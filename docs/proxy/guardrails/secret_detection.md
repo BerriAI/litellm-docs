@@ -10,7 +10,7 @@ Example if you want to redact the value of `OPENAI_API_KEY` in the following req
     "messages": [
         {
             "role": "user",
-            "content": "Hey, how's it going, API_KEY = 'sk_1234567890abcdef'",
+            "content": "Hey, how's it going, API_KEY = 'sk_1234567890abcdef'"
         }
     ]
 }
@@ -23,7 +23,7 @@ Example if you want to redact the value of `OPENAI_API_KEY` in the following req
     "messages": [
         {
             "role": "user",
-            "content": "Hey, how's it going, API_KEY = '[REDACTED]'",
+            "content": "Hey, how's it going, API_KEY = '[REDACTED]'"
         }
     ]
 }
@@ -53,7 +53,7 @@ Send this request
 ```shell
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "fake-claude-endpoint",
     "messages": [
@@ -75,7 +75,7 @@ LiteLLM Proxy:WARNING: secret_detection.py:88 - Detected and redacted secrets in
 
 
 You can also see the raw request sent from litellm to the API Provider with (`--detailed_debug`).
-```json
+```text
 POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.groq.com/openai/v1/ \
@@ -95,7 +95,7 @@ https://api.groq.com/openai/v1/ \
 
 ## Turn on/off per project (API KEY/Team)
 
-[**See Here**](./quick_start.md#-control-guardrails-per-project-api-key)
+[**See Here**](./quick_start.md#-control-guardrails-per-api-key)
 
 ## Control secret detectors
 
@@ -136,7 +136,7 @@ litellm --config /path/to/config.yaml --detailed_debug
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "fake-claude-endpoint",
     "messages": [

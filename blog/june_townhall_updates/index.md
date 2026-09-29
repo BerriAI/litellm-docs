@@ -31,7 +31,7 @@ Three numbers capture the month: **24 security fixes**, **94 bug fixes**, and **
 |---|---|
 | Vulnerabilities patched | **24** |
 
-### Bug bounty — now live
+### Bug bounty: now live
 
 We pay for security reports.
 
@@ -41,7 +41,7 @@ We pay for security reports.
 
 ### Automated review on every PR
 
-Every PR gets a security pass. Look for the **Veria scan** — it's a required check on every PR, built on Veria AI + zizmor + semgrep. False positives are flagged, never blocking.
+Every PR gets a security pass. Look for the **Veria scan**; it's a required check on every PR, built on Veria AI + zizmor + semgrep. False positives are flagged, never blocking.
 
 ### What's next for security
 
@@ -62,15 +62,15 @@ The goal:
 
 Fixes shipped across five areas:
 
-- Proxy core & resilience — 22 fixes
-- UI + Auth / SSO — 22 fixes
-- Cost, Budgets & Observability — 21 fixes
-- MCP Gateway — 15 fixes
-- Streaming / Realtime APIs — 14 fixes
+- Proxy core & resilience: 22 fixes
+- UI + Auth / SSO: 22 fixes
+- Cost, Budgets & Observability: 21 fixes
+- MCP Gateway: 15 fixes
+- Streaming / Realtime APIs: 14 fixes
 
 **What kinds of fixes shipped:**
 
-- **Billing accuracy.** Closed the gaps where spend slipped through — virtual-key limits are now enforced, and cached and tiered usage on Anthropic and Bedrock is priced correctly.
+- **Billing accuracy.** Closed the gaps where spend slipped through: virtual-key limits are now enforced, and cached and tiered usage on Anthropic and Bedrock is priced correctly.
 - **Identity & access.** Caller identity now resolves once into a single record, so team IDs and spend attribution stay correct and auth no longer fails open on DB errors.
 - **MCP reliability.** Tools now list and call consistently across every auth method, with per-user credentials and proper OAuth token refresh.
 - **Resource leaks.** Guardrails no longer re-initialize on every request, eliminating the runner leaks, latency spikes, and OOMs they caused.
@@ -79,7 +79,7 @@ Fixes shipped across five areas:
 **Root causes, not just symptoms:**
 
 - **MCP authentication** — 5 separate code paths, one per auth method, caused inconsistent tool listing and calling. Fix: a single unified code path resolves credentials across all auth methods.
-- **AI gateway auth** — 5+ DB lookups per request to resolve key/user/team identity. Fix: caller identity resolves once into a single record — lookups cut roughly in half.
+- **AI gateway auth**: 5+ DB lookups per request to resolve key/user/team identity. Fix: caller identity resolves once into a single record, cutting lookups roughly in half.
 - **UI forms** — saving a form could overwrite unrelated fields. Fix: frontend and backend types are 100% in sync from a shared source, so only edited fields change on save.
 
 ### Public timeline
@@ -124,7 +124,7 @@ We're migrating the LiteLLM gateway to Rust, and the early numbers make the case
 
 **How the migration works:** a staged rollout, moving piece by piece from a pure Python SDK + FastAPI proxy, to Python driving Rust transforms via PyO3, to a FastAPI shell with pure Rust on the hot path, to an all-Rust async server (axum).
 
-**A gradual rollout** — one route at a time, proven in production before the next begins. Same config, database, and API: nothing for you to change.
+**A gradual rollout**, one route at a time, proven in production before the next begins. Same config, database, and API: nothing for you to change.
 
 - **Aug 15** — OCR routes: Mistral first, then all OCR.
 - **Sep 1** — `/messages`, then `/chat/completions`.
@@ -133,14 +133,14 @@ We're migrating the LiteLLM gateway to Rust, and the early numbers make the case
 
 ### Announcing our version policy
 
-Going forward, we'll maintain only the four most recent stable minor releases. This takes effect **next Monday, June 29th**. Our focus is ensuring stability on the most up-to-date product offerings — bookmark our [Release Notes](https://docs.litellm.ai/release_notes) to stay current.
+Going forward, we'll maintain only the four most recent stable minor releases. This takes effect **next Monday, June 29th**. Our focus is ensuring stability on the most up-to-date product offerings; bookmark our [Release Notes](https://docs.litellm.ai/release_notes) to stay current.
 
 ## What's next
 
-Thank you again for all the questions and feedback. We'll keep sharing concrete progress updates as these efforts ship — especially as we approach the August 29 zero-regression milestone.
+Thank you again for all the questions and feedback. We'll keep sharing concrete progress updates as these efforts ship, especially as we approach the August 29 zero-regression milestone.
 
 ## Hiring
 
-We are actively hiring across several roles — apply [here](https://jobs.ashbyhq.com/litellm) if you're interested!
+We are actively hiring across several roles. Apply [here](https://jobs.ashbyhq.com/litellm) if you're interested!
 
 Thank you for using LiteLLM - Krrish & Ishaan

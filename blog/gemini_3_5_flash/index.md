@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 LiteLLM now supports `gemini-3.5-flash` with full day 0 support!
 
 :::note
-If you only want cost tracking, you need no change in your current LiteLLM version. But if you want support for new features introduced with this release — thinking levels, strict function-call IDs, and thought signatures — use `v1.87.0-dev.1` or above.
+If you only want cost tracking, you need no change in your current LiteLLM version. But if you want support for new features introduced with this release, namely thinking levels, strict function-call IDs, and thought signatures, use `v1.87.0-dev.1` or above.
 :::
 
 {/* truncate */}
@@ -52,7 +52,7 @@ pip install litellm==1.87.0.dev1
 
 ### 1. Minimal thinking level
 
-Gemini 3.5 Flash supports the new "Minimal" level. LiteLLM maps OpenAI `reasoning_effort` to Gemini's `thinkingLevel` — use `reasoning_effort="minimal"`.
+Gemini 3.5 Flash supports the new "Minimal" level. LiteLLM maps OpenAI `reasoning_effort` to Gemini's `thinkingLevel`, so use `reasoning_effort="minimal"`.
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
@@ -98,7 +98,7 @@ Gemini 3.5+ requires every `functionResponse` to include the same `id` as the or
 
 **Step 1 : User submits a query that would trigger a tool call**
 
-Send the user message and your tool definitions. The model responds with `tool_calls` — save the **`id`** from the first tool call (it may look like `5x450f94__thought__<signature>`; pass it back unchanged on the next request).
+Send the user message and your tool definitions. The model responds with `tool_calls`; save the **`id`** from the first tool call (it may look like `5x450f94__thought__<signature>`; pass it back unchanged on the next request).
 
 ```bash
 curl -sS http://localhost:4000/v1/chat/completions \
@@ -141,7 +141,7 @@ echo "$TOOL_CALL_ID"
 
 **Step 2 : Run your tool, then send the result with the same `tool_call_id`**
 
-Run `get_weather` locally, then call the proxy again with the full message history. Set **`tool_call_id`** to the exact **`id`** from Step 1 — LiteLLM uses it as the Gemini `functionResponse.id`.
+Run `get_weather` locally, then call the proxy again with the full message history. Set **`tool_call_id`** to the exact **`id`** from Step 1; LiteLLM uses it as the Gemini `functionResponse.id`.
 
 ```bash
 # Result from your local get_weather("Tokyo") call

@@ -10,14 +10,14 @@ Control how many tokens Claude uses when responding with the `effort` parameter,
 The `effort` parameter allows you to control how eager Claude is about spending tokens when responding to requests. This gives you the ability to trade off between response thoroughness and token efficiency, all with a single model.
 
 **Supported models:**
-- **Claude 4.6** (Opus 4.6, Sonnet 4.6) — `output_config` is a stable API feature, no beta header needed. Opus 4.6 also supports `effort="max"`.
+- **Claude 4.6** (Opus 4.6, Sonnet 4.6): `output_config` is a stable API feature, no beta header needed. Opus 4.6 also supports `effort="max"`.
 - **Claude Opus 4.5** — requires the `effort-2025-11-24` beta header (automatically added by LiteLLM).
 
 LiteLLM automatically maps `reasoning_effort` → `output_config={"effort": ...}` for all supported models.
 
 ## How Effort Works
 
-By default, Claude uses maximum effort—spending as many tokens as needed for the best possible outcome. By lowering the effort level, you can instruct Claude to be more conservative with token usage, optimizing for speed and cost while accepting some reduction in capability.
+By default, Claude uses maximum effort, spending as many tokens as needed for the best possible outcome. By lowering the effort level, you can instruct Claude to be more conservative with token usage, optimizing for speed and cost while accepting some reduction in capability.
 
 **Tip**: Setting `effort` to `"high"` produces exactly the same behavior as omitting the `effort` parameter entirely.
 
@@ -27,7 +27,7 @@ The effort parameter affects **all tokens** in the response, including:
 - Extended thinking (when enabled)
 
 This approach has two major advantages:
-1. It doesn't require thinking to be enabled in order to use it.
+1. It doesn't require thinking to be enabled to use it.
 2. It can affect all token spend including tool calls. For example, lower effort would mean Claude makes fewer tool calls.
 
 This gives a much greater degree of control over efficiency.
@@ -48,7 +48,7 @@ This gives a much greater degree of control over efficiency.
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python
+```python keep-model-ids
 import litellm
 
 # Works with Claude 4.6 models (no beta header needed)
@@ -64,7 +64,7 @@ response = litellm.completion(
 print(response.choices[0].message.content)
 ```
 
-```python
+```python keep-model-ids
 # Also works with Claude Opus 4.5 (beta header auto-injected)
 response = litellm.completion(
     model="anthropic/claude-opus-4-5-20251101",
@@ -79,7 +79,7 @@ response = litellm.completion(
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-```typescript
+```typescript keep-model-ids
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({
@@ -107,7 +107,7 @@ console.log(response.content[0].text);
 
 ### Using LiteLLM Proxy
 
-```bash
+```bash keep-model-ids
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
@@ -126,7 +126,7 @@ curl http://localhost:4000/v1/chat/completions \
 <Tabs>
 <TabItem value="46" label="Claude 4.6 (stable)">
 
-```bash
+```bash keep-model-ids
 # Claude 4.6 — no beta header needed
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -148,7 +148,7 @@ curl https://api.anthropic.com/v1/messages \
 </TabItem>
 <TabItem value="45" label="Claude Opus 4.5 (beta)">
 
-```bash
+```bash keep-model-ids
 # Claude Opus 4.5 — requires beta header
 curl https://api.anthropic.com/v1/messages \
   --header "x-api-key: $ANTHROPIC_API_KEY" \
@@ -174,9 +174,9 @@ curl https://api.anthropic.com/v1/messages \
 ## Model Compatibility
 
 The effort parameter is supported by:
-- **Claude Opus 4.6** (`claude-opus-4-6`) — supports `high`, `medium`, `low`, and `max`
-- **Claude Sonnet 4.6** (`claude-sonnet-4-6`) — supports `high`, `medium`, `low`
-- **Claude Opus 4.5** (`claude-opus-4-5-20251101`) — supports `high`, `medium`, `low`
+- **Claude Opus 4.6** (`claude-opus-4-6`): supports `high`, `medium`, `low`, and `max`
+- **Claude Sonnet 4.6** (`claude-sonnet-4-6`): supports `high`, `medium`, `low`
+- **Claude Opus 4.5** (`claude-opus-4-5-20251101`): supports `high`, `medium`, `low`
 
 :::info
 `effort="max"` is only available on Claude Opus 4.6. Using it with other models will raise a validation error.
@@ -184,11 +184,11 @@ The effort parameter is supported by:
 
 ## When Should I Adjust the Effort Parameter?
 
-- Use **high effort** (the default) when you need Claude's best work—complex reasoning, nuanced analysis, difficult coding problems, or any task where quality is the top priority.
+- Use **high effort** (the default) when you need Claude's best work: complex reasoning, detailed analysis, difficult coding problems, or any task where quality is the top priority.
 
 - Use **medium effort** as a balanced option when you want solid performance without the full token expenditure of high effort.
 
-- Use **low effort** when you're optimizing for speed (because Claude answers with fewer tokens) or cost—for example, simple classification tasks, quick lookups, or high-volume use cases where marginal quality improvements don't justify additional latency or spend.
+- Use **low effort** when you're optimizing for speed (because Claude answers with fewer tokens) or cost: simple classification tasks, quick lookups, or high-volume use cases where marginal quality improvements don't justify additional latency or spend.
 
 ## Effort with Tool Use
 
@@ -199,7 +199,7 @@ When using tools, the effort parameter affects both the explanations around tool
 
 Example with tools:
 
-```python
+```python keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -228,9 +228,9 @@ response = litellm.completion(
 
 ## Effort with Extended Thinking
 
-The effort parameter works seamlessly with extended thinking. When both are enabled, effort controls the token budget across all response types:
+The effort parameter works together with extended thinking. When both are enabled, effort controls the token budget across all response types:
 
-```python
+```python keep-model-ids
 import litellm
 
 response = litellm.completion(
@@ -274,7 +274,7 @@ Token usage with different effort levels is tracked in the standard usage object
 
 ```python
 response = litellm.completion(
-    model="anthropic/claude-opus-4-5-20251101",
+    model="anthropic/{{anthropic_large}}",
     messages=[{"role": "user", "content": "Analyze this"}],
     output_config={"effort": "low"}
 )
@@ -289,7 +289,7 @@ print(f"Total tokens: {response.usage.total_tokens}")
 
 LiteLLM automatically adds the `effort-2025-11-24` beta header for Claude Opus 4.5 when `reasoning_effort` or `output_config` is provided.
 
-**Note:** Claude 4.6 models do NOT need a beta header — `output_config` is a stable API feature for these models.
+**Note:** Claude 4.6 models do NOT need a beta header, since `output_config` is a stable API feature for these models.
 
 If you're not seeing the header for Opus 4.5:
 
@@ -301,7 +301,7 @@ If you're not seeing the header for Opus 4.5:
 
 Accepted values: `"high"`, `"medium"`, `"low"`, and `"max"` (Opus 4.6 only). Any other value will raise a validation error:
 
-```python
+```python keep-model-ids
 # ❌ This will raise an error
 output_config={"effort": "very_low"}
 
@@ -309,10 +309,10 @@ output_config={"effort": "very_low"}
 output_config={"effort": "low"}
 
 # ❌ This will raise an error (max only works on Opus 4.6)
-litellm.completion(model="anthropic/claude-sonnet-4-6", reasoning_effort="max", ...)
+litellm.completion(model="anthropic/claude-sonnet-4-6", messages=messages, reasoning_effort="max")
 
 # ✅ max is only for Opus 4.6
-litellm.completion(model="anthropic/claude-opus-4-6", reasoning_effort="max", ...)
+litellm.completion(model="anthropic/claude-opus-4-6", messages=messages, reasoning_effort="max")
 ```
 
 ### Model not supported
@@ -321,14 +321,14 @@ The effort parameter is supported by Claude Opus 4.6, Sonnet 4.6, and Opus 4.5. 
 
 ## Related Features
 
-- [Extended Thinking](/docs/providers/anthropic_extended_thinking) - Control Claude's reasoning process
-- [Tool Use](/docs/providers/anthropic_tools) - Enable Claude to use tools and functions
+- [Extended Thinking](/docs/reasoning_content) - Control Claude's reasoning process
+- [Tool Use](/docs/providers/anthropic) - Enable Claude to use tools and functions
 - [Programmatic Tool Calling](/docs/providers/anthropic_programmatic_tool_calling) - Let Claude write code that calls tools
-- [Prompt Caching](/docs/providers/anthropic_prompt_caching) - Cache prompts to reduce costs
+- [Prompt Caching](/docs/completion/prompt_caching) - Cache prompts to reduce costs
 
 ## Additional Resources
 
 - [Anthropic Effort Documentation](https://docs.anthropic.com/en/docs/build-with-claude/effort)
 - [LiteLLM Anthropic Provider Guide](/docs/providers/anthropic)
-- [Cost Optimization Best Practices](/docs/guides/cost_optimization)
+- [Cost Optimization Best Practices](/docs/proxy/cost_tracking)
 

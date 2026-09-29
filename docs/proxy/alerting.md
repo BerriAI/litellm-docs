@@ -17,8 +17,8 @@ Get alerts for:
 
 Works across: 
 - [Slack](#quick-start)
-- [Discord](#advanced---using-discord-webhooks)
-- [Microsoft Teams](#advanced---using-ms-teams-webhooks)
+- [Discord](/docs/proxy/alerting#discord-webhooks)
+- [Microsoft Teams](/docs/proxy/alerting#ms-teams-webhooks)
 
 ## Quick Start
 
@@ -28,7 +28,7 @@ Set up a slack alert channel to receive alerts from proxy.
 
 Get a slack webhook url from https://api.slack.com/messaging/webhooks
 
-You can also use Discord Webhooks, see [here](#using-discord-webhooks)
+You can also use Discord Webhooks, see [here](/docs/proxy/alerting#discord-webhooks)
 
 
 Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
@@ -36,6 +36,8 @@ Set `SLACK_WEBHOOK_URL` in your proxy env to enable Slack alerts.
 ```bash
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/<>/<>/<>"
 ```
+
+If `SLACK_WEBHOOK_URL` is unset, `ALERTING_WEBHOOK_URL` is read as a provider-neutral fallback. Use it to send the same Slack-format alerts to any Slack-compatible incoming webhook, such as Rocket.Chat or Mattermost
 
 ### Step 2: Setup Proxy
 
@@ -48,13 +50,13 @@ general_settings:
     # [OPTIONAL ALERTING ARGS]
     alerting_args:
         daily_report_frequency: 43200  # 12 hours in seconds
-        report_check_interval: 3600    # 1 hour in seconds
+        report_check_interval: 300     # 5 minutes in seconds
         budget_alert_ttl: 86400        # 24 hours in seconds
         outage_alert_ttl: 60           # 1 minute in seconds
         region_outage_alert_ttl: 60    # 1 minute in seconds
         minor_outage_alert_threshold: 5 
         major_outage_alert_threshold: 10
-        max_outage_alert_list_size: 1000
+        max_outage_alert_list_size: 10
         log_to_console: false
     
 ```
@@ -70,7 +72,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/health/services?service=slack' \
--H 'Authorization: Bearer sk-1234'
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## Advanced
@@ -101,7 +103,7 @@ Set the `soft_budget` to 0.001
 curl -X 'POST' \
   'http://localhost:4000/key/generate' \
   -H 'accept: application/json' \
-  -H 'x-goog-api-key: sk-1234' \
+  -H 'x-goog-api-key: sk-<your-litellm-api-key>' \
   -H 'Content-Type: application/json' \
   -d '{
   "key_alias": "prod-app1",
@@ -117,7 +119,7 @@ curl http://0.0.0.0:4000/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer sk-Nb5eCf427iewOlbxXIH4Ow" \
 -d '{
-  "model": "openai/gpt-4",
+  "model": "openai/{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -148,7 +150,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages = [], 
     extra_body={
         "metadata": {
@@ -204,14 +206,14 @@ Set `alert_to_webhook_url` on your config.yaml
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   alerting: ["slack"]
   alerting_threshold: 0.0001 # (Seconds) set an artificially low threshold for testing alerting
   alert_to_webhook_url: {
@@ -238,14 +240,14 @@ Provide multiple slack channels for a given alert type
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   alerting: ["slack"]
   alerting_threshold: 0.0001 # (Seconds) set an artificially low threshold for testing alerting
   alert_to_webhook_url: {
@@ -274,9 +276,9 @@ Test it - send a valid llm request - expect to see a `llm_too_slow` alert in it'
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ]
@@ -304,7 +306,7 @@ SLACK_WEBHOOK_URL="https://berriai.webhook.office.com/webhookb2/...6901/Incoming
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-35-turbo"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -318,7 +320,7 @@ Call the proxy `/health/services` endpoint to test if your alerting connection i
 
 ```bash
 curl --location 'http://0.0.0.0:4000/health/services?service=slack' \
---header 'Authorization: Bearer sk-1234'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 
@@ -346,7 +348,7 @@ Discord provides a slack compatible webhook url that you can use for alerting
 model_list: 
     model_name: "azure-model"
     litellm_params:
-        model: "azure/gpt-35-turbo"
+        model: "azure/{{openai_small}}"
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
@@ -390,7 +392,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
---header 'Authorization: Bearer sk-1234'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Expected Response**
@@ -404,9 +406,9 @@ curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
   "team_id": null,
   "user_email": null,
   "key_alias": null,
-  "projected_exceeded_data": null,
+  "projected_exceeded_date": null,
   "projected_spend": null,
-  "event": "budget_crossed", # Literal["budget_crossed", "threshold_crossed", "projected_limit_exceeded"]
+  "event": "budget_crossed", # see the `event` spec below for all values
   "event_group": "user",
   "event_message": "User Budget: Budget Crossed"
 }
@@ -416,17 +418,21 @@ curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
 
 - `spend` *float*: The current spend amount for the 'event_group'.
 - `max_budget` *float or null*: The maximum allowed budget for the 'event_group'. null if not set. 
+- `soft_budget` *float or null*: The soft budget set for the 'event_group'. null if not set.
 - `token` *str*: A hashed value of the key, used for authentication or identification purposes.
 - `customer_id` *str or null*: The ID of the customer associated with the event (optional).
-- `internal_user_id` *str or null*: The ID of the internal user associated with the event (optional).
+- `user_id` *str or null*: The ID of the internal user associated with the event (optional).
 - `team_id` *str or null*: The ID of the team associated with the event (optional).
+- `team_alias` *str or null*: The alias of the team associated with the event (optional).
+- `organization_id` *str or null*: The ID of the organization associated with the event (optional).
 - `user_email` *str or null*: The email of the internal user associated with the event (optional).
 - `key_alias` *str or null*: An alias for the key associated with the event (optional).
 - `projected_exceeded_date` *str or null*: The date when the budget is projected to be exceeded, returned when 'soft_budget' is set for key (optional).
 - `projected_spend` *float or null*: The projected spend amount, returned when 'soft_budget' is set for key (optional).
-- `event` *Literal["budget_crossed", "threshold_crossed", "projected_limit_exceeded"]*: The type of event that triggered the webhook. Possible values are:
+- `event` *Literal["budget_crossed", "max_budget_alert", "soft_budget_crossed", "threshold_crossed", "projected_limit_exceeded", "key_created", "key_rotated", "internal_user_created", "spend_tracked"]*: The type of event that triggered the webhook. `key_created`, `key_rotated`, `internal_user_created` and `max_budget_alert` are shared with email alerts. Budget webhook values are:
     * "spend_tracked": Emitted whenever spend is tracked for a customer id. 
     * "budget_crossed": Indicates that the spend has exceeded the max budget.
+    * "soft_budget_crossed": Indicates that the spend has exceeded the soft budget.
     * "threshold_crossed": Indicates that spend has crossed a threshold (currently sent when 85% and 95% of budget is reached).
     * "projected_limit_exceeded": For "key" only - Indicates that the projected spend is expected to exceed the soft budget threshold.
 - `event_group` *Literal["customer", "internal_user", "key", "team", "proxy"]*: The group associated with the event. Possible values are:
@@ -482,7 +488,7 @@ End: `2026-02-20 03:27:39`
 Count: `847`
 
 Message: `Requests are hanging - 600s+ request time`
-Request Model: `gemini-2.5-flash`
+Request Model: `{{gemini_flash}}`
 API Base: `None`
 ```
 
@@ -521,7 +527,7 @@ general_settings:
 
 ## **All Possible Alert Types**
 
-👉 [**Here is how you can set specific alert types**](#opting-into-specific-alert-types)
+👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
 
 LLM-related Alerts
 
@@ -551,6 +557,13 @@ Database Alerts
 |------------|-------------|---------|
 | `db_exceptions` | Notifications for database-related exceptions | ✅ |
 
+MCP Gateway Alerts
+
+| Alert Type | Description | Default On |
+|------------|-------------|---------|
+| `mcp_tool_description_blocked` | A `pre_mcp_call` guardrail blocked an upstream MCP tool's description, so the tool was hidden from `tools/list`. See [MCP Guardrails](../mcp_guardrail#scanning-tool-descriptions-on-discovery) | ✅ |
+| `mcp_pinned_tools_changed` | A pinned MCP server's upstream tool list, descriptions, or input schemas drifted from the pin. See [Pin a Server's Tool List](../mcp_control#pin-a-servers-tool-list) | ✅ |
+
 Management Endpoint Alerts - Virtual Key, Team, Internal User
 
 | Alert Type | Description | Default On |
@@ -571,11 +584,11 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `daily_report_frequency` | 43200 (12 hours) | Frequency of receiving deployment latency/failure reports in seconds |
-| `report_check_interval` | 3600 (1 hour) | How often to check if a report should be sent (background process) in seconds |
+| `report_check_interval` | 300 (5 minutes) | How often to check if a report should be sent (background process) in seconds |
 | `budget_alert_ttl` | 86400 (24 hours) | Cache TTL for budget alerts to prevent spam when budget is crossed |
 | `outage_alert_ttl` | 60 (1 minute) | Time window for collecting model outage errors in seconds |
 | `region_outage_alert_ttl` | 60 (1 minute) | Time window for collecting region-based outage errors in seconds |
 | `minor_outage_alert_threshold` | 5 | Number of errors that trigger a minor outage alert (400 errors not counted) |
 | `major_outage_alert_threshold` | 10 | Number of errors that trigger a major outage alert (400 errors not counted) |
-| `max_outage_alert_list_size` | 1000 | Maximum number of errors to store in cache per model/region |
+| `max_outage_alert_list_size` | 10 | Maximum number of errors to store in cache per model/region |
 | `log_to_console` | false | If true, prints alerting payload to console as a `.warning` log. |

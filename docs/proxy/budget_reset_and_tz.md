@@ -31,7 +31,7 @@ This ensures that all budget resets happen at midnight in your specified timezon
 
 :::info
 
-`budget_reset_time` is available starting in the next release candidate (after `v1.94.0rc1`).
+`budget_reset_time` is available starting in the next release (after `v1.94.0`).
 
 :::
 

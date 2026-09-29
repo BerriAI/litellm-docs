@@ -43,6 +43,14 @@ pip install litellm==1.93.0
 </TabItem>
 </Tabs>
 
+:::danger[Breaking Changes]
+
+**Keys are now throttled instead of revoked when they hit a spend limit.** A key that exceeds its budget is rate-limited rather than losing access outright, so workflows that depended on a hard block at the limit will see requests slowed instead of rejected. See [PR #31300](https://github.com/BerriAI/litellm/pull/31300).
+
+**OpenTelemetry error detail keys moved under the `litellm.*` namespace.** Error spans now carry litellm error details under `litellm.*` rather than their previous keys, so dashboards and queries referencing the old attribute names will stop matching. See [PR #32591](https://github.com/BerriAI/litellm/pull/32591).
+
+:::
+
 ## Key Highlights
 
 - **GPT-5.6 and more new models** - day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure, xAI Grok-4.5, OpenAI Realtime 2.1 (and `-mini`), Google Cloud Chirp 3 speech-to-text, and the `jp` regional inference profile for Bedrock Claude Opus 4.8.
@@ -130,7 +138,7 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
 - **[Responses API](../../docs/response_api)**
     - Preserve custom-tool round-trips and allowlists for the Codex CLI in the responses bridge - [PR #32258](https://github.com/BerriAI/litellm/pull/32258)
     - Preserve `reasoning_tokens` through the chat -> responses usage translation - [PR #32837](https://github.com/BerriAI/litellm/pull/32837)
-- **[Pass-through](../../docs/pass_through)**
+- **[Pass-through](/docs/pass_through/intro)**
     - Stream non-SSE pass-through responses instead of buffering them in memory - [PR #32386](https://github.com/BerriAI/litellm/pull/32386)
 - **General**
     - Merge websearch tool params - [PR #32162](https://github.com/BerriAI/litellm/pull/32162)
@@ -209,11 +217,11 @@ GPT-5.6 ships priority, flex, batch, and above-272k long-context pricing tiers o
 - **[Model Armor](../../docs/proxy/guardrails/model_armor)**
     - Scan MCP tool calls in `pre_mcp_call` / `during_mcp_call` modes - [PR #32296](https://github.com/BerriAI/litellm/pull/32296)
     - Pass reference-only attachments through with `skip_unscannable_attachments` and remove the attachment count cap - [PR #33554](https://github.com/BerriAI/litellm/pull/33554)
-- **[Content Filter](../../docs/proxy/guardrails)**
+- **[Content Filter](/docs/proxy/guardrails/quick_start)**
     - Add `pre_mcp_call` support to Content Filter - [PR #32936](https://github.com/BerriAI/litellm/pull/32936)
-- **[CrowdStrike AIDR](../../docs/proxy/guardrails)**
+- **[CrowdStrike AIDR](/docs/proxy/guardrails/quick_start)**
     - Send only new messages since the last assistant turn - [PR #31974](https://github.com/BerriAI/litellm/pull/31974)
-- **[GraySwan](../../docs/proxy/guardrails)**
+- **[GraySwan](/docs/proxy/guardrails/quick_start)**
     - Forward the GraySwan scan id header - [PR #32544](https://github.com/BerriAI/litellm/pull/32544)
 - **General**
     - Walk the Responses-API text taxonomy in the shared content helpers - [PR #32542](https://github.com/BerriAI/litellm/pull/32542)

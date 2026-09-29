@@ -68,12 +68,12 @@ function ArchitectureView() {
       {/* Control Plane */}
       <div className={`${styles.node} ${styles.nodeControlPlane}`}>
         <div className={styles.nodeHeader}>
-          <span className={styles.nodeTitle}>Control Plane</span>
+          <span className={styles.nodeTitle}>Global Control Plane</span>
           <span className={`${styles.badge} ${styles.badgeBlue}`}>ADMIN UI ONLY</span>
         </div>
         <div className={styles.nodeSubtitle}>cp.example.com</div>
         <div className={styles.nodeCaption}>
-          Not a router — does not proxy LLM requests.
+          Not a router. Does not proxy LLM requests.
           <br />
           Lets admins switch between workers to manage them.
         </div>

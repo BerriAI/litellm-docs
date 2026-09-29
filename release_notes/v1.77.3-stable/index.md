@@ -61,7 +61,7 @@ This is great for use cases where you want to ensure your realtime use cases mus
 
 This release adds support for priority quota reservation. This allows **Proxy Admins** to reserve TPM/RPM capacity for keys based on metadata priority levels, ensuring critical production workloads get guaranteed access regardless of development traffic volume.
 
-Get started [here](../../docs/proxy/dynamic_rate_limit#priority-quota-reservation)
+Get started [here](/docs/proxy/dynamic_rate_limit#beta-set-priority--reserve-quota)
 
 ## +550 RPS Performance Improvements
 
@@ -89,7 +89,7 @@ We've achieved a +500 RPS boost by fixing cache type inconsistencies that were c
 #### Features
 
 - **[OVHCloud AI Endpoints](../../docs/providers/ovhcloud)**
-    - New provider support with comprehensive model catalog - [PR #14494](https://github.com/BerriAI/litellm/pull/14494)
+    - New provider support with a full model catalog - [PR #14494](https://github.com/BerriAI/litellm/pull/14494)
 - **[CompactifAI](../../docs/providers/compactifai)**
     - New provider integration - [PR #14532](https://github.com/BerriAI/litellm/pull/14532)
 - **[SambaNova](../../docs/providers/sambanova)**
@@ -105,11 +105,11 @@ We've achieved a +500 RPS boost by fixing cache type inconsistencies that were c
 - **[Vertex AI](../../docs/providers/vertex)**
     - Gemini labels field provider-aware filtering - [PR #14563](https://github.com/BerriAI/litellm/pull/14563)
     - Gemini Batch API support - [PR #14733](https://github.com/BerriAI/litellm/pull/14733)
-- **[Volcengine](../../docs/providers/volcengine)**
+- **[Volcengine](/docs/providers/volcano)**
     - Fixed thinking parameters when disabled - [PR #14569](https://github.com/BerriAI/litellm/pull/14569)
 - **[Cohere](../../docs/providers/cohere)**
     - Handle Generate API deprecation, default to chat endpoints - [PR #14676](https://github.com/BerriAI/litellm/pull/14676)
-- **[TwelveLabs](../../docs/providers/twelvelabs)**
+- **[TwelveLabs](/docs/providers/bedrock_embedding)**
     - Added Marengo Embed 2.7 embedding support - [PR #14674](https://github.com/BerriAI/litellm/pull/14674)
 
 ### Bug Fixes
@@ -199,10 +199,10 @@ We've achieved a +500 RPS boost by fixing cache type inconsistencies that were c
     - Added logging support for Responses API - [PR #14597](https://github.com/BerriAI/litellm/pull/14597)
 - **[Langsmith](../../docs/proxy/logging#langsmith)**
     - Langsmith Sampling Rate - Key/Team-level tracing configuration - [PR #14740](https://github.com/BerriAI/litellm/pull/14740)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Multi-worker support improvements - [PR #14530](https://github.com/BerriAI/litellm/pull/14530)
     - User email labels in monitoring - [PR #14520](https://github.com/BerriAI/litellm/pull/14520)
-- **[Opik](../../docs/proxy/logging#opik)**
+- **[Opik](/docs/observability/opik_integration)**
     - Fixed timezone issue - [PR #14708](https://github.com/BerriAI/litellm/pull/14708)
 
 ### Bug Fixes
@@ -218,7 +218,7 @@ We've achieved a +500 RPS boost by fixing cache type inconsistencies that were c
 - **AWS exceptions handling despite 200 response** - [PR #14658](https://github.com/BerriAI/litellm/pull/14658)
 #### New Integration
 
-- **[PostHog](../../docs/observability/posthog)** - Complete observability integration for LiteLLM usage tracking and analytics - [PR #14610](https://github.com/BerriAI/litellm/pull/14610)
+- **[PostHog](/docs/observability/posthog_integration)** - Complete observability integration for LiteLLM usage tracking and analytics - [PR #14610](https://github.com/BerriAI/litellm/pull/14610)
 
 ---
 

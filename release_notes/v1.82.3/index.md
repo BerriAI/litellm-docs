@@ -41,8 +41,8 @@ pip install litellm==1.82.3
 
 ## Key Highlights
 
-- **Nebius AI — new provider** — [30 models across DeepSeek, Qwen, Llama, Mistral, NVIDIA, and BAAI available via Nebius AI cloud](../../docs/providers/nebius) - [PR #22614](https://github.com/BerriAI/litellm/pull/22614)
-- **OpenAI gpt-5.4 / gpt-5.4-pro — day 0** — Full pricing and routing support for `gpt-5.4` (1M context, $2.50/$15.00) and `gpt-5.4-pro` ($30.00/$180.00) on OpenAI and Azure
+- **Nebius AI, new provider**: [30 models across DeepSeek, Qwen, Llama, Mistral, NVIDIA, and BAAI available via Nebius AI cloud](../../docs/providers/nebius) - [PR #22614](https://github.com/BerriAI/litellm/pull/22614)
+- **OpenAI gpt-5.4 / gpt-5.4-pro, day 0**: Full pricing and routing support for `gpt-5.4` (1M context, $2.50/$15.00) and `gpt-5.4-pro` ($30.00/$180.00) on OpenAI and Azure
 - **Gemini 3.x models** — `gemini-3-flash-preview`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-image-preview`, and `gemini-embedding-2-preview` added to cost map for Google AI and Vertex AI
 - **FLUX Kontext image editing** — `flux-kontext-pro` and `flux-kontext-max` added to Black Forest Labs, alongside `flux-pro-1.0-fill` and `flux-pro-1.0-expand` for inpainting and outpainting
 - **116 new models, 132 deprecated models cleaned up** — Major model map refresh including Mistral Magistral, Dashscope Qwen3 VL, xAI Grok via Azure AI, ZAI GLM-5, Serper Search; removal of OpenAI GPT-3.5/GPT-4 legacy variants, Gemini 1.5, and Vertex AI PaLM2
@@ -65,9 +65,9 @@ pip install litellm==1.82.3
 | [Nebius AI](../../docs/providers/nebius) (`nebius/`) | `/chat/completions`, `/embeddings` | EU-based AI cloud with 30+ open models — DeepSeek, Qwen3, Llama 3.1/3.3, NVIDIA Nemotron, BAAI embeddings |
 | [ZAI](../../docs/providers/zai) (`zai/`) | `/chat/completions` | ZhipuAI GLM-5 models via ZAI cloud |
 | [Black Forest Labs](../../docs/providers/black_forest_labs) (`black_forest_labs/`) | `/images/generations`, `/images/edits` | FLUX image generation and editing — Kontext Pro/Max, Pro 1.0 Fill/Expand |
-| [Serper](../../docs/providers/serper) (`serper/`) | `/search` | Web search via Serper API |
+| [Serper](/docs/search/serper) (`serper/`) | `/search` | Web search via Serper API |
 | [SageMaker Nova](../../docs/providers/aws_sagemaker) (`sagemaker_nova/`) | `/chat/completions` | Amazon Nova models via SageMaker endpoint |
-| [Google Search API](../../docs/providers/google_search) (`google_search/`) | `/search` | Google Search API integration - [PR #22752](https://github.com/BerriAI/litellm/pull/22752) |
+| [Google Search API](/docs/search/google_pse) (`google_search/`) | `/search` | Google Search API integration - [PR #22752](https://github.com/BerriAI/litellm/pull/22752) |
 | [Bedrock Mantle](../../docs/providers/bedrock) (`bedrock_mantle/`) | `/chat/completions` | Amazon Bedrock via Mantle — alternative auth and routing path for Bedrock models - [PR #22866](https://github.com/BerriAI/litellm/pull/22866) |
 
 ---
@@ -170,11 +170,11 @@ pip install litellm==1.82.3
 #### Updated Models
 
 - **[AWS Bedrock](../../docs/providers/bedrock)**
-    - Add `cache_read_input_token_cost` and `cache_creation_input_token_cost` to Bedrock-hosted Anthropic models (`claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`, and APAC/EU variants) — prompt caching is now tracked for cost estimation
+    - Add `cache_read_input_token_cost` and `cache_creation_input_token_cost` to Bedrock-hosted Anthropic models (`claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`, and APAC/EU variants), so prompt caching is now tracked for cost estimation
     - Rename `apac.anthropic.claude-sonnet-4-6` → `au.anthropic.claude-sonnet-4-6` to reflect correct regional identifier
 
 - **[Azure OpenAI](../../docs/providers/azure)**
-    - Add `supports_none_reasoning_effort` to all `gpt-5.1-chat`, `gpt-5.1-codex`, and `gpt-5.4` variants (global, EU, standard deployments) — allows passing `reasoning_effort: null` to disable reasoning
+    - Add `supports_none_reasoning_effort` to all `gpt-5.1-chat`, `gpt-5.1-codex`, and `gpt-5.4` variants (global, EU, standard deployments), allowing `reasoning_effort: null` to disable reasoning
 
 - **[Azure OpenAI](../../docs/providers/azure)** — Removed deprecated models
     - Remove `azure/gpt-35-turbo-0301` (deprecated 2025-02-13)
@@ -186,7 +186,7 @@ pip install litellm==1.82.3
     - Day 0 support for `gpt-5.4` and `gpt-5.4-pro` on OpenAI and Azure
 
 - **[Google Gemini](../../docs/providers/gemini)**
-    - Add Gemini 3.x model cost map entries — `gemini-3-flash-preview`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-pro-image-preview`, `gemini-embedding-2-preview`
+    - Add Gemini 3.x model cost map entries: `gemini-3-flash-preview`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-pro-image-preview`, `gemini-embedding-2-preview`
     - Add Gemini 2.0 Flash and Flash Lite to cost map (re-added with updated pricing)
 
 - **[Google Vertex AI](../../docs/providers/vertex)**
@@ -197,7 +197,7 @@ pip install litellm==1.82.3
     - Add `mistral-large-2512`, `mistral-medium-3-1-2508`, `mistral-small-3-2-2506`, `ministral-3-*` variants
 
 - **[Dashscope / Qwen](../../docs/providers/dashscope)**
-    - Add Qwen3 VL multimodal models (`qwen3-vl-235b`, `qwen3-vl-32b` — instruct and thinking variants)
+    - Add Qwen3 VL multimodal models (`qwen3-vl-235b`, `qwen3-vl-32b`, instruct and thinking variants)
     - Add `qwen3-next-80b-a3b` (instruct + thinking), `qwen3.5-plus`, `qwen3-max-2026-01-23`
 
 - **[Black Forest Labs](../../docs/providers/black_forest_labs)**
@@ -207,7 +207,7 @@ pip install litellm==1.82.3
 
 - **[Azure AI](../../docs/providers/azure_ai)**
     - Add xAI Grok models via Azure AI Foundry (`grok-4-1-fast-non-reasoning`, `grok-4-1-fast-reasoning`)
-    - Add Mistral Document AI (`mistral-document-ai-2512`) — OCR mode
+    - Add Mistral Document AI (`mistral-document-ai-2512`) in OCR mode
 
 - **[AWS Bedrock](../../docs/providers/bedrock)**
     - Add `mistral.devstral-2-123b` (256K context, tools)
@@ -218,22 +218,22 @@ pip install litellm==1.82.3
 
 #### Deprecated / Removed Models
 
-**OpenAI** — Legacy models removed from cost map:
+**OpenAI**: Legacy models removed from cost map:
 - `gpt-3.5-turbo-0301`, `gpt-3.5-turbo-0613`, `gpt-3.5-turbo-16k-0613`
 - `gpt-4-0314`, `gpt-4-32k`, `gpt-4-32k-0314`, `gpt-4-32k-0613`, `gpt-4-1106-vision-preview`, `gpt-4-vision-preview`
 - `gpt-4.5-preview`, `gpt-4.5-preview-2025-02-27`
 - `gpt-4o-audio-preview-2024-10-01`, `gpt-4o-realtime-preview-2024-10-01`
 - `o1-mini`, `o1-mini-2024-09-12`, `o1-preview`, `o1-preview-2024-09-12`
 
-**Google Gemini** — Gemini 1.5 and legacy 2.0 variants removed:
+**Google Gemini**: Gemini 1.5 and legacy 2.0 variants removed:
 - All `gemini-1.5-*` variants (flash, flash-8b, pro, and dated versions)
 - `gemini-2.0-flash-exp`, `gemini-2.0-pro-exp-02-05`, `gemini-2.5-flash-preview-04-17`, `gemini-2.5-flash-preview-05-20`
 
-**Google Vertex AI** — PaLM 2 / legacy models removed:
+**Google Vertex AI**: PaLM 2 / legacy models removed:
 - All `chat-bison`, `text-bison`, `codechat-bison`, `code-bison`, `code-gecko` variants
 - Gemini 1.0 Pro, 1.5 Flash/Pro, 2.0 Flash experimental, and preview variants
 
-**Perplexity** — Legacy Llama-sonar models removed:
+**Perplexity**: Legacy Llama-sonar models removed:
 - `llama-3.1-sonar-huge-128k-online`, `llama-3.1-sonar-large/small-128k-chat/online`
 
 ---
@@ -243,27 +243,27 @@ pip install litellm==1.82.3
 #### Features
 
 - **[Responses API](../../docs/response_api)**
-    - Handle `response.failed`, `response.incomplete`, and `response.cancelled` terminal event types in background streaming — previously only `response.completed` was handled - [PR #23492](https://github.com/BerriAI/litellm/pull/23492)
-    - WebSocket streaming support for Responses API — real-time streaming via WebSocket for all providers - [PR #22559](https://github.com/BerriAI/litellm/pull/22559), [PR #22771](https://github.com/BerriAI/litellm/pull/22771)
+    - Handle `response.failed`, `response.incomplete`, and `response.cancelled` terminal event types in background streaming; previously only `response.completed` was handled - [PR #23492](https://github.com/BerriAI/litellm/pull/23492)
+    - WebSocket streaming support for Responses API: real-time streaming via WebSocket for all providers - [PR #22559](https://github.com/BerriAI/litellm/pull/22559), [PR #22771](https://github.com/BerriAI/litellm/pull/22771)
     - WebRTC support for real-time audio/video communication - [PR #23446](https://github.com/BerriAI/litellm/pull/23446)
     - Responses API support for OpenAI-compatible JSON providers (`openai_like`) - [PR #21398](https://github.com/BerriAI/litellm/pull/21398)
     - Route `gpt-5.4+` calls using both tools and reasoning to the Responses API automatically - [PR #23577](https://github.com/BerriAI/litellm/pull/23577)
 
 - **[Anthropic Files API](../../docs/providers/anthropic)**
-    - Full Anthropic Files API support — upload, retrieve, list, and delete files; use file references in messages - [PR #16594](https://github.com/BerriAI/litellm/pull/16594)
+    - Full Anthropic Files API support: upload, retrieve, list, and delete files; use file references in messages - [PR #16594](https://github.com/BerriAI/litellm/pull/16594)
 
 - **[Mistral](../../docs/providers/mistral)**
-    - Voxtral audio transcription support — `mistral/voxtral-mini-*` and `mistral/voxtral-*` for audio transcription via Mistral - [PR #22801](https://github.com/BerriAI/litellm/pull/22801)
+    - Voxtral audio transcription support: `mistral/voxtral-mini-*` and `mistral/voxtral-*` for audio transcription via Mistral - [PR #22801](https://github.com/BerriAI/litellm/pull/22801)
 
 - **[OpenAI](../../docs/providers/openai)**
-    - `litellm.acount_tokens()` public API — async token counting with full OpenAI provider support - [PR #22809](https://github.com/BerriAI/litellm/pull/22809)
+    - `litellm.acount_tokens()` public API: async token counting with full OpenAI provider support - [PR #22809](https://github.com/BerriAI/litellm/pull/22809)
     - Normalize `reasoning_effort` dict to string for chat completion API - [PR #22981](https://github.com/BerriAI/litellm/pull/22981)
 
 - **[OpenRouter](../../docs/providers/openrouter)**
     - Image edit support for OpenRouter models - [PR #22403](https://github.com/BerriAI/litellm/pull/22403)
 
 - **[Google Gemini](../../docs/providers/gemini)**
-    - Gemini 3 — no injected default `thinking_level` when `reasoning_effort` is omitted (matches Gemini API; Flash may default to `high` vs old `minimal`) — [Gemini 3 blog](../../blog/gemini_3)
+    - Gemini 3: no injected default `thinking_level` when `reasoning_effort` is omitted (matches Gemini API; Flash may default to `high` vs old `minimal`). See the [Gemini 3 blog](../../blog/gemini_3)
 
 - **[Google Vertex AI](../../docs/providers/vertex)**
     - VIDEO modality token usage tracking in `completion_tokens_details` - [PR #22550](https://github.com/BerriAI/litellm/pull/22550)
@@ -273,20 +273,20 @@ pip install litellm==1.82.3
 
 - **General**
     - Per-request `enable_json_schema_validation` flag for thread-safe JSON schema validation - [PR #21233](https://github.com/BerriAI/litellm/pull/21233)
-    - Model cost aliases expansion — define aliases in the cost map that inherit pricing from a parent model - [PR #23314](https://github.com/BerriAI/litellm/pull/23314), [PR #23457](https://github.com/BerriAI/litellm/pull/23457)
+    - Model cost aliases expansion: define aliases in the cost map that inherit pricing from a parent model - [PR #23314](https://github.com/BerriAI/litellm/pull/23314), [PR #23457](https://github.com/BerriAI/litellm/pull/23457)
     - Wildcards model support for the Files API - [PR #22740](https://github.com/BerriAI/litellm/pull/22740)
 
 #### Bugs
 
 - **[Anthropic](../../docs/providers/anthropic)**
     - Preserve native tool format (web_search, bash, tool_search, etc.) when guardrails convert tools for the Anthropic Messages API - [PR #23526](https://github.com/BerriAI/litellm/pull/23526)
-    - Enforce `type: "object"` on tool input schemas in `_map_tool_helper` — fixes tool call failures for strict-schema providers - [PR #23103](https://github.com/BerriAI/litellm/pull/23103)
-    - Deduplicate `tool_result` messages by `tool_call_id` — prevents duplicate tool result errors in multi-turn conversations - [PR #23104](https://github.com/BerriAI/litellm/pull/23104)
+    - Enforce `type: "object"` on tool input schemas in `_map_tool_helper`, fixing tool call failures for strict-schema providers - [PR #23103](https://github.com/BerriAI/litellm/pull/23103)
+    - Deduplicate `tool_result` messages by `tool_call_id`, preventing duplicate tool result errors in multi-turn conversations - [PR #23104](https://github.com/BerriAI/litellm/pull/23104)
     - Map `reasoning_effort` to `output_config` for Claude 4.6 models - [PR #22220](https://github.com/BerriAI/litellm/pull/22220)
 
 - **[Google Gemini](../../docs/providers/gemini)**
-    - Correct streaming `finish_reason` for tool calls — was incorrectly returning `null` instead of `tool_calls` - [PR #21577](https://github.com/BerriAI/litellm/pull/21577)
-    - Preserve `$ref` in JSON Schema for Gemini 2.0+ — schema references were being stripped, breaking structured output - [PR #21597](https://github.com/BerriAI/litellm/pull/21597)
+    - Correct streaming `finish_reason` for tool calls; it was incorrectly returning `null` instead of `tool_calls` - [PR #21577](https://github.com/BerriAI/litellm/pull/21577)
+    - Preserve `$ref` in JSON Schema for Gemini 2.0+; schema references were being stripped, breaking structured output - [PR #21597](https://github.com/BerriAI/litellm/pull/21597)
     - Handle `minimal` `reasoning_effort` param for Gemini 3.1 models - [PR #22920](https://github.com/BerriAI/litellm/pull/22920)
 
 - **[Google Vertex AI](../../docs/providers/vertex)**
@@ -294,7 +294,7 @@ pip install litellm==1.82.3
     - Prevent content truncation when `finish_reason` races ahead of content chunks in streaming - [PR #22692](https://github.com/BerriAI/litellm/pull/22692)
     - Strip LiteLLM-internal keys from `extra_body` before merging to Gemini request body - [PR #23131](https://github.com/BerriAI/litellm/pull/23131)
     - Drop unsupported `output_config` parameter from all Vertex AI requests - [PR #22884](https://github.com/BerriAI/litellm/pull/22884)
-    - Skip schema transforms for Gemini 2.0+ tool parameters — avoids breaking native Gemini schema handling - [PR #23265](https://github.com/BerriAI/litellm/pull/23265)
+    - Skip schema transforms for Gemini 2.0+ tool parameters, which avoids breaking native Gemini schema handling - [PR #23265](https://github.com/BerriAI/litellm/pull/23265)
 
 - **[OpenRouter](../../docs/providers/openrouter)**
     - Pattern-based fix for native model double-stripping when provider prefix matches model name - [PR #22320](https://github.com/BerriAI/litellm/pull/22320)
@@ -320,7 +320,7 @@ pip install litellm==1.82.3
     - Pass all custom pricing fields to `register_model` in `completion()` and `embedding()` - [PR #22552](https://github.com/BerriAI/litellm/pull/22552)
 
 - **Tools / Function Calling**
-    - Gracefully repair truncated JSON in tool call arguments — prevents crashes on malformed tool responses - [PR #22503](https://github.com/BerriAI/litellm/pull/22503)
+    - Gracefully repair truncated JSON in tool call arguments, preventing crashes on malformed tool responses - [PR #22503](https://github.com/BerriAI/litellm/pull/22503)
     - Fix `output_item.done` for function calls not emitting `finish_reason` in streaming - [PR #22553](https://github.com/BerriAI/litellm/pull/22553)
     - Preserve thinking block order with multiple web searches - [PR #23093](https://github.com/BerriAI/litellm/pull/23093)
 
@@ -328,7 +328,7 @@ pip install litellm==1.82.3
     - Normalize `content_filtered` finish reason across providers - [PR #23564](https://github.com/BerriAI/litellm/pull/23564)
     - Unify `finish_reason` mapping to OpenAI-compatible values across all providers - [PR #22138](https://github.com/BerriAI/litellm/pull/22138)
     - Fix custom cost tracking on deployments for `/v1/messages` and `/v1/responses` - [PR #23647](https://github.com/BerriAI/litellm/pull/23647)
-    - Fix per-request custom pricing when `router_model_id` has no pricing data — now falls back to model name
+    - Fix per-request custom pricing when `router_model_id` has no pricing data; it now falls back to model name
     - Fix batch list showing stale `validating` status after completion - [PR #22982](https://github.com/BerriAI/litellm/pull/22982)
     - Fix batch retrieve returning raw `output_file_id` when `model_id` is missing - [PR #23194](https://github.com/BerriAI/litellm/pull/23194)
     - Encode batch IDs when `x-litellm-model` header is used - [PR #22653](https://github.com/BerriAI/litellm/pull/22653)
@@ -341,29 +341,29 @@ pip install litellm==1.82.3
 #### Features
 
 - **Virtual Keys**
-    - Add Organization dropdown to Create/Edit Key form — `organization_id` is now a first-class field in Key Ownership - [PR #23595](https://github.com/BerriAI/litellm/pull/23595)
-    - Allow setting `organization_id` on `/key/update` — keys can be assigned or moved to a different organization after creation - [PR #23557](https://github.com/BerriAI/litellm/pull/23557)
-    - Manual Spend Reset for virtual keys from the UI — admins can reset key spend to zero on demand - [PR #22715](https://github.com/BerriAI/litellm/pull/22715)
-    - BYOK (Bring Your Own Key) — client-side provider API key takes precedence over proxy key for Anthropic `/v1/messages` - [PR #22964](https://github.com/BerriAI/litellm/pull/22964)
+    - Add Organization dropdown to Create/Edit Key form: `organization_id` is now a first-class field in Key Ownership - [PR #23595](https://github.com/BerriAI/litellm/pull/23595)
+    - Allow setting `organization_id` on `/key/update`, so keys can be assigned or moved to a different organization after creation - [PR #23557](https://github.com/BerriAI/litellm/pull/23557)
+    - Manual Spend Reset for virtual keys from the UI: admins can reset key spend to zero on demand - [PR #22715](https://github.com/BerriAI/litellm/pull/22715)
+    - BYOK (Bring Your Own Key): client-side provider API key takes precedence over proxy key for Anthropic `/v1/messages` - [PR #22964](https://github.com/BerriAI/litellm/pull/22964)
     - UI login session duration configurable via `LITELLM_UI_SESSION_DURATION` environment variable - [PR #22182](https://github.com/BerriAI/litellm/pull/22182)
     - Auto-redirect UI login to SSO via `auto_redirect_ui_login_to_sso: true` in config.yaml - [PR #23367](https://github.com/BerriAI/litellm/pull/23367)
 
 - **Access Control (RBAC)**
-    - Org Admins can now access team management endpoints — `/team/new`, `/team/update`, `/team/delete`, `/team/member_add`, `/team/member_delete` - [PR #23085](https://github.com/BerriAI/litellm/pull/23085), [PR #23095](https://github.com/BerriAI/litellm/pull/23095)
-    - Org Admins can view and invite internal users — full user management without requiring global admin role - [PR #23080](https://github.com/BerriAI/litellm/pull/23080)
-    - Allow Admin Viewers to access Audit Logs — view-only admin role now includes audit log access - [PR #23419](https://github.com/BerriAI/litellm/pull/23419)
-    - RBAC for Vector Stores and Agents — key/team-level access control for vector store and agent resources - [PR #22858](https://github.com/BerriAI/litellm/pull/22858)
-    - User filter scope (`scope_user_search_to_org`) is now opt-in — previously default-on, causing unintended restriction - [PR #23057](https://github.com/BerriAI/litellm/pull/23057)
+    - Org Admins can now access team management endpoints: `/team/new`, `/team/update`, `/team/delete`, `/team/member_add`, `/team/member_delete` - [PR #23085](https://github.com/BerriAI/litellm/pull/23085), [PR #23095](https://github.com/BerriAI/litellm/pull/23095)
+    - Org Admins can view and invite internal users: full user management without requiring global admin role - [PR #23080](https://github.com/BerriAI/litellm/pull/23080)
+    - Allow Admin Viewers to access Audit Logs; the view-only admin role now includes audit log access - [PR #23419](https://github.com/BerriAI/litellm/pull/23419)
+    - RBAC for Vector Stores and Agents: key/team-level access control for vector store and agent resources - [PR #22858](https://github.com/BerriAI/litellm/pull/22858)
+    - User filter scope (`scope_user_search_to_org`) is now opt-in; it was previously default-on, causing unintended restriction - [PR #23057](https://github.com/BerriAI/litellm/pull/23057)
 
 - **Vector Stores**
-    - Vector Store management endpoints — retrieve, list, update, and delete vector stores via `/v1/vector_stores/*` - [PR #23435](https://github.com/BerriAI/litellm/pull/23435)
+    - Vector Store management endpoints: retrieve, list, update, and delete vector stores via `/v1/vector_stores/*` - [PR #23435](https://github.com/BerriAI/litellm/pull/23435)
 
 - **Teams**
-    - Batch expiry setting for teams — configure a default expiry duration for all team keys - [PR #22705](https://github.com/BerriAI/litellm/pull/22705)
+    - Batch expiry setting for teams: configure a default expiry duration for all team keys - [PR #22705](https://github.com/BerriAI/litellm/pull/22705)
     - Team Admin can reset key spend - [PR #22725](https://github.com/BerriAI/litellm/pull/22725)
 
 - **Internal Users**
-    - Add/Remove Team Membership directly from the Internal Users info page — includes searchable dropdown and role selector; no longer requires navigating to each team - [PR #23638](https://github.com/BerriAI/litellm/pull/23638)
+    - Add/Remove Team Membership directly from the Internal Users info page, including a searchable dropdown and role selector; no longer requires navigating to each team - [PR #23638](https://github.com/BerriAI/litellm/pull/23638)
 
 - **Models**
     - Attach knowledge base to model via UI - [PR #22656](https://github.com/BerriAI/litellm/pull/22656)
@@ -375,13 +375,13 @@ pip install litellm==1.82.3
     - Fix: resolved race condition in `_update_litellm_setting` where `get_config()` could overwrite freshly saved values - [PR #23614](https://github.com/BerriAI/litellm/pull/23614)
 
 - **Usage**
-    - Auto-paginate daily spend data — all entity views (teams, orgs, customers, tags, agents, users) fetch pages progressively with charts updating after each page - [PR #23622](https://github.com/BerriAI/litellm/pull/23622)
+    - Auto-paginate daily spend data: all entity views (teams, orgs, customers, tags, agents, users) fetch pages progressively with charts updating after each page - [PR #23622](https://github.com/BerriAI/litellm/pull/23622)
 
 - **Models / Cost**
-    - Azure Model Router cost breakdown in UI — show per-sub-model `additional_costs` from `hidden_params` in `CostBreakdownViewer` - [PR #23550](https://github.com/BerriAI/litellm/pull/23550)
+    - Azure Model Router cost breakdown in UI: show per-sub-model `additional_costs` from `hidden_params` in `CostBreakdownViewer` - [PR #23550](https://github.com/BerriAI/litellm/pull/23550)
 
 - **User Management**
-    - New `/user/info/v2` endpoint — scoped, paginated replacement for the existing god endpoint that caused memory and stability issues on large installs - [PR #23437](https://github.com/BerriAI/litellm/pull/23437)
+    - New `/user/info/v2` endpoint: scoped, paginated replacement for the existing god endpoint that caused memory and stability issues on large installs - [PR #23437](https://github.com/BerriAI/litellm/pull/23437)
 
 #### Bugs
 
@@ -405,14 +405,14 @@ pip install litellm==1.82.3
 ### Logging
 
 - **[Helicone](../../docs/observability/helicone_integration)**
-    - Add Gemini and Vertex AI support to HeliconeLogger — routes Gemini and Vertex AI requests through the correct Helicone provider URL - [PR #19288](https://github.com/BerriAI/litellm/pull/19288)
+    - Add Gemini and Vertex AI support to HeliconeLogger, routing Gemini and Vertex AI requests through the correct Helicone provider URL - [PR #19288](https://github.com/BerriAI/litellm/pull/19288)
     - Fix correct provider URL for Vertex AI Gemini models - [PR #22603](https://github.com/BerriAI/litellm/pull/22603)
 
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Fix failure path kwargs inconsistency causing dropped traces on failed requests - [PR #22390](https://github.com/BerriAI/litellm/pull/22390)
 
 - **[Vantage](https://vantage.sh)**
-    - Add Vantage integration for FOCUS 1.2 CSV export — export LiteLLM proxy spend data as FinOps Open Cost & Usage Specification reports, with time-windowed filenames to prevent overwrites - [PR #23333](https://github.com/BerriAI/litellm/pull/23333)
+    - Add Vantage integration for FOCUS 1.2 CSV export: export LiteLLM proxy spend data as FinOps Open Cost & Usage Specification reports, with time-windowed filenames to prevent overwrites - [PR #23333](https://github.com/BerriAI/litellm/pull/23333)
 
 - **General**
     - Fix silent metrics race condition causing metric collision across experiments - [PR #23542](https://github.com/BerriAI/litellm/pull/23542)
@@ -430,7 +430,7 @@ No major prompt management changes in this release.
 
 ### Secret Managers
 
-- **[Hashicorp Vault](../../docs/secret_managers)** — Full Hashicorp Vault integration as a config override backend — secrets defined in Vault are fetched at startup and override `config.yaml` values. UI support for managing vault-sourced credentials included - [PR #22939](https://github.com/BerriAI/litellm/pull/22939), [PR #23036](https://github.com/BerriAI/litellm/pull/23036)
+- **[Hashicorp Vault](/docs/secret)**: Full Hashicorp Vault integration as a config override backend, where secrets defined in Vault are fetched at startup and override `config.yaml` values. UI support for managing vault-sourced credentials included - [PR #22939](https://github.com/BerriAI/litellm/pull/22939), [PR #23036](https://github.com/BerriAI/litellm/pull/23036)
 
 ---
 
@@ -462,7 +462,7 @@ No major prompt management changes in this release.
 ## Performance / Loadbalancing / Reliability improvements
 
 - **Fix streaming crashes after ~1 hour** — `LLMClientCache._remove_key()` no longer calls `close()`/`aclose()` on evicted HTTP/SDK clients. In-flight requests were crashing with `RuntimeError: Cannot send a request, as the client has been closed.` after the 1-hour TTL expired. Cleanup now happens only at shutdown via `close_litellm_async_clients()` - [PR #22926](https://github.com/BerriAI/litellm/pull/22926)
-- **Fix OOM / Prisma connection loss** on large installs — unbounded managed-object poll was exhausting Prisma connections after ~60–70 minutes on instances with 336K+ queued response rows - [PR #23472](https://github.com/BerriAI/litellm/pull/23472)
+- **Fix OOM / Prisma connection loss** on large installs: an unbounded managed-object poll was exhausting Prisma connections after ~60–70 minutes on instances with 336K+ queued response rows - [PR #23472](https://github.com/BerriAI/litellm/pull/23472)
 - **Centralize logging kwarg updates** — root cause fix migrating all logging updates to a single function, eliminating kwarg inconsistencies across logging paths - [PR #23659](https://github.com/BerriAI/litellm/pull/23659)
 - **Fix tiktoken cache for non-root offline containers** — tiktoken cache now works correctly in offline environments running as non-root users - [PR #23498](https://github.com/BerriAI/litellm/pull/23498)
 - **Block proxy startup when Redis transaction buffer has no Redis** — prevents silent data loss when `use_redis_transaction_buffer: true` is set without a Redis connection - [PR #23019](https://github.com/BerriAI/litellm/pull/23019)

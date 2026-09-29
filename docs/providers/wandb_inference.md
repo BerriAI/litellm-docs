@@ -188,7 +188,8 @@ Once done, add the `openai-project` header to your request as shown below:
 response = completion(
     model="...",
     extra_headers={"openai-project": "team_name/project_name"},
-    ...
+    # ...
+)
 ```
 
 For more information, see [Personal entities unsupported](https://docs.wandb.ai/guides/inference/usage-limits/#personal-entities-unsupported).

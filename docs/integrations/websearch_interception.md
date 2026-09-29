@@ -1,6 +1,6 @@
 # Web Search Integration
 
-Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Perplexity, Tavily, etc.).
+Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Parallel, Perplexity, Tavily, and others).
 
 ## Quick Start
 
@@ -10,9 +10,9 @@ Add to your `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -37,7 +37,7 @@ search_tools:
 import litellm
 
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "What's the weather in San Francisco today?"}
     ],
@@ -91,6 +91,60 @@ sequenceDiagram
 ```
 
 **Result**: One API call from user → Complete answer with search results
+
+## The Search Tool the Model Sees
+
+Whatever web search tool the request carries, LiteLLM replaces it with its own `litellm_web_search` definition before the model sees it. Anthropic's `web_search_20250305`, the Responses API's `web_search_preview`, Claude Code's `web_search`, and a `litellm_web_search` function tool you define yourself with only a `query` parameter all reach the model as the schema below, in the tool format of the API you called (an Anthropic `input_schema`, a Chat Completions `function.parameters`, or a flat Responses function tool).
+
+```json title="litellm_web_search input schema"
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The search query to execute"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Natural-language description of the goal behind the search, including any source or freshness requirements."
+    },
+    "search_queries": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Two to five short keyword queries (3-6 words each) covering different angles of the objective, e.g. varying names, synonyms, or phrasings. Provide together with objective for the best results."
+    }
+  },
+  "required": ["query"]
+}
+```
+
+`query` is required and is what most search providers receive. `objective` and `search_queries` are optional: they let the model say what it is after and fan out several keyword searches in one tool call. LiteLLM forwards them only to search providers whose API takes that shape natively, which today means [Parallel AI](../search/parallel_ai.md). There the `search_queries` list becomes the provider's queries and `objective` goes alongside it, unless the search tool's `litellm_params` already sets an `objective`, which is kept over the model's. Every other search provider (Perplexity, Tavily, Exa, and the rest) keeps receiving the single `query` string, and a model that fills only `query` behaves exactly as before on every provider.
+
+The optional fields are validated before they are forwarded: a blank `objective` is ignored, `search_queries` has to be an array (a bare string is ignored rather than split into characters), entries that are not non-empty strings are dropped, and only the first five queries are kept, matching Parallel's own cap.
+
+With a Parallel AI search tool configured, a tool call from the model and the request LiteLLM builds from it look like this. The outbound body is what `--detailed_debug` prints as the request sent to `https://api.parallel.ai/v1/search`.
+
+```json title="Tool call emitted by the model"
+{
+  "name": "litellm_web_search",
+  "input": {
+    "query": "latest stable Node.js release",
+    "objective": "Find the most current stable Node.js release version and what changes were included in that release",
+    "search_queries": ["latest stable Node.js release", "Node.js newest version changelog", "current Node.js LTS release"]
+  }
+}
+```
+
+```json title="Request LiteLLM sends to Parallel AI"
+{
+  "objective": "Find the most current stable Node.js release version and what changes were included in that release",
+  "search_queries": ["latest stable Node.js release", "Node.js newest version changelog", "current Node.js LTS release"],
+  "mode": "basic",
+  "advanced_settings": {"max_results": 5}
+}
+```
+
+The same tool call with a Tavily search tool sends Tavily `"query": "latest stable Node.js release"` and nothing from the other two fields. For clients that sent an Anthropic-native `web_search_*` tool, the `server_tool_use` block in the final response still shows only `query`.
 
 ## Supported Providers
 
@@ -192,9 +246,9 @@ See [Search Providers Documentation](../search/index.md) for detailed setup inst
 ```yaml
 model_list:
   # OpenAI
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   # MiniMax
@@ -206,13 +260,13 @@ model_list:
   # Anthropic
   - model_name: claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   # Azure OpenAI
-  - model_name: azure-gpt4
+  - model_name: azure-gpt
     litellm_params:
-      model: azure/gpt-4
+      model: azure/{{openai_large}}
       api_base: https://my-azure.openai.azure.com
       api_key: os.environ/AZURE_API_KEY
 
@@ -236,7 +290,14 @@ search_tools:
     litellm_params:
       search_provider: tavily
       api_key: os.environ/TAVILY_API_KEY
+
+  - search_tool_name: parallel-search
+    litellm_params:
+      search_provider: parallel_ai
+      api_key: os.environ/PARALLEL_API_KEY
 ```
+
+To use Parallel Search, set `search_tool_name: parallel-search` in `websearch_interception_params`.
 
 ## Usage Examples
 
@@ -250,7 +311,7 @@ litellm.callbacks = ["websearch_interception"]
 
 # Make completion with web search tool
 response = await litellm.acompletion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {"role": "user", "content": "What are the latest AI news?"}
     ],
@@ -287,9 +348,9 @@ litellm --config config.yaml
 # Make request
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "What is the weather in San Francisco?"}
     ],

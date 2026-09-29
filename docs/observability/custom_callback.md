@@ -39,7 +39,7 @@ customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
 ## sync 
-response = completion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -48,8 +48,8 @@ for chunk in response:
 ## async
 import asyncio 
 
-def async completion():
-    response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+async def completion():
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -66,6 +66,35 @@ asyncio.run(completion())
 **Proxy-only hooks** (only work with LiteLLM Proxy):
 - `async_post_call_success_hook` - Access user data + modify responses
 - `async_pre_call_hook` - Modify requests before sending
+
+### Per-Attempt Deployment Hooks
+
+`async_log_success_event` and `async_log_failure_event` are documented as request-level hooks: each is meant to fire once per logical client request. The per-attempt deployment hooks below are a different contract entirely: each one is guaranteed to fire once for every real deployment call, including the original attempt, every retry, and every fallback step, with no dedup logic involved. Reach for these, not the request-level hooks, whenever you need a signal per deployment attempt rather than per logical request; a Prometheus-style per-deployment counter or a circuit breaker keyed on individual attempt failures is exactly what these are for.
+
+These work in both the SDK and the proxy:
+
+- `async_pre_call_deployment_hook(kwargs, call_type)` - runs before each deployment call, can modify the request
+- `async_post_call_success_deployment_hook(request_data, response, call_type)` - runs after each successful deployment call
+- `async_post_call_failure_deployment_hook(request_data, exception, call_type, fallback_depth=None)` - runs after each failed deployment call
+
+A fallback chain where the first two deployments fail and the third succeeds calls the failure hook twice and the success hook once, in that order. `request_data` is that attempt's own request kwargs, not shared state carried over from an earlier attempt. `fallback_depth` is a best-effort field on the failure hook: `None` on the original attempt, `1` on the first fallback hop, `2` on the second, and so on.
+
+```python
+from litellm.integrations.custom_logger import CustomLogger
+
+class DeploymentFailureCounter(CustomLogger):
+    def __init__(self):
+        super().__init__()
+        self.failures_by_model = {}
+
+    async def async_post_call_failure_deployment_hook(self, request_data, exception, call_type, fallback_depth=None):
+        model = request_data.get("model", "unknown")
+        self.failures_by_model[model] = self.failures_by_model.get(model, 0) + 1
+        print(f"deployment failure: model={model} exception={type(exception).__name__} fallback_depth={fallback_depth} total={self.failures_by_model[model]}")
+
+counter = DeploymentFailureCounter()
+litellm.callbacks = [counter]
+```
 
 ### Example: Modifying the Response in async_post_call_success_hook
 
@@ -125,7 +154,7 @@ from litellm import completion
 litellm.success_callback = [custom_callback]
 
 response = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -162,8 +191,8 @@ customHandler = MyCustomHandler()
 
 litellm.callbacks = [customHandler]
 
-def async completion():
-    response = await acompletion(model="gpt-3.5-turbo", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+async def completion():
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -186,7 +215,7 @@ async def test_chat_openai():
     try:
         # litellm.set_verbose = True
         litellm.success_callback = [async_test_logging_fn]
-        response = await litellm.acompletion(model="gpt-3.5-turbo",
+        response = await litellm.acompletion(model="{{openai_small}}",
                               messages=[{
                                   "role": "user",
                                   "content": "Hi 👋 - i'm openai"
@@ -238,7 +267,7 @@ def track_cost_callback(kwargs, completion_response, start_time, end_time):
 
 litellm.success_callback = [track_cost_callback]
 
-response = completion(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hello"}])
 ```
 
 ### Log Inputs to LLMs
@@ -249,7 +278,7 @@ def get_transformed_inputs(kwargs):
 
 litellm.input_callback = [get_transformed_inputs]
 
-response = completion(model="claude-2", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="{{anthropic}}", messages=[{"role": "user", "content": "Hello"}])
 ```
 
 ### Send to External Service

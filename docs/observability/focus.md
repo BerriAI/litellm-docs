@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Focus Export (Experimental)
 
-:::caution Experimental feature
+:::warning[Experimental feature]
 Focus Format export is under active development and currently considered experimental.
 Interfaces, schema mappings, and configuration options may change as we iterate based on user feedback.
 Please treat this integration as a preview and report any issues or suggestions to help us stabilize and improve the workflow.
@@ -90,9 +90,9 @@ The service account (or ADC principal) needs the `storage.objects.create` permis
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-your-key
 
 litellm_settings:

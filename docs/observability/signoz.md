@@ -10,7 +10,7 @@ For more details on setting up observability for LiteLLM, check out the [SigNoz 
 
 This guide walks you through setting up observability and monitoring for LiteLLM SDK and Proxy Server using [OpenTelemetry](https://opentelemetry.io/) and exporting logs, traces, and metrics to SigNoz. With this integration, you can observe various models performance, capture request/response details, and track system-level metrics in SigNoz, giving you real-time visibility into latency, error rates, and usage trends for your LiteLLM applications.
 
-Instrumenting LiteLLM in your AI applications with telemetry ensures full observability across your AI workflows, making it easier to debug issues, optimize performance, and understand user interactions. By leveraging SigNoz, you can analyze correlated traces, logs, and metrics in unified dashboards, configure alerts, and gain actionable insights to continuously improve reliability, responsiveness, and user experience.
+Instrumenting LiteLLM in your AI applications with telemetry gives you full observability across your AI workflows, making it easier to debug issues, optimize performance, and understand user interactions. With SigNoz, you can analyze correlated traces, logs, and metrics in unified dashboards, configure alerts, and get concrete insights to improve reliability and responsiveness.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ For more detailed info on instrumenting your LiteLLM SDK applications click [her
 <Tabs>
 <TabItem value="No Code" label="No Code(Recommended)" default>
 
-No-code auto-instrumentation is recommended for quick setup with minimal code changes. It's ideal when you want to get observability up and running without modifying your application code and are leveraging standard instrumentor libraries.
+No-code auto-instrumentation is recommended for quick setup with minimal code changes. It's ideal when you want to get observability up and running without modifying your application code and are using standard instrumentor libraries.
 
 **Step 1:** Install the necessary packages in your Python environment.
 
@@ -74,7 +74,7 @@ from litellm import completion, litellm
 litellm.callbacks = ["otel"]
 
 response = completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{ "content": "What is SigNoz","role": "user"}]
 )
 
@@ -285,7 +285,7 @@ from litellm import completion, litellm
 litellm.callbacks = ["otel"]
 
 response = completion(
-  model="openai/gpt-4o",
+  model="openai/{{openai_large}}",
   messages=[{ "content": "What is SigNoz","role": "user"}]
 )
 

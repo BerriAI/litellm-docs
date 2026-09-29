@@ -43,7 +43,7 @@ pip install litellm==1.84.1
 </TabItem>
 </Tabs>
 
-`v1.84.1` is a patch release on top of [`v1.84.0`](/release_notes/v1.84.0/v1-84-0). It adds day-0 support for Gemini 3.5 Flash and ships two reliability fixes — cross-pod spend accuracy and Vertex AI tool calling.
+`v1.84.1` is a patch release on top of [`v1.84.0`](/release_notes/v1.84.0/v1-84-0). It adds day-0 support for Gemini 3.5 Flash and ships two reliability fixes: cross-pod spend accuracy and Vertex AI tool calling.
 
 ## New Models / Updated Models
 

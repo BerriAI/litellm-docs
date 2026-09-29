@@ -34,7 +34,7 @@ litellm.vector_store_registry = VectorStoreRegistry(
 
 # Make a completion request using your Knowledge Base
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet", 
+    model="anthropic/{{anthropic}}", 
     messages=[{"role": "user", "content": "What does our company policy say about remote work?"}],
     tools=[
         {
@@ -56,9 +56,9 @@ print(response.choices[0].message.content)
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 vector_store_registry:
@@ -95,7 +95,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What does our company policy say about remote work?"}],
     "tools": [
         {
@@ -121,7 +121,7 @@ client = OpenAI(
 
 # Make a completion request with vector_store_ids parameter
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",
+    model="{{anthropic}}",
     messages=[{"role": "user", "content": "What does our company policy say about remote work?"}],
     tools=[
         {
@@ -153,7 +153,7 @@ Filter by metadata attributes.
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "What are the latest updates?"}],
     tools=[{
         "type": "file_search",
@@ -173,7 +173,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "What are the policies?"}],
     tools=[{
         "type": "file_search",
@@ -194,7 +194,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Show me technical docs"}],
     tools=[{
         "type": "file_search",
@@ -215,7 +215,7 @@ response = await litellm.acompletion(
 
 ```python
 response = await litellm.acompletion(
-    model="anthropic/claude-3-5-sonnet",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Find docs"}],
     tools=[{
         "type": "file_search",
@@ -239,7 +239,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What are our policies?"}],
     "tools": [{
         "type": "file_search",
@@ -252,6 +252,73 @@ curl http://localhost:4000/v1/chat/completions \
         }
     }]
   }'
+```
+
+</TabItem>
+</Tabs>
+
+## Restrict Results to a User
+
+Knowledge Bases with access control (a Kendra GenAI index or a data source with document-level ACLs) only return the chunks a given user may see. Pass that identity as Bedrock's `userContext` and LiteLLM forwards it on the Retrieve request. The value is sent as is, so Bedrock validates it: `userId` must be a string. LiteLLM does not check the identity against the proxy key, so only callers you trust to name their users should be able to search a store with ACLs.
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM Python SDK">
+
+```python
+import litellm
+
+response = litellm.vector_stores.search(
+    vector_store_id="YOUR_KNOWLEDGE_BASE_ID",
+    custom_llm_provider="bedrock",
+    query="What does our company policy say about remote work?",
+    extra_body={"userContext": {"userId": "alice@example.com"}},
+)
+```
+
+</TabItem>
+
+<TabItem value="proxy-openai-sdk" label="Proxy (OpenAI SDK)">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:4000", api_key="your-litellm-api-key")
+
+response = client.vector_stores.search(
+    vector_store_id="YOUR_KNOWLEDGE_BASE_ID",
+    query="What does our company policy say about remote work?",
+    extra_body={"userContext": {"userId": "alice@example.com"}},
+)
+```
+
+</TabItem>
+
+<TabItem value="proxy-curl" label="Proxy (curl)">
+
+```bash
+curl http://localhost:4000/v1/vector_stores/YOUR_KNOWLEDGE_BASE_ID/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "query": "What does our company policy say about remote work?",
+    "userContext": {"userId": "alice@example.com"}
+  }'
+```
+
+</TabItem>
+
+<TabItem value="proxy-config" label="Proxy (config.yaml)">
+
+Set `user_context` on the store to apply one identity to every search against it. A `userContext` sent on the request overrides it.
+
+```yaml
+vector_store_registry:
+  - vector_store_name: "bedrock-company-docs"
+    litellm_params:
+      vector_store_id: "YOUR_KNOWLEDGE_BASE_ID"
+      custom_llm_provider: "bedrock"
+      user_context:
+        userId: "service-account@example.com"
 ```
 
 </TabItem>

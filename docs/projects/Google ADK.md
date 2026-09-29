@@ -8,7 +8,7 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 
 root_agent = Agent(
-    model=LiteLlm(model="openai/gpt-4o"),  # Or any LiteLLM-supported model
+    model=LiteLlm(model="openai/{{openai_large}}"),  # Or any LiteLLM-supported model
     name="my_agent",
     description="An agent using LiteLLM",
     instruction="You are a helpful assistant.",

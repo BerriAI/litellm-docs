@@ -34,6 +34,9 @@ Get your API key and endpoint from [Azure AI Studio](https://ai.azure.com/).
 | `azure_ai/FLUX-1.1-pro` | Latest FLUX 1.1 Pro model for high-quality image generation | $0.04 |
 | `azure_ai/FLUX.1-Kontext-pro` | FLUX 1 Kontext Pro model with enhanced context understanding | $0.04 |
 | `azure_ai/flux.2-pro` | FLUX 2 Pro model for next-generation image generation | $0.04 |
+| `azure_ai/FLUX.2-flex` | FLUX 2 Flex model with adjustable `guidance` and `steps` | $0.05 per megapixel ($0.052 at 1024x1024) |
+
+FLUX 2 models are served from Azure's Black Forest Labs route rather than the Azure OpenAI deployment route: `flux.2-pro` requests go to `/providers/blackforestlabs/v1/flux-2-pro` and `FLUX.2-flex` requests go to `/providers/blackforestlabs/v1/flux-2-flex`, both under your `api_base`. The model name is matched case-insensitively, so `azure_ai/flux.2-flex` works too. FLUX 2 Flex is billed per pixel of the generated image, so the cost LiteLLM records follows the `size` (or `width` and `height`) you request; without explicit dimensions it is recorded at 1024x1024, which is what Azure generates by default
 
 ## Image Generation
 
@@ -105,6 +108,34 @@ response = litellm.image_generation(
     api_version="preview",
     size="1024x1024",
     n=1
+)
+
+print(response.data[0].b64_json)  # FLUX 2 returns base64 encoded images
+```
+
+</TabItem>
+
+<TabItem value="flux2flex" label="FLUX 2 Flex">
+
+```python showLineNumbers title="FLUX 2 Flex Image Generation"
+import litellm
+import os
+
+# Set your API credentials
+os.environ["AZURE_AI_API_KEY"] = "your-api-key-here"
+os.environ["AZURE_AI_API_BASE"] = "your-azure-ai-endpoint"  # e.g., https://your-resource.services.ai.azure.com
+
+# Generate image with FLUX 2 Flex, tuning guidance and steps
+response = litellm.image_generation(
+    model="azure_ai/FLUX.2-flex",
+    prompt="A photograph of a red fox in an autumn forest",
+    api_base=os.environ["AZURE_AI_API_BASE"],
+    api_key=os.environ["AZURE_AI_API_KEY"],
+    api_version="preview",
+    size="1536x1024",
+    n=1,
+    guidance=4.5,
+    steps=32,
 )
 
 print(response.data[0].b64_json)  # FLUX 2 returns base64 encoded images
@@ -201,8 +232,17 @@ model_list:
     model_info:
       mode: image_generation
 
+  - model_name: azure-flux-2-flex
+    litellm_params:
+      model: azure_ai/FLUX.2-flex
+      api_key: os.environ/AZURE_AI_API_KEY
+      api_base: os.environ/AZURE_AI_API_BASE
+      api_version: preview
+    model_info:
+      mode: image_generation
+
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -224,7 +264,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",  # Your proxy URL
-    api_key="sk-1234"                  # Your proxy API key
+    api_key="sk-<your-litellm-api-key>"                  # Your proxy API key
 )
 
 # Generate image with FLUX Kontext Pro
@@ -250,7 +290,7 @@ response = litellm.image_generation(
     model="litellm_proxy/azure-flux-11-pro",
     prompt="A cyberpunk warrior in a neon-lit alleyway",
     api_base="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 print(response.data[0].url)
@@ -263,7 +303,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Azure AI Image Generation via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "azure-flux-kontext",
     "prompt": "A cozy coffee shop interior with warm lighting and rustic wooden furniture",
@@ -342,7 +382,7 @@ asyncio.run(edit_image())
 
 ```bash showLineNumbers title="Image Edit via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'model="azure-flux-2-pro"' \
 --form 'prompt="Add sunglasses to the person"' \
 --form 'image=@"input_image.png"'
@@ -357,7 +397,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 response = client.images.edit(
@@ -384,6 +424,21 @@ Azure AI Image Generation supports the following OpenAI-compatible parameters:
 | `size` | string | Image dimensions | `"1024x1024"` | `"512x512"`, `"1024x1024"` |
 | `api_base` | string | Your Azure AI endpoint URL | Required | `"https://your-endpoint.eastus2.inference.ai.azure.com/"` |
 | `api_key` | string | Your Azure AI API key | Required | Environment variable or direct value |
+
+### FLUX 2 parameters
+
+FLUX 2 Pro and FLUX 2 Flex take `n`, `size`, `output_format`, `seed`, `safety_tolerance`, and `aspect_ratio`, plus the Black Forest Labs names `width`, `height`, `num_images`, `guidance`, and `steps`. `size` is sent as `width` and `height` (`"1536x1024"` becomes `width: 1536, height: 1024`), `n` is sent as `num_images`, and `size: "auto"` sends no dimensions so Azure picks its default. A `size` that is not `WxH`, such as `"large"`, is rejected with a 400 naming the expected format. The OpenAI-only fields `user`, `quality`, `background`, `moderation`, and `output_compression` are accepted and dropped, so clients built for `gpt-image-1` keep working without `drop_params`. Any other unsupported field is rejected unless `drop_params` is set. Azure returns one image per request for FLUX 2 models regardless of `n`
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `size` | string | `WxH` dimensions, or `"auto"` for Azure's default | `"1536x1024"` |
+| `width`, `height` | integer | Dimensions in pixels, an alternative to `size` | `1536`, `1024` |
+| `output_format` | string | Image encoding | `"jpeg"`, `"png"` |
+| `seed` | integer | Seed for reproducible output | `42` |
+| `safety_tolerance` | integer | Content moderation strictness | `2` |
+| `aspect_ratio` | string | Aspect ratio of the generated image | `"16:9"` |
+| `guidance` | float | Prompt adherence (FLUX 2 Flex) | `4.5` |
+| `steps` | integer | Diffusion steps (FLUX 2 Flex) | `32` |
 
 ## Getting Started
 

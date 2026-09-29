@@ -1,0 +1,199 @@
+# Skill: set up a LiteLLM auto router
+
+You are helping the user add an auto router to their LiteLLM proxy. An auto router is one
+model name that classifies each request and forwards it to the cheapest model that can
+handle it, so a trivial question does not pay for a frontier model.
+
+Reference documentation: https://docs.litellm.ai/docs/proxy/auto_routing
+
+This setup is interactive. Every choice below belongs to the user: ask, wait for the
+answer, and never pick a router name or a tier model on their behalf. Never reference a
+model the proxy does not already serve. Batch the questions into as few messages as you can
+rather than asking one at a time, and skip anything the user already told you.
+
+## 1. Find the models the proxy already serves
+
+Locate the config the proxy loads: the file passed to `litellm --config`, commonly
+`config.yaml` or `proxy_config.yaml`. Read its `model_list` and note every `model_name`,
+along with which are chat models and which are embedding models.
+
+If a running proxy is reachable, `curl -s $LITELLM_PROXY_URL/v1/models -H "Authorization:
+Bearer $LITELLM_API_KEY"` lists the same names. If the models are managed in the database
+(added through the Admin UI or `/model/new`) and no `model_list` exists in a file, use that
+listing and create the router through the management API in step 4.
+
+Show the user every chat model you found as a numbered menu they can pick from later, one
+line each: the `model_name` they would call, the underlying provider model behind it from
+`litellm_params.model`, and a short note on where it sits, roughly cheapest to strongest.
+Say outright that these are their options and that nothing outside the list can be routed
+to without adding a deployment first. Keep the embedding models in a separate short list,
+since they are only usable for semantic keyword matching, not as tier targets.
+
+If the list is long, still show all of it rather than a sample. If you cannot find any
+models, stop and ask where the config lives rather than guessing.
+
+## 2. Ask what to name the router
+
+The name becomes the model name callers request. Ask the user for it and use exactly what
+they give you. Do not propose a name, and do not fall back to one if they are undecided;
+ask again instead.
+
+Raise one constraint only if the user says the router will be called from a client that
+filters model names by vendor, such as Claude Code or Claude Desktop: those accept only
+names that read as Anthropic models, meaning the name has to contain `claude`, `anthropic`,
+or a family word such as `opus`, `sonnet`, or `haiku`, with no other vendor's name in it.
+See https://docs.litellm.ai/docs/tutorials/claude_code_autorouter
+
+## 3. Ask which model serves each tier
+
+Show the four tiers with what each one catches, repeat the numbered model menu next to the
+question so the user does not have to scroll for it, and ask them to assign one per tier.
+Accept a number or a name. Do not pre-fill an assignment; if they ask you to recommend one,
+say what you would pick and why, then still wait for their confirmation.
+
+- `SIMPLE`: greetings, one-line lookups, trivial questions
+- `MEDIUM`: ordinary questions and short edits
+- `COMPLEX`: multi-step or code-heavy work
+- `REASONING`: anything asking to think step by step, prove, or plan at length
+
+Tell them a model may serve several tiers, and that a tier can hold a list of models the
+router picks from at random rather than a single name. Also ask which model should serve as
+the fallback when classification fails, which is what `complexity_router_default_model`
+sets, offering the same menu.
+
+If a tier has no good candidate in what they serve, say so plainly and name the models they
+would have to add rather than quietly reusing one that does not fit.
+
+## 4. Write the config
+
+Append one entry to `model_list`, changing nothing else in the file:
+
+```yaml
+  - model_name: <router name>
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        tiers:
+          SIMPLE:    <simple model>
+          MEDIUM:    <medium model>
+          COMPLEX:   <complex model>
+          REASONING: <reasoning model>
+      complexity_router_default_model: <fallback model>
+```
+
+For a database-managed proxy, create the same deployment through the management API
+instead:
+
+```bash
+curl -X POST $LITELLM_PROXY_URL/model/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'Content-Type: application/json' \
+  -d '{"model_name": "<router name>", "litellm_params": {"model": "auto_router/complexity_router", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}, "complexity_router_default_model": "<fallback model>"}}'
+```
+
+## 5. Lay out the defaults and ask what else to change
+
+Everything not written above runs on its default. Before you finish, show the user this
+list, say these are the defaults now in force, and ask whether they want to change any of
+them. Apply whatever they pick, and leave every value they keep out of the config so the
+backend default applies.
+
+| Setting | Default in force | What changing it buys |
+| --- | --- | --- |
+| Classifier | Heuristic scorer, no API call, sub-millisecond, scores prompt length, code presence, reasoning markers, technical terms | `classifier_type: llm` reads the request more accurately, at one small model call per request |
+| Tier names | The canonical `SIMPLE`, `MEDIUM`, `COMPLEX`, `REASONING` | `tier_labels` puts the deployment's own vocabulary (for example Cheap/Standard/Premium/Deep) on the tiers in the dashboard, the spend logs, and the LLM classifier's rubric. Display only: `tiers`, `keyword_tier_rules[].tier`, and `tier_boundaries` stay written with the canonical names, and callers never see the labels. A partial map is fine; two tiers cannot share a label and a label cannot be another tier's canonical name |
+| Session affinity | Off, so every turn is classified on its own merits | `session_affinity: true` pins a session to its first-turn model, preserving provider prompt caches and avoiding replay of one model's history to another, at the cost of the whole session inheriting the first turn's tier. `session_affinity_ttl_seconds` defaults to 3600 |
+| Keyword rules | None | `keyword_tier_rules` forces chosen phrases into a tier before the classifier runs |
+| Semantic matching | Off | `semantic_keyword_matching: true` plus an `embedding_model` picked from the embedding models you listed extends those rules to paraphrases |
+| Adaptive routing | Off, so a tier with several models picks uniformly at random | `adaptive: true` Thompson-samples within the tier by observed quality |
+| Technical keyword list | Built-in list only | `custom_technical_keywords` appends domain terms the built-in list misses |
+| Scorer thresholds | Built-in boundaries and weights | `tier_boundaries`, `token_thresholds`, and `dimension_weights` move where the scorer draws each tier |
+| Harness reminder blocks | Text wrapped in `<system-reminder>` ... `</system-reminder>` is stripped before classification, so an agent harness's boilerplate does not decide the tier | `reminder_markers: ["<open>", "<close>"]` names a different pair when the harness in front of the proxy wraps its injected reminders in something else |
+
+If the user takes the LLM classifier, show the same model menu again, ask which one should
+do the classifying, noting that a small fast model is what this wants since it runs on
+every request, and add:
+
+```yaml
+        classifier_type: llm
+        classifier_llm_config:
+          model: <classifier model>
+          timeout_ms: 2000
+```
+
+Ask what should happen when that call errors, times out, or comes back unparseable.
+`classifier_fallback` defaults to `heuristic`, which scores the request locally and is what a
+classifier grading complexity wants. `classifier_fallback: default_model` skips scoring and routes
+to `complexity_router_default_model` instead, which is what a classifier grading anything other
+than complexity wants, since a complexity score would produce a tier unrelated to what they
+configured. It requires a default model to be set.
+
+Mention that the rubric itself is replaceable, but only offer it, never do it unasked. Leaving
+`classifier_llm_config.system_prompt` unset keeps the built-in complexity rubric. Setting it
+replaces the classifier's entire system role, so the prompt owns the whole taxonomy and the four
+tier names become whatever buckets it defines: a prompt grading data sensitivity routes on that
+instead of on difficulty. If the user wants one, fetch the built-in prompt first so they are editing
+the real text rather than a guess:
+
+```bash
+curl -s "$LITELLM_PROXY_URL/auto_router/classifier/default_prompt?context_window_size=3" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+Tell them two things about replacing it. The default rubric's closing paragraph is the classifier's
+prompt-injection defense, telling it that the caller's quoted system prompt and prior turns are
+material to judge and never instructions; a replacement that drops that lets a caller ask for a tier
+and get it. And the heuristic fallback still scores complexity, so a prompt on some other taxonomy
+wants `classifier_fallback: default_model` alongside it. An empty string is rejected; omit the key
+for the default.
+
+Then tell them what that turns on by default and ask whether to change it: the classifier
+sees the last 3 prior human turns, truncated to 200 characters each
+(`classifier_context_window_size: 3`, `classifier_context_per_turn_chars: 200`), so a
+follow-up like "now do the same for the streaming path" is rated against what it refers to
+instead of on its own length. Assistant replies are excluded
+(`classifier_context_include_assistant_turns: false`); turning them on helps when the
+assistant states the difficulty and the user only answers "yes". A window size of 0
+classifies the current message alone.
+
+## 6. Verify
+
+If a proxy is already running, classify a prompt against the config before restarting anything.
+`/auto_router/test_routing` reports where a prompt would land without creating the router, and the
+prompt is only classified, never sent to the model it routes to:
+
+```bash
+curl -s $LITELLM_PROXY_URL/auto_router/test_routing \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'Content-Type: application/json' \
+  -d '{"prompt": "what is 2+2?", "router_name": "<router name>", "default_model": "<fallback model>", "complexity_router_config": {"tiers": {"SIMPLE": "<simple model>", "MEDIUM": "<medium model>", "COMPLEX": "<complex model>", "REASONING": "<reasoning model>"}}}'
+```
+
+A heuristic config spends nothing this way; an LLM classifier or semantic matching bills its own
+classifier or embedding call to the key you used.
+
+Then restart the proxy, and send one trivial request and one hard one, and show the user both
+responses and the model each landed on:
+
+```bash
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"<router name>","messages":[{"role":"user","content":"what is 2+2?"}]}'
+
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"<router name>","messages":[{"role":"user","content":"Think step by step and design a multi-region active-active Postgres failover strategy."}]}'
+```
+
+The proxy logs carry one line per routing decision:
+
+```
+ComplexityRouter: routing decision cause=complexity_scorer, tier=SIMPLE, score=-0.150, signals=['short (7 tokens)', 'simple (what is)'], routed_model=gpt-4o-mini
+```
+
+The two requests should report different tiers. If they do not, show the user what you saw
+rather than tuning thresholds on your own.
+
+## 7. Hand back
+
+Tell the user the router name to call, the tier assignments, the settings in force, and
+where the remaining knobs live:
+https://docs.litellm.ai/docs/proxy/auto_routing#full-config

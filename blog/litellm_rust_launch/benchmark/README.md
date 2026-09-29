@@ -14,7 +14,7 @@ the LiteLLM Python path, against the same local mock upstream.
 
 ## Files
 
-- `main.rs` / `Cargo.toml` — mock upstream, the Rust gateway, and a microsecond
+- `main.rs` / `Cargo.toml`: mock upstream, the Rust gateway, and a microsecond
   resolution load client. Modes: `mock`, `gateway`, `bench <url> <total> <conc>`.
 - `llm_app.py` — the LiteLLM (Python) request path over uvicorn.
 - `orchestrate_compare.py` — starts all three, runs the load, prints median and p95

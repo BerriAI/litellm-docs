@@ -3,7 +3,7 @@ import Image from '@theme/IdealImage';
 # New Relic
 
 ## Prerequisite
-In order to use LiteLLM with New Relic, you will need to have a New Relic account and [license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). If you do not have a New Relic account yet, you can create a [free tier account](https://newrelic.com/pricing/free-tier).
+To use LiteLLM with New Relic, you will need to have a New Relic account and [license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). If you do not have a New Relic account yet, you can create a [free tier account](https://newrelic.com/pricing/free-tier).
 
 This page covers using New Relic with LiteLLM in proxy mode. You can also use New Relic with the LiteLLM SDK by including the New Relic Python Agent in your application. Please refer to the New Relic AI Monitoring [documentation](https://docs.newrelic.com/docs/ai-monitoring/intro-to-ai-monitoring/).
 
@@ -40,9 +40,9 @@ The [New Relic Python Agent](https://docs.newrelic.com/docs/apm/agents/python-ag
 
 The official LiteLLM containers include the New Relic callback, but do not include the New Relic Python Agent. The easiest way to include the New Relic Python Agent is to create a new container image that layers the agent on top of an existing LiteLLM image. By doing this, you will be able to define the official LiteLLM image version to use as a base.
 
-In order to build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add new entrypoint and supervisord configuration files. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
+To build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile` and `entrypoint.sh` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add a new entrypoint. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
 
-To build the container image, copy the `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files to a directory. From this directory, you can build an image from the CLI using the following command.
+To build the container image, copy the `Dockerfile` and `entrypoint.sh` files to a directory. From this directory, you can build an image from the CLI using the following command.
 
 ```shell
 docker build -f Dockerfile -t litellm-newrelic:local .
@@ -64,7 +64,7 @@ You may use any docker name for the output image that suits your image naming po
 
 #### `Dockerfile`
 
-The Dockerfile defines the layers added on top of an official LiteLLM container. You should pick the version you want to use by setting `BASE_TAG` when you actually build the image. This Dockerfile installs the New Relic Python Agent, then adds new supervisor and entrypoint files that run LiteLLM with the New Relic Python Agent.
+The Dockerfile defines the layers added on top of an official LiteLLM container. You should pick the version you want to use by setting `BASE_TAG` when you actually build the image. This Dockerfile installs the New Relic Python Agent, then adds a new entrypoint that runs LiteLLM with the New Relic Python Agent.
 
 ```dockerfile
 ARG BASE_IMAGE=docker.litellm.ai/berriai/litellm
@@ -76,8 +76,7 @@ USER root
 # Install New Relic agent (ensurepip bootstraps pip in case base image venv omits it)
 RUN python -m ensurepip && python -m pip install --no-cache-dir 'newrelic>=12.1.0,<13'
 
-# Copy New Relic-specific configuration files
-COPY supervisord.conf /etc/supervisord_newrelic.conf
+# Copy the New Relic entrypoint
 COPY entrypoint.sh /app/docker/newrelic/entrypoint.sh
 RUN chmod +x /app/docker/newrelic/entrypoint.sh
 
@@ -89,79 +88,11 @@ LABEL org.opencontainers.image.description="LiteLLM with New Relic APM and AI mo
 
 #### `entrypoint.sh`
 
-This `entrypoint.sh` is a copy of LiteLLM's default `docker/prod_entrypoint.sh`, modified to run either supervisord or the `litellm` process wrapped by the New Relic Python Agent.
+This `entrypoint.sh` replaces LiteLLM's default `docker/prod_entrypoint.sh` and runs the `litellm` process wrapped by the New Relic Python Agent.
 
 ```sh
 #!/bin/sh
-# This entry point is a copy of the litellm docker/prod_entrypoint.sh file
-# with these changes:
-#
-#  - Use the New Relic-specific supervisor file
-#  - Wrap the litellm command with New Relic Python Agent
-
-if [ "$SEPARATE_HEALTH_APP" = "1" ]; then
-    export LITELLM_ARGS="$@"
-    export SUPERVISORD_STOPWAITSECS="${SUPERVISORD_STOPWAITSECS:-3600}"
-    exec supervisord -c /etc/supervisord_newrelic.conf
-fi
-
 exec newrelic-admin run-program litellm "$@"
-```
-
-#### `supervisord.conf`
-
-If you use supervisord to run LiteLLM alongside the separate health app, this version will ensure the main LiteLLM process is started with the New Relic Python Agent.
-
-```ini
-# This config is a copy of the litellm docker/supervisord.conf with a change to the `main` program
-# to wrap the litellm command with the New Relic Python Agent.
-
-[supervisord]
-nodaemon=true
-loglevel=info
-logfile=/tmp/supervisord.log
-pidfile=/tmp/supervisord.pid
-
-[group:litellm]
-programs=main,health
-
-[program:main]
-command=sh -c 'exec newrelic-admin run-program python -m litellm.proxy.proxy_cli --host 0.0.0.0 --port=4000 $LITELLM_ARGS'
-autostart=true
-autorestart=true
-startretries=3
-priority=1
-exitcodes=0
-stopasgroup=true
-killasgroup=true
-stopwaitsecs=%(ENV_SUPERVISORD_STOPWAITSECS)s
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
-stdout_logfile_maxbytes = 0
-stderr_logfile_maxbytes = 0
-environment=PYTHONUNBUFFERED=true
-
-[program:health]
-command=sh -c '[ "$SEPARATE_HEALTH_APP" = "1" ] && exec uvicorn litellm.proxy.health_endpoints.health_app_factory:build_health_app --factory --host 0.0.0.0 --port=${SEPARATE_HEALTH_PORT:-4001} || exit 0'
-autostart=true
-autorestart=true
-startretries=3
-priority=2
-exitcodes=0
-stopasgroup=true
-killasgroup=true
-stopwaitsecs=%(ENV_SUPERVISORD_STOPWAITSECS)s
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
-stdout_logfile_maxbytes = 0
-stderr_logfile_maxbytes = 0
-environment=PYTHONUNBUFFERED=true
-
-[eventlistener:process_monitor]
-command=python -c "from supervisor import childutils; import os, signal; [os.kill(os.getppid(), signal.SIGTERM) for h,p in iter(lambda: childutils.listener.wait(), None) if h['eventname'] in ['PROCESS_STATE_FATAL', 'PROCESS_STATE_EXITED'] and dict([x.split(':') for x in p.split(' ')])['processname'] in ['main', 'health'] or childutils.listener.ok()]"
-events=PROCESS_STATE_EXITED,PROCESS_STATE_FATAL
-autostart=true
-autorestart=true
 ```
 
 ### Running from LiteLLM source
@@ -208,7 +139,7 @@ litellm_settings:
     turn_off_message_logging: true
 ```
 
-The New Relic callback also utilizes an environment variable option to disable recording content. This environment variable defaults to `true`. You can turn off recording content messages by setting the following environment variable to `false`.
+The New Relic callback also reads an environment variable option to disable recording content. This environment variable defaults to `true`. You can turn off recording content messages by setting the following environment variable to `false`.
 
 ```shell
 NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED=false
@@ -234,6 +165,48 @@ The New Relic LiteLLM Extension will send telemetry to New Relic so that the mes
 NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_ATTRIBUTE_VALUE=4095
 NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100000
 ```
+
+
+## Per-team routing (OTel v2)
+
+Each LiteLLM team can send its traces and cost metrics to its own New Relic account, using that team's own ingest license key. Requests from teams without a configured key export nothing to New Relic.
+
+Requires the proxy to run with:
+
+```shell
+LITELLM_OTEL_V2=true
+```
+
+Configure the team callback (proxy admin or org admin):
+
+```shell
+curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
+  -H 'Authorization: Bearer <master-or-admin-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "newrelic",
+    "callback_type": "success",
+    "callback_vars": {
+      "newrelic_api_key": "<team ingest license key, 40 chars ending NRAL>",
+      "newrelic_region": "us"
+    }
+  }'
+```
+
+`newrelic_region` accepts `us` or `eu` and picks the data center for both traces (OTLP) and cost metrics (Metric API). The key is stored encrypted and reads back masked. Request bodies cannot supply `newrelic_api_key` or `newrelic_region`; only admin-configured team or key callback settings are honored.
+
+Traces arrive as OTLP `gen_ai.*` spans with `litellm.team.id`, `litellm.team.alias` and `litellm.cost.*` attributes. Cost metrics arrive as `litellm.requests`, `litellm.cost.usd`, `litellm.tokens.*` counts and a `litellm.request.duration_ms` summary, faceted by `team_id`, `team_alias`, `model_group`, `model`, `custom_llm_provider` and `status`.
+
+Team budgets arrive as two gauges faceted by `team_id` and `team_alias`: `litellm.team.max_budget` is the team's configured `max_budget`, and `litellm.team.remaining_budget` is `max_budget` minus the team's spend including the request that produced it. Teams without a `max_budget` send neither gauge. Query them in NRQL with `SELECT latest(litellm.team.remaining_budget) FROM Metric FACET team_alias`.
+
+Optional operator-level fallback for traffic without team credentials:
+
+```shell
+NEW_RELIC_LICENSE_KEY=<operator ingest key>
+NEW_RELIC_REGION=us
+```
+
+With `LITELLM_OTEL_V2=true` the `newrelic` callback exports over OTLP instead of loading the Python agent; `NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED=false` still disables message-content capture on the OTLP path. Note the OTLP path feeds distributed tracing, dashboards, NRQL and alerting; it does not populate the New Relic AI Monitoring product UI.
 
 ## Support
 

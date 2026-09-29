@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `empiriolabs/` |
 | Link to Provider Doc | [EmpirioLabs AI Documentation ↗](https://docs.empiriolabs.ai) |
 | Base URL | `https://api.empiriolabs.ai/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage), `/responses` |
+| Supported Operations | [`/chat/completions`](/docs/providers/empiriolabs#usage---litellm-python-sdk), `/responses` |
 
 <br />
 <br />

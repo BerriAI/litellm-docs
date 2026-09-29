@@ -24,7 +24,7 @@ Route Claude Code Max subscription traffic through LiteLLM AI Gateway.
 
 Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/2d069b9e3bcc4cecaa5eb27a72ba7b3c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/2d069b9e3bcc4cecaa5eb27a72ba7b3c" frameBorder="0" allowFullScreen></iframe>
 
 ## Prerequisites
 
@@ -40,24 +40,22 @@ Create a `config.yaml` with the critical `forward_client_headers_to_llm_api: tru
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
 
-  - model_name: claude-3-5-sonnet-20241022
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
 
-  - model_name: claude-3-5-haiku-20241022
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-3-5-haiku-20241022
+      model: anthropic/{{anthropic_large}}
 
 general_settings:
-  forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
-
-litellm_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
+  forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
 ```
 
-:::info Why `forward_client_headers_to_llm_api`?
+:::info[Why `forward_client_headers_to_llm_api`?]
 
 This setting forwards the user's OAuth token (in the `Authorization` header) through LiteLLM to the Anthropic API, enabling per-user authentication with their Max subscription while LiteLLM handles tracking and controls.
 
@@ -269,18 +267,20 @@ For more granular control, you can enable header forwarding only for specific mo
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
 
-  - model_name: claude-3-5-haiku-20241022
+  - model_name: {{anthropic_large}}
     litellm_params:
-      model: anthropic/claude-3-5-haiku-20241022
+      model: anthropic/{{anthropic_large}}
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
   model_group_settings:
     forward_client_headers_to_llm_api:
       - anthropic-claude
-      - claude-3-5-haiku-20241022
+      - {{anthropic_large}}
 ```
 
 ### Budget Controls
@@ -291,14 +291,12 @@ Set up per-user budgets while using Max subscriptions:
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: anthropic/{{anthropic}}
 
 general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
   forward_client_headers_to_llm_api: true
   database_url: "postgresql://..."
-
-litellm_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 Then create virtual keys with budgets:

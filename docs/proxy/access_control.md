@@ -6,7 +6,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 
 ### Video Walkthrough
 
-<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.loom.com/embed/a980e25027ad4ecc9e8db1af2777b2a2" frameBorder="0" allowFullScreen></iframe>
 
 <TenancyDiagram />
 
@@ -56,6 +56,19 @@ LiteLLM has two types of roles:
 |-----------|-------------|
 | `org_admin` | Admin over a specific organization. Can create teams and users within their organization ✨ **Premium Feature** |
 | `team_admin` | Admin over a specific team. Can manage team members, update team member permissions, and create keys for their team. ✨ **Premium Feature** |
+
+## Usage dashboard visibility
+
+The Usage page shows different data depending on the selected view and the signed-in user's role:
+
+| View | What it shows |
+| --- | --- |
+| Personal usage | The signed-in user's aggregate usage. If the user belongs to multiple teams, this view does not split their personal usage by team. |
+| Team usage | The complete usage for the selected team, not only the signed-in user's contribution to that team. |
+| Organization usage | Aggregate usage for an organization, when the user's organization role permits access. |
+| Global usage | Platform-wide usage for proxy admins and proxy admin viewers. |
+
+The LiteLLM Admin UI does not host custom dashboards. For a custom view such as per-user usage within each team, query the spend data through the management API or export telemetry to an external system. See [Prometheus metrics](./prometheus.md) and [OpenTelemetry](../observability/opentelemetry_v2.md) for Grafana-compatible exports.
 
 ## What Can Each Role Do?
 
@@ -121,7 +134,7 @@ An internal user can create API keys (when allowed by team-specific permissions)
 
 ### Internal User Viewer - Read-Only Access
 
-:::warning DEPRECATED
+:::warning[DEPRECATED]
 This role is deprecated in favor of team/org specific roles. Use `org_admin` or `team_admin` roles for better granular control over user permissions within organizations and teams.
 :::
 
@@ -144,9 +157,7 @@ An internal user viewer can view their own information but cannot create or dele
 
 ## Organization/Team Specific Roles
 
-:::info 
-Organization/Team specific roles are premium features. You need to be a LiteLLM Enterprise user to use them. [Get a 30 day trial here](https://www.litellm.ai/#trial).
-:::
+<EnterpriseFeature />
 
 These roles are scoped to specific organizations or teams. Users with these roles can only manage resources within their assigned organization or team.
 
@@ -186,22 +197,22 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 
 **What they cannot do:**
 - Create new teams
-- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`) — only a proxy admin can do this
+- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`); only a proxy admin can do this
 - Add/remove global proxy models to their team
 
-:::info Team budget raises
+:::info[Team budget raises]
 On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or clearing the cap) is reserved for proxy admins so a team admin cannot grow spend authority on their own. Org-scoped teams must also stay within the organization budget.
 :::
 
 **Who should be a team admin:** Team leads who need to manage their team's API access without bothering IT.
 
-:::info How to create a team admin
+:::info[How to create a team admin]
 
 You need to be a LiteLLM Enterprise user to assign team admins. [Get a 30 day trial here](https://www.litellm.ai/#trial).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"team_id": "team-123", "member": {"role": "admin", "user_id": "user@company.com"}}'
 ```
@@ -267,7 +278,7 @@ By default, team members can only:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/permissions_list?team_id=team-123' \
-    --header 'Authorization: Bearer sk-1234'
+    --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Expected Response:
@@ -283,7 +294,7 @@ Expected Response:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "team_id": "team-123",
@@ -353,15 +364,15 @@ Any user with role=`proxy_admin` can create a new organization
 
 **Usage**
 
-[**API Reference for /organization/new**](https://litellm-api.up.railway.app/#/organization%20management/new_organization_organization_new_post)
+[**API Reference for /organization/new**](https://docs.litellm.ai/api-reference/#/organization%20management/new_organization_organization_new_post)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/organization/new' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "organization_alias": "marketing_department",
-        "models": ["gpt-4"],
+        "models": ["{{openai_large}}"],
         "max_budget": 20
     }'
 ```
@@ -375,7 +386,7 @@ Expected Response
   "budget_id": "98754244-3a9c-4b31-b2e9-c63edc8fd7eb",
   "metadata": {},
   "models": [
-    "gpt-4"
+    "{{openai_large}}"
   ],
   "created_by": "109010464461339474872",
   "updated_by": "109010464461339474872",
@@ -395,7 +406,7 @@ Users with the following roles can call `/organization/member_add`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/organization/member_add' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23", "member": {"role": "org_admin", "user_id": "ishaan@berri.ai"}}'
 ```
@@ -406,7 +417,7 @@ Create a Virtual Key for user_id = `ishaan@berri.ai`. The User can then use the 
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
             "user_id": "ishaan@berri.ai"
@@ -420,7 +431,7 @@ Expected Response
   "models": [],
   "user_id": "ishaan@berri.ai",
   "key": "sk-7shH8TGMAofR4zQpAAo6kQ",
-  "key_name": "sk-...o6kQ",
+  "key_name": "sk-...o6kQ"
 }
 ```
 
@@ -446,7 +457,7 @@ Expected Response
 {
   "team_alias": "engineering_team",
   "team_id": "01044ee8-441b-45f4-be7d-c70e002722d8",
-  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23",
+  "organization_id": "ad15e8ca-12ae-46f4-8659-d02debef1b23"
 }
 ```
 
@@ -467,7 +478,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
     -d '{"team_id": "01044ee8-441b-45f4-be7d-c70e002722d8", "member": {"role": "admin", "user_id": "john@company.com"}}'
 ```
 
-Now `john@company.com` is a team admin. They can manage the `engineering_team` — add members, update rate limits, keep or lower the team budget, create keys — but they can't touch other teams or raise the team budget above its current cap.
+Now `john@company.com` is a team admin. They can manage the `engineering_team` (add members, update rate limits, keep or lower the team budget, create keys) but they can't touch other teams or raise the team budget above its current cap.
 
 Create a Virtual Key for the team admin:
 

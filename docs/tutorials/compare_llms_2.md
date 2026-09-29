@@ -19,8 +19,8 @@ given test set using litellm
 
 <div class="cell code" id="fBkbl4Qo9pvz">
 
-``` python
-!uv add litellm
+```bash
+uv add litellm
 ```
 
 </div>
@@ -73,10 +73,10 @@ os.environ['ANTHROPIC_API_KEY'] = ""
 
 <div class="cell code" id="DhXwRlc-9DED">
 
-``` python
+```python
 results = [] # for storing results
 
-models = ['gpt-3.5-turbo', 'claude-2'] # define what models you're testing, see: https://docs.litellm.ai/docs/providers
+models = ['{{openai_small}}', '{{anthropic}}'] # define what models you're testing, see: https://docs.litellm.ai/docs/providers
 for question in questions:
     row = [question]
     for model in models:

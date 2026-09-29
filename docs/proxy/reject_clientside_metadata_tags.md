@@ -27,10 +27,10 @@ general_settings:
 **Rejected Request Example:**
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {
       "tags": ["custom-tag"]  # This will be rejected
@@ -53,10 +53,10 @@ curl -X POST http://localhost:4000/chat/completions \
 **Allowed Request Example:**
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {
       "custom_field": "value"  # Other metadata fields are allowed
@@ -89,13 +89,13 @@ These tags will be automatically inherited by all requests made with that API ke
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: gpt-3.5-turbo
+      model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: "postgresql://user:password@localhost:5432/litellm"
   
   # Reject client-side tags

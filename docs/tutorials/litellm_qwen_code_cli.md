@@ -11,7 +11,7 @@ This integration is supported from LiteLLM v1.73.3-nightly and above.
 
 <br />
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/d7059b059c0f425fb0b8839418adffd6" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/d7059b059c0f425fb0b8839418adffd6" frameBorder="0" allowFullScreen></iframe>
 
 ## Benefits of using qwen-code with LiteLLM
 
@@ -51,7 +51,7 @@ Configure the Qwen Code CLI to point to your LiteLLM Proxy instance by setting t
 
 ```bash
 export OPENAI_BASE_URL="http://localhost:4000"
-export OPENAI_API_KEY=sk-1234567890
+export OPENAI_API_KEY=sk-<your-litellm-api-key>
 export OPENAI_MODEL="your-configured-model"
 ```
 
@@ -83,7 +83,7 @@ The CLI will now use LiteLLM Proxy as the backend, giving you access to LiteLLM'
 
 ### Use Anthropic, OpenAI, Bedrock, etc. models on qwen-code
 
-In order to use non-qwen models on qwen-code, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `qwen-code` should be routed to your desired model from any provider.
+To use non-qwen models on qwen-code, you need to set a `model_group_alias` in the LiteLLM Proxy config. This tells LiteLLM that requests with model = `qwen-code` should be routed to your desired model from any provider.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -95,29 +95,29 @@ Route `qwen-code` requests to Claude Sonnet:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: claude-sonnet-4-20250514
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
 router_settings:
-  model_group_alias: {"qwen-code": "claude-sonnet-4-20250514"}
+  model_group_alias: {"qwen-code": "{{anthropic}}"}
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-Route `qwen-code` requests to GPT-4o:
+Route `qwen-code` requests to `{{openai_large}}`:
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: gpt-4o-model
+  - model_name: openai-gpt
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
-  model_group_alias: {"qwen-code": "gpt-4o-model"}
+  model_group_alias: {"qwen-code": "openai-gpt"}
 ```
 
 </TabItem>
@@ -129,7 +129,7 @@ Route `qwen-code` requests to Claude on Bedrock:
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
@@ -147,11 +147,11 @@ All deployments with model_name=`anthropic-claude` will be load balanced. In thi
 model_list:
   - model_name: anthropic-claude
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY  
   - model_name: anthropic-claude
     litellm_params:
-      model: bedrock/anthropic.claude-haiku-4-5-20251001:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1

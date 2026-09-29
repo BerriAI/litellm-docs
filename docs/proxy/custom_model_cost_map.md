@@ -12,17 +12,17 @@ Example: an Azure deployment billed under a regional price variant (such as US D
 
 ```yaml
 model_list:
-  - model_name: gpt-5.5
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
-      input_cost_per_token: 0.0000055        # base rate for your price variant
-      output_cost_per_token: 0.000044
-      input_cost_per_token_above_272k_tokens: 0.000011   # long-context tier
-      output_cost_per_token_above_272k_tokens: 0.0000495
-      cache_read_input_token_cost: 0.00000055
-      cache_read_input_token_cost_above_272k_tokens: 0.0000011
+      input_cost_per_token: 0.0000022        # base rate for your price variant
+      output_cost_per_token: 0.0000132
+      input_cost_per_token_above_272k_tokens: 0.0000044   # long-context tier
+      output_cost_per_token_above_272k_tokens: 0.0000198
+      cache_read_input_token_cost: 0.00000022
+      cache_read_input_token_cost_above_272k_tokens: 0.00000044
 ```
 
 The full set of overridable keys includes the base per-token rates, per-second rates, cache read and cache creation rates, and the `above_128k`, `above_200k`, and `above_272k` tier variants for each, plus `_priority` service-tier variants. Numbers above are illustrative; take real rates from your provider's price sheet. See [Custom LLM Pricing](./custom_pricing) for the general override mechanism.

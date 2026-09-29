@@ -8,15 +8,15 @@ OpenTelemetry is a CNCF standard for observability. It connects to any observabi
 
 <Image img={require('../../img/traceloop_dash.png')} />
 
-:::tip Looking for full-request tracing?
+:::tip[Looking for full-request tracing?]
 
 There's a newer, opt-in **[OpenTelemetry v2](./opentelemetry_v2)** integration for LiteLLM Proxy that produces one trace per request (HTTP → auth → guardrails → LLM call → DB writes), follows the official GenAI semantic conventions, and ships with presets for Arize, Phoenix, Langfuse, Weave, and more. Enable it with `LITELLM_OTEL_V2=true`.
 
 :::
 
-:::note Change in v1.81.0
+:::note[Change in v1.81.0]
 
-From v1.81.0, the request/response is set as attributes on the parent `Received Proxy Server Request` span by default — there is **no** separate `litellm_request` span unless you opt in. To restore nested `litellm_request` spans, set `USE_OTEL_LITELLM_REQUEST_SPAN=true`. See [Span Hierarchy](#span-hierarchy) for the full picture and [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span) for when to flip the flag.
+From v1.81.0, the request/response is set as attributes on the parent `Received Proxy Server Request` span by default, and there is **no** separate `litellm_request` span unless you opt in. To restore nested `litellm_request` spans, set `USE_OTEL_LITELLM_REQUEST_SPAN=true`. See [Span Hierarchy](#span-hierarchy) for the full picture and [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span) for when to flip the flag.
 
 :::
 
@@ -118,9 +118,9 @@ Received Proxy Server Request                      (SpanKind.SERVER, root)
 └── Failed Proxy Server Request                    (INTERNAL — only on exception)
 ```
 
-In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), when an LLM-call span is created its name becomes `{operation} {model}` (e.g. `chat gpt-4`) with `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. The same `USE_OTEL_LITELLM_REQUEST_SPAN` gating decides whether the span is emitted at all. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
+In **semconv mode** (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`), when an LLM-call span is created its name becomes `{operation} {model}` (e.g. `chat {{openai_large}}`) with `SpanKind.CLIENT`, and `raw_gen_ai_request` is suppressed. The same `USE_OTEL_LITELLM_REQUEST_SPAN` gating decides whether the span is emitted at all. See [Opt-In to Latest GenAI Semantic Conventions](#opt-in-to-latest-genai-semantic-conventions).
 
-The SDK (no proxy) emits `litellm_request` as the root if no parent context exists — there is no `Received Proxy Server Request` span in pure-SDK use.
+The SDK (no proxy) emits `litellm_request` as the root if no parent context exists; there is no `Received Proxy Server Request` span in pure-SDK use.
 
 ### Span name reference
 
@@ -155,13 +155,13 @@ There is currently **no env var that disables individual service-hook spans**. I
 
 ### Why don't I see a `litellm_request` span?
 
-Behavior changed in **v1.81.0**. By default, `USE_OTEL_LITELLM_REQUEST_SPAN=false` and the proxy collapses the `litellm_request` span into the parent `Received Proxy Server Request` span — its `gen_ai.*` attributes are set on the parent instead. This:
+Behavior changed in **v1.81.0**. By default, `USE_OTEL_LITELLM_REQUEST_SPAN=false` and the proxy collapses the `litellm_request` span into the parent `Received Proxy Server Request` span, setting its `gen_ai.*` attributes on the parent instead. This:
 
 - Avoids duplicating attributes across parent and child.
 - Reduces span count (and storage cost) by ~1 span per request.
 - Keeps the trace shallow when a parent context already exists.
 
-To restore the older nested behavior — where every LLM call gets its own `litellm_request` span as a child of the proxy root span — set:
+To restore the older nested behavior, where every LLM call gets its own `litellm_request` span as a child of the proxy root span, set:
 
 ```shell
 USE_OTEL_LITELLM_REQUEST_SPAN=true
@@ -169,7 +169,7 @@ USE_OTEL_LITELLM_REQUEST_SPAN=true
 
 This is the right setting if:
 
-- One HTTP request makes multiple `litellm.completion` calls — under the default behavior the last call's attributes overwrite earlier ones on the shared parent.
+- One HTTP request makes multiple `litellm.completion` calls, and under the default behavior the last call's attributes overwrite earlier ones on the shared parent.
 - You want a clean parent for `raw_gen_ai_request` and `guardrail` children that is not the HTTP request span.
 - Your backend's UI is built around AI-semantic span names like `litellm_request`.
 
@@ -186,7 +186,7 @@ Parent-context resolution order (highest priority first):
 1. Explicit `litellm_parent_otel_span` in the request `metadata`.
 2. Inbound `traceparent` HTTP header (extracted via `TraceContextTextMapPropagator`).
 3. The currently-active span in the OTEL global context (thread-local).
-4. None — LiteLLM's span is the root.
+4. None; LiteLLM's span is the root.
 
 To force every LiteLLM trace to be its own root regardless of inbound headers or active context, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true`.
 
@@ -218,7 +218,7 @@ Init order does not matter. Both handlers receive their own spans regardless of 
 
 ### Cross-collector behavior (e.g. LangSmith + generic OTEL)
 
-When two OTEL-emitting integrations are active at once — for instance a customized LangSmith OTEL handler plus the generic `otel` exporter — both honor the same `traceparent` propagation rules and the same parent-resolution order described in [Context propagation](#context-propagation-w3c-traceparent). As long as one handler uses `skip_set_global=True`, both will:
+When two OTEL-emitting integrations are active at once, for instance a customized LangSmith OTEL handler plus the generic `otel` exporter, both honor the same `traceparent` propagation rules and the same parent-resolution order described in [Context propagation](#context-propagation-w3c-traceparent). As long as one handler uses `skip_set_global=True`, both will:
 
 - See the same `trace_id` for a given request.
 - Emit the same span hierarchy (`Received Proxy Server Request` → `litellm_request` if enabled → `raw_gen_ai_request` / `guardrail`).
@@ -275,7 +275,7 @@ Resolution order (highest priority first):
 1. `litellm.turn_off_message_logging=True` forces `NO_CONTENT` (dynamic kill-switch; overrides everything below).
 2. `OpenTelemetryConfig.capture_message_content` (per-handler field, sampled at handler init).
 3. `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` env var (sampled at handler init).
-4. The legacy per-instance `message_logging` flag — defaults to `True`, which maps to `SPAN_AND_EVENT`.
+4. The legacy per-instance `message_logging` flag, which defaults to `True` and maps to `SPAN_AND_EVENT`.
 
 ## Opt-In to Latest GenAI Semantic Conventions
 
@@ -287,7 +287,7 @@ OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
 
 This changes the LLM-call span name, kind, and structure, suppresses the non-standard `raw_gen_ai_request` child span, adds the `gen_ai.provider.name` attribute alongside `gen_ai.system`, populates additional request and cache-token attributes when present, and consolidates the per-message events into a single `gen_ai.client.inference.operation.details` event. See the [Spans Reference](#spans-reference) and [Attributes Reference](#attributes-reference) below for the per-row differences.
 
-`OpenTelemetryConfig.semconv_stability` is the programmatic equivalent. The flag is comma-separable per the OTEL spec.
+`OpenTelemetryConfig.semconv_stability_opt_in` (a set of `OTELSemconvCategory` values, e.g. `{OTELSemconvCategory.GEN_AI_LATEST_EXPERIMENTAL}`) is the programmatic equivalent and is unioned with the env var. The flag is comma-separable per the OTEL spec.
 
 ## Redacting Messages, Response Content from OpenTelemetry Logging
 
@@ -297,13 +297,7 @@ Set `litellm.turn_off_message_logging=True` This will prevent the messages and r
 
 ### Redact Messages and Responses from specific OpenTelemetry Logging
 
-In the metadata typically passed for text completion or embedding calls you can set specific keys to mask the messages and responses for this call.
-
-Setting `mask_input` to `True` will mask the input from being logged for this call
-
-Setting `mask_output` to `True` will make the output from being logged for this call.
-
-Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message.
+The OpenTelemetry logger does not read the Langfuse `mask_input`, `mask_output` or `update_trace_keys` metadata keys, so passing them on a request leaves message content on the spans. To keep content off a specific OpenTelemetry handler, give it its own `capture_message_content="NO_CONTENT"` (see [Per-handler content policy](#per-handler-content-policy)) or set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT`
 
 ## Troubleshooting
 
@@ -311,15 +305,15 @@ Be aware that if you are continuing an existing trace, and you set `update_trace
 
 Expected behavior under the v1.81.0+ default (`USE_OTEL_LITELLM_REQUEST_SPAN=false`): the proxy root span absorbs the LLM-call attributes and there is no separate `litellm_request` span. To restore nested spans, set `USE_OTEL_LITELLM_REQUEST_SPAN=true`. See [Why don't I see a `litellm_request` span?](#why-dont-i-see-a-litellm_request-span).
 
-If you're in semconv mode, the LLM-call span exists but is renamed to `{operation} {model}` (e.g. `chat gpt-4`) — search by `gen_ai.system` rather than by the literal name `litellm_request`.
+If you're in semconv mode, the LLM-call span exists but is renamed to `{operation} {model}` (e.g. `chat {{openai_large}}`), so search by `gen_ai.system` rather than by the literal name `litellm_request`.
 
 ### I only see infrastructure spans (`router`, `auth`, `redis`, `proxy_pre_call`)
 
-Those are [service-hook spans](#service-hook-spans-aka-infrastructure-spans). They're emitted alongside the AI-semantic spans (`raw_gen_ai_request`, `guardrail`, and `litellm_request` if enabled), not instead of them. If you genuinely don't see any `gen_ai.*` attributes anywhere in your trace:
+Those are [service-hook spans](#service-hook-spans-aka-infrastructure-spans). They're emitted alongside the AI-semantic spans (`raw_gen_ai_request`, `guardrail`, and `litellm_request` if enabled), not instead of them. If you don't see any `gen_ai.*` attributes anywhere in your trace:
 
 1. Verify `litellm.callbacks` (or `litellm_settings.callbacks`) includes `"otel"`.
-2. Verify the request actually hit a `/chat/completions` (or other LLM) route — management endpoints (`/key/info`, `/user/info`, …) won't have `gen_ai.*` attributes.
-3. Check whether `litellm.turn_off_message_logging=true` and/or `mask_input`/`mask_output` are set — they suppress message and raw-provider attributes.
+2. Verify the request actually hit a `/chat/completions` (or other LLM) route. Management endpoints (`/key/info`, `/user/info`, …) won't have `gen_ai.*` attributes.
+3. Check whether `litellm.turn_off_message_logging=true` or a `NO_CONTENT` capture mode is set, since they suppress message and raw-provider attributes.
 4. Set `USE_OTEL_LITELLM_REQUEST_SPAN=true` so the LLM attributes land on a span named `litellm_request` instead of being co-mingled with HTTP request attributes on `Received Proxy Server Request`.
 
 ### Trace LiteLLM Proxy user/key/org/team information on failed requests
@@ -330,10 +324,10 @@ LiteLLM emits `metadata.user_api_key_*` attributes (key hash, key alias, org ID,
 
 ### Not seeing traces land on Integration
 
-If you don't see traces landing on your integration, set `OTEL_DEBUG="True"` in your LiteLLM environment and try again.
+If you don't see traces landing on your integration, set `DEBUG_OTEL="True"` in your LiteLLM environment and try again.
 
 ```shell
-export OTEL_DEBUG="True"
+export DEBUG_OTEL="True"
 ```
 
 This will emit any logging issues to the console. Common causes:
@@ -445,6 +439,8 @@ All flags below are read from environment variables unless noted. Boolean flags 
 | `LITELLM_LOGGER_NAME` | `litellm` | Logger name (when events enabled) |
 | `OTEL_LOGS_EXPORTER` | none | Logs exporter (e.g. `console`) when events are enabled |
 
+When the `otlp_http` exporter talks to a collector behind an internal CA, it honors `SSL_CERT_FILE` (a path to a CA bundle) and `litellm_settings.ssl_verify` (`false` disables verification). The OpenTelemetry SDK's own `OTEL_EXPORTER_OTLP_CERTIFICATE` still wins when set
+
 ### Span / metric / event toggles
 
 | Variable | Default | Effect |
@@ -455,18 +451,15 @@ All flags below are read from environment variables unless noted. Boolean flags 
 | `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` | `false` | Enable OTLP metrics (TTFT, TPOT, response duration, cost, token usage, operation duration) |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS` | `false` | Enable OTLP semantic logs (`gen_ai.content.prompt`/`gen_ai.content.completion`, or `gen_ai.client.inference.operation.details` in semconv mode) |
 | `OTEL_IGNORE_CONTEXT_PROPAGATION` | `false` | If `true`, ignore inbound `traceparent` headers and any active span — every LiteLLM trace becomes its own root |
-| `OTEL_DEBUG` / `DEBUG_OTEL` | `false` | Print exporter and span-creation diagnostics to stderr |
+| `DEBUG_OTEL` | `false` | Print exporter and span-creation diagnostics to stderr |
 | `litellm.turn_off_message_logging` (Python global / `litellm_settings.turn_off_message_logging`) | `false` | Kill-switch for content capture. Suppresses `llm.{provider}.*` raw request/response, `gen_ai.input.messages`, `gen_ai.output.messages`, and `gen_ai.content.*` log events. Overrides per-handler `capture_message_content` |
 
-### Per-request redaction (request `metadata`)
+### Per-request `metadata` keys
 
-Per-request keys you can pass in `metadata` to redact a single call without disabling logging globally.
+The Langfuse `mask_input`, `mask_output` and `update_trace_keys` keys have no effect on OpenTelemetry spans. Use `litellm.turn_off_message_logging` or a `NO_CONTENT` capture mode to redact content.
 
 | Key | Effect |
 |---|---|
-| `mask_input` | When `true`, redacts the input messages on this request |
-| `mask_output` | When `true`, redacts the output messages on this request |
-| `update_trace_keys` | Controls which trace keys (`input`, `output`) get replaced when continuing an existing trace |
 | `generation_name` | Overrides the `raw_gen_ai_request` span's name with this value |
 
 ### `OpenTelemetryConfig` programmatic equivalents
@@ -479,7 +472,7 @@ Per-request keys you can pass in `metadata` to redact a single call without disa
 | `enable_metrics` | `false` | Same as `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` |
 | `enable_events` | `false` | Same as `LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS` |
 | `capture_message_content` | env var | Per-handler override; same value space as `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` |
-| `semconv_stability` | env var | Same as `OTEL_SEMCONV_STABILITY_OPT_IN` |
+| `semconv_stability_opt_in` | empty set | Set of `OTELSemconvCategory` values, unioned with `OTEL_SEMCONV_STABILITY_OPT_IN` |
 | `skip_set_global` | `false` | Don't claim the process-global `TracerProvider`/`MeterProvider`/`LoggerProvider` |
 | `ignore_context_propagation` | `false` | Same as `OTEL_IGNORE_CONTEXT_PROPAGATION` |
 | `attributes` | none | Metric attribute include/exclude filter. See [Control metric attribute cardinality](#control-metric-attribute-cardinality) |
@@ -520,17 +513,23 @@ LiteLLM emits the following histograms when `enable_metrics=True` is set on the 
 |---|---|---|
 | `gen_ai.client.operation.duration` | `s` | End-to-end operation duration including LiteLLM overhead. |
 | `gen_ai.client.token.usage` | `{token}` | Token usage. Records two histograms per call (label `gen_ai.token.type` is `"input"` or `"output"`). |
-| `gen_ai.client.token.cost` | `USD` | Computed request cost. |
-| `gen_ai.client.response.time_to_first_token` | `s` | Time from request start to first streamed token (streaming requests only). |
-| `gen_ai.client.response.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
+| `gen_ai.usage.cost` | `USD` | Computed request cost. |
+| `gen_ai.server.time_to_first_token` | `s` | Time from request start to first streamed token (streaming requests only). |
+| `gen_ai.server.time_per_output_token` | `s` | Average time per output token (generation time / completion tokens). |
 | `gen_ai.client.response.duration` | `s` | LLM API generation time, excluding LiteLLM overhead. |
 
-Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.framework="litellm"`.
+:::note[Renamed in this release]
+
+`gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
+
+:::
+
+Common labels on every histogram: `gen_ai.operation.name`, `gen_ai.request.model`, `gen_ai.framework="litellm"`. `gen_ai.system` is added when LiteLLM knows the call's provider, so a call without one carries no `gen_ai.system` label.
 
 | Common metric ask | Metric |
 |---|---|
-| TTFT | `gen_ai.client.response.time_to_first_token` |
-| TPS | derived as `1 / gen_ai.client.response.time_per_output_token` |
+| TTFT | `gen_ai.server.time_to_first_token` |
+| TPS | derived as `1 / gen_ai.server.time_per_output_token` |
 | Token usage | `gen_ai.client.token.usage` (split by `gen_ai.token.type`) |
 | Vendor/model latency (excludes overhead) | `gen_ai.client.response.duration` |
 | Vendor/model latency (includes overhead) | `gen_ai.client.operation.duration` |
@@ -541,13 +540,13 @@ Even with metrics off, every metric below can be derived from spans. This is wha
 
 | Metric | How to derive from spans |
 |---|---|
-| **TTFT** (Time to First Token) | Streaming requests only. Use the dedicated `gen_ai.client.response.time_to_first_token` metric, or capture `completion_start_time` from request `kwargs` via a custom callback. |
-| **TPOT** (Time per Output Token) | Use the `gen_ai.client.response.time_per_output_token` metric, or derive as `gen_ai.client.response.duration ÷ gen_ai.usage.output_tokens`. |
+| **TTFT** (Time to First Token) | Streaming requests only. Use the dedicated `gen_ai.server.time_to_first_token` metric, or capture `completion_start_time` from request `kwargs` via a custom callback. |
+| **TPOT** (Time per Output Token) | Use the `gen_ai.server.time_per_output_token` metric, or derive as `gen_ai.client.response.duration ÷ gen_ai.usage.output_tokens`. |
 | **Total response duration** | `gen_ai.client.response.duration` metric, or `end_time − start_time` of the LLM-call span (or proxy root span minus LiteLLM overhead — see `hidden_params.litellm_overhead_time_ms`). |
 | **Vendor (provider) latency** | Duration of the `raw_gen_ai_request` span (default mode) — pure time spent waiting on the upstream provider. In semconv mode, use `gen_ai.client.response.duration`. |
 | **LiteLLM overhead** | `hidden_params.litellm_overhead_time_ms` on the proxy root span. Or `Received Proxy Server Request.duration − raw_gen_ai_request.duration`. |
 | **Token usage** | `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.total_tokens` on the LLM span (or `gen_ai.client.token.usage` metric). |
-| **Cost** | `gen_ai.cost.total_cost` (and the rest of `gen_ai.cost.*`) on the LLM span; or `gen_ai.client.token.cost` metric. |
+| **Cost** | `gen_ai.cost.total_cost` (and the rest of `gen_ai.cost.*`) on the LLM span; or `gen_ai.usage.cost` metric. |
 | **Guardrail evaluation time** | Duration of each `guardrail` span. Disambiguate by `guardrail_name` and `guardrail_mode`. |
 | **Router / auth / Redis / DB latency** | Duration of the corresponding [service-hook span](#service-hook-spans-aka-infrastructure-spans) (`router`, `auth`, `redis`, `postgres`, …). |
 | **Retry / fallback count** | `hidden_params.x-litellm-attempted-retries` and `hidden_params.x-litellm-attempted-fallbacks` on the proxy root span. |
@@ -650,7 +649,7 @@ LiteLLM iterates `standard_logging_payload["metadata"]` and emits each entry as 
 | `metadata.cold_storage_object_key` | When request payloads are offloaded to cold storage |
 | `metadata.user_api_key_auth_metadata` | Extra auth context |
 
-Plus `hidden_params` — a single attribute holding a JSON-serialized dict that includes `litellm_overhead_time_ms`, `api_base`, `response_cost`, `additional_headers`, `model_id`, `x-litellm-attempted-retries`, `x-litellm-attempted-fallbacks`, etc.
+Plus `hidden_params`, a single attribute holding a JSON-serialized dict that includes `litellm_overhead_time_ms`, `api_base`, `response_cost`, `additional_headers`, `model_id`, `x-litellm-attempted-retries`, `x-litellm-attempted-fallbacks`, etc.
 
 #### Guardrail span attributes
 
@@ -666,7 +665,7 @@ Set on each `guardrail` child span:
 
 The span's `start_time`/`end_time` come from the guardrail's own timing, so the span duration equals the **guardrail evaluation time**.
 
-There is no separate `guardrail_pre`/`guardrail_post` span name today — both are emitted as `guardrail` and disambiguated via the `guardrail_mode` attribute.
+There is no separate `guardrail_pre`/`guardrail_post` span name today. Both are emitted as `guardrail` and disambiguated via the `guardrail_mode` attribute.
 
 #### Service-hook span attributes
 

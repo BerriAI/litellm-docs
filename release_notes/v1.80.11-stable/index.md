@@ -51,7 +51,7 @@ pip install litellm==1.80.11
 - **New Provider: Venice.ai** - Support for Venice.ai API via providers.json
 - **Unified Skills API** - [Skills API works across Anthropic, Vertex, Azure, and Bedrock](../../docs/skills)
 - **Azure Sentinel Logging** - [New logging integration for Azure Sentinel](../../docs/observability/azure_sentinel)
-- **Guardrails Load Balancing** - [Load balance between multiple guardrail providers](../../docs/proxy/guardrails)
+- **Guardrails Load Balancing** - [Load balance between multiple guardrail providers](/docs/proxy/guardrails/quick_start)
 - **Email Budget Alerts** - [Send email notifications when budgets are reached](../../docs/proxy/email)
 - **Cloudzero Integration on UI** - Setup your Cloudzero Integration Directly on the UI
 
@@ -94,7 +94,7 @@ This makes LiteLLM especially beneficial for serverless functions, Lambda deploy
 | Endpoint | Method | Description | Documentation |
 | -------- | ------ | ----------- | ------------- |
 | `/interactions` | POST | Google Interactions API for conversational AI | [Docs](../../docs/interactions) |
-| `/search` | POST | RAG Search API with rerankers | [Docs](../../docs/search/index) |
+| `/search` | POST | RAG Search API with rerankers | [Docs](/docs/search) |
 
 ---
 
@@ -200,7 +200,7 @@ This makes LiteLLM especially beneficial for serverless functions, Lambda deploy
     - Add support for agent skills - [PR #18031](https://github.com/BerriAI/litellm/pull/18031)
 - **[Skills API](../../docs/skills)**
     - Unified Skills API works across Anthropic, Vertex, Azure, Bedrock - [PR #18232](https://github.com/BerriAI/litellm/pull/18232)
-- **[Search API](../../docs/search/index)**
+- **[Search API](/docs/search)**
     - Add new RAG Search API with rerankers - [PR #18217](https://github.com/BerriAI/litellm/pull/18217)
 - **[Interactions API](../../docs/interactions)**
     - Add Google Interactions API on SDK and AI Gateway - [PR #18079](https://github.com/BerriAI/litellm/pull/18079), [PR #18081](https://github.com/BerriAI/litellm/pull/18081)
@@ -263,7 +263,7 @@ This makes LiteLLM especially beneficial for serverless functions, Lambda deploy
 
 - **[Azure Sentinel](../../docs/observability/azure_sentinel)**
     - Add new Azure Sentinel Logger integration - [PR #18146](https://github.com/BerriAI/litellm/pull/18146)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Add extraction of top level metadata for custom labels - [PR #18087](https://github.com/BerriAI/litellm/pull/18087)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Fix not working log_failure_event - [PR #18234](https://github.com/BerriAI/litellm/pull/18234)

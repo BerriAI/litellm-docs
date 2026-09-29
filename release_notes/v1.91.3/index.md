@@ -43,7 +43,7 @@ pip install litellm==1.91.3
 </TabItem>
 </Tabs>
 
-`v1.91.3` is a patch release on top of [`v1.91.2`](/release_notes/v1.91.2/v1-91-2). It backports two changes onto the 1.91.x line. The first restores guardrail coverage on the Responses API: shared content helpers now walk the Responses item taxonomy, so text guardrails once again see user and tool-output text on `/v1/responses` instead of scanning an empty payload. The second records a failed LLM call as the GenAI-standard `gen_ai.client.operation.exception` log event, carrying the exception type, message, and stacktrace at WARN severity so observability backends see the full failure.
+`v1.91.3` is a patch release on top of `v1.91.2`. It backports two changes onto the 1.91.x line. The first restores guardrail coverage on the Responses API: shared content helpers now walk the Responses item taxonomy, so text guardrails once again see user and tool-output text on `/v1/responses` instead of scanning an empty payload. The second records a failed LLM call as the GenAI-standard `gen_ai.client.operation.exception` log event, carrying the exception type, message, and stacktrace at WARN severity so observability backends see the full failure.
 
 ### What's Changed
 

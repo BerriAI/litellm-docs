@@ -34,7 +34,7 @@ response = litellm.ocr(
 
 # Access extracted text
 for page in response.pages:
-    print(page.text)
+    print(page.markdown)
 ```
 
 ### **LiteLLM PROXY**
@@ -179,8 +179,8 @@ response.usage_info     # Token usage information
 
 # Access page content
 for page in response.pages:
-    print(f"Page {page.page_number}:")
-    print(page.text)
+    print(f"Page {page.index}:")
+    print(page.markdown)
 ```
 
 ## Async Support
@@ -218,11 +218,11 @@ print(f"Cost: ${response._hidden_params.get('response_cost', 0)}")
 
 ## Important Notes
 
-:::info URL Conversion
+:::info[URL Conversion]
 Vertex AI Mistral OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Vertex AI.
 :::
 
-:::tip Regional Availability
+:::tip[Regional Availability]
 Mistral OCR is available in multiple regions. Specify `vertex_location` to use a region closer to your data:
 - `us-central1` (default)
 - `europe-west1`

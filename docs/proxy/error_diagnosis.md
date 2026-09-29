@@ -2,6 +2,8 @@
 
 Having trouble diagnosing if an error is from the **LLM Provider** (OpenAI, Anthropic, etc.) or from the **LiteLLM AI Gateway** itself? Here's how to tell.
 
+For the full error payload schema, the status code and error type reference, and fallback exhaustion behavior, see the [Error Reference](/docs/proxy/error_reference)
+
 ## Quick Rule
 
 **If the error contains `<Provider>Exception`, it's from the provider.**

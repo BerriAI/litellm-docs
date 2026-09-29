@@ -19,9 +19,9 @@ Use policies to group guardrails and control which ones run for specific teams, 
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
 
 # 1. Define your guardrails
 guardrails:
@@ -79,9 +79,7 @@ x-litellm-applied-guardrails: pii_masking,prompt_injection
 
 ## Add guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have a global baseline, but want to add extra guardrails for a specific team.
 
@@ -139,9 +137,7 @@ Now the `finance` team gets `pii_masking` + `strict_compliance_check` + `audit_l
 
 ## Remove guardrails for a specific team
 
-:::info
-✨ Enterprise only feature for team/key-based policy attachments. [Get a free trial](https://www.litellm.ai/enterprise#trial)
-:::
+<EnterpriseFeature feature="Team/key-based policy attachment" />
 
 You have guardrails running globally, but want to disable some for a specific team (e.g., internal testing).
 
@@ -206,12 +202,12 @@ Run guardrails only for specific models:
 
 ```yaml showLineNumbers title="config.yaml"
 policies:
-  gpt4-safety:
+  gpt-safety:
     guardrails:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-4.*"  # regex - matches gpt-4, gpt-4-turbo, gpt-4o
+      model: "gpt-5.6.*"  # regex - matches {{openai_small}}, {{openai_large}}
 
   bedrock-compliance:
     guardrails:
@@ -219,8 +215,8 @@ policies:
         - audit_logger
     condition:
       model:  # exact match list
-        - bedrock/claude-3
-        - bedrock/claude-2
+        - bedrock/anthropic.{{anthropic}}
+        - bedrock/anthropic.{{anthropic_large}}
 ```
 
 ## Attachments
@@ -287,7 +283,7 @@ curl -X POST "http://localhost:4000/policies/resolve" \
     -H "Content-Type: application/json" \
     -d '{
         "tags": ["healthcare"],
-        "model": "gpt-4"
+        "model": "{{openai_large}}"
     }'
 ```
 
@@ -308,6 +304,55 @@ Response:
 
 </TabItem>
 </Tabs>
+
+## Policy Execution Order
+
+When several policies match one request, LiteLLM runs them from the broadest attachment to the narrowest: `scope: "*"` first, then `teams`, then `keys`, then `tags`, then `models`. An attachment that combines several of these is ranked by its narrowest one and after the single-constraint attachments in that tier (`models: [gpt-4o]` before `teams: [finance], models: [gpt-4o]`). Attachments that still tie keep their `config.yaml` order, followed by attachments created through the API or UI, newest first. Policies passed in the request body (`"policies": [...]`) run after every attachment match, in the order given. Across tiers, the order does not depend on how attachments are listed in `config.yaml` or on which proxy worker handles the request.
+
+This is the order pipelines execute in, so a global blocking policy always rejects a request before a model-scoped one gets to run. It is also the order of `x-litellm-applied-policies` and of `matched_policies` in `/policies/resolve` and the Policy Simulator. When the same policy is attached at more than one matching scope, it runs once, ranked by whichever of its attachments sorts first, and `matched_via` reports that attachment (`scope:*` rather than `model:gpt-4o` when neither has a `priority`).
+
+To override the tier order, set an optional integer `priority` on an attachment. Attachments with a `priority` run before every attachment without one, lowest value first, and fall back to the tier order above when two share the same value. Attachments without a `priority` behave exactly as before, so existing configs do not change. Here `model-policy` runs before `tag-policy` even though `tags` is the broader tier:
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: model-policy
+    models: [gpt-4o]
+    priority: 1
+  - policy: tag-policy
+    tags: [production]
+    priority: 2
+```
+
+The same field is accepted by `POST /policies/attachments`, returned from `GET /policies/attachments/list`, and shown as a sortable Priority column and an optional Priority input in the Admin UI Attachments tab. Values must fit a signed 32-bit integer (-2147483648 to 2147483647).
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: model-policy
+    models: [gpt-4o]
+  - policy: team-policy
+    teams: [finance]
+  - policy: global-policy
+    scope: "*"
+```
+
+A `gpt-4o` request from a `finance` key runs `global-policy`, then `team-policy`, then `model-policy`, and returns `x-litellm-applied-policies: global-policy,team-policy,model-policy`.
+
+## Default (Fallback) Attachments
+
+Attachment matches are additive: every attachment whose scope matches the request contributes its policy. To run one policy only for requests that opted in and a different policy for everyone else, mark the fallback attachment with `default: true`. A default attachment is skipped whenever any non-default attachment matches the request and its policy applies (the policy exists and its `condition`, if any, matches the request model). When no non-default attachment matches, every default attachment whose own scope matches applies, in the usual execution order.
+
+```yaml showLineNumbers title="config.yaml"
+policy_attachments:
+  - policy: strict-guardrail
+    tags: [strict-opt-in]
+  - policy: standard-guardrail
+    scope: "*"
+    default: true
+```
+
+A request carrying the `strict-opt-in` tag runs only `strict-guardrail`. A request without it runs only `standard-guardrail`, and its `matched_via` in `/policies/resolve` and the Policy Simulator is prefixed with `default:` (for example `default:scope:*`). A default attachment still honors `teams`, `keys`, `models` and `tags`, so `teams: [finance], default: true` applies only to finance requests that matched nothing else. Attachments without `default` behave exactly as before.
+
+The same field is accepted by `POST /policies/attachments`, returned from `GET /policies/attachments/list`, and exposed as a Default switch in the Admin UI create-attachment form plus a Default column in the Attachments tab.
 
 ## Policy Flow Builder
 
@@ -349,6 +394,8 @@ policy_attachments:
     keys: [...]
     models: [...]
     tags: [...]
+    priority: ...
+    default: ...
 ```
 
 | Field | Type | Description |
@@ -359,6 +406,8 @@ policy_attachments:
 | `keys` | `list[string]` | Key aliases (from `/key/generate`). Supports `*` wildcard. |
 | `models` | `list[string]` | Model names. Supports `*` wildcard. |
 | `tags` | `list[string]` | Tag patterns (from key/team `metadata.tags`). Supports `*` wildcard. |
+| `priority` | `integer` | Optional. Lower values run first. Attachments with a priority run before those without one; ties fall back to the tier order. |
+| `default` | `boolean` | Optional, defaults to `false`. Apply this attachment only when no non-default attachment matches the request. |
 
 ### Response Headers
 

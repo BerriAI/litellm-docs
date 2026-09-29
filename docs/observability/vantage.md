@@ -61,7 +61,7 @@ curl -X POST http://localhost:4000/vantage/export \
 
 Optional parameters:
 - `limit` — Max number of records to export
-- `start_time_utc` / `end_time_utc` — Filter by time range (must be provided together)
+- `start_time_utc` / `end_time_utc`: filter by time range (must be provided together)
 
 ### 4. Verify in Vantage
 
@@ -85,9 +85,9 @@ For automatic scheduled exports, configure via environment variables and proxy c
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-your-key
 
 litellm_settings:
@@ -138,8 +138,8 @@ Additional metadata (`user_id`, `user_email`, `model`, `model_group`, etc.) is a
 
 Vantage enforces per-upload limits. LiteLLM handles these automatically:
 
-- **10,000 rows** per upload — large exports are split into batches
-- **2 MB** per upload — oversized batches are further split by size
+- **10,000 rows** per upload; large exports are split into batches
+- **2 MB** per upload; oversized batches are further split by size
 - **Unsupported columns** are stripped before upload
 
 ## Related Links

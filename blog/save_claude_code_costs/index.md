@@ -178,7 +178,7 @@ model_list:
       complexity_router_default_model: gpt-4o
 ```
 
-**→ Learn more:** [Complexity Router](../../docs/proxy/auto_routing#complexity-router) · [Semantic Auto Routing](../../docs/proxy/auto_routing) · [Adaptive Router](../../docs/adaptive_router)
+**→ Learn more:** [Complexity Router](../../docs/proxy/auto_routing#classification) · [Semantic Auto Routing](../../docs/proxy/auto_routing) · [Adaptive Router](../../docs/adaptive_router)
 
 ## Stacking the levers
 

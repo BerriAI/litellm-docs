@@ -30,9 +30,7 @@ Read more about MCP [here](https://docs.litellm.ai/docs/mcp).
   img={require('../../img/release_notes/mcp_ui.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Expose and use MCP servers through LiteLLM
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Expose and use MCP servers through LiteLLM</p>
 
 ## UI view total usage after 1M+ logs
 
@@ -43,9 +41,7 @@ This release brings the ability to view total usage analytics even after exceedi
   img={require('../../img/release_notes/ui_usage.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  View total usage after 1M+ logs
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>View total usage after 1M+ logs</p>
 
 
 - How this works:

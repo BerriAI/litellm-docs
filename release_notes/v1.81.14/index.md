@@ -42,19 +42,19 @@ pip install litellm==1.81.14
 
 ## Key Highlights
 
-- **Guardrail Garden** — [Browse built-in and partner guardrails by use case — competitor blocking, topic filtering, GDPR, prompt injection, and more. Pick a template, customize it, attach it to a team or key.](../../docs/proxy/guardrails/policy_templates)
-- **Compliance Playground** — [Test any guardrail policy against your own traffic before it goes live. See precision, recall, and false positive rate — so you know how it'll behave in production.](../../docs/proxy/guardrails/policy_templates)
-- **3 new zero-cost built-in guardrails** — [Competitor name blocker, topic blocker, and insults filter — all gateway-level, &lt;0.1ms latency, no external API, configurable per-team or key](../../docs/proxy/guardrails)
-- **Store Model in DB Settings via UI** - [Configure model storage directly in the Admin UI without editing config files or restarting the proxy—perfect for cloud deployments](../../docs/proxy/model_management#database-vs-configyaml-models)
-- **Claude Sonnet 4.6 — day 0** — [Full support across Anthropic and Vertex AI: reasoning, computer use, prompt caching, 200K context](../../docs/providers/anthropic)
-- **20+ performance optimizations** — Faster routing, lower logging overhead, reduced cost-calculator latency, and connection pool fixes — meaningfully less CPU and latency on every request
+- **Guardrail Garden**: [Browse built-in and partner guardrails by use case: competitor blocking, topic filtering, GDPR, prompt injection, and more. Pick a template, customize it, attach it to a team or key.](../../docs/proxy/guardrails/policy_templates)
+- **Compliance Playground**: [Test any guardrail policy against your own traffic before it goes live. See precision, recall, and false positive rate, so you know how it'll behave in production.](../../docs/proxy/guardrails/policy_templates)
+- **3 new zero-cost built-in guardrails**: [Competitor name blocker, topic blocker, and insults filter, all gateway-level, &lt;0.1ms latency, no external API, configurable per-team or key](/docs/proxy/guardrails/quick_start)
+- **Store Model in DB Settings via UI** - [Configure model storage directly in the Admin UI without editing config files or restarting the proxy, which is ideal for cloud deployments](../../docs/proxy/model_management#database-vs-configyaml-models)
+- **Claude Sonnet 4.6, day 0**: [Full support across Anthropic and Vertex AI: reasoning, computer use, prompt caching, 200K context](../../docs/providers/anthropic)
+- **20+ performance optimizations**: Faster routing, lower logging overhead, reduced cost-calculator latency, and connection pool fixes, for meaningfully less CPU and latency on every request
 
 ---
 
 
 ### Guardrail Garden
 
-AI Platform Admins can now browse built-in and partner guardrails from the Guardrail Garden. Guardrails are organized by use case — blocking financial advice, filtering insults, detecting competitor mentions, and more — so you can find the right one and deploy it in a few clicks.
+AI Platform Admins can now browse built-in and partner guardrails from the Guardrail Garden. Guardrails are organized by use case, such as blocking financial advice, filtering insults, and detecting competitor mentions, so you can find the right one and deploy it in a few clicks.
 
 ![Guardrail Garden](../../img/release_notes/guardrail_garden.png)
 
@@ -70,7 +70,7 @@ These guardrails are built for production and on our benchmarks had a 100% Recal
 
 ### Store Model in DB Settings via UI
 
-Previously, the `store_model_in_db` setting could only be configured in `proxy_config.yaml` under `general_settings`, requiring a proxy restart to take effect. Now you can enable or disable this setting directly from the Admin UI without any restarts. This is especially useful for cloud deployments where you don't have direct access to config files or want to avoid downtime. Enable `store_model_in_db` to move model definitions from your YAML into the database—reducing config complexity, improving scalability, and enabling dynamic model management across multiple proxy instances.
+Previously, the `store_model_in_db` setting could only be configured in `proxy_config.yaml` under `general_settings`, requiring a proxy restart to take effect. Now you can enable or disable this setting directly from the Admin UI without any restarts. This is especially useful for cloud deployments where you don't have direct access to config files or want to avoid downtime. Enable `store_model_in_db` to move model definitions from your YAML into the database, reducing config complexity, improving scalability, and enabling dynamic model management across multiple proxy instances.
 
 ![Store model in DB Setting](../../img/ui_store_model_in_db.png)
 
@@ -84,7 +84,7 @@ We benchmarked our new built-in guardrails against labeled datasets before shipp
 | Denied Financial Advice | 100% | 100% | 100% | &lt;0.1ms | $0 |
 | Denied Insults | 100% | 100% | 100% | &lt;0.1ms | $0 |
 
-100% precision means zero false positives — no legitimate messages were incorrectly blocked. 100% recall means zero false negatives — every message that should have been blocked was caught.
+100% precision means zero false positives: no legitimate messages were incorrectly blocked. 100% recall means zero false negatives: every message that should have been blocked was caught.
 
 
 ### Compliance Playground
@@ -96,7 +96,7 @@ The Compliance Playground lets you test any guardrail against our pre-built eval
 
 ---
 
-## Performance & Reliability — Up to 13% Lower Latency
+## Performance & Reliability: Up to 13% Lower Latency
 
 <Image img={require('../../img/release_notes/v1_81_14_perf.png')} />
 
@@ -216,14 +216,14 @@ graph LR
 - **[hosted_vllm](../../docs/providers/vllm)**
     - Convert thinking blocks to content blocks for multi-turn conversations - [PR #21557](https://github.com/BerriAI/litellm/pull/21557)
 
-- **[OCI / Oracle](../../docs/providers/oci_cohere)**
+- **[OCI / Oracle](/docs/providers/oci)**
     - Fix Grok output pricing - [PR #21329](https://github.com/BerriAI/litellm/pull/21329)
 
 - **[AU Anthropic](../../docs/providers/anthropic)**
     - Fix `au.anthropic.claude-opus-4-6-v1` model ID - [PR #20731](https://github.com/BerriAI/litellm/pull/20731)
 
 - **General**
-    - Add routing based on reasoning support — skip deployments that don't support reasoning when `thinking` params are present - [PR #21302](https://github.com/BerriAI/litellm/pull/21302)
+    - Add routing based on reasoning support, skipping deployments that don't support reasoning when `thinking` params are present - [PR #21302](https://github.com/BerriAI/litellm/pull/21302)
     - Add `stop` as supported param for OpenAI and Azure - [PR #21539](https://github.com/BerriAI/litellm/pull/21539)
     - Add `store` and other missing params to `OPENAI_CHAT_COMPLETION_PARAMS` - [PR #21195](https://github.com/BerriAI/litellm/pull/21195), [PR #21360](https://github.com/BerriAI/litellm/pull/21360)
     - Preserve `provider_specific_fields` from proxy responses - [PR #21220](https://github.com/BerriAI/litellm/pull/21220)
@@ -294,7 +294,7 @@ graph LR
 - **Virtual Keys**
     - Fix virtual key grace period from env/UI - [PR #20321](https://github.com/BerriAI/litellm/pull/20321)
     - Fix key expiry default duration - [PR #21362](https://github.com/BerriAI/litellm/pull/21362)
-    - Key Last Active Tracking — see when a key was last used - [PR #21545](https://github.com/BerriAI/litellm/pull/21545)
+    - Key Last Active Tracking: see when a key was last used - [PR #21545](https://github.com/BerriAI/litellm/pull/21545)
     - Fix `/v1/models` returning wildcard instead of expanded models for BYOK team keys - [PR #21408](https://github.com/BerriAI/litellm/pull/21408)
     - Return `failed_tokens` in delete_verification_tokens response - [PR #21609](https://github.com/BerriAI/litellm/pull/21609)
 
@@ -354,7 +354,7 @@ graph LR
 - **[DataDog](../../docs/proxy/logging#datadog)**
     - Add `team` tag to logs, metrics, and cost management - [PR #21449](https://github.com/BerriAI/litellm/pull/21449)
 
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Fix double-counting of `litellm_proxy_total_requests_metric` - [PR #21159](https://github.com/BerriAI/litellm/pull/21159)
     - Guard against None metadata in Prometheus metrics - [PR #21489](https://github.com/BerriAI/litellm/pull/21489)
     - Add ASGI middleware for improved Prometheus metrics collection - [PR #20434](https://github.com/BerriAI/litellm/pull/20434)
@@ -371,7 +371,7 @@ graph LR
 ### Guardrails
 
 - **Guardrail Garden**
-    - Launch Guardrail Garden — a marketplace for pre-built guardrails deployable in one click - [PR #21732](https://github.com/BerriAI/litellm/pull/21732)
+    - Launch Guardrail Garden, a marketplace for pre-built guardrails deployable in one click - [PR #21732](https://github.com/BerriAI/litellm/pull/21732)
     - Redesign guardrail creation form with vertical stepper UI - [PR #21727](https://github.com/BerriAI/litellm/pull/21727)
     - Add guardrail jump link in log detail view - [PR #21437](https://github.com/BerriAI/litellm/pull/21437)
     - Guardrail tracing UI: show policy, detection method, and match details - [PR #21349](https://github.com/BerriAI/litellm/pull/21349)
@@ -396,18 +396,18 @@ graph LR
     - Insults content filter - [PR #21729](https://github.com/BerriAI/litellm/pull/21729)
     - MCP Security guardrail to block unregistered MCP servers - [PR #21429](https://github.com/BerriAI/litellm/pull/21429)
 
-- **[Generic Guardrails](../../docs/proxy/guardrails)**
+- **[Generic Guardrails](/docs/proxy/guardrails/quick_start)**
     - Add configurable fallback to handle generic guardrail endpoint connection failures - [PR #21245](https://github.com/BerriAI/litellm/pull/21245)
 
-- **[Presidio](../../docs/proxy/guardrails)**
+- **[Presidio](/docs/proxy/guardrails/quick_start)**
     - Fix Presidio controls configuration - [PR #21798](https://github.com/BerriAI/litellm/pull/21798)
 
-- **[LakeraAI](../../docs/proxy/guardrails)**
+- **[LakeraAI](/docs/proxy/guardrails/quick_start)**
     - Avoid `KeyError` on missing `LAKERA_API_KEY` during initialization - [PR #21422](https://github.com/BerriAI/litellm/pull/21422)
 
 ### Auto Routing
 
-- **Complexity-based auto routing** — new router strategy that scores requests across 7 dimensions (token count, code presence, reasoning markers, technical terms, etc.) and routes to the appropriate model tier — no embeddings or API calls required - [PR #21789](https://github.com/BerriAI/litellm/pull/21789), [Docs](../../docs/proxy/auto_routing)
+- **Complexity-based auto routing**: new router strategy that scores requests across 7 dimensions (token count, code presence, reasoning markers, technical terms, etc.) and routes to the appropriate model tier, with no embeddings or API calls required - [PR #21789](https://github.com/BerriAI/litellm/pull/21789), [Docs](../../docs/proxy/auto_routing)
 
 ### Prompt Management
 
@@ -441,8 +441,8 @@ graph LR
 
 **Logging & callback overhead**
 
-- Move async/sync callback separation from per-request to callback registration time — ~30% speedup for callback-heavy deployments - [PR #20354](https://github.com/BerriAI/litellm/pull/20354)
-- Skip Pydantic Usage round-trip in logging payload — reduces serialization overhead per request - [PR #21003](https://github.com/BerriAI/litellm/pull/21003)
+- Move async/sync callback separation from per-request to callback registration time, a ~30% speedup for callback-heavy deployments - [PR #20354](https://github.com/BerriAI/litellm/pull/20354)
+- Skip Pydantic Usage round-trip in logging payload, reducing serialization overhead per request - [PR #21003](https://github.com/BerriAI/litellm/pull/21003)
 - Skip duplicate `get_standard_logging_object_payload` calls for non-streaming requests - [PR #20440](https://github.com/BerriAI/litellm/pull/20440)
 - Reuse `LiteLLM_Params` object across the request lifecycle - [PR #20593](https://github.com/BerriAI/litellm/pull/20593)
 - Optimize `add_litellm_data_to_request` hot path - [PR #20526](https://github.com/BerriAI/litellm/pull/20526)
@@ -464,12 +464,12 @@ graph LR
 - Avoid O(n) alias scan for non-alias `get_model_list` lookups - [PR #21136](https://github.com/BerriAI/litellm/pull/21136)
 - Increase default LRU cache size to reduce multi-model cache thrash - [PR #21139](https://github.com/BerriAI/litellm/pull/21139)
 - Cache `get_model_access_groups()` no-args result on Router - [PR #20374](https://github.com/BerriAI/litellm/pull/20374)
-- Deployment affinity routing callback — route to the same deployment for a session - [PR #19143](https://github.com/BerriAI/litellm/pull/19143)
-- Session-ID-based routing — use `session_id` for consistent routing within a session - [PR #21763](https://github.com/BerriAI/litellm/pull/21763)
+- Deployment affinity routing callback: route to the same deployment for a session - [PR #19143](https://github.com/BerriAI/litellm/pull/19143)
+- Session-ID-based routing: use `session_id` for consistent routing within a session - [PR #21763](https://github.com/BerriAI/litellm/pull/21763)
 
 **Connection management & reliability**
 
-- Fix Redis connection pool reliability — prevent connection exhaustion under load - [PR #21717](https://github.com/BerriAI/litellm/pull/21717)
+- Fix Redis connection pool reliability to prevent connection exhaustion under load - [PR #21717](https://github.com/BerriAI/litellm/pull/21717)
 - Fix Prisma connection self-heal for auth and runtime reconnection (reverted, will be re-introduced with fixes) - [PR #21706](https://github.com/BerriAI/litellm/pull/21706)
 - Close streaming connections to prevent connection pool exhaustion - [PR #21213](https://github.com/BerriAI/litellm/pull/21213)
 - Make `PodLockManager.release_lock` atomic compare-and-delete - [PR #21226](https://github.com/BerriAI/litellm/pull/21226)
@@ -510,7 +510,7 @@ Vulnerability counts are based on full image scans including build-time tooling.
 ### Critical Severity
 
 **1. Node.js Critical (non-root, database, spend_logs images):**
-Node.js 24.12.0 is used **only** for the Admin UI build and Prisma client generation — it is **not** part of the LiteLLM Python application runtime.
+Node.js 24.12.0 is used **only** for the Admin UI build and Prisma client generation; it is **not** part of the LiteLLM Python application runtime.
 
 | Package | Vulnerability | Description | Fix Version |
 |---------|---------------|-------------|-------------|
@@ -526,7 +526,7 @@ The `spend_logs` image contains additional vulnerabilities in the underlying Go 
 
 ### High Severity
 
-All high-severity vulnerabilities are in **npm/Node.js build-time dependencies** or system-level libraries — they are **not** in the LiteLLM Python application code.
+All high-severity vulnerabilities are in **npm/Node.js build-time dependencies** or system-level libraries; they are **not** in the LiteLLM Python application code.
 
 **Present in all images:**
 

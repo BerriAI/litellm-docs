@@ -247,7 +247,7 @@ model_list:
 
 ## LiteLLM A2A Gateway {#litellm-a2a-gateway}
 
-Register a Bedrock AgentCore runtime as a first-class A2A agent on the LiteLLM [Agent Gateway](../a2a). This gives you per-agent RBAC, access groups, trace-ID enforcement, and the `x-a2a-{agent_name_or_id}-{header}` per-user passthrough convention — same surface as any other A2A provider.
+Register a Bedrock AgentCore runtime as a first-class A2A agent on the LiteLLM [Agent Gateway](../a2a). This gives you per-agent RBAC, access groups, trace-ID enforcement, and the `x-a2a-{agent_name_or_id}-{header}` per-user passthrough convention, the same surface as any other A2A provider.
 
 This path is distinct from the chat-completions invocation above. Pick one based on your client:
 
@@ -264,7 +264,7 @@ This path is distinct from the chat-completions invocation above. Pick one based
 1. Go to **Agents** → **Add Agent**.
 2. Select **Bedrock AgentCore** as the provider.
 3. Paste the AgentCore Runtime ARN as the agent URL.
-4. Configure AWS credentials (or leave blank to use the proxy's ambient credential chain — see [Authentication](#a2a-gateway-authentication) below).
+4. Configure AWS credentials (or leave blank to use the proxy's ambient credential chain; see [Authentication](#a2a-gateway-authentication) below).
 
 </TabItem>
 <TabItem value="api" label="REST API">
@@ -291,6 +291,14 @@ curl -X POST http://localhost:4000/v1/agents \
 </TabItem>
 </Tabs>
 
+### Updating or rotating credentials
+
+Any credential-bearing field in `litellm_params` (`aws_access_key_id`, `aws_secret_access_key`, `aws_session_token`, `api_key`, and similar) is write-only. `GET`/`POST`/`PUT`/`PATCH /v1/agents` responses, and the Admin UI's agent edit form, always show these fields as a redacted placeholder rather than the stored value.
+
+- Editing an unrelated field (name, description, rate limits) and saving leaves the stored credential unchanged, even though the form round-trips the placeholder for every credential field it didn't touch.
+- To rotate a credential, submit the new value for that field; the update is applied immediately and, again, never echoed back.
+- Submitting a field as an empty string clears the stored credential (for example, to fall back to the proxy's ambient AWS credential chain).
+
 ### 2. Invoke via A2A
 
 ```bash showLineNumbers
@@ -310,6 +318,37 @@ curl -X POST http://localhost:4000/a2a/my-agentcore-runtime/message/send \
     }
   }'
 ```
+
+### Session isolation
+
+Each AgentCore runtime session is its own microVM: reusing the same `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` keeps conversation context, and mixing two callers into one session leaks context between them. LiteLLM picks that session id in this order:
+
+1. **`params.message.contextId`** in the A2A request, scoped to the calling API key so two keys can never collide on the same `contextId`. This is the recommended way to isolate sessions per conversation.
+2. **`runtimeSessionId`** in the agent's `litellm_params` (see [Available Parameters](#available-parameters)), used only when the request carries no `contextId`. Every caller that omits `contextId` shares this one session.
+3. A freshly generated id, when neither of the above is set. Every request gets its own session, so multi-turn context is not preserved.
+
+To keep a conversation going across turns, send the same `contextId` on every `message/send` or `message/stream` call for that conversation, and a different `contextId` for each new conversation or end user:
+
+```bash showLineNumbers
+curl -X POST http://localhost:4000/a2a/my-agentcore-runtime/message/send \
+  -H "x-litellm-api-key: Bearer sk-client-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "role": "user",
+        "parts": [{"kind": "text", "text": "Summarize the latest clinical trial results"}],
+        "messageId": "msg-1",
+        "contextId": "conversation-<a stable id you generate per conversation, e.g. a UUID>"
+      }
+    }
+  }'
+```
+
+AWS requires the runtime session id to be 33-256 characters. LiteLLM prefixes `contextId` with a 16-character hash of the calling key before checking this, so `contextId` itself needs to be at least 16 characters; a UUID (36 characters) comfortably clears it. A `contextId` (or a configured `runtimeSessionId`) outside that range is rejected with HTTP 400 and a JSON-RPC `-32602` error before any request reaches AWS, rather than silently falling back to a shared session.
 
 ### Authentication {#a2a-gateway-authentication}
 
@@ -346,7 +385,7 @@ Recognized fields on `litellm_params` for SigV4:
 
 #### IRSA on EKS
 
-For Kubernetes deployments using [IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), no explicit credential configuration is needed — boto3's default chain picks up `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` from the pod environment automatically.
+For Kubernetes deployments using [IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), no explicit credential configuration is needed. boto3's default chain picks up `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` from the pod environment automatically.
 
 If you want the invocation to assume a **second** role (e.g. separate the pod's identity from the agent-invocation identity for CloudTrail attribution), combine IRSA with `aws_role_name`:
 
@@ -372,7 +411,7 @@ The proxy pod's IRSA role serves as the source identity for the AssumeRole call;
 
 ### Per-user header passthrough
 
-The standard A2A header forwarding mechanisms apply — see [A2A Agent Authentication Headers](../a2a_agent_headers) for the full reference. All three methods work with AgentCore:
+The standard A2A header forwarding mechanisms apply; see [A2A Agent Authentication Headers](../a2a_agent_headers) for the full reference. All three methods work with AgentCore:
 
 - **`static_headers`** — always sent to AgentCore (e.g. a custom `X-Tenant-Id`)
 - **`extra_headers`** — admin-configured allowlist of client headers to forward
@@ -385,7 +424,7 @@ Note that the SigV4 / Bearer auth handled by `litellm_params` is **separate** fr
 All standard A2A controls apply:
 - **Per-agent RBAC** — [Agent Permission Management](../a2a_agent_permissions). Returns HTTP 403 when the calling key/team isn't authorized for the AgentCore agent.
 - **Access groups** — tag the agent with one or more access groups in the LiteLLM dashboard, then grant the group to a team or key via `object_permission.agent_access_groups`. See [Agent Access Groups](../a2a_agent_permissions#agent-access-groups).
-- **Trace ID enforcement** — set `require_trace_id_on_calls_to_agent: true` on `litellm_params` to require `x-litellm-trace-id` on every inbound call. See [A2A Overview — Trace ID enforcement](../a2a#trace-id-enforcement-optional-per-agent).
+- **Trace ID enforcement.** Set `require_trace_id_on_calls_to_agent: true` on `litellm_params` to require `x-litellm-trace-id` on every inbound call. See [A2A Overview: Trace ID enforcement](../a2a#trace-id-enforcement-optional-per-agent).
 
 ## Further Reading
 
