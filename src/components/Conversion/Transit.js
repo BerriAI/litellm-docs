@@ -36,7 +36,9 @@ function Monogram({x, y, size}) {
 
 function Car({d, dur, begin}) {
   return (
-    <rect className={styles.car} x="-8" y="-3.5" width="16" height="7" rx="2.5">
+    // Hidden until its first run starts, so it never waits at the origin
+    <rect className={styles.car} x="-8" y="-3.5" width="16" height="7" rx="2.5" opacity="0">
+      <set attributeName="opacity" to="1" begin={begin} fill="freeze" />
       <animateMotion dur={dur} begin={begin} repeatCount="indefinite" path={d} rotate="auto" />
     </rect>
   );
