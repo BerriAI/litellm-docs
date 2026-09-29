@@ -5,6 +5,13 @@ import Link from '@docusaurus/Link';
 import {AgentBand, PathFinder, SalesBand, Tiles, UseCases} from '@site/src/components/Conversion';
 import styles from './index.module.css';
 
+const PROOF = [
+  ['59.8k GitHub stars', 'https://github.com/BerriAI/litellm'],
+  ['89M downloads a month', 'https://pypistats.org/packages/litellm'],
+  ['SOC 2 Type II', 'https://trust.litellm.ai/'],
+  ['Trusted by Netflix, Okta, Ramp, and NASA', '/docs/enterprise'],
+];
+
 const POPULAR = [
   {icon: 'gateway', title: 'Gateway quickstart', text: 'Docker + Postgres, admin UI, first virtual key in five minutes.', to: '/docs/proxy/docker_quick_start'},
   {icon: 'sdk', title: 'SDK quickstart', text: 'uv add litellm, then call any provider with completion().', to: '/docs/'},
@@ -18,17 +25,25 @@ export default function Home() {
   return (
     <Layout
       title="LiteLLM documentation"
-      description="Docs for LiteLLM: a Python SDK and a self-hosted AI Gateway that give 100+ LLM providers one OpenAI-compatible API, with keys, budgets, spend tracking, and guardrails.">
+      description="Docs for LiteLLM, the most widely used open-source AI gateway: a Python SDK and a self-hosted gateway that give 100+ LLM providers one OpenAI-compatible API, with keys, budgets, spend tracking, and guardrails.">
       <Head>
         <link rel="alternate" type="text/markdown" href="/index.md" title="LiteLLM docs home (markdown)" />
       </Head>
       <main className={styles.page}>
         <header className={styles.hero}>
-          <h1 className={styles.title}>One API for every model, in your code or behind your own gateway.</h1>
+          <h1 className={styles.title}>The most widely used open-source AI gateway.</h1>
           <p className={styles.lead}>
-            LiteLLM is an open-source Python SDK and a self-hosted AI Gateway. Call OpenAI, Anthropic, Bedrock, Gemini Enterprise Agent Platform, and 100+ other
-            providers in the OpenAI format, with keys, budgets, spend tracking, and fallbacks built in.
+            One API for every model, in your Python code or behind your own gateway. Call OpenAI, Anthropic, Bedrock, Gemini Enterprise Agent
+            Platform, and 100+ other providers in the OpenAI format, with keys, budgets, spend tracking, and fallbacks built in.
           </p>
+          {/* Figures match the facts block in plugins/llms.js; update both together */}
+          <ul className={styles.proof}>
+            {PROOF.map(([label, href]) => (
+              <li key={label}>
+                <Link to={href}>{label}</Link>
+              </li>
+            ))}
+          </ul>
         </header>
 
         <PathFinder source="docs-home" />
