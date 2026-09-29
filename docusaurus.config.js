@@ -66,7 +66,11 @@ const inkeepConfig = {
 const config = {
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/brand/litellm-monogram-blue-192.png',
+  // SVG favicon that turns white on dark browser themes; PNG for browsers without SVG icons
+  favicon: '/img/brand/litellm-favicon.svg',
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'alternate icon', type: 'image/png', href: '/img/brand/litellm-monogram-blue-192.png'}},
+  ],
 
   // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
@@ -85,6 +89,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  clientModules: [require.resolve('./src/clientModules/gridMarks.js')],
   plugins: [
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
@@ -391,7 +396,7 @@ const config = {
         blog: false, // Disable the default blog plugin from preset-classic
         pages: {},
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
       }),
     ],
@@ -435,6 +440,8 @@ const config = {
         // Primary logo (monogram + wordmark): blue on light, white on dark,
         // per the logo guidelines. The wordmark-only secondary logo ships in
         // white only, so it cannot sit on the light header.
+        // Shown beside the logo as a "DOCS" label (styled in logo-shape.css)
+        title: 'Docs',
         logo: {
           alt: 'LiteLLM',
           src: '/img/brand/litellm-logo-blue.png',

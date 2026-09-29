@@ -36,7 +36,7 @@ export default function TOC({ className, ...props }) {
         <div className={styles.promoHeading}>LiteLLM Enterprise</div>
         <div className={styles.promoDescription}>
           SSO/SAML, audit logs, spend tracking, multi-team management, and
-          guardrails — built for production.
+          guardrails, built for production.
         </div>
         <Link to="/docs/enterprise" className={styles.promoButton}>
           Learn more →
