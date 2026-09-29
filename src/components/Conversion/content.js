@@ -35,7 +35,7 @@ const PROMPTS = {
     title: 'Run the LiteLLM Gateway locally',
     text: `Help me run the LiteLLM Gateway locally. First read ${DOCS}/docs/proxy/docker_quick_start.md. Then:
 1. Check that Docker Compose v2 is installed and running, and that port 4000 is free.
-2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32. Add .env to .gitignore and never print either key.
+2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
 3. Run docker compose -f docker-compose.quickstart.yml up -d and poll http://localhost:4000/health/readiness until the database shows as connected.
 4. Ask me which provider and model to add. Add it with POST /model/new using the master key, reading my provider API key from my shell environment without echoing it.
 5. Verify: GET /v1/models lists the model and POST /v1/chat/completions returns a reply.
@@ -53,7 +53,7 @@ const PROMPTS = {
 };
 
 const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
-printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
+printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\nPOSTGRES_PASSWORD=%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" > .env
 docker compose -f docker-compose.quickstart.yml up -d`;
 
 const GATEWAY_DOCKER_RUN = `docker run \\
@@ -80,7 +80,7 @@ const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.
 const INSTALLS = {
   gateway: {
     title: 'Start the Gateway',
-    what: 'Runs the gateway and a Postgres database on port 4000, with the admin UI at /ui. The master key and salt key are generated into .env.',
+    what: 'Runs the gateway and a Postgres database on port 4000, with the admin UI at /ui. The master key, salt key, and database password are generated into .env.',
     options: [
       {
         id: 'compose',
