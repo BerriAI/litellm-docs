@@ -5,9 +5,8 @@ Register custom pricing for sagemaker completion model
 For chat, completion, embedding and responses models, set `cost_per_second`. LiteLLM multiplies it by the full request
 duration, including streaming until the last chunk, and ignores it when per-token pricing is configured
 
-`input_cost_per_second` and `output_cost_per_second` remain accepted as legacy aliases for these modes and are charged
-once, not added. When both are set, `input_cost_per_second` wins. Transcription and video continue to use the
-input/output per-second fields
+For these modes, `input_cost_per_second` remains accepted as a legacy alias and is charged once.
+`output_cost_per_second` is ignored and remains available for transcription, speech and video
 
 ```python
 # !uv add boto3 
