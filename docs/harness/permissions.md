@@ -25,7 +25,7 @@ If you ask for a mode the harness can't enforce, the call raises `CapabilityUnsu
 
 ## Approvals
 
-The API also accepts `permissions="ask"` with an `on_approval` callback, or `Approval` events in a stream. The CLI harnesses don't support it in this release and raise `CapabilityUnsupported`. Check `capabilities(harness).tool_approval` before depending on it.
+The API also accepts `permissions="ask"` with an `on_approval` callback, or `Approval` events in a stream. The CLI harnesses don't support it in this release and raise `CapabilityUnsupported`. Check `litellm.agent_capabilities(harness).tool_approval` before depending on it.
 
 ```python
 from litellm.harness import Approval
