@@ -234,9 +234,9 @@ const USE_CASES = [
   {
     id: 'sdk',
     product: 'Python SDK',
-    problem: 'Your Python code calls more than one model provider.',
+    problem: 'Call 100+ LLM providers from Python with one function.',
     solution:
-      'Call every provider with one function. completion() takes the same arguments for OpenAI, Anthropic, Bedrock, and 100+ others, and always answers in the OpenAI format, so switching models is a string change. Streaming, retries, fallbacks, and cost per call come with it.',
+      'completion() takes the same arguments for OpenAI, Anthropic, Bedrock, and 100+ others, and always answers in the OpenAI format, so switching models is a string change. Streaming, retries, fallbacks, and cost per call come with it.',
     to: '/docs/',
     cta: 'Install the SDK',
     prompt: 'sdk',
@@ -254,9 +254,9 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'gateway',
     product: 'AI Gateway',
-    problem: 'Several apps and teams share provider keys, and nobody can say who spent what.',
+    problem: 'One endpoint for every provider, with keys, budgets, and spend tracking for each team.',
     solution:
-      'Run one gateway that every app calls in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
+      'Every app calls the gateway in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
     to: '/docs/proxy/docker_quick_start',
     cta: 'Start the Gateway',
     prompt: 'gateway',
@@ -273,7 +273,7 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'enterprise',
     product: 'Enterprise',
-    problem: 'Security review wants single sign-on, audit logs, and admin roles before rollout.',
+    problem: 'Single sign-on, audit logs, and admin roles for a company-wide rollout.',
     solution:
       'Enterprise adds them to the same gateway with a license key: SSO and SCIM, audit logs of every admin action, delegated admins per team, multi-region deployment, and support from the engineers who build LiteLLM.',
     to: '/docs/enterprise',

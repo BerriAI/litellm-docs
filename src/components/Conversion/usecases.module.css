@@ -14,7 +14,7 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 1rem 0 2rem;
+  margin: 2rem 0 0.5rem;
   border-radius: var(--lite-radius-md, 12px);
   border: 1px solid var(--ifm-color-emphasis-200);
 }

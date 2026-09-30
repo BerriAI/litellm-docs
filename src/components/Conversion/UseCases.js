@@ -10,8 +10,8 @@ import {track} from './shared';
 import cv from './styles.module.css';
 import styles from './usecases.module.css';
 
-// The docs home below the path picker: one section per product, each the
-// problem a reader has, then the product that solves it. The visual is always
+// The docs home below the path picker: one section per product, each what
+// the product does, then how. The visual is always
 // real text (code, a small table, or log lines), so it reads the same for a
 // person and for an agent reading the page's markdown.
 
@@ -144,11 +144,11 @@ export default function UseCases({source = 'docs-home'}) {
       <h2 id="use-cases-title" className={styles.title}>
         Why developers love LiteLLM
       </h2>
-      <Stats />
       <div className={styles.list}>
         <Row u={sdk} source={source} />
         <Row u={gateway} source={source} />
       </div>
+      <Stats />
       <div className={styles.built}>
         <h3 className={styles.moreTitle}>Built on the gateway</h3>
         <p className={styles.moreLead}>

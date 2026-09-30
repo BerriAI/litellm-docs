@@ -99,10 +99,10 @@ function useCasesMarkdown() {
   return [
     '## Why developers love LiteLLM',
     '',
-    `${STATS.stars} GitHub stars, ${STATS.downloadsShort} PyPI downloads last month, ${STATS.contributors} contributors, and ${STATS.imagePulls} container image pulls.`,
-    '',
     ...row(sdk),
     ...row(gateway),
+    `${STATS.stars} GitHub stars, ${STATS.downloadsShort} PyPI downloads last month, ${STATS.contributors} contributors, and ${STATS.imagePulls} container image pulls.`,
+    '',
     '### Built on the gateway',
     '',
     'Once your apps call the gateway, the same deployment can serve MCP tools and agents, pick the right model for each request, and be run from your terminal or by your coding agent.',
