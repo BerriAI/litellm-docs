@@ -20,7 +20,7 @@
   --ht-line: rgba(255, 255, 255, 0.14);
 }
 :global([data-theme='dark']) .ps {
-  color: var(--ifm-color-primary);
+  color: #9fabff;
 }
 
 .bar {
