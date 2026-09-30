@@ -845,6 +845,7 @@ const sidebars = {
           label: "Logging, Alerting, Metrics",
           items: [
             "proxy/dynamic_logging",
+            "proxy/lens",
             "proxy/logging",
             "proxy/logging_spec",
             "proxy/team_logging",
