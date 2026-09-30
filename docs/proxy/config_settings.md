@@ -1248,6 +1248,8 @@ router_settings:
 | LITELLM_LOCAL_MODEL_COST_MAP | Set to `True` to use the model cost map bundled with the package (`litellm/model_prices_and_context_window_backup.json`) only, disabling the remote fetch from GitHub at startup and on `/reload/model_cost_map`. Default is `False`: the remote file is fetched at startup and the bundled copy is only used as a fallback if the fetch fails
 | LITELLM_LOCAL_POLICY_TEMPLATES | When set to "true", uses local backup policy templates instead of fetching from GitHub. Policy templates are fetched from https://raw.githubusercontent.com/BerriAI/litellm/main/policy_templates.json by default, with automatic fallback to local backup on failure
 | LITELLM_LOG | Enable detailed logging for LiteLLM
+| LITELLM_ECS_LOGS | Set to `true` to format all LiteLLM logs (and uvicorn's access/error logs) as JSON conforming to the Elastic Common Schema (ECS) v8.x, for ingestion into the Elastic Stack or Datadog's ECS mode. Takes precedence over `JSON_LOGS`. Can also be turned on at runtime via `litellm._logging._turn_on_ecs()`
+| LITELLM_SERVICE_NAME | Overrides the `service.name` field emitted by ECS-formatted logs when `LITELLM_ECS_LOGS` is set. Default is `litellm`
 | LITELLM_MODEL_COST_MAP_URL | URL for fetching model cost map data. Default is https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
 | LITELLM_LOGGER_NAME | Name for OTEL logger 
 | LITELLM_METER_NAME | Name for OTEL Meter 
