@@ -240,6 +240,12 @@ const USE_CASES = [
     to: '/docs/',
     cta: 'Install the SDK',
     prompt: 'sdk',
+    // On the docs home the hero already installs and holds the prompt, so the
+    // row points to what comes next
+    links: [
+      ['SDK quickstart', '/docs/'],
+      ['Supported providers', '/docs/providers'],
+    ],
     visual: {
       type: 'code',
       lang: 'python',
@@ -254,12 +260,16 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'gateway',
     product: 'AI Gateway',
-    problem: 'One endpoint for every provider, with keys, budgets, and spend tracking for each team.',
+    problem: 'One endpoint for every model, with keys, budgets, and spend tracking for each team.',
     solution:
       'Every app calls the gateway in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
     to: '/docs/proxy/docker_quick_start',
     cta: 'Start the Gateway',
     prompt: 'gateway',
+    links: [
+      ['Gateway quickstart', '/docs/proxy/docker_quick_start'],
+      ['Virtual keys and budgets', '/docs/proxy/virtual_keys'],
+    ],
     visual: {
       type: 'code',
       lang: 'bash',

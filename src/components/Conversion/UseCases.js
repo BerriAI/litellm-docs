@@ -79,16 +79,26 @@ function Row({u, source}) {
         <p className={styles.product}>{u.product}</p>
         <h3 className={styles.problem}>{u.problem}</h3>
         <p className={styles.solution}>{u.solution}</p>
-        <div className={styles.actions}>
-          {u.sales ? (
-            <SalesButton source={`${source}-${u.id}`} variant="secondary" />
-          ) : (
-            <Link className={cv.btnSecondary} to={u.to} onClick={() => track('docs_use_case_cta', {id: u.id, source})}>
-              {u.cta}
-            </Link>
-          )}
-          {u.prompt && <PromptButton id={u.prompt} source={`${source}-${u.id}`} size="md" />}
-        </div>
+        {u.links ? (
+          <div className={styles.links}>
+            {u.links.map(([label, to]) => (
+              <Link key={to} to={to} onClick={() => track('docs_use_case_link', {id: u.id, to, source})}>
+                {label} →
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.actions}>
+            {u.sales ? (
+              <SalesButton source={`${source}-${u.id}`} variant="secondary" />
+            ) : (
+              <Link className={cv.btnSecondary} to={u.to} onClick={() => track('docs_use_case_cta', {id: u.id, source})}>
+                {u.cta}
+              </Link>
+            )}
+            {u.prompt && <PromptButton id={u.prompt} source={`${source}-${u.id}`} size="md" />}
+          </div>
+        )}
       </div>
       <div className={styles.visual}>
         <Visual v={u.visual} />

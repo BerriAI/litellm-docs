@@ -89,6 +89,13 @@
   color: var(--ifm-color-emphasis-800);
   line-height: 1.6;
 }
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.1rem;
+  font-weight: 600;
+}
 .actions {
   display: flex;
   flex-wrap: wrap;
