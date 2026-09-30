@@ -55,19 +55,7 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the late
 
 **The proxy refuses to start with an unset, empty, or publicly known master key.** A deployment with no `LITELLM_MASTER_KEY`, an empty one, or `sk-1234` stops booting after the upgrade. The startup error names where the bad key came from and prints a command that generates a secure one. If the database holds values encrypted with the old key, also set `LITELLM_MIGRATE_FROM_MASTER_KEY` so the next boot re-encrypts them. To keep the old behavior on a local sandbox, set `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` or `general_settings.dangerously_permit_weak_or_unset_master_key: true`. See [PR #42019](https://github.com/BerriAI/litellm/pull/42019), [PR #42011](https://github.com/BerriAI/litellm/pull/42011)
 
-**The `langfuse` callback now requires the Langfuse v4 SDK.** LiteLLM pins `langfuse>=4.7,<5` and exports generations and spans over Langfuse's OpenTelemetry (OTLP) route. SDK 2.x and 3.x are rejected when the logger is built, your Langfuse server must accept OTLP ingestion, and trace ids and span nesting differ from what the v2 integration produced, so dashboards or queries keyed on the old shape may need updating. See [PR #36741](https://github.com/BerriAI/litellm/pull/36741)
-
 **An exhausted budget now returns HTTP 422 instead of 429.** Clients stop treating a spent budget as a retryable rate limit. Real rpm/tpm limits still return 429. Set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status. See [PR #42097](https://github.com/BerriAI/litellm/pull/42097)
-
-**A `model_group_alias` now shares its target's rate-limit buckets.** Requests through an alias and requests to the model group count against one `<scope>:<model group>` bucket for key, team, org and project `model_rpm_limit` / `model_tpm_limit` and the default per-key limits. A key can no longer double its limit by alternating between the two names, and 429 details and rate-limit headers name the model group. See [PR #42516](https://github.com/BerriAI/litellm/pull/42516)
-
-**Auth answers a database outage with 503 `no_db_connection` on more paths.** Team membership reads, the JWT user read, the JWT single-team fallback and the caller's user read on management routes now return a retryable 503 while Postgres is unreachable, where they previously served the request without membership limits, answered 401 "user doesn't exist", or returned a bare 500. `allow_requests_on_db_unavailable: true` keeps working as before. See [PR #42036](https://github.com/BerriAI/litellm/pull/42036), [PR #42344](https://github.com/BerriAI/litellm/pull/42344), [PR #42399](https://github.com/BerriAI/litellm/pull/42399), [PR #42410](https://github.com/BerriAI/litellm/pull/42410)
-
-**Key and session settings that were ignored are now enforced.** `general_settings.disable_custom_api_keys: true` now rejects a caller-chosen key value on `/key/generate`, and a change made on the settings page reaches every worker. Only proxy admins can set `disable_global_guardrails: true` on a key or team; other callers get 403, and existing exemptions granted by an admin stay in place. Admin UI logout now revokes the session server side, a password change signs out the user's other sessions, and JWT users marked inactive are rejected. See [PR #42437](https://github.com/BerriAI/litellm/pull/42437), [PR #42699](https://github.com/BerriAI/litellm/pull/42699), [PR #42463](https://github.com/BerriAI/litellm/pull/42463), [PR #42064](https://github.com/BerriAI/litellm/pull/42064)
-
-**MCP server registration and access are stricter.** Creating or updating an MCP server whose `server_name` or `alias` another server already uses returns 400 naming the conflict. When `LITELLM_CORS_ORIGINS` is set, MCP requests from an Origin outside that list get 403. An agent key acting for a user is now limited to the tools that user and their team may call, not every tool on the server. See [PR #42791](https://github.com/BerriAI/litellm/pull/42791), [PR #42649](https://github.com/BerriAI/litellm/pull/42649), [PR #42478](https://github.com/BerriAI/litellm/pull/42478)
-
-**Vector stores declared in `config.yaml` are read-only through the API.** They now appear in `/vector_store/list` and `/vector_store/info` with `is_config: true`, and `new`, `update` or `delete` on a config-declared id returns 400 pointing at the YAML file. See [PR #42574](https://github.com/BerriAI/litellm/pull/42574)
 
 **275 retired model entries were removed from the bundled cost map.** Entries past their provider deprecation date, or no longer served by the provider, no longer resolve pricing or metadata from the bundled map. If you still route to one of them, add custom pricing on the deployment. The full list is under Model catalog and pricing below. See [PR #42435](https://github.com/BerriAI/litellm/pull/42435), [PR #42521](https://github.com/BerriAI/litellm/pull/42521)
 
@@ -78,12 +66,6 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the late
 **The `s3_v2` logger now gives up on objects that keep failing.** With default settings, an object that keeps failing next to delivered siblings is dropped after one hour, and an object-specific 400 or 403 is dropped after its in-call retries, where both were previously retried forever. Set `s3_max_retry_age_seconds: 0` and `s3_drop_on_terminal_error: false` for the old behavior. See [PR #43022](https://github.com/BerriAI/litellm/pull/43022)
 
 **CLI session spend is recorded under a stable per-user alias.** Requests made with a `litellm-proxy login` session token now log under `cli-session-<user_id>` instead of a fresh hashed key per login, so `user_api_key_hash` in callbacks and the key column in usage data change for those requests. A SQL backfill ships with the change to fold old per-login rows into the alias. See [PR #40541](https://github.com/BerriAI/litellm/pull/40541)
-
-**OCR always runs on the native Rust route.** The Python OCR path is removed. The official wheels and Docker image include the native extension, so most deployments see no change, but an install built without it now fails fast on `/v1/ocr` instead of falling back to Python. See [PR #43081](https://github.com/BerriAI/litellm/pull/43081)
-
-**Self-deployed Vertex `gemma/` and `openai/<endpoint id>` routes stop forwarding OpenAI platform-only params.** An explicit `service_tier`, `store`, `modalities`, `prediction`, `audio`, `safety_identifier`, `prompt_cache_retention`, `web_search_options` or `prompt_cache_key` now fails in LiteLLM unless `drop_params` is on, instead of reaching the container. Use `allowed_openai_params` to keep forwarding one. See [PR #43079](https://github.com/BerriAI/litellm/pull/43079)
-
-**Bedrock batch uploads for Claude reject params Bedrock Claude cannot take.** A batch row carrying a param such as `logprobs` is now refused at `POST /v1/files` with a 400, the same error real time returns, instead of being written to S3 and failing inside the batch job. Function tools and `reasoning_effort` are now mapped the way real time maps them. See [PR #43087](https://github.com/BerriAI/litellm/pull/43087)
 
 :::
 
@@ -913,7 +895,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### Logging and observability
 
-- Migrate the sdk callback to langfuse v4 - [PR #36741](https://github.com/BerriAI/litellm/pull/36741)
+- Migrate the sdk callback to langfuse v4. The Docker image now ships `langfuse>=4.7,<5`. If you install the SDK yourself, upgrade from `langfuse` 2.x or 3.x, which the logger now rejects at startup. Traces go through Langfuse's OpenTelemetry (OTLP) ingestion, so a self-hosted Langfuse server must accept OTLP, and trace ids and span nesting differ from the v2 integration - [PR #36741](https://github.com/BerriAI/litellm/pull/36741)
 - Replace colons in generated log filenames - [PR #40452](https://github.com/BerriAI/litellm/pull/40452)
 - Attribute provider and model_info on pre_call_hook rejections - [PR #41077](https://github.com/BerriAI/litellm/pull/41077)
 - Bound concurrent S3 uploads per flush and add opt-in JSONL batch files - [PR #41258](https://github.com/BerriAI/litellm/pull/41258)
