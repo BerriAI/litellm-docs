@@ -120,29 +120,58 @@ print(response)
 
 The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p2-fast`) are treated as routers even without the `routers/` prefix.
 
-## FireRouter (auto router)
+## FireRouter and open-model routers
 
-[FireRouter](https://docs.fireworks.ai/ecosystem/firerouter/litellm) is Fireworks' managed router. Instead of pointing at one model, the `accounts/fireworks/routers/firerouter` resource picks a model per request, and the response `model` field reports which one served it.
+[FireRouter](https://docs.fireworks.ai/nexus/firerouter) is Fireworks' managed router. Instead of pointing at one model, a router ID picks a model for each user turn. Fireworks serves routers under `accounts/fireworks/routers/<id>`, and LiteLLM accepts the short ID or the full resource path:
 
-LiteLLM accepts three equivalent spellings:
+| Router ID | What it routes across | LiteLLM model |
+| - | - | - |
+| `auto` | Fireworks open models, chosen by Fireworks | `fireworks_ai/auto` |
+| `auto-instant` | Fireworks open models, tuned for the lowest latency | `fireworks_ai/auto-instant` |
+| `firerouter` | Claude Opus or GPT, plus the Fireworks open-model mix | `fireworks_ai/firerouter` |
+| `firerouter/<models>` | Only the models you list, such as `firerouter/opus` or `firerouter/kimi-k3/glm-5p3` | `fireworks_ai/firerouter/kimi-k3/glm-5p3` |
+| any of the above | Same router, spelled out | `fireworks_ai/accounts/fireworks/routers/<id>` |
 
-```python
-model="fireworks_ai/firerouter"                                        # default router
-model="fireworks_ai/firerouter/kimi-k3/glm-5p2"                        # custom slug: restrict the pool
-model="fireworks_ai/accounts/fireworks/routers/firerouter"             # full resource id
+`auto` and `auto-instant` only use Fireworks open models, so your Fireworks API key is the only credential they need. `firerouter/auto` and `firerouter/auto-instant` behave the same way. See [Example router IDs](https://docs.fireworks.ai/nexus/firerouter#example-router-ids) for more routes
+
+The full resource path works on every LiteLLM version. The short `firerouter` IDs need v1.104.0-rc.1 or later, and the short `auto` and `auto-instant` IDs need v1.105.0 or later. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
+
+```yaml
+model_list:
+  - model_name: auto
+    litellm_params:
+      model: fireworks_ai/accounts/fireworks/routers/auto
+      api_key: os.environ/FIREWORKS_AI_API_KEY
+  - model_name: firerouter
+    litellm_params:
+      model: fireworks_ai/accounts/fireworks/routers/firerouter
+      api_key: os.environ/FIREWORKS_AI_API_KEY
 ```
 
-### Bring your own key for pass-through legs
+```bash
+curl -X POST http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "auto", "messages": [{"role": "user", "content": "hello"}]}'
+```
 
-Fireworks does not resell closed models. When FireRouter picks a Claude or GPT leg, it forwards the request to that provider under your own credentials, so the caller must supply `x-anthropic-api-key` or `x-openai-api-key`. Without it Fireworks fails closed with a 401.
+### Which model served the request
 
-Attach the header server-side on the deployment with `litellm_params.extra_headers`, or let each client send its own by enabling `forward_client_headers_to_llm_api` globally or per model group.
+The proxy returns the `model_name` you configured, such as `auto`, in the response `model` field. On the SDK, a non-streaming `completion()` reports the served model in `response.model`, for example `fireworks_ai/glm-5p3-flash`. A streamed response keeps the requested router ID in `model` and puts the served model in `response._hidden_params["provider_response_model"]`
+
+### Closed-model credentials
+
+Fireworks does not resell closed models. When a `firerouter` route includes Claude or GPT, Fireworks calls that provider under your own account, using either [Provider Keys](https://docs.fireworks.ai/nexus/provider-keys) stored on your Fireworks account or an `x-anthropic-api-key` or `x-openai-api-key` header on the request. A header takes precedence over a stored Provider Key
+
+If no credential is available for a closed model, FireRouter leaves it out and serves the turn with the other models in the route. For example, `firerouter/opus` without an Anthropic credential is served by Fireworks open models. You get `400 no_credential` instead when you send `x-routing-preference: 1`, which forces the route's closed primary, or when you call a closed model ID directly
+
+To send the header from LiteLLM, set it on the deployment with `litellm_params.extra_headers`, or let each client send its own by enabling `forward_client_headers_to_llm_api` globally or per model group
 
 ```yaml
 model_list:
   - model_name: firerouter
     litellm_params:
-      model: fireworks_ai/firerouter
+      model: fireworks_ai/accounts/fireworks/routers/firerouter
       api_key: os.environ/FIREWORKS_AI_API_KEY
       extra_headers:
         x-anthropic-api-key: os.environ/ANTHROPIC_API_KEY
@@ -154,13 +183,6 @@ general_settings:
 # or per model group:
 # model_group_settings:
 #   forward_client_headers_to_llm_api: [firerouter]
-```
-
-```bash
-curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "firerouter", "messages": [{"role": "user", "content": "hello"}]}'
 ```
 
 The same headers go through the SDK on `completion()`:
@@ -177,11 +199,11 @@ response = completion(
 
 ### Routing preference
 
-`x-routing-preference` steers the router on a 1–5 scale, where 1 is cheapest and 5 is highest quality. It travels the same way as the BYOK headers: `litellm_params.extra_headers` server-side, client-supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`.
+`x-routing-preference` sets how strongly a `firerouter` request favors its primary model or cheaper models, from `1` (max intelligence) to `5` (max savings). The default is `3`. See [Routing Preferences](https://docs.fireworks.ai/nexus/routing-preferences). It travels the same way as the credential headers: `litellm_params.extra_headers` on the deployment, client-supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`
 
 ### Cost tracking
 
-LiteLLM prices each request off the model Fireworks reports it routed to. Fireworks-hosted legs are billed at Fireworks rates; pass-through legs (for example a Claude leg) are billed at that provider's own list price. Your invoice is split across two vendor bills, the Fireworks key covering open models and your Anthropic or OpenAI key covering pass-through, but LiteLLM spend logs and budgets sum both under the one model group.
+LiteLLM prices each request off the model Fireworks reports it routed to, so a router has no price of its own. Fireworks-hosted models are billed at Fireworks rates, and closed models (for example a Claude turn) are billed at that provider's own list price. The charges land on two vendor bills, Fireworks for open models and Anthropic or OpenAI for closed ones, but LiteLLM spend logs and budgets add both up under the one model group
 
 ## Usage with LiteLLM Proxy 
 

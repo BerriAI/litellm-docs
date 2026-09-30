@@ -1525,6 +1525,7 @@ const learnSidebar = {
   learnSidebar: [
     // ── Landing page ──────────────────────────────────────────────────
     { type: "doc", id: "learn/index", label: "Learn" },
+    { type: "link", label: "LiteLLM Academy", href: "https://litellm.ai/course" },
     {
       type: "category",
       label: "Start Here",

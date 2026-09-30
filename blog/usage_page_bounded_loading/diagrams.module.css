@@ -1,0 +1,216 @@
+.figure {
+  --diagram-border: #dce3eb;
+  --diagram-text: #172b43;
+  --diagram-muted: #53667c;
+  --diagram-blue: #315fa4;
+  --diagram-teal: #087566;
+  --diagram-teal-bg: #edf8f5;
+  --diagram-teal-border: #bddfd6;
+  margin: 1.5rem 0 1.75rem;
+  color: var(--diagram-text);
+  font-variant-numeric: tabular-nums;
+}
+
+:global([data-theme='dark']) .figure {
+  --diagram-border: #3c4a5c;
+  --diagram-text: #e5edf6;
+  --diagram-muted: #afbdd0;
+  --diagram-blue: #9fbeff;
+  --diagram-teal: #83deca;
+  --diagram-teal-bg: #183b37;
+  --diagram-teal-border: #34645b;
+}
+
+.results {
+  padding: 1.25rem 1.5rem 0.5rem;
+  border: 1px solid var(--diagram-border);
+  border-radius: 16px;
+  background: transparent;
+}
+
+.resultHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--diagram-muted);
+}
+
+.improvement {
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  background: var(--diagram-teal-bg);
+  color: var(--diagram-teal);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.timing {
+  display: grid;
+  grid-template-columns: 1fr 2rem 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 0 1.35rem;
+}
+
+.beforeTime,
+.afterTime {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.beforeTime { color: var(--diagram-blue); }
+.afterTime { color: var(--diagram-teal); }
+
+.timeLabel {
+  color: var(--diagram-muted);
+  font-size: 0.8rem;
+}
+
+.timeValue {
+  font-size: clamp(2.5rem, 5vw, 3.6rem);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.timeUnit {
+  margin-left: 0.18rem;
+  font-size: 0.5em;
+  font-weight: 500;
+}
+
+.timingArrow {
+  width: 2rem;
+  height: 2rem;
+  color: var(--diagram-muted);
+}
+
+.metrics {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.metrics th,
+.metrics td {
+  padding: 0.65rem 0;
+  border: 0;
+  border-top: 1px solid var(--diagram-border);
+  background: transparent;
+  vertical-align: middle;
+}
+
+.metrics tr,
+.metrics tr:nth-child(2n) { background: transparent; border: 0; }
+.metrics th { text-align: left; font-weight: 500; }
+.metrics thead th { font-size: 0.72rem; font-weight: 600; color: var(--diagram-muted); }
+.metrics th:not(:first-child),
+.metrics td { width: 23%; text-align: right; white-space: nowrap; padding-left: 0.6rem; }
+.metrics td:last-child { color: var(--diagram-teal); font-weight: 650; }
+
+.caption {
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--diagram-muted);
+  text-align: center;
+}
+
+.flows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.flow {
+  padding: 1.15rem;
+  border: 1px solid var(--diagram-border);
+  border-radius: 14px;
+  background: transparent;
+}
+
+.after {
+  border-color: var(--diagram-teal-border);
+}
+
+.flowLabel {
+  color: var(--diagram-blue);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.after .flowLabel { color: var(--diagram-teal); }
+
+.flowTitle {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.94rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.stage {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem 0.8rem;
+  margin: 0 !important;
+  border: 1px solid var(--diagram-border);
+  border-radius: 8px;
+  background: transparent;
+}
+
+.after .stage { border-color: var(--diagram-teal-border); }
+
+.stageLabel {
+  color: var(--diagram-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.stageDetail { font-size: 0.8rem; line-height: 1.4; }
+
+.flowArrow {
+  position: absolute;
+  top: -1.5rem;
+  left: calc(50% - 0.7rem);
+  width: 1.4rem;
+  height: 1.4rem;
+  transform: rotate(90deg);
+  color: var(--diagram-muted);
+}
+
+.after .flowArrow { color: var(--diagram-teal); }
+
+@media (max-width: 540px) {
+  .results { padding: 1rem 1rem 0.4rem; }
+  .timing { gap: 0.6rem; }
+  .metrics { font-size: 0.75rem; }
+  .metrics thead th { font-size: 0.65rem; }
+  .flows { grid-template-columns: 1fr; }
+  .flow { padding: 1rem; }
+  .stage { padding: 0.6rem 0.8rem; }
+  .flowTitle { margin-bottom: 0.8rem; }
+}

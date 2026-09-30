@@ -33,6 +33,11 @@ export default function NavigationCards({ items, columns = 2 }) {
                 ))}
               </ul>
             )}
+            {item.ctaLabel && (
+              <span className={`button button--primary button--sm ${styles.cta}`}>
+                {item.ctaLabel}
+              </span>
+            )}
             {isExternal && (
               <span className={styles.externalIcon}>↗</span>
             )}
