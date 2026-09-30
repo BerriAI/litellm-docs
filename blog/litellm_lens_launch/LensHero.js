@@ -245,11 +245,7 @@ export function LensHero() {
         ref={canvasRef}
         aria-label="Hundreds of agents swarm in from the left, all converge into a single gateway, leave as one trace, and the insight loops back into the gateway so the next run has fewer failures"
       />
-      <div className="tag t-swarm"><b>Agent swarms</b>hundreds of agents · thousands of LLM + tool calls</div>
-      <div className="tag blue t-gate"><b>LiteLLM gateway</b>every call, one choke point</div>
-      <div className="tag t-out"><b>One trace per run</b>steps · tokens · $cost</div>
-      <div className="tag blue t-loop"><b>Insight lands back in the gateway</b>routing · prompts · evals</div>
-      <div className="tag blue t-run" ref={runRef}><b>Run 1</b>failures: many</div>
+      <div hidden ref={runRef} />
     </div>
   );
 }
