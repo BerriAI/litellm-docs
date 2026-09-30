@@ -59,8 +59,6 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the late
 
 **Proxy startup uses the v2 migration resolver by default.** This matches what the migrations Job already ran. Set `USE_V2_MIGRATION_RESOLVER=false` or pass `--use_legacy_migration_resolver` to go back to v1. `--use_v2_migration_resolver` is still accepted as a no-op. See [PR #42105](https://github.com/BerriAI/litellm/pull/42105)
 
-**CLI session spend is recorded under a stable per-user alias.** Requests made with a `litellm-proxy login` session token now log under `cli-session-<user_id>` instead of a fresh hashed key per login, so `user_api_key_hash` in callbacks and the key column in usage data change for those requests. A SQL backfill ships with the change to fold old per-login rows into the alias. See [PR #40541](https://github.com/BerriAI/litellm/pull/40541)
-
 :::
 
 ## Key Highlights
