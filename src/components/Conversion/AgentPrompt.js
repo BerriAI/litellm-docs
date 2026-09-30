@@ -23,9 +23,8 @@ export default function AgentPrompt({id, title, text, defaultOpen = false, compa
           <IconAgent size={18} />
         </span>
         <span className={styles.promptTitle}>
-          <span className={styles.promptBadge}>Agent prompt</span>
           {heading}
-          <span className={styles.promptSub}>Paste into Claude Code, Codex, Cursor, or any coding agent</span>
+          <span className={styles.promptSub}>Agent prompt for Claude Code, Codex, Cursor, or any coding agent</span>
         </span>
         <button
           type="button"

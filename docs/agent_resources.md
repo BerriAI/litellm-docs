@@ -10,6 +10,12 @@ import Stat from '@site/src/components/Stat';
 
 # Agent resources
 
+## Getting started
+
+<AgentPrompt id="gateway" />
+
+<AgentPrompt id="sdk" />
+
 ## Skills
 
 ### Gateway management
@@ -35,11 +41,7 @@ Sets up the auto router end to end, from picking models to verifying routing dec
 
 Markdown pages include the full text of every prompt and install command on the rendered page.
 
-## Prompts
-
-<AgentPrompt id="gateway" />
-
-<AgentPrompt id="sdk" />
+## More prompts
 
 <AgentPrompt id="clients" />
 
