@@ -249,6 +249,7 @@ const sidebars = {
           label: "Claude Code",
           customProps: { icon: "/img/integrations/anthropic.png" },
           items: [
+            { type: "link", label: "Cut Claude Code Costs", href: "/blog/save-claude-code-costs-with-litellm" },
             "claude_code_compatibility",
             "tutorials/claude_code_cut_costs",
             "tutorials/claude_code_autorouter",
