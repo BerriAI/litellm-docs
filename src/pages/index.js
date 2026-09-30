@@ -26,10 +26,10 @@ export default function Home() {
       <main className={styles.page}>
         <header className={styles.hero}>
           <div className={styles.heroText}>
-            <h1 className={styles.title}>One gateway for every model, tool, and agent.</h1>
+            <h1 className={styles.title}>The most widely used open&#8209;source AI gateway.</h1>
             <p className={styles.lead}>
-              The most widely used open&#8209;source AI gateway: 100+ LLM providers, MCP tools, and A2A agents behind one API, with keys, budgets,
-              and spend tracking.
+              One gateway for every model, tool, and agent: 100+ LLM providers, MCP tools, and A2A agents behind one API, with keys, budgets, and
+              spend tracking.
             </p>
           </div>
           <HeroTerminal source="docs-home-hero" />

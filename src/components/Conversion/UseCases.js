@@ -144,7 +144,7 @@ export default function UseCases({source = 'docs-home'}) {
       <h2 id="use-cases-title" className={styles.title}>
         Why developers love LiteLLM
       </h2>
-      <div className={styles.list}>
+      <div className={clsx(styles.list, styles.listOpen)}>
         <Row u={sdk} source={source} />
         <Row u={gateway} source={source} />
       </div>

@@ -14,7 +14,7 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 2rem 0 0.5rem;
+  margin: 0.25rem 0 0.5rem;
   border-radius: var(--lite-radius-md, 12px);
   border: 1px solid var(--ifm-color-emphasis-200);
 }
@@ -66,6 +66,10 @@
   padding: 2rem 0;
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
   scroll-margin-top: 5rem;
+}
+/* The stats row has its own frame, so the rows above it end without a divider */
+.listOpen > :last-child {
+  border-bottom: 0;
 }
 .product {
   margin: 0 0 0.35rem;
