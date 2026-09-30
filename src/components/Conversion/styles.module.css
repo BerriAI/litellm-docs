@@ -1,0 +1,1039 @@
+/*
+ * Conversion components (path finder, install box, agent prompt, tiles, sales
+ * band). Colors come from Infima variables so the set follows whatever palette
+ * the site theme sets; only the terminal surface is fixed, and it is dark in
+ * both modes on purpose so commands read as "run this".
+ */
+
+.pf,
+.install,
+.prompt,
+.tiles,
+.band,
+.terminal {
+  --cv-accent: var(--ifm-color-primary);
+  --cv-ink: var(--ifm-font-color-base);
+  --cv-muted: var(--ifm-color-emphasis-700);
+  --cv-faint: var(--ifm-color-emphasis-600);
+  --cv-line: var(--ifm-color-emphasis-300);
+  --cv-hair: var(--ifm-color-emphasis-200);
+  --cv-surface: var(--ifm-background-surface-color, var(--ifm-background-color));
+  --cv-page: var(--lite-page, var(--ifm-background-color));
+  --cv-tint: color-mix(in srgb, var(--ifm-color-primary) 7%, var(--cv-page));
+  --cv-tint-strong: color-mix(in srgb, var(--ifm-color-primary) 14%, var(--cv-page));
+  /* Commands use the same surface as every other code block on the site. */
+  --cv-term-bg: var(--prism-background-color, var(--ifm-pre-background));
+  --cv-term-edge: var(--ifm-color-emphasis-200);
+  --cv-term-ink: var(--prism-color, var(--ifm-pre-color));
+  --cv-term-dim: var(--ifm-color-emphasis-600);
+  --cv-term-accent: var(--ifm-color-emphasis-500);
+  --cv-mono: var(--ifm-font-family-monospace);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btnPrimary,
+.btnSecondary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: var(--lite-radius-sm, 8px);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btnPrimary {
+  padding: 0.75rem 1.1rem;
+  background: var(--ifm-color-primary);
+  color: var(--lite-on-primary, #fff);
+  border: 1px solid var(--ifm-color-primary);
+}
+.btnPrimary:hover {
+  background: var(--ifm-color-primary-dark);
+  border-color: var(--ifm-color-primary-dark);
+  color: var(--lite-on-primary, #fff);
+  text-decoration: none;
+}
+
+.btnSecondary {
+  padding: 0.72rem 1.05rem;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-color-emphasis-400);
+}
+.btnSecondary:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.btnGhost {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.82rem;
+  background: transparent;
+  color: var(--cv-muted);
+  border: 1px solid var(--cv-line);
+}
+.btnGhost:hover {
+  color: var(--cv-accent);
+  border-color: var(--cv-accent);
+}
+.btnDone,
+.btnDone:hover {
+  color: var(--ifm-color-success-darkest, #1a7f37);
+  border-color: currentColor;
+}
+[data-theme='dark'] .btnDone {
+  color: var(--ifm-color-success-lighter, #57d78a);
+}
+
+.salesNote {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.textLink {
+  font-weight: 600;
+  font-size: 0.9rem;
+  align-self: center;
+}
+
+.iconBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--lite-radius-sm, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--cv-muted);
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+.iconBtn:hover {
+  color: var(--cv-accent);
+}
+.iconBtnOpen svg {
+  transform: rotate(180deg);
+}
+
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible,
+.btnGhost:focus-visible,
+.iconBtn:focus-visible,
+.pfOption:focus-visible,
+.termCopy:focus-visible,
+.showMore:focus-visible,
+.tileLink:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------- terminal */
+
+.terminal {
+  position: relative;
+  background: var(--cv-term-bg);
+  border: 1px solid var(--cv-term-edge);
+  border-radius: var(--lite-radius-md, 10px);
+  padding: 1rem 5.5rem 1rem 1.1rem;
+  color: var(--cv-term-ink);
+  font-family: var(--cv-mono);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+.terminalSmall {
+  font-size: 0.8rem;
+  padding: 0.8rem 5rem 0.8rem 0.95rem;
+}
+
+.termComment {
+  color: var(--cv-term-dim);
+  font-style: italic;
+  margin-bottom: 0.35rem;
+  white-space: normal;
+}
+
+.termCode {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  white-space: pre;
+  scrollbar-width: thin;
+}
+
+.termLine {
+  display: block;
+}
+
+.termPrompt {
+  display: inline-block;
+  width: 1.3em;
+  color: var(--cv-term-accent);
+  user-select: none;
+}
+
+.termCopy {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--lite-radius-sm, 6px);
+  border: 1px solid var(--cv-term-edge);
+  background: var(--cv-term-bg);
+  color: var(--cv-term-ink);
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.termCopy:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
+}
+.termCopyDone,
+.termCopyDone:hover {
+  color: var(--ifm-color-success-dark);
+  border-color: currentColor;
+}
+[data-theme='dark'] .termCopyDone {
+  color: var(--ifm-color-success-lighter);
+}
+
+/* ------------------------------------------------------------ install box */
+
+.install {
+  margin: 1.5rem 0 2rem;
+  border: 1px solid var(--cv-line);
+  border-radius: var(--lite-radius-lg, 14px);
+  background: var(--cv-surface);
+  overflow: hidden;
+}
+
+.installHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.85rem 1rem 0;
+}
+
+.installTitle {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--cv-ink);
+}
+
+.installPanel {
+  padding: 0.75rem 1rem 1rem;
+}
+
+.install .installWhat {
+  margin: 0.7rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--cv-muted);
+}
+
+.installMore {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.installOthers {
+  border-top: 1px solid var(--cv-hair);
+}
+
+.installOthersToggle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--cv-ink);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.installOthersToggle::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: none;
+  align-self: center;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.installOthersToggle[aria-expanded='true']::before {
+  transform: rotate(45deg);
+}
+.installOthersToggle:hover {
+  color: var(--cv-accent);
+}
+.installOthersToggle:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: -2px;
+}
+
+.installOthersList {
+  font-weight: 400;
+  color: var(--cv-faint);
+}
+
+.installOthersBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.25rem 1rem 1.1rem;
+}
+
+.installAlt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+
+.install .installAltHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.installAltHead span {
+  color: var(--cv-muted);
+}
+
+.oneClick {
+  --cv-line: var(--ifm-color-emphasis-300);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--cv-line);
+  border-radius: var(--lite-radius-md, 12px);
+  background: var(--ifm-background-surface-color, var(--ifm-background-color));
+}
+.oneClickCopy {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.oneClick .oneClickTitle {
+  margin: 0 0 0.15rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.oneClick .oneClickText {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+}
+.oneClickBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: none;
+}
+.oneClickBadges img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+
+.mobileHint {
+  display: none;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--cv-hair);
+  background: var(--cv-tint);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+
+/* ----------------------------------------------------------- agent prompt */
+
+.prompt {
+  margin: 1.25rem 0 1.75rem;
+  border: 1px solid var(--cv-line);
+  border-radius: var(--lite-radius-lg, 12px);
+  background: var(--cv-surface);
+  overflow: hidden;
+}
+.promptCompact {
+  margin: 0.75rem 0 0;
+}
+
+.promptHead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.7rem 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--cv-hair);
+}
+
+.promptIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--lite-radius-sm, 8px);
+  background: var(--cv-tint);
+  color: var(--cv-ink);
+}
+
+.promptBadge {
+  display: block;
+  margin-bottom: 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--cv-accent);
+}
+
+.promptTitle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-weight: 650;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.promptSub {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--cv-faint);
+}
+
+.promptBody {
+  position: relative;
+  max-height: 5.6rem;
+  overflow: hidden;
+}
+.promptBodyOpen {
+  max-height: none;
+}
+.promptBody:not(.promptBodyOpen)::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3.2rem;
+  background: linear-gradient(to bottom, transparent, var(--cv-surface) 85%);
+  pointer-events: none;
+}
+
+.promptText {
+  margin: 0;
+  padding: 0.85rem 1rem 1rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--cv-muted);
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.showMore {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 0.45rem;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--lite-radius-xs, 999px);
+  border: 1px solid var(--cv-line);
+  background: var(--cv-page);
+  color: var(--cv-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Expanded: the button sits under the text instead of over the fade */
+.showLess {
+  position: static;
+  display: block;
+  margin: 0.25rem auto 0.75rem;
+  transform: none;
+}
+.showMore:hover {
+  border-color: var(--cv-accent);
+  color: var(--cv-accent);
+}
+
+/* ------------------------------------------------------------ path finder */
+
+.pf {
+  margin: 1.5rem 0 2.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--cv-line);
+  border-radius: var(--lite-radius-lg, 18px);
+  background: var(
+    --lite-panel-bg,
+    radial-gradient(120% 80% at 100% 0%, var(--cv-tint) 0%, transparent 60%),
+    var(--cv-surface)
+  );
+}
+
+.pf .pfQuestion {
+  margin: 0 0 1rem;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--cv-ink);
+}
+
+.pfOptions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.pfOption {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.2rem;
+  align-items: start;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  border-radius: var(--lite-radius-md, 12px);
+  border: 1px solid var(--cv-line);
+  background: var(--cv-page);
+  color: var(--cv-ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pfOption:hover {
+  border-color: var(--ifm-color-emphasis-500);
+}
+.pfOptionOn,
+.pfOptionOn:hover {
+  border-color: var(--cv-accent);
+  background: var(--cv-tint);
+  box-shadow: inset 0 0 0 1px var(--cv-accent);
+}
+
+.pfOptionIcon {
+  grid-row: 1 / span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--lite-radius-sm, 10px);
+  background: var(--cv-tint);
+  color: var(--cv-ink);
+}
+.pfOptionOn .pfOptionIcon {
+  --cv-accent: var(--lite-icon-on-accent, var(--ifm-color-primary));
+  background: var(--lite-icon-on-bg, var(--cv-page));
+  color: var(--lite-icon-on-fg, var(--cv-ink));
+}
+
+.pfOptionLabel {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.pfOptionHint {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--cv-faint);
+}
+
+.pf {
+  container-type: inline-size;
+}
+
+.pfStage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'diagram diagram'
+    'side main';
+  gap: 1.25rem 1.5rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+/* With only a link to hand off, the link sits under the benefits instead of
+   alone in a second column */
+.pfStageStack {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'diagram' 'side' 'main';
+  gap: 1.25rem 0;
+}
+.pfStageStack .pfMain {
+  margin-top: -0.25rem;
+}
+.pfDiagram {
+  grid-area: diagram;
+  min-width: 0;
+}
+.pfSide {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.pfMain {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.pfMain > .prompt {
+  margin: 0;
+}
+
+@container (max-width: 620px) {
+  .pfStage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'diagram' 'side' 'main';
+  }
+}
+
+.pfDiagramHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.5rem 0.6rem;
+}
+.pfDiagramCaption {
+  font-size: 0.88rem;
+  font-weight: 550;
+  color: var(--cv-muted);
+}
+/* Phones get the vertical map; wider screens the horizontal one */
+.pfDiagramTall {
+  display: none;
+  max-width: 420px;
+  margin: 0 auto;
+}
+@media (max-width: 620px) {
+  .pfDiagramWide {
+    display: none;
+  }
+  .pfDiagramTall {
+    display: block;
+  }
+}
+
+.pfDiagram {
+  border-radius: var(--lite-radius-md, 14px);
+  border: 1px solid var(--cv-hair);
+  background: var(--cv-page);
+  padding: 0.5rem;
+}
+
+.pfPanel {
+  animation: cvPanelIn 0.28s ease both;
+}
+
+.pf .pfLead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--cv-ink);
+}
+
+.pfLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.pf .pfNote {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--cv-faint);
+}
+
+.pfList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.pfList li {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.pfList svg {
+  margin-top: 1px;
+  color: var(--cv-ink);
+}
+
+.pfFoot {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cv-hair);
+  font-size: 0.85rem;
+  color: var(--cv-faint);
+}
+
+@keyframes cvPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- diagram */
+
+.diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ifm-font-family-base);
+}
+
+.dgText {
+  font-size: 14px;
+  font-weight: 550;
+  fill: var(--cv-ink);
+}
+
+.dgApp,
+.dgProvider {
+  fill: var(--cv-surface);
+  stroke: var(--cv-line);
+  stroke-width: 1;
+}
+.dgProviderMore {
+  stroke-dasharray: 4 3;
+}
+
+.dgGw {
+  fill: var(--cv-tint-strong);
+  stroke: var(--cv-accent);
+  stroke-width: 1.5;
+}
+.dgGwTitle {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--cv-ink);
+}
+
+.dgChip {
+  fill: var(--cv-page);
+  stroke: var(--cv-hair);
+}
+.dgChipText {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--cv-muted);
+}
+
+.dgChipStrong {
+  fill: var(--cv-accent);
+}
+.dgChipTextStrong {
+  font-family: var(--cv-mono);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--lite-on-primary, #fff);
+}
+
+.dgRing {
+  fill: none;
+  stroke: var(--cv-accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+  transition: opacity 0.3s ease;
+}
+
+.dgPill {
+  fill: var(--cv-page);
+  stroke: var(--cv-accent);
+}
+.dgPillText {
+  font-size: 12px;
+  font-weight: 650;
+  fill: var(--cv-accent);
+}
+
+.dgGateway {
+  transition: opacity 0.3s ease;
+}
+.dgHidden {
+  opacity: 0;
+}
+
+.dgLine {
+  fill: none;
+  stroke: var(--ifm-color-emphasis-400);
+  stroke-width: 1.3;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cvDraw 0.6s ease forwards;
+}
+
+.dgDot {
+  fill: var(--cv-accent);
+}
+
+.dgFlows {
+  animation: cvFade 0.3s ease both;
+}
+
+.dgAppIn {
+  animation: cvFade 0.35s ease both;
+}
+
+@keyframes cvDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cvFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ tiles */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--cv-cols, 3), minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.15rem 1.2rem;
+  border-radius: var(--lite-radius-md, 12px);
+  border: 1px solid var(--cv-line);
+  background: var(--cv-surface);
+  color: var(--cv-ink);
+}
+.tileLink {
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.tileLink:hover {
+  border-color: var(--cv-accent);
+  color: var(--cv-ink);
+  text-decoration: none;
+}
+.tileTitle a {
+  color: inherit;
+  text-decoration: none;
+}
+.tileTitle a:hover {
+  color: var(--cv-accent);
+}
+.tileMore {
+  margin-top: 0.2rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.tileIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 0.35rem;
+  border-radius: var(--lite-radius-sm, 10px);
+  background: var(--cv-tint);
+  color: var(--cv-ink);
+}
+
+.tileTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.tileText {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--cv-muted);
+}
+
+.tilesLg .tile {
+  padding: 1.5rem 1.5rem 1.6rem;
+  border-radius: var(--lite-radius-md, 16px);
+}
+.tilesLg .tileIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--lite-radius-sm, 14px);
+  margin-bottom: 0.6rem;
+}
+.tilesLg .tileTitle {
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+.tilesLg .tileText {
+  font-size: 0.98rem;
+}
+
+/* ------------------------------------------------------------------- band */
+
+.band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 2.5rem 0;
+  padding: 1.6rem 1.75rem;
+  border-radius: var(--lite-radius-lg, 16px);
+  border: 1px solid var(--cv-accent);
+  background: var(
+    --lite-band-bg,
+    radial-gradient(90% 140% at 0% 100%, var(--cv-tint-strong) 0%, transparent 70%),
+    var(--cv-surface)
+  );
+}
+
+.bandCopy {
+  max-width: 38rem;
+}
+
+.band .bandTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--cv-ink);
+}
+
+.band .bandText {
+  margin: 0;
+  color: var(--cv-muted);
+  line-height: 1.55;
+}
+
+.bandActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  flex: none;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 996px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .pfStage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'diagram' 'side' 'main';
+  }
+  .pf {
+    padding: 1.1rem;
+    border-radius: var(--lite-radius-lg, 14px);
+  }
+  .pfOptions {
+    grid-template-columns: 1fr;
+  }
+  .pfOptionHint {
+    display: none;
+  }
+  .pfOptionOn .pfOptionHint {
+    display: block;
+  }
+  .pfDiagramHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+  .band {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.3rem;
+  }
+  .terminal {
+    padding-right: 1rem;
+    padding-top: 2.8rem;
+  }
+  .promptSub {
+    display: none;
+  }
+  .mobileHint {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pfPanel,
+  .dgFlows,
+  .dgAppIn,
+  .dgLine {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .dgRing,
+  .dgGateway,
+  .iconBtn {
+    transition: none;
+  }
+}
+
+/* The TOC's Enterprise promo points at the page it would sit on. */
+:global(html.docs-doc-id-enterprise) :global([class*='promoCard_']) {
+  display: none;
+}
