@@ -29,7 +29,9 @@ This brings up the gateway on port 4000 and a Postgres database that stores your
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
 </TabItem>
-<TabItem value="cloud" label="1-click deploy">
+<TabItem value="cloud" label="Deploy to Railway or Render">
+
+Railway and Render each provide a one-click button that stands up the gateway on their platform, which is the fastest way to get a hosted URL for this guide:
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
   <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
@@ -37,6 +39,8 @@ The second command generates your master key, which is the credential you will u
 </div>
 
 For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
+
+Deploying on AWS, Google Cloud, or Azure for production is covered separately in the [Production Deployment](./deploy.md) guide, which uses Helm charts and official Terraform modules rather than a single button.
 
 </TabItem>
 </Tabs>
