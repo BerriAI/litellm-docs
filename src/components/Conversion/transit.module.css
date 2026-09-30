@@ -154,6 +154,65 @@
   font-weight: 550;
 }
 
+/* ------------------------------------------------------------ gateway map */
+
+.lineBranch {
+  stroke-width: 2.5;
+}
+.junction {
+  fill: var(--tr-page);
+  stroke: var(--tr-line);
+  stroke-width: 2.5;
+}
+.grp {
+  fill: var(--tr-line);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.route {
+  transition: opacity 0.2s ease;
+}
+.routeDim {
+  opacity: 0.16;
+}
+.routeOn .line:not(.lineMore) {
+  stroke-width: 4.5;
+}
+.routeOn .lineBranch:not(.lineMore) {
+  stroke-width: 3;
+}
+.routeOn .box:not(.boxMore) {
+  stroke: var(--tr-line);
+}
+.pill {
+  cursor: pointer;
+  outline: none;
+}
+.pill rect {
+  fill: var(--tr-tint);
+  stroke: var(--tr-edge);
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+.pill text {
+  fill: var(--tr-line);
+  font-size: 11px;
+  font-weight: 600;
+  transition: fill 0.15s ease;
+}
+.pill:hover rect,
+.pill:focus-visible rect {
+  stroke: var(--tr-line);
+}
+.pillOn rect {
+  fill: var(--tr-line);
+  stroke: var(--tr-line);
+}
+.pillOn text {
+  fill: var(--tr-page);
+}
+
 /* Blue logo on light backgrounds, white logo on dark (logo guidelines) */
 .monoDark {
   display: none;

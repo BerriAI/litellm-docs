@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import {usePluginData} from '@docusaurus/useGlobalData';
 import CodeBlock from '@theme/CodeBlock';
 import PromptButton from './PromptButton';
 import SalesButton from './SalesButton';
@@ -115,13 +116,35 @@ function Card({c, source}) {
   );
 }
 
+// Adoption at a glance, from plugins/litellm-stats.js (fetched at build time).
+function Stats() {
+  const s = usePluginData('litellm-stats') || {};
+  const items = [
+    {value: s.stars, label: 'GitHub stars', to: 'https://github.com/BerriAI/litellm'},
+    {value: s.downloadsShort, label: 'PyPI downloads last month', to: 'https://pypistats.org/packages/litellm'},
+    {value: s.contributors, label: 'contributors', to: 'https://github.com/BerriAI/litellm/graphs/contributors'},
+    {value: '100+', label: 'LLM providers', to: '/docs/providers'},
+  ].filter((i) => i.value);
+  return (
+    <div className={clsx('lite-cardgrid', styles.stats)}>
+      {items.map((i) => (
+        <Link key={i.label} to={i.to} className={clsx('lite-cardgrid__cell', styles.stat)}>
+          <span className={styles.statValue}>{i.value}</span>
+          <span className={styles.statLabel}>{i.label}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function UseCases({source = 'docs-home'}) {
   const [sdk, gateway, ...rest] = USE_CASES;
   return (
     <section className={styles.wrap} aria-labelledby="use-cases-title">
       <h2 id="use-cases-title" className={styles.title}>
-        What people use LiteLLM for
+        Why developers love LiteLLM
       </h2>
+      <Stats />
       <div className={styles.list}>
         <Row u={sdk} source={source} />
         <Row u={gateway} source={source} />

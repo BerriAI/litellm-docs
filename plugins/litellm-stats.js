@@ -4,7 +4,7 @@
 // rate-limited, or the build is offline, the saved figures below are used and
 // the build carries on. Set LITELLM_DOCS_OFFLINE=1 to skip the requests.
 
-const FALLBACK = {stars: 59800, forks: 11900, downloadsMonth: 89400000, asOf: '2026-09-28'};
+const FALLBACK = {stars: 59800, forks: 11900, downloadsMonth: 89400000, contributors: 1758, asOf: '2026-09-28'};
 const TIMEOUT_MS = 4000;
 
 async function getJson(url, headers = {}) {
@@ -19,6 +19,26 @@ async function getJson(url, headers = {}) {
   }
 }
 
+// GitHub has no contributor total; with one contributor per page, the page
+// number of the "last" link is the count. anon=true counts commits from
+// emails not linked to an account too, as the GitHub insights page does.
+async function getContributors(headers = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch('https://api.github.com/repos/BerriAI/litellm/contributors?per_page=1&anon=true', {
+      headers: {'User-Agent': 'litellm-docs-build', ...headers},
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`contributors returned ${res.status}`);
+    const last = /[?&]page=(\d+)>; rel="last"/.exec(res.headers.get('link') || '');
+    if (!last) throw new Error('contributors: no last page link');
+    return Number(last[1]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 let pending;
 
 // One fetch per build, shared by every caller.
@@ -27,9 +47,10 @@ function getStats() {
     pending = (async () => {
       if (process.env.LITELLM_DOCS_OFFLINE) return {...FALLBACK, live: false};
       const gh = process.env.GITHUB_TOKEN ? {Authorization: `Bearer ${process.env.GITHUB_TOKEN}`} : {};
-      const [repo, pypi] = await Promise.allSettled([
+      const [repo, pypi, people] = await Promise.allSettled([
         getJson('https://api.github.com/repos/BerriAI/litellm', gh),
         getJson('https://pypistats.org/api/packages/litellm/recent'),
+        getContributors(gh),
       ]);
       const stats = {...FALLBACK};
       const ghOk = repo.status === 'fulfilled' && Number.isFinite(repo.value?.stargazers_count);
@@ -39,6 +60,9 @@ function getStats() {
         stats.forks = repo.value.forks_count;
       }
       if (pypiOk) stats.downloadsMonth = pypi.value.data.last_month;
+      // The contributor count only feeds a rounded "1,700+", so a failed
+      // request quietly keeps the saved figure.
+      if (people.status === 'fulfilled' && Number.isFinite(people.value)) stats.contributors = people.value;
       // Only claim today's date when every figure is from today.
       if (ghOk && pypiOk) stats.asOf = new Date().toISOString().slice(0, 10);
       stats.live = ghOk || pypiOk;
@@ -63,6 +87,8 @@ function formatStats(s) {
     stars: thousands(s.stars),
     forks: thousands(s.forks),
     downloads: millions(s.downloadsMonth),
+    downloadsShort: `${(s.downloadsMonth / 1e6).toFixed(1).replace(/\.0$/, '')}M`,
+    contributors: `${(Math.floor(s.contributors / 100) * 100).toLocaleString('en-US')}+`,
     asOf: s.asOf,
     asOfLong: longDate(s.asOf),
   };

@@ -4,15 +4,15 @@ import Link from '@docusaurus/Link';
 import SalesButton from './SalesButton';
 import {IconAudit, IconBudget, IconEnterprise, IconGateway, IconRegions, IconRoles, IconSdk, IconSpend, IconSso, IconSupport} from './icons';
 import PromptButton from './PromptButton';
-import {TransitDiagram, TransitTall} from './Transit';
+import {GatewayMap, GatewayMapTall, TransitDiagram, TransitTall} from './Transit';
 import {track} from './shared';
 import styles from './styles.module.css';
 
 // One line over the map, saying what the drawing shows for each answer.
 const CAPTIONS = {
   sdk: 'Your app calls every provider itself, through the SDK.',
-  gateway: 'Every app calls one gateway; the gateway calls every provider.',
-  enterprise: 'The same gateway, inside a zone your identity provider controls.',
+  gateway: 'One gateway for models, MCP tools, and agents, with the same keys, budgets, guardrails, and spend logs.',
+  enterprise: 'The same gateway for models, MCP tools, and agents, inside a zone your identity provider controls.',
 };
 
 const PATHS = [
@@ -187,10 +187,10 @@ export default function PathFinder({
             <span className={styles.pfDiagramCaption}>{CAPTIONS[path]}</span>
           </div>
           <div className={styles.pfDiagramWide}>
-            <TransitDiagram path={path} />
+            {path === 'sdk' ? <TransitDiagram path="sdk" /> : <GatewayMap path={path} />}
           </div>
           <div className={styles.pfDiagramTall}>
-            <TransitTall path={path} />
+            {path === 'sdk' ? <TransitTall path="sdk" /> : <GatewayMapTall path={path} />}
           </div>
         </div>
         <div key={`${path}-side`} className={clsx(styles.pfPanel, styles.pfSide)}>

@@ -59,7 +59,7 @@ const facts = () => `## LiteLLM at a glance
 
 LiteLLM is the most widely used and most secure open-source AI gateway, trusted by teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade (https://www.litellm.ai/enterprise). Figures as of ${STATS.asOf}; each links to its source for current values.
 
-- Adoption: ${STATS.stars} GitHub stars and ${STATS.forks} forks (https://github.com/BerriAI/litellm), with more than 1,700 contributors.
+- Adoption: ${STATS.stars} GitHub stars and ${STATS.forks} forks (https://github.com/BerriAI/litellm), with ${STATS.contributors} contributors.
 - Usage: ${STATS.downloads} downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm).
 - Security: SOC 2 Type II audited (https://trust.litellm.ai/). Every Docker image on GHCR is signed with cosign and can be verified before it runs (${SITE}/docs/proxy/docker_image_security.md). Enterprise support includes a 72-hour security patch SLA (${SITE}/docs/enterprise.md).
 - Deployment: self-hosted in your own cloud, so prompts, responses, and provider keys stay in your infrastructure (${SITE}/docs/data_security.md).
@@ -96,7 +96,9 @@ function useCasesMarkdown() {
   ];
   const [sdk, gateway, ...rest] = USE_CASES;
   return [
-    '## What people use LiteLLM for',
+    '## Why developers love LiteLLM',
+    '',
+    `${STATS.stars} GitHub stars, ${STATS.downloadsShort} PyPI downloads last month, ${STATS.contributors} contributors, and 100+ LLM providers.`,
     '',
     ...row(sdk),
     ...row(gateway),

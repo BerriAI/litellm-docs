@@ -365,6 +365,350 @@ export function TransitTall({path}) {
 }
 
 // ---------------------------------------------------------------------------
+// The gateway map: one interchange, three lines out. The AI Gateway line runs
+// to model providers, the MCP Gateway line to MCP tools, and the Agent Gateway
+// line to other agents. The three pills under the interchange name the lines;
+// hovering or focusing one (or tapping it on a phone) lights its route and
+// dims the other two.
+
+export const GATEWAYS = [
+  {id: 'llm', pill: 'AI Gateway', group: 'Models', items: ['OpenAI', 'Anthropic', 'Bedrock'], more: '100+ more'},
+  {id: 'mcp', pill: 'MCP Gateway', group: 'MCP tools', items: ['GitHub', 'Jira'], more: 'Any MCP server'},
+  {id: 'a2a', pill: 'Agent Gateway', group: 'Agents', items: ['LangGraph', 'Pydantic AI'], more: null},
+];
+
+const CALLERS = {
+  gateway: ['Python service', 'Node.js app', 'AI agents', 'Claude Code'],
+  enterprise: ['Search team', 'Support team', 'Internal agents', 'Every employee'],
+};
+
+const MAP_TITLES = {
+  gateway:
+    'Apps, AI agents, and coding agents call one LiteLLM Gateway. Its AI Gateway routes to model providers, its MCP Gateway to MCP tools, and its Agent Gateway to other agents, with the same keys, budgets, guardrails, and spend logs.',
+  enterprise:
+    'Every team, internal agent, and employee calls the LiteLLM Gateway inside your organization, with SSO, audit logs, roles, and regions on its edge. It routes to model providers, MCP tools, and other agents.',
+};
+
+// A transit line whose 45-degree run ends exactly at (x2, y2): level first,
+// then the run. Used where the usual centered run would cross the pills.
+function routeLate(x1, y1, x2, y2) {
+  const a = Math.abs(y2 - y1);
+  const xa = Math.max(x1, x2 - a);
+  return `M${x1} ${y1} H${xa} L${x2} ${y2}`;
+}
+
+// A car's path from the interchange to one stop: the trunk, then its branch.
+const joined = (trunk, branch) => `${trunk} ${branch.replace(/^M\S+ \S+ ?/, '')}`;
+
+// Which line is lit: hover and keyboard focus preview it, a click or tap pins it.
+function useActiveLine() {
+  const [hover, setHover] = useState(null);
+  const [pinned, setPinned] = useState(null);
+  const pillProps = (id) => ({
+    role: 'button',
+    tabIndex: 0,
+    'aria-pressed': (hover ?? pinned) === id,
+    'aria-label': `Highlight the ${GATEWAYS.find((g) => g.id === id).pill} route`,
+    onPointerEnter: (e) => e.pointerType === 'mouse' && setHover(id),
+    onPointerLeave: (e) => e.pointerType === 'mouse' && setHover(null),
+    onFocus: () => setHover(id),
+    onBlur: () => setHover(null),
+    onClick: () => setPinned((p) => (p === id ? null : id)),
+    onKeyDown: (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setPinned((p) => (p === id ? null : id));
+      }
+    },
+  });
+  return [hover ?? pinned, pillProps];
+}
+
+function routeClass(active, id) {
+  return clsx(styles.route, active && (active === id ? styles.routeOn : styles.routeDim));
+}
+
+function Pill({x, y, w, label, on, props}) {
+  return (
+    <g className={clsx(styles.pill, on && styles.pillOn)} {...props}>
+      <rect x={x + 0.5} y={y + 0.5} width={w} height="20" rx="4" />
+      <text x={x + w / 2} y={y + 14} textAnchor="middle">
+        {label}
+      </text>
+    </g>
+  );
+}
+
+const pillW = (label) => label.length * 6.1 + 14;
+
+// Wide layout ---------------------------------------------------------------
+
+const G_HUB = {x: 262, y: 120, s: 110};
+const G_CX = G_HUB.x + G_HUB.s / 2;
+const G_CY = G_HUB.y + G_HUB.s / 2;
+const G_CALLER_Y = [85, 145, 205, 265];
+const G_JX = 520; // where each line splits to its stops
+const G_BX = 572; // stop boxes
+const G_BW = 136;
+const G_STEP = 31;
+const G_FIRST = [44, 192, 307]; // first stop of each group
+const G_TRUNK_Y = [145, 175, 205];
+
+function groupStops(g, first) {
+  const labels = g.more ? [...g.items, g.more] : g.items;
+  return labels.map((label, i) => ({label, y: first + i * G_STEP, more: g.more && i === labels.length - 1}));
+}
+
+export function GatewayMap({path = 'gateway'}) {
+  const reduced = usePrefersReducedMotion();
+  const [active, pillProps] = useActiveLine();
+  const ent = path === 'enterprise';
+  const callers = CALLERS[ent ? 'enterprise' : 'gateway'];
+  const inbound = G_CALLER_Y.map((y, i) => route(BOX_W + 18, y, G_HUB.x, G_CY + (i - 1.5) * 16));
+  const lines = GATEWAYS.map((g, gi) => {
+    const stops = groupStops(g, G_FIRST[gi]);
+    const jy = (stops[0].y + stops[stops.length - 1].y) / 2;
+    const x1 = G_HUB.x + G_HUB.s;
+    const trunk = gi === 2 ? routeLate(x1, G_TRUNK_Y[gi], G_JX, jy) : route(x1, G_TRUNK_Y[gi], G_JX, jy);
+    const branches = stops.map((st) => route(G_JX, jy, G_BX - 6, st.y));
+    return {...g, stops, jy, trunk, branches};
+  });
+  const widths = GATEWAYS.map((g) => pillW(g.pill));
+  let px = G_CX - (widths.reduce((a, b) => a + b, 0) + 5 * (widths.length - 1)) / 2;
+  const pillY = G_HUB.y + G_HUB.s + 32;
+
+  return (
+    <svg className={styles.svg} viewBox="0 0 720 360" role="img" aria-label={MAP_TITLES[path]}>
+      <defs>
+        <pattern id="gm-dots" width="18" height="18" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" className={styles.dot} />
+        </pattern>
+      </defs>
+      <rect width="720" height="360" fill="url(#gm-dots)" />
+
+      {ent && (
+        <g className={styles.fadeIn}>
+          <rect className={styles.zone} x="176.5" y="96.5" width="282" height="200" rx="18" />
+          <text className={styles.zoneText} x="190" y="114">
+            Your organization
+          </text>
+        </g>
+      )}
+
+      <g key={path}>
+        {inbound.map((d, i) => (
+          <path key={`in${i}`} d={d} className={clsx(styles.line, styles.draw)} pathLength="1" />
+        ))}
+        {!reduced && (
+          <g className={styles.cars}>
+            {inbound.map((d, i) => (
+              <Car key={`ci${i}`} d={d} dur="2.2s" begin={`${0.8 + i * 0.6}s`} />
+            ))}
+          </g>
+        )}
+      </g>
+
+      {lines.map((l, li) => (
+        <g key={`${path}-${l.id}`} className={routeClass(active, l.id)}>
+          <path d={l.trunk} className={clsx(styles.line, styles.draw)} pathLength="1" />
+          {l.branches.map((d, i) => (
+            <path key={i} d={d} className={clsx(styles.line, styles.lineBranch, l.stops[i].more ? styles.lineMore : styles.draw)} pathLength="1" />
+          ))}
+          <circle className={styles.junction} cx={G_JX} cy={l.jy} r="5.5" />
+          {!reduced && (
+            <g className={styles.cars}>
+              {l.branches
+                .filter((_, i) => !l.stops[i].more)
+                .map((d, i) => (
+                  <Car key={i} d={joined(l.trunk, d)} dur="2.6s" begin={`${1.3 + li * 0.45 + i * 0.9}s`} />
+                ))}
+            </g>
+          )}
+          <g className={styles.fadeIn}>
+            <text className={styles.grp} x={G_BX + 2} y={l.stops[0].y - 21}>
+              {l.group}
+            </text>
+            {l.stops.map((st) => (
+              <g key={st.label}>
+                <rect className={clsx(styles.box, st.more && styles.boxMore)} x={G_BX + 0.5} y={st.y - 12.5} width={G_BW} height="25" rx="6" />
+                <text className={clsx(styles.boxTextSm, st.more && styles.boxTextMore)} x={G_BX + 14} y={st.y + 4.5}>
+                  {st.label}
+                </text>
+                <rect className={clsx(styles.stn, st.more && styles.stnMore)} x={G_BX - 5.5} y={st.y - 5.5} width="11" height="11" rx="3" />
+              </g>
+            ))}
+          </g>
+        </g>
+      ))}
+
+      <g className={styles.fadeIn}>
+        {callers.map((label, i) => (
+          <AppBox key={label} y={G_CALLER_Y[i]} label={label} />
+        ))}
+        <rect className={styles.hub} x={G_HUB.x + 0.5} y={G_HUB.y + 0.5} width={G_HUB.s} height={G_HUB.s} rx="14" />
+        <Monogram x={G_CX - 28} y={G_CY - 28} size={56} />
+        <text className={styles.hubLabel} x={G_CX} y={G_HUB.y + G_HUB.s + 22} textAnchor="middle">
+          LiteLLM Gateway
+        </text>
+        {GATEWAYS.map((g, i) => {
+          const x = px;
+          px += widths[i] + 5;
+          return <Pill key={g.id} x={x} y={pillY} w={widths[i]} label={g.pill} on={active === g.id} props={pillProps(g.id)} />;
+        })}
+      </g>
+
+      {ent && (
+        <g className={styles.fadeIn}>
+          <Tag x={176.5} y={128} label="SSO" />
+          <Tag x={400} y={96.5} label="Audit log" />
+          <Tag x={250} y={296.5} label="Roles" />
+          <Tag x={384} y={296.5} label="Regions" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// Phone layout: callers across the top, the interchange in the middle with
+// its name on the left and the pills on the right, and the three lines
+// running down into three columns of stops.
+
+const GT_HUB = {x: 125, y: 110, s: 110};
+const GT_CX = GT_HUB.x + GT_HUB.s / 2;
+const GT_COLS = [62, 180, 298];
+const GT_TOP = 330; // where each line turns down its column
+const GT_FIRST = 364;
+const GT_STEP = 40;
+const GT_BW = 108;
+
+export function GatewayMapTall({path = 'gateway'}) {
+  const reduced = usePrefersReducedMotion();
+  const [active, pillProps] = useActiveLine();
+  const ent = path === 'enterprise';
+  // Three callers fit across a phone
+  const callers = CALLERS[ent ? 'enterprise' : 'gateway'].filter((_, i) => i !== 1);
+  const hubBottom = GT_HUB.y + GT_HUB.s;
+  const inbound = T_APPS_X.map((x, i) => vroute(x, 64, GT_CX + (i - 1) * 15, GT_HUB.y));
+  const lines = GATEWAYS.map((g, gi) => {
+    const cx = GT_COLS[gi];
+    const labels = g.more ? [...g.items, g.more] : g.items;
+    const stops = labels.map((label, i) => ({label, y: GT_FIRST + i * GT_STEP, more: g.more && i === labels.length - 1}));
+    const trunk = vroute(GT_CX + (gi - 1) * 15, hubBottom, cx, GT_TOP);
+    const last = stops[stops.length - 1].y;
+    const firstReal = stops.filter((st) => !st.more);
+    const down = `M${cx} ${GT_TOP} V${firstReal[firstReal.length - 1].y - 15}`;
+    const toMore = g.more ? `M${cx} ${firstReal[firstReal.length - 1].y + 14} V${last - 15}` : null;
+    return {...g, cx, stops, trunk, down, toMore};
+  });
+  const height = 520;
+
+  return (
+    <svg className={styles.svg} viewBox={`0 0 360 ${height}`} role="img" aria-label={MAP_TITLES[path]}>
+      <defs>
+        <pattern id="gm-dots-tall" width="18" height="18" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" className={styles.dot} />
+        </pattern>
+      </defs>
+      <rect width="360" height={height} fill="url(#gm-dots-tall)" />
+
+      {ent && (
+        <g className={styles.fadeIn}>
+          <rect className={styles.zone} x="8.5" y="88.5" width="343" height="156" rx="18" />
+          <text className={styles.zoneText} x="22" y="108">
+            Your organization
+          </text>
+        </g>
+      )}
+
+      <g key={path}>
+        {inbound.map((d, i) => (
+          <path key={`in${i}`} d={d} className={clsx(styles.line, styles.draw)} pathLength="1" />
+        ))}
+        {!reduced && (
+          <g className={styles.cars}>
+            {inbound.map((d, i) => (
+              <Car key={`ci${i}`} d={d} dur="1.8s" begin={`${0.8 + i * 0.6}s`} />
+            ))}
+          </g>
+        )}
+      </g>
+
+      {lines.map((l, li) => (
+        <g key={`${path}-${l.id}`} className={routeClass(active, l.id)}>
+          <path d={`${l.trunk} ${l.down.replace(/^M\S+ \S+ ?/, '')}`} className={clsx(styles.line, styles.draw)} pathLength="1" />
+          {l.toMore && <path d={l.toMore} className={clsx(styles.line, styles.lineMore)} pathLength="1" />}
+          {!reduced && (
+            <g className={styles.cars}>
+              <Car d={`${l.trunk} ${l.down.replace(/^M\S+ \S+ ?/, '')}`} dur="2.4s" begin={`${1.3 + li * 0.5}s`} />
+            </g>
+          )}
+          <g className={styles.fadeIn}>
+            <text className={styles.grp} x={l.cx + 9} y={GT_TOP + 12}>
+              {l.group}
+            </text>
+            {l.stops.map((st) => (
+              <g key={st.label}>
+                <rect
+                  className={clsx(styles.box, st.more && styles.boxMore)}
+                  x={l.cx - GT_BW / 2 + 0.5}
+                  y={st.y - 13.5}
+                  width={GT_BW}
+                  height="27"
+                  rx="6"
+                />
+                <text className={clsx(styles.boxTextSm, st.more && styles.boxTextMore)} x={l.cx} y={st.y + 4.5} textAnchor="middle">
+                  {st.label}
+                </text>
+              </g>
+            ))}
+          </g>
+        </g>
+      ))}
+
+      <g className={styles.fadeIn}>
+        {callers.map((label, i) => (
+          <g key={label}>
+            <rect className={styles.box} x={T_APPS_X[i] - 55 + 0.5} y="20.5" width="110" height="34" rx="6" />
+            <text className={styles.boxTextSm} x={T_APPS_X[i]} y="42" textAnchor="middle">
+              {label}
+            </text>
+            <rect className={styles.stn} x={T_APPS_X[i] - 5.5} y="52.5" width="11" height="11" rx="3" />
+          </g>
+        ))}
+        <rect className={styles.hub} x={GT_HUB.x + 0.5} y={GT_HUB.y + 0.5} width={GT_HUB.s} height={GT_HUB.s} rx="13" />
+        <Monogram x={GT_HUB.x + 27} y={GT_HUB.y + 27} size={56} />
+        <text className={styles.hubLabel} x={GT_HUB.x - 12} y={GT_HUB.y + 50} textAnchor="end">
+          LiteLLM
+        </text>
+        <text className={styles.hubLabel} x={GT_HUB.x - 12} y={GT_HUB.y + 68} textAnchor="end">
+          Gateway
+        </text>
+        {GATEWAYS.map((g, i) => (
+          <Pill
+            key={g.id}
+            x={GT_HUB.x + GT_HUB.s + 12}
+            y={GT_HUB.y + 18 + i * 26}
+            w={pillW(g.pill)}
+            label={g.pill}
+            on={active === g.id}
+            props={pillProps(g.id)}
+          />
+        ))}
+      </g>
+
+      {ent && (
+        <g className={styles.fadeIn}>
+          <Tag x={80} y={88.5} label="SSO" />
+          <Tag x={280} y={88.5} label="Audit log" />
+          <Tag x={70} y={244.5} label="Roles" />
+          <Tag x={290} y={244.5} label="Regions" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // The system map: every LiteLLM product as a line, meeting at the gateway.
 
 const MAP_LINES = [
