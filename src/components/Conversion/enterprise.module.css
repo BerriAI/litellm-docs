@@ -77,6 +77,27 @@
 .proof a:hover {
   color: var(--cv-accent);
 }
+/* SOC 2 reads as a badge: the first thing a security reviewer looks for */
+.proof li.proofBadge {
+  padding: 0;
+  border-color: var(--lite-badge-line, var(--cv-accent));
+  background: var(--lite-badge-bg, var(--cv-tint));
+}
+.proofBadge a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  color: var(--lite-badge-ink, var(--cv-accent));
+  font-weight: 650;
+}
+.proofBadge a:hover {
+  color: var(--lite-badge-ink, var(--cv-accent));
+  text-decoration: underline;
+}
+.proofBadge svg {
+  flex: none;
+}
 
 /* ------------------------------------------------------------------ stack */
 

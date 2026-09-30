@@ -133,6 +133,14 @@ export const IconSupport = (p) => (
   </Svg>
 );
 
+// A shield with a check mark: an audited, compliant deployment.
+export const IconCompliance = (p) => (
+  <Svg {...p}>
+    <path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.2-7.5 9.5-4.4-1.3-7.5-4.9-7.5-9.5V6z" />
+    <path d="M8.6 12.2l2.4 2.4 4.4-4.6" style={A} />
+  </Svg>
+);
+
 // A speech bubble behind a short fence: guardrails on prompts and replies.
 export const IconGuardrails = (p) => (
   <Svg {...p}>
@@ -296,6 +304,7 @@ export const ICONS = {
   regions: IconRegions,
   support: IconSupport,
   guardrails: IconGuardrails,
+  compliance: IconCompliance,
   mcp: IconMcp,
   spend: IconSpend,
   agent: IconAgent,

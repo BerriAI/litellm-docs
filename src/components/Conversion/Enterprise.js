@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import SalesButton from './SalesButton';
-import {IconEnterprise, IconGateway, IconSdk} from './icons';
+import {IconCompliance, IconEnterprise, IconGateway, IconSdk} from './icons';
 import {ENTERPRISE_HERO, TIERS as TIER_DATA} from './content';
 
 const TIER_ICONS = {enterprise: IconEnterprise, gateway: IconGateway, sdk: IconSdk};
@@ -21,11 +21,11 @@ export function EnterpriseHero({source = 'enterprise-page'}) {
         <span className={shared.salesNote}>Includes a free 30-day trial</span>
       </div>
       <ul className={styles.proof}>
-        <li>
-          <Link to="https://trust.litellm.ai/">SOC 2 Type II</Link>
-        </li>
-        <li>
-          <Link to="/docs/data_security#legalcompliance-faqs">AWS and Azure Marketplace</Link>
+        <li className={styles.proofBadge}>
+          <Link to="https://trust.litellm.ai/">
+            <IconCompliance size={16} />
+            SOC 2 Type II audited
+          </Link>
         </li>
         <li>Self-hosted in your VPC</li>
         <li>For teams with 100+ users or 10+ production AI use cases</li>

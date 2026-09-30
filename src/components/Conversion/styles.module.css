@@ -861,6 +861,18 @@
   color: var(--cv-ink);
   text-decoration: none;
 }
+.tileTitle a {
+  color: inherit;
+  text-decoration: none;
+}
+.tileTitle a:hover {
+  color: var(--cv-accent);
+}
+.tileMore {
+  margin-top: 0.2rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
 
 .tileIcon {
   display: inline-grid;

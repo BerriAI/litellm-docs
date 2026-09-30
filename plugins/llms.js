@@ -199,7 +199,14 @@ function expandMultiline(block) {
     const to = field('to');
     const text = field('text') || field('description');
     const href = to ? (to.startsWith('/') ? SITE + to : to) : null;
-    items.push(`- ${href ? `[${clean(title)}](${href})` : clean(title)}${text ? `: ${clean(text)}` : ''}`);
+    const more = field('more');
+    const moreTo = field('moreTo');
+    const moreHref = moreTo ? (moreTo.startsWith('/') ? SITE + moreTo : moreTo) : null;
+    items.push(
+      `- ${href ? `[${clean(title)}](${href})` : clean(title)}${text ? `: ${clean(text)}` : ''}${
+        more && moreHref ? ` ([${clean(more)}](${moreHref}))` : ''
+      }`,
+    );
   }
   return items.length ? items.join('\n') + '\n' : '';
 }

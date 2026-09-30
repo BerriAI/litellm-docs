@@ -18,15 +18,15 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 ## What changes for your organization
 
 <Tiles size="lg" columns={3} items={[
+  {icon: 'compliance', title: 'Audited security you can hand to your review team', text: 'SOC 2 Type II audited, self-hosted so no data leaves your environment, and signed Docker images you can verify.', to: 'https://trust.litellm.ai/', more: 'Verify the signed images', moreTo: '/docs/proxy/docker_image_security'},
   {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
   {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
-  {icon: 'roles', title: 'Teams manage their own keys and budgets', text: 'Organizations with their own admins who manage keys, budgets, and models without the master key.', to: '/docs/proxy/access_control'},
-  {icon: 'budget', title: 'Spend stays inside each budget', text: 'Budgets per project, tag, and model, soft-limit alerts before teams hit a cap, and spend reports by team.', to: '/docs/proxy/project_management'},
+  {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
   {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '#professional-support'},
 ]} />
 
-<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout, security review, and procurement through AWS or Azure Marketplace, and start a 30-day trial with a full license." />
+<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout and security review, and start a 30-day trial with a full license." />
 
 ## Who is Enterprise for?
 
@@ -60,6 +60,7 @@ Everything below is enabled by the license key. Each item links to its setup gui
 
 ### Observability and compliance
 
+- **[SOC 2 Type II](https://trust.litellm.ai/)**. Audited controls; request the report through the Trust Center
 - **[Team-Based Logging](./proxy/team_logging.md)**. Route each team's logs to their own Langfuse project or callback
 - **[Disable logging per team](./proxy/team_logging.md#disable-logging-for-a-team)**. GDPR-friendly opt-out at the team level
 - **[Log export to GCS / Azure Blob](./observability/gcs_bucket_integration.md)**. Durable storage for compliance
@@ -85,7 +86,7 @@ Deploy the Docker image, or build from the pip package, on your own infrastructu
 LITELLM_LICENSE="eyJ..."
 ```
 
-No data leaves your environment. [Procurement is available through AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
+No data leaves your environment, and LiteLLM is [SOC 2 Type II](https://trust.litellm.ai/) audited. [Procurement is available through AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
 
 Pricing depends on your deployment size. [Get in touch](https://enterprise.litellm.ai/demo) to scope it.
 
@@ -134,6 +135,28 @@ LITELLM_LICENSE="eyJ..."
 ```
 
 Open `http://<your-proxy-host>:<port>/`. The API docs page should show **Enterprise Edition** in the description. If it does not, confirm the key is correct and unexpired, and that the proxy was fully restarted.
+
+</details>
+
+<details>
+<summary>
+
+### Is LiteLLM SOC 2 compliant?
+
+</summary>
+
+Yes. LiteLLM is SOC 2 Type II audited. Request the current report through the [LiteLLM Trust Center](https://trust.litellm.ai/). For data handling, vulnerability reporting, and the rest of the security review, see [Data Security, Legal, and Compliance FAQs](./data_security.md).
+
+</details>
+
+<details>
+<summary>
+
+### Can we buy through AWS or Azure Marketplace?
+
+</summary>
+
+Yes. You can buy an Enterprise license through AWS Marketplace or Azure Marketplace, or directly by invoice. See [Procurement Options](./data_security.md#legalcompliance-faqs).
 
 </details>
 
