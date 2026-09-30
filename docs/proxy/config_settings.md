@@ -325,6 +325,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | admission_queue_timeout_seconds | float | `1.0` | Default `1.0`. A queued request that gets no slot within this time is rejected with a `503` |
 | cancel_on_disconnect | boolean | `false` | If true, cancels the in-flight upstream LLM request (non-streaming) when the client disconnects, freeing backend capacity (e.g. a vLLM GPU slot). The cancelled request is logged as a 499 failure. Default `false` |
 | infer_model_from_keys | boolean | `false` | If true, infers the model from the provided keys |
+| model_list_return_wildcard_routes | boolean | `false` | When `true`, `GET /v1/models` and `GET /v1/models/{model_id}` include wildcard routes such as `openai/*` next to the models they expand to, without the caller passing `?return_wildcard_routes=true`. A request that passes `return_wildcard_routes=false` still leaves them out, as do the Admin UI's model pickers and `/cursor/v1/models`. Editable in the Admin UI under Router Settings, General. [List wildcard routes in /v1/models](../wildcard_routing#proxy-only-list-wildcard-routes-in-v1models) |
 | background_health_checks | boolean | `false` | If true, enables background health checks. [Doc on health checks](health) |
 | health_check_interval | integer | `300` (seconds) | The interval for health checks in seconds [Doc on health checks](health) |
 | alerting | array of strings | `null` | List of alerting methods [Doc on Slack Alerting](alerting) |
