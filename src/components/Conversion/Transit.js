@@ -374,7 +374,7 @@ export function TransitTall({path}) {
 export const GATEWAYS = [
   {id: 'llm', pill: 'AI Gateway', group: 'Models', items: ['OpenAI', 'Anthropic', 'Bedrock'], more: '100+ more'},
   {id: 'mcp', pill: 'MCP Gateway', group: 'MCP tools', items: ['GitHub', 'Jira'], more: 'Any MCP server'},
-  {id: 'a2a', pill: 'Agent Gateway', group: 'Agents', items: ['LangGraph', 'Pydantic AI'], more: null},
+  {id: 'a2a', pill: 'Agent Gateway', group: 'Agents', items: ['LangGraph', 'Pydantic AI'], more: 'Any A2A agent'},
 ];
 
 const CALLERS = {
@@ -451,7 +451,7 @@ const G_JX = 520; // where each line splits to its stops
 const G_BX = 572; // stop boxes
 const G_BW = 136;
 const G_STEP = 31;
-const G_FIRST = [44, 192, 307]; // first stop of each group
+const G_FIRST = [40, 184, 300]; // first stop of each group
 const G_TRUNK_Y = [145, 175, 205];
 
 function groupStops(g, first) {
@@ -478,13 +478,13 @@ export function GatewayMap({path = 'gateway'}) {
   const pillY = G_HUB.y + G_HUB.s + 32;
 
   return (
-    <svg className={styles.svg} viewBox="0 0 720 360" role="img" aria-label={MAP_TITLES[path]}>
+    <svg className={styles.svg} viewBox="0 0 720 380" role="img" aria-label={MAP_TITLES[path]}>
       <defs>
         <pattern id="gm-dots" width="18" height="18" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="1" className={styles.dot} />
         </pattern>
       </defs>
-      <rect width="720" height="360" fill="url(#gm-dots)" />
+      <rect width="720" height="380" fill="url(#gm-dots)" />
 
       {ent && (
         <g className={styles.fadeIn}>
