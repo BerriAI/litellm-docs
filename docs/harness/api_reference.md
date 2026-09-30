@@ -4,32 +4,38 @@ title: API reference
 
 # API reference
 
-Everything public in `litellm.harness`. Every function has an async version with an `a` prefix: `arun`, `astream`, `asession` and `aresume`.
+The entry points live on the top-level `litellm` module, next to `litellm.completion`. Each one has an async version with an `a` prefix.
+
+```python
+import litellm
+from litellm import Harness, ClaudeCodeOptions, CodexOptions, OpenCodeOptions, DeepAgentsOptions, sandbox
+from litellm.harness import Text, ToolCall, FileChange, Done, Result, State
+```
 
 ## Functions
 
-| Function | Returns |
-|---|---|
-| `run(harness, prompt, *, sandbox, **options)` | `Result` |
-| `stream(harness, prompt, *, sandbox, **options)` | `EventStream` |
-| `session(harness, *, sandbox, **options)` | `Session` |
-| `resume(state, *, sandbox)` | `Session` |
-| `capabilities(harness)` | `Capabilities` |
+| Function | Async | Returns |
+|---|---|---|
+| `litellm.agent(harness, prompt, *, sandbox, **options)` | `aagent` | `Result` |
+| `litellm.agent(harness, prompt, *, sandbox, stream=True, **options)` | `aagent(..., stream=True)` | `EventStream` |
+| `litellm.agent_session(harness, *, sandbox, **options)` | `aagent_session` | `Session` |
+| `litellm.agent_resume(state, *, sandbox)` | `aagent_resume` | `Session` |
+| `litellm.agent_capabilities(harness)` | | `Capabilities` |
 
 ## Options
 
 All options are keyword-only, and only `sandbox` is required.
 
 ```python
-def run(
+def agent(
     harness: Harness,
     prompt: str,
     *,
     sandbox: Sandbox,
-    model: str | None = None,
-    gateway: Gateway | None = None,          # else Gateway.from_env(), else SDK mode
-    api_key: str | None = None,              # SDK mode only
-    api_base: str | None = None,             # SDK mode only
+    model: str | None = None,                # "litellm_proxy/<group>" for the gateway, else any LiteLLM model
+    api_key: str | None = None,              # gateway virtual key, or provider key in SDK mode
+    api_base: str | None = None,             # gateway root without /v1, or provider base in SDK mode
+    stream: bool = False,
     instructions: str | None = None,
     tools: Sequence[Callable[..., Any]] = (),
     skills: Sequence[str | os.PathLike] = (),
@@ -42,19 +48,7 @@ def run(
     metadata: Mapping[str, Any] | None = None,   # sent as x-litellm-spend-logs-metadata
     options: ClaudeCodeOptions | CodexOptions | OpenCodeOptions | DeepAgentsOptions | None = None,
     install: bool = False,                   # runtimes must already be in the sandbox
-) -> Result: ...
-```
-
-## `Gateway`
-
-```python
-@dataclass(frozen=True)
-class Gateway:
-    api_base: str   # gateway root, without /v1
-    api_key: str    # LiteLLM virtual key
-
-    @classmethod
-    def from_env(cls) -> Gateway | None: ...   # LITELLM_PROXY_API_BASE, LITELLM_PROXY_API_KEY
+) -> Result | EventStream: ...
 ```
 
 ## `Result`
@@ -86,7 +80,7 @@ class Result:
 
 ## `EventStream`
 
-An iterator of `Event` (an async iterator for `astream`). After it's exhausted, `.result` holds the `Result`.
+An iterator of `Event` (an async iterator from `aagent(..., stream=True)`). After it's exhausted, `.result` holds the `Result`.
 
 ## `State`
 
