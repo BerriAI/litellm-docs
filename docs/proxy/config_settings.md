@@ -566,6 +566,8 @@ router_settings:
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
 | AI21_API_BASE | Base URL for AI21. Default is https://api.ai21.com/studio/v1
+| AINETCAFE_API_BASE | Base URL for ainetcafe. Default is https://microquickjs.com/v1
+| AINETCAFE_API_KEY | API key for ainetcafe
 | AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_CONNECTOR_LIMIT_PER_HOST | Connection limit per host for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
