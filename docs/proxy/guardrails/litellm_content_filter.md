@@ -491,27 +491,29 @@ Output: "This is [KEYWORD_REDACTED] and [KEYWORD_REDACTED] information"
 
 ### Customizing Tags
 
-Use `pattern_redaction_format` and `keyword_redaction_tag` to change the redaction format:
+Use the `pattern_redaction_format` and `keyword_redaction_tag` constructor arguments of `ContentFilterGuardrail` to change the redaction format:
 
-```yaml showLineNumbers title="config.yaml"
-guardrails:
-  - guardrail_name: "custom-redaction"
-    litellm_params:
-      guardrail: litellm_content_filter
-      mode: "pre_call"
-      pattern_redaction_format: "***{pattern_name}***"  # Use {pattern_name} placeholder
-      keyword_redaction_tag: "***REDACTED***"
-      patterns:
-        - pattern_type: "prebuilt"
-          pattern_name: "email"
-          action: "MASK"
-        - pattern_type: "prebuilt"
-          pattern_name: "us_ssn"
-          action: "MASK"
-      blocked_words:
-        - keyword: "confidential"
-          action: "MASK"
+```python showLineNumbers title="custom_redaction.py"
+from litellm.proxy.guardrails.guardrail_hooks.litellm_content_filter import (
+    ContentFilterGuardrail,
+)
+from litellm.types.guardrails import BlockedWord, ContentFilterPattern
+
+guardrail = ContentFilterGuardrail(
+    guardrail_name="custom-redaction",
+    pattern_redaction_format="***{pattern_name}***",  # Use {pattern_name} placeholder
+    keyword_redaction_tag="***REDACTED***",
+    patterns=[
+        ContentFilterPattern(pattern_type="prebuilt", pattern_name="email", action="MASK"),
+        ContentFilterPattern(pattern_type="prebuilt", pattern_name="us_ssn", action="MASK"),
+    ],
+    blocked_words=[BlockedWord(keyword="confidential", action="MASK")],
+)
 ```
+
+:::info
+Setting `pattern_redaction_format` or `keyword_redaction_tag` under `litellm_params` in `config.yaml` has no effect: the YAML guardrail initializer does not forward them, so guardrails defined in `config.yaml` always use the default tags shown above.
+:::
 
 **Output:**
 ```
