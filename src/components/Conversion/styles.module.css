@@ -591,6 +591,16 @@
   align-items: center;
   margin-top: 1.25rem;
 }
+/* With only a link to hand off, the link sits under the benefits instead of
+   alone in a second column */
+.pfStageStack {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'diagram' 'side' 'main';
+  gap: 1.25rem 0;
+}
+.pfStageStack .pfMain {
+  margin-top: -0.25rem;
+}
 .pfDiagram {
   grid-area: diagram;
   min-width: 0;

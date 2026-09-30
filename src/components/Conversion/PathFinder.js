@@ -204,7 +204,7 @@ export default function PathFinder({
           </button>
         ))}
       </div>
-      <div className={styles.pfStage}>
+      <div className={clsx(styles.pfStage, linkOnly && styles.pfStageStack)}>
         <div className={styles.pfDiagram}>
           <div className={styles.pfDiagramHead}>
             <span className={styles.pfDiagramCaption}>{CAPTIONS[path]}</span>
