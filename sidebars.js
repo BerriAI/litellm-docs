@@ -336,6 +336,7 @@ const sidebars = {
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
         { type: "doc", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
+        { type: "link", label: "Agent Harnesses (litellm.harness)", href: "/docs/harness" },
       ]
     },
     {
@@ -872,6 +873,61 @@ const sidebars = {
           ],
         },
       ]
+    },
+    // litellm.harness: agent harnesses (Claude Code, Codex, OpenCode, Deep Agents).
+    // Styled by the "litellm.harness docs" block in src/css/custom.css.
+    {
+      type: "category",
+      label: "Agent Harnesses",
+      className: "harness-sidebar",
+      items: [
+        {
+          type: "category",
+          label: "Getting started",
+          className: "harness-group",
+          collapsible: false,
+          items: [
+            { type: "doc", id: "harness/index", label: "Overview" },
+            { type: "doc", id: "harness/gateway", label: "Using with AI Gateway" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Harnesses",
+          className: "harness-group",
+          collapsible: false,
+          items: [
+            "harness/supported",
+            "harness/claude_code",
+            "harness/codex",
+            "harness/opencode",
+            "harness/deepagents",
+          ],
+        },
+        {
+          type: "category",
+          label: "Guides",
+          className: "harness-group",
+          collapsible: false,
+          items: [
+            "harness/quickstart",
+            "harness/models",
+            "harness/sessions",
+            "harness/events",
+            "harness/sandboxes",
+            "harness/tools",
+            "harness/permissions",
+            "harness/structured_output",
+          ],
+        },
+        {
+          type: "category",
+          label: "Reference",
+          className: "harness-group",
+          collapsible: false,
+          items: ["harness/api_reference", "harness/errors"],
+        },
+      ],
     },
     {
       type: "category",
