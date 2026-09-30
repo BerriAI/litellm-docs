@@ -2,21 +2,15 @@
 
 Agent tracing + insights at scale.
 
-1. Download the [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.lens.yml):
+1. Clone the repo and start [`docker-compose.tracing.yml`](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) (LiteLLM + Postgres + ClickHouse):
 
    ```bash
-   curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker/docker-compose.lens.yml
-   ```
-
-2. Start it:
-
-   ```bash
+   git clone https://github.com/BerriAI/litellm.git
+   cd litellm/docker
    export OPENAI_API_KEY=sk-...
-   docker compose -f docker-compose.lens.yml up
+   docker compose -f docker-compose.tracing.yml up --build
    ```
 
-3. Send traces (OTLP/HTTP) to `POST http://localhost:4000/v1/traces` with `Authorization: Bearer sk-1234`.
+2. Send traces (OTLP/HTTP) to `POST http://localhost:4002/v1/traces` with `Authorization: Bearer local-tracing-master-key`.
 
-4. Open `http://localhost:4000/ui/?page=logs` (login: `admin` / `sk-1234`).
-
-Set `LITELLM_PORT` to use a different port.
+3. Open `http://localhost:4002/ui/?page=logs` and select a run.
