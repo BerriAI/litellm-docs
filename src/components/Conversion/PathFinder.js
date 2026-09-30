@@ -53,8 +53,18 @@ function Benefits({items}) {
 
 // The picker explains what each path gives you (side) and hands off with one
 // button (main). Commands and agent prompts live on the page it links to, so
-// a reader never sees two different install commands at once.
-function actionFor(path, source, links) {
+// a reader never sees two different install commands at once. Where the page
+// already offers the command and the prompt (the docs home hero), `linkOnly`
+// trims the hand-off to a plain link to the guide.
+function GuideLink({to, path, source, children}) {
+  return (
+    <Link className={styles.textLink} to={to} onClick={() => track('docs_path_cta', {path, source})}>
+      {children} →
+    </Link>
+  );
+}
+
+function actionFor(path, source, links, linkOnly) {
   if (path === 'sdk') {
     return {
       side: (
@@ -69,7 +79,13 @@ function actionFor(path, source, links) {
           />
         </>
       ),
-      main: (
+      main: linkOnly ? (
+        <div className={styles.pfLinks}>
+          <GuideLink to={links.sdk} path={path} source={source}>
+            SDK quickstart
+          </GuideLink>
+        </div>
+      ) : (
         <div className={styles.pfLinks}>
           <Link className={styles.btnPrimary} to={links.sdk} onClick={() => track('docs_path_cta', {path, source})}>
             Install the SDK
@@ -94,7 +110,13 @@ function actionFor(path, source, links) {
           />
         </>
       ),
-      main: (
+      main: linkOnly ? (
+        <div className={styles.pfLinks}>
+          <GuideLink to={links.gateway} path={path} source={source}>
+            Gateway quickstart
+          </GuideLink>
+        </div>
+      ) : (
         <div className={styles.pfLinks}>
           <Link className={styles.btnPrimary} to={links.gateway} onClick={() => track('docs_path_cta', {path, source})}>
             Start the Gateway
@@ -137,9 +159,10 @@ export default function PathFinder({
   source = 'docs',
   sdkHref = '/docs/#installation',
   gatewayHref = '/docs/proxy/docker_quick_start',
+  linkOnly = false,
 }) {
   const [path, setPath] = useState(initial);
-  const action = actionFor(path, source, {sdk: sdkHref, gateway: gatewayHref});
+  const action = actionFor(path, source, {sdk: sdkHref, gateway: gatewayHref}, linkOnly);
   const baseId = useId();
   const refs = useRef([]);
 
