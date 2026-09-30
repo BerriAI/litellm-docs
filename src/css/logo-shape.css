@@ -431,3 +431,41 @@ html[data-theme='dark'] [class*='promoButton_'] {
   background: var(--ifm-color-primary) !important;
   color: #0d1117 !important;
 }
+
+/* ---------- Dark mode: calm and clearly bounded ----------
+   Panels, cards, and code sit on the lighter surface with visible borders,
+   so sections separate from the page. The navbar is solid rather than a
+   blurred glass over the content, and cards no longer lift on hover. */
+html[data-theme='dark'] {
+  --aurora-code-bg: #161b22;
+  --aurora-line: rgba(255, 255, 255, 0.13);
+  --aurora-line-strong: rgba(255, 255, 255, 0.2);
+  --ifm-toc-border-color: #30363d;
+  --ifm-color-emphasis-200: #30363d;
+  --ifm-color-emphasis-300: #3d444d;
+}
+html[data-theme='dark'] .lite-cardgrid,
+html[data-theme='dark'] [class*='grid_']:has(> a[class*='card_']),
+html[data-theme='dark'] section.row:has(> article > a.card),
+html[data-theme='dark'] details,
+html[data-theme='dark'] .tabs-container > div,
+html[data-theme='dark'] [class*='promoCard_'] {
+  background-color: #161b22 !important;
+}
+html[data-theme='dark'] .theme-admonition.alert {
+  border: 1px solid var(--co-border, rgba(255, 255, 255, 0.13));
+}
+html[data-theme='dark'] :is(.markdown, [class*='mdxPageWrapper'] article) table {
+  background: #161b22;
+}
+html[data-theme='dark'] .navbar {
+  background-color: #0d1117 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-bottom-color: #30363d;
+}
+html[data-theme='dark'] .contact-card:hover,
+html[data-theme='dark'] article a.card:hover,
+html[data-theme='dark'] .pagination-nav__link:hover {
+  transform: none !important;
+}
