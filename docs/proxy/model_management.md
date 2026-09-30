@@ -86,3 +86,18 @@ The rest of the operations:
 | Delete a model | `POST /model/delete` | Body `{"id": "<model_id>"}`, admin only. This is a POST; there is no DELETE-verb route |
 
 You can attach arbitrary `model_info` fields when you create or update a model, and they pass straight through to `GET /model/info` alongside the mapped cost and context data. That is the mechanism for annotating models with your own metadata, such as an owning team, a description, or a version, and reading it back programmatically.
+
+## Model deprecation
+
+LiteLLM tracks a `deprecation_date` for models in its model cost map, and you can set or override it per deployment in `model_info`, in `config.yaml` or through `POST /model/new` and `POST /model/update`:
+
+```yaml
+model_list:
+  - model_name: gpt-old
+    litellm_params:
+      model: openai/gpt-old
+    model_info:
+      deprecation_date: "2026-12-31"
+```
+
+`GET /v1/model/deprecations?warn_within_days=30` lists every configured deployment that has a deprecation date, bucketed into `deprecated` (the date has passed), `imminent` (inside the window), and `upcoming`. With `alerting: ["slack"]` the proxy posts a daily Slack summary of the deprecated and imminent models under the `model_deprecation_warnings` alert type, and with `alerting: ["email"]` it emails the admins of each affected team as their models cross the configured thresholds. See [Model deprecation warnings](./alerting.md#model-deprecation-warnings) for the settings and how teams are matched.
