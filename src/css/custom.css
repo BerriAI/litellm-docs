@@ -1165,7 +1165,7 @@ html[data-theme='dark'][class*='docs-doc-id-harness/'] {
 }
 
 .harness-sidebar > ul.menu__list::before {
-  content: 'litellm.harness';
+  content: 'litellm.agent()';
   display: block;
   padding: 6px 0 2px 2px;
   font: 500 12.5px/1.4 var(--hd-mono);
