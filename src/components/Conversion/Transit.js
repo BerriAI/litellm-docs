@@ -488,8 +488,9 @@ export function GatewayMap({path = 'gateway'}) {
 
       {ent && (
         <g className={styles.fadeIn}>
-          <rect className={styles.zone} x="176.5" y="96.5" width="282" height="200" rx="18" />
-          <text className={styles.zoneText} x="190" y="114">
+          {/* The label sits bottom-left, the one corner no line crosses */}
+          <rect className={styles.zone} x="176.5" y="96.5" width="282" height="214" rx="18" />
+          <text className={styles.zoneText} x="192" y="302">
             Your organization
           </text>
         </g>
@@ -561,8 +562,8 @@ export function GatewayMap({path = 'gateway'}) {
         <g className={styles.fadeIn}>
           <Tag x={176.5} y={128} label="SSO" />
           <Tag x={400} y={96.5} label="Audit log" />
-          <Tag x={250} y={296.5} label="Roles" />
-          <Tag x={384} y={296.5} label="Regions" />
+          <Tag x={330} y={310.5} label="Roles" />
+          <Tag x={405} y={310.5} label="Regions" />
         </g>
       )}
     </svg>

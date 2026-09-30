@@ -11,7 +11,7 @@ import {AgentPrompt, InstallBox, PathFinder} from '@site/src/components/Conversi
 
 **LiteLLM** gives you one OpenAI-format interface to 100+ LLMs (OpenAI, Anthropic, Gemini Enterprise Agent Platform, Bedrock, and more), as a Python SDK you import or a self-hosted AI Gateway every app and teammate can share.
 
-<PathFinder source="docs-index" />
+<PathFinder source="docs-index" linkOnly />
 
 ## Installation
 
