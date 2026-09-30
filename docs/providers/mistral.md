@@ -160,6 +160,9 @@ All models listed here https://docs.mistral.ai/platform/endpoints are supported.
 | Mistral NeMo 2407      | `completion(model="mistral/open-mistral-nemo-2407", messages)`     | No |
 | Codestral Mamba      | `completion(model="mistral/open-codestral-mamba", messages)`     | No |
 | Codestral Mamba    | `completion(model="mistral/codestral-mamba-latest"", messages)`     | No |
+| Voxtral Small  | `completion(model="mistral/voxtral-small-latest", messages)` | No |
+
+Voxtral Small is the only Voxtral model that serves `/v1/chat/completions`; it accepts audio input alongside text. `mistral/voxtral-mini-latest` is transcription-only and is served through [`/v1/audio/transcriptions`](#audio-transcription), so chat completion requests to it fail
 
 ## Function Calling 
 
@@ -313,7 +316,7 @@ print(response)
 
 ## Audio Transcription
 
-Use Mistral's Voxtral models for audio transcription via `litellm.transcription()`.
+Use Mistral's Voxtral models for audio transcription via `litellm.transcription()`. `mistral/voxtral-mini-latest` (and its pinned `mistral/voxtral-mini-2602`) only supports this endpoint, not chat completions
 
 ### SDK Usage
 
