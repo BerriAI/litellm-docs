@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-09-29T06:11:22Z",
-  "litellm_version": "v1.103.0",
+  "generated_at": "2026-09-30T06:10:52Z",
+  "litellm_version": "v1.103.1",
   "claude_code_version": "2.1.283",
   "providers": [
     "anthropic",
