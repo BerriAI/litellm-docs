@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 ## 1. Install
 
-`litellm.harness` is part of the regular `litellm` package and adds no dependencies to it. Install what your harness needs:
+`litellm.agent()` is part of the regular `litellm` package and adds no dependencies to it. Install what your harness needs:
 
 | Harness | Python packages | Runtime on the sandbox's `PATH` |
 |---|---|---|
@@ -22,14 +22,14 @@ import TabItem from '@theme/TabItem';
 
 ## 2. Point at your gateway
 
-Use a virtual key from your [LiteLLM AI Gateway](./gateway.md). It stays on your host.
+Use a virtual key from your [LiteLLM AI Gateway](./gateway.md). It stays on your host. Models prefixed with `litellm_proxy/` are sent to this gateway.
 
 ```bash
 export LITELLM_PROXY_API_BASE=https://litellm.example.com
 export LITELLM_PROXY_API_KEY=sk-...
 ```
 
-To skip the gateway, leave these unset and export a provider key such as `ANTHROPIC_API_KEY` instead, then use a full model string like `anthropic/claude-sonnet-4-5` below.
+To skip the gateway, export a provider key such as `ANTHROPIC_API_KEY` instead and use a model string without the prefix, like `anthropic/claude-sonnet-4-5`.
 
 ## 3. Run one turn
 
@@ -38,14 +38,13 @@ To skip the gateway, leave these unset and export a provider key such as `ANTHRO
 
 ```python title="fix_flaky.py"
 import litellm
-from litellm import sandbox
-from litellm.harness import Harness
+from litellm import Harness, sandbox
 
-result = litellm.harness.run(
+result = litellm.agent(
     Harness.CLAUDE_CODE,
     "Find why tests/test_router.py is flaky and fix it.",
     sandbox=sandbox.local("./repo"),
-    model="coder",
+    model="litellm_proxy/coder",
 )
 
 print(result.text)
@@ -58,15 +57,14 @@ print(f"${result.cost:.4f}")
 ```python title="fix_flaky.py"
 import asyncio
 import litellm
-from litellm import sandbox
-from litellm.harness import Harness
+from litellm import Harness, sandbox
 
 async def main():
-    result = await litellm.harness.arun(
+    result = await litellm.aagent(
         Harness.CLAUDE_CODE,
         "Find why tests/test_router.py is flaky and fix it.",
         sandbox=sandbox.local("./repo"),
-        model="coder",
+        model="litellm_proxy/coder",
     )
     print(result.text)
 
@@ -81,13 +79,14 @@ Permissions default to `"full"`, because the sandbox is the boundary. Use `permi
 ## 4. Stream events
 
 ```python
-from litellm.harness import Harness, Text, FileChange, Done
+from litellm import Harness
+from litellm.harness import Text, FileChange, Done
 
-for event in litellm.harness.stream(
+for event in litellm.agent(stream=True, 
     Harness.CODEX,
     "Add type hints to utils.py",
     sandbox=sandbox.local("./repo"),
-    model="coder",
+    model="litellm_proxy/coder",
 ):
     match event:
         case Text(delta=delta):
@@ -100,16 +99,6 @@ for event in litellm.harness.stream(
             pass
 ```
 
-## 5. Compare harnesses
+## 5. Pick a harness
 
-Every harness takes the same call, so comparing them is a loop.
-
-```python
-box = sandbox.docker("my-agents:latest", mounts={"./repo": "/workspace"})
-
-for harness in (Harness.CLAUDE_CODE, Harness.CODEX, Harness.OPENCODE, Harness.DEEPAGENTS):
-    r = litellm.harness.run(harness, task, sandbox=box, model="coder")
-    print(harness.name, r.stop_reason, f"${r.cost:.2f}", len(r.files))
-```
-
-On the gateway, each run shows up under its own harness tag.
+Every harness takes the same call, but each suits different work and a different kind of model group. [Choosing a harness](./gateway.md#4-choosing-a-harness) covers when to use which, and the gateway tags every request with the harness that made it, so you can compare their spend.
