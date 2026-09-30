@@ -20,10 +20,10 @@ response = text_completion(
     max_tokens=100)
 ```
 
-### With text-davinci-003
+### With gpt-3.5-turbo-instruct
 ```python
 response = text_completion(
-    model="text-davinci-003",
+    model="gpt-3.5-turbo-instruct",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)
