@@ -1,0 +1,619 @@
+/*
+ * Blog front page: masthead, featured story with a latest column, category
+ * chips, per-category sections, and a month-grouped archive.
+ * Each category owns one accent (--cat), used for its chip dot, label, and
+ * the drawn cover of posts without a hero image. Everything else follows the
+ * site theme through Infima variables.
+ */
+
+.page {
+  --b-ink: var(--ifm-font-color-base);
+  --b-muted: var(--ifm-color-emphasis-700);
+  --b-faint: var(--ifm-color-emphasis-600);
+  --b-line: var(--ifm-color-emphasis-200);
+  --b-line-strong: var(--ifm-color-emphasis-300);
+  --b-page: var(--ifm-background-color);
+  --b-surface: var(--ifm-background-surface-color, var(--ifm-background-color));
+  --cat: var(--ifm-color-primary);
+
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+/* ------------------------------------------------------------ categories */
+
+.cat_launches { --cat: #3a4bd6; }
+.cat_autorouter { --cat: #0d7a70; }
+.cat_gateway { --cat: var(--ifm-color-primary); }
+.cat_engineering { --cat: #a65c00; }
+.cat_incidents { --cat: #b42318; }
+.cat_rust { --cat: #b7410e; }
+.cat_townhall { --cat: #52607a; }
+.cat_customers { --cat: #067647; }
+
+[data-theme='dark'] .cat_launches { --cat: #9fabff; }
+[data-theme='dark'] .cat_autorouter { --cat: #5fd9c9; }
+[data-theme='dark'] .cat_engineering { --cat: #f5b94a; }
+[data-theme='dark'] .cat_incidents { --cat: #fc9a92; }
+[data-theme='dark'] .cat_rust { --cat: #f3a06a; }
+[data-theme='dark'] .cat_townhall { --cat: #b8c2d6; }
+[data-theme='dark'] .cat_customers { --cat: #6fdca0; }
+
+/* -------------------------------------------------------------- masthead */
+
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: end;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--b-line);
+}
+
+.page .mastTitle {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.2rem, 1.5rem + 2.6vw, 3.4rem);
+  line-height: 1.02;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.page .mastSub {
+  margin: 0;
+  max-width: 38rem;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--b-muted);
+}
+
+.mastAside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page .mastLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--b-ink);
+}
+
+.page .mastLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+}
+.mastLinks a {
+  color: var(--b-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--b-line-strong);
+  text-underline-offset: 3px;
+}
+.mastLinks a:hover {
+  color: var(--ifm-color-primary);
+  text-decoration-color: currentColor;
+}
+
+/* ------------------------------------------------------------------ lead */
+
+.lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 2.25rem;
+  margin-bottom: 3rem;
+}
+
+.latest {
+  display: flex;
+  flex-direction: column;
+}
+
+.page .latestHeading {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--b-muted);
+}
+
+/* ---------------------------------------------------------------- covers */
+
+/* Hero images are 1200 x 630 social cards with logos near the edges, so every
+   cover keeps that shape; a different frame crops the logos. */
+.cover {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--lite-radius-md, 12px);
+  background: var(--b-surface);
+  border: 1px solid var(--b-line);
+}
+.cover_lg {
+  aspect-ratio: 1200 / 630;
+  border-radius: var(--lite-radius-md, 16px);
+}
+.cover_md {
+  aspect-ratio: 1200 / 630;
+}
+.cover_sm {
+  aspect-ratio: 1200 / 630;
+  border-radius: var(--lite-radius-sm, 8px);
+}
+
+.coverImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.card,
+.compact,
+.row {
+  color: var(--b-ink);
+  text-decoration: none;
+}
+.card:hover,
+.compact:hover,
+.row:hover {
+  color: var(--b-ink);
+  text-decoration: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.card:hover .coverImg,
+.compact:hover .coverImg {
+  transform: scale(1.03);
+}
+.card:hover .cardTitle,
+.compact:hover .compactTitle,
+.row:hover .rowTitle {
+  color: var(--ifm-color-primary);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.catText {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--cat);
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+.cardDesc {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--b-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--b-faint);
+}
+
+.authors {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.avatars {
+  display: inline-flex;
+}
+.avatars img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--b-page);
+  object-fit: cover;
+}
+.avatars img + img {
+  margin-left: -7px;
+}
+
+/* Posts without a hero image: a bordered text card, so the grid still
+   reads as cards and the missing image does not look like an empty box. */
+.cardText {
+  padding: 1.25rem 1.3rem 1.2rem;
+  border-radius: var(--lite-radius-md, 12px);
+  border: 1px solid var(--b-line-strong);
+  background: var(--b-surface);
+  transition: border-color 0.15s ease;
+}
+.cardText:hover {
+  border-color: var(--cat);
+}
+.cardText .cardBody {
+  flex: 1;
+  gap: 0.55rem;
+}
+.cardText .cardTitle {
+  font-size: 1.18rem;
+  line-height: 1.28;
+}
+.cardText .cardDesc {
+  -webkit-line-clamp: 4;
+}
+.cardText .meta {
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+.grid4 .cardText .cardDesc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+}
+
+.cardFeature {
+  gap: 1.2rem;
+}
+.cardFeature .cardTitle {
+  font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.cardFeature .cardDesc {
+  font-size: 1.02rem;
+  -webkit-line-clamp: 3;
+}
+
+.compact {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--b-line);
+}
+.compact:last-child {
+  border-bottom: 0;
+}
+
+.compactText {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.compactBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.compactTitle {
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.3;
+  transition: color 0.15s ease;
+}
+
+/* ------------------------------------------------------------ toolbar */
+
+.toolbar {
+  position: sticky;
+  top: var(--ifm-navbar-height);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 -1.5rem 2rem;
+  padding: 0.75rem 1.5rem;
+  background: color-mix(in srgb, var(--b-page) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--b-line);
+  border-bottom: 1px solid var(--b-line);
+}
+
+.chips {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.8rem;
+  border-radius: var(--lite-radius-xs, 999px);
+  border: 1px solid var(--b-line-strong);
+  background: var(--b-page);
+  color: var(--b-ink);
+  font-size: 0.84rem;
+  font-weight: 550;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.chip:hover {
+  border-color: var(--cat);
+}
+.chipOn,
+.chipOn:hover {
+  border-color: var(--cat);
+  background: color-mix(in srgb, var(--cat) 12%, var(--b-page));
+  box-shadow: inset 0 0 0 1px var(--cat);
+}
+.chip:focus-visible,
+.seeAll:focus-visible,
+.linkBtn:focus-visible,
+.card:focus-visible,
+.compact:focus-visible,
+.row:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 3px;
+  border-radius: var(--lite-radius-sm, 8px);
+}
+
+.chipDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cat);
+}
+
+.chipCount {
+  font-size: 0.75rem;
+  color: var(--b-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.search {
+  flex: none;
+  width: 14rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--lite-radius-sm, 8px);
+  border: 1px solid var(--b-line-strong);
+  background: var(--b-page);
+  color: var(--b-ink);
+  font: inherit;
+  font-size: 0.88rem;
+}
+.search:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ifm-color-primary) 20%, transparent);
+}
+
+/* ------------------------------------------------------------- sections */
+
+.section {
+  margin-bottom: 3.25rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--b-line);
+}
+
+.page .sectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.page .sectionBlurb {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--b-faint);
+}
+
+.seeAll,
+.linkBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ifm-color-primary);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.seeAll:hover,
+.linkBtn:hover {
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.25rem 1.75rem;
+}
+.grid4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem 1.25rem;
+}
+.grid4 .cardDesc {
+  display: none;
+}
+
+.empty {
+  color: var(--b-muted);
+}
+
+/* ------------------------------------------------------------- rows */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+  gap: 1.25rem;
+  align-items: baseline;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--b-line);
+}
+.rows .row:last-child {
+  border-bottom: 0;
+}
+
+.rowDate {
+  font-size: 0.82rem;
+  color: var(--b-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.rowDesc {
+  font-size: 0.86rem;
+  color: var(--b-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catTag {
+  justify-self: end;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--lite-radius-xs, 999px);
+  border: 1px solid color-mix(in srgb, var(--cat) 40%, var(--b-line));
+  color: var(--cat);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.archive {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.page .archiveHeading {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--b-muted);
+}
+
+/* ---------------------------------------------------------- responsive */
+
+@media (max-width: 1100px) {
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 996px) {
+  .masthead,
+  .lead {
+    grid-template-columns: 1fr;
+  }
+  .masthead {
+    gap: 1.5rem;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 2rem 1rem 4rem;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0 -1rem 1.5rem;
+    padding: 0.65rem 1rem;
+  }
+  .search {
+    width: 100%;
+  }
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .grid,
+  .grid4 {
+    grid-template-columns: 1fr;
+  }
+  .compact {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+  .row {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  .catTag {
+    justify-self: start;
+  }
+  .rowDesc {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coverImg,
+  .chip {
+    transition: none;
+  }
+  .card:hover .coverImg,
+  .compact:hover .coverImg {
+    transform: none;
+  }
+}

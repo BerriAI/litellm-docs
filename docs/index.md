@@ -7,31 +7,24 @@ sidebar_label: Quickstart
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
-import Image from '@theme/IdealImage';
+import {AgentPrompt, InstallBox, PathFinder} from '@site/src/components/Conversion';
 
-<Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
+**LiteLLM** gives you one OpenAI-format interface to 100+ LLMs (OpenAI, Anthropic, Gemini Enterprise Agent Platform, Bedrock, and more), as a Python SDK you import or a self-hosted AI Gateway every app and teammate can share.
 
-**LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
-
-- Call any provider using the same `completion()` interface, with no API to re-learn for each one
-- Consistent output format regardless of which provider or model you use
-- Built-in retry / fallback logic across multiple deployments via the [Router](./routing.md)
-- Self-hosted [LLM Gateway (Proxy)](/docs/simple_proxy) with virtual keys, cost tracking, and an admin UI
-
-[![PyPI](https://img.shields.io/pypi/v/litellm.svg)](https://pypi.org/project/litellm/)
-[![GitHub Stars](https://img.shields.io/github/stars/BerriAI/litellm?style=social)](https://github.com/BerriAI/litellm)
-
----
+<PathFinder source="docs-index" linkOnly />
 
 ## Installation
 
-```shell
-uv add litellm
-```
+<InstallBox variant="sdk" title="Install the SDK" />
 
-To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
+If you use Claude Code, Codex, or Cursor, you can paste this prompt instead. The agent runs the setup and checks that it works.
 
----
+<AgentPrompt id="sdk" />
+
+To run the AI Gateway with the Admin UI instead, follow the [Gateway quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI, see the [Gateway CLI quickstart](./learn/gateway_quickstart.md).
+
+[![PyPI](https://img.shields.io/pypi/v/litellm.svg)](https://pypi.org/project/litellm/)
+[![GitHub Stars](https://img.shields.io/github/stars/BerriAI/litellm?style=social)](https://github.com/BerriAI/litellm)
 
 ## Quick Start
 
@@ -70,7 +63,7 @@ print(response.choices[0].message.content)
 ```
 
 </TabItem>
-<TabItem value="vertex" label="Vertex AI">
+<TabItem value="vertex" label="Agent Platform">
 
 ```python
 from litellm import completion
@@ -206,40 +199,6 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 **Want to get started fast?** Head to [Tutorials](/docs/tutorials) for step-by-step walkthroughs of AI coding tools, agent SDKs, proxy setup, and more.
 
 **Need to understand a specific feature?** Check [Guides](/docs/guides) for streaming, function calling, prompt caching, and other how-tos.
-
----
-
-## Choose Your Path
-
-<NavigationCards
-columns={2}
-items={[
-{
-icon: "🐍",
-title: "Python SDK",
-description: "Integrate LiteLLM directly into your Python application. Drop-in replacement for the OpenAI client.",
-listDescription: [
-"completion(), embedding(), image_generation() and more",
-"Router with retry, fallback, and load balancing",
-"OpenAI-compatible exceptions across all providers",
-"Observability callbacks (Langfuse, MLflow, Helicone…)",
-],
-to: "#litellm-python-sdk",
-},
-{
-icon: "🖥️",
-title: "Proxy Server (LLM Gateway)",
-description: "Self-hosted gateway for platform teams managing LLM access across an organization.",
-listDescription: [
-"Virtual keys with per-key/team/user budgets",
-"Centralized logging, guardrails, and caching",
-"Admin UI for monitoring and management",
-"Drop-in replacement for any OpenAI-compatible client",
-],
-to: "#litellm-proxy-server-llm-gateway",
-},
-]}
-/>
 
 ---
 

@@ -1,291 +1,269 @@
-import React, {useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
+import clsx from 'clsx';
+import Head from '@docusaurus/Head';
 import Layout from '@theme/Layout';
-import Link from '@docusaurus/Link';
 import SubscribeForm from '@site/src/components/SubscribeForm';
-import styles from './styles.module.css';
+import PostCard from '@site/src/components/Blog/PostCard';
+import {CATEGORIES, categoryOf} from '@site/src/components/Blog/categories';
+import {itemScore, queryTokens} from '@site/src/components/Blog/search';
+import styles from '@site/src/components/Blog/blog.module.css';
 
-const TABS = [
-  {id: 'all', label: 'All'},
-  {id: 'autorouter', label: 'Auto Router'},
-  {id: 'engineering', label: 'Engineering'},
-  {id: 'ideas', label: 'Ideas'},
-  {id: 'security', label: 'Security'},
-  {id: 'infrastructure', label: 'Performance / Reliability'},
+// Sections on the front page, in order, and how many posts each shows.
+const SECTIONS = [
+  {id: 'launches', count: 4},
+  {id: 'autorouter', count: 3},
+  {id: 'gateway', count: 3},
+  {id: 'engineering', count: 3},
+  {id: 'incidents', count: 4, rows: true},
 ];
 
-const SECURITY_TAGS = ['security', 'incident-report'];
-const INFRA_TAGS = ['performance', 'reliability', 'infrastructure'];
-const IDEAS_TAGS = ['ideas', 'thesis'];
-const AUTOROUTER_TAGS = ['complexity-router', 'auto-router'];
+// Chip order for readers; categories.js order is matching priority instead.
+const CHIP_ORDER = ['launches', 'autorouter', 'gateway', 'engineering', 'incidents', 'rust', 'townhall', 'customers'];
 
-function hasTag(item, tagSet) {
-  const tags = item.content?.metadata?.tags || [];
-  return tags.some(t => tagSet.includes(t.label));
-}
-
-function filterItems(items, tab) {
-  if (tab === 'all') return items;
-  if (tab === 'autorouter') return items.filter(i => hasTag(i, AUTOROUTER_TAGS));
-  if (tab === 'security') return items.filter(i => hasTag(i, SECURITY_TAGS));
-  if (tab === 'infrastructure') return items.filter(i => hasTag(i, INFRA_TAGS));
-  if (tab === 'ideas') return items.filter(i => hasTag(i, IDEAS_TAGS));
-  return items.filter(i =>
-    !hasTag(i, SECURITY_TAGS) &&
-    !hasTag(i, INFRA_TAGS) &&
-    !hasTag(i, IDEAS_TAGS)
+// Pin a post to the top with `featured: true` in its front matter. Otherwise
+// the newest post with a cover image that is not a model launch is featured,
+// since launches have their own section.
+function pickFeatured(items) {
+  const pinned = items.find((i) => i.content.metadata.frontMatter?.featured);
+  if (pinned) return pinned;
+  return (
+    items.find((i) => {
+      const fm = i.content.metadata.frontMatter || {};
+      return fm.image && categoryOf(i.content.metadata.tags).id !== 'launches';
+    }) || items[0]
   );
 }
 
-function searchableText(item) {
-  const metadata = item.content?.metadata || {};
-  return [
-    metadata.title,
-    metadata.description,
-    ...(metadata.frontMatter?.keywords || []),
-    ...(metadata.tags || []).map(tag => tag.label),
-    ...(metadata.authors || []).map(author => author.name),
-  ].filter(Boolean).join(' ').toLowerCase();
+function monthKey(date) {
+  return new Date(date).toLocaleDateString('en-US', {month: 'long', year: 'numeric', timeZone: 'UTC'});
 }
 
-function queryTokens(query) {
-  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-}
-
-function maxEditDistance(token) {
-  if (token.length <= 3) return 0;
-  if (token.length <= 5) return 1;
-  return 2;
-}
-
-function levenshteinDistance(first, second, maxDistance) {
-  if (Math.abs(first.length - second.length) > maxDistance) return maxDistance + 1;
-
-  let previous = Array.from({length: second.length + 1}, (_, index) => index);
-  for (let firstIndex = 1; firstIndex <= first.length; firstIndex++) {
-    const current = [firstIndex];
-    for (let secondIndex = 1; secondIndex <= second.length; secondIndex++) {
-      current[secondIndex] = Math.min(
-        current[secondIndex - 1] + 1,
-        previous[secondIndex] + 1,
-        previous[secondIndex - 1] + (first[firstIndex - 1] === second[secondIndex - 1] ? 0 : 1)
-      );
-    }
-    previous = current;
+function Archive({items}) {
+  const groups = [];
+  for (const item of items) {
+    const key = monthKey(item.content.metadata.date);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.items.push(item);
+    else groups.push({key, items: [item]});
   }
-
-  return previous[second.length];
-}
-
-function isSubsequence(token, word) {
-  let tokenIndex = 0;
-  for (const character of word) {
-    if (character === token[tokenIndex]) tokenIndex++;
-  }
-  return tokenIndex === token.length;
-}
-
-function tokenScore(word, token) {
-  if (word === token) return 4;
-  if (word.startsWith(token)) return 3;
-  if (word.includes(token)) return 2;
-  if (levenshteinDistance(word, token, maxEditDistance(token)) <= maxEditDistance(token)) return 1;
-  if (token.length >= 4 && isSubsequence(token, word)) return 0.5;
-  return null;
-}
-
-function itemScore(item, tokens) {
-  if (tokens.length === 0) return 0;
-
-  const words = searchableText(item).match(/[\p{L}\p{N}]+/gu) || [];
-  return tokens.reduce((score, token) => {
-    const bestTokenScore = words.reduce((best, word) => {
-      const current = tokenScore(word, token);
-      return current !== null && current > best ? current : best;
-    }, null);
-
-    return score === null || bestTokenScore === null ? null : score + bestTokenScore;
-  }, 0);
-}
-
-// ── Provider marquee ──────────────────────────────────────────────────────
-const PROVIDERS = [
-  { name: 'OpenAI',        img: 'https://www.google.com/s2/favicons?domain=openai.com&sz=64' },
-  { name: 'Anthropic',     img: 'https://www.google.com/s2/favicons?domain=claude.ai&sz=64' },
-  { name: 'Google Gemini', img: 'https://www.google.com/s2/favicons?domain=ai.google.dev&sz=64' },
-  { name: 'AWS Bedrock',   img: 'https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=64' },
-  { name: 'Azure OpenAI',  img: 'https://www.google.com/s2/favicons?domain=azure.microsoft.com&sz=64' },
-  { name: 'Mistral AI',    img: 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=64' },
-  { name: 'Meta Llama',    img: 'https://www.google.com/s2/favicons?domain=meta.com&sz=64' },
-  { name: 'Groq',          img: 'https://www.google.com/s2/favicons?domain=groq.com&sz=64' },
-  { name: 'Hugging Face',  img: 'https://www.google.com/s2/favicons?domain=huggingface.co&sz=64' },
-  { name: 'Perplexity',    img: 'https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64' },
-  { name: 'DeepSeek',      img: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
-  { name: 'Cohere',        img: 'https://www.google.com/s2/favicons?domain=cohere.com&sz=64' },
-  { name: 'Together AI',   img: 'https://www.google.com/s2/favicons?domain=together.ai&sz=64' },
-  { name: 'Vertex AI',     img: 'https://www.google.com/s2/favicons?domain=cloud.google.com&sz=64' },
-];
-
-const DOUBLED = [...PROVIDERS, ...PROVIDERS];
-
-function ProviderMarquee() {
   return (
-    <div className={styles.marqueeWrap}>
-      <p className={styles.marqueeLabel}>Routing to 100+ providers</p>
-      <div className={styles.marqueeOuter}>
-        <div className={styles.fadeLeft} />
-        <div className={styles.fadeRight} />
-        <div className={styles.marqueeTrack}>
-          {DOUBLED.map((p, i) => (
-            <span key={i} className={styles.marqueeItem}>
-              <img src={p.img} alt={p.name} width={18} height={18} className={styles.marqueeIcon} />
-              <span>{p.name}</span>
-              <span className={styles.marqueeSep}>|</span>
-            </span>
-          ))}
-        </div>
-      </div>
+    <div className={styles.archive}>
+      {groups.map((g) => (
+        <section key={g.key} className={styles.archiveMonth}>
+          <h3 className={styles.archiveHeading}>{g.key}</h3>
+          <div className={styles.rows}>
+            {g.items.map((item) => (
+              <PostCard key={item.content.metadata.permalink} item={item} variant="row" />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
 
-// ── Post row ──────────────────────────────────────────────────────────────
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-    timeZone: 'UTC',
-  });
+function readCategoryFromUrl() {
+  if (typeof window === 'undefined') return 'all';
+  const c = new URLSearchParams(window.location.search).get('c');
+  return CATEGORIES.some((cat) => cat.id === c) ? c : 'all';
 }
 
-function AuthorList({authors}) {
-  if (!authors || authors.length === 0) return null;
-  return (
-    <>
-      {authors.map((a, i) => (
-        <React.Fragment key={a.name}>
-          {i > 0 && <span className={styles.authorSep}> </span>}
-          {a.url ? (
-            <a href={a.url} target="_blank" rel="noopener" className={styles.authorLink}>{a.name}</a>
-          ) : (
-            <span className={styles.authorName}>{a.name}</span>
-          )}
-        </React.Fragment>
-      ))}
-    </>
-  );
-}
-
-export function PostRow({post}) {
-  const {title, permalink, date, description, authors} = post;
-  return (
-    <article className={styles.post}>
-      <Link to={permalink} className={styles.titleLink}>
-        <h2 className={styles.title}>{title}</h2>
-      </Link>
-      {description && <p className={styles.desc}>{description}</p>}
-      <div className={styles.meta}>
-        <AuthorList authors={authors} />
-        {authors && authors.length > 0 && <span className={styles.metaDash}> — </span>}
-        <time className={styles.date} dateTime={date}>{formatDate(date)}</time>
-      </div>
-    </article>
-  );
-}
-
-function Pagination({metadata}) {
-  const {previousPage, nextPage} = metadata;
-  if (!previousPage && !nextPage) return null;
-  return (
-    <nav className={styles.pagination} aria-label="Blog list pagination">
-      {previousPage ? <Link to={previousPage} className={styles.pageLink}>&larr; Newer posts</Link> : <span />}
-      {nextPage ? <Link to={nextPage} className={styles.pageLink}>Older posts &rarr;</Link> : <span />}
-    </nav>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────
 export default function BlogListPage(props) {
   const items = props.items || [];
-  const metadata = props.metadata || {};
-  const [activeTab, setActiveTab] = useState('all');
+  const [active, setActive] = useState('all');
   const [query, setQuery] = useState('');
+
+  useEffect(() => setActive(readCategoryFromUrl()), []);
+
+  const choose = (id) => {
+    setActive(id);
+    const url = new URL(window.location.href);
+    if (id === 'all') url.searchParams.delete('c');
+    else url.searchParams.set('c', id);
+    window.history.replaceState(null, '', url);
+  };
+
+  const byCategory = useMemo(() => {
+    const map = Object.fromEntries(CATEGORIES.map((c) => [c.id, []]));
+    for (const item of items) map[categoryOf(item.content.metadata.tags).id].push(item);
+    return map;
+  }, [items]);
+
   const tokens = queryTokens(query);
-  const filtered = filterItems(items, activeTab)
-    .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
-    .filter(({score}) => score !== null)
-    .sort((first, second) => second.score - first.score || first.index - second.index)
-    .map(({item}) => item);
+  const filtering = active !== 'all' || tokens.length > 0;
+  const pool = active === 'all' ? items : byCategory[active];
+  const results = filtering
+    ? pool
+        .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
+        .filter(({score}) => score !== null)
+        .sort((a, b) => b.score - a.score || a.index - b.index)
+        .map(({item}) => item)
+    : [];
+
+  const featured = pickFeatured(items);
+  const latest = items.filter((i) => i !== featured).slice(0, 4);
+  const activeCategory = CATEGORIES.find((c) => c.id === active);
 
   return (
     <Layout
-      title="Engineering Blog"
-      description="How we build the world's most widely used open-source AI Gateway. Routing, reliability, observability, and what we learn along the way."
-    >
+      title="Blog"
+      description="Model launches, Auto Router research, gateway features, and engineering notes from the team building the LiteLLM AI Gateway.">
+      <Head>
+        <link rel="alternate" type="text/markdown" href="/blog.md" title="LiteLLM blog index (markdown)" />
+      </Head>
       <div className={styles.page}>
-        {/* Hero */}
-        <header className={styles.hero}>
-          <p className={styles.eyebrow}>AI Gateway</p>
-          <h1 className={styles.heroTitle}>Engineering</h1>
-          <p className={styles.heroSub}>
-            How we build the world's most widely used open-source AI Gateway.
-            Routing, reliability, observability, and what we learn along the way.
-          </p>
-          <a href="https://jobs.ashbyhq.com/litellm" target="_blank" rel="noopener noreferrer" className={styles.hiringBtn}>
-            We're hiring!
-          </a>
-          <div className={styles.subscribeSection}>
-            <p className={styles.subscribeLabel}>Get new posts in your inbox</p>
+        <header className={styles.masthead}>
+          <div>
+            <h1 className={styles.mastTitle}>LiteLLM Blog</h1>
+            <p className={styles.mastSub}>
+              Model launches on day 0, Auto Router research, gateway features, and what we learn running the most widely used open-source AI
+              Gateway.
+            </p>
+          </div>
+          <div className={styles.mastAside}>
+            <p className={styles.mastLabel}>New posts in your inbox</p>
             <SubscribeForm />
+            <p className={styles.mastLinks}>
+              <a href="/blog/rss.xml">RSS</a>
+              <a href="/blog.md" title="Every post as a markdown index for coding agents">
+                Markdown for agents
+              </a>
+              <a href="https://jobs.ashbyhq.com/litellm" target="_blank" rel="noopener noreferrer">
+                We're hiring
+              </a>
+            </p>
           </div>
         </header>
 
-        <ProviderMarquee />
+        {featured && (
+          <section className={styles.lead} aria-label="Featured and latest posts">
+            <PostCard item={featured} variant="feature" />
+            <div className={styles.latest}>
+              <h2 className={styles.latestHeading}>Latest</h2>
+              {latest.map((item) => (
+                <PostCard key={item.content.metadata.permalink} item={item} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
 
-        <div className={styles.searchRow}>
+        <div className={styles.toolbar}>
+          <nav className={styles.chips} aria-label="Filter posts by category">
+            <button
+              type="button"
+              className={clsx(styles.chip, active === 'all' && styles.chipOn)}
+              aria-pressed={active === 'all'}
+              onClick={() => choose('all')}>
+              All <span className={styles.chipCount}>{items.length}</span>
+            </button>
+            {CHIP_ORDER.map((id) => CATEGORIES.find((c) => c.id === id)).filter((c) => c && byCategory[c.id].length > 1).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={clsx(styles.chip, styles[`cat_${c.id}`], active === c.id && styles.chipOn)}
+                aria-pressed={active === c.id}
+                onClick={() => choose(c.id)}>
+                <span className={styles.chipDot} aria-hidden="true" />
+                {c.label} <span className={styles.chipCount}>{byCategory[c.id].length}</span>
+              </button>
+            ))}
+          </nav>
           <input
             type="search"
-            className={styles.searchInput}
+            className={styles.search}
             value={query}
-            onChange={event => setQuery(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'Escape') setQuery('');
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
             placeholder="Search posts"
             aria-label="Search posts"
             autoComplete="off"
           />
         </div>
 
-        {/* Tabs */}
-        <nav className={styles.tabs} aria-label="Filter posts by category">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-              aria-pressed={activeTab === tab.id}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        {filtering ? (
+          <section className={styles.section} aria-live="polite">
+            <div className={styles.sectionHead}>
+              <h2 className={clsx(styles.sectionTitle, activeCategory && styles[`cat_${activeCategory.id}`])}>
+                {activeCategory && <span className={styles.chipDot} aria-hidden="true" />}
+                {activeCategory ? activeCategory.label : 'Search results'}
+              </h2>
+              <p className={styles.sectionBlurb}>
+                {activeCategory?.blurb ? `${activeCategory.blurb} ` : ''}
+                {results.length} {results.length === 1 ? 'post' : 'posts'}
+                {query ? ` matching "${query}"` : ''}
+              </p>
+            </div>
+            {results.length === 0 ? (
+              <p className={styles.empty}>
+                No posts match.{' '}
+                <button
+                  type="button"
+                  className={styles.linkBtn}
+                  onClick={() => {
+                    setQuery('');
+                    choose('all');
+                  }}>
+                  Show all posts
+                </button>
+              </p>
+            ) : (
+              <div className={clsx('lite-cardgrid', styles.grid)}>
+                {results.map((item) => (
+                  <PostCard key={item.content.metadata.permalink} item={item} />
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <>
+            {SECTIONS.map(({id, count, rows}) => {
+              const cat = CATEGORIES.find((c) => c.id === id);
+              const posts = byCategory[id].filter((i) => i !== featured).slice(0, count);
+              if (!posts.length) return null;
+              return (
+                <section key={id} className={styles.section}>
+                  <div className={styles.sectionHead}>
+                    <h2 className={clsx(styles.sectionTitle, styles[`cat_${id}`])}>
+                      <span className={styles.chipDot} aria-hidden="true" />
+                      {cat.label}
+                    </h2>
+                    <p className={styles.sectionBlurb}>{cat.blurb}</p>
+                    <button
+                      type="button"
+                      className={styles.seeAll}
+                      onClick={() => {
+                        choose(id);
+                        window.scrollTo({top: 0});
+                      }}>
+                      All {byCategory[id].length} posts
+                    </button>
+                  </div>
+                  {rows ? (
+                    <div className={styles.rows}>
+                      {posts.map((item) => (
+                        <PostCard key={item.content.metadata.permalink} item={item} variant="row" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={clsx('lite-cardgrid', styles.grid, count === 4 && styles.grid4)}>
+                      {posts.map((item) => (
+                        <PostCard key={item.content.metadata.permalink} item={item} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
 
-        <p className={styles.resultCount} role="status" aria-live="polite">
-          {query ? `${filtered.length} of ${items.length} posts` : ''}
-        </p>
-
-        {/* Post list */}
-        <main className={styles.list}>
-          {filtered.length === 0 && (
-            <p className={styles.emptyMsg}>
-              {query ? `No posts match "${query}".` : 'No posts on this page match the selected filter.'}
-            </p>
-          )}
-          {filtered.map(({content}) => (
-            <PostRow key={content.metadata.permalink} post={content.metadata} />
-          ))}
-        </main>
-
-        <Pagination metadata={metadata} />
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>Every post</h2>
+                <p className={styles.sectionBlurb}>Newest first.</p>
+              </div>
+              <Archive items={items} />
+            </section>
+          </>
+        )}
       </div>
     </Layout>
   );

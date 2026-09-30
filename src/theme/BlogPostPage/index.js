@@ -1,6 +1,9 @@
 import React, {useEffect} from 'react';
+import Head from '@docusaurus/Head';
 import OriginalBlogPostPage from '@theme-original/BlogPostPage';
+import {PageActions} from '@site/src/theme/DocItem/Content';
 import styles from './styles.module.css';
+import actions from './postActions.module.css';
 
 function BackLink() {
   return (
@@ -22,9 +25,20 @@ export default function BlogPostPage(props) {
     return () => document.body.classList.remove('blog-post-body');
   }, []);
 
+  const {frontMatter, metadata} = props.content || {};
   return (
     <>
+      {metadata?.permalink && (
+        <Head>
+          <link rel="alternate" type="text/markdown" href={`${metadata.permalink}.md`} />
+        </Head>
+      )}
       <BackLink />
+      {frontMatter?.rawMarkdownB64 && metadata?.permalink && (
+        <div className={actions.outer}>
+          <PageActions rawMarkdownB64={frontMatter.rawMarkdownB64} permalink={metadata.permalink} hasMarkdownUrl />
+        </div>
+      )}
       <OriginalBlogPostPage {...props} />
     </>
   );

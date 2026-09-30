@@ -74,3 +74,19 @@
 [data-theme='dark'] .input:focus {
   border-color: var(--ifm-color-primary);
 }
+
+/* On the navy footer */
+.dark .input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+.dark .input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+.dark .success {
+  color: #7ee2a8;
+}
+.dark .error {
+  color: #fca5a5;
+}

@@ -7,6 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 import { CloudArchitectureSelector } from '@site/src/components/CloudArchitecture';
+import { SalesBand } from '@site/src/components/Conversion';
 
 # Production Deployment
 
@@ -550,3 +551,5 @@ Then open the Admin UI at `https://llm.example.com/ui`, log in with your master 
 ## Next steps
 
 Use the [production checklist](./prod.md) to configure workers, resources, Redis, graceful degradation, and server tuning. Verify images with the [Docker Image Security Guide](./docker_image_security.md). Add regions with [Multi-Region Deployment](./multi_region.md). For workloads above 1,000 RPS, enable the [Redis transaction buffer](./prod.md#redis-transaction-buffer) and evaluate the [high-throughput deployment profile](./high_throughput.md).
+
+<SalesBand source="deploy" title="Deploying for more than one team?" text="Enterprise adds SSO, audit logs, delegated admins, multi-region deployment under one license, and a support channel with 24/7 SLAs down to a one-hour Sev 0 response." />

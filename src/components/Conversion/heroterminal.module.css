@@ -1,0 +1,112 @@
+/* The hero terminal stays dark in both themes, like a real terminal. */
+
+.wrap {
+  min-width: 0;
+}
+
+.term {
+  --ht-bg: #0b1030;
+  --ht-ink: #e7e9ff;
+  --ht-dim: rgba(231, 233, 255, 0.55);
+  --ht-line: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  border: 1px solid var(--ht-line);
+  border-radius: var(--lite-radius-md, 12px);
+  background: var(--ht-bg);
+  box-shadow: 0 24px 50px -30px rgba(5, 8, 40, 0.55);
+}
+:global([data-theme='dark']) .term {
+  --ht-line: rgba(255, 255, 255, 0.14);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--ht-line);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.tab {
+  padding: 0.35rem 0.65rem;
+  border: 0;
+  border-radius: var(--lite-radius-sm, 6px);
+  background: transparent;
+  color: var(--ht-dim);
+  font: 600 0.78rem/1.2 var(--ifm-font-family-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab:hover {
+  color: var(--ht-ink);
+}
+.tabOn,
+.tabOn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.tab:focus-visible,
+.copy:focus-visible,
+.code:focus-visible {
+  outline: 2px solid #9fabff;
+  outline-offset: 2px;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--lite-radius-sm, 6px);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: 600 0.78rem/1.2 var(--ifm-font-family-base);
+  cursor: pointer;
+}
+.copy:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Lines never wrap: three short lines, scrolling sideways when needed */
+.code {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ht-ink);
+  font: 0.8rem/1.7 var(--ifm-font-family-monospace);
+  white-space: pre;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.line {
+  display: block;
+}
+.ps {
+  margin-right: 0.6rem;
+  color: #7f89ff;
+  user-select: none;
+}
+
+.under {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  margin-top: 0.75rem;
+}
+.more {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

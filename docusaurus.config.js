@@ -89,7 +89,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/gridMarks.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js')],
   plugins: [
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
@@ -99,6 +99,8 @@ const config = {
     }),
     require('./plugins/optimize-images'),
     require('./plugins/rust-migration-posts'),
+    require('./plugins/litellm-stats'),
+    require('./plugins/llms'),
     [
       '@docusaurus/plugin-client-redirects',
       {
@@ -525,6 +527,7 @@ const config = {
             items: [
               {label: 'Blog', to: '/blog'},
               {label: 'Changelog', to: '/release_notes'},
+              {label: 'Agent resources', to: '/docs/agent_resources'},
               {label: 'llms.txt', href: 'https://docs.litellm.ai/llms.txt'},
               {label: 'Trust Center', href: 'https://trust.litellm.ai/'},
             ],

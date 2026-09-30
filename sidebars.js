@@ -365,6 +365,7 @@ const sidebars = {
       collapsed: false,
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
+        { type: "doc", id: "agent_resources", label: "Agent resources" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
@@ -452,12 +453,7 @@ const sidebars = {
     {
       type: "category",
       label: "LiteLLM AI Gateway (Proxy)",
-      link: {
-        type: "generated-index",
-        title: "LiteLLM AI Gateway (LLM Proxy)",
-        description: `OpenAI Proxy Server (LLM Gateway) to call 100+ LLMs in a unified interface & track spend, set budgets per virtual key/user`,
-        slug: "/simple_proxy",
-      },
+      link: { type: "doc", id: "simple_proxy" },
       items: [
         {
           type: "category",
@@ -1541,7 +1537,6 @@ const learnSidebar = {
         "learn/enterprise_quickstart",
       ],
     },
-    { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
 
     // ── Guides ────────────────────────────────────────────────────────
     {
@@ -1842,7 +1837,7 @@ const autoRouterSidebar = {
       items: [
         { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
         { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
-        { type: "link", label: "lite autoroute", href: "/docs/learn/autorouter_cli" },
+        { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
         { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
       ],
     },

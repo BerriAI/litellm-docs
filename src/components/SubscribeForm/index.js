@@ -1,9 +1,21 @@
 import React from 'react';
+import clsx from 'clsx';
 import {LOOPS_FORM_URL} from '@site/src/config';
 import styles from './styles.module.css';
 
+// PostHog is loaded in production only; a no-op elsewhere.
+function track(event, props) {
+  try {
+    window.posthog?.capture?.(event, {path: window.location.pathname, ...props});
+  } catch {
+    // analytics must never break the form
+  }
+}
 
-export default function SubscribeForm() {
+// The Loops newsletter signup. `source` records where on the site someone
+// subscribed (blog, footer, release notes, quickstart); `tone="dark"` suits
+// the navy footer.
+export default function SubscribeForm({source = 'blog', tone = 'light', className}) {
   const [email, setEmail] = React.useState('');
   const [honeypot, setHoneypot] = React.useState('');
   const [status, setStatus] = React.useState('idle'); // idle | loading | success | error
@@ -21,6 +33,7 @@ export default function SubscribeForm() {
       if (res.ok) {
         setStatus('success');
         setEmail('');
+        track('docs_newsletter_subscribed', {source});
       } else {
         setStatus('error');
       }
@@ -30,11 +43,11 @@ export default function SubscribeForm() {
   }
 
   if (status === 'success') {
-    return <p className={`${styles.feedback} ${styles.success}`}>We'll keep you posted!</p>;
+    return <p className={clsx(styles.feedback, styles.success)}>You're on the list. Watch your inbox for the next update.</p>;
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <form onSubmit={handleSubmit} className={clsx(styles.form, tone === 'dark' && styles.dark, className)}>
       <input
         type="text"
         value={honeypot}
@@ -54,6 +67,7 @@ export default function SubscribeForm() {
           required
           disabled={status === 'loading'}
           className={styles.input}
+          aria-label="Email address"
         />
         <button type="submit" disabled={status === 'loading'} className={styles.btn}>
           {status === 'loading' ? 'Subscribing…' : 'Subscribe'}

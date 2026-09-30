@@ -1,0 +1,28 @@
+.band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+  gap: 1rem 2rem;
+  align-items: center;
+  margin: 2.5rem 0 1rem;
+  padding: 1.15rem 1.3rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-lg, 12px);
+}
+.title {
+  margin: 0 0 0.2rem;
+  font-weight: 650;
+  color: var(--ifm-heading-color);
+}
+.text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+.form {
+  width: 100%;
+}
+@media (max-width: 760px) {
+  .band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

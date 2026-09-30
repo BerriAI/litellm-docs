@@ -1,0 +1,294 @@
+/*
+ * Docs home: one section per product, problem first, then the product that
+ * solves it, with one small visual. Hairlines between sections; no cards, no
+ * gradients, so the path picker above stays the only large visual.
+ */
+
+.wrap {
+  margin: 3rem 0 2rem;
+}
+.title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0.25rem 0 0.5rem;
+  border-radius: var(--lite-radius-md, 12px);
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1rem 1.15rem;
+  color: inherit;
+  text-decoration: none;
+}
+.stat:hover {
+  color: inherit;
+  text-decoration: none;
+}
+.stat + .stat {
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+}
+.statValue {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ifm-color-primary);
+}
+.statLabel {
+  font-size: 0.88rem;
+  color: var(--ifm-color-emphasis-700);
+}
+@media (max-width: 700px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stat:nth-child(3) {
+    border-left: 0;
+  }
+  .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--ifm-color-emphasis-200);
+  }
+}
+.list {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.75rem 2.5rem;
+  align-items: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  scroll-margin-top: 5rem;
+}
+/* The stats row has its own frame, so the rows above it end without a divider */
+.listOpen > :last-child {
+  border-bottom: 0;
+}
+.product {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary);
+}
+.problem {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+.solution {
+  margin: 0 0 1rem;
+  color: var(--ifm-color-emphasis-800);
+  line-height: 1.6;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.1rem;
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.visual {
+  min-width: 0;
+}
+.code {
+  margin: 0 !important;
+  font-size: 0.82rem;
+}
+
+/* Small tables and log lines share the code block's frame */
+.table,
+.lines {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-lg, 12px);
+  overflow: hidden;
+  font-size: 0.85rem;
+  background: var(--lite-page, var(--ifm-background-surface-color));
+}
+.tr {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(calc(var(--cols) - 1), 1fr);
+  gap: 1rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.th {
+  border-top: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+  background: color-mix(in srgb, var(--ifm-color-primary) 5%, transparent);
+}
+.lines {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+}
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  padding: 0.65rem 0.9rem;
+}
+.line + .line {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.lineEnd {
+  margin-left: auto;
+  color: var(--ifm-color-success-darker);
+}
+.muted,
+.lineEnd.muted {
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* The rest of the products as a grid of cards */
+.built {
+  margin-top: 3rem;
+}
+.moreTitle {
+  margin: 0 0 0.4rem;
+  font-size: 1.3rem;
+}
+.moreLead {
+  margin: 0 0 1.5rem;
+  max-width: 46rem;
+  color: var(--ifm-color-emphasis-800);
+}
+.group + .group {
+  margin-top: 1.75rem;
+}
+.groupTitle {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ifm-heading-color);
+}
+.cardVisual {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+}
+.cardVisual .code {
+  font-size: 0.78rem;
+}
+
+/* A two-message exchange with an agent */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-lg, 12px);
+  background: var(--lite-page, var(--ifm-background-surface-color));
+  font-size: 0.82rem;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-width: 88%;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--lite-radius-md, 10px);
+  background: var(--ifm-color-emphasis-100);
+}
+.msgYou {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--ifm-color-primary) 10%, transparent);
+}
+.who {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--ifm-color-emphasis-700);
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.2rem 1.1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-md, 12px);
+}
+.card .product {
+  margin: 0;
+}
+.cardProblem {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.cardText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ifm-color-emphasis-800);
+}
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+}
+.cardLink {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.listEnd {
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* One quiet line for readers using a coding agent */
+.agentBand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1.75rem 0 0;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-md, 10px);
+  color: var(--ifm-color-primary);
+}
+.agentText {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ifm-color-emphasis-800);
+}
+.agentText strong {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+}
