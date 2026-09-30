@@ -111,6 +111,45 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 }
 ```
 
+## Budgeting `max_tokens` for reasoning models
+
+Reasoning tokens count toward the same completion budget as visible output: `max_completion_tokens` (and `max_tokens`) is an upper bound for visible output tokens and reasoning tokens combined. Several providers also reason by default, with no `thinking` or `reasoning_effort` in the request; DeepSeek, Moonshot AI, and Z.AI models behave this way, and current Gemini models default to thinking as well.
+
+The combination can produce a surprising failure mode. With a modest `max_tokens`, the model may spend the entire budget on hidden reasoning before emitting any visible text. The call then returns `finish_reason: "length"` with `content` empty or nearly empty, and the request is billed for the full completion, since reasoning tokens are billed as output tokens. From the response alone this looks like ordinary truncation.
+
+```python showLineNumbers
+response = litellm.completion(
+    model="moonshot/kimi-k2.5",  # reasons by default; no thinking param needed
+    messages=[{"role": "user", "content": "Shorten this sentence: ..."}],
+    max_tokens=200,
+)
+print(response.choices[0].finish_reason)                          # "length"
+print(repr(response.choices[0].message.content))                  # ''
+print(response.usage.completion_tokens_details.reasoning_tokens)  # 199
+```
+
+### Detecting reasoning-consumed budgets
+
+For non-streaming calls, check `usage.completion_tokens_details.reasoning_tokens`. If `finish_reason` is `"length"` and reasoning tokens account for all or nearly all of `completion_tokens`, the budget went to reasoning rather than to a long visible answer:
+
+```python showLineNumbers
+choice = response.choices[0]
+details = response.usage.completion_tokens_details
+reasoning_tokens = (details.reasoning_tokens or 0) if details else 0
+
+if choice.finish_reason == "length" and not choice.message.content:
+    print(
+        f"Empty response: {reasoning_tokens} of {response.usage.completion_tokens} "
+        "completion tokens were consumed by reasoning. Raise max_tokens."
+    )
+```
+
+For streaming calls, set `stream_options={"include_usage": True}` and read the same fields from the usage object on the final chunk. See [Streaming Usage](/docs/completion/usage#streaming-usage).
+
+### Sizing the budget
+
+Set `max_tokens` to cover the reasoning plus the answer, not the answer alone. Reasoning commonly runs to several hundred tokens even for short prompts; the request above that returned nothing at `max_tokens=200` finished cleanly at a higher cap with 623 reasoning tokens and 17 visible output tokens. Where the provider supports it, `reasoning_effort` reduces or disables reasoning; see the per-provider mapping notes, for example [Gemini](/docs/providers/gemini#usage---thinking--reasoning_content), where thinking cannot be fully disabled on Gemini 3 models. Proxy health checks hit the same interaction and support separate token limits for reasoning models; see [health check reasoning defaults](/docs/proxy/health#reasoning-vs-non-reasoning-defaults).
+
 ## Tool Calling with `thinking`
 
 Here's how to use `thinking` blocks by Anthropic with tool calling.
