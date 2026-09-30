@@ -224,10 +224,7 @@
   --owner-mixed: #087566;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  padding: 1.15rem 1.25rem;
-  border: 1px solid var(--diagram-border);
-  border-radius: 14px;
+  gap: 1.5rem;
 }
 
 :global([data-theme='dark']) .timeline {
@@ -240,31 +237,61 @@
 }
 
 .lane {
-  display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 1px solid var(--diagram-border);
+  border-top: 3px solid var(--diagram-blue);
+  border-radius: 12px;
+  background: transparent;
 }
+
+.laneAfter { border-top-color: var(--diagram-teal); }
 
 .laneLabel {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding-top: 0.2rem;
+  gap: 0.25rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--diagram-border);
+}
+
+.laneHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
 }
 
 .laneName {
   color: var(--diagram-blue);
-  font-size: 0.75rem;
-  font-weight: 650;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .laneAfter .laneName { color: var(--diagram-teal); }
 
+.laneTotal {
+  color: var(--diagram-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.laneTotal strong {
+  color: var(--diagram-blue);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.laneAfter .laneTotal strong { color: var(--diagram-teal); }
+
 .laneCount {
   color: var(--diagram-muted);
-  font-size: 0.7rem;
-  line-height: 1.3;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 .trips {
@@ -272,6 +299,7 @@
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0.3rem;
+  min-width: 0;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -283,6 +311,8 @@
   justify-content: center;
   gap: 0.1rem;
   min-width: 2.2rem;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.35rem 0.5rem;
   margin: 0 !important;
   border: 1px solid var(--owner, var(--diagram-border));
@@ -300,7 +330,7 @@
 .trip[data-owner='mixed'] { --owner: var(--owner-mixed); }
 
 .tripOp { font-weight: 650; white-space: nowrap; }
-.tripDetail { color: var(--diagram-muted); font-size: 0.64rem; }
+.tripDetail { color: var(--diagram-muted); font-size: 0.64rem; overflow-wrap: anywhere; }
 
 .provider {
   display: flex;
@@ -345,7 +375,5 @@
 .swatch[data-owner='mixed'] { --owner: var(--owner-mixed); }
 
 @media (max-width: 540px) {
-  .timeline { padding: 0.9rem; }
-  .lane { grid-template-columns: 1fr; gap: 0.4rem; }
-  .laneLabel { flex-direction: row; align-items: baseline; gap: 0.5rem; }
+  .lane { padding: 0.85rem; }
 }
