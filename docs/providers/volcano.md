@@ -7,6 +7,8 @@ https://www.volcengine.com/docs/82379/1263482
 
 :::
 
+For chat completions, the value after `volcengine/` can be either a Volcengine endpoint ID or a direct model ID from Volcengine Ark.
+
 ## API Key
 ```python
 # env variable
@@ -22,7 +24,7 @@ import os
 
 os.environ['VOLCENGINE_API_KEY'] = ""
 response = completion(
-    model="volcengine/<OUR_ENDPOINT_ID>",
+    model="volcengine/<MODEL_ID_OR_ENDPOINT_ID>",
     messages=[
         {
             "role": "user",
@@ -46,7 +48,7 @@ import os
 
 os.environ['VOLCENGINE_API_KEY'] = ""
 response = completion(
-    model="volcengine/<OUR_ENDPOINT_ID>",
+    model="volcengine/<MODEL_ID_OR_ENDPOINT_ID>",
     messages=[
         {
             "role": "user",
@@ -100,7 +102,7 @@ response = embedding(
 
 ## Supported Models - 💥 ALL Volcengine Models Supported!
 We support ALL `volcengine` models for both chat completions and embeddings:
-- **Chat Models**: Set `volcengine/<OUR_ENDPOINT_ID>` as a prefix when sending completion requests
+- **Chat Models**: Set `volcengine/<MODEL_ID_OR_ENDPOINT_ID>` as a prefix when sending completion requests. Direct model IDs are supported, so an endpoint ID is not required when using models that Volcengine Ark exposes by model ID.
 - **Embedding Models**: Use the specific model names listed above (e.g., `volcengine/doubao-embedding-text-240715`)
 
 ## Sample Usage - LiteLLM Proxy
@@ -112,7 +114,7 @@ model_list:
   # Chat model
   - model_name: volcengine-model
     litellm_params:
-      model: volcengine/<OUR_ENDPOINT_ID>
+      model: volcengine/<MODEL_ID_OR_ENDPOINT_ID>
       api_key: os.environ/VOLCENGINE_API_KEY
   # Embedding model
   - model_name: volcengine-embedding
