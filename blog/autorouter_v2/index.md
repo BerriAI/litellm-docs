@@ -107,6 +107,8 @@ UI got a working Test Connection per tier ([#32950](https://github.com/BerriAI/l
 
 Existing complexity router configs keep working. To try v2, add `keyword_tier_rules`, `classifier_type: llm`, `adaptive: true`, `session_affinity: true`, or a list value on a tier to your existing `complexity_router_config`. Full reference on the [Auto Routing docs page](/docs/proxy/auto_routing).
 
+Want to QA the router before touching your setup? The [Autorouter CLI](/docs/learn/autorouter_cli) runs complexity-based auto-routing locally against your real, running proxy without editing its `config.yaml`, so you can see the routing decisions and point Claude Code at it for a session.
+
 ## What's next
 
 **Router plugins.** From [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168): a pipeline where each plugin receives the routing context, enriches it, and passes it on before Auto Router makes the final call. Plugins do not replace the router; they contribute structured signals (classification, policies, candidate filters, scores) that Auto Router combines.
