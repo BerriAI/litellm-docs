@@ -10,7 +10,7 @@ sidebar_label: Claude Code
 ## Install
 
 ```bash
-pip install "litellm[harness]"
+pip install litellm starlette uvicorn
 npm install -g @anthropic-ai/claude-code   # inside the sandbox
 ```
 

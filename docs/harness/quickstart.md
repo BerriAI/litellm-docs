@@ -9,11 +9,16 @@ import TabItem from '@theme/TabItem';
 
 ## 1. Install
 
-```bash
-pip install "litellm[harness]"
-```
+`litellm.harness` is part of the regular `litellm` package and adds no dependencies to it. Install what your harness needs:
 
-The extra adds `starlette` and `uvicorn` for the per-session model endpoint. It doesn't install any runtime binaries; put `claude`, `codex` or `opencode` on the sandbox's `PATH` yourself. For Deep Agents use `litellm[harness-deepagents]`.
+| Harness | Python packages | Runtime on the sandbox's `PATH` |
+|---|---|---|
+| Claude Code | `pip install litellm starlette uvicorn` | `npm install -g @anthropic-ai/claude-code` |
+| Codex | `pip install litellm starlette uvicorn` | `npm install -g @openai/codex` |
+| OpenCode | `pip install litellm starlette uvicorn` | `npm install -g opencode-ai` |
+| Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) | nothing |
+
+`starlette` and `uvicorn` run the small per-session model endpoint the CLI harnesses call. If something is missing, the call raises `HarnessInstallFailed` with the exact install command.
 
 ## 2. Point at your gateway
 

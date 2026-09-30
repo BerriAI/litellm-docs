@@ -10,7 +10,7 @@ sidebar_label: Codex
 ## Install
 
 ```bash
-pip install "litellm[harness]"
+pip install litellm starlette uvicorn
 npm install -g @openai/codex   # inside the sandbox
 ```
 

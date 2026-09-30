@@ -88,8 +88,4 @@ An `Event` is one of eight frozen dataclasses: `Text`, `Reasoning`, `ToolCall`, 
 
 ## Install
 
-```bash
-pip install "litellm[harness]"
-```
-
-For Deep Agents, install `litellm[harness-deepagents]` instead. The CLI harnesses also need their binary on the sandbox's `PATH`; each harness page lists the install command.
+`litellm.harness` ships in the normal `litellm` package and adds no dependencies to it. You install only what the harness you use needs; the [Quickstart](./quickstart.md#1-install) has the table.

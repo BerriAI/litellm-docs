@@ -10,10 +10,10 @@ sidebar_label: Deep Agents
 ## Install
 
 ```bash
-pip install "litellm[harness-deepagents]"
+pip install litellm deepagents langchain-litellm
 ```
 
-This pulls in `deepagents` and `langchain-litellm`, and needs Python 3.11 or newer. Without them the call raises `HarnessInstallFailed` with the install command.
+Deep Agents needs Python 3.11 or newer. It doesn't need `starlette` or `uvicorn`. Without them the call raises `HarnessInstallFailed` with the install command.
 
 ## Usage
 

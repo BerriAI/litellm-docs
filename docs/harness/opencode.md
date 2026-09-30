@@ -10,7 +10,7 @@ sidebar_label: OpenCode
 ## Install
 
 ```bash
-pip install "litellm[harness]"
+pip install litellm starlette uvicorn
 npm install -g opencode-ai   # inside the sandbox
 ```
 
