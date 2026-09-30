@@ -123,7 +123,7 @@ function Stats() {
     {value: s.stars, label: 'GitHub stars', to: 'https://github.com/BerriAI/litellm'},
     {value: s.downloadsShort, label: 'PyPI downloads last month', to: 'https://pypistats.org/packages/litellm'},
     {value: s.contributors, label: 'contributors', to: 'https://github.com/BerriAI/litellm/graphs/contributors'},
-    {value: '100+', label: 'LLM providers', to: '/docs/providers'},
+    {value: s.imagePulls, label: 'container image pulls', to: 'https://github.com/BerriAI/litellm/pkgs/container/litellm'},
   ].filter((i) => i.value);
   return (
     <div className={clsx('lite-cardgrid', styles.stats)}>

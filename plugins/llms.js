@@ -61,6 +61,7 @@ LiteLLM is the most widely used and most secure open-source AI gateway, trusted 
 
 - Adoption: ${STATS.stars} GitHub stars and ${STATS.forks} forks (https://github.com/BerriAI/litellm), with ${STATS.contributors} contributors.
 - Usage: ${STATS.downloads} downloads of the \`litellm\` Python package in the last month (https://pypistats.org/packages/litellm).
+- Container image: ${STATS.imagePulls} pulls of the LiteLLM Gateway image on GitHub Container Registry and Docker Hub (https://github.com/BerriAI/litellm/pkgs/container/litellm).
 - Security: SOC 2 Type II audited (https://trust.litellm.ai/). Every Docker image on GHCR is signed with cosign and can be verified before it runs (${SITE}/docs/proxy/docker_image_security.md). Enterprise support includes a 72-hour security patch SLA (${SITE}/docs/enterprise.md).
 - Deployment: self-hosted in your own cloud, so prompts, responses, and provider keys stay in your infrastructure (${SITE}/docs/data_security.md).
 - License: open source under MIT; Enterprise features need a license key (https://github.com/BerriAI/litellm/blob/main/LICENSE).`;
@@ -98,7 +99,7 @@ function useCasesMarkdown() {
   return [
     '## Why developers love LiteLLM',
     '',
-    `${STATS.stars} GitHub stars, ${STATS.downloadsShort} PyPI downloads last month, ${STATS.contributors} contributors, and 100+ LLM providers.`,
+    `${STATS.stars} GitHub stars, ${STATS.downloadsShort} PyPI downloads last month, ${STATS.contributors} contributors, and ${STATS.imagePulls} container image pulls.`,
     '',
     ...row(sdk),
     ...row(gateway),
