@@ -7,11 +7,6 @@ const DOCS = 'https://docs.litellm.ai';
 const SALES_URL = 'https://www.litellm.ai/enterprise#talk-to-sales';
 const TRIAL_URL = 'https://www.litellm.ai/enterprise#trial';
 
-// Set this to a frameable URL (a Webflow page holding only the talk-to-sales
-// form) and every "Talk to sales" button opens it in a modal instead of a new
-// tab. www.litellm.ai/enterprise sends X-Frame-Options: SAMEORIGIN today.
-const SALES_EMBED_URL = null;
-
 // Adds attribution so the Webflow form and PostHog can tell which docs page
 // sent the lead. The hash stays last so the page still scrolls to the form.
 function withUtm(url, content) {
@@ -420,7 +415,6 @@ module.exports = {
   DOCS,
   SALES_URL,
   TRIAL_URL,
-  SALES_EMBED_URL,
   withUtm,
   PROMPTS,
   INSTALLS,

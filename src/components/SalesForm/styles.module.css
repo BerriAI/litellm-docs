@@ -1,0 +1,196 @@
+.dialog {
+  --sf-bg: var(--lite-panel-bg, var(--ifm-background-surface-color, #fff));
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-lg, 16px);
+  /* The restyle leaves --ifm-background-color transparent, so paint a surface */
+  background: var(--sf-bg);
+  color: var(--ifm-font-color-base);
+  overflow: auto;
+}
+.dialog:has(.bodyWide) {
+  width: min(760px, calc(100vw - 32px));
+}
+.dialog::backdrop {
+  background: rgba(5, 8, 30, 0.55);
+}
+
+.body {
+  position: relative;
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--lite-radius-sm, 8px);
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-font-color-base);
+}
+
+.title {
+  margin: 0 2.5rem 0.35rem 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+.lead {
+  margin: 0 0 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
+}
+
+.form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.intents {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.intent {
+  position: relative;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-md, 12px);
+  cursor: pointer;
+}
+.intent:hover {
+  border-color: var(--ifm-color-primary);
+}
+.intent input {
+  position: absolute;
+  top: 0.95rem;
+  left: 0.95rem;
+  margin: 0;
+  accent-color: var(--ifm-color-primary);
+}
+.intentOn {
+  border-color: var(--ifm-color-primary);
+  background: color-mix(in srgb, var(--ifm-color-primary) 6%, transparent);
+}
+.intentTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.intentNote {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.85rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+.field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.fieldWide {
+  grid-column: 1 / -1;
+}
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-sm, 8px);
+  background: var(--sf-bg);
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.input:focus {
+  outline: 2px solid color-mix(in srgb, var(--ifm-color-primary) 45%, transparent);
+  outline-offset: 0;
+  border-color: var(--ifm-color-primary);
+}
+textarea.input {
+  resize: vertical;
+}
+
+.error {
+  min-height: 1.2em;
+  margin-top: -0.4rem;
+  color: var(--ifm-color-danger-dark);
+  font-size: 0.85rem;
+}
+.error:empty {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.submit {
+  padding: 0.65rem 1.2rem;
+  border: 0;
+  border-radius: var(--lite-radius-sm, 8px);
+  background: var(--ifm-color-primary);
+  color: var(--lite-on-primary, #fff);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.submit:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+}
+.submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.calendar {
+  display: block;
+  width: 100%;
+  height: min(680px, calc(100dvh - 170px));
+  min-height: 420px;
+  min-width: 280px;
+  border: 0;
+  border-radius: var(--lite-radius-md, 12px);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .body {
+    padding: 1.35rem 1.1rem 1.1rem;
+  }
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
