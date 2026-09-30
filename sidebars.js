@@ -1336,6 +1336,7 @@ const sidebars = {
           ]
         },
         "providers/s3_vectors",
+        "providers/sail",
         "providers/sambanova",
         "providers/sap",
         "providers/scaleway",
