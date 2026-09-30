@@ -9,8 +9,8 @@ Recommended ladders, matching the dashboard's Auto Router templates. Every tier 
 | Ladder | SIMPLE | MEDIUM | COMPLEX | REASONING | Classifier |
 | --- | --- | --- | --- | --- | --- |
 | [1M Context](#1m-context) | gpt-5.6-luna | gpt-5.6-terra | gpt-5.6-sol | claude-opus-5, high effort | heuristic v2 |
-| [Anthropic Family](#anthropic-family) | claude-haiku-4-5 | claude-sonnet-5 | claude-opus-5 | claude-opus-5, high effort | heuristic |
-| [OpenAI Family](#openai-family) | gpt-5.6-luna | gpt-5.6-terra | gpt-5.6-sol | gpt-5.6-sol, xhigh effort | heuristic |
+| [Anthropic Family](#anthropic-family) | claude-haiku-4-5 | claude-sonnet-5 | claude-opus-5 | claude-fable-5-1, high effort | heuristic |
+| [OpenAI Family](#openai-family) | gpt-5.6-luna | gpt-5.6-terra | gpt-5.6-sol | gpt-6-astra, xhigh effort | heuristic |
 | [Gemini Family](#gemini-family) | gemini-2.5-flash-lite | gemini-3.1-flash-lite | gemini-3.7-flash | gemini-3.1-pro-preview | heuristic |
 | [Lite](#lite) | deepseek-v4-flash | muse-spark-1.2, xhigh | kimi-k3, max | claude-opus-5 | LLM, agentic rubric |
 | [Benchmark config](#the-benchmark-configuration) | claude-haiku-4-5 | claude-sonnet-5 | claude-opus-5 | claude-opus-5 | LLM, gpt-5.4-mini |
@@ -26,7 +26,7 @@ Recommended ladders, matching the dashboard's Auto Router templates. Every tier 
 
 ## Anthropic Family
 
-Haiku, Sonnet, Opus, then Opus at high reasoning effort.
+Haiku, Sonnet, Opus, then Fable 5.1 at high reasoning effort.
 
 ```yaml title="config.yaml" keep-model-ids
 model_list:
@@ -42,9 +42,9 @@ model_list:
     litellm_params:
       model: anthropic/claude-opus-5
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus-5-high
+  - model_name: claude-fable-5-1-high
     litellm_params:
-      model: anthropic/claude-opus-5
+      model: anthropic/claude-fable-5-1
       api_key: os.environ/ANTHROPIC_API_KEY
       reasoning_effort: high
 
@@ -56,7 +56,7 @@ model_list:
           SIMPLE:    claude-haiku-4-5
           MEDIUM:    claude-sonnet-5
           COMPLEX:   claude-opus-5
-          REASONING: claude-opus-5-high
+          REASONING: claude-fable-5-1-high
         classifier_type: heuristic
         escalation_keywords: ["LITELLM ESCALATE"]
         session_affinity: false
@@ -67,7 +67,7 @@ Keep `claude` in the router name if Claude Code or Claude Desktop needs to disco
 
 ## OpenAI Family
 
-Luna, Terra, Sol, then Sol at xhigh reasoning effort.
+Luna, Terra, Sol, then Astra at xhigh reasoning effort.
 
 ```yaml title="config.yaml"
 model_list:
@@ -83,9 +83,9 @@ model_list:
     litellm_params:
       model: openai/gpt-5.6-sol
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.6-sol-xhigh
+  - model_name: gpt-6-astra-xhigh
     litellm_params:
-      model: openai/gpt-5.6-sol
+      model: openai/gpt-6-astra
       api_key: os.environ/OPENAI_API_KEY
       reasoning_effort: xhigh
 
@@ -97,7 +97,7 @@ model_list:
           SIMPLE:    {{openai_small}}
           MEDIUM:    {{openai_large}}
           COMPLEX:   gpt-5.6-sol
-          REASONING: gpt-5.6-sol-xhigh
+          REASONING: gpt-6-astra-xhigh
         classifier_type: heuristic
         escalation_keywords: ["LITELLM ESCALATE"]
         session_affinity: false
