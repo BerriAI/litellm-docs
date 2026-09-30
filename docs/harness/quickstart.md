@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 | Claude Code | `pip install litellm starlette uvicorn` | `npm install -g @anthropic-ai/claude-code` |
 | Codex | `pip install litellm starlette uvicorn` | `npm install -g @openai/codex` |
 | OpenCode | `pip install litellm starlette uvicorn` | `npm install -g opencode-ai` |
-| Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) | nothing |
+| Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) {/* keep-python-version */} | nothing |
 
 `starlette` and `uvicorn` run the small per-session model endpoint the CLI harnesses call. If something is missing, the call raises `HarnessInstallFailed` with the exact install command.
 
@@ -79,14 +79,16 @@ Permissions default to `"full"`, because the sandbox is the boundary. Use `permi
 ## 4. Stream events
 
 ```python
-from litellm import Harness
+import litellm
+from litellm import Harness, sandbox
 from litellm.harness import Text, FileChange, Done
 
-for event in litellm.agent(stream=True, 
+for event in litellm.agent(
     Harness.CODEX,
     "Add type hints to utils.py",
     sandbox=sandbox.local("./repo"),
     model="litellm_proxy/coder",
+    stream=True,
 ):
     match event:
         case Text(delta=delta):
