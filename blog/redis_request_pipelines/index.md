@@ -4,12 +4,30 @@ title: "How we cut LiteLLM's Redis round trips per request by 64%"
 date: 2026-10-01T09:00:00
 authors:
   - yassin
+image: ./cover.png
 description: "A governed request to the LiteLLM AI Gateway waited on Redis 22 times. It now waits 8 times: one pipeline per Redis backend before the model call, one after."
 tags: [performance, redis, proxy, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
 
 import { PerformanceResults, RoundTripTimeline, BatchLifecycle } from './diagrams';
+import coverVideo from './cover.mp4';
+import coverPoster from './cover.png';
+
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  controls
+  preload="metadata"
+  poster={coverPoster.src?.src ?? coverPoster.default ?? coverPoster}
+  width="1080"
+  height="1080"
+  style={{display: 'block', width: '100%', height: 'auto', marginBottom: '2rem'}}
+  aria-label="LiteLLM's 22 Redis round trips merge into 8, a 64% reduction per request">
+  <source src={coverVideo} type="video/mp4" />
+</video>
 
 This week, we cut the number of times a request to the LiteLLM proxy waits on Redis from **22 to 8**.
 
