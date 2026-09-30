@@ -19,6 +19,22 @@ Send OTLP/HTTP traces to `http://localhost:4002/v1/traces` using `Authorization:
 
 For a working agent example, [DeepLite](https://github.com/BerriAI/deeplite) uses an OpenTelemetry OTLP/HTTP exporter pointed at that full `/v1/traces` URL with a bearer key. Its `.env` settings are `LITELLM_DEV_BASE=http://localhost:4002/v1/traces` and `LITELLM_DEV_KEY=local-tracing-master-key` for the Compose stack
 
+## Landing your first trace
+
+With the stack from the quick start running, send a trace from a demo agent
+
+```bash
+curl -O https://docs.litellm.ai/lens/first_trace.py
+pip install requests
+python first_trace.py
+```
+
+The [script](https://docs.litellm.ai/lens/first_trace.py) runs one agent with 20 tool calls and 2 LLM calls through the proxy, then exports the spans to `/v1/traces`. It reads `LITELLM_URL` (default `http://localhost:4002`) and `LITELLM_KEY` (default `local-tracing-master-key`). Set `MODEL` to a model in your config; the Compose stack's default is `gpt-6.1-sol`
+
+Open `http://localhost:4002/ui/?page=logs`, select the **Agent Traces** tab, and click the run. You should see the agent's spans on a timeline, with tool calls grouped and request cost on the LLM calls
+
+![Agent trace in the LiteLLM UI](/img/lens-first-trace.png)
+
 ## Configure an existing proxy
 
 Add tracing to your `config.yaml` under `general_settings`
