@@ -94,30 +94,66 @@
   color: var(--diagram-muted);
 }
 
-.metrics {
+/* Keep the table layout when this article is embedded without .blog-wrapper. */
+.figure .metrics[aria-label] {
   display: table;
   width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
   margin: 0;
+  border: 0;
+  border-radius: 0;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  border-spacing: 0;
+  overflow: visible;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-.metrics th,
-.metrics td {
-  padding: 0.65rem 0;
+.figure .metrics[aria-label] th,
+.figure .metrics[aria-label] td {
+  padding: 0.8rem 0.75rem;
   border: 0;
   border-top: 1px solid var(--diagram-border);
   background: transparent;
   vertical-align: middle;
 }
 
-.metrics tr,
-.metrics tr:nth-child(2n) { background: transparent; border: 0; }
-.metrics th { text-align: left; font-weight: 500; }
-.metrics thead th { font-size: 0.72rem; font-weight: 600; color: var(--diagram-muted); }
-.metrics th:not(:first-child),
-.metrics td { width: 23%; text-align: right; white-space: nowrap; padding-left: 0.6rem; }
-.metrics td:last-child { color: var(--diagram-teal); font-weight: 650; }
+.figure .metrics[aria-label] thead,
+.figure .metrics[aria-label] tr,
+.figure .metrics[aria-label] tr:nth-child(2n) { background: transparent; border: 0; }
+.figure .metrics[aria-label] th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--diagram-text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.figure .metrics[aria-label] thead th {
+  border-top: 0;
+  border-bottom: 1px solid var(--diagram-border);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--diagram-muted);
+}
+.figure .metrics[aria-label] th:not(:first-child),
+.figure .metrics[aria-label] td { width: 4.5rem; text-align: right; white-space: nowrap; }
+.figure .metrics[aria-label] td:last-child { color: var(--diagram-teal); font-weight: 650; }
+.figure .metrics[aria-label] tbody tr:first-child th,
+.figure .metrics[aria-label] tbody tr:first-child td { border-top: 0; }
+.figure .metrics[aria-label] code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.9em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.requestVariant { display: block; margin-top: 0.2rem; color: var(--diagram-muted); font-size: 0.85em; }
 
 .caption {
   margin-top: 0.65rem;
@@ -207,8 +243,12 @@
 @media (max-width: 540px) {
   .results { padding: 1rem 1rem 0.4rem; }
   .timing { gap: 0.6rem; }
-  .metrics { font-size: 0.75rem; }
-  .metrics thead th { font-size: 0.65rem; }
+  .figure .metrics[aria-label] { font-size: 0.8rem; }
+  .figure .metrics[aria-label] th,
+  .figure .metrics[aria-label] td { padding: 0.65rem 0.4rem; }
+  .figure .metrics[aria-label] thead th { font-size: 0.72rem; }
+  .figure .metrics[aria-label] th:not(:first-child),
+  .figure .metrics[aria-label] td { width: 3.75rem; }
   .flows { grid-template-columns: 1fr; }
   .flow { padding: 1rem; }
   .stage { padding: 0.6rem 0.8rem; }

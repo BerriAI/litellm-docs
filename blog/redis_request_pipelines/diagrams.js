@@ -15,6 +15,15 @@ const benchmark = {
   ],
 };
 
+const endpoints = [
+  {endpoint: '/v1/chat/completions', before: '22', after: '8'},
+  {endpoint: '/v1/chat/completions', variant: 'streaming', before: '24', after: '8'},
+  {endpoint: '/v1/chat/completions', variant: 'simple-shuffle routing', before: '22', after: '8'},
+  {endpoint: '/v1/messages', before: '21', after: '8'},
+  {endpoint: '/v1/responses', before: '26', after: '9'},
+  {endpoint: '/v1/chat/completions', variant: 'response-cache hit', before: '18', after: '7'},
+];
+
 const before = [
   {owner: 'identity', op: 'MGET', detail: 'team, membership'},
   {owner: 'identity', op: 'SET', detail: 'write back'},
@@ -101,6 +110,40 @@ function Arrow({className}) {
   );
 }
 
+function ResultsTable({label, rows}) {
+  return (
+    <table className={styles.metrics} aria-label={`${label}: Redis round trips before and after`}>
+      <thead>
+        <tr>
+          <th scope="col">{label}</th>
+          <th scope="col">Before</th>
+          <th scope="col">After</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, index) => (
+          <tr key={index}>
+            <th scope="row">
+              {row.endpoint ? <code>{row.endpoint}</code> : row.label}
+              {row.variant && <span className={styles.requestVariant}>{row.variant}</span>}
+            </th>
+            <td>{row.before}</td>
+            <td>{row.after}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function EndpointResults() {
+  return (
+    <figure className={styles.figure}>
+      <ResultsTable label="Request" rows={endpoints} />
+    </figure>
+  );
+}
+
 export function PerformanceResults() {
   return (
     <figure className={styles.figure}>
@@ -120,24 +163,7 @@ export function PerformanceResults() {
             </React.Fragment>
           ))}
         </div>
-        <table className={styles.metrics}>
-          <thead>
-            <tr>
-              <th scope="col">Redis round trips</th>
-              <th scope="col">Before</th>
-              <th scope="col">After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {benchmark.metrics.map(metric => (
-              <tr key={metric.label}>
-                <th scope="row">{metric.label}</th>
-                <td>{metric.before}</td>
-                <td>{metric.after}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ResultsTable label="Redis round trips" rows={benchmark.metrics} />
       </div>
       <figcaption className={styles.caption}>{benchmark.context}</figcaption>
     </figure>

@@ -10,7 +10,7 @@ tags: [performance, redis, proxy, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
 
-import { PerformanceResults, RoundTripTimeline, BatchLifecycle } from './diagrams';
+import { PerformanceResults, RoundTripTimeline, BatchLifecycle, EndpointResults } from './diagrams';
 import coverVideo from './cover.mp4';
 import coverPoster from './cover.png';
 
@@ -59,14 +59,7 @@ Each command in a pipeline gets its own reply. A Lua script that is not loaded f
 
 The same harness ran every endpoint shape the proxy governs the same way, with and without streaming, with usage-based and simple-shuffle routing, and with a response-cache hit. `/v1/responses` keeps one extra round trip on each side because its native handler still makes two synchronous cache calls from a worker thread.
 
-| Request | Before | After |
-|---|---:|---:|
-| `/v1/chat/completions` | 22 | 8 |
-| `/v1/chat/completions`, streaming | 24 | 8 |
-| `/v1/chat/completions`, simple-shuffle routing | 22 | 8 |
-| `/v1/messages` | 21 | 8 |
-| `/v1/responses` | 26 | 9 |
-| `/v1/chat/completions`, response-cache hit | 18 | 7 |
+<EndpointResults />
 
 ## Auth refresh requests: 46 → 16 Redis round trips
 
