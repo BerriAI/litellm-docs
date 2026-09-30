@@ -176,6 +176,8 @@ A key that is not in a team can be granted any server by a proxy admin; a non-ad
 
 Organization, internal user, end user and agent grants sit above the key and team and only ever narrow the result further. Narrowing happens at `tools/list` time and again at `tools/call` time, so a tool outside the effective set is neither advertised nor callable.
 
+With JWT auth, `scope_mappings` can grant servers and tools from the token's scopes with no key or team row at all. Those grants join the key level additively and are capped by the team and every level above it; see [Control MCP Access with Scopes](./proxy/token_auth#control-mcp-access-with-scopes) for the precedence table.
+
 ### Worked example
 
 Team `research-team` allows `deepwiki` with `mcp_tool_permissions: {"deepwiki": ["read_wiki_structure", "read_wiki_contents"]}` and the toolset `wiki_readonly` (the same two tools).
