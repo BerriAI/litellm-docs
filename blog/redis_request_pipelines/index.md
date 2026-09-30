@@ -37,7 +37,7 @@ After the model responds, nothing waits on the writes, so they collect in a post
 
 Each command in a pipeline gets its own reply. A Lua script that is not loaded fails only its owner, which falls back to a direct call exactly as it did before. A pipeline that fails as a whole looks to every owner like Redis being unreachable, which they already handle. Redis Cluster clients keep making direct calls, since a cluster pipeline fans out per node. Requests that touch two Redis backends get one pipeline per backend, and the proxy and router caches share a pipeline when they point at the same server.
 
-## The results hold across AI Gateway endpoints
+## Redis round trips per request: 22 → 8
 
 The same harness ran every endpoint shape the proxy governs the same way, with and without streaming, with usage-based and simple-shuffle routing, and with a response-cache hit. `/v1/responses` keeps one extra round trip on each side because its native handler still makes two synchronous cache calls from a worker thread.
 
@@ -50,15 +50,13 @@ The same harness ran every endpoint shape the proxy governs the same way, with a
 | `/v1/responses` | 26 | 9 |
 | `/v1/chat/completions`, response-cache hit | 18 | 7 |
 
-## The once-a-minute refresh
+## Auth refresh requests: 46 → 16 Redis round trips
 
 Auth keeps its management objects, the key, the end user, the team and the model-access registry, in memory for 60 seconds. On the first request after they expire, the proxy refreshed each one from Redis and then Postgres one call at a time: 16 serial Redis trips before routing started, the end user, the key and the registry each read twice, and the team alias deleted with a synchronous call on the event loop. That request cost 46 round trips instead of 22, once a minute for every active key.
 
 The same request now reads whatever memory is missing with one MGET on the request pipeline, reads the team, and sends the write-backs and the alias delete as one pipeline behind it. The refresh is 3 trips, and the request as a whole went from **46 to 16 round trips** for chat and from 40 to 14 for `/v1/messages`. The alias is deleted rather than rewritten because aliases are not unique, its in-memory entry drops at once, and the refresh waits for the delete before it returns so a request on another pod cannot refill memory from the stale value.
 
-## What is left
-
-Three data dependencies keep pre-call at 5 round trips rather than 1: budget reservation needs the spend counters, TPM reservation runs after the RPM check, and the response-cache key is only known after routing. Post-call is 3 rather than 1 because the spend settle reads the counters before the write pipeline. Folding the check-and-reserve into Lua and settling with an existence-guarded increment are the next steps.
+## How we measured
 
 We measured both versions on the same local proxy, from the commit before this work (`27c110cb`) to main with all five changes in it (`13d004fc`): Redis 6.0 and Postgres 14, mock deployments so the count does not depend on a provider, and a tracer that logs every Redis call and every pipeline flush with its caller. A pipeline or a Lua script counts as one round trip. Every sample was preceded by a warm-up request 12 seconds earlier, and the harness idles for 65 seconds every three samples so the 60-second cache expiry never lands inside a sample. For the refresh case, the harness sent a warm-up request, waited 65 seconds and traced the next one. All requests returned HTTP 200 in both arms.
 
