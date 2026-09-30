@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives you **one clean trace per request** covering the incoming HTTP call, authentication, guardrails, the LLM call itself, and the internal database/cache work, all nested in a single tree.
 
-It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps).
+It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz).
 
 :::info[Opt-in feature]
 
@@ -32,7 +32,7 @@ Highlights:
 - **One trace, end to end** — the HTTP request, auth, guardrails, the LLM call, and DB writes all live in the same trace, correctly nested.
 - **Rich GenAI attributes** — every LLM-call span carries `gen_ai.*` attributes: model, provider, token usage, cost, finish reasons, request parameters, and more.
 - **Standards-based** — built on the official OpenTelemetry GenAI semantic conventions, so it works with any OTel-compatible backend.
-- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, or AgentOps in the format each tool expects.
+- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, or SigNoz in the format each tool expects.
 - **Safe by default** — prompts and responses are **not** captured unless you explicitly opt in. Noisy routes (health checks, metrics scrapes, UI assets) are excluded automatically.
 - **Distributed tracing** — if your client sends a `traceparent` header, LiteLLM's spans nest inside your existing trace.
 
@@ -223,6 +223,21 @@ AGENTOPS_API_KEY="your-api-key"
 
 </TabItem>
 
+<TabItem value="signoz" label="SigNoz">
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["signoz"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+SIGNOZ_INGESTION_ENDPOINT="https://ingest.<region>.signoz.cloud:443"   # or your self-hosted collector, e.g. http://signoz-otel-collector:4318
+SIGNOZ_INGESTION_KEY="your-ingestion-key"                              # omit for self-hosted SigNoz
+```
+
+</TabItem>
+
 </Tabs>
 
 :::tip[Send to several backends at once]
@@ -251,6 +266,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
 | Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
+| SigNoz | `signoz` | `SIGNOZ_INGESTION_ENDPOINT` (OTLP base URL; `/v1/traces` is appended) | `SIGNOZ_INGESTION_KEY` (sent as `signoz-ingestion-key`; omit for self-hosted) | SigNoz Cloud or self-hosted SigNoz, OTLP HTTP | canonical `gen_ai.*` only | Yes |
 
 Notes:
 
@@ -443,6 +459,24 @@ No vendor mapper is added. Traces carry only the canonical keys from [Span attri
 
 </TabItem>
 
+<TabItem value="signoz-shot" label="SigNoz">
+
+#### What SigNoz renders
+
+Open **Traces** and filter by the service named in `OTEL_SERVICE_NAME` (default `litellm`). Each request is one trace with the server span at the root and the `chat <model>` span under it; the span detail view lists the `gen_ai.*` and `litellm.*` attributes, and the **Related Logs** button opens log lines correlated by trace id.
+
+#### Attributes added by the SigNoz preset
+
+No vendor mapper is added. Spans carry only the canonical keys from [Span attributes](#span-attributes), which is what SigNoz's LLM views and its [LiteLLM dashboard templates](https://signoz.io/docs/dashboards/dashboard-templates/litellm-proxy-dashboard/) read.
+
+#### Setup notes
+
+- `SIGNOZ_INGESTION_ENDPOINT` is the OTLP base URL for both SigNoz Cloud (`https://ingest.<region>.signoz.cloud:443`) and a self-hosted collector (`http://<host>:4318`). The preset appends `/v1/traces`; a value that already ends in `/v1/traces` is used as is. An unset or empty value fails at startup with an error naming the variable, and nothing is exported.
+- `SIGNOZ_INGESTION_KEY` is optional. When set it is sent as the `signoz-ingestion-key` header; when unset no auth header is sent, which is the self-hosted case.
+- Per-team and per-key routing is supported, including a per-tenant endpoint. See [SigNoz](./signoz#per-team-and-per-key-routing).
+
+</TabItem>
+
 <TabItem value="generic-shot" label="Generic OTLP">
 
 #### What a generic OTLP backend renders
@@ -455,7 +489,7 @@ None beyond the canonical `gen_ai.*` and `litellm.*` keys listed in [Span attrib
 
 #### Setup notes
 
-Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
+Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, Splunk Observability Cloud, and any other backend that consumes standard OTLP. SigNoz has its own `signoz` preset with per-team ingestion keys; see [SigNoz](./signoz). If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
 
 </TabItem>
 
@@ -683,7 +717,7 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 
 ## Per-key / per-team credentials (multi-tenant)
 
-One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, or New Relic account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
+One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, or SigNoz account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
 
 This is the same key/team callback mechanism described in [Team/Key based logging](../proxy/team_logging); v2 applies it to the OTel presets. There is no separate admin-owned "destination" object, and `/credentials` holds LLM provider credentials, not logging ones.
 
@@ -695,6 +729,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 | Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
+| SigNoz | `signoz` | `signoz_ingestion_key`, `signoz_ingestion_endpoint` | The SigNoz account, and optionally the SigNoz Cloud region or self-hosted collector it is sent to |
 
 Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
 
@@ -767,7 +802,7 @@ litellm_settings:
   provider_url_destination_allowed_hosts: ["langfuse.acme.com"]
 ```
 
-Your own `LANGFUSE_HOST` needs no allowlist entry. The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
+Your own `LANGFUSE_HOST` needs no allowlist entry. SigNoz works the same way: `signoz_ingestion_endpoint` on a key or team, passed together with `signoz_ingestion_key`, moves that tenant's traces to its own SigNoz Cloud region or collector, and its host must be allowlisted; an endpoint without a key or off the allowlist is ignored with a warning. See [SigNoz per-team routing](./signoz#per-team-and-per-key-routing). The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
 
 ### Send only the model calls to Langfuse
 

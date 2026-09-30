@@ -39,6 +39,7 @@ const sidebars = {
             "observability/opentelemetry_v2_migration",
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
+            "observability/signoz",
           ],
         },
         {
@@ -80,7 +81,6 @@ const sidebars = {
             "observability/parseable",
             "observability/posthog_integration",
             "observability/sentry",
-            "observability/signoz",
             "observability/slack_integration",
             "observability/splunk_observability_cloud",
             "observability/sumologic_integration",
