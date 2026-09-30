@@ -14,13 +14,13 @@ class Review(BaseModel):
     verdict: Literal["approve", "request_changes"]
     issues: list[str]
 
-r = litellm.harness.run(
+r = litellm.agent(
     Harness.CLAUDE_CODE,
     "Review the staged diff.",
     output=Review,
     permissions="read-only",
     sandbox=box,
-    model="coder",
+    model="litellm_proxy/coder",
 )
 r.output.verdict  # "request_changes"
 ```
