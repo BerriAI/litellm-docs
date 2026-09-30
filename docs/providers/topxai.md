@@ -35,7 +35,7 @@ The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://a
 | `topxai/claude-sonnet-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-fable-5-1` | $5 | $25 | 1M context; prompt caching through `anthropic/` (see Notes) |
-| `topxai/gpt-6-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
+| `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
 | `topxai/gpt-6-astra` | $5 | $25 | from 272,001 input tokens the whole request bills at $10 / $37.50; also on `/responses` |
 | `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
 | `topxai/kimi-k3` | $2.40 | $12 | 1M context |
@@ -69,7 +69,7 @@ import os
 
 os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 stream = completion(
-    model="topxai/gpt-6-sol",
+    model="topxai/gpt-6.1-sol",
     messages=[{"role": "user", "content": "What is LiteLLM?"}],
     stream=True
 )
@@ -89,7 +89,7 @@ import os
 
 os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = litellm.responses(
-    model="topxai/gpt-6-sol",
+    model="topxai/gpt-6.1-sol",
     input="What is LiteLLM?",
 )
 print(response)
@@ -105,9 +105,9 @@ model_list:
     litellm_params:
       model: topxai/claude-sonnet-5
       api_key: os.environ/TOPXAI_API_KEY
-  - model_name: topxai/gpt-6-sol
+  - model_name: topxai/gpt-6.1-sol
     litellm_params:
-      model: topxai/gpt-6-sol
+      model: topxai/gpt-6.1-sol
       api_key: os.environ/TOPXAI_API_KEY
   - model_name: topxai/kimi-k3
     litellm_params:
