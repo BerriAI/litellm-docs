@@ -57,13 +57,7 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the late
 
 **An exhausted budget now returns HTTP 422 instead of 429.** Clients stop treating a spent budget as a retryable rate limit. Real rpm/tpm limits still return 429. Set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status. See [PR #42097](https://github.com/BerriAI/litellm/pull/42097)
 
-**275 retired model entries were removed from the bundled cost map.** Entries past their provider deprecation date, or no longer served by the provider, no longer resolve pricing or metadata from the bundled map. If you still route to one of them, add custom pricing on the deployment. The full list is under Model catalog and pricing below. See [PR #42435](https://github.com/BerriAI/litellm/pull/42435), [PR #42521](https://github.com/BerriAI/litellm/pull/42521)
-
 **Proxy startup uses the v2 migration resolver by default.** This matches what the migrations Job already ran. Set `USE_V2_MIGRATION_RESOLVER=false` or pass `--use_legacy_migration_resolver` to go back to v1. `--use_v2_migration_resolver` is still accepted as a no-op. See [PR #42105](https://github.com/BerriAI/litellm/pull/42105)
-
-**Complexity Router context-window escalation is off unless you turn it on.** A router config that omits `enable_context_window_escalation` no longer moves long requests to a larger tier. Set it to `true` to keep the old behavior. Saved routers with an explicit value are unchanged. See [PR #41872](https://github.com/BerriAI/litellm/pull/41872)
-
-**The `s3_v2` logger now gives up on objects that keep failing.** With default settings, an object that keeps failing next to delivered siblings is dropped after one hour, and an object-specific 400 or 403 is dropped after its in-call retries, where both were previously retried forever. Set `s3_max_retry_age_seconds: 0` and `s3_drop_on_terminal_error: false` for the old behavior. See [PR #43022](https://github.com/BerriAI/litellm/pull/43022)
 
 **CLI session spend is recorded under a stable per-user alias.** Requests made with a `litellm-proxy login` session token now log under `cli-session-<user_id>` instead of a fresh hashed key per login, so `user_api_key_hash` in callbacks and the key column in usage data change for those requests. A SQL backfill ships with the change to fold old per-login rows into the alias. See [PR #40541](https://github.com/BerriAI/litellm/pull/40541)
 
