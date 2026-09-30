@@ -5,31 +5,31 @@ sidebar_label: Models and routing
 
 # Models and routing
 
-`model=` is resolved against the gateway when there is one, and against the LiteLLM SDK when there isn't. The gateway is chosen in this order: the `gateway=` argument, then `Gateway.from_env()` (`LITELLM_PROXY_API_BASE` and `LITELLM_PROXY_API_KEY`), then SDK mode. A gateway with an empty key raises `ValueError` at call time.
+`model=` follows the same convention as `litellm.completion`. A model prefixed with `litellm_proxy/` goes to the gateway, and anything else is called directly through the LiteLLM SDK.
 
 ## Gateway mode
 
-`model` is a model group on the gateway, such as `coder`. Load balancing, fallbacks and rate limits on the key all happen on the gateway. See [Using with LiteLLM AI Gateway](./gateway.md).
+With `model="litellm_proxy/coder"`, `coder` is a model group on the gateway. The gateway address and virtual key come from `api_base=` and `api_key=` on the call, or from `LITELLM_PROXY_API_BASE` and `LITELLM_PROXY_API_KEY`. Setting `litellm.use_litellm_proxy = True` sends every call to the gateway, even without the prefix. A gateway model with no base URL or key raises `ValueError` at call time. Load balancing, fallbacks and rate limits on the key all happen on the gateway. See [Using with LiteLLM AI Gateway](./gateway.md).
 
 ## SDK mode
 
 `model` is any LiteLLM model string, and the provider key is read on your host the same way `litellm.completion` reads it.
 
 ```python
-litellm.harness.run(Harness.CODEX, task, sandbox=box, model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0")
+litellm.agent(Harness.CODEX, task, sandbox=box, model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0")
 
-litellm.harness.run(
+litellm.agent(
     Harness.CLAUDE_CODE, task, sandbox=box,
     model="hosted_vllm/qwen3-coder",
     api_base="http://gpu-01:8000/v1",
 )
 ```
 
-`api_key=` and `api_base=` apply to the provider in SDK mode. With `model=None`, the runtime's own default model name is used.
+In SDK mode `api_key=` and `api_base=` apply to the provider. With `model=None`, the runtime's own default model name is used.
 
 ## The local model endpoint
 
-The CLI harnesses need an HTTP endpoint to call. For each session, `litellm.harness` starts a small Starlette app on `127.0.0.1` with a random port, makes it reachable from the sandbox, and points the runtime at it.
+The CLI harnesses need an HTTP endpoint to call. For each session, `litellm.agent()` starts a small Starlette app on `127.0.0.1` with a random port, makes it reachable from the sandbox, and points the runtime at it.
 
 | Harness | Configured with | Route | Gateway mode | SDK mode |
 |---|---|---|---|---|
