@@ -1,0 +1,61 @@
+/* Split "Copy page" control. The buttons reuse .copyBtn from styles.module.css
+   for their look; this file only joins them and styles the menu. */
+
+.wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.main {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.toggle {
+  margin-left: -1px;
+  padding-left: 0.45rem !important;
+  padding-right: 0.45rem !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 15rem;
+  padding: 0.35rem;
+  border-radius: 10px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-surface-color, var(--ifm-background-color));
+  box-shadow: 0 12px 32px rgba(8, 11, 38, 0.18);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 7px;
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+.item:hover,
+.item:focus-visible {
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  outline: none;
+}
+
+.itemLabel {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.itemSub {
+  font-size: 0.76rem;
+  color: var(--ifm-color-emphasis-600);
+}
