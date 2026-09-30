@@ -1,7 +1,7 @@
 ---
-title: "1.103.0rc1 - Config File Ownership, Fuse Routing & Gateway Hardening"
-slug: "v1-103-0-rc-1"
-date: 2026-09-20T03:08:52
+title: "v1.103.0 - Config File Ownership, Fuse Routing & Gateway Hardening"
+slug: "v1-103-0"
+date: 2026-09-27T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -32,24 +32,22 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.103.0-rc.1
+docker.litellm.ai/berriai/litellm:1.103.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.103.0rc1
+pip install litellm==1.103.0
 ```
 
 </TabItem>
 </Tabs>
 
-The published GitHub tag is `v1.103.0-rc.1`. These notes compare it with `v1.102.0-rc.1`, the previous release candidate cut from `main`. Changes backported onto `rc/1.102.0` and already shipped in `v1.102.0` are omitted
-
 :::danger[Breaking Changes]
 
-These callouts cover changes to behavior available in `v1.102.0`, the latest stable release
+These callouts cover changes to behavior available in `v1.102.0`, the previous stable release
 
 **The config file now owns every setting it declares, and the database no longer overrides it.** One rule replaces the per-key mix of DB-wins, config-wins and merged precedence: if `config.yaml` declares a key, the file owns it and a runtime write to that key is refused with a 400 naming the file to edit, instead of being stored and silently ignored. This covers `POST /config/field/update`, `POST /config/field/delete`, `POST /config/update`, and the `allowed_ips` routes. Keys the file leaves out still come from the database and stay editable. `GET /config/field/info` and `GET /config/list` now resolve through the same store and report `source` and `editable`, and a config-owned field reports the value the file declares, so an `os.environ/...` reference is returned as written rather than resolved. In the Admin UI a config-owned field renders read-only. Startup warns once per key whose stored database value is being ignored, and the refusal carries the same sentence plus `stored_database_value_ignored: true`. Move any setting you edit at runtime out of the config file, or edit the file and restart. See [PR #41779](https://github.com/BerriAI/litellm/pull/41779), [PR #41862](https://github.com/BerriAI/litellm/pull/41862), [PR #41868](https://github.com/BerriAI/litellm/pull/41868), [PR #41931](https://github.com/BerriAI/litellm/pull/41931), [PR #41985](https://github.com/BerriAI/litellm/pull/41985), [PR #42009](https://github.com/BerriAI/litellm/pull/42009)
 
@@ -84,6 +82,19 @@ These callouts cover changes to behavior available in `v1.102.0`, the latest sta
 - **Gateway hardening**: MCP client allowlisting, live session visibility with admin force-close, delegated OAuth admission, RFC 8693 token exchange for IdP JWTs, and per-issuer JWT key scoping
 - **Spend and budget correctness**: per-member organization spend, project budgets enforced additively, team-level `model_max_budget` with key overrides, temporary budget increases, lifetime `total_spend` on keys, and budgets re-checked on fallback targets
 - **408 new model catalog entries**: additions across OpenRouter, AIHubMix, Azure, Together AI, Vertex AI, Deepgram and others, with 147 pricing corrections
+
+## Included after the v1.103.0-rc.1 cut
+
+The stable tag includes these release-line additions:
+
+- **Prompt caching** applies configured `cache_control_injection_points` beside client cache marks, keeps `prompt_caching` pinning when a replayed `redacted_thinking` block is present, and stands the automatic cache points down on `/v1/messages` when `extra_body` hides a client's own mark - [PR #41956](https://github.com/BerriAI/litellm/pull/41956), [PR #42069](https://github.com/BerriAI/litellm/pull/42069), [PR #43341](https://github.com/BerriAI/litellm/pull/43341)
+- **MCP** `/v1/mcp/tools` returns camelCase `inputSchema` and `outputSchema` again after the MCP SDK 2 upgrade - [PR #42352](https://github.com/BerriAI/litellm/pull/42352)
+- **Rust bridge** keeps `/v1/messages`, the token counter and the tokenizer on Python when `LITELLM_RUST=1` is set, so compaction edits no longer fail with 400 - [PR #42517](https://github.com/BerriAI/litellm/pull/42517)
+- **Bedrock** streams `/v1/messages` Invoke bytes through instead of holding them in a 1024-byte chunker - [PR #42607](https://github.com/BerriAI/litellm/pull/42607)
+- **Streaming** keeps LiteLLM's `Usage` on text-completion usage chunks, so `/v1/completions` streams with `include_usage` end with token counts instead of an error - [PR #43047](https://github.com/BerriAI/litellm/pull/43047)
+- **JWT and OpenTelemetry**: `x-litellm-team-id` accepts a team alias, its 403 says it matched no team id or alias, and with `fallback_to_db_teams` on it can select any DB team the caller belongs to. v2 LLM spans carry the caller's session id as `gen_ai.conversation.id` - [PR #42445](https://github.com/BerriAI/litellm/pull/42445), [PR #42495](https://github.com/BerriAI/litellm/pull/42495), [PR #43206](https://github.com/BerriAI/litellm/pull/43206), [PR #42486](https://github.com/BerriAI/litellm/pull/42486)
+- **Proxy reliability** stops DB config reloads from leaking background tasks, passes team member spend rows as `jsonb` so a $0 flush cannot poison a pooled connection, and unregisters logging callbacks removed from the stored config - [PR #42784](https://github.com/BerriAI/litellm/pull/42784), [PR #43029](https://github.com/BerriAI/litellm/pull/43029), [PR #43429](https://github.com/BerriAI/litellm/pull/43429)
+- **Usage pages** load spend for every key again. The top-N key cap and the daily global spend rollup reads from rc.1 were reverted before stable, while the `LiteLLM_DailyGlobalSpend` table and migration stay in place, so [PR #41293](https://github.com/BerriAI/litellm/pull/41293) and [PR #41324](https://github.com/BerriAI/litellm/pull/41324) are no longer listed below - [PR #43326](https://github.com/BerriAI/litellm/pull/43326)
 
 ## New Providers and Endpoints
 
@@ -1078,9 +1089,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 - Estimate auto-router baseline costs from durable cache history - [PR #41177](https://github.com/BerriAI/litellm/pull/41177)
 - Carry image and video input tokens through the Responses usage bridge - [PR #41237](https://github.com/BerriAI/litellm/pull/41237)
 - Keep client User-Agent on auth failure spend logs - [PR #41291](https://github.com/BerriAI/litellm/pull/41291)
-- Split aggregated usage query into key-free rollups and bounded top-N keys - [PR #41293](https://github.com/BerriAI/litellm/pull/41293)
 - Price native Responses WebSocket turns at their returned service_tier - [PR #41318](https://github.com/BerriAI/litellm/pull/41318)
-- Add LiteLLM_DailyGlobalSpend key-free rollup for the usage dashboard - [PR #41324](https://github.com/BerriAI/litellm/pull/41324)
 - Preserve Anthropic pricing modifiers in router savings - [PR #41341](https://github.com/BerriAI/litellm/pull/41341)
 - Remove duplicate user budget hook that 429'd zero-cost models - [PR #41345](https://github.com/BerriAI/litellm/pull/41345)
 - Attribute router-rejected requests to the model group provider - [PR #41507](https://github.com/BerriAI/litellm/pull/41507)
@@ -1168,7 +1177,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### PR roll-up by ownership area
 
-Customer-visible PRs: **366**
+Customer-visible PRs for the original rc.1 notes: **366**, including the two usage rollup PRs reverted before stable. The release-line additions listed above are separate from this roll-up
 
 - Management Endpoints / UI: 90
 - Models & Providers: 86
@@ -1200,4 +1209,4 @@ Customer-visible PRs: **366**
 
 ## Full Changelog
 
-[Compare release contents on GitHub](https://github.com/BerriAI/litellm/compare/v1.102.0-rc.1..v1.103.0-rc.1)
+https://github.com/BerriAI/litellm/compare/v1.102.0...v1.103.0

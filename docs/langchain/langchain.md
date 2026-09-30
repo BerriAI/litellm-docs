@@ -443,20 +443,24 @@ When using tags with LiteLLM Proxy, you can:
 
 #### Example Proxy Configuration with Tags
 
+Tag routing is configured per deployment: add `tags` under each deployment's `litellm_params` and turn on `enable_tag_filtering` in `router_settings`. A request tagged `premium` to `chat` then only goes to the deployments carrying that tag. See [Tag Based Routing](../proxy/tag_routing.md) for default tags and match modes
+
 ```yaml
 # config.yaml
 model_list:
-  - model_name: {{openai_large}}
+  - model_name: chat
     litellm_params:
       model: {{openai_large}}
       api_key: your-key
+      tags: ["premium", "high-priority"]
+  - model_name: chat
+    litellm_params:
+      model: {{openai_small}}
+      api_key: your-key
+      tags: ["standard"]
 
-# Tag-based routing rules
-tag_routing:
-  - tags: ["premium", "high-priority"]
-    models: ["{{openai_large}}", "{{anthropic_large}}"]
-  - tags: ["standard"]
-    models: ["{{openai_small}}", "{{anthropic}}"]
+router_settings:
+  enable_tag_filtering: true
 ```
 
 ### Monitoring and Analytics
@@ -464,20 +468,22 @@ tag_routing:
 Tags enable powerful analytics capabilities:
 
 ```python
-# Example: Get spend reports by tags
+# Example: Get spend per tag
 import requests
 
 response = requests.get(
-    "http://localhost:4000/global/spend/report",
+    "http://localhost:4000/spend/tags",
     headers={"Authorization": "Bearer sk-your-key"},
     params={
         "start_date": "2024-01-01",
-        "end_date": "2024-12-31",
-        "group_by": "tags"
+        "end_date": "2024-12-31"
     }
 )
 
 spend_by_tags = response.json()
+# [{"individual_request_tag": "premium", "log_count": 23, "total_spend": 0.0000882}, ...]
 ```
+
+`/global/spend/report` only accepts `group_by` values `team`, `customer` and `api_key`, so use `/spend/tags` for per-tag spend
 
 This documentation covers the essential patterns for using tags effectively with LangChain and LiteLLM, enabling better organization, tracking, and analytics of your LLM requests.

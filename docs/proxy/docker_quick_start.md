@@ -44,7 +44,7 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 :::warning[What the two keys do]
 Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
 
-`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. It must start with `sk-`.
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement
 
 `LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the generated value: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
 :::

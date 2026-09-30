@@ -167,12 +167,23 @@ litellm_settings:
 
 ### Disable Message Redaction
 
-If you have `litellm.turn_on_message_logging` turned on, you can override it for specific requests by
+If you have `litellm.turn_off_message_logging` turned on, you can override it for specific requests by
 setting a request header `LiteLLM-Disable-Message-Redaction: true`.
 
+The proxy only honors this header on keys or teams whose metadata has `allow_client_message_redaction_opt_out: true`. On any other key the header is dropped and messages stay redacted
+
+```shell
+curl --location 'http://0.0.0.0:4000/key/generate' \
+    --header 'Authorization: Bearer sk-1234' \
+    --header 'Content-Type: application/json' \
+    --data '{"metadata": {"allow_client_message_redaction_opt_out": true}}'
+```
+
+Then send the header with that key
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Authorization: Bearer <key-from-above>' \
     --header 'Content-Type: application/json' \
     --header 'LiteLLM-Disable-Message-Redaction: true' \
     --data '{
@@ -636,98 +647,13 @@ litellm_settings:
 
 Use this when you want to view the RAW curl request sent from LiteLLM to the LLM API 
 
-<Tabs>
+Set `log_raw_request_response: true` in `litellm_settings`. LiteLLM then attaches the curl command it sent to the provider as `raw_request` in the Langfuse metadata of every request. This is a global setting with no per-request toggle
 
-<TabItem value="Curl" label="Curl Request">
-
-Pass `metadata` as part of the request body
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "{{openai_small}}",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "metadata": {
-        "log_raw_request": true
-    }
-}'
+```yaml
+litellm_settings:
+  callbacks: ["langfuse"]
+  log_raw_request_response: true
 ```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI v1.0.0+">
-
-Set `extra_body={"metadata": {"log_raw_request": True }}` to `metadata` you want to pass
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-# request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(
-    model="{{openai_small}}",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-print(response)
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model = "{{openai_small}}",
-    temperature=0.1,
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-</Tabs>
 
 **Expected Output on Langfuse**
 
@@ -1337,6 +1263,11 @@ litellm_settings:
     s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
     s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
     s3_max_concurrent_uploads: 16 # [OPTIONAL] cap on simultaneous PUTs per flush; values below 1 or non integers fall back to 16 with a warning
+    s3_adaptive_concurrency: false # [OPTIONAL] grow the PUT concurrency bound above s3_max_concurrent_uploads while uploads succeed and halve it on throttling (429, 503, SlowDown, transport errors)
+    s3_max_adaptive_concurrency: 200 # [OPTIONAL] ceiling for s3_adaptive_concurrency; values below 1 or non integers fall back to 200 with a warning
+    s3_max_retry_age_seconds: 3600 # [OPTIONAL] drop a failed upload once it has been retrying longer than this many seconds, measured from the first flush where a sibling upload delivered; set 0 to retry forever, non integers fall back to 3600 with a warning
+    s3_drop_on_terminal_error: true # [OPTIONAL] drop an object after a terminal, object-specific S3 rejection (400/403 with a code like EntityTooLarge or InvalidArgument) once a sibling delivered, instead of retrying it every flush; set false to keep retrying
+    s3_max_queue_size: 50000 # [OPTIONAL] cap on queued log events applied after a failed flush; the oldest events are dropped once the queue exceeds this size
     s3_batch_file_upload: false # [OPTIONAL] write each flush as one NDJSON .jsonl file per object key prefix instead of one object per request
 ```
 
@@ -1347,6 +1278,8 @@ The bound is a sliding window, not a batch size: the 17th upload starts as soon 
 When the bound is too low for the traffic nothing is lost, but delivery lags: a flush takes longer than `DEFAULT_S3_FLUSH_INTERVAL_SECONDS`, objects show up in the bucket later than the flush interval, and `log_queue` grows in memory until traffic drops. If you see objects arriving minutes late while the proxy log shows no `Error uploading to s3` lines, that is the signal to raise the bound. If the number you compute is above 64, turn on `s3_batch_file_upload` instead: each flush then becomes one object per key prefix, so the bound stops mattering and the bucket sees a handful of PUTs per tick. Raising the bound far above what the formula gives moves you back toward the burst shape that makes S3 throttle: eight workers at a few hundred in flight each measured about 4,500 PUTs per second into one fresh daily prefix and got `503 SlowDown` on 11 to 18 percent of them, while the same eight workers at 16 saw 0.08 percent, all recovered on the first retry
 
 With `s3_batch_file_upload` enabled, each flush produces one `batch_<HH-MM-SS>_<uuid>.jsonl` object per object key prefix, so batch files sit next to the per request objects they replace and team or API key prefixes are preserved. Uploads that fail stay in the queue and are retried on the next flush. The flag is ignored with a warning when `cold_storage_custom_logger: s3_v2` is set, because spend log lookups require per request objects
+
+Failed uploads are retried, but not forever. Each flush uploads new events before the ones it is retrying, and 403, 500 and 503 are retried up to three times inside the same flush with a 1s then 2s backoff; any other failure waits for the next flush. An object S3 rejects for a reason specific to that object (400 or 403 with a code such as `EntityTooLarge`, `InvalidArgument`, `MalformedXML`, `InvalidDigest` or `KeyTooLongError`) is dropped at the end of that flush once another object in it delivered, since retrying it can never succeed; `AccessDenied`, credential and KMS errors, 404, 429 and 5xx are treated as recoverable and keep retrying. An object that keeps failing while its siblings deliver is dropped after `s3_max_retry_age_seconds` (1 hour by default); the clock only starts once a sibling has delivered, so a whole bucket outage where nothing delivers does not start it, but an object already on the clock keeps aging through a later outage. These are two independent drop rules: `s3_drop_on_terminal_error: false` turns off only the terminal drop and `s3_max_retry_age_seconds: 0` turns off only the age limit, so set both to keep every failed object retrying. Independently of either, after a failed flush the queue is trimmed to `s3_max_queue_size` by dropping its oldest events, so raise that cap if the queue must outlive a long outage; every drop is logged as `s3 logging: N uploads dropped`
 
 **Step 3**: Start the proxy, make a test request
 
@@ -1465,10 +1398,6 @@ litellm_settings:
     sqs_strip_base64_files: false
     # If true, LiteLLM will remove or redact base64-encoded binary data (e.g., PDFs, images, audio)
     # from logged messages to avoid large payloads. SQS has a 1 MB payload size limit.
-    s3_use_team_prefix: false
-    # If true, Litellm will add the team alias prefix to s3 path
-    s3_use_key_prefix: false
-    # If true, Litellm will add the key alias prefix to s3 path
 
 ```
 
@@ -2243,7 +2172,9 @@ Expect to see your logs in Arize.
 
 ## Langtrace
 
-1. Set `success_callback: ["langtrace"]` on litellm config.yaml
+The `langtrace` callback posts spans straight to `https://app.langtrace.ai/api/trace` with `LANGTRACE_API_KEY` in the `x-api-key` header. For a self-hosted Langtrace, set `LANGTRACE_API_HOST` to its base URL (for example `https://langtrace.example.com`) and the callback posts to `<host>/api/trace`. The [Langtrace page](../observability/langtrace_integration) covers the OpenTelemetry v2 exporter, which routes through a collector instead
+
+1. Set `callbacks: ["langtrace"]` on litellm config.yaml
 
 ```yaml
 model_list:
@@ -2558,6 +2489,7 @@ export SENTRY_DSN="your-sentry-dsn"
 export SENTRY_API_SAMPLE_RATE="1.0"  # Controls what percentage of errors are sent (default: 1.0 = 100%)
 export SENTRY_API_TRACE_RATE="1.0"   # Controls what percentage of transactions are sampled for performance monitoring (default: 1.0 = 100%)
 export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (default: production)
+export SENTRY_SEND_DEFAULT_PII="true" # Sends user ids, emails, and key hashes to Sentry; secrets stay filtered (default: false, see /observability/sentry)
 ```
 
 ```yaml 

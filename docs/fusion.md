@@ -9,6 +9,12 @@ import TabItem from '@theme/TabItem';
 
 # Fusion model
 
+:::caution Not yet released
+
+Fusion is not in any released litellm version or on litellm `main` yet. It lives on the `litellm_fusion_router` branch and ships once [litellm PR #39224](https://github.com/BerriAI/litellm/pull/39224) merges. Until then, the snippets on this page fail with `BadRequestError: LLM Provider NOT provided ... You passed model=litellm/fusion-1`
+
+:::
+
 `litellm/fusion-1` is a LiteLLM-provided virtual model for requests that benefit from independent model perspectives. It sends the request to a configurable panel in parallel, asks a judge to compare the successful responses, then has the judge synthesize one public response.
 
 The request and response keep the native shape of the SDK method you call. Fusion works with Chat Completions, Anthropic Messages, and Responses.

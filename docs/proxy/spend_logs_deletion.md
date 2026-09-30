@@ -19,6 +19,9 @@ Add this to your `proxy_config.yaml` under `general_settings`:
 general_settings:
   maximum_spend_logs_retention_period: "7d"  # Keep logs for 7 days
 
+  # Optional: prune per-tag daily spend rollups older than this
+  maximum_daily_tag_spend_retention_period: "90d"
+
   # Optional: set how frequently cleanup should run - default is daily
   maximum_spend_logs_retention_interval: "1d"  # Run cleanup daily
 
@@ -39,21 +42,25 @@ litellm_settings:
 
 ### When the job runs
 
-The cleanup job exists only if you ask for it. It is registered at proxy startup when `maximum_spend_logs_retention_period` or `maximum_autorouter_session_retention_period` is set, and not otherwise. With neither set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
+The cleanup job exists only if you ask for it. It is registered at proxy startup when any of `maximum_spend_logs_retention_period`, `maximum_autorouter_session_retention_period`, `maximum_health_check_retention_period` or `maximum_daily_tag_spend_retention_period` is set, and not otherwise. Setting one of them later through `/config/update` registers the job on the next config sync without a restart. With none set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
 
 When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
 
 ### What gets deleted
 
-A run prunes three tables, each on the cutoff implied by its retention setting:
+A run prunes these tables, each on the cutoff implied by its retention setting:
 
 | Table | Time column | Retention setting |
 | --- | --- | --- |
 | `LiteLLM_SpendLogs` | `startTime` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_SpendLogToolIndex` | `start_time` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_AutoRouterSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+| `LiteLLM_HealthCheckTable` | `checked_at` | `maximum_health_check_retention_period` |
+| `LiteLLM_DailyTagSpend` | `date` | `maximum_daily_tag_spend_retention_period` |
 
 `LiteLLM_SpendLogToolIndex` rows are derived from spend logs, so they expire on the same cutoff as the log rows they point at. Auto-router session rollups carry their own retention setting and their own cutoff. Setting only `maximum_autorouter_session_retention_period` is enough to register the job, in which case spend logs are left untouched and only session rollups are pruned
+
+`LiteLLM_DailyTagSpend` holds one row per tag, model and calendar day and backs the Tag Usage page. Its `date` column is a `YYYY-MM-DD` string, so the cutoff is a day: rows whose day is strictly older than the day the retention period reaches back to are deleted, and the horizon day itself is kept. With `maximum_daily_tag_spend_retention_period` unset the table is never touched, which is the pre-existing behavior. Tag budgets are enforced from lifetime counters and are unaffected by this pruning, but the Tag Usage chart can no longer show days that were deleted
 
 ### Configuration Options
 

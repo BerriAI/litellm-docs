@@ -13,6 +13,7 @@ Use this if you want to **proxy all models from a specific provider without defi
 <TabItem value="sdk" label="SDK">
 
 ```python
+import os
 from litellm import Router
 
 router = Router(
@@ -82,15 +83,15 @@ from litellm import Router
 router = Router(model_list=...)
 
 # Test with `anthropic/` - all models with `anthropic/` prefix will get routed to `anthropic/*`
-resp = completion(model="anthropic/{{anthropic}}", messages=[{"role": "user", "content": "Hello, Claude!"}])
+resp = router.completion(model="anthropic/{{anthropic}}", messages=[{"role": "user", "content": "Hello, Claude!"}])
 print(resp)
 
 # Test with `groq/` - all models with `groq/` prefix will get routed to `groq/*`
-resp = completion(model="groq/llama3-8b-8192", messages=[{"role": "user", "content": "Hello, Groq!"}])
+resp = router.completion(model="groq/llama3-8b-8192", messages=[{"role": "user", "content": "Hello, Groq!"}])
 print(resp)
 
 # Test with `fo::*::static::*` - all requests matching this pattern will be routed to `openai/fo::*:static::*`
-resp = completion(model="fo::hi::static::hi", messages=[{"role": "user", "content": "Hello, Claude!"}])
+resp = router.completion(model="fo::hi::static::hi", messages=[{"role": "user", "content": "Hello, Claude!"}])
 print(resp)
 ```
 

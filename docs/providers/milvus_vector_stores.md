@@ -86,7 +86,7 @@ response = vector_stores.search(
     # Milvus-specific parameters
     limit=10,  # Number of results to return
     offset=0,  # Pagination offset
-    dbName="default",  # Database name
+    milvus_db_name="default",  # Database name, sent to Milvus as dbName
     annsField="book_intro_vector",  # Vector field name
     outputFields=["id", "book_intro", "title"],  # Fields to return
     filter='book_id > 0',  # Metadata filter expression
@@ -159,7 +159,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-collection-name/search' \
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `dbName` | string | Database name (default: "default") |
+| `milvus_db_name` | string | Milvus database to search, sent as `dbName` (Milvus uses "default" when unset) |
 | `annsField` | string | Vector field name to search (default: "book_intro_vector") |
 | `limit` | integer | Maximum number of results to return |
 | `offset` | integer | Pagination offset |
@@ -167,7 +167,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-collection-name/search' \
 | `groupingField` | string | Field to group results by |
 | `outputFields` | list | List of fields to return in results |
 | `searchParams` | dict | Search parameters like metric type and search parameters |
-| `partitionNames` | list | List of partition names to search |
+| `milvus_partition_names` | list | Partitions to search, sent as `partitionNames` |
 | `consistencyLevel` | string | Consistency level for the search |
 
 ## Supported Features

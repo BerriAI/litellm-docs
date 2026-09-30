@@ -16,8 +16,8 @@ export default function NavigationCards({ items, columns = 2 }) {
             key={i}
             to={item.to}
             className={styles.card}
-            target={isExternal ? '_blank' : undefined}
-            rel={isExternal ? 'noopener noreferrer' : undefined}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
           >
             {item.icon && (
               <div className={styles.icon}>{item.icon}</div>
@@ -32,6 +32,11 @@ export default function NavigationCards({ items, columns = 2 }) {
                   <li key={j}>{line}</li>
                 ))}
               </ul>
+            )}
+            {item.ctaLabel && (
+              <span className={`button button--primary button--sm ${styles.cta}`}>
+                {item.ctaLabel}
+              </span>
             )}
             {isExternal && (
               <span className={styles.externalIcon}>↗</span>

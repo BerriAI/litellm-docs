@@ -962,11 +962,15 @@ video {
 }
 
 .blog-wrapper article .markdown a {
-  color: #0ea5e9;
   text-decoration: none;
 }
 
-.blog-wrapper article .markdown a:hover {
+/* Button links keep Infima's theme-aware foreground and interaction styles. */
+.blog-wrapper article .markdown a:not(.button) {
+  color: #0ea5e9;
+}
+
+.blog-wrapper article .markdown a:not(.button):hover {
   text-decoration: underline;
 }
 
@@ -986,6 +990,18 @@ video {
   border: none;
   padding: 0;
   color: inherit;
+}
+
+/* The reset above zeroes padding on fenced blocks too, which left blog code
+   touching the block edges. Give Docusaurus's code lines their inset back,
+   matching docs pages; numbered blocks keep vertical-only padding because
+   their line content is inset separately. */
+.blog-wrapper article .markdown pre.prism-code code[class*='codeBlockLines']:not([class*='codeBlockLinesWithNumbering']) {
+  padding: var(--ifm-pre-padding);
+}
+
+.blog-wrapper article .markdown pre.prism-code code[class*='codeBlockLinesWithNumbering'] {
+  padding: var(--ifm-pre-padding) 0;
 }
 
 /* Nav buttons (prev/next) at bottom - keep clean */
@@ -1011,7 +1027,7 @@ video {
 
 
 
-[data-theme='dark'].blog-wrapper article .markdown a {
+[data-theme='dark'].blog-wrapper article .markdown a:not(.button) {
   color: #38bdf8;
 }
 

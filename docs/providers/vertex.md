@@ -1926,15 +1926,6 @@ curl --location 'https://0.0.0.0:4000/v1/chat/completions' \
 |------------------|--------------------------------------|
 | gemini-3.1-pro-preview   | `completion('gemini-3.1-pro-preview', messages)`, `completion('vertex_ai/gemini-3.1-pro-preview', messages)`|
 
-## Gemini 1.5 Pro (and Vision)
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| gemini-1.5-pro   | `completion('gemini-1.5-pro', messages)`, `completion('vertex_ai/gemini-1.5-pro', messages)` |
-| gemini-1.5-flash-preview-0514   | `completion('gemini-1.5-flash-preview-0514', messages)`, `completion('vertex_ai/gemini-1.5-flash-preview-0514', messages)` |
-| gemini-1.5-pro-preview-0514   | `completion('gemini-1.5-pro-preview-0514', messages)`, `completion('vertex_ai/gemini-1.5-pro-preview-0514', messages)` |
-
-
-
 
 #### Using Gemini Pro Vision
 
@@ -2481,33 +2472,9 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </Tabs>
 
 
-## Chat Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| chat-bison-32k   | `completion('chat-bison-32k', messages)` |
-| chat-bison       | `completion('chat-bison', messages)`     |
-| chat-bison@001   | `completion('chat-bison@001', messages)` |
+## Legacy PaLM 2 and Gemini 1.x Models
 
-## Code Chat Models
-| Model Name           | Function Call                              |
-|----------------------|--------------------------------------------|
-| codechat-bison       | `completion('codechat-bison', messages)`     |
-| codechat-bison-32k   | `completion('codechat-bison-32k', messages)` |
-| codechat-bison@001   | `completion('codechat-bison@001', messages)` |
-
-## Text Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| text-bison       | `completion('text-bison', messages)` |
-| text-bison@001   | `completion('text-bison@001', messages)` |
-
-## Code Text Models
-| Model Name       | Function Call                        |
-|------------------|--------------------------------------|
-| code-bison       | `completion('code-bison', messages)` |
-| code-bison@001   | `completion('code-bison@001', messages)` |
-| code-gecko@001   | `completion('code-gecko@001', messages)` |
-| code-gecko@latest| `completion('code-gecko@latest', messages)` |
+Google has retired the PaLM 2 models (`chat-bison`, `codechat-bison`, `text-bison`, `code-bison`, `code-gecko`) and the Gemini 1.0 and 1.5 models on Vertex AI, and they are no longer in the LiteLLM model map. Unprefixed names like `completion('chat-bison', messages)` or `completion('gemini-1.5-pro', messages)` fail with `LLM Provider NOT provided`, and the `vertex_ai/` prefixed forms return a 404 from Vertex AI. Use a current Gemini model instead, for example `completion('vertex_ai/gemini-2.5-pro', messages)`
 
 
 ## **Embedding Models**

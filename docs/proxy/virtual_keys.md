@@ -288,7 +288,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 **Step 3: Test the key**
 
 ```bash
-curl -X POST "https://0.0.0.0:4000/key/generate" \
+curl -X POST "http://0.0.0.0:4000/chat/completions" \
 -H "Authorization: Bearer <user-key>" \
 -H "Content-Type: application/json" \
 -d '{
@@ -818,13 +818,13 @@ litellm --config config.yaml
 
 ### Temporary Budget Increase
 
-Use the `/key/update` endpoint to increase the budget of an existing key. 
+Use the `/key/update` endpoint to increase the budget of an existing key. `temp_budget_expiry` is a datetime, not a duration string, so pass an ISO date such as `2026-10-15`. See [Temporary Budget Increase](./temporary_budget_increase.md) for details.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
--d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
+-d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "2026-10-15"}'
 ```
 
 [API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)

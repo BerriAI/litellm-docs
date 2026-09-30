@@ -213,7 +213,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
          }'
 ```
 
-**When budget is exceeded, you'll see:**
+**When budget is exceeded, the request is rejected with HTTP 422:**
 
 ```json
 {
@@ -221,7 +221,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
     "message": "Budget has been exceeded! Tag=engineering Current cost: 505.50, Max budget: 500.0",
     "type": "budget_exceeded",
     "param": null,
-    "code": "400"
+    "code": "422"
   }
 }
 ```

@@ -1092,7 +1092,7 @@ curl http://0.0.0.0:4000/v1/batches \
     "input_file_id": "file-f0be81f654454113a922da60acb0eea6",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h",
-    "model: "batch-gpt-4o-mini"
+    "model": "batch-gpt-4o-mini"
   }'
 ```
 

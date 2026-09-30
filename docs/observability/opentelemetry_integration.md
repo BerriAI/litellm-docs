@@ -287,7 +287,7 @@ OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
 
 This changes the LLM-call span name, kind, and structure, suppresses the non-standard `raw_gen_ai_request` child span, adds the `gen_ai.provider.name` attribute alongside `gen_ai.system`, populates additional request and cache-token attributes when present, and consolidates the per-message events into a single `gen_ai.client.inference.operation.details` event. See the [Spans Reference](#spans-reference) and [Attributes Reference](#attributes-reference) below for the per-row differences.
 
-`OpenTelemetryConfig.semconv_stability` is the programmatic equivalent. The flag is comma-separable per the OTEL spec.
+`OpenTelemetryConfig.semconv_stability_opt_in` (a set of `OTELSemconvCategory` values, e.g. `{OTELSemconvCategory.GEN_AI_LATEST_EXPERIMENTAL}`) is the programmatic equivalent and is unioned with the env var. The flag is comma-separable per the OTEL spec.
 
 ## Redacting Messages, Response Content from OpenTelemetry Logging
 
@@ -297,13 +297,7 @@ Set `litellm.turn_off_message_logging=True` This will prevent the messages and r
 
 ### Redact Messages and Responses from specific OpenTelemetry Logging
 
-In the metadata typically passed for text completion or embedding calls you can set specific keys to mask the messages and responses for this call.
-
-Setting `mask_input` to `True` will mask the input from being logged for this call
-
-Setting `mask_output` to `True` will make the output from being logged for this call.
-
-Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message.
+The OpenTelemetry logger does not read the Langfuse `mask_input`, `mask_output` or `update_trace_keys` metadata keys, so passing them on a request leaves message content on the spans. To keep content off a specific OpenTelemetry handler, give it its own `capture_message_content="NO_CONTENT"` (see [Per-handler content policy](#per-handler-content-policy)) or set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT`
 
 ## Troubleshooting
 
@@ -319,7 +313,7 @@ Those are [service-hook spans](#service-hook-spans-aka-infrastructure-spans). Th
 
 1. Verify `litellm.callbacks` (or `litellm_settings.callbacks`) includes `"otel"`.
 2. Verify the request actually hit a `/chat/completions` (or other LLM) route. Management endpoints (`/key/info`, `/user/info`, …) won't have `gen_ai.*` attributes.
-3. Check whether `litellm.turn_off_message_logging=true` and/or `mask_input`/`mask_output` are set, since they suppress message and raw-provider attributes.
+3. Check whether `litellm.turn_off_message_logging=true` or a `NO_CONTENT` capture mode is set, since they suppress message and raw-provider attributes.
 4. Set `USE_OTEL_LITELLM_REQUEST_SPAN=true` so the LLM attributes land on a span named `litellm_request` instead of being co-mingled with HTTP request attributes on `Received Proxy Server Request`.
 
 ### Trace LiteLLM Proxy user/key/org/team information on failed requests
@@ -330,10 +324,10 @@ LiteLLM emits `metadata.user_api_key_*` attributes (key hash, key alias, org ID,
 
 ### Not seeing traces land on Integration
 
-If you don't see traces landing on your integration, set `OTEL_DEBUG="True"` in your LiteLLM environment and try again.
+If you don't see traces landing on your integration, set `DEBUG_OTEL="True"` in your LiteLLM environment and try again.
 
 ```shell
-export OTEL_DEBUG="True"
+export DEBUG_OTEL="True"
 ```
 
 This will emit any logging issues to the console. Common causes:
@@ -457,18 +451,15 @@ When the `otlp_http` exporter talks to a collector behind an internal CA, it hon
 | `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` | `false` | Enable OTLP metrics (TTFT, TPOT, response duration, cost, token usage, operation duration) |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS` | `false` | Enable OTLP semantic logs (`gen_ai.content.prompt`/`gen_ai.content.completion`, or `gen_ai.client.inference.operation.details` in semconv mode) |
 | `OTEL_IGNORE_CONTEXT_PROPAGATION` | `false` | If `true`, ignore inbound `traceparent` headers and any active span — every LiteLLM trace becomes its own root |
-| `OTEL_DEBUG` / `DEBUG_OTEL` | `false` | Print exporter and span-creation diagnostics to stderr |
+| `DEBUG_OTEL` | `false` | Print exporter and span-creation diagnostics to stderr |
 | `litellm.turn_off_message_logging` (Python global / `litellm_settings.turn_off_message_logging`) | `false` | Kill-switch for content capture. Suppresses `llm.{provider}.*` raw request/response, `gen_ai.input.messages`, `gen_ai.output.messages`, and `gen_ai.content.*` log events. Overrides per-handler `capture_message_content` |
 
-### Per-request redaction (request `metadata`)
+### Per-request `metadata` keys
 
-Per-request keys you can pass in `metadata` to redact a single call without disabling logging globally.
+The Langfuse `mask_input`, `mask_output` and `update_trace_keys` keys have no effect on OpenTelemetry spans. Use `litellm.turn_off_message_logging` or a `NO_CONTENT` capture mode to redact content.
 
 | Key | Effect |
 |---|---|
-| `mask_input` | When `true`, redacts the input messages on this request |
-| `mask_output` | When `true`, redacts the output messages on this request |
-| `update_trace_keys` | Controls which trace keys (`input`, `output`) get replaced when continuing an existing trace |
 | `generation_name` | Overrides the `raw_gen_ai_request` span's name with this value |
 
 ### `OpenTelemetryConfig` programmatic equivalents
@@ -481,7 +472,7 @@ Per-request keys you can pass in `metadata` to redact a single call without disa
 | `enable_metrics` | `false` | Same as `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` |
 | `enable_events` | `false` | Same as `LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS` |
 | `capture_message_content` | env var | Per-handler override; same value space as `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` |
-| `semconv_stability` | env var | Same as `OTEL_SEMCONV_STABILITY_OPT_IN` |
+| `semconv_stability_opt_in` | empty set | Set of `OTELSemconvCategory` values, unioned with `OTEL_SEMCONV_STABILITY_OPT_IN` |
 | `skip_set_global` | `false` | Don't claim the process-global `TracerProvider`/`MeterProvider`/`LoggerProvider` |
 | `ignore_context_propagation` | `false` | Same as `OTEL_IGNORE_CONTEXT_PROPAGATION` |
 | `attributes` | none | Metric attribute include/exclude filter. See [Control metric attribute cardinality](#control-metric-attribute-cardinality) |

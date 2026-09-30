@@ -8,7 +8,7 @@ In this case, let's try and call 3 models:
 
 | Model                                   | Type of Endpoint |
 | --------------------------------------- | ---------------- |
-| deepset/deberta-v3-large-squad2         | [Default Huggingface Endpoint](#case-1-call-default-huggingface-endpoint) |
+| meta-llama/Llama-3.1-8B-Instruct        | [Default Huggingface Endpoint](#case-1-call-default-huggingface-endpoint) |
 | meta-llama/Llama-2-7b-hf                | [Public Endpoint](#case-2-call-llama2-public-huggingface-endpoint)              |
 | meta-llama/Llama-2-7b-chat-hf           | [Private Endpoint](#case-3-call-llama2-private-huggingface-endpoint)             |
 
@@ -19,7 +19,7 @@ Here's the complete example:
 ```python
 from litellm import completion 
 
-model = "deepset/deberta-v3-large-squad2"
+model = "meta-llama/Llama-3.1-8B-Instruct"
 messages = [{"role": "user", "content": "Hey, how's it going?"}] # LiteLLM follows the OpenAI format 
 
 ### CALLING ENDPOINT
@@ -28,7 +28,7 @@ completion(model=model, messages=messages, custom_llm_provider="huggingface")
 
 What's happening? 
 - model: This is the name of the deployed model on huggingface 
-- messages: This is the input. We accept the OpenAI chat format. For huggingface, by default we iterate through the list and add the message["content"] to the prompt. [Relevant Code](https://github.com/BerriAI/litellm/blob/6aff47083be659b80e00cb81eb783cb24db2e183/litellm/llms/huggingface_restapi.py#L46)
+- messages: This is the input, in the OpenAI chat format. LiteLLM sends the messages array unchanged to the OpenAI-compatible chat completions API at `https://router.huggingface.co/v1/chat/completions` (or `<api_base>/v1/chat/completions` when you pass `api_base`), so the model must be a chat model served by Hugging Face Inference Providers. Non-chat models such as question-answering models are not supported on this route. [Relevant Code](https://github.com/BerriAI/litellm/blob/main/litellm/llms/huggingface/chat/transformation.py)
 - custom_llm_provider: Optional param. This is an optional flag, needed only for Azure, Replicate, Huggingface and Together-ai (platforms where you deploy your own models). This enables litellm to route to the right provider, for your model. 
 
 ### Case 2: Call Llama2 public Huggingface endpoint
@@ -48,7 +48,7 @@ completion(model=model, messages=messages, custom_llm_provider="huggingface", ap
 ```
 
 What's happening? 
-- api_base: Optional param. Since this uses a deployed endpoint (not the [default huggingface inference endpoint](https://github.com/BerriAI/litellm/blob/6aff47083be659b80e00cb81eb783cb24db2e183/litellm/llms/huggingface_restapi.py#L35)), we pass that to LiteLLM. 
+- api_base: Optional param. Since this uses a deployed endpoint (not the default `https://router.huggingface.co` endpoint), we pass that to LiteLLM, which appends `/v1/chat/completions` to it
 
 ### Case 3: Call Llama2 private Huggingface endpoint
 

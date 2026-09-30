@@ -301,6 +301,54 @@ const config = {
         };
       },
     }),
+    // PostHog product analytics. Same project as the Webflow marketing site
+    // (www.litellm.ai), so a visitor moving between the two domains is one
+    // person and one journey: persistence keeps a first-party cookie on
+    // .litellm.ai, which every litellm.ai subdomain can read.
+    // Uses the official posthog-docusaurus plugin, which is production-only
+    // by default (mirroring the gtag setup below) and forwards every extra
+    // option below to posthog.init via JSON.stringify.
+    //
+    // capture_pageview is false because the plugin ships a client module whose
+    // onRouteUpdate captures $pageview on the initial load and on every
+    // Docusaurus route change. Leaving the SDK's own pageview on as well logs
+    // every landing page twice.
+    //
+    // $pageleave and dead clicks are on for docs UX analysis: time on page,
+    // bounce rate and scroll depth, plus clicks on things readers expect to be
+    // links. capture_pageleave must be an explicit true, since the SDK default
+    // only captures it when capture_pageview is on.
+    //
+    // Kept off the docs on purpose, so this stays analytics and nothing else:
+    // no session replay (no rrweb bundle downloaded, no DOM observation;
+    // replay is scoped to litellm.ai/enterprise and /pricing by URL trigger in
+    // the project settings), no heatmap capture despite the project-level
+    // opt-in (skips the mousemove listener and its periodic requests; link and
+    // button clicks are already captured with their hrefs by autocapture).
+    // Surveys are off too, which drops the surveys.js request the SDK
+    // otherwise makes on every page; docs feedback already goes through
+    // Feedback Rocket below.
+    [
+      'posthog-docusaurus',
+      {
+        apiKey: 'phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',
+        appUrl: 'https://us.i.posthog.com',
+        enableInDevelopment: false,
+        defaults: '2026-05-30',
+        person_profiles: 'identified_only',
+        cross_subdomain_cookie: true,
+        capture_pageview: false,
+        capture_pageleave: true,
+        capture_dead_clicks: true,
+        disable_session_recording: true,
+        capture_heatmaps: false,
+        disable_surveys: true,
+        autocapture: {
+          dom_event_allowlist: ['click'],
+          element_allowlist: ['a', 'button'],
+        },
+      },
+    ],
     // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
@@ -486,6 +534,10 @@ const config = {
               {
                 label: 'Twitter',
                 href: 'https://twitter.com/LiteLLM',
+              },
+              {
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/berri-ai/',
               },
             ],
           },

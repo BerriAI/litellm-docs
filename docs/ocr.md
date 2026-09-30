@@ -66,14 +66,15 @@ asyncio.run(test_async_ocr())
 LiteLLM can read local files directly, with no manual base64 encoding:
 
 ```python
+from pathlib import Path
 from litellm import ocr
 
-# OCR with a local PDF file path
+# OCR with a local PDF file path (pass a pathlib.Path, a plain str is rejected)
 response = ocr(
     model="mistral/mistral-ocr-latest",
     document={
         "type": "file",
-        "file": "/path/to/document.pdf"
+        "file": Path("/path/to/document.pdf")
     }
 )
 
@@ -101,7 +102,7 @@ response = ocr(
 ```
 
 The `file` field accepts:
-- **File path** (`str` or `pathlib.Path`): LiteLLM reads the file and detects the MIME type from the extension
+- **File path** (`pathlib.Path` or any `os.PathLike`): LiteLLM reads the file and detects the MIME type from the extension. A plain `str` is rejected with `OCR file input does not accept bare str values`, so wrap string paths in `Path(...)`
 - **File object** (binary file-like object): e.g. `open("doc.pdf", "rb")`
 - **Raw bytes** (`bytes`): use `mime_type` to specify the content type
 
@@ -239,7 +240,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 | `document.type` | string | Yes | `"document_url"` for PDFs/docs, `"image_url"` for images, or `"file"` for local files |
 | `document.document_url` | string | Conditional | URL or data URI to the document (required if `type` is `"document_url"`) |
 | `document.image_url` | string | Conditional | URL or data URI to the image (required if `type` is `"image_url"`) |
-| `document.file` | string/bytes/file | Conditional | File path, bytes, or file-like object (required if `type` is `"file"`) |
+| `document.file` | pathlib.Path/bytes/file | Conditional | `pathlib.Path`, bytes, or binary file-like object (required if `type` is `"file"`). A plain `str` path is rejected |
 | `document.mime_type` | string | No | Explicit MIME type for file inputs (auto-detected from extension if not provided) |
 | `pages` | array | No | List of specific page indices to process (0-indexed) |
 | `include_image_base64` | boolean | No | Whether to include extracted images as base64 strings |
@@ -274,7 +275,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 
 **For local files (SDK):**
 ```python
-{"type": "file", "file": "/path/to/document.pdf"}
+{"type": "file", "file": Path("/path/to/document.pdf")}
 {"type": "file", "file": open("image.png", "rb")}
 {"type": "file", "file": pdf_bytes, "mime_type": "application/pdf"}
 ```
