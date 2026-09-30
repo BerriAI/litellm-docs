@@ -34,10 +34,11 @@ os.environ["ZEROGPU_API_BASE"] = "https://api.zerogpu.ai/v1"  # optional overrid
 | `zerogpu/gpt-5.4-nano` | 400,000 | $0.20 | $1.25 | $0.02 |
 | `zerogpu/gpt-5.6-luna` | 272,000 | $0.20 | $1.20 | $0.20 |
 | `zerogpu/gpt-oss-120b` | 131,072 | $0.15 | $0.60 | $0.03 |
+| `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | $0.02 | $0.05 | n/a |
 | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | $0.025 |
 | `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | n/a |
 
-Pricing follows the [ZeroGPU model catalog](https://docs.zerogpu.ai/docs/model-catalog). Every model above supports `tools`, `tool_choice`, and a `json_schema` `response_format`, and `gpt-5.6-luna` is the only reasoning model. Other catalog models, such as the LFM2.5 models that are left out of the cost map until the API serves them correctly, still route through `zerogpu/<model>` but log $0 unless the deployment sets `input_cost_per_token` and `output_cost_per_token`. Those two fields also override the cost map when your contract prices differ.
+Pricing follows the [ZeroGPU model catalog](https://docs.zerogpu.ai/docs/model-catalog). Every model above except `LFM2.5-1.2B-Instruct` supports `tools`, `tool_choice`, and a `json_schema` `response_format`, and `gpt-5.6-luna` is the only reasoning model. The ZeroGPU API ignores `tools`, `response_format`, and `max_completion_tokens` for `LFM2.5-1.2B-Instruct`, so LiteLLM treats tool params as unsupported for it; pass `drop_params=True` to have them dropped when the same call can reach that model. Other catalog models, such as `LFM2.5-1.2B-Thinking`, which is left out of the cost map until the API serves it correctly, still route through `zerogpu/<model>` but log $0 unless the deployment sets `input_cost_per_token` and `output_cost_per_token`. Those two fields also override the cost map when your contract prices differ.
 
 ## Usage - LiteLLM Python SDK
 
