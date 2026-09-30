@@ -1231,6 +1231,7 @@ const sidebars = {
         "providers/compactifai",
         "providers/crusoe",
         "providers/custom_llm_server",
+        "providers/daoxe",
         "providers/dashscope",
         "providers/databricks",
         "providers/datarobot",
