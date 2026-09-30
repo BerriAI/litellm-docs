@@ -1468,6 +1468,7 @@ const sidebars = {
             "projects/Harbor",
             "projects/CompatCanary",
             "projects/GraphRAG",
+            "projects/Nika",
             "projects/Docq.AI",
             "projects/PDL",
             "projects/OpenInterpreter",
