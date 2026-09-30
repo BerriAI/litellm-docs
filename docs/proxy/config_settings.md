@@ -1431,7 +1431,8 @@ router_settings:
 | PROXY_DB_LOOKUP_MAX_CONCURRENCY | Maximum number of key-object DB fallback lookups and spend-counter reseed lookups the proxy sends to the Prisma query engine at once. Extra lookups wait in the proxy instead of queueing inside the engine's HTTP client, whose per-request bookkeeping grows with the number of queued requests and starves the event loop during cache-miss bursts. Default is 25
 | PROXY_DB_LOOKUP_STALL_WINDOW_SECONDS | How long after a lookup exceeds `PROXY_DB_LOOKUP_DEADLINE_SECONDS` the `/health/readiness` endpoint reports `"db":"stalled"`. Set to 0 to disable. Default is 30
 | MAX_OBJECTS_PER_POLL_CYCLE | Maximum number of managed objects (batches / responses) fetched per polling cycle. Prevents OOM on installs with many stale rows. Default is `50`
-| MANAGED_OBJECT_STALENESS_CUTOFF_DAYS | Managed objects older than this many days in a non-terminal state are marked `stale_expired` at the start of each poll cycle and skipped. Default is `7`
+| MANAGED_OBJECT_STALENESS_CUTOFF_DAYS | Managed objects older than this many days in a non-terminal state are marked `stale_expired` at the start of each poll cycle and skipped. Batches get one last provider retrieval first, so one that finished in time is still priced; the rest are counted in `litellm_check_batch_cost_stale_expired_total`. Default is `7`
+| MANAGED_OBJECT_STALE_RECONCILE_GRACE_DAYS | Days past MANAGED_OBJECT_STALENESS_CUTOFF_DAYS that CheckBatchCost keeps retrying a batch whose final retrieval hit a temporary error or a lagging output file, before marking it stale_expired. Default is 1
 | PROXY_BUDGET_RESCHEDULER_MAX_TIME | Maximum time in seconds to wait before checking database for budget resets. Default is 605
 | PROXY_BUDGET_RESCHEDULER_MIN_TIME | Minimum time in seconds to wait before checking database for budget resets. Default is 597
 | PYTHON_GC_THRESHOLD | GC thresholds ('gen0,gen1,gen2', e.g. '1000,50,50'); defaults to Python’s values.
