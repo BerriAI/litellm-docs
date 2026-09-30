@@ -58,43 +58,16 @@
   gap: 1.1rem;
 }
 
-.intents {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0;
+.switch {
   padding: 0;
   border: 0;
-}
-.intent {
-  position: relative;
-  display: grid;
-  gap: 0.1rem;
-  padding: 0.7rem 0.9rem 0.7rem 2.5rem;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: var(--lite-radius-md, 12px);
+  background: none;
+  color: var(--ifm-link-color);
+  font: inherit;
   cursor: pointer;
 }
-.intent:hover {
-  border-color: var(--ifm-color-primary);
-}
-.intent input {
-  position: absolute;
-  top: 0.95rem;
-  left: 0.95rem;
-  margin: 0;
-  accent-color: var(--ifm-color-primary);
-}
-.intentOn {
-  border-color: var(--ifm-color-primary);
-  background: color-mix(in srgb, var(--ifm-color-primary) 6%, transparent);
-}
-.intentTitle {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-.intentNote {
-  color: var(--ifm-color-emphasis-700);
-  font-size: 0.85rem;
+.switch:hover {
+  text-decoration: underline;
 }
 
 .grid {
@@ -175,15 +148,6 @@ textarea.input {
   min-width: 280px;
   border: 0;
   border-radius: var(--lite-radius-md, 12px);
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 @media (max-width: 560px) {

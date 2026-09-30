@@ -1,43 +1,32 @@
-// The lead scoring and routing that www.litellm.ai/enterprise runs before it
-// submits (the "codex-enterprise-unified-routing" custom code in Webflow).
-// Keep this in step with the website: the Zap and the sales sheet read
-// lead-score, lead-route and lead-routing-reason from every submission.
+// The lead routing that www.litellm.ai/enterprise runs before it submits
+// (the "codex-enterprise-unified-routing" custom code in Webflow). Company
+// size alone picks the route; the Zap and the sales sheet read lead-route and
+// lead-routing-reason, and the route picks the Calendly page. The website
+// also sends a lead score, which is no longer used; the docs leave it blank.
 
 export const CALENDLY = {
   SDR: 'https://calendly.com/varoon-berri/intro-call',
   AE: 'https://calendly.com/d/cx2b-bjm-s77',
 };
 
-const POINTS = {
-  intent: {'30-day-trial': 10, 'talk-to-sales': 20, other: 0},
-  gateway: {
-    'Using LiteLLM OSS today': 20,
-    'Using another or homegrown gateway': 15,
-    'Calling model providers directly': 8,
-    'Still exploring': 0,
+// The docs button that opens the form already says what the reader wants, so
+// the form sets the intent from it and offers a one-line switch.
+export const INTENTS = {
+  'talk-to-sales': {
+    title: 'Talk to sales',
+    lead: 'Pricing, procurement, or rollout. Takes less than a minute.',
+    submit: 'See available times',
+    switchTo: '30-day-trial',
+    switchLabel: 'Want a 30-day trial key instead?',
   },
-  timing: {
-    'Within a month': 20,
-    'In the next 1–3 months': 15,
-    'In the next 3–6 months': 5,
-    'Just gathering information': 0,
-  },
-  size: {
-    '1-49': 0,
-    '50-199': 5,
-    '200-499': 10,
-    '500-999': 25,
-    '1000-4999': 35,
-    '5000-9999': 50,
-    '10000+': 55,
+  '30-day-trial': {
+    title: 'Get a 30-day trial key',
+    lead: 'Evaluate Enterprise in your own environment.',
+    submit: 'Get my trial key',
+    switchTo: 'talk-to-sales',
+    switchLabel: 'Want to talk to sales instead?',
   },
 };
-
-export const INTENTS = [
-  {value: '30-day-trial', title: 'Get a 30-day trial key', note: 'Evaluate Enterprise in your own environment.', submit: 'Get my trial key'},
-  {value: 'talk-to-sales', title: 'Talk to sales', note: 'Discuss pricing, procurement, or rollout.', submit: 'See available times'},
-  {value: 'other', title: 'Something else', note: 'Product, partnership, or general question.', submit: 'Send request'},
-];
 
 export const COMPANY_SIZES = [
   ['1-49', '1–49 employees'],
@@ -58,11 +47,8 @@ function route(size) {
   return {route: 'Sales email follow-up', reason: 'Company size is below 500'};
 }
 
-export function scoreLead({intent, size, stage = '', timing = ''}) {
-  const {route: r, reason} = route(size);
-  const score =
-    (POINTS.intent[intent] || 0) + (POINTS.gateway[stage] || 0) + (POINTS.timing[timing] || 0) + (POINTS.size[size] || 0);
-  return {intent, score, route: r, reason};
+export function routeLead({intent, size}) {
+  return {intent, ...route(size)};
 }
 
 export const meetsSales = (result) => result.route === 'AE' || result.route === 'SDR';
@@ -78,20 +64,14 @@ export function successCopy(result) {
         : 'You will get an email from our team with next steps.',
     };
   }
-  if (result.intent === 'talk-to-sales') {
-    return {
-      heading: call ? 'Thanks, let’s talk.' : 'Thank you for your interest in LiteLLM.',
-      body: call ? 'Choose a time that works for you.' : 'You will get an email from our sales team shortly.',
-    };
-  }
   return {
-    heading: call ? 'Thanks, let’s connect.' : 'Thanks, your request is in.',
-    body: call ? 'Choose a time that works for you.' : 'You will get an email from our team shortly.',
+    heading: call ? 'Thanks, let’s talk.' : 'Thank you for your interest in LiteLLM.',
+    body: call ? 'Choose a time that works for you.' : 'You will get an email from our sales team shortly.',
   };
 }
 
 // Calendly only accepts its utm_* and salesforce_uuid hidden params. The
-// website sends the submission id and routing signals through them so the
+// website sends the submission id and route through them so the
 // Calendly Zap can join a booking to its lead; the docs send the same.
 export function calendlyUrl(result, {name, email, submissionId}) {
   const base = result.route === 'AE' ? CALENDLY.AE : CALENDLY.SDR;
@@ -101,7 +81,6 @@ export function calendlyUrl(result, {name, email, submissionId}) {
   p.set('utm_source', 'litellm-enterprise-form');
   if (submissionId) p.set('utm_term', submissionId);
   p.set('utm_campaign', result.route);
-  p.set('utm_content', String(result.score));
   return `${base}?${p.toString()}`;
 }
 

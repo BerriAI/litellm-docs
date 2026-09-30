@@ -18,7 +18,8 @@ const ENDPOINT = `https://webflow.com/api/v1/form/${SITE_ID}`;
 
 // Every field the website form sends, in its order. The website hides
 // linkedin, current-stage, purchase-timing and how-hear and sends them empty;
-// the docs do the same so each Zap step finds the keys it maps.
+// the docs do the same so each Zap step finds the keys it maps. lead-score
+// is sent blank: the scoring is retired.
 export const FIELD_ORDER = [
   'intent',
   'first-name',

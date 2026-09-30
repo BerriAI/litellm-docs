@@ -9,15 +9,15 @@ import {
   calendlyUrl,
   meetsSales,
   newSubmissionId,
-  scoreLead,
+  routeLead,
   successCopy,
 } from './routing';
 import styles from './styles.module.css';
 
 // The website's Enterprise request form as a dialog on the docs, so a reader
-// never leaves the page to reach sales. Same fields, same scoring and
-// routing, same Webflow form (and so the same Zap), and the same Calendly
-// step for leads routed to a call.
+// never leaves the page to reach sales. Same fields, same routing, same
+// Webflow form (and so the same Zap), and the same Calendly step for leads
+// routed to a call. The button that opened it sets the intent.
 
 const SalesFormContext = createContext({open: () => {}});
 
@@ -36,7 +36,7 @@ function emit(event, props) {
 export function SalesFormProvider({children}) {
   const [request, setRequest] = useState(null);
   const open = useCallback((opts = {}) => {
-    setRequest({intent: opts.intent || 'talk-to-sales', source: opts.source || 'docs', key: Date.now()});
+    setRequest({intent: opts.intent === '30-day-trial' ? '30-day-trial' : 'talk-to-sales', source: opts.source || 'docs', key: Date.now()});
   }, []);
   const close = useCallback(() => setRequest(null), []);
 
@@ -124,24 +124,23 @@ function SalesFormBody({request, onClose}) {
     }
 
     const data = Object.fromEntries(new FormData(form).entries());
-    const scored = scoreLead({intent, size: data['company-size']});
+    const routed = routeLead({intent, size: data['company-size']});
     submissionId.current = submissionId.current || newSubmissionId();
     who.current = {name: data['first-name'], email: data.email, submissionId: submissionId.current};
     const fields = {
       ...data,
       intent,
       'submission-id': submissionId.current,
-      'lead-score': scored.score,
-      'lead-route': scored.route,
-      'lead-routing-reason': scored.reason,
+      'lead-route': routed.route,
+      'lead-routing-reason': routed.reason,
     };
-    const props = {intent, route: scored.route, company_size: data['company-size'], submission_id: submissionId.current, source: request.source};
+    const props = {intent, route: routed.route, company_size: data['company-size'], submission_id: submissionId.current, source: request.source};
 
     setStatus('sending');
     emit('submitted', props);
     try {
       await submitToWebflow(fields);
-      setResult(scored);
+      setResult(routed);
       setStatus('done');
       track('enterprise_request_accepted', {form_location: 'docs', ...props});
     } catch (err) {
@@ -159,12 +158,12 @@ function SalesFormBody({request, onClose}) {
   );
 
   if (status === 'done' && result) {
-    const copy = successCopy(result);
+    const thanks = successCopy(result);
     return (
       <div className={clsx(styles.body, meetsSales(result) && styles.bodyWide)}>
         {close}
-        <h2 id="sf-title" className={styles.title}>{copy.heading}</h2>
-        <p className={styles.lead}>{copy.body}</p>
+        <h2 id="sf-title" className={styles.title}>{thanks.heading}</h2>
+        <p className={styles.lead}>{thanks.body}</p>
         {meetsSales(result) && (
           <iframe
             className={styles.calendar}
@@ -176,33 +175,25 @@ function SalesFormBody({request, onClose}) {
     );
   }
 
-  const chosen = INTENTS.find((i) => i.value === intent) || INTENTS[1];
+  const copy = INTENTS[intent];
   const big = size === ENTERPRISE_SIZE;
+  const switchIntent = () => {
+    setIntent(copy.switchTo);
+    emit('intent_switched', {from: intent, to: copy.switchTo, source: request.source});
+  };
 
   return (
     <div className={styles.body}>
       {close}
-      <h2 id="sf-title" className={styles.title}>How can we help?</h2>
-      <p className={styles.lead}>Choose what you are here for. The form takes less than a minute.</p>
+      <h2 id="sf-title" className={styles.title}>{copy.title}</h2>
+      <p className={styles.lead}>
+        {copy.lead}{' '}
+        <button type="button" className={styles.switch} onClick={switchIntent}>
+          {copy.switchLabel}
+        </button>
+      </p>
 
       <form className={styles.form} onSubmit={onSubmit} onInput={onInput} noValidate>
-        <fieldset className={styles.intents}>
-          <legend className={styles.srOnly}>Request type</legend>
-          {INTENTS.map((i) => (
-            <label key={i.value} className={clsx(styles.intent, intent === i.value && styles.intentOn)}>
-              <input
-                type="radio"
-                name="intent"
-                value={i.value}
-                checked={intent === i.value}
-                onChange={() => setIntent(i.value)}
-              />
-              <span className={styles.intentTitle}>{i.title}</span>
-              <span className={styles.intentNote}>{i.note}</span>
-            </label>
-          ))}
-        </fieldset>
-
         <div className={styles.grid}>
           <Field label="Name">
             <input className={styles.input} type="text" name="first-name" autoComplete="name" required />
@@ -262,7 +253,7 @@ function SalesFormBody({request, onClose}) {
 
         <div className={styles.actions}>
           <button type="submit" className={styles.submit} disabled={status === 'sending'}>
-            {status === 'sending' ? 'Please wait...' : chosen.submit}
+            {status === 'sending' ? 'Please wait...' : copy.submit}
           </button>
         </div>
       </form>
