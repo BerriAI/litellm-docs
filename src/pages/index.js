@@ -3,6 +3,7 @@ import Layout from '@theme/Layout';
 import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
 import {AgentBand, PathFinder, SalesBand, Tiles, UseCases} from '@site/src/components/Conversion';
+import HeroTerminal from '@site/src/components/Conversion/HeroTerminal';
 import styles from './index.module.css';
 
 const POPULAR = [
@@ -24,11 +25,11 @@ export default function Home() {
       </Head>
       <main className={styles.page}>
         <header className={styles.hero}>
-          <h1 className={styles.title}>The most widely used open-source AI gateway.</h1>
-          <p className={styles.lead}>
-            One API for every model, in your Python code or behind your own gateway. Call OpenAI, Anthropic, Bedrock, Gemini Enterprise Agent
-            Platform, and 100+ other providers in the OpenAI format, with keys, budgets, spend tracking, and fallbacks built in.
-          </p>
+          <div className={styles.heroText}>
+            <h1 className={styles.title}>The most widely used open&#8209;source AI gateway.</h1>
+            <p className={styles.lead}>One API for 100+ LLM providers, with keys, budgets, and spend tracking built in.</p>
+          </div>
+          <HeroTerminal source="docs-home-hero" />
         </header>
 
         <PathFinder source="docs-home" />
