@@ -17,7 +17,7 @@ class Harness(Enum):
     DEEPAGENTS = "deepagents"
 ```
 
-`Harness` is a plain `Enum`. A `StrEnum` member would compare equal to its string and let `"codex"` through, so every public function checks `isinstance(harness, Harness)` and raises `TypeError` otherwise.
+`Harness` is a plain `Enum`. A `StrEnum` member would compare equal to its string and let `"codex"` through, so `litellm.agent()` and the other entry points check `isinstance(harness, Harness)` and raise `TypeError` otherwise.
 
 ## Capabilities
 
@@ -36,7 +36,7 @@ class Harness(Enum):
 `permissions="ask"` with interactive approval isn't available on the CLI harnesses in this release. Asking a harness for something it doesn't support raises `CapabilityUnsupported` before the runtime starts, and it never falls back to a looser mode. You can read the same table in code.
 
 ```python
-caps = litellm.harness.capabilities(Harness.CODEX)
+caps = litellm.agent_capabilities(Harness.CODEX)
 caps.tool_filtering     # False
 caps.permission_modes   # frozenset({'read-only', 'full'})
 ```
@@ -55,9 +55,9 @@ The runtime binaries aren't installed for you in this release. Put them in your 
 Every harness takes a typed options class for settings that only make sense for that runtime. Passing another harness's options raises `OptionsMismatch`.
 
 ```python
-from litellm.harness import Harness, CodexOptions
+from litellm import Harness, CodexOptions
 
-litellm.harness.run(
+litellm.agent(
     Harness.CODEX, task, sandbox=box,
     options=CodexOptions(reasoning_effort="high"),
 )
