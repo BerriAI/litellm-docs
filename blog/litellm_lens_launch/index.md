@@ -25,3 +25,5 @@ import { LensHero } from './LensHero';
 </Head>
 
 <LensHero />
+
+{/* truncate */}
