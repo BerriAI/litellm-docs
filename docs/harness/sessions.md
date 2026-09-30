@@ -4,19 +4,19 @@ title: Sessions
 
 # Sessions
 
-A session keeps the runtime's working directory and native history alive between turns. `run()` and `stream()` create a session for one turn and close it afterwards. Use `session()` when you need more than one turn.
+A session keeps the runtime's working directory and native history alive between turns. `litellm.agent()` creates a session for one turn and closes it afterwards. Use `litellm.agent_session()` when you need more than one turn.
 
 ## Multi-turn
 
 ```python
-with litellm.harness.session(Harness.CODEX, sandbox=box, model="coder") as s:
+with litellm.agent_session(Harness.CODEX, sandbox=box, model="litellm_proxy/coder") as s:
     s.run("Install dev deps.")
     s.run("Run the router unit tests and summarize failures.")
     r = s.run("Fix the first failure. Keep the diff small.")
     print(s.cost)  # running total across all turns
 ```
 
-Options you pass to `session()` apply to every turn.
+Options you pass to `agent_session()` apply to every turn.
 
 ## Ending a session
 
@@ -33,7 +33,8 @@ Leaving a `with` block calls `close()` unless you already called `detach()` or `
 `State` holds the harness, the runtime's own session id, the working directory and the model. It never holds credentials. `state.dumps()` gives you bytes to store anywhere.
 
 ```python title="app.py"
-from litellm.harness import Harness, State
+from litellm import Harness
+from litellm.harness import State
 
 @app.post("/chat/{chat_id}")
 async def chat(chat_id: str, msg: str):
@@ -41,9 +42,9 @@ async def chat(chat_id: str, msg: str):
     box = sandbox.docker("my-agents:latest", name=f"chat-{chat_id}")
 
     if raw:
-        s = await litellm.harness.aresume(State.loads(raw), sandbox=box)
+        s = await litellm.aagent_resume(State.loads(raw), sandbox=box)
     else:
-        s = await litellm.harness.asession(Harness.CLAUDE_CODE, sandbox=box, model="coder")
+        s = await litellm.aagent_session(Harness.CLAUDE_CODE, sandbox=box, model="litellm_proxy/coder")
 
     async with s:
         r = await s.arun(msg)
@@ -51,7 +52,7 @@ async def chat(chat_id: str, msg: str):
     return {"text": r.text, "cost": r.cost}
 ```
 
-`resume()` raises `StateIncompatible` when the state came from a different harness or can't be read.
+`agent_resume()` raises `StateIncompatible` when the state came from a different harness or can't be read.
 
 ## History
 
