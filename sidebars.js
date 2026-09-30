@@ -112,6 +112,7 @@ const sidebars = {
             "observability/generic_api",
             "observability/raw_request_response",
             "observability/scrub_data",
+            "observability/tttps_provenance",
           ],
         },
       ],
