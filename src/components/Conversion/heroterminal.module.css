@@ -16,7 +16,11 @@
   box-shadow: 0 24px 50px -30px rgba(5, 8, 40, 0.55);
 }
 :global([data-theme='dark']) .term {
+  --ht-bg: #161b22;
   --ht-line: rgba(255, 255, 255, 0.14);
+}
+:global([data-theme='dark']) .ps {
+  color: var(--ifm-color-primary);
 }
 
 .bar {
