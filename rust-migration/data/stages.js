@@ -1,10 +1,3 @@
-interface Stage {
-  id: string;
-  label: string;
-  description: string;
-  switch?: {value: string; effect: string};
-}
-
 // Rollout stages in order, matching `Rollout` in litellm/rust_bridge/configuration.py.
 // `switch` is the `LITELLM_RUST` value that flips a stage's default, for the
 // two stages that honor it.
@@ -23,6 +16,4 @@ export const STAGES = [
     switch: {value: '0', effect: 'Stay on Python'},
   },
   {id: 'rustRequired', label: 'Rust only', description: 'Always runs on Rust. The Python path is gone and the switch has no effect.'},
-] as const satisfies readonly Stage[];
-
-export type StageId = (typeof STAGES)[number]['id'];
+];

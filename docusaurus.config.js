@@ -93,7 +93,6 @@ const config = {
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
     require('./plugins/optimize-images'),
-    require('./plugins/rust-migration-posts'),
     [
       '@docusaurus/plugin-client-redirects',
       {

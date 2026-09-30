@@ -1,5 +1,3 @@
-import type {ProviderId} from './providers';
-
 // Each area of work and its units, where a unit is one provider an API must
 // serve from Rust. A string unit is a litellm provider id from PROVIDERS; work
 // that is not a provider names itself as `{id, text}`. Provider lists follow
@@ -13,20 +11,6 @@ import type {ProviderId} from './providers';
 // it. Units roll out through STAGES by default. A unit marked `task: true` has
 // no rollout of its own and is simply done or not, like the cloud auth that
 // many providers and APIs share.
-interface UnitDeclaration {
-  id: string;
-  text: string;
-  task?: boolean;
-  units?: readonly (ProviderId | UnitDeclaration)[];
-}
-
-interface AreaDeclaration {
-  id: string;
-  text: string;
-  groundwork?: boolean;
-  units: readonly (ProviderId | UnitDeclaration)[];
-}
-
 export const AREAS = [
   {
     id: 'foundation',
@@ -87,6 +71,7 @@ export const AREAS = [
       'anthropic', 'bedrock', 'vertex_ai', 'azure_ai', 'github_copilot', 'deepseek', 'minimax', 'openai', 'azure',
       'gemini', 'mistral', 'groq', 'xai', 'together_ai', 'fireworks_ai', 'openrouter', 'databricks', 'ollama',
       'hosted_vllm', 'openai_like',
+      {id: 'adapter', text: 'Chat completions to Responses adapter'},
     ],
   },
   {
@@ -139,20 +124,4 @@ export const AREAS = [
     text: 'MCP',
     units: [{id: 'gateway', text: 'MCP gateway'}],
   },
-] as const satisfies readonly AreaDeclaration[];
-
-export type AreaId = (typeof AREAS)[number]['id'];
-
-// The ids of the units at the bottom of a tree, each relative to `Prefix`.
-type LeafIds<Unit, Prefix extends string = ''> = Unit extends string
-  ? Join<Prefix, Unit>
-  : Unit extends {id: infer Id extends string; units: readonly (infer Child)[]}
-    ? LeafIds<Child, Join<Prefix, Id>>
-    : Unit extends {id: infer Id extends string}
-      ? Join<Prefix, Id>
-      : never;
-
-type Join<Prefix extends string, Id extends string> = Prefix extends '' ? Id : `${Prefix}/${Id}`;
-
-// A unit's id inside its area, like `azure_ai` under `ocr` or `auth/aws` under `foundation`.
-export type UnitId<Area extends AreaId> = LeafIds<Extract<(typeof AREAS)[number], {id: Area}>['units'][number]>;
+];
