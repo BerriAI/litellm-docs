@@ -11,13 +11,13 @@ All exceptions below except `TypeError` and `ValueError` subclass `litellm.harne
 | Exception | Raised when | Raised at |
 |---|---|---|
 | `TypeError` | `harness` isn't a `Harness` member. The message names the member you probably meant. | call |
-| `ValueError` | a gateway is configured with an empty base URL or key | call |
+| `ValueError` | a `litellm_proxy/` model is used without a gateway base URL or key | call |
 | `CapabilityUnsupported` | the harness can't do what you asked, for example `permissions="edit"` on Codex or `tools=` on Claude Code | before the runtime starts |
 | `OptionsMismatch` | options for a different harness, or a native config key LiteLLM manages | call |
 | `HarnessInstallFailed` | the runtime binary isn't on the sandbox's `PATH`, or Deep Agents' packages aren't installed | session start |
 | `SandboxError` | the sandbox failed to start, run a command or reach the host | any time |
 | `SessionClosed` | a turn on a session that is closed or detached | turn start |
-| `StateIncompatible` | `resume()` with a state from a different harness or an unreadable version | resume |
+| `StateIncompatible` | `agent_resume()` with a state from a different harness or an unreadable version | resume |
 | `OutputInvalid` | the final answer didn't validate against `output=` | turn end |
 
 ## Stop reasons
