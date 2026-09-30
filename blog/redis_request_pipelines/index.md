@@ -1,6 +1,6 @@
 ---
 slug: redis-request-pipelines
-title: "How we cut the LiteLLM proxy's Redis round trips per request from 22 to 8"
+title: "How we cut LiteLLM's Redis round trips per request by 64%"
 date: 2026-10-01T09:00:00
 authors:
   - yassin
