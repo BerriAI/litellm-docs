@@ -13,7 +13,7 @@ sidebar_label: Deep Agents
 pip install litellm deepagents langchain-litellm
 ```
 
-Deep Agents needs Python 3.11 or newer and doesn't need `starlette` or `uvicorn`. If `deepagents` or `langchain-litellm` is missing, the call raises `HarnessInstallFailed` with the install command.
+Deep Agents needs Python 3.11 or newer and doesn't need `starlette` or `uvicorn`. If `deepagents` or `langchain-litellm` is missing, the call raises `HarnessInstallFailed` with the install command. {/* keep-python-version */}
 
 ## Usage
 
@@ -28,7 +28,7 @@ def lookup_owner(path: str) -> str:
 result = litellm.agent(
     Harness.DEEPAGENTS,
     "Find the three flakiest tests, write NOTES.md, and name an owner for each.",
-    sandbox=sandbox.docker("python:3.12", mounts={"./repo": "/workspace"}),
+    sandbox=sandbox.docker("python:{{python_version}}", mounts={"./repo": "/workspace"}),
     model="litellm_proxy/claude",
     tools=[lookup_owner],
     permissions="edit",
