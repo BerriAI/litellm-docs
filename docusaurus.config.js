@@ -433,7 +433,8 @@ const config = {
       image: 'img/docusaurus-social-card.png',
       docs: {
         sidebar: {
-          hideable: true,
+          // No collapse-sidebar toggle at the bottom of the sidebar
+          hideable: false,
         },
       },
       navbar: {
@@ -524,7 +525,6 @@ const config = {
             items: [
               {label: 'Blog', to: '/blog'},
               {label: 'Changelog', to: '/release_notes'},
-              {label: 'Agent resources', to: '/docs/agent_resources'},
               {label: 'llms.txt', href: 'https://docs.litellm.ai/llms.txt'},
               {label: 'Trust Center', href: 'https://trust.litellm.ai/'},
             ],
