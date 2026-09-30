@@ -148,7 +148,12 @@ function Lane({name, count, trips, after}) {
   return (
     <div className={after ? `${styles.lane} ${styles.laneAfter}` : styles.lane}>
       <div className={styles.laneLabel}>
-        <span className={styles.laneName}>{name}</span>
+        <div className={styles.laneHeading}>
+          <span className={styles.laneName}>{name}</span>
+          <span className={styles.laneTotal}>
+            <strong>{trips.filter(trip => !trip.provider).length}</strong> round trips
+          </span>
+        </div>
         <span className={styles.laneCount}>{count}</span>
       </div>
       <ol className={styles.trips} aria-label={`${name} Redis round trips`}>
