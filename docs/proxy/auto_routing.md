@@ -614,7 +614,7 @@ For example, a baseline-identical request costing $0.10 has $0.10 baseline cost,
 
 ## Compression
 
-From v1.101.0 an auto router can name a compression guardrail for each of the two hops a routed request makes: the classifier call that decides the tier, and the call to the model it routes to. Both fields sit on the marker's `litellm_params` next to `complexity_router_default_model`, take the name of a [Headroom](./headroom.md) or [Compresr](./guardrails/compresr.md) guardrail, and accept `none`, case-insensitive, for a hop that should not be compressed at all.
+From v1.101.0 an auto router can name a compression guardrail for each of the two hops a routed request makes: the classifier call that decides the tier, and the call to the model it routes to. Both fields sit on the marker's `litellm_params` next to `complexity_router_default_model`, take the name of a [Headroom](./headroom.md), [Compresr](./guardrails/compresr.md), or [TypeSafe](./guardrails/typesafe.md) guardrail, and accept `none`, case-insensitive, for a hop that should not be compressed at all.
 
 ```yaml title="config.yaml"
 - model_name: smart-router
