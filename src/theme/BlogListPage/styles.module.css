@@ -22,7 +22,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #0ea5e9;
+  color: var(--ifm-color-primary);
   margin: 0 0 0.5rem;
 }
 
@@ -166,7 +166,7 @@
 
 .searchInput:focus-visible {
   outline: none;
-  border-color: #0ea5e9;
+  border-color: var(--ifm-color-primary);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
 }
 
@@ -204,8 +204,8 @@
 }
 
 .tabActive {
-  color: #0ea5e9;
-  border-bottom-color: #0ea5e9;
+  color: var(--ifm-color-primary);
+  border-bottom-color: var(--ifm-color-primary);
 }
 
 .emptyMsg {
@@ -240,7 +240,7 @@
 }
 
 .titleLink:hover .title {
-  color: #0ea5e9;
+  color: var(--ifm-color-primary);
 }
 
 .desc {
@@ -268,8 +268,8 @@
 }
 
 .authorLink:hover {
-  color: #0ea5e9;
-  text-decoration-color: #0ea5e9;
+  color: var(--ifm-color-primary);
+  text-decoration-color: var(--ifm-color-primary);
 }
 
 .authorName {
@@ -306,7 +306,7 @@
 }
 
 .pageLink:hover {
-  color: #0ea5e9;
+  color: var(--ifm-color-primary);
 }
 
 /* ── Mobile (≤640px) ──────────────────────────────────────────────────── */
@@ -433,7 +433,7 @@
 }
 
 [data-theme='dark'] .pageLink:hover {
-  color: #38bdf8;
+  color: var(--ifm-color-primary);
 }
 
 [data-theme='dark'] .meta {
@@ -456,7 +456,7 @@
 }
 
 [data-theme='dark'] .searchInput:focus-visible {
-  border-color: #38bdf8;
+  border-color: var(--ifm-color-primary);
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 
@@ -477,6 +477,6 @@
 }
 
 [data-theme='dark'] .tabActive {
-  color: #38bdf8;
-  border-bottom-color: #38bdf8;
+  color: var(--ifm-color-primary);
+  border-bottom-color: var(--ifm-color-primary);
 }
