@@ -985,6 +985,7 @@ router_settings:
 | DIRECT_URL | Direct URL for service endpoint
 | DISABLE_ADMIN_UI | Toggle to disable the admin UI
 | LITELLM_HIDE_DEFAULT_CREDENTIALS_HINT | Flag to hide the "Default Credentials" info card on the admin UI login page (`/ui/login` and `/fallback/login`). Useful when UI credentials are managed via `UI_USERNAME` / `UI_PASSWORD` or SSO and the hardcoded hint about `admin` + `MASTER_KEY` becomes misleading or is flagged by security scanners. **Default is false**
+| LITELLM_HIDE_SSO_LOGIN_NOTICE | Flag to hide the "Single Sign-On (SSO) is enabled" notice on the admin UI login page (`/ui/login`) that explains auto-redirect-to-SSO is opt-in. Can also be set via `general_settings.hide_sso_login_notice` in `config.yaml`. **Default is false**
 | LITELLM_ENABLE_HSTS | Flag to send the `Strict-Transport-Security` response header on proxy and UI responses. Only takes effect for deployments served over HTTPS. **Default is false**
 | DISABLE_AIOHTTP_TRANSPORT | Flag to disable aiohttp transport. When this is set to True, litellm will use httpx instead of aiohttp. **Default is False**
 | DISABLE_AIOHTTP_TRUST_ENV | Flag to stop LiteLLM from resolving `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` for requests on the aiohttp transport. By default these env vars are honored without any extra setting. Has no effect on the httpx transport (`DISABLE_AIOHTTP_TRANSPORT=True`), which always honors them. **Default is False**
