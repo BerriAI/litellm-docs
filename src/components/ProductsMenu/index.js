@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
 import styles from './styles.module.css';
@@ -36,8 +36,15 @@ const ICONS = {
     <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
   </>),
   lens: icon(<>
-    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
-    <circle cx="12" cy="12" r="3" />
+    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
+    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
+    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+    <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+    <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
+    <path d="M6 18a4 4 0 0 1-1.967-.516" />
+    <path d="M19.967 17.484A4 4 0 0 1 18 18" />
   </>),
   logs: icon(<>
     <path d="M3 3v18h18" />
@@ -83,9 +90,9 @@ function currentItem(location) {
   return ALL_ITEMS.find((item) => item.id === (hit ? hit[0] : 'home'));
 }
 
-function MenuLink({item, active}) {
+function MenuLink({item, active, onNavigate}) {
   return (
-    <Link className={`${styles.item} ${active ? styles.itemActive : ''}`} to={item.to}>
+    <Link className={`${styles.item} ${active ? styles.itemActive : ''}`} to={item.to} onClick={onNavigate}>
       <span className={styles.icon}>{ICONS[item.icon]}</span>
       <span className={styles.text}>
         <span className={styles.title}>{item.title}</span>
@@ -104,6 +111,10 @@ function MenuLink({item, active}) {
 export default function ProductsMenu({mobile}) {
   const location = useLocation();
   const current = currentItem(location);
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  useEffect(close, [location.pathname, location.hash]);
 
   if (mobile) {
     return (
@@ -123,8 +134,17 @@ export default function ProductsMenu({mobile}) {
   }
 
   return (
-    <div className={styles.root}>
-      <button type="button" className={styles.trigger} aria-haspopup="true">
+    <div
+      className={`${styles.root} ${open ? styles.open : ''}`}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={close}
+      onKeyDown={(e) => e.key === 'Escape' && close()}>
+      <button
+        type="button"
+        className={styles.trigger}
+        aria-haspopup="true"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}>
         <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
         {current.title}
         <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
@@ -134,13 +154,13 @@ export default function ProductsMenu({mobile}) {
       </button>
       <div className={styles.panel} role="menu">
         <div className={styles.home}>
-          <MenuLink item={HOME} active={current.id === HOME.id} />
+          <MenuLink item={HOME} active={current.id === HOME.id} onNavigate={close} />
         </div>
         {COLUMNS.map((col) => (
           <div key={col.heading} className={styles.column}>
             <div className={styles.heading}>{col.heading}</div>
             {col.items.map((item) => (
-              <MenuLink key={item.id} item={item} active={current.id === item.id} />
+              <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
             ))}
           </div>
         ))}
