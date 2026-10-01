@@ -19,7 +19,7 @@
 }
 
 .trigger:hover,
-.root:focus-within .trigger {
+.open .trigger {
   border-color: var(--aurora-accent-line, #d3d8f3);
 }
 
@@ -36,8 +36,7 @@
   transition: transform 0.15s ease;
 }
 
-.root:hover .chevron,
-.root:focus-within .chevron {
+.open .chevron {
   transform: rotate(180deg);
 }
 
@@ -69,8 +68,7 @@
   height: 14px;
 }
 
-.root:hover .panel,
-.root:focus-within .panel {
+.open .panel {
   display: grid;
   animation: panelIn 0.14s ease-out;
 }
