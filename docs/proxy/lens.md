@@ -275,7 +275,7 @@ Sign in as a proxy administrator and open **Lens > Investigations** under **Obse
 
 Run the Docker command on a server that can reach your LiteLLM deployment. Keep the command private because it contains the worker token. Wait for **Worker connected**. Investigation creation unlocks when the worker is ready.
 
-![Lens worker setup with an analysis model and a monthly limit.](/img/lens/worker-setup.jpg)
+![Lens worker setup with an analysis model and a monthly limit.](/img/lens/worker-setup.png)
 
 This worker runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations and sends the results back. It calls your chosen model through LiteLLM and keeps running when you close the dashboard.
 
@@ -301,7 +301,7 @@ Find repeated searches that add no new information.
 
 After setup, you can review these under **Criteria** and change them through **Edit investigation** in the actions menu.
 
-![Expected behavior and individual checks for an investigation.](/img/lens/investigation-expectations.jpg)
+![Expected behavior and individual checks for an investigation.](/img/lens/investigation-expectations.png)
 
 ### Start the run
 
@@ -321,7 +321,7 @@ Open **Findings** when the investigation finishes. **Needs attention** shows pro
 
 Open a finding to read what happened and the suggested next step. Expand **Evidence by run** to read the quotes. Click **Open original step** to see the cited step in its trace.
 
-![Investigation findings with supporting runs.](/img/lens/investigation-findings.jpg)
+![An example finding with a suggested next step and supporting evidence.](/img/lens/investigation-findings.png)
 
 Use **History** to return to a previous run and its findings, settings, progress, total duration, and cost. Duration includes any wait for a worker. **Traces** shows the activity selected for that run; this tab is called **Requests** or **Traces & requests** when those activity types are selected.
 
