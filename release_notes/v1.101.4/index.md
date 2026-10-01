@@ -53,6 +53,12 @@ There are no new database migrations or breaking changes on top of [`v1.101.3`](
 
 :::
 
+:::warning `lite` CLI users must log in again
+
+Applies if you are upgrading from a release older than `v1.101.3`. After upgrading the proxy, every `lite` CLI user has to run `lite login` once more. Until they do, the CLI keeps sending its old session token and its requests to the proxy fail
+
+:::
+
 `v1.101.4` is a patch release on top of [`v1.101.3`](https://github.com/BerriAI/litellm/releases/tag/v1.101.3). It lets the Straiker guardrail use v3 platform keys and stops a shared `api_version` default from breaking Azure Content Safety guardrails. The `v1.101.4` tag points at [`f471923`](https://github.com/BerriAI/litellm/commit/f4719232112d87f9f815f37120f916c42a37a30e)
 
 ## Straiker guardrail supports v3 platform keys

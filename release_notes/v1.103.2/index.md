@@ -53,6 +53,12 @@ There are no new database migrations or breaking changes on top of [`v1.103.1`](
 
 :::
 
+:::warning `lite` CLI users must log in again
+
+Applies if you are upgrading from a release older than `v1.103.1`. After upgrading the proxy, every `lite` CLI user has to run `lite login` once more. Until they do, the CLI keeps sending its old session token and its requests to the proxy fail
+
+:::
+
 `v1.103.2` is a patch release on top of [`v1.103.1`](https://github.com/BerriAI/litellm/releases/tag/v1.103.1). It brings Claude Code auto mode through the gateway, attributes CLI session spend to the user behind it, and restores the pass-through endpoint handling that `v1.103.0` changed. The `v1.103.2` tag points at [`f69b210`](https://github.com/BerriAI/litellm/commit/f69b2103dfc0f7a41f65555fd66df05274584e5a)
 
 ## Claude Code auto mode works through the gateway

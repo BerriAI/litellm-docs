@@ -53,6 +53,12 @@ This release is published as [`ghcr.io/berriai/litellm:v1.101.3`](https://github
 
 :::
 
+:::warning `lite` CLI users must log in again
+
+After upgrading the proxy, every `lite` CLI user has to run `lite login` once more. Until they do, the CLI keeps sending its old session token and its requests to the proxy fail
+
+:::
+
 `v1.101.3` is a patch release on top of [`v1.101.2`](https://github.com/BerriAI/litellm/releases/tag/v1.101.2). It carries one change: the session tokens the Admin UI and the `lite` CLI receive after sign-in now use their own encryption context and a header-safe format. Both the Docker image and the PyPI package were built from [`1b6ee73`](https://github.com/BerriAI/litellm/commit/1b6ee737c96c346430b04f36827fbe64935328df)
 
 ## UI and CLI session tokens get their own format
