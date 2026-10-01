@@ -32,6 +32,12 @@ const ICONS = {
     <circle cx="19" cy="19" r="2.2" />
     <path d="M12 7.2v4.3M12 11.5l-5.6 5.4M12 11.5l5.6 5.4" />
   </>),
+  router: icon(<>
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="19" cy="5" r="2" />
+    <circle cx="19" cy="19" r="2" />
+    <path d="M7 12h3c2.5 0 3-7 7-7M10 12c3 0 3.5 7 7 7" />
+  </>),
   sdk: icon(<>
     <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
   </>),
@@ -61,6 +67,7 @@ const COLUMNS = [
       {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/proxy/docker_quick_start'},
       {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
       {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
+      {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
       {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/#litellm-python-sdk'},
     ],
   },
@@ -82,6 +89,7 @@ const SECTION_MATCHERS = [
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
   ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
   ['sdk', ({hash}) => hash === '#litellm-python-sdk'],
+  ['router', ({pathname}) => pathname.startsWith('/docs/auto_router')],
   ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy')],
 ];
 
