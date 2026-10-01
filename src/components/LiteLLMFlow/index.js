@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import {PROMPTS} from '../Conversion/content';
+import {GATEWAY_COMPOSE, PROMPTS} from '../Conversion/content';
 import {IconAgent, IconCheck} from '../Conversion/icons';
 import {track, useCopy} from '../Conversion/shared';
 import styles from './styles.module.css';
@@ -56,6 +56,7 @@ export default function LiteLLMFlow() {
   const ref = useRef(null);
   const [lines, setLines] = useState({w: 0, h: 0, d: []});
   const [copied, copy] = useCopy();
+  const [hubCopied, copyHub] = useCopy(2200);
   const integration = useBaseUrl('/img/integrations/');
   const monoBlue = useBaseUrl('/img/brand/litellm-monogram-blue.svg');
   const monoWhite = useBaseUrl('/img/brand/litellm-monogram-white.svg');
@@ -111,11 +112,24 @@ export default function LiteLLMFlow() {
         </div>
 
         <div className={styles.hubWrap}>
-          <div className={styles.hub} data-hub="">
+          {/* Clicking the logo copies the three commands that start the gateway */}
+          <button
+            type="button"
+            className={styles.hub}
+            data-hub=""
+            title="Copy the command that starts the LiteLLM Gateway"
+            aria-label={hubCopied ? 'Start command copied' : 'Copy the command that starts the LiteLLM Gateway'}
+            onClick={() => {
+              copyHub(GATEWAY_COMPOSE);
+              track('docs_install_copied', {kind: 'gateway', source: 'docs-index-figure'});
+            }}>
             <img className={styles.monoLight} src={monoBlue} alt="" width="52" height="52" />
             <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
             <span className={styles.hubName}>LiteLLM</span>
-          </div>
+            <span className={hubCopied ? `${styles.hubHint} ${styles.hubHintOn}` : styles.hubHint} aria-live="polite">
+              {hubCopied ? 'Start command copied' : 'Click to copy start command'}
+            </span>
+          </button>
         </div>
 
         <div className={styles.dests}>
@@ -149,7 +163,7 @@ export default function LiteLLMFlow() {
             copy(PROMPTS.gateway.text);
             track('docs_agent_prompt_copied', {prompt: 'gateway', source: 'docs-index-figure'});
           }}>
-          {copied ? <IconCheck size={15} /> : <IconAgent size={15} />}
+          {copied ? <IconCheck size={13} /> : <IconAgent size={13} />}
           {copied ? 'Copied' : 'Copy agent prompt'}
         </button>
         <Link className={styles.link} to="/docs/proxy/docker_quick_start">

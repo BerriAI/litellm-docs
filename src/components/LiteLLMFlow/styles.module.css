@@ -112,6 +112,36 @@
   background: var(--fl-card);
   box-shadow: 0 16px 36px -28px rgba(20, 24, 40, 0.35);
 }
+button.hub {
+  position: relative;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+button.hub:hover,
+button.hub:focus-visible {
+  border-color: var(--ifm-color-primary);
+  outline: none;
+}
+.hubHint {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  font: 500 11px var(--ifm-font-family-monospace);
+  color: var(--fl-mute);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+button.hub:hover .hubHint,
+button.hub:focus-visible .hubHint,
+.hubHintOn {
+  opacity: 1;
+}
+.hubHintOn {
+  color: var(--ifm-color-success-dark, #1a7f37);
+}
 .hubName {
   font-size: 15px;
   font-weight: 650;
@@ -159,28 +189,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem 1.25rem;
-  margin: 0 0 2rem;
+  gap: 0.4rem 1rem;
+  margin: -0.25rem 0 2rem;
 }
 .promptBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.85rem;
-  border: 1px solid var(--ifm-color-emphasis-300);
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: var(--lite-radius-sm, 6px);
-  background: var(--ifm-background-surface-color);
-  color: var(--ifm-font-color-base);
-  font: 600 0.9rem var(--ifm-font-family-base);
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  font: 500 0.8rem var(--ifm-font-family-base);
   cursor: pointer;
 }
 .promptBtn:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
+  border-color: var(--ifm-color-emphasis-400);
+  color: var(--ifm-font-color-base);
 }
 .link {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-700);
+}
+.link:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
 }
 
 /* Phones: the logo and what it reaches; the callers and lines drop away */
@@ -193,6 +228,9 @@
   .callers,
   .lines {
     display: none;
+  }
+  .hubWrap {
+    padding-bottom: 18px;
   }
   .dests {
     flex-direction: row;
