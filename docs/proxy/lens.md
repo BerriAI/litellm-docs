@@ -147,22 +147,22 @@ Proxy administrators can read all traces. Team keys can read their team's traces
 
 ## Lens API {#use-the-api}
 
-Your agents can start Lens investigations and read findings through the same API as the dashboard. These endpoints are on your existing LiteLLM proxy, under `/engine`:
+Your agents can start Lens investigations and read findings through the same API as the dashboard. These endpoints are on your existing LiteLLM proxy, under `/lens`:
 
 | Action | Endpoint |
 | --- | --- |
-| Preview matching runs and sample size | `POST /engine/preview/sample` |
-| List lenses and their latest state | `GET /engine` |
-| Read a lens and its findings | `GET /engine/{id}` |
-| Update the saved settings | `PUT /engine/{id}` |
-| Create a lens and start its first investigation | `POST /engine` |
-| Run again with the saved settings | `POST /engine/{id}/runs` with `{}` |
-| Run once with different settings or selected runs | `POST /engine/{id}/runs` with a `settings` override |
-| List previous investigations | `GET /engine/{id}/runs` |
-| Get an investigation's progress, findings, and selected runs | `GET /engine/{id}/runs/{run_id}` |
-| Read supporting trace content | `GET /engine/{id}/executions/{execution_id}` |
-| Cancel the active investigation | `POST /engine/{id}/cancel` |
-| Mark a finding as expected and explain why | `PATCH /engine/{id}/findings/{finding_id}` |
+| Preview matching runs and sample size | `POST /lens/preview/sample` |
+| List lenses and their latest state | `GET /lens` |
+| Read a lens and its findings | `GET /lens/{id}` |
+| Update the saved settings | `PUT /lens/{id}` |
+| Create a lens and start its first investigation | `POST /lens` |
+| Run again with the saved settings | `POST /lens/{id}/runs` with `{}` |
+| Run once with different settings or selected runs | `POST /lens/{id}/runs` with a `settings` override |
+| List previous investigations | `GET /lens/{id}/runs` |
+| Get an investigation's progress, findings, and selected runs | `GET /lens/{id}/runs/{run_id}` |
+| Read supporting trace content | `GET /lens/{id}/executions/{execution_id}` |
+| Cancel the active investigation | `POST /lens/{id}/cancel` |
+| Mark a finding as expected and explain why | `PATCH /lens/{id}/findings/{finding_id}` |
 
 An agent follows the same flow as the UI: preview the matching runs, create or start an investigation, check its progress, then read the findings. Scheduling is part of the saved settings. Run history returns 50 investigations per page; pass `offset=50` for the next page. To mark a finding as expected, send `{"status":"dismissed","reason":"Why this behavior is acceptable"}` to its feedback endpoint.
 
@@ -198,15 +198,15 @@ export LITELLM_API_KEY="<proxy-admin-key>"
 jq '{settings: .}' lens.json | curl -fsS \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d @- "$LITELLM_URL/engine/preview/sample"
+  -d @- "$LITELLM_URL/lens/preview/sample"
 
 result=$(curl -fsS -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" -d @lens.json "$LITELLM_URL/engine")
+  -H "Content-Type: application/json" -d @lens.json "$LITELLM_URL/lens")
 lens_id=$(echo "$result" | jq -r '.id')
 run_id=$(echo "$result" | jq -r '.jobs[0].id')
 
 curl -fsS -H "Authorization: Bearer $LITELLM_API_KEY" \
-  "$LITELLM_URL/engine/$lens_id/runs/$run_id" \
+  "$LITELLM_URL/lens/$lens_id/runs/$run_id" \
   | jq '{status, stage, coverage, cost, findings}'
 ```
 
@@ -215,12 +215,18 @@ Repeat the last command to check progress and read the completed findings. Start
 ```bash
 curl -fsS -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" -d '{}' \
-  "$LITELLM_URL/engine/$lens_id/runs"
+  "$LITELLM_URL/lens/$lens_id/runs"
 
 curl -fsS -H "Authorization: Bearer $LITELLM_API_KEY" \
-  "$LITELLM_URL/engine/$lens_id/runs?offset=0"
+  "$LITELLM_URL/lens/$lens_id/runs?offset=0"
 ```
 
-The preview returns `eligible`, `selected`, and a page of `executions`. Send its `next_offset` as `offset` alongside `settings` to see the next page. Creation returns the lens `id` and its queued investigation in `jobs`. Poll `GET /engine/{id}/runs/{run_id}` for `status`, `stage`, `coverage`, `cost`, and `findings`.
+The preview returns `eligible`, `selected`, and a page of `executions`. Send its `next_offset` as `offset` alongside `settings` to see the next page. Creation returns the lens `id` and its queued investigation in `jobs`. Poll `GET /lens/{id}/runs/{run_id}` for `status`, `stage`, `coverage`, `cost`, and `findings`.
 
-Set `enabled` to `true` and `interval_minutes` to `1440` for daily investigations. To run once with different settings, send `{"settings": <complete settings object>}` to `POST /engine/{id}/runs`. An optional `execution_ids` array in those settings restricts analysis to IDs returned by the preview. This override does not change the saved settings.
+Set `enabled` to `true` and `interval_minutes` to `1440` for daily investigations. To run once with different settings, send `{"settings": <complete settings object>}` to `POST /lens/{id}/runs`. An optional `execution_ids` array in those settings restricts analysis to IDs returned by the preview. This override does not change the saved settings.
+
+:::note Upgrading an existing Lens setup
+
+The renamed API uses `/lens`, lists lenses under `lenses`, and returns `lens_id` in worker claims. Stop workers after active scans finish, upgrade all proxy instances together, and recreate workers using the upgraded dashboard command. Saved lenses and results are preserved by the database migration. Existing API clients must update their paths and response fields.
+
+:::
