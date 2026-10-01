@@ -1,0 +1,198 @@
+.flow {
+  --fl-ink: #2b2f3a;
+  --fl-mute: #7a7f8c;
+  --fl-line: #e3e5ea;
+  --fl-wire: #d6d9e0;
+  --fl-card: #ffffff;
+  --fl-bg: #fafafb;
+  --fl-dot: #dcdee4;
+  position: relative;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 176px;
+  gap: 48px;
+  align-items: center;
+  margin: 1.25rem 0 1rem;
+  padding: 26px 22px;
+  border: 1px solid var(--fl-line);
+  border-radius: 16px;
+  background-color: var(--fl-bg);
+  background-image: radial-gradient(circle at 1px 1px, var(--fl-dot) 1px, transparent 0);
+  background-size: 16px 16px;
+}
+:global([data-theme='dark']) .flow {
+  --fl-ink: #e6e8ee;
+  --fl-mute: #8b93a1;
+  --fl-line: #2a313c;
+  --fl-wire: #343c48;
+  --fl-card: #161b22;
+  --fl-bg: #0f141b;
+  --fl-dot: #262c35;
+}
+
+.lines {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.lines path {
+  fill: none;
+  stroke: var(--fl-wire);
+  stroke-width: 1.5;
+}
+
+.callers,
+.dests,
+.hubWrap {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+.callers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  display: block;
+  margin: 0 2px 4px;
+  font: 500 10.5px/1 var(--ifm-font-family-monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fl-mute);
+}
+
+.caller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 9px 5px 5px;
+  border: 1px solid var(--fl-line);
+  border-radius: 10px;
+  background: var(--fl-card);
+  color: var(--fl-ink);
+  font: 500 12.5px var(--ifm-font-family-monospace);
+  white-space: nowrap;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--fl-line);
+  border-radius: 7px;
+  background: var(--fl-card);
+  color: var(--fl-mute);
+}
+.icon img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+:global([data-theme='dark']) .invertDark {
+  filter: invert(1);
+}
+
+.hubWrap {
+  display: flex;
+  justify-content: center;
+}
+.hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 30px 18px;
+  border: 1px solid var(--fl-line);
+  border-radius: 16px;
+  background: var(--fl-card);
+  box-shadow: 0 16px 36px -28px rgba(20, 24, 40, 0.35);
+}
+.hubName {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--fl-ink);
+}
+/* The monogram: blue on light, white on dark, per the logo guidelines */
+.monoDark {
+  display: none;
+}
+:global([data-theme='dark']) .monoLight {
+  display: none;
+}
+:global([data-theme='dark']) .monoDark {
+  display: block;
+}
+
+.dests {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.more {
+  margin-left: 2px;
+  font: 500 11px var(--ifm-font-family-monospace);
+  color: var(--fl-mute);
+  white-space: nowrap;
+}
+.more:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  margin: 0 0 2rem;
+}
+.promptBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-sm, 6px);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  font: 600 0.9rem var(--ifm-font-family-base);
+  cursor: pointer;
+}
+.promptBtn:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+.link {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Phones: the logo and what it reaches; the callers and lines drop away */
+@media (max-width: 700px) {
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px 16px;
+  }
+  .callers,
+  .lines {
+    display: none;
+  }
+  .dests {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+  }
+}
