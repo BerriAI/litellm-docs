@@ -1,0 +1,150 @@
+import React from 'react';
+import Link from '@docusaurus/Link';
+import {useLocation} from '@docusaurus/router';
+import styles from './styles.module.css';
+
+const icon = (paths) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+    strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {paths}
+  </svg>
+);
+
+const ICONS = {
+  home: icon(<>
+    <path d="M3 11l9-8 9 8" />
+    <path d="M5 10v10h14V10" />
+    <path d="M10 20v-6h4v6" />
+  </>),
+  gateway: icon(<>
+    <rect x="3" y="4" width="18" height="7" rx="2" />
+    <rect x="3" y="13" width="18" height="7" rx="2" />
+    <path d="M7 7.5h.01M7 16.5h.01" />
+  </>),
+  mcp: icon(<>
+    <path d="M9 3v4M15 3v4" />
+    <path d="M6 7h12v4a6 6 0 0 1-12 0V7z" />
+    <path d="M12 17v4" />
+  </>),
+  agent: icon(<>
+    <circle cx="12" cy="5" r="2.2" />
+    <circle cx="5" cy="19" r="2.2" />
+    <circle cx="19" cy="19" r="2.2" />
+    <path d="M12 7.2v4.3M12 11.5l-5.6 5.4M12 11.5l5.6 5.4" />
+  </>),
+  sdk: icon(<>
+    <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
+  </>),
+  lens: icon(<>
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </>),
+  logs: icon(<>
+    <path d="M3 3v18h18" />
+    <path d="M7 15l4-5 3 3 5-7" />
+  </>),
+};
+
+const HOME = {id: 'home', icon: 'home', title: 'Home', desc: 'Get started with LiteLLM', to: '/docs/'};
+
+const COLUMNS = [
+  {
+    heading: 'Build',
+    items: [
+      {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/proxy/docker_quick_start'},
+      {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
+      {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
+      {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/#litellm-python-sdk'},
+    ],
+  },
+  {
+    heading: 'Monitor',
+    items: [
+      {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
+      {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
+    ],
+  },
+];
+
+const ALL_ITEMS = [HOME, ...COLUMNS.flatMap((c) => c.items)];
+
+// Ordered most-specific first: /docs/proxy/lens must win over the /docs/proxy prefix.
+const SECTION_MATCHERS = [
+  ['lens', ({pathname}) => pathname.startsWith('/docs/proxy/lens')],
+  ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
+  ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
+  ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
+  ['sdk', ({hash}) => hash === '#litellm-python-sdk'],
+  ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy')],
+];
+
+function currentItem(location) {
+  const hit = SECTION_MATCHERS.find(([, matches]) => matches(location));
+  return ALL_ITEMS.find((item) => item.id === (hit ? hit[0] : 'home'));
+}
+
+function MenuLink({item, active}) {
+  return (
+    <Link className={`${styles.item} ${active ? styles.itemActive : ''}`} to={item.to}>
+      <span className={styles.icon}>{ICONS[item.icon]}</span>
+      <span className={styles.text}>
+        <span className={styles.title}>{item.title}</span>
+        <span className={styles.desc}>{item.desc}</span>
+      </span>
+      {active && (
+        <svg className={styles.check} viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </Link>
+  );
+}
+
+export default function ProductsMenu({mobile}) {
+  const location = useLocation();
+  const current = currentItem(location);
+
+  if (mobile) {
+    return (
+      <li className="menu__list-item">
+        <span className="menu__link">{current.title}</span>
+        <ul className="menu__list">
+          {ALL_ITEMS.map((item) => (
+            <li key={item.id} className="menu__list-item">
+              <Link className={`menu__link ${item.id === current.id ? 'menu__link--active' : ''}`} to={item.to}>
+                {item.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </li>
+    );
+  }
+
+  return (
+    <div className={styles.root}>
+      <button type="button" className={styles.trigger} aria-haspopup="true">
+        <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
+        {current.title}
+        <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+          <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div className={styles.panel} role="menu">
+        <div className={styles.home}>
+          <MenuLink item={HOME} active={current.id === HOME.id} />
+        </div>
+        {COLUMNS.map((col) => (
+          <div key={col.heading} className={styles.column}>
+            <div className={styles.heading}>{col.heading}</div>
+            {col.items.map((item) => (
+              <MenuLink key={item.id} item={item} active={current.id === item.id} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
