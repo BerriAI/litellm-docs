@@ -127,7 +127,7 @@ export default function LiteLLMFlow() {
             <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
             <span className={styles.hubName}>LiteLLM</span>
             <span className={hubCopied ? `${styles.hubHint} ${styles.hubHintOn}` : styles.hubHint} aria-live="polite">
-              {hubCopied ? 'Start command copied' : 'Click to copy start command'}
+              {hubCopied ? 'Gateway start command copied' : 'Copy gateway start command'}
             </span>
           </button>
         </div>
