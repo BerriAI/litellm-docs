@@ -58,8 +58,9 @@ export default function LiteLLMFlow() {
   const [copied, copy] = useCopy();
   const [hubCopied, copyHub] = useCopy(2200);
   const integration = useBaseUrl('/img/integrations/');
-  const monoBlue = useBaseUrl('/img/brand/litellm-monogram-blue.svg');
-  const monoWhite = useBaseUrl('/img/brand/litellm-monogram-white.svg');
+  // The official Primary Logo: blue on light, white on dark
+  const logoBlue = useBaseUrl('/img/brand/litellm-logo-blue.png');
+  const logoWhite = useBaseUrl('/img/brand/litellm-logo-white.png');
 
   useEffect(() => {
     const fig = ref.current;
@@ -123,9 +124,8 @@ export default function LiteLLMFlow() {
               copyHub(GATEWAY_COMPOSE);
               track('docs_install_copied', {kind: 'gateway', source: 'docs-index-figure'});
             }}>
-            <img className={styles.monoLight} src={monoBlue} alt="" width="52" height="52" />
-            <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
-            <span className={styles.hubName}>LiteLLM</span>
+            <img className={styles.monoLight} src={logoBlue} alt="LiteLLM" width="140" height="27" />
+            <img className={styles.monoDark} src={logoWhite} alt="LiteLLM" width="140" height="27" />
             <span className={hubCopied ? `${styles.hubHint} ${styles.hubHintOn}` : styles.hubHint} aria-live="polite">
               {hubCopied ? 'Start command copied' : 'Click to copy start command'}
             </span>
