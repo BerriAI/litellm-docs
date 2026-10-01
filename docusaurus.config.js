@@ -7,61 +7,6 @@ require('dotenv').config();
 const lightCodeTheme = require('./src/utils/prismLight');
 const darkCodeTheme = require('./src/utils/prismDark');
 
-const inkeepApiKey = process.env.INKEEP_API_KEY;
-// Conditional check: docs should work if this key is missing.
-const hasInkeepSearch = Boolean(inkeepApiKey);
-
-const inkeepConfig = {
-  baseSettings: {
-    apiKey: inkeepApiKey,
-    organizationDisplayName: 'liteLLM',
-    primaryBrandColor: '#4965f5',
-    theme: {
-      styles: [
-        {
-          key: "custom-theme",
-          type: "style",
-          value: `
-            .ikp-chat-button__button {
-              margin-right: 80px !important;
-            }
-          `,
-        },
-      ],
-      syntaxHighlighter: {
-        lightTheme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    },
-  },
-  searchSettings: {
-    searchBarPlaceholder: 'Search docs, guides, API reference...',
-    debounceTimeMs: 0,
-    maxResults: 7 
-  },
-  aiChatSettings: {
-    aiAssistantName: 'LiteLLM AI',
-    chatSubjectName: 'LiteLLM',
-    aiAssistantAvatar: '/img/favicon.ico',
-    placeholder: 'Ask anything about LiteLLM...',
-    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
-    exampleQuestions: [
-      'How do I set up the LiteLLM proxy?',
-      'How do I route requests across multiple models?',
-      'How do I enable response caching?',
-      'How do I track spend per team or API key?',
-    ],
-    exampleQuestionsLabel: 'Common questions',
-    isFirstExampleQuestionHighlighted: true,
-    shouldOpenLinksInNewTab: true,
-    isCopyChatButtonVisible: true,
-    isShareButtonVisible: false,
-    prompts: [
-      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
-    ],
-  },
-};
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'liteLLM',
@@ -154,21 +99,7 @@ const config = {
         ],
       },
     ],
-    ...(hasInkeepSearch
-      ? [
-          [
-            '@inkeep/cxkit-docusaurus',
-            {
-              SearchBar: {
-                ...inkeepConfig,
-              },
-              ChatButton: {
-                ...inkeepConfig,
-              },
-            },
-          ],
-        ]
-      : []),
+    require('./plugins/docs-search'),
     [
       '@docusaurus/plugin-ideal-image',
       {
@@ -500,9 +431,7 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          ...(hasInkeepSearch
-            ? [{type: 'search', position: 'right'}]
-            : []),
+          {type: 'search', position: 'right'},
         ],
       },
       footer: {
