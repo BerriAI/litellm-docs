@@ -930,7 +930,7 @@ const sidebars = {
         },
       ]
     },
-    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens" },
+    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Supported Endpoints",
