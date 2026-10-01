@@ -145,9 +145,9 @@ curl -H "Authorization: Bearer <key>" \
 
 Proxy administrators can read all traces. Team keys can read their team's traces. Keys without a team can read traces sent with that key. Read-only proxy administrators cannot ingest traces.
 
-## Lens API (coming soon) {#use-the-api}
+## Lens API {#use-the-api}
 
-API access for your agents to start Lens investigations and read findings is coming soon. The dashboard already uses these endpoints on your existing LiteLLM proxy, under `/engine`:
+Your agents can start Lens investigations and read findings through the same API as the dashboard. These endpoints are on your existing LiteLLM proxy, under `/engine`:
 
 | Action | Endpoint |
 | --- | --- |
