@@ -1302,6 +1302,7 @@ const sidebars = {
         "providers/featherless_ai",
         "providers/fireworks_ai",
         "providers/friendliai",
+        "providers/futureinfra",
         "providers/galadriel",
         "providers/github",
         "providers/github_copilot",
