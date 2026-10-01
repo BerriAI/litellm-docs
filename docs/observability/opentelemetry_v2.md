@@ -5,9 +5,9 @@ import TabItem from '@theme/TabItem';
 
 OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives you **one clean trace per request** covering the incoming HTTP call, authentication, guardrails, the LLM call itself, and the internal database/cache work, all nested in a single tree.
 
-It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps).
+It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz).
 
-:::info Opt-in feature
+:::info[Opt-in feature]
 
 OTel v2 is **off by default**. Nothing in it runs until you set `LITELLM_OTEL_V2=true`. It is separate from the existing [OpenTelemetry integration](./opentelemetry_integration), so pick one. If you are moving from v1, see [Migrating to OpenTelemetry v2](./opentelemetry_v2_migration).
 
@@ -32,7 +32,7 @@ Highlights:
 - **One trace, end to end** — the HTTP request, auth, guardrails, the LLM call, and DB writes all live in the same trace, correctly nested.
 - **Rich GenAI attributes** — every LLM-call span carries `gen_ai.*` attributes: model, provider, token usage, cost, finish reasons, request parameters, and more.
 - **Standards-based** — built on the official OpenTelemetry GenAI semantic conventions, so it works with any OTel-compatible backend.
-- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, or AgentOps in the format each tool expects.
+- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, or SigNoz in the format each tool expects.
 - **Safe by default** — prompts and responses are **not** captured unless you explicitly opt in. Noisy routes (health checks, metrics scrapes, UI assets) are excluded automatically.
 - **Distributed tracing** — if your client sends a `traceparent` header, LiteLLM's spans nest inside your existing trace.
 
@@ -223,9 +223,24 @@ AGENTOPS_API_KEY="your-api-key"
 
 </TabItem>
 
+<TabItem value="signoz" label="SigNoz">
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["signoz"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+SIGNOZ_INGESTION_ENDPOINT="https://ingest.<region>.signoz.cloud:443"   # or your self-hosted collector, e.g. http://signoz-otel-collector:4318
+SIGNOZ_INGESTION_KEY="your-ingestion-key"                              # omit for self-hosted SigNoz
+```
+
+</TabItem>
+
 </Tabs>
 
-:::tip Send to several backends at once
+:::tip[Send to several backends at once]
 
 To send the same traces to multiple vendors, list each preset in `callbacks` and set each one's env vars. For example, Langfuse and Arize together:
 
@@ -251,6 +266,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Langtrace | `langtrace` | none of its own | — | Langtrace, via an OpenTelemetry Collector (Langtrace ingests JSON-only OTLP) | Langtrace | No |
 | Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
+| SigNoz | `signoz` | `SIGNOZ_INGESTION_ENDPOINT` (OTLP base URL; `/v1/traces` is appended) | `SIGNOZ_INGESTION_KEY` (sent as `signoz-ingestion-key`; omit for self-hosted) | SigNoz Cloud or self-hosted SigNoz, OTLP HTTP | canonical `gen_ai.*` only | Yes |
 
 Notes:
 
@@ -345,6 +361,7 @@ These are set by the preset from the request and response, not from a client-sup
 
 - Auth is HTTP Basic, `Authorization: Basic <base64(public_key:secret_key)>`; the preset builds this from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` so you never set the header directly.
 - If your client already sends a W3C `traceparent` and Langfuse is picking up the wrong parent, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true` in the proxy environment to drop inbound context.
+- By default your Langfuse project receives the whole request tree. Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 - This is a Langfuse-flavored path; for a general-purpose OTel backend, use the [generic OTLP setup](#1-send-traces-to-any-otlp-collector) instead.
 
 ![LiteLLM trace in Langfuse](/img/observability/otel_v2_langfuse.png)
@@ -442,6 +459,24 @@ No vendor mapper is added. Traces carry only the canonical keys from [Span attri
 
 </TabItem>
 
+<TabItem value="signoz-shot" label="SigNoz">
+
+#### What SigNoz renders
+
+Open **Traces** and filter by the service named in `OTEL_SERVICE_NAME` (default `litellm`). Each request is one trace with the server span at the root and the `chat <model>` span under it; the span detail view lists the `gen_ai.*` and `litellm.*` attributes, and the **Related Logs** button opens log lines correlated by trace id.
+
+#### Attributes added by the SigNoz preset
+
+No vendor mapper is added. Spans carry only the canonical keys from [Span attributes](#span-attributes), which is what SigNoz's LLM views and its [LiteLLM dashboard templates](https://signoz.io/docs/dashboards/dashboard-templates/litellm-proxy-dashboard/) read.
+
+#### Setup notes
+
+- `SIGNOZ_INGESTION_ENDPOINT` is the OTLP base URL for both SigNoz Cloud (`https://ingest.<region>.signoz.cloud:443`) and a self-hosted collector (`http://<host>:4318`). The preset appends `/v1/traces`; a value that already ends in `/v1/traces` is used as is. An unset or empty value fails at startup with an error naming the variable, and nothing is exported.
+- `SIGNOZ_INGESTION_KEY` is optional. When set it is sent as the `signoz-ingestion-key` header; when unset no auth header is sent, which is the self-hosted case.
+- Per-team and per-key routing is supported, including a per-tenant endpoint. See [SigNoz](./signoz#per-team-and-per-key-routing).
+
+</TabItem>
+
 <TabItem value="generic-shot" label="Generic OTLP">
 
 #### What a generic OTLP backend renders
@@ -454,7 +489,7 @@ None beyond the canonical `gen_ai.*` and `litellm.*` keys listed in [Span attrib
 
 #### Setup notes
 
-Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, SigNoz, Splunk Observability Cloud, and any other backend that consumes standard OTLP. If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
+Use this path for Jaeger, Grafana Tempo, Honeycomb, Datadog, Splunk Observability Cloud, and any other backend that consumes standard OTLP. SigNoz has its own `signoz` preset with per-team ingestion keys; see [SigNoz](./signoz). If a backend is not listed above and there is no dedicated tab, this is the one to use. For Grafana Cloud specifically, see [Grafana Cloud](./grafana_cloud), which covers the OTLP gateway's auth format and the prebuilt GenAI dashboards.
 
 </TabItem>
 
@@ -514,9 +549,9 @@ The ceiling is span-wide, not per vocabulary. Tool definitions may claim a quart
 
 #### Chat messages are capped
 
-The `openinference` mapper's `llm.input_messages.{idx}.*` and `llm.output_messages.{idx}.*` keys are the other unbounded family: two attributes per message, for the prompt and the response alike, on the same span. Past a few dozen turns they alone exceed the 128-attribute default and evict the `gen_ai.*` model, usage, cost, and finish-reason attributes written before them. The per-index keys therefore share one span-wide allowance of an eighth of the budget, 8 messages total under the default limit, with at least half of it reserved for the response so a long prompt can never push the completion off the span. The prompt's share goes to message 0 and the most recent turns, under their original indices: a 60-turn conversation with one reply indexes `llm.input_messages.0`, `llm.input_messages.54` through `.59`, and `llm.output_messages.0`. The selection is by position, not role: message 0 and the newest prompt messages always keep a short key of their own, which matters when `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` clips the `input.value` blob before it reaches the end of the conversation.
+The `openinference` mapper's `llm.input_messages.{idx}.*` and `llm.output_messages.{idx}.*` keys are the other unbounded family: two attributes per message, prompt and response alike. Past a few dozen turns they alone would exceed the 128-attribute default and evict the `gen_ai.*` model, usage, cost, and finish-reason attributes written before them. They are therefore fitted to the budget the span has left: its tracer provider's attribute count limit (`OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT`, or the `SpanLimits` of an injected or per-request routed provider) minus every other attribute on the span, `error.*` included. A conversation that fits is indexed in full. One that does not loses whole messages, role and content together, least valuable first: middle prompt turns, then extra response choices, then message 0 and the newest turn, and last the first choice. Surviving messages keep their original indices, so message 0 and the newest turns stay addressable even when `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` clips the `input.value` blob before the end of the conversation. With `genai` plus `openinference` and `LITELLM_OTEL_LEGACY_COMPAT=false`, a 60-turn conversation with one reply at the default limit indexes `llm.input_messages.0`, `.18` through `.59`, and `llm.output_messages.0`; the default `legacy` mapper adds keys of its own, so fewer middle turns survive with it on.
 
-The cap only touches the per-index convenience keys. `input.value` and `output.value` still list every message's role and text, and the canonical `gen_ai.input.messages` and `gen_ai.output.messages` blobs carry the full message objects (tool calls and non-text parts included), so the whole conversation stays on the span and Arize keeps rendering it. Conversations shorter than the allowance are indexed in full. Phoenix compacts the per-index keys into a dense list when it renders a span, so the gap in indices shows up there as a shorter message list, in the same order.
+The cap only touches the per-index convenience keys. `input.value` and `output.value` still list every message's role and text, and the canonical `gen_ai.input.messages` and `gen_ai.output.messages` blobs carry the full message objects (tool calls and non-text parts included), so the whole conversation stays on the span and Arize keeps rendering it. Those blobs are single strings, so `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` (unlimited by default) can truncate them on a long conversation; the surviving per-index keys then still show the opener and the newest turns. Phoenix compacts the per-index keys into a dense list when it renders a span, so a gap in indices shows up there as a shorter message list, in the same order.
 
 Response, usage, cost, identity:
 
@@ -617,7 +652,7 @@ Each successful LLM call records the standard OpenTelemetry GenAI client metrics
 | `gen_ai.server.time_per_output_token` | `s` | Average time per output token |
 | `gen_ai.client.response.duration` | `s` | Provider-side generation time |
 
-:::note Renamed in this release
+:::note[Renamed in this release]
 
 `gen_ai.usage.cost`, `gen_ai.server.time_to_first_token`, and `gen_ai.server.time_per_output_token` were previously emitted as `gen_ai.client.token.cost`, `gen_ai.client.response.time_to_first_token`, and `gen_ai.client.response.time_per_output_token`. The older spellings are not GenAI semantic conventions and no vendor dashboard queries them, so nothing prebuilt could chart LiteLLM's cost or latency. If you hand-built panels or alerts against the old names, repoint them at the names above
 
@@ -682,7 +717,7 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 
 ## Per-key / per-team credentials (multi-tenant)
 
-One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, or New Relic account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
+One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, or SigNoz account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
 
 This is the same key/team callback mechanism described in [Team/Key based logging](../proxy/team_logging); v2 applies it to the OTel presets. There is no separate admin-owned "destination" object, and `/credentials` holds LLM provider credentials, not logging ones.
 
@@ -694,6 +729,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 | Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
+| SigNoz | `signoz` | `signoz_ingestion_key`, `signoz_ingestion_endpoint` | The SigNoz account, and optionally the SigNoz Cloud region or self-hosted collector it is sent to |
 
 Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
 
@@ -703,7 +739,7 @@ Register the callback on the team; every key on that team then exports with thes
 
 ```shell
 curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
-  -H 'Authorization: Bearer sk-1234' -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
     "callback_name": "langfuse_otel",
     "callback_type": "success",
@@ -722,7 +758,7 @@ A key can carry its own credentials in `metadata.logging`, including a key with 
 
 ```shell
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d '{
     "metadata": {
       "logging": [{
@@ -766,7 +802,61 @@ litellm_settings:
   provider_url_destination_allowed_hosts: ["langfuse.acme.com"]
 ```
 
-Your own `LANGFUSE_HOST` needs no allowlist entry. The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
+Your own `LANGFUSE_HOST` needs no allowlist entry. SigNoz works the same way: `signoz_ingestion_endpoint` on a key or team, passed together with `signoz_ingestion_key`, moves that tenant's traces to its own SigNoz Cloud region or collector, and its host must be allowlisted; an endpoint without a key or off the allowlist is ignored with a warning. See [SigNoz per-team routing](./signoz#per-team-and-per-key-routing). The other presets take their endpoint from the proxy's environment; only the credentials vary per tenant, plus New Relic's region, picked from a fixed us/eu table.
+
+### Send only the model calls to Langfuse
+
+By default a Langfuse project, yours or a tenant's, receives the whole request tree: the HTTP request root, the auth step, database and cache lookups, every guardrail run, MCP tool calls, the model call and the spend write. If you only want the generations in Langfuse, set the scope to `llm_only`. The proxy keeps the model-call spans and stops forwarding every other span of that request to that Langfuse project. A model-call span is the one the proxy emits for each provider call it made on the caller's behalf, whatever the route: chat and text completions, Responses API calls, embeddings, image, audio and OCR generation, moderation, vector store calls and agent messages all count. They are the spans carrying `gen_ai.operation.name`, minus MCP tool calls. The generation keeps its trace id, so Langfuse still groups the generations of one request under one trace, and it keeps the caller's `langfuse.trace.name`, `user.id`, `session.id` and `langfuse.trace.tags`. Since the request root is no longer sent, that Langfuse project receives the generation as the root of the trace, and when the caller set no `langfuse_trace_name` or `metadata.trace_name` the trace takes the generation's own name, `chat claude-3-5-haiku` for instance, instead of showing up unnamed. Only that project's copy of the span is changed; a `full` project or a plain collector receiving the same request still sees the generation under the request span. When a tenant's `full` project is the same Langfuse account as your own `llm_only` exporter, that account gets the whole tree once and the generation stays in its place under the request span
+
+A team or key sets it in its `langfuse_otel` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "langfuse_span_scope": "llm_only"
+    }
+  }'
+```
+
+The Admin UI shows the same field as a `langfuse span scope` pick between `full` and `llm_only` next to the Langfuse OTEL credentials of a team or key
+
+Your own Langfuse exporter has a separate switch in the proxy environment:
+
+```shell
+LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # default: full
+```
+
+The two are independent. A tenant's `llm_only` narrows only that tenant's project, and the operator setting narrows only the exporter built from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, whichever mode `otel_tenant_destination_mode` is in. Neither touches a plain `otel` collector or any other preset, so a Datadog or Grafana view of the same request stays complete. The accepted values are `full` and `llm_only`, and a key or team callback with any other value is rejected when it is saved. The setting applies to the `langfuse_otel` preset only: saving a `langfuse_span_scope` on a legacy `langfuse` callback or on another backend's callback is rejected as well, since nothing there would read it
+
+Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
+
+### Keep Redis and Postgres spans out of tenant traces
+
+A request also produces spans for the proxy's own datastore work: Redis lookups for the auth and response caches, and the Postgres spend write. A key or team that sends traces to its own account receives those as well. Set `excluded_services` to stop forwarding them to key and team destinations, while the request root, auth, guardrail and model-call spans still go through:
+
+```yaml
+callback_settings:
+  otel:
+    excluded_services: ["redis", "postgres"]
+```
+
+Or in the proxy environment:
+
+```shell
+LITELLM_OTEL_EXCLUDED_SERVICES=redis,postgres
+```
+
+The config value wins over the env var when both are set. The accepted names are `redis` and `postgres` (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
+
+The setting only narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team), from the API or from the team's logging settings in the Admin UI. The tenant needs nothing new. Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. There is no Admin UI field for `excluded_services`, since it is a proxy-wide setting
+
+`langfuse_span_scope: llm_only` already drops these spans for a Langfuse project, together with the request root, auth and guardrail spans. Use `excluded_services` when the tenant should keep the rest of the request tree
 
 ### Good to know
 
@@ -793,6 +883,8 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 |---|---|---|
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
 | `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
+| `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
+| `LITELLM_OTEL_EXCLUDED_SERVICES` | none | Comma-separated datastores, `redis` and `postgres`, whose spans are not forwarded to key and team destinations. `callback_settings.otel.excluded_services` overrides it. See [Keep Redis and Postgres spans out of tenant traces](#keep-redis-and-postgres-spans-out-of-tenant-traces). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. |
 | `OTEL_HEADERS` (alias `OTEL_EXPORTER_OTLP_HEADERS`) | none | Comma-separated `key=value` auth headers for your backend. |

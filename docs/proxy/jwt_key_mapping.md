@@ -56,7 +56,7 @@ Add `virtual_key_claim_field` to your `litellm_jwtauth` config. This is the JWT 
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enable_jwt_auth: True
   litellm_jwtauth:
     team_id_jwt_field: "team_id"          # existing team mapping (optional)

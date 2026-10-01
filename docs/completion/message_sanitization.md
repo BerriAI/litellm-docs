@@ -241,18 +241,9 @@ export LITELLM_MODIFY_PARAMS=True
 </TabItem>
 </Tabs>
 
-### Enable Per-Request
+### No Per-Request Override
 
-```python
-import litellm
-
-# Enable only for specific requests
-response = litellm.completion(
-    model="anthropic/{{anthropic}}",
-    messages=messages,
-    modify_params=True  # Override global setting
-)
-```
+Sanitization reads only the global `litellm.modify_params` flag, set by any of the options above. `litellm.completion()` has no `modify_params` argument, so passing `modify_params=True` on a call does not enable sanitization and is forwarded to the provider as an extra body field, which Anthropic rejects with `400 invalid_request_error: modify_params: Extra inputs are not permitted`
 
 ## Supported Providers
 

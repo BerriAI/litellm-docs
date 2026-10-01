@@ -74,9 +74,7 @@ Start [here](https://docs.litellm.ai/docs/realtime)
   img={require('../../img/release_notes/sso_sync.png')}
   style={{width: '100%', display: 'block'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Auto-sync groups and members from Azure Entra ID to LiteLLM
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Auto-sync groups and members from Azure Entra ID to LiteLLM</p>
 
 This release adds support for auto-syncing groups and members on Microsoft Entra ID with LiteLLM. This means that LiteLLM proxy administrators can spend less time managing teams and members and LiteLLM handles the following: 
 
@@ -143,9 +141,7 @@ Get started with this [here](https://docs.litellm.ai/docs/tutorials/msft_sso)
     img={require('../../img/release_notes/chat_metrics.png')}
     style={{width: '100%', display: 'block'}}
     />
-    <p style={{textAlign: 'left', color: '#666'}}>
-    View input, output, reasoning tokens, ttft metrics.
-    </p>
+    <p style={{textAlign: 'left', color: '#666'}}>View input, output, reasoning tokens, ttft metrics.</p>
 - **Tag / Policy Management**
     1. Added Tag/Policy Management. Create routing rules based on request metadata. This allows you to enforce that requests with `tags="private"` only go to specific models. [Get Started](https://docs.litellm.ai/docs/tutorials/tag_management)
 
@@ -155,9 +151,7 @@ Get started with this [here](https://docs.litellm.ai/docs/tutorials/msft_sso)
     img={require('../../img/release_notes/tag_management.png')}
     style={{width: '100%', display: 'block'}}
     />
-    <p style={{textAlign: 'left', color: '#666'}}>
-    Create and manage tags.
-    </p>
+    <p style={{textAlign: 'left', color: '#666'}}>Create and manage tags.</p>
 - **Redesigned Login Screen**
     1. Polished login screen [PR](https://github.com/BerriAI/litellm/pull/9778)
 - **Microsoft SSO Auto-Sync**

@@ -13,13 +13,13 @@ All image variants published to `ghcr.io/berriai/` are signed with the same cosi
 | `ghcr.io/berriai/litellm-spend_logs` | Spend-logs sidecar |
 | `ghcr.io/berriai/litellm-database` | Legacy alias of `litellm`, kept for existing deployments |
 
-:::note `litellm-database` is a legacy alias
+:::note[`litellm-database` is a legacy alias]
 `ghcr.io/berriai/litellm-database` used to be the image to pick when the proxy needed Postgres, because it bundled the Prisma toolchain that the core image lacked. `ghcr.io/berriai/litellm` now ships the same toolchain, entrypoint and migrations, so there is no longer a reason to choose between them. `litellm-database` is still published and signed with the same key, so deployments that pin it keep working and verify with the same commands. Use `ghcr.io/berriai/litellm` for new deployments; the examples on this page use it throughout.
 :::
 
 The signing key was introduced in [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub).
 
-:::info Enterprise images
+:::info[Enterprise images]
 Enterprise images (`litellm-ee`) follow the same signing process. Contact [support@berri.ai](mailto:support@berri.ai) to confirm coverage for your specific enterprise image tag.
 :::
 
@@ -170,7 +170,7 @@ cosign verify \
 
 If digest pinning is too rigid for your workflow, use plain semver / PEP 440 release tags (e.g. `v1.86.2`). These are immutable release tags that will not be overwritten.
 
-:::warning `main-stable` and `main-latest` are deprecated
+:::warning[`main-stable` and `main-latest` are deprecated]
 
 LiteLLM has moved to PEP 440 / semver versioning, so stable releases are now published as plain `vX.Y.Z` tags (e.g. `v1.86.2`) instead of the older `vX.Y.Z-stable` form. The rolling `main-stable` tag is still being updated for backwards compatibility but is deprecated; pin to a specific `vX.Y.Z` tag (or a digest) instead. The rolling `main-latest` tag is deprecated and is no longer being updated; use `latest` instead.
 :::

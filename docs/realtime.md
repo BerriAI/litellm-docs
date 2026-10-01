@@ -11,6 +11,7 @@ Supported Providers:
 - xAI ([see full docs](/docs/providers/xai_realtime))
 - Google AI Studio (Gemini)
 - Vertex AI
+- Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 
@@ -94,7 +95,7 @@ const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
 // const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
 const ws = new WebSocket(url, {
     headers: {
-        "api-key": `sk-1234`,
+        "api-key": `sk-<your-litellm-api-key>`,
         "OpenAI-Beta": "realtime=v1",
     },
 });
@@ -180,7 +181,7 @@ const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&gu
 
 const ws = new WebSocket(url, {
     headers: {
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
     },
 });
 
@@ -212,7 +213,7 @@ async def main():
     url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         print("Connected — guardrail active")
         async for msg in ws:

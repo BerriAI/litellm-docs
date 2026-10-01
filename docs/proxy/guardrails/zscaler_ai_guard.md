@@ -127,7 +127,7 @@ Example Request with Custom Policy Metadata
 ```shell
 curl -i http://localhost:8165/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [

@@ -145,7 +145,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_small}}",
   "messages": [
@@ -397,7 +397,7 @@ model_list:
     - model_name: {{openai_small}} 
       litellm_params: # params for litellm completion/embedding call 
         model: {{openai_small}} 
-        api_key: os.getenv(OPENAI_API_KEY)
+        api_key: os.environ/OPENAI_API_KEY
       tpm: 100000
       rpm: 1000
 
@@ -406,10 +406,10 @@ router_settings:
   redis_host: <your-redis-host>
   redis_password: <your-redis-password>
   redis_port: <your-redis-port>
-  enable_pre_call_check: true
+  enable_pre_call_checks: true
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
@@ -423,7 +423,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "{{openai_small}}", 
     "messages": [{"role": "user", "content": "Hey, how's it going?"}]
@@ -453,7 +453,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# 👈 set routing strategy
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 ## CALL 1+2
@@ -576,7 +576,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_check=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -995,7 +995,7 @@ Send a session id with every request of the conversation. The proxy reads it fro
 
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -H "x-litellm-session-id: 7f1c2d1e-2b5a-4a5e-9c1f-0d5a9a3f8b21" \
   -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "hi"}]}'
@@ -1053,7 +1053,7 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
 | `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
-These settings are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy.
+`deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
 
 :::info
 The `session_affinity` option inside `complexity_router_config` on the [Auto Router](./proxy/auto_routing.md) page is a different setting. It pins the auto router's model choice for a session; the pre-call check on this page pins a deployment inside a model group.
@@ -1282,10 +1282,13 @@ See [`enable_weighted_failover`](./proxy/config_settings#router_settings---refer
 
 ### Max Parallel Requests (ASYNC)
 
-Used in semaphore for async requests on router. Limit the max concurrent calls made to a deployment. Useful in high-traffic scenarios. 
+Limit the max concurrent calls made to a deployment. Useful in high-traffic scenarios. 
 
-If tpm/rpm is set, and no max parallel request limit given, we use the RPM or calculated RPM (tpm/1000/6) as the max parallel request limit. 
+If tpm/rpm is set, and no max parallel request limit given, we use the RPM or calculated RPM as the max parallel request limit. The precedence is `max_parallel_requests`, then `rpm`, then `int(tpm / 1000 * 6)` (six concurrent requests per 1000 TPM, minimum 1), then the router's `default_max_parallel_requests`. This means a deployment with only `rpm: 2` set gets a per-process concurrency cap of 2, whatever its provider is. The cap is counted in process, so it is per proxy worker and is not shared across workers or pods
 
+A request that arrives while every slot of the deployment is in use fails right away with a 429 whose body names the deployment and its `max_parallel_requests`. There is no wait queue and nothing to configure for one: requests never sit in the proxy waiting for a slot, they either run or get the 429. The 429 is raised before any provider call, so it does not count towards the deployment's cooldown. The router's own retries and fallbacks treat it like any other 429, so a model group with a second deployment fails over to it, and a single deployment is retried `num_retries` times before the caller sees the error. Set `num_retries: 0` if callers should see the rejection immediately
+
+Earlier versions queued instead of rejecting: a request over the cap waited, for as long as it took, until a slot freed up, so a deployment with `rpm` or `tpm` set could silently serialize traffic with 200s and long latencies instead of 429s. If you relied on that, raise `max_parallel_requests` (or the `rpm`/`tpm` it is derived from), or handle the 429 in the caller
 
 ```python
 from litellm import Router 
@@ -1305,6 +1308,27 @@ router = Router(model_list=model_list, default_max_parallel_requests=20) # 👈 
 
 
 # deployment max parallel requests > default max parallel requests
+```
+
+On the proxy, set `max_parallel_requests` per deployment under `litellm_params` and the default under `router_settings`:
+
+```yaml
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+      rpm: 2 # derives max_parallel_requests=2
+
+router_settings:
+  num_retries: 0 # optional, surfaces the 429 to the caller instead of retrying it
+  default_max_parallel_requests: 20 # applies to deployments with no max_parallel_requests, rpm or tpm of their own
+```
+
+With the config above, four requests sent at the same time to `{{openai_large}}` get two 200s and two immediate 429s:
+
+```json
+{"error":{"message":"litellm.RateLimitError: Deployment has all max_parallel_requests slots in use. Deployment model_group={{openai_large}}, id=... already has max_parallel_requests=2 requests in flight. Raise max_parallel_requests (or the rpm/tpm it is derived from) for this deployment. Received Model Group={{openai_large}}\nAvailable Model Group Fallbacks=None","type":"throttling_error","param":null,"code":"429"}}
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/a978f2d8813c04dad34802cb95e0a0e35a3324bc/litellm/utils.py#L5605)
@@ -1568,6 +1592,8 @@ stops a deployment `num_retries: N` from being applied twice and turning one req
 - Use `RetryPolicy` if you want to set a `num_retries` based on the Exception received
 - Use `AllowedFailsPolicy` to set a custom number of `allowed_fails`/minute before cooling down a deployment
 
+`RetryPolicy` takes one field per error type (`AuthenticationErrorRetries`, `TimeoutErrorRetries`, `RateLimitErrorRetries`, `ContentPolicyViolationErrorRetries`, `BadRequestErrorRetries`, `NotFoundErrorRetries`, `InternalServerErrorRetries`, `ServiceUnavailableErrorRetries`) plus `DefaultRetries` for every error none of those cover. The most specific field wins: `NotFoundErrorRetries` governs any 404 answer, whatever exception class the provider's error body mapped to, `BadRequestErrorRetries` then covers a 4xx the provider reported as an invalid request, and `DefaultRetries` applies last. A field left unset defers to the next one, so a policy that only sets `DefaultRetries` retries 404s too; set `NotFoundErrorRetries: 0` to leave them alone.
+
 [**See All Exception Types**](https://github.com/BerriAI/litellm/blob/ccda616f2f881375d4e8586c76fe4662909a7d22/litellm/types/router.py#L436)
 
 
@@ -1580,6 +1606,8 @@ Example:
 retry_policy = RetryPolicy(
     ContentPolicyViolationErrorRetries=3, 		  # run 3 retries for ContentPolicyViolationErrors
     AuthenticationErrorRetries=0,         		  # run 0 retries for AuthenticationErrorRetries
+    NotFoundErrorRetries=0,               		  # never retry a 404 (a deleted response id, an unknown deployment name)
+    DefaultRetries=2,                     		  # run 2 retries for every error with no field of its own
 )
 
 allowed_fails_policy = AllowedFailsPolicy(
@@ -1599,6 +1627,9 @@ retry_policy = RetryPolicy(
 	BadRequestErrorRetries=1,
 	TimeoutErrorRetries=2,
 	RateLimitErrorRetries=3,
+	NotFoundErrorRetries=0,
+	ServiceUnavailableErrorRetries=2,
+	DefaultRetries=1,
 )
 
 allowed_fails_policy = AllowedFailsPolicy(
@@ -1644,7 +1675,9 @@ response = await router.acompletion(
 router_settings: 
   retry_policy: {
     "BadRequestErrorRetries": 3,
-    "ContentPolicyViolationErrorRetries": 4
+    "ContentPolicyViolationErrorRetries": 4,
+    "NotFoundErrorRetries": 0, # never retry a 404
+    "DefaultRetries": 2 # retries for every error with no field of its own
   }
   allowed_fails_policy: {
     "ContentPolicyViolationErrorAllowedFails": 1000, # Allow 1000 ContentPolicyViolationError before cooling down a deployment

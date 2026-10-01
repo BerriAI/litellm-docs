@@ -39,6 +39,7 @@ const sidebars = {
             "observability/opentelemetry_v2_migration",
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
+            "observability/signoz",
           ],
         },
         {
@@ -77,13 +78,14 @@ const sidebars = {
             "observability/datadog",
             "observability/gcs_bucket_integration",
             "observability/newrelic",
+            "observability/parseable",
             "observability/posthog_integration",
             "observability/sentry",
-            "observability/signoz",
             "observability/slack_integration",
             "observability/splunk_observability_cloud",
             "observability/sumologic_integration",
             "observability/supabase_integration",
+            "observability/zerobus",
           ],
         },
         {
@@ -139,50 +141,52 @@ const sidebars = {
           label: "Team Bring-Your-Own Guardrails",
         },
         ...[
-          "proxy/guardrails/qohash_qostodian_nexus",
+          { type: "doc", id: "proxy/guardrails/qohash_qostodian_nexus", customProps: { icon: "/img/integrations/qohash.png" } },
           "proxy/guardrails/qualifire",
-          "proxy/guardrails/aim_security",
+          { type: "doc", id: "proxy/guardrails/aim_security", customProps: { icon: "/img/integrations/aim-security.png" } },
           "proxy/guardrails/onyx_security",
-          "proxy/guardrails/aporia_api",
-          "proxy/guardrails/azure_content_guardrail",
-          "proxy/guardrails/bedrock",
-          "proxy/guardrails/compresr",
-          "proxy/guardrails/crowdstrike_aidr",
-          "proxy/guardrails/enkryptai",
-          "proxy/guardrails/ibm_guardrails",
-          "proxy/guardrails/grayswan",
-          "proxy/guardrails/hiddenlayer",
-          "proxy/guardrails/lasso_security",
-          "proxy/guardrails/guardrails_ai",
-          "proxy/guardrails/lakera_ai",
-          "proxy/guardrails/llm_as_a_judge",
-          "proxy/guardrails/microsoft_purview",
-          "proxy/guardrails/model_armor",
-          "proxy/guardrails/noma_security",
-          "proxy/guardrails/dynamoai",
-          "proxy/guardrails/openai_moderation",
-          "proxy/guardrails/pangea",
+          { type: "doc", id: "proxy/guardrails/aporia_api", customProps: { icon: "/img/integrations/aporia.png" } },
+          { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
+          { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
+          { type: "doc", id: "proxy/guardrails/compresr", customProps: { icon: "/img/integrations/compresr.png" } },
+          "proxy/guardrails/typesafe",
+          { type: "doc", id: "proxy/guardrails/crowdstrike_aidr", customProps: { icon: "/img/integrations/crowdstrike.png" } },
+          { type: "doc", id: "proxy/guardrails/enkryptai", customProps: { icon: "/img/integrations/enkrypt.png" } },
+          { type: "doc", id: "proxy/guardrails/ibm_guardrails", customProps: { icon: "/img/integrations/ibm.png" } },
+          { type: "doc", id: "proxy/guardrails/grayswan", customProps: { icon: "/img/integrations/grayswan.png" } },
+          { type: "doc", id: "proxy/guardrails/hiddenlayer", customProps: { icon: "/img/integrations/hiddenlayer.png" } },
+          { type: "doc", id: "proxy/guardrails/lasso_security", customProps: { icon: "/img/integrations/lasso.png" } },
+          { type: "doc", id: "proxy/guardrails/guardrails_ai", customProps: { icon: "/img/integrations/guardrails-ai.png" } },
+          { type: "doc", id: "proxy/guardrails/lakera_ai", customProps: { icon: "/img/integrations/lakera.png" } },
+          { type: "doc", id: "proxy/guardrails/llm_as_a_judge", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/microsoft_agent_365", customProps: { icon: "/img/integrations/microsoft.png" } },
+          { type: "doc", id: "proxy/guardrails/microsoft_purview", customProps: { icon: "/img/integrations/microsoft.png" } },
+          { type: "doc", id: "proxy/guardrails/model_armor", customProps: { icon: "/img/integrations/google.png" } },
+          { type: "doc", id: "proxy/guardrails/noma_security", customProps: { icon: "/img/integrations/noma.png" } },
+          { type: "doc", id: "proxy/guardrails/dynamoai", customProps: { icon: "/img/integrations/dynamoai.png" } },
+          { type: "doc", id: "proxy/guardrails/openai_moderation", customProps: { icon: "/img/integrations/openai.png" } },
+          { type: "doc", id: "proxy/guardrails/pangea", customProps: { icon: "/img/integrations/pangea.png" } },
           "proxy/guardrails/pillar_security",
-          "proxy/guardrails/repelloai",
-          "proxy/guardrails/promptguard",
-          "proxy/guardrails/pii_masking_v2",
-          "proxy/guardrails/panw_prisma_airs",
-          "proxy/guardrails/secret_detection",
-          "proxy/guardrails/sensitive_data_routing",
-          "proxy/guardrails/custom_guardrail",
-          "proxy/guardrails/custom_code_guardrail",
-          "proxy/guardrails/prompt_injection",
-          "proxy/guardrails/tool_permission",
-          "proxy/guardrails/rubrik",
-          "proxy/guardrails/zscaler_ai_guard",
-          "proxy/guardrails/javelin",
-          "proxy/guardrails/akto",
+          { type: "doc", id: "proxy/guardrails/repelloai", customProps: { icon: "/img/integrations/repello.png" } },
+          { type: "doc", id: "proxy/guardrails/promptguard", customProps: { icon: "/img/integrations/prompt-security.png" } },
+          { type: "doc", id: "proxy/guardrails/pii_masking_v2", customProps: { icon: "/img/integrations/microsoft.png" } },
+          { type: "doc", id: "proxy/guardrails/panw_prisma_airs", customProps: { icon: "/img/integrations/panw.png" } },
+          { type: "doc", id: "proxy/guardrails/secret_detection", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/sensitive_data_routing", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/custom_guardrail", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/custom_code_guardrail", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/prompt_injection", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/tool_permission", customProps: { icon: "/img/integrations/litellm.png" } },
+          { type: "doc", id: "proxy/guardrails/rubrik", customProps: { icon: "/img/integrations/rubrik.png" } },
+          { type: "doc", id: "proxy/guardrails/zscaler_ai_guard", customProps: { icon: "/img/integrations/zscaler.png" } },
+          { type: "doc", id: "proxy/guardrails/javelin", customProps: { icon: "/img/integrations/javelin.png" } },
+          { type: "doc", id: "proxy/guardrails/akto", customProps: { icon: "/img/integrations/akto.png" } },
           "proxy/guardrails/vigil_guard",
-          "proxy/guardrails/xecguard",
-          "proxy/guardrails/straiker",
+          { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
+          { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
-          "proxy/guardrails/conduct",
-        ].sort(),
+          { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
+        ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
       ],
     },
     {
@@ -235,16 +239,22 @@ const sidebars = {
         slug: "/ai_tools"
       },
       items: [
-        "tutorials/openweb_ui",
+        {
+          type: "doc",
+          id: "tutorials/openweb_ui",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
         {
           type: "category",
           label: "Claude Code",
+          customProps: { icon: "/img/integrations/anthropic.png" },
           items: [
             "claude_code_compatibility",
             "tutorials/claude_code_cut_costs",
             "tutorials/claude_code_autorouter",
             "tutorials/claude_responses_api",
             "tutorials/claude_code_okta_sso",
+            "tutorials/claude_code_gateway",
             "tutorials/claude_code_max_subscription",
             "tutorials/claude_code_byok",
             "tutorials/claude_code_customer_tracking",
@@ -258,16 +268,51 @@ const sidebars = {
             "claude_code_context_management",
           ]
         },
-        "tutorials/claude_desktop_cowork",
-        "tutorials/opencode_integration",
-        "tutorials/openclaw_integration",
-        "tutorials/cursor_integration",
-        "tutorials/github_copilot_integration",
-        "tutorials/litellm_gemini_cli",
-        "tutorials/litellm_qwen_code_cli",
-        "tutorials/openai_codex",
-        "tutorials/retool_assist",
-        "tutorials/cost_tracking_coding"
+        {
+          type: "doc",
+          id: "tutorials/claude_desktop_cowork",
+          customProps: { icon: "/img/integrations/anthropic.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/opencode_integration",
+          customProps: { icon: "/img/integrations/opencode.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/openclaw_integration",
+          customProps: { icon: "/img/integrations/openclaw.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/cursor_integration",
+          customProps: { icon: "/img/integrations/cursor.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/github_copilot_integration",
+          customProps: { icon: "/img/integrations/github-copilot.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/litellm_gemini_cli",
+          customProps: { icon: "/img/integrations/google.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/litellm_qwen_code_cli",
+          customProps: { icon: "/img/integrations/qwen.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/retool_assist",
+          customProps: { icon: "/img/integrations/retool.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/cost_tracking_coding",
+          customProps: { icon: "/img/integrations/litellm.png" },
+        }
       ]
     },
     {
@@ -280,17 +325,18 @@ const sidebars = {
         slug: "/agent_sdks"
       },
       items: [
-        "tutorials/openai_agents_sdk",
-        "tutorials/claude_agent_sdk",
-        "tutorials/copilotkit_sdk",
-        "tutorials/google_adk",
-        "tutorials/google_genai_sdk",
-        "tutorials/livekit_xai_realtime",
-        "integrations/letta",
-        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM" },
+        { type: "doc", id: "tutorials/openai_agents_sdk", customProps: { icon: "/img/integrations/openai.png" } },
+        { type: "doc", id: "tutorials/claude_agent_sdk", customProps: { icon: "/img/integrations/anthropic.png" } },
+        { type: "doc", id: "tutorials/copilotkit_sdk", customProps: { icon: "/img/integrations/copilotkit.png" } },
+        { type: "doc", id: "tutorials/google_adk", customProps: { icon: "/img/integrations/google.png" } },
+        { type: "doc", id: "tutorials/google_genai_sdk", customProps: { icon: "/img/integrations/google.png" } },
+        { type: "doc", id: "tutorials/livekit_xai_realtime", customProps: { icon: "/img/integrations/livekit.png" } },
+        { type: "doc", id: "integrations/letta", customProps: { icon: "/img/integrations/letta.png" } },
+        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM", customProps: { icon: "/img/integrations/scalekit.png" } },
+        { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
+        { type: "doc", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM" },
-        "projects/openai-agents"
+        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness" },
       ]
     },
     {
@@ -303,7 +349,7 @@ const sidebars = {
         slug: "/manage_with_ai_agents"
       },
       items: [
-        "tutorials/claude_code_skills",
+        { type: "doc", id: "tutorials/claude_code_skills", customProps: { icon: "/img/integrations/litellm.png" } },
       ]
     },
 
@@ -320,8 +366,10 @@ const sidebars = {
       collapsed: false,
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
+        { type: "doc", id: "agent_resources", label: "Agent resources" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
+        { type: "doc", id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -390,6 +438,61 @@ const sidebars = {
             },
           ],
         },
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents).
+        // Styled by the "litellm.harness docs" block in src/css/custom.css.
+        {
+          type: "category",
+          label: "Agent Harnesses",
+          className: "harness-sidebar",
+          items: [
+            {
+              type: "category",
+              label: "Getting started",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                { type: "doc", id: "harness/index", label: "Overview" },
+                { type: "doc", id: "harness/gateway", label: "Using with AI Gateway" },
+              ],
+            },
+            {
+              type: "category",
+              label: "Harnesses",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                "harness/supported",
+                "harness/claude_code",
+                "harness/codex",
+                "harness/opencode",
+                "harness/deepagents",
+              ],
+            },
+            {
+              type: "category",
+              label: "Guides",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                "harness/quickstart",
+                "harness/models",
+                "harness/sessions",
+                "harness/events",
+                "harness/sandboxes",
+                "harness/tools",
+                "harness/permissions",
+                "harness/structured_output",
+              ],
+            },
+            {
+              type: "category",
+              label: "Reference",
+              className: "harness-group",
+              collapsible: false,
+              items: ["harness/api_reference", "harness/errors"],
+            },
+          ],
+        },
         {
           type: "category",
           label: "Configuration",
@@ -415,15 +518,28 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Setup & Deployment",
+          label: "Client Setup",
+          items: [
+            "proxy/client_setup/overview",
+            "proxy/client_setup/claude_code",
+            "proxy/client_setup/claude_desktop",
+            "proxy/client_setup/codex_chatgpt_desktop",
+            "proxy/client_setup/codex_cli",
+          ],
+        },
+        {
+          type: "category",
+          label: "Deploy the Gateway",
           items: [
             { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
             "proxy/deploy",
+            "proxy/manifests_to_microservices",
             "proxy/prod",
             "proxy/redis_requirements",
             "proxy/db_sizing",
             "proxy/redis_sizing",
             "proxy/security_best_practices",
+            "proxy/security_owasp_llm_top10",
             "proxy/rust_gateway",
             "proxy/server_tuning",
             "proxy/high_throughput",
@@ -435,11 +551,6 @@ const sidebars = {
             "proxy/master_key_rotations",
             "proxy/billing_metrics",
           ],
-        },
-        {
-          "type": "category",
-          "label": "Config.yaml",
-          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
         },
         {
           type: "category",
@@ -456,6 +567,7 @@ const sidebars = {
                 "a2a_cost_tracking",
                 "a2a_agent_permissions",
                 "a2a_iteration_budgets",
+                "a2a_kill_switch",
               ],
             },
             {
@@ -463,6 +575,7 @@ const sidebars = {
               label: "MCP Gateway",
               items: [
                 "mcp",
+                "mcp_config_reference",
                 "mcp_usage",
                 {
                   type: "category",
@@ -472,11 +585,13 @@ const sidebars = {
                     "mcp_servers/slack",
                     "mcp_servers/atlassian",
                     "mcp_servers/linear",
+                    "mcp_servers/microsoft_365",
                   ],
                 },
                 "mcp_rest_api",
                 "mcp_openapi",
                 "mcp_authentication",
+                "mcp_per_user_auth",
                 "mcp_oauth",
                 "mcp_oauth_passthrough",
                 "mcp_obo_auth",
@@ -484,14 +599,17 @@ const sidebars = {
                 "mcp_aws_sigv4",
                 "mcp_zero_trust",
                 "mcp_public_internet",
+                "mcp_client_allowlist",
                 "mcp_deployment",
                 "mcp_semantic_filter",
                 "mcp_tool_search",
                 "mcp_control",
+                "mcp_grant_access",
                 "mcp_cost",
                 "mcp_guardrail",
                 "mcp_server_submissions",
                 "mcp_toolsets",
+                "proxy/tool_policies",
                 {
                   type: "link",
                   label: "MCP Troubleshooting Guide",
@@ -510,6 +628,11 @@ const sidebars = {
           ],
         },
         {
+          "type": "category",
+          "label": "Config.yaml",
+          "items": ["proxy/configs", "proxy/config_management", "proxy/config_settings"]
+        },
+        {
           type: "category",
           label: "CLI",
           items: ["proxy/quick_start", "proxy/cli"],
@@ -518,6 +641,14 @@ const sidebars = {
           type: "category",
           label: "Troubleshooting",
           items: ["proxy/debugging", "proxy/error_reference", "proxy/error_diagnosis"],
+        },
+        {
+          type: "category",
+          label: "LiteAdmin",
+          items: [
+            "proxy/liteadmin_mcp",
+            "proxy/liteadmin_slack",
+          ],
         },
         {
           type: "category",
@@ -596,7 +727,7 @@ const sidebars = {
         {
           type: "link",
           label: "All Endpoints (Swagger)",
-          href: "https://litellm-api.up.railway.app/",
+          href: "https://docs.litellm.ai/api-reference/",
         },
         {
           type: "category",
@@ -647,6 +778,7 @@ const sidebars = {
             "proxy/caching_redis",
             "proxy/elasticache_iam",
             "proxy/gcp_memorystore_iam",
+            "proxy/azure_redis_ad",
             "proxy/caching_semantic",
             "proxy/caching_object_storage",
             "proxy/caching_controls",
@@ -765,6 +897,7 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
+            "proxy/spend_capture_rate",
             "tutorials/vertex_ai_pay_go",
             "proxy/request_tags",
             "proxy/custom_pricing",
@@ -797,6 +930,7 @@ const sidebars = {
         },
       ]
     },
+    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Supported Endpoints",
@@ -891,6 +1025,7 @@ const sidebars = {
           label: "/mcp - Model Context Protocol",
           items: [
             "mcp",
+            "mcp_config_reference",
             "mcp_usage",
             {
               type: "category",
@@ -900,11 +1035,13 @@ const sidebars = {
                 "mcp_servers/slack",
                 "mcp_servers/atlassian",
                 "mcp_servers/linear",
+                "mcp_servers/microsoft_365",
               ],
             },
             "mcp_rest_api",
             "mcp_openapi",
             "mcp_authentication",
+            "mcp_per_user_auth",
             "mcp_oauth",
             "mcp_oauth_passthrough",
             "mcp_obo_auth",
@@ -912,10 +1049,12 @@ const sidebars = {
             "mcp_aws_sigv4",
             "mcp_zero_trust",
             "mcp_public_internet",
+            "mcp_client_allowlist",
             "mcp_deployment",
             "mcp_semantic_filter",
             "mcp_tool_search",
             "mcp_control",
+            "mcp_grant_access",
             "mcp_cost",
             "mcp_guardrail",
             "mcp_server_submissions",
@@ -946,14 +1085,19 @@ const sidebars = {
             "pass_through/assembly_ai",
             "pass_through/bedrock",
             "pass_through/azure_passthrough",
+            "pass_through/azure_speech",
             "pass_through/cohere",
             "pass_through/comprehend_medical",
             "pass_through/cursor",
+            "pass_through/deepgram_listen_websocket",
             "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
             "pass_through/mistral",
             "pass_through/openai_passthrough",
+            "pass_through/tinyfish",
+            "pass_through/transcribe",
+            "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
             {
               type: "category",
@@ -1100,6 +1244,7 @@ const sidebars = {
         },
         "providers/anthropic",
         "providers/anthropic_tool_search",
+        "providers/anthropic_preserved_thinking",
         "providers/aws_sagemaker",
         {
           type: "category",
@@ -1151,6 +1296,7 @@ const sidebars = {
         "providers/deepinfra",
         "providers/deepseek",
         "providers/docker_model_runner",
+        "providers/edenai",
         "providers/elevenlabs",
         "providers/empiriolabs",
         "providers/fal_ai",
@@ -1188,11 +1334,19 @@ const sidebars = {
         "providers/meta",
         "providers/meta_llama",
         "providers/milvus_vector_stores",
-        "providers/mistral",
+        {
+          type: "category",
+          label: "Mistral AI",
+          items: [
+            "providers/mistral",
+            "providers/mistral_batches",
+          ]
+        },
         "providers/minimax",
         "providers/mongodb_vector_stores",
         "providers/moonshot",
         "providers/morph",
+        "providers/nadir",
         "providers/nebius",
         "providers/nlp_cloud",
         "providers/nano-gpt",
@@ -1224,6 +1378,7 @@ const sidebars = {
         "providers/poe",
         "providers/publicai",
         "providers/predibase",
+        "providers/prism",
         "providers/pydantic_ai_agent",
         "providers/qwencloud",
         "providers/ragflow",
@@ -1254,7 +1409,14 @@ const sidebars = {
         "providers/v0",
         "providers/valkey_vector_stores",
         "providers/vercel_ai_gateway",
-        "providers/vllm",
+        {
+          type: "category",
+          label: "vLLM",
+          items: [
+            "providers/vllm",
+            "providers/vllm_batches",
+          ]
+        },
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
@@ -1272,6 +1434,7 @@ const sidebars = {
           items: [
             "providers/xai",
             "providers/xai_realtime",
+            "providers/xai_batches",
           ]
         },
         "providers/xiaomi_mimo",
@@ -1292,6 +1455,7 @@ const sidebars = {
       },
       items: [
         "routing",
+        "fusion",
         "routing_plugins",
         "adaptive_router",
         "scheduler",
@@ -1309,7 +1473,6 @@ const sidebars = {
         "proxy/health_check_routing"
       ],
     },
-    "benchmarks",
     {
       type: "category",
       label: "Contributing",
@@ -1424,6 +1587,7 @@ const learnSidebar = {
   learnSidebar: [
     // ── Landing page ──────────────────────────────────────────────────
     { type: "doc", id: "learn/index", label: "Learn" },
+    { type: "link", label: "LiteLLM Academy", href: "https://litellm.ai/course" },
     {
       type: "category",
       label: "Start Here",
@@ -1435,7 +1599,7 @@ const learnSidebar = {
         "learn/enterprise_quickstart",
       ],
     },
-    { type: "doc", id: "learn/autorouter_cli", label: "Autorouter CLI" },
+    { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
 
     // ── Guides ────────────────────────────────────────────────────────
     {
@@ -1609,23 +1773,10 @@ const learnSidebar = {
       collapsed: false,
       link: { type: "doc", id: "tutorials/index" },
       items: [
-        {
-          type: "category",
-          label: "Getting Started",
-          collapsed: false,
-          link: {
-            type: "generated-index",
-            title: "Getting Started",
-            description: "Installation, playground, text completion, and mock completions",
-            slug: "/tutorials/getting_started"
-          },
-          items: [
-            "tutorials/installation",
-            "tutorials/first_playground",
-            "tutorials/text_completion",
-            "tutorials/mock_completion",
-          ],
-        },
+        "tutorials/installation",
+        "tutorials/first_playground",
+        "tutorials/text_completion",
+        "tutorials/mock_completion",
         {
           type: "link",
           label: "Agent SDKs & Frameworks",
@@ -1736,6 +1887,7 @@ const autoRouterSidebar = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
@@ -1748,7 +1900,7 @@ const autoRouterSidebar = {
       items: [
         { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
         { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
-        { type: "link", label: "Autorouter CLI", href: "/docs/learn/autorouter_cli" },
+        { type: "link", label: "lite autoroute", href: "/docs/learn/autorouter_cli" },
         { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
       ],
     },

@@ -43,7 +43,7 @@ pip install litellm==1.101.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **MongoDB Vector Search requires an optional sidecar.** Existing configurations must supply the sidecar URL and key; move MongoDB connection strings and TLS files into the sidecar. PyMongo is no longer installed in LiteLLM SDK extras or images. See the [setup guide](../../docs/providers/mongodb_vector_stores) and [PR #40316](https://github.com/BerriAI/litellm/pull/40316).
 
@@ -127,7 +127,7 @@ The stable tag includes these release-line additions, including changes after rc
 
 | Provider | Supported LiteLLM Endpoints | Description |
 | --- | --- | --- |
-| [QwenCloud and Qwen AI Platform](../../docs/providers/qwencloud) | `/chat/completions`, `/embeddings`, `/rerank`, `/images/generations` | `qwencloud/` (international) and `qwen_ai_platform/` (mainland) prefixes over the DashScope implementation, with 45 priced entries each |
+| [QwenCloud and Qianwen AI Platform](../../docs/providers/qwencloud) | `/chat/completions`, `/embeddings`, `/rerank`, `/images/generations` | `qwencloud/` (international) and `qwen_ai_platform/` (mainland) prefixes over the DashScope implementation, with 45 priced entries each |
 | [MongoDB Vector Search (BETA)](../../docs/providers/mongodb_vector_stores) | `/v1/vector_stores/{id}/search`, `/v1/chat/completions` with `file_search` | Search existing Atlas or self-managed MongoDB indexes and use retrieved documents as chat context. Collection/index creation and document ingestion are not supported through LiteLLM. |
 | [Alice](../../docs/proxy/guardrails/alice) | Guardrails (`pre_call`, `post_call`) | Guardrail provider (formerly ActiveFence) enforcing ALLOW, BLOCK, MASK, or DETECT verdicts with the application chosen per virtual key |
 

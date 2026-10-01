@@ -66,12 +66,9 @@ litellm_settings:
 
 ### Environment Variables
 
-You can also configure using environment variables:
+The feature itself is enabled only via `general_settings.use_shared_health_check` in the config file; there is no environment variable for it. The cache and lock TTLs can be tuned with environment variables:
 
 ```bash
-# Enable shared health check
-export USE_SHARED_HEALTH_CHECK=true
-
 # Health check TTL (seconds)
 export DEFAULT_SHARED_HEALTH_CHECK_TTL=300
 
@@ -270,9 +267,8 @@ spec:
       containers:
       - name: litellm-proxy
         image: docker.litellm.ai/berriai/litellm:latest
+        args: ["--config", "/app/proxy_config.yaml"]  # config sets use_shared_health_check: true
         env:
-        - name: USE_SHARED_HEALTH_CHECK
-          value: "true"
         - name: REDIS_HOST
           value: "redis-service"
         - name: REDIS_PASSWORD

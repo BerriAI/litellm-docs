@@ -881,6 +881,124 @@ Beta features may require special access or permissions in your AWS account. Som
 
 :::
 
+### Eager Input Streaming for Tool Calls
+
+By default Claude buffers a tool call's whole input JSON before streaming it, so a large tool call (a big file write, say) can leave the stream silent long enough to trip a client read timeout. Set `eager_input_streaming: true` on a tool and its input streams as it is generated. LiteLLM turns the flag into the `fine-grained-tool-streaming-2025-05-14` beta on every Bedrock route (Converse and Invoke, `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`), so it works on every Claude model on Bedrock, including older ones that reject the per-tool field. The beta is request-wide: once one tool sets it, every tool's input streams eagerly, and the streamed deltas can be partial JSON until the block ends.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python keep-model-ids
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    messages=[{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "write_file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                "required": ["path", "content"],
+            },
+        },
+        "eager_input_streaming": True,
+    }],
+    stream=True,
+)
+for chunk in response:
+    print(chunk.choices[0].delta.tool_calls)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+**Set on YAML Config**
+
+```yaml keep-model-ids
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0  # bedrock/converse/ and bedrock/invoke/ work too
+```
+
+**OpenAI format, `/v1/chat/completions`**
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "parameters": {
+          "type": "object",
+          "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+          "required": ["path", "content"]
+        }
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**Anthropic format, `/v1/messages`**
+
+```bash
+curl http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LITELLM_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "bedrock-claude",
+    "max_tokens": 4096,
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "name": "write_file",
+      "input_schema": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**OpenAI Responses format, `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "input": "Write a 2000 word README to docs/README.md",
+    "tools": [{
+      "type": "function",
+      "name": "write_file",
+      "parameters": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 
 ## Usage - Structured Output / JSON mode 
 
@@ -1583,7 +1701,7 @@ Test it!
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-claude",
     "messages": [{"role": "assistant", "content": "Hey, how's it going?"}]
@@ -1676,7 +1794,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1762,7 +1880,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1847,7 +1965,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test GPT OSS via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "gpt-oss-20b",
@@ -1857,6 +1975,71 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "What are the key benefits of open source AI?"
       }
     ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+## OpenAI models on the native Responses API
+
+AWS serves its OpenAI models on bedrock-runtime's own Responses endpoint, `https://bedrock-runtime.{region}.amazonaws.com/openai/v1/responses`. For the models that opt in, LiteLLM sends your `/v1/responses` request there in the shape it arrived in, instead of translating it into Converse through the Chat Completions bridge. That is what makes Responses-only parameters work: `prompt_cache_key` reaches Bedrock and the repeat call reports cached tokens in `usage.input_tokens_details`, where the bridge answered 400 with `bedrock does not support parameters: ['prompt_cache_key']`.
+
+A model opts in through `"supported_endpoints": ["/v1/responses"]` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Today that is the `us.` and `global.` inference profiles of GPT-5.4, GPT-5.5, GPT-5.6 (Sol, Terra, Luna), and GPT-6 (Astra, Sol, Luna), so `bedrock/us.openai.gpt-6-astra` and `bedrock/global.openai.gpt-5.6-sol` take the native route while `bedrock/openai.gpt-oss-120b-1:0` keeps the bridge. The flag can be overridden per deployment through `model_info` on the proxy or `litellm.register_model` in the SDK, so onboarding a model is a JSON change.
+
+Authentication, regions, and cost tracking work the same as on Converse: SigV4 credentials or a Bedrock API key as `api_key`, with the host picked from the region's partition. An `aws_bedrock_runtime_endpoint` that already ends in `/openai/v1/responses`, `/v1/responses`, or `/responses` is used as is.
+
+What is different on the native route: `background` is dropped with a proxy-log warning, since bedrock-runtime rejects it and the bridge never forwarded it either. A `web_search` tool is dropped with a warning, since bedrock-runtime answers that web search is not supported. `file_search` keeps LiteLLM's emulation. Remote `http(s)` image URLs, in `input_image` blocks, in `function_call_output` lists, and in `computer_call_output` screenshots, are downloaded and inlined as data URIs, because bedrock-runtime accepts only `data:` and `s3://` images. Streaming works as on OpenAI.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python title="Native Responses API SDK Usage" showLineNumbers
+import os
+from litellm import responses
+
+os.environ["AWS_ACCESS_KEY_ID"] = "your-aws-access-key"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "your-aws-secret-key"
+os.environ["AWS_REGION_NAME"] = "us-east-1"
+
+response = responses(
+    model="bedrock/us.openai.gpt-6-astra",
+    input="Reply with the single word pong.",
+    prompt_cache_key="my-session",
+)
+print(response.output_text)
+```
+
+</TabItem>
+
+<TabItem value="proxy" label="Proxy">
+
+**1. Add to config**
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: bedrock-gpt-6-astra
+    litellm_params:
+      model: bedrock/us.openai.gpt-6-astra
+      aws_region_name: us-east-1
+```
+
+**2. Start the proxy**
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-gpt-6-astra",
+    "input": "Reply with the single word pong.",
+    "prompt_cache_key": "my-session"
   }'
 ```
 
@@ -1937,7 +2120,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test Pegasus via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "pegasus-video",
@@ -2051,6 +2234,7 @@ Here's an example of using a bedrock model with LiteLLM. For a complete list, re
 | TwelveLabs Pegasus 1.2 (US) | `completion(model='bedrock/us.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | TwelveLabs Pegasus 1.2 (EU) | `completion(model='bedrock/eu.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Moonshot Kimi K2 Thinking | `completion(model='bedrock/moonshot.kimi-k2-thinking', messages=messages)` or `completion(model='bedrock/invoke/moonshot.kimi-k2-thinking', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| Moonshot Kimi K3 | `completion(model='bedrock/global.moonshotai.kimi-k3', messages=messages)` or `completion(model='bedrock/us.moonshotai.kimi-k3', messages=messages)`. The bare `moonshotai.kimi-k3` ID is an inference-profile-only entry and is not callable on demand | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 
 
 ## Bedrock Embedding
@@ -2169,7 +2353,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "anthropic-claude-sonnet-4-5",
   "messages": [
@@ -2259,7 +2443,7 @@ litellm --config /path/to/config.yaml --detailed_debug
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -2584,7 +2768,7 @@ from litellm import completion
 response = completion(
     model="bedrock/converse_like/some-model",
     messages=[{"role": "user", "content": "What's AWS?"}],
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     api_base="https://some-api-url/models",
     extra_headers={"test": "hello world"},
 )
@@ -2616,7 +2800,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "anthropic-claude",
     "messages": [

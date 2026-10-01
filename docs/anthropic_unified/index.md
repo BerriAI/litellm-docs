@@ -16,7 +16,7 @@ Use LiteLLM to call all your LLM APIs in the Anthropic `v1/messages` format.
 | Streaming | ✅ | |
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
-| Guardrails | ✅ | Applies to input and output text (non-streaming only) |
+| Guardrails | ✅ | Applies to input and output text. On streamed output a guardrail can block the response, but text rewrites such as masking only apply to non-streaming responses |
 | Supported Providers | **All LiteLLM supported providers** | `openai`, `anthropic`, `bedrock`, `vertex_ai`, `gemini`, `azure`, `azure_ai`, etc. |
 
 ## Usage 
@@ -264,7 +264,7 @@ import anthropic
 # point anthropic sdk to litellm proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 response = client.messages.create(
@@ -302,7 +302,7 @@ import anthropic
 # point anthropic sdk to litellm proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 response = client.messages.create(
@@ -340,7 +340,7 @@ import anthropic
 # point anthropic sdk to litellm proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 response = client.messages.create(
@@ -379,7 +379,7 @@ import anthropic
 # point anthropic sdk to litellm proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 response = client.messages.create(
@@ -419,7 +419,7 @@ import anthropic
 # point anthropic sdk to litellm proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 response = client.messages.create(
@@ -436,7 +436,7 @@ response = client.messages.create(
 ```bash showLineNumbers title="Example using LiteLLM Proxy Server"
 curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 -H 'content-type: application/json' \
--H 'x-api-key: $LITELLM_API_KEY' \
+-H "x-api-key: $LITELLM_API_KEY" \
 -H 'anthropic-version: 2023-06-01' \
 -d '{
   "model": "anthropic-claude",

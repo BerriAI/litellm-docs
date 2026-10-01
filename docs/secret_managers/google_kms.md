@@ -17,7 +17,7 @@ Step 2: Update Config
 general_settings:
   key_management_system: "google_kms"
   database_url: "os.environ/PROXY_DATABASE_URL_ENCRYPTED"
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 Step 3: Start + test proxy

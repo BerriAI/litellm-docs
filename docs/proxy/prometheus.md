@@ -77,7 +77,7 @@ scrape_configs:
       - targets: ["litellm:4001"]
 ```
 
-:::warning Secure the metrics listener
+:::warning[Secure the metrics listener]
 The dedicated listener does not use LiteLLM virtual-key authentication. `require_auth_for_metrics_endpoint` applies only to `/metrics` on the proxy port. Permit access only from trusted Prometheus or collector networks, and do not publish the dedicated port through a public ingress or load balancer.
 :::
 
@@ -231,6 +231,16 @@ Only emitted for requests attached to an organization, with the same conditions 
 | `litellm_remaining_org_budget_metric`               | Remaining Budget for Organization Labels: `"org_id", "org_alias"`|
 | `litellm_org_max_budget_metric`                     | Max Budget for Organization Labels: `"org_id", "org_alias"`|
 | `litellm_org_budget_remaining_hours_metric`         | Hours before the Organization budget is reset Labels: `"org_id", "org_alias"`|
+
+### Customer (end_user) - Budget
+
+Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is enabled. On each request the remaining and max budget gauges are refreshed for the request's customer from the customer row cached during auth (no extra database query; a cache miss is left to the periodic refresh); the reset hours gauge and customers without recent traffic are covered by [Initialize Budget Metrics on Startup](#initialize-budget-metrics-on-startup), which emits all three gauges for every customer that has a budget attached. When `max_end_user_budget_id` is set, customers without their own budget are emitted against that default budget. The series are subject to the `end_user` cardinality caps described in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus).
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_remaining_customer_budget_metric`          | Remaining Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_max_budget_metric`                | Max Budget for Customer Labels: `"end_user"`|
+| `litellm_customer_budget_remaining_hours_metric`    | Hours before the Customer budget is reset Labels: `"end_user"`|
 
 ### Virtual Key - Rate Limit
 
@@ -386,6 +396,12 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 |----------------------|--------------------------------------|
 | `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
 
+### Spend Capture Rate
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_spend_capture_rate`       | Share of the provider's bill LiteLLM captured as spend over the [scheduled capture-rate check](spend_capture_rate)'s window (captured spend / provider bill). `NaN` when the last check produced no rate, and on every proxy with a database where the check is not configured. Labels: `"api_provider"` |
+
 ### Deployment State 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
@@ -407,6 +423,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_requests_metric`             | **deprecated** use `litellm_proxy_total_requests_metric`. Total number of LLM calls to litellm, tracked per API key, team, user. Labels: `"end_user", "hashed_api_key", "api_key_alias", "model", "team", "team_alias", "user", "user_email", "client_ip", "user_agent", "requested_model", "model_id", "api_provider"` |
+| `litellm_zero_cost_requests_total`    | Requests that carried usage but were logged at `$0` on a model whose pricing entry has a non-zero rate. Free models and requests without usage are not counted. Labels: `"requested_model", "model", "model_id", "api_provider", "reason"` where `reason` is `missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`. Each counted request also logs one warning naming the missing pricing key, see [Requests that price to $0](cost_tracking#requests-that-price-to-0) |
 
 ## Request Latency Metrics
 
@@ -521,6 +538,15 @@ litellm_settings:
   enable_end_user_cost_tracking_prometheus_only: true
 ```
 
+Every metric that carries the `end_user` label, including the [customer budget gauges](#customer-end_user---budget), is capped per metric by `prometheus_end_user_metrics_max_series_per_metric` (default `10000`, oldest series are dropped first) and series idle for longer than `prometheus_end_user_metrics_ttl_seconds` (default `3600`) are removed. Set either to `null` to disable that limit.
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  enable_end_user_cost_tracking_prometheus_only: true
+  prometheus_end_user_metrics_max_series_per_metric: 500
+  prometheus_end_user_metrics_ttl_seconds: 1800
+```
 
 ### Emit Stream Label
 
@@ -596,7 +622,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -609,7 +635,7 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -891,11 +917,11 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 ## 🔥 LiteLLM Maintained Grafana Dashboards 
 
-Link to Grafana Dashboards maintained by LiteLLM
+LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 
-https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard
+The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics/readme.md) lists which setting each row needs
 
-Here is a screenshot of the metrics you can monitor with the LiteLLM Grafana Dashboard
+The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
 
 
 <Image img={require('../../img/grafana_1.png')} />

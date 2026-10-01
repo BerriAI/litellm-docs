@@ -37,7 +37,7 @@ guardrails:
 
 - `pre_call` - Run **before** LLM call to validate **user input**. Blocks requests with detected policy violations (jailbreaks, harmful prompts, PII, malicious files, etc.)
 - `post_call` - Run **after** LLM call to validate **model output**. Blocks responses containing harmful content, policy violations, or sensitive information
-- `during_call` - Run **both** pre and post call validation
+- `during_call` - Run **in parallel** with the LLM call to validate **user input**. Same checks as `pre_call`, but without adding latency before the LLM call. Does not validate model output; add a second guardrail with `mode: "post_call"` for that
 
 ### 2. Set Environment Variables
 
@@ -349,7 +349,7 @@ Sensitive data in the response is automatically redacted.
 
 ## Streaming Support
 
-Prompt Security guardrail fully supports streaming responses with chunk-based validation:
+Streamed responses are scanned only by a guardrail with `mode: "post_call"`. A `pre_call` or `during_call` guardrail checks the request and lets the streamed output through unscanned
 
 ```shell
 curl -i http://0.0.0.0:4000/v1/chat/completions \
@@ -366,15 +366,32 @@ curl -i http://0.0.0.0:4000/v1/chat/completions \
 
 ### Streaming Behavior
 
-- **Window-based validation**: Chunks are buffered and validated in windows (default: 250 characters)
-- **Smart chunking**: Splits on word boundaries to avoid breaking mid-word
-- **Real-time blocking**: If harmful content is detected, streaming stops immediately
-- **Modification support**: Modified chunks are streamed in real-time
+The accumulated response text is sent to Prompt Security every 5 chunks and once more at the end of the stream. What happens with the verdict depends on `streaming_transform_mode`:
 
-If a violation is detected during streaming:
+```yaml
+guardrails:
+  - guardrail_name: "prompt-security-guard"
+    litellm_params:
+      guardrail: prompt_security
+      mode: "post_call"
+      api_key: os.environ/PROMPT_SECURITY_API_KEY
+      api_base: os.environ/PROMPT_SECURITY_API_BASE
+      streaming_transform_mode: "block_only"  # default; or "incremental_diff"
+```
+
+| Mode | Chunks | Block verdict | Modify verdict |
+| --- | --- | --- | --- |
+| `block_only` (default) | Forwarded to the client unmodified as they arrive | Stream ends at the next scan, text already sent stays with the client | Ignored, the original text is streamed |
+| `incremental_diff` | Response text is held back until the final verdict | Stream ends without releasing the held text | Modified text is emitted as one chunk at the end of the stream |
+
+Use `incremental_diff` when redactions must apply to streamed output. It only applies to `/v1/chat/completions`, other routes fall back to `block_only`
+
+A block verdict ends the stream with an error frame:
 
 ```
-data: {"error": "Blocked by Prompt Security, Violations: harmful_content"}
+data: {"error": {"message": "Blocked by Prompt Security, Violations: harmful_content", "type": "invalid_request_error", "param": null, "code": "400"}}
+
+data: [DONE]
 ```
 
 ## Advanced Configuration
@@ -544,7 +561,7 @@ Solution: Ensure files are properly base64-encoded in data URLs
 
 ## Best Practices
 
-1. **Use `during_call` mode** to cover both inputs and outputs
+1. **Use both `pre_call` (or `during_call`) and `post_call` modes** to cover both inputs and outputs
 2. **Enable for production workloads** using `default_on: true` to protect all requests by default
 3. **Configure user tracking** to identify patterns across user sessions
 4. **Monitor violations** in Prompt Security dashboard to tune policies

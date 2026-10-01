@@ -43,7 +43,7 @@ pip install litellm==1.97.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Request-parameter checks now apply to path and form inputs, not only the request body.** A request that supplies a deployment name through the URL path, or metadata through bracket-notation form fields, is now subject to the same destination check the body already went through, so calls that previously slipped past it will start being rejected. Configured credentials also stay with the endpoint they belong to, so a connection test can no longer borrow another model's credentials. Three admin opt-outs are preserved for legitimate overrides. See [PR #36011](https://github.com/BerriAI/litellm/pull/36011).
 

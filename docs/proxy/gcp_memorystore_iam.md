@@ -14,7 +14,8 @@ as a service account and no Redis password exists in your config.
 :::info
 
 GCP IAM authentication for redis is only supported on Redis Clusters for now. For AWS ElastiCache and
-Valkey, see [AWS ElastiCache IAM Authentication](./elasticache_iam.md).
+Valkey, see [AWS ElastiCache IAM Authentication](./elasticache_iam.md). For Azure Cache for Redis and
+Azure Managed Redis, see [Azure Redis Entra ID Authentication](./azure_redis_ad.md).
 
 :::
 

@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Use Bedrock's Rerank API in the Cohere `/rerank` format.
 
-:::info Cost Tracking
+:::info[Cost Tracking]
 
 ✅ **Cost tracking is supported** for Bedrock Rerank API calls.
 
@@ -68,7 +68,7 @@ litellm --config config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "bedrock-rerank",

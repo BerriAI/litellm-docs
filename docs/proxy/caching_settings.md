@@ -30,8 +30,8 @@ litellm_settings:
 
     # Optional configurations
     supported_call_types:
-      ["acompletion", "atext_completion", "aembedding", "atranscription"]
-      # /chat/completions, /completions, /embeddings, /audio/transcriptions
+      ["acompletion", "atext_completion", "aembedding", "atranscription", "aresponses"]
+      # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 ```
 
 ## Supported `cache_params` on proxy config.yaml
@@ -51,8 +51,8 @@ cache_params:
   # List of litellm call types to cache for
   # Options: "completion", "acompletion", "embedding", "aembedding"
   supported_call_types:
-    ["acompletion", "atext_completion", "aembedding", "atranscription"]
-    # /chat/completions, /completions, /embeddings, /audio/transcriptions
+    ["acompletion", "atext_completion", "aembedding", "atranscription", "aresponses"]
+    # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 
   # Redis cache parameters
   host: localhost # Redis server hostname or IP address
@@ -66,6 +66,12 @@ cache_params:
   ssl: true # Enable SSL for secure connections
   ssl_cert_reqs: null # Set to null for self-signed certificates
   ssl_check_hostname: false # Set to false for self-signed certificates
+
+  # Azure Entra ID (Azure AD) Authentication for Redis (see azure_redis_ad)
+  azure_redis_ad_token: "true" # Authenticate to Azure Redis with Entra ID instead of a password
+  azure_client_id: your_client_id # [OPTIONAL] User-assigned managed identity or service principal client ID
+  azure_tenant_id: your_tenant_id # [OPTIONAL] Tenant ID, needed together with a client secret
+  azure_client_secret: your_client_secret # [OPTIONAL] Service principal secret; all three fall back to AZURE_* env vars
 
   # S3 cache parameters
   s3_bucket_name: your_s3_bucket_name # Name of the S3 bucket

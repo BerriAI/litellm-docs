@@ -105,7 +105,7 @@ The blocked example assumes your Vigil Guard policy is configured to block promp
 ```shell showLineNumbers title="Curl Request"
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -135,7 +135,7 @@ Expected response on failure:
 ```shell showLineNumbers title="Curl Request"
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -196,7 +196,7 @@ Then attach both guardrails to a request:
 ```shell showLineNumbers title="Curl Request"
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -238,7 +238,7 @@ guardrails:
       unreachable_fallback: fail_open
 ```
 
-:::caution
+:::warning
 `unreachable_fallback: fail_open` only applies when the Vigil Guard backend cannot be reached or returns an invalid guardrail response. It does not override a policy block decision.
 :::
 

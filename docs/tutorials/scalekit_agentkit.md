@@ -216,7 +216,7 @@ MODEL=anthropic/{{anthropic}} python scalekit_agent.py
 MODEL=bedrock/us.anthropic.{{anthropic}} python scalekit_agent.py
 
 # Via LiteLLM Proxy
-OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-1234 MODEL={{anthropic}} python scalekit_agent.py
+OPENAI_API_BASE=http://localhost:4000 OPENAI_API_KEY=sk-<your-api-key> MODEL={{anthropic}} python scalekit_agent.py
 ```
 
 ## Route Through LiteLLM Proxy for Cost Tracking and Rate Limits
@@ -230,7 +230,7 @@ import litellm
 response = litellm.completion(
     model="{{anthropic}}",                          # model name from your proxy config
     api_base="http://localhost:4000",                  # proxy URL
-    api_key="sk-1234",                                 # proxy virtual key
+    api_key="sk-<your-litellm-api-key>",                                 # proxy virtual key
     tools=llm_tools,
     messages=messages,
 )
@@ -240,7 +240,7 @@ Or use environment variables so no code changes are needed:
 
 ```bash
 export OPENAI_API_BASE="http://localhost:4000"
-export OPENAI_API_KEY="sk-1234"
+export OPENAI_API_KEY="sk-<your-api-key>"
 python scalekit_agent.py
 ```
 

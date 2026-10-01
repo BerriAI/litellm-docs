@@ -9,7 +9,7 @@ tags: [routing, complexity-router, plugins, proxy, product]
 hide_table_of_contents: false
 ---
 
-:::info Availability
+:::info[Availability]
 
 Router plugins run on the proxy from **v1.94.x**. The design is still evolving; tell us how you'd use it and what you'd want next in the [autorouter discussion on GitHub (#32168)](https://github.com/BerriAI/litellm/discussions/32168).
 

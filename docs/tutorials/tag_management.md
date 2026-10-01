@@ -44,7 +44,7 @@ Here is an example sending the same request using the OpenAI Python SDK.
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000/v1/"
 )
 
@@ -65,7 +65,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -98,7 +98,7 @@ Here is an example sending the same request using the OpenAI Python SDK.
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000/v1/"
 )
 
@@ -119,7 +119,7 @@ response = client.chat.completions.create(
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "us.anthropic.{{anthropic}}",
   "messages": [

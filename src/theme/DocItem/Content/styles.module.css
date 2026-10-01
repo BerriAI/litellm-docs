@@ -1,3 +1,49 @@
+.rustMigrationBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  border: 1px solid var(--aurora-accent-line);
+  border-radius: 14px;
+  background-color: var(--aurora-tint);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.rustMigrationBanner:hover {
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  border-color: var(--ifm-color-primary);
+  background-color: var(--aurora-tint);
+}
+
+.rustMigrationContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.rustMigrationBanner strong {
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.rustMigrationBanner small {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+}
+
+.rustMigrationChevron {
+  flex-shrink: 0;
+  color: var(--ifm-color-primary);
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
 .titleRow {
   display: flex;
   align-items: flex-start;
@@ -39,9 +85,9 @@
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.01em;
-  border-radius: 8px;
-  border: 1.5px solid var(--ifm-color-emphasis-300);
-  background: var(--ifm-background-surface-color);
+  border-radius: 999px;
+  border: 1px solid var(--aurora-line-strong);
+  background: var(--aurora-code-bg);
   color: var(--ifm-font-color-base);
   transition: background 0.15s, border-color 0.15s;
   box-shadow: none;
@@ -51,8 +97,8 @@
 }
 
 .copyBtn:not(:disabled):hover .copyBtnInner {
-  background: var(--ifm-color-emphasis-200);
-  border-color: var(--ifm-color-emphasis-300);
+  background: var(--ifm-menu-color-background-hover);
+  border-color: var(--aurora-accent-line);
 }
 
 .copyBtn:not(:disabled):active .copyBtnInner {
@@ -72,6 +118,10 @@
 }
 
 @media (max-width: 600px) {
+  .rustMigrationBanner {
+    padding: 11px 13px;
+  }
+
   .titleRow {
     flex-direction: column;
     gap: 10px;

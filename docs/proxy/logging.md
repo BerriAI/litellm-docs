@@ -31,7 +31,7 @@ mentioned in this page.
 
 ```shell
 curl -i -sSL --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
       "model": "{{openai_small}}",
@@ -167,12 +167,23 @@ litellm_settings:
 
 ### Disable Message Redaction
 
-If you have `litellm.turn_on_message_logging` turned on, you can override it for specific requests by
+If you have `litellm.turn_off_message_logging` turned on, you can override it for specific requests by
 setting a request header `LiteLLM-Disable-Message-Redaction: true`.
 
+The proxy only honors this header on keys or teams whose metadata has `allow_client_message_redaction_opt_out: true`. On any other key the header is dropped and messages stay redacted
+
+```shell
+curl --location 'http://0.0.0.0:4000/key/generate' \
+    --header 'Authorization: Bearer sk-1234' \
+    --header 'Content-Type: application/json' \
+    --data '{"metadata": {"allow_client_message_redaction_opt_out": true}}'
+```
+
+Then send the header with that key
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Authorization: Bearer <key-from-above>' \
     --header 'Content-Type: application/json' \
     --header 'LiteLLM-Disable-Message-Redaction: true' \
     --data '{
@@ -276,7 +287,7 @@ Send the list of callbacks to disable in the request header `x-litellm-disable-c
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
     "model": "{{anthropic}}",
@@ -296,7 +307,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -345,7 +356,7 @@ We will use the `--config` to set `litellm.success_callback = ["langfuse"]` this
 **Step 1** Install langfuse
 
 ```shell
-uv add langfuse>=2.0.0
+uv add "langfuse>=4.7,<5"
 ```
 
 **Step 2**: Create a `config.yaml` file and set `litellm_settings`: `success_callback`
@@ -490,6 +501,10 @@ print(response)
 </TabItem>
 </Tabs>
 
+:::info
+Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). LiteLLM first lowercases a custom `trace_id` and strips hyphens, so a UUID is used as is once normalized. Anything that still isn't 32 hex chars (like `trace-id22` above) is deterministically hashed to one; the same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the normalized or hashed form, not the original string.
+:::
+
 ### Custom Tags
 
 Set `tags` as part of your request body
@@ -503,7 +518,7 @@ Set `tags` as part of your request body
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -534,7 +549,7 @@ Pass `metadata` as part of the request body
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "llama3",
     "messages": [
@@ -562,7 +577,7 @@ from langchain.prompts.chat import (
 from langchain.schema import HumanMessage, SystemMessage
 import os
 
-os.environ["OPENAI_API_KEY"] = "sk-1234"
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
@@ -632,98 +647,13 @@ litellm_settings:
 
 Use this when you want to view the RAW curl request sent from LiteLLM to the LLM API 
 
-<Tabs>
+Set `log_raw_request_response: true` in `litellm_settings`. LiteLLM then attaches the curl command it sent to the provider as `raw_request` in the Langfuse metadata of every request. This is a global setting with no per-request toggle
 
-<TabItem value="Curl" label="Curl Request">
-
-Pass `metadata` as part of the request body
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "{{openai_small}}",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "metadata": {
-        "log_raw_request": true
-    }
-}'
+```yaml
+litellm_settings:
+  callbacks: ["langfuse"]
+  log_raw_request_response: true
 ```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI v1.0.0+">
-
-Set `extra_body={"metadata": {"log_raw_request": True }}` to `metadata` you want to pass
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-# request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(
-    model="{{openai_small}}",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-print(response)
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model = "{{openai_small}}",
-    temperature=0.1,
-    extra_body={
-        "metadata": {
-            "log_raw_request": True
-        }
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-</Tabs>
 
 **Expected Output on Langfuse**
 
@@ -1054,7 +984,7 @@ Example Usage
 import openai
 import uuid
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 example_traceparent = f"00-80e1afed08e019fc1110464cfa66635c-02e80198930058d4-01"
 extra_headers = {
     "traceparent": example_traceparent
@@ -1276,7 +1206,7 @@ litellm --config config.yaml --debug
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -1332,7 +1262,25 @@ litellm_settings:
     s3_strip_base64_files: false # [OPTIONAL] remove base64 files before storing in s3
     s3_server_side_encryption: aws:kms # [OPTIONAL] server-side encryption algorithm for log objects: AES256 or aws:kms
     s3_sse_kms_key_id: arn:aws:kms:us-west-2:111122223333:key/my-key-id # [OPTIONAL] KMS key id or ARN to encrypt log objects with; requires s3_server_side_encryption: aws:kms (inferred automatically if only the key id is set)
+    s3_max_concurrent_uploads: 16 # [OPTIONAL] cap on simultaneous PUTs per flush; values below 1 or non integers fall back to 16 with a warning
+    s3_adaptive_concurrency: false # [OPTIONAL] grow the PUT concurrency bound above s3_max_concurrent_uploads while uploads succeed and halve it on throttling (429, 503, SlowDown, transport errors)
+    s3_max_adaptive_concurrency: 200 # [OPTIONAL] ceiling for s3_adaptive_concurrency; values below 1 or non integers fall back to 200 with a warning
+    s3_max_retry_age_seconds: 3600 # [OPTIONAL] drop a failed upload once it has been retrying longer than this many seconds, measured from the first flush where a sibling upload delivered; set 0 to retry forever, non integers fall back to 3600 with a warning
+    s3_drop_on_terminal_error: true # [OPTIONAL] drop an object after a terminal, object-specific S3 rejection (400/403 with a code like EntityTooLarge or InvalidArgument) once a sibling delivered, instead of retrying it every flush; set false to keep retrying
+    s3_max_queue_size: 50000 # [OPTIONAL] cap on queued log events applied after a failed flush; the oldest events are dropped once the queue exceeds this size
+    s3_batch_file_upload: false # [OPTIONAL] write each flush as one NDJSON .jsonl file per object key prefix instead of one object per request
+    s3_partition_granularity: day # [OPTIONAL] date folder layout for log objects: day (default) or hour, see Hourly Folders below
 ```
+
+The default of 16 for `s3_max_concurrent_uploads` comes from the flush budget rather than from an S3 limit: a full queue of `DEFAULT_S3_BATCH_SIZE` (512) entries has to drain inside `DEFAULT_S3_FLUSH_INTERVAL_SECONDS` (10s), and at a pessimistic 300ms per PUT that needs `512 * 0.3 / 10 = 15.4` uploads in flight, so 16 is the smallest round number that fits. It is also an order of magnitude under the [3,500 PUT/s per prefix](https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html) S3 supports, and in the same range as boto3's `max_concurrency` of 10 or Fluentd's suggested 8 flush threads. The limit is per uvicorn worker, so process wide concurrency is `workers * 16`
+
+The bound is a sliding window, not a batch size: the 17th upload starts as soon as one of the first 16 finishes, so a worker ships about `s3_max_concurrent_uploads / PUT latency` objects per second. Measured against a us-east-1 bucket, one small PUT took about 100ms round trip, so 16 sustains roughly 160 logs per second per worker, 32 about 320, and 64 about 610. Cross region or under `503 SlowDown` the latency is closer to 300ms and those numbers drop to a third. Size it with `s3_max_concurrent_uploads >= peak requests per second per worker * PUT latency in seconds`, rounded up to the next power of two. A worker doing 250 requests per second at 100ms needs 25, so set 32
+
+When the bound is too low for the traffic nothing is lost, but delivery lags: a flush takes longer than `DEFAULT_S3_FLUSH_INTERVAL_SECONDS`, objects show up in the bucket later than the flush interval, and `log_queue` grows in memory until traffic drops. If you see objects arriving minutes late while the proxy log shows no `Error uploading to s3` lines, that is the signal to raise the bound. If the number you compute is above 64, turn on `s3_batch_file_upload` instead: each flush then becomes one object per key prefix, so the bound stops mattering and the bucket sees a handful of PUTs per tick. Raising the bound far above what the formula gives moves you back toward the burst shape that makes S3 throttle: eight workers at a few hundred in flight each measured about 4,500 PUTs per second into one fresh daily prefix and got `503 SlowDown` on 11 to 18 percent of them, while the same eight workers at 16 saw 0.08 percent, all recovered on the first retry
+
+With `s3_batch_file_upload` enabled, each flush produces one `batch_<HH-MM-SS>_<uuid>.jsonl` object per object key prefix, so batch files sit next to the per request objects they replace and team or API key prefixes are preserved. Uploads that fail stay in the queue and are retried on the next flush. The flag is ignored with a warning when `cold_storage_custom_logger: s3_v2` is set, because spend log lookups require per request objects
+
+Failed uploads are retried, but not forever. Each flush uploads new events before the ones it is retrying, and 403, 500 and 503 are retried up to three times inside the same flush with a 1s then 2s backoff; any other failure waits for the next flush. An object S3 rejects for a reason specific to that object (400 or 403 with a code such as `EntityTooLarge`, `InvalidArgument`, `MalformedXML`, `InvalidDigest` or `KeyTooLongError`) is dropped at the end of that flush once another object in it delivered, since retrying it can never succeed; `AccessDenied`, credential and KMS errors, 404, 429 and 5xx are treated as recoverable and keep retrying. An object that keeps failing while its siblings deliver is dropped after `s3_max_retry_age_seconds` (1 hour by default); the clock only starts once a sibling has delivered, so a whole bucket outage where nothing delivers does not start it, but an object already on the clock keeps aging through a later outage. These are two independent drop rules: `s3_drop_on_terminal_error: false` turns off only the terminal drop and `s3_max_retry_age_seconds: 0` turns off only the age limit, so set both to keep every failed object retrying. Independently of either, after a failed flush the queue is trimmed to `s3_max_queue_size` by dropping its oldest events, so raise that cap if the queue must outlive a long outage; every drop is logged as `s3 logging: N uploads dropped`
 
 **Step 3**: Start the proxy, make a test request
 
@@ -1359,6 +1307,24 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 Your logs should be available on the specified s3 Bucket
+
+### Hourly Folders
+
+By default `s3_v2` writes every log for a day into one date folder, `my-test-path/2026-10-01/time-14-05-09-123456_chatcmpl-abc.json`. Set `s3_partition_granularity: hour` to add an hour folder under the date, so the same object lands at `my-test-path/2026-10-01/14/time-14-05-09-123456_chatcmpl-abc.json` and a query over a time range only has to list the hours it needs
+
+```yaml
+litellm_settings:
+  callbacks: ["s3_v2"]
+  s3_callback_params:
+    s3_bucket_name: logs-bucket-litellm
+    s3_region_name: us-west-2
+    s3_path: my-test-path
+    s3_partition_granularity: hour
+```
+
+You can also set it with the `S3_PARTITION_GRANULARITY` environment variable, and a value in `s3_callback_params` wins over it. The date and hour both come from the request start time, the same clock the daily layout already uses, and team or key alias prefixes stay in front of the date folder. Leaving the setting out, or setting it to `day` or an empty value, keeps the daily layout unchanged, and any other value logs a warning and falls back to `day`
+
+The same setting applies to audit log objects, `s3_batch_file_upload` files and the cold storage object key, so `cold_storage_custom_logger: s3_v2` keeps finding the objects it wrote. When audit logs go to a separate bucket through `s3_audit_callback_params`, their layout comes from `s3_partition_granularity` in that block instead, falling back to the environment variable, so request logs and audit logs can use different layouts. With batch uploads on, a flush that spans an hour boundary writes one `.jsonl` file per hour folder. In the Admin UI the option shows up as Folder Partitioning on the `s3_v2` callback form. Only `s3_v2` supports it. The legacy `s3` callback and the `gcs_bucket` logger always write daily folders
 
 ### Team Alias Prefix in Object Key
 
@@ -1451,10 +1417,6 @@ litellm_settings:
     sqs_strip_base64_files: false
     # If true, LiteLLM will remove or redact base64-encoded binary data (e.g., PDFs, images, audio)
     # from logged messages to avoid large payloads. SQS has a 1 MB payload size limit.
-    s3_use_team_prefix: false
-    # If true, Litellm will add the team alias prefix to s3 path
-    s3_use_key_prefix: false
-    # If true, Litellm will add the key alias prefix to s3 path
 
 ```
 
@@ -1904,7 +1866,7 @@ litellm --config proxy_config.yaml
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "{{openai_small}}",
     "messages": [
@@ -1928,7 +1890,7 @@ On Success
     Usage: {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21},
     Cost: 1.42e-05,
     Response: {'id': 'chatcmpl-8S8avKJ1aVBg941y5xzGMSKrYCMvN', 'choices': [{'finish_reason': 'stop', 'index': 0, 'message': {'content': 'Good morning! How can I assist you today?', 'role': 'assistant'}}], 'created': 1701716913, 'model': '{{openai_small}}', 'object': 'chat.completion', 'system_fingerprint': None, 'usage': {'completion_tokens': 10, 'prompt_tokens': 11, 'total_tokens': 21}}
-    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': 'Bearer sk-1234', 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': '{{openai_small}}', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
+    Proxy Metadata: {'user_api_key': None, 'headers': Headers({'host': '0.0.0.0:4000', 'user-agent': 'curl/7.88.1', 'accept': '*/*', 'authorization': "Bearer $LITELLM_API_KEY", 'content-length': '199', 'content-type': 'application/x-www-form-urlencoded'}), 'model_group': '{{openai_small}}', 'deployment': 'gpt-5.6-luna-ModelID-gpt-5.6-luna'}
 ```
 
 #### Logging Proxy Request Object, Header, Url
@@ -2062,9 +2024,7 @@ ModelResponse(
   img={require('../../img/callback_api.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Send LiteLLM logs to a custom API endpoint
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Send LiteLLM logs to a custom API endpoint</p>
 
 <EnterpriseFeature />
 
@@ -2123,7 +2083,7 @@ litellm --config /path/to/config.yaml
 ```shell
 curl -i --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "openai/{{openai_large}}",
     "messages": [
@@ -2231,7 +2191,9 @@ Expect to see your logs in Arize.
 
 ## Langtrace
 
-1. Set `success_callback: ["langtrace"]` on litellm config.yaml
+The `langtrace` callback posts spans straight to `https://app.langtrace.ai/api/trace` with `LANGTRACE_API_KEY` in the `x-api-key` header. For a self-hosted Langtrace, set `LANGTRACE_API_HOST` to its base URL (for example `https://langtrace.example.com`) and the callback posts to `<host>/api/trace`. The [Langtrace page](../observability/langtrace_integration) covers the OpenTelemetry v2 exporter, which routes through a collector instead
+
+1. Set `callbacks: ["langtrace"]` on litellm config.yaml
 
 ```yaml
 model_list:
@@ -2546,6 +2508,7 @@ export SENTRY_DSN="your-sentry-dsn"
 export SENTRY_API_SAMPLE_RATE="1.0"  # Controls what percentage of errors are sent (default: 1.0 = 100%)
 export SENTRY_API_TRACE_RATE="1.0"   # Controls what percentage of transactions are sampled for performance monitoring (default: 1.0 = 100%)
 export SENTRY_ENVIRONMENT="development" # Controls the Sentry Environment (default: production)
+export SENTRY_SEND_DEFAULT_PII="true" # Sends user ids, emails, and key hashes to Sentry; secrets stay filtered (default: false, see /observability/sentry)
 ```
 
 ```yaml 
@@ -2622,7 +2585,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 
-<!-- ## (BETA) Moderation with Azure Content Safety
+{/* ## (BETA) Moderation with Azure Content Safety
 
 Note: This page is for logging callbacks and this is a moderation service. Commenting until we found a better location for this.
 
@@ -2709,4 +2672,4 @@ litellm_settings:
 :::info
 `thresholds` are not required by default, but you can tune the values to your needs.
 Default values is `4` for all categories
-::: -->
+::: */}

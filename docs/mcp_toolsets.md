@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # MCP Toolsets
 
+For direct-client URLs and LLM tool selectors, see the [MCP Configuration Reference](./mcp_config_reference#endpoint-matrix)
+
 A **Toolset** is a named collection of specific tools drawn from one or more MCP servers. Instead of giving an agent access to every tool on every server, you pick exactly which tools it needs, from whichever servers they live on, and bundle them under a single name.
 
 ## How it works

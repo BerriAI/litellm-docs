@@ -42,7 +42,7 @@ In this example, we will delete a key.
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/delete' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
         "key": "d5265fc73296c8fea819b4525590c99beab8c707e465afdf60dab57e1fa145e4"
@@ -124,7 +124,7 @@ litellm_settings:
 
 Call management endpoints on behalf of a user, and have the audit log attribute the change to them instead of to the calling key's `user_id`. (Useful when connecting proxy to your development platform).
 
-:::warning Opt in required since v1.84.0
+:::warning[Opt in required since v1.84.0]
 
 Before v1.84.0 the `LiteLLM-Changed-By` header was honored unconditionally, which let any caller rewrite audit attribution. Since v1.84.0 the proxy ignores the header unless the calling key, or its team, has `allow_litellm_changed_by_header: true` in its metadata; without the opt in, `changed_by` falls back to the calling key's `user_id`. The master key cannot opt in because it has no stored metadata, so send the header with an admin virtual key
 
@@ -136,7 +136,7 @@ Set `allow_litellm_changed_by_header: true` in the metadata of the admin virtual
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/update' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
         "key": "sk-my-admin-key",
@@ -146,7 +146,7 @@ curl -X POST 'http://0.0.0.0:4000/key/update' \
 
 #### 2. Set `LiteLLM-Changed-By` in request headers
 
-Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://litellm-api.up.railway.app/#/team%20management).
+Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://docs.litellm.ai/api-reference/#/team%20management).
 
 - Update Team budget with the opted-in admin key. 
 - Attribute change to 'krrish@berri.ai'. 

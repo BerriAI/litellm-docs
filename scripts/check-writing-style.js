@@ -139,7 +139,7 @@ function main() {
   const failed = errors.length > 0 || (strict && warnings.length > 0);
   if (failed) {
     console.log(
-      "\nSee CLAUDE.md for the writing rules. Rewrite the flagged lines instead of adding exceptions."
+      "\nSee AGENTS.md for the writing rules. Rewrite the flagged lines instead of adding exceptions."
     );
     process.exit(1);
   }

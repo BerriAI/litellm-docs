@@ -8,9 +8,7 @@ import Image from '@theme/IdealImage';
   img={require('../../img/kb.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Use Vector Stores with any LiteLLM supported model
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Use Vector Stores with any LiteLLM supported model</p>
 
 
 LiteLLM integrates with vector stores, allowing your models to access your organization's data for more accurate and contextually relevant responses.
@@ -236,12 +234,12 @@ LiteLLM provides a server that exposes OpenAI-compatible `vector_store` endpoint
 
 ```env
 DATABASE_URL="postgresql://neondb_owner:xxxx"
-SERVER_API_KEY="sk-1234"
+SERVER_API_KEY="sk-<your-litellm-api-key>"
 HOST="0.0.0.0"
 PORT=8001
 EMBEDDING__MODEL="text-embedding-ada-002"
 EMBEDDING__BASE_URL="http://localhost:4000"
-EMBEDDING__API_KEY="sk-1234"
+EMBEDDING__API_KEY="sk-<your-litellm-api-key>"
 EMBEDDING__DIMENSIONS=1536
 DB_FIELDS__ID_FIELD="id"
 DB_FIELDS__CONTENT_FIELD="content"
@@ -302,9 +300,7 @@ After completing a request with a vector store, navigate to the `Logs` page on L
   img={require('../../img/kb_4.png')}
   style={{width: '80%'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM Logs Page: Vector Store Usage
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM Logs Page: Vector Store Usage</p>
 
 
 ### Listing available vector stores

@@ -34,7 +34,7 @@ response = litellm.ocr(
 
 # Access extracted text
 for page in response.pages:
-    print(page.text)
+    print(page.markdown)
 ```
 
 ### **LiteLLM PROXY**
@@ -122,8 +122,8 @@ response.usage_info     # Token usage information
 
 # Access page content
 for page in response.pages:
-    print(f"Page {page.page_number}:")
-    print(page.text)
+    print(f"Page {page.index}:")
+    print(page.markdown)
 ```
 
 ## Async Support
@@ -142,7 +142,7 @@ response = await litellm.aocr(
 
 ## Important Notes
 
-:::info URL Conversion
+:::info[URL Conversion]
 Azure AI OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Azure AI.
 :::
 

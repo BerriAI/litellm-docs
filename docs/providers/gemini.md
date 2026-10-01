@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 
 <br />
 
-:::tip Gemini API vs Vertex AI
+:::tip[Gemini API vs Vertex AI]
 | Model Format | Provider | Auth Required |
 |-------------|----------|---------------|
 | `gemini/gemini-2.0-flash` | Gemini API | `GEMINI_API_KEY` (simple API key) |
@@ -82,11 +82,11 @@ LiteLLM translates OpenAI's `reasoning_effort` to Gemini's `thinking` parameter.
 Note: Reasoning cannot be turned off on Gemini 2.5 Pro models.
 :::
 
-:::tip Gemini 3 Models
-For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model (Flash-family models also support `minimal` and `medium`). If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
+:::tip[Gemini 3 Models]
+For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effort` to the `thinking_level` field instead of `thinking_budget` when you set it. Supported levels depend on the model: Flash-family models also support `medium`, and `minimal` up to 3.6 Flash. 3.7 and 3.8 Flash reject `minimal`, so LiteLLM sends `low` for `minimal`, `none` and `disable` on them, driven by `supports_minimal_reasoning_effort: false` on their cost-map entries. If you omit `reasoning_effort`, LiteLLM does **not** send a default `thinking_level`, so the request uses the **Gemini API defaults** (Gemini 3 Flash defaults to `high` on the API).
 :::
 
-:::warning Image Models
+:::warning[Image Models]
 **Gemini image models** (e.g., `gemini-3-pro-image-preview`, `gemini-2.0-flash-exp-image-generation`) do **not** support the `thinking_level` parameter. LiteLLM automatically excludes image models from receiving thinking configuration to prevent API errors.
 :::
 
@@ -104,12 +104,12 @@ For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effor
 
 | reasoning_effort | thinking_level | Notes |
 | ---------------- | -------------- | ----- |
-| "minimal"        | `"minimal"` (Flash / some 3.1) or `"low"` | Flash-family IDs use `minimal` when supported |
+| "minimal"        | `"minimal"` (Flash up to 3.6 / some 3.1) or `"low"` | Flash-family IDs use `minimal` unless their cost-map entry sets `supports_minimal_reasoning_effort: false` (3.7 and 3.8 Flash), which maps to `low` |
 | "low"            | "low" | Best for simple instruction following or chat |
 | "medium"         | `"medium"` or `"high"` | `"medium"` where the API supports it; otherwise `"high"` |
 | "high"           | "high" | Maximizes reasoning depth |
-| "disable"        | `"minimal"` (Flash) or `"low"` | Cannot fully disable thinking in Gemini 3 |
-| "none"           | `"minimal"` (Flash) or `"low"` | Cannot fully disable thinking in Gemini 3 |
+| "disable"        | `"minimal"` (Flash up to 3.6) or `"low"` | Cannot fully disable thinking in Gemini 3; 3.7 and 3.8 Flash reject `minimal`, so they get `low` |
+| "none"           | `"minimal"` (Flash up to 3.6) or `"low"` | Cannot fully disable thinking in Gemini 3; 3.7 and 3.8 Flash reject `minimal`, so they get `low` |
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -486,7 +486,7 @@ litellm --config config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/transcriptions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F file=@speech.wav \
   -F model=gemini-3.5-transcribe \
   -F response_format=verbose_json \
@@ -512,7 +512,7 @@ import websockets
 async def main():
     async with websockets.connect(
         "ws://0.0.0.0:4000/v1/realtime?model=gemini-3.5-transcribe-live",
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": "<base64 pcm16 audio>"}))
         async for message in ws:
@@ -591,7 +591,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -662,7 +662,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -752,7 +752,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -812,7 +812,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -956,7 +956,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1050,7 +1050,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in Buenos Aires?"}],
@@ -1177,7 +1177,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1234,7 +1234,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_flash}}",
   "messages": [{"role": "user", "content": "What is the weather in San Francisco?"}],
@@ -1349,7 +1349,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-computer-use",
     "messages": [
@@ -1453,7 +1453,7 @@ response = completion(
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What'\''s the weather in Tokyo?"}],
@@ -1476,7 +1476,7 @@ When building conversation history for multi-turn function calling, you must inc
 from openai import OpenAI
 import json
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 def get_current_temperature(location: str) -> dict:
     """Gets the current weather temperature for a given location."""
@@ -1549,7 +1549,7 @@ print(response2.choices[0].message.content)
 # Step 1: Initial request
 curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1622,7 +1622,7 @@ The response will include tool calls with thought signatures in `provider_specif
 # Include the assistant message from Step 1 (with thought signatures in provider_specific_fields)
 curl --location 'http://localhost:4000/v1/chat/completions' \
   --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data '{
     "model": "{{gemini_flash}}",
     "messages": [
@@ -1759,7 +1759,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{gemini_pro}}",
   "messages": [
@@ -1877,7 +1877,7 @@ response = completion(
 
 ## Video Metadata Control
 
-For Gemini 3+ models, LiteLLM supports fine-grained video processing control through the `video_metadata` field. This allows you to specify frame extraction rates and time ranges for video analysis.
+LiteLLM supports fine-grained video processing control through the `video_metadata` field on every Gemini model (2.x and 3+). This allows you to specify frame extraction rates and time ranges for video analysis. Only the per-part `media_resolution` set via `detail` is limited to Gemini 3+
 
 **Supported `video_metadata` parameters:**
 
@@ -1895,7 +1895,6 @@ For Gemini 3+ models, LiteLLM supports fine-grained video processing control thr
 :::
 
 :::warning
-- **Gemini 3+ Only:** This feature is only available for Gemini 3.0 and newer models
 - **Video Files Recommended:** While `video_metadata` is designed for video files, error handling for other media types is delegated to the Vertex AI API
 - **File Formats Supported:** Works with `gs://`, `https://`, and base64-encoded video files
 :::
@@ -2075,7 +2074,7 @@ from openai import OpenAI
 import os
 import base64
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-12345")
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>")
 base64_image = base64.b64encode(open("closeup-object-on-table-many-260nw-1216144471.webp", "rb").read()).decode()
 
 import json
@@ -2635,7 +2634,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "gemini-2.0-flash-exp-image-generation",
     "messages": [{"role": "user", "content": "Generate an image of a cat"}],
