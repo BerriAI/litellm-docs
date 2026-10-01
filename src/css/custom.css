@@ -539,6 +539,26 @@ li.tabs__item--active {
   color: #f9fafb;
 }
 
+/* Top-level single pages (e.g. Lens): match the category rows' type and spacing */
+.top-level-doc-item {
+  margin-bottom: 0.25rem !important;
+}
+
+.top-level-doc-item > .menu__link {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  margin: 0 0.25rem;
+  padding: 0 0.75rem !important;
+  color: #111827;
+  font-weight: 600 !important;
+  font-size: 14px;
+}
+
+[data-theme='dark'] .top-level-doc-item > .menu__link {
+  color: #f9fafb;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {

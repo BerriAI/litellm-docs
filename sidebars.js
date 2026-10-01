@@ -846,7 +846,6 @@ const sidebars = {
           label: "Logging, Alerting, Metrics",
           items: [
             "proxy/dynamic_logging",
-            "proxy/lens",
             "proxy/logging",
             "proxy/logging_spec",
             "proxy/team_logging",
@@ -931,6 +930,7 @@ const sidebars = {
         },
       ]
     },
+    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Supported Endpoints",

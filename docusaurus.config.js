@@ -456,6 +456,11 @@ const config = {
         },
         items: [
           {
+            type: 'custom-productsMenu',
+            label: 'Products',
+            position: 'left',
+          },
+          {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
@@ -480,12 +485,6 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'docSidebar',
-            sidebarId: 'autoRouterSidebar',
-            position: 'left',
-            label: 'Auto Router',
-          },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://trust.litellm.ai/',
