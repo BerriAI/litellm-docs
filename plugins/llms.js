@@ -19,7 +19,6 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
-const {categoryOf, CATEGORIES: BLOG_CATEGORIES} = require('../src/components/Blog/categories');
 const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
@@ -544,8 +543,9 @@ module.exports = function llmsPlugin(context) {
           }
           body = body.replace(/<!--[\s\S]*?-->/g, '').replace(/\n{3,}/g, '\n\n');
           const authors = (m.authors || []).map((a) => a.name).filter(Boolean).join(', ');
+          const tags = (m.tags || []).map((t) => t.label).filter(Boolean);
           const header =
-            `# ${clean(m.title)}\n\n> ${day(m.date)}${authors ? `, by ${authors}` : ''}. ${categoryOf(m.tags).label}. ` +
+            `# ${clean(m.title)}\n\n> ${day(m.date)}${authors ? `, by ${authors}` : ''}.${tags.length ? ` Tags: ${tags.join(', ')}.` : ''} ` +
             `Source: ${SITE}${m.permalink}. All posts: ${SITE}/blog.md\n\n`;
           const meta = frontMatter({
             title: clean(m.title),
@@ -553,7 +553,7 @@ module.exports = function llmsPlugin(context) {
             canonical_url: `${SITE}${m.permalink}`,
             type: 'blog',
             date: day(m.date),
-            category: categoryOf(m.tags).label,
+            tags,
             authors: (m.authors || []).map((a) => a.name).filter(Boolean),
             summary: m.description ? oneLine(m.description, 240) : null,
           });
@@ -564,15 +564,12 @@ module.exports = function llmsPlugin(context) {
         const index = [
           '# LiteLLM blog',
           '',
-          `> Every post on ${SITE}/blog, newest first within each category. Append \`.md\` to any post URL for its markdown. RSS: ${SITE}/blog/rss.xml`,
+          `> Every post on ${SITE}/blog, newest first. Append \`.md\` to any post URL for its markdown. RSS: ${SITE}/blog/rss.xml`,
+          '',
+          ...blogPosts.map(postLine),
         ];
-        for (const cat of BLOG_CATEGORIES) {
-          const posts = blogPosts.filter((m) => categoryOf(m.tags).id === cat.id);
-          if (!posts.length) continue;
-          index.push('', `## ${cat.label}`, '', cat.blurb, '', ...posts.map(postLine));
-        }
         await fs.promises.writeFile(path.join(outDir, 'blog.md'), index.join('\n') + '\n');
-        lines.push('', '## Blog', '', `- [All blog posts by category](${SITE}/blog.md): Model launches, Auto Router, gateway features, engineering, and security`);
+        lines.push('', '## Blog', '', `- [All blog posts](${SITE}/blog.md): every post, newest first`);
         lines.push(...blogPosts.slice(0, 15).map(postLine));
       }
 
