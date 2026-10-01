@@ -930,12 +930,7 @@ const sidebars = {
         },
       ]
     },
-    {
-      type: "category",
-      label: "LiteLLM Lens",
-      link: { type: "doc", id: "proxy/lens" },
-      items: ["proxy/lens_first_trace", "proxy/lens_deployment", "proxy/lens_api"],
-    },
+    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Supported Endpoints",
