@@ -1324,7 +1324,7 @@ litellm_settings:
 
 You can also set it with the `S3_PARTITION_GRANULARITY` environment variable, and a value in `s3_callback_params` wins over it. The date and hour both come from the request start time, the same clock the daily layout already uses, and team or key alias prefixes stay in front of the date folder. Leaving the setting out, or setting it to `day` or an empty value, keeps the daily layout unchanged, and any other value logs a warning and falls back to `day`
 
-The same setting applies to audit log objects, `s3_batch_file_upload` files and the cold storage object key, so `cold_storage_custom_logger: s3_v2` keeps finding the objects it wrote. With batch uploads on, a flush that spans an hour boundary writes one `.jsonl` file per hour folder. In the Admin UI the option shows up as Folder Partitioning on the `s3_v2` callback form. Only `s3_v2` supports it. The legacy `s3` callback and the `gcs_bucket` logger always write daily folders
+The same setting applies to audit log objects, `s3_batch_file_upload` files and the cold storage object key, so `cold_storage_custom_logger: s3_v2` keeps finding the objects it wrote. When audit logs go to a separate bucket through `s3_audit_callback_params`, their layout comes from `s3_partition_granularity` in that block instead, falling back to the environment variable, so request logs and audit logs can use different layouts. With batch uploads on, a flush that spans an hour boundary writes one `.jsonl` file per hour folder. In the Admin UI the option shows up as Folder Partitioning on the `s3_v2` callback form. Only `s3_v2` supports it. The legacy `s3` callback and the `gcs_bucket` logger always write daily folders
 
 ### Team Alias Prefix in Object Key
 
