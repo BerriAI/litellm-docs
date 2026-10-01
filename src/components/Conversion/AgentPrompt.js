@@ -24,7 +24,6 @@ export default function AgentPrompt({id, title, text, defaultOpen = false, compa
         </span>
         <span className={styles.promptTitle}>
           {heading}
-          <span className={styles.promptSub}>Agent prompt for Claude Code, Codex, Cursor, or any coding agent</span>
         </span>
         <button
           type="button"
@@ -33,9 +32,9 @@ export default function AgentPrompt({id, title, text, defaultOpen = false, compa
             copy(body);
             track('docs_agent_prompt_copied', {prompt: id || heading});
           }}
-          aria-label={copied ? 'Prompt copied' : `Copy prompt: ${heading}`}>
+          aria-label={copied ? 'Prompt copied' : `Copy agent prompt: ${heading}`}>
           {copied ? <IconCheck /> : <IconCopy />}
-          <span>{copied ? 'Copied' : 'Copy prompt'}</span>
+          <span>{copied ? 'Copied' : 'Copy agent prompt'}</span>
         </button>
       </div>
       <div id={bodyId} className={clsx(styles.promptBody, open && styles.promptBodyOpen)}>
