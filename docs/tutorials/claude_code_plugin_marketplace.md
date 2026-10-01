@@ -150,6 +150,10 @@ curl -X POST http://localhost:4000/claude-code/plugins \
   }'
 ```
 
+`installation_preference` is optional and takes `available`, `auto_install`, or `required`. See [Auto-install plugins in Claude Desktop](#auto-install-plugins-in-claude-desktop).
+
+`PUT /claude-code/plugins/{name}` takes the same body without `name` and replaces the whole plugin, so a field left out of the body, `installation_preference` included, is cleared.
+
 #### GET `/claude-code/plugins`
 
 List all registered plugins.
@@ -185,6 +189,40 @@ Delete a plugin.
 curl -X DELETE http://localhost:4000/claude-code/plugins/my-plugin \
   -H "Authorization: Bearer sk-..."
 ```
+
+## Auto-install plugins in Claude Desktop
+
+Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry:
+
+```bash
+curl -X POST http://localhost:4000/claude-code/plugins \
+  -H "Authorization: Bearer sk-..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-plugin",
+    "source": {
+      "source": "archive",
+      "url": "https://litellm.example.com/plugins/my-plugin-1.0.0.zip",
+      "sha256": "9f2c04d1...b8e7"
+    },
+    "installation_preference": "auto_install"
+  }'
+```
+
+```json
+{
+  "name": "my-plugin",
+  "source": {
+    "source": "archive",
+    "url": "https://litellm.example.com/plugins/my-plugin-1.0.0.zip",
+    "sha256": "9f2c04d1...b8e7"
+  },
+  "version": "1.0.0",
+  "installationPreference": "auto_install"
+}
+```
+
+Claude Desktop honors a per-plugin `installationPreference` only when `marketplace.json` is served from its `inferenceGatewayBaseUrl` or `bootstrapUrl` origin, and only for an `archive` source with a `sha256` whose zip sits on that same origin. It ignores the mark on any other origin or source type. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup. The Claude Code CLI ignores the field, so plugins still install there with `/plugin install`.
 
 ## Plugin Source Formats
 

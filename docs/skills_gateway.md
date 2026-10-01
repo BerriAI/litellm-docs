@@ -98,6 +98,7 @@ Then install any skill:
 | `namespace` | Subcategory within a domain (e.g. `quality`, `meetings`) |
 | `keywords` | Tags for search and filtering |
 | `version` | Semver string |
+| `installation_preference` | Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop) |
 
 ## API reference
 
