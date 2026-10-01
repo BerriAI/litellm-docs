@@ -1,3 +1,5 @@
+import AgentDeployPrompt from '@site/src/components/AgentDeployPrompt';
+
 # LiteLLM Lens
 
 <p>
@@ -12,15 +14,105 @@ LiteLLM Lens uses AI agents to analyze your agent traces and find recurring prob
 
 Use **Logs > Agent Traces** to manually inspect individual runs. Use **Lens** to investigate a set of runs, on demand or on a schedule.
 
-## Setup {#quick-start}
+## Deployment {#quick-start}
 
-### Set up LiteLLM and ClickHouse
+![LiteLLM Lens architecture: your agent sends LLM calls and traces to LiteLLM, which stores traces in ClickHouse; the Lens worker polls LiteLLM for investigations.](/img/lens-architecture.svg)
 
-Lens needs ClickHouse to store traces and PostgreSQL to store investigation results. Deploy ClickHouse where your LiteLLM proxy can reach it, then [enable tracing on your proxy](#configure-an-existing-proxy).
+Lens adds two things to your LiteLLM stack: ClickHouse and the Lens worker. PostgreSQL is the same database your proxy already uses.
 
-If you are starting a new deployment, the [tracing Docker Compose stack](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) starts ClickHouse, PostgreSQL, and LiteLLM together.
+| Component | What it does | What we use |
+| --- | --- | --- |
+| LiteLLM proxy | Receives traces, serves the Lens UI and API | [`ghcr.io/berriai/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm) with [tracing enabled](#configure-an-existing-proxy) |
+| ClickHouse (new) | Stores traces and request logs | [`clickhouse/clickhouse-server:26.9.6.6`](https://hub.docker.com/r/clickhouse/clickhouse-server/tags?name=26.9.6.6) |
+| Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
+| PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database |
 
-Open the dashboard at `https://<your-litellm-proxy>/ui/`. In the examples below, replace `https://<your-litellm-proxy>` with your LiteLLM proxy URL.
+### One-click Docker
+
+For a new deployment, the [tracing Docker Compose stack](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) starts LiteLLM, PostgreSQL, and ClickHouse together:
+
+```bash
+git clone https://github.com/BerriAI/litellm.git
+cd litellm/docker
+export OPENAI_API_KEY=sk-...
+docker compose -f docker-compose.tracing.yml up --build
+```
+
+Open `http://localhost:4002/ui/` and sign in with username `admin` and password `local-tracing-master-key`. Then [connect the analyzer](#connect-the-analyzer) to start the Lens worker.
+
+For an existing proxy, deploy ClickHouse where the proxy can reach it, then [enable tracing on your proxy](#configure-an-existing-proxy). In the examples below, replace `https://<your-litellm-proxy>` with your LiteLLM proxy URL.
+
+### Deploy with a coding agent
+
+<AgentDeployPrompt prompt={`Deploy LiteLLM Lens on this machine by following https://docs.litellm.ai/docs/proxy/lens
+
+1. If a LiteLLM proxy is already running, keep it and its PostgreSQL database. Otherwise clone https://github.com/BerriAI/litellm and start docker/docker-compose.tracing.yml, which runs LiteLLM, PostgreSQL, and ClickHouse.
+2. For an existing proxy, run ClickHouse (clickhouse/clickhouse-server:26.9.6.6) where the proxy can reach it. Add general_settings.tracing.store: clickhouse to the proxy config, set CLICKHOUSE_URL (and optionally a SELECT-only CLICKHOUSE_READER_URL), and restart the proxy.
+3. Check tracing works: POST an OTLP/HTTP trace to <proxy>/v1/traces with Authorization: Bearer <key>, then GET <proxy>/v1/traces and confirm it is listed.
+4. Ask me to open the dashboard, go to Observability > Lens > Set up analysis, and paste the generated worker command. Run it, or use https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml with LITELLM_URL and LENS_WORKER_TOKEN.
+5. Confirm the dashboard shows "Connected · ready to analyze".
+
+Never print or commit keys, worker tokens, or passwords. Ask me before replacing an existing container, database, or config.`} />
+
+### Docker deployment
+
+Use these steps to add Lens to a LiteLLM proxy you already run. If you don't have one yet, follow the [Docker quick start](./docker_quick_start.md) or [production deployment](./deploy.md) guide first. Lens also needs the PostgreSQL database configured through `DATABASE_URL`.
+
+#### 1. Deploy ClickHouse
+
+Run ClickHouse where your proxy can reach port `8123`:
+
+```bash
+docker run -d --name litellm-clickhouse --restart unless-stopped \
+  -e CLICKHOUSE_USER=default \
+  -e CLICKHOUSE_PASSWORD=<clickhouse-password> \
+  -e CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
+  -v clickhouse_data:/var/lib/clickhouse \
+  -p 8123:8123 \
+  clickhouse/clickhouse-server:26.9.6.6
+```
+
+The URL your proxy needs is `http://default:<clickhouse-password>@<clickhouse-host>:8123`. LiteLLM creates the `litellm` database and tables on startup.
+
+#### 2. Point LiteLLM at ClickHouse
+
+Add this to your proxy's `config.yaml`:
+
+```yaml
+general_settings:
+  tracing:
+    store: clickhouse
+```
+
+Set these environment variables on the proxy, then restart it:
+
+| Variable | Value |
+| --- | --- |
+| `CLICKHOUSE_URL` | `http://default:<clickhouse-password>@<clickhouse-host>:8123` |
+| `CLICKHOUSE_READER_URL` | Optional. A SELECT-only ClickHouse user, same URL format. Defaults to `CLICKHOUSE_URL` |
+| `CLICKHOUSE_DATABASE` | Optional. Defaults to `litellm` |
+
+Check that tracing is on: `curl -H "Authorization: Bearer <your-litellm-key>" https://<your-litellm-proxy>/v1/traces` returns `{"data": [...]}`.
+
+#### 3. Deploy the Lens worker
+
+Open `https://<your-litellm-proxy>/ui/`, go to **Observability > Lens**, click **Set up analysis**, then **Generate setup command**. Run the generated command on any server that can reach your proxy over HTTPS. It looks like this:
+
+```bash
+docker run -d --restart unless-stopped --read-only --cap-drop ALL \
+  --tmpfs /tmp:rw,noexec,nosuid,size=1g \
+  --security-opt no-new-privileges --platform linux/amd64 --add-host host.docker.internal:host-gateway \
+  -e LITELLM_URL=https://<your-litellm-proxy> \
+  -e LENS_WORKER_TOKEN=<worker-token-from-the-dashboard> \
+  ghcr.io/berriai/litellm-lens-worker@sha256:a8e8731d954916594eea462969946b9292fb771681ff515a9fd296b53f856c77
+```
+
+| Variable | Value |
+| --- | --- |
+| `LITELLM_URL` | Your proxy's base URL, without `/v1`, for example `https://litellm.example.com`. Use `http://host.docker.internal:4000` if the proxy runs on the same machine |
+| `LENS_WORKER_TOKEN` | The worker token from **Generate setup command**. Keep it private |
+
+The worker needs outbound access to `LITELLM_URL` only. It needs no inbound ports, provider keys, or database access. Use [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) instead if you manage containers with Compose. The dashboard shows **Connected · ready to analyze** once the worker checks in.
 
 ### Connect your agent
 
