@@ -188,6 +188,7 @@ button.hub:focus-visible .hubHint,
 .actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.4rem 1rem;
   margin: -0.25rem 0 2rem;
@@ -208,16 +209,6 @@ button.hub:focus-visible .hubHint,
   border-color: var(--ifm-color-emphasis-400);
   color: var(--ifm-font-color-base);
 }
-.link {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ifm-color-emphasis-700);
-}
-.link:hover {
-  color: var(--ifm-color-primary);
-  text-decoration: none;
-}
-
 /* Phones: the logo and what it reaches; the callers and lines drop away */
 @media (max-width: 700px) {
   .flow {

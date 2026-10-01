@@ -166,9 +166,6 @@ export default function LiteLLMFlow() {
           {copied ? <IconCheck size={13} /> : <IconAgent size={13} />}
           {copied ? 'Copied' : 'Copy agent prompt'}
         </button>
-        <Link className={styles.link} to="/docs/proxy/docker_quick_start">
-          Start the gateway →
-        </Link>
       </div>
     </>
   );
