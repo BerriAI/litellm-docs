@@ -1,3 +1,7 @@
+---
+image: /img/lens/lens_hero_labeled.gif
+---
+
 import AgentDeployPrompt from '@site/src/components/AgentDeployPrompt';
 
 # LiteLLM Lens
