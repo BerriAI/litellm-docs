@@ -10,6 +10,28 @@ LiteLLM Lens uses AI agents to analyze your agent traces and find recurring prob
 
 Use **Logs > Agent Traces** to manually inspect individual runs. Use **Lens** to investigate a set of runs, on demand or on a schedule.
 
+## Requirements
+
+Lens needs the following before you start setup:
+
+- A LiteLLM proxy release that includes Lens
+- PostgreSQL, which stores lens configurations, findings, and scan history
+- ClickHouse, which stores agent traces and request logs, reachable through `CLICKHOUSE_URL` and `CLICKHOUSE_READER_URL`
+- Agent tracing enabled with `general_settings.tracing.store: clickhouse`
+
+This guide was verified against ClickHouse `clickhouse/clickhouse-server:25.8` (server build 25.8.33.6). To run it locally:
+
+```bash
+docker run -d --name litellm-clickhouse \
+  -e CLICKHOUSE_USER=default \
+  -e CLICKHOUSE_PASSWORD=<password> \
+  -e CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
+  -p 8123:8123 \
+  clickhouse/clickhouse-server:25.8
+```
+
+The [tracing Docker Compose stack](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) in the LiteLLM repo currently pins `clickhouse/clickhouse-server:26.9.6.6`. Version 25.8 is the one verified against this guide.
+
 ## Setup {#quick-start}
 
 ### Set up LiteLLM and ClickHouse
@@ -121,7 +143,34 @@ general_settings:
     store: clickhouse
 ```
 
-Set `CLICKHOUSE_URL` to the ClickHouse HTTP address your proxy can reach. `CLICKHOUSE_DATABASE` defaults to `litellm`. You can set `CLICKHOUSE_READER_URL` to use a separate read-only account; otherwise reads use `CLICKHOUSE_URL`.
+Set both ClickHouse URLs in the proxy environment. `CLICKHOUSE_DATABASE` defaults to `litellm`.
+
+```bash
+export CLICKHOUSE_URL="http://default:<password>@<clickhouse-host>:8123"
+export CLICKHOUSE_READER_URL="http://litellm_reader:<reader-password>@<clickhouse-host>:8123"
+```
+
+`CLICKHOUSE_URL` is used to create tables and write spans and request logs. `CLICKHOUSE_READER_URL` is used for every read, including **Logs > Agent Traces**, the `/v1/traces` read endpoints, and Lens. Both are required. If `CLICKHOUSE_READER_URL` is unset, reads do not fall back to `CLICKHOUSE_URL`. Agent tracing stays off entirely: the proxy logs `Agent tracing unavailable` at startup, writes no spans or request logs to ClickHouse, and returns `501` from `/v1/traces` and from Lens activity reads.
+
+You can point both variables at the same account for local testing. In production, use a separate SELECT-only user for `CLICKHOUSE_READER_URL`. Lens and the trace viewer run read queries on behalf of dashboard users, so a reader that can only SELECT from the trace tables limits what a bad query can do. LiteLLM also sets `readonly=1` and row and time limits on each read query. Do not give the reader a `readonly` setting of its own, because ClickHouse then rejects those per-query settings and every read fails. With `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1`, you can create the reader with SQL after the proxy has created the tables:
+
+```sql
+CREATE USER litellm_reader IDENTIFIED BY '<reader-password>';
+GRANT SELECT ON litellm.otel_traces TO litellm_reader;
+GRANT SELECT ON litellm.agent_traces_by_key TO litellm_reader;
+GRANT SELECT ON litellm.spend_logs TO litellm_reader;
+```
+
+To analyze individual LLM requests, Lens reads the request and response content that the proxy logs to ClickHouse. With tracing enabled, the proxy writes these request logs automatically, so you do not need to add `clickhouse` to `litellm_settings.callbacks`. Keep message logging on. When `turn_off_message_logging` is `true`, request inputs and outputs are stored empty and Lens has nothing to review:
+
+```yaml
+general_settings:
+  tracing:
+    store: clickhouse
+
+litellm_settings:
+  turn_off_message_logging: false
+```
 
 Investigations also need PostgreSQL, a configured analysis model, and a connected Lens worker. Keep the proxy and worker versions compatible. See the [tracing config](https://github.com/BerriAI/litellm/blob/main/docker/tracing-config.yaml) and [worker setup guide](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md) for deployment details.
 
