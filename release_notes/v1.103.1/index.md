@@ -68,6 +68,12 @@ If your spend logs table is partitioned, Postgres cannot build its index concurr
 
 :::
 
+:::warning `lite` CLI users must log in again
+
+After upgrading the proxy, every `lite` CLI user has to run `lite login` once more. Until they do, the CLI keeps sending its old session token and its requests to the proxy fail
+
+:::
+
 `v1.103.1` is a patch release on top of [`v1.103.0`](https://github.com/BerriAI/litellm/releases/tag/v1.103.0). It carries one change: the session tokens the Admin UI and the `lite` CLI receive after sign-in now use their own encryption context and a header-safe format. Both the Docker image and the PyPI package were built from [`580bde9`](https://github.com/BerriAI/litellm/commit/580bde9a2d148714889ec1c04a9872819e78a778)
 
 ## UI and CLI session tokens get their own format
