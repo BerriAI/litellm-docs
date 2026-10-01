@@ -6,31 +6,26 @@ Use **Logs > Agent Traces** to manually inspect individual runs. Use **Lens** to
 
 ## Setup {#quick-start}
 
-### Start LiteLLM
+### Set up LiteLLM and ClickHouse
 
-Lens stores traces in ClickHouse and investigation results in PostgreSQL. The [tracing Docker Compose stack](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) starts both databases and LiteLLM:
+Lens needs ClickHouse to store traces and PostgreSQL to store investigation results. Deploy ClickHouse where your LiteLLM proxy can reach it, then [enable tracing on your proxy](#configure-an-existing-proxy).
 
-```bash
-git clone https://github.com/BerriAI/litellm.git
-cd litellm/docker
-export OPENAI_API_KEY=sk-...
-docker compose -f docker-compose.tracing.yml up --build
-```
+If you are starting a new deployment, the [tracing Docker Compose stack](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.tracing.yml) starts ClickHouse, PostgreSQL, and LiteLLM together.
 
-Open the dashboard at `http://localhost:4002/ui/`. This stack uses local example credentials. If you already run LiteLLM, see [Configure an existing proxy](#configure-an-existing-proxy).
+Open the dashboard at `https://<your-litellm-proxy>/ui/`. In the examples below, replace `https://<your-litellm-proxy>` with your LiteLLM proxy URL.
 
 ### Connect your agent
 
 Point your agent's OpenTelemetry OTLP/HTTP exporter to LiteLLM:
 
-| Setting | Local Compose value |
+| Setting | Value |
 | --- | --- |
-| Trace endpoint | `http://localhost:4002/v1/traces` |
-| HTTP header | `Authorization: Bearer local-tracing-master-key` |
+| Trace endpoint | `https://<your-litellm-proxy>/v1/traces` |
+| HTTP header | `Authorization: Bearer <your-litellm-key>` |
 
-For your own deployment, use its proxy URL and a LiteLLM key. Record the agent's task, steps, tool calls, inputs, and final answer. Lens uses this content to check what happened.
+Use a LiteLLM key to authenticate. Record the agent's task, steps, tool calls, inputs, and final answer. Lens uses this content to check what happened.
 
-For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=http://localhost:4002/v1/traces` and `LITELLM_DEV_KEY=local-tracing-master-key` in its `.env` file, then run the agent.
+For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=https://<your-litellm-proxy>/v1/traces` and `LITELLM_DEV_KEY=<your-litellm-key>` in its `.env` file, then run the agent.
 
 ## View your first trace
 
@@ -44,7 +39,7 @@ Check that you can see the task, tool results, and final answer. If these are mi
 
 ### Connect the analyzer
 
-Sign in as a proxy administrator and open **Lens** under **Observability**. Click **Connect analyzer** in the setup guide, or **Set up analysis** at the top of the page. Check your LiteLLM deployment URL, then click **Generate setup command**.
+Sign in as a proxy administrator and open **Lens** under **Observability**. Click **Set up analysis** at the top of the page. Check your LiteLLM deployment URL, then click **Generate setup command**.
 
 Run the Docker command on a server that can reach your LiteLLM deployment. Keep the command private because it contains the worker token. Wait for **Connected · ready to analyze**.
 
@@ -54,23 +49,23 @@ This worker runs on your infrastructure. It checks LiteLLM for scheduled or requ
 
 ### Choose the traces
 
-Click **Set up your first lens**, or **New lens**. In **Activity**, name the lens and choose **Agent runs**. Select an application, team, or metadata conditions to narrow the investigation. **Application** matches the recorded OpenTelemetry `service.name`. Metadata conditions match recorded keys and values exactly.
+Click **Set up your first lens**, or **New lens**. In **Activity**, name the lens and choose **Agent runs**. Select an application or add metadata conditions to narrow the investigation. **Application** matches the recorded OpenTelemetry `service.name`. Metadata conditions match recorded keys and values exactly.
 
-Set **Review the last** to your time window. Set **Sample (%)** to the portion you want to review. Use **Maximum runs** to add a limit, or leave it empty. To review all matching traces, select 100% with no maximum.
+Set **Review the last** to the time window for the first investigation.
 
 ![Activity selection filtered by application and metadata, with matching runs on the right.](/img/lens/activity-selection.png)
 
-Check the matching runs in the preview. You can open a run or select particular runs to investigate. Newly received traces need a two-minute settling period before they appear here.
+Check the matching runs in the preview. Click **Open run** to inspect an example before you continue. Newly received traces need a two-minute settling period before they appear here.
 
 ### Describe what to check
 
-Click **Continue** to open **Questions**. Describe what your agent should do and what a good run looks like.
+Click **Continue** to open **Questions**. In **What does a good run look like?**, describe what your agent should do.
 
 For example:
 
 > The research agent answers the user's question with sources. It checks the sources before writing the final answer and states when it cannot verify a claim.
 
-Add **Specific checks** if needed, one per line:
+In **Questions & checks**, add the questions you want Lens to answer, one per line. You can edit the suggested questions or write your own:
 
 ```text
 Find claims that conflict with the retrieved sources.
@@ -84,13 +79,13 @@ After setup, you can review and edit these under **Questions & checks**.
 
 ### Start the run
 
-In **Review & run**, choose an **Analysis model**, a **Monthly limit (USD)**, and **Runs analyzed at once**. Trace content goes to the selected model through LiteLLM. Parallelism controls how much analysis runs at once; sampling controls how many traces are selected.
+Click **Continue** to open **Review & run**. Choose an **Analysis model**, set a **Monthly limit (USD)**, and set **Maximum runs to review**. If more runs match, Lens reviews a sample. Trace content goes to the selected model through LiteLLM.
 
 Choose **Run once, then manually** or **Run now and keep monitoring**. For monitoring, set **Check every** to the interval you want. Click **Run analysis** or **Start monitoring**.
 
 Lens reviews the selected runs in parallel, groups similar observations, and checks the original evidence before saving findings.
 
-Use **Run now** to repeat the investigation with its saved settings. Scheduled runs use those same settings over a new time window. Use **Duplicate** to investigate a different subset, or **Pause** to stop future scheduled runs.
+Use **Analyze now** to start another investigation. To review recent history again, open **Questions & checks** and click **Recheck the last 24 hours**. Use **Pause** to stop scheduled investigations.
 
 ## Read the findings
 
@@ -100,34 +95,15 @@ Open a finding to read what happened and the suggested next step. Expand **Evide
 
 ![A finding showing what happened, what to do next, and links to the supporting runs.](/img/lens/finding-detail.png)
 
-Use the batch selector or **Scans** to return to an earlier investigation. Each batch keeps its settings, selected runs, findings, coverage, and cost. **Runs** shows the traces reviewed in that batch.
+Open **Runs** to see the traces selected for the current or most recent investigation. Open **Scans** to see investigation history.
 
 Findings describe the reviewed sample. **Linked runs** counts cited runs, which can include counterexamples; it is not a count of all failures.
 
 ### Give feedback
 
-If Lens flags expected behavior, explain why under **What should Lens remember?** and click **This is expected**. Lens uses that feedback in later investigations for the same lens.
+If Lens flags expected behavior, explain why in **Feedback** and click **Dismiss**. Lens uses that feedback in later investigations for the same lens.
 
 After you fix an issue, click **Mark resolved**. Lens can reopen it if the same issue appears in new runs.
-
-## Lens API (coming soon) {#use-the-api}
-
-API access for your agents to start Lens investigations and read findings is coming soon. The dashboard already uses these endpoints on your existing LiteLLM proxy, under `/engine`:
-
-| Action | Endpoint |
-| --- | --- |
-| Preview matching runs and sample size | `POST /engine/preview/sample` |
-| Create a lens and start its first investigation | `POST /engine` |
-| Run again with the saved settings | `POST /engine/{id}/runs` with `{}` |
-| Run once with different settings or selected runs | `POST /engine/{id}/runs` with a `settings` override |
-| List previous investigations | `GET /engine/{id}/runs` |
-| Get an investigation's progress, findings, and selected runs | `GET /engine/{id}/runs/{run_id}` |
-| Read supporting trace content | `GET /engine/{id}/executions/{execution_id}` |
-| Mark a finding as expected and explain why | `PATCH /engine/{id}/findings/{finding_id}` |
-
-An agent follows the same flow as the UI: preview the matching runs, create or start an investigation, check its progress, then read the findings. Scheduling is part of the saved settings.
-
-Creating, changing, starting, cancelling, and giving feedback require proxy administrator access.
 
 ## Configure an existing proxy
 
@@ -158,7 +134,26 @@ List responses contain `data` and `next_cursor`, with 50 summaries per page by d
 
 ```bash
 curl -H "Authorization: Bearer <key>" \
-  "http://localhost:4002/v1/traces"
+  "https://<your-litellm-proxy>/v1/traces"
 ```
 
 Proxy administrators can read all traces. Team keys can read their team's traces. Keys without a team can read traces sent with that key. Read-only proxy administrators cannot ingest traces.
+
+## Lens API (coming soon) {#use-the-api}
+
+API access for your agents to start Lens investigations and read findings is coming soon. The dashboard already uses these endpoints on your existing LiteLLM proxy, under `/engine`:
+
+| Action | Endpoint |
+| --- | --- |
+| Preview matching runs and sample size | `POST /engine/preview/sample` |
+| Create a lens and start its first investigation | `POST /engine` |
+| Run again with the saved settings | `POST /engine/{id}/runs` with `{}` |
+| Run once with different settings or selected runs | `POST /engine/{id}/runs` with a `settings` override |
+| List previous investigations | `GET /engine/{id}/runs` |
+| Get an investigation's progress, findings, and selected runs | `GET /engine/{id}/runs/{run_id}` |
+| Read supporting trace content | `GET /engine/{id}/executions/{execution_id}` |
+| Mark a finding as expected and explain why | `PATCH /engine/{id}/findings/{finding_id}` |
+
+An agent follows the same flow as the UI: preview the matching runs, create or start an investigation, check its progress, then read the findings. Scheduling is part of the saved settings.
+
+Creating, changing, starting, cancelling, and giving feedback require proxy administrator access.
