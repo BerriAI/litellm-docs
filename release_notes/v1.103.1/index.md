@@ -49,6 +49,21 @@ This release is published as [`ghcr.io/berriai/litellm:v1.103.1`](https://github
 
 :::danger Breaking Changes
 
+**Upgrading from `v1.102.x` or earlier adds an index on `LiteLLM_SpendLogs`, which blocks spend log writes while it builds at startup.** On a large table that can take a long time. To avoid this, build the index yourself before upgrading with `CONCURRENTLY`, which does not block writes. The migration then finds it and skips the build. See [PR #37983](https://github.com/BerriAI/litellm/pull/37983)
+
+```sql
+SET statement_timeout = 0;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx" ON "LiteLLM_SpendLogs"("api_key", "startTime");
+```
+
+Run it outside a transaction, from a session that stays connected until it finishes. A failed concurrent build leaves an invalid index behind, and the migration would skip that too, so check it before upgrading. This must return `true`, otherwise run `DROP INDEX CONCURRENTLY "LiteLLM_SpendLogs_api_key_startTime_idx";` and build it again:
+
+```sql
+SELECT indisvalid FROM pg_index WHERE indexrelid = '"LiteLLM_SpendLogs_api_key_startTime_idx"'::regclass;
+```
+
+If your spend logs table is partitioned, Postgres cannot build its index concurrently. Build a matching index concurrently on each partition first, then run the same `CREATE INDEX` without `CONCURRENTLY` on the parent, which only attaches them
+
 **Session tokens issued before the upgrade stop working.** Admin UI and `lite` CLI users sign in once more after upgrading. During a rolling upgrade, pods on the old and new versions reject each other's session tokens, so finish the rollout before asking users to sign in again. Virtual keys, the master key and stored credentials are unaffected. See [`a80eaca`](https://github.com/BerriAI/litellm/commit/a80eacacee118fbed54e3d98f239d17a63fac818)
 
 :::
