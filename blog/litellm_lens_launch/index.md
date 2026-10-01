@@ -11,7 +11,6 @@ hide_table_of_contents: true
 ---
 
 import Head from '@docusaurus/Head';
-import { LensHero } from './LensHero';
 
 <Head>
   <meta property="og:image" content="https://docs.litellm.ai/img/blog/litellm_lens_launch/lens_hero.gif" />
@@ -24,6 +23,6 @@ import { LensHero } from './LensHero';
   <meta name="twitter:image" content="https://docs.litellm.ai/img/blog/litellm_lens_launch/lens_hero.gif" />
 </Head>
 
-<LensHero />
+![Agent swarms flow through the LiteLLM gateway into one trace per run, and LiteLLM Lens feeds improvements back.](/img/blog/litellm_lens_launch/lens_hero_labeled.gif)
 
 {/* truncate */}
