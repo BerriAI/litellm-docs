@@ -112,7 +112,7 @@ This video walks through adding and using an SSE MCP server on LiteLLM UI and us
 
 stdio MCP servers are disabled unless the proxy is started with `LITELLM_ENABLE_MCP_STDIO=true` in its environment. While it is off, the stdio transport is greyed out in the UI, creating or updating a stdio server returns an error, and existing stdio servers stay listed but never start: their tools are left out of tool listings, direct tool calls return `403`, and their health check reports them as unhealthy
 
-The flag is read from the proxy's process environment only. Setting it through `environment_variables` stored in the database has no effect
+The flag is read from the proxy's process environment only. Setting it under `environment_variables` in config.yaml or in the database has no effect
 
 :::
 
