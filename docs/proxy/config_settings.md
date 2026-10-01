@@ -698,6 +698,7 @@ router_settings:
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
 | CLI_SSO_CLAIM_MAP | Comma-separated allowlist mapping OIDC claim paths to LiteLLM user `metadata` keys for CLI SSO (e.g. `employment_type->acme_employment_type,org_info.department->department`). Scalar values are also returned in `/sso/cli/poll` as `attribution_metadata`. Alias: `LITELLM_CLI_SSO_CLAIM_MAP`
+| CLICKHOUSE_FLUSH_INTERVAL_SECONDS | Seconds between flushes of the rows LiteLLM buffers for ClickHouse, such as spend logs when tracing is on. A full batch flushes early. Default `1.0`
 | CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
