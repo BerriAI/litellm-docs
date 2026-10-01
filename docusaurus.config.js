@@ -456,6 +456,11 @@ const config = {
         },
         items: [
           {
+            type: 'custom-productsMenu',
+            label: 'Products',
+            position: 'left',
+          },
+          {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
