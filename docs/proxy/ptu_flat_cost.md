@@ -129,7 +129,7 @@ model_list:
         <team b id>: 20
 ```
 
-`ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike. Through the API every team in the split has to exist already: `POST /model/new` and `PATCH /model/{model_id}/update` refuse a split naming an unknown team with a 400 that names it, the same way they refuse an unknown `team_id`
+`ptu_shares` and `team_id` cannot both be set, and the shares have to add up to `ptu_count` exactly, in whole PTUs. A split that leaves capacity unowned or hands out more than was reserved is refused with a 400 saying how many of the PTUs were allocated, from `POST /model/new` and `config.yaml` alike, and so is a split declared without `ptu_count` and `cost_per_ptu_per_hour`, since it would have nothing to add up to and no flat cost to roll up. Through the API every team in the split has to exist already: `POST /model/new` and `PATCH /model/{model_id}/update` refuse a split naming an unknown team with a 400 that names it, the same way they refuse an unknown `team_id`
 
 A deployment one team already owns through `team_id` is not switched to `ptu_shares` by a `PATCH`: a `team_id` row is team-scoped, with an internal routing name and an entry in that team's model list, and a shared row is proxy-wide, so the patch is refused with the same 400. To split it, delete the deployment and register it again with `ptu_shares` and the same `model_info.id`, which keeps the flat-cost rows already written under that id
 
