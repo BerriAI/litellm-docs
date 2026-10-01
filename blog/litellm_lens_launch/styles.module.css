@@ -201,7 +201,7 @@
 }
 
 .partner {
-  margin: 2rem 0;
+  margin: 2rem 0 !important;
   padding: 36px 40px;
   border-radius: 14px;
   background: #f5f6fa;
@@ -211,7 +211,8 @@
   background: var(--ifm-background-surface-color);
 }
 
-.partnerName {
+.partner .partnerName,
+.partner .partnerName:hover {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -220,30 +221,33 @@
   letter-spacing: -0.02em;
   color: var(--ifm-heading-color) !important;
   text-decoration: none !important;
+  background: none !important;
+  border: 0 !important;
 }
 
-.partnerName img {
+.partner .partnerName img {
   width: 36px;
   height: 36px;
   margin: 0 !important;
   border-radius: 0 !important;
 }
 
-[data-theme='dark'] .partnerName img {
+[data-theme='dark'] .partner .partnerName img {
   filter: invert(1);
 }
 
-.partnerQuote {
+.partner .partnerQuote {
   margin: 28px 0 0 !important;
   padding: 0 !important;
   border: 0 !important;
-  font-size: 22px;
+  background: none !important;
+  font-size: 22px !important;
   line-height: 1.45;
   letter-spacing: -0.01em;
-  color: var(--ifm-heading-color);
+  color: var(--ifm-heading-color) !important;
 }
 
-.partnerAuthor {
+.partner .partnerAuthor {
   margin-top: 24px;
   font-size: 16px;
   color: var(--ifm-color-emphasis-700);
