@@ -366,6 +366,7 @@ const sidebars = {
       collapsed: false,
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
+        { type: "doc", id: "agent_resources", label: "Agent resources" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
