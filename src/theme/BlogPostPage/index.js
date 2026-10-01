@@ -73,11 +73,47 @@ function Author({author, imageURL}) {
   );
 }
 
+export function PostByline() {
+  const {metadata, assets} = useBlogPost();
+  const authorImages = assets.authorsImageUrls || [];
+  return (
+    <div className={clsx(styles.page, styles.immersiveByline)}>
+      <div className={styles.inner}>
+        <span className={styles.published}>
+          Published: <time dateTime={metadata.date}>{formatDate(metadata.date)}</time>
+        </span>
+        <div className={styles.authors}>
+          {metadata.authors.map((author, index) => (
+            <Author
+              key={author.key || author.name}
+              author={author}
+              imageURL={authorImages[index] ?? author.imageURL}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BlogPostPageContent({children}) {
   const {metadata, assets} = useBlogPost();
   const {title, date, tags, authors, nextItem, prevItem, frontMatter} = metadata;
   const coverImage = assets.image ?? frontMatter.image;
   const authorImages = assets.authorsImageUrls || [];
+
+  if (frontMatter.custom_hero) {
+    return (
+      <Layout>
+        <article className={styles.immersive}>
+          <ContentVisibility metadata={metadata} />
+          <div id={blogPostContainerID} className="markdown">
+            <MDXContent>{children}</MDXContent>
+          </div>
+        </article>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

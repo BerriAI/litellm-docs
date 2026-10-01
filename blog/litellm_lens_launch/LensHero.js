@@ -23,7 +23,6 @@ const css = `
 
 // Palette index: 1..4 agent kinds, 5 LLM, 6 tool, 7 failure, 8 insight (theme blue)
 const BASE_COLORS = ['#2aa889', '#8b5cf6', '#ec6f93', '#27b6e8', '#e3a42b', '#f28bb0', '#48c7f0', '#e5484d', '#0017b7'];
-const GATE_X = 0.46, END_X = 0.975, GATE_Y = 0.42;
 const CYCLE = 12; // seconds per run
 const RUN_LABELS = ['failures: many', 'failures: fewer', 'failures: rare', 'failures: none'];
 const COLONY_Y = [0.08, 0.24, 0.4, 0.56, 0.72, 0.88];
@@ -45,7 +44,7 @@ const AGENTS = Array.from({length: 900}, (_, n) => ({
   tail: 3 + Math.floor(hash(n, 7) * 5),
 }));
 
-function startField(stage, canvas, runTag) {
+function startField(stage, canvas, runTag, {gateX: GATE_X = 0.46, endX: END_X = 0.975, gateY: GATE_Y = 0.42, agents = 900, cellFor = (w) => (w < 560 ? 4.5 : 5.5)} = {}) {
   const ctx = canvas.getContext('2d');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const COLORS = [...BASE_COLORS];
@@ -59,7 +58,7 @@ function startField(stage, canvas, runTag) {
     W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cell = W < 560 ? 4.5 : 5.5;
+    cell = cellFor(W);
     cols = Math.ceil(W / cell); rows = Math.ceil(H / cell);
     colorGrid = new Int8Array(cols * rows); alphaGrid = new Float32Array(cols * rows); bigGrid = new Uint8Array(cols * rows);
     const cs = window.getComputedStyle(stage);
@@ -81,7 +80,7 @@ function startField(stage, canvas, runTag) {
   }
 
   function drawSwarm(t, failRate) {
-    for (let n = 0; n < AGENTS.length; n++) {
+    for (let n = 0; n < Math.min(agents, AGENTS.length); n++) {
       const a = AGENTS[n];
       const u = (a.phase + t * a.speed) % 1;
       for (let k = 0; k <= a.tail; k++) {
@@ -229,6 +228,35 @@ function startField(stage, canvas, runTag) {
     window.removeEventListener('resize', redraw);
     themeObserver.disconnect();
   };
+}
+
+export function LensHeroZoomed({className}) {
+  const stageRef = useRef(null);
+  const canvasRef = useRef(null);
+  const runRef = useRef(null);
+
+  useEffect(
+    () =>
+      startField(stageRef.current, canvasRef.current, runRef.current, {
+        gateX: 0.4,
+        endX: 0.93,
+        gateY: 0.4,
+        agents: 700,
+        cellFor: (w) => (w < 640 ? 4.5 : 6),
+      }),
+    [],
+  );
+
+  return (
+    <div className={`lens-hero ${className}`} ref={stageRef}>
+      <style>{css}</style>
+      <canvas
+        ref={canvasRef}
+        aria-label="Agent swarms converge into the LiteLLM gateway, leave as one trace, and Lens loops insight back into the gateway"
+      />
+      <div hidden ref={runRef} />
+    </div>
+  );
 }
 
 export function LensHero() {
