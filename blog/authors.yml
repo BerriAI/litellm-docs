@@ -7,7 +7,10 @@ litellm:
 yujonglee:
   name: Yujong Lee
   title: Senior SWE, LiteLLM
-  url: mailto:yujong@berri.ai
+  url: https://www.linkedin.com/in/yujong1ee/
+  email: yujong@berri.ai
+  socials:
+    x: https://x.com/yujonglee
   image_url: https://avatars.githubusercontent.com/u/61503739?v=4
 
 sameer:
