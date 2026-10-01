@@ -76,6 +76,7 @@ misbah:
 tin:
   name: Tin Lo
   title: Founding AI Product Engineer, LiteLLM
+  url: https://www.linkedin.com/in/tinchi-lo/
   image_url: /img/authors/tin.png
 
 mubashir:
@@ -99,7 +100,7 @@ moe:
   name: Moe Khalil
   title: Product Engineer
   url: https://www.linkedin.com/in/moe-khalil-73a2371a1/
-  image_url: https://github.com/moe-berri.png
+  image_url: /img/authors/moe.jpg
 
 kerry:
   name: Kerry Lu
