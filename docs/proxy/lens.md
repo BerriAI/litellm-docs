@@ -2,7 +2,7 @@
 
 LiteLLM Lens uses AI agents to analyze your agent traces and find recurring problems. You specify the expected behavior. Lens investigates failures, groups similar problems, and links each finding to the original traces.
 
-Use **Logs > Agent Traces** to inspect individual runs. Use **Lens** to investigate a set of runs, on demand or on a schedule.
+Use **Logs > Agent Traces** to manually inspect individual runs. Use **Lens** to investigate a set of runs, on demand or on a schedule.
 
 ## Setup {#quick-start}
 
@@ -52,9 +52,19 @@ Run the Docker command on a server that can reach your LiteLLM deployment. Keep 
 
 This worker runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations and sends the results back. It calls your chosen model through LiteLLM and keeps running when you close the dashboard.
 
+### Choose the traces
+
+Click **Set up your first lens**, or **New lens**. In **Activity**, name the lens and choose **Agent runs**. Select an application, team, or metadata conditions to narrow the investigation. **Application** matches the recorded OpenTelemetry `service.name`. Metadata conditions match recorded keys and values exactly.
+
+Set **Review the last** to your time window. Set **Sample (%)** to the portion you want to review. Use **Maximum runs** to add a limit, or leave it empty. To review all matching traces, select 100% with no maximum.
+
+![Activity selection filtered by application and metadata, with matching runs on the right.](/img/lens/activity-selection.png)
+
+Check the matching runs in the preview. You can open a run or select particular runs to investigate. Newly received traces need a two-minute settling period before they appear here.
+
 ### Describe what to check
 
-Click **Set up your first lens**, or **New lens**. In **Expectations**, name the lens and describe **What does a good run look like?**
+Click **Continue** to open **Questions**. Describe what your agent should do and what a good run looks like.
 
 For example:
 
@@ -71,16 +81,6 @@ Find repeated searches that add no new information.
 After setup, you can review and edit these under **Questions & checks**.
 
 ![Saved agent context and checks for a research agent.](/img/lens/questions-and-checks.png)
-
-### Choose the traces
-
-In **Activity**, choose **Agent runs**. Select an application, team, or metadata conditions to narrow the investigation. **Application** matches the recorded OpenTelemetry `service.name`. Metadata conditions match recorded keys and values exactly.
-
-Set **Review the last** to your time window. Set **Sample (%)** to the portion you want to review. Use **Maximum runs** to add a limit, or leave it empty. To review all matching traces, select 100% with no maximum.
-
-![Activity selection filtered by application and metadata, with matching runs on the right.](/img/lens/activity-selection.png)
-
-Check the matching runs in the preview. You can open a run or select particular runs to investigate. Newly received traces need a two-minute settling period before they appear here.
 
 ### Start the run
 
@@ -110,40 +110,24 @@ If Lens flags expected behavior, explain why under **What should Lens remember?*
 
 After you fix an issue, click **Mark resolved**. Lens can reopen it if the same issue appears in new runs.
 
-## Use the API
+## Lens API (coming soon) {#use-the-api}
 
-Your agents can start investigations and read findings through the same API used by the dashboard. Use a proxy administrator credential to create or run an investigation.
-
-Set `LITELLM_URL` to your proxy address and `LITELLM_API_KEY` to your administrator key. This request starts one investigation over the last 24 hours:
-
-```bash
-curl "$LITELLM_URL/engine" \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name": "Research quality",
-    "model": "your-model-alias",
-    "context": "The agent answers the user question with verified sources and states what it cannot verify.",
-    "source": "traces",
-    "lookback_hours": 24,
-    "sample_percent": 100,
-    "sample_size": null,
-    "concurrency": 8,
-    "monthly_budget": 20,
-    "enabled": false
-  }'
-```
-
-Replace `your-model-alias` with a model on your gateway. The response includes the lens `id` and the first batch ID in `jobs[0].id`. Here, `enabled: false` stops future scheduled runs; the first investigation still runs.
+API access for your agents to start Lens investigations and read findings is coming soon. The dashboard already uses these endpoints on your existing LiteLLM proxy, under `/engine`:
 
 | Action | Endpoint |
 | --- | --- |
-| Start another investigation | `POST /engine/{lens_id}/runs` with `{}` |
-| Read a batch and its findings | `GET /engine/{lens_id}/runs/{batch_id}` |
-| List investigation history | `GET /engine/{lens_id}/runs?offset=0` |
-| Give feedback | `PATCH /engine/{lens_id}/findings/{finding_id}` |
+| Preview matching runs and sample size | `POST /engine/preview/sample` |
+| Create a lens and start its first investigation | `POST /engine` |
+| Run again with the saved settings | `POST /engine/{id}/runs` with `{}` |
+| Run once with different settings or selected runs | `POST /engine/{id}/runs` with a `settings` override |
+| List previous investigations | `GET /engine/{id}/runs` |
+| Get an investigation's progress, findings, and selected runs | `GET /engine/{id}/runs/{run_id}` |
+| Read supporting trace content | `GET /engine/{id}/executions/{execution_id}` |
+| Mark a finding as expected and explain why | `PATCH /engine/{id}/findings/{finding_id}` |
 
-To investigate a different subset without changing the saved lens, include a complete `settings` object in the runs request. Use `team_id`, `filters`, or `execution_ids` from `POST /engine/preview/sample` to select runs.
+An agent follows the same flow as the UI: preview the matching runs, create or start an investigation, check its progress, then read the findings. Scheduling is part of the saved settings.
+
+Creating, changing, starting, cancelling, and giving feedback require proxy administrator access.
 
 ## Configure an existing proxy
 
