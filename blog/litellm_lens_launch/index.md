@@ -5,7 +5,6 @@ date: 2026-09-30T09:00:00
 authors:
   - ishaan
 description: "Launching LiteLLM Lens"
-image: /img/blog/litellm_lens_launch/lens_hero.gif
 tags: [lens, agent-tracing]
 hide_table_of_contents: true
 ---
