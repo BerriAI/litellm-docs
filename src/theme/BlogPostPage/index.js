@@ -7,7 +7,7 @@
  * its metadata, structured data, draft/unlisted banners and the
  * #__blog-post-container id that the RSS feed generator reads.
  */
-import React from 'react';
+import React, {useEffect} from 'react';
 import clsx from 'clsx';
 import {HtmlClassNameProvider, ThemeClassNames} from '@docusaurus/theme-common';
 import {BlogPostProvider, useBlogPost} from '@docusaurus/plugin-content-blog/client';
@@ -96,7 +96,23 @@ export function PostByline() {
   );
 }
 
+const EMBED_CSS = `
+.navbar, footer, .theme-announcement-bar, .crisp-client { display: none !important; }
+:root { --ifm-navbar-height: 0px; }
+`;
+
+function useEmbedMode() {
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('embed') !== '1') return undefined;
+    const style = document.createElement('style');
+    style.textContent = EMBED_CSS;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+}
+
 function BlogPostPageContent({children}) {
+  useEmbedMode();
   const {metadata, assets} = useBlogPost();
   const {title, date, tags, authors, nextItem, prevItem, frontMatter} = metadata;
   const coverImage = assets.image ?? frontMatter.image;
