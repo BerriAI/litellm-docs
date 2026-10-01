@@ -263,14 +263,15 @@ export default function LaunchHero({date, tagline, sections}) {
   );
 }
 
-export function Partner({href, logo, name, children}) {
+export function Partner({href, logo, name, quote, author}) {
   return (
-    <a className={styles.partner} href={href} target="_blank" rel="noopener noreferrer">
-      <span className={styles.partnerName}>
+    <figure className={styles.partner}>
+      <a className={styles.partnerName} href={href} target="_blank" rel="noopener noreferrer">
         <img src={logo} alt="" />
         {name}
-      </span>
-      <span className={styles.partnerText}>{children}</span>
-    </a>
+      </a>
+      <blockquote className={styles.partnerQuote}>&ldquo;{quote}&rdquo;</blockquote>
+      <figcaption className={styles.partnerAuthor}>{author}</figcaption>
+    </figure>
   );
 }
