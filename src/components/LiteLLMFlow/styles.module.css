@@ -8,7 +8,7 @@
   --fl-dot: #dcdee4;
   position: relative;
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 176px;
+  grid-template-columns: 150px minmax(0, 1fr) 190px;
   gap: 48px;
   align-items: center;
   margin: 1.25rem 0 1rem;
@@ -135,10 +135,14 @@
   gap: 12px;
 }
 .row {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  padding: 5px 9px 5px 5px;
+  border: 1px solid var(--fl-line);
+  border-radius: 12px;
+  background: var(--fl-card);
 }
 .more {
   margin-left: 2px;
@@ -193,6 +197,12 @@
   .dests {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 14px 18px;
+    justify-content: center;
+    gap: 14px 16px;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 }
