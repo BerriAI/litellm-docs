@@ -934,7 +934,7 @@ const sidebars = {
       type: "category",
       label: "LiteLLM Lens",
       link: { type: "doc", id: "proxy/lens" },
-      items: ["proxy/lens_deployment", "proxy/lens_api"],
+      items: ["proxy/lens_first_trace", "proxy/lens_deployment", "proxy/lens_api"],
     },
     {
       type: "category",

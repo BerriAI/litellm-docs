@@ -67,18 +67,9 @@ Set `CLICKHOUSE_URL=http://default:<clickhouse-password>@<clickhouse-host>:8123`
 
 ## Connect your agent
 
-Point your agent's OpenTelemetry OTLP/HTTP exporter at LiteLLM:
+Follow [Sending your first trace](./lens_first_trace.md) for a runnable DeepAgents example. Run the script, open **Lens > Traces**, and check that its question, model call, and answer appear.
 
-| Setting | Value |
-| --- | --- |
-| Trace endpoint | `https://<your-litellm-proxy>/v1/traces` |
-| HTTP header | `Authorization: Bearer <your-litellm-key>` |
-
-Record the task, tool calls, inputs, and final answer. Set `service.name` to a recognizable agent name so you can select it when creating an investigation. Other recorded metadata can be used as advanced filters.
-
-For a working agent example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=https://<your-litellm-proxy>/v1/traces` and `LITELLM_DEV_KEY=<your-litellm-key>` in its `.env` file, then run the agent.
-
-Open **Lens > Traces** and check that the run and its content appear. Then return to **Investigations** to connect the worker.
+For an existing OpenTelemetry integration, use your proxy's `/v1/traces` OTLP/HTTP endpoint with `Authorization: Bearer <your-litellm-key>`. Record the agent name as `gen_ai.agent.name`; other recorded metadata remains available through Lens's advanced filters.
 
 ## Start the worker
 

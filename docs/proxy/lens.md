@@ -5,6 +5,10 @@ description: Set up agent traces, connect a Lens worker, and investigate your ag
 
 # LiteLLM Lens
 
+<p>
+  <a className="button button--primary button--sm" href="https://forms.gle/3GC1Ner4vjthGWi18">Early access</a>
+</p>
+
 Lens reviews recorded agent activity and finds recurring problems. Tell it what your agent should do and what to look out for. Each finding links back to the traces that support it.
 
 For example, Lens can find an agent that repeatedly calls a failing tool without offering a handoff. You can read the finding, inspect the original steps, then decide what to change.
@@ -21,7 +25,9 @@ Sign in as a proxy administrator. In **Lens > Investigations**, complete the thr
 
 ### 1. Set up traces {#view-your-first-trace}
 
-Select **Set up traces** to open the Traces tab. Use **Send a test trace** to check that ingestion works. Then [connect your agent](./lens_deployment.md#connect-your-agent), run a task, and open its trace. Check that you can read the task, tool results, and final answer.
+Select **Set up traces** to open the Traces tab. Use **Send a test trace** to check that ingestion works. Then follow [Sending your first trace](./lens_first_trace.md) to run the DeepAgents example and open its trace. Check that you can read the task, tool results, and final answer.
+
+![Tracing setup with the OTEL endpoints and a successfully received test trace.](/img/lens/tracing-setup.jpg)
 
 Return to **Investigations**. **Traces received** confirms that Lens has activity to work with.
 
@@ -29,15 +35,19 @@ Return to **Investigations**. **Traces received** confirms that Lens has activit
 
 Select **Connect worker**. Choose an **Analysis model** and a **Monthly limit**, then select **Get install command**. The default limit is $100, shared across investigations through a dedicated virtual key restricted to your chosen model.
 
+![Worker setup with an analysis model and a $100 monthly limit.](/img/lens/worker-setup.jpg)
+
 Copy the Docker command and run it on your server. The dialog changes to **Worker connected** when it checks in. Select **New investigation** to continue.
 
 The worker is a separate service you deploy once. It keeps running when you close the dashboard. To use an existing virtual key or change the proxy address, open **Advanced options** during setup. Later, open the worker status and select **Settings** to change its access.
 
 ### 3. Run an investigation {#run-your-first-investigation}
 
-**Activity:** Name the investigation and choose an agent. Leave the agent blank to include all activity you can access. **Advanced options** lets you filter by recorded metadata, such as a user ID, or choose LLM request logs instead of traces.
+**Activity:** Name the investigation and choose a recorded agent name. Leave the agent blank to include all traces you can access. **Advanced filters** lets you filter by recorded metadata, such as a user ID, or choose LLM request logs instead of traces.
 
 **Expectations:** Describe what the agent should be doing. Under **What should we look out for?**, add specific checks with **Add check**. For a support agent, you might expect it to answer order questions and check for failed lookups that never lead to a handoff.
+
+![Investigation expectations with separate checks for the agent.](/img/lens/investigation-expectations.jpg)
 
 **Run:** Choose the time range and sample percentage. The preview shows the matching runs. By default, Lens reviews 100% of the last day's matching activity, with no run cap, using the worker's model. Select **Run investigation**.
 
@@ -46,6 +56,8 @@ For a different model, a run cap, a monthly investigation limit, or a repeat sch
 ## Read the findings
 
 Open a saved investigation to see its **Findings**. **Needs attention** contains problems; **Patterns** contains other observations. Open a finding, then its supporting trace to read the original steps.
+
+![Completed investigation with findings linked to supporting runs.](/img/lens/investigation-findings.jpg)
 
 **Traces** shows the activity analyzed, **Criteria** holds your expectations and checks, and **History** contains previous runs. Use **Run now** to investigate again with the same settings.
 
