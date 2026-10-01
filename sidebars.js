@@ -167,6 +167,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/openai_moderation", customProps: { icon: "/img/integrations/openai.png" } },
           { type: "doc", id: "proxy/guardrails/pangea", customProps: { icon: "/img/integrations/pangea.png" } },
           "proxy/guardrails/pillar_security",
+          "proxy/guardrails/reco",
           { type: "doc", id: "proxy/guardrails/repelloai", customProps: { icon: "/img/integrations/repello.png" } },
           { type: "doc", id: "proxy/guardrails/promptguard", customProps: { icon: "/img/integrations/prompt-security.png" } },
           { type: "doc", id: "proxy/guardrails/pii_masking_v2", customProps: { icon: "/img/integrations/microsoft.png" } },
