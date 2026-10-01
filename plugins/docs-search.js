@@ -9,7 +9,12 @@ function extractSections(html, url) {
   const article = $('.theme-doc-markdown').first();
   if (!article.length) return [];
   article.find('script, style, button, .hash-link, [aria-hidden="true"]').remove();
+  // Prism renders code lines with <br>, which text() otherwise joins together.
+  article.find('br').replaceWith('\n');
   const title = article.find('h1').first().text().trim() || $('title').text().replace(/\s*\|.*$/, '').trim();
+  const description = $('meta[name="description"]').attr('content') || '';
+  const keywords = $('meta[name="keywords"]').attr('content') || '';
+  const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
   const sections = [];
   let heading = '', anchor = '', parts = [];
   function flush() {
@@ -18,7 +23,7 @@ function extractSections(html, url) {
       // Bound retrieval passages without losing the rest of a long section.
       for (let offset = 0; offset < text.length; offset += 2600) {
         const chunk = text.slice(offset, offset + 3000);
-        sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading,
+        sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
           text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240)});
         if (offset + 3000 >= text.length) break;

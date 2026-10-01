@@ -1,0 +1,132 @@
+[
+  {
+    "query": "lens",
+    "url": "/docs/proxy/lens",
+    "top": 3
+  },
+  {
+    "query": "virtual key",
+    "url": "/docs/proxy/virtual_keys",
+    "top": 3
+  },
+  {
+    "query": "virtual keys",
+    "url": "/docs/proxy/virtual_keys",
+    "top": 3
+  },
+  {
+    "query": "fallbacks",
+    "url": "/docs/proxy/reliability",
+    "top": 3
+  },
+  {
+    "query": "fallbaks",
+    "url": "/docs/proxy/reliability",
+    "top": 3
+  },
+  {
+    "query": "rate limiting",
+    "url": "/docs/proxy/users",
+    "top": 3
+  },
+  {
+    "query": "rate limits",
+    "url": "/docs/proxy/users",
+    "top": 3
+  },
+  {
+    "query": "redis caching",
+    "url": "/docs/proxy/caching_redis",
+    "top": 3
+  },
+  {
+    "query": "semantic cache",
+    "url": "/docs/proxy/caching_semantic",
+    "top": 3
+  },
+  {
+    "query": "how to setup proxy",
+    "url": "/docs/proxy/docker_quick_start",
+    "top": 3
+  },
+  {
+    "query": "track spend per team",
+    "url": "/docs/proxy/cost_tracking",
+    "top": 3
+  },
+  {
+    "query": "bedrock",
+    "url": "/docs/providers/bedrock",
+    "top": 3
+  },
+  {
+    "query": "azure",
+    "url": "/docs/providers/azure/",
+    "top": 3
+  },
+  {
+    "query": "mcp",
+    "url": "/docs/mcp",
+    "top": 3
+  },
+  {
+    "query": "sso",
+    "url": "/docs/proxy/admin_ui_sso",
+    "top": 3
+  },
+  {
+    "query": "api_base",
+    "url": "/docs/set_keys",
+    "top": 3
+  },
+  {
+    "query": "caching",
+    "url": "/docs/proxy/caching",
+    "top": 3
+  },
+  {
+    "query": "langfuse",
+    "url": "/docs/observability/langfuse_integration",
+    "top": 3
+  },
+  {
+    "query": "set up retries",
+    "url": "/docs/completion/reliable_completions",
+    "top": 3
+  },
+  {
+    "query": "How do I set up Lens?",
+    "url": "/docs/proxy/lens",
+    "top": 3
+  },
+  {
+    "query": "lnes",
+    "url": "/docs/proxy/lens",
+    "top": 1
+  },
+  {
+    "query": "lesn",
+    "url": "/docs/proxy/lens",
+    "top": 1
+  },
+  {
+    "query": "lenz",
+    "url": "/docs/proxy/lens",
+    "top": 1
+  },
+  {
+    "query": "lense",
+    "url": "/docs/proxy/lens",
+    "top": 1
+  },
+  {
+    "query": "cachign",
+    "url": "/docs/proxy/caching",
+    "top": 1
+  },
+  {
+    "query": "CLICKHOUSE_URL",
+    "url": "/docs/proxy/config_settings",
+    "top": 3
+  }
+]
