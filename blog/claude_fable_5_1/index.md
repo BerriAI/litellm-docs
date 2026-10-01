@@ -8,6 +8,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Fable 5.1 on the LiteLLM AI Gateway, with the 0.025x cache read price tracked from the first call."
+image: /img/litellm_claude_fable_5_1_announcement.png
 tags: [anthropic, claude, fable 5.1, day 0 support]
 hide_table_of_contents: false
 ---
