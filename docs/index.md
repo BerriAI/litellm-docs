@@ -2,7 +2,6 @@
 id: index
 title: Getting Started
 sidebar_label: Quickstart
-image: /img/og/getting-started.png
 ---
 
 import Tabs from '@theme/Tabs';

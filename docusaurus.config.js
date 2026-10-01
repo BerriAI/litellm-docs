@@ -77,6 +77,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  staticDirectories: ['static', '.docusaurus/social-cards'],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -99,6 +100,7 @@ const config = {
     }),
     require('./plugins/optimize-images'),
     require('./plugins/rust-migration-posts'),
+    require('./plugins/social-cards'),
     [
       '@docusaurus/plugin-client-redirects',
       {

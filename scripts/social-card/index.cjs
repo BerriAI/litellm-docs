@@ -30,8 +30,8 @@ async function textLayer(text, size, color, {bold = false, wrap} = {}) {
 
 async function fitTitle(title, size = 84) {
   const layer = await textLayer(title, size, ink, {bold: true});
-  if (layer.info.width <= 1040 && layer.info.height <= size * 2.2 && layer.info.height <= 188) return {layer, size};
-  if (size <= 46) throw new Error('The title is too long to fit in two lines.');
+  if (layer.info.width <= 1040 && layer.info.height <= 188) return {layer, size};
+  if (size <= 36) throw new Error('The title is too long to fit in the preview.');
   return fitTitle(title, size - 2);
 }
 
@@ -43,19 +43,17 @@ async function renderSocialCard({title, section = 'Documentation'}) {
   if (cleanTitle.length > 180) throw new Error('Use a title with 180 characters or fewer.');
   if (cleanSection.length > 80) throw new Error('Use a section with 80 characters or fewer.');
 
-  const [{layer: titleLayer, size}, docsLayer, logo] = await Promise.all([
+  const [{layer: titleLayer, size}, logo] = await Promise.all([
     fitTitle(cleanTitle),
-    textLayer('Docs', 46, ink),
     sharp(path.join(assets, 'litellm-logo-blue.svg')).resize({width: 304}).png().toBuffer(),
   ]);
   const sectionLayer = cleanSection ? await textLayer(cleanSection, 34, muted, {bold: true, wrap: 'none'}) : null;
   if (sectionLayer && sectionLayer.info.width > 1040) throw new Error('The section is too wide to fit.');
-  const twoLines = titleLayer.info.height > size * 1.2;
+  const multipleLines = titleLayer.info.height > size * 1.2;
   return sharp({create: {width, height, channels: 3, background}}).composite([
     {input: logo, left: 80, top: 80},
-    {input: docsLayer.data, left: 418, top: 94},
-    ...(sectionLayer ? [{input: sectionLayer.data, left: 80, top: twoLines ? 278 : 332}] : []),
-    {input: titleLayer.data, left: 80, top: twoLines ? 341 : 395},
+    ...(sectionLayer ? [{input: sectionLayer.data, left: 80, top: multipleLines ? 278 : 332}] : []),
+    {input: titleLayer.data, left: 80, top: multipleLines ? 341 : 395},
   ]).png().toBuffer();
 }
 
