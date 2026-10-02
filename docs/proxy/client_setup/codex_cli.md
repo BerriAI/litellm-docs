@@ -120,6 +120,8 @@ model_list:
 
 The same `model_info` works for a model added through the Admin UI or `POST /model/new`. An invalid `service_tiers` value (not a list, an empty id, an unknown object key) is ignored for that model and the gateway logs one warning naming it; the rest of the listing is unaffected
 
+When several deployments share one `model_name`, a request can route to any of them, so Codex is offered only the tiers every deployment of that name lists, in the first deployment's order. A deployment that leaves `service_tiers` unset therefore removes every tier for that name. Both cases log a warning naming the model, so set the same list on each deployment
+
 Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway stops the listing before the model that would cross that limit (each entry is 20 to 65 KB, so roughly 20 to 45 models fit) and logs the models it left out. Put the models your Codex users need first in `model_list`
 
 ## MCP setup
