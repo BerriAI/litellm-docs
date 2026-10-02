@@ -144,17 +144,20 @@ export default function ProductsMenu({mobile}) {
   return (
     <div
       className={`${styles.root} ${open ? styles.open : ''}`}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={close}
+      // Hover opens it for a mouse only; on touch screens a tap would fire
+      // the hover and then the click, opening and closing it at once
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && close()}
       onKeyDown={(e) => e.key === 'Escape' && close()}>
       <button
         type="button"
         className={styles.trigger}
         aria-haspopup="true"
         aria-expanded={open}
+        aria-label={`Products: ${current.title}`}
         onClick={() => setOpen((v) => !v)}>
         <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
-        {current.title}
+        <span className={styles.triggerLabel}>{current.title}</span>
         <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
           <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />
