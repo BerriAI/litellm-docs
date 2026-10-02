@@ -54,16 +54,15 @@ For storage, we started with SQLite on Render's persistent disk. That keeps depl
 
 ### Keeping work alive across deployments
 
-A deployment can interrupt the web process while an agent is working. We needed to recover the session without losing its answer or repeating completed actions.
+A Render deployment replaces the web process and its Temporal worker while an agent may still be running in Modal. We split recovery across three layers:
 
-We combined Temporal workflows with application records and Modal checkpoints:
+- **Temporal Cloud:** records workflow progress, preserves waits and timers, and retries unfinished orchestration steps when a worker reconnects.
+- **Render's persistent disk:** stores chat messages, queued inputs, execution phases, sandbox IDs, and the last event-log position.
+- **Modal:** runs the agent and stores snapshots of its conversation history and workspace files.
 
-- Save incoming messages before acknowledging them.
-- Record execution phases and sandbox identifiers so a replacement worker can reconnect.
-- Checkpoint conversation history and files at safe tool boundaries.
-- Save the final answer before packaging workspace artifacts.
+During an upgrade, we leave the Modal sandbox running. The replacement Render worker opens the same database and reconnects to Temporal. Temporal delivers the unfinished orchestration step; Moyai uses the saved sandbox ID and event-log position to resume monitoring the existing agent. Launch records prevent a retried step from starting a second agent.
 
-Temporal coordinates recovery. We still have to save the files, identify the running machine, and decide which operations are safe to retry.
+We save incoming messages before acknowledging them, checkpoint conversation history and files at safe tool boundaries, and save final answers before packaging artifacts. To resume on a new sandbox, we restore the last committed snapshot.
 
 External writes need particular care. If a PR creation request succeeds but its response gets lost, retrying without checking could create a duplicate. We use stable operation identifiers and publication records to reconcile those cases.
 
