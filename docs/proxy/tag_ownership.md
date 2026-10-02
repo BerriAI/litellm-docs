@@ -21,6 +21,8 @@ Update semantics on `/tag/update`:
 
 `/tag/list` called with a key on a team also returns that team's registered tags, including ones with no spend yet
 
+Creating a tag with `team_id` set also checks past usage: if the name already has daily tag spend from any key that is not currently on the owning team, `/tag/new` returns 409 and creates nothing. Usage by deleted keys and by the master key or other teamless identities counts against a new owner, usage by the new owner's own keys does not. Creating a tag with no owner is never blocked by usage, and proxy admins are not exempt. `/tag/update` is not guarded, since it would block every legitimate transfer
+
 Create an owned tag:
 
 ```shell
@@ -115,7 +117,7 @@ Enforcement runs for standard auth and for custom auth when `general_settings.cu
 
 ## Limitations
 
-Registering an owned tag with a name other teams already send unregistered starts rejecting their requests, so check `/spend/tags` for a name before claiming it. A tag assigned to a team at the same moment the team is deleted can stay cached with the old owner until its cache entry expires
+The `/tag/new` usage check reads `LiteLLM_DailyTagSpend`, so usage not yet flushed to daily spend (within the batch write interval) is not seen, and usage from before daily tag spend existed or while `general_settings.disable_spend_updates: true` stopped its writes is not seen either. `/tag/update` assignment and transfer are not guarded, so a proxy admin assigning an existing tag should check `/spend/tags` first. A tag assigned to a team at the same moment the team is deleted can stay cached with the old owner until its cache entry expires
 
 ## Related
 
