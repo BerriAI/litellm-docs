@@ -356,3 +356,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 **Budget Enforcement:** If any tag exceeds its budget, the request will be rejected.
+
+## Related
+
+- [Team-Owned Tags](tag_ownership.md) - Restrict a registered tag so only keys on one team can use it

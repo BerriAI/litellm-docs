@@ -180,3 +180,4 @@ The tag from the model config appears in `LiteLLM_SpendLogs`:
 - [Spend Tracking Overview](cost_tracking.md) - Complete tutorial on tracking spend with tags
 - [Tag Budgets](tag_budgets.md) - Set budget limits per tag
 - [Virtual Keys Setup](virtual_keys.md) - Required for tag tracking
+- [Team-Owned Tags](tag_ownership.md) - Restrict a registered tag so only keys on one team can use it
