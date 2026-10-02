@@ -262,6 +262,30 @@ JEV usage is logged as a separate classifier call with the originating request's
 
 For successful classifications, reported Auto Router savings deduct `classifier_cost`. Do not add that metadata again when summing spend rows that already include the classifier call. See [evaluation and savings accounting](/docs/auto_router/evaluate#evaluate-jev-on-your-own-prompts) and the [benchmark's cost scope](/blog/jev-auto-router-benchmark)
 
+### Model directed
+
+A classifier reading each turn is always less capable than the model it picks for. `classifier_type: model_directed` removes the classifier and lets the strongest model decide what goes cheaper. Every main-loop turn routes to the strongest configured tier. A request that names one of the router's tier models, directly or through `model_group_alias`, routes to that tier
+
+```yaml
+model_list:
+  - model_name: claude-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_config:
+        classifier_type: model_directed
+        tiers:
+          SIMPLE: tier-haiku
+          MEDIUM: tier-sonnet
+          COMPLEX: tier-opus
+router_settings:
+  model_group_alias:
+    claude-haiku-4-5-20251001: tier-haiku
+```
+
+In Claude Code the main model picks `haiku`, `sonnet` or `opus` on the Agent tool for each subagent, and subagent requests in a session that started on this router are routed through it. Set `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` to the tier groups, or alias the concrete ids Claude Code sends to them as above
+
+Decisions record `cause: model_directed`, with `requested:<model>` or `strongest_tier` in `signals`. No classifier call is made, so there is no classifier cost. `session_affinity`, `classification_mode: user_turn`, `adaptive` and `keyword_tier_rules` are rejected at startup, since each would replace the tier the request named. `tier_definitions` is rejected too, since a request can only name a built-in tier's model. Only delegated work routes down: the main loop itself stays on the strongest tier
+
 ### Keyword rules
 
 Deterministic short-circuit. Match a keyword, land in that tier. When multiple rules match, routing escalates to the highest tier (`SIMPLE < MEDIUM < COMPLEX < REASONING`) so rule order does not silently change behavior
