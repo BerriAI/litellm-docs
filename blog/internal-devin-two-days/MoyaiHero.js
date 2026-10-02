@@ -3,6 +3,10 @@ import {useBlogPost} from '@docusaurus/plugin-content-blog/client';
 import workspace from './workspace.png';
 import styles from './styles.module.css';
 
+// Docusaurus' ideal-image loader exports image metadata in production.
+const workspaceImage = typeof workspace === 'string' ? {src: workspace}
+  : workspace.default ? {src: workspace.default} : workspace.src;
+
 const sections = [
   ['1-main-architecture', 'Main architecture'],
   ['2-main-challenges', 'Main challenges'],
@@ -79,7 +83,10 @@ export default function MoyaiHero() {
             <AgentFlow />
             <div className={styles.sessionLabel}>Moyai Devin<span>One shared session</span></div>
             <div className={styles.window}>
-              <img src={workspace} width="2400" height="1350" loading="eager"
+              <img src={workspaceImage.src}
+                srcSet={workspaceImage.images?.map(image => `${image.path} ${image.width}w`).join(', ')}
+                sizes="(max-width: 640px) calc(100vw - 40px), (max-width: 1440px) 61vw, 850px"
+                width="2400" height="1350" loading="eager"
                 alt="Moyai Devin's web interface with a chat, five worker sessions in the sidebar, and tool activity." />
             </div>
           </div>
