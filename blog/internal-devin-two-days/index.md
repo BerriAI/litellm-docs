@@ -1,6 +1,6 @@
 ---
 slug: internal-devin-two-days
-title: "We built our own internal Devin in two days"
+title: "How we built our own internal Devin in 2 days"
 date: 2026-10-01
 authors:
   - tin
@@ -10,7 +10,9 @@ image: ./hero.png
 hide_table_of_contents: false
 ---
 
-![We built our own internal Devin in two days, using Render, Modal, Hermes, Temporal, and LiteLLM.](./hero.png)
+![Moyai Devin's web interface with a chat, five worker sessions in the sidebar, and tool activity.](./hero.png)
+
+*The Moyai Devin interface, shown with an example session.*
 
 At BerriAI, we built **Moyai Devin**, an internal engineering agent that runs in the cloud. Teammates can give it a task in Slack, follow its progress in a web app, and ask it to prepare a pull request.
 
