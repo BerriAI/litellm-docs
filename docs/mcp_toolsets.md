@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # MCP Toolsets
 
+For direct-client URLs and LLM tool selectors, see the [MCP Configuration Reference](./mcp_config_reference#endpoint-matrix)
+
 A **Toolset** is a named collection of specific tools drawn from one or more MCP servers. Instead of giving an agent access to every tool on every server, you pick exactly which tools it needs, from whichever servers they live on, and bundle them under a single name.
 
 ## How it works
@@ -138,7 +140,7 @@ client = openai.OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     input="What CI/CD tools do you have?",
     tools=[
         {
@@ -164,7 +166,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "What CI/CD tools do you have?"}],
     tools=[
         {
@@ -186,7 +188,7 @@ curl http://your-proxy/v1/responses \
   -H "Authorization: Bearer your-litellm-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": "What CI/CD tools do you have?",
     "tools": [
       {

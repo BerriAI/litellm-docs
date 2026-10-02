@@ -2,9 +2,10 @@
 
 Build a `CustomLogger` callback that intercepts a model response, fulfills tool calls server-side, and reruns the model, all transparently to the caller.
 
-:::info Supported call types
+:::info[Supported call types]
 - `async` only (sync calls do not trigger the hook)
-- Non-streaming only (streaming responses cannot be inspected for tool calls)
+- Streaming `/v1/messages` is supported: the upstream stream is passed through to the caller while being buffered, the hook runs when it ends, and a follow-up response is appended to the same SSE stream as a second `message_start` ... `message_stop` sequence
+- Streaming `/v1/chat/completions` does not trigger the hook, only non-streaming chat completions are inspected
 - Works on both `/v1/messages` and `/v1/chat/completions`
 :::
 

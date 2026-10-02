@@ -5,13 +5,7 @@ import TabItem from '@theme/TabItem';
 
 # Dynamic Callback Management
 
-:::info
-
-✨ This is an enterprise feature.
-
-[Get started with LiteLLM Enterprise](https://www.litellm.ai/enterprise)
-
-:::
+<EnterpriseFeature />
 
 LiteLLM's dynamic callback management enables teams to control logging behavior on a per-request basis without requiring central infrastructure changes. This is essential for organizations managing large-scale service ecosystems where:
 
@@ -39,7 +33,7 @@ Start by viewing all currently enabled callbacks on your proxy to see what's ava
 curl -X 'GET' \
   'http://localhost:4000/callbacks/list' \
   -H 'accept: application/json' \
-  -H 'x-litellm-api-key: sk-1234'
+  -H 'x-litellm-api-key: sk-<your-litellm-api-key>'
 ```
 
 #### Response
@@ -84,10 +78,10 @@ Use the `x-litellm-disable-callbacks` header to disable specific callbacks for i
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'x-litellm-disable-callbacks: langfuse' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "{{anthropic}}",
     "messages": [
         {
         "role": "user",
@@ -104,12 +98,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -137,10 +131,10 @@ You can disable multiple callbacks by providing a comma-separated list in the he
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'x-litellm-disable-callbacks: langfuse,datadog,prometheus' \
     --data '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "{{anthropic}}",
     "messages": [
         {
         "role": "user",
@@ -157,12 +151,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-20250514",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -249,9 +243,9 @@ Here's a complete example for an organization requiring guaranteed logging:
 ```yaml showLineNumbers title="config.yaml"
 # config.yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:

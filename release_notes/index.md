@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.98.0: Provisioned Throughput Billing, Shadow Evals & Routing Groups](/release_notes/v1.98.0/v1-98-0)
+### [v1.103.0: Config File Ownership, Fuse Routing & Gateway Hardening](/release_notes/v1.103.0/v1-103-0)
 
-_August 22, 2026_
+_September 27, 2026_
 
-Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cost_per_ptu_per_hour` on a deployment driving a per-model flat cost by active hour while per-token billing is switched off there, so a team paying for reserved capacity is not charged twice for the same traffic; a shadow eval job that samples a slice of one key's successful traffic, replays it through the auto-router in a detached task that never serves a response or adds latency, and has an LLM judge compare both answers blind, so the router can be measured before it is adopted; routing groups that are callable models, where `model=<group_name>` routes across the union of member deployments with the group's own strategy, appears in `/v1/models` for Claude Code and Codex discovery, and is grantable on keys and teams; six `x-litellm-response-cost-*` headers that split a response's cost into input, cache read, cache creation, output, reasoning, and tool usage; TPM reservations that follow declared output size per key, per team, and per model instead of one static floor for every tenant; and the largest step yet in the Admin UI's move off antd and Tremor, with 75 UI pull requests carrying the navbar, playground, usage, cost tracking, the log details drawer, and much of the shared component library onto shadcn. Note that the Langfuse metadata blob is now sourced from a StandardLoggingPayload allowlist, so roughly 20 fields no longer appear on the generation.
+The config file now owns every setting it declares, with one precedence rule across the settings APIs, `source` and `editable` flags on both read endpoints, read-only fields in the Admin UI, and a startup warning for each stored value the file is ignoring. Auto Router adds a capability classifier, Fuse v2 forecasting, per-model Fast mode, maintained Fuse presets and TypeSafe JEV. Gateway hardening covers MCP client allowlisting, live session visibility, delegated OAuth admission, RFC 8693 token exchange and per-issuer JWT key scoping, and spend controls add per-member organization spend, additive project budgets, team-level `model_max_budget`, temporary budget increases and budgets re-checked on fallback targets, alongside 408 new model catalog entries. This stable also folds in prompt caching, streaming, JWT and proxy reliability fixes backported after the rc.1 cut, and reverts the rc.1 top-N key cap on the Usage pages. Review the release's Breaking Changes section before upgrading
 
 ---
 
@@ -22,6 +22,11 @@ Provisioned throughput is billed as reserved capacity, with `ptu_count` and `cos
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
 | [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |

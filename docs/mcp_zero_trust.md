@@ -150,7 +150,7 @@ guardrails:
 ```
 
 **What the client sees when blocked:**
-```json
+```text
 HTTP 403
 { "error": "MCPJWTSigner: incoming token is missing required claims: ['employee_id']. Configure the IdP to include these claims." }
 ```

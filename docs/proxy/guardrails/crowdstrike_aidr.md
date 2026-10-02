@@ -48,9 +48,9 @@ configuration file.
 
 ```yaml title="config.yaml - Example LiteLLM configuration with CrowdStrike AIDR guardrail"
 model_list:
-  - model_name: gpt-4o                       # Alias used in API requests
+  - model_name: {{openai_large}}                       # Alias used in API requests
     litellm_params:
-      model: openai/gpt-4o-mini              # Actual model to use
+      model: openai/{{openai_small}}              # Actual model to use
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -58,9 +58,7 @@ guardrails:
     litellm_params:
       guardrail: crowdstrike_aidr
       default_on: true                       # Enable for all requests.
-      mode: []                               # Mode is required by LiteLLM but ignored by AIDR.
-                                             # Guardrail always runs in [pre_call, post_call] mode.
-                                             # Policy actions are defined in AIDR console.
+      mode: [pre_call, post_call]            # Scan prompts and responses. Policy actions are defined in AIDR console.
       api_key: os.environ/CS_AIDR_TOKEN      # CrowdStrike AIDR API token
       api_base: os.environ/CS_AIDR_BASE_URL  # CrowdStrike AIDR base URL
       fail_on_error: true                    # Optional. Set false to fail open on AIDR errors (default: true)
@@ -113,7 +111,7 @@ This example requires the **Malicious Prompt** detector to be enabled in your co
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "system",
@@ -155,7 +153,7 @@ If the policy input rules redact a sensitive value, you will not see redaction a
 curl -sSLX POST 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -186,7 +184,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -197,7 +195,7 @@ When the guardrail detects PII, it redacts the sensitive content before returnin
 curl -sSLX POST http://localhost:4000/v1/chat/completions \
 --header "Content-Type: application/json" \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Hi :0)"}
   ]
@@ -221,7 +219,7 @@ The above request should not be blocked, and you should receive a regular LLM re
   ],
   ...
 }
-200
+// 200 (HTTP status code printed by -w "%{http_code}")
 ```
 
 </TabItem>
@@ -240,7 +238,7 @@ guardrails:
     litellm_params:
       guardrail: crowdstrike_aidr
       default_on: true
-      mode: []
+      mode: [pre_call, post_call]
       api_key: os.environ/CS_AIDR_TOKEN
       api_base: os.environ/CS_AIDR_BASE_URL
       fail_on_error: false                   # Fail open on AIDR guard API errors

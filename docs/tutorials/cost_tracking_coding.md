@@ -36,7 +36,7 @@ Configure your coding tool to send requests through the LiteLLM proxy with appro
 **Setup guides:**
 - [Use LiteLLM with Claude Code](../../docs/tutorials/claude_responses_api)
 - [Use LiteLLM with Gemini CLI](../../docs/tutorials/litellm_gemini_cli)
-- [Use LiteLLM with OpenAI Codex](../../docs/tutorials/openai_codex)
+- [Use LiteLLM with OpenAI Codex](../../docs/proxy/client_setup/codex_cli)
 
 ### 2. Send Requests with User-Agent Headers
 
@@ -84,8 +84,8 @@ Example using `claude-cli` as the User-Agent:
 ```shell
 curl -X POST \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "User-Agent: claude-cli/1.0" \
-  -d '{"model": "claude-3-5-sonnet-latest", "messages": [{"role": "user", "content": "Hello, how are you?"}]}' \
+  -d '{"model": "{{anthropic}}", "messages": [{"role": "user", "content": "Hello, how are you?"}]}' \
   http://localhost:4000/chat/completions
 ```

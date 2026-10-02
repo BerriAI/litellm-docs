@@ -53,7 +53,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Vercel AI Gateway call
 response = completion(
-    model="vercel_ai_gateway/openai/gpt-4o", 
+    model="vercel_ai_gateway/openai/{{openai_large}}", 
     messages=messages
 )
 
@@ -73,7 +73,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Vercel AI Gateway call with streaming
 response = completion(
-    model="vercel_ai_gateway/openai/gpt-4o",
+    model="vercel_ai_gateway/openai/{{openai_large}}",
     messages=messages,
     stream=True
 )
@@ -117,7 +117,7 @@ Add the following to your LiteLLM Proxy configuration file:
 model_list:
   - model_name: gpt-4o-gateway
     litellm_params:
-      model: vercel_ai_gateway/openai/gpt-4o
+      model: vercel_ai_gateway/openai/{{openai_large}}
       api_key: os.environ/VERCEL_AI_GATEWAY_API_KEY
 
   - model_name: claude-4-sonnet-gateway

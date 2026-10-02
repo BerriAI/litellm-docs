@@ -330,7 +330,7 @@ for chunk in stream:
 ```python
 import os
 os.environ["ANTHROPIC_BASE_URL"] = "http://localhost:4000"
-os.environ["ANTHROPIC_API_KEY"] = "sk-1234"  # Your LiteLLM proxy key
+os.environ["ANTHROPIC_API_KEY"] = "sk-<your-api-key>"  # Your LiteLLM proxy key
 
 import anthropic
 
@@ -365,7 +365,7 @@ for block in message.content:
 ```python
 import os
 os.environ["OPENAI_BASE_URL"] = "http://localhost:4000"
-os.environ["OPENAI_API_KEY"] = "sk-1234"  # Your LiteLLM proxy key
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"  # Your LiteLLM proxy key
 
 from openai import OpenAI
 

@@ -190,12 +190,12 @@ Without a policy, the first health check failure marks a deployment as unhealthy
 model_list:
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-sonnet
     litellm_params:
-      model: anthropic/claude-sonnet-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY_SECONDARY
 
 general_settings:
@@ -252,19 +252,19 @@ With an allowlist set:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY_SECONDARY
 
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/{{openai_large}}
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
 
@@ -290,7 +290,7 @@ router_settings:
 | `enable_health_check_routing` | `general_settings` | `false` | Route away from deployments that fail health checks |
 | `background_health_checks` | `general_settings` | `false` | Must be `true` for health check routing to work |
 | `health_check_interval` | `general_settings` | `300` | Seconds between full health check cycles |
-| `health_check_staleness_threshold` | `general_settings` | `interval x 2` | Seconds before cached health state is ignored |
+| `health_check_staleness_threshold` | `general_settings` | `600` | Seconds before cached health state is ignored. The default is fixed at 2x the default 300s interval and does not follow `health_check_interval`, so set it explicitly (e.g. `2 x health_check_interval`) when you change the interval |
 | `health_check_ignore_transient_errors` | `general_settings` | `false` | Ignore 429 and 408 from health checks; these never affect routing |
 | `background_health_check_model_groups` | `general_settings` | `null` | Only probe and health-route the listed model groups; unlisted groups keep normal routing |
 | `cooldown_time` | `router_settings` | `5` | Seconds a deployment stays in cooldown after threshold is crossed |

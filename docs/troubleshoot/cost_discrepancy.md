@@ -2,6 +2,8 @@
 
 Cost discrepancies between LiteLLM and your provider bill usually come from one of three areas: token ingestion, the cost formula LiteLLM applies, or stale or incorrect pricing in the model map. This page walks through how to tell which case you are in.
 
+For OpenAI, LiteLLM can run this comparison for you. The [spend capture-rate check](../proxy/spend_capture_rate) reads the OpenAI bill through the Organization Costs API, compares it to the spend LiteLLM tracked for the same UTC days, and alerts when the share LiteLLM captured drops under a threshold. Use the steps below for other providers, or to work out where a gap the check reports comes from
+
 ## Step 1: Pick a time range
 
 Lock down a specific window where the discrepancy is visible.
@@ -132,7 +134,7 @@ If any category is off by more than about 10%, LiteLLM may not be ingesting that
 1. Screenshots of both dashboards with the date range visible.
 2. Which category is off (input, output, cache reads, cache writes, or request count).
 3. Endpoints used (for example `/chat/completions`, `/responses`, `/embeddings`).
-4. Model names as sent in the request (for example `anthropic.claude-opus-4-5`, `gpt-4o`).
+4. Model names as sent in the request (for example `anthropic.{{anthropic_large}}`, `{{openai_large}}`).
 
 ### For maintainers debugging ingestion
 
@@ -202,4 +204,6 @@ If Path A and Path B do not close the case after triage, **you** should reach ou
 ## See also
 
 - [Spend tracking](../proxy/cost_tracking)
+- [Spend capture rate](../proxy/spend_capture_rate)
 - [Sync model pricing from GitHub](../proxy/sync_models_github)
+- [Model missing after Reload Price Data](./missing_model)

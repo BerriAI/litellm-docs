@@ -84,9 +84,9 @@ Create a `config.yaml` file:
 
 ```yaml
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -98,9 +98,12 @@ general_settings:
 
 Set environment variables and start the proxy:
 ```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
+export OTEL_EXPORTER="otlp_http"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
 litellm --config config.yaml
 ```
+
+LiteLLM exports OTLP over HTTP when only an endpoint is set, so the endpoint must be the collector's HTTP port 4318. To use the gRPC port 4317 instead, set `OTEL_EXPORTER="otlp_grpc"` and `OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"`
 
 </TabItem>
 <TabItem value="python-sdk" label="Python SDK">
@@ -112,14 +115,15 @@ import litellm
 import os
 
 # Configure OpenTelemetry
-os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4317"
+os.environ["OTEL_EXPORTER"] = "otlp_http"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318"
 
 # Enable OTEL logging
 litellm.callbacks = ["otel"]
 
 # Make your LLM calls
 response = litellm.completion(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello, world!"}]
 )
 ```
@@ -137,9 +141,9 @@ Make a test request to verify logging is working:
 ```bash
 curl -X POST "http://localhost:4000/v1/chat/completions" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4.1",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM!"}]
   }'
 ```
@@ -151,7 +155,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 import litellm
 
 response = litellm.completion(
-    model="gpt-4.1",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello from LiteLLM!"}],
     user="test-user"
 )
@@ -226,7 +230,8 @@ services:
       - "4000:4000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER=otlp_http
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
     command: ["--config", "/app/config.yaml"]
     volumes:
       - ./config.yaml:/app/config.yaml
@@ -237,15 +242,15 @@ services:
 **config.yaml:**
 ```yaml
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
   callbacks: ["otel"]
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   otel: true
 ```

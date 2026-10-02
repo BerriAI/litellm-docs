@@ -5,7 +5,7 @@
 | Cost Tracking | ✅ |
 | Logging | ✅ (Basic Logging not supported) |
 | Load Balancing | ✅ |
-| Supported Providers | `mistral`, `azure_ai`, `vertex_ai` |
+| Supported Providers | `mistral`, `azure_ai`, `vertex_ai`, `cohere` |
 
 :::tip
 
@@ -66,14 +66,15 @@ asyncio.run(test_async_ocr())
 LiteLLM can read local files directly, with no manual base64 encoding:
 
 ```python
+from pathlib import Path
 from litellm import ocr
 
-# OCR with a local PDF file path
+# OCR with a local PDF file path (pass a pathlib.Path, a plain str is rejected)
 response = ocr(
     model="mistral/mistral-ocr-latest",
     document={
         "type": "file",
-        "file": "/path/to/document.pdf"
+        "file": Path("/path/to/document.pdf")
     }
 )
 
@@ -101,7 +102,7 @@ response = ocr(
 ```
 
 The `file` field accepts:
-- **File path** (`str` or `pathlib.Path`): LiteLLM reads the file and detects the MIME type from the extension
+- **File path** (`pathlib.Path` or any `os.PathLike`): LiteLLM reads the file and detects the MIME type from the extension. A plain `str` is rejected with `OCR file input does not accept bare str values`, so wrap string paths in `Path(...)`
 - **File object** (binary file-like object): e.g. `open("doc.pdf", "rb")`
 - **Raw bytes** (`bytes`): use `mime_type` to specify the content type
 
@@ -171,7 +172,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "mistral-ocr",
@@ -188,7 +189,7 @@ Upload a file directly using multipart form data. No need to base64-encode the f
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@/path/to/document.pdf"
 ```
@@ -197,7 +198,7 @@ You can also pass optional parameters as additional form fields:
 
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@screenshot.png" \
   -F 'pages=[0,1,2]' \
@@ -239,7 +240,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 | `document.type` | string | Yes | `"document_url"` for PDFs/docs, `"image_url"` for images, or `"file"` for local files |
 | `document.document_url` | string | Conditional | URL or data URI to the document (required if `type` is `"document_url"`) |
 | `document.image_url` | string | Conditional | URL or data URI to the image (required if `type` is `"image_url"`) |
-| `document.file` | string/bytes/file | Conditional | File path, bytes, or file-like object (required if `type` is `"file"`) |
+| `document.file` | pathlib.Path/bytes/file | Conditional | `pathlib.Path`, bytes, or binary file-like object (required if `type` is `"file"`). A plain `str` path is rejected |
 | `document.mime_type` | string | No | Explicit MIME type for file inputs (auto-detected from extension if not provided) |
 | `pages` | array | No | List of specific page indices to process (0-indexed) |
 | `include_image_base64` | boolean | No | Whether to include extracted images as base64 strings |
@@ -274,7 +275,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 
 **For local files (SDK):**
 ```python
-{"type": "file", "file": "/path/to/document.pdf"}
+{"type": "file", "file": Path("/path/to/document.pdf")}
 {"type": "file", "file": open("image.png", "rb")}
 {"type": "file", "file": pdf_bytes, "mime_type": "application/pdf"}
 ```
@@ -282,7 +283,7 @@ See the [official Mistral OCR documentation](https://docs.mistral.ai/capabilitie
 **For file uploads (Proxy, multipart form):**
 ```bash
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "model=mistral-ocr" \
   -F "file=@document.pdf"
 ```
@@ -340,11 +341,16 @@ The response follows Mistral's OCR format with the following structure:
 | `object` | string | Always `"ocr"` for OCR responses |
 
 
+## **Batch OCR**
+
+Mistral OCR also runs through the [Batches API](./batches): upload a JSONL file whose lines target `/v1/ocr`, create a batch with `"endpoint": "/v1/ocr"`, and download the output file once it completes. Pages processed in a batch are billed at the model's `ocr_cost_per_page_batches` rate. See [Mistral AI Batch API](./providers/mistral_batches) for the full flow and the cost keys.
+
 ## **Supported Providers**
 
 | Provider    | Link to Usage      |
 |-------------|--------------------|
-| Mistral AI  |   [Usage](#quick-start)                 |
-| Azure AI    |   [Usage](../docs/providers/azure_ocr)                 |
+| Mistral AI  |   [Usage](#quick-start), [Batch OCR](./providers/mistral_batches)                 |
+| Azure AI (Mistral, Cohere Parse) |   [Usage](../docs/providers/azure_ocr)                 |
 | Vertex AI   |   [Usage](../docs/providers/vertex_ocr)                 |
+| Cohere Parse |   [Usage](../docs/providers/cohere#parse-ocr)                 |
 

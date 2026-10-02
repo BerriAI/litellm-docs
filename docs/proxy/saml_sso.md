@@ -4,9 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # SAML 2.0 SSO
 
-:::info
-SSO is free for up to 5 users. After that, an enterprise license is required. [Get Started with Enterprise here](https://www.litellm.ai/enterprise).
-:::
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 LiteLLM supports SAML 2.0 single sign-on for the admin UI alongside its existing OIDC providers (Google, Microsoft, Generic OAuth). SAML can be configured from the admin UI (**Admin Settings -> SSO Settings**) or through environment variables; no changes to `config.yaml` are needed. When SAML is configured and no OIDC provider is set, the existing **SSO** login button on the admin UI automatically redirects to the SAML Identity Provider.
 
@@ -115,7 +113,7 @@ Under **Attribute Statements**, add the attributes your proxy will read. The def
 | `firstName` | `user.firstName` |
 | `lastName` | `user.lastName` |
 
-If you want to control user roles from Okta, add a **Group Attribute Statement** or a custom attribute named `role` with a value of `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_view_only`.
+If you want to control user roles from Okta, add a **Group Attribute Statement** or a custom attribute named `role` with a value of `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_viewer`.
 
 #### Step 2: Copy the IdP metadata URL
 
@@ -203,7 +201,7 @@ LiteLLM auto-detects common SAML attribute names (URN/OID and friendly names) fo
 | `SAML_ATTRIBUTE_ROLE` | `role`, `roles`, `litellm_role` | Attribute mapped to the LiteLLM user role |
 | `SAML_ATTRIBUTE_TEAM_IDS` | `teams`, `team_ids`, `groups` | Attribute mapped to LiteLLM team IDs |
 
-The role attribute value must be one of: `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_view_only`.
+The role attribute value must be one of: `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_viewer`.
 
 ## Configuration reference
 

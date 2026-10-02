@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Prompt Management
 
-Run experiments or change the specific model (e.g. from gpt-4o to gpt4o-mini finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
+Run experiments or change the specific model (e.g. from gpt-5.6-terra to a gpt-5.6-luna finetune) from your prompt management tool (e.g. Langfuse) instead of making changes in the application. 
 
 | Supported Integrations | Link |
 |------------------------|------|
@@ -18,7 +18,7 @@ Run experiments or change the specific model (e.g. from gpt-4o to gpt4o-mini fin
 You can onboard and initialize prompts directly in your `config.yaml` file. This allows you to:
 - Load prompts at proxy startup
 - Manage prompts as code alongside your proxy configuration
-- Use any supported prompt integration (dotprompt, Langfuse, BitBucket, GitLab, custom)
+- Use any prompt integration that supports config onboarding (dotprompt, BitBucket, GitLab, Generic Prompt Management, Arize Phoenix)
 
 ### Basic Structure
 
@@ -26,16 +26,16 @@ Add a `prompts` field to your config.yaml:
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
   - prompt_id: "my_prompt_id"
     litellm_params:
       prompt_id: "my_prompt_id"
-      prompt_integration: "dotprompt"  # or langfuse, bitbucket, gitlab, generic_prompt_management, custom
+      prompt_integration: "dotprompt"  # or bitbucket, gitlab, generic_prompt_management, arize_phoenix
       # integration-specific parameters below
 ```
 
@@ -44,20 +44,21 @@ prompts:
 The `prompt_integration` field determines where and how prompts are loaded:
 
 - **`dotprompt`**: Load from local `.prompt` files or inline content
-- **`langfuse`**: Fetch prompts from Langfuse prompt management
 - **`bitbucket`**: Load from BitBucket repository `.prompt` files (team-based access control)
 - **`gitlab`**: Load from GitLab repository `.prompt` files (team-based access control)
 - **`generic_prompt_management`**: Integrate any prompt management system via a simple API endpoint (no PR required)
-- **`custom`**: Use your own custom prompt management implementation
+- **`arize_phoenix`**: Fetch prompts from [Arize Phoenix](./arize_phoenix_prompts)
 
-Each integration has its own configuration parameters and access control mechanisms.
+Each integration has its own configuration parameters and access control mechanisms. Any other `prompt_integration` value, including `langfuse` and `custom`, fails proxy startup with `ValueError: Unsupported prompt: <value>`. Langfuse prompts are used through a `langfuse/` model with a `prompt_id` (see [Quick Start](#quick-start)), and custom prompt managers are registered as `callbacks` (see [Custom Prompt Management](./custom_prompt_management))
 
 ### Supported Integrations
 
 <Tabs>
 <TabItem value="dotprompt" label="DotPrompt (File-based)">
 
-**Option 1: Using a prompt directory**
+**Option 1: Using a .prompt file**
+
+Point each entry at a single file with `prompt_file`, or omit it to load `<prompt_id>.prompt` from `litellm_settings.global_prompt_directory`. A per-prompt `prompt_directory` is rejected at startup with `ValueError: Cannot set prompt_directory when working with prompt_initializer`
 
 ```yaml
 prompts:
@@ -65,7 +66,12 @@ prompts:
     litellm_params:
       prompt_id: "hello"
       prompt_integration: "dotprompt"
-      prompt_directory: "./prompts"  # Directory containing .prompt files
+      prompt_file: "./prompts/hello.prompt"  # Path to a single .prompt file
+
+  - prompt_id: "goodbye"
+    litellm_params:
+      prompt_id: "goodbye"
+      prompt_integration: "dotprompt"  # Loads ./prompts/goodbye.prompt from global_prompt_directory
 
 litellm_settings:
   global_prompt_directory: "./prompts"  # Global setting for all dotprompt integrations
@@ -83,7 +89,7 @@ prompts:
         my_inline_prompt:
           content: "Hello {{name}}! How can I help you with {{topic}}?"
           metadata:
-            model: "gpt-4"
+            model: "{{openai_large}}"
             temperature: 0.7
             max_tokens: 150
 ```
@@ -98,7 +104,7 @@ prompts:
       prompt_integration: "dotprompt"
       dotprompt_content: |
         ---
-        model: gpt-4
+        model: {{openai_large}}
         temperature: 0.7
         ---
         System: You are a helpful assistant.
@@ -108,34 +114,15 @@ prompts:
 
 Create `.prompt` files in your prompt directory:
 
-```yaml
+```yaml nolint
 # prompts/hello.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
 
 User: {{user_message}}
-```
-
-</TabItem>
-
-<TabItem value="langfuse" label="Langfuse">
-
-```yaml
-prompts:
-  - prompt_id: "my_langfuse_prompt"
-    litellm_params:
-      prompt_id: "my_langfuse_prompt"
-      prompt_integration: "langfuse"
-      langfuse_public_key: "os.environ/LANGFUSE_PUBLIC_KEY"
-      langfuse_secret_key: "os.environ/LANGFUSE_SECRET_KEY"
-      langfuse_host: "https://cloud.langfuse.com"  # optional
-
-litellm_settings:
-  langfuse_public_key: "os.environ/LANGFUSE_PUBLIC_KEY"  # Global setting
-  langfuse_secret_key: "os.environ/LANGFUSE_SECRET_KEY"  # Global setting
 ```
 
 </TabItem>
@@ -163,10 +150,10 @@ litellm_settings:
 
 Your BitBucket repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_bitbucket_prompt.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -198,10 +185,10 @@ litellm_settings:
 
 Your GitLab repository should contain `.prompt` files:
 
-```yaml
+```yaml nolint
 # prompts/my_gitlab_prompt.prompt
 ---
-model: gpt-4
+model: gpt-5.6-terra
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -244,7 +231,7 @@ A GET endpoint at `/beta/litellm_prompt_management` that returns:
       "content": "Help me with {task}"
     }
   ],
-  "prompt_template_model": "gpt-4",
+  "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
     "temperature": 0.7,
     "max_tokens": 500
@@ -265,13 +252,13 @@ A GET endpoint at `/beta/litellm_prompt_management` that returns:
 
 ### Complete Example
 
-Here's a complete example showing multiple prompts with different integrations:
+Here's a complete example showing multiple prompts:
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 prompts:
@@ -280,7 +267,7 @@ prompts:
     litellm_params:
       prompt_id: "coding_assistant"
       prompt_integration: "dotprompt"
-      prompt_directory: "./prompts"
+      prompt_file: "./prompts/coding_assistant.prompt"
   
   # Inline dotprompt
   - prompt_id: "simple_chat"
@@ -291,16 +278,8 @@ prompts:
         simple_chat:
           content: "You are a {{personality}} assistant. User: {{message}}"
           metadata:
-            model: "gpt-4"
+            model: "{{openai_large}}"
             temperature: 0.8
-  
-  # Langfuse prompt
-  - prompt_id: "langfuse_chat"
-    litellm_params:
-      prompt_id: "langfuse_chat"
-      prompt_integration: "langfuse"
-      langfuse_public_key: "os.environ/LANGFUSE_PUBLIC_KEY"
-      langfuse_secret_key: "os.environ/LANGFUSE_SECRET_KEY"
 
 litellm_settings:
   global_prompt_directory: "./prompts"
@@ -320,9 +299,9 @@ After loading prompts via config.yaml, use them in your API requests:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -336,9 +315,9 @@ You can also use the same `prompt_id` with the Responses API:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/responses' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "prompt_id": "coding_assistant",
     "prompt_variables": {
         "language": "python",
@@ -355,7 +334,7 @@ Each prompt in the `prompts` list requires:
 - **`prompt_id`** (string, required): Unique identifier for the prompt
 - **`litellm_params`** (object, required): Configuration for the prompt
   - **`prompt_id`** (string, required): Must match the top-level prompt_id
-  - **`prompt_integration`** (string, required): One of: `dotprompt`, `langfuse`, `bitbucket`, `gitlab`, `custom`
+  - **`prompt_integration`** (string, required): One of: `dotprompt`, `bitbucket`, `gitlab`, `generic_prompt_management`, `arize_phoenix`
   - Additional integration-specific parameters (see tabs above)
 - **`prompt_info`** (object, optional): Metadata about the prompt
   - **`prompt_type`** (string): Defaults to `"config"` for config-loaded prompts
@@ -385,7 +364,7 @@ os.environ["LANGFUSE_SECRET_KEY"] = "secret_key" # [OPTIONAL] set here or in `.c
 litellm.set_verbose = True # see raw request to provider
 
 resp = litellm.completion(
-    model="langfuse/gpt-3.5-turbo",
+    model="langfuse/{{openai_small}}",
     prompt_id="test-chat-prompt",
     prompt_variables={"user_message": "this is used"}, # [OPTIONAL]
     messages=[{"role": "user", "content": "<IGNORED>"}],
@@ -408,7 +387,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
   - model_name: openai-model
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -426,7 +405,7 @@ litellm --config config.yaml --detailed_debug
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-langfuse-model",
     "messages": [
@@ -452,7 +431,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -482,7 +461,7 @@ print(response)
 POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/ \
--d '{'model': 'gpt-3.5-turbo', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
+-d '{'model': '{{openai_small}}', 'messages': <YOUR LANGFUSE PROMPT TEMPLATE>}'
 ```
 
 ## How to set model 
@@ -496,8 +475,8 @@ You can do `langfuse/<litellm_model_name>`
 
 ```python
 litellm.completion(
-    model="langfuse/gpt-3.5-turbo", # or `langfuse/anthropic/claude-3-5-sonnet`
-    ...
+    model="langfuse/{{openai_small}}", # or `langfuse/anthropic/{{anthropic}}`
+    # ...
 )
 ```
 
@@ -506,9 +485,9 @@ litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: langfuse/gpt-3.5-turbo # OR langfuse/anthropic/claude-3-5-sonnet
+      model: langfuse/{{openai_small}} # OR langfuse/anthropic/{{anthropic}}
       prompt_id: <langfuse_prompt_id>
       api_key: os.environ/OPENAI_API_KEY
 ```
@@ -524,7 +503,7 @@ If the model is specified in the Langfuse config, it will be used.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/chatgpt-v-2
       api_key: os.environ/AZURE_API_KEY

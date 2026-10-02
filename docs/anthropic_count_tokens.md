@@ -32,9 +32,9 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "Hello, how are you?"}
     ]
@@ -51,10 +51,10 @@ response = httpx.post(
     "http://localhost:4000/v1/messages/count_tokens",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer sk-1234"
+        "Authorization": "Bearer sk-<your-litellm-api-key>"
     },
     json={
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "messages": [
             {"role": "user", "content": "Hello, how are you?"}
         ]
@@ -82,21 +82,21 @@ Add models to your `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: claude-vertex
     litellm_params:
-      model: vertex_ai/claude-3-5-sonnet-v2@20241022
+      model: vertex_ai/{{anthropic}}
       vertex_project: my-project
       vertex_location: us-east5
       vertex_count_tokens_location: us-east5 # Optional: Override location for token counting (count_tokens not available on global location)
 
   - model_name: claude-bedrock
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
 ```
 
@@ -123,7 +123,7 @@ model_list:
 
 ```json
 {
-  "input_tokens": <number>
+  "input_tokens": "<number>"
 }
 ```
 
@@ -151,9 +151,9 @@ The `/v1/messages/count_tokens` endpoint automatically routes to the appropriate
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "You are a helpful assistant. Please help me write a haiku about programming."}
     ]
@@ -165,9 +165,9 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {"role": "user", "content": "What is the capital of France?"},
       {"role": "assistant", "content": "The capital of France is Paris."},
@@ -181,7 +181,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-vertex",
     "messages": [
@@ -195,7 +195,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-bedrock",
     "messages": [
@@ -225,7 +225,7 @@ curl --request POST \
     --header "anthropic-beta: token-counting-2024-11-01" \
     --header "content-type: application/json" \
     --data '{
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "{{anthropic}}",
         "messages": [
             {"role": "user", "content": "Hello, world"}
         ]

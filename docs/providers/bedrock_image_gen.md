@@ -70,8 +70,8 @@ model_list:
     litellm_params:
       model: bedrock/amazon.nova-canvas-v1:0
       aws_region_name: "us-east-1"
+      aws_access_key_id: my-id # OPTIONAL - all boto3 auth params supported
       aws_secret_access_key: my-key # OPTIONAL - all boto3 auth params supported
-      aws_secret_access_id: my-id # OPTIONAL - all boto3 auth params supported
 ```
 
 ### 2. Start proxy 

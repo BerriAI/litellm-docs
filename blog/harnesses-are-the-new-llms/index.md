@@ -17,6 +17,8 @@ import { StackComparison, ConvergenceHero } from './diagrams';
 
 Agent infrastructure is already separating into three layers: models, harnesses, and runtimes. We believe a fourth layer will emerge: the unified agent control plane. This will allow calling agents living in different agent runtimes, all from 1 place. 
 
+{/* truncate */}
+
 The reason is that companies will not run every agent on one runtime. Coding agents may run on Bedrock AgentCore or Claude Managed Agents. Data agents may run inside Elastic, Databricks, or Snowflake. Internal workflow agents may run on custom infrastructure. The control plane emerges because companies want one place where all of these agents can be used, regardless of where they were built or run.
 
 But a registry alone is not enough. Anyone can build a list of agents.

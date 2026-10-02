@@ -24,7 +24,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['OPENAI_API_KEY'] = ""
-chat = ChatLiteLLM(model="gpt-3.5-turbo")
+chat = ChatLiteLLM(model="{{openai_small}}")
 messages = [
     HumanMessage(
         content="what model are you"
@@ -49,7 +49,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 os.environ['ANTHROPIC_API_KEY'] = ""
-chat = ChatLiteLLM(model="claude-2", temperature=0.3)
+chat = ChatLiteLLM(model="{{anthropic}}", temperature=0.3)
 messages = [
     HumanMessage(
         content="what model are you"
@@ -131,7 +131,7 @@ from langchain.chat_models import ChatLiteLLM
 
 os.environ['OPENAI_API_KEY']="sk-..."
 
-chat = ChatLiteLLM(model="gpt-4o-mini")
+chat = ChatLiteLLM(model="{{openai_small}}")
 chat.invoke("Hi!")
 ```
 
@@ -149,8 +149,9 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"] 
 
 chat = ChatLiteLLM(
-  model="gpt-4o"
-  messages = [
+  model="{{openai_large}}"
+)
+messages = [
     HumanMessage(
         content="what model are you"
     )
@@ -161,7 +162,7 @@ chat(messages)
 Get more details [here](../observability/lunary_integration.md)
 
 ## Use LangChain ChatLiteLLM + Langfuse
-Checkout this section [here](../observability/langfuse_integration#use-langchain-chatlitellm--langfuse) for more details on how to integrate Langfuse with ChatLiteLLM.
+Checkout this section [here](/docs/observability/langfuse_integration#use-langchain-chatlitellm--langfuse) for more details on how to integrate Langfuse with ChatLiteLLM.
 
 ## Using Tags with LangChain and LiteLLM
 
@@ -180,7 +181,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 os.environ['OPENAI_API_KEY'] = "sk-your-key-here"
 
 chat = ChatOpenAI(
-    model="gpt-4o",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -210,7 +211,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 os.environ['ANTHROPIC_API_KEY'] = "sk-ant-your-key-here"
 
 chat = ChatOpenAI(
-    model="claude-3-sonnet-20240229",
+    model="{{anthropic}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -240,7 +241,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # No API key needed when using proxy
 chat = ChatOpenAI(
     openai_api_base="http://localhost:4000",  # Your proxy URL
-    model="gpt-4o",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -293,7 +294,7 @@ def create_chat_with_tags(user_type: str, feature: str):
     
     return ChatOpenAI(
         openai_api_base="http://localhost:4000",
-        model="gpt-4o",
+        model="{{openai_large}}",
         temperature=0.7,
         extra_body={
             "metadata": {
@@ -323,7 +324,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # Tags for cost tracking
 cost_tracking_chat = ChatOpenAI(
     openai_api_base="http://localhost:4000",
-    model="gpt-4o",
+    model="{{openai_large}}",
     temperature=0.7,
     extra_body={
         "metadata": {
@@ -364,7 +365,7 @@ def create_ab_test_chat(test_variant: str = None):
     
     return ChatOpenAI(
         openai_api_base="http://localhost:4000",
-        model="gpt-4o",
+        model="{{openai_large}}",
         temperature=0.7 if test_variant == "variant-a" else 0.9,  # Different temp for variants
         extra_body={
             "metadata": {
@@ -442,20 +443,24 @@ When using tags with LiteLLM Proxy, you can:
 
 #### Example Proxy Configuration with Tags
 
+Tag routing is configured per deployment: add `tags` under each deployment's `litellm_params` and turn on `enable_tag_filtering` in `router_settings`. A request tagged `premium` to `chat` then only goes to the deployments carrying that tag. See [Tag Based Routing](../proxy/tag_routing.md) for default tags and match modes
+
 ```yaml
 # config.yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: chat
     litellm_params:
-      model: gpt-4o
+      model: {{openai_large}}
       api_key: your-key
+      tags: ["premium", "high-priority"]
+  - model_name: chat
+    litellm_params:
+      model: {{openai_small}}
+      api_key: your-key
+      tags: ["standard"]
 
-# Tag-based routing rules
-tag_routing:
-  - tags: ["premium", "high-priority"]
-    models: ["gpt-4o", "claude-3-opus"]
-  - tags: ["standard"]
-    models: ["gpt-3.5-turbo", "claude-3-haiku"]
+router_settings:
+  enable_tag_filtering: true
 ```
 
 ### Monitoring and Analytics
@@ -463,20 +468,22 @@ tag_routing:
 Tags enable powerful analytics capabilities:
 
 ```python
-# Example: Get spend reports by tags
+# Example: Get spend per tag
 import requests
 
 response = requests.get(
-    "http://localhost:4000/global/spend/report",
+    "http://localhost:4000/spend/tags",
     headers={"Authorization": "Bearer sk-your-key"},
     params={
         "start_date": "2024-01-01",
-        "end_date": "2024-12-31",
-        "group_by": "tags"
+        "end_date": "2024-12-31"
     }
 )
 
 spend_by_tags = response.json()
+# [{"individual_request_tag": "premium", "log_count": 23, "total_spend": 0.0000882}, ...]
 ```
+
+`/global/spend/report` only accepts `group_by` values `team`, `customer` and `api_key`, so use `/spend/tags` for per-tag spend
 
 This documentation covers the essential patterns for using tags effectively with LangChain and LiteLLM, enabling better organization, tracking, and analytics of your LLM requests.

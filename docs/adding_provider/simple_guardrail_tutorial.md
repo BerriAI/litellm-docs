@@ -11,10 +11,10 @@ Request with guardrail:
 
 ```bash
 curl --location 'http://localhost:4000/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "How do I hack a system?"}],
     "guardrails": ["my-guardrail"]
 }'
@@ -98,14 +98,14 @@ class SupportedGuardrailIntegrations(str, Enum):
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
     api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
     - guardrail_name: my_guardrail
-        litellm_params:
+      litellm_params:
         guardrail: my_guardrail
         mode: during_call
         api_key: os.environ/MY_GUARDRAIL_API_KEY
@@ -116,10 +116,10 @@ guardrails:
 
 ```bash
 curl --location 'http://localhost:4000/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Test message"}],
     "guardrails": ["my_guardrail"]
 }'

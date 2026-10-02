@@ -5,7 +5,7 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/87c5d243cde642ff942783024ff037e3" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/87c5d243cde642ff942783024ff037e3" frameBorder="0" allowFullScreen></iframe>
 
 ## Usage 
 
@@ -62,6 +62,19 @@ You can check your current token's age and expiration status using:
 lite whoami
 ```
 :::
+
+#### Pre-fill the verification code
+
+By default the browser page that finishes `lite login` asks you to type the verification code the terminal printed. To have `lite login` open that page with the code already filled in, so you only confirm it and click Continue, set on the proxy:
+
+```yaml
+general_settings:
+  allow_cli_sso_verification_uri_complete: true
+```
+
+The flag is off by default because typing the code by hand is what ties the browser page to the terminal that started the login. With the flag on, still check that the pre-filled code matches the one the terminal printed before you confirm it. Older `lite` versions open the page without the code either way, so upgrade the CLI as well
+
+If that browser is already signed in to your SSO provider and you would rather skip the code entirely, run `lite login --pkce` instead: one Approve click and the terminal prints `Login successful!`. See [Browser sign-in with PKCE](#browser-sign-in-with-pkce)
 
 #### Attribution metadata (OIDC claims)
 
@@ -138,6 +151,8 @@ Example poll response (after SSO completes):
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you should be able to login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
+
+   The browser page asks for the verification code the terminal printed. To skip typing it, either have the proxy [pre-fill the verification code](#pre-fill-the-verification-code) or, when the browser already holds your SSO session, use [`lite login --pkce`](#browser-sign-in-with-pkce), which needs no code at all
 
    The credential goes into your OS keychain, and `lite login` prints where it landed. On a machine with no keychain it falls back to `~/.litellm/token.json` with owner-only permissions. See [the `lite login` credential](./management_cli.md#the-lite-login-credential) for the details and for how to turn keychain storage off
 
@@ -365,6 +380,34 @@ The URLs are built from the request's base URL. Behind a load balancer or revers
 
 ### Security rules
 
-A grant that carries `resource` only ever redirects to a loopback address (`127.0.0.1`, `::1`, or `localhost`). A hosted `https://` redirect URI, even one the client registered, is refused with `400 invalid_request` and the description `a proxy-API grant may only redirect to a loopback address`, so the personal credential this flow mints can only land on the user's own machine. The authorization code is single-use and bound to the client and the PKCE verifier. `lite` never follows a redirect from the registration, token, or revocation endpoint; a `3xx` answer stops the command with a message naming where it pointed, so the code and verifier or the refresh token only ever reach the origin the discovery document was checked against. The consent page is served with `Cache-Control: no-store` and `Content-Security-Policy: frame-ancestors 'none'`, so it cannot be embedded in another page. The server never picks a team on the user's behalf: the team comes from the consent page, membership is checked again at every token exchange and refresh, and a grant posted without a team while the user still has a live team to pick from is refused with `400 invalid_grant` and the description `this user belongs to a team; sign in again and pick the team for this credential`
+Native proxy API grants redirect to a loopback address (`127.0.0.1`, `::1`, or `localhost`). Hosted HTTPS callbacks require a separate [hosted app grant](#hosted-app-sign-in) and exact operator allowlisting; client registration alone does not authorize one. The authorization code is single-use and bound to the client and the PKCE verifier. `lite` never follows a redirect from the registration, token, or revocation endpoint; a `3xx` answer stops the command with a message naming where it pointed, so the code and verifier or the refresh token only ever reach the origin the discovery document was checked against. The consent page is served with `Cache-Control: no-store` and `Content-Security-Policy: frame-ancestors 'none'`, so it cannot be embedded in another page. The server never picks a team on the user's behalf: the team comes from the consent page, membership is checked again at every token exchange and refresh, and a grant posted without a team while the user still has a live team to pick from is refused with `400 invalid_grant` and the description `this user belongs to a team; sign in again and pick the team for this credential`
 
 The device authorization grant, embedded browsers, and the resource owner password credentials grant are not supported
+
+
+## Hosted app sign-in
+
+A hosted application can reuse the gateway's configured Google, Okta or other SSO provider through the same authorization-code and S256 PKCE flow. Configure the application with the gateway URL and register its exact HTTPS callback on the gateway. Use a gateway release whose `/.well-known/litellm-cli-auth` discovery document advertises the required hosted scope
+
+| Requested scope | Gateway callback setting | Access |
+| --- | --- | --- |
+| `proxy:read` | `LITELLM_PROXY_API_OAUTH_REDIRECT_URIS` | Model listings and aggregate usage reports within the user's current permissions |
+| `proxy:admin` | `LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS` | Existing administrator operations and model calls, subject to current `proxy_admin` authority and gateway limits |
+
+For an administrator app, set on the gateway:
+
+```shell
+export LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS=https://admin.example.com/oauth/callback
+```
+
+Both settings accept comma-separated exact HTTPS URIs. Wildcards, query strings and fragments are rejected. An admin callback may request either scope; a reporting callback cannot request admin access. Omitting `scope` requests `proxy:read`. Registering a callback never promotes the user or skips their consent
+
+The discovery document retains `contract_version: 1` and adds `hosted_app`. Its `scopes_supported` lists currently enabled hosted scopes, `access_token_ttl` is 300 seconds, and `refresh_token_ttl` is 86400 seconds. Clients check those capabilities, validate `issuer` and `resource` against their configured gateway, and use the discovered registration, authorization, token and revocation endpoints. Send `resource=<gateway origin>` and the chosen `scope` when authorizing. Hosted tokens include `scope`, `user_id`, `access_token`, `refresh_token`, `expires_in` and `refresh_expires_in`
+
+Hosted grants require a database and shared Redis. The gateway checks the current user, selected team, callback trust and applicable model, budget and rate limits on use. Custom authentication and exclusive external-auth modes do not issue hosted grants. An admin who loses the `proxy_admin` role loses hosted admin access
+
+Access tokens expire within five minutes. Refresh tokens rotate and cannot extend consent beyond 24 hours; reusing a spent refresh token revokes the grant. A successful refresh preserves still-unexpired access tokens for work already in progress. Revoking an access or refresh token at the discovered revocation endpoint invalidates the entire grant across gateway workers
+
+Clients encrypt refresh tokens at rest, bind them to the gateway and user, serialize renewal, and persist renewal attempts before sending them. An uncertain renewal requires signing in again rather than replaying the refresh or an administrator operation. Disconnect removes local access immediately and retries gateway revocation if the gateway is temporarily unavailable
+
+Keep the gateway URL, callback configuration, signing configuration and shared Redis state when upgrading the standard gateway deployment. The application discovers protocol capabilities from that URL; it does not depend on a separate backend image pin

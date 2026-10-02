@@ -12,17 +12,18 @@ Supported Providers:
 - Deepseek API (`deepseek/`)
 - xAI (`xai/`)
 
-:::warning Minimum token requirements
+:::warning[Minimum token requirements]
 Prompt caching is silently skipped when the input is below the provider's minimum, and **no error is returned**. Always verify caching occurred by checking `cache_creation_input_tokens` in the response.
 
 | Provider | Minimum input tokens |
 |---|---|
 | OpenAI | 1,024 |
-| Anthropic (Claude 3.x) | 1,024 |
-| Anthropic (Claude Sonnet/Opus 4.x) | 2,048 |
-| Anthropic (Claude Haiku 4.5+, Opus 4.5+) | 4,096 |
-| Bedrock (Claude 3.5, 3.7) | 1,024 |
-| Bedrock (Claude Sonnet 4.x) | 2,048 |
+| Anthropic (Claude Opus 5, Fable 5, Mythos 5) | 512 |
+| Anthropic (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Opus 4, 4.1, Claude 3.x) | 1,024 |
+| Anthropic (Claude Haiku 4.5, Opus 4.5, 4.6) | 4,096 |
+| Bedrock (Claude Opus 5) | 512 |
+| Bedrock (Claude Sonnet 5, Opus 4.8, Sonnet 4.x, Claude 3.5, 3.7) | 1,024 |
+| Bedrock (Claude Haiku 4.5, Opus 4.5, 4.6, 4.7) | 4,096 |
 | Google Gemini | 1,024 |
 :::
 
@@ -67,7 +68,7 @@ os.environ["OPENAI_API_KEY"] = ""
 
 for _ in range(2):
     response = completion(
-        model="gpt-4o",
+        model="{{openai_large}}",
         messages=[
             # System Message
             {
@@ -121,9 +122,9 @@ assert response.usage.prompt_tokens_details.cached_tokens > 0
 
 ```yaml
 model_list:
-    - model_name: gpt-4o
+    - model_name: {{openai_large}}
       litellm_params:
-        model: openai/gpt-4o
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -140,13 +141,13 @@ from openai import OpenAI
 import os
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 
 for _ in range(2):
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="{{openai_large}}",
         messages=[
             # System Message
             {
@@ -215,7 +216,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 
 response = completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "system",
@@ -245,7 +246,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[
         {
             "role": "system",
@@ -365,7 +366,7 @@ litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 
 response = completion(
-    model="anthropic/claude-3-5-sonnet-20240620",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -397,9 +398,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: claude-3-5-sonnet-20240620
+    - model_name: {{anthropic}}
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20240620
+        model: anthropic/{{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -416,12 +417,12 @@ from openai import OpenAI
 import os
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet-20240620",
+    model="{{anthropic}}",
     messages=[
         {
             "role": "system",
@@ -450,29 +451,38 @@ print(response.usage)
 </TabItem>
 </Tabs>
 
-:::tip Minimum tokens (Anthropic)
+:::tip[Minimum tokens (Anthropic)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model | Min tokens |
 |---|---|
-| Claude 3 Haiku, 3 Sonnet, 3 Opus | 1,024 |
-| Claude 3.5 Sonnet, 3.7 Sonnet | 1,024 |
+| Claude Opus 5, Fable 5, Mythos 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
+| Claude Opus 4.7 | 2,048 |
+| Claude Haiku 4.5, Opus 4.5, Opus 4.6 | 4,096 |
+| Claude Sonnet 4, Sonnet 4.5, Sonnet 4.6, Opus 4, Opus 4.1 | 1,024 |
 | Claude 3.5 Haiku | 2,048 |
-| Claude Sonnet 4.5, Sonnet 4.6, Opus 4 | 2,048 |
-| Claude Haiku 4.5, Opus 4.5+ | 4,096 |
+| Claude 3.x Haiku, Sonnet, Opus, 3.5 Sonnet, 3.7 Sonnet | 1,024 |
+
+See [Anthropic's prompt caching docs](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) for the full list; these minimums apply on every platform where each model is available.
 :::
 
 ### Bedrock Example
 
 LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format, so no changes are needed to your existing code if you're already using `cache_control`.
 
-:::tip Minimum tokens (Bedrock)
+:::tip[Minimum tokens (Bedrock)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 
 | Model family | Min tokens per request |
 |---|---|
+| Claude Opus 5 | 512 |
+| Claude Sonnet 5, Opus 4.8 | 1,024 |
+| Claude Haiku 4.5, Opus 4.5, Opus 4.6, Opus 4.7 | 4,096 |
+| Claude Sonnet 4.5, Sonnet 4.6 | 1,024 |
 | Claude 3.5 Sonnet v2, Claude 3.7 Sonnet | 1,024 |
-| Claude Sonnet 4.5, Sonnet 4.6 | 2,048 |
+
+See [the Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) for the full per-model table.
 :::
 
 <Tabs>
@@ -482,14 +492,14 @@ Prompts below the minimum are processed without caching, and no error is returne
 import litellm
 
 response = litellm.completion(
-    model="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[
         {
             "role": "system",
             "content": [
                 {
                     "type": "text",
-                    "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+                    "text": "<your large system prompt here, at least 1,024 tokens on Claude Sonnet 4.x, 4,096 on Haiku 4.5 and Opus 4.5+>",
                     "cache_control": {"type": "ephemeral"}
                 }
             ]
@@ -512,7 +522,7 @@ print(response.usage)
 model_list:
   - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+      model: bedrock/us.anthropic.{{anthropic}}
 ```
 
 2. Start proxy
@@ -535,7 +545,7 @@ curl -X POST http://localhost:4000/chat/completions \
         "content": [
           {
             "type": "text",
-            "text": "<your large system prompt here — min 1,024 tokens for Claude 3.x, 2,048 for Claude Sonnet 4.x>",
+            "text": "<your large system prompt here, at least 1,024 tokens on Claude Sonnet 4.x, 4,096 on Haiku 4.5 and Opus 4.5+>",
             "cache_control": {"type": "ephemeral"}
           }
         ]
@@ -552,10 +562,15 @@ curl -X POST http://localhost:4000/chat/completions \
 
 | Model | Bedrock Model ID | Min Tokens | TTL Options |
 |---|---|---|---|
+| Claude Opus 5 | `anthropic.claude-opus-5` | 512 | 5 min, 1 hour |
+| Claude Sonnet 5 | `anthropic.claude-sonnet-5` | 1,024 | 5 min, 1 hour |
+| Claude Opus 4.8 | `anthropic.claude-opus-4-8` | 1,024 | 5 min, 1 hour |
 | Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
 | Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
 | Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
-| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 2,048 | 5 min, 1 hour |
+| Claude Sonnet 4.5, 4.6 | `us.anthropic.claude-sonnet-4-5-*`, `us.anthropic.claude-sonnet-4-6-*` | 1,024 | 5 min, 1 hour |
+| Claude Haiku 4.5 | `us.anthropic.claude-haiku-4-5-*` | 4,096 | 5 min, 1 hour |
+| Claude Opus 4.5, 4.6, 4.7 | `us.anthropic.claude-opus-4-5-*`, `us.anthropic.claude-opus-4-6-*`, `us.anthropic.claude-opus-4-7-*` | 4,096 | 5 min, 1 hour |
 
 Cross-region inference profiles are also supported for the models above.
 
@@ -581,7 +596,7 @@ import os
 os.environ["GEMINI_API_KEY"] = ""
 
 response = completion(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -613,9 +628,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-2.5-flash
+    - model_name: {{gemini_flash}}
       litellm_params:
-        model: gemini/gemini-2.5-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -631,12 +646,12 @@ litellm --config /path/to/config.yaml
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY",  # sk-1234
+    api_key="LITELLM_PROXY_KEY",  # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE",  # http://0.0.0.0:4000
 )
 
 response = client.chat.completions.create(
-    model="gemini-2.5-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -676,7 +691,7 @@ For Vertex AI, use `vertex_ai/` prefix:
 from litellm import completion
 
 response = completion(
-    model="vertex_ai/gemini-2.5-flash",
+    model="vertex_ai/{{gemini_flash}}",
     vertex_project="my-gcp-project",
     vertex_location="us-central1",
     messages=[
@@ -710,9 +725,9 @@ print(response.usage)
 
 ```yaml
 model_list:
-    - model_name: gemini-2.5-flash
+    - model_name: {{gemini_flash}}
       litellm_params:
-        model: vertex_ai/gemini-2.5-flash
+        model: vertex_ai/{{gemini_flash}}
         vertex_project: my-gcp-project
         vertex_location: us-central1
 ```
@@ -729,12 +744,12 @@ litellm --config /path/to/config.yaml
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY",  # sk-1234
+    api_key="LITELLM_PROXY_KEY",  # sk-<your-litellm-api-key>
     base_url="LITELLM_PROXY_BASE",  # http://0.0.0.0:4000
 )
 
 response = client.chat.completions.create(
-    model="gemini-2.5-flash",
+    model="{{gemini_flash}}",
     messages=[
         {
             "role": "system",
@@ -854,7 +869,7 @@ import os
 
 litellm.set_verbose = True # 👈 SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
-model = "anthropic/claude-3-5-sonnet-20240620"
+model = "anthropic/{{anthropic}}"
 response = completion(
     model=model,
     messages=[
@@ -895,7 +910,7 @@ LiteLLM returns the calculated cost in the response headers - `x-litellm-respons
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="LITELLM_PROXY_KEY", # sk-1234..
+    api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>..
     base_url="LITELLM_PROXY_BASE" # http://0.0.0.0:4000
 )
 response = client.chat.completions.with_raw_response.create(
@@ -903,7 +918,7 @@ response = client.chat.completions.with_raw_response.create(
         "role": "user",
         "content": "Say this is a test",
     }],
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
 )
 print(response.headers.get('x-litellm-response-cost'))
 
@@ -924,7 +939,7 @@ Check if a model supports prompt caching with `supports_prompt_caching()`
 ```python
 from litellm.utils import supports_prompt_caching
 
-supports_pc: bool = supports_prompt_caching(model="anthropic/claude-3-5-sonnet-20240620")
+supports_pc: bool = supports_prompt_caching(model="anthropic/{{anthropic}}")
 
 assert supports_pc
 ```
@@ -938,9 +953,9 @@ Use the `/model/info` endpoint to check if a model on the proxy supports prompt 
 
 ```yaml
 model_list:
-    - model_name: claude-3-5-sonnet-20240620
+    - model_name: {{anthropic}}
       litellm_params:
-        model: anthropic/claude-3-5-sonnet-20240620
+        model: anthropic/{{anthropic}}
         api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -954,7 +969,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 ```
 
 **Expected Response**
@@ -963,12 +978,12 @@ curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
 {
     "data": [
         {
-            "model_name": "claude-3-5-sonnet-20240620",
+            "model_name": "{{anthropic}}",
             "litellm_params": {
-                "model": "anthropic/claude-3-5-sonnet-20240620"
+                "model": "anthropic/{{anthropic}}"
             },
             "model_info": {
-                "key": "claude-3-5-sonnet-20240620",
+                "key": "{{anthropic}}",
                 ...
                 "supports_prompt_caching": true # 👈 LOOK FOR THIS!
             }
@@ -984,7 +999,7 @@ This checks our maintained [model info/cost map](https://github.com/BerriAI/lite
 
 ## Read More
 
-:::tip Auto-Inject Prompt Caching
+:::tip[Auto-Inject Prompt Caching]
 Want LiteLLM to automatically add `cache_control` directives without modifying your code? 
 
 See [**Auto-Inject Prompt Caching Tutorial**](../tutorials/prompt_caching.md) to learn how to use `cache_control_injection_points` to automatically cache system messages, specific messages by index, or custom injection patterns.

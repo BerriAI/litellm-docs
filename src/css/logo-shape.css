@@ -1,0 +1,471 @@
+/* =========================================================================
+   LOGO SHAPE
+   Corner radii and surfaces taken from the LiteLLM monogram: a square whose
+   corners are 10% of its side, one flat fill, no shadow. Small things use the
+   logo's ratio directly; large panels stop at 12px, where the corner still
+   reads as the logo rather than a phone app. Loaded after custom.css; delete
+   this file and its line in docusaurus.config.js to return to the restyle.
+   ========================================================================= */
+
+:root {
+  --lite-radius-xs: 4px;  /* chips, pills, tags */
+  --lite-radius-sm: 6px;  /* buttons, icon tiles, inputs, nav highlights */
+  --lite-radius-md: 10px; /* cards, tiles, card grids */
+  --lite-radius-lg: 12px; /* large panels: code, tabs, callouts, bands */
+
+  /* Components paint these instead of their own gradients */
+  --lite-page: var(--aurora-surface);
+  --lite-on-primary: #ffffff;
+  --lite-panel-bg: var(--aurora-surface);
+  --lite-band-bg: var(--aurora-tint);
+  /* The chosen option's icon tile is solid logo blue, like the monogram */
+  --lite-icon-on-bg: var(--ifm-color-primary);
+  --lite-icon-on-fg: var(--lite-on-primary);
+  --lite-icon-on-accent: var(--lite-on-primary);
+}
+
+html[data-theme='dark'] {
+  /* Dark mode's primary is a light blue, so text on it is navy */
+  --lite-on-primary: #080b26;
+}
+
+/* ---------- The restyle's own surfaces on the same scale ---------- */
+
+.navbar__link,
+.navbar__link:hover {
+  border-radius: var(--lite-radius-xs);
+}
+
+.menu__link,
+.table-of-contents__link,
+[data-theme='dark'] .table-of-contents__link {
+  border-radius: var(--lite-radius-sm);
+}
+
+.theme-code-block,
+.tabs-container > div > [role='tabpanel'] > .theme-code-block:only-child,
+details {
+  border-radius: var(--lite-radius-lg) !important;
+}
+
+li.tabs__item {
+  border-radius: var(--lite-radius-lg) var(--lite-radius-lg) 0 0 !important;
+}
+
+.tabs-container > div,
+[data-theme='dark'] .tabs-container > div,
+.theme-admonition.alert,
+:is(.markdown, [class*='mdxPageWrapper'] article) table {
+  border-radius: var(--lite-radius-lg);
+}
+
+/* The first tab still joins its panel with a square corner */
+.tabs-container:has(> ul.tabs > li.tabs__item--active:first-child) > div {
+  border-top-left-radius: 0;
+}
+.tabs-container:has(> ul.tabs > li.tabs__item--active:first-child) > div > [role='tabpanel'] > .theme-code-block:only-child {
+  border-top-left-radius: 0 !important;
+}
+
+article a.card,
+.pagination-nav__link {
+  border-radius: var(--lite-radius-md);
+}
+
+/* ---------- Card grids ----------
+   Every set of cards (Integrations, Learn, generated card lists, feature
+   tiles, the blog) is one hairline grid inside a rounded frame. A small
+   rounded mark sits where two inner lines cross; gridMarks.js tags the cells
+   whose corner is an inner crossing, so no mark lands on the frame. */
+
+.lite-cardgrid,
+[class*='grid_']:has(> a[class*='card_']),
+section.row:has(> article > a.card) {
+  --cg-line: var(--aurora-line-strong);
+  --cg-mark: var(--ifm-color-primary);
+  position: relative;
+  gap: 0 !important;
+  border: 0 !important;
+  border-radius: var(--lite-radius-md) !important;
+  overflow: hidden;
+  /* The frame is an inset line, so the cells' own edge lines land on it */
+  box-shadow: inset 0 0 0 1px var(--cg-line);
+  background: var(--aurora-surface);
+}
+
+.lite-cardgrid::before,
+.lite-cardgrid::after,
+[class*='grid_']:has(> a[class*='card_'])::before,
+[class*='grid_']:has(> a[class*='card_'])::after,
+section.row:has(> article > a.card)::before,
+section.row:has(> article > a.card)::after {
+  display: none !important;
+}
+
+.lite-cardgrid > .lite-cardgrid__cell,
+[class*='grid_'] > a[class*='card_'],
+section.row:has(> article > a.card) > article {
+  position: relative;
+  margin: 0 !important;
+  border: 0 !important;
+  border-right: 1px solid var(--cg-line) !important;
+  border-bottom: 1px solid var(--cg-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+section.row > article > a.card {
+  background: transparent !important;
+}
+
+/* A see-through hover tint keeps the frame line visible under it */
+.lite-cardgrid > .lite-cardgrid__cell:hover,
+[class*='grid_'] > a[class*='card_']:hover,
+section.row > article > a.card:hover {
+  background: color-mix(in srgb, var(--ifm-color-primary) 4%, transparent) !important;
+}
+
+.lite-cardgrid > .lite-cardgrid__cell::before,
+[class*='grid_'] > a[class*='card_']::before,
+section.row:has(> article > a.card) > article::before {
+  display: none !important;
+}
+
+.lite-cardgrid > .lite-cardgrid__cell::after,
+[class*='grid_'] > a[class*='card_']::after,
+section.row:has(> article > a.card) > article::after {
+  content: '';
+  display: none;
+  position: absolute;
+  z-index: 2;
+  top: auto;
+  left: auto;
+  right: -4px;
+  bottom: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--cg-mark);
+  pointer-events: none;
+}
+
+[data-grid-ready] > [data-grid-mark]::after {
+  display: block !important;
+}
+
+/* Blog posts in the grid: one padding for every post, image or not */
+.lite-cardgrid > .lite-cardgrid__cell:has([class*='cardBody_']) {
+  padding: 1.1rem 1.15rem 1.25rem;
+  gap: 0.85rem;
+}
+
+.lite-cardgrid > .lite-cardgrid__cell [class*='cover_'] {
+  border-radius: var(--lite-radius-sm);
+}
+
+/* The highlighted row of a grid (the Enterprise tier) keeps a flat tint */
+.lite-cardgrid > .lite-cardgrid__cell--on,
+.lite-cardgrid > .lite-cardgrid__cell--on:hover {
+  background: var(--aurora-tint) !important;
+}
+
+/* Collapsible sections: a flat surface with a hairline, like every other panel.
+   Dark mode keeps the restyle's own rule, which is more specific. */
+details {
+  background-color: var(--aurora-surface) !important;
+  box-shadow: none !important;
+}
+
+/* Some FAQ questions are headings (kept for their anchors); their bottom
+   margin leaked out of the summary and padded every closed row. */
+details > summary > :last-child {
+  margin-bottom: 0;
+}
+
+/* Sidebar categories that are also pages: the link and its arrow are one
+   row, so only the row gets a hover or current-page background. */
+.menu__list-item-collapsible {
+  border-radius: var(--lite-radius-sm) !important;
+}
+.menu__list-item-collapsible > .menu__link,
+.menu__list-item-collapsible > .menu__link:hover,
+.menu__list-item-collapsible > .menu__link.menu__link--active,
+.menu__list-item-collapsible > .menu__caret,
+.menu__list-item-collapsible > .menu__caret:hover {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.menu__list-item-collapsible:hover {
+  background-color: var(--ifm-menu-color-background-hover) !important;
+}
+.menu__list-item-collapsible:has(> .menu__link[aria-current='page']),
+.theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible:has(> .menu__link[aria-current='page']) {
+  background-color: var(--aurora-active-bg) !important;
+  box-shadow: var(--aurora-active-shadow);
+}
+.menu__list-item-collapsible > .menu__link[aria-current='page'] {
+  color: var(--aurora-accent-ink) !important;
+}
+
+/* The TOC's Enterprise promo on the same corner scale as every card */
+[class*='promoCard_'] {
+  border-radius: var(--lite-radius-md) !important;
+}
+[class*='promoButton_'] {
+  border-radius: var(--lite-radius-sm) !important;
+}
+
+/* "DOCS" beside the logo, as Stripe does. The logo file is untouched and
+   keeps its clear space: half its 25px height before the label. */
+.navbar__brand .navbar__title {
+  margin-left: 13px;
+  font-family: var(--ifm-font-family-base);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary-lightest);
+}
+html[data-theme='dark'] .navbar__brand .navbar__title {
+  color: var(--ifm-color-primary);
+}
+
+/* The mark where the header line meets the sidebar, rounded like the
+   grid marks and the logo tile */
+html.docs-wrapper .navbar::after {
+  border-radius: 2px;
+}
+
+/* ---------- Footer: brand and newsletter beside four link columns ---------- */
+.lite-footer {
+  padding: 3.5rem 0 1.5rem;
+  background: #080b26;
+}
+.lite-footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 3rem;
+}
+.lite-footer__logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  margin-bottom: 1rem;
+}
+.lite-footer__tagline {
+  max-width: 22rem;
+  margin: 0 0 1.75rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.lite-footer__news-title {
+  margin: 0 0 0.2rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.lite-footer__news-text {
+  margin: 0 0 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+.lite-footer__links .footer__links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 0;
+}
+.lite-footer__links .footer__col {
+  flex: none;
+  max-width: none;
+  padding: 0;
+}
+.lite-footer .footer__title {
+  margin-bottom: 0.9rem;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lite-footer .footer__item {
+  margin: 0 0 0.55rem;
+}
+.lite-footer .footer__link-item {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.9rem;
+}
+.lite-footer .footer__link-item:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+.lite-footer .footer__link-item svg {
+  display: none;
+}
+.lite-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lite-footer .footer__copyright {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.82rem;
+}
+.lite-footer__legal {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.82rem;
+}
+.lite-footer__legal a {
+  color: rgba(255, 255, 255, 0.5);
+}
+.lite-footer__legal a:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+@media (max-width: 996px) {
+  .lite-footer__top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .lite-footer__links .footer__links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+  }
+}
+.lite-footer__links .footer__col {
+  margin-bottom: 0;
+}
+
+/* Newsletter button: navy text on dark mode's light blue; the navy footer
+   keeps the logo blue in both themes */
+html[data-theme='dark'] form [class*='btn_'][type='submit'] {
+  color: var(--lite-on-primary) !important;
+}
+.lite-footer form [type='submit'],
+html[data-theme='dark'] .lite-footer form [type='submit'] {
+  background: #0117be;
+  color: #ffffff !important;
+}
+.lite-footer form [type='submit']:hover:not(:disabled) {
+  background: #1c31d1;
+}
+
+/* ---------- Dark mode: the palette from before the restyle ----------
+   Light mode keeps the new look. Dark mode goes back to the earlier docs
+   palette: teal accents on the GitHub-style near-black, no blue glow. The
+   restyle's dark variables are remapped here, so every component that reads
+   them follows; the few dark rules with fixed blues are reset below. */
+html[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-background-color: #0d1117;
+  --ifm-background-surface-color: #161b22;
+  --ifm-font-color-base: #e3e3e3;
+  --ifm-heading-color: #f0f0f0;
+  --ifm-toc-border-color: #262c36;
+  --ifm-menu-color: #c3c6cc;
+  --ifm-menu-color-background-hover: rgba(255, 255, 255, 0.05);
+  --ifm-navbar-background-color: #0d1117;
+  --docusaurus-highlighted-code-line-bg: rgb(66 66 66 / 35%);
+
+  --aurora-mesh: none;
+  --aurora-nav-bg: rgba(13, 17, 23, 0.85);
+  --aurora-line: rgba(255, 255, 255, 0.08);
+  --aurora-line-strong: rgba(255, 255, 255, 0.14);
+  --aurora-muted: #a8adb5;
+  --aurora-soft: #8b939e;
+  --aurora-tint: rgba(37, 194, 160, 0.1);
+  --aurora-accent-line: rgba(37, 194, 160, 0.35);
+  --aurora-accent-ink: #4fddbf;
+  --aurora-active-bg: rgba(37, 194, 160, 0.1);
+  --aurora-pill-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.25);
+  --aurora-code-bg: #161b22;
+  --aurora-surface: #0d1117;
+  --aurora-scroll: rgba(255, 255, 255, 0.18);
+  --aurora-inline-code-bg: rgba(255, 255, 255, 0.08);
+  --aurora-grad-border: linear-gradient(135deg, rgba(37, 194, 160, 0.3), rgba(37, 194, 160, 0.15));
+  --aurora-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* Text on the teal primary */
+  --lite-on-primary: #0d1117;
+}
+html[data-theme='dark'] .theme-admonition.alert--info {
+  --co-bg: rgba(37, 194, 160, 0.07);
+  --co-border: rgba(37, 194, 160, 0.2);
+  --co-title: #4fddbf;
+  --co-accent: #25c2a0;
+}
+html[data-theme='dark'] .enterprise-compare-head span:last-child,
+html[data-theme='dark'] .enterprise-compare span:last-child {
+  color: #4fddbf;
+}
+html[data-theme='dark'] .footer,
+html[data-theme='dark'] .lite-footer {
+  background: #161b22;
+}
+html[data-theme='dark'] .lite-footer form [type='submit'] {
+  background: #25c2a0;
+  color: #0d1117 !important;
+}
+html[data-theme='dark'] .lite-footer form [type='submit']:hover:not(:disabled) {
+  background: #29d5b0;
+}
+html[data-theme='dark'] [class*='promoButton_'] {
+  background: var(--ifm-color-primary) !important;
+  color: #0d1117 !important;
+}
+
+/* ---------- Dark mode: calm and clearly bounded ----------
+   Panels, cards, and code sit on the lighter surface with visible borders,
+   so sections separate from the page. The navbar is solid rather than a
+   blurred glass over the content, and cards no longer lift on hover. */
+html[data-theme='dark'] {
+  --aurora-code-bg: #161b22;
+  --aurora-line: rgba(255, 255, 255, 0.13);
+  --aurora-line-strong: rgba(255, 255, 255, 0.2);
+  --ifm-toc-border-color: #30363d;
+  --ifm-color-emphasis-200: #30363d;
+  --ifm-color-emphasis-300: #3d444d;
+}
+html[data-theme='dark'] .lite-cardgrid,
+html[data-theme='dark'] [class*='grid_']:has(> a[class*='card_']),
+html[data-theme='dark'] section.row:has(> article > a.card),
+html[data-theme='dark'] details,
+html[data-theme='dark'] .tabs-container > div,
+html[data-theme='dark'] [class*='promoCard_'] {
+  background-color: #161b22 !important;
+}
+html[data-theme='dark'] .theme-admonition.alert {
+  border: 1px solid var(--co-border, rgba(255, 255, 255, 0.13));
+}
+html[data-theme='dark'] :is(.markdown, [class*='mdxPageWrapper'] article) table {
+  background: #161b22;
+}
+html[data-theme='dark'] .navbar {
+  background-color: #0d1117 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-bottom-color: #30363d;
+}
+html[data-theme='dark'] .contact-card:hover,
+html[data-theme='dark'] article a.card:hover,
+html[data-theme='dark'] .pagination-nav__link:hover {
+  transform: none !important;
+}

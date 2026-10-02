@@ -62,6 +62,8 @@ agents:
 
 `protocolVersion` can be set the same way when registering through the API.
 
+An optional `litellm_params` block carries per-agent settings such as `api_key`, `headers`, `agent_card_path`, and Microsoft Entra credentials; [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a) shows a full entry
+
 Config-defined agents show up in the Agents tab and in `GET /v1/agents` alongside agents created in the UI, and they survive the periodic reload from the database. Verify them with:
 
 ```shell
@@ -82,6 +84,8 @@ The `agents` key is read correctly starting in the next release (after `v1.95.0`
 ### Add Azure AI Foundry Agents
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
+
+Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 
@@ -125,7 +129,7 @@ If an agent has no pinned version, LiteLLM infers the served version from the cl
 | Request header `a2a-version: 1.x` | `1.0` |
 | Otherwise (e.g. `message/send` with no header) | `0.3` |
 
-:::tip Always pin `protocolVersion`
+:::tip[Always pin `protocolVersion`]
 
 The proxied agent card defaults to `1.0` when unset, but legacy `message/send` callers without an `a2a-version` header receive **0.3**-shaped responses. Pin `protocolVersion` explicitly so your card and responses always match.
 
@@ -179,7 +183,8 @@ To enable these features, your A2A server must **forward these headers** to any 
 ### Implementation Steps
 
 **Step 1: Extract headers from incoming A2A request**
-```python def get_litellm_headers(request) -> dict:
+```python
+def get_litellm_headers(request) -> dict:
     """Extract X-LiteLLM-* headers from incoming A2A request."""
     all_headers = request.call_context.state.get('headers', {})
     return {
@@ -193,7 +198,8 @@ Pass the extracted headers when making calls back to LiteLLM:
 <Tabs>
 <TabItem value="openai" label="OpenAI SDK" default>
 
-```python from openai import OpenAI
+```python
+from openai import OpenAI
 
 headers = get_litellm_headers(request)
 
@@ -204,7 +210,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -218,7 +224,7 @@ from langchain_openai import ChatOpenAI
 headers = get_litellm_headers(request)
 
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="{{openai_large}}",
     openai_api_key="sk-your-litellm-key",
     base_url="http://localhost:4000",
     default_headers=headers,  # Forward headers
@@ -233,7 +239,7 @@ import litellm
 headers = get_litellm_headers(request)
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     api_base="http://localhost:4000",
     extra_headers=headers,  # Forward headers
@@ -251,7 +257,7 @@ headers["Authorization"] = "Bearer sk-your-litellm-key"
 response = httpx.post(
     "http://localhost:4000/v1/chat/completions",
     headers=headers,
-    json={"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}
+    json={"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}
 )
 ```
 </TabItem>
@@ -441,7 +447,7 @@ Agent JSON-RPC errors are returned in the `error` field with the same `id` as th
 
 ```bash title="Poll task after message/send"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",

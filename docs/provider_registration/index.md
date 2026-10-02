@@ -109,7 +109,7 @@ bytez_transformation = BytezChatConfig()
 
 Then much lower in the code
 
-```py
+```py nolint
 elif custom_llm_provider == "bytez":
     api_key = (
         api_key
@@ -153,6 +153,8 @@ LITELLM_CHAT_PROVIDERS = [
     "xai",
     "custom_openai",
     "text-completion-openai",
+    # ...
+]
 ```
 
 Add yourself to the if statement chain of providers here
@@ -160,7 +162,7 @@ Add yourself to the if statement chain of providers here
 #### `litellm/litellm_core_utils/get_llm_provider_logic.py`
 
 ```py
-elif model == "*":
+if model == "*":
     custom_llm_provider = "openai"
 # bytez models
 elif model.startswith("bytez/"):
@@ -262,7 +264,7 @@ The debugger is your friend.
 Setup headers, validate key/model:
 
 ```python
-def validate_environment(...):
+def validate_environment(*args, **kwargs):
     headers.update({
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -275,7 +277,7 @@ def validate_environment(...):
 Return the final request URL:
 
 ```python
-def get_complete_url(...):
+def get_complete_url(*args, **kwargs):
     return f"{api_base}/{model}"
 ```
 
@@ -284,7 +286,7 @@ def get_complete_url(...):
 Adapt OpenAI-style input into provider-specific format:
 
 ```python
-def transform_request(...):
+def transform_request(*args, **kwargs):
     data = {"messages": messages, "params": optional_params}
     return data
 ```
@@ -294,7 +296,7 @@ def transform_request(...):
 Process and map the raw provider response:
 
 ```python
-def transform_response(...):
+def transform_response(*args, **kwargs):
     json = raw_response.json()
     model_response.model = model
     model_response.choices[0].message.content = json.get("output")

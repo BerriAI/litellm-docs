@@ -29,7 +29,7 @@ The feature requires:
 
 The feature is active only for **OpenAI** (`/openai_passthrough/...`) and **Azure OpenAI** (`/azure/openai/...`) passthrough routes.
 
-:::info `/openai/v1/files`, `/openai/v1/batches`, and `/openai/v1/responses` are not passthrough routes
+:::info[`/openai/v1/files`, `/openai/v1/batches`, and `/openai/v1/responses` are not passthrough routes]
 
 Those three paths are served by LiteLLM's native endpoints, exactly like `/v1/files`, `/v1/batches`, and `/v1/responses`, so `passthrough_managed_object_ids` never sees them. To isolate tenants there, use [`require_managed_files`](./litellm_managed_files) for files and batches and the built-in Responses API ownership checks for responses. The passthrough prefix for OpenAI is `/openai_passthrough`.
 

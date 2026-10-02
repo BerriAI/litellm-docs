@@ -4,15 +4,7 @@ import { ControlPlaneArchitecture } from '@site/src/components/ControlPlaneArchi
 
 Deploy a single LiteLLM UI that manages multiple independent LiteLLM proxy instances, each with its own database, Redis, and master key.
 
-:::info
-
-This is an Enterprise feature.
-
-[Enterprise Pricing](https://www.litellm.ai/#pricing)
-
-[Get free 30-day trial key](https://www.litellm.ai/enterprise#trial)
-
-:::
+<EnterpriseFeature />
 
 ## When to use this
 
@@ -38,7 +30,7 @@ The control plane needs a `worker_registry` that lists all worker instances. Eac
 model_list: []
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: os.environ/DATABASE_URL
 
 worker_registry:

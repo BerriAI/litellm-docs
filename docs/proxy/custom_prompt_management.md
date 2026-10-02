@@ -31,6 +31,7 @@ Create a new file called `custom_prompt.py` and add this code. The key method he
 from typing import List, Tuple, Optional
 from litellm.integrations.custom_prompt_management import CustomPromptManagement
 from litellm.types.llms.openai import AllMessageValues
+from litellm.types.prompts.init_prompts import PromptSpec
 from litellm.types.utils import StandardCallbackDynamicParams
 
 class MyCustomPromptManagement(CustomPromptManagement):
@@ -42,6 +43,11 @@ class MyCustomPromptManagement(CustomPromptManagement):
         prompt_id: str,
         prompt_variables: Optional[dict],
         dynamic_callback_params: StandardCallbackDynamicParams,
+        prompt_spec: Optional[PromptSpec] = None,
+        prompt_label: Optional[str] = None,
+        prompt_version: Optional[int] = None,
+        ignore_prompt_manager_model: Optional[bool] = False,
+        ignore_prompt_manager_optional_params: Optional[bool] = False,
     ) -> Tuple[str, List[AllMessageValues], dict]:
         """
         Retrieve and format prompts based on prompt_id.
@@ -69,9 +75,9 @@ prompt_management = MyCustomPromptManagement()
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -120,12 +126,12 @@ When you pass `prompt_id="1234"`, the custom prompt manager will add a system me
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 response = client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     extra_body={
         "prompt_id": "1234"
@@ -143,8 +149,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
 chat = ChatOpenAI(
-    model="gpt-4",
-    openai_api_key="sk-1234",
+    model="{{openai_large}}",
+    openai_api_key="sk-<your-api-key>",
     openai_api_base="http://0.0.0.0:4000",
     extra_body={
         "prompt_id": "1234"
@@ -163,9 +169,9 @@ print(response.content)
 ```shell
 curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }'
@@ -183,10 +189,9 @@ import litellm
 from custom_prompt import prompt_management
 
 litellm.callbacks = [prompt_management]
-litellm.use_litellm_proxy = True
 
 response = litellm.completion(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hi"}],
     prompt_id="1234",
     prompt_variables={"user_message": "hi"},
@@ -198,7 +203,7 @@ response = litellm.completion(
 The request will be transformed from:
 ```json
 {
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],
     "prompt_id": "1234"
 }
@@ -207,7 +212,7 @@ The request will be transformed from:
 To:
 ```json
 {
-    "model": "gemini-1.5-pro",
+    "model": "{{openai_large}}",
     "messages": [
         {"role": "system", "content": "Be a good Bot!"},
         {"role": "user", "content": "hi"}

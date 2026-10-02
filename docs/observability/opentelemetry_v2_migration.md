@@ -29,7 +29,7 @@ In v1 a guardrail span is a child of the `litellm_request` span. In v2 it is a s
 
 ### The inference span name and kind
 
-v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat gpt-4o`, with span kind `CLIENT`.
+v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat {{openai_large}}`, with span kind `CLIENT`.
 
 ### Vendor selection
 

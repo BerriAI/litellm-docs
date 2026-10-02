@@ -3,13 +3,13 @@ import TabItem from '@theme/TabItem';
 
 # Use Claude Code with MCPs
 
-This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy.
+This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy. For endpoint, transport, and credential selection, see the [MCP Configuration Reference](../mcp_config_reference)
 
 Note: LiteLLM supports OAuth for MCP servers as well. [Learn more](https://docs.litellm.ai/docs/mcp#mcp-oauth)
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameBorder="0" allowFullScreen></iframe>
 
 ## Connecting MCP Servers
 
@@ -77,7 +77,7 @@ ngrok http 4000
 
 ```bash
 claude mcp add --transport http litellm-github https://your-ngrok-url.ngrok-free.dev/github_mcp/mcp \
-  --header "x-litellm-api-key: Bearer sk-1234"
+  --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -85,7 +85,7 @@ claude mcp add --transport http litellm-github https://your-ngrok-url.ngrok-free
 
 ```bash
 claude mcp add --transport http litellm-atlassian https://your-ngrok-url.ngrok-free.dev/atlassian_mcp/mcp \
-  --header "x-litellm-api-key: Bearer sk-1234"
+  --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -98,7 +98,7 @@ claude mcp add --transport http litellm-atlassian https://your-ngrok-url.ngrok-f
 | `--transport http` | Use HTTP transport for the MCP connection |
 | `litellm-atlassian` | The name for this MCP server **on Claude Code** — can be anything you choose |
 | `https://your-ngrok-url.ngrok-free.dev/atlassian_mcp/mcp` | The LiteLLM proxy URL. Format: `<PROXY_URL>/<server_name_on_litellm>/mcp`. The `atlassian_mcp` part **must match** the key under `mcp_servers:` in your LiteLLM proxy config |
-| `--header "x-litellm-api-key: Bearer sk-1234"` | Your LiteLLM virtual key for authentication to the proxy |
+| `--header "x-litellm-api-key: Bearer $LITELLM_API_KEY"` | Your LiteLLM virtual key for authentication to the proxy |
 
 You can also add the MCP server directly to your `~/.claude.json` file instead of using `claude mcp add`. [See Claude Code docs](https://docs.anthropic.com/en/docs/claude-code/mcp).
 
@@ -142,7 +142,7 @@ LiteLLM passes the beta header, `defer_loading`, and `tool_reference` blocks thr
 
 ```bash
 export ANTHROPIC_BASE_URL=http://0.0.0.0:4000
-export ANTHROPIC_AUTH_TOKEN=sk-1234
+export ANTHROPIC_AUTH_TOKEN=sk-<your-litellm-api-key>
 export ENABLE_TOOL_SEARCH=true
 claude
 ```

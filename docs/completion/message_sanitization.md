@@ -40,7 +40,7 @@ litellm.modify_params = True
 
 # This will work even if messages have formatting issues
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=[
         {"role": "user", "content": "What's the weather in Boston?"},
         {
@@ -79,9 +79,9 @@ litellm_settings:
   modify_params: true  # Enable automatic message sanitization
 
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: anthropic/{{anthropic}}
 ```
 
 </TabItem>
@@ -126,7 +126,7 @@ messages = [
 # }
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=[...]
 )
@@ -164,7 +164,7 @@ messages = [
 # LiteLLM automatically removes the orphaned tool message
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -198,7 +198,7 @@ messages = [
 # {"role": "assistant", "content": "[System: Empty message content sanitised to satisfy protocol]"}
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -241,18 +241,9 @@ export LITELLM_MODIFY_PARAMS=True
 </TabItem>
 </Tabs>
 
-### Enable Per-Request
+### No Per-Request Override
 
-```python
-import litellm
-
-# Enable only for specific requests
-response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
-    messages=messages,
-    modify_params=True  # Override global setting
-)
-```
+Sanitization reads only the global `litellm.modify_params` flag, set by any of the options above. `litellm.completion()` has no `modify_params` argument, so passing `modify_params=True` on a call does not enable sanitization and is forwarded to the provider as an extra body field, which Anthropic rejects with `400 invalid_request_error: modify_params: Extra inputs are not permitted`
 
 ## Supported Providers
 
@@ -305,7 +296,7 @@ litellm.modify_params = True
 
 # Ensures robust handling of edge cases
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=tools
 )
@@ -345,7 +336,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Track sanitization events in your application
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=messages
 )
 ```
@@ -366,7 +357,7 @@ test_messages = [
 ]
 
 response = litellm.completion(
-    model="anthropic/claude-3-5-sonnet-20241022",
+    model="anthropic/{{anthropic}}",
     messages=test_messages,
     tools=[...]
 )

@@ -113,9 +113,9 @@ Create a `config.yaml` file:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -168,9 +168,9 @@ Let's test the PII masking with various types of sensitive data.
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -207,7 +207,7 @@ My name is <PERSON>, my email is <EMAIL_ADDRESS>, and my credit card is <CREDIT_
       "finish_reason": "stop"
     }
   ],
-  "model": "gpt-3.5-turbo"
+  "model": "{{openai_small}}"
 }
 ```
 
@@ -219,9 +219,9 @@ My name is <PERSON>, my email is <EMAIL_ADDRESS>, and my credit card is <CREDIT_
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -239,9 +239,9 @@ The patient name and medical record number will be automatically masked.
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {
         "role": "user",
@@ -279,9 +279,9 @@ Test the blocking behavior:
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My SSN is 123-45-6789"}
     ],
@@ -352,9 +352,9 @@ You can also override language per request:
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Mi tarjeta de crédito es 4111-1111-1111-1111"}
     ],
@@ -558,7 +558,7 @@ from litellm import completion
 def test_pii_masking_credit_card():
     """Test that credit cards are properly masked"""
     response = completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[{
             "role": "user",
             "content": "My card is 4111-1111-1111-1111"
@@ -576,7 +576,7 @@ def test_pii_masking_credit_card():
 def test_pii_masking_allows_normal_text():
     """Test that normal text passes through"""
     response = completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[{
             "role": "user",
             "content": "What is the weather today?"

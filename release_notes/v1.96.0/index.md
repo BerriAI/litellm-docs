@@ -43,7 +43,7 @@ pip install litellm==1.96.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Mock testing request params are gated behind one config flag.** Six `mock_*` request params previously had three different behaviors, and a dropped param returned a normal success, so a fallback drill could pass without ever running. All six now reject with a 400 naming the params and the key unless an admin sets `general_settings.dangerously_allow_mock_testing_request_params: true` in `config.yaml`; the flag cannot be changed from the Admin UI or the API. See [PR #35423](https://github.com/BerriAI/litellm/pull/35423).
 

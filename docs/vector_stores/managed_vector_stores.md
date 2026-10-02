@@ -3,14 +3,14 @@ import TabItem from '@theme/TabItem';
 
 # LiteLLM Managed Vector Stores
 
-Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, Valkey search index, ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
+Register an existing provider vector store (Bedrock Knowledge Base, Vertex AI Search datastore, Azure AI Search index, Milvus collection, Valkey search index, [MongoDB Vector Search index (BETA)](../providers/mongodb_vector_stores.md), ...) with LiteLLM, so that every consumer of the proxy can use it through one OpenAI-compatible API without knowing the provider or holding its credentials.
 
 A managed vector store is a mapping, stored in `config.yaml` or in the LiteLLM database, of:
 
 | Field | Required | Description |
 |---|---|---|
 | `vector_store_id` | Yes | The id clients will reference, typically the provider's own store id (Knowledge Base id, datastore id, index name) |
-| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `valkey`, `gemini`, `openai`, `pg_vector` |
+| `custom_llm_provider` | Yes | Which provider backend to route to, e.g. `bedrock`, `vertex_ai/search_api`, `azure_ai`, `milvus`, `mongodb` (BETA), `valkey`, `gemini`, `openai`, `pg_vector` |
 | `vector_store_name` | No | Human readable name shown in the UI |
 | `vector_store_description` | No | Description shown in the UI |
 | `vector_store_metadata` | No | Free-form metadata object |
@@ -47,7 +47,7 @@ vector_store_registry:
 
 ```bash showLineNumbers title="Register a Vertex AI Search datastore"
 curl -X POST 'http://localhost:4000/vector_store/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "vector_store_id": "my-datastore_1234567890",
@@ -60,7 +60,7 @@ curl -X POST 'http://localhost:4000/vector_store/new' \
   }'
 ```
 
-The store is written to the LiteLLM database and is immediately usable; no restart needed. The response echoes the stored object with sensitive `litellm_params` values redacted.
+The store is written to the LiteLLM database and is immediately available to direct search; no restart needed. If the proxy started with no registered vector stores, chat retrieval for its first UI or API registration becomes available after database synchronization or a proxy restart. The response echoes the stored object with sensitive `litellm_params` values redacted.
 
 </TabItem>
 <TabItem value="ui" label="Admin UI">
@@ -76,7 +76,7 @@ Search it through the unified endpoint. LiteLLM resolves the provider and creden
 
 ```bash showLineNumbers title="Unified search"
 curl -X POST 'http://localhost:4000/v1/vector_stores/my-datastore_1234567890/search' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"query": "How do I authenticate?"}'
 ```
@@ -87,7 +87,7 @@ Or attach it to a chat completion, and LiteLLM will search the store and inject 
 
 ```bash showLineNumbers title="RAG in /chat/completions"
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "gpt-5.6",
@@ -97,6 +97,29 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
 ```
 
 The request must reference the store explicitly (top-level `vector_store_ids` or inside `tools`); registering a store does not by itself change any chat completion. Details, citations, and streaming behavior: [Using Vector Stores with Chat Completions](../completion/knowledgebase.md).
+
+### Retrieved context goes through your pre-call guardrails
+
+A document in the store is untrusted input: it can carry an instruction aimed at the model (indirect prompt injection through RAG). So every guardrail that runs `pre_call` on the request (`default_on: true` in the config, or requested through `guardrails` on the request, key, or team) also scans each store's retrieved context before it is injected into the prompt, one scan per store. A guardrail that blocks returns the same 400 it would return for the user's own message, with `guardrail_name` and `guardrail_mode` in the error, and the model is never called. A guardrail that masks rewrites the injected context instead. Guardrails set to `during_call` or `post_call` keep seeing the request and the response as before and are not run on the retrieved context
+
+```json title="A blocked chunk, with the Azure Prompt Shield guardrail from the guardrails docs"
+{
+  "error": {
+    "message": "Violated Azure Prompt Shield guardrail policy",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "400",
+    "provider_specific_fields": {
+      "error": "Violated Azure Prompt Shield guardrail policy",
+      "detection_message": "Attack detected: {'attackDetected': True}",
+      "guardrail_name": "azure-prompt-shield",
+      "guardrail_mode": "pre_call"
+    }
+  }
+}
+```
+
+A guardrail that fails while scanning the retrieved context fails the request too, rather than injecting the context unscanned
 
 ## Management API reference
 
@@ -118,7 +141,7 @@ Set `object_permission.vector_stores` when creating a key or team to control whi
 
 ```bash showLineNumbers title="Key limited to one store"
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "object_permission": {"vector_stores": ["my-datastore_1234567890"]}
