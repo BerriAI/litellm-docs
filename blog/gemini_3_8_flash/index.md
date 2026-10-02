@@ -112,7 +112,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::warning Known limitation at launch
+:::warning[Known limitation at launch]
 The `minimal` thinking level is not supported on `gemini-3.8-flash`, same as on 3.7 Flash. The Gemini API returns a 400 (`Thinking level MINIMAL is not supported for this model`). The `low`, `medium`, and `high` levels work as expected.
 :::
 

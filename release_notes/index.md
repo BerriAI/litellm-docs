@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.100.0: Access Group Budgets, Together AI Sync & Custom Router Tiers](/release_notes/v1.100.0/v1-100-0)
+### [v1.103.0: Config File Ownership, Fuse Routing & Gateway Hardening](/release_notes/v1.103.0/v1-103-0)
 
-_September 6, 2026_
+_September 27, 2026_
 
-Model access groups can carry one shared budget enforced across every deployment in the group, tracked in a per-window spend table, settable from the dashboard, and with opt-in rollover of unused headroom; Together AI moves onto a dedicated config with `api.together.ai` as the default endpoint, `reasoning_effort` mapped per model class, cache-read pricing, and a daily sync that keeps the registry priced against the live serverless catalog; the complexity router's tier set becomes operator-defined end to end, with custom classifier tiers, a preview of the classifier prompt, heuristic-first chaining, a dry run on `/auto_router/test_routing`, and classifier cost counted in savings; the MCP gateway gains RFC 7662 `/introspect` for session tokens, RS256-signed session tokens, bulk import of Anthropic MCP connectors, and enforcement of toolsets attached to teams, organizations and users; Grounding with Bing Search arrives as a search provider alongside 242 new models, including `gemini-3.5-transcribe`, the xAI `grok-4.20` family, 24 Mistral entries, RunwayML `gen4.5` and the Seedance 2 family; and `GET /public/v1/model_hub` exposes a paginated public listing of the models the proxy serves. This stable also carries the Docker base image fix for glibc 2.44 that landed after the rc.1 cut.
+The config file now owns every setting it declares, with one precedence rule across the settings APIs, `source` and `editable` flags on both read endpoints, read-only fields in the Admin UI, and a startup warning for each stored value the file is ignoring. Auto Router adds a capability classifier, Fuse v2 forecasting, per-model Fast mode, maintained Fuse presets and TypeSafe JEV. Gateway hardening covers MCP client allowlisting, live session visibility, delegated OAuth admission, RFC 8693 token exchange and per-issuer JWT key scoping, and spend controls add per-member organization spend, additive project budgets, team-level `model_max_budget`, temporary budget increases and budgets re-checked on fallback targets, alongside 408 new model catalog entries. This stable also folds in prompt caching, streaming, JWT and proxy reliability fixes backported after the rc.1 cut, and reverts the rc.1 top-N key cap on the Usage pages. Review the release's Breaking Changes section before upgrading
 
 ---
 
@@ -22,6 +22,9 @@ Model access groups can carry one shared budget enforced across every deployment
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
 | [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
 | [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |

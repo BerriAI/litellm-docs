@@ -83,7 +83,7 @@ response = completion(
     ```shell
     curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "my-triton-model",
     "messages": [{"role": "user", "content": "who are u?"}]
@@ -169,7 +169,7 @@ response = completion(
     ```shell
     curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "my-triton-model",
     "messages": [{"role": "user", "content": "who are u?"}]
@@ -192,7 +192,7 @@ response = completion(
 
 Use the `triton/` prefix to route to triton server
 ```python
-from litellm import embedding
+import litellm
 import os
 
 response = await litellm.aembedding(
@@ -254,7 +254,7 @@ response = await litellm.aembedding(
     ```shell
     curl --location 'http://0.0.0.0:4000/embeddings' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "my-triton-model",
     "input": ["write a litellm poem"]

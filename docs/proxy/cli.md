@@ -31,7 +31,7 @@ This page documents all command-line interface (CLI) arguments available for the
     ```
 
 ### --num_workers
-   - **Default:** Number of logical CPUs in the system, or `4` if that cannot be determined
+   - **Default:** `1`, or the value of the `DEFAULT_NUM_WORKERS_LITELLM_PROXY` environment variable if set
    - The number of worker processes to spin up (uvicorn, gunicorn, or Granian `--workers`).
    - **Usage:** 
      ```shell
@@ -235,7 +235,7 @@ This page documents all command-line interface (CLI) arguments available for the
      ```
 
 ### --api_version
-   - **Default:** `2024-07-01-preview`
+   - **Default:** `litellm.AZURE_DEFAULT_API_VERSION` (currently `2025-02-01-preview`)
    - For Azure services, specify the API version.
    - **Usage:** 
      ```shell
@@ -526,15 +526,6 @@ A read replica takes the same key under `database.reader`, and it requires the w
    - **Usage:** 
      ```shell
      litellm --version
-     ```
-
-### --telemetry
-   - **Default:** `True`
-   - **Type:** `bool`
-   - Help track usage of this feature. Turn off for privacy.
-   - **Usage:** 
-     ```shell
-     litellm --telemetry False
      ```
 
 ### --use_queue

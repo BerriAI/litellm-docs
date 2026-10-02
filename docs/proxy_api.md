@@ -1,86 +1,19 @@
-# 🔑 LiteLLM Keys (Access Claude-2, Llama2-70b, etc.)
+# LiteLLM Keys (community key, discontinued)
 
-Use this if you're trying to add support for new LLMs and need access for testing. We provide a free $10 community-key for testing all providers on LiteLLM: 
+The free community `sk-litellm-...` keys and the hosted proxy behind them are no longer available. The LiteLLM SDK has no special handling for these keys, so setting `OPENAI_API_KEY` (or any other provider key) to an `sk-litellm-...` value sends it straight to that provider, which rejects it with an authentication error
 
-## usage (community-key)
+To get one key for many providers, run your own [LiteLLM Proxy](./proxy/quick_start.md) with your provider credentials, then call it from the SDK through the [`litellm_proxy/` provider](./providers/litellm_proxy.md) using a key issued by your proxy
 
 ```python
 import os
 from litellm import completion
 
-## set ENV variables
-os.environ["OPENAI_API_KEY"] = "your-api-key"
-os.environ["COHERE_API_KEY"] = "your-api-key"
+os.environ["LITELLM_PROXY_API_BASE"] = "http://0.0.0.0:4000"  # your proxy
+os.environ["LITELLM_PROXY_API_KEY"] = "sk-1234"  # a key issued by your proxy
 
-messages = [{ "content": "Hello, how are you?","role": "user"}]
+messages = [{"content": "Hello, how are you?", "role": "user"}]
 
-# openai call
-response = completion(model="{{openai_small}}", messages=messages)
-
-# cohere call
-response = completion("command-nightly", messages)
+response = completion(model="litellm_proxy/{{openai_small}}", messages=messages)
 ```
 
-**Need a dedicated key?**
-Email us @ krrish@berri.ai 
-
-## Supported Models for LiteLLM Key
-These are the models that currently work with the "sk-litellm-.." keys.
-
-For a complete list of models/providers that you can call with LiteLLM, [check out our provider list](./providers/) or check out [models.litellm.ai](https://models.litellm.ai/)
-
-* OpenAI models - [OpenAI docs](./providers/openai.md)
-    * gpt-4
-    * gpt-3.5-turbo
-    * gpt-3.5-turbo-16k
-* Llama2 models - [TogetherAI docs](./providers/togetherai.md)
-    * togethercomputer/llama-2-70b-chat
-    * togethercomputer/llama-2-70b
-    * togethercomputer/LLaMA-2-7B-32K
-    * togethercomputer/Llama-2-7B-32K-Instruct
-    * togethercomputer/llama-2-7b
-    * togethercomputer/CodeLlama-34b
-    * WizardLM/WizardCoder-Python-34B-V1.0
-    * NousResearch/Nous-Hermes-Llama2-13b
-* Falcon models - [TogetherAI docs](./providers/togetherai.md)
-    * togethercomputer/falcon-40b-instruct
-    * togethercomputer/falcon-7b-instruct
-* Jurassic/AI21 models - [AI21 docs](./providers/ai21.md)
-    * j2-ultra
-    * j2-mid
-    * j2-light
-* NLP Cloud models - [NLPCloud docs](./providers/nlp_cloud.md)
-    * dolpin
-    * chatdolphin 
-* Anthropic models - [Anthropic docs](./providers/anthropic.md)
-    * claude-2
-    * claude-instant-v1
-
-
-## For OpenInterpreter
-This was initially built for the Open Interpreter community. If you're trying to use this feature in there, here's how you can do it:  
-**Note**: You will need to clone and modify the Github repo, until [this PR is merged.](https://github.com/KillianLucas/open-interpreter/pull/288)
-
-```
-git clone https://github.com/krrishdholakia/open-interpreter-litellm-fork
-```
-To run it do: 
-```
-uv build 
-
-# call {{openai_large}} - always add 'litellm_proxy/' in front of the model name
-uv run interpreter --model litellm_proxy/{{openai_large}}
-
-# call llama-70b - always add 'litellm_proxy/' in front of the model name
-uv run interpreter --model litellm_proxy/togethercomputer/llama-2-70b-chat
-
-# call {{anthropic}} - always add 'litellm_proxy/' in front of the model name
-uv run interpreter --model litellm_proxy/{{anthropic}}
-```
-
-And that's it! 
-
-Now you can call any model you like!
-
-
-Want us to add more models? [Let us know!](https://github.com/BerriAI/litellm/issues/new/choose)
+The `litellm_proxy/` prefix works the same way in tools built on the LiteLLM SDK, as long as `LITELLM_PROXY_API_BASE` points at your proxy. For every model and provider you can call, see the [provider list](./providers/) or [models.litellm.ai](https://models.litellm.ai/)

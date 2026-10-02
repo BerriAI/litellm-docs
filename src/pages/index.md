@@ -684,7 +684,7 @@ The proxy provides:
 3. [Cost tracking](https://docs.litellm.ai/docs/proxy/virtual_keys#tracking-spend)
 4. [Rate Limiting](https://docs.litellm.ai/docs/proxy/users#set-rate-limits)
 
-### 📖 Proxy Endpoints - [Swagger Docs](https://litellm-api.up.railway.app/)
+### 📖 Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
 
 Go here for a complete tutorial with keys + rate limits - [**here**](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 
@@ -725,7 +725,7 @@ model_list:
       api_version: "2023-07-01-preview"
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: postgres://
 ```
 
@@ -771,7 +771,7 @@ print(response)
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 

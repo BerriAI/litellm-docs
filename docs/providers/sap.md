@@ -21,7 +21,7 @@ Before you begin, ensure you have:
 3. **Service Key** created for your AI Core instance (this contains your credentials)
 4. **Resource Group** with deployed AI models (check with your SAP administrator)
 
-:::tip Where to Find Your Credentials
+:::tip[Where to Find Your Credentials]
 Your credentials come from the **Service Key** you create in SAP BTP Cockpit:
 
 1. Navigate to your **Subaccount** → **Instances and Subscriptions**
@@ -42,7 +42,7 @@ The service key JSON looks like this:
 }
 ```
 
-:::info Resource Group
+:::info[Resource Group]
 The resource group is typically configured separately in your AI Core deployment, not in the service key itself. You can set it via the `AICORE_RESOURCE_GROUP` environment variable (defaults to "default").
 :::
 
@@ -334,7 +334,7 @@ litellm_settings:
   forward_client_headers_to_llm_api: ["anthropic-version"]
 
 general_settings:
-  master_key: "sk-1234" # Enter here your desired master key starting with 'sk-'.
+  master_key: "sk-<your-litellm-master-key>" # Enter here your desired master key starting with 'sk-'.
   
   # UI Admin is not required but helpful including the management of keys for your team(s). If you are using a database, these parameters are required:
   database_url: "Enter you database URL."
@@ -363,7 +363,7 @@ The proxy will start on `http://localhost:4000` by default.
 ```bash showLineNumbers title="Test Request"
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}]
@@ -378,7 +378,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 response = client.chat.completions.create(
@@ -395,7 +395,7 @@ print(response.choices[0].message.content)
 import os
 import litellm
 
-os.environ["LITELLM_PROXY_API_KEY"] = "sk-1234"
+os.environ["LITELLM_PROXY_API_KEY"] = "sk-<your-litellm-api-key>"
 litellm.use_litellm_proxy = True
 
 response = litellm.completion(
@@ -487,7 +487,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::note SAP Platform Requirement
+:::note[SAP Platform Requirement]
 When using `json_object` type, SAP's orchestration service requires the word "json" to appear in your prompt. This ensures explicit intent for JSON formatting. For schema-validated output without this requirement, use `json_schema` instead (recommended).
 :::
 
@@ -781,7 +781,7 @@ print(response.choices[0].message.content)
 
 For the complete and up-to-date list of available models provided by SAP Gen AI Hub, please refer to the [SAP AI Core Generative AI Hub documentation](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/models-and-scenarios-in-generative-ai-hub).
 
-:::info Model Availability
+:::info[Model Availability]
 Model availability varies by SAP deployment region and your subscription. Contact your SAP administrator to confirm which models are available in your environment.
 :::
 

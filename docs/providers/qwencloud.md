@@ -1,9 +1,9 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# QwenCloud and Qwen AI Platform (Qwen models)
+# QwenCloud and Qianwen AI Platform (Qwen models)
 
-Alibaba unified its model platform brands (DashScope, Bailian, Model Studio) under [QwenCloud](https://www.qwencloud.com/) outside mainland China and Qwen AI Platform in mainland China. LiteLLM routes both brands through its existing DashScope implementation, and the legacy `dashscope/` prefix keeps working as an alias
+Alibaba unified its model platform brands (DashScope, Bailian, Model Studio) under [QwenCloud](https://www.qwencloud.com/) outside mainland China and [Qianwen AI Platform](https://www.qianwenai.com/) in mainland China. LiteLLM routes both brands through its existing DashScope implementation, and the legacy `dashscope/` prefix keeps working as an alias
 
 ## Overview
 
@@ -11,7 +11,7 @@ Alibaba unified its model platform brands (DashScope, Bailian, Model Studio) und
 |-------|-------|
 | Description | Alibaba's Qwen model platform, served over an OpenAI-compatible API |
 | Provider Routes on LiteLLM | `qwencloud/` (international), `qwen_ai_platform/` (mainland China), `dashscope/` (legacy alias) |
-| Link to Provider Doc | [QwenCloud Documentation](https://www.qwencloud.com/) |
+| Link to Provider Doc | [QwenCloud Documentation](https://docs.qwencloud.com/developer-guides/getting-started/introduction), [Qianwen AI Platform Documentation](https://platform.qianwenai.com/docs/developer-guides/getting-started/first-api-call) |
 | Supported Operations | `/chat/completions`, `/embeddings`, `/rerank`, `/images/generations` |
 
 These routes support pay-as-you-go API keys. Token Plan and Coding Plan endpoints are not yet mapped in LiteLLM (tracked on [issue #36150](https://github.com/BerriAI/litellm/issues/36150))
@@ -29,7 +29,7 @@ Use the `qwencloud/` prefix outside mainland China
 | API key env var | `QWENCLOUD_API_KEY` (falls back to `DASHSCOPE_API_KEY`) |
 | Base URL overrides | `QWENCLOUD_API_BASE`, `QWENCLOUD_API_BASE_RERANK`, `QWENCLOUD_API_BASE_IMAGE` |
 
-## Qwen AI Platform (mainland China)
+## Qianwen AI Platform (mainland China)
 
 Use the `qwen_ai_platform/` prefix in mainland China. It hits the same paths on the mainland host
 

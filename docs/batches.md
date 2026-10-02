@@ -7,7 +7,7 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM, xAI | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
@@ -24,14 +24,32 @@ uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
 
 - Retrieve the Specific Batch and File Content
 
+**Create the batch input file**
+
+Each line is one request in the [OpenAI batch file format](https://platform.openai.com/docs/guides/batch). `custom_id`, `method`, `url`, and `body` are required on every line:
+
+```json showLineNumbers title="mydata.jsonl"
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are an unhelpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+```
 
 <Tabs>
 <TabItem value="proxy" label="LiteLLM PROXY Server">
 
+**Setup config.yaml and start the proxy**
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+```
+
 ```bash
 $ export OPENAI_API_KEY="sk-..."
 
-$ litellm
+$ litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
 ```
@@ -40,7 +58,7 @@ $ litellm
 
 ```shell
 curl http://localhost:4000/v1/files \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -F purpose="batch" \
     -F file="@mydata.jsonl"
 ```
@@ -49,7 +67,7 @@ curl http://localhost:4000/v1/files \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-        -H "Authorization: Bearer sk-1234" \
+        -H "Authorization: Bearer $LITELLM_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{
             "input_file_id": "file-abc123",
@@ -62,7 +80,7 @@ curl http://localhost:4000/v1/batches \
 
 ```bash
 curl http://localhost:4000/v1/batches/batch_abc123 \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -71,7 +89,7 @@ curl http://localhost:4000/v1/batches/batch_abc123 \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
 ```
 
@@ -87,7 +105,7 @@ import asyncio
 
 os.environ["OPENAI_API_KEY"] = "sk-.."
 
-file_name = "openai_batch_completions.jsonl"
+file_name = "mydata.jsonl"
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(_current_dir, file_name)
 file_obj = await litellm.acreate_file(
@@ -221,7 +239,7 @@ When you upload a file with a model parameter, LiteLLM encodes the model informa
 ```bash
 # Step 1: Upload file with model
 curl http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-1" \
   -F purpose="batch" \
   -F file="@batch.jsonl"
@@ -234,7 +252,7 @@ curl http://localhost:4000/v1/files \
 
 # Step 2: Create batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
@@ -251,7 +269,7 @@ curl http://localhost:4000/v1/batches \
 
 # Step 3: Retrieve batch - automatically routes to gpt-4o-account-1
 curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxncHQtNG8tYWNjb3VudC0x \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Benefits:**
@@ -266,7 +284,7 @@ Specify the model for each request without encoding it in the ID.
 ```bash
 # Create batch with model header
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: gpt-4o-account-2" \
   -H "Content-Type: application/json" \
   -d '{
@@ -277,7 +295,7 @@ curl http://localhost:4000/v1/batches \
 
 # Or use query parameter
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -287,7 +305,7 @@ curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
 
 # List batches for specific model
 curl "http://localhost:4000/v1/batches?model=gpt-4o-account-2" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **✅ Use Case:**
@@ -303,7 +321,7 @@ Traditional approach using environment variables when no model is specified.
 export OPENAI_API_KEY="sk-env-key"
 
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -438,6 +456,9 @@ LiteLLM supports the following provider-native batch APIs:
 | OpenAI | [Quick start](#quick-start) |
 | Google Vertex AI | [Vertex AI batch APIs](/docs/providers/vertex_batch) |
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
+| Mistral AI | [Mistral AI Batch API](./providers/mistral_batches) |
+| vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
+| xAI | [xAI Batch API](./providers/xai_batches) |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
@@ -453,7 +474,7 @@ Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch i
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   max_batch_file_size_mb: 10
 ```
 
@@ -525,7 +546,7 @@ Per-minute windows fit batches poorly: a batch runs for hours, but its whole inp
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
 ```
@@ -600,4 +621,4 @@ The initial submission and the completed aggregate are recorded separately. The 
 
 Batch cost tracking does not change the TPM or RPM counters reserved at submission. Those counters remain based on the input-file calculation described above.
 
-## [Swagger API Reference](https://litellm-api.up.railway.app/#/batch)
+## [Swagger API Reference](https://docs.litellm.ai/api-reference/#/batch)

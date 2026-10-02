@@ -23,7 +23,7 @@ LiteLLM supports all anthropic models.
 | Property | Details |
 |-------|-------|
 | Description | Claude is a highly performant, trustworthy, and intelligent AI platform built by Anthropic. Claude excels at tasks involving language, reasoning, analysis, coding, and more. Also available via Azure Foundry. |
-| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
+| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure_ai/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
 | Provider Doc | [Anthropic ↗](https://docs.anthropic.com/en/docs/build-with-claude/overview), [Azure Foundry Claude ↗](https://learn.microsoft.com/en-us/azure/ai-services/foundry-models/claude) |
 | API Endpoint for Provider | https://api.anthropic.com (or Azure Foundry endpoint: `https://<resource-name>.services.ai.azure.com/anthropic`) |
 | Supported Endpoints | `/chat/completions`, `/v1/messages` (passthrough) |
@@ -53,22 +53,25 @@ Check this in code, [here](../completion/input.md#translated-openai-params)
 
 **Notes:**
 - Anthropic API fails requests when `max_tokens` are not passed. Due to this litellm passes `max_tokens=4096` when no `max_tokens` are passed.
-- `response_format` is fully supported for Claude Sonnet 4.5 and Opus 4.1 models (see [Structured Outputs](#structured-outputs) section)
+- `response_format` uses Anthropic native structured outputs on Claude Sonnet 4.5+, Opus 4.5+ and Haiku 4.5. Older models such as Opus 4.1 fall back to a forced tool call (see [Structured Outputs](#structured-outputs) section)
 - `reasoning_effort` is automatically mapped to `output_config={"effort": ...}` for Claude 4.6 and Opus 4.5 models (see [Effort Parameter](./anthropic_effort.md))
 
 :::
 
 ## **Structured Outputs**
 
-LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Sonnet 4.5 and Opus 4.1 models. When you use `response_format` with these models, LiteLLM automatically:
+LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Sonnet 4.5 and later, Opus 4.5 and later, and Haiku 4.5. When you use `response_format` with these models, LiteLLM automatically:
 - Adds the required `structured-outputs-2025-11-13` beta header
 - Transforms OpenAI's `response_format` to Anthropic's `output_format` format
 
 ### Supported Models
-- `sonnet-4-5` or `sonnet-4.5` (all Sonnet 4.5 variants)
-- `opus-4-1` or `opus-4.1` (all Opus 4.1 variants)
-  - `opus-4-5` or `opus-4.5` (all Opus 4.5 variants)
-  
+Native structured outputs are used when the model has `supports_native_structured_output` set in the model cost map:
+- Sonnet 4.5 and later (`claude-sonnet-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5`)
+- Opus 4.5 and later (`claude-opus-4-5`, `claude-opus-4-6`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5`, `claude-opus-5-5`)
+- Haiku 4.5 (`claude-haiku-4-5`)
+
+Claude Opus 4.1 and older models do not have this flag, so LiteLLM never sends `output_format` for them. It instead adds a `json_tool_call` tool built from your schema and forces the model to call it
+
 ### Example Usage
 
 <Tabs>
@@ -154,9 +157,10 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 :::info
 When using structured outputs with supported models, LiteLLM automatically:
-- Converts OpenAI's `response_format` to Anthropic's `output_schema`
+- Converts OpenAI's `response_format` to Anthropic's `output_format`
 - Adds the `anthropic-beta: structured-outputs-2025-11-13` header
-- Creates a tool with the schema and forces the model to use it
+
+For models without native support, LiteLLM instead creates a `json_tool_call` tool with the schema and forces the model to use it
 :::
 
 ## API Keys
@@ -169,14 +173,14 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 # os.environ["LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX"] = "true" # [OPTIONAL] Disable automatic URL suffix appending
 ```
 
-:::tip Azure Foundry Support
+:::tip[Azure Foundry Support]
 
-Claude models are also available via Microsoft Azure Foundry. Use the `azure/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
+Claude models are also available via Microsoft Azure Foundry. Use the `azure_ai/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
 
 Example:
 ```python
 response = completion(
-    model="azure/{{anthropic}}",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[{"role": "user", "content": "Hello!"}]
@@ -207,7 +211,7 @@ With `LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX=true`:
 
 ### Azure AI Foundry (Alternative Method)
 
-:::tip Recommended Method
+:::tip[Recommended Method]
 For full Azure support including Azure AD authentication, use the dedicated [Azure Anthropic provider](./azure/azure_anthropic) with `azure_ai/` prefix.
 :::
 
@@ -1793,6 +1797,7 @@ Human: How do I boil water?
 Assistant:
 ```
 
+Mid-conversation `system` messages, and how LiteLLM places them on each provider so preserved thinking blocks keep their binding, are covered in [Preserved Thinking Prefix Stability](./anthropic_preserved_thinking)
 
 ## Usage - PDF
 
@@ -1960,7 +1965,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "anthropic-claude",
   "messages": [

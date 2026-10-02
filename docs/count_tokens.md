@@ -110,6 +110,8 @@ result = await litellm.acount_tokens(
 print(result.tokenizer_type)  # "local_tokenizer"
 ```
 
+On the proxy, local counting runs in a worker thread, so a large payload does not hold up other requests. Each worker process counts at most `TOKEN_COUNTER_MAX_CONCURRENT_COUNTS` payloads at a time (default 4) and queues the rest, which bounds the memory a burst of large counts can take. Strings longer than `TOKEN_COUNTER_MAX_EXACT_CHARS` characters (default 4,000,000, roughly a million tokens) are estimated by tokenizing 16 evenly spaced samples that together total that many characters and scaling the result by the string's length, which keeps the cost of the largest payloads bounded.
+
 ## Proxy Usage
 
 ### OpenAI Format: `/v1/responses/input_tokens`
@@ -120,7 +122,7 @@ print(result.tokenizer_type)  # "local_tokenizer"
 ```bash
 curl -X POST "http://localhost:4000/v1/responses/input_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "input": "Hello, how are you?"
@@ -137,7 +139,7 @@ response = httpx.post(
     "http://localhost:4000/v1/responses/input_tokens",
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Bearer sk-1234"
+        "Authorization": "Bearer sk-<your-litellm-api-key>"
     },
     json={
         "model": "{{openai_large}}",
@@ -164,7 +166,7 @@ See [Anthropic Token Counting](./anthropic_count_tokens.md) for full documentati
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{anthropic}}",
     "messages": [

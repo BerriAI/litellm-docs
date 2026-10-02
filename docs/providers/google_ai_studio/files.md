@@ -37,9 +37,9 @@ encoded_string = base64.b64encode(wav_data).decode('utf-8')
 
 
 file = create_file(
-    file=wav_data,
-    purpose="user_data",
-    extra_headers={"custom-llm-provider": "gemini"},
+    file=("alloy.wav", wav_data),
+    purpose="assistants",
+    custom_llm_provider="gemini",
     api_key=os.getenv("GEMINI_API_KEY"),
 )
 
@@ -64,7 +64,7 @@ completion = completion(
                     "file": {
                         "file_id": file.id,
                         "filename": "my-test-name",
-                        "format": "audio/wav"
+                        "format": "audio/x-wav"
                     }
                 }
             ]
@@ -103,7 +103,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Fetch the audio file and convert it to a base64 encoded string
@@ -228,7 +228,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Upload file to Azure Blob Storage
@@ -271,7 +271,7 @@ print(completion.choices[0].message.content)
 ```bash
 # Upload file with Azure Blob Storage
 curl -X POST "http://0.0.0.0:4000/v1/files" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -F "file=@document.pdf" \
   -F "purpose=user_data" \
   -F "target_storage=azure_storage" \
@@ -280,7 +280,7 @@ curl -X POST "http://0.0.0.0:4000/v1/files" \
 
 # Use the file with Gemini
 curl -X POST "http://0.0.0.0:4000/v1/chat/completions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{gemini_flash}}",

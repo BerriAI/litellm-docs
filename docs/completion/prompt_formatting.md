@@ -2,35 +2,35 @@
 
 LiteLLM automatically translates the OpenAI ChatCompletions prompt format, to other models. You can control this by setting a custom prompt template for a model as well. 
 
-## Huggingface Models 
+## Stored Templates
 
-LiteLLM supports [Huggingface Chat Templates](https://huggingface.co/docs/transformers/main/chat_templating), and will automatically check if your huggingface model has a registered chat template (e.g. [Mistral-7b](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1/blob/main/tokenizer_config.json#L32)).
+Prompt templates only apply to providers that take a single raw text prompt, such as `ollama/`, `petals/`, `replicate/`, `sagemaker/`, and `predibase/`. `huggingface/` and `together_ai/` call the providers' OpenAI-compatible chat completions APIs, so LiteLLM sends your `messages` as-is and the provider applies the model's own chat template. Neither the stored templates below nor templates registered with `register_prompt_template` are used for them
 
-For popular models (e.g. meta-llama/llama2), we have their templates saved as part of the package. 
+For raw-prompt providers, LiteLLM supports [Huggingface Chat Templates](https://huggingface.co/docs/transformers/main/chat_templating) and falls back to the model's registered chat template on the Hugging Face Hub (e.g. [Mistral-7b](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1/blob/main/tokenizer_config.json#L32)). On `sagemaker/`, pass `hf_model_name` to pick the template for your endpoint's base model. For popular models, the templates are saved as part of the package
 
-**Stored Templates**
+| Model Name | Works for Models |
+| -------- | -------- |
+| mistralai/Mistral-7B-Instruct-v0.1 | mistralai/Mistral-7B-Instruct-v0.1 |
+| meta-llama/Llama-2-7b-chat | All meta-llama llama2 chat models |
+| tiiuae/falcon-7b-instruct | All falcon instruct models |
+| mosaicml/mpt-7b-chat | All mpt chat models |
+| codellama/CodeLlama-34b-Instruct-hf | All codellama instruct models |
+| WizardLM/WizardCoder-Python-34B-V1.0 | All wizardcoder models |
+| Phind/Phind-CodeLlama-34B-v2 | All phind-codellama models |
 
-| Model Name | Works for Models | Completion Call
-| -------- | -------- | -------- |
-| mistralai/Mistral-7B-Instruct-v0.1 | mistralai/Mistral-7B-Instruct-v0.1| `completion(model='huggingface/mistralai/Mistral-7B-Instruct-v0.1', messages=messages, api_base="your_api_endpoint")` |
-| meta-llama/Llama-2-7b-chat | All meta-llama llama2 chat models| `completion(model='huggingface/meta-llama/Llama-2-7b', messages=messages, api_base="your_api_endpoint")` |
-| tiiuae/falcon-7b-instruct | All falcon instruct models | `completion(model='huggingface/tiiuae/falcon-7b-instruct', messages=messages, api_base="your_api_endpoint")` |
-| mosaicml/mpt-7b-chat | All mpt chat models | `completion(model='huggingface/mosaicml/mpt-7b-chat', messages=messages, api_base="your_api_endpoint")` |
-| codellama/CodeLlama-34b-Instruct-hf | All codellama instruct models | `completion(model='huggingface/codellama/CodeLlama-34b-Instruct-hf', messages=messages, api_base="your_api_endpoint")` |
-| WizardLM/WizardCoder-Python-34B-V1.0 | All wizardcoder models | `completion(model='huggingface/WizardLM/WizardCoder-Python-34B-V1.0', messages=messages, api_base="your_api_endpoint")` |
-| Phind/Phind-CodeLlama-34B-v2 | All phind-codellama models | `completion(model='huggingface/Phind/Phind-CodeLlama-34B-v2', messages=messages, api_base="your_api_endpoint")` |
-
-[**Jump to code**](https://github.com/BerriAI/litellm/blob/main/litellm/llms/prompt_templates/factory.py)
+[**Jump to code**](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 
 ## Format Prompt Yourself
 
-You can also format the prompt yourself. Here's how: 
+You can also format the prompt yourself. Register the template under the model name without the provider prefix. Here's how: 
 
 ```python 
 import litellm
+from litellm import completion
+
 # Create your own custom prompt template 
 litellm.register_prompt_template(
-	    model="togethercomputer/LLaMA-2-7B-32K",
+	    model="llama2",
         initial_prompt_value="You are a good assistant", # [OPTIONAL]
 	    roles={
             "system": {
@@ -49,18 +49,14 @@ litellm.register_prompt_template(
         final_prompt_value="Now answer as best you can:" # [OPTIONAL]
 )
 
-def test_huggingface_custom_model():
-    model = "huggingface/togethercomputer/LLaMA-2-7B-32K"
-    response = completion(model=model, messages=messages, api_base="https://my-huggingface-endpoint")
-    print(response['choices'][0]['message']['content'])
-    return response
-
-test_huggingface_custom_model()
+messages = [{"role": "user", "content": "Hey, how's it going?"}]
+response = completion(model="ollama/llama2", messages=messages, api_base="http://localhost:11434")
+print(response['choices'][0]['message']['content'])
 ```
 
-This is currently supported for Huggingface, TogetherAI, Ollama, and Petals. 
+This is supported for raw-prompt providers such as Ollama (`ollama/`, not `ollama_chat/`), Petals, Replicate, SageMaker, and Predibase. It has no effect on `huggingface/` or `together_ai/` chat models
 
-Other providers either have fixed prompt templates (e.g. Anthropic), or format it themselves (e.g. Replicate). If there's a provider we're missing coverage for, let us know! 
+Other providers either have fixed prompt templates (e.g. Anthropic), or accept chat messages and format them server-side (e.g. Hugging Face, Together AI). If there's a provider we're missing coverage for, let us know! 
 
 ## All Providers
 

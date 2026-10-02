@@ -47,7 +47,7 @@ model_list:
     model: vertex_ai/textembedding-gecko
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Start proxy 
@@ -65,7 +65,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/embeddings' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"input": ["Academia.edu uses"], "model": "textembedding-gecko", "encoding_format": "base64"}'
 ```
@@ -76,7 +76,7 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 ```python
 from openai import OpenAI
 client = OpenAI(
-  api_key="sk-1234",
+  api_key="sk-<your-litellm-api-key>",
   base_url="http://0.0.0.0:4000"
 )
 
@@ -92,7 +92,7 @@ client.embeddings.create(
 ```python
 from langchain_openai import OpenAIEmbeddings
 
-embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-1234")
+embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-<your-api-key>")
 
 text = "This is a test document."
 
@@ -519,7 +519,7 @@ All models listed [here](https://ai.google.dev/gemini-api/docs/models/gemini) ar
 
 `gemini-embedding-2-preview` supports **multimodal embeddings**: text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior, so swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
 
-:::info Response shape
+:::info[Response shape]
 
 For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`), the same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector; see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
 
@@ -556,7 +556,7 @@ print(response)
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",
@@ -609,7 +609,7 @@ response = embedding(
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",

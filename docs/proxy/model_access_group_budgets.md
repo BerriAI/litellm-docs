@@ -37,7 +37,7 @@ model_list:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/model/new' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "model_name": "premium-sonnet",
@@ -54,7 +54,7 @@ curl -X POST 'http://0.0.0.0:4000/model/new' \
 
 ```shell
 curl -X PUT 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "max_budget": 500.0,
@@ -77,7 +77,7 @@ The key has to name the group in its `models` list. That grant is what ties the 
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "models": ["premium"]
@@ -119,7 +119,7 @@ Read the pool and the spend drawn against it:
 
 ```shell
 curl -X GET 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234'
+     -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json
@@ -140,7 +140,7 @@ Clearing the budget leaves the group and its models in place:
 
 ```shell
 curl -X DELETE 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234'
+     -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json

@@ -113,8 +113,7 @@ import litellm
 
 # Configure gitlab access
 gitlab_config = {
-    "workspace": "your-workspace",
-    "repository": "your-repo",
+    "project": "your-group/your-repo",  # project path or numeric project id
     "access_token": "your-access-token",
     "branch": "main"
 }
@@ -171,8 +170,7 @@ litellm_settings:
     branch: "main"
   # Or use Gitlab for team-based prompt management
   global_gitlab_config:
-    workspace: "your-workspace"
-    repository: "your-repo"
+    project: "your-group/your-repo"  # project path or numeric project id
     access_token: "your-access-token"
     branch: "main"
 ```
@@ -188,7 +186,7 @@ litellm --config config.yaml --detailed_debug
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "my-dotprompt-model",
     "messages": [{"role": "user", "content": "IGNORED"}],

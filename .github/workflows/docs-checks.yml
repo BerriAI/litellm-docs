@@ -6,13 +6,23 @@ on:
     branches: [main]
 
 jobs:
+  social-cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:social-cards
   writing-style:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: node scripts/check-writing-style.js docs blog release_notes
   structure:
     runs-on: ubuntu-latest

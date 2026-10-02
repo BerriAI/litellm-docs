@@ -19,15 +19,14 @@ By the end you will have LiteLLM running at `http://localhost:4000` with a model
 <TabItem value="local" label="Run locally" default>
 
 ```bash
-curl -sSL https://docs.litellm.ai/docker-compose.yml | docker compose -f - up -d
+curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
+docker compose -f docker-compose.quickstart.yml up -d
 ```
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://docs.litellm.ai/docker-compose.yml) it pipes in defines just those two services; to customize anything (pin a release tag instead of `latest`, change credentials), download it and start it the usual way:
+This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
 
-```bash
-curl -sSLO https://docs.litellm.ai/docker-compose.yml
-docker compose up -d
-```
+The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
 </TabItem>
 <TabItem value="cloud" label="1-click deploy">
@@ -42,13 +41,17 @@ For the rest of this guide, use your deployment's URL wherever you see `http://l
 </TabItem>
 </Tabs>
 
-:::warning Set a real salt key
-`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. The quickstart compose file ships a placeholder; before adding models to anything you intend to keep, set it to a long random value, and never change it afterwards. Credentials encrypted with the old value cannot be decrypted with a new one. A password generator works well for this.
+:::warning[What the two keys do]
+Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
+
+`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement
+
+`LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the generated value: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
 :::
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value (`sk-1234` in the quickstart compose file).
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value, the one in the `.env` file you just generated.
 
 <Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
 
@@ -62,7 +65,7 @@ Click **Test Connect** to verify the key against the provider, then **Add Model*
 
 <Image img={require('../../img/ui_quickstart_models_list.png')} alt="All Models list showing the newly added model with cost data" />
 
-:::tip Keep provider keys out of the UI
+:::tip[Keep provider keys out of the UI]
 If you prefer to manage provider keys as environment variables, download the compose file, add them to the `litellm` service (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`), and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
 :::
 
@@ -186,7 +189,7 @@ model_list:
 docker run \
   -v $(pwd)/litellm_config.yaml:/app/config.yaml \
   -e OPENAI_API_KEY=<your-openai-key> \
-  -e LITELLM_MASTER_KEY=sk-1234 \
+  -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \
   -p 4000:4000 \
   docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml
@@ -194,7 +197,7 @@ docker run \
 
 Requests authenticate with the master key. See the [full config reference](./configs.md) for everything the file supports.
 
-:::warning Budgets are not enforced without a database
+:::warning[Budgets are not enforced without a database]
 
 `litellm_settings.max_budget` is not a spend cap on this path. Loading the proxy's global spend requires a database client, so without one the running total stays unknown and the global budget check never fires; a proxy configured with `max_budget: 100` keeps serving requests past $100 with no per-request error and no budget alert. The proxy does log a one-time warning at startup when a budget is configured with no database connected, and that startup line is the only signal you get
 

@@ -3,14 +3,14 @@
 ## Error Message
 
 ```
-Cannot add callback - would exceed MAX_CALLBACKS limit of 30. Current callbacks: 30
+Cannot add callback - would exceed MAX_CALLBACKS limit of 100. Current callbacks: 100
 ```
 
 ## What This Means
 
-LiteLLM limits the number of callbacks that can be registered to prevent performance degradation. Each callback runs on every LLM request, so having too many callbacks can cause exponential CPU usage and slow down your proxy.
+LiteLLM limits the number of callbacks that can be registered to prevent performance degradation. Each callback runs on every LLM request, so having too many callbacks can cause exponential CPU usage and slow down your proxy. When a callback list is already at the limit, LiteLLM logs this message as a warning and skips the new callback
 
-The default limit is **30 callbacks**.
+The default limit is **100 callbacks**.
 
 ## When You Might Hit This Limit
 
@@ -24,25 +24,25 @@ Set the `LITELLM_MAX_CALLBACKS` environment variable to increase the limit:
 
 ```bash
 # Docker
-docker run -e LITELLM_MAX_CALLBACKS=100 ...
+docker run -e LITELLM_MAX_CALLBACKS=200 ...
 
 # Docker Compose
 environment:
-  - LITELLM_MAX_CALLBACKS=100
+  - LITELLM_MAX_CALLBACKS=200
 
 # Kubernetes
 env:
   - name: LITELLM_MAX_CALLBACKS
-    value: "100"
+    value: "200"
 
 # Direct
-export LITELLM_MAX_CALLBACKS=100
+export LITELLM_MAX_CALLBACKS=200
 litellm --config config.yaml
 ```
 
 ## Recommendations
 
-1. **Start conservative** - Only increase as much as you need. If you have 60 teams with guardrails, try `LITELLM_MAX_CALLBACKS=75` to leave headroom.
+1. **Start conservative** - Only increase as much as you need. If you have 150 teams with guardrails, try `LITELLM_MAX_CALLBACKS=175` to leave headroom.
 
 2. **Monitor performance** - More callbacks means more processing per request. Watch your CPU usage and response latency after increasing the limit.
 
@@ -50,19 +50,19 @@ litellm --config config.yaml
 
 ## Example: Large Enterprise Setup
 
-For an organization with 60+ teams, each with a guardrail callback:
+For an organization with 150+ teams, each with a guardrail callback:
 
 ```yaml
 # config.yaml
 litellm_settings:
   callbacks: ["prometheus", "langfuse"]  # 2 global callbacks
 
-# Each team adds 1 guardrail callback = 60+ callbacks
-# Total: 62+ callbacks needed
+# Each team adds 1 guardrail callback = 150+ callbacks
+# Total: 152+ callbacks needed
 ```
 
 Set the environment variable:
 
 ```bash
-export LITELLM_MAX_CALLBACKS=100
+export LITELLM_MAX_CALLBACKS=200
 ```
