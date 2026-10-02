@@ -53,6 +53,8 @@ Expected: a JSON-RPC `result` whose `tools` array contains prefixed tool names f
 
 When `transport` is omitted in `config.yaml`, the loader defaults to `http` (streamable HTTP). The management API create/update request models default to `sse`. Set `transport` explicitly in both entry points to avoid relying on different defaults
 
+stdio MCP servers are disabled by default. Enabling them requires `LITELLM_ENABLE_STDIO_MCP=true` in the proxy's process environment; see the [stdio security warning](./mcp#add-stdio-mcp-server)
+
 ```yaml title="config.yaml: the three transports side by side" showLineNumbers
 mcp_servers:
   # Streamable HTTP (default): url required
@@ -76,11 +78,11 @@ mcp_servers:
 |-----------|-----------------|-------------|-------------------|
 | `http` (YAML default) | `url` | Any modern remote MCP server; this is the MCP streamable HTTP transport | LiteLLM POSTs JSON-RPC to `url` and streams responses |
 | `sse` | `url`, `transport: "sse"` | Legacy servers that only expose an SSE endpoint | LiteLLM opens an SSE stream to `url` |
-| `stdio` | `transport: "stdio"`, `command`; optional `args`, `env` | Local MCP servers launched as a subprocess on the proxy host | LiteLLM spawns `command` and speaks MCP over stdin/stdout. Per-request headers can be mapped into `env` with `${X-HEADER-NAME}` syntax; see [header-to-env forwarding](./mcp#passing-request-headers-to-stdio-env-vars) |
+| `stdio` | `transport: "stdio"`, `command`; optional `args`, `env` | Local MCP servers launched as a subprocess on the proxy host; requires operator opt-in | LiteLLM spawns `command` and speaks MCP over stdin/stdout. Per-request headers can be mapped into `env` with `${X-HEADER-NAME}` syntax; see [header-to-env forwarding](./mcp#passing-request-headers-to-stdio-env-vars) |
 
-Replace the SSE URL with a running legacy SSE server. The stdio example requires Node.js and `npx` on the proxy host and launches the pinned demonstration server; it is a connectivity control. Use your own server command for production
+Replace the SSE URL with a running legacy SSE server. The stdio example requires `LITELLM_ENABLE_STDIO_MCP=true` in the proxy process environment, plus Node.js and `npx` on the proxy host. It launches the pinned demonstration server as a connectivity control. Use your own server command for production
 
-In the UI (MCP Servers, Add New MCP Server) the same three transports appear as Streamable HTTP, SSE, and Standard Input/Output (stdio), and stdio config is pasted as JSON
+In the UI (MCP Servers, Add New MCP Server) the same three transports appear as Streamable HTTP, SSE, and Standard Input/Output (stdio), and stdio config is pasted as JSON. The proxy process environment must include `LITELLM_ENABLE_STDIO_MCP=true` to use stdio
 
 ## Upstream auth matrix
 

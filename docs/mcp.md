@@ -17,7 +17,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
 |---------|-------------|
 | MCP Operations | • List Tools<br/>• Call Tools <br/>• Prompts <br/>• Resources |
 | Direct REST API | [`/mcp-rest/tools/list` and `/mcp-rest/tools/call`](./mcp_rest_api.md) — call tools with curl without an LLM |
-| Supported MCP Transports | • Streamable HTTP<br/>• SSE<br/>• Standard Input/Output (stdio) |
+| Supported MCP Transports | • Streamable HTTP<br/>• SSE<br/>• Standard Input/Output (stdio, disabled by default) |
 | LiteLLM Permission Management | • By Key<br/>• By Team<br/>• By Organization |
 
 :::warning[MCP protocol update]
@@ -78,7 +78,7 @@ On this form, you should enter your MCP Server URL and the transport you want to
 LiteLLM supports the following MCP transports:
 - Streamable HTTP
 - SSE (Server-Sent Events)
-- Standard Input/Output (stdio)
+- Standard Input/Output (stdio, disabled by default; see the warning below)
 
 <Image 
   img={require('../img/add_mcp.png')}
@@ -107,6 +107,10 @@ This video walks through adding and using an SSE MCP server on LiteLLM UI and us
 <br/>
 
 ### Add STDIO MCP Server
+
+:::warning stdio MCP servers are disabled by default
+A stdio MCP server runs a command on the proxy host. With stdio enabled, anyone with proxy admin access (and any bug that grants it) can run arbitrary code on that host, because allowlisted runtimes like `python`, `node`, `npx` and `uvx` execute whatever their arguments say. LiteLLM therefore refuses stdio servers unless the operator sets `LITELLM_ENABLE_STDIO_MCP=true` in the proxy's process environment at deploy time. It cannot be turned on from the Admin UI, the management API, or `environment_variables` in config. Prefer running the server behind a stdio-to-HTTP bridge and registering it as an HTTP MCP server. Only enable stdio if you accept that proxy admins have shell-level control of the host
+:::
 
 For stdio MCP servers, select "Standard Input/Output (stdio)" as the transport type and provide the stdio configuration in JSON format:
 
@@ -182,6 +186,12 @@ Store credentials on the server and reference them in static headers or authenti
 
 Add your MCP servers directly in your `config.yaml` file:
 
+Set the stdio opt-in in the proxy's process environment before using a stdio entry. It is ignored under `environment_variables`:
+
+```bash
+export LITELLM_ENABLE_STDIO_MCP=true
+```
+
 ```yaml title="config.yaml" showLineNumbers
 model_list:
   - model_name: {{openai_large}}
@@ -230,7 +240,7 @@ mcp_servers:
 - **Transport**: Defaults to `http` in `config.yaml`. Management API request models default to `sse`; set it explicitly when adding or updating a server. See [transport defaults](./mcp_config_reference#transport-matrix)
   - `sse` - SSE (Server-Sent Events) transport
   - `http` - Streamable HTTP transport
-  - `stdio` - Standard Input/Output transport
+  - `stdio` - Standard Input/Output transport, requires `LITELLM_ENABLE_STDIO_MCP=true` in the proxy process environment. See the [stdio security warning](#add-stdio-mcp-server)
 - **Command**: The command to execute for stdio transport (required for stdio)
 - **allow_all_keys**: Set to `true` to make the server available to every LiteLLM API key, even if the key/team doesn't list the server in its MCP permissions.
 - **Args**: Array of arguments to pass to the command (optional for stdio)
@@ -353,6 +363,8 @@ If `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` is enabled, changing the id also changes 
 ### MCP Walkthroughs
 
 - **Strands (STDIO)** – [watch tutorial](https://screen.studio/share/ruv4D73F)
+
+The proxy-hosted stdio setup below requires `LITELLM_ENABLE_STDIO_MCP=true` in the proxy process environment. See the [stdio security warning](#add-stdio-mcp-server)
 
 > Add it from the UI
 
@@ -697,6 +709,8 @@ curl --location 'http://localhost:4000/github_mcp/mcp' \
 
 
 ### Passing Request Headers to STDIO env Vars
+
+This stdio setup requires `LITELLM_ENABLE_STDIO_MCP=true` in the proxy process environment. See the [stdio security warning](#add-stdio-mcp-server)
 
 If your stdio MCP server needs per-request credentials, you can map HTTP headers from the client request directly into the environment for the launched stdio process. Reference the header name in the env value using the `${X-HEADER_NAME}` syntax. LiteLLM will read that header from the incoming request and set the env var before starting the command.
 

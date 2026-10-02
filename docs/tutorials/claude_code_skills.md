@@ -57,6 +57,8 @@ curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm-skills/main/install
 
 ### MCP Servers
 
+The `/add-mcp` and `/update-mcp` skills can configure proxy-hosted stdio servers only when `LITELLM_ENABLE_STDIO_MCP=true` is set in the proxy process environment. See the [stdio security warning](../mcp#add-stdio-mcp-server)
+
 | Skill | What it does |
 |-------|-------------|
 | `/add-mcp` | Register an MCP server (SSE, HTTP, or stdio) |
