@@ -82,7 +82,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
-To use TypeSafe System One for classification, choose `classifier_type: jev` and configure `jev_classifier_config`. Start with [JEV setup](/docs/auto_router/setup#jev-classifier-typesafe-ai) and review its [context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier)
+Use the **OSS Classifier** with hosted Jev or self-hosted Nimble and Laya. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
 
 <NavigationCards
 columns={3}

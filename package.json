@@ -20,7 +20,9 @@
     "lint:docs": "python3 scripts/check-docs.py docs",
     "test:search": "node --test search/*.test.js",
     "search:serve": "node search/server.js",
-    "check:search": "node search/evaluate.js"
+    "check:search": "node search/evaluate.js",
+    "generate:social-card": "node scripts/social-card/index.cjs",
+    "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

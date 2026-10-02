@@ -799,6 +799,8 @@ router_settings:
 | JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
+| LAYA_API_BASE | HTTP(S) base URL of a self-hosted Laya server, without `/v1/systemone`, for native gateway decisions and [OSS classifiers](/docs/auto_router/decision_classifiers) with `opensource_classifier_config.provider: laya` that omit `api_base`. Required when no classifier endpoint is supplied. Requires a build containing [LiteLLM #43626](https://github.com/BerriAI/litellm/pull/43626) |
+| LAYA_API_KEY | Optional bearer key paired with `LAYA_API_BASE`. A Laya classifier with an explicit `opensource_classifier_config.api_base` uses only its explicit `api_key`; omitting that key connects without authentication |
 | LEMONADE_API_KEY | API key for Lemonade
 | LINKUP_API_BASE | Base URL for the Linkup search provider
 | LLAMAFILE_API_KEY | API key for llamafile. llamafile does not require one, so a placeholder is used when this is unset
@@ -1008,7 +1010,7 @@ router_settings:
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%). Default is 0.8
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
 | ENABLE_SSO_DEBUG | Flag to enable the [SSO debug routes](./admin_ui_sso.md#debugging-sso-jwt-fields) (`/sso/debug/login` and `/sso/debug/callback`). These routes return 404 unless this is set. Enable it while debugging an SSO setup and unset it afterwards. **Default is false**
-| ENFORCE_PRISMA_MIGRATION_CHECK | When a database migration fails, exit nonzero instead of continuing. The standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) enforces this by default, so a failed migration fails the Job rather than letting a deploy proceed against a stale schema; set it to `false` there to get the old log-and-continue behavior. Proxy startup itself still defaults to log-and-continue and only exits when this is set to `true` or `--enforce_prisma_migration_check` is passed
+| ENFORCE_PRISMA_MIGRATION_CHECK | Deprecated and ignored. The proxy always exits nonzero when database setup fails at startup (unreachable database, exhausted connection retries, or a failed `prisma migrate deploy`), and the standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) fails the same way, so a deploy never proceeds against a stale schema. Setting this variable, or passing `--enforce_prisma_migration_check`, changes nothing; remove it from your deployment
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
 | EXPERIMENTAL_OPENAI_BASE_LLM_HTTP_HANDLER | Flag to send `openai` chat completion requests through LiteLLM's shared HTTP handler instead of the OpenAI Python SDK client. **Default is False**
@@ -1205,6 +1207,8 @@ router_settings:
 | LITELLM_BLOG_POSTS_URL | Custom URL for fetching LiteLLM blog posts JSON. Default is the GitHub main branch URL
 | LITELLM_CLI_DISABLE_KEYRING | Set on the machine running the `lite` CLI to `1`, `true`, `yes`, or `on` to keep the CLI away from the OS keychain, so the credential from `lite login` stays in `~/.litellm/token.json` (`0600`) instead. Unset by default, which stores the credential in the keychain whenever one is reachable
 | LITELLM_CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours
+| LITELLM_PROXY_API_OAUTH_REDIRECT_URIS | Comma-separated exact HTTPS callbacks trusted for hosted `proxy:read` grants, which permit model listings and aggregate usage reports. Empty by default. Does not permit admin operations or model calls. See [hosted app sign-in](./cli_sso.md#hosted-app-sign-in)
+| LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS | Comma-separated exact HTTPS callbacks trusted to request hosted `proxy:admin` grants. Requires explicit consent from a current `proxy_admin`; the gateway rechecks the role and existing policies on use. Empty by default. Listed apps can also request `proxy:read`. See [hosted app sign-in](./cli_sso.md#hosted-app-sign-in)
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
 | LITELLM_CORS_ALLOW_CREDENTIALS | Set to `true` to explicitly allow credentials in CORS responses. When not set, credentials are disabled automatically if `LITELLM_CORS_ORIGINS` is `*` (wildcard) to prevent the browser security misconfiguration of reflecting any origin with credentials
 | LITELLM_CORS_ORIGINS | Comma-separated list of allowed CORS origins (e.g. `https://app.example.com,https://admin.example.com`). Defaults to `*` (all origins) when not set
@@ -1225,6 +1229,7 @@ router_settings:
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of URL paths to exclude from uvicorn access logs (e.g., `/health,/metrics`). Useful for suppressing noisy health-check log entries. |
 | LITELLM_DISABLE_LAZY_LOADING | When set to "1", "true", "yes", or "on", disables lazy loading of attributes (currently only affects encoding/tiktoken). This ensures encoding is initialized before VCR starts recording HTTP requests, fixing VCR cassette creation issues. See [issue #18659](https://github.com/BerriAI/litellm/issues/18659)
+| LITELLM_DISABLE_LAZY_ROUTES | When set to "1", "true", "yes", or "on", registers every optional feature router (MCP, guardrails, agents, vector stores, pass-throughs, and the rest) at worker startup, before `LITELLM_WORKER_STARTUP_HOOKS` run and before the first request, instead of on the first request to their path. Use it when you need the complete route table at startup, for example to filter `app.routes` from a startup hook or audit `GET /routes` before serving traffic. Default: unset, so optional routers load lazily. |
 | LITELLM_DISABLE_NO_REDIS_WARNING | When set to "true", hides the Admin UI banner shown while no Redis is configured. Set it only on single-worker deployments; see [What Needs Redis](./redis_requirements.md).
 | LITELLM_DISABLE_REDACT_SECRETS | When set to "true", disables automatic redaction of secrets (API keys, tokens, credentials) from proxy log output. Secret redaction is enabled by default.
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of exact request paths whose uvicorn access-log lines should be dropped (e.g. health checks, root probes, metrics scrapes that flood logs). Path is matched against the portion before any query string. Empty/unset disables filtering.
@@ -1345,6 +1350,7 @@ router_settings:
 | MICROSOFT_USERINFO_ENDPOINT | Custom userinfo endpoint URL for Microsoft SSO (overrides default Microsoft Graph userinfo endpoint)
 | MODEL_COST_MAP_MAX_SHRINK_RATIO | Maximum allowed shrinkage ratio when validating a fetched model cost map against the local backup. Rejects the fetched map if it is smaller than this fraction of the backup. Default is 0.5
 | MODEL_COST_MAP_MIN_MODEL_COUNT | Minimum number of models a fetched cost map must contain to be considered valid. Default is 50
+| MS_TEAMS_WEBHOOK_URL | Incoming webhook URL for Microsoft Teams alerts, used when `ms_teams` is in `general_settings.alerting`. See [MS Teams alerting](./alerting#ms-teams-webhooks)
 | NEW_RELIC_APP_NAME | Application name for New Relic AI Monitoring integration |
 | NEW_RELIC_LICENSE_KEY | License key for New Relic authentication |
 | NO_DOCS | Flag to disable Swagger UI documentation

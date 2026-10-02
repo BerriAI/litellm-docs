@@ -9,6 +9,10 @@ import Image from '@theme/IdealImage';
 
 Select **Codex** in the [ChatGPT desktop app](https://openai.com/chatgpt/download/). It reads the same `~/.codex/config.toml` as the [Codex CLI](./codex_cli.md), so the desktop and CLI can share a LiteLLM connection.
 
+These settings configure the Codex side of the app, which reads `~/.codex/config.toml`. Regular ChatGPT chats in the app are not configured by that file and do not go through LiteLLM
+
+The same `model_catalog_json` setting applies to the app; see [Model metadata for custom aliases](./codex_cli.md#model-metadata-for-custom-aliases)
+
 These instructions configure Codex's local model provider and MCP servers. Screenshots show ChatGPT Desktop 26.917.51856 on Linux; menu labels can differ by app version. Complete the app's onboarding if prompted before selecting Codex.
 
 <Image img={require('../../../img/client_setup/codex_desktop_01_mode_switcher_chatgpt_codex.png')} alt="ChatGPT Desktop mode switcher with Codex selected" />
@@ -19,7 +23,7 @@ These instructions configure Codex's local model provider and MCP servers. Scree
 |---|---|
 | Config file | `~/.codex/config.toml` (shared with the CLI) |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key` |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or a `lite auth print-token` command (see [Codex CLI SSO](./codex_cli.md#sign-in-with-litellm-sso)) |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
 
@@ -51,6 +55,8 @@ LITELLM_API_KEY=sk-1234
 ```
 
 Replace the demonstration key with your virtual key, keep this file private, and restart the app after changing it. An existing macOS setup using `launchctl setenv LITELLM_API_KEY <your-key>` can continue supplying the variable that way.
+
+You can skip `.env` by using the [`auth` command](./codex_cli.md#sign-in-with-litellm-sso) in place of `env_key`, because the app runs the same helper
 
 ### 2. Launch Codex in ChatGPT Desktop
 

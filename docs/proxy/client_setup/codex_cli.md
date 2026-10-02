@@ -15,7 +15,7 @@ import Image from '@theme/IdealImage';
 |---|---|
 | Config file | `~/.codex/config.toml` |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key` |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](#sign-in-with-litellm-sso) |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
 
@@ -65,7 +65,7 @@ export LITELLM_API_KEY="sk-1234"
 codex
 ```
 
-`model` can be any `model_name` from your LiteLLM config. Override it per run with `codex --model {{gemini_pro}}`. Codex only knows the metadata of OpenAI's own models, so with a gateway name it prints `Model metadata for ... not found. Defaulting to fallback metadata` on the first request; requests still go through.
+`model` can be any `model_name` from your LiteLLM config. Override it per run with `codex --model {{gemini_pro}}`. If Codex does not recognize the name, it uses fallback metadata; see [Model metadata for custom aliases](#model-metadata-for-custom-aliases) to configure an entry
 
 Codex shows the model in its startup header and routes the task through the gateway. Here Codex 0.154 is answering through a local gateway:
 
@@ -76,6 +76,49 @@ Codex shows the model in its startup header and routes the task through the gate
 Ask Codex to make a small change, then check the Admin UI under **Logs** or **Usage**; the request appears under `/v1/responses`, attributed to your virtual key and the model you selected.
 
 The row carries no end user yet, since Codex has no setting that puts one in the request body. To attribute each request to a developer, customer, or project instead, add a LiteLLM tracking header to the provider block with `http_headers` or `env_http_headers`; see [Codex CLI granular cost tracking](../../tutorials/codex_customer_tracking.md).
+
+## Sign in with LiteLLM SSO
+
+In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
+
+Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
+
+```toml title="~/.codex/config.toml"
+model_provider = "litellm"
+
+[model_providers.litellm]
+name = "LiteLLM"
+base_url = "https://litellm.example.com/v1"
+wire_api = "responses"
+
+[model_providers.litellm.auth]
+command = "/absolute/path/to/lite"
+args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
+timeout_ms = 30000
+refresh_interval_ms = 300000
+```
+
+Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
+
+Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
+
+## Model metadata for custom aliases
+
+Codex looks up the selected model name in its bundled catalog to set the context window, reasoning levels, and tool support. A LiteLLM `model_name` Codex does not know, such as a custom alias, still works, but Codex logs `Unknown model <name> is used. This will use fallback model metadata.` and runs with generic defaults
+
+Run `codex debug models` to print the bundled catalog. Copy the entry for the model your alias routes to, set its `slug` to the LiteLLM `model_name`, and save it as `{"models": [ ... ]}`. Put `model_catalog_json` before the first TOML table in `~/.codex/config.toml`:
+
+```toml title="~/.codex/config.toml"
+model = "my-gpt-alias"
+model_provider = "litellm"
+model_catalog_json = "/absolute/path/to/litellm-models.json"
+```
+
+Keep `base_instructions` in the copied entry. Codex refuses to load an entry with neither `base_instructions` nor `model_messages.instructions_template`; the parse error starts with `Error: failed to parse model_catalog_json path` and reports that the model is missing both fields
+
+The file replaces the bundled catalog. In testing, Codex logged the fallback warning for an internal model that was not in the file, so include every model name Codex will use by keeping the bundled entries and adding your aliases
+
+Catalog entries come from the installed Codex version, so regenerate the file after upgrading Codex. [OpenAI's gateway guide](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway) also says custom aliases need matching catalog metadata
 
 ## MCP setup
 

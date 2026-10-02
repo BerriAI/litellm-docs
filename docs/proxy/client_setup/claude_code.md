@@ -47,6 +47,14 @@ Send a prompt. Here Claude Code 2.1 is answering through a local gateway with `A
 
 Then confirm the traffic in the Admin UI under **Logs** or **Usage**, attributed to your virtual key and the model you chose.
 
+## Sign in without a static key
+
+[Claude Code Gateway SSO](../../tutorials/claude_code_gateway.md) is the native device sign-in option recommended for fleet rollout, with no per-user keys. You can also use [`lite auth print-token`](../cli_sso.md#use-the-credential-from-other-tools) as `apiKeyHelper` after [`lite login --pkce`](../cli_sso.md#browser-sign-in-with-pkce), or use an [IdP JWT helper](../../tutorials/claude_code_okta_sso.md)
+
+`lite login --pkce --config-claude` writes this login's key to `~/.claude/settings.json` as `env.ANTHROPIC_AUTH_TOKEN`; rerun it after the key expires, or set `apiKeyHelper` so Claude Code fetches a fresh token itself
+
+If a user's team or key restricts models, Claude Code's default model name must be on that list, or set `ANTHROPIC_MODEL` to an allowed alias. Otherwise requests fail with `403 The requested model '...' is not available for this API key`
+
 ## MCP setup
 
 Expose your LiteLLM [MCP gateway](../../mcp.md) tools inside Claude Code with `claude mcp add`. The URL is `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp`, where `<server_name>` matches a key under `mcp_servers:` in your gateway config, and the virtual key goes in the `x-litellm-api-key` header:

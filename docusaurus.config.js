@@ -22,6 +22,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  staticDirectories: ['static', '.docusaurus/social-cards'],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -36,6 +37,8 @@ const config = {
   },
   clientModules: [require.resolve('./src/clientModules/gridMarks.js')],
   plugins: [
+    require('./plugins/litellm-stats'),
+    require('./plugins/llms'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
     () => ({
@@ -44,6 +47,7 @@ const config = {
     }),
     require('./plugins/optimize-images'),
     require('./plugins/rust-migration-posts'),
+    require('./plugins/social-cards'),
     [
       '@docusaurus/plugin-client-redirects',
       {
@@ -383,6 +387,11 @@ const config = {
         },
         items: [
           {
+            type: 'custom-productsMenu',
+            label: 'Products',
+            position: 'left',
+          },
+          {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
@@ -407,12 +416,6 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'docSidebar',
-            sidebarId: 'autoRouterSidebar',
-            position: 'left',
-            label: 'Auto Router',
-          },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://trust.litellm.ai/',
@@ -454,6 +457,7 @@ const config = {
             items: [
               {label: 'Blog', to: '/blog'},
               {label: 'Changelog', to: '/release_notes'},
+              {label: 'Agent resources', to: '/docs/agent_resources'},
               {label: 'llms.txt', href: 'https://docs.litellm.ai/llms.txt'},
               {label: 'Trust Center', href: 'https://trust.litellm.ai/'},
             ],

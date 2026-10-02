@@ -7,9 +7,9 @@ sidebar_label: Quickstart
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
-import Image from '@theme/IdealImage';
+import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
 
-<Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
+<LiteLLMFlow />
 
 **LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 
