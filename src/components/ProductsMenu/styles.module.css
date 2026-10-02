@@ -193,3 +193,16 @@
   background: #8fa0ff;
   color: #11131f;
 }
+
+/* Never wider than the screen */
+.panel {
+  max-width: calc(100vw - 32px);
+}
+
+/* Phones and tablets: the switcher lives in the menu drawer (the mobile
+   branch above), so the top bar keeps room for the logo */
+@media (max-width: 996px) {
+  .root {
+    display: none;
+  }
+}
