@@ -2329,3 +2329,8 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 .tabs-container:has(> ul.tabs.lens-framework-tabs > li.tabs__item--active:first-child) > div {
   border-top-left-radius: 16px;
 }
+
+/* Search stays in its original sidebar location. */
+[class*='navbarSearchContainer'] {
+  display: none !important;
+}
