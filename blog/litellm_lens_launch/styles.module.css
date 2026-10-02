@@ -247,6 +247,17 @@
   color: var(--ifm-heading-color) !important;
 }
 
+.partner .partnerQuote p {
+  margin: 0 0 0.9em !important;
+  font-size: inherit !important;
+  line-height: inherit;
+  color: inherit !important;
+}
+
+.partner .partnerQuote p:last-child {
+  margin-bottom: 0 !important;
+}
+
 .partner .partnerAuthor {
   margin-top: 24px;
   font-size: 16px;
