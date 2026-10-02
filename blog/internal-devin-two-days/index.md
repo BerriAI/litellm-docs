@@ -54,17 +54,19 @@ For storage, we started with SQLite on Render's persistent disk. That keeps depl
 
 ### Keeping work alive across deployments
 
-A Render deployment replaces the web process and its Temporal worker while an agent may still be running in Modal. We split recovery across three layers:
+Deploying a new version restarts Moyai on Render. The agent can keep working in its Modal sandbox while the app comes back online.
 
-- **Temporal Cloud:** records workflow progress, preserves waits and timers, and retries unfinished orchestration steps when a worker reconnects.
-- **Render's persistent disk:** stores chat messages, queued inputs, execution phases, sandbox IDs, and the last event-log position.
-- **Modal:** runs the agent and stores snapshots of its conversation history and workspace files.
+Each service has a role in recovery:
 
-During an upgrade, we leave the Modal sandbox running. The replacement Render worker opens the same database and reconnects to Temporal. Temporal delivers the unfinished orchestration step; Moyai uses the saved sandbox ID and event-log position to resume monitoring the existing agent. Launch records prevent a retried step from starting a second agent.
+- **Temporal** keeps track of unfinished steps and retries them when a worker reconnects.
+- **Render's database** keeps the chat, queued messages, and the details needed to find the running agent.
+- **Modal** runs the agent and stores saved copies of its conversation history and files.
 
-We save incoming messages before acknowledging them, checkpoint conversation history and files at safe tool boundaries, and save final answers before packaging artifacts. To resume on a new sandbox, we restore the last committed snapshot.
+After a restart, the new Render worker reads the saved session and reconnects to Temporal. Temporal sends it the unfinished step. Moyai reconnects to the same sandbox and picks up the agent's progress. We record agent launches so a retry won't start a second copy.
 
-External writes need particular care. If a PR creation request succeeds but its response gets lost, retrying without checking could create a duplicate. We use stable operation identifiers and publication records to reconcile those cases.
+We save the conversation and files between tool rounds so we can restore them on a new sandbox. We also save the final answer before packaging files.
+
+Retries need care: if creating a PR succeeds but its response gets lost, we check our publication records before trying again.
 
 ### Orchestrating parallel agents
 
