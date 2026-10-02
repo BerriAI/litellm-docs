@@ -270,7 +270,15 @@ export function Partner({href, logo, name, quote, author}) {
         <img src={logo} alt="" />
         {name}
       </a>
-      <blockquote className={styles.partnerQuote}>&ldquo;{quote}&rdquo;</blockquote>
+      <blockquote className={styles.partnerQuote}>
+        {quote.map((paragraph, i) => (
+          <p key={paragraph}>
+            {i === 0 && '“'}
+            {paragraph}
+            {i === quote.length - 1 && '”'}
+          </p>
+        ))}
+      </blockquote>
       <figcaption className={styles.partnerAuthor}>{author}</figcaption>
     </figure>
   );
