@@ -148,4 +148,42 @@ curl -X POST 'http://localhost:4000/key/generate' \
   }'
 ```
 
-A request through that key using any other registered store id in `vector_store_ids` is rejected. An empty or unset list means the key is not restricted. The same field works on teams.
+A request through that key using any other registered store id in `vector_store_ids` is rejected. An empty or unset list means the key is not restricted, unless [`vector_store_deny_by_default`](#deny-vector-stores-by-default) is on. The same field works on teams and users.
+
+## Deny vector stores by default
+
+Without restrictions, any key the proxy accepts can query any store id the proxy's provider credentials can reach, including a Bedrock Knowledge Base id that was never registered with LiteLLM. To make every store opt-in, turn on `vector_store_deny_by_default`:
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  vector_store_deny_by_default: true
+```
+
+The setting defaults to `false`. With it on, every store id a request references, through `/v1/rag/query`, `/rag/query`, `retrieval_config.vector_store_id`, or `vector_store_ids` in a `file_search` tool, must be listed in `object_permission.vector_stores` of each identity the request resolves to. A request naming several stores needs a grant for every one of them
+
+| Caller | Grants required |
+|---|---|
+| Virtual key without a team | The key |
+| Virtual key with a team | The key and its team |
+| Team member without a virtual key (JWT or `lite login` session) | The team the request resolved to |
+| User without a virtual key or team | The user |
+
+A missing permission record, a `null` list, and an empty list all grant nothing. A user's personal grants only count when the request has no virtual key and no team, so they never widen or narrow a key or team request, and grants on other teams the user belongs to are ignored. If a key names a team that cannot be loaded, the request is denied rather than treated as a key without a team. Denied requests fail before any provider call with `key_vector_store_access_denied`, `team_vector_store_access_denied`, or `user_vector_store_access_denied`
+
+For a team key, grant the store on both objects:
+
+```bash showLineNumbers title="Team and key both grant the store"
+curl -X POST 'http://localhost:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_alias": "support", "object_permission": {"vector_stores": ["YOUR_KNOWLEDGE_BASE_ID"]}}'
+
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_id": "<team_id from above>", "object_permission": {"vector_stores": ["YOUR_KNOWLEDGE_BASE_ID"]}}'
+```
+
+Registering a store does not grant access to it, and a provider-native store that is granted explicitly can stay unregistered. The master key is not restricted. Dashboard login sessions are not covered by this setting yet
+
+Setting the flag back to `false` restores the earlier behavior, where an empty or unset list means unrestricted. It does not turn off the existing check: a nonempty `vector_stores` list that leaves out the requested store is still rejected
