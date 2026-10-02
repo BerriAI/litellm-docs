@@ -1,0 +1,139 @@
+/* The centered, full-width opening and section index follow the Lens launch. */
+.hero {
+  --ink: #12142b;
+  --muted: #6b6f8c;
+  --line: rgba(18, 20, 43, 0.12);
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 64px 32px 0;
+  color: var(--ink);
+}
+
+:global([data-theme='dark']) .hero {
+  --ink: #eceefe;
+  --muted: #9296b8;
+  --line: rgba(236, 238, 254, 0.15);
+}
+
+.heading {
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.date {
+  display: block;
+  margin-bottom: 22px;
+  color: var(--muted);
+  font: 12px/1.4 var(--ifm-font-family-monospace);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.heading .title {
+  margin: 0 auto !important;
+  max-width: 1040px;
+  color: var(--ink) !important;
+  font-size: clamp(38px, 5.2vw, 76px) !important;
+  line-height: 1.08 !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.heading .subtitle {
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: clamp(15px, 1.7vw, 20px);
+  line-height: 1.5;
+}
+
+.product {
+  max-width: 1120px;
+  margin: 44px auto 0;
+}
+
+.window {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(18, 20, 43, 0.05);
+}
+
+.product .window img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+}
+
+.product figcaption {
+  margin-top: 13px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stack {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 900px;
+  margin: 36px auto 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font: 13px/1.5 var(--ifm-font-family-monospace);
+}
+
+.contents {
+  max-width: 460px;
+  margin: 48px auto 32px;
+}
+
+.contents ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.contents li {
+  margin: 0 0 10px;
+}
+
+.contents a {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+.contents a:hover {
+  color: var(--ifm-color-primary);
+}
+
+.dots {
+  flex: 1;
+  border-bottom: 2px dotted var(--ifm-color-emphasis-400);
+  transform: translateY(-5px);
+}
+
+@media (max-width: 640px) {
+  .hero { padding: 40px 20px 0; }
+  .date { font-size: 10px; margin-bottom: 18px; }
+  .heading .subtitle { max-width: 300px; margin: 20px auto 0; }
+  .product { margin-top: 28px; }
+  .window { border-radius: 8px; }
+  .product figcaption { font-size: 10px; }
+  .stack { justify-content: center; flex-wrap: wrap; margin-top: 28px; font-size: 11px; gap: 10px 20px; }
+  .contents { margin-top: 32px; }
+  .contents a { font-size: 15px; }
+}

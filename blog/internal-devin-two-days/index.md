@@ -7,12 +7,16 @@ authors:
 description: "How we built Moyai Devin with Render, Modal, Hermes, Temporal, and LiteLLM: durable sessions, parallel agents, Slack, and shared organization connections."
 tags: [engineering, agents, infrastructure, slack]
 image: ./hero.png
-hide_table_of_contents: false
+hide_table_of_contents: true
+custom_hero: true
 ---
 
-![Moyai Devin's web interface with a chat, five worker sessions in the sidebar, and tool activity.](./hero.png)
+import MoyaiHero from './MoyaiHero';
+import {PostByline} from '@theme/BlogPostPage';
 
-*The Moyai Devin interface, shown with an example session.*
+<MoyaiHero />
+
+<PostByline />
 
 At BerriAI, we built **Moyai Devin**, an internal engineering agent that runs in the cloud. Teammates can give it a task in Slack, follow its progress in a web app, and ask it to prepare a pull request.
 
