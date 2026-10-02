@@ -15,7 +15,7 @@ https://docs.github.com/en/copilot
 |-------|-------|
 | Description | GitHub Copilot Chat API provides access to GitHub's AI-powered coding assistant. |
 | Provider Route on LiteLLM | `github_copilot/` |
-| Supported Endpoints | `/chat/completions`, `/embeddings` |
+| Supported Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/v1/messages` |
 | API Reference | [GitHub Copilot docs](https://docs.github.com/en/copilot) |
 
 ## Authentication
@@ -59,15 +59,31 @@ for chunk in stream:
 
 ### Responses
 
-For GPT Codex models, only responses API is supported.
+GPT Codex models such as `gpt-5.3-codex` only support the Responses API. Models that support both endpoints, such as `gpt-5.2`, are sent to Copilot's `/chat/completions` unless their `model_info` sets `mode: responses`
 
 ```python showLineNumbers title="GitHub Copilot Responses"
 import litellm
 
 response = await litellm.aresponses(
-    model="github_copilot/gpt-5.1-codex",
+    model="github_copilot/gpt-5.3-codex",
     input="Write a Python hello world",
     max_output_tokens=500
+)
+
+print(response)
+```
+
+### Anthropic Messages
+
+Claude models can be called through Copilot's native Anthropic `/v1/messages` endpoint.
+
+```python showLineNumbers title="GitHub Copilot Anthropic Messages"
+import litellm
+
+response = await litellm.anthropic.messages.acreate(
+    model="github_copilot/claude-sonnet-4.5",
+    messages=[{"role": "user", "content": "Write a Python hello world"}],
+    max_tokens=500,
 )
 
 print(response)
@@ -94,11 +110,14 @@ model_list:
   - model_name: github_copilot/gpt-5.2
     litellm_params:
       model: github_copilot/gpt-5.2
-  - model_name: github_copilot/gpt-5.1-codex
+  - model_name: github_copilot/gpt-5.3-codex
     model_info:
       mode: responses
     litellm_params:
-      model: github_copilot/gpt-5.1-codex
+      model: github_copilot/gpt-5.3-codex
+  - model_name: github_copilot/claude-sonnet-4.5
+    litellm_params:
+      model: github_copilot/claude-sonnet-4.5
   - model_name: github_copilot/text-embedding-ada-002
     model_info:
       mode: embedding
@@ -170,6 +189,27 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+Responses and Anthropic Messages requests go to the proxy's `/v1/responses` and `/v1/messages` routes:
+
+```bash showLineNumbers title="GitHub Copilot via Proxy - Responses and Messages"
+curl http://localhost:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-proxy-api-key" \
+  -d '{
+    "model": "github_copilot/gpt-5.3-codex",
+    "input": "Write a Python hello world"
+  }'
+
+curl http://localhost:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-proxy-api-key" \
+  -d '{
+    "model": "github_copilot/claude-sonnet-4.5",
+    "max_tokens": 500,
+    "messages": [{"role": "user", "content": "Write a Python hello world"}]
+  }'
+```
+
 ## Getting Started
 
 1. Ensure you have GitHub Copilot access (paid GitHub subscription required)
@@ -199,20 +239,23 @@ export GITHUB_COPILOT_API_BASE="https://copilot-api.my-company.ghe.com"
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://my-company.ghe.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://my-company.ghe.com/login/oauth/access_token"
 export GITHUB_COPILOT_API_KEY_URL="https://my-company.ghe.com/api/v3/copilot_internal/v2/token"
+
+# Optional: Custom OAuth client ID for the device flow
+export GITHUB_COPILOT_CLIENT_ID="Iv1.b507a08c87ecfe98"
 ```
 
 ### Headers
 
-LiteLLM automatically injects the required GitHub Copilot headers (simulating VSCode). You don't need to specify them manually.
+LiteLLM automatically injects the required GitHub Copilot headers (simulating VS Code Copilot Chat). You don't need to specify them manually.
 
-If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`:
+If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`. These are the defaults LiteLLM sends on chat, responses, and embedding requests:
 
 ```python showLineNumbers title="Custom Headers (Optional)"
 extra_headers = {
-    "editor-version": "vscode/1.85.1",           # Editor version
-    "editor-plugin-version": "copilot/1.155.0",  # Plugin version
-    "Copilot-Integration-Id": "vscode-chat",     # Integration ID
-    "user-agent": "GithubCopilot/1.155.0"        # User agent
+    "editor-version": "vscode/1.95.0",                 # Editor version
+    "editor-plugin-version": "copilot-chat/0.26.7",    # Plugin version
+    "copilot-integration-id": "vscode-chat",           # Integration ID
+    "user-agent": "GitHubCopilotChat/0.26.7"           # User agent
 }
 ```
 
