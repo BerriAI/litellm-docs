@@ -59,3 +59,12 @@
   font-size: 0.76rem;
   color: var(--ifm-color-emphasis-600);
 }
+
+/* On narrow screens the title takes the full width and Copy page sits under
+   it on the right, where it is on wider screens, instead of under the
+   title's first letter */
+@media (max-width: 600px) {
+  .wrap {
+    align-self: flex-end;
+  }
+}
