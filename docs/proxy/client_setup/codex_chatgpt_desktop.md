@@ -11,6 +11,8 @@ Select **Codex** in the [ChatGPT desktop app](https://openai.com/chatgpt/downloa
 
 These settings configure the Codex side of the app, which reads `~/.codex/config.toml`. Regular ChatGPT chats in the app are not configured by that file and do not go through LiteLLM
 
+The same `model_catalog_json` setting applies to the app; see [Model metadata for custom aliases](./codex_cli.md#model-metadata-for-custom-aliases)
+
 These instructions configure Codex's local model provider and MCP servers. Screenshots show ChatGPT Desktop 26.917.51856 on Linux; menu labels can differ by app version. Complete the app's onboarding if prompted before selecting Codex.
 
 <Image img={require('../../../img/client_setup/codex_desktop_01_mode_switcher_chatgpt_codex.png')} alt="ChatGPT Desktop mode switcher with Codex selected" />

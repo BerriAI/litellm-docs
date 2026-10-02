@@ -19,8 +19,9 @@ Once your LiteLLM gateway is running, a coding tool or chat app can route model 
 |---|---|---|---|
 | [Claude Code](./claude_code.md) | CLI | Yes | Yes |
 | [Claude Desktop](./claude_desktop.md) | GUI | Yes | Yes |
-| [Codex (ChatGPT Desktop)](./codex_chatgpt_desktop.md) | GUI | Yes | Yes |
-| [Codex (CLI)](./codex_cli.md) | CLI | Yes | Yes |
+| [Codex (CLI)](./codex_cli.md) | CLI | Yes, through `/v1/responses` | Yes |
+| [Codex (ChatGPT Desktop)](./codex_chatgpt_desktop.md) | GUI | Yes, through `/v1/responses` | Yes |
+| Regular ChatGPT chats (ChatGPT Desktop) | GUI | No, they stay on your ChatGPT workspace | Not covered here |
 
 ## Two credentials, two hops
 
@@ -30,14 +31,27 @@ Billing a user's own subscription is a separate, opt-in setup: [Claude Code Max]
 
 ## Choose how users sign in
 
-| Client | Static key | Sign-in, no per-user key | One-command setup |
-|---|---|---|---|
-| Claude Code | Virtual key in `ANTHROPIC_AUTH_TOKEN` | [Claude Code Gateway](../../tutorials/claude_code_gateway.md) device login, [`lite auth print-token`](../cli_sso.md) as `apiKeyHelper`, or an [IdP JWT helper](../../tutorials/claude_code_okta_sso.md) | `lite configure claude` |
-| Claude Desktop | Gateway API key | [Interactive OIDC](../../tutorials/claude_desktop_cowork.md) | None |
-| Codex CLI | Virtual key via `env_key` | [`lite auth print-token` as the provider `auth` command](./codex_cli.md#sign-in-with-litellm-sso) | `lite configure codex` |
-| Codex in ChatGPT Desktop | Virtual key via `env_key` and `~/.codex/.env` | Same `auth` command, since the app reads the same `config.toml` | Same as Codex CLI |
+| Client | Static key | Sign-in, no manually issued long-lived key | License | One-command setup |
+|---|---|---|---|---|
+| Claude Code | Virtual key in `ANTHROPIC_AUTH_TOKEN` | [Claude Code Gateway](../../tutorials/claude_code_gateway.md) device login, [`lite auth print-token`](../cli_sso.md) as `apiKeyHelper`, or an [IdP JWT helper](../../tutorials/claude_code_okta_sso.md) | Gateway device login and `lite login` through an IdP: free up to 5 SSO users, Enterprise beyond. IdP JWT helper: Enterprise | `lite configure claude` |
+| Claude Desktop | Gateway API key | [Interactive OIDC](../../tutorials/claude_desktop_cowork.md) | Enterprise (JWT auth) | None |
+| Codex CLI | Virtual key via `env_key` | [`lite auth print-token` as the provider `auth` command](./codex_cli.md#sign-in-with-litellm-sso) | `lite login` through an IdP: free up to 5 SSO users, Enterprise beyond | `lite configure codex` |
+| Codex in ChatGPT Desktop | Virtual key via `env_key` and `~/.codex/.env` | Same `auth` command, since the app reads the same `config.toml` | `lite login` through an IdP: free up to 5 SSO users, Enterprise beyond | Same as Codex CLI |
+
+Each sign-in flow uses a short-lived token associated with the user's LiteLLM identity and team. These flows remove the long-lived virtual key an admin would otherwise have to issue, hand out, and rotate
+
+For large rollouts, every sign-in path needs an Enterprise license. SSO through an identity provider is free for up to 5 users, and JWT authentication is Enterprise at any size. An unlicensed proxy rejects JWT auth with `403 JWT Auth is an enterprise only feature`. See [Enterprise](../../enterprise.md)
 
 [`lite configure`](../../auto_router/user_setup.md) writes the supplied credential into the client's config file. For Codex, it goes in `config.toml` as a plaintext `Authorization: Bearer` header under `http_headers`, with no `env_key`, so use the sign-in options above when long-lived keys should not sit on disk
+
+## Feature tradeoffs
+
+| Client | Protocol to LiteLLM | Best fit | Main limitations |
+|---|---|---|---|
+| Claude Code | Anthropic Messages, `/v1/messages` | Claude models on Anthropic, Bedrock, Vertex AI, or Azure Foundry | Other providers are translated, and per-provider feature support is in the [compatibility matrix](../../claude_code_compatibility.md). Claude Code runs gateway sessions with server-side WebSearch off and a 5-minute prompt cache TTL ([known limits](../../tutorials/claude_code_gateway.md#known-limits)). A model allowlist must include the model name Claude Code sends |
+| Claude Desktop | Anthropic Messages, `/v1/messages`, with models from `/v1/models` | Claude models | A model's `model_name` must contain `claude` or `anthropic` to appear in the picker. Non-Claude models need `drop_params: true`, and Claude for Teams or Enterprise organizations must allowlist gateway model names ([models in the picker](../../tutorials/claude_desktop_cowork.md#models-in-the-picker)) |
+| Regular ChatGPT chats | Not routed | n/a | They stay on your ChatGPT workspace, so LiteLLM does not track or govern them |
+| Codex (CLI and desktop) | OpenAI Responses, `/v1/responses` | OpenAI models, which use the Responses API natively | A custom `model_name` needs a [model catalog entry](./codex_cli.md#model-metadata-for-custom-aliases); without one, Codex uses generic model metadata. Shell tool calls and follow-up turns succeeded on both an OpenAI route and a translated Anthropic route. A live `web_search` event occurred on the Anthropic route; on the OpenAI route, the live lookup failed when DNS could not resolve its hostname. There is no Codex compatibility matrix yet, so check other features on your route before rollout |
 
 ## The values you will reuse everywhere
 
