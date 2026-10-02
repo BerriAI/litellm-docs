@@ -525,6 +525,42 @@ const sidebars = {
             "proxy/client_setup/claude_desktop",
             "proxy/client_setup/codex_chatgpt_desktop",
             "proxy/client_setup/codex_cli",
+            {
+              type: "category",
+              label: "Enterprise sign-in and billing",
+              items: [
+                {
+                  type: "link",
+                  label: "Claude Code Gateway",
+                  href: "/docs/tutorials/claude_code_gateway",
+                },
+                {
+                  type: "link",
+                  label: "Claude Desktop Cowork",
+                  href: "/docs/tutorials/claude_desktop_cowork",
+                },
+                {
+                  type: "link",
+                  label: "CLI SSO",
+                  href: "/docs/proxy/cli_sso",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code Okta SSO",
+                  href: "/docs/tutorials/claude_code_okta_sso",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code BYOK",
+                  href: "/docs/tutorials/claude_code_byok",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code Max Subscription",
+                  href: "/docs/tutorials/claude_code_max_subscription",
+                },
+              ],
+            },
           ],
         },
         {
@@ -1887,6 +1923,7 @@ const autoRouterSidebar = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/decision_classifiers", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },

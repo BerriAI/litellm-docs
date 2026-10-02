@@ -53,7 +53,8 @@ For an existing proxy, deploy ClickHouse where the proxy can reach it, then [ena
 <AgentDeployPrompt prompt={`Deploy LiteLLM Lens on this machine by following https://docs.litellm.ai/docs/proxy/lens
 
 1. If a LiteLLM proxy is already running, keep it and its PostgreSQL database. Otherwise clone https://github.com/BerriAI/litellm and start docker/docker-compose.tracing.yml, which runs LiteLLM, PostgreSQL, and ClickHouse.
-2. For an existing proxy, run ClickHouse (clickhouse/clickhouse-server:26.9.6.6) where the proxy can reach it. Add general_settings.tracing.store: clickhouse to the proxy config, set CLICKHOUSE_URL (and optionally a SELECT-only CLICKHOUSE_READER_URL), and restart the proxy.
+2. For an existing proxy, run ClickHouse (clickhouse/clickhouse-server:26.9.6.6) where the proxy can reach it. Add general_settings.tracing.store:
+      type: clickhouse to the proxy config, set CLICKHOUSE_URL (and optionally a SELECT-only CLICKHOUSE_READER_URL), and restart the proxy.
 3. Check tracing works: POST an OTLP/HTTP trace to <proxy>/v1/traces with Authorization: Bearer <key>, then GET <proxy>/v1/traces and confirm it is listed.
 4. Ask me to open the dashboard, go to Observability > Lens > Investigations > Connect worker, and paste the generated worker command. Run it, or use https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml with LITELLM_URL and LENS_WORKER_TOKEN.
 5. Confirm the dashboard shows "Worker connected".
@@ -87,7 +88,8 @@ Add this to your proxy's `config.yaml`:
 ```yaml
 general_settings:
   tracing:
-    store: clickhouse
+    store:
+      type: clickhouse
 ```
 
 Set these environment variables on the proxy, then restart it:
@@ -135,13 +137,35 @@ For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set 
 
 ## Send your first trace
 
-Use your existing model and tracing setup. Choose your framework below; replace `research_agent` with your agent's name.
+Use your existing model configuration. Set the trace destination once, then choose your framework below. Replace `research_agent` with your agent's name.
 
-<Tabs groupId="lens-framework" queryString="framework">
+```bash
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="https://<your-litellm-proxy>/v1/traces"
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer <your-litellm-key>"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_METRICS_EXPORTER="none"
+export OTEL_LOGS_EXPORTER="none"
+```
+
+The Python examples initialize OpenTelemetry before creating the agent. If your app already configures a tracer provider, keep it and point its exporter at the destination above instead.
+
+<Tabs groupId="lens-framework" queryString="framework" className="lens-framework-tabs">
 
 <TabItem value="deepagents" label="DeepAgents">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http deepagents openinference-instrumentation-langchain
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from deepagents import create_deep_agent
 
 agent = create_deep_agent(name="research_agent", model=model, tools=[])
@@ -153,7 +177,19 @@ print(result["messages"][-1].content)
 
 <TabItem value="langgraph" label="LangGraph">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http langgraph openinference-instrumentation-langchain
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 # Use your existing StateGraph.
 agent = graph.compile(name="research_agent")
 result = agent.invoke({"messages": [{"role": "user", "content": "What is an agent trace?"}]})
@@ -164,7 +200,19 @@ print(result["messages"][-1].content)
 
 <TabItem value="langchain" label="LangChain">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http langchain openinference-instrumentation-langchain
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from langchain.agents import create_agent
 
 agent = create_agent(name="research_agent", model=model, tools=[])
@@ -176,7 +224,19 @@ print(result["messages"][-1].content)
 
 <TabItem value="openai-agents" label="OpenAI Agents">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http openai-agents openinference-instrumentation-openai-agents
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from agents import Agent, Runner
 
 agent = Agent(name="research_agent", model=model)
@@ -186,9 +246,57 @@ print(result.final_output)
 
 </TabItem>
 
+<TabItem value="claude" label="Claude Agent SDK">
+
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http claude-agent-sdk openinference-instrumentation-claude-agent-sdk
+```
+
+</div>
+
+```python title="Send a trace"
+import asyncio
+import os
+
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "gen_ai.agent.name=research_agent"
+
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
+from claude_agent_sdk import ResultMessage, query
+
+async def main():
+    async for message in query(prompt="What is an agent trace?"):
+        if isinstance(message, ResultMessage):
+            print(message.result)
+
+asyncio.run(main())
+```
+
+Uses your Claude Agent SDK authentication and model settings. This captures SDK input and output; internal model calls are not exposed by this instrumentor.
+
+
+
+</TabItem>
+
 <TabItem value="crewai" label="CrewAI">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http crewai openinference-instrumentation-crewai
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from crewai import Agent, Crew, Task
 
 agent = Agent(
@@ -205,7 +313,19 @@ print(Crew(agents=[agent], tasks=[task]).kickoff())
 
 <TabItem value="pydantic-ai" label="Pydantic AI">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http pydantic-ai
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from pydantic_ai import Agent
 
 Agent.instrument_all()
@@ -217,7 +337,26 @@ print(agent.run_sync("What is an agent trace?").output)
 
 <TabItem value="llamaindex" label="LlamaIndex">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http llama-index-core openinference-instrumentation-llama-index
+```
+
+</div>
+
+```python title="Send a trace"
+import os
+
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "gen_ai.agent.name=research_agent"
+
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
+from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
+
+LlamaIndexInstrumentor().instrument()
 from llama_index.core.agent.workflow import FunctionAgent
 
 agent = FunctionAgent(name="research_agent", llm=model, tools=[])
@@ -225,31 +364,183 @@ result = await agent.run(user_msg="What is an agent trace?")
 print(result)
 ```
 
+The resource attribute supplies the agent name because this instrumentor does not export `FunctionAgent.name`. Run this example in your existing async application.
+
+
+
+</TabItem>
+
+<TabItem value="adk" label="Google ADK">
+
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http google-adk
+```
+
+</div>
+
+```python title="Send a trace"
+import asyncio
+import os
+
+os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "SPAN_ONLY"
+
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+
+agent = Agent(name="research_agent", model=model)
+asyncio.run(InMemoryRunner(agent=agent).run_debug("What is an agent trace?"))
+```
+
+`SPAN_ONLY` records the messages needed to inspect and investigate the run.
+
+
+
+</TabItem>
+
+<TabItem value="strands" label="Strands">
+
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http "strands-agents[otel]"
+```
+
+</div>
+
+```python title="Send a trace"
+import os
+
+os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = "gen_ai_latest_experimental,gen_ai_span_attributes_only"
+
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
+from strands import Agent
+
+agent = Agent(name="research_agent", model=model)
+print(agent("What is an agent trace?"))
+```
+
+The semantic-convention setting enables message content in spans.
+
+
+
 </TabItem>
 
 <TabItem value="vercel" label="Vercel AI SDK">
 
-```typescript
-import { generateText } from "ai";
+<div className="lens-dependencies">
 
-const { text } = await generateText({
-  model,
-  prompt: "What is an agent trace?",
-  experimental_telemetry: { isEnabled: true, functionId: "research_agent" },
-});
-console.log(text);
+```bash title="Install dependencies"
+npm install ai @ai-sdk/otel @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http
 ```
+
+</div>
+
+```typescript title="Send a trace"
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OpenTelemetry } from "@ai-sdk/otel";
+import { generateText, registerTelemetry } from "ai";
+
+const sdk = new NodeSDK({ traceExporter: new OTLPTraceExporter() });
+sdk.start();
+registerTelemetry(new OpenTelemetry());
+
+try {
+  const { text } = await generateText({
+    model,
+    prompt: "What is an agent trace?",
+    experimental_telemetry: { isEnabled: true, functionId: "research_agent" },
+  });
+  console.log(text);
+} finally {
+  await sdk.shutdown();
+}
+```
+
+</TabItem>
+
+<TabItem value="openclaw" label="OpenClaw">
+
+Enable the [diagnostics-otel plugin](https://docs.openclaw.ai/plugins/reference/diagnostics-otel). Set your agent ID once in `~/.openclaw/openclaw.json`. Keep your existing model and workspace settings when adding the tracing configuration:
+
+```json title="openclaw.json"
+{
+  "agents": {
+    "list": [{ "id": "research_agent" }]
+  },
+  "plugins": {
+    "entries": { "diagnostics-otel": { "enabled": true } }
+  },
+  "diagnostics": {
+    "enabled": true,
+    "otel": {
+      "enabled": true,
+      "tracesEndpoint": "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}",
+      "headers": { "Authorization": "Bearer ${LITELLM_API_KEY}" },
+      "captureContent": true,
+      "traces": true,
+      "metrics": false,
+      "logs": false,
+      "sampleRate": 1
+    }
+  }
+}
+```
+
+Set `LITELLM_API_KEY` to your LiteLLM key, then run `openclaw agent --local --session-id first-trace --message "What is an agent trace?"`. Select **research_agent** in Lens. Restart an existing gateway after changing the config.
+
+</TabItem>
+
+<TabItem value="hermes" label="Hermes">
+
+Install and enable the community [hermes-otel plugin](https://github.com/briancaffey/hermes-otel#install). Set `LITELLM_API_KEY` to your LiteLLM key, then add this to `~/.hermes/hermes_otel.yaml`:
+
+```yaml title="hermes_otel.yaml"
+resource_attributes:
+  gen_ai.agent.name: research_agent
+content_capture: full
+backends:
+  - type: otlp
+    endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}
+    headers:
+      Authorization: "Bearer ${LITELLM_API_KEY}"
+    metrics: false
+    logs: false
+```
+
+Start a new Hermes session and ask a question. The configured name **research_agent** appears in Lens. Hermes' built-in diagnostic telemetry alone does not include the conversation content needed for investigations.
 
 </TabItem>
 
 <TabItem value="otel" label="OpenTelemetry">
 
-```python
+<div className="lens-dependencies">
+
+```bash title="Install dependencies"
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http
+```
+
+</div>
+
+```python title="Send a trace"
+from opentelemetry.instrumentation.auto_instrumentation import initialize
+
+initialize()
+
 from opentelemetry import trace
 
 with trace.get_tracer(__name__).start_as_current_span("research_agent") as span:
     span.set_attribute("gen_ai.agent.name", "research_agent")
-    span.set_attribute("gen_ai.operation.name", "invoke_agent")
+    span.set_attribute("openinference.span.kind", "AGENT")
     span.set_attribute("input.value", "What is an agent trace?")
     answer = agent.run("What is an agent trace?")
     span.set_attribute("output.value", str(answer))
@@ -261,7 +552,7 @@ with trace.get_tracer(__name__).start_as_current_span("research_agent") as span:
 
 ## View your first trace
 
-Open **Lens > Traces**. Select a time range that includes your run, then open it. For the examples above, look for **research_agent**. Select a step to read its input, output, and attributes.
+Open **Lens > Traces**. Select a time range that includes your run, then open it. For the examples above, look for **research_agent**. The same name is available under **Agent** when creating an investigation. Select a step to read its input, output, and attributes.
 
 ![A research_agent trace with its question, model call, and final answer.](/img/lens/first-agent-trace.png)
 
@@ -340,7 +631,8 @@ Add this to `config.yaml`:
 ```yaml
 general_settings:
   tracing:
-    store: clickhouse
+    store:
+      type: clickhouse
 ```
 
 Set `CLICKHOUSE_URL` to the ClickHouse HTTP address your proxy can reach. `CLICKHOUSE_DATABASE` defaults to `litellm`. You can set `CLICKHOUSE_READER_URL` to use a separate read-only account; otherwise reads use `CLICKHOUSE_URL`.

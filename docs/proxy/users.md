@@ -216,6 +216,21 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 
 Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
 
+A budget change is permanent. When the member's `budget_duration` window rolls over, the reset only sets their current cycle spend back to $0 and moves the next reset date forward, so a raised `max_budget_in_team` stays at the new value in every later cycle and does not revert to the earlier amount or to the team default. Raising `team_member_budget` with `/team/update` behaves the same way for every member still on the team default
+
+When a member on the team default gets their own budget this way, their current reset window carries over and the next reset lands on the same date as before. Sending `budget_duration` in the same `/team/member_update` call starts a new window from that point instead
+
+To raise a member's budget for a limited time, send `temp_budget_increase` together with `temp_budget_expiry` (a UTC datetime) on `/team/member_update`, or fill in **Temporary Budget Increase (USD)** and **Temporary Budget Expiry (UTC)** when editing the member in the UI. The increase is added on top of the member's budget, or the team default if they are on it, until `temp_budget_expiry` and stops applying after that without any action. It expires at that time rather than at the next budget reset, so set the expiry to the member's next reset if you want it to last only for the current cycle. A member on the team default who only gets a temporary increase stays on the team default, and the increase has no effect on a member with no budget at all
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "temp_budget_increase": 25, "temp_budget_expiry": "2026-11-01T00:00:00Z"}'
+```
+
+To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. This is available starting in `v1.104.0`
+
 #### Reset a team member's spend
 
 Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
