@@ -1428,6 +1428,7 @@ const sidebars = {
             "providers/watsonx/audio_transcription",
           ]
         },
+        "providers/wavespeed",
         {
           type: "category",
           label: "xAI",
