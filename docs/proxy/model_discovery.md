@@ -108,6 +108,27 @@ Expected response
 }
 ```
 
+## Which key discovery uses
+
+Discovery calls the provider with the wildcard deployment's own credentials: its `api_base`, and its `api_key` or, when that is unset, the provider's environment variable on the proxy host. For a deployment pointed at a custom Anthropic-compatible gateway, LiteLLM requests `<api_base>/v1/models` with `x-api-key` set to that key and lists each returned id under the wildcard prefix, for example `my-gateway/claude-sonnet-4-5`
+
+```yaml
+model_list:
+  - model_name: "my-gateway/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_base: "https://gateway.example.com/anthropic"
+      api_key: os.environ/GATEWAY_SERVICE_TOKEN # used for discovery, and as the fallback when a request has no key
+
+general_settings:
+  forward_llm_provider_auth_headers: true
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+The listing reflects that one key's access. A provider key that a caller forwards on the `/v1/models` request (see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)) is not used for discovery, so users whose own keys can see different models all get the same list, and a listed model can still fail with a given user's key. When neither the deployment key nor the environment variable is set, the wildcard route adds nothing to `/v1/models`
+
 ## Hide a model from `/v1/models`
 
 Set `model_info.discoverable: false` on a `model_list` entry to leave it out of the listing endpoints while keeping it callable by anyone whose key allows it. This is for models a chat client's model picker should not offer, such as embedding, classifier, or evaluator models that only your own services call. Clients like Claude Code (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`) and Open WebUI fill their pickers from `GET /v1/models`, and most do not filter by capability
