@@ -14,6 +14,7 @@ Use this to give users an accurate list of models available behind provider endp
 - VLLM
 - Vertex AI
 - Eden AI
+- AWS Bedrock
 
 ### Usage
 
@@ -107,6 +108,35 @@ Expected response
     "object": "list"
 }
 ```
+
+## AWS Bedrock
+
+With `check_provider_endpoint: true`, `bedrock/*` lists what the deployment's AWS account can invoke in its region instead of every Bedrock id LiteLLM knows about: the account's `ACTIVE` system-defined inference profiles (`us.`, `eu.`, `global.`, and so on) plus the foundation models that support on-demand throughput there. Ids that only work in another region or through an inference profile the account does not have are left out, so a client picking a model from `/v1/models` gets one it can call
+
+The listing signs its requests with the same credentials the deployment uses for inference (`aws_access_key_id` / `aws_secret_access_key`, a role, a profile, web identity, or the default AWS credential chain), or with a Bedrock API key when `api_key` or `AWS_BEARER_TOKEN_BEDROCK` is set. Those credentials need `bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles` on top of the invoke permissions
+
+```yaml
+model_list:
+  - model_name: bedrock/*
+    litellm_params:
+      model: bedrock/*
+      aws_region_name: us-east-1
+      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+```bash
+curl -s http://localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_KEY" | jq '.data[].id'
+# "bedrock/amazon.nova-micro-v1:0"
+# "bedrock/global.anthropic.claude-opus-4-5-20251101-v1:0"
+# "bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+# ...
+```
+
+The list is refreshed every 5 minutes. If the listing call fails (missing permissions, a region with no Bedrock endpoint), the proxy logs a warning and `bedrock/*` lists no models until it succeeds
 
 ## Hide a model from `/v1/models`
 
