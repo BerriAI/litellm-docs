@@ -799,6 +799,8 @@ router_settings:
 | JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
+| BESPOKE_API_BASE | HTTP(S) base URL of a Bespoke Nimble System One server, without `/v1/systemone`, for `/bespoke/v1/systemone` and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: bespoke`. Required when no classifier endpoint is supplied |
+| BESPOKE_API_KEY | Optional bearer key paired with `BESPOKE_API_BASE`. An explicit classifier `api_base` uses only its explicit `api_key`; it never inherits the environment key |
 | LAYA_API_BASE | HTTP(S) base URL of a self-hosted Laya server, without `/v1/systemone`, for native gateway decisions and [OSS classifiers](/docs/auto_router/decision_classifiers) with `opensource_classifier_config.provider: laya` that omit `api_base`. Required when no classifier endpoint is supplied. Requires a build containing [LiteLLM #43626](https://github.com/BerriAI/litellm/pull/43626) |
 | LAYA_API_KEY | Optional bearer key paired with `LAYA_API_BASE`. A Laya classifier with an explicit `opensource_classifier_config.api_base` uses only its explicit `api_key`; omitting that key connects without authentication |
 | LEMONADE_API_KEY | API key for Lemonade

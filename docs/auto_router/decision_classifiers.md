@@ -11,14 +11,14 @@ Jev is available through TypeSafe's hosted API. Nimble and Laya are open models 
 | Classifier | Where it runs | Classifier model | `opensource_classifier_config.provider` |
 | --- | --- | --- | --- |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
-| [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted, including Ollama | `nimble` on Ollama; `nimble-latest` on Bespoke's System One server | `jev` with a custom endpoint |
+| [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 
 All three use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
 
 :::info Availability
 
-The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). These changes are pending; existing releases can reject `oss_classifier`, `opensource_classifier_config` and `provider: laya`.
+The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
 
 For Jev or Nimble on a released build, keep `classifier_type: jev` and `jev_classifier_config` as shown in the [Jev setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai). The new backend continues to accept those names; see [migration](#migrate-an-existing-jev-or-nimble-router).
 
@@ -65,28 +65,28 @@ Set `TYPESAFE_API_KEY` in the gateway's environment using your secret manager. L
 
 For a router-specific endpoint, supply both `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit endpoint does not inherit the TypeSafe environment key. The model, timeout, instructions and circuit-breaker fields follow the [Jev reference](/docs/proxy/auto_routing#jev-classifier), whose examples retain the names supported by released builds.
 
-### Nimble: self-hosted with Ollama
+### Nimble: self-hosted System One server
 
-Install [Ollama 0.35 or later](https://ollama.com/library/nimble) and start its server. If the Ollama app is not already serving requests, run `ollama serve` in a separate terminal. Download the decision model:
+Deploy Bespoke's [System One server](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) with the [published Nimble checkpoint](https://github.com/bespokelabsai/nimble#quickstart). Use a server you control; the public demo's availability and authentication can change
+
+Set the server's reachable base URL in the gateway process:
 
 ```bash
-ollama pull nimble
+export BESPOKE_API_BASE="http://nimble-server:8000"
 ```
 
-Replace the example's `opensource_classifier_config` with this block:
+Replace the example's `opensource_classifier_config` with:
 
 ```yaml
 opensource_classifier_config:
-  provider: jev
-  model: nimble
-  api_base: http://localhost:11434
-  api_key: ollama
+  provider: bespoke
+  model: nimble-latest
   timeout_ms: 30000
 ```
 
-Local Ollama ignores the API key. `ollama` is a non-secret placeholder because LiteLLM's Jev-compatible client requires a nonempty key when an endpoint is supplied. If your endpoint has authentication, use that endpoint's real credential instead. There is no `provider: nimble` setting.
+The server must accept `POST /v1/systemone` with `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B`. An OpenAI-compatible chat endpoint alone is insufficient. The `bespoke` provider is separate from LiteLLM's unrelated Nimble search integration
 
-The longer timeout allows more time for local inference; warm the model before measuring latency. For Bespoke's own System One server, use its base URL and `model: nimble-latest` instead. See the upstream [serving guide](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) and [model preparation guide](https://github.com/bespokelabsai/nimble#quickstart).
+`BESPOKE_API_KEY` is optional and sends a bearer credential to `BESPOKE_API_BASE`. An administrator can instead configure `api_base` and optional `api_key` on this router. An explicit endpoint without a key connects without authentication and never inherits the environment key. Warm the model before measuring latency; adjust the timeout for your server
 
 ### Laya: self-hosted HTTP server
 
@@ -142,13 +142,20 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-In dashboards containing [UI #43768](https://github.com/BerriAI/litellm/pull/43768), select **OSS Classifier** in the auto-router form, then **Jev** or **Laya**. Nimble uses the **Jev** provider with a custom model and endpoint; YAML is the simplest setup. Older dashboards label the classifier **JEV Classifier**.
+In dashboards containing [UI #43768](https://github.com/BerriAI/litellm/pull/43768), select **OSS Classifier** in the auto-router form, then **Jev** or **Laya**. Builds containing the Nimble integration also offer **Bespoke Nimble**. Older dashboards label the classifier **JEV Classifier**.
 
-Administrators can configure connection overrides. Team members cannot submit classifier endpoint or credential overrides through the management API. Saved connection fields are hidden on edit; leaving them untouched preserves them. Use the explicit reset controls to clear a saved key or return to the gateway connection.
+Administrators can configure connection overrides. Team members cannot submit classifier endpoint or credential overrides through the management API. The dashboard edits model and classifier options while the gateway owns the connection. Saving the same provider preserves its stored connection; changing providers drops the previous provider's endpoint and key. Use the management API to explicitly replace or clear connection overrides.
 
-## Call Laya's native decision API
+## Call a native decision API
 
-With `LAYA_API_BASE` configured as above, call `POST /laya/v1/systemone` using a LiteLLM virtual key with access to `laya/english`. The request names the bare checkpoint; LiteLLM uses `laya/english` for model permissions and usage logs.
+Configure the matching server URL, then use a LiteLLM virtual key with access to the provider-prefixed model. The body names the native model:
+
+| Provider | Gateway endpoint | Body `model` | Virtual-key model permission |
+| --- | --- | --- | --- |
+| Laya | `/laya/v1/systemone` | `english` | `laya/english` |
+| Bespoke Nimble | `/bespoke/v1/systemone` | `nimble-latest` | `bespoke/nimble-latest` |
+
+The following Laya example also works for Nimble after replacing the endpoint and body model with the Nimble row:
 
 ```bash
 curl http://localhost:4000/laya/v1/systemone \
@@ -170,13 +177,13 @@ curl http://localhost:4000/laya/v1/systemone \
   }'
 ```
 
-Every native request must explicitly choose `english`, `multilingual` or `typed-decisions`, with permission for the corresponding `laya/<checkpoint>` model. Unknown names and automatic selection are rejected. The response preserves Laya's `answers`, `usage` and `routing` fields. The native Laya route supports System One requests only; `/laya/v1/evaluate` and Laya chat completions are not exposed.
+Every native request must explicitly choose `english`, `multilingual` or `typed-decisions`, with permission for the corresponding `laya/<checkpoint>` model. Unknown names and automatic selection are rejected. The response preserves Laya's `answers`, `usage` and `routing` fields. Both native routes support System One requests only; `/v1/evaluate`, chat completions and streaming are not exposed. Nimble preserves its native `answers` and `usage` response.
 
 ## Evaluate quality and cost
 
 Compare tier choices on representative prompts before changing production routing. Probabilities describe the supplied choices; confidence scores from different model families are not interchangeable accuracy estimates. Measure downstream answer quality, classifier latency, fallback frequency and total cost using the [evaluation guide](/docs/auto_router/evaluate).
 
-Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya's built-in catalog rates are zero; custom Nimble model names may have no registered rate, so missing classifier cost does not establish zero cost. Jev and Nimble retain `typesafe/<model>` classifier log naming; Laya uses `laya/<checkpoint>`. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
+Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya and Bespoke Nimble's built-in catalog token rates are zero; infrastructure is paid separately. Jev uses `typesafe/<model>` classifier log naming, Laya uses `laya/<checkpoint>` and Bespoke Nimble uses `bespoke/<model>`. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
 
 If the classifier falls back, check the endpoint, checkpoint name, credentials, model warm-up and timeout. A timeout can also open the classifier circuit breaker, which defaults to a 30-second recovery interval. Verify that the server accepts `/v1/systemone`, rather than adding that path to `api_base`.
 
@@ -194,4 +201,4 @@ opensource_classifier_config:
 
 The new backend still accepts `classifier_type: jev`, `jev_classifier_config` and the legacy `provider: typesafe` value for existing YAML and saved routers. Supply only one classifier configuration block. Model-management creates and updates that include the classifier configuration write the canonical names; an update that leaves the configuration untouched preserves the saved value.
 
-Existing Jev and Nimble connections continue to use `TYPESAFE_API_KEY` and `TYPESAFE_API_BASE` when no explicit connection is supplied. The transport, `typesafe/<model>` accounting labels and `cause: jev_classifier` remain unchanged.
+Existing configurations that retain `provider: jev` continue using the TypeSafe transport and environment variables. To migrate a compatible Nimble System One server to `provider: bespoke`, select `nimble-latest`, configure `BESPOKE_API_BASE` and optional `BESPOKE_API_KEY`, and grant access to `bespoke/nimble-latest`. The provider change clears saved Jev connection overrides; administrators must explicitly resupply any intended override. New calls use `bespoke/<model>` in logs, while `cause: jev_classifier` stays unchanged
