@@ -222,13 +222,26 @@ classifier_context_include_assistant_turns: false
 
 | `jev_classifier_config` field | Default | Behavior |
 | --- | --- | --- |
-| `model` | `jev-latest` | TypeSafe model identifier, without a `typesafe/` prefix. Pin a version for a repeatable evaluation |
-| `api_key` | `null` | Reads `TYPESAFE_API_KEY` from the server when omitted |
-| `api_base` | `null` | Reads `TYPESAFE_API_BASE`, then falls back to `https://api.typesafe.ai`. An explicit value requires an explicit `api_key` |
+| `provider` | `typesafe` | `typesafe`, or `bespoke_nimble` for a self-hosted [Bespoke Nimble](https://github.com/bespokelabsai/nimble) server |
+| `model` | `jev-latest` | Model identifier, without a provider prefix. Pin a version for a repeatable evaluation. Required for `bespoke_nimble` |
+| `api_key` | `null` | Reads `TYPESAFE_API_KEY` or `BESPOKE_NIMBLE_API_KEY` from the server when omitted |
+| `api_base` | `null` | Reads `TYPESAFE_API_BASE` (then `https://api.typesafe.ai`) or `BESPOKE_NIMBLE_API_BASE`. For `typesafe`, an explicit value requires an explicit `api_key` |
 | `timeout_ms` | `3000` | Deadline for a classification, at least 1 ms |
 | `instructions` | `null` | Replaces the built-in question instructions. Omit to keep the default. Blank strings are rejected |
 | `circuit_breaker_enabled` | `true` | Enables the process-local timeout breaker for this router instance |
 | `circuit_breaker_cooldown_seconds` | `30` | Positive cooldown before one recovery probe is admitted |
+
+#### Bespoke Nimble
+
+Bespoke Nimble serves the same `POST /v1/systemone` API, so `provider: bespoke_nimble` reuses every JEV setting above. It has no hosted default, so set `api_base` or `BESPOKE_NIMBLE_API_BASE`. The key is optional: with none configured, LiteLLM sends no `Authorization` header. `BESPOKE_NIMBLE_API_KEY` is only sent to `BESPOKE_NIMBLE_API_BASE`, never to a base set in the config. Classifier spend is logged as `bespoke_nimble/<model>` at $0, since self-hosted models have no list price
+
+```yaml
+classifier_type: jev
+jev_classifier_config:
+  provider: bespoke_nimble
+  model: nimble-latest
+  api_base: http://nimble.internal:8000
+```
 
 #### Context sent to JEV
 
