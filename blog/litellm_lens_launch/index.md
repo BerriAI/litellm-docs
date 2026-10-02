@@ -87,7 +87,10 @@ Lens was built and designed with our launch partners
   href="https://www.mindfort.ai/"
   logo="/img/blog/litellm_lens_launch/partners/mindfort.svg"
   name="MindFort"
-  quote="We are building the first end to end agent swarm platform for cybersecurity. MindFort uses thousands of agents that work together to find real exploitable vulnerabilities in runtime and safely roll out patches across thousands of live environments, autonomously and continuously. We are using Lens to power our internal applied AI research and our production engineering, letting us analyze hundreds of thousands of agent interactions at scale, while maintaining complete data sovereignty"
+  quote={[
+    "We built the world's first fully autonomous security swarm. MindFort uses thousands of agents that work together to find real, exploitable vulnerabilities live on target, then safely build and roll out patches, continuously.",
+    "We use Lens to power our internal applied AI research and production engineering, letting us analyze hundreds of thousands of agent interactions at scale while maintaining complete data sovereignty.",
+  ]}
   author="Akul Gupta, Co-founder & CTO, MindFort"
 />
 
