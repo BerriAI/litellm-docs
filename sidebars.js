@@ -1415,6 +1415,7 @@ const sidebars = {
         "providers/publicai",
         "providers/predibase",
         "providers/prism",
+        "providers/vynaris",
         "providers/pydantic_ai_agent",
         "providers/qwencloud",
         "providers/ragflow",
