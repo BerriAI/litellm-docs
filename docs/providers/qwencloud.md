@@ -26,8 +26,9 @@ Use the `qwencloud/` prefix outside mainland China
 | Default API base | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
 | Rerank endpoint | `https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks` |
 | Image generation endpoint | `https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation` |
+| Video generation host | `https://dashscope-intl.aliyuncs.com` |
 | API key env var | `QWENCLOUD_API_KEY` (falls back to `DASHSCOPE_API_KEY`) |
-| Base URL overrides | `QWENCLOUD_API_BASE`, `QWENCLOUD_API_BASE_RERANK`, `QWENCLOUD_API_BASE_IMAGE` |
+| Base URL overrides | `QWENCLOUD_API_BASE`, `QWENCLOUD_API_BASE_RERANK`, `QWENCLOUD_API_BASE_IMAGE`, `QWENCLOUD_API_BASE_VIDEO` |
 
 ## Qianwen AI Platform (mainland China)
 
@@ -39,8 +40,9 @@ Use the `qwen_ai_platform/` prefix in mainland China. It hits the same paths on 
 | Default API base | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | Rerank endpoint | `https://dashscope.aliyuncs.com/compatible-api/v1/reranks` |
 | Image generation endpoint | `https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation` |
+| Video generation host | `https://dashscope.aliyuncs.com` |
 | API key env var | `QWEN_AI_PLATFORM_API_KEY` (falls back to `DASHSCOPE_API_KEY`) |
-| Base URL overrides | `QWEN_AI_PLATFORM_API_BASE`, `QWEN_AI_PLATFORM_API_BASE_RERANK`, `QWEN_AI_PLATFORM_API_BASE_IMAGE` |
+| Base URL overrides | `QWEN_AI_PLATFORM_API_BASE`, `QWEN_AI_PLATFORM_API_BASE_RERANK`, `QWEN_AI_PLATFORM_API_BASE_IMAGE`, `QWEN_AI_PLATFORM_API_BASE_VIDEO` |
 
 ## API Key
 
