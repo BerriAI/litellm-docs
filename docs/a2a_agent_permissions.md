@@ -211,12 +211,12 @@ curl -X POST "http://localhost:4000/a2a/agent-456" \
 ## Require explicit agent grants
 
 By default, a key with no agent grants on itself or its team can reach all agents. Set
-`require_key_agent_access_defined: true` under `general_settings` to require an explicit grant on the key or
+`agent_access_default_deny: true` under `general_settings` to require an explicit grant on the key or
 its team before the key can reach an agent
 
 ```yaml title="config.yaml" showLineNumbers
 general_settings:
-  require_key_agent_access_defined: true
+  agent_access_default_deny: true
 ```
 
 You can enable this setting from the Admin UI under **Settings** and **General Settings**, or update it at runtime
@@ -228,7 +228,7 @@ curl -X POST "http://localhost:4000/config/field/update" \
   -H "Content-Type: application/json" \
   -d '{
     "config_type": "general_settings",
-    "field_name": "require_key_agent_access_defined",
+    "field_name": "agent_access_default_deny",
     "field_value": true
   }'
 ```
@@ -300,7 +300,7 @@ flowchart TD
     C -->|No| F[Use key permissions only]
 
     D -->|Yes| G[Inherit team permissions]
-    D -->|No| H{require_key_agent_access_defined enabled?}
+    D -->|No| H{agent_access_default_deny enabled?}
 
     E --> I{Agent in allowed list?}
     F --> I
@@ -316,7 +316,7 @@ A2A permission resolution operates over two levels: Key and Team. (MCP's [permis
 
 | Key Permissions | Team Permissions | Result | Notes |
 |-----------------|------------------|--------|-------|
-| None | None | Key can access **all** agents by default, or no agents when `require_key_agent_access_defined` is enabled | Open access remains the default for backward compatibility |
+| None | None | Key can access **all** agents by default, or no agents when `agent_access_default_deny` is enabled | Open access remains the default for backward compatibility |
 | `["agent-1", "agent-2"]` | None | Key can access `agent-1` and `agent-2` | Key uses its own permissions |
 | None | `["agent-1", "agent-3"]` | Key can access `agent-1` and `agent-3` | Key inherits team's permissions |
 | `["agent-1", "agent-2"]` | `["agent-1", "agent-3"]` | Key can access `agent-1` only | Intersection of both lists (most restrictive wins) |
