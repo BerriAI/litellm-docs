@@ -224,8 +224,8 @@ The Python `Router` used on its own zeroes per-token pricing at registration, bu
 
 PTU-hours are reported on team activity only. The per-key, per-user, and per-tag activity routes carry no model group in their rows today, so they report none
 
-A request that names a shared deployment by an alias, a routing group, its deployment id, or its provider model lands in a usage row keyed by that name. The row is sized by the deployment behind the name, so its PTU-hours count the same as a request naming the model group
+A request that names a shared deployment by an alias, a routing group, its deployment id, or its provider model lands in a usage row keyed by that name. On one team's page the row is sized by the deployment that team is served from behind the name, its shared one first, so its PTU-hours count the same as a request naming the model group and a team with no share on a name reads no PTU-hours on it. A page spanning several or all teams sizes the row by the first reserved deployment behind the name
 
-An unshared deployment in the same model group as a shared one counts toward the teams' ceilings and PTU-hours on that group, and a group mixing models is sized by its first reserved deployment's row. Keep a shared deployment in a model group of its own
+An unshared deployment in the same model group as a shared one counts toward the teams' ceilings and PTU-hours on that group, and a group mixing models is sized on one team's page by the deployment that team holds its share on and on a page spanning teams by its first reserved deployment's row. Keep a shared deployment in a model group of its own
 
 `ptu_shares` is edited through `POST /model/new`, `PATCH /model/{model_id}/update`, or `config.yaml`; the model form in the Admin UI has no shares editor yet
