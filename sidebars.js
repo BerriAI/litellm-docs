@@ -1476,6 +1476,7 @@ const sidebars = {
         "providers/xiaomi_mimo",
         "providers/xinference",
         "providers/zai",
+        "providers/zerogpu",
       ],
     },
 

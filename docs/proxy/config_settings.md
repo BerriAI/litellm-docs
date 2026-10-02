@@ -890,6 +890,8 @@ router_settings:
 | XAI_OAUTH_TOKEN_DIR | Directory holding the xAI OAuth token file. Default is ~/.config/litellm/xai_oauth
 | YOUCOM_API_BASE | Base URL for the You.com search provider
 | ZAI_API_BASE | Base URL for Z.ai
+| ZEROGPU_API_BASE | Base URL for ZeroGPU. Default is https://api.zerogpu.ai/v1
+| ZEROGPU_API_KEY | API key for ZeroGPU
 | DD_AGENT_HOST | Hostname or IP of DataDog agent (e.g., "localhost"). When set, logs are sent to agent instead of direct API
 | DD_AGENT_PORT | Port of DataDog agent for log intake. Default is 10518
 | DD_API_KEY | API key for Datadog integration
