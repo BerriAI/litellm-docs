@@ -24,13 +24,9 @@
 .suggestion:hover {background:var(--search-hover)}
 .suggestion strong {display:block;font-size:14px;font-weight:550}
 .suggestion small {display:block;font-size:12px;color:var(--search-muted);margin-top:2px}
-.suggestArrow {margin-left:auto;color:var(--search-muted);opacity:0}
-.suggestion:hover .suggestArrow {opacity:1}
-.docIcon {display:flex;align-items:center;justify-content:center;width:30px;height:32px;flex-shrink:0;color:var(--search-muted)}
 .result {display:flex;align-items:flex-start;gap:10px;padding:13px;margin:2px 0;border:1px solid transparent;border-radius:8px;color:var(--search-text);text-decoration:none;scroll-margin:8px}
 .result:hover {text-decoration:none;color:var(--search-text)}
 .selected {background:var(--search-selected);border-color:color-mix(in srgb,var(--search-accent) 12%,transparent)}
-.selected .docIcon {color:var(--search-accent)}
 .resultBody {display:block;min-width:0;flex:1}
 .result strong {display:block;font-size:14px;line-height:22px;font-weight:600;letter-spacing:-.1px}
 .path {display:block;font-size:11px;line-height:18px;color:var(--search-muted);margin-top:1px}
@@ -38,8 +34,6 @@
 .snippet {display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--search-muted);font-size:12px;line-height:19px;margin-top:5px;overflow-wrap:anywhere}
 .result mark {background:none;color:var(--search-text);font-weight:600;padding:0}
 .result strong mark {color:var(--search-accent)}
-.openResult {padding-top:4px;color:var(--search-muted);opacity:0;flex-shrink:0}
-.selected .openResult {opacity:1}
 .noResults {padding:20px 14px 26px;font-size:14px}
 .noResults p {margin-bottom:6px}
 .noResults>span {font-size:13px;color:var(--search-muted)}
@@ -93,15 +87,6 @@
 .chatHeader .close {display:flex;padding:4px;border:0}
 .newChat {background:none;border:1px solid var(--search-border);border-radius:6px;padding:5px 9px;color:var(--search-muted);font:inherit;font-size:11px;cursor:pointer}
 .chatContent {padding:0 26px;scroll-padding-top:20px}
-.chatWelcome {padding:48px 12px 35px;text-align:center}
-.welcomeIcon {display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--search-border);border-radius:12px;color:var(--search-accent);margin-bottom:18px}
-.welcomeIcon svg {width:24px;height:24px}
-.chatWelcome h2 {font-size:24px;letter-spacing:-.7px;font-weight:550;margin:0 0 12px}
-.chatWelcome p {font-size:13px;line-height:1.7;color:var(--search-muted);margin:0 0 28px}
-.questionGrid {display:grid;grid-template-columns:1fr 1fr;gap:9px;text-align:left;max-width:560px;margin:auto}
-.questionGrid button {display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--search-border);border-radius:8px;padding:13px;background:none;color:var(--search-text);font:inherit;font-size:12px;text-align:left;cursor:pointer;line-height:1.6}
-.questionGrid button:hover {background:var(--search-hover);border-color:var(--search-muted)}
-.questionGrid span {color:var(--search-muted)}
 .turn {padding:22px 0 8px;scroll-margin-top:16px}
 .turn+.turn {border-top:1px solid var(--search-border)}
 .userQuestion {margin-left:auto;max-width:85%;width:fit-content;padding:10px 14px;background:var(--search-hover);border:1px solid var(--search-border);border-radius:12px 12px 3px 12px;font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -121,3 +106,23 @@
 .composer>p {display:flex;justify-content:space-between;gap:12px;font-size:9px;color:var(--search-muted);margin:8px 0 0}
 .chatDialog .footer {border:0;padding-top:0;font-size:9px}
 @media(max-width:600px) {.chatBackdrop {padding:10px;padding-top:3vh}.chatDialog {max-height:94dvh}.chatHeader {padding:16px}.chatHeader>div>span {display:none}.chatContent {padding:0 16px}.chatWelcome {padding:30px 0 20px}.chatWelcome h2 {font-size:22px}.questionGrid {grid-template-columns:1fr}.questionGrid button {padding:10px 12px}.composer {padding:12px 14px 8px}.composer textarea {font-size:16px}.composer>p>span {display:none}.chatDialog .footer>span:last-child {display:none}}
+
+/* Plain documentation chat: no welcome hero, cards, or decorative icons. */
+.backdrop {backdrop-filter:none}
+.chatDialog {height:600px;max-height:82dvh}
+.chatHeader {padding:18px 22px 16px}
+.chatHeader .close {font-size:12px}
+.chatHint {margin:0;padding:24px 0;font-size:13px;color:var(--search-muted)}
+.composerField {align-items:center}
+.send,.stop {width:auto;min-width:44px;padding:6px 10px;font:inherit;font-size:12px;border-radius:5px}
+@media(max-width:600px) {.chatDialog {max-height:90dvh}.chatHeader {padding:16px}.chatContent {padding:0 16px}}
+
+.chatDialog {height:auto}
+.chatActive {height:600px}
+.chatDialog .toolbar {padding-top:16px}
+.chatContent {min-height:0}
+.chatContent:empty {display:none}
+.chatActions {display:flex;align-items:center;gap:14px;padding-bottom:12px}
+.chatActions .close {border:0;padding:3px 0;font-family:inherit}
+.clear {font:inherit;font-size:12px}
+.sources a>span:last-child {margin-left:0;color:var(--search-text)}

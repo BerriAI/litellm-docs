@@ -14,19 +14,7 @@ const examples = [
   {query: 'Caching', detail: 'Reuse responses and reduce costs'},
   {query: 'Fallbacks', detail: 'Recover from provider failures'},
 ];
-const questions = ['How do I set up Lens?', 'How do I create a virtual key?', 'How do I cache responses with Redis?', 'How do I configure model fallbacks?'];
 const categories = ['All docs', 'Gateway', 'SDK', 'Providers', 'Integrations'];
-function Icon({name = 'search', ...props}) {
-  const paths = {
-    search: <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></>,
-    document: <><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"/><path d="M14 3v5h5M9 12h6M9 16h6"/></>,
-    spark: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></>,
-    close: <path d="m6 6 12 12M18 6 6 18"/>,
-    send: <path d="M12 20V4m-6 6 6-6 6 6"/>,
-    enter: <path d="M20 5v8H4m5-5-5 5 5 5"/>,
-  };
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name]}</svg>;
-}
 function Highlighted({text, terms = []}) {
   const escaped = [...new Set(terms)].filter(term => term.length > 1).sort((a,b) => b.length-a.length)
     .map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -189,75 +177,69 @@ export default function SearchBar() {
 
   return <>
     <button className={styles.trigger} onClick={() => window.dispatchEvent(new Event(openEvent))} aria-label="Search docs or ask AI">
-      <Icon/><span>Search docs</span><kbd>⌘ K</kbd>
+      <span>Search docs</span><kbd>⌘ K</kbd>
     </button>
     {open && createPortal(<div className={`${styles.backdrop} ${mode === 'ai' ? styles.chatBackdrop : ''}`} onClick={event => {if (event.target === event.currentTarget) close();}}>
-      <section ref={dialog} className={`${styles.dialog} ${mode === 'ai' ? styles.chatDialog : ''}`} role="dialog" aria-modal="true" aria-label="Search LiteLLM documentation" onKeyDown={onKeyDown}>
+      <section ref={dialog} className={`${styles.dialog} ${mode === 'ai' ? styles.chatDialog : ''} ${mode === 'ai' && (turns.length || asking || aiError) ? styles.chatActive : ''}`} role="dialog" aria-modal="true" aria-label="Search LiteLLM documentation" onKeyDown={onKeyDown}>
         {mode === 'search' ? <form className={styles.query} onSubmit={event => event.preventDefault()}>
-          <Icon name={mode === 'search' ? 'search' : 'spark'}/>
+
           <input ref={input} value={query} maxLength={500} onChange={event => changeQuery(event.target.value)}
             placeholder={mode === 'search' ? 'Search documentation…' : 'Ask a question about LiteLLM…'}
             aria-label={mode === 'search' ? 'Search documentation' : 'Ask a question about LiteLLM'}
             aria-controls={mode === 'search' ? 'docs-search-results' : undefined}
             aria-activedescendant={mode === 'search' && results.length ? `docs-result-${selected}` : undefined}
             role={mode === 'search' ? 'combobox' : undefined} aria-expanded={mode === 'search' ? !!results.length : undefined} aria-autocomplete={mode === 'search' ? 'list' : undefined}/>
-          {query && <button type="button" className={styles.clear} onClick={() => {changeQuery(''); input.current?.focus();}} aria-label="Clear search"><Icon name="close"/></button>}
+          {query && <button type="button" className={styles.clear} onClick={() => {changeQuery(''); input.current?.focus();}} aria-label="Clear search">Clear</button>}
           <button type="button" className={styles.close} onClick={close} aria-label="Close search">esc</button>
-        </form> : <div className={styles.chatHeader}>
-          <div><Icon name="spark"/><strong>Ask LiteLLM</strong><span>Documentation assistant</span></div>
-          {(turns.length > 0 || asking) && <button className={styles.newChat} onClick={newChat}>New chat</button>}
-          <button className={styles.close} onClick={close} aria-label="Close search"><Icon name="close"/></button>
-        </div>}
+        </form> : null}
         <div className={styles.toolbar}>
           <div className={styles.tabs} role="group" aria-label="Search mode">
-            <button aria-pressed={mode === 'search'} onClick={() => {setMode('search'); input.current?.focus();}}><Icon/>Search</button>
-            <button aria-pressed={mode === 'ai'} onClick={() => openAI()}><Icon name="spark"/>Ask AI</button>
+            <button aria-pressed={mode === 'search'} onClick={() => {setMode('search'); input.current?.focus();}}>Search</button>
+            <button aria-pressed={mode === 'ai'} onClick={() => openAI()}>Ask AI</button>
           </div>
           {mode === 'search' && <select aria-label="Filter documentation" value={category} onChange={event => setCategory(event.target.value)}>{categories.map(value => <option key={value}>{value}</option>)}</select>}
-          {mode === 'ai' && <span className={styles.private}>Grounded in the docs</span>}
+          {mode === 'ai' && <div className={styles.chatActions}>
+            {(turns.length > 0 || asking) && <button className={styles.newChat} onClick={newChat}>New chat</button>}
+            <button className={styles.close} onClick={close} aria-label="Close search">Close</button>
+          </div>}
         </div>
         <div className={`${styles.content} ${mode === 'ai' ? styles.chatContent : ''}`}>
           {mode === 'search' && error && <p role="alert" className={styles.error}>{error} <button onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
           {mode === 'search' && !query.trim() && <div className={styles.empty}>
             <p className={styles.eyebrow}>{mode === 'search' ? 'Suggested' : 'What can we help with?'}</p>
             {examples.map(({query: example, detail}) => <button className={styles.suggestion} key={example} onClick={() => {changeQuery(mode === 'ai' ? `How do I set up ${example}?` : example); input.current?.focus();}}>
-              <span className={styles.docIcon}><Icon name={mode === 'search' ? 'document' : 'spark'}/></span><span><strong>{mode === 'search' ? example : `How do I set up ${example}?`}</strong><small>{detail}</small></span><span className={styles.suggestArrow}>↗</span>
+              <span><strong>{mode === 'search' ? example : `How do I set up ${example}?`}</strong><small>{detail}</small></span>
             </button>)}
           </div>}
           {mode === 'search' && query.trim() && <>
             <p className={styles.eyebrow} role="status">{loading ? 'Searching…' : results[0]?.matchType === 'typo' ? 'Closest matches' : results.length ? 'Top matches' : 'No matches'}</p>
             <div id="docs-search-results" role="listbox" aria-label="Matching documentation">{results.map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
               className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
-              <span className={styles.docIcon}><Icon name="document"/></span>
+
               <span className={styles.resultBody}>
                 <strong><Highlighted text={result.title} terms={result.highlights}/></strong>
                 <span className={styles.path}>{result.category}{result.heading && <> <span>›</span> <Highlighted text={result.heading} terms={result.highlights}/></>}</span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>
               </span>
-              <span className={styles.openResult}><Icon name="enter"/></span>
+
             </a>)}</div>
             {!loading && !error && !results.length && <div className={styles.noResults}><p>No documentation found for “{query}”.</p><span>Try fewer words or a feature name.</span>{category !== 'All docs' && <button onClick={() => setCategory('All docs')}>Search all docs</button>}<button onClick={() => openAI(query)}>Ask AI about this <span>→</span></button></div>}
           </>}
           {mode === 'ai' && <>
-            {!turns.length && !asking && !aiError && <div className={styles.chatWelcome}>
-              <span className={styles.welcomeIcon}><Icon name="spark"/></span>
-              <h2>What are you building?</h2><p>Ask about setup, configuration, or troubleshooting.<br/>Get an answer with links to the docs.</p>
-              <div className={styles.questionGrid}>{questions.map(question => <button key={question} onClick={() => ask(question)}>{question}<span>↗</span></button>)}</div>
-            </div>}
             {turns.map((turn, i) => <article className={styles.turn} key={i} ref={i === turns.length - 1 && !asking ? latestTurn : undefined}>
               <div className={styles.userQuestion}>{turn.question}</div>
-              <div className={styles.answer}><div className={styles.answerLabel}><Icon name="spark"/>LiteLLM</div><Answer {...turn}/>
-                {turn.sources.length > 0 && <details className={styles.sourceDetails}><summary>{turn.sources.length} {turn.sources.length === 1 ? 'source' : 'sources'}</summary><div className={styles.sources}>{turn.sources.map(source => <a key={source.id} href={source.url}><span>{source.id}</span><span>{source.title}{source.heading && <small>{source.heading}</small>}</span><span>↗</span></a>)}</div></details>}
+              <div className={styles.answer}><div className={styles.answerLabel}>LiteLLM</div><Answer {...turn}/>
+                {turn.sources.length > 0 && <details className={styles.sourceDetails}><summary>{turn.sources.length} {turn.sources.length === 1 ? 'source' : 'sources'}</summary><div className={styles.sources}>{turn.sources.map(source => <a key={source.id} href={source.url}><span>{source.id}</span><span>{source.title}{source.heading && <small>{source.heading}</small>}</span></a>)}</div></details>}
               </div>
             </article>)}
-            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userQuestion}>{pendingQuestion}</div><div role="status" className={styles.thinking}><Icon name="spark"/><div><strong>Searching the documentation</strong><span>{turns.length ? 'Using the context from your conversation…' : 'Finding the relevant guides…'}</span></div></div></article>}
+            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userQuestion}>{pendingQuestion}</div><div role="status" className={styles.thinking}><div><strong>Searching the documentation</strong><span>{turns.length ? 'Using the context from your conversation…' : 'Finding the relevant guides…'}</span></div></div></article>}
             {aiError && <div role="alert" className={styles.error}>{aiError}<button onClick={() => ask(failedQuestion)}>Retry question</button></div>}
           </>}
         </div>
         {mode === 'ai' && <form className={styles.composer} onSubmit={event => {event.preventDefault(); ask();}}>
-          <div className={styles.composerField}><textarea ref={composer} aria-label="Ask a question about LiteLLM" placeholder={turns.length ? 'Ask a follow-up…' : 'Ask anything about LiteLLM…'} value={draft} maxLength={500} rows={2} disabled={asking}
+          <div className={styles.composerField}><textarea ref={composer} aria-label="Ask a question about LiteLLM" placeholder={turns.length ? 'Ask a follow-up…' : 'Ask a question…'} value={draft} maxLength={500} rows={2} disabled={asking}
             onChange={event => setDraft(event.target.value)} onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); ask();}}}/>
-            {asking ? <button type="button" className={styles.stop} onClick={stopAnswer} aria-label="Stop answer">■</button> : <button className={styles.send} type="submit" disabled={!draft.trim()} aria-label="Send question"><Icon name="send"/></button>}
+            {asking ? <button type="button" className={styles.stop} onClick={stopAnswer} aria-label="Stop answer">Stop</button> : <button className={styles.send} type="submit" disabled={!draft.trim()} aria-label="Send question">Send</button>}
           </div><p>AI can make mistakes. Check the sources. <span>Enter to send · Shift + Enter for a new line</span></p>
         </form>}
         <footer className={styles.footer}><span>{mode === 'search' ? <><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>↵</kbd> open</> : 'History clears on refresh · Uses our AI gateway'}</span><span>LiteLLM Docs</span></footer>
