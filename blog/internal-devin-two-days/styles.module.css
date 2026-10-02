@@ -3,6 +3,7 @@
   --ink: #12142b;
   --muted: #6b6f8c;
   --line: rgba(18, 20, 43, 0.12);
+  --return: #0017b7;
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -14,6 +15,7 @@
   --ink: #eceefe;
   --muted: #9296b8;
   --line: rgba(236, 238, 254, 0.15);
+  --return: #7085ff;
 }
 
 .heading {
@@ -50,11 +52,33 @@
 }
 
 .product {
-  max-width: 1120px;
-  margin: 44px auto 0;
+  max-width: 1440px;
+  margin: 32px auto 0;
 }
 
+.stage { position: relative; aspect-ratio: 1400 / 720; }
+.flow { display: block; width: 100%; height: 100%; overflow: visible; }
+.field { fill: var(--muted); opacity: 0.14; }
+.track { stroke: var(--muted); opacity: 0.18; stroke-width: 2; stroke-dasharray: 1 8; }
+.particles { stroke-width: 4; stroke-dasharray: 1 19; animation: travel 6s linear infinite; }
+.returning { stroke: var(--return); stroke-width: 3; animation-duration: 9s; }
+.endpoint { fill: var(--ifm-background-color); stroke: var(--line); stroke-width: 1; }
+.sourceLabel, .workerLabel, .caseLabel, .groupLabel, .returnLabel { fill: var(--muted); font: 13px var(--ifm-font-family-monospace); }
+.sourceLabel { text-anchor: middle; fill: var(--ink); }
+.workerLabel { fill: var(--ink); font-weight: 500; }
+.caseLabel { font-size: 11px; }
+.groupLabel { font-size: 12px; }
+.returnLabel { font-size: 12px; }
+.sessionLabel { position: absolute; top: 4%; left: 17.5%; width: 60.7%; text-align: center; font-size: 16px; font-weight: 500; line-height: 1.5; }
+.sessionLabel span { display: block; color: var(--muted); font: 12px/1.5 var(--ifm-font-family-monospace); font-weight: 400; }
+@keyframes travel { to { stroke-dashoffset: -120; } }
+.product[data-paused='true'] .particles { animation-play-state: paused; }
+
 .window {
+  position: absolute;
+  top: 16.7%;
+  left: 17.5%;
+  width: 60.7%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -71,12 +95,20 @@
 }
 
 .product figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
   margin-top: 13px;
   text-align: center;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
 }
+
+.motionToggle { border: 0; border-bottom: 1px solid var(--line); padding: 2px 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.motionToggle:hover, .motionToggle:focus-visible { color: var(--ink); }
 
 .stack {
   display: flex;
@@ -130,10 +162,20 @@
   .hero { padding: 40px 20px 0; }
   .date { font-size: 10px; margin-bottom: 18px; }
   .heading .subtitle { max-width: 300px; margin: 20px auto 0; }
-  .product { margin-top: 28px; }
-  .window { border-radius: 8px; }
+  .product { margin-top: 22px; }
+  .stage { aspect-ratio: auto; padding: 40px 0 14px; }
+  .flow { position: absolute; top: 0; left: -20px; width: calc(100% + 40px); height: 100%; opacity: 0.4; }
+  .flow text, .flow .endpoint { display: none; }
+  .sessionLabel { top: 0; left: 0; width: 100%; font-size: 12px; }
+  .sessionLabel span { font-size: 9px; }
+  .window { position: relative; top: auto; left: auto; width: 100%; border-radius: 8px; }
   .product figcaption { font-size: 10px; }
   .stack { justify-content: center; flex-wrap: wrap; margin-top: 28px; font-size: 11px; gap: 10px 20px; }
   .contents { margin-top: 32px; }
   .contents a { font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particles { animation: none; }
+  .motionToggle { display: none; }
 }
