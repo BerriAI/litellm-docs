@@ -24,7 +24,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 - **One-click setup.** Configure automatically checks the models your proxy already serves and fills all four tiers for you; no template to pick.
 - **One model name in your clients.** The gateway classifies each request and picks the model.
 - **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
-- **Classifier choices.** Heuristics, an LLM, JEV through TypeSafe System One Choice, keyword rules, or a custom plugin
+- **Classifier choices.** Heuristics, an LLM, Jev or Laya through System One Choice, keyword rules, or a custom plugin
 - **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
 - **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
 
@@ -82,7 +82,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
-To use TypeSafe System One for classification, choose `classifier_type: jev` and configure `jev_classifier_config`. Start with [JEV setup](/docs/auto_router/setup#jev-classifier-typesafe-ai) and review its [context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier)
+To use Jev or Laya for classification, choose **Decision Model** in the editor, or set `classifier_type: jev` with a `jev_classifier_config`. The [Decision Model guide](/docs/auto_router/decision_models) covers provider connections and self-hosted Laya setup. Start with [JEV setup](/docs/auto_router/setup#jev-classifier-typesafe-ai) and review its [context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier)
 
 <NavigationCards
 columns={3}

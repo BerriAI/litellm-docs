@@ -94,7 +94,7 @@ litellm --config config.yaml
 
 ### Create or edit in the dashboard
 
-In **Models + Endpoints**, open **Auto Router** and add a router, or edit an existing router. Configure its tier models, then choose **JEV Classifier** under **Classification Method** in Detailed Configuration
+In **Models + Endpoints**, open **Auto Router** and add a router, or edit an existing router. Configure its tier models, then choose **Decision Model** under **Classification Method** in Detailed Configuration and select **Jev (TypeSafe)**. To use a self-hosted Laya deployment instead, follow the [Decision Model guide](/docs/auto_router/decision_models)
 
 Set **JEV Model** (`jev-latest` by default) and **JEV Timeout (ms)** (`3000` by default). Review the circuit breaker, classifier fallback, **Context Window Size**, **Context Character Budget**, and assistant-turn setting. Enterprise users can replace the built-in rubric with **JEV Instructions**, or restore the built-in instructions
 
