@@ -36,7 +36,7 @@ Before you begin, ensure you have:
 
 ## Option 1: LiteLLM extension for VS Code
 
-The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort menu in the chat toolbar, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
+The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort option in the model picker, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
 
 ### Step 1: Build and install the extension
 
@@ -59,7 +59,7 @@ The Language Models editor now lists the chat models that key can reach under th
 
 ### Step 3: Pick a model and its reasoning effort
 
-Open the chat view and click the model name in the toolbar. The gateway's models are listed with their price per 1M tokens, and hovering a model shows its context limits and the reasoning efforts it supports. After picking a model that supports reasoning efforts, the toolbar shows a Reasoning Effort control whose choices are the efforts the gateway reports for that model plus `Gateway default`, which sends no `reasoning_effort` and lets the proxy's own default apply.
+Open the chat view and click the model name in the toolbar. The gateway's models are listed with their price per 1M tokens, and hovering a model shows its context limits and the reasoning efforts it supports. After picking a model that supports reasoning efforts, the model picker shows a Reasoning Effort option whose choices are the efforts the gateway reports for that model plus `Gateway default`, which sends no `reasoning_effort` and lets the proxy's own default apply.
 
 ### Keeping the list current
 
