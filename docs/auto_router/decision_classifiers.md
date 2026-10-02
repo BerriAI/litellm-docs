@@ -11,7 +11,7 @@ Jev is available through TypeSafe's hosted API. Nimble and Laya are open models 
 | Classifier | Where it runs | Classifier model | `opensource_classifier_config.provider` |
 | --- | --- | --- | --- |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
-| [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
+| [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 
 All three use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
@@ -67,7 +67,7 @@ For a router-specific endpoint, supply both `api_base` and its matching `api_key
 
 ### Nimble: self-hosted System One server
 
-Deploy Bespoke's [System One server](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) with the [published Nimble checkpoint](https://github.com/bespokelabsai/nimble#quickstart). Use a server you control; the public demo's availability and authentication can change
+Deploy Bespoke's [System One server](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) with the [published Nimble checkpoint](https://github.com/bespokelabsai/nimble#quickstart), or run `ollama pull nimble` on [Ollama](https://ollama.com/library/nimble) 0.35 or later, which serves the same endpoint at `http://localhost:11434` under the model name `nimble`. Use a server you control; the public demo's availability and authentication can change
 
 Set the server's reachable base URL in the gateway process:
 
@@ -84,7 +84,7 @@ opensource_classifier_config:
   timeout_ms: 30000
 ```
 
-The server must accept `POST /v1/systemone` with `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B`. An OpenAI-compatible chat endpoint alone is insufficient. The `bespoke` provider is separate from LiteLLM's unrelated Nimble search integration
+The server must accept `POST /v1/systemone` with `nimble-latest`, `nimble` or `bespokelabs/Bespoke-Nimble-9B`; set `model` to the name your server answers to, so `nimble` for Ollama. An OpenAI-compatible chat endpoint alone is insufficient. The `bespoke` provider is separate from LiteLLM's unrelated Nimble search integration
 
 `BESPOKE_API_KEY` is optional and sends a bearer credential to `BESPOKE_API_BASE`. An administrator can instead configure `api_base` and optional `api_key` on this router. An explicit endpoint without a key connects without authentication and never inherits the environment key. Warm the model before measuring latency; adjust the timeout for your server
 
@@ -153,7 +153,7 @@ Configure the matching server URL, then use a LiteLLM virtual key with access to
 | Provider | Gateway endpoint | Body `model` | Virtual-key model permission |
 | --- | --- | --- | --- |
 | Laya | `/laya/v1/systemone` | `english` | `laya/english` |
-| Bespoke Nimble | `/bespoke/v1/systemone` | `nimble-latest` | `bespoke/nimble-latest` |
+| Bespoke Nimble | `/bespoke/v1/systemone` | `nimble-latest` (`nimble` on Ollama) | `bespoke/nimble-latest` (`bespoke/nimble` on Ollama) |
 
 The following Laya example also works for Nimble after replacing the endpoint and body model with the Nimble row:
 
