@@ -15,7 +15,7 @@ import Image from '@theme/IdealImage';
 |---|---|
 | Config file | `~/.codex/config.toml` |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key` |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](#sign-in-with-litellm-sso) |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
 
@@ -76,6 +76,31 @@ Codex shows the model in its startup header and routes the task through the gate
 Ask Codex to make a small change, then check the Admin UI under **Logs** or **Usage**; the request appears under `/v1/responses`, attributed to your virtual key and the model you selected.
 
 The row carries no end user yet, since Codex has no setting that puts one in the request body. To attribute each request to a developer, customer, or project instead, add a LiteLLM tracking header to the provider block with `http_headers` or `env_http_headers`; see [Codex CLI granular cost tracking](../../tutorials/codex_customer_tracking.md).
+
+## Sign in with LiteLLM SSO
+
+In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
+
+Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
+
+```toml title="~/.codex/config.toml"
+model_provider = "litellm"
+
+[model_providers.litellm]
+name = "LiteLLM"
+base_url = "https://litellm.example.com/v1"
+wire_api = "responses"
+
+[model_providers.litellm.auth]
+command = "/absolute/path/to/lite"
+args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
+timeout_ms = 30000
+refresh_interval_ms = 300000
+```
+
+Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
+
+Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
 
 ## MCP setup
 
