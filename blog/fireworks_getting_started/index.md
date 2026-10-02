@@ -8,6 +8,7 @@ description: "A beginner tutorial: run an open model on Fireworks AI behind a Li
 keywords: [fireworks ai, litellm tutorial, ai gateway, open models, getting started, openai compatible, llm proxy]
 tags: [tutorial, providers, fireworks, getting-started]
 hide_table_of_contents: false
+image: ./hero.png
 ---
 
 Fireworks AI is one of the largest open model inference platforms, serving more than 40 trillion tokens a day for companies including Uber, Notion, DoorDash, and Cursor. LiteLLM is the most widely used open source AI gateway, with over 240 million Docker pulls. Together they give you fast, low-cost open models behind a single OpenAI-compatible endpoint that tracks every token you spend.

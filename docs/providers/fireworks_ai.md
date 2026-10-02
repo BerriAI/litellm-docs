@@ -8,6 +8,10 @@ import TabItem from '@theme/TabItem';
 **We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when sending completion requests**
 :::
 
+:::tip
+New to running Fireworks AI behind LiteLLM? [Getting Started with Fireworks AI on LiteLLM](/blog/fireworks-getting-started) goes from an empty directory to a working request, then adds a second model and a fallback.
+:::
+
 | Property | Details |
 |-------|-------|
 | Description | The fastest and most efficient inference engine to build production-ready, compound AI systems. |
