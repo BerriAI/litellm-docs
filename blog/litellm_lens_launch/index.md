@@ -83,9 +83,13 @@ Own your infra. Traces land in ClickHouse that you run, next to the LiteLLM gate
 
 Lens was built and designed with our launch partners
 
-<Partner href="https://www.mindfort.ai/" logo="/img/blog/litellm_lens_launch/partners/mindfort.svg" name="MindFort">
-  Autonomous security agents · mindfort.ai
-</Partner>
+<Partner
+  href="https://www.mindfort.ai/"
+  logo="/img/blog/litellm_lens_launch/partners/mindfort.svg"
+  name="MindFort"
+  quote="We are building the first end to end agent swarm platform for cybersecurity. MindFort uses thousands of agents that work together to find real exploitable vulnerabilities in runtime and safely roll out patches across thousands of live environments, autonomously and continuously. We are using Lens to power our internal applied AI research and our production engineering, letting us analyze hundreds of thousands of agent interactions at scale, while maintaining complete data sovereignty"
+  author="Akul Gupta, Co-founder & CTO, MindFort"
+/>
 
 ## Get started
 
