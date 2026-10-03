@@ -19,7 +19,8 @@
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
     "generate:social-card": "node scripts/social-card/index.cjs",
-    "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs"
+    "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
+    "test:optimize-images": "node --test plugins/optimize-images.test.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
