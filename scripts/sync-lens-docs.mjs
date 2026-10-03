@@ -77,6 +77,22 @@ export async function transformReadme(content, page, pages, revision, readFile, 
   return {content: frontmatter + provenance + parser.stringify(tree), assets};
 }
 
+export async function replaceDirectory(stage, destination, {rename = fs.rename, rm = fs.rm} = {}) {
+  const backup = stage + '-previous';
+  let hasBackup = true;
+  try { await rename(destination, backup); } catch (error) { if (error.code !== 'ENOENT') throw error; hasBackup = false; }
+  try {
+    await rename(stage, destination);
+  } catch (error) {
+    if (hasBackup) {
+      try { await rename(backup, destination); }
+      catch (restoreError) { throw new AggregateError([error, restoreError], 'Lens import failed; previous guides kept at ' + backup); }
+    }
+    throw error;
+  }
+  if (hasBackup) await rm(backup, {recursive: true, force: true});
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (args.length && (args.length !== 2 || args[0] !== '--source-dir')) {
@@ -113,8 +129,7 @@ async function main() {
         await fs.mkdir(path.dirname(target), {recursive: true});
         await fs.writeFile(target, content);
       }
-      await fs.rm(path.join(LENS_DIR, 'imported'), {recursive: true, force: true});
-      await fs.rename(stage, path.join(LENS_DIR, 'imported'));
+      await replaceDirectory(stage, path.join(LENS_DIR, 'imported'));
     } finally {
       await fs.rm(stage, {recursive: true, force: true});
     }
