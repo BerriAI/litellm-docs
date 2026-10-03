@@ -115,7 +115,7 @@ function BlogPostPageContent({children}) {
   useEmbedMode();
   const {metadata, assets} = useBlogPost();
   const {title, date, tags, authors, nextItem, prevItem, frontMatter} = metadata;
-  const coverImage = frontMatter.hide_cover ? undefined : (assets.image ?? frontMatter.image);
+  const coverImage = assets.image ?? frontMatter.image;
   const authorImages = assets.authorsImageUrls || [];
 
   if (frontMatter.custom_hero) {
