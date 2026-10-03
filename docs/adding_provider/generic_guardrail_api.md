@@ -259,6 +259,8 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        fire_and_forget: false  # default: false. Set to true for an observe-only guardrail that never blocks. See "Fire and forget" below.
+        fire_and_forget_max_inflight: 100  # default: 100. Maximum number of background calls in flight per worker when fire_and_forget is on.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -286,6 +288,20 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Fire and forget
+
+`fire_and_forget: true` turns the guardrail into an observe-only monitor. LiteLLM sends the guardrail call in the background and lets the request continue without waiting for it, so the guardrail adds no latency in any mode (`pre_call`, `during_call` or `post_call`). The endpoint still receives the same payload, URL and headers it would get from an awaited call.
+
+:::warning
+
+With `fire_and_forget` on, the guardrail can no longer block or change anything. `BLOCKED` and `GUARDRAIL_INTERVENED` answers are ignored, and `fail_on_error` and `unreachable_fallback` cannot stop a request. Use it only for a guardrail that monitors or audits traffic, never for one that has to enforce a policy.
+
+:::
+
+Each dispatched call is recorded in the guardrail logs with `guardrail_status: success` and a response saying the verdict was not read, the same way a fail-open passthrough is recorded, so it counts as a pass in the guardrail usage dashboard and compliance checks. A background call that fails is only logged as a warning. On a stream, the guardrail sends one call with the whole response at the end, even with `streaming_transform_mode: incremental_diff`, and the chunks reach the client as they arrive.
+
+`fire_and_forget_max_inflight` (default 100) caps how many background calls each worker keeps open for this guardrail, so a slow endpoint cannot pile them up. Calls beyond the cap are dropped and recorded as `not_run`. A background call uses the guardrail's `timeout` when one is set, or 30 seconds otherwise. A `fire_and_forget` value LiteLLM cannot read, such as `"maybe"`, is ignored with a warning, so the guardrail keeps enforcing. A `fire_and_forget_max_inflight` below 1 or not a whole number falls back to 100 with a warning.
 
 ### Static and dynamic headers
 
