@@ -47,7 +47,7 @@ Under **Advanced settings**, you can provide an **Estimator API key**. Otherwise
 
 Select **Start backfill**. The calculator reads spend, imports merged PRs, and estimates up to three PRs at a time. After setup, use **Run analysis** for a manual refresh or **Settings** to change the configuration. **Test connections** checks model access and repository access without running an estimate.
 
-Select **Preview sample report** to explore the calculator before or after setup. The demo opens in **Branches** with fictional PR costs, including a PR whose author has no email match and spending on an unmerged branch. Open a PR to see its cost, request count, and example tags. **Exit demo** returns to your live report or setup without changing saved data. Sample mode makes no source-provider or model requests.
+Select **Preview sample report** to explore the calculator before or after setup. The demo opens in **Branches** with fictional PR costs, including a PR whose author has no email match and spending on an unmerged branch. Open a PR to see its cost, request count, and example tags. **Exit demo** returns to your live report or setup without changing saved data. Sample mode makes no source-provider or model requests. To open the demo directly, add `?demo=1` to the calculator URL, for example `/roi-calculator/?demo=1`. Reloading that link keeps the sample report open; **Exit demo** removes the demo parameter.
 
 ## Read the report
 
