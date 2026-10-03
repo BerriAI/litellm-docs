@@ -36,6 +36,8 @@ Each cloud derives its default `max_connections` from instance memory, so the ce
 | Azure Database for PostgreSQL flexible server | Fixed per product name, 1,718 on 16GB (D4ds_v5) and 3,437 on 32GB (D8ds_v5), 15 reserved by the service | [Azure limits](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-limits#maximum-connections) |
 | Google Cloud SQL | Derived from instance memory, adjusts automatically when you resize unless you pin the flag | [Cloud SQL flags](https://cloud.google.com/sql/docs/postgres/flags#postgres-m) |
 
+Connections also run out when many pods wait on the same row. Every pod rolls its spend into shared daily rows (`LiteLLM_DailyUserSpend`, `LiteLLM_DailyToolSpend`, `LiteLLM_DailyModelUsage`), and a pod that waits for a row another pod is updating holds its pooled connection for as long as it waits. The proxy bounds that wait with `lock_timeout` on every rollup transaction (`SPEND_ROLLUP_LOCK_TIMEOUT_MS`, default 5000): a statement that waits longer is cancelled by Postgres before it applies, its rows are requeued for the next flush, and the connection goes back to the pool. If you suspect this, `SELECT query, count(*) FROM pg_stat_activity WHERE wait_event_type = 'Lock' GROUP BY query` during the incident shows which statement the waiters are queued behind.
+
 If you need more application connections than the instance can serve, put a pooler in front of it (RDS Proxy, the PgBouncer built into Azure flexible server, or your own) and set [`database_disable_prepared_statements: true`](./configs.md#disable-server-side-prepared-statements) so Prisma stops reusing server-side prepared statements across pooled sessions.
 
 ## Cloud recommendations
