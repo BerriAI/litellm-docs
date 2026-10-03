@@ -16,6 +16,13 @@ Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHou
 
 ![LiteLLM Lens architecture: your agent sends LLM calls and traces to LiteLLM, which stores traces in ClickHouse; the Lens worker polls LiteLLM for investigations.](/img/lens-architecture.svg)
 
+| Component | What it does | What we use |
+| --- | --- | --- |
+| LiteLLM proxy | Receives traces, serves the Lens UI and API | [`ghcr.io/berriai/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm) with [tracing enabled](#configure-an-existing-proxy) |
+| ClickHouse (new) | Stores traces and request logs | [`clickhouse/clickhouse-server:26.9.6.6`](https://hub.docker.com/r/clickhouse/clickhouse-server/tags?name=26.9.6.6) |
+| Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
+| PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database, or PostgreSQL from the new-installation bundle |
+
 Choose your starting point below. New installations can start all four services with Docker Compose. Existing users can keep their deployment and add only the services they need. If Lens is already installed, go to [upgrading](#upgrade-litellm-and-the-worker)
 
 <Tabs groupId="lens-install" queryString="install">
