@@ -685,6 +685,7 @@ const sidebars = {
           items: [
             "proxy/liteadmin_mcp",
             "proxy/liteadmin_slack",
+            "proxy/liteadmin_slack_native",
           ],
         },
         {

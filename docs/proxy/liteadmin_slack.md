@@ -13,6 +13,10 @@ import TabItem from '@theme/TabItem';
 
 The app bundles a pinned Admin MCP connector and launches it with the requesting user's credential. You do not need to register an MCP server in your gateway or deploy a separate connector.
 
+## Enterprise deployment
+
+To run LiteAdmin with the same image as your Enterprise gateway and use its existing login, follow [LiteAdmin with Enterprise SSO](./liteadmin_slack_native.md). This option needs an image containing the native integration. It uses a private worker and the gateway connection page, so it does not depend on support for hosted proxy API callbacks. The standalone deployment below remains available for existing installations
+
 ## Before you start
 
 - A LiteLLM gateway with HTTPS, a database, and a model that supports tool calling.
