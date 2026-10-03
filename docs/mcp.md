@@ -110,6 +110,16 @@ This video walks through adding and using an SSE MCP server on LiteLLM UI and us
 
 ### Add STDIO MCP Server
 
+:::warning stdio is off by default
+
+stdio MCP servers are disabled unless the proxy is started with `LITELLM_ENABLE_MCP_STDIO=true` in its environment. While it is off, the stdio transport is greyed out in the UI, creating or updating a stdio server returns an error, and existing stdio servers stay listed but never start: their tools are left out of tool listings, direct tool calls return `403`, and their health check reports them as unhealthy
+
+The flag is read from the proxy's process environment only. Setting it under `environment_variables` in config.yaml or in the database has no effect
+
+:::
+
+**Upgrading with existing stdio servers?** Add `LITELLM_ENABLE_MCP_STDIO=true` to the proxy's environment and restart it. Until you do, the proxy logs a warning naming each stdio server it will not start
+
 For stdio MCP servers, select "Standard Input/Output (stdio)" as the transport type and provide the stdio configuration in JSON format:
 
 <Image 
@@ -215,6 +225,7 @@ mcp_servers:
     url: "https://actions.zapier.com/mcp/sk-akxxxxx/sse"
   
   # Standard Input/Output (stdio) Server - CircleCI Example
+  # Requires LITELLM_ENABLE_MCP_STDIO=true in the proxy's environment
   circleci_mcp:
     transport: "stdio"
     command: "npx"
