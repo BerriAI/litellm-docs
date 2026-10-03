@@ -94,7 +94,7 @@ For GitHub, the repository tag looks like `repo:github.com/acme/api`. Use the so
 
 You can also send the same pair through the `x-litellm-tags` header. Configure your coding tool or wrapper to send both tags on each gateway request. See [Request tags](./request_tags.md) for client setup.
 
-Run analysis after the requests have been recorded. The calculator sums their recorded gateway costs across users and keys, so branch matching does not require an email match. Repeated identical tags count a request once. Missing tags or conflicting repository or branch tags exclude the request from branch attribution. Requests tagged `litellm-roi-estimator` are excluded.
+Run analysis after the requests have been recorded. The calculator sums their recorded gateway costs across users and keys, so branch matching does not require an email match. Repeated identical tags count a request once. Missing tags or conflicting repository or branch tags exclude the request from branch attribution. The calculator excludes its own estimation requests.
 
 **Branch spend per estimated hour** divides the cost of uniquely matched branches with successful estimates by those same changes' estimated hours. No tagged requests means unknown cost, displayed as **No tagged requests**. A recorded request costing zero is a real zero. When multiple merged changes in the report share a source branch, the calculator marks the branch ambiguous rather than charging the same spend twice. Unmatched or ambiguous costs remain visible as unallocated spend.
 
