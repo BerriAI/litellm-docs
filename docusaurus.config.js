@@ -101,6 +101,7 @@ const config = {
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
     require('./plugins/optimize-images'),
+    require('./plugins/webpack-cache'),
     require('./plugins/rust-migration-posts'),
     require('./plugins/social-cards'),
     [
