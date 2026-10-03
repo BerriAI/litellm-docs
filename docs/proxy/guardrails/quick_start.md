@@ -86,6 +86,25 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
 - A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
+### Observe only one direction with `logging_only_scope`
+
+A `logging_only` guardrail observes the request and the response by default. Set `logging_only_scope` under the guardrail's `litellm_params` to `input` to observe only the request, `output` to observe only the response, or `both` for the default. The scan never blocks or changes the client call in any of these cases; each verdict, including a block verdict, is recorded in `guardrail_information` on the spend log and counted in the Guardrails Monitor. A flagged request no longer stops the response from being observed when the scope is `both`
+
+```yaml
+guardrails:
+  - guardrail_name: "observe-responses"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_scope: output
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+`logging_only_scope` only narrows the `logging_only` scan. If the same guardrail also lists `pre_call` or `post_call`, those modes still run and still block, so `mode: [pre_call, logging_only]` with `logging_only_scope: output` blocks bad requests and records response verdicts without blocking them. To observe a direction without ever blocking it, leave the matching blocking mode out of `mode`
+
+At startup, whether loaded from a config file or stored database row, an invalid `logging_only_scope` is ignored with an error log and the guardrail keeps its configured mode. Through the API, a value other than `input`, `output` or `both` returns `422`, a scope the guardrail's mode or integration cannot use returns `400` on create and full update, and a PATCH that sets such a scope returns `422` and leaves the guardrail unchanged. `input` and `output` are only available for guardrails that run their `logging_only` scan through the shared `apply_guardrail` path; guardrails with their own logging hook, such as Presidio (which has `presidio_filter_scope`), ignore those directional scopes at startup
+
 ### Skip system messages in guardrail evaluation
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
@@ -739,6 +758,7 @@ guardrails:
       api_key: string          # Required: API key for the guardrail service
       api_base: string         # Optional: Base URL for the guardrail service
       default_on: boolean      # Optional: Default False. When set to True, will run on every request, does not need client to specify guardrail in request
+      logging_only_scope: string # Optional: "input", "output", or "both" (default). Direction observed by a logging_only scan
     guardrail_info:            # Optional[Dict]: Additional information about the guardrail
       
 ```
