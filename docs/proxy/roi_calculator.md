@@ -69,6 +69,8 @@ Use **Engineers** for per-person results, **Pull requests**, **Merge requests**,
 
 Merge time is elapsed time, not hours worked. A 30-second merge displays `<1m`. Bug labels and revert titles are repository signals, not a measured failure rate or an individual defect score. These comparisons show changes in recorded activity; they do not establish that AI caused those changes
 
+Bug and regression counts combine repositories with issue tracking enabled. They remain unavailable when none of the selected repositories has issue tracking enabled
+
 ### Link accounts
 
 Open **Link accounts**, choose an internal gateway email, and enter the person's current and historical usernames, separated by commas. GitHub and GitLab have separate fields for each connected host. One email can own multiple accounts on both providers. Identical usernames on different hosts remain separate identities
