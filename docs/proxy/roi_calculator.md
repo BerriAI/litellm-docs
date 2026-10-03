@@ -53,15 +53,15 @@ You can select **Preview sample report** before your first report to explore the
 
 ### Overview
 
-The overview has a **Spend basis** selector. **People** compares gateway usage with work by matched people. **Branches** compares tagged request costs with individual merged changes. Settings open from the top-right button; **Overview** and **People** remain the two report views.
+The overview has **By person** and **By branch** controls. **By person** compares gateway usage with work by matched people. **By branch** compares tagged request costs with individual merged changes. Settings open from the top-right button; **Overview** and **People** remain the two report views. The cost view stays selected when you switch between them.
 
-The default **People** basis shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and email coverage. Expand **Calculation details** to see the calculation and excluded spend.
+The default **By person** view shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and email coverage. Expand **How this is calculated** to see the calculation and excluded spend.
 
 For example, `$120` of matched spend divided by `30` estimated hours gives `$4` per estimated engineering hour. Both numbers come from the same set of eligible people and the same reporting period.
 
 The chart places daily gateway spend alongside estimated effort for PRs merged on each day. A PR's estimated hours appear on its merge date; this does not mean the work or its AI usage happened on that date. Dates and reporting boundaries use UTC, and the window includes the current day.
 
-The **Pull requests** table lists merged work. Select a PR to see its estimated hours, reasoning, model, merge date, and email match. **View on GitHub** or **View on GitLab** opens the original change. In branch mode, the table also shows tagged spend. Open a change to see its exact cost, request count, and the tags to send.
+The **Merged work** table lists merged pull requests or merge requests. In the **By branch** view, it is titled **Costs by branch**. Select a PR to see its estimated hours, reasoning, model, merge date, and email match. **View on GitHub** or **View on GitLab** opens the original change. In branch mode, the table also shows tagged spend. Open a change to see its exact cost, request count, and the tags to send.
 
 ### People and email matching
 
@@ -81,7 +81,7 @@ Unmatched spend remains visible as excluded spend. PR email coverage measures em
 
 ## Attribute actual request costs to branches
 
-In **Overview**, choose **Branches**. Send a repository tag and a branch tag together on each model request through LiteLLM:
+In **Overview**, choose **By branch**. Send a repository tag and a branch tag together on each model request through LiteLLM:
 
 ```json
 {
