@@ -2325,19 +2325,6 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 }
 /* end litellm.harness docs */
 
-.theme-doc-markdown .lens-dependencies div[class*="codeBlockContainer"] {
-  margin-bottom: 12px;
-}
-
-.theme-doc-markdown .lens-dependencies pre code {
-  display: block;
-  padding: 12px 16px;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 .tabs-container:has(> ul.lens-framework-tabs) [class*="codeBlockTitle"] {
   padding: 6px 16px;
   font-size: 12px;
