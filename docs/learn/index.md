@@ -8,6 +8,18 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 LiteLLM gives you one OpenAI-compatible interface for 100+ LLM providers. Start with the path that matches your setup.
 
+<NavigationCards
+columns={1}
+items={[
+  {
+    title: "LiteLLM Academy",
+    description: "Get started with our interactive course. Learn the fundamentals every platform admin needs, from gateway setup and access control to routing and observability.",
+    ctaLabel: "Get started",
+    to: "https://litellm.ai/course",
+  },
+]}
+/>
+
 ---
 
 ## Start Here
@@ -108,8 +120,14 @@ items={[
 Use these when you already know the type of doc you want.
 
 <NavigationCards
-columns={2}
+columns={3}
 items={[
+  {
+    icon: "🎓",
+    title: "LiteLLM Academy",
+    description: "Guided course on how the gateway handles requests, routing, access, and costs.",
+    to: "https://litellm.ai/course",
+  },
   {
     icon: "📚",
     title: "Guides",

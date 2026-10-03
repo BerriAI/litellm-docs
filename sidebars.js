@@ -39,6 +39,7 @@ const sidebars = {
             "observability/opentelemetry_v2_migration",
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
+            "observability/signoz",
           ],
         },
         {
@@ -80,7 +81,6 @@ const sidebars = {
             "observability/parseable",
             "observability/posthog_integration",
             "observability/sentry",
-            "observability/signoz",
             "observability/slack_integration",
             "observability/splunk_observability_cloud",
             "observability/sumologic_integration",
@@ -336,6 +336,7 @@ const sidebars = {
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
         { type: "doc", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
+        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness" },
       ]
     },
     {
@@ -365,6 +366,7 @@ const sidebars = {
       collapsed: false,
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
+        { type: "doc", id: "agent_resources", label: "Agent resources" },
         { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
         { type: "link", label: "Changelog", href: "/release_notes" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
@@ -436,6 +438,62 @@ const sidebars = {
             },
           ],
         },
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents, Tool Loop).
+        // Styled by the "litellm.harness docs" block in src/css/custom.css.
+        {
+          type: "category",
+          label: "Agent Harnesses",
+          className: "harness-sidebar",
+          items: [
+            {
+              type: "category",
+              label: "Getting started",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                { type: "doc", id: "harness/index", label: "Overview" },
+                { type: "doc", id: "harness/gateway", label: "Using with AI Gateway" },
+              ],
+            },
+            {
+              type: "category",
+              label: "Harnesses",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                "harness/supported",
+                "harness/claude_code",
+                "harness/codex",
+                "harness/opencode",
+                "harness/deepagents",
+                "harness/tool_loop",
+              ],
+            },
+            {
+              type: "category",
+              label: "Guides",
+              className: "harness-group",
+              collapsible: false,
+              items: [
+                "harness/quickstart",
+                "harness/models",
+                "harness/sessions",
+                "harness/events",
+                "harness/sandboxes",
+                "harness/tools",
+                "harness/permissions",
+                "harness/structured_output",
+              ],
+            },
+            {
+              type: "category",
+              label: "Reference",
+              className: "harness-group",
+              collapsible: false,
+              items: ["harness/api_reference", "harness/errors"],
+            },
+          ],
+        },
         {
           type: "category",
           label: "Configuration",
@@ -468,6 +526,42 @@ const sidebars = {
             "proxy/client_setup/claude_desktop",
             "proxy/client_setup/codex_chatgpt_desktop",
             "proxy/client_setup/codex_cli",
+            {
+              type: "category",
+              label: "Enterprise sign-in and billing",
+              items: [
+                {
+                  type: "link",
+                  label: "Claude Code Gateway",
+                  href: "/docs/tutorials/claude_code_gateway",
+                },
+                {
+                  type: "link",
+                  label: "Claude Desktop Cowork",
+                  href: "/docs/tutorials/claude_desktop_cowork",
+                },
+                {
+                  type: "link",
+                  label: "CLI SSO",
+                  href: "/docs/proxy/cli_sso",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code Okta SSO",
+                  href: "/docs/tutorials/claude_code_okta_sso",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code BYOK",
+                  href: "/docs/tutorials/claude_code_byok",
+                },
+                {
+                  type: "link",
+                  label: "Claude Code Max Subscription",
+                  href: "/docs/tutorials/claude_code_max_subscription",
+                },
+              ],
+            },
           ],
         },
         {
@@ -871,7 +965,16 @@ const sidebars = {
             "proxy/headroom",
           ],
         },
+        { type: "doc", id: "proxy/roi_calculator", label: "ROI Calculator" },
       ]
+    },
+    {
+      type: "category",
+      label: "LiteLLM Lens",
+      link: { type: "doc", id: "proxy/lens" },
+      items: [
+        { type: "doc", id: "proxy/lens/coding_agents", label: "Coding agent sessions" },
+      ],
     },
     {
       type: "category",
@@ -1529,6 +1632,7 @@ const learnSidebar = {
   learnSidebar: [
     // ── Landing page ──────────────────────────────────────────────────
     { type: "doc", id: "learn/index", label: "Learn" },
+    { type: "link", label: "LiteLLM Academy", href: "https://litellm.ai/course" },
     {
       type: "category",
       label: "Start Here",
@@ -1828,6 +1932,7 @@ const autoRouterSidebar = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/decision_classifiers", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },

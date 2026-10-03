@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.102.0: Auto Router Controls, Native OCR & Gateway Reliability](/release_notes/v1.102.0/v1-102-0)
+### [v1.103.0: Config File Ownership, Fuse Routing & Gateway Hardening](/release_notes/v1.103.0/v1-103-0)
 
-_September 19, 2026_
+_September 27, 2026_
 
-Auto Router gains custom heuristic dimensions, editable scoring weights, an optional NON_REASONING tier, per-tier output limits, healthier tier fallbacks, and routed-model and session-savings feedback in coding agents; OCR runs natively by default across supported providers, alongside Meta Muse Voice realtime transcription, Mistral text-to-speech, Vertex Lyria music, and native Fireworks Responses. Gateway reliability adds optional shared PgBouncer connections and a spend collector, fewer database and Redis calls, stable behavior through Redis outages, and request and token-based autoscaling controls. The MCP gateway, logging, and guardrails pick up schema-discovery proxy mode, better OAuth compatibility and permission enforcement, configurable OTel trace URLs with HTTP/JSON export, PointFive logging, and Conduct Guard, alongside 99 new model catalog entries. This stable also folds in request-body hygiene, spend-tracking, routing, and license fixes backported after the rc.1 cut. Review the release's Breaking Changes section before upgrading.
+The config file now owns every setting it declares, with one precedence rule across the settings APIs, `source` and `editable` flags on both read endpoints, read-only fields in the Admin UI, and a startup warning for each stored value the file is ignoring. Auto Router adds a capability classifier, Fuse v2 forecasting, per-model Fast mode, maintained Fuse presets and TypeSafe JEV. Gateway hardening covers MCP client allowlisting, live session visibility, delegated OAuth admission, RFC 8693 token exchange and per-issuer JWT key scoping, and spend controls add per-member organization spend, additive project budgets, team-level `model_max_budget`, temporary budget increases and budgets re-checked on fallback targets, alongside 408 new model catalog entries. This stable also folds in prompt caching, streaming, JWT and proxy reliability fixes backported after the rc.1 cut, and reverts the rc.1 top-N key cap on the Usage pages. Review the release's Breaking Changes section before upgrading
 
 ---
 
@@ -22,6 +22,7 @@ Auto Router gains custom heuristic dimensions, editable scoring weights, an opti
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
 | [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
 | [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
 | [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
