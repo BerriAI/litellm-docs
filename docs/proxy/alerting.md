@@ -188,6 +188,35 @@ general_settings:
   ] 
 ```
 
+### Filter Slack budget alerts by key alias
+
+:::note Pending release
+
+This setting is proposed in [LiteLLM PR #44359](https://github.com/BerriAI/litellm/pull/44359). Use it only after the implementation is included in your proxy version
+
+:::
+
+Set `general_settings.alerting_args.slack_budget_alert_key_aliases` to receive Slack budget alerts only for matching virtual key aliases:
+
+```yaml
+general_settings:
+  alerting: ["slack"]
+  alert_types: ["budget_alerts"]
+  alerting_args:
+    slack_budget_alert_key_aliases:
+      - "github-example-*"
+```
+
+Patterns are nonempty strings matched against the whole alias with Python's case-sensitive `fnmatchcase` glob rules. Exact aliases, `*`, `?` and character classes such as `[ab]` are supported. Any matching pattern allows the alert
+
+Omitting the setting or using `null` preserves existing behavior. An empty list `[]` disables Slack budget alerts. With a list configured, only key-budget events with a present, nonempty matching `key_alias` reach Slack. Non-key budgets, including user, team, organization, project and proxy budgets, are excluded even if they carry an associated key alias
+
+The filter applies to immediate and digest Slack `budget_alerts`. Budget enforcement, spend tracking and thresholds are unchanged. Webhook, email, Microsoft Teams and other Slack alert types are unaffected
+
+An excluded event does not consume Slack's budget dedup window. When its alias becomes allowed, the next eligible budget event can enter Slack without waiting for another destination's cache to expire. Already accepted Slack alerts retain the configured `budget_alert_ttl`, and changing the filter does not retract queued messages or accumulated digests. Reloading the filter does not scan existing budgets or send a notification by itself. Budget events cached before upgrading retain their existing shared dedup TTL until it expires
+
+The manual `/health/services?service=slack` budget test has no key alias and is suppressed when this filter is configured, even if the endpoint reports success. Omit the setting or use `null` to check Slack connectivity with that test
+
 ### Map slack channels to alert type
 
 Use this if you want to set specific channels per alert type
@@ -595,6 +624,7 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | `daily_report_frequency` | 43200 (12 hours) | Frequency of receiving deployment latency/failure reports in seconds |
 | `report_check_interval` | 300 (5 minutes) | How often to check if a report should be sent (background process) in seconds |
 | `budget_alert_ttl` | 86400 (24 hours) | Cache TTL for budget alerts to prevent spam when budget is crossed |
+| `slack_budget_alert_key_aliases` | `null` | Proposed in PR #44359: case-sensitive virtual-key alias globs for Slack budget alerts; `[]` disables them |
 | `outage_alert_ttl` | 60 (1 minute) | Time window for collecting model outage errors in seconds |
 | `region_outage_alert_ttl` | 60 (1 minute) | Time window for collecting region-based outage errors in seconds |
 | `minor_outage_alert_threshold` | 5 | Number of errors that trigger a minor outage alert (400 errors not counted) |
