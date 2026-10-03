@@ -163,7 +163,7 @@ The chart selects matching gateway and worker images and connects the worker to 
 
 You choose when to upgrade. Publishing a new release does not update existing containers. Keep LiteLLM and the worker on matching release versions; PostgreSQL and ClickHouse have their own versions and do not need upgrading with every LiteLLM release
 
-Read the release notes, back up your databases, and let active investigations finish before upgrading. Preserve your configuration, database volumes, master key, salt key, and worker token. Worker setup is performed once; you do not need a new token for each release
+Read the release notes, back up your databases, pause scheduled investigations, and let active investigations finish before upgrading. Preserve your configuration, database volumes, master key, salt key, and worker token. Worker setup is performed once; you do not need a new token for each release
 
 <Tabs groupId="lens-upgrade">
 <TabItem value="compose" label="Docker Compose" default>
@@ -191,19 +191,29 @@ For a worker started with `docker run`, use your saved install command with the 
 </TabItem>
 <TabItem value="helm" label="Helm">
 
-Upgrade the componentized chart using your existing release name, namespace, values, and token Secret. Replace `X.Y.Z` with the target chart version:
+Upgrade the componentized chart using your existing release name, namespace, values, and token Secret. Replace `X.Y.Z` with the target chart version. Keep workers paused until all LiteLLM pods have finished upgrading, then restore the worker count from your values:
 
 ```bash
 helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --namespace litellm --version X.Y.Z -f values.yaml
+  --namespace litellm --version X.Y.Z -f values.yaml \
+  --set lensWorker.replicaCount=0 --wait
+
+kubectl -n litellm wait --for=delete pod \
+  -l app.kubernetes.io/instance=litellm,app.kubernetes.io/component=lens-worker \
+  --timeout=120s
+
+helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
+  --namespace litellm --version X.Y.Z -f values.yaml --wait
 ```
 
-The chart selects matching LiteLLM and worker images. If you explicitly set image tags in your values, update those overrides too so they do not hold either component on an older version. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
+The chart selects matching LiteLLM and worker images. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
+
+If you explicitly set image tags in your values, update those overrides too so they do not hold either component on an older version. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
 
 </TabItem>
 </Tabs>
 
-After any upgrade, check for **Worker connected** in the dashboard and run an investigation. The gateway checks compatibility before handing out work. An outdated worker waits with an upgrade message, leaving queued investigations untouched; update its image to resume work
+After any upgrade, check for **Worker connected** in the dashboard, run an investigation, and restore any schedules you paused. The gateway checks compatibility before handing out work. An outdated worker waits with an upgrade message, leaving queued investigations untouched; update its image to resume work
 
 RC and dev releases follow the same process using matching version suffixes. Hourly development deployments build the gateway and worker from the same selected commit
 
