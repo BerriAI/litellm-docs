@@ -20,11 +20,32 @@ All three use the System One decision protocol. LiteLLM sends a `choice` questio
 
 The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
 
-For Jev or Nimble on a released build, keep `classifier_type: jev` and `jev_classifier_config` as shown in the [Jev setup guide](/docs/auto_router/setup#jev-classifier-typesafe-ai). The new backend continues to accept those names; see [migration](#migrate-an-existing-jev-or-nimble-router).
+Existing Jev-compatible configurations can keep `classifier_type: jev` and `jev_classifier_config`. For new routers, use the canonical names below; see [migration](#migrate-an-existing-jev-or-nimble-router) when upgrading an existing router.
 
 :::
 
-## Configure the router
+## Configure from the dashboard
+
+First start a [Nimble](#nimble-self-hosted-system-one-server) or [Laya](#laya-self-hosted-http-server) server and set its connection variables on the gateway. The dashboard selects the classifier; it does not deploy the classifier server.
+
+| Dashboard provider | Gateway base URL variable | Optional gateway bearer-key variable | Classifier Model |
+| --- | --- | --- | --- |
+| **Laya** | `LAYA_API_BASE` | `LAYA_API_KEY` | `english`, `multilingual` or `typed-decisions` |
+| **Bespoke Nimble** | `BESPOKE_API_BASE` | `BESPOKE_API_KEY` | `nimble-latest`, `nimble` or `bespokelabs/Bespoke-Nimble-9B` |
+
+Set each base URL to the classifier server's root, for example `http://laya-server:8000` or `http://nimble-server:8000`. LiteLLM appends `/v1/systemone`. If the server requires a bearer key, configure its matching key in the gateway environment. Restart the gateway after changing its environment.
+
+1. Open **Models + Endpoints → Auto Router** and create or edit a router.
+2. Under **What classifies your requests?**, select **OSS Classifier**. Under **OSS provider**, choose **Laya** or **Bespoke Nimble**.
+3. Set **Classifier Model** to a name your server supports and **Classifier Timeout (ms)** to a value appropriate for that server. Start with `15000` for Laya or `30000` for Nimble, then tune after warming the model.
+4. Assign existing completion deployments to the `SIMPLE`, `MEDIUM`, `COMPLEX` and `REASONING` tiers, and choose a default model.
+5. Use **Test Routing** with representative prompts, inspect the classifier result, then save the router. Send client requests to the router's model name as shown [below](#test-routing-and-send-a-request).
+
+Built-in OSS classification uses the shipped tier criteria and is available without a LiteLLM license. Custom instructions and custom tiers follow the dashboard's displayed allowance.
+
+Administrators can configure connection overrides through the management API. The dashboard edits model and classifier options while the gateway owns the connection. Saving the same provider preserves its stored connection; changing providers drops the previous provider's endpoint and key. Team members cannot submit endpoint or credential overrides through the management API.
+
+## Configure the router in YAML {#configure-the-router}
 
 Start with this complete configuration, then choose the classifier connection below. `small-solver` and `large-solver` are public deployment names; replace their underlying models with models your gateway can access:
 
@@ -67,7 +88,7 @@ For a router-specific endpoint, supply both `api_base` and its matching `api_key
 
 ### Nimble: self-hosted System One server
 
-Deploy Bespoke's [System One server](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) with the [published Nimble checkpoint](https://github.com/bespokelabsai/nimble#quickstart), or run `ollama pull nimble` on [Ollama](https://ollama.com/library/nimble) 0.35 or later, which serves the same endpoint at `http://localhost:11434` under the model name `nimble`. Use a server you control; the public demo's availability and authentication can change
+Deploy Bespoke's [System One server](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md) with the [published Nimble checkpoint](https://github.com/bespokelabsai/nimble#quickstart), or run `ollama pull nimble` on [Ollama](https://ollama.com/library/nimble) 0.35 or later, which serves the same endpoint at `http://localhost:11434` under the model name `nimble`. Use a server you control; the public demo's availability and authentication can change.
 
 Set the server's reachable base URL in the gateway process:
 
@@ -84,9 +105,9 @@ opensource_classifier_config:
   timeout_ms: 30000
 ```
 
-The server must accept `POST /v1/systemone` with `nimble-latest`, `nimble` or `bespokelabs/Bespoke-Nimble-9B`; set `model` to the name your server answers to, so `nimble` for Ollama. An OpenAI-compatible chat endpoint alone is insufficient. The `bespoke` provider is separate from LiteLLM's unrelated Nimble search integration
+The server must accept `POST /v1/systemone` with `nimble-latest`, `nimble` or `bespokelabs/Bespoke-Nimble-9B`; set `model` to the name your server answers to, so `nimble` for Ollama. For Ollama on the gateway's host, use `BESPOKE_API_BASE="http://localhost:11434"` instead of the example's port `8000`. An OpenAI-compatible chat endpoint alone is insufficient. The `bespoke` provider is separate from LiteLLM's unrelated Nimble search integration.
 
-`BESPOKE_API_KEY` is optional and sends a bearer credential to `BESPOKE_API_BASE`. An administrator can instead configure `api_base` and optional `api_key` on this router. An explicit endpoint without a key connects without authentication and never inherits the environment key. Warm the model before measuring latency; adjust the timeout for your server
+`BESPOKE_API_KEY` is optional and sends a bearer credential to `BESPOKE_API_BASE`. An administrator can instead configure `api_base` and optional `api_key` on this router. An explicit endpoint without a key connects without authentication and never inherits the environment key. Warm the model before measuring latency; adjust the timeout for your server.
 
 ### Laya: self-hosted HTTP server
 
@@ -128,7 +149,7 @@ Start LiteLLM from its own environment after configuring the completion-provider
 litellm --config config.yaml
 ```
 
-In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier`; Laya reports a classifier model such as `laya/english`.
+In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for all three providers. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available.
 
 Use a LiteLLM virtual key with access to `decision-router` to make a completion:
 
@@ -142,9 +163,7 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-In dashboards containing [UI #43768](https://github.com/BerriAI/litellm/pull/43768), select **OSS Classifier** in the auto-router form, then **Jev** or **Laya**. Builds containing the Nimble integration also offer **Bespoke Nimble**. Older dashboards label the classifier **JEV Classifier**.
-
-Administrators can configure connection overrides. Team members cannot submit classifier endpoint or credential overrides through the management API. The dashboard edits model and classifier options while the gateway owns the connection. Saving the same provider preserves its stored connection; changing providers drops the previous provider's endpoint and key. Use the management API to explicitly replace or clear connection overrides.
+If the provider is missing from the dashboard, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
 
 ## Call a native decision API
 
