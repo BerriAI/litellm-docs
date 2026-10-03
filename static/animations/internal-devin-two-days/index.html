@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moyai: our internal Devin in the cloud</title>
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:Geist;src:url('assets/geist-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('assets/geist-mono-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+:root{--bg:#faf8f2;--ink:#222443;--paper:#fffefa;--muted:#64647a;--cloud:#d4d3fa;--blue:#4142cf;--orange:#ffac78;--lavender:#c8b5f5;--mint:#c4e6d8;--edge:#292b4e;--white:#fffefa}
+:root[data-theme='dark']{--bg:#202135;--ink:#f6f3ea;--paper:#303149;--muted:#c3c0d2;--cloud:#44446b;--edge:#c9c6e9;--blue:#4b4dd3}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg)}
+#root{width:100%;height:100%;position:relative;overflow:hidden;background:var(--bg);font-family:Geist,system-ui,sans-serif;color:var(--ink)}
+.cloud-art{position:absolute;left:24%;top:2%;width:71%;height:82%;fill:var(--cloud)}
+.cloud-caption{position:absolute;left:34%;top:11%;width:40%;text-align:center;display:flex;align-items:center;justify-content:center;gap:9px;font-size:clamp(11px,1vw,17px);font-family:'Geist Mono',monospace;letter-spacing:.06em}
+.cloud-caption svg{width:24px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7}
+.source-group{position:absolute;left:4%;top:35%;width:20%;height:39%}
+.source{position:absolute;width:100%;height:33%;border:2px solid var(--edge);border-radius:12px;background:var(--paper);display:flex;align-items:center;padding:0 12%;gap:12px;box-shadow:4px 4px 0 var(--edge);font-size:clamp(16px,1.75vw,29px);font-weight:500}
+.source img,.source svg{width:clamp(23px,2.5vw,38px);height:clamp(23px,2.5vw,38px);flex:none}
+.slack{top:0}.web{top:58%}
+.source-caption{position:absolute;left:4%;top:26%;width:20%;font-size:clamp(11px,1.15vw,18px);color:var(--muted)}
+.request-wire{position:absolute;left:24%;top:45%;width:10%;height:23%;overflow:visible;fill:none;stroke:var(--edge);stroke-width:2}
+.request-envelope{position:absolute;left:25.5%;top:51%;width:clamp(18px,2.1vw,31px);height:clamp(15px,1.6vw,24px);border:1.7px solid var(--edge);border-radius:3px;background:var(--orange);z-index:5;display:grid;place-items:center}
+.request-envelope svg{width:100%;height:100%;fill:none;stroke:var(--edge);stroke-width:1.3}
+.computer{position:absolute;left:33%;top:23%;width:40%;height:43%;border:2px solid var(--edge);border-radius:15px;background:var(--paper);box-shadow:7px 7px 0 var(--edge);z-index:3;overflow:hidden}
+.chrome{height:18%;min-height:25px;border-bottom:2px solid var(--edge);display:flex;align-items:center;justify-content:space-between;padding:0 5%;font-family:'Geist Mono',monospace;font-size:clamp(9px,.85vw,14px);color:var(--muted)}
+.chrome-dots{display:flex;gap:6px}.chrome-dots i{width:6px;height:6px;border:1px solid var(--edge);border-radius:50%}
+.session-indicator{display:flex;align-items:center;gap:6px}.session-indicator i{width:6px;height:6px;border-radius:50%;background:#31946c}
+.workspace{height:82%;display:flex;flex-direction:column;justify-content:center;padding:4% 8%}
+.name{font-size:clamp(32px,4.3vw,69px);font-weight:500;letter-spacing:-.055em;line-height:1}
+.tagline{font-size:clamp(13px,1.6vw,26px);letter-spacing:-.025em;margin-top:3%}
+.tools{display:flex;gap:10px;margin-top:8%;font-family:'Geist Mono',monospace;font-size:clamp(8px,.9vw,14px);color:var(--muted)}
+.tools span+span::before{content:' / ';padding-right:10px;opacity:.5}
+.code-mark{position:absolute;right:8%;top:37%;width:17%;height:25%;color:var(--blue);fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.stand{position:absolute;left:39%;top:66%;width:28%;height:8%;fill:var(--edge);z-index:2}
+.foundation{position:absolute;left:30%;top:75%;width:47%;height:19%;display:flex;z-index:4;border:2px solid var(--edge);border-radius:12px;box-shadow:5px 5px 0 var(--edge);overflow:hidden}
+.provider{width:50%;display:flex;flex-direction:column;justify-content:center;padding-left:8%;gap:5px}
+.render{background:var(--blue);color:var(--white)}.temporal{background:var(--orange);color:#272540;border-left:2px solid var(--edge)}
+.provider strong{font-size:clamp(22px,2.5vw,40px);font-weight:500;letter-spacing:-.035em;line-height:1}
+.provider span{font-size:clamp(10px,1.05vw,17px)}
+.support-join{position:absolute;left:50%;top:73%;width:7%;height:2px;background:var(--edge)}
+.agent-zone{position:absolute;left:79%;top:26%;width:16%;height:34%;z-index:4}
+.sheet{position:absolute;inset:0;border:2px solid var(--edge);border-radius:10px;box-shadow:3px 3px 0 var(--edge);overflow:hidden;color:#292b4e;transform-origin:50% 100%}
+.sheet-header{height:19%;border-bottom:1.5px solid var(--edge);padding-left:10%;display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:clamp(8px,.8vw,13px)}
+.sheet-body{height:81%;padding:12% 12%;display:flex;flex-direction:column;justify-content:space-between}
+.sheet-body svg{width:45%;height:40%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.code-lines{display:flex;flex-direction:column;gap:7px}.code-lines i{display:block;height:3px;background:currentColor;opacity:.35}.code-lines i:nth-child(1){width:74%}.code-lines i:nth-child(2){width:46%}.code-lines i:nth-child(3){width:62%}
+#agent-0{background:#c8b5f5}#agent-1{background:#c4e6d8}#agent-2{background:#ffe4a1}#agent-3{background:#ffbfac}#agent-4{background:#d4dafb}
+.agent-label{position:absolute;left:79%;top:69%;width:19%;font-size:clamp(13px,1.4vw,23px);font-weight:500;line-height:1.3}
+.agent-label small{display:block;font-size:clamp(10px,1vw,16px);font-weight:400;color:var(--muted);margin-top:7px}
+.agent-wire{position:absolute;left:73%;top:46%;width:6%;height:30px;fill:none;stroke:var(--edge);stroke-width:2}
+.model-label{position:absolute;left:4%;top:85%;width:24%;display:flex;gap:7px;align-items:center;font-size:clamp(10px,1vw,16px);color:var(--muted)}
+.model-label img{width:22px;height:18px}.model-label strong{font-weight:500;color:var(--ink)}
+@media(max-width:720px){.cloud-caption{font-size:10px;gap:5px}.cloud-caption svg{width:18px;height:15px}.source{gap:7px;padding:0 12px;border-radius:8px;box-shadow:3px 3px 0 var(--edge);font-size:16px}.source-caption{font-size:11px}.computer{border-radius:11px;box-shadow:5px 5px 0 var(--edge)}.foundation{box-shadow:4px 4px 0 var(--edge)}.provider{gap:5px}.tools{gap:4px}.tools span+span::before{padding-right:4px}.agent-label{font-size:14px}.model-label{gap:4px;font-size:10px;flex-wrap:wrap}.model-label img{width:18px;height:15px}.chrome{padding:0 5%;font-size:8px}.chrome-dots{gap:4px}.chrome-dots i{width:4px;height:4px}.code-lines{gap:5px}.code-lines i{height:2px}}
+@media(max-width:460px){.cloud-art{left:8%;width:92%;top:15%;height:54%}.cloud-caption{left:22%;width:60%;top:9%}.computer{left:25%;width:55%;top:21%;height:42%}.source-caption{left:3%;top:27%;width:20%;font-size:9px}.source-group{left:3%;width:18%;top:34%;height:35%}.source{flex-direction:column;gap:4px;justify-content:center;padding:0;font-size:12px;height:34%;border-width:1.5px}.source img,.source svg{width:21px;height:21px}.web{top:61%}.request-wire{left:21%;width:5%;top:43%;height:22%}.request-envelope{display:none}.name{font-size:32px}.tagline{font-size:12px}.tools{font-size:7px;gap:3px}.tools span+span::before{padding-right:3px}.stand{left:34%;top:63%;width:36%;height:10%}.foundation{left:22%;width:67%;top:75%;height:18%;border-radius:9px}.provider{padding-left:7%;gap:5px}.provider strong{font-size:24px}.provider span{font-size:10px}.agent-zone{left:78%;top:29%;width:15%;height:22%}.sheet{border-width:1.5px;border-radius:7px}.sheet-header{font-size:6px}.agent-wire{display:none}.agent-label{left:75%;top:66%;width:24%;font-size:10px}.agent-label small{font-size:8px;margin-top:3px}.model-label{left:3%;top:84%;width:17%;font-size:8px;gap:4px}.model-label img{width:15px;height:12px}.model-label strong{font-size:9px}.code-mark{stroke-width:2}.chrome-dots{display:none}.chrome{justify-content:flex-end}.session-indicator{font-size:7px}.support-join{display:none}}
+</style></head><body>
+<div id="root" data-composition-id="architecture" data-start="0" data-width="1600" data-height="740" data-duration="12" role="img" aria-label="Moyai is our internal Devin in the cloud. Render hosts the application. Temporal keeps sessions running. Teammates use Slack or web. Hermes agents work in Modal cloud computers and access models through LiteLLM.">
+ <svg class="cloud-art" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true"><path d="M180 590C70 590 20 530 20 450C20 370 70 315 150 307C135 185 235 100 350 123C415 -15 615 1 664 152C825 110 930 210 913 325C1029 375 1010 557 899 590Z"/></svg>
+ <div class="cloud-caption"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M7 19C-1 19 0 9 7 9C6 1 19-1 21 8C29 7 31 19 23 19Z"/></svg>RUNNING IN THE CLOUD</div>
+ <div class="source-caption">For your team</div>
+ <div class="source-group"><div class="source slack"><img id="slack-mark" src="assets/slack.svg" alt="">Slack</div><div class="source web"><svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="24" height="21" rx="4"/><path d="M3 12H27 M8 8.5H9 M13 8.5H14"/></svg>Web</div></div>
+ <svg class="request-wire" viewBox="0 0 120 160" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H27Q40 0 40 15V61Q40 75 56 75H120 M0 160H27Q40 160 40 145V91Q40 75 56 75"/><path d="M108 67L118 75L108 83"/></svg>
+ <div class="request-envelope" aria-hidden="true" data-layout-ignore><svg viewBox="0 0 30 22"><path d="M1 2L15 12L29 2"/></svg></div>
+ <div class="computer"><div class="chrome"><div class="chrome-dots"><i></i><i></i><i></i></div><div class="session-indicator"><i></i>cloud session</div></div><div class="workspace"><div class="name">Moyai</div><div class="tagline">Your team's internal Devin</div><div class="tools"><span>Terminal</span><span>Files</span><span>Browser</span></div></div><svg class="code-mark" viewBox="0 0 60 48" aria-hidden="true"><path d="M8 10L22 24L8 38 M31 38H53"/></svg></div>
+ <svg class="stand" viewBox="0 0 320 80" preserveAspectRatio="none" aria-hidden="true"><path d="M122 0H198L208 58H286Q300 58 300 77H20Q20 58 34 58H112Z"/></svg>
+ <div class="foundation"><div class="provider render"><strong>Render</strong><span>App hosting</span></div><div class="provider temporal"><strong>Temporal</strong><span>Durable sessions</span></div></div>
+ <svg class="agent-wire" viewBox="0 0 80 30" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15H78 M68 7L78 15L68 23"/></svg>
+ <div class="agent-zone"><div class="sheet" id="agent-0"><div class="sheet-header"></div><div class="sheet-body"><svg viewBox="0 0 48 36" aria-hidden="true"><path d="M5 6L16 18L5 30 M24 30H42"/></svg><div class="code-lines"><i></i><i></i><i></i></div></div></div><div class="sheet" id="agent-1"><div class="sheet-header"></div><div class="sheet-body"><svg viewBox="0 0 48 36" aria-hidden="true"><path d="M5 6L16 18L5 30 M24 30H42"/></svg><div class="code-lines"><i></i><i></i><i></i></div></div></div><div class="sheet" id="agent-2"><div class="sheet-header"></div><div class="sheet-body"><svg viewBox="0 0 48 36" aria-hidden="true"><path d="M5 6L16 18L5 30 M24 30H42"/></svg><div class="code-lines"><i></i><i></i><i></i></div></div></div><div class="sheet" id="agent-3"><div class="sheet-header"></div><div class="sheet-body"><svg viewBox="0 0 48 36" aria-hidden="true"><path d="M5 6L16 18L5 30 M24 30H42"/></svg><div class="code-lines"><i></i><i></i><i></i></div></div></div><div class="sheet" id="agent-4"><div class="sheet-header">agent</div><div class="sheet-body"><svg viewBox="0 0 48 36" aria-hidden="true"><path d="M5 6L16 18L5 30 M24 30H42"/></svg><div class="code-lines"><i></i><i></i><i></i></div></div></div></div>
+ <div class="agent-label">Hermes agents<small>Modal cloud computers</small></div>
+ <div class="model-label">Models via <img id="litellm-mark" src="assets/litellm.svg" alt=""><strong>LiteLLM</strong></div>
+</div>
+<script>
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+// The workstation stays anchored; the small agent windows fan out as work starts.
+const poses=[{xPercent:6,yPercent:-10,rotation:11},{xPercent:2,yPercent:-5,rotation:5},{xPercent:-3,yPercent:0,rotation:-4},{xPercent:0,yPercent:5,rotation:3},{xPercent:-5,yPercent:10,rotation:-6}];
+poses.forEach((p,i)=>{
+ tl.fromTo('#agent-'+i,{xPercent:p.xPercent*.25,yPercent:p.yPercent*.25,rotation:p.rotation*.25},{...p,duration:1.7,ease:'power2.inOut',immediateRender:true},.8+i*.12);
+ tl.to('#agent-'+i,{xPercent:p.xPercent*.25,yPercent:p.yPercent*.25,rotation:p.rotation*.25,duration:1.7,ease:'power2.inOut'},9.3+i*.1);
+});
+tl.fromTo('.request-envelope',{xPercent:0,opacity:0},{xPercent:0,opacity:1,duration:.3},.3);
+tl.to('.request-envelope',{xPercent:180,duration:1.5,ease:'power1.inOut'},.6);
+tl.to('.request-envelope',{opacity:0,duration:.25},1.9);
+tl.fromTo('.code-mark',{opacity:.5},{opacity:1,duration:1,ease:'sine.inOut'},2);
+tl.to('.code-mark',{opacity:.5,duration:1,ease:'sine.inOut'},8.8);
+tl.to({}, {duration:.6},11.4);
+window.__timelines.architecture=tl;
+</script><script src="player.js"></script>
+</body></html>
