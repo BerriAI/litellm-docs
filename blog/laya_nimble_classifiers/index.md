@@ -1,10 +1,10 @@
 ---
 slug: laya-nimble-classifiers
-title: "Adding Self-hosted Laya & Nimble Classifiers"
+title: "Self-hosted Auto Router Classifiers: Laya & Nimble"
 date: 2026-10-02T12:00:00
 authors:
   - tin
-description: "Run the model that makes your routing decisions on your own infrastructure. LiteLLM Auto Router now supports self-hosted Laya and Bespoke Nimble classifiers."
+description: "Use Laya or Bespoke Nimble to classify Auto Router requests on your own infrastructure. Control where classification runs, which model you serve, and how you provision it."
 image: ./cover.png
 tags: [auto-router, product, ai-gateway]
 hide_table_of_contents: false
@@ -15,52 +15,38 @@ hide_table_of_contents: false
   <img src={require('./cover.gif').default} width="1200" height="630" alt="Laya and Nimble self-hosted classifiers: LiteLLM Auto Router sends classification to either model inside your infrastructure, then routes the request to the selected completion model." />
 </picture>
 
-You can now **run Auto Router's classifier on your own infrastructure**. Deploy a decision model alongside your gateway, let it choose a complexity tier for each request, and have LiteLLM call the completion model you assign to that tier.
-
-We've added support for two self-hosted options, **Laya** and **Bespoke Nimble**. You control the classifier server, its capacity, and where it receives request context. Your application keeps calling one router model name through `/v1/chat/completions`.
+LiteLLM Auto Router now supports **Laya** and **Bespoke Nimble** as self-hosted classifiers. Run either model on your infrastructure to choose which completion model handles each request. Your application keeps calling the same router endpoint.
 
 {/* truncate */}
 
-## Why self-host the classifier?
+## Why self-host a classifier?
 
-An agent might summarize a short email in one turn and debug a failure across several services in the next. With Auto Router, you can assign smaller models to simpler requests and larger models to more demanding work. A classifier makes that routing decision from the request context and your tier criteria.
+Customers have asked to keep classification local, avoid another hosted classifier vendor, and use clusters they already operate. Self-hosting gives you control over:
 
-Self-hosting gives you control over that classification call. You can deploy the classifier inside your network, choose the checkpoint you serve, and provision its inference capacity alongside your gateway. Your team operates the server and pays for its compute.
+- **Prompt data.** Process classification context on servers you control, with your own access and logging policies.
+- **Vendor dependencies.** Run the classifier without opening an account with a separate hosted classifier service.
+- **Deployment location.** Choose the network and region where classification runs, including your existing private cluster.
+- **Capacity and latency tuning.** Allocate compute for your traffic, keep the model warm, and place it near the gateway.
+- **Model versions.** Choose the supported checkpoint you serve and decide when to roll out upgrades.
+- **Compute costs.** Use your infrastructure budget and compare its cost against hosted inference on your workload.
 
-The selected completion model still receives the request to generate the answer. You can use hosted or self-hosted completion models; that choice is separate from where you run the classifier.
+You operate and pay for the classifier service. Measure latency, routing quality, and total cost on your own traffic with the [evaluation guide](/docs/auto_router/evaluate).
 
-## How a request moves through the gateway
+## How it works
 
-Your application sends a request to the Auto Router. LiteLLM sends the classification context and tier criteria to your classifier server, reads its chosen tier, then calls a completion model from that tier. You configure the timeout and the fallback to use if classification fails.
+1. Your application sends a request to the LiteLLM Auto Router.
+2. Your self-hosted classifier chooses a complexity tier, such as `SIMPLE` or `COMPLEX`.
+3. LiteLLM calls a completion model assigned to that tier to generate the answer.
 
-For example, you can map `SIMPLE` and `MEDIUM` to a smaller model, and `COMPLEX` and `REASONING` to a larger one. Use **Test Routing** to see the selected tier and model without making a completion call, then evaluate answer quality, latency, and total cost on your own prompts.
-
-## Choose a self-hosted classifier
-
-[Laya](https://github.com/NandhaKishorM/laya) and [Bespoke Nimble](https://github.com/bespokelabsai/nimble) are decision models that choose from supplied options. LiteLLM uses them to select a tier. Both expose the System One API through a server you deploy; Nimble also runs through Ollama's System One endpoint.
-
-In the dashboard, both appear under **OSS Classifier**, alongside the existing hosted Jev option. The [configuration guide](/docs/auto_router/decision_classifiers) covers the supported checkpoints, server setup, credentials, and the request context sent for classification.
-
-## Configure it in the dashboard
-
-Set `LAYA_API_BASE` or `BESPOKE_API_BASE` on the gateway to your classifier server's base URL. In **Models + Endpoints → Auto Router**, create or edit a router, select **OSS Classifier**, then choose **Laya** or **Bespoke Nimble**.
-
-Choose the classifier model, assign your completion models to tiers, test, and save the router. Built-in OSS classification is available without a LiteLLM license. Deploy and start the classifier server before selecting it in the dashboard.
-
-You can also configure the same router in YAML. Inside `complexity_router_config`, select Laya with:
-
-```yaml
-classifier_type: oss_classifier
-opensource_classifier_config:
-  provider: laya
-  model: english
-  timeout_ms: 15000
-```
-
-For Nimble, use `provider: bespoke` and a model name your server supports: `nimble-latest`, `nimble` on Ollama, or `bespokelabs/Bespoke-Nimble-9B`.
-
-The [configuration guide](/docs/auto_router/decision_classifiers) includes server setup, a complete router configuration, optional authentication, and a request you can send through the gateway.
+The completion model still receives the request. You choose separately whether that model runs locally or through a hosted provider.
 
 ## Get started
 
-Deploy a gateway build containing the [Laya](https://github.com/BerriAI/litellm/pull/43626), [classifier dashboard](https://github.com/BerriAI/litellm/pull/43768), and [Nimble](https://github.com/BerriAI/litellm/pull/44246) changes. Follow the [Laya setup](/docs/auto_router/decision_classifiers#laya-self-hosted-http-server) or [Nimble setup](/docs/auto_router/decision_classifiers#nimble-self-hosted-system-one-server), then [test routing](/docs/auto_router/decision_classifiers#test-routing-and-send-a-request) with representative prompts.
+Choose a classifier, deploy its server, and connect it to LiteLLM:
+
+- **[Laya setup](/docs/auto_router/decision_classifiers#laya-self-hosted-http-server):** install and start Laya's HTTP server, choose a checkpoint, and configure authentication.
+- **[Nimble setup](/docs/auto_router/decision_classifiers#nimble-self-hosted-system-one-server):** run Bespoke Nimble with Ollama or use a compatible System One deployment.
+
+In **Models + Endpoints → Auto Router**, select **OSS Classifier**, choose your provider, and assign completion models to tiers. Use **Test Routing** to inspect the choice before sending completions.
+
+The **[deployment and configuration guide](/docs/auto_router/decision_classifiers)** covers server checks, network access, credentials, dashboard setup, YAML configuration, and fallback behavior. Jev remains available as the hosted classifier option.
