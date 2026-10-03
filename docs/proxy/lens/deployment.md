@@ -207,6 +207,8 @@ After any upgrade, check for **Worker connected** in the dashboard, run an inves
 
 RC and dev releases follow the same process using matching version suffixes. Hourly development deployments build the gateway and worker from the same selected commit
 
+For development from source, use `make lens-dev`. Custom container builds must use the same checkout and release identity for both components; follow the [source build instructions](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md#release-compatibility). A build without that identity refuses worker setup instead of suggesting an unrelated released image
+
 ### Deploy with a coding agent
 
 <AgentDeployPrompt prompt={`Deploy LiteLLM Lens on this machine by following https://docs.litellm.ai/docs/proxy/lens/deployment
