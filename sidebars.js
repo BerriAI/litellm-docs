@@ -968,7 +968,14 @@ const sidebars = {
         },
       ]
     },
-    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
+    {
+      type: "category",
+      label: "LiteLLM Lens",
+      link: { type: "doc", id: "proxy/lens" },
+      items: [
+        { type: "doc", id: "proxy/lens/coding_agents", label: "Coding agent sessions" },
+      ],
+    },
     {
       type: "category",
       label: "Supported Endpoints",
