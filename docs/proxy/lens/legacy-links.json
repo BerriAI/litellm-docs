@@ -1,0 +1,41 @@
+{
+  "anchors": {
+    "litellm-lens": "/docs/proxy/lens#litellm-lens",
+    "quick-start": "/docs/proxy/lens/deployment#quick-start",
+    "one-click-docker": "/docs/proxy/lens/deployment#one-click-docker",
+    "deploy-with-a-coding-agent": "/docs/proxy/lens/deployment#deploy-with-a-coding-agent",
+    "docker-deployment": "/docs/proxy/lens/deployment#docker-deployment",
+    "1-deploy-clickhouse": "/docs/proxy/lens/deployment#1-deploy-clickhouse",
+    "2-point-litellm-at-clickhouse": "/docs/proxy/lens/deployment#2-point-litellm-at-clickhouse",
+    "3-deploy-the-lens-worker": "/docs/proxy/lens/deployment#3-deploy-the-lens-worker",
+    "connect-your-agent": "/docs/proxy/lens/first-trace#connect-your-agent",
+    "send-your-first-trace": "/docs/proxy/lens/first-trace#send-your-first-trace",
+    "view-your-first-trace": "/docs/proxy/lens/first-trace#view-your-first-trace",
+    "run-your-first-investigation": "/docs/proxy/lens/investigations#run-your-first-investigation",
+    "connect-the-analyzer": "/docs/proxy/lens/investigations#connect-the-analyzer",
+    "choose-the-traces": "/docs/proxy/lens/investigations#choose-the-traces",
+    "describe-what-to-check": "/docs/proxy/lens/investigations#describe-what-to-check",
+    "start-the-run": "/docs/proxy/lens/investigations#start-the-run",
+    "read-the-findings": "/docs/proxy/lens/investigations#read-the-findings",
+    "give-feedback": "/docs/proxy/lens/investigations#give-feedback",
+    "configure-an-existing-proxy": "/docs/proxy/lens/deployment#configure-an-existing-proxy",
+    "agent-tracing-api": "/docs/proxy/lens/api#agent-tracing-api",
+    "use-the-api": "/docs/proxy/lens/api#use-the-api"
+  },
+  "frameworks": {
+    "deepagents": "/docs/proxy/lens/integrations/deepagents",
+    "langgraph": "/docs/proxy/lens/integrations/langgraph",
+    "langchain": "/docs/proxy/lens/integrations/langchain",
+    "openai-agents": "/docs/proxy/lens/integrations/openai-agents",
+    "claude": "/docs/proxy/lens/integrations/claude-agent-sdk",
+    "crewai": "/docs/proxy/lens/integrations/crewai",
+    "pydantic-ai": "/docs/proxy/lens/integrations/pydantic-ai",
+    "llamaindex": "/docs/proxy/lens/integrations/llamaindex",
+    "adk": "/docs/proxy/lens/integrations/google-adk",
+    "strands": "/docs/proxy/lens/integrations/strands",
+    "vercel": "/docs/proxy/lens/integrations/vercel-ai-sdk-js",
+    "openclaw": "/docs/proxy/lens/integrations/openclaw",
+    "hermes": "/docs/proxy/lens/integrations/hermes",
+    "otel": "/docs/proxy/lens/integrations/opentelemetry"
+  }
+}

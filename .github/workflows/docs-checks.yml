@@ -17,6 +17,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run test:social-cards
       - run: npm run test:optimize-images
+      - run: npm run test:lens
   writing-style:
     runs-on: ubuntu-latest
     steps:

@@ -5,9 +5,9 @@ description: Send your personal Claude Code and Codex sessions to LiteLLM Lens.
 
 # Trace coding agent sessions
 
-Send your personal Claude Code or Codex sessions to [LiteLLM Lens](../lens.md) to inspect their recorded activity. Choose your agent below.
+Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
 
-You need a LiteLLM gateway with [tracing enabled](../lens.md#configure-an-existing-proxy) and a [virtual key](../virtual_keys.md). If you are starting from scratch, follow the [Lens deployment guide](../lens.md#quick-start). A Lens worker is only required for investigations; you can view traces without one.
+You need a LiteLLM gateway with [tracing enabled](./deployment.md#configure-an-existing-proxy) and a [virtual key](/docs/proxy/virtual_keys). If you are starting from scratch, follow the [Lens deployment guide](./deployment.md#quick-start). A Lens worker is only required for investigations; you can view traces without one.
 
 ## Claude Code
 
