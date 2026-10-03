@@ -1,5 +1,6 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 # Proxy - Load Balancing
 Load balance multiple instances of the same model
@@ -68,6 +69,28 @@ router_settings:
   redis_password: <your redis password>
   redis_port: 1992
 ```
+
+## Kubernetes pod discovery
+
+Set `kubernetes_pod_discovery: true` in a deployment's `litellm_params` when its `api_base` is a Kubernetes headless service; the router resolves the service hostname to ready pod IPs and round-robins requests across them, refreshing every `KUBERNETES_POD_DISCOVERY_REFRESH_INTERVAL_SECONDS`
+
+```yaml
+model_list:
+  - model_name: gpu-llama
+    litellm_params:
+      model: openai/fake-llama
+      api_base: http://my-vllm-headless.gpu.svc.cluster.local:8000/v1
+      api_key: os.environ/VLLM_API_KEY
+      kubernetes_pod_discovery: true
+```
+
+The Admin UI also exposes this setting at Add Model > Advanced Settings > "Kubernetes pod discovery"
+
+To see which pod served a request, open Logs in the Admin UI and select the request. API Base shows the pod IP the request was sent to
+
+<Image img={require('../../img/kubernetes_pod_discovery_logs.png')} style={{ width: '100%', maxWidth: '1200px' }} />
+
+LiteLLM must run in the same cluster. Only `http://` bases are rewritten; `https://` bases are left unchanged because connecting to an IP breaks TLS hostname checks. If `HTTP_PROXY` is set and `NO_PROXY` exempts the service host but not each pod IP, LiteLLM keeps the service hostname and logs a warning, because HTTP clients do not match pod IPs against CIDR entries in `NO_PROXY`
 
 ## Enforce Model Rate Limits
 
