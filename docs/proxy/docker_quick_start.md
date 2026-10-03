@@ -33,7 +33,7 @@ The second command generates your master key, which is the credential you will u
 <TabItem value="cloud" label="1-click deploy">
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
-  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
+  <a href="https://railway.com/deploy/Lm9gxI?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
   <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
 </div>
 
