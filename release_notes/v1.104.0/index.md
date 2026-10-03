@@ -45,9 +45,7 @@ pip install litellm==1.104.0
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.104.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.104.0) and the full [releases page](https://github.com/BerriAI/litellm/releases)
-
-These notes cover everything new since `v1.103.0`. The main sections list what landed on `main` between the `v1.103.0-rc.1` and `v1.104.0-rc.1` cuts. Changes backported onto `rc/1.103.0` and already shipped in `v1.103.0` are omitted, and so are the three Usage page follow-ups built on the top-N key cap, which were reverted on `rc/1.104.0` before rc.1 so the Usage pages load every key the same way `v1.103.0` does. Everything added to the release line after the rc.1 cut, including `v1.104.0-rc.2`, is listed under [Included after the v1.104.0-rc.1 cut](#included-after-the-v11040-rc1-cut)
+These notes cover everything since `v1.103.0`. Changes added to the release line after rc.1, including rc.2, are under [Included after the v1.104.0-rc.1 cut](#included-after-the-v11040-rc1-cut)
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom
 
@@ -59,31 +57,22 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the prev
 
 **An exhausted budget now returns HTTP 422 instead of 429.** Clients stop treating a spent budget as a retryable rate limit. Real rpm/tpm limits still return 429. Set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status. See [PR #42097](https://github.com/BerriAI/litellm/pull/42097)
 
-**stdio MCP servers are off by default.** stdio servers run local commands on the proxy host, and most deployments only need remote HTTP or SSE servers. Existing stdio servers stay listed but never start: tool listings skip them, direct tool calls and health checks return 403 naming the env var, and creating or updating a stdio server is rejected with 422. `/v1/responses`, `/v1/chat/completions` and `/v1/messages` requests that point at a stdio server get no tools from it. The Admin UI greys out the stdio transport and badges stdio servers. Set `LITELLM_ENABLE_MCP_STDIO=true` in the proxy's environment and restart to keep using them. Only the process environment counts, including a `.env` file next to the proxy: the same key under `environment_variables` in `config.yaml` or in the database is ignored with a warning. The `litellm.experimental_mcp_client` SDK is not affected. See [PR #44066](https://github.com/BerriAI/litellm/pull/44066)
+**stdio MCP servers are off by default.** Existing stdio servers stay listed but never start, and new ones are rejected. Set `LITELLM_ENABLE_MCP_STDIO=true` in the proxy's environment (not `config.yaml` or the DB) and restart to keep using them. See [PR #44066](https://github.com/BerriAI/litellm/pull/44066)
 
-**The proxy now exits when database setup fails at startup.** Earlier releases logged the failure and kept serving against a schema that could be behind the code. `--enforce_prisma_migration_check` now defaults to on for both the proxy and the standalone migration entrypoint. To keep the old behavior, set `ENFORCE_PRISMA_MIGRATION_CHECK=false` or pass `--no-enforce_prisma_migration_check`. See [PR #44206](https://github.com/BerriAI/litellm/pull/44206)
+**The proxy exits when database setup fails at startup** instead of serving against an outdated schema. Set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior. See [PR #44206](https://github.com/BerriAI/litellm/pull/44206)
 
-**Session tokens issued before the upgrade stop working if you are upgrading from `v1.103.0` or earlier.** `v1.103.1` and `v1.103.2` already use the new format. Admin UI and `lite` CLI users sign in once more after upgrading. During a rolling upgrade, pods on the old and new versions reject each other's session tokens, so finish the rollout before asking users to sign in again. Virtual keys, the master key and stored credentials are unaffected. See [`9fa1a64`](https://github.com/BerriAI/litellm/commit/9fa1a641119dd0d4fe43e93622eae5f482ceb63f)
-
-:::
-
-:::warning `lite` CLI users must log in again
-
-Applies if you are upgrading from `v1.103.0` or earlier. After upgrading the proxy, every `lite` CLI user has to run `lite login` once more. Until they do, the CLI keeps sending its old session token and its requests to the proxy fail
+**Upgrading from `v1.103.0` or earlier: Admin UI and `lite` CLI users sign in again** (`lite login`), because session tokens use a new format. Finish a rolling upgrade before asking users to sign in. See [`9fa1a64`](https://github.com/BerriAI/litellm/commit/9fa1a641119dd0d4fe43e93622eae5f482ceb63f)
 
 :::
 
-:::warning Upgrading from `v1.102.x` or earlier: build two `LiteLLM_SpendLogs` indexes yourself
+:::warning Upgrading from `v1.102.x` or earlier
 
-`v1.103.0` built two indexes on `LiteLLM_SpendLogs` in its migrations, which blocked spend log writes on large tables. In `v1.104.0` both migrations are no-ops and the startup schema check no longer recreates them, so nothing blocks at boot. If you are upgrading from `v1.103.x`, the indexes already exist and there is nothing to do. If you are upgrading from `v1.102.x` or earlier, build them online so spend log lookups by key and by call id stay fast:
+The two `LiteLLM_SpendLogs` index migrations from `v1.103.0` are now no-ops. Build the indexes online yourself, outside a transaction:
 
 ```sql
-SET statement_timeout = 0;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx" ON "LiteLLM_SpendLogs"("api_key", "startTime");
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_litellm_call_id_idx" ON "LiteLLM_SpendLogs"("litellm_call_id");
 ```
-
-Run each statement outside a transaction, from a session that stays connected until it finishes. A failed concurrent build leaves an invalid index behind: check `SELECT indisvalid FROM pg_index WHERE indexrelid = '"<index name>"'::regclass;` and, if it returns `false`, run `DROP INDEX CONCURRENTLY "<index name>";` and build it again. If your spend logs table is partitioned, Postgres cannot build its index concurrently. Build a matching index concurrently on each partition first, then run the same `CREATE INDEX` without `CONCURRENTLY` on the parent, which only attaches them. See [PR #44206](https://github.com/BerriAI/litellm/pull/44206), [PR #44397](https://github.com/BerriAI/litellm/pull/44397)
 
 :::
 
@@ -91,24 +80,19 @@ Run each statement outside a transaction, from a session that stays connected un
 
 - **New frontier models on day one**: Claude Opus 5.5 across Anthropic, Bedrock, Vertex AI and Azure AI, and GPT-6 Sol and GPT-6 Luna across OpenAI, Bedrock and Azure Foundry, among 331 new catalog entries
 - **New providers and routes**: Eden AI and Nadir providers, TinyFish, fal.ai queue and OpenRouter decisions pass-through routes, OpenAI models on Bedrock's native Responses API, and Claude on Bedrock Mantle's native Messages API
-- **Gateway hardening**: the proxy refuses a weak or missing master key, dashboard sign-in adds breached-password detection and forced password resets, sessions are revoked on logout, auth fails closed during a database outage, stdio MCP servers are off by default, and the proxy exits when database setup fails at startup
+- **Gateway hardening**: the proxy refuses a weak or missing master key, dashboard sign-in adds breached-password detection and forced password resets, sessions are revoked on logout, auth fails closed during a database outage, and stdio MCP servers are off by default
 - **Routing controls**: group-scoped priority routing, time-windowed team reservation of deployments, native compact-to-fit across conversation APIs, a JEV classifier for the Auto Router, and configurable provider affinity headers
 - **Admin UI**: the LiteAdmin assistant, prompt caching savings, internal-user savings and Auto Router usage, and Capability and Fuse v2 routing forecasts
 
-
 ## Included after the v1.104.0-rc.1 cut
 
-The stable tag includes these release-line additions. `v1.104.0-rc.2` shipped the first one, the rest landed after it:
-
-- **Session tokens** for the Admin UI and the `lite` CLI use their own AES-256-GCM context and a `litellm_login_` prefix with unpadded base64url, so they pass through Basic auth parsers and WebSocket subprotocols. Langfuse pass-through and the realtime playground can now use them, and a token can no longer start with `sk-` and be mistaken for a virtual key - [`9fa1a64`](https://github.com/BerriAI/litellm/commit/9fa1a641119dd0d4fe43e93622eae5f482ceb63f)
-- **stdio MCP servers** only run when the proxy is started with `LITELLM_ENABLE_MCP_STDIO=true`, as described under Breaking Changes - [PR #44066](https://github.com/BerriAI/litellm/pull/44066)
-- **Startup** exits when database setup fails unless `ENFORCE_PRISMA_MIGRATION_CHECK=false` is set, and the two `LiteLLM_SpendLogs` index migrations from `v1.103.0` no longer build anything. The startup schema check skips those two indexes too, so it cannot recreate them with a blocking `CREATE INDEX` - [PR #44206](https://github.com/BerriAI/litellm/pull/44206), [PR #44397](https://github.com/BerriAI/litellm/pull/44397)
-- **Migrations across several pods** retry a P3009 failed-migration error when another pod has already recovered the named migration row, instead of failing the boot - [PR #44283](https://github.com/BerriAI/litellm/pull/44283)
-- **Pass-through endpoints** are back to their pre-`v1.103.0` handling. Config and DB pass-throughs are merged on every DB sync and config reload, config pass-throughs with `forward_headers: true` forward `Authorization` again, Admin UI writes are accepted when the config declares pass-throughs, and `os.environ/` targets are resolved - [PR #43962](https://github.com/BerriAI/litellm/pull/43962)
-- **Multi-worker model lookups**: a burst of more than 20 requests for a model created on another worker no longer exhausts the resync budget and returns 400 `Invalid model name`. The same fix covers guardrails and agents - [PR #44277](https://github.com/BerriAI/litellm/pull/44277)
-- **Dependencies**: `pyjwt` 2.15.0, `oauthlib` 4.0.0, `urllib3` 2.8.0, `tornado` 6.5.9, `gitpython` 3.1.62, `pypdf` 6.19.0 and `litellm-proxy-extras` 0.4.102.post1 - [PR #44216](https://github.com/BerriAI/litellm/pull/44216), [PR #44224](https://github.com/BerriAI/litellm/pull/44224), [PR #44304](https://github.com/BerriAI/litellm/pull/44304)
-- **Not in this release**: a background build of the `LiteLLM_SpendLogs` indexes ([PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #44109](https://github.com/BerriAI/litellm/pull/44109), [PR #44124](https://github.com/BerriAI/litellm/pull/44124)) was backported to the release line and reverted before the tag - [PR #44212](https://github.com/BerriAI/litellm/pull/44212)
-- Test-only backports that keep the release line's CI green: [PR #44267](https://github.com/BerriAI/litellm/pull/44267), [PR #44280](https://github.com/BerriAI/litellm/pull/44280), [PR #44312](https://github.com/BerriAI/litellm/pull/44312), [PR #44332](https://github.com/BerriAI/litellm/pull/44332)
+- stdio MCP servers off by default - [PR #44066](https://github.com/BerriAI/litellm/pull/44066)
+- Startup exits on database setup failure, and the `LiteLLM_SpendLogs` index migrations no longer build anything - [PR #44206](https://github.com/BerriAI/litellm/pull/44206), [PR #44397](https://github.com/BerriAI/litellm/pull/44397)
+- New UI and CLI session token format (rc.2) - [`9fa1a64`](https://github.com/BerriAI/litellm/commit/9fa1a641119dd0d4fe43e93622eae5f482ceb63f)
+- Pass-through endpoints back to their pre-`v1.103.0` handling - [PR #43962](https://github.com/BerriAI/litellm/pull/43962)
+- Fix 400 `Invalid model name` on request bursts for a model created on another worker - [PR #44277](https://github.com/BerriAI/litellm/pull/44277)
+- Multi-pod migrations retry P3009 when another pod already recovered the row - [PR #44283](https://github.com/BerriAI/litellm/pull/44283)
+- Dependency bumps: `pyjwt`, `oauthlib`, `urllib3`, `tornado`, `gitpython`, `pypdf`, `litellm-proxy-extras` 0.4.102.post1 - [PR #44216](https://github.com/BerriAI/litellm/pull/44216), [PR #44224](https://github.com/BerriAI/litellm/pull/44224), [PR #44304](https://github.com/BerriAI/litellm/pull/44304)
 
 ## New Providers and Endpoints
 
@@ -1296,7 +1280,7 @@ These 184 PRs change tests, CI, contributor tooling, release packaging, or Rust 
 
 ### PR roll-up by ownership area
 
-Customer-facing PRs for the original rc.1 notes: **447**. Tests, CI and internal PRs: **184**. Total: **631**. The release-line additions listed under Included after the v1.104.0-rc.1 cut are separate from this roll-up
+Customer-facing PRs in rc.1: **447**. Tests, CI and internal PRs: **184**. Total: **631**
 
 - Models & Providers: 236
 - Other (tests, CI, internal): 184

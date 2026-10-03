@@ -14,7 +14,7 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 _October 3, 2026_
 
-Claude Opus 5.5 and GPT-6 Sol and Luna arrive across their providers on day one among 331 new catalog entries, alongside the Eden AI and Nadir providers, new pass-through routes, OpenAI models on Bedrock's native Responses API and Claude on Bedrock Mantle's native Messages API. Gateway hardening refuses a weak or missing master key, adds breached-password detection and forced password resets, revokes sessions on logout and fails auth closed during a database outage. Routing gains group-scoped priority routing, time-windowed team reservation of deployments, native compact-to-fit and a JEV classifier for the Auto Router, and the Admin UI adds the LiteAdmin assistant and prompt caching savings. This stable also folds in the changes made after the rc.1 cut: stdio MCP servers are off by default, the proxy exits when database setup fails at startup, UI and CLI session tokens get a new format so users upgrading from `v1.103.0` or earlier sign in once more, the `LiteLLM_SpendLogs` index migrations from `v1.103.0` no longer build anything, and pass-through endpoints return to their pre-`v1.103.0` handling. Review the release's Breaking Changes section before upgrading
+Claude Opus 5.5 and GPT-6 on day one, Eden AI and Nadir providers, master key enforcement, team routing controls, and the LiteAdmin assistant. stdio MCP servers are now off by default. Review the Breaking Changes before upgrading
 
 ---
 
