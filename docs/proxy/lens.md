@@ -151,19 +151,11 @@ export OTEL_METRICS_EXPORTER="none"
 export OTEL_LOGS_EXPORTER="none"
 ```
 
-The Python examples initialize OpenTelemetry before creating the agent. If your app already configures a tracer provider, keep it and point its exporter at the destination above instead.
+Each tab shows the core setup. Open its full example for dependencies and a runnable project. The Python examples initialize OpenTelemetry before creating the agent. If your app already configures a tracer provider, keep it and point its exporter at the destination above instead.
 
 <Tabs groupId="lens-framework" queryString="framework" className="lens-framework-tabs">
 
 <TabItem value="deepagents" label="DeepAgents">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http deepagents openinference-instrumentation-langchain
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -177,17 +169,11 @@ result = agent.invoke({"messages": [{"role": "user", "content": "What is an agen
 print(result["messages"][-1].content)
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/deepagents)
+
 </TabItem>
 
 <TabItem value="langgraph" label="LangGraph">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http langgraph openinference-instrumentation-langchain
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -200,17 +186,11 @@ result = agent.invoke({"messages": [{"role": "user", "content": "What is an agen
 print(result["messages"][-1].content)
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/langgraph)
+
 </TabItem>
 
 <TabItem value="langchain" label="LangChain">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http langchain openinference-instrumentation-langchain
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -224,17 +204,11 @@ result = agent.invoke({"messages": [{"role": "user", "content": "What is an agen
 print(result["messages"][-1].content)
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/langchain)
+
 </TabItem>
 
 <TabItem value="openai-agents" label="OpenAI Agents">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http openai-agents openinference-instrumentation-openai-agents
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -248,17 +222,11 @@ result = Runner.run_sync(agent, "What is an agent trace?")
 print(result.final_output)
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/openai-agents)
+
 </TabItem>
 
 <TabItem value="claude" label="Claude Agent SDK">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http claude-agent-sdk openinference-instrumentation-claude-agent-sdk
-```
-
-</div>
 
 ```python title="Send a trace"
 import asyncio
@@ -282,19 +250,11 @@ asyncio.run(main())
 
 Uses your Claude Agent SDK authentication and model settings. This captures SDK input and output; internal model calls are not exposed by this instrumentor.
 
-
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/claude-agent-sdk)
 
 </TabItem>
 
 <TabItem value="crewai" label="CrewAI">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http crewai openinference-instrumentation-crewai
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -313,17 +273,11 @@ task = Task(description="What is an agent trace?", expected_output="A short answ
 print(Crew(agents=[agent], tasks=[task]).kickoff())
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/crewai)
+
 </TabItem>
 
 <TabItem value="pydantic-ai" label="Pydantic AI">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http pydantic-ai
-```
-
-</div>
 
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
@@ -337,17 +291,11 @@ agent = Agent(model, name="research_agent")
 print(agent.run_sync("What is an agent trace?").output)
 ```
 
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/pydantic-ai)
+
 </TabItem>
 
 <TabItem value="llamaindex" label="LlamaIndex">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http llama-index-core openinference-instrumentation-llama-index
-```
-
-</div>
 
 ```python title="Send a trace"
 import os
@@ -370,19 +318,11 @@ print(result)
 
 The resource attribute supplies the agent name because this instrumentor does not export `FunctionAgent.name`. Run this example in your existing async application.
 
-
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/llamaindex)
 
 </TabItem>
 
 <TabItem value="adk" label="Google ADK">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http google-adk
-```
-
-</div>
 
 ```python title="Send a trace"
 import asyncio
@@ -403,19 +343,11 @@ asyncio.run(InMemoryRunner(agent=agent).run_debug("What is an agent trace?"))
 
 `SPAN_ONLY` records the messages needed to inspect and investigate the run.
 
-
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/google-adk)
 
 </TabItem>
 
 <TabItem value="strands" label="Strands">
-
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http "strands-agents[otel]"
-```
-
-</div>
 
 ```python title="Send a trace"
 import os
@@ -434,23 +366,15 @@ print(agent("What is an agent trace?"))
 
 The semantic-convention setting enables message content in spans.
 
-
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/strands)
 
 </TabItem>
 
 <TabItem value="vercel" label="Vercel AI SDK">
 
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-npm install ai @ai-sdk/otel @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http
-```
-
-</div>
-
 ```typescript title="Send a trace"
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { OpenTelemetry } from "@ai-sdk/otel";
 import { generateText, registerTelemetry } from "ai";
 
@@ -469,6 +393,8 @@ try {
   await sdk.shutdown();
 }
 ```
+
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/vercel-ai-sdk)
 
 </TabItem>
 
@@ -527,14 +453,6 @@ Start a new Hermes session and ask a question. The configured name **research_ag
 
 <TabItem value="otel" label="OpenTelemetry">
 
-<div className="lens-dependencies">
-
-```bash title="Install dependencies"
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http
-```
-
-</div>
-
 ```python title="Send a trace"
 from opentelemetry.instrumentation.auto_instrumentation import initialize
 
@@ -549,6 +467,8 @@ with trace.get_tracer(__name__).start_as_current_span("research_agent") as span:
     answer = agent.run("What is an agent trace?")
     span.set_attribute("output.value", str(answer))
 ```
+
+[Full example](https://github.com/BerriAI/litellm-lens-example/tree/main/opentelemetry)
 
 </TabItem>
 
