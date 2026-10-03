@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.103.0: Config File Ownership, Fuse Routing & Gateway Hardening](/release_notes/v1.103.0/v1-103-0)
+### [v1.104.0: Claude Opus 5.5, GPT-6, Master Key Enforcement & Team Routing Controls](/release_notes/v1.104.0/v1-104-0)
 
-_September 27, 2026_
+_October 3, 2026_
 
-The config file now owns every setting it declares, with one precedence rule across the settings APIs, `source` and `editable` flags on both read endpoints, read-only fields in the Admin UI, and a startup warning for each stored value the file is ignoring. Auto Router adds a capability classifier, Fuse v2 forecasting, per-model Fast mode, maintained Fuse presets and TypeSafe JEV. Gateway hardening covers MCP client allowlisting, live session visibility, delegated OAuth admission, RFC 8693 token exchange and per-issuer JWT key scoping, and spend controls add per-member organization spend, additive project budgets, team-level `model_max_budget`, temporary budget increases and budgets re-checked on fallback targets, alongside 408 new model catalog entries. This stable also folds in prompt caching, streaming, JWT and proxy reliability fixes backported after the rc.1 cut, and reverts the rc.1 top-N key cap on the Usage pages. Review the release's Breaking Changes section before upgrading
+Claude Opus 5.5 and GPT-6 Sol and Luna arrive across their providers on day one among 331 new catalog entries, alongside the Eden AI and Nadir providers, new pass-through routes, OpenAI models on Bedrock's native Responses API and Claude on Bedrock Mantle's native Messages API. Gateway hardening refuses a weak or missing master key, adds breached-password detection and forced password resets, revokes sessions on logout and fails auth closed during a database outage. Routing gains group-scoped priority routing, time-windowed team reservation of deployments, native compact-to-fit and a JEV classifier for the Auto Router, and the Admin UI adds the LiteAdmin assistant and prompt caching savings. This stable also folds in the changes made after the rc.1 cut: stdio MCP servers are off by default, the proxy exits when database setup fails at startup, UI and CLI session tokens get a new format so users upgrading from `v1.103.0` or earlier sign in once more, the `LiteLLM_SpendLogs` index migrations from `v1.103.0` no longer build anything, and pass-through endpoints return to their pre-`v1.103.0` handling. Review the release's Breaking Changes section before upgrading
 
 ---
 
@@ -22,6 +22,7 @@ The config file now owns every setting it declares, with one precedence rule acr
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
 | [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
 | [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
 | [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
