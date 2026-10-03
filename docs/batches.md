@@ -587,7 +587,7 @@ Only a proxy admin can set, change, or clear `max_batch_file_records`, `max_batc
 
 An upload that fails batch input file validation (a wrong format, too many records, too large) does not count. An upload that passes validation counts even when a guardrail or the provider rejects it afterwards, and a download counts even when the provider returns an error for it
 
-With Redis configured, the counts are shared across every proxy instance and worker. Without Redis, each worker process keeps its own count, so a caller can reach up to the limit times the number of workers, and the counts reset when the proxy restarts
+With Redis configured, the counts are shared across every proxy instance and worker. Without Redis, each worker process keeps its own count, so a caller can reach up to the limit times the number of workers, and the counts reset when the proxy restarts. Each worker keeps up to 20,000 live counters (one per caller and window, and per file id for downloads), and once more than that are live the one closest to expiry is dropped, so that caller starts a fresh window early
 
 The limits apply to the `/v1/files` routes above, including `/files` and `/{provider}/v1/files`. Provider pass-through routes are not counted
 
