@@ -9,10 +9,18 @@ Hero export alone does not enable that behavior on the marketing site.
 Particle motion illustrates the change; it is not a measured request trace.
 The displayed times are benchmark medians, with scope stated in the post.
 
+Headline font: Archivo Black, bundled locally under the SIL Open Font License.
+Source: https://github.com/google/fonts/tree/main/ofl/archivoblack
+License: assets/OFL.ArchivoBlack.txt
+
 The logos identify the harnesses and model providers illustrated in the animation.
 Marks are normalized to transparent 512-pixel assets and rendered in grayscale.
 Published background circles and tiles are removed; foreground geometry is retained.
 Marks belong to their respective owners.
+
+LiteLLM
+static/img/brand/litellm-monogram-white.svg
+Official monogram, displayed only during the colorful fast phase of the gateway.
 
 Open WebUI
 https://github.com/open-webui/open-webui/blob/main/static/static/favicon.svg

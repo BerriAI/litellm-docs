@@ -7,26 +7,23 @@ import React from 'react';
 import styles from './diagrams.module.css';
 
 const benchmarks = [
-  {endpoint: 'Chat completions', rust: 'on', before: 554, after: 37},
-  {endpoint: 'Chat completions', rust: 'off', before: 553, after: 35},
-  {endpoint: 'Messages', rust: 'on', before: 570, after: 80},
-  {endpoint: 'Messages', rust: 'off', before: 542, after: 40},
+  {endpoint: 'Chat completions', before: 553, after: 35},
+  {endpoint: 'Messages', before: 542, after: 40},
 ];
 
 const trace = {
-  name: 'POST /v1/messages',
-  windowMs: 50,
-  ticks: [0, 10, 20, 30, 40, 50],
+  name: 'POST /v1/chat/completions',
+  windowMs: 15,
+  ticks: [0, 3, 6, 9, 12, 15],
   spans: [
-    {name: 'auth /v1/messages', start: 4.9, end: 8.3, tone: 'auth'},
-    {name: 'route claude-opus-5-5', start: 11.9, end: 12.9, tone: 'route'},
-    {name: 'chat claude-opus-5-5', start: 24.8, end: 46.4, tone: 'chat'},
+    {name: 'auth /v1/chat/completions', start: 3.8, end: 8.9, tone: 'auth'},
+    {name: 'route claude-opus-5-5', start: 11.6, end: 12.7, tone: 'route'},
   ],
   events: [
-    {name: 'litellm.request.body_received', at: 1.8, detail: '1,810,481 bytes'},
-    {name: 'litellm.request.body_parsed', at: 4.9},
-    {name: 'litellm.request.pre_call_completed', at: 11.0},
-    {name: 'litellm.request.deployment_selected', at: 12.9, detail: 'Attempt 1 · initial'},
+    {name: 'litellm.request.body_received', at: 1.7, detail: '1,807,504 bytes'},
+    {name: 'litellm.request.body_parsed', at: 3.7},
+    {name: 'litellm.request.pre_call_completed', at: 11.2},
+    {name: 'litellm.request.deployment_selected', at: 12.6, detail: 'Attempt 1 · initial'},
   ],
 };
 
@@ -47,10 +44,9 @@ export function BenchmarkResults() {
       </div>
       <div className={styles.benchmarkGrid}>
         {benchmarks.map((item) => (
-          <div className={styles.benchmarkCard} key={`${item.endpoint}-${item.rust}`}>
+          <div className={styles.benchmarkCard} key={item.endpoint}>
             <div className={styles.cardHeading}>
               <span>{item.endpoint}</span>
-              <span className={styles.context}>Rust {item.rust}</span>
             </div>
             <div className={styles.comparison}>
               <div>
@@ -79,10 +75,10 @@ export function MeasuredTrace() {
       <div className={styles.tracePanel}>
         <div className={styles.heading}>
           <strong><code>{trace.name}</code></strong>
-          <span className={styles.context}>Measured local trace</span>
+          <span className={styles.context}>Measured request setup</span>
         </div>
         <div className={styles.axis} aria-hidden="true">
-          {trace.ticks.map((tick) => <span key={tick}>{tick}{tick === 50 ? ' ms' : ''}</span>)}
+          {trace.ticks.map((tick) => <span key={tick}>{tick}{tick === trace.windowMs ? ' ms' : ''}</span>)}
         </div>
         <div className={styles.spanRows}>
           {trace.spans.map((span) => (
@@ -116,7 +112,7 @@ export function MeasuredTrace() {
         </div>
       </div>
       <figcaption className={styles.caption}>
-        Reconstructed from the local benchmark with an instant mock upstream. Offsets are from server start; server duration is not shown.
+        Reconstructed from the Python-path benchmark with an instant mock upstream. Offsets are from server start; only recorded request-setup spans and events are shown.
       </figcaption>
     </figure>
   );

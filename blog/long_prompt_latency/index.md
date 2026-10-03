@@ -1,11 +1,11 @@
 ---
 slug: long-prompt-latency
-title: "How we cut time to first byte by 93% for long prompts"
+title: "How we cut time to first byte by 94% for long prompts"
 date: 2026-10-03T09:00:00
 authors:
   - yassin
 image: ./cover.gif
-description: "A 440k-token benchmark went from 554 ms to 37 ms median time to first byte. We removed unnecessary prompt-cache routing work and made the request trace show where time goes."
+description: "A 440k-token benchmark went from 553 ms to 35 ms median time to first byte. We removed unnecessary prompt-cache routing work and made the request trace show where time goes."
 tags: [performance, proxy, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
@@ -15,11 +15,11 @@ import PromptLatencyHero from './PromptLatencyHero';
 
 export const Hero = PromptLatencyHero;
 
-![LiteLLM's median time to first byte drops from 554 ms to 37 ms in a local 440k-token, single-deployment benchmark, a 93% reduction](./cover.gif)
+![LiteLLM's median time to first byte drops from 553 ms to 35 ms in a local 440k-token, single-deployment benchmark, a 94% reduction](./cover.gif)
 
 LiteLLM was counting every token in a long conversation to answer a yes-or-no routing question.
 
-Removing that unnecessary work took median time to first byte from **554 ms to 37 ms** in our local 440k-token benchmark: **93% lower**. We also improved the OpenTelemetry traces so you can see where a request spends its time.
+Removing that unnecessary work took median time to first byte from **553 ms to 35 ms** in our local 440k-token benchmark: **94% lower**. We also improved the OpenTelemetry traces so you can see where a request spends its time.
 
 {/* truncate */}
 
@@ -33,19 +33,19 @@ For a coding session with hundreds of turns and tool results, that could mean hu
 
 **With multiple deployments, counting stops once the answer is known.** The eligibility check stops after the first message that brings the count to the required minimum. Cache affinity and prefix hashing remain in place. Other uses of token counting, including usage accounting, are unchanged.
 
-## 554 ms → 37 ms
+## 553 ms → 35 ms
 
-The benchmark used a 439,945-token conversation with 334 turns and 18 tools, one healthy deployment, Redis response caching, and the `prompt_caching` check enabled. The test provider replied immediately, isolating request overhead from model generation time.
+The benchmark used the Python request path, a 439,945-token conversation with 334 turns and 18 tools, one healthy deployment, Redis response caching, and the `prompt_caching` check enabled. The test provider replied immediately, isolating request overhead from model generation time.
 
 <BenchmarkResults />
 
-Each result is the median of three requests after one warmup, on the same local machine. Both Rust and Python paths benefit because the removed counting work ran in Python. `/v1/responses` already bypassed this check and stayed roughly flat. Requests without the optional check are unaffected. [Full benchmark samples and setup](https://github.com/BerriAI/litellm/pull/44221).
+Each result is the median of three requests after one warmup, on the same local machine. `/v1/responses` already bypassed this check and stayed roughly flat. Requests without the optional check are unaffected. [Full benchmark samples and setup](https://github.com/BerriAI/litellm/pull/44221).
 
 ## See where the time goes
 
 The request's server span now records when the body arrives, JSON parsing finishes, pre-call hooks complete, and a deployment is selected. That separates a slow upload from work inside the proxy.
 
-Here's a measured `/v1/messages` trace from the local benchmark, reconstructed from the recorded timestamps:
+Here's the request-setup portion of a measured `/v1/chat/completions` trace from the same Python-path benchmark:
 
 <MeasuredTrace />
 

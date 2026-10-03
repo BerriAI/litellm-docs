@@ -1,4 +1,5 @@
 import React, {useEffect, useRef} from 'react';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import openwebui from './assets/bare-openwebui.png';
 import claude from './assets/bare-claude-code.png';
 import codex from './assets/bare-codex.png';
@@ -37,9 +38,9 @@ function createPath(branch, strand) {
   const y = ROWS[branch] + (strand - 2.5) * 2.8;
   const middle = 343 + (branch - 1.5) * 4 + (strand - 2.5) * 1.4;
   const points = [];
-  for (let i = 0; i <= 80; i++) points.push(cubic([181,y], [337,y], [388,middle], [483,middle], i/80));
-  for (let i = 1; i <= 50; i++) points.push([lerp(483,717,i/50), middle]);
-  for (let i = 1; i <= 80; i++) points.push(cubic([717,middle], [812,middle], [863,y], [1019,y], i/80));
+  for (let i = 0; i <= 80; i++) points.push(cubic([181,y], [337,y], [420,middle], [528,middle], i/80));
+  for (let i = 1; i <= 50; i++) points.push([lerp(528,672,i/50), middle]);
+  for (let i = 1; i <= 80; i++) points.push(cubic([672,middle], [780,middle], [863,y], [1019,y], i/80));
   const lengths = [0];
   for (let i = 1; i < points.length; i++) lengths.push(lengths[i-1] + Math.hypot(points[i][0]-points[i-1][0], points[i][1]-points[i-1][1]));
   return {points, lengths, length: lengths[lengths.length-1]};
@@ -130,13 +131,12 @@ function drawSpeedField(context, t, active) {
 }
 
 export default function PromptLatencyHero() {
+  const gatewayLogo = useBaseUrl('/img/brand/litellm-monogram-white.svg');
   const rootRef = useRef(null);
   const canvasRef = useRef(null);
   const oldRef = useRef(null);
   const newRef = useRef(null);
   const resultRef = useRef(null);
-  const captionRef = useRef(null);
-  const resultCaptionRef = useRef(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -156,14 +156,14 @@ export default function PromptLatencyHero() {
       const reset = ease((t-9.67)/.31);
       const active = ease((t-3.42)/.22) * (1-reset);
       root.style.setProperty('--active', active.toFixed(4));
+      root.style.setProperty('--shimmer-y', `${-80 + (((t-3.42)/1.8+10)%1)*240}%`);
+      root.style.setProperty('--gateway-angle', `${140 + Math.sin(t*1.1)*30}deg`);
       root.style.setProperty('--hero-ink', mix(dark ? [235,240,250] : [47,60,82], [255,255,255], active));
       root.style.setProperty('--hero-muted', mix(dark ? [175,189,211] : [80,100,132], [210,226,255], active));
       root.style.setProperty('--hero-logo', mix(dark ? [184,184,184] : [112,112,112], [230,230,230], active));
       oldRef.current.style.opacity = (1-ease((t-3.70)/.18))*(1-reset)+reset;
       newRef.current.style.opacity = ease((t-3.91)/.18)*(1-ease((t-5.20)/.2))*(1-reset);
       resultRef.current.style.opacity = ease((t-5.47)/.3)*(1-reset);
-      captionRef.current.style.opacity = (1-ease((t-5.20)/.2))*(1-reset)+reset;
-      resultCaptionRef.current.style.opacity = ease((t-5.47)/.3)*(1-reset);
       context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.setTransform(canvas.width/1200, 0, 0, canvas.height/600, 0, 0);
@@ -229,21 +229,22 @@ export default function PromptLatencyHero() {
   }, []);
 
   return (
-    <div ref={rootRef} className={styles.hero} role="img" aria-label="LiteLLM routes requests from Open WebUI, Claude Code, Codex and Hermes to OpenAI, Anthropic, Amazon Bedrock and Vertex AI. A local 440k-token, single-deployment benchmark with a mock upstream reduced median time to first byte from 554 to 37 milliseconds, 93 percent lower. Motion is illustrative.">
+    <div ref={rootRef} className={styles.hero} role="img" aria-label="LiteLLM routes requests from Open WebUI, Claude Code, Codex and Hermes to OpenAI, Anthropic, Amazon Bedrock and Vertex AI. A local 440k-token, single-deployment benchmark using the Python request path with a mock upstream reduced median time to first byte from 553 to 35 milliseconds, 94 percent lower. Motion is illustrative.">
       <div className={styles.blue} aria-hidden="true" />
-      <div className={styles.gateway} aria-hidden="true" />
+      <div className={styles.gateway} aria-hidden="true">
+        <div className={styles.gatewayEnergy} />
+        <div className={styles.gatewayShimmer} />
+        <span className={styles.gatewayBrand} style={{maskImage: `url("${gatewayLogo}")`, WebkitMaskImage: `url("${gatewayLogo}")`}} />
+      </div>
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
       <div className={styles.labels} aria-hidden="true">
-        <div ref={oldRef} className={styles.metric}>554 ms</div>
-        <div ref={newRef} className={`${styles.metric} ${styles.hidden}`}>37 ms</div>
-        <div ref={resultRef} className={`${styles.metric} ${styles.hidden}`}>93% lower</div>
-        <div ref={captionRef} className={styles.caption}>time to first byte</div>
-        <div ref={resultCaptionRef} className={`${styles.caption} ${styles.hidden}`}>554 ms → 37 ms · time to first byte</div>
-        <div className={styles.gatewayLabel}>LiteLLM</div>
+        <div ref={oldRef} className={styles.metric}>553 ms</div>
+        <div ref={newRef} className={`${styles.metric} ${styles.hidden}`}>35 ms</div>
+        <div ref={resultRef} className={`${styles.metric} ${styles.hidden}`}>94% lower</div>
+        <div className={styles.caption}>time to first byte</div>
         {LOGOS.map(([name, image, x, y]) => (
           <span key={name} className={styles.logo} title={name} style={{left: `${x/12}%`, top: `${y/6}%`, maskImage: `url("${logoUrl(image)}")`, WebkitMaskImage: `url("${logoUrl(image)}")`}} />
         ))}
-        <div className={styles.footer}>440k-token local benchmark · one deployment · mock upstream</div>
       </div>
     </div>
   );

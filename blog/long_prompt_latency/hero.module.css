@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Prompt Metric Black';
+  src: url('./assets/ArchivoBlack-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .hero {
   --active: 0;
   --hero-ink: #2f3c52;
@@ -34,13 +42,52 @@
 
 .gateway {
   position: absolute;
-  left: 40.25%;
-  top: 43.8333%;
-  width: 19.5%;
-  height: 21.1667%;
+  left: 44%;
+  top: 36.3333%;
+  width: 12%;
+  height: 41.6667%;
   border: 1px solid var(--hero-muted);
-  border-radius: 1.667cqw;
-  background: linear-gradient(135deg, rgba(37,84,230,var(--active)), rgba(15,44,164,var(--active)));
+  border-radius: 1.8333cqw;
+}
+
+.gatewayEnergy, .gatewayShimmer {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  opacity: var(--active);
+}
+
+.gatewayEnergy {
+  border: 1px solid rgba(208,239,255,.85);
+  background: radial-gradient(ellipse at 0% 0%, rgba(34,222,255,.8), transparent 58%), radial-gradient(ellipse at 100% 100%, rgba(255,110,216,.85), transparent 65%), linear-gradient(var(--gateway-angle, 140deg), #056ac1, #5131c8 52%, #ad278d);
+  box-shadow: -.4cqw 0 2cqw rgba(42,208,255,.32), .4cqw .4cqw 2cqw rgba(242,101,222,.4), inset 0 0 1.2cqw rgba(220,239,255,.3);
+}
+
+.gatewayShimmer {
+  overflow: hidden;
+}
+
+.gatewayShimmer::before {
+  content: '';
+  position: absolute;
+  top: var(--shimmer-y, -80%);
+  left: -75%;
+  width: 250%;
+  height: 38%;
+  transform: rotate(-25deg);
+  background: linear-gradient(transparent, rgba(206,235,255,.1) 24%, rgba(255,255,255,.5) 49%, rgba(255,255,255,.75) 50%, rgba(255,193,242,.18) 62%, transparent);
+}
+
+.gatewayBrand {
+  position: absolute;
+  left: 25%;
+  top: 9.6%;
+  width: 50%;
+  height: 28.8%;
+  opacity: var(--active);
+  background: #fff;
+  mask: no-repeat center / contain;
+  -webkit-mask: no-repeat center / contain;
 }
 
 .labels {
@@ -49,7 +96,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.metric, .caption, .gatewayLabel, .footer {
+.metric, .caption {
   position: absolute;
   left: 0;
   width: 100%;
@@ -59,27 +106,17 @@
 
 .metric {
   top: 14.5%;
+  font-family: 'Prompt Metric Black', 'Arial Black', sans-serif;
   font-size: 4.8333cqw;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: -.025em;
+  transform: scaleX(1.08);
 }
 
 .caption {
   top: 26.3%;
   font-size: 1.8333cqw;
   color: var(--hero-muted);
-}
-
-.gatewayLabel {
-  top: 45.6%;
-  font-size: 2.4167cqw;
-  font-weight: 700;
-}
-
-.footer {
-  top: 90%;
-  color: var(--hero-muted);
-  font-size: 1.5cqw;
 }
 
 .logo {
