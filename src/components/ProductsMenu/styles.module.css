@@ -193,3 +193,52 @@
   background: #8fa0ff;
   color: #11131f;
 }
+
+/* Never wider than the screen */
+.panel {
+  max-width: calc(100vw - 32px);
+}
+
+/* Phones: a compact one-line button, and the panel as a single column
+   pinned under the navbar across the screen */
+@media (max-width: 996px) {
+  .trigger {
+    gap: 5px;
+    padding: 4px 9px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .triggerIcon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .panel {
+    position: fixed;
+    top: var(--ifm-navbar-height, 60px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - var(--ifm-navbar-height, 60px) - 24px);
+    overflow-y: auto;
+    margin-top: 8px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .panel::before {
+    display: none;
+  }
+  .column + .column {
+    border-left: 0;
+    border-top: 1px solid var(--ifm-toc-border-color);
+    margin-top: 6px;
+    padding-top: 10px;
+  }
+}
+
+/* The narrowest phones: icon and arrow only; the open panel marks the
+   current product */
+@media (max-width: 400px) {
+  .triggerLabel {
+    display: none;
+  }
+}

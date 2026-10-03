@@ -469,3 +469,24 @@ html[data-theme='dark'] article a.card:hover,
 html[data-theme='dark'] .pagination-nav__link:hover {
   transform: none !important;
 }
+
+/* Phones: a smaller logo and DOCS label, so the product switcher fits
+   beside them. Clear space stays half the logo's height. */
+@media (max-width: 576px) {
+  .navbar__brand-col .navbar__logo,
+  .navbar__logo {
+    height: 20px;
+  }
+  .navbar__brand {
+    padding-right: 10px;
+  }
+  .navbar__brand .navbar__title {
+    flex: none;
+    margin-left: 9px;
+    font-size: 0.78rem;
+  }
+  .navbar__brand,
+  .navbar__brand-col {
+    flex: none;
+  }
+}
