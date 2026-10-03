@@ -797,6 +797,8 @@ router_settings:
 | JINA_AI_API_KEY | API key for Jina AI
 | JINA_AI_TOKEN | Fallback for `JINA_AI_API_KEY`
 | JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
+| KUBERNETES_POD_DISCOVERY_IDLE_EVICTION_SECONDS | Seconds a Kubernetes pod discovery entry can go unused before it is dropped from the cache. Default is 300
+| KUBERNETES_POD_DISCOVERY_REFRESH_INTERVAL_SECONDS | Seconds between DNS refreshes of a headless service's pod IPs when `kubernetes_pod_discovery` is on. Default is 5
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
 | BESPOKE_API_BASE | HTTP(S) base URL of a Bespoke Nimble System One server, without `/v1/systemone`, for `/bespoke/v1/systemone` and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: bespoke`. Required when no classifier endpoint is supplied |
