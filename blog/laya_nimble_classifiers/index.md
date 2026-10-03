@@ -6,17 +6,20 @@ authors:
   - tin
 description: "Use Laya or Bespoke Nimble to classify Auto Router requests on your own infrastructure. Control where classification runs, which model you serve, and how you provision it."
 image: ./cover.png
-hide_cover: true
 tags: [auto-router, product, ai-gateway]
 hide_table_of_contents: false
 ---
 
 import cover from './cover.png';
 
-<picture>
-  <source media="(prefers-reduced-motion: reduce)" srcSet={typeof cover === 'string' ? cover : cover.src.src} />
-  <img src={require('./cover.gif').default} width="1200" height="630" alt="Laya and Nimble self-hosted classifiers: LiteLLM Auto Router sends classification to either model inside your infrastructure, then routes the request to the selected completion model." />
-</picture>
+export function Hero() {
+  return (
+    <picture>
+      <source media="(prefers-reduced-motion: reduce)" srcSet={typeof cover === 'string' ? cover : cover.src.src} />
+      <img src={require('./cover.gif').default} width="1200" height="630" alt="Laya and Nimble self-hosted classifiers: LiteLLM Auto Router sends classification to either model inside your infrastructure, then routes the request to the selected completion model." />
+    </picture>
+  );
+}
 
 LiteLLM Auto Router now supports **Laya** and **Bespoke Nimble** as self-hosted classifiers. Run either model on your infrastructure to choose which completion model handles each request. Your application keeps calling the same router endpoint.
 
