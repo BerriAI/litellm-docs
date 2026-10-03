@@ -275,6 +275,8 @@ curl -X GET 'http://0.0.0.0:4000/key/list?tag=engineering&team_id=team-a' \
 
 On the Admin UI, click a tag in **Tag Management** to open its details page. The **Virtual Keys** card lists the keys carrying that tag, with the key alias (or the masked key name when there is no alias) linking to the key, its team ID and its spend. It shows "No virtual keys use this tag" when there are none. At most 100 keys are shown, most recently created first, with a note when there are more.
 
+<Image img={require('../../img/tag_details_virtual_keys.jpg')} />
+
 ### Update Tag Budget
 
 Update an existing tag's budget:
