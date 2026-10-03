@@ -1,6 +1,6 @@
 # litellm-docs
 
-Source for [docs.litellm.ai](https://docs.litellm.ai) — the documentation site for [LiteLLM](https://github.com/BerriAI/litellm).
+Source for [docs.litellm.ai](https://docs.litellm.ai); the documentation site for [LiteLLM](https://github.com/BerriAI/litellm).
 
 Built with [Docusaurus 3](https://docusaurus.io/).
 
@@ -30,3 +30,11 @@ Deploys are handled automatically by Vercel on push to `main`.
 Edits are welcome via pull request. For substantive content changes, please open an issue first to discuss.
 
 The main LiteLLM repository is at <https://github.com/BerriAI/litellm>.
+
+## Update Lens integrations
+
+Run `npm run sync:lens` to clone the latest `main` branch of BerriAI/litellm-lens-example and import the READMEs listed in its docs.json manifest. The script adds Docusaurus metadata, rewrites repository links, copies image assets, and updates the integration sidebar. It replaces only `docs/proxy/lens/imported/`; the locally maintained Lens pages stay in `docs/proxy/lens/`.
+
+Review and commit the generated changes with the docs update. Each page records its source commit and links editing back to its README. Builds use the committed pages and do not fetch the examples repository. No GitHub token, dispatch event, or scheduled workflow is required.
+
+For a local committed checkout, run `npm run sync:lens -- --source-dir /path/to/litellm-lens-example`. This imports that checkout’s HEAD, excluding uncommitted changes.
