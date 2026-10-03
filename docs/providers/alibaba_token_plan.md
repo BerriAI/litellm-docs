@@ -53,12 +53,12 @@ We actively maintain the list of models, capabilities and context windows [here]
 
 | Model | LiteLLM endpoints | Notes |
 | --- | --- | --- |
-| `auto` | `/chat/completions`, `/v1/messages` | Alibaba picks the underlying model per request |
+| `auto` | `/chat/completions`, `/v1/messages`, `/responses` | Alibaba picks the underlying model per request; reasoning, tools, image input |
 | `qwen3.8-max`, `qwen3.8-flash`, `qwen3.7-plus`, `qwen3.6-flash` | `/chat/completions`, `/v1/messages`, `/responses` | Reasoning, tools, image input |
 | `qwen3.7-max` | `/chat/completions`, `/v1/messages`, `/responses` | Reasoning, tools |
 | `deepseek-v4.1-flash` | `/chat/completions`, `/v1/messages`, `/responses` | Reasoning, tools, image input |
 | `deepseek-v4-pro`, `deepseek-v4-pro-0813`, `glm-5.3`, `glm-5.2` | `/chat/completions`, `/v1/messages`, `/responses` | Reasoning, tools |
-| `deepseek-v4-flash-0731` | `/chat/completions`, `/v1/messages` | Reasoning, tools |
+| `deepseek-v4-flash-0731` | `/chat/completions`, `/v1/messages`, `/responses` | Reasoning, tools |
 | `qwen-image-3.0-pro` | `/images/generations`, `/images/edits` | Up to 3 input images for edits |
 | `wan2.7-image`, `wan2.7-image-pro` | `/images/generations`, `/images/edits` | Up to 9 input images for edits |
 | `qwen-audio-3.0-tts-plus` | `/audio/speech` | |
@@ -93,7 +93,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-Streaming, tools and `reasoning_effort` work the same way as on the [DashScope route](./dashscope), and `cache_control` markers on messages are passed through
+Streaming, tools and `reasoning_effort` work the same way as on the [DashScope route](./dashscope), and `cache_control` markers on messages are passed through. Two Alibaba limits apply to tools: `auto` rejects `tool_choice` altogether, and the Qwen models reject `tool_choice` set to `required` or a named function while thinking is on, so send `"enable_thinking": false` with those or keep `tool_choice` at `auto`. Models without image input do not reject image parts; they answer as if no image was sent, so check the table above before sending images
 
 ### Anthropic Messages
 
@@ -193,7 +193,7 @@ response = speech(
 response.stream_to_file("build.mp3")
 ```
 
-`voice` takes a Token Plan voice name. OpenAI's `alloy` and an omitted voice both map to `longanhuan_v3.6`, the voice Alibaba uses in its Token Plan examples. `response_format` sets the audio format (default `mp3`) and `sample_rate` sets the rate (default `24000`). Other OpenAI parameters such as `speed` and `instructions` are rejected unless `drop_params` is on
+`voice` takes a Token Plan voice name. OpenAI's `alloy` and an omitted voice both map to `longanhuan_v3.6`, the voice Alibaba uses in its Token Plan examples. `response_format` sets the audio format (default `mp3`); Token Plan accepts `mp3`, `wav`, `pcm` and `opus`, and rejects `aac` and `flac`. `sample_rate` sets the rate (default `24000`). Other OpenAI parameters such as `speed` and `instructions` are rejected unless `drop_params` is on
 
 ### Speech to Text
 
@@ -241,7 +241,7 @@ if video.status == "completed":
         f.write(video_content(video_id=video.id))
 ```
 
-`seconds` must be between 3 and 15. `size` is converted to Token Plan's `resolution` and `ratio`, so its shorter side must be 480, 720 or 1080; you can also pass `resolution` (`480P`, `720P`, `1080P`) directly. Use `input_reference` with `happyhorse-1.1-i2v` for the first frame. For `happyhorse-1.1-r2v`, pass one reference image with `input_reference`, or up to 9 through a native `input.media` list of `reference_image` entries. Image-to-video keeps the source image's aspect ratio, so it accepts neither `size` nor `ratio`. Remix, list and delete are not available on Token Plan
+`seconds` must be between 3 and 15. `size` is converted to Token Plan's `resolution` and `ratio`, so its shorter side must be 480, 720 or 1080; you can also pass `resolution` (`480P`, `720P`, `1080P`) directly. Use `input_reference` with `happyhorse-1.1-i2v` for the first frame. For `happyhorse-1.1-r2v`, pass one reference image with `input_reference`, or up to 9 through a native `input.media` list of `reference_image` entries. Image-to-video keeps the source image's aspect ratio, so it accepts neither `size` nor `ratio`. Videos carry a small HappyHorse watermark unless you send `"parameters": {"watermark": false}`, which also takes `ratio` and `seed`. Jobs took 80 to 105 seconds in testing, and every clip includes an AAC audio track. Remix, list and delete are not available on Token Plan
 
 ## Usage - LiteLLM Proxy
 
@@ -408,11 +408,12 @@ The client events `session.update`, `input_audio_buffer.append`, `input_audio_bu
 | --- | --- |
 | `turn_detection` | `server_vad`, `smart_turn` or `null` for manual turns; `create_response` and `interrupt_response` cannot be turned off |
 | `tools` | Function tools only, with `tool_choice` `auto`; cannot be combined with `enable_search` |
+| Guardrails | `realtime_input_transcription` guardrails are not supported, because they need auto-response turned off |
 | Input sample rate | 16000 or 24000 Hz, and it cannot change once audio has been sent |
 | `response.create` | Only `modalities` / `output_modalities` and `voice` overrides |
 | `response.cancel` | Cancels the active response; omit `response_id` |
 
-Qwen-Audio session fields such as `enable_search`, `search_options`, `enable_speech_emotion` and `max_history_turns` pass through `session.update` unchanged
+Qwen-Audio session fields such as `enable_search`, `search_options`, `enable_speech_emotion` and `max_history_turns` pass through `session.update` unchanged. With input transcription on, Qwen-Audio already replies to each turn, so LiteLLM does not send its own `response.create` after a transcript; in manual mode, send `response.create` yourself as usual
 
 ## Limitations
 
