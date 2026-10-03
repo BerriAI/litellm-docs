@@ -749,7 +749,6 @@ const sidebars = {
             }
           ],
         },
-        { type: "doc", id: "proxy/roi_calculator", label: "ROI Calculator" },
         {
           type: "category",
           label: "Architecture",
@@ -965,6 +964,7 @@ const sidebars = {
             "proxy/headroom",
           ],
         },
+        { type: "doc", id: "proxy/roi_calculator", label: "ROI Calculator" },
       ]
     },
     {
