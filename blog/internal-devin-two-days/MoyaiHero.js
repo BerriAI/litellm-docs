@@ -12,12 +12,15 @@ const sections = [
 export default function MoyaiHero() {
   const {metadata} = useBlogPost();
   const [paused, setPaused] = useState(false);
+  const publishedDate = new Date(metadata.date).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  });
 
   return (
     <>
       <header className={styles.hero}>
         <div className={styles.heading}>
-          <time className={styles.date} dateTime="2026-10-01">October 1, 2026</time>
+          <time className={styles.date} dateTime={metadata.date}>{publishedDate}</time>
           <h1 className={styles.title}>{metadata.title}</h1>
           <p className={styles.subtitle}>Our team's cloud coding agent, built with Render and Temporal.</p>
         </div>
