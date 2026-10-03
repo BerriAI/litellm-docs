@@ -26,7 +26,7 @@ export function BenchmarkResults() {
                 <span className={styles.beforeValue}>{item.before}<small>ms</small></span>
               </div>
               <span className={styles.arrow} aria-hidden="true">→</span>
-              <div>
+              <div className={styles.after}>
                 <span className={styles.metricLabel}>After</span>
                 <span className={styles.afterValue}>{item.after}<small>ms</small></span>
               </div>
