@@ -1,0 +1,136 @@
+.figure {
+  --border: #dce3eb;
+  --text: #1c3049;
+  --muted: #5b6e85;
+  --blue: #285eae;
+  margin: 2em 0;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+:global([data-theme='dark']) .figure {
+  --border: #3b4c60;
+  --text: #e5edf7;
+  --muted: #acbfd4;
+  --blue: #8cb7ff;
+}
+
+.heading,
+.cardHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+}
+
+.heading {
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.context {
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.benchmarkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+  gap: 20px;
+}
+
+.benchmarkCard {
+  min-width: 0;
+  container-type: inline-size;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: transparent;
+  padding: 24px;
+}
+
+.cardHeading {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.comparison {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.metricLabel {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.beforeValue,
+.afterValue {
+  display: block;
+  font-size: clamp(40px, 16cqi, 64px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.beforeValue {
+  color: var(--muted);
+}
+
+.afterValue {
+  color: var(--blue);
+}
+
+.after {
+  text-align: right;
+}
+
+.beforeValue small,
+.afterValue small {
+  margin-left: 4px;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.arrow {
+  color: var(--muted);
+  padding-bottom: 5px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.caption {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+@container (max-width: 230px) {
+  .arrow {
+    display: none;
+  }
+
+  .beforeValue small,
+  .afterValue small {
+    display: block;
+    margin: 8px 0 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .benchmarkCard {
+    padding: 20px;
+  }
+}
