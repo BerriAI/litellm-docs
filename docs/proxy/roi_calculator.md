@@ -47,7 +47,7 @@ Under **Advanced settings**, you can provide an **Estimator API key**. Otherwise
 
 Select **Start backfill**. The calculator reads spend, imports merged PRs, and estimates up to three PRs at a time. After setup, use **Run analysis** for a manual refresh or **Settings** to change the configuration. **Test connections** checks model access and repository access without running an estimate.
 
-You can select **Preview sample report** before your first report to explore the interface. Sample mode makes no source-provider or model requests.
+Select **Preview sample report** to explore the calculator before or after setup. The demo opens in **By branch** with fictional PR costs, including a PR whose author has no email match and spending on an unmerged branch. Open a PR to see its cost, request count, and example tags. **Exit demo** returns to your live report or setup without changing saved data. Sample mode makes no source-provider or model requests.
 
 ## Read the report
 
