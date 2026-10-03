@@ -858,6 +858,33 @@ litellm_settings:
 
 Both lists are validated at startup; an unknown metric or label name raises a configuration error so typos surface immediately. Exclusion always wins, so a metric named in `prometheus_exclude_metrics` is dropped even if a `prometheus_metrics_config` group enables it, and a label in `prometheus_exclude_labels` is removed even when a group's `include_labels` lists it.
 
+### Cap Series per Metric
+
+Every distinct label combination a metric has ever seen stays in the proxy's memory until the process restarts, so labels such as `user`, `user_email`, `hashed_api_key`, `api_key_alias`, `client_ip`, and `user_agent` grow the metric state with every new caller. Dropping the labels you do not query is the first lever (above). When a label has to stay, set `prometheus_metrics_max_series_per_metric` to bound how many series each metric keeps. It is off by default and applies to every labeled metric the `prometheus` callback emits
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_metrics_max_series_per_metric: 5000
+```
+
+The first `5000` label combinations a metric sees keep a series of their own. For a counter or histogram, every later combination is recorded on one extra series whose labels are all `other`, so sums over the metric stay exact and only the per-label breakdown of the overflow is lost. A gauge skips combinations past the cap, because one gauge value shared by many callers would mean nothing. A non-positive value fails proxy startup
+
+The cap is counted per worker process. With multiple workers, each worker keeps its own first `5000` combinations, so a scrape that merges `N` workers can show up to `N` times the cap plus the `other` series. A worker that is replaced, for example by `--max_requests_before_restart`, counts as another worker, because the Prometheus client library keeps the counters of a worker that exited
+
+To free slots held by callers that went away, also set `prometheus_metrics_ttl_seconds`. A series that has not been updated for that many seconds is removed, checked at most every `prometheus_metrics_cleanup_interval_seconds` (default `60`), and its slot goes to the next new label combination. A removed series disappears from `/metrics` until it is emitted again, at which point its counter restarts from zero, which PromQL `rate()` and `increase()` treat as a counter reset
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_metrics_max_series_per_metric: 5000
+  prometheus_metrics_ttl_seconds: 3600
+```
+
+The TTL only works in single-process mode. With `PROMETHEUS_MULTIPROC_DIR` set (multiple workers or the [dedicated metrics port](#isolate-prometheus-scraping-from-inference-traffic)), the Prometheus client library cannot remove a series it has written, so LiteLLM ignores `prometheus_metrics_ttl_seconds` there and logs a warning at startup. The cap still holds in that mode, and slots are freed when the worker restarts
+
+The `end_user` caps in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus) are separate settings and still apply to metrics that carry the `end_user` label
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
