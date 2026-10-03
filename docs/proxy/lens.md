@@ -20,6 +20,8 @@ LiteLLM Lens uses AI agents to analyze your agent traces and find recurring prob
 
 Use **Lens > Traces** to manually inspect individual runs. Use **Lens > Investigations** to investigate a set of runs, on demand or on a schedule.
 
+Before setup, click **Preview sample** beside the Lens title to explore sample traces, investigations, and linked evidence. **Exit demo** returns to your own workspace.
+
 ## Deployment {#quick-start}
 
 ![LiteLLM Lens architecture: your agent sends LLM calls and traces to LiteLLM, which stores traces in ClickHouse; the Lens worker polls LiteLLM for investigations.](/img/lens-architecture.svg)
@@ -112,7 +114,7 @@ docker run -d --restart unless-stopped --read-only --cap-drop ALL \
   --security-opt no-new-privileges --platform linux/amd64 --add-host host.docker.internal:host-gateway \
   -e LITELLM_URL=https://<your-litellm-proxy> \
   -e LENS_WORKER_TOKEN=<worker-token-from-the-dashboard> \
-  ghcr.io/berriai/litellm-lens-worker@sha256:a8e8731d954916594eea462969946b9292fb771681ff515a9fd296b53f856c77
+  <worker-image-from-your-dashboard>
 ```
 
 | Variable | Value |
@@ -121,6 +123,8 @@ docker run -d --restart unless-stopped --read-only --cap-drop ALL \
 | `LENS_WORKER_TOKEN` | The worker token from **Get install command**. Keep it private |
 
 The worker needs outbound access to `LITELLM_URL` only. It needs no inbound ports, provider keys, or database access. Use [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) instead if you manage containers with Compose. The dashboard shows **Worker connected** once the worker checks in.
+
+Copy the full command from your dashboard, including its pinned worker image. After upgrading the gateway, use its compatible worker image and recreate the worker with the same proxy URL and token. A running container does not update automatically.
 
 ### Connect your agent
 
@@ -458,7 +462,7 @@ try {
   const { text } = await generateText({
     model,
     prompt: "What is an agent trace?",
-    experimental_telemetry: { isEnabled: true, functionId: "research_agent" },
+    telemetry: { functionId: "research_agent" },
   });
   console.log(text);
 } finally {
@@ -569,6 +573,8 @@ Run the Docker command on a server that can reach your LiteLLM deployment. Keep 
 ![Lens worker setup with an analysis model and a monthly limit.](/img/lens/worker-setup.png)
 
 This worker runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations and sends the results back. It calls your chosen model through LiteLLM and keeps running when you close the dashboard.
+
+The generated command starts one worker process, which runs one investigation at a time. Its concurrency setting controls how many traces it reviews within that investigation. Running more worker processes allows more simultaneous investigations; their analysis costs share the assigned virtual key's budget.
 
 ### Choose the traces
 
