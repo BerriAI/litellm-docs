@@ -41,7 +41,9 @@ LiteLLM picks the endpoint for each API from the same host:
 | Video | `https://token-plan.ap-southeast-1.maas.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis`, polled at `/api/v1/tasks/{task_id}` |
 | Realtime | `wss://token-plan.ap-southeast-1.maas.aliyuncs.com/api-ws/v1/realtime` |
 
-To send traffic through your own gateway, set `ALIBABA_TOKEN_PLAN_API_BASE` or `api_base` to the gateway root, or to that root followed by `/compatible-mode/v1` or `/apps/anthropic`. LiteLLM keeps the scheme, host and any path prefix and appends the path each API needs, so one value works for every model. Any other path is treated as the complete URL for that request, which is useful when a single deployment needs a fully custom image, speech or transcription URL. The official host only accepts `https://` and `wss://`
+To send traffic through your own gateway, set `ALIBABA_TOKEN_PLAN_API_BASE` or `api_base` to its origin, such as `https://gateway.example.com`, or to a base ending in `/compatible-mode/v1` or `/apps/anthropic`. For a gateway mounted under a path prefix, include that prefix before one of these suffixes, such as `https://gateway.example.com/token-plan/compatible-mode/v1`. LiteLLM keeps the host and path prefix and selects the endpoint path for each API, so one value works for every model
+
+Other paths are treated as complete operation URLs by image generation, image editing, speech, transcription and realtime. Chat and Messages append their own route paths. Video derives creation and task URLs from a base, removing the video creation endpoint suffix when supplied. Use one of the recognized suffixes above when sharing a gateway base across APIs. The official host only accepts `https://` and `wss://`
 
 ## Supported Models
 
@@ -394,7 +396,7 @@ Authenticate with `Authorization: Bearer <proxy key>`. Audio is mono PCM16. Outp
         "format": {"type": "audio/pcm", "rate": 16000},
         "turn_detection": {"type": "server_vad"}
       },
-      "output": {"voice": "longanhuan_v3.6"}
+      "output": {"voice": "longanqian"}
     }
   }
 }
