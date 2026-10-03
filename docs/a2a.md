@@ -35,13 +35,16 @@ LiteLLM follows the [A2A (Agent-to-Agent) Protocol](https://github.com/google/A2
 
 You can add A2A-compatible agents through the LiteLLM Admin UI.
 
-1. Navigate to the **Agents** tab
-2. Click **Add Agent**
-3. Enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
+1. Navigate to **Agentic** > **Agents**
+2. Click **Add New Agent**
+3. In the **Configure** step, enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
 4. Choose a **Protocol Version** (`1.0` or `0.3`) - the wire format LiteLLM serves to clients for this agent
+5. Continue through the remaining steps and save the agent
 
 <Image 
   img={require('../img/add_agent_1.png')}
+  dark={require('../img/add_agent_1_dark.png')}
+  alt="Add New Agent dialog showing the agent name, URL and protocol version"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -156,12 +159,14 @@ See the [Invoking A2A Agents](./a2a_invoking_agents) guide to learn how to call 
 After invoking an agent, you can view the request logs in the LiteLLM **Logs** tab.
 
 The logs show:
-- **Request/Response content** sent to and received from the agent
+- **Request/Response content** sent to and received from the agent (open a row, then switch the **Request & Response** section to **JSON**; requires `store_prompts_in_spend_logs: true`)
 - **User, Key, Team** information for tracking who made the request
 - **Latency and cost** metrics
 
 <Image 
   img={require('../img/agent2.png')}
+  dark={require('../img/agent2_dark.png')}
+  alt="Request log details for an A2A agent call showing the request JSON"
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
 
@@ -276,8 +281,12 @@ With header forwarding enabled, you'll see:
 
 **Agent Spend Attribution:**
 
+Open **Usage**, choose **Agent Usage (A2A)** and stay on the **Cost** tab to see spend per agent.
+
 <Image
   img={require('../img/a2a_agent_spend.png')}
+  dark={require('../img/a2a_agent_spend_dark.png')}
+  alt="Agent Usage (A2A) page showing daily spend and spend by agent"
   style={{width: '80%', display: 'block', margin: '0', borderRadius: '8px'}}
 />
 

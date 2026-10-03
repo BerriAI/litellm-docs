@@ -4,6 +4,7 @@ description: Start LiteLLM with one command or one click and go from zero to you
 ---
 
 import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -53,17 +54,17 @@ Running locally, the command above generated both into `.env` and the compose fi
 
 Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value, the one in the `.env` file you just generated.
 
-<Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
+<Image img={require('../../img/ui_quickstart_login.png')} dark={require('../../img/ui_quickstart_login_dark.png')} alt="LiteLLM Admin UI login page" />
 
 ## 3. Add your first model
 
 Go to **Models + Endpoints**, open the **Add Model** tab, pick your provider and the models you want to expose, and paste your provider API key. LiteLLM ships with each provider's model catalog, so you select models rather than type them.
 
-<Image img={require('../../img/ui_quickstart_add_model.png')} alt="Add Model form with OpenAI provider and gpt-5.5 selected" />
+<Image img={require('../../img/ui_quickstart_add_model.png')} dark={require('../../img/ui_quickstart_add_model_dark.png')} alt="Add Model form with OpenAI provider and gpt-5.5 selected" />
 
-Click **Test Connect** to verify the key against the provider, then **Add Model**. It appears under **All Models** with its pricing already mapped:
+Click **Test Connect** to verify the key against the provider, then **Add Model**. It appears under **Deployed Models** with its pricing already mapped:
 
-<Image img={require('../../img/ui_quickstart_models_list.png')} alt="All Models list showing the newly added model with cost data" />
+<Image img={require('../../img/ui_quickstart_models_list.png')} dark={require('../../img/ui_quickstart_models_list_dark.png')} alt="Deployed Models list showing the newly added model with cost data" />
 
 :::tip[Keep provider keys out of the UI]
 If you prefer to manage provider keys as environment variables, download the compose file, add them to the `litellm` service (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`), and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
@@ -73,7 +74,7 @@ If you prefer to manage provider keys as environment variables, download the com
 
 Go to **Playground**, select your model, and send a message. The request goes through the gateway to your provider, and the response comes back with latency and token counts:
 
-<Image img={require('../../img/ui_quickstart_playground.png')} alt="Playground showing a live response from the model with latency and token metrics" />
+<Image img={require('../../img/ui_quickstart_playground.png')} dark={require('../../img/ui_quickstart_playground_dark.png')} alt="Playground showing a live response from the model with latency and token metrics" />
 
 Your gateway works end to end. The **Get Code** button in the Playground generates the equivalent API call for your language.
 
@@ -83,7 +84,7 @@ Virtual keys are what you hand to applications and teammates instead of raw prov
 
 Go to **Virtual Keys**, click **+ Create New Key**, give it a name, and click **Create Key**:
 
-<Image img={require('../../img/ui_quickstart_create_key.png')} alt="Save your Key modal showing the newly created virtual key" />
+<Image img={require('../../img/ui_quickstart_create_key.png')} dark={require('../../img/ui_quickstart_create_key_dark.png')} alt="Save your Key modal showing the newly created virtual key" />
 
 Copy the key now; it is shown only once.
 
@@ -170,7 +171,13 @@ console.log(response.choices[0].message.content);
 
 ## The whole flow, end to end
 
-<Image img={require('../../img/ui_quickstart_flow.gif')} alt="Animated walkthrough: add a model, test it in the Playground, create a virtual key" />
+<ThemedVideo
+  src={require('../../img/ui_quickstart_flow.mp4')}
+  dark={require('../../img/ui_quickstart_flow_dark.mp4')}
+  poster={require('../../img/ui_quickstart_flow_poster.png')}
+  darkPoster={require('../../img/ui_quickstart_flow_poster_dark.png')}
+  title="Walkthrough: add a model, test it in the Playground, create a virtual key"
+/>
 
 ## Running without a database
 
