@@ -20,5 +20,8 @@
       "source": "/:path((?:.*/)?[^./]*){/}?",
       "headers": [{ "key": "Vary", "value": "Accept" }]
     }
+  ],
+  "redirects": [
+    {"source": "/docs/proxy/lens/coding_agents", "destination": "/docs/proxy/lens/coding-agents", "permanent": true}
   ]
 }
