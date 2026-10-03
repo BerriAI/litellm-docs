@@ -474,6 +474,8 @@ with trace.get_tracer(__name__).start_as_current_span("research_agent") as span:
 
 </Tabs>
 
+To try tracing your personal coding sessions, see [Claude Code and Codex setup](./lens/coding_agents.md).
+
 ## View your first trace
 
 Open **Lens > Traces**. Select a time range that includes your run, then open it. For the examples above, look for **research_agent**. The same name is available under **Agent** when creating an investigation. Select a step to read its input, output, and attributes.
