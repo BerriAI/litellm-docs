@@ -21,6 +21,8 @@ For GitHub Enterprise or self-managed GitLab, expand **Self-hosted instance** an
 
 The first sync reads the current period, the preceding period, and the same period last year. Choose **Last 7 days**, **Last 28 days**, or **Last 90 days**. Every window covers the selected number of complete UTC days and excludes today. **Previous period** is the immediately preceding window of the same length. **Same period last year** has the same length and ends on the equivalent date last year, clamping February 29 to February 28. The dashboard shows both date ranges. Changing the range starts a sync, and later refreshes retain the last successfully loaded range. **Sync now** refreshes all selected repositories. Automatic sync defaults to daily and runs while the gateway is running. The settings API accepts `update_interval_minutes: 0` for manual refreshes, or at least `5` for automatic refreshes
 
+The refresh interval applies to the whole workspace, including every connected provider and selected repository. Adding or editing a connection preserves the interval unless you explicitly change it
+
 An empty repository is a valid report with zero merged changes. Merge time and spend per merged change have no value until there are matching observations. Failed or cancelled syncs keep the last complete report
 
 ## Configure app connections
@@ -33,7 +35,7 @@ Set `PROXY_BASE_URL` to the gateway's public URL. Register a GitHub App with rea
 <PROXY_BASE_URL>/roi-calculator/observed/oauth/github/callback
 ```
 
-Set its setup URL to `<PROXY_BASE_URL>/roi-calculator/observed/oauth/github/installed`, enable **Redirect on update**, and leave authorization during installation disabled. The gateway starts authorization after installation. Configure:
+Set its setup URL to `<PROXY_BASE_URL>/roi-calculator/observed/oauth/github/installed`, enable **Redirect on update**, and leave authorization during installation disabled. Generate a private key in the app settings so GitHub allows installation, and store it securely. The gateway uses the app's client ID and a generated client secret for authorization and does not need that private key. Configure:
 
 ```bash
 LITELLM_ROI_GITHUB_CLIENT_ID=<app-client-id>
