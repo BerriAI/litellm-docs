@@ -2337,3 +2337,9 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 .tabs-container:has(> ul.tabs.lens-framework-tabs > li.tabs__item--active:first-child) > div {
   border-top-left-radius: 16px;
 }
+
+/* Light/dark pairs from IdealImage `dark` and ThemedVideo, before hydration */
+[data-theme='light'] .themed-media--dark,
+[data-theme='dark'] .themed-media--light {
+  display: none;
+}

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
 import styles from './styles.module.css';
@@ -120,9 +120,14 @@ export default function ProductsMenu({mobile}) {
   const location = useLocation();
   const current = currentItem(location);
   const [open, setOpen] = useState(false);
-  const close = () => setOpen(false);
+  const leaveTimer = useRef();
+  const close = () => {
+    clearTimeout(leaveTimer.current);
+    setOpen(false);
+  };
 
   useEffect(close, [location.pathname, location.hash]);
+  useEffect(() => () => clearTimeout(leaveTimer.current), []);
 
   if (mobile) {
     return (
@@ -146,8 +151,16 @@ export default function ProductsMenu({mobile}) {
       className={`${styles.root} ${open ? styles.open : ''}`}
       // Hover opens it for a mouse only; on touch screens a tap would fire
       // the hover and then the click, opening and closing it at once
-      onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(true)}
-      onPointerLeave={(e) => e.pointerType === 'mouse' && close()}
+      onPointerEnter={(e) => {
+        if (e.pointerType !== 'mouse') return;
+        clearTimeout(leaveTimer.current);
+        setOpen(true);
+      }}
+      // A short grace period, so a pointer cutting across the gap on its way
+      // to the panel doesn't close it
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') leaveTimer.current = setTimeout(close, 200);
+      }}
       onKeyDown={(e) => e.key === 'Escape' && close()}>
       <button
         type="button"

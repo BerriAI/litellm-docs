@@ -235,3 +235,26 @@ button.hub:focus-visible .hubHint,
     align-items: center;
   }
 }
+
+/* highlight: one destination group stands out, the others fade back */
+.lines path.lineOn {
+  stroke: var(--ifm-color-primary);
+  stroke-width: 2;
+}
+.dim .group {
+  opacity: 0.55;
+}
+.dim .group.on {
+  opacity: 1;
+}
+.on .label {
+  color: var(--ifm-color-primary);
+  font-weight: 650;
+}
+.on .row {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ifm-color-primary) 16%, transparent);
+}
+.on .more {
+  color: var(--ifm-color-primary);
+}

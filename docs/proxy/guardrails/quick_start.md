@@ -111,6 +111,7 @@ litellm_settings:
 
 <Image
   img={require('../../../img/skip_system_message_guardrail_ui.png')}
+  dark={require('../../../img/skip_system_message_guardrail_ui_dark.png')}
   alt="Create guardrail: Skip system messages in guardrail dropdown with Use global default, Yes exclude from guardrail scan, and No always include in scan"
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
