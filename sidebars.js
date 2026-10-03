@@ -735,6 +735,7 @@ const sidebars = {
               items: [
                 "proxy/customer_usage",
                 "proxy/endpoint_activity",
+                { type: "ref", id: "proxy/roi_calculator" },
               ]
             },
             {
@@ -933,6 +934,7 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
+            "proxy/roi_calculator",
             "proxy/spend_capture_rate",
             "tutorials/vertex_ai_pay_go",
             "proxy/request_tags",
