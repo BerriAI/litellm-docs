@@ -11,6 +11,9 @@ hide_table_of_contents: true
 ---
 
 import { BenchmarkResults, MeasuredTrace, TraceExamples } from './diagrams';
+import PromptLatencyHero from './PromptLatencyHero';
+
+export const Hero = PromptLatencyHero;
 
 ![LiteLLM's median time to first byte drops from 554 ms to 37 ms in a local 440k-token, single-deployment benchmark, a 93% reduction](./cover.gif)
 
