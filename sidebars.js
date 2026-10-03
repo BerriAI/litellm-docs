@@ -1312,6 +1312,7 @@ const sidebars = {
         "providers/baseten",
         "providers/black_forest_labs",
         "providers/black_forest_labs_img_edit",
+        "providers/bourse",
         "providers/bytez",
         "providers/cerebras",
         "providers/chutes",
