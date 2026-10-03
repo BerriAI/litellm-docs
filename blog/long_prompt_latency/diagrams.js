@@ -1,5 +1,4 @@
-// Measured offsets and median TTFB: https://github.com/BerriAI/litellm/pull/44221
-// MeasuredTrace reconstructs request setup from one local benchmark.
+// Median TTFB: https://github.com/BerriAI/litellm/pull/44221
 import React from 'react';
 import styles from './diagrams.module.css';
 
@@ -7,22 +6,6 @@ const benchmarks = [
   {endpoint: 'Chat completions', before: 553, after: 35},
   {endpoint: 'Messages', before: 542, after: 40},
 ];
-
-const trace = {
-  name: 'POST /v1/chat/completions',
-  windowMs: 15,
-  ticks: [0, 3, 6, 9, 12, 15],
-  spans: [
-    {name: 'auth /v1/chat/completions', start: 3.8, end: 8.9, tone: 'auth'},
-    {name: 'route claude-opus-5-5', start: 11.6, end: 12.7, tone: 'route'},
-  ],
-  events: [
-    {name: 'litellm.request.body_received', at: 1.7, detail: '1,807,504 bytes'},
-    {name: 'litellm.request.body_parsed', at: 3.7},
-    {name: 'litellm.request.pre_call_completed', at: 11.2},
-    {name: 'litellm.request.deployment_selected', at: 12.6, detail: 'Attempt 1 · initial'},
-  ],
-};
 
 export function BenchmarkResults() {
   return (
@@ -53,55 +36,6 @@ export function BenchmarkResults() {
       </div>
       <figcaption className={styles.caption}>
         440k-token conversation · prompt-caching check enabled · instant mock upstream
-      </figcaption>
-    </figure>
-  );
-}
-
-export function MeasuredTrace() {
-  return (
-    <figure className={styles.figure}>
-      <div className={styles.tracePanel}>
-        <div className={styles.heading}>
-          <strong><code>{trace.name}</code></strong>
-          <span className={styles.context}>Measured request setup</span>
-        </div>
-        <div className={styles.axis} aria-hidden="true">
-          {trace.ticks.map((tick) => <span key={tick}>{tick}{tick === trace.windowMs ? ' ms' : ''}</span>)}
-        </div>
-        <div className={styles.spanRows}>
-          {trace.spans.map((span) => (
-            <div className={styles.spanRow} key={span.name}>
-              <div className={styles.spanLabel}>
-                <code>{span.name}</code>
-                <span className={styles.time}>{span.start.toFixed(1)}–{span.end.toFixed(1)} ms</span>
-              </div>
-              <div className={styles.track} aria-hidden="true">
-                <div
-                  className={`${styles.bar} ${styles[span.tone]}`}
-                  style={{left: `${span.start / trace.windowMs * 100}%`, width: `${(span.end - span.start) / trace.windowMs * 100}%`}}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className={styles.events}>
-          <div className={styles.sectionLabel}>Events on the request's SERVER span</div>
-          <dl className={styles.eventList}>
-            {trace.events.map((event) => (
-              <div className={styles.eventRow} key={event.name}>
-                <dt>
-                  <code>{event.name}</code>
-                  {event.detail && <span className={styles.eventDetail}>{event.detail}</span>}
-                </dt>
-                <dd className={styles.time}>{event.at.toFixed(1)} ms</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
-      <figcaption className={styles.caption}>
-        Request setup from the Python-path benchmark, reconstructed from recorded spans and events. Times are relative to server start.
       </figcaption>
     </figure>
   );

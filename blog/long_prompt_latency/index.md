@@ -5,12 +5,12 @@ date: 2026-10-03T09:00:00
 authors:
   - yassin
 image: ./cover.gif
-description: "A 440k-token benchmark went from 553 ms to 35 ms median time to first byte. We removed unnecessary prompt-cache routing work and made the request trace show where time goes."
+description: "A 440k-token benchmark went from 553 ms to 35 ms median time to first byte. We removed unnecessary prompt-cache routing work before the model call."
 tags: [performance, proxy, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
 
-import { BenchmarkResults, MeasuredTrace } from './diagrams';
+import { BenchmarkResults } from './diagrams';
 import PromptLatencyHero from './PromptLatencyHero';
 
 export const Hero = PromptLatencyHero;
@@ -19,7 +19,7 @@ export const Hero = PromptLatencyHero;
 
 LiteLLM was counting every token in a long conversation to answer a yes-or-no routing question.
 
-Removing that unnecessary work took median time to first byte from **553 ms to 35 ms** in our local 440k-token benchmark: **94% lower**. We also improved the OpenTelemetry traces so you can see where a request spends its time.
+Removing that unnecessary work took median time to first byte from **553 ms to 35 ms** in our local 440k-token benchmark: **94% lower**.
 
 {/* truncate */}
 
@@ -40,13 +40,5 @@ The benchmark used the Python request path, a 439,945-token conversation with 33
 <BenchmarkResults />
 
 Each result is the median of three requests after one warmup, on the same local machine. `/v1/responses` already bypassed this check and stayed roughly flat. Requests without the optional check are unaffected. [Full benchmark samples and setup](https://github.com/BerriAI/litellm/pull/44221).
-
-## See where the time goes
-
-New OpenTelemetry events show time spent receiving and parsing the request, running hooks, and selecting a deployment. Here's a measured request from the same benchmark:
-
-<MeasuredTrace />
-
-Enable [OpenTelemetry v2](https://docs.litellm.ai/docs/observability/opentelemetry_v2) with `LITELLM_OTEL_V2=true` to see these events in your traces.
 
 See the changes: [prompt-cache routing optimization](https://github.com/BerriAI/litellm/pull/44221).

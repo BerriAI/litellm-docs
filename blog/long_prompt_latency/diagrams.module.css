@@ -3,9 +3,6 @@
   --text: #1c3049;
   --muted: #5b6e85;
   --blue: #285eae;
-  --teal: #087a70;
-  --purple: #8554c7;
-  --grid: rgba(108, 132, 160, 0.12);
   margin: 1.5rem 0 2rem;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -17,25 +14,10 @@
   --text: #e5edf7;
   --muted: #acbfd4;
   --blue: #8cb7ff;
-  --teal: #75d6c6;
-  --purple: #c1a0f6;
-  --grid: rgba(167, 188, 217, 0.13);
-}
-
-.figure code {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 0.83rem;
-  line-height: 1.55;
-  white-space: normal;
-  overflow-wrap: anywhere;
 }
 
 .heading,
-.cardHeading,
-.spanLabel {
+.cardHeading {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -45,10 +27,6 @@
 
 .heading {
   margin-bottom: 0.85rem;
-  font-size: 0.95rem;
-}
-
-.heading strong code {
   font-size: 0.95rem;
 }
 
@@ -64,8 +42,7 @@
   gap: 0.85rem;
 }
 
-.benchmarkCard,
-.tracePanel {
+.benchmarkCard {
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -132,126 +109,9 @@
   line-height: 1.6;
 }
 
-.tracePanel {
-  padding: 1.15rem 1.25rem;
-}
-
-.axis {
-  display: flex;
-  justify-content: space-between;
-  margin: 1.25rem 0 0.4rem;
-  color: var(--muted);
-  font-size: 0.69rem;
-}
-
-.spanRows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.spanLabel {
-  margin-bottom: 0.35rem;
-}
-
-.time {
-  flex-shrink: 0;
-  color: var(--muted);
-  font-size: 0.74rem;
-  white-space: nowrap;
-}
-
-.track {
-  position: relative;
-  height: 14px;
-  border-radius: 3px;
-  background-color: var(--grid);
-  background-image: linear-gradient(to right, var(--border) 1px, transparent 1px);
-  background-size: 20% 100%;
-}
-
-.bar {
-  position: absolute;
-  height: 100%;
-  min-width: 2px;
-  border-radius: 3px;
-}
-
-.auth { background: var(--purple); }
-.route { background: var(--teal); }
-.chat { background: var(--blue); }
-
-.events {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.sectionLabel {
-  margin-bottom: 0.8rem;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.eventList {
-  margin: 0;
-}
-
-.eventRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.8rem;
-  align-items: baseline;
-  padding: 0.38rem 0;
-}
-
-.eventRow dt {
-  position: relative;
-  padding-left: 0.85rem;
-  font-weight: 400;
-}
-
-.eventRow dt::before {
-  position: absolute;
-  top: 0.59rem;
-  left: 0;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--blue);
-  content: '';
-}
-
-.eventRow dd {
-  margin: 0;
-}
-
-.eventDetail {
-  display: block;
-  margin-top: 0.1rem;
-  color: var(--muted);
-  font-size: 0.71rem;
-}
 
 @media (max-width: 600px) {
   .benchmarkGrid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .tracePanel {
-    padding: 1rem 0.85rem;
-  }
-
-  .figure code {
-    font-size: 0.76rem;
-  }
-
-  .eventRow {
-    gap: 0.4rem;
-  }
-
-  .spanLabel {
-    gap: 0.1rem 0.5rem;
   }
 }
