@@ -391,7 +391,6 @@ A hosted application can reuse the gateway's configured Google, Okta or other SS
 
 | Requested scope | Gateway callback setting | Access |
 | --- | --- | --- |
-| `proxy:read` | `LITELLM_PROXY_API_OAUTH_REDIRECT_URIS` | Model listings and aggregate usage reports within the user's current permissions |
 | `proxy:admin` | `LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS` | Existing administrator operations and model calls, subject to current `proxy_admin` authority and gateway limits |
 
 For an administrator app, set on the gateway:
@@ -400,14 +399,14 @@ For an administrator app, set on the gateway:
 export LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS=https://admin.example.com/oauth/callback
 ```
 
-Both settings accept comma-separated exact HTTPS URIs. Wildcards, query strings and fragments are rejected. An admin callback may request either scope; a reporting callback cannot request admin access. Omitting `scope` requests `proxy:read`. Registering a callback never promotes the user or skips their consent
+This setting accepts comma-separated exact HTTPS callbacks. Wildcards, userinfo, query strings and fragments are rejected. Hosted applications must explicitly request `scope=proxy:admin`; an omitted or different scope is rejected. Registering a callback never promotes the user or skips consent
 
-The discovery document retains `contract_version: 1` and adds `hosted_app`. Its `scopes_supported` lists currently enabled hosted scopes, `access_token_ttl` is 300 seconds, and `refresh_token_ttl` is 86400 seconds. Clients check those capabilities, validate `issuer` and `resource` against their configured gateway, and use the discovered registration, authorization, token and revocation endpoints. Send `resource=<gateway origin>` and the chosen `scope` when authorizing. Hosted tokens include `scope`, `user_id`, `access_token`, `refresh_token`, `expires_in` and `refresh_expires_in`
+The discovery document retains `contract_version: 1` and adds `hosted_app`. With an admin callback configured, `scopes_supported` contains `proxy:admin`; `access_token_ttl` is 300 seconds and `refresh_token_ttl` is 86400 seconds. Clients validate `issuer` and `resource` against their configured gateway and use the discovered endpoints. Send the discovered `resource` unchanged and `scope=proxy:admin` when authorizing. The token response includes `scope`, `user_id`, `access_token`, `refresh_token`, `expires_in` and `refresh_expires_in`. Clients treat the signed token values as opaque credentials
 
-Hosted grants require a database and shared Redis. The gateway checks the current user, selected team, callback trust and applicable model, budget and rate limits on use. Custom authentication and exclusive external-auth modes do not issue hosted grants. An admin who loses the `proxy_admin` role loses hosted admin access
+Hosted grants require a database and shared Redis. The gateway checks the current user, selected team, callback trust and applicable model, budget and rate limits on use. Custom auth and external OAuth API authentication disable hosted issuance, renewal and access. An admin who loses the `proxy_admin` role loses hosted admin access
 
 Access tokens expire within five minutes. Refresh tokens rotate and cannot extend consent beyond 24 hours; reusing a spent refresh token revokes the grant. A successful refresh preserves still-unexpired access tokens for work already in progress. Revoking an access or refresh token at the discovered revocation endpoint invalidates the entire grant across gateway workers
 
 Clients encrypt refresh tokens at rest, bind them to the gateway and user, serialize renewal, and persist renewal attempts before sending them. An uncertain renewal requires signing in again rather than replaying the refresh or an administrator operation. Disconnect removes local access immediately and retries gateway revocation if the gateway is temporarily unavailable
 
-Keep the gateway URL, callback configuration, signing configuration and shared Redis state when upgrading the standard gateway deployment. The application discovers protocol capabilities from that URL; it does not depend on a separate backend image pin
+Upgrade every gateway and backend instance before enabling the callback, using the same gateway URL, callback allowlist, signing configuration and shared Redis. The application discovers protocol capabilities from that URL; it does not depend on a separate backend image pin
