@@ -964,6 +964,7 @@ const sidebars = {
             "proxy/headroom",
           ],
         },
+        { type: "doc", id: "proxy/roi_calculator", label: "ROI Calculator" },
       ]
     },
     {
