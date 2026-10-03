@@ -135,8 +135,8 @@ Non-streaming ClinePass responses arrive wrapped in a `data` envelope (`{"data":
 
 ClinePass accepts the legacy `max_tokens` spelling only. You can pass `max_completion_tokens` to LiteLLM and it is mapped to `max_tokens` on the wire.
 
-When a completion is cut off by `max_tokens`, LiteLLM reports `finish_reason: "length"` even if ClinePass labels the truncation `"stop"`, provided the returned usage shows the cap was reached and there is a single choice.
+LiteLLM reports ClinePass's `finish_reason` unmodified. It does not infer truncation from token usage, because a completion that ends naturally exactly on the `max_tokens` cap would then be misreported. If you need to detect a cut-off completion, compare `usage.completion_tokens` against the cap you set.
 
-ClinePass exposes no model catalog endpoint (`GET /models` returns HTTP 404), so `litellm.get_models()` returns an empty list for the provider. Check the Cline documentation for available model ids.
+ClinePass exposes no model catalog endpoint (`GET /models` returns HTTP 404), so `litellm.get_valid_models(check_provider_endpoint=True, custom_llm_provider="clinepass")` returns an empty list. Check the Cline documentation for available model ids.
 
 An invalid API key surfaces as a LiteLLM `AuthenticationError` (HTTP 401), not a generic connection error.
