@@ -227,6 +227,18 @@
   .panel::before {
     display: none;
   }
+  /* The fixed panel sits below the navbar, a gap of about 24px under the
+     button. This strip under the button keeps the menu open while the
+     pointer crosses it; half the navbar height plus the panel's 8px margin
+     always reaches the panel. */
+  .open::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: calc(var(--ifm-navbar-height, 60px) / 2 + 8px);
+  }
   .column + .column {
     border-left: 0;
     border-top: 1px solid var(--ifm-toc-border-color);
