@@ -851,6 +851,9 @@ router_settings:
 | SCHEDULED_JOB_SHUTDOWN_FINISH_TIMEOUT_SECONDS | Seconds proxy shutdown waits for in-flight scheduled jobs (spend log cleanup, spend writes) to finish before cancelling them. Default 5
 | SCX_API_BASE | Base URL for SCX.ai. Default is https://api.scx.ai/v1
 | SCX_API_KEY | API key for SCX.ai
+| SEARCH1API_API_BASE | Base URL for the Search1API search provider. Default is https://api.search1api.com
+| SEARCH1API_API_KEY | API key for the Search1API search provider
+| SEARCH1API_KEY | Fallback API key for the Search1API search provider, the name Search1API's own CLI and SDKs read
 | SEARCHAPI_API_BASE | Base URL for the SearchApi search provider
 | SERPER_API_BASE | Base URL for the Serper search provider
 | SONIOX_API_BASE | Base URL for Soniox. Default is https://api.soniox.com
