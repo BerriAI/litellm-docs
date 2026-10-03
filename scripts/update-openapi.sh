@@ -4,3 +4,5 @@
 # The daily .github/workflows/update-openapi.yml job calls this script to keep the snapshot in sync.
 set -euo pipefail
 curl -sf "${1:-http://localhost:4000}/openapi.json" -o static/openapi.json
+# Unlink the proxy's relative per-proxy pages (/ui, /fallback/login, ...), which 404 on docs.litellm.ai
+sed -E -i 's#\[([^][]*)\]\((/[^)]*)\)#\1#g' static/openapi.json
