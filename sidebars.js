@@ -968,14 +968,7 @@ const sidebars = {
         { type: "doc", id: "proxy/roi_calculator", label: "ROI Calculator" },
       ]
     },
-    {
-      type: "category",
-      label: "LiteLLM Lens",
-      link: { type: "doc", id: "proxy/lens" },
-      items: [
-        { type: "doc", id: "proxy/lens/coding_agents", label: "Coding agent sessions" },
-      ],
-    },
+    require('./docs/proxy/lens/sidebar'),
     {
       type: "category",
       label: "Supported Endpoints",
