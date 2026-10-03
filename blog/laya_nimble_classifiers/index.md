@@ -53,6 +53,6 @@ Connect your classifier endpoint to LiteLLM:
 - **[Connect Laya](/docs/auto_router/decision_classifiers#laya-self-hosted-http-server):** set your server's base URL, credentials, and classifier model.
 - **[Connect Nimble](/docs/auto_router/decision_classifiers#nimble-self-hosted-system-one-server):** connect your System One endpoint and select the model it serves.
 
-In **Models + Endpoints → Auto Router**, select **OSS Classifier**, choose your provider, and assign completion models to tiers. Use **Test Routing** to inspect the choice before sending completions.
+In **Models + Endpoints → Auto Router**, select **OSS Classifier**, choose your provider, and assign completion models to tiers. Use **[Test Routing](/docs/auto_router/decision_classifiers#test-routing-and-send-a-request)** to inspect the choice before sending completions.
 
-The **[connection guide](/docs/auto_router/decision_classifiers)** covers endpoint settings, credentials, dashboard setup, YAML configuration, and fallback behavior. Jev remains available as the hosted classifier option.
+The **[connection guide](/docs/auto_router/decision_classifiers)** covers endpoint settings and credentials, with a **[complete YAML example](/docs/auto_router/decision_classifiers#configure-the-router)** for configuring tiers and fallback behavior. Jev remains available as the hosted classifier option.
