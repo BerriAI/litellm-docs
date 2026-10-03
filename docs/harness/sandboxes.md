@@ -4,7 +4,7 @@ title: Sandboxes
 
 # Sandboxes
 
-A sandbox is where the runtime runs and which files it can touch. You always pass one. There's no default that runs on your host.
+A sandbox is required by every call. CLI harnesses run there, and Deep Agents' built-in file and shell tools use it. Tool Loop and Deep Agents run Python tools in your process, so those tools are not restricted by the sandbox automatically
 
 ## Built-in sandboxes
 
@@ -25,7 +25,7 @@ RUN npm install -g @anthropic-ai/claude-code @openai/codex opencode-ai
 WORKDIR /workspace
 ```
 
-For `sandbox.local`, the binary must be on your `PATH`. A missing binary raises `HarnessInstallFailed` naming it. Deep Agents runs in your process and needs nothing in the sandbox.
+For `sandbox.local`, the CLI binary must be on your `PATH`. A missing binary raises `HarnessInstallFailed` naming it. Deep Agents and Tool Loop need nothing installed in the sandbox
 
 ## Setup before the first turn
 

@@ -25,7 +25,7 @@ litellm.agent(
 )
 ```
 
-In SDK mode `api_key=` and `api_base=` apply to the provider. With `model=None`, the runtime's own default model name is used.
+In SDK mode `api_key=` and `api_base=` apply to the provider. With `model=None`, CLI runtimes use their own default model name. Tool Loop requires an explicit model
 
 ## The local model endpoint
 
@@ -39,7 +39,7 @@ The CLI harnesses need an HTTP endpoint to call. For each session, `litellm.agen
 
 The runtime's API key is a random per-session token. The endpoint rejects any other token with 401, and the token stops working when the session closes. In gateway mode the endpoint swaps the token for your virtual key, adds `x-litellm-tags: harness,<name>`, sends `metadata=` as `x-litellm-spend-logs-metadata`, and streams responses through unchanged.
 
-Deep Agents runs in your process with a `ChatLiteLLM` model and doesn't use the endpoint.
+Deep Agents and Tool Loop run in your process and don't use the endpoint. Deep Agents uses a `ChatLiteLLM` model, while Tool Loop calls `litellm.acompletion()` directly
 
 ## Cost and usage
 
