@@ -1,16 +1,16 @@
 ---
 title: ROI Calculator
-description: Compare LiteLLM gateway spend with estimated engineering effort for merged GitHub pull requests in the Admin UI.
+description: Compare LiteLLM gateway spend with estimated engineering effort for merged GitHub pull requests or GitLab merge requests in the Admin UI.
 ---
 
 # ROI Calculator
 
-The ROI Calculator compares your team's gateway spend with the estimated engineering effort in their merged GitHub pull requests. Open **Observability > ROI Calculator** in the LiteLLM Admin UI to connect repositories, choose an estimator model, and generate a report.
+The ROI Calculator compares your team's gateway spend with the estimated engineering effort in their merged GitHub pull requests or GitLab merge requests. Open **Observability > ROI Calculator** in the LiteLLM Admin UI to connect repositories, choose an estimator model, and generate a report.
 
 The main metric is **spend per estimated engineering hour**. Hours are model estimates of the effort required to complete the work without AI assistance. They are not measured working hours, hours saved, or a financial return on investment.
 
 :::info Availability
-This page covers the native Admin UI calculator added in [LiteLLM PR #43669](https://github.com/BerriAI/litellm/pull/43669). Use a gateway build that includes that change. The [original launch post](/blog/litellm-roi-calculator) describes the earlier standalone application.
+This page covers the native Admin UI calculator added in [LiteLLM PR #43669](https://github.com/BerriAI/litellm/pull/43669), plus GitLab sources and branch cost attribution in [LiteLLM PR #44324](https://github.com/BerriAI/litellm/pull/44324). Use a gateway build that includes the features you need. The [original launch post](/blog/litellm-roi-calculator) describes the earlier standalone application.
 :::
 
 ## Before you start
@@ -19,23 +19,23 @@ Use a gateway with a connected database, recorded user spend, and at least one c
 
 Sign in as a **Proxy Admin** to configure the calculator, run analysis, or change email matches. **Proxy Admin Viewer** users can read reports and settings. Other roles cannot access the calculator.
 
-Have a GitHub token with access to the repositories you want to analyze. For a fine-grained token, grant read access to **Pull requests**, **Contents**, and repository metadata for those repositories. The integration reads pull requests, changed-file metadata, and commit metadata. Organization approval or SSO authorization may also be required by your GitHub organization.
+Choose GitHub or GitLab. Public repositories can be read without a token, subject to the provider's unauthenticated rate limits. For private GitHub repositories, use a token with read access to **Pull requests**, **Contents**, and repository metadata. Organization approval or SSO authorization may also be required. For private GitLab projects, use a personal access token with **read_api** scope and membership that allows access to those projects.
 
-The current integration supports GitHub and a configurable GitHub Enterprise API URL. GitLab is not supported.
+The integrations support configurable HTTPS API URLs for GitHub Enterprise and self-managed GitLab. One source and API host are active at a time.
 
 ## Set up the calculator
 
-### 1. Connect GitHub
+### 1. Connect your source
 
-Enter your **GitHub token** and select **Continue**. For GitHub Enterprise, expand **GitHub Enterprise settings** and enter your HTTPS API URL, such as `https://github.example.com/api/v3`, before saving the token.
+Choose **GitHub** or **GitLab**, enter an access token if needed, and select **Continue**. For a self-managed installation, expand the API settings and enter its HTTPS API URL, such as `https://github.example.com/api/v3` or `https://gitlab.example.com/api/v4`.
 
-Tokens are encrypted when saved and are not returned to the browser. Changing the API URL clears the saved GitHub token unless you supply a replacement.
+Tokens are encrypted when saved and are not returned to the browser. Changing an API URL clears that source's saved token unless you supply a replacement. Switching source or API host starts a new report and clears manual email matches.
 
 ### 2. Choose repositories
 
-Select the repositories to include. Use **Search repositories**, **Load repositories**, and **Load more repositories** to find them. You can also expand **Add a repository by name** and enter an `owner/repository` name.
+Select the repositories to include. Use **Search repositories**, **Load repositories**, and **Load more repositories** to find them. You can also expand **Add a repository by name** and enter an `owner/repository` name for GitHub or a `group/subgroup/project` path for GitLab. Without a token, add a public repository by name.
 
-Only pull requests merged during the report period are included. Open PRs and PRs closed without merging are excluded.
+Only pull requests or merge requests merged during the report period are included. Open changes and changes closed without merging are excluded. The following sections use “PR” for either type unless they name a provider.
 
 ### 3. Choose an estimator
 
@@ -47,27 +47,29 @@ Under **Advanced settings**, you can provide an **Estimator API key**. Otherwise
 
 Select **Start backfill**. The calculator reads spend, imports merged PRs, and estimates up to three PRs at a time. After setup, use **Run analysis** for a manual refresh or **Settings** to change the configuration. **Test connections** checks model access and repository access without running an estimate.
 
-You can select **Preview sample report** before your first report to explore the interface. Sample mode makes no GitHub or model requests.
+You can select **Preview sample report** before your first report to explore the interface. Sample mode makes no source-provider or model requests.
 
 ## Read the report
 
 ### Overview
 
-The overview shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and PR email coverage. Expand **Calculation details** to see the calculation and excluded spend.
+The overview has a **Spend basis** selector. **People** compares gateway usage with work by matched people. **Branches** compares tagged request costs with individual merged changes. Settings open from the top-right button; **Overview** and **People** remain the two report views.
+
+The default **People** basis shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and email coverage. Expand **Calculation details** to see the calculation and excluded spend.
 
 For example, `$120` of matched spend divided by `30` estimated hours gives `$4` per estimated engineering hour. Both numbers come from the same set of eligible people and the same reporting period.
 
 The chart places daily gateway spend alongside estimated effort for PRs merged on each day. A PR's estimated hours appear on its merge date; this does not mean the work or its AI usage happened on that date. Dates and reporting boundaries use UTC, and the window includes the current day.
 
-The **Pull requests** table lists merged work. Select a PR to see its estimated hours, reasoning, model, merge date, and email match. **View on GitHub** opens the original PR.
+The **Pull requests** table lists merged work. Select a PR to see its estimated hours, reasoning, model, merge date, and email match. **View on GitHub** or **View on GitLab** opens the original change. In branch mode, the table also shows tagged spend. Open a change to see its exact cost, request count, and the tags to send.
 
 ### People and email matching
 
 The **People** view shows gateway spend, estimated hours, and spend per estimated hour for each person. It can also export a people CSV.
 
-Automatic matching compares the PR author's public GitHub email and commit emails associated with that author's GitHub account against gateway user emails. Matching ignores case. GitHub noreply addresses are ignored, and multiple matching emails remain ambiguous.
+Automatic matching compares the PR author's public GitHub email and commit emails associated with that author's GitHub account against gateway user emails. GitLab uses the author’s public profile email. It does not assume that commit emails belong to the merge request author. Matching ignores case. GitHub noreply addresses are ignored, and multiple matching emails remain ambiguous.
 
-To correct a match, select the person's GitHub username, enter their **Gateway email**, and save. Manual matches take priority. **Use automatic match** removes a manual mapping. Email corrections update the report without rerunning model estimates.
+To correct a match, select the person's source-control username, enter their **Gateway email**, and save. Manual matches take priority. **Use automatic match** removes a manual mapping. Email corrections update the report without rerunning model estimates.
 
 ### What enters the calculation
 
@@ -77,13 +79,40 @@ Matched spend includes each eligible person's **full gateway usage for the perio
 
 Unmatched spend remains visible as excluded spend. PR email coverage measures email matches; it does not indicate how much AI usage has been attributed to individual PRs. The ratio is unavailable when there are no eligible estimated hours, or when any selected repository could not be read.
 
+## Attribute actual request costs to branches
+
+In **Overview**, choose **Branches**. Send a repository tag and a branch tag together on each model request through LiteLLM:
+
+```json
+{
+  "model": "your-gateway-model",
+  "messages": [{"role": "user", "content": "Help implement this change"}],
+  "metadata": {
+    "tags": [
+      "repo:gitlab.com/acme/platform/api",
+      "branch:feature/search"
+    ]
+  }
+}
+```
+
+For GitHub, the repository tag looks like `repo:github.com/acme/api`. Use the source repository and source branch from the PR or MR, including the fork when the change comes from a fork. The change's details show the exact tags to use. For self-managed hosts, include the host and repository path, without the API suffix. Branch names are case-sensitive. GitHub repository names are matched without case sensitivity; GitLab project paths must match the displayed path.
+
+You can also send the same pair through the `x-litellm-tags` header. See [Request tags](./request_tags.md) for client setup. The calculator does not automatically detect your Git branch or configure your coding tool: the tool or wrapper making each gateway request must send both tags.
+
+Run analysis after the requests have been recorded. The calculator sums their recorded gateway costs across users and keys, so branch matching does not require an email match. Repeated identical tags count a request once. Missing tags or conflicting repository or branch tags exclude the request from branch attribution. Requests tagged `litellm-roi-estimator` are excluded.
+
+**Branch spend per estimated hour** divides the cost of uniquely matched branches with successful estimates by those same changes' estimated hours. No tagged requests means unknown cost, displayed as **No tagged requests**. A recorded request costing zero is a real zero. When multiple merged changes in the report share a source branch, the calculator marks the branch ambiguous rather than charging the same spend twice. Unmatched or ambiguous costs remain visible as unallocated spend.
+
+Branch costs cover retained request logs within the report's UTC dates. They are not lifetime branch costs. Requests outside the window, before tagging began, omitted from gateway logs, or removed by spend-log retention cannot be recovered. Reusing branch names outside the report window cannot be distinguished by these tags; use a unique branch for each change. This is recorded model usage cost, not a provider invoice or a measure of time saved.
+
 ## Estimation, caching, and data handling
 
 The estimator receives PR titles and descriptions, file names and change counts, and commit metadata, including commit messages. Source-code patches are not included in the model request. Descriptions and commit messages can still contain sensitive information, so choose a model appropriate for that data.
 
-Estimation requests go through your gateway and incur normal model usage charges. They carry the `litellm-roi-estimator` tag. The calculator's user-spend query does not automatically subtract requests with this tag.
+Estimation requests go through your gateway and incur normal model usage charges. They carry the `litellm-roi-estimator` tag. Branch spend excludes these requests. The calculator's user-spend query does not automatically subtract them, so use a separate service user for the estimator when comparing people.
 
-Successful estimates are cached. Unchanged PRs reuse their estimates; changes to the selected model, prompt, or relevant PR metadata invalidate the cache. Incomplete metadata and oversized inputs are marked for review rather than silently truncated and estimated. Failed estimates are retried on later analysis runs.
+Successful estimates are cached. Unchanged PRs reuse their estimates while branch costs refresh; changes to the selected model, prompt, or relevant PR metadata invalidate the cache. Incomplete metadata and oversized inputs are marked for review rather than silently truncated and estimated. Failed estimates are retried on later analysis runs.
 
 Settings, the latest report, and cached estimates are stored in the gateway database. A failed sync leaves the previous report available. Check the last-sync time and any warning before interpreting results.
 
@@ -96,12 +125,8 @@ Settings, the latest report, and cached estimates are stored in the gateway data
 | The selected model is unavailable | Confirm the model is configured and accessible to the estimator key. Run **Test connections**. |
 | A person is unmatched | Check their gateway user email and correct the mapping in **People**. Private, noreply, or ambiguous email data may prevent an automatic match. |
 | A PR needs attention | Open its details. Incomplete file or commit metadata, oversized input, or an invalid model response can prevent estimation. Run analysis again after resolving the cause. |
-| Spend per estimated hour is unavailable | Check for unavailable repositories, unmatched people, incomplete estimates, or zero estimated hours. |
-
-## Can I track actual branch or PR costs?
-
-The current ROI Calculator does not attribute spend to a branch or PR. It does not read request tags, and its PR records do not store branch names.
-
-LiteLLM separately supports [request tags for spend tracking](./request_tags.md), including dynamic tags supplied through `x-litellm-tags` or `metadata.tags`. Sending a branch tag records that tag on gateway requests, but does not connect those costs to an ROI report. Branch-level attribution requires additional integration.
+| Spend per estimated hour is unavailable | Check for unavailable repositories, unmatched people or branches, incomplete estimates, or zero estimated hours. |
+| No tagged requests | Check that each request sends both exact tags and falls within the report dates and retained spend logs, then run analysis. |
+| A branch is ambiguous | Use distinct source branches for changes. The calculator cannot split one branch’s costs between multiple merged changes in the report. |
 
 See [Spend Tracking](./cost_tracking.md) for gateway cost reporting and [Admin UI](./ui.md) for dashboard setup.
