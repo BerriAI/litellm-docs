@@ -182,6 +182,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/javelin", customProps: { icon: "/img/integrations/javelin.png" } },
           { type: "doc", id: "proxy/guardrails/akto", customProps: { icon: "/img/integrations/akto.png" } },
           "proxy/guardrails/vigil_guard",
+          "proxy/guardrails/wingback",
           { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
