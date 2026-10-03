@@ -1,6 +1,6 @@
 ---
 slug: laya-nimble-classifiers
-title: "Self-hosted Auto Router Classifiers: Laya & Nimble"
+title: "Adding Self-hosted Auto Router Classifiers: Laya & Nimble"
 date: 2026-10-02T12:00:00
 authors:
   - tin
