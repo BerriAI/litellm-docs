@@ -1,16 +1,16 @@
 ---
-title: Self-hosted classifiers
+title: Connect self-hosted classifiers
 sidebar_label: Self-hosted classifiers
-description: Run Auto Router classification on your own infrastructure with Laya or Bespoke Nimble. Configure the server, request context, routing tiers, and fallback behavior.
+description: Connect a self-hosted Laya or Bespoke Nimble endpoint to LiteLLM Auto Router. Set the endpoint, credentials, classifier model, and routing tiers.
 ---
 
-Run the model that makes your routing decisions on infrastructure you control. Deploy a classifier server, connect it to LiteLLM, and map complexity tiers to your completion models. The classifier chooses a tier for each request; the Auto Router calls a model in that tier to generate the answer. Clients keep using one router model name through the chat completions API.
+Connect an existing Laya or Bespoke Nimble endpoint to LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
 
 **Laya and Bespoke Nimble are the supported self-hosted classifier options.** Jev uses TypeSafe's hosted API and shares the same configuration flow. Select **OSS Classifier** in the dashboard, or use `classifier_type: oss_classifier` with a provider inside `opensource_classifier_config`.
 
 ## What you host
 
-Deploy the classifier as a separate service reachable from the gateway. LiteLLM calls its HTTP API; selecting a classifier in the dashboard does not install or start its model server.
+You host the classifier model behind a System One HTTP API, separately from the LiteLLM gateway. LiteLLM sends it the request context and tier criteria, then uses its decision to route the completion. This guide assumes that endpoint is running. For hosting instructions, see the [Laya HTTP server guide](https://github.com/NandhaKishorM/laya/blob/main/docs/http-api.md) or the [Nimble project](https://github.com/bespokelabsai/nimble#quickstart).
 
 | Component | Role | Where it runs |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Deploy the classifier as a separate service reachable from the gateway. LiteLLM 
 | Classifier server | Runs Laya or Nimble inference and returns the tier choice | A server you deploy and operate |
 | Completion model | Generates the answer after routing | Your configured hosted provider or self-hosted model endpoint |
 
-To keep classification traffic inside your network, deploy the classifier there and configure an internal base URL reachable from the gateway. You manage the checkpoint, inference capacity, authentication, and server availability. Self-hosting has compute costs even when the model has no hosted inference fee.
+Use a base URL reachable from the gateway. For a classifier in your private network, this can be an internal service URL. Selecting a classifier in LiteLLM connects to that service; it does not start a model server.
 
 ### Request context and data flow
 
@@ -44,36 +44,21 @@ Existing Jev-compatible configurations can keep `classifier_type: jev` and `jev_
 
 :::
 
-## Start a classifier server
+## Connect the classifier to the gateway
 
-Choose one of the self-hosted options below, or use [Jev's hosted API](#jev-hosted-typesafe-api). The local examples run the gateway and classifier on the same machine, in separate processes.
+Set your classifier's connection variables in the **LiteLLM gateway environment**. The examples below use internal hostnames; replace them with your endpoint's base URL. LiteLLM appends `/v1/systemone`, so omit that path from the URL.
 
-### Laya: self-hosted HTTP server
+### Connect Laya {#laya-self-hosted-http-server}
 
-Install Laya in a separate Python environment from LiteLLM and start its English checkpoint using the [HTTP server](https://github.com/NandhaKishorM/laya/blob/main/docs/http-api.md):
-
-```bash
-python -m venv .venv-laya
-source .venv-laya/bin/activate
-python -m pip install 'laya[serve]==0.3.21'
-LAYA_HOST=127.0.0.1 LAYA_PORT=8000 LAYA_MODELS=english laya-serve
-```
-
-Leave this process running. In another terminal, check liveness:
+Point LiteLLM to your Laya HTTP endpoint:
 
 ```bash
-curl --fail-with-body http://127.0.0.1:8000/health
+export LAYA_API_BASE="http://laya-server:8000"
+# Set this only if your endpoint requires bearer authentication.
+export LAYA_API_KEY="<classifier-bearer-key>"
 ```
 
-A health response confirms the server is running. Use the [decision request below](#verify-the-classifier-server) to check that inference works too.
-
-In the environment that will run the gateway, set:
-
-```bash
-export LAYA_API_BASE="http://127.0.0.1:8000"
-```
-
-Use this classifier block in the [complete router configuration](#configure-the-router):
+Use `provider: laya` and select a checkpoint your endpoint serves: `english`, `multilingual` or `typed-decisions`. In the [complete router configuration](#configure-the-router), use:
 
 ```yaml
 opensource_classifier_config:
@@ -82,96 +67,37 @@ opensource_classifier_config:
   timeout_ms: 15000
 ```
 
-For another checkpoint, change `LAYA_MODELS` and the router's `model` to `multilingual` or `typed-decisions`. To require bearer authentication, set the same `LAYA_API_KEY` secret in both the server and gateway environments before starting them.
+### Connect Nimble {#nimble-self-hosted-system-one-server}
 
-For container deployments, follow Laya's [Docker quickstart](https://github.com/NandhaKishorM/laya/blob/main/docs/docker.md). The [HTTP server reference](https://github.com/NandhaKishorM/laya/blob/main/docs/http-api.md) covers preloading, device selection, and concurrency limits.
-
-### Nimble: self-hosted System One server
-
-Install [Ollama](https://ollama.com/download) 0.35 or later, as required by its [Nimble model](https://ollama.com/library/nimble). If Ollama is not already running, start it in a separate terminal:
+Point LiteLLM to your Nimble System One endpoint:
 
 ```bash
-ollama serve
+export BESPOKE_API_BASE="http://nimble-server:8000"
+# Set this only if your endpoint requires bearer authentication.
+export BESPOKE_API_KEY="<classifier-bearer-key>"
 ```
 
-Leave the server running. In another terminal, download Nimble:
-
-```bash
-ollama pull nimble
-```
-
-In the environment that will run the gateway, set:
-
-```bash
-export BESPOKE_API_BASE="http://127.0.0.1:11434"
-```
-
-Use this classifier block in the [complete router configuration](#configure-the-router):
+Use `provider: bespoke` and set `model` to the name your endpoint serves. Replace the classifier block in the [complete router configuration](#configure-the-router) with:
 
 ```yaml
 opensource_classifier_config:
   provider: bespoke
-  model: nimble
+  model: nimble-latest
   timeout_ms: 30000
 ```
 
-Ollama exposes Nimble at `/v1/systemone` with the model name `nimble`. Verify it with the [decision request below](#verify-the-classifier-server). `BESPOKE_API_KEY` is unnecessary for local Ollama; setting a gateway key does not enable authentication on the server.
+For an Ollama endpoint, use `model: nimble`. Other deployments may serve `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B`. The `bespoke` provider is separate from LiteLLM's Nimble search integration.
 
-For a GPU deployment on Modal, follow Bespoke's [System One deployment guide](https://github.com/bespokelabsai/nimble/blob/main/docs/MODAL_SERVING.md). Set `BESPOKE_API_BASE` to your deployment's URL and choose the name it serves, such as `nimble-latest` or `bespokelabs/Bespoke-Nimble-9B`. The `bespoke` provider is separate from LiteLLM's Nimble search integration.
+### Endpoint and authentication settings
 
-The Modal recipe publishes an unauthenticated endpoint by default. Its [private mode](https://github.com/bespokelabsai/nimble/blob/main/deploy/setup_credentials.py) uses `Modal-Key` and `Modal-Secret` headers. LiteLLM's classifier bearer-key setting cannot supply that pair directly; a proxy must handle those headers if you use private mode.
+- **Base URL:** use the hostname and port reachable from the gateway. `localhost` refers to the gateway's own host or container.
+- **Credentials:** LiteLLM sends `LAYA_API_KEY` or `BESPOKE_API_KEY` as a bearer token. Use the credential your endpoint accepts; omit it for endpoints that do not require authentication. These settings do not enable authentication on the classifier server.
+- **Model:** match the name served by your endpoint.
+- **Timeout:** start with the examples above, then tune for your classifier's response time.
 
-### Connect across hosts or containers
+Restart the gateway after changing its environment. You can then [configure the Auto Router in the dashboard](#configure-from-the-dashboard) or [use YAML](#configure-the-router).
 
-`127.0.0.1` and `localhost` refer to the gateway's own host or container. When the classifier runs elsewhere, use a hostname reachable from the gateway, such as `http://laya-server:8000` or `http://nimble-server:11434` for an Ollama service.
-
-The classifier must also listen on a reachable interface. Set `LAYA_HOST=0.0.0.0` for Laya, or configure Ollama's [`OLLAMA_HOST`](https://docs.ollama.com/faq#how-do-i-configure-ollama-server) before starting its server. Keep the service on your intended private network. If you expose Ollama through a reverse proxy, configure authentication there; Ollama's local API does not enforce the gateway's bearer key.
-
-For a server that accepts bearer authentication, set its matching `LAYA_API_KEY` or `BESPOKE_API_KEY` in the gateway environment. LiteLLM sends that credential to the classifier.
-
-### Verify the classifier server
-
-Run this check from the gateway host or container, before configuring routing. Choose the connection variables for **Laya**:
-
-```bash
-CLASSIFIER_API_BASE="$LAYA_API_BASE"
-CLASSIFIER_MODEL="english"
-CLASSIFIER_API_KEY="${LAYA_API_KEY:-}"
-```
-
-Or choose **Nimble on Ollama**:
-
-```bash
-CLASSIFIER_API_BASE="$BESPOKE_API_BASE"
-CLASSIFIER_MODEL="nimble"
-CLASSIFIER_API_KEY="${BESPOKE_API_KEY:-}"
-```
-
-Then send a decision request directly to that server:
-
-```bash
-curl --fail-with-body "$CLASSIFIER_API_BASE/v1/systemone" \
-  -H 'Content-Type: application/json' \
-  -H "Authorization: Bearer $CLASSIFIER_API_KEY" \
-  --data-binary @- <<JSON
-{
-  "model": "$CLASSIFIER_MODEL",
-  "state": "Summarize this short email in one sentence.",
-  "questions": {
-    "tier": {
-      "type": "choice",
-      "instructions": "Choose the complexity tier for this request.",
-      "criteria": {
-        "SIMPLE": "Short, routine requests with no multi-step reasoning.",
-        "COMPLEX": "Requests that require analysis across multiple steps."
-      }
-    }
-  }
-}
-JSON
-```
-
-A successful response includes `answers.tier.choice` with one of the supplied choices. This checks reachability, the model name, credentials, and inference without involving a completion model. The two-choice question is a setup check; Auto Router supplies its own tier criteria when routing. Warm the model before measuring latency, then tune the classifier timeout for your server.
+For a router-specific connection, set `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit `api_base` does not inherit the environment key. If your endpoint requires another authentication scheme, such as Modal's `Modal-Key` and `Modal-Secret` headers, use a proxy that translates the bearer credential to the required headers.
 
 ### Jev: hosted TypeSafe API
 
@@ -190,14 +116,7 @@ For a router-specific endpoint, supply both `api_base` and its matching `api_key
 
 ## Configure from the dashboard
 
-After starting and verifying your classifier server, set its connection variables on the gateway:
-
-| Dashboard provider | Gateway base URL variable | Optional gateway bearer-key variable | Classifier Model |
-| --- | --- | --- | --- |
-| **Laya** | `LAYA_API_BASE` | `LAYA_API_KEY` | `english`, `multilingual` or `typed-decisions` |
-| **Bespoke Nimble** | `BESPOKE_API_BASE` | `BESPOKE_API_KEY` | `nimble-latest`, `nimble` or `bespokelabs/Bespoke-Nimble-9B` |
-
-Set each base URL to the classifier server's root. LiteLLM appends `/v1/systemone`. Restart the gateway after changing its environment.
+First set the [connection variables above](#connect-the-classifier-to-the-gateway) on your gateway. The dashboard uses that connection when you select a provider.
 
 1. Open **Models + Endpoints → Auto Router** and create or edit a router.
 2. Under **What classifies your requests?**, select **OSS Classifier**. Under **OSS provider**, choose **Laya** or **Bespoke Nimble**.
@@ -211,7 +130,7 @@ Administrators can configure `api_base` and `api_key` overrides through the mana
 
 ## Configure the router in YAML {#configure-the-router}
 
-This complete example uses a self-hosted Laya classifier. Start the [Laya server](#laya-self-hosted-http-server) and set `LAYA_API_BASE` on the gateway first. To use Nimble, replace the classifier block with the [Nimble configuration](#nimble-self-hosted-system-one-server). `small-solver` and `large-solver` are public deployment names; replace their underlying models with models your gateway can access:
+This complete example uses a self-hosted Laya classifier. Set the [Laya connection variables](#laya-self-hosted-http-server) on the gateway first. To use Nimble, replace the classifier block with the [Nimble configuration](#nimble-self-hosted-system-one-server). `small-solver` and `large-solver` are public deployment names; replace their underlying models with models your gateway can access:
 
 ```yaml title="config.yaml"
 model_list:
@@ -246,7 +165,7 @@ This example routes classifier failures to `large-solver` and sends no prior con
 
 ## Test routing and send a request
 
-Start LiteLLM from its own environment after configuring the completion-provider credentials and your chosen classifier:
+Start LiteLLM after setting the classifier connection variables and your completion-provider credentials:
 
 ```bash
 litellm --config config.yaml
