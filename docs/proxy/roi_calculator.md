@@ -33,7 +33,7 @@ Tokens are encrypted when saved and are not returned to the browser. Changing an
 
 ### 2. Choose repositories
 
-Select the repositories to include. Use **Search repositories**, **Load repositories**, and **Load more repositories** to find them. You can also expand **Add a repository by name** and enter an `owner/repository` name for GitHub or a `group/subgroup/project` path for GitLab. Without a token, add a public repository by name.
+Select the repositories to include. Use **Search repositories**, **Load repositories**, and **Load more repositories** to find them. You can also expand **Add a repository by name** and enter an `owner/repository` name for GitHub or a `group/subgroup/project` path for GitLab. Without a GitHub token, add a public repository by name. GitLab also supports browsing public projects without a token.
 
 Only pull requests or merge requests merged during the report period are included. Open changes and changes closed without merging are excluded. The following sections use “PR” for either type unless they name a provider.
 
@@ -47,25 +47,23 @@ Under **Advanced settings**, you can provide an **Estimator API key**. Otherwise
 
 Select **Start backfill**. The calculator reads spend, imports merged PRs, and estimates up to three PRs at a time. After setup, use **Run analysis** for a manual refresh or **Settings** to change the configuration. **Test connections** checks model access and repository access without running an estimate.
 
-Select **Preview sample report** to explore the calculator before or after setup. The demo opens in **By branch** with fictional PR costs, including a PR whose author has no email match and spending on an unmerged branch. Open a PR to see its cost, request count, and example tags. **Exit demo** returns to your live report or setup without changing saved data. Sample mode makes no source-provider or model requests.
+Select **Preview sample report** to explore the calculator before or after setup. The demo opens in **Branches** with fictional PR costs, including a PR whose author has no email match and spending on an unmerged branch. Open a PR to see its cost, request count, and example tags. **Exit demo** returns to your live report or setup without changing saved data. Sample mode makes no source-provider or model requests.
 
 ## Read the report
 
 ### Overview
 
-The overview has **By person** and **By branch** controls. **By person** compares gateway usage with work by matched people. **By branch** compares tagged request costs with individual merged changes. Settings open from the top-right button; **Overview** and **People** remain the two report views. The cost view stays selected when you switch between them.
+The report has three tabs: **Overview**, **People**, and **Branches**. Settings open from the top-right button.
 
-The default **By person** view shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and email coverage. Expand **How this is calculated** to see the calculation and excluded spend.
+**Overview** shows total gateway AI cost, estimated effort, merged changes, and contributors for the reporting period. The cost-coverage table shows how much spending is matched or unmatched in each view. People use gateway account costs, while branches use tagged requests for the selected repositories, so these rows are different views of spending and should not be added together.
 
-For example, `$120` of matched spend divided by `30` estimated hours gives `$4` per estimated engineering hour. Both numbers come from the same set of eligible people and the same reporting period.
-
-The chart places daily gateway spend alongside estimated effort for PRs merged on each day. A PR's estimated hours appear on its merge date; this does not mean the work or its AI usage happened on that date. Dates and reporting boundaries use UTC, and the window includes the current day.
-
-The **Merged work** table lists merged pull requests or merge requests. In the **By branch** view, it is titled **Costs by branch**. Select a PR to see its estimated hours, reasoning, model, merge date, and email match. **View on GitHub** or **View on GitLab** opens the original change. In branch mode, the table also shows tagged spend. Open a change to see its exact cost, request count, and the tags to send.
+**Highest-cost changes** ranks up to five merged PRs with uniquely matched branch costs. Open a change for its recorded cost, request count, estimate, and matching details, or select **View all branches** for the complete list. Dates and reporting boundaries use UTC, and the window includes the current day.
 
 ### People and email matching
 
-The **People** view shows gateway spend, estimated hours, and spend per estimated hour for each person. It can also export a people CSV.
+The **People** tab shows spend per estimated engineering hour, matched gateway spend, estimated engineering hours, and email coverage. Expand **How this is calculated** to see the calculation and excluded spend. For example, `$120` of matched spend divided by `30` estimated hours gives `$4` per estimated engineering hour. Both numbers come from the same set of eligible people and the same reporting period.
+
+The table shows gateway spend, estimated hours, and spend per estimated hour for each person. It can also export a people CSV.
 
 Automatic matching compares the PR author's public GitHub email and commit emails associated with that author's GitHub account against gateway user emails. GitLab uses the author’s public profile email. It does not assume that commit emails belong to the merge request author. Matching ignores case. GitHub noreply addresses are ignored, and multiple matching emails remain ambiguous.
 
@@ -81,7 +79,9 @@ Unmatched spend remains visible as excluded spend. PR email coverage measures em
 
 ## Attribute actual request costs to branches
 
-In **Overview**, choose **By branch**. Send a repository tag and a branch tag together on each model request through LiteLLM:
+Open the **Branches** tab for matched AI costs, estimated effort, cost per estimated hour, and branch coverage. The **Costs by branch** table shows each merged change, its source branch, and its tagged AI cost. Search by title, repository, PR number, author, or branch name. Open a change to see the exact cost, request count, estimate, and tags to send. **View on GitHub** or **View on GitLab** opens the original change.
+
+Send a repository tag and a branch tag together on each model request through LiteLLM:
 
 ```json
 {
