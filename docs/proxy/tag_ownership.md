@@ -117,7 +117,7 @@ Enforcement runs for standard auth and for custom auth when `general_settings.cu
 
 ## Limitations
 
-The `/tag/new` usage check reads `LiteLLM_DailyTagSpend`, so usage not yet flushed to daily spend (within the batch write interval) is not seen, and usage from before daily tag spend existed or while `general_settings.disable_spend_updates: true` stopped its writes is not seen either. `/tag/update` assignment and transfer are not guarded, so a proxy admin assigning an existing tag should check `/spend/tags` first. A tag assigned to a team at the same moment the team is deleted can stay cached with the old owner until its cache entry expires
+The `/tag/new` usage check reads `LiteLLM_DailyTagSpend`, so usage not yet flushed to daily spend (within the batch write interval) is not seen, and usage from before daily tag spend existed or while `general_settings.disable_spend_updates: true` stopped its writes is not seen either. The check attributes past usage to each key's current team, so usage from a key that has since moved into the new owner team counts as that team's own. `/tag/update` assignment and transfer are not guarded, so a proxy admin assigning an existing tag should check `/spend/tags` first. A tag assigned to a team at the same moment the team is deleted can stay cached with the old owner until its cache entry expires
 
 ## Related
 
