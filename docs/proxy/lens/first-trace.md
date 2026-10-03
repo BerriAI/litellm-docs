@@ -19,7 +19,7 @@ Use a LiteLLM key to authenticate. Record the agent's task, steps, tool calls, i
 
 For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=https://<your-litellm-proxy>/v1/traces` and `LITELLM_DEV_KEY=<your-litellm-key>` in its `.env` file, then run the agent.
 
-## Configure the exporter
+## Configure the exporter {#send-your-first-trace}
 
 Use your existing model configuration. Set the trace destination once, then choose an integration from the sidebar. Replace `research_agent` with your agent's name.
 
