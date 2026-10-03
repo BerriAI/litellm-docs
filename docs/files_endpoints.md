@@ -8,6 +8,8 @@ Files are used to upload documents that can be used with features like Assistant
 
 Use this to call the provider's `/files` endpoints directly, in the OpenAI format. 
 
+Uploads with purpose `assistants` or `user_data` run the vector store upload controls before the file reaches the provider: the bytes must be a PDF or UTF-8 text document under 512 MiB, archives and executables are rejected, and the content goes through the configured malware scanner. A rejected upload returns a 400 `invalid_request_error` on `file` with the reason code at the end of the message. See [Upload Controls and Malware Scanning](./rag_ingest.md#upload-controls-and-malware-scanning) for the full list of checks and how to plug in your own scanner with `general_settings.rag_ingest.malware_scanner`, or set `general_settings.rag_ingest.files_api_controls: false` to send these uploads to the provider unchecked
+
 ## Quick Start
 
 - Upload a File
