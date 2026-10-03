@@ -1,6 +1,6 @@
 ---
 slug: laya-nimble-classifiers
-title: "Self-hosted classifiers for LiteLLM Auto Router"
+title: "Adding Self-hosted Laya & Nimble Classifiers"
 date: 2026-10-02T12:00:00
 authors:
   - tin
@@ -12,7 +12,7 @@ hide_table_of_contents: false
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcSet={require('./cover.png').default} />
-  <img src={require('./cover.gif').default} width="1200" height="630" alt="Self-hosted classification for LiteLLM Auto Router: a classifier server on your infrastructure chooses a tier, then the selected completion model answers the request. Laya and Bespoke Nimble are supported classifier options." />
+  <img src={require('./cover.gif').default} width="1200" height="630" alt="Laya and Nimble self-hosted classifiers: LiteLLM Auto Router sends classification to either model inside your infrastructure, then routes the request to the selected completion model." />
 </picture>
 
 You can now **run Auto Router's classifier on your own infrastructure**. Deploy a decision model alongside your gateway, let it choose a complexity tier for each request, and have LiteLLM call the completion model you assign to that tier.
