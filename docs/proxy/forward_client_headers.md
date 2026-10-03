@@ -112,7 +112,7 @@ general_settings:
   forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
-For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting.
+For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting. Each spend log row records which credential the upstream call used in `metadata.used_client_oauth_token` (`true` for a forwarded OAuth token, `false` for the deployment's configured key, never the token itself), filterable on the Logs page **Credential** dropdown or with `GET /spend/logs/ui?used_client_oauth_token=true`.
 
 Client request:
 ```bash
