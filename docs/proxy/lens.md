@@ -12,6 +12,8 @@ import TabItem from '@theme/TabItem';
   <a className="button button--primary button--sm" href="https://forms.gle/3GC1Ner4vjthGWi18">Early access</a>
 </p>
 
+Want to trace your personal coding sessions? [Connect Claude Code or Codex to Lens](./lens/coding_agents.md).
+
 ![Agent swarms flow through the LiteLLM gateway into one trace per run, and LiteLLM Lens feeds improvements back.](/img/lens/lens_hero_labeled.gif)
 
 Once your agents are in production, you cannot manually review every trace.
