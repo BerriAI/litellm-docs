@@ -478,6 +478,17 @@ litellm_jwtauth:
   org_id_jwt_field: "organization.id"
 ```
 
+### What the internal user mapping controls
+
+`user_id_jwt_field` attaches the request to an internal user, so spend is attributed to that user (`/spend/users`, the Users and Logs pages in the Admin UI) and the user's role is used for route access. Whether the user's own `models` list and `max_budget` are enforced depends on whether a team was resolved for the request, the same rule a virtual key follows (see [key auth architecture](./key_auth_arch.md)):
+
+| Request resolved a team (`team_id_jwt_field` claim, `object_id_jwt_field`, or the DB team fallback) | User-level controls applied |
+|---|---|
+| Yes | Team `models`, team budget and team member budget apply. The user's `models` list is ignored and the user's `max_budget` is only enforced when `general_settings.apply_user_budget_to_team_keys: true` is set |
+| No | The user's `models` list and `max_budget` apply directly |
+
+To give individual JWT callers their own budget, model allowlist, rate limits, or guardrails independent of the team, use [JWT to virtual key mapping](./jwt_key_mapping.md), which resolves the identity to a virtual key and enforces that key's settings. Team `model_aliases` are applied on the JWT path from v1.102.0; on earlier versions they only applied to virtual keys
+
 Now litellm will automatically update the spend for the user/team/org in the db for each call. 
 
 ### Resolve by Name (Alias) Instead of ID
