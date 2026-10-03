@@ -10,7 +10,7 @@ tags: [performance, proxy, engineering, ai-gateway]
 hide_table_of_contents: true
 ---
 
-import { BenchmarkResults, MeasuredTrace, TraceExamples } from './diagrams';
+import { BenchmarkResults, MeasuredTrace } from './diagrams';
 import PromptLatencyHero from './PromptLatencyHero';
 
 export const Hero = PromptLatencyHero;
@@ -43,31 +43,10 @@ Each result is the median of three requests after one warmup, on the same local 
 
 ## See where the time goes
 
-The request's server span now records when the body arrives, JSON parsing finishes, pre-call hooks complete, and a deployment is selected. That separates a slow upload from work inside the proxy.
-
-Here's the request-setup portion of a measured `/v1/chat/completions` trace from the same Python-path benchmark:
+New OpenTelemetry events show time spent receiving and parsing the request, running hooks, and selecting a deployment. Here's a measured request from the same benchmark:
 
 <MeasuredTrace />
 
-Redis and Postgres spans are clearer too. Cache operations contain their Redis calls, and database spans name the operation and table. An in-memory auth-cache hit no longer appears as a database query.
+Enable [OpenTelemetry v2](https://docs.litellm.ai/docs/observability/opentelemetry_v2) with `LITELLM_OTEL_V2=true` to see these events in your traces.
 
-<TraceExamples />
-
-Every successful deployment selection also records its model group, attempt, and reason. For example, a fallback emits this event on the server span:
-
-```json
-{
-  "name": "litellm.request.deployment_selected",
-  "attributes": {
-    "litellm.deployment.model_group": "backup",
-    "litellm.deployment.reason": "fallback",
-    "litellm.deployment.attempt": 1
-  }
-}
-```
-
-This is an illustrative event from the fallback test. Attempts count within a model-group hop, so the first selection in the backup group starts at 1. Post-response cache writes and database flushes remain linked to the request without extending its duration.
-
-Enable [OpenTelemetry v2](https://docs.litellm.ai/docs/observability/opentelemetry_v2) with `LITELLM_OTEL_V2=true` to see these traces in your observability backend.
-
-See the changes: [prompt-cache routing and request events](https://github.com/BerriAI/litellm/pull/44221), [real database I/O](https://github.com/BerriAI/litellm/pull/44148), [cache and Redis spans](https://github.com/BerriAI/litellm/pull/44150), and [Postgres operation names](https://github.com/BerriAI/litellm/pull/44240).
+See the changes: [prompt-cache routing optimization](https://github.com/BerriAI/litellm/pull/44221).

@@ -58,15 +58,13 @@
   font-weight: 400;
 }
 
-.benchmarkGrid,
-.exampleGrid {
+.benchmarkGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
 .benchmarkCard,
-.exampleCard,
 .tracePanel {
   min-width: 0;
   border: 1px solid var(--border);
@@ -74,8 +72,7 @@
   background: transparent;
 }
 
-.benchmarkCard,
-.exampleCard {
+.benchmarkCard {
   padding: 1rem 1.1rem;
 }
 
@@ -237,67 +234,8 @@
   font-size: 0.71rem;
 }
 
-.tree {
-  color: var(--blue);
-}
-
-.treeChild {
-  position: relative;
-  margin-top: 0.5rem;
-  margin-left: 0.25rem;
-  padding-left: 1rem;
-  color: var(--teal);
-}
-
-.treeChild::before {
-  position: absolute;
-  top: -0.3rem;
-  left: 0;
-  width: 0.65rem;
-  height: 1.05rem;
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  content: '';
-}
-
-.explanation {
-  margin: 0.9rem 0 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.6;
-}
-
-.figure .databaseSpan {
-  display: block;
-  color: var(--blue);
-}
-
-.attributeList {
-  margin: 0.8rem 0 0;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--border);
-}
-
-.attributeList > div + div {
-  margin-top: 0.5rem;
-}
-
-.attributeList dt {
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.attributeList dd {
-  margin: 0.1rem 0 0;
-}
-
-.attributeList code {
-  font-size: 0.73rem;
-}
-
 @media (max-width: 600px) {
-  .benchmarkGrid,
-  .exampleGrid {
+  .benchmarkGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 

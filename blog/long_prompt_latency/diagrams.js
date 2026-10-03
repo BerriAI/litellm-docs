@@ -1,8 +1,5 @@
 // Measured offsets and median TTFB: https://github.com/BerriAI/litellm/pull/44221
-// Cache span hierarchy: https://github.com/BerriAI/litellm/pull/44150
-// Real DB I/O and attributes: https://github.com/BerriAI/litellm/pull/44148
-// https://github.com/BerriAI/litellm/pull/44240
-// TraceExamples is illustrative. MeasuredTrace reconstructs one local benchmark.
+// MeasuredTrace reconstructs request setup from one local benchmark.
 import React from 'react';
 import styles from './diagrams.module.css';
 
@@ -24,14 +21,6 @@ const trace = {
     {name: 'litellm.request.body_parsed', at: 3.7},
     {name: 'litellm.request.pre_call_completed', at: 11.2},
     {name: 'litellm.request.deployment_selected', at: 12.6, detail: 'Attempt 1 · initial'},
-  ],
-};
-
-const databaseExample = {
-  span: 'postgres.select LiteLLM_VerificationToken',
-  attributes: [
-    {name: 'db.operation.name', value: 'select'},
-    {name: 'db.collection.name', value: 'LiteLLM_VerificationToken'},
   ],
 };
 
@@ -112,42 +101,8 @@ export function MeasuredTrace() {
         </div>
       </div>
       <figcaption className={styles.caption}>
-        Reconstructed from the Python-path benchmark with an instant mock upstream. Offsets are from server start; only recorded request-setup spans and events are shown.
+        Request setup from the Python-path benchmark, reconstructed from recorded spans and events. Times are relative to server start.
       </figcaption>
-    </figure>
-  );
-}
-
-export function TraceExamples() {
-  return (
-    <figure className={styles.figure}>
-      <div className={styles.heading}>
-        <strong>Read the work behind a request</strong>
-        <span className={styles.context}>Illustrative trace excerpts</span>
-      </div>
-      <div className={styles.exampleGrid}>
-        <div className={styles.exampleCard}>
-          <div className={styles.sectionLabel}>Response cache</div>
-          <div className={styles.tree}>
-            <code>cache.get llm_response</code>
-            <div className={styles.treeChild}><code>redis.get llm_response</code></div>
-          </div>
-          <p className={styles.explanation}>The Redis read sits inside the cache lookup it serves.</p>
-        </div>
-        <div className={styles.exampleCard}>
-          <div className={styles.sectionLabel}>Database read</div>
-          <code className={styles.databaseSpan}>{databaseExample.span}</code>
-          <dl className={styles.attributeList}>
-            {databaseExample.attributes.map((attribute) => (
-              <div key={attribute.name}>
-                <dt><code>{attribute.name}</code></dt>
-                <dd><code>{attribute.value}</code></dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
-      <figcaption className={styles.caption}>An in-memory auth cache hit adds no Postgres span. A real database read does.</figcaption>
     </figure>
   );
 }
