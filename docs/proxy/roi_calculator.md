@@ -1,13 +1,13 @@
 ---
 title: ROI Calculator
-description: Compare shipping velocity, issue trends, and recorded AI spend across GitHub and GitLab repositories, without an estimator model.
+description: Compare shipping velocity, issue trends, and recorded AI spend per engineer across GitHub and GitLab repositories
 ---
 
 # ROI Calculator
 
-See whether your team is merging more changes, how long changes take to merge, and what recorded AI spend costs per merged change. Open **Observability > ROI Calculator** in the Admin UI
+Compare your team's merged changes, time to merge, bug reports, and recorded AI spend across GitHub and GitLab repositories
 
-The calculator uses repository activity and gateway spend records. It does not call an LLM, estimate engineering effort, or claim to measure time saved
+The ROI Calculator combines repository activity with spend recorded by your LiteLLM gateway. Link repository accounts to internal users to see shipping velocity and spend per merged change for each engineer. Open **Observability > ROI Calculator** in the Admin UI
 
 ## Connect repositories
 
@@ -85,7 +85,7 @@ Usage that bypasses the gateway is outside the calculation. No spend records mea
 
 ## Attribute actual request costs to branches
 
-Branch cost tracking still uses the same tags. Send a repository tag and a branch tag together on each model request:
+To track a branch's AI cost, send a repository tag and a branch tag together on each model request:
 
 ```json
 {
@@ -114,7 +114,7 @@ After sync, **Branch spend** shows recorded spend and request counts for each ta
 
 Repeated identical tags count a request once. Missing or conflicting repository or branch tags exclude a request from attribution. When several merged changes share a branch in the period, its cost remains visible in **Branch spend** without being charged to several PRs. Use a unique branch per change for unambiguous matching
 
-Branch costs cover retained request logs within the same UTC reporting window, not necessarily the entire lifetime of a PR. Costs incurred before the window are outside that report. Existing `repo:` and `branch:` tags remain usable after upgrading. Historical estimator requests are excluded from branch costs; the new calculator generates none
+Branch costs cover retained request logs within the same UTC reporting window, not necessarily the entire lifetime of a PR. Costs incurred before the window are outside that report
 
 ## Troubleshooting
 
