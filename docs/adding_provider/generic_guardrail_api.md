@@ -108,6 +108,8 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 }
 ```
 
+With `send_images: false` or `exclude_payload_fields` set, the withheld fields are absent from this payload. See [Controlling what is sent to the guardrail](#controlling-what-is-sent-to-the-guardrail).
+
 ### Response Format
 
 ```json nolint
@@ -259,6 +261,8 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        send_images: true  # default: true. Set to false to keep image data away from the guardrail. See "Controlling what is sent to the guardrail" below.
+        exclude_payload_fields: ["request_headers"]  # optional. Request fields left out of the payload sent to the guardrail.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -286,6 +290,23 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Controlling what is sent to the guardrail
+
+Two options shrink the payload LiteLLM posts to your endpoint:
+
+- `send_images: false` drops the top-level `images` field and replaces the URL of every `image_url` part in `structured_messages` with `[omitted]`, so each part keeps its place. That covers inline data URLs and remote URLs alike, and on `/v1/messages` Anthropic documents (PDFs) too, since LiteLLM turns them into image parts.
+- `exclude_payload_fields` lists request fields to leave out, such as `request_headers`, `tools` or `structured_messages`. `input_type` and `litellm_call_id` are always sent, because your endpoint needs them to read the payload. An unknown field name is ignored with a warning.
+
+:::warning
+
+Content LiteLLM does not send is never scanned. With `send_images: false` your guardrail cannot see text written inside an image, and an excluded field is not checked at all. Use these options only for content your guardrail does not need to inspect.
+
+:::
+
+Your endpoint can only rewrite what it was sent. A rewrite to a field LiteLLM did not send is ignored with a warning, and when the only real change in a `GUARDRAIL_INTERVENED` answer goes to such a field, the call is rejected rather than sent without the rewrite. Returned `images` are never written back to the request. In `structured_messages`, a part you return still holding `[omitted]` gets the caller's original image back, while a row that gains an `[omitted]` placeholder it was not sent with is rejected.
+
+`exclude_payload_fields` is set in `config.yaml` or through the guardrails API, and the Admin UI form does not show it. An invalid value for either option, such as `send_images: "maybe"` or a single string instead of a list, is ignored with a warning and the default is kept.
 
 ### Static and dynamic headers
 
