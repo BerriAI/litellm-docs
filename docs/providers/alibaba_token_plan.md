@@ -41,9 +41,7 @@ LiteLLM picks the endpoint for each API from the same host:
 | Video | `https://token-plan.ap-southeast-1.maas.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis`, polled at `/api/v1/tasks/{task_id}` |
 | Realtime | `wss://token-plan.ap-southeast-1.maas.aliyuncs.com/api-ws/v1/realtime` |
 
-To send traffic through your own gateway, set `ALIBABA_TOKEN_PLAN_API_BASE` or `api_base` to its origin, such as `https://gateway.example.com`, or to a base ending in `/compatible-mode/v1` or `/apps/anthropic`. For a gateway mounted under a path prefix, include that prefix before one of these suffixes, such as `https://gateway.example.com/token-plan/compatible-mode/v1`. LiteLLM keeps the host and path prefix and selects the endpoint path for each API, so one value works for every model
-
-Other paths are treated as complete operation URLs by image generation, image editing, speech, transcription and realtime. Chat and Messages append their own route paths. Video derives creation and task URLs from a base, removing the video creation endpoint suffix when supplied. Use one of the recognized suffixes above when sharing a gateway base across APIs. The official host only accepts `https://` and `wss://`
+To send traffic through your own gateway, set `ALIBABA_TOKEN_PLAN_API_BASE` or `api_base` to the gateway's OpenAI-compatible base, such as `https://gateway.example.com/token-plan/compatible-mode/v1`. Chat and Responses use it as is, and every other API swaps the `/compatible-mode/v1` suffix for its own path on the same host, so one value works for every model
 
 ## Supported Models
 
@@ -106,7 +104,6 @@ import litellm
 
 os.environ["ALIBABA_TOKEN_PLAN_API_KEY"] = "sk-sp-..."
 
-
 async def main():
     response = await litellm.anthropic.messages.acreate(
         model="alibaba_token_plan/qwen3.8-max",
@@ -114,7 +111,6 @@ async def main():
         max_tokens=1024,
     )
     print(response)
-
 
 asyncio.run(main())
 ```
@@ -153,7 +149,7 @@ response = image_generation(
 print(response.data[0].url)
 ```
 
-Token Plan returns signed image URLs, so `response_format` must be `url` (the default); `b64_json` is rejected unless `drop_params` is on. `size` uses OpenAI's `WxH` form and defaults to `1024x1024`. Pass native parameters such as `negative_prompt`, `prompt_extend` or `watermark` through `extra_body`. Clients that need explicit values, such as Open WebUI, should send `"response_format": "url"` and a concrete size
+Token Plan returns signed image URLs, so `response_format` must be `url` (the default); `b64_json` is rejected unless `drop_params` is on. `size` uses OpenAI's `WxH` form; without it, Alibaba's default size applies. Pass native parameters such as `negative_prompt`, `prompt_extend` or `watermark` through `extra_body`. Clients that need explicit values, such as Open WebUI, should send `"response_format": "url"` and a concrete size
 
 ### Image Editing
 
@@ -173,7 +169,7 @@ response = image_edit(
 print(response.data[0].url)
 ```
 
-`image` accepts a file, bytes, an `https://` URL or an image data URI, or a list of them. `qwen-image-3.0-pro` takes 1 to 3 images and also supports `negative_prompt`, `prompt_extend` and `enable_thinking`; the `wan2.7` models take 1 to 9 images and also support `enable_sequential`, `bbox_list` and `color_palette`. `n`, `seed` and `watermark` work for both
+`image` accepts a file, bytes, an `https://` URL or an image data URI, or a list of them; Alibaba sets how many images each model takes (up to 3 for `qwen-image-3.0-pro` and 9 for the `wan2.7` models). Besides `n` and `size`, LiteLLM forwards `seed`, `watermark`, `negative_prompt` and `prompt_extend`
 
 ### Text to Speech
 
@@ -212,7 +208,7 @@ response = transcription(
 print(response.text)
 ```
 
-LiteLLM uploads the file inline as base64, and Alibaba caps recordings at 10 MB and 5 minutes. The file extension sets the audio format: `aac`, `amr`, `avi`, `flac`, `flv`, `m4a`, `mkv`, `mov`, `mp3`, `mp4`, `mpeg`, `ogg`, `opus`, `wav`, `webm`, `wma` and `wmv` are accepted. `language` is sent as a language hint, and `response_format` supports `json` only
+LiteLLM uploads the file inline as base64, and Alibaba caps recordings at 10 MB and 5 minutes. The file extension sets the audio format; mp3, wav and m4a worked in testing, and Alibaba rejects formats it does not support. `language` is sent as a language hint and `prompt` as context. Responses are always JSON
 
 ### Video Generation
 
@@ -241,7 +237,7 @@ if video.status == "completed":
         f.write(video_content(video_id=video.id))
 ```
 
-`seconds` must be between 3 and 15. `size` is converted to Token Plan's `resolution` and `ratio`, so its shorter side must be 480, 720 or 1080; you can also pass `resolution` (`480P`, `720P`, `1080P`) directly. Use `input_reference` with `happyhorse-1.1-i2v` for the first frame. For `happyhorse-1.1-r2v`, pass one reference image with `input_reference`, or up to 9 through a native `input.media` list of `reference_image` entries. Image-to-video keeps the source image's aspect ratio, so it accepts neither `size` nor `ratio`. Videos carry a small HappyHorse watermark unless you send `"parameters": {"watermark": false}`, which also takes `ratio` and `seed`. Jobs took 80 to 105 seconds in testing, and every clip includes an AAC audio track. Remix, list and delete are not available on Token Plan
+`seconds` sets the duration (Alibaba accepts 3 to 15). `size` is converted to Token Plan's `resolution` and `ratio`, so its shorter side should be 480, 720 or 1080 and its ratio one Alibaba supports, such as `1280x720` for 16:9 (`854x480` reduces to 427:240 and is rejected); to set them directly, send `"parameters": {"resolution": "720P", "ratio": "16:9"}`. Use `input_reference` with `happyhorse-1.1-i2v` for the first frame. For `happyhorse-1.1-r2v`, pass one reference image with `input_reference`, or up to 9 through a native `"input": {"media": [...]}` list of `reference_image` entries. Image-to-video keeps the source image's aspect ratio. Videos carry a small HappyHorse watermark unless you send `"parameters": {"watermark": false}`, which also takes `seed`. Jobs took 80 to 105 seconds in testing, and every clip includes an AAC audio track. Remix, list and delete are not available on Token Plan
 
 ## Usage - LiteLLM Proxy
 
