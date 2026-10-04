@@ -263,6 +263,9 @@ litellm_settings:
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
         send_images: true  # default: true. Set to false to keep image data away from the guardrail. See "Controlling what is sent to the guardrail" below.
         exclude_payload_fields: ["request_headers"]  # optional. Request fields left out of the payload sent to the guardrail.
+        max_messages: 20  # optional. Only the last 20 messages are sent. See "Shrinking what a block-only guardrail scans" below.
+        max_text_chars: 4000  # optional. Every text is cut to this many characters before it is sent.
+        strip_patterns: ["<ts>\\d+</ts>"]  # optional. Regex matches removed from every text before it is sent.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -307,6 +310,26 @@ Content LiteLLM does not send is never scanned. With `send_images: false` your g
 Your endpoint can only rewrite what it was sent. A rewrite to a field LiteLLM did not send is ignored with a warning, and when the only real change in a `GUARDRAIL_INTERVENED` answer goes to such a field, the call is rejected rather than sent without the rewrite. Returned `images` are never written back to the request. In `structured_messages`, a part you return still holding `[omitted]` gets the caller's original image back, while a row that gains an `[omitted]` placeholder it was not sent with is rejected.
 
 `exclude_payload_fields` is set in `config.yaml` or through the guardrails API, and the Admin UI form does not show it. An invalid value for either option, such as `send_images: "maybe"` or a single string instead of a list, is ignored with a warning and the default is kept.
+
+### Shrinking what a block-only guardrail scans
+
+Three options cut down the text LiteLLM sends, for guardrails that only block or only observe. Each one keeps part of the conversation away from your endpoint:
+
+- `max_messages` sends only the last N `structured_messages` and rebuilds `texts` from the text of those messages. Text an endpoint sends from outside message content, such as `/v1/responses` `input_file` text, is not sent even for the turns that are kept. Calls without `structured_messages`, such as embeddings, rerank or an LLM response, are not affected.
+- `max_text_chars` cuts every text in `texts` and in `structured_messages` content to N characters. It applies to LLM responses too.
+- `strip_patterns` removes regex matches from every text, for volatile boilerplate your guardrail does not need. Roles, ids, tool calls, tools and metadata are never touched. Each pattern removes at most 64 matches per text. Per guardrail call, only the first 100,000 characters of distinct text are stripped and stripping stops after 0.1 seconds, and a text past either limit is sent unstripped in full with a warning.
+
+:::warning
+
+Text LiteLLM does not send is never scanned. A caller can put content past the first `max_text_chars` characters, in a turn that falls out of the `max_messages` window, or inside something a `strip_patterns` entry matches, and your guardrail will not see it. On the response side, model output past the first `max_text_chars` characters is not scanned either. Use these options only when that is acceptable for your guardrail.
+
+:::
+
+Because your endpoint sees only part of the content, it cannot rewrite it. When any of these options changed what was sent, a `BLOCKED` answer still blocks and an echo of what was sent passes the caller's content through unchanged, but any other returned change fails the call. A failed request or response is rejected with an error naming the request or the response, and a failed stream is cut off after the chunks already sent.
+
+Stripping runs on the proxy worker's event loop, so a slow pattern holds up that worker for up to 0.1 seconds per guardrail call. Keep patterns linear-time: avoid nested quantifiers such as `(a+)+` and lazy matches up to a closing delimiter such as `<!--.*?-->`.
+
+`strip_patterns` is set in `config.yaml` or through the guardrails API, and the Admin UI form does not show it. `max_messages` and `max_text_chars` appear in the form as number fields. An invalid value, such as `max_messages: 0`, `max_text_chars: 10.5` or a pattern that is not a valid regex, is ignored with a warning and the default is kept. The other patterns still apply.
 
 ### Static and dynamic headers
 
