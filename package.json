@@ -6,7 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "typecheck": "tsc -p .",
-    "build": "docusaurus build",
+    "build": "node scripts/build.cjs",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -20,6 +20,7 @@
     "lint:docs": "python3 scripts/check-docs.py docs",
     "generate:social-card": "node scripts/social-card/index.cjs",
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
+    "test:build": "node --test scripts/optimize-images.test.cjs",
     "sync:lens": "node scripts/sync-lens-docs.mjs",
     "test:lens": "node --test scripts/sync-lens-docs.test.mjs"
   },
