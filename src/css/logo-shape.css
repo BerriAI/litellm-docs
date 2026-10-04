@@ -490,3 +490,22 @@ html[data-theme='dark'] .pagination-nav__link:hover {
     flex: none;
   }
 }
+
+/* ---------- Navbar stays on one row ----------
+   Infima lets .navbar__inner wrap, and between 997px and about 1065px the
+   logo with its DOCS label, the links, and the right icons no longer fit, so
+   the icons dropped to a second line. The row never wraps now, and in that
+   range the Trust Center text link steps aside (the footer links it too). */
+@media (min-width: 997px) {
+  .navbar__inner {
+    flex-wrap: nowrap !important;
+  }
+  .navbar__center-col {
+    min-width: 0;
+  }
+}
+@media (min-width: 997px) and (max-width: 1100px) {
+  .navbar__right-col a[href^='https://trust.litellm.ai'] {
+    display: none;
+  }
+}
