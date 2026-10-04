@@ -413,7 +413,13 @@ The client events `session.update`, `input_audio_buffer.append`, `input_audio_bu
 | `response.create` | Only `modalities` / `output_modalities` and `voice` overrides |
 | `response.cancel` | Cancels the active response; omit `response_id` |
 
-Qwen-Audio session fields such as `enable_search`, `search_options`, `enable_speech_emotion` and `max_history_turns` pass through `session.update` unchanged. With input transcription on, Qwen-Audio already replies to each turn, so LiteLLM does not send its own `response.create` after a transcript; in manual mode, send `response.create` yourself as usual
+Qwen-Audio session fields such as `enable_search`, `search_options`, `enable_speech_emotion` and `max_history_turns` pass through `session.update` unchanged.
+
+:::note Known issue
+
+With input transcription turned on, each turn currently ends with an extra `error` event saying a response is already in progress. LiteLLM sends its own `response.create` after every transcript, while Qwen-Audio has already started replying. The reply still completes normally. The same happens with Azure OpenAI and is tracked in [issue #31726](https://github.com/BerriAI/litellm/issues/31726), with a fix proposed in [PR #43791](https://github.com/BerriAI/litellm/pull/43791)
+
+:::
 
 ## Limitations
 
