@@ -4,7 +4,7 @@
 
 | Property | Details |
 |-------|-------|
-| Description | Y-API is an OpenAI-compatible relay that fronts models from DeepSeek, Z.ai, Moonshot, Tencent, Xiaomi, Qwen and OpenAI behind a single API key. It also serves the Anthropic Messages API and the OpenAI Responses API. |
+| Description | Y-API is an OpenAI-compatible relay that fronts models from Anthropic, DeepSeek, MiniMax, Moonshot, Qwen, StepFun, Tencent, Xiaomi, Z.ai and OpenAI behind a single API key. It also serves the Anthropic Messages API and the OpenAI Responses API. |
 | Provider Route on LiteLLM | `y-api/` |
 | Link to Provider Doc | [Y-API Website ↗](https://y-api.bestvirtualgoods.com) |
 | Base URL | `https://api.y-api.bestvirtualgoods.com/v1` |
@@ -163,25 +163,43 @@ curl http://localhost:4000/v1/messages \
 
 ## Supported Models
 
-`GET /v1/models` currently returns fifteen models. Prices below are USD per million tokens.
+`GET /v1/models` currently returns twenty models. The catalog changes without notice, so treat
+the table below as a snapshot rather than the source of truth.
+
+Prices are USD per million tokens. Y-API publishes each model's **account credit** rate, and
+converts top-ups at $1 paid = $10 credit, so every figure below is the credit price ÷ 10. Both
+inputs are public and in one file — `credit_price` per model and `top_up.quota_rate` for the
+conversion — at [pricing.json](https://y-api.bestvirtualgoods.com/pricing.json); read them there
+rather than trusting this table long-term, because the conversion has moved before (a
+limited-time 1:20 promo reverted to 1:10 on 2026-10-01, which doubled every cash figure).
+Snapshot taken 2026-10-04.
 
 | Model | Input | Output |
 |-------|-------|--------|
+| `anthropic/claude-opus-5` | $0.50 | $2.50 |
+| `anthropic/claude-sonnet-5` | $0.20 | $1.00 |
 | `deepseek/deepseek-v4-flash` | free | free |
-| `deepseek/deepseek-v4-flash-0731` | $0.0075 | $0.015 |
-| `deepseek/deepseek-v4-pro` | $0.025 | $0.05 |
-| `deepseek/deepseek-v4.1-flash` | $0.01 | $0.05 |
-| `moonshotai/kimi-k3` | $0.15 | $0.75 |
-| `openai/gpt-5.6-luna` | $0.015 | $0.065 |
-| `openai/gpt-5.6-sol` | $0.25 | $1.50 |
-| `openai/gpt-5.6-terra` | $0.10 | $0.60 |
-| `openai/gpt-6-astra` | $0.50 | $2.50 |
-| `qwen/qwen3.8-flash` | $0.01 | $0.025 |
+| `deepseek/deepseek-v4-flash-0731` | $0.015 | $0.03 |
+| `deepseek/deepseek-v4-pro` | $0.05 | $0.10 |
+| `deepseek/deepseek-v4.1-flash` | $0.02 | $0.10 |
+| `minimax/minimax-m2.7` | free | free |
+| `moonshotai/kimi-k2.6` | $0.095 | $0.40 |
+| `moonshotai/kimi-k3` | $0.30 | $1.50 |
+| `openai/gpt-5.6-luna` | $0.03 | $0.13 |
+| `openai/gpt-5.6-sol` | $0.50 | $3.00 |
+| `qwen/qwen3.8-flash` | $0.02 | $0.05 |
+| `stepfun/step-3.7-flash` | $0.02 | $0.12 |
 | `tencent/hy3` | free | free |
+| `tencent/hy4-preview` | $0.10 | $0.30 |
 | `xiaomi/mimo-v2.5` | free | free |
-| `z-ai/glm-5.2` | $0.07 | $0.22 |
-| `z-ai/glm-5.3` | $0.07 | $0.25 |
-| `z-ai/glm-5.3-flash` | $0.0075 | $0.025 |
+| `xiaomi/mimo-v2.6-flash` | $0.018 | $0.036 |
+| `z-ai/glm-5.2` | $0.14 | $0.44 |
+| `z-ai/glm-5.3` | $0.14 | $0.50 |
+| `z-ai/glm-5.3-flash` | $0.015 | $0.05 |
+
+Models removed from the table since this page was written: `openai/gpt-5.6-terra` and
+`openai/gpt-6-astra` returned `503 "No available channel"` and were absent from
+`GET /v1/models` on 2026-10-04.
 
 Add the `y-api/` prefix to any of these to use it through LiteLLM:
 
@@ -209,8 +227,7 @@ upstream labs do, so pass only what the model serves:
 
 | Model | Accepted `reasoning_effort` |
 |-------|-----------------------------|
-| `openai/gpt-5.6-luna` / `sol` / `terra` | `none`, `low`, `medium`, `high`, `xhigh` |
-| `openai/gpt-6-astra` | `low`, `medium`, `high`, `xhigh` |
+| `openai/gpt-5.6-luna` / `sol` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `tencent/hy3` | `low`, `high` |
 
 Values outside those sets are rejected with a `400` that names the accepted ones, for example:
