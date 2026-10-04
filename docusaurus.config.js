@@ -107,6 +107,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
