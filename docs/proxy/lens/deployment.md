@@ -104,7 +104,7 @@ The command already contains the matching image, proxy URL, and a limited worker
 <details>
 <summary>Standalone image, Render, and worker-only Compose</summary>
 
-The worker is available independently from [GHCR](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker) and [Docker Hub](https://hub.docker.com/r/litellm/litellm-lens-worker), with tag `vX.Y.Z` matching LiteLLM release `X.Y.Z`. Images support amd64 and arm64, including matching RC and dev versions
+The worker is available independently from [GHCR](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker) and [Docker Hub](https://hub.docker.com/r/litellm/litellm-lens-worker), with tag `vX.Y.Z` matching LiteLLM release `X.Y.Z`. Images support amd64 and arm64, including matching RC and dev versions. For a proxy installed from the published Helm chart, **Connect worker** supplies the same digest-pinned image used by the chart
 
 On Render or another container host, create a background worker using that image. Set `LITELLM_URL` to your proxy's reachable base URL and `LENS_WORKER_TOKEN` to the token copied from **Using Docker Compose or Helm?** in setup. The worker needs outbound access to LiteLLM and no inbound port
 
@@ -203,16 +203,16 @@ helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
   --namespace litellm --version X.Y.Z -f values.yaml --wait
 ```
 
-The chart selects matching LiteLLM and worker images. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
+The published chart selects matching LiteLLM and worker images and pins the worker by digest, so restarting it keeps the approved image even if a registry tag changes. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
 
-If you explicitly set image tags in your values, update those overrides too so they do not hold either component on an older version. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
+If you explicitly set image tags or digests in your values, update those overrides too so they do not hold either component on an older version. Keep the worker image fields unset to follow each published chart release. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
 
 </TabItem>
 </Tabs>
 
 After any upgrade, check for **Worker connected** in the dashboard, run an investigation, and restore any schedules you paused. The gateway checks compatibility before handing out work. An outdated worker waits with an upgrade message, leaving queued investigations untouched; update its image to resume work
 
-RC and dev releases follow the same process using matching version suffixes. Hourly development deployments build the gateway and worker from the same selected commit
+RC and dev releases follow the same process using matching version suffixes. Hourly development deployments build the gateway and worker from the same selected commit. Source builds tagged `sha-<commit>` use the separate `ghcr.io/berriai/litellm-lens-worker-dev` package
 
 For development from source, use `make lens-dev`. Custom container builds must use the same checkout and release identity for both components; follow the [source build instructions](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md#release-compatibility). A build without that identity refuses worker setup instead of suggesting an unrelated released image
 
@@ -240,4 +240,4 @@ general_settings:
 
 Set `CLICKHOUSE_URL` to the ClickHouse HTTP address your proxy can reach. `CLICKHOUSE_DATABASE` defaults to `litellm`. You can set `CLICKHOUSE_READER_URL` to use a separate read-only account; otherwise reads use `CLICKHOUSE_URL`.
 
-Investigations also need PostgreSQL, a configured analysis model, and a connected Lens worker. Keep the proxy and worker versions compatible. See the [tracing config](https://github.com/BerriAI/litellm/blob/main/docker/tracing-config.yaml) and [worker setup guide](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md) for deployment details.
+Investigations also need PostgreSQL, a configured analysis model, and a connected Lens worker. Keep the proxy and worker versions compatible. See the [tracing config](https://github.com/BerriAI/litellm/blob/main/docker/tracing-config.yaml) and [worker setup guide](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md) for deployment details. 
