@@ -1467,6 +1467,7 @@ router_settings:
 | REDIS_GCP_SERVICE_ACCOUNT | GCP service account for IAM authentication with Redis. Format: "projects/-/serviceAccounts/name@project.iam.gserviceaccount.com"
 | REDIS_GCP_SSL_CA_CERTS | Path to SSL CA certificate file for secure GCP Memorystore Redis connections
 | REDOC_URL | The path to the Redoc Fast API documentation. **By default this is "/redoc"**
+| REGISTRY_LOAD_TIMEOUT_SECONDS | Seconds a request waits for an auth registry load (tag, end-user, model access group), applied separately to the load lock and the database scan, before falling back to per-id lookups. Default is 5.0
 | REPEATED_STREAMING_CHUNK_LIMIT | Limit for repeated streaming chunks to detect looping. Default is 100
 | REALTIME_CREDENTIAL_RESOLUTION_TIMEOUT_SECONDS | Timeout in seconds for fetching the Vertex AI access token before a realtime session starts. Default is 20.0
 | REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES | Maximum size in bytes for WebSocket messages in realtime connections. Default is None.
