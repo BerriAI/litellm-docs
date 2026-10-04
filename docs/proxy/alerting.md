@@ -188,6 +188,30 @@ general_settings:
   ] 
 ```
 
+### Configure budget alert percentages
+
+:::note Pending release
+This setting is proposed in [LiteLLM PR #44359](https://github.com/BerriAI/litellm/pull/44359). Use it only with a version that includes that implementation
+:::
+
+Set `general_settings.alerting_args.budget_alert_thresholds` to configure consumed-budget percentages for enabled alert destinations:
+
+```yaml
+general_settings:
+  alerting: ["slack", "webhook", "ms_teams", "email"]
+  alert_types: ["budget_alerts"]
+  alerting_args:
+    budget_alert_thresholds: [70, 85, 95]
+```
+
+Configure each destination's credentials and recipients separately. Thresholds are unique integers from 1 through 99, measured against the entity's `max_budget`. Order does not matter. Omitting the setting or using `null` retains the existing 85%/95% Slack, webhook and Teams thresholds and the separate email defaults. An empty list `[]` disables the common percentage warnings without changing budget enforcement or the existing exhausted-budget, soft-budget and projected-limit checks
+
+Configured percentages have separate dedup windows, using `budget_alert_ttl` for Slack, webhook, Teams and native SMTP. A jump across several percentages selects only the highest reached threshold, rather than sending a backlog of lower warnings. Existing pre-upgrade sent entries retain their TTL. Reloading does not scan budgets, retract queued alerts or reset dedup entries
+
+The setting changes selection where the proxy already emits budget events. It does not add polling or enable new under-budget checks for entities whose existing checks emit only exhausted-budget events
+
+The dedicated email logger uses these percentages for its existing maximum-budget warning path and retains `EMAIL_BUDGET_ALERT_TTL`. It does not gain an exhausted-budget email path from this setting. SMTP, SendGrid and Resend keep their existing owner-email resolution. Explicit `max_budget_alert_emails` recipient maps take priority over the common setting, including `[]`, and retain their existing multi-threshold behavior. No new email event types or recipients are enabled
+
 ### Filter Slack budget alerts by key alias
 
 :::note Pending release
@@ -471,7 +495,7 @@ curl -X GET --location 'http://0.0.0.0:4000/health/services?service=webhook' \
     * "spend_tracked": Emitted whenever spend is tracked for a customer id. 
     * "budget_crossed": Indicates that the spend has exceeded the max budget.
     * "soft_budget_crossed": Indicates that the spend has exceeded the soft budget.
-    * "threshold_crossed": Indicates that spend has crossed a threshold (currently sent when 85% and 95% of budget is reached).
+    * "threshold_crossed": Indicates that spend has crossed a threshold (85% and 95% by default; configurable with `budget_alert_thresholds` in the pending implementation above).
     * "projected_limit_exceeded": For "key" only - Indicates that the projected spend is expected to exceed the soft budget threshold.
 - `event_group` *Literal["customer", "internal_user", "key", "team", "proxy"]*: The group associated with the event. Possible values are:
     * "customer": The event is related to a specific customer
@@ -624,6 +648,7 @@ Management Endpoint Alerts - Virtual Key, Team, Internal User
 | `daily_report_frequency` | 43200 (12 hours) | Frequency of receiving deployment latency/failure reports in seconds |
 | `report_check_interval` | 300 (5 minutes) | How often to check if a report should be sent (background process) in seconds |
 | `budget_alert_ttl` | 86400 (24 hours) | Cache TTL for budget alerts to prevent spam when budget is crossed |
+| `budget_alert_thresholds` | `null` | Proposed in PR #44359: unique consumed-budget percentages from 1 to 99 across enabled alert destinations; `[]` disables percentage warnings, except explicit email recipient maps |
 | `slack_budget_alert_key_aliases` | `null` | Proposed in PR #44359: case-sensitive virtual-key alias globs for Slack budget alerts; `[]` disables them |
 | `outage_alert_ttl` | 60 (1 minute) | Time window for collecting model outage errors in seconds |
 | `region_outage_alert_ttl` | 60 (1 minute) | Time window for collecting region-based outage errors in seconds |
