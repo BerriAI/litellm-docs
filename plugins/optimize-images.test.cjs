@@ -1,10 +1,26 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fsSync = require('node:fs');
 const fs = require('node:fs/promises');
+const {createRequire} = require('node:module');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const sharp = require('sharp');
 const {optimizeImages} = require('./optimize-images');
+
+const pluginPath = path.join(__dirname, 'optimize-images.js');
+
+function loadPlugin(fakeSharp) {
+  const pluginModule = {exports: {}};
+  const pluginRequire = createRequire(pluginPath);
+  vm.runInNewContext(fsSync.readFileSync(pluginPath, 'utf8'), {
+    module: pluginModule,
+    require: (name) => name === 'sharp' ? fakeSharp : pluginRequire(name),
+    console: {log() {}},
+  }, {filename: pluginPath});
+  return pluginModule.exports;
+}
 
 async function createFixtures(directory) {
   const width = 256;
@@ -76,4 +92,52 @@ test('leaves a corrupt PNG untouched and does not cache it', async (t) => {
   assert.deepEqual(result, {total: 1, cached: 0, saved: 0});
   assert.deepEqual(await fs.readFile(filePath), input);
   assert.deepEqual(await fs.readdir(cacheDir), []);
+});
+
+test('limits image optimization to two concurrent pipelines', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-optimize-concurrency-'));
+  t.after(() => fs.rm(root, {recursive: true, force: true}));
+  const outDir = path.join(root, 'out');
+  const nestedDir = path.join(outDir, 'nested');
+  const cacheDir = path.join(root, 'cache');
+  await Promise.all([fs.mkdir(nestedDir, {recursive: true}), fs.mkdir(cacheDir)]);
+
+  const imagePaths = Array.from({length: 101}, (_, index) => (
+    path.join(index % 2 ? nestedDir : outDir, `${index}.png`)
+  ));
+  await Promise.all(imagePaths.map((file, index) => fs.writeFile(file, `original image ${index}`)));
+  const svgPath = path.join(outDir, 'untouched.svg');
+  await fs.writeFile(svgPath, 'vector image');
+
+  let active = 0;
+  let peak = 0;
+  let completed = 0;
+  const fakeSharp = () => {
+    active += 1;
+    peak = Math.max(peak, active);
+    return {
+      png() { return this; },
+      jpeg() { return this; },
+      async metadata() { return {width: 1, height: 1}; },
+      async toFile(output) {
+        await new Promise(setImmediate);
+        fsSync.writeFileSync(output, 'small');
+        active -= 1;
+        completed += 1;
+      },
+    };
+  };
+
+  const plugin = loadPlugin(fakeSharp);
+  const result = await plugin.optimizeImages(outDir, cacheDir);
+  assert.equal(peak, 2);
+  assert.equal(active, 0);
+  assert.equal(completed, imagePaths.length);
+  assert.equal(result.total, imagePaths.length);
+  assert.equal(result.cached, 0);
+  for (const file of imagePaths) {
+    assert.equal(await fs.readFile(file, 'utf8'), 'small');
+    assert.equal(fsSync.existsSync(`${file}.opt`), false);
+  }
+  assert.equal(await fs.readFile(svgPath, 'utf8'), 'vector image');
 });

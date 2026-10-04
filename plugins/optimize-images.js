@@ -6,6 +6,7 @@ const sharp = require('sharp');
 const QUALITY = 75;
 const PNG_COMPRESSION_LEVEL = 9;
 const SHARP_PACKAGE_VERSION = require('sharp/package.json').version;
+const CONCURRENCY = 2;
 const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
 
 function walk(dir) {
@@ -106,7 +107,16 @@ async function optimizeImages(outDir, cacheDir) {
   await fs.promises.mkdir(cacheDir, {recursive: true});
   const files = walk(outDir);
   const usedEntries = new Set();
-  const results = await Promise.all(files.map((file) => optimizeFile(file, cacheDir, usedEntries)));
+  const results = new Array(files.length);
+  let nextIndex = 0;
+  const workers = Array.from({length: Math.min(CONCURRENCY, files.length)}, async () => {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= files.length) return;
+      results[index] = await optimizeFile(files[index], cacheDir, usedEntries);
+    }
+  });
+  await Promise.all(workers);
   const cacheEntries = await fs.promises.readdir(cacheDir, {withFileTypes: true});
   await Promise.all(cacheEntries
     .filter((entry) => entry.isFile() && !usedEntries.has(entry.name))
@@ -122,6 +132,8 @@ function optimizeImagesPlugin(context) {
   return {
     name: 'optimize-images',
     async postBuild({outDir}) {
+      const files = walk(outDir);
+      console.log(`[optimize-images] Optimizing ${files.length} images, ${CONCURRENCY} at a time`);
       const {total, cached, saved} = await optimizeImages(
         outDir,
         path.join(context.siteDir, 'node_modules/.cache/optimize-images'),
