@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const QUALITY = 75;
+const CONCURRENCY = 2;
 const EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
 
 function walk(dir) {
@@ -46,8 +47,12 @@ module.exports = function optimizeImagesPlugin() {
     async postBuild({ outDir }) {
       const files = walk(outDir);
       if (!files.length) return;
+      console.log(`[optimize-images] Optimizing ${files.length} images, ${CONCURRENCY} at a time`);
       let saved = 0;
-      await Promise.all(files.map(async (f) => { saved += await optimizeFile(f); }));
+      for (let offset = 0; offset < files.length; offset += CONCURRENCY) {
+        const savings = await Promise.all(files.slice(offset, offset + CONCURRENCY).map(optimizeFile));
+        saved += savings.reduce((total, bytes) => total + bytes, 0);
+      }
       const mb = (saved / 1024 / 1024).toFixed(1);
       console.log(`\n[optimize-images] Compressed ${files.length} images, saved ${mb} MB`);
     },
