@@ -382,7 +382,7 @@ curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
 ws://localhost:4000/v1/realtime?model=qwen-voice
 ```
 
-Authenticate with `Authorization: Bearer <proxy key>`. Audio is mono PCM16. Output is always 24 kHz. Input defaults to 24 kHz, which LiteLLM resamples to the 16 kHz that Qwen-Audio expects; this needs the optional resampler, which ships in the official Docker images and installs with `pip install 'litellm[alibaba-token-plan-realtime]'`. Clients that already capture 16 kHz audio can declare it and skip resampling:
+Authenticate with `Authorization: Bearer <proxy key>`. Audio is mono PCM16. Qwen-Audio takes 16 kHz input and always replies with 24 kHz audio. OpenAI clients default to 24 kHz input, so declare 16 kHz in your first `session.update` and send audio captured at that rate:
 
 ```json showLineNumbers title="session.update"
 {
@@ -409,7 +409,7 @@ The client events `session.update`, `input_audio_buffer.append`, `input_audio_bu
 | `turn_detection` | `server_vad`, `smart_turn` or `null` for manual turns; `create_response` and `interrupt_response` cannot be turned off |
 | `tools` | Function tools only, with `tool_choice` `auto`; cannot be combined with `enable_search` |
 | Guardrails | `realtime_input_transcription` guardrails are not supported, because they need auto-response turned off |
-| Input sample rate | 16000 or 24000 Hz, and it cannot change once audio has been sent |
+| Input sample rate | 16000 Hz only; declaring 24 kHz (`pcm16` or `rate: 24000`) closes the session, and the reason appears in LiteLLM's debug log |
 | `response.create` | Only `modalities` / `output_modalities` and `voice` overrides |
 | `response.cancel` | Cancels the active response; omit `response_id` |
 
