@@ -23,7 +23,9 @@ Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHou
 | Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker-dev`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker-dev), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
 | PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database, or PostgreSQL from the local tracing stack |
 
-Build LiteLLM and its worker from the same source commit and use the same release identity. Choose your starting point below
+Choose your starting point below. New installations can start all four services with Docker Compose. Existing users can keep their deployment and add only the services they need. If Lens is already installed, go to [upgrading](#upgrade-litellm-and-the-worker)
+
+Build LiteLLM and its worker from the same source commit and use the same release identity
 
 <Tabs groupId="lens-install" queryString="install">
 <TabItem value="compose" label="New local installation" default>
@@ -70,9 +72,11 @@ This stack is for local evaluation. It binds to localhost and uses development d
 </TabItem>
 <TabItem value="existing" label="Existing LiteLLM">
 
-Keep your existing deployment, PostgreSQL database, configuration, master key, and salt key. If Lens already works, keep that gateway and worker together until you are ready to upgrade. You do not need to move to a different deployment tool
+Keep your existing LiteLLM installation and PostgreSQL database. For a new Lens setup, use a source deployment with Lens support. Record the exact source commit and `LITELLM_RELEASE_TAG` used to build your running gateway; the worker needs both to match
 
-For a new Lens setup, use a source deployment with Lens support. Record the exact source commit and `LITELLM_RELEASE_TAG` used to build your running gateway. The worker needs both to match.
+There is no need to switch deployment tools or start a second proxy. Preserve your configuration, `DATABASE_URL`, `LITELLM_MASTER_KEY`, and `LITELLM_SALT_KEY`. If your proxy runs without PostgreSQL, [connect a database](../virtual_keys.md#setup) before enabling Lens
+
+If you already use Compose, add the [worker service](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) to your existing project and set `LENS_WORKER_IMAGE` to the matching worker. Keep the existing database volumes and project name; the new-installation recipe creates fresh databases and keys
 
 #### 1. Enable trace storage
 
@@ -88,7 +92,7 @@ docker run -d --name litellm-clickhouse --restart unless-stopped \
   clickhouse/clickhouse-server:26.9.6.6
 ```
 
-[Enable tracing](#configure-an-existing-proxy) with `CLICKHOUSE_URL=http://default:<clickhouse-password>@<clickhouse-host>:8123`, then restart LiteLLM. Keep the ClickHouse port accessible only to your proxy. Lens also requires PostgreSQL through `DATABASE_URL`
+[Enable tracing](#configure-an-existing-proxy) with `CLICKHOUSE_URL=http://default:<clickhouse-password>@<clickhouse-host>:8123`, then restart LiteLLM. Keep the ClickHouse port accessible only to your proxy
 
 #### 2. Prepare the matching worker image
 
@@ -235,13 +239,12 @@ For development from source, use `make lens-dev`. Custom container builds must u
 
 ### Deploy with a coding agent
 
-<AgentDeployPrompt prompt={`Deploy LiteLLM Lens by following https://docs.litellm.ai/docs/proxy/lens/deployment
+<AgentDeployPrompt prompt={`Deploy LiteLLM Lens on this machine by following https://docs.litellm.ai/docs/proxy/lens/deployment
 
-1. If LiteLLM is already running, preserve its deployment, PostgreSQL database, configuration, master key, and salt key. Confirm its source commit and release identity before choosing a worker.
-2. For a new local installation, follow the source-build commands in New local installation. Build the gateway and standalone worker from the same checkout and release identity.
-3. Configure ClickHouse tracing and confirm a trace can be written and read through LiteLLM.
-4. Ask me to open Lens > Investigations > Connect worker, select a model and budget, and get the worker token. For the local stack, start the worker with both Compose files. For an existing deployment, confirm the image exists and run its generated install command.
-5. Confirm Worker connected and complete an investigation. Explain how to upgrade both components while preserving the databases and worker token.
+1. If a LiteLLM proxy is already running, keep it and its PostgreSQL database. Otherwise follow New local installation, building the gateway and worker from the same checkout and release identity.
+2. For an existing proxy, configure ClickHouse tracing using the Existing LiteLLM tab. Check POST /v1/traces and GET /v1/traces with a LiteLLM key.
+3. Ask me to open Lens > Investigations > Connect worker, select a model and budget, and get a worker token. For the local stack, start the worker with both Compose files. For an existing proxy, confirm its generated command names an available matching image, then run it.
+4. Confirm the dashboard shows "Worker connected". Keep LiteLLM and the worker on the same source commit and release identity for future upgrades.
 
 Never print or commit keys, worker tokens, or passwords. Ask me before replacing an existing container, database, or config.`} />
 
