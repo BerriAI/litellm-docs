@@ -90,7 +90,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/llms'),
