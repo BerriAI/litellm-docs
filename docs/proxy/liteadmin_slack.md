@@ -1,23 +1,19 @@
 ---
-title: Set up the LiteAdmin Slack app
-sidebar_label: Set up the Slack app
-description: Deploy the LiteAdmin Slack app, connect your personal LiteLLM admin account, and manage your gateway from Slack.
+title: "LiteAdmin Slack app: standalone setup"
+sidebar_label: Slack app (standalone)
+description: Deploy LiteAdmin as a separate agent service, connect your personal LiteLLM admin account, and manage your gateway from Slack.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Set up the LiteAdmin Slack app
+# LiteAdmin Slack app: standalone setup
 
-**LiteAdmin** is a Slack agent built on [LiteAdmin MCP](./liteadmin_mcp.md). Deploy the [LiteLLM Admin Agent](https://github.com/BerriAI/litellm-admin-agent), then connect your own admin account to manage keys, models, teams, and budgets from a Slack DM.
+Use this guide to deploy the [LiteLLM Admin Agent](https://github.com/BerriAI/litellm-admin-agent) as a separate service with its own HTTPS address and login configuration. Connect your own admin account to manage keys, models, teams, and budgets from a Slack DM.
 
-The app bundles a pinned Admin MCP connector and launches it with the requesting user's credential. You do not need to register an MCP server in your gateway or deploy a separate connector.
+For the worker bundled with your Enterprise gateway and its existing SSO, follow [Enterprise setup](./liteadmin_slack_native.md). Both guides configure the same LiteAdmin Slack app. Choose one guide for your deployment
 
-## Enterprise deployment
-
-To run LiteAdmin alongside your Enterprise gateway, follow [Enable the LiteAdmin Slack app](./liteadmin_slack_native.md). The guide covers Slack app creation, credentials, Helm and Docker Compose enablement, readiness checks, and a first request through your existing SSO
-
-An image containing the native integration includes the agent code, but you must enable the worker in your deployment configuration. There is no dashboard toggle. This mode uses a private worker and the gateway connection page. The standalone deployment below remains available for existing installations
+The app bundles a pinned [Admin MCP connector](./liteadmin_mcp.md) and launches it with the requesting user's credential. You do not need to register an MCP server in your gateway or deploy a separate connector.
 
 ## Before you start
 

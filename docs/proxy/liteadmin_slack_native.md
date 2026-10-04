@@ -1,15 +1,17 @@
 ---
-title: Enable the LiteAdmin Slack app
-sidebar_label: Enable with Enterprise SSO
-description: Enable the Enterprise LiteAdmin worker, install the Slack app, and connect admins through your existing LiteLLM SSO.
+title: "LiteAdmin Slack app: Enterprise setup"
+sidebar_label: Slack app (Enterprise)
+description: Set up the LiteAdmin Slack app using the worker bundled with your Enterprise gateway and its existing SSO.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Enable the LiteAdmin Slack app
+# LiteAdmin Slack app: Enterprise setup
 
 Use **LiteAdmin** to ask about teams, budgets, models, and spend from Slack. In this deployment, you run the agent alongside your Enterprise gateway, and each admin connects through your existing LiteLLM login
+
+This guide covers the complete setup using the worker bundled in the gateway image. For a separate agent service with its own HTTPS address and login configuration, use [standalone setup](./liteadmin_slack.md). Choose one guide for your deployment
 
 The Docker image includes the agent code and its dependencies. You must enable the worker and install a Slack app before anyone can use it. The Helm setting `liteadmin.enabled` defaults to `false`; a normal gateway container does not start the worker. Enable it through your deployment configuration, with a valid Enterprise license. There is no dashboard toggle
 

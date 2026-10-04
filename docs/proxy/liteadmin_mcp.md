@@ -18,7 +18,7 @@ Use **LiteAdmin MCP** ([LiteLLM Admin MCP](https://github.com/BerriAI/litellm-ad
 
 Your client runs the agent and model. The MCP server calls your gateway's management API with your personal admin credential. Connecting it leaves your client's model-provider settings unchanged.
 
-For gateway management in Slack, follow the [LiteAdmin Slack app setup](./liteadmin_slack.md). To route third-party MCP tools through LiteLLM, see the separate [MCP Gateway](../mcp.md) guide.
+For gateway management in Slack, follow [Enterprise setup](./liteadmin_slack_native.md) for the bundled worker, or [standalone setup](./liteadmin_slack.md) for a separate agent service. To route third-party MCP tools through LiteLLM, see the separate [MCP Gateway](../mcp.md) guide.
 
 ## Before you start
 
