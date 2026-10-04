@@ -169,7 +169,7 @@ helm upgrade --install litellm ./helm/litellm \
   --namespace litellm -f values.yaml
 ```
 
-The chart uses your selected images and connects the worker to the backend. The worker digest must match the gateway's source commit and release identity. Keep the values and Secret for future upgrades. `lensWorker.replicaCount` controls simultaneous investigations; `lensWorker.image.repository`, `lensWorker.image.digest`, and `lensWorker.url` support private registries and external proxies
+The chart uses your selected images and connects the worker to the backend. **Connect worker** supplies the same digest-pinned image selected in your values. The worker digest must match the gateway's source commit and release identity. Keep the values and Secret for future upgrades. `lensWorker.replicaCount` controls simultaneous investigations; `lensWorker.image.repository`, `lensWorker.image.digest`, and `lensWorker.url` support private registries and external proxies
 
 </TabItem>
 </Tabs>
@@ -224,7 +224,7 @@ helm upgrade litellm ./helm/litellm \
   --namespace litellm -f values.yaml --wait
 ```
 
-The chart uses the matching images you selected in your values. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
+The chart uses the matching images you selected in your values. Pinning the worker by digest keeps the selected image across restarts even if its registry tag changes. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
 
 Update both image tags and digests in your values so neither component remains on an older build. A worker digest takes precedence over its tag. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
 
