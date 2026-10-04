@@ -15,7 +15,9 @@ The app bundles a pinned Admin MCP connector and launches it with the requesting
 
 ## Enterprise deployment
 
-To run LiteAdmin with the same image as your Enterprise gateway and use its existing login, follow [LiteAdmin with Enterprise SSO](./liteadmin_slack_native.md). This option needs an image containing the native integration. It uses a private worker and the gateway connection page, so it does not depend on support for hosted proxy API callbacks. The standalone deployment below remains available for existing installations
+To run LiteAdmin alongside your Enterprise gateway, follow [Enable the LiteAdmin Slack app](./liteadmin_slack_native.md). The guide covers Slack app creation, credentials, Helm and Docker Compose enablement, readiness checks, and a first request through your existing SSO
+
+An image containing the native integration includes the agent code, but you must enable the worker in your deployment configuration. There is no dashboard toggle. This mode uses a private worker and the gateway connection page. The standalone deployment below remains available for existing installations
 
 ## Before you start
 
