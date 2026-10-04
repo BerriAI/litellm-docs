@@ -1,5 +1,6 @@
 ---
 title: ROI Calculator
+draft: true
 description: Compare shipping velocity, issue trends, and recorded AI spend per engineer across GitHub and GitLab repositories
 ---
 

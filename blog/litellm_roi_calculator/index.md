@@ -1,6 +1,7 @@
 ---
 slug: litellm-roi-calculator
 title: "Introducing the LiteLLM ROI Calculator"
+draft: true
 date: 2026-09-26T10:00:00-07:00
 authors: [moe]
 description: "Compare each engineer's LiteLLM gateway spend with the estimated effort of their merged pull requests. Open source and self-hosted."
