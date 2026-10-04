@@ -77,7 +77,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
-  staticDirectories: ['static', '.docusaurus/social-cards'],
+  staticDirectories: ['static', require('./plugins/social-cards').cacheDir],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -101,6 +101,7 @@ const config = {
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
     require('./plugins/optimize-images'),
+    require('./plugins/webpack-cache'),
     require('./plugins/rust-migration-posts'),
     require('./plugins/social-cards'),
     [
