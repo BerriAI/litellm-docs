@@ -20,64 +20,53 @@ Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHou
 | --- | --- | --- |
 | LiteLLM proxy | Receives traces, serves the Lens UI and API | [`ghcr.io/berriai/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm) with [tracing enabled](#configure-an-existing-proxy) |
 | ClickHouse (new) | Stores traces and request logs | [`clickhouse/clickhouse-server:26.9.6.6`](https://hub.docker.com/r/clickhouse/clickhouse-server/tags?name=26.9.6.6) |
-| Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
-| PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database, or PostgreSQL from the new-installation bundle |
+| Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker-dev`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker-dev), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
+| PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database, or PostgreSQL from the local tracing stack |
 
-Choose your starting point below. New installations can start all four services with Docker Compose. Existing users can keep their deployment and add only the services they need. If Lens is already installed, go to [upgrading](#upgrade-litellm-and-the-worker)
+:::info Preview installation
+
+Coordinated Lens worker images and Helm releases are not published yet. For now, use the source setup below or keep your existing working gateway and worker. Both components must come from the same source commit and use the same release identity. The current `v1.105.0-rc.1` release predates this coordinated setup
+
+:::
 
 <Tabs groupId="lens-install" queryString="install">
-<TabItem value="compose" label="New installation" default>
+<TabItem value="compose" label="New local installation" default>
 
-This Docker Compose bundle includes LiteLLM, PostgreSQL, ClickHouse, and the Lens worker. Start the first three, then connect the worker once through the dashboard
+The existing tracing stack starts LiteLLM, PostgreSQL, and ClickHouse. Build its standalone Lens worker from the same checkout, then connect it through the dashboard
 
-#### 1. Start LiteLLM
+#### 1. Build and start LiteLLM
 
-Install [Docker with Compose](https://docs.docker.com/compose/install/). Choose a [LiteLLM release](https://github.com/BerriAI/litellm/releases) that includes the coordinated worker release, and replace `X.Y.Z` below with its version, without `v`
+Install [Docker with Compose](https://docs.docker.com/compose/install/) and Git. Run:
 
 ```bash
-mkdir litellm-lens
-cd litellm-lens
-LENS_RELEASE=X.Y.Z
-curl -fSLo compose.yaml "https://raw.githubusercontent.com/BerriAI/litellm/v${LENS_RELEASE}/deploy/lens/stack.yaml"
-curl -fSLo config.yaml "https://raw.githubusercontent.com/BerriAI/litellm/v${LENS_RELEASE}/deploy/lens/config.yaml"
-umask 077
-printf 'LITELLM_VERSION=%s\nLITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' \
-  "$LENS_RELEASE" "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
-printf 'POSTGRES_PASSWORD=%s\nCLICKHOUSE_PASSWORD=%s\n' \
-  "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >> .env
-docker compose up -d
+git clone https://github.com/BerriAI/litellm.git
+cd litellm
+export LITELLM_RELEASE_TAG="sha-$(git rev-parse HEAD)"
+export LENS_WORKER_IMAGE="litellm-lens-worker:${LITELLM_RELEASE_TAG}"
+export OPENAI_API_KEY='sk-...'
+docker build --build-arg LITELLM_RELEASE_TAG="$LITELLM_RELEASE_TAG" \
+  -f deploy/lens/Dockerfile -t "$LENS_WORKER_IMAGE" .
+docker compose -f docker/docker-compose.tracing.yml up -d --build
 ```
 
-This starts LiteLLM, PostgreSQL, and ClickHouse from published images. Open [http://localhost:4000/ui/](http://localhost:4000/ui/), sign in as `admin` with the `LITELLM_MASTER_KEY` from `.env`, and [add an analysis model](../docker_quick_start.md#3-add-your-first-model)
+Replace `sk-...` with your OpenAI key, or configure another provider in `docker/tracing-config.yaml` before starting. The first build takes several minutes. Both images are built locally; these steps do not depend on an unpublished release image
+
+Open [http://localhost:4002/ui/](http://localhost:4002/ui/) and sign in as `admin` with password `sk-1234`
 
 #### 2. Connect the worker
 
-Go to **Lens > Investigations > Connect worker**, choose the model and monthly budget, then **Get install command**. Expand **Using Docker Compose or Helm?**, copy the worker token, and add it to `.env`:
+Go to **Lens > Investigations > Connect worker**, choose the analysis model and monthly budget, then **Get install command**. Run the command on the same Docker host where you built the worker. It already contains the worker image, proxy URL, and limited worker token
 
-![Copy the private worker token for Docker Compose or Helm](/img/lens/worker-install.png)
+When the dashboard shows **Worker connected**, [send your first trace](./first-trace.md). Keep the command private and save it for future upgrades
 
-```bash title="Add to .env"
-LENS_WORKER_TOKEN=<paste-your-worker-token>
-```
-
-Start the worker:
-
-```bash
-docker compose --profile lens up -d
-```
-
-When the dashboard shows **Worker connected**, continue to [send your first trace](./first-trace.md). Setup is performed once; the same version setting controls LiteLLM and the worker
-
-Keep `.env` private and preserve its salt key and both database volumes. This local stack exposes LiteLLM on localhost. For a public production deployment, use your normal ingress and managed databases
+This stack is for local evaluation. It binds to localhost and uses development database credentials. For a hosted installation, use your normal ingress, private credentials, and database backups. Preserve both database volumes; do not use `docker compose down -v` when upgrading
 
 </TabItem>
 <TabItem value="existing" label="Existing LiteLLM">
 
-Keep your existing LiteLLM installation and PostgreSQL database. Upgrade LiteLLM to a release that includes the coordinated worker release
+Keep your existing deployment, PostgreSQL database, configuration, master key, and salt key. If Lens already works, keep that gateway and worker together until you are ready to upgrade. You do not need to move to a different deployment tool
 
-There is no need to switch deployment tools or start a second proxy. Preserve your configuration, `DATABASE_URL`, `LITELLM_MASTER_KEY`, and `LITELLM_SALT_KEY`. If your proxy runs without PostgreSQL, [connect a database](../virtual_keys.md#setup) before enabling Lens
-
-If you already use Compose, add the [worker service](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) to your existing project and use the same release version for LiteLLM and the worker. Keep the existing database volumes and project name; the new-installation recipe creates fresh databases and keys
+For a new Lens setup during the preview, use a source deployment with coordinated Lens support. Record the exact source commit and `LITELLM_RELEASE_TAG` used to build your running gateway. The worker needs both to match. These instructions do not retrofit that support into the existing RC
 
 #### 1. Enable trace storage
 
@@ -93,137 +82,75 @@ docker run -d --name litellm-clickhouse --restart unless-stopped \
   clickhouse/clickhouse-server:26.9.6.6
 ```
 
-[Enable tracing](#configure-an-existing-proxy) with `CLICKHOUSE_URL=http://default:<clickhouse-password>@<clickhouse-host>:8123`, then restart LiteLLM. Keep the ClickHouse port accessible only to your proxy
+[Enable tracing](#configure-an-existing-proxy) with `CLICKHOUSE_URL=http://default:<clickhouse-password>@<clickhouse-host>:8123`, then restart LiteLLM. Keep the ClickHouse port accessible only to your proxy. Lens also requires PostgreSQL through `DATABASE_URL`
 
-#### 2. Connect the worker
+#### 2. Prepare the matching worker image
 
-In the dashboard, go to **Lens > Investigations > Connect worker**, choose an analysis model and monthly budget, then **Get install command**. Copy and run the command on any Docker host that can reach your proxy
-
-The command already contains the matching image, proxy URL, and a limited worker token. No source checkout or second LiteLLM deployment is needed. Wait for **Worker connected**, then [send your first trace](./first-trace.md)
-
-<details>
-<summary>Standalone image, Render, and worker-only Compose</summary>
-
-The worker is available independently from [GHCR](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker) and [Docker Hub](https://hub.docker.com/r/litellm/litellm-lens-worker), with tag `vX.Y.Z` matching LiteLLM release `X.Y.Z`. Images support amd64 and arm64, including matching RC and dev versions
-
-On Render or another container host, create a background worker using that image. Set `LITELLM_URL` to your proxy's reachable base URL and `LENS_WORKER_TOKEN` to the token copied from **Using Docker Compose or Helm?** in setup. The worker needs outbound access to LiteLLM and no inbound port
-
-To manage just the worker with Compose, download [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) and put these values in a private `.env` file:
+Public source workers use `ghcr.io/berriai/litellm-lens-worker-dev:sha-<full-commit>`. They currently support amd64 and publish on Lens-related changes. Use one only when its commit and `sha-<full-commit>` release identity match your gateway. Check that the exact image exists:
 
 ```bash
-LITELLM_VERSION=X.Y.Z
+docker buildx imagetools inspect \
+  ghcr.io/berriai/litellm-lens-worker-dev:sha-<full-commit>
+```
+
+If the image is unavailable, your gateway uses a different release identity, or you need native arm64, check out the gateway's exact source revision and build the worker there:
+
+```bash
+export LITELLM_RELEASE_TAG='<gateway-release-identity>'
+export LENS_WORKER_IMAGE='<your-registry>/litellm-lens-worker:<your-image-tag>'
+docker build --build-arg LITELLM_RELEASE_TAG="$LITELLM_RELEASE_TAG" \
+  -f deploy/lens/Dockerfile -t "$LENS_WORKER_IMAGE" .
+```
+
+For another Docker host or a hosting service, publish the image to a registry that host can pull from. Configure `LENS_WORKER_IMAGE` on the gateway to that image, preferably by digest, and restart through your normal deployment process. Keep the gateway's existing release identity; changing it does not make a different worker compatible
+
+#### 3. Connect the worker
+
+Open **Lens > Investigations > Connect worker**, choose an analysis model and monthly budget, then **Get install command**. Run it on a Docker host that has the matching image and can reach your proxy. Wait for **Worker connected**, then [send your first trace](./first-trace.md)
+
+<details>
+<summary>Render, Kubernetes, and worker-only Compose</summary>
+
+On Render or another container host, use the matching standalone worker image. Set `LITELLM_URL` to your proxy's reachable base URL, without `/v1`, and `LENS_WORKER_TOKEN` to the token copied from **Using Docker Compose or Helm?** in setup. The worker needs outbound access to LiteLLM and no inbound port
+
+For Kubernetes, keep the token in a Secret and use the same image and two environment variables in your worker deployment. An existing source chart with Lens support can use an explicit `lensWorker.image.repository` and `lensWorker.image.digest`, plus its token Secret. Published chart versions do not yet provide this installation path
+
+For worker-only Compose, download [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) and use a private `.env` file:
+
+```bash
+LENS_WORKER_IMAGE=<matching-worker-image>
 LITELLM_URL=https://your-litellm-proxy
 LENS_WORKER_TOKEN=<paste-your-worker-token>
 ```
 
-Copy the token from **Using Docker Compose or Helm?** in worker setup, then run `docker compose up -d`. `LITELLM_URL` is the proxy's base URL without `/v1`. For another registry, set `LENS_WORKER_IMAGE` instead of `LITELLM_VERSION`. Setting `LENS_WORKER_IMAGE` on the proxy also changes the image shown in its setup command
+Run `docker compose up -d`. Use the explicit image during the preview; the `LITELLM_VERSION` shortcut requires a published coordinated worker release
 
 </details>
-
-</TabItem>
-<TabItem value="helm" label="Kubernetes (Helm)">
-
-Use the componentized [LiteLLM Helm deployment](../deploy.md#deploy-with-helm). The chart includes the optional worker; PostgreSQL and ClickHouse are configured separately. For a new installation, deploy LiteLLM and its database connections first. For an existing installation, keep your release, values, and databases
-
-Configure [ClickHouse tracing](#configure-an-existing-proxy), then open **Lens > Investigations > Connect worker** and get a worker token. If you use a different chart or manage Kubernetes manifests yourself, you can keep that setup and deploy the standalone worker image instead
-
-Store the token in a Secret named `litellm-lens-worker`, under key `token`, in the same namespace as LiteLLM. Use your existing secret manager, or save `token=<paste-your-worker-token>` in a private file and create the Secret:
-
-```bash
-kubectl -n litellm create secret generic litellm-lens-worker \
-  --from-env-file=/path/to/private/lens-worker.env
-```
-
-Add this to your existing Helm values:
-
-```yaml title="values.yaml"
-lensWorker:
-  enabled: true
-  tokenSecret:
-    name: litellm-lens-worker
-    key: token
-```
-
-Upgrade to the matching chart version, replacing `X.Y.Z` and using your existing release name and namespace:
-
-```bash
-helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --namespace litellm --version X.Y.Z -f values.yaml
-```
-
-The chart selects matching gateway and worker images and connects the worker to the backend. Keep the values and Secret for future upgrades. `lensWorker.replicaCount` controls simultaneous investigations; `lensWorker.image.repository`, `lensWorker.image.tag`, and `lensWorker.url` support private registries and external proxies
 
 </TabItem>
 </Tabs>
 
 ### Upgrade LiteLLM and the worker
 
-You choose when to upgrade. Publishing a new release does not update existing containers. Keep LiteLLM and the worker on matching release versions; PostgreSQL and ClickHouse have their own versions and do not need upgrading with every LiteLLM release
+Publishing an image does not update an existing container. Pause scheduled investigations and let active investigations finish. Keep your databases, configuration, master key, salt key, and worker token
 
-Read the release notes, back up your databases, pause scheduled investigations, and let active investigations finish before upgrading. Preserve your configuration, database volumes, master key, salt key, and worker token. Worker setup is performed once; you do not need a new token for each release
+Choose one source commit for the next gateway and worker, and build both with the same release identity. Make the worker image available before updating the gateway's `LENS_WORKER_IMAGE`. Upgrade the gateway through your normal process, then recreate or redeploy the worker with the new image and its existing URL and token. Do not mix a released gateway with the newest source worker
 
-<Tabs groupId="lens-upgrade">
-<TabItem value="compose" label="Docker Compose" default>
+For the local tracing stack, stop your standalone worker, update your source checkout, and repeat the build commands in **New local installation**. Keep the same Compose project and database volumes. Recreate the worker from your saved command with the new `LENS_WORKER_IMAGE`; do not register a new worker just to upgrade
 
-For the bundled stack, stop the worker and change `LITELLM_VERSION` in the existing `.env` file to the new release, without `v`. Then pull and restart:
+For Render, update and redeploy the existing worker service. For worker-only Compose, update `LENS_WORKER_IMAGE` in `.env`, then run `docker compose pull` and `docker compose up -d`. Kubernetes users update their worker deployment or explicit chart image override alongside the gateway
 
-```bash
-docker compose --profile lens stop lens-worker
-# Change LITELLM_VERSION in .env
-docker compose --profile lens pull
-docker compose --profile lens up -d
-```
-
-This updates LiteLLM and the worker together while retaining the databases. Do not repeat the first-install key-generation step or run `down -v`
-
-If you added the worker to your own Compose project, follow the same process with your existing files and shared version setting. Omit `--profile lens` if your worker does not use that profile. If Compose manages only the worker, upgrade LiteLLM separately first, update the worker's `LITELLM_VERSION` or explicit `LENS_WORKER_IMAGE`, then run `docker compose pull` and `docker compose up -d`
-
-</TabItem>
-<TabItem value="standalone" label="Docker or hosted worker">
-
-Stop the worker after active investigations finish, then upgrade LiteLLM using your usual deployment process. Recreate the worker with image `ghcr.io/berriai/litellm-lens-worker:vX.Y.Z`, replacing `X.Y.Z` with the upgraded LiteLLM release. The same tag is available on Docker Hub
-
-For a worker started with `docker run`, use your saved install command with the new image tag and remove the stopped container after its replacement connects. Keep its proxy URL, token, and runtime options. For Render or another container host, update the existing worker service's image tag and redeploy it, keeping its environment settings
-
-</TabItem>
-<TabItem value="helm" label="Helm">
-
-Upgrade the componentized chart using your existing release name, namespace, values, and token Secret. Replace `X.Y.Z` with the target chart version. Keep workers paused until all LiteLLM pods have finished upgrading, then restore the worker count from your values:
-
-```bash
-helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --namespace litellm --version X.Y.Z -f values.yaml \
-  --set lensWorker.replicaCount=0 --wait
-
-kubectl -n litellm wait --for=delete pod \
-  -l app.kubernetes.io/instance=litellm,app.kubernetes.io/component=lens-worker \
-  --timeout=120s
-
-helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --namespace litellm --version X.Y.Z -f values.yaml --wait
-```
-
-The chart selects matching LiteLLM and worker images. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
-
-If you explicitly set image tags in your values, update those overrides too so they do not hold either component on an older version. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
-
-</TabItem>
-</Tabs>
-
-After any upgrade, check for **Worker connected** in the dashboard, run an investigation, and restore any schedules you paused. The gateway checks compatibility before handing out work. An outdated worker waits with an upgrade message, leaving queued investigations untouched; update its image to resume work
-
-RC and dev releases follow the same process using matching version suffixes. Hourly development deployments build the gateway and worker from the same selected commit
-
-For development from source, use `make lens-dev`. Custom container builds must use the same checkout and release identity for both components; follow the [source build instructions](https://github.com/BerriAI/litellm/blob/main/deploy/lens/README.md#release-compatibility). A build without that identity refuses worker setup instead of suggesting an unrelated released image
+After upgrading, confirm **Worker connected**, run an investigation, and restore paused schedules. The gateway checks compatibility before handing out work. An incompatible worker waits without consuming queued investigations
 
 ### Deploy with a coding agent
 
-<AgentDeployPrompt prompt={`Deploy LiteLLM Lens on this machine by following https://docs.litellm.ai/docs/proxy/lens/deployment
+<AgentDeployPrompt prompt={`Deploy the current Lens preview by following https://docs.litellm.ai/docs/proxy/lens/deployment
 
-1. If a LiteLLM proxy is already running, keep it and its PostgreSQL database. Otherwise choose a published release containing the coordinated Lens worker release and follow the New installation tab. Download its stack and configuration from that release; do not build from source.
-2. For an existing proxy, configure ClickHouse tracing using the Existing LiteLLM tab. Check POST /v1/traces and GET /v1/traces with a LiteLLM key.
-3. Ask me to open Lens > Investigations > Connect worker, select a model and budget, and get a worker token. For the bundled stack, save it in the private .env file and start the lens profile. For an existing proxy, use its generated Docker command.
-4. Confirm the dashboard shows "Worker connected". Keep LiteLLM and the worker on the same release for future upgrades.
+1. If LiteLLM is already running, preserve its deployment, PostgreSQL database, configuration, master key, and salt key. Confirm its source commit and release identity before choosing a worker.
+2. For a new local installation, follow the source-build commands in New local installation. Build the gateway and standalone worker from the same checkout and release identity. Coordinated public worker releases are not available yet.
+3. Configure ClickHouse tracing and confirm a trace can be written and read through LiteLLM.
+4. Ask me to open Lens > Investigations > Connect worker, select a model and budget, and get the install command. Confirm its image exists on the Docker host or in an accessible registry, then run it.
+5. Confirm Worker connected and complete an investigation. Explain how to upgrade both components while preserving the databases and worker token.
 
 Never print or commit keys, worker tokens, or passwords. Ask me before replacing an existing container, database, or config.`} />
 
