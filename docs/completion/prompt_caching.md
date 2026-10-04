@@ -586,6 +586,12 @@ Use the same Anthropic-style `cache_control` format; LiteLLM automatically trans
 3. Works across all three providers: `gemini/` (Google AI Studio), `vertex_ai/`, and `vertex_ai_beta/`
 4. Requires a minimum of **1024 tokens** in the cached content. Below that, caching is silently skipped
 
+:::warning
+
+Gemini 2.5 and newer already cache repeated prefixes implicitly, for free. Sending `cache_control` (by hand or through `cache_control_injection_points`) opts the request into explicit caching instead: the marked prefix is moved into a `cachedContents` object, so implicit caching no longer applies to it, and Google charges storage for each cache object. Only add `cache_control` for Gemini when you want explicit caching on purpose. See the [auto-inject tutorial](../tutorials/prompt_caching.md)
+
+:::
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
