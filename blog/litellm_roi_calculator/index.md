@@ -1,7 +1,6 @@
 ---
 slug: litellm-roi-calculator
 title: "Introducing the LiteLLM ROI Calculator"
-draft: true
 date: 2026-09-26T10:00:00-07:00
 authors: [moe]
 description: "Compare each engineer's LiteLLM gateway spend with the estimated effort of their merged pull requests. Open source and self-hosted."
@@ -17,10 +16,6 @@ Your gateway tells you what your team spends on AI. It doesn't tell you what tha
 **The [LiteLLM ROI Calculator](https://github.com/BerriAI/litellm-roi-calculator) compares gateway spend with the engineering work your team ships.** It reads spend per user from LiteLLM, estimates the effort in each merged pull request with a model you choose, and matches people by email. The result is one number: spend per estimated engineering hour.
 
 {/* truncate */}
-
-:::info Native Admin UI calculator
-The ROI Calculator is now also integrated into the LiteLLM Admin UI. See the [ROI Calculator documentation](/docs/proxy/roi_calculator) for build availability, setup, and how the calculation works. The instructions below describe the original standalone application.
-:::
 
 ## Connect your gateway and GitHub
 
