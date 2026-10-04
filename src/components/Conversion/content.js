@@ -105,6 +105,16 @@ const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/
 printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\nPOSTGRES_PASSWORD=%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" > .env
 docker compose -f docker-compose.quickstart.yml up -d`;
 
+// The one command per system shown in the Quick Start box. The gateway scripts
+// live in the litellm repo: scripts/quickstart.sh and scripts/quickstart.ps1.
+const QUICKSTART = {
+  gateway: {
+    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.sh | sh',
+    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.ps1 | iex',
+  },
+  sdk: 'uv add litellm',
+};
+
 const GATEWAY_DOCKER_RUN = `docker run \\
   -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \\
   -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \\
@@ -234,9 +244,9 @@ const USE_CASES = [
   {
     id: 'sdk',
     product: 'Python SDK',
-    problem: 'Call 100+ LLM providers from Python with one function.',
+    problem: 'Use one Python function for 100+ LLM providers.',
     solution:
-      'completion() takes the same arguments for OpenAI, Anthropic, Bedrock, and 100+ others, and always answers in the OpenAI format, so switching models is a string change. Streaming, retries, fallbacks, and cost per call come with it.',
+      'The completion() function uses the same arguments for OpenAI, Anthropic, Bedrock, and 100+ other providers. It always gives the result in the OpenAI format. To use a different model, you replace one string. The SDK also gives streaming, retries, fallbacks, and the cost of each call.',
     to: '/docs/',
     cta: 'Install the SDK',
     prompt: 'sdk',
@@ -260,9 +270,9 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'gateway',
     product: 'AI Gateway',
-    problem: 'One endpoint for every model, with keys, budgets, and spend tracking for each team.',
+    problem: 'One endpoint for all models, with keys, budgets, and costs for each team.',
     solution:
-      'Every app calls the gateway in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
+      'Apps in all programming languages send requests to the gateway in the OpenAI format. Each app or person gets a virtual key with a budget and a rate limit. The gateway records each request and its cost. Your provider keys stay in the gateway.',
     to: '/docs/proxy/docker_quick_start',
     cta: 'Start the Gateway',
     prompt: 'gateway',
@@ -283,9 +293,9 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'enterprise',
     product: 'Enterprise',
-    problem: 'Single sign-on, audit logs, and admin roles for a company-wide rollout.',
+    problem: 'Single sign-on, audit logs, and admin roles for all the teams in your company.',
     solution:
-      'Enterprise adds them to the same gateway with a license key: SSO and SCIM, audit logs of every admin action, delegated admins per team, multi-region deployment, and support from the engineers who build LiteLLM.',
+      'A license key adds Enterprise features to the same gateway. These features are SSO, SCIM, audit logs of all admin changes, and admins for each team. Enterprise also gives deployment in more than one region, and the LiteLLM engineers help your team.',
     to: '/docs/enterprise',
     cta: 'Talk to sales',
     sales: true,
@@ -304,16 +314,16 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
 // it with one small text visual.
 const CARD_GROUPS = [
   {title: 'Tools and agents', ids: ['mcp', 'agents']},
-  {title: 'Choose models and harnesses', ids: ['autorouter', 'liteagents']},
-  {title: 'Run it from your terminal or your agent', ids: ['tools', 'liteadmin']},
+  {title: 'Models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Your terminal and your agent', ids: ['tools', 'liteadmin']},
 ];
 
 const PRODUCT_CARDS = [
   {
     id: 'mcp',
     product: 'MCP Gateway',
-    problem: 'Serve every MCP tool from one endpoint.',
-    text: 'Add MCP servers to the gateway once instead of wiring them into every app, and choose which keys and teams can use each server.',
+    problem: 'Make all MCP tools available from one endpoint.',
+    text: 'Add MCP servers to the gateway one time. You do not connect them to each app. Select which keys and teams can use each server.',
     visual: {
       type: 'table',
       head: ['MCP server', 'Search team', 'Support team'],
@@ -328,8 +338,8 @@ const PRODUCT_CARDS = [
   {
     id: 'agents',
     product: 'Agent Gateway',
-    problem: 'Route agent-to-agent calls through the gateway.',
-    text: 'Register your A2A agents on the gateway, so every call to them uses a virtual key, shows up in your logs with its cost, and is limited to the teams you allow.',
+    problem: 'Send agent-to-agent calls through the gateway.',
+    text: 'Register your A2A agents on the gateway. Each call to these agents then uses a virtual key and shows in your logs with its cost. Only the teams that you select can call these agents.',
     visual: {
       type: 'lines',
       lines: [
@@ -343,8 +353,8 @@ const PRODUCT_CARDS = [
   {
     id: 'autorouter',
     product: 'Auto Router (add-on)',
-    problem: 'Send each request to the cheapest model that can answer it.',
-    text: 'Easy prompts stop going to your most expensive model, with no change to your app.',
+    problem: 'Send each request to the model with the lowest cost that can do the task.',
+    text: 'Easy prompts go to a model with a lower cost. Your app stays the same.',
     visual: {
       type: 'table',
       head: ['Request', 'Routed to'],
@@ -359,8 +369,8 @@ const PRODUCT_CARDS = [
   {
     id: 'liteagents',
     product: 'LiteAgents (preview)',
-    problem: 'Switch agent harnesses without rewriting your agent.',
-    text: 'Move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode by changing one field. Your tools and MCP connections stay.',
+    problem: 'Use a different agent harness and keep your agent code.',
+    text: 'Replace one parameter to move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode. Your tools and MCP connections stay the same.',
     visual: {
       type: 'code',
       lang: 'python',
@@ -376,7 +386,7 @@ const PRODUCT_CARDS = [
     id: 'tools',
     product: 'lite CLI',
     problem: 'Run Claude Code and Codex through your gateway.',
-    text: 'Instead of personal API keys, the lite CLI signs in to your gateway and launches the tool through it, so budgets, logs, and guardrails apply per person.',
+    text: 'The lite CLI signs in to your gateway and starts the tool through it. No person uses a provider API key. Budgets, logs, and guardrails apply to each person.',
     visual: {
       type: 'code',
       lang: 'bash',
@@ -389,8 +399,8 @@ lite claude   # Claude Code, through the gateway`,
   {
     id: 'liteadmin',
     product: 'LiteAdmin MCP',
-    problem: 'Manage the gateway by asking your agent.',
-    text: 'Connect Claude or Codex to your gateway and ask it to create keys, add models, manage teams and budgets, or look up a failing request.',
+    problem: 'Control the gateway with instructions to your agent.',
+    text: 'Connect Claude or Codex to your gateway. Then tell the agent to create keys, add models, control teams and budgets, or find a request with an error.',
     visual: {
       type: 'chat',
       lines: [
@@ -430,5 +440,6 @@ module.exports = {
   INSTALLS,
   ONE_CLICK,
   GATEWAY_COMPOSE,
+  QUICKSTART,
   INSTALLER,
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import SalesButton from './SalesButton';
 import {ICONS} from './icons';
 import styles from './styles.module.css';
 
@@ -42,4 +43,28 @@ export function Tiles({items, columns = 3, size = 'md'}) {
       })}
     </div>
   );
+}
+
+// Closing call to action for enterprise-minded readers.
+export function SalesBand({title, text, source = 'docs'}) {
+  return (
+    <aside className={styles.band}>
+      <div className={styles.bandCopy}>
+        <p className={styles.bandTitle}>{title || 'LiteLLM for all the teams in your company'}</p>
+        <p className={styles.bandText}>
+          {text ||
+            'Enterprise adds SSO, audit logs, admin roles for each team, and help from the LiteLLM engineers. It uses the same gateway with one license key.'}
+        </p>
+      </div>
+      <div className={styles.bandActions}>
+        <SalesButton source={source} />
+        <span className={styles.salesNote}>A free 30-day trial is available.</span>
+      </div>
+    </aside>
+  );
+}
+
+// "What next" row: plain cards with a drawn icon and a one-line reason.
+export function NextSteps({items}) {
+  return <Tiles items={items} columns={items.length > 3 ? 4 : items.length} />;
 }
