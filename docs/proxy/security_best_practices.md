@@ -121,7 +121,7 @@ Set `allowed_file_extensions` under `general_settings` to the extensions your wo
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   allowed_file_extensions: [".jsonl", ".pdf", ".txt"]
   max_file_size_mb: 50
   max_batch_file_size_mb: 200

@@ -53,7 +53,7 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 These callouts cover user-facing behavior that differs from `v1.103.0`, the previous stable release
 
-**The proxy refuses to start with an unset, empty, or publicly known master key.** A deployment with no `LITELLM_MASTER_KEY`, an empty one, or `sk-1234` stops booting after the upgrade. The startup error names where the bad key came from and prints a command that generates a secure one. If the database holds values encrypted with the old key, also set `LITELLM_MIGRATE_FROM_MASTER_KEY` so the next boot re-encrypts them. To keep the old behavior on a local sandbox, set `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` or `general_settings.dangerously_permit_weak_or_unset_master_key: true`. See [PR #42019](https://github.com/BerriAI/litellm/pull/42019), [PR #42011](https://github.com/BerriAI/litellm/pull/42011)
+**The proxy refuses to start with an unset, empty, or publicly known master key.** A deployment with no `LITELLM_MASTER_KEY`, an empty one, or a known unsafe value stops booting after the upgrade. The startup error names where the bad key came from and prints a command that generates a secure one. If the database holds values encrypted with the old key, also set `LITELLM_MIGRATE_FROM_MASTER_KEY` so the next boot re-encrypts them. To keep the old behavior on a local sandbox, set `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` or `general_settings.dangerously_permit_weak_or_unset_master_key: true`. See [PR #42019](https://github.com/BerriAI/litellm/pull/42019), [PR #42011](https://github.com/BerriAI/litellm/pull/42011)
 
 **An exhausted budget now returns HTTP 422 instead of 429.** Clients stop treating a spent budget as a retryable rate limit. Real rpm/tpm limits still return 429. Set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status. See [PR #42097](https://github.com/BerriAI/litellm/pull/42097)
 
@@ -1057,7 +1057,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### Documentation
 
-- Stop advertising sk-1234 as the master key in shipped configs and examples - [PR #42011](https://github.com/BerriAI/litellm/pull/42011)
+- Stop advertising a publicly known weak master-key value in shipped configs and examples - [PR #42011](https://github.com/BerriAI/litellm/pull/42011)
 
 
 ## Tests, CI and Internal Changes

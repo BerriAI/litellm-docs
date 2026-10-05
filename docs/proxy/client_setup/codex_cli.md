@@ -61,7 +61,7 @@ request_max_retries = 4
 Export the key, then run Codex:
 
 ```bash
-export LITELLM_API_KEY="sk-1234"
+export LITELLM_API_KEY="sk-<your-virtual-key>"
 
 codex
 ```

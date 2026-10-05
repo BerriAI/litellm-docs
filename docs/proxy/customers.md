@@ -524,7 +524,7 @@ curl -X POST 'http://localhost:4000/budget/new' \
 
 ```bash
 curl -X POST 'http://localhost:4000/budget/info' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"budgets": ["my-free-tier"]}'
 ```

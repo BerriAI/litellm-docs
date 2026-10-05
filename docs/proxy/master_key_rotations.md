@@ -34,11 +34,11 @@ Call `POST /key/regenerate` with the current master key as `key` and the new one
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/regenerate' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
+-H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "key": "sk-<current-master-key>",
-  "new_master_key": "sk-PIp1h0RekR"
+  "new_master_key": "sk-<your-master-key>"
 }'
 ```
 
@@ -46,9 +46,9 @@ This re-encrypts stored models, the `environment_variables` saved in the config 
 
 ```json
 {
-  "key": "sk-PIp1h0RekR",
-  "token": "sk-PIp1h0RekR",
-  "key_name": "sk-PIp1h0RekR",
+  "key": "sk-<your-master-key>",
+  "token": "sk-<your-master-key>",
+  "key_name": "sk-<your-master-key>",
   "expires": null
 }
 ```
@@ -64,7 +64,7 @@ Restart every proxy instance so they load the new key. Then verify: log into the
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-PIp1h0RekR' \
+-H "Authorization: Bearer $LITELLM_MASTER_KEY" \
 -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -78,9 +78,9 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 If the UI loads and your stored models and credentials resolve, the rotation is complete.
 
-## Proxy refuses to start on sk-1234 {#proxy-refuses-to-start}
+## Proxy refuses to start with a known unsafe master key {#proxy-refuses-to-start-with-known-unsafe-master-key}
 
-The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or is the literal `sk-1234`. With no master key the proxy runs without authentication and accepts every request. `sk-1234` is the example key from LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
+The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or matches a publicly known unsafe value. With no master key the proxy runs without authentication and accepts every request. The known unsafe value was widely advertised in LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
 
 What to do next depends on whether the old key encrypted anything in your database. The proxy works that out for you. When a database is configured and `LITELLM_SALT_KEY` is not set, it connects during the refusal and counts the stored values that decrypt under the unsafe key, and the steps it prints depend on the result.
 
@@ -94,7 +94,7 @@ When the variable is not set at all, the error prints a command that generates a
 echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)" | tee -a .env
 ```
 
-When the variable is already set to an unsafe value (`sk-1234` or empty), the error prints a command that only generates a key. Put the new key in place of the current `LITELLM_MASTER_KEY` value wherever that is set: a shell export, your container or deployment environment, or its line in `.env`. Do not just add it to `.env`. The proxy loads `.env` without overriding variables that already exist, so a value already exported in the environment wins and an appended line would never take effect.
+When the variable is already set to a known unsafe value or is empty, the error prints a command that only generates a key. Put the new key in place of the current `LITELLM_MASTER_KEY` value wherever that is set: a shell export, your container or deployment environment, or its line in `.env`. Do not just add it to `.env`. The proxy loads `.env` without overriding variables that already exist, so a value already exported in the environment wins and an appended line would never take effect.
 
 ```bash
 echo "sk-$(openssl rand -hex 32)"
@@ -119,7 +119,7 @@ You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_K
 1. Set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old key in the same place as `LITELLM_MASTER_KEY`: a shell export, your container or deployment environment, or `.env`. Use an empty value, `LITELLM_MIGRATE_FROM_MASTER_KEY=`, when the old key was empty.
 
    ```bash
-   export LITELLM_MIGRATE_FROM_MASTER_KEY=sk-1234
+   export LITELLM_MIGRATE_FROM_MASTER_KEY="$LITELLM_MASTER_KEY"
    ```
 
 2. Generate a new key and set it as `LITELLM_MASTER_KEY`. When the variable is already set, put the new key in place of the current value.
@@ -128,11 +128,11 @@ You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_K
    echo "sk-$(openssl rand -hex 32)"
    ```
 
-   When nothing sets `LITELLM_MASTER_KEY` yet, which happens when the old key was a literal in `config.yaml`, the error prints commands that save both values to `.env` instead.
+   When nothing sets `LITELLM_MASTER_KEY` yet, which happens when the old key was a literal in `config.yaml`, first load the previous value into the shell from its current secret source. The error then prints commands that save both values to `.env`.
 
    ```bash
-   echo 'LITELLM_MIGRATE_FROM_MASTER_KEY=sk-1234' | tee -a .env
-   echo "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)" | tee -a .env
+   printf 'LITELLM_MIGRATE_FROM_MASTER_KEY=%s\n' "$LITELLM_MASTER_KEY" | tee -a .env
+   printf 'LITELLM_MASTER_KEY=sk-%s\n' "$(openssl rand -hex 32)" | tee -a .env
    ```
 
 3. Start the proxy again. Right after the database connects, and before any traffic is served, the proxy re-encrypts every stored value that decrypts under the previous key. It logs this at WARNING, so the lines show up at the default log level, among the first lines of the log.
@@ -144,7 +144,7 @@ You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_K
 
 4. Delete `LITELLM_MIGRATE_FROM_MASTER_KEY`, then verify as described in [After rotating](#after-rotating). Leaving the variable set does no harm. Each boot then logs one notice: "LITELLM_MIGRATE_FROM_MASTER_KEY is still set, but nothing in the database is left to migrate from that key. You may now delete LITELLM_MIGRATE_FROM_MASTER_KEY."
 
-`LITELLM_MIGRATE_FROM_MASTER_KEY` only takes effect together with a safe master key. If you set it while `LITELLM_MASTER_KEY` is still unset, empty, or `sk-1234`, the proxy refuses to start again.
+`LITELLM_MIGRATE_FROM_MASTER_KEY` only takes effect together with a safe master key. If you set it while `LITELLM_MASTER_KEY` is still unset, empty, or has a known unsafe value, the proxy refuses to start again.
 
 If a stored value is edited while the migration runs, that value is left as it was and the log says "Re-encrypted N stored value(s), but M are still encrypted with the previous key because they changed during the migration. Keep LITELLM_MIGRATE_FROM_MASTER_KEY set and restart the proxy to migrate them." Do what it says and restart once more.
 
