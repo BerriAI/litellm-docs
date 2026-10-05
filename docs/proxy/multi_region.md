@@ -45,7 +45,7 @@ Every proxy instance in every region must share the following. If any of these d
 |---|---|---|
 | `DATABASE_URL` | Same database in every region | Single source of truth for keys, teams, users, spend, and license seat counts |
 | `LITELLM_MASTER_KEY` | Identical in every region | Keys are validated against the shared database; the master key must match everywhere |
-| `LITELLM_SALT_KEY` | Identical in every region, never changed after setup | Encrypts and decrypts LLM credentials stored in the database. An instance with a different salt key cannot read stored model credentials |
+| `LITELLM_SALT_KEY` | Identical in every region, never changed after setup | Encrypts and decrypts what the proxy stores encrypted in the database: model and guardrail `litellm_params`, provider credentials, and the `environment_variables` and `router_settings` rows of the config table. An instance with a different salt key cannot read any of them |
 | `LITELLM_LICENSE` | Same license key in every region | Each instance validates the license independently; one key activates all of them |
 | `DISABLE_SCHEMA_UPDATE` | `true` on all proxy instances | Schema migrations must run exactly once (as a job), not raced by every instance in every region |
 
