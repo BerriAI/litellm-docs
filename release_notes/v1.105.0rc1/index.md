@@ -53,7 +53,7 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 These callouts cover user-facing behavior that differs from `v1.104.0`, the latest stable release
 
-**The proxy no longer starts when it cannot reach its database or apply its migrations**, so a new version never serves traffic against an outdated schema. During a rolling update the new pods stay down and the old pods keep serving. The `ENFORCE_PRISMA_MIGRATION_CHECK=false` opt-out from `v1.104.0` is removed. See [PR #44141](https://github.com/BerriAI/litellm/pull/44141)
+**The proxy no longer starts when it cannot reach its database or apply its migrations**, so a new version never serves traffic against an outdated schema. During a rolling update the new pods stay down and the old pods keep serving. This became the default in `v1.104.0`, and it can no longer be turned off: `ENFORCE_PRISMA_MIGRATION_CHECK=false` is now ignored. See [PR #44141](https://github.com/BerriAI/litellm/pull/44141)
 
 **Bedrock GPT-5.6, GPT-6 and GPT-6.1 move from Converse to native Chat Completions**, so response ids, `service_tier` and reasoning fields change shape. Use `bedrock/converse/<model>` to stay on Converse. See [PR #44307](https://github.com/BerriAI/litellm/pull/44307)
 
