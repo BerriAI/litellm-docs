@@ -62,6 +62,41 @@ for chunk in response:
     print(chunk)
 ```
 
+### Tool calling
+
+```python showLineNumbers title="Nadir Tool Calling"
+import os
+from litellm import completion
+
+os.environ["NADIR_API_KEY"] = "your-api-key"
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather for a city",
+            "parameters": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="nadir/auto",
+    messages=[{"role": "user", "content": "What is the weather in Paris?"}],
+    tools=tools,
+    tool_choice="auto",
+)
+print(response.choices[0].message.tool_calls)
+```
+
+Tool calls stream too. With `stream=True`, Nadir streams the tool-call deltas
+and ends the turn with `finish_reason="tool_calls"`.
+
 ## Usage - LiteLLM Proxy
 
 Add the following to your LiteLLM Proxy configuration file:
@@ -115,13 +150,23 @@ routed model's own entry in the LiteLLM model cost map, for example
 `openrouter/anthropic/claude-haiku-4.5`, so a routed model with no cost map
 entry logs a streamed call at $0.
 
+A non-streaming call that Nadir could not price is priced the same way. Nadir
+still returns a total for it, flagged with `cost_breakdown.pricing_failed`, and
+LiteLLM prices the call from the routed model's cost map entry instead of
+recording that total.
+
 ## Supported OpenAI Parameters
 
 Nadir validates requests against its own schema and drops anything outside it,
 so LiteLLM advertises only the parameters the endpoint honors:
 
-`frequency_penalty`, `max_tokens`, `presence_penalty`, `response_format`,
-`stream`, `temperature`, `top_p`
+`frequency_penalty`, `max_tokens`, `parallel_tool_calls`, `presence_penalty`,
+`response_format`, `service_tier`, `stream`, `temperature`, `tool_choice`,
+`tools`, `top_p`, `user`
+
+`user` is recorded as the end user on Nadir's usage log, so spend can be split
+per end user. `service_tier` is forwarded only when the routed model's provider
+accepts it.
 
 `extra_headers` and `max_retries` are handled by the LiteLLM transport rather
 than sent in the request body. Passing any other parameter raises
@@ -129,7 +174,7 @@ than sent in the request body. Passing any other parameter raises
 
 :::info
 
-`tools`, `tool_choice`, and `functions` are **not** supported. Function calling
-is not part of Nadir's request schema today.
+The legacy `functions` and `function_call` parameters are not supported. Use
+`tools` and `tool_choice` instead.
 
 :::
