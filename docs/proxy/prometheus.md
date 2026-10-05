@@ -881,7 +881,7 @@ litellm_settings:
   prometheus_metrics_ttl_seconds: 3600
 ```
 
-The TTL only works in single-process mode. With `PROMETHEUS_MULTIPROC_DIR` set (multiple workers or the [dedicated metrics port](#isolate-prometheus-scraping-from-inference-traffic)), the Prometheus client library cannot remove a series it has written, so LiteLLM ignores `prometheus_metrics_ttl_seconds` there and logs a warning at startup. The cap still holds in that mode, and slots are freed when the proxy restarts: with several workers `litellm` wipes that directory at boot, and with one worker it drops its own admission files there and leaves the rest of the directory alone. If you start the workers yourself instead of through `litellm`, wipe `PROMETHEUS_MULTIPROC_DIR` before they start
+The TTL only works in single-process mode. With `PROMETHEUS_MULTIPROC_DIR` set (multiple workers or the [dedicated metrics port](#isolate-prometheus-scraping-from-inference-traffic)), the Prometheus client library cannot remove a series it has written, so LiteLLM ignores `prometheus_metrics_ttl_seconds` there and logs a warning at startup. The cap still holds in that mode, and slots are freed when the proxy restarts, because `litellm` wipes that directory at boot whenever `PROMETHEUS_MULTIPROC_DIR` is set, with one worker too, so the samples of the workers that exited do not keep the merged scrape past the cap. If you start the workers yourself instead of through `litellm`, wipe `PROMETHEUS_MULTIPROC_DIR` before they start
 
 The `end_user` caps in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus) are separate settings and still apply to metrics that carry the `end_user` label
 
