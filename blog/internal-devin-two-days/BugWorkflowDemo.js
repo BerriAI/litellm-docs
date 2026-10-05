@@ -4,39 +4,30 @@ import poster from './bug-workflow-poster.jpg';
 import styles from './BugWorkflowDemo.module.css';
 
 export default function BugWorkflowDemo() {
-  const posterUrl = typeof poster === 'string' ? poster : poster.src.src;
+  const posterUrl = typeof poster === 'string'
+    ? poster
+    : poster.src.images.find((image) => image.width >= 1280)?.path ?? poster.src.src;
 
   return (
     <figure className={styles.demo}>
-      <div className={styles.layout}>
-        <div className={styles.context}>
-          <span className={styles.label}>A real /team workflow</span>
-          <h3>From a Slack bug to a pull request.</h3>
-          <p>
-            A teammate spotted broken mentions. I asked Moyai to run{' '}
-            <code>/personal:team</code>. It traced the escaping bug, added a
-            regression test, and opened the fix.
-          </p>
-          <span className={styles.outcome}>61 Slack tests passed</span>
-        </div>
-        <video
-          className={styles.video}
-          controls
-          muted
-          playsInline
-          preload="none"
-          src={recording}
-          poster={posterUrl}
-          width="780"
-          height="504"
-          aria-label="24-second walkthrough of Moyai's real cloud session: a team workflow request, root cause investigation, pull request, and regression tests"
-        >
-          <a href={recording}>Watch the bug-fix walkthrough</a>
-        </video>
-      </div>
+      <video
+        className={styles.video}
+        controls
+        muted
+        playsInline
+        preload="none"
+        src={recording}
+        poster={posterUrl}
+        width="1600"
+        height="1000"
+        aria-label="18-second walkthrough of Moyai across Slack and the web: a real team workflow request, investigation, regression tests, and a pull request returned to the thread"
+      >
+        <a href={recording}>Watch the bug-fix walkthrough</a>
+      </video>
       <figcaption className={styles.caption}>
-        24-second walkthrough of the completed cloud session. The fix was tested
-        with a mocked Slack transport.
+        A real <code>/personal:team</code> bug fix across Slack and the web.
+        Edited 18-second walkthrough of a completed session; tests used a mocked
+        Slack transport.
       </figcaption>
     </figure>
   );
