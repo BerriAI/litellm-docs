@@ -7,13 +7,13 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | ZeroGPU serves open and hosted text generation models over an OpenAI-compatible API |
+| Description | ZeroGPU is the compute efficiency layer for AI inference. It runs high-volume tasks such as text generation, classification, extraction, moderation, embeddings and audio on specialized small and nano language models across an edge-powered network, through one OpenAI-compatible API |
 | Provider Route on LiteLLM | `zerogpu/` |
 | Link to Provider Doc | [ZeroGPU Documentation](https://docs.zerogpu.ai) |
 | Default Base URL | `https://api.zerogpu.ai/v1` |
 | Supported Operations | `/chat/completions`, plus `/messages` and `/responses` through LiteLLM's adapters |
 
-ZeroGPU is its own provider on LiteLLM rather than a generic OpenAI-compatible route, so its spend is priced from the `zerogpu/` cost map entries and reported under provider `zerogpu`.
+LiteLLM's `zerogpu/` route covers the ZeroGPU text generation models listed below. ZeroGPU is its own provider on LiteLLM rather than a generic OpenAI-compatible route, so its spend is priced from the `zerogpu/` cost map entries and reported under provider `zerogpu`.
 
 ## API Key
 
