@@ -61,12 +61,6 @@ These callouts cover user-facing behavior that differs from `v1.104.0`, the late
 
 :::
 
-:::warning Upgrading from `v1.104.0`
-
-The `LiteLLM_SpendLogs` indexes are now built online after `prisma migrate deploy`: the migration job waits for them and fails if one is still missing, and a proxy that runs its own migrations builds them in the background after boot. Indexes you already built by hand from the `v1.104.0` notes are reused, not rebuilt. See [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #44203](https://github.com/BerriAI/litellm/pull/44203)
-
-:::
-
 ## Key Highlights
 
 - **New models on day one**: Claude Sonnet 5.5 across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI, OpenRouter and Perplexity, GPT-6.1 Sol across OpenAI, Azure, Bedrock and OpenRouter, and Grok 4.7 on Bedrock and Vertex AI, among 78 new catalog entries
