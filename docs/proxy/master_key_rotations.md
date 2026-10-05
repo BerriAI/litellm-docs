@@ -78,7 +78,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 If the UI loads and your stored models and credentials resolve, the rotation is complete.
 
-## Proxy refuses to start with a known unsafe master key {#proxy-refuses-to-start-with-known-unsafe-master-key}
+## Proxy refuses to start with a known unsafe master key {#proxy-refuses-to-start}
 
 The proxy exits at boot with a non-zero status and prints how to fix it when the master key it resolved is not set, is empty or only whitespace, or matches a publicly known unsafe value. With no master key the proxy runs without authentication and accepts every request. The known unsafe value was widely advertised in LiteLLM's own docs and tutorials, so anyone who can reach the proxy can guess it.
 
