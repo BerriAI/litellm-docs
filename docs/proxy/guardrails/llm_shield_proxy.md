@@ -9,7 +9,7 @@ Because the substitution is reversible, both halves belong on one guardrail entr
 
 The guardrail fails closed. If your Shield deployment is unreachable, times out, or answers with an error status, the request is blocked rather than forwarded, since a redaction guardrail that failed open would send the very data it exists to protect to the provider.
 
-It covers `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming.
+It covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming.
 
 ## Quick Start
 
@@ -108,11 +108,43 @@ Tokens are forwarded as they arrive rather than buffered to the end of the respo
 
 ## What is redacted and what is restored
 
-On the request side the guardrail collects message text and tool-call arguments in chat, Responses `input`, and Anthropic messages, including nested tool results. Each request gets a fresh vault id minted by LiteLLM and namespaced to the process; nothing the caller sends is used to name a vault, so a caller cannot reach another request's values by getting a stand-in echoed back.
+On the request side the guardrail collects message text and tool-call arguments in chat, Responses `input`, Completions `prompt` and `suffix`, and Anthropic messages, including nested tool results. Also walked: Anthropic document parts (their `title`, `context`, and the text of a `text` source), Responses function-call outputs (a string or `output_text` parts), custom tool-call `input`, code-interpreter `code`, typed prompt variables, and anything under `extra_body`, which LiteLLM merges over the transformed request just before sending it — an unredacted `messages` or `system` there would replace the redacted one on the wire. Each request gets a fresh vault id minted by LiteLLM and namespaced to the process; nothing the caller sends is used to name a vault, so a caller cannot reach another request's values by getting a stand-in echoed back.
 
-Text the application wrote rather than the caller is redacted into a second vault that is never restored from: `system` and `developer` turns, Anthropic's top-level `system`, Responses `instructions`, tool descriptions and parameter schemas, structured-output schemas, web-search user locations, and the `user` and `safety_identifier` fields. The exception is `enum` and `const` values in a schema, which go to the caller's vault so that a tool call or structured output that uses them comes back with the real value. A request nested deeper than the walk's bound is refused rather than forwarded partly unredacted.
+Text the application wrote rather than the caller is redacted into a second vault that is never restored from: `system` and `developer` turns, `system` and `developer` items in Responses `input`, Anthropic's top-level `system`, Responses `instructions`, tool descriptions and parameter schemas, structured-output schemas, web-search user locations, and the `user` and `safety_identifier` fields. The exception is `enum` and `const` values in a schema, which go to the caller's vault so that a tool call or structured output that uses them comes back with the real value. A request nested deeper than the walk's bound is refused rather than forwarded partly unredacted.
 
-On the reply side the guardrail restores message content, tool-call arguments, Anthropic text and `tool_use` input, and Responses output items, both in full replies and in streams. Each stream (each choice's content, each tool call, each Anthropic content block, each Responses delta family) keeps its own window, so text held back for one never lands in another. Image and audio parts carry no text and pass through untouched.
+On the reply side the guardrail restores message content, tool-call arguments, Completions `text`, Anthropic text and `tool_use` input, and Responses output items, both in full replies and in streams. Each stream (each choice's content, each tool call, each Anthropic content block, each Responses delta family) keeps its own window, so text held back for one never lands in another. Image and audio parts carry no text and pass through untouched.
+
+## Using it with the LiteLLM SDK
+
+Outside the proxy, attach the guardrail as a model-level callback and name it per call. The request is redacted in the deployment pre-call hook and the reply restored in the deployment post-call hook:
+
+```python
+import litellm
+from litellm.proxy.guardrails.guardrail_hooks.llm_shield_proxy import LLMShieldProxyGuardrail
+
+litellm.callbacks.append(
+    LLMShieldProxyGuardrail(
+        api_base="http://localhost:8000",
+        api_key="sk-shield-change-me",
+        event_hook=["pre_call", "post_call"],
+    )
+)
+
+response = await litellm.acompletion(
+    model="openai/gpt-4.1-mini",
+    messages=[{"role": "user", "content": "Email jane.doe@example.com the invoice"}],
+    guardrails=["llm_shield_proxy"],
+)
+```
+
+The name passed to `guardrails` must match the guardrail's `guardrail_name` (`llm_shield_proxy` unless you set your own). Two limits on this path:
+
+- **Streaming is refused.** Nothing restores an SDK stream, so a `stream=True` request here fails closed with `LLM Shield Proxy cannot restore a streamed reply for a model-level guardrail outside the LiteLLM proxy`. Send streamed requests through the proxy, which restores them incrementally.
+- **The response cache is bypassed.** A cache hit returns before any post-call hook runs, and a reply stored after restoration would hand one caller's values to the next caller whose redacted request matches, so model-level guardrail requests are neither read from nor written to the cache.
+
+## Caching and telemetry through the proxy
+
+Through the proxy, LiteLLM caches the redacted reply — restoration happens after the cache write — so the response cache never holds plaintext. Guardrail telemetry likewise records the stand-ins the guardrail sent, not the restored values.
 
 ## Supported parameters
 
