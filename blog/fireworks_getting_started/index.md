@@ -11,7 +11,7 @@ hide_table_of_contents: false
 image: ./hero.png
 ---
 
-Fireworks AI is one of the largest open model inference platforms, serving more than 40 trillion tokens a day for companies including Uber, Notion, DoorDash, and Cursor. LiteLLM is the most widely used open source AI gateway, with over 240 million Docker pulls. Together they give you fast, low-cost open models behind a single OpenAI-compatible endpoint that tracks every token you spend.
+Fireworks AI is one of the largest open model inference platforms, serving more than 40 trillion tokens a day for companies including Uber, Notion, DoorDash, and Cursor. LiteLLM is the most widely used open source AI gateway, with over 500 million container pulls. Together they give you fast, low-cost open models behind a single OpenAI-compatible endpoint that tracks every token you spend.
 
 {/* truncate */}
 
