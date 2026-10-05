@@ -77,6 +77,18 @@ The response is TypeSafe's own, unchanged:
 
 Any path under `/typesafe/` is forwarded, so `GET /typesafe/v1/models` lists the available models. [See the TypeSafe API reference](https://docs.typesafe.ai/api)
 
+## Try it in the Admin UI
+
+The Playground has a **System One** tab (Beta) for sending Jev requests without curl. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **System One**. The proxy still needs `TYPESAFE_API_KEY`; without it the upstream error shows inline
+
+The left side is a JSON editor preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score). Edit it or paste your own request; **Reset example** restores it and **Format JSON** reindents it. The `model` is set in the JSON (for example `jev-latest`) rather than picked from the model list
+
+The request is checked as you type. `state` and a non-empty `questions` object are required, every question needs `instructions`, choice `criteria` must map 1 to 255 labels to descriptions, noul `criteria` is optional with `true` and `false` descriptions, and score `criteria` is a list of at least 2 levels. Errors are listed by JSON path and disable **Send**; more than 10 score levels only shows a warning. Fields outside these are forwarded to TypeSafe unchanged
+
+**Virtual Key Source** picks the key: **Current UI Session** uses your dashboard login, and **Virtual Key** lets you paste one so the call is attributed and budgeted against that key. **Send** posts to `/typesafe/v1/systemone`, the same endpoint as the curl above, so spend and logs land the same way
+
+The right side shows a **Question breakdown** of the state and each question's criteria, and once the call returns, the answers above it: the picked choice with confidence and a probability bar per option, the noul probability, and the score with its legend and per-level probabilities. The model TypeSafe reports, input and output tokens, latency and the raw JSON response are shown under the answers. Auth and upstream errors, such as a 401 for an unknown key, show inline
+
 ## Cost Tracking
 
 Spend uses `usage.input_tokens` and `usage.output_tokens` from the response and the `typesafe/<model>` entry in LiteLLM's model registry (`jev-1.13.0`, `jev-latest`, `jev-preview`). The request is logged under the versioned model TypeSafe reports, for example `typesafe/jev-1.13.0`, even when the request used an alias.
