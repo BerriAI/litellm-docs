@@ -29,12 +29,11 @@ const PROMPTS = {
   gateway: {
     title: 'Run the LiteLLM Gateway locally',
     text: `Help me run the LiteLLM Gateway locally. First read ${DOCS}/docs/proxy/docker_quick_start.md. Then:
-1. Check that Docker Compose v2 is installed and running, and that port 4000 is free.
-2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
-3. Run docker compose -f docker-compose.quickstart.yml up -d and poll http://localhost:4000/health/readiness until the database shows as connected.
-4. Ask me which provider and model to add. Add it with POST /model/new using the master key, reading my provider API key from my shell environment without echoing it.
-5. Verify: GET /v1/models lists the model and POST /v1/chat/completions returns a reply.
-6. Tell me to open http://localhost:4000/ui and sign in as admin with the master key from .env.`,
+1. Check that Docker or Podman with Compose v2 is installed and running.
+2. Run the quickstart script with no questions. On macOS or Linux: curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.sh | sh -s -- --yes. On Windows PowerShell: $env:LITELLM_YES=1; irm https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.ps1 | iex. The script installs to ~/litellm-gateway, creates the keys, and starts the gateway and Postgres. Do not open or print the .env file.
+3. Find the gateway URL in the script output. It uses port 4000, or the next free port if 4000 is busy. If the script fails, show me the error and stop.
+4. Verify: GET <url>/health/readiness shows the database as connected.
+5. Tell me to open <url>/ui and sign in as admin with LITELLM_MASTER_KEY from ~/litellm-gateway/.env. Then point me to the guide's next steps (add a model, create a virtual key, call the gateway from my apps). Do not do these steps unless I ask.`,
   },
   clients: {
     title: 'Point my tools at my LiteLLM Gateway',
