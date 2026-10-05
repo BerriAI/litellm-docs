@@ -32,7 +32,7 @@ The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://a
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
-| `topxai/claude-sonnet-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/claude-sonnet-5-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-fable-5-1` | $5 | $25 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
@@ -57,7 +57,7 @@ import os
 
 os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = completion(
-    model="topxai/claude-sonnet-5",
+    model="topxai/claude-sonnet-5-5",
     messages=[{"role": "user", "content": "What is LiteLLM?"}]
 )
 print(response)
@@ -101,9 +101,9 @@ Add the following to your LiteLLM Proxy configuration file:
 
 ```yaml keep-model-ids showLineNumbers title="config.yaml"
 model_list:
-  - model_name: topxai/claude-sonnet-5
+  - model_name: topxai/claude-sonnet-5-5
     litellm_params:
-      model: topxai/claude-sonnet-5
+      model: topxai/claude-sonnet-5-5
       api_key: os.environ/TOPXAI_API_KEY
   - model_name: topxai/gpt-6.1-sol
     litellm_params:
@@ -135,7 +135,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="topxai/claude-sonnet-5",
+    model="topxai/claude-sonnet-5-5",
     messages=[{"role": "user", "content": "What is LiteLLM?"}]
 )
 print(response.choices[0].message.content)
@@ -150,7 +150,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "topxai/claude-sonnet-5",
+    "model": "topxai/claude-sonnet-5-5",
     "messages": [{"role": "user", "content": "What is LiteLLM?"}]
   }'
 ```
@@ -160,5 +160,5 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Notes
 
-- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5"` with `api_base="https://ai.topxea.com"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
+- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://ai.topxea.com"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
 - Image generation (`gpt-image-2.5-sunburst`, `gpt-image-2.5-flare`), video generation and TypeSafe's Jev (`/v1/systemone`) are outside the `topxai/` route; see the [API reference](https://ai.topxea.com/docs/api-reference).
