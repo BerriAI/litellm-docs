@@ -40,7 +40,7 @@ We wanted:
 
 In this live test, I asked Moyai to remember a marker, wait using its terminal, and reply. A follow-up in the same Slack thread asked for that marker again. Moyai showed its working status and returned the remembered value.
 
-<video controls loop muted playsInline preload="none" src={slackDemo} poster={slackPoster} width="600" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai working on a Slack follow-up, then replying with the remembered marker" />
+<video controls loop muted playsInline preload="none" src={slackDemo} poster={typeof slackPoster === 'string' ? slackPoster : slackPoster.src.src} width="600" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai working on a Slack follow-up, then replying with the remembered marker" />
 
 *Two real Slack captures from that test, condensed into a 12-second walkthrough. The wait between captures is shortened.* [Open as a GIF](./slack-demo.gif).
 
@@ -54,7 +54,7 @@ The handoff can also include the recording, screenshot, and PR link in the conve
 
 The web session shows a short progress summary as work advances, keeps tool details available underneath, and saves the final answer in the conversation.
 
-<video controls loop muted playsInline preload="none" src={webDemo} poster={webPoster} width="1280" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai web session updating its progress summary and displaying a completed answer" />
+<video controls loop muted playsInline preload="none" src={webDemo} poster={typeof webPoster === 'string' ? webPoster : webPoster.src.src} width="1280" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai web session updating its progress summary and displaying a completed answer" />
 
 *Recording of the local Moyai app with simulated agent updates, using its real event journal and streaming UI. This demonstrates the interface; it does not run a cloud task.* [Open as a GIF](./web-demo.gif).
 
