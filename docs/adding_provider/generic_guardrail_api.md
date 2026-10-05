@@ -327,7 +327,7 @@ Text LiteLLM does not send is never scanned. A caller can put content past the f
 
 Because your endpoint sees only part of the content, it cannot rewrite it. When any of these options changed what was sent, a `BLOCKED` answer still blocks and an echo of what was sent passes the caller's content through unchanged, but any other returned change fails the call. A failed request or response is rejected with an error naming the request or the response, and a failed stream is cut off after the chunks already sent.
 
-Stripping runs on the proxy worker's event loop, so a slow pattern holds up that worker for up to 0.1 seconds per guardrail call. Keep patterns linear-time: avoid nested quantifiers such as `(a+)+` and lazy matches up to a closing delimiter such as `<!--.*?-->`.
+Stripping runs on the proxy worker's event loop, so a slow pattern holds up that worker for up to 0.1 seconds per guardrail call. Keep patterns linear-time: avoid nested quantifiers such as `(a+)+` and lazy matches up to a closing delimiter such as `<!--.*?-->`. Also avoid large counted repeats such as `a{100000}`: the regex engine expands them in memory when the guardrail loads, so a short pattern can take gigabytes at startup. Use `+` or a range such as `{1,n}` instead, which are not expanded.
 
 `strip_patterns` is set in `config.yaml` or through the guardrails API, and the Admin UI form does not show it. `max_messages` and `max_text_chars` appear in the form as number fields. An invalid value, such as `max_messages: 0`, `max_text_chars: 10.5` or a pattern that is not a valid regex, is ignored with a warning and the default is kept. The other patterns still apply.
 
