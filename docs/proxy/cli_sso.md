@@ -387,26 +387,23 @@ The device authorization grant, embedded browsers, and the resource owner passwo
 
 ## Hosted app sign-in
 
-A hosted application can reuse the gateway's configured Google, Okta or other SSO provider through the same authorization-code and S256 PKCE flow. Configure the application with the gateway URL and register its exact HTTPS callback on the gateway. Use a gateway release whose `/.well-known/litellm-cli-auth` discovery document advertises the required hosted scope
-
-| Requested scope | Gateway callback setting | Access |
-| --- | --- | --- |
-| `proxy:read` | `LITELLM_PROXY_API_OAUTH_REDIRECT_URIS` | Model listings and aggregate usage reports within the user's current permissions |
-| `proxy:admin` | `LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS` | Existing administrator operations and model calls, subject to current `proxy_admin` authority and gateway limits |
+A hosted administrator application can reuse the gateway's configured sign-in method through the existing authorization-code and S256 PKCE flow. This requires a gateway release containing [delegated admin OAuth](https://github.com/BerriAI/litellm/pull/44360). The standard discovery document at `/.well-known/oauth-authorization-server/oauth/api` advertises issuer `<gateway>/oauth/api` and scope `proxy:admin`; a gateway without that capability must be upgraded before connecting
 
 For an administrator app, set on the gateway:
 
 ```shell
-export LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS=https://admin.example.com/oauth/callback
+export LITELLM_OAUTH_ADMIN_REDIRECT_URIS=https://admin.example.com/oauth/callback
 ```
 
-Both settings accept comma-separated exact HTTPS URIs. Wildcards, query strings and fragments are rejected. An admin callback may request either scope; a reporting callback cannot request admin access. Omitting `scope` requests `proxy:read`. Registering a callback never promotes the user or skips their consent
+The setting accepts comma-separated exact HTTPS callbacks without fragments. Client registration alone does not authorize a callback. The user must be a current `proxy_admin` and explicitly approve access through the gateway's existing consent page
 
-The discovery document retains `contract_version: 1` and adds `hosted_app`. Its `scopes_supported` lists currently enabled hosted scopes, `access_token_ttl` is 300 seconds, and `refresh_token_ttl` is 86400 seconds. Clients check those capabilities, validate `issuer` and `resource` against their configured gateway, and use the discovered registration, authorization, token and revocation endpoints. Send `resource=<gateway origin>` and the chosen `scope` when authorizing. Hosted tokens include `scope`, `user_id`, `access_token`, `refresh_token`, `expires_in` and `refresh_expires_in`
+Clients validate the issuer and discovered endpoints against their configured gateway, then use the existing registration, authorization, token and revocation endpoints. Send `resource=<gateway URL>` and `scope=proxy:admin` when authorizing. Token responses contain standard `access_token`, `token_type`, `expires_in`, `refresh_token` and `scope` fields. Read the connected user's identity through `/user/info`
 
-Hosted grants require a database and shared Redis. The gateway checks the current user, selected team, callback trust and applicable model, budget and rate limits on use. Custom authentication and exclusive external-auth modes do not issue hosted grants. An admin who loses the `proxy_admin` role loses hosted admin access
+Hosted grants require a database and shared Redis. Each delegated request reads current user and team permissions from the database and applies the gateway's ordinary authorization checks. Database or Redis failure denies access. Custom authentication and global OAuth replacement modes do not issue hosted grants. An admin who loses the `proxy_admin` role loses hosted admin access
 
-Access tokens expire within five minutes. Refresh tokens rotate and cannot extend consent beyond 24 hours; reusing a spent refresh token revokes the grant. A successful refresh preserves still-unexpired access tokens for work already in progress. Revoking an access or refresh token at the discovered revocation endpoint invalidates the entire grant across gateway workers
+The scope permits key, user, team and budget management, usage reads and model calls. Configuration, session, MCP, passthrough and master-key-only routes are excluded. Keys intentionally created by the administrator remain after the app disconnects
+
+Access tokens use the gateway's existing one-hour session lifetime. Refresh tokens rotate within an absolute 14-day consent deadline; the hosted application may impose a shorter connection lifetime. Reusing a spent refresh token revokes the grant. A successful refresh preserves still-unexpired access tokens for work already in progress. Revoking an access or refresh token at the discovered revocation endpoint invalidates the entire grant across gateway workers
 
 Clients encrypt refresh tokens at rest, bind them to the gateway and user, serialize renewal, and persist renewal attempts before sending them. An uncertain renewal requires signing in again rather than replaying the refresh or an administrator operation. Disconnect removes local access immediately and retries gateway revocation if the gateway is temporarily unavailable
 
