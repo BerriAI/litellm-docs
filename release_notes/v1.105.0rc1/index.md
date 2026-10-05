@@ -57,21 +57,13 @@ These callouts cover user-facing behavior that differs from `v1.104.0`, the late
 
 **Bedrock GPT-5.6, GPT-6 and GPT-6.1 move from Converse to native Chat Completions**, so response ids, `service_tier` and reasoning fields change shape. Use `bedrock/converse/<model>` to stay on Converse. See [PR #44307](https://github.com/BerriAI/litellm/pull/44307)
 
-**Daily activity `aggregated` endpoints return the top 100 keys in `breakdown.api_keys`.** Totals are unchanged. Pass `api_key_limit` (up to 1000) or page `/{entity}/daily/activity/aggregated/keys`. See [PR #43398](https://github.com/BerriAI/litellm/pull/43398), [PR #43408](https://github.com/BerriAI/litellm/pull/43408)
-
-**WebSocket pass-through with `forward_headers: true` no longer forwards the client's `Authorization` or `x-api-key`.** Set upstream credentials in the route's headers. See [PR #43855](https://github.com/BerriAI/litellm/pull/43855)
-
-**Per-second chat pricing bills once.** A model with both `input_cost_per_second` and `output_cost_per_second` now bills only the input rate; use the new `cost_per_second`. See [PR #43614](https://github.com/BerriAI/litellm/pull/43614)
-
-**Custom-priced deployments bill priority, flex and ultrafast requests at the catalog tier price** unless the deployment sets `input_cost_per_token_<tier>` and `output_cost_per_token_<tier>`. See [PR #43890](https://github.com/BerriAI/litellm/pull/43890)
-
 **`/sso/debug/*` returns 404 unless `ENABLE_SSO_DEBUG=true`.** See [PR #43150](https://github.com/BerriAI/litellm/pull/43150)
 
 :::
 
 :::warning Upgrading from `v1.104.0`
 
-The migration job now builds the `LiteLLM_SpendLogs` indexes online after `prisma migrate deploy` and fails if one is still missing. Indexes you already built by hand from the `v1.104.0` notes are reused, not rebuilt. See [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #44203](https://github.com/BerriAI/litellm/pull/44203)
+The `LiteLLM_SpendLogs` indexes are now built online after `prisma migrate deploy`: the migration job waits for them and fails if one is still missing, and a proxy that runs its own migrations builds them in the background after boot. Indexes you already built by hand from the `v1.104.0` notes are reused, not rebuilt. See [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #44203](https://github.com/BerriAI/litellm/pull/44203)
 
 :::
 
@@ -443,7 +435,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### Usage and analytics
 
-- Daily activity repository with centralized bounded usage queries - [PR #43398](https://github.com/BerriAI/litellm/pull/43398)
+- Aggregated daily activity endpoints return the top 100 keys in `breakdown.api_keys` by default (totals unchanged); set `api_key_limit` up to 1000 - [PR #43398](https://github.com/BerriAI/litellm/pull/43398)
 - Bounded daily activity routes (aggregated, search, model_top_keys, export, cache_leakage_keys) for all usage entities - [PR #43408](https://github.com/BerriAI/litellm/pull/43408)
 - Usage pages consume bounded daily activity routes instead of storing all keys client-side - [PR #43409](https://github.com/BerriAI/litellm/pull/43409)
 - Recover session key owners from daily spend for usage attribution - [PR #43642](https://github.com/BerriAI/litellm/pull/43642)
