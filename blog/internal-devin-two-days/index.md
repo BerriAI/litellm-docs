@@ -13,10 +13,7 @@ custom_hero: true
 
 import MoyaiHero from './MoyaiHero';
 import {PostByline} from '@theme/BlogPostPage';
-import slackDemo from './slack-demo.mp4';
-import slackPoster from './slack-demo-poster.png';
-import webDemo from './web-demo.mp4';
-import webPoster from './web-demo-poster.png';
+import BugWorkflowDemo from './BugWorkflowDemo';
 
 <MoyaiHero />
 
@@ -36,27 +33,7 @@ We wanted:
 
 ## What it looks like
 
-### Slack: progress and follow-ups in the same thread
-
-In this live test, I asked Moyai to remember a marker, wait using its terminal, and reply. A follow-up in the same Slack thread asked for that marker again. Moyai showed its working status and returned the remembered value.
-
-<video controls loop muted playsInline preload="none" src={slackDemo} poster={typeof slackPoster === 'string' ? slackPoster : slackPoster.src.src} width="600" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai working on a Slack follow-up, then replying with the remembered marker" />
-
-*Two real Slack captures from that test, condensed into a 12-second walkthrough. The wait between captures is shortened.* [Open as a GIF](./slack-demo.gif).
-
-The handoff can also include the recording, screenshot, and PR link in the conversation:
-
-![A real Moyai Slack handoff with video and screenshot attachments and a PR card with a View PR button.](./slack-pr-handoff.png)
-
-*This delivery test re-shared saved media and an existing PR. The attached LiteLLM dashboard uses a mocked backend; the Slack upload and PR card are real.*
-
-### Web: see what the agent is working on
-
-The web session shows a short progress summary as work advances, keeps tool details available underneath, and saves the final answer in the conversation.
-
-<video controls loop muted playsInline preload="none" src={webDemo} poster={typeof webPoster === 'string' ? webPoster : webPoster.src.src} width="1280" style={{maxWidth: '100%', height: 'auto'}} aria-label="Moyai web session updating its progress summary and displaying a completed answer" />
-
-*Recording of the local Moyai app with simulated agent updates, using its real event journal and streaming UI. This demonstrates the interface; it does not run a cloud task.* [Open as a GIF](./web-demo.gif).
+<BugWorkflowDemo />
 
 ## 1. Main architecture
 
