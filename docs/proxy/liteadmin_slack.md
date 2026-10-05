@@ -14,6 +14,8 @@ Use **LiteAdmin** to ask about teams, budgets, models, and spend from a Slack DM
 
 Install the Slack app once, then choose one deployment below. **Enterprise** uses the worker bundled with your gateway and its existing SSO. **Standalone** runs a separate agent service with its own HTTPS address and login configuration
 
+To connect Claude Code or Codex to an MCP endpoint on your Enterprise deployment, see [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md). That guide covers `/admin/mcp` in unified and componentized images; this page configures the Slack agent worker
+
 ## Before you start
 
 You need a working LiteLLM gateway with HTTPS, a database, and a tool-calling model each connecting admin can use. Each user needs an active [`proxy_admin` account](./access_control.md#global-proxy-roles) whose email matches their Slack profile. You also need permission to create and install a Slack app in your workspace

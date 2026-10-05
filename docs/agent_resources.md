@@ -61,7 +61,7 @@ Markdown pages include the full text of every prompt and install command on the 
 
 ## LiteAdmin MCP
 
-Manage a running gateway from Claude Code with a personal admin key, never the master key. The [LiteAdmin MCP guide](./proxy/liteadmin_mcp.md) covers Claude Desktop, Codex, and remote HTTP.
+Manage a running gateway from Claude Code with a personal admin key, never the master key. The [LiteAdmin MCP guide](./proxy/liteadmin_mcp.md) covers Claude Desktop, Codex, and remote HTTP. To serve `/admin/mcp` from your existing unified or componentized deployment, follow the [Enterprise MCP deployment guide](./proxy/liteadmin_mcp_enterprise.md).
 
 <Command code={`claude mcp add --scope user --transport stdio litellm-admin \\
   --env LITELLM_BASE_URL=https://gateway.example.com \\
