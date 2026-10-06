@@ -1936,6 +1936,7 @@ const autoRouterSidebar = {
     { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/evaluate", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/telemetry", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/feature_history", className: "autorouter-nav-item" },
     {
       type: "category",
