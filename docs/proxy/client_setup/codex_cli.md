@@ -111,7 +111,7 @@ model_list:
       service_tiers: ["priority", "ultrafast"]
   - model_name: my-coding-model
     litellm_params:
-      model: openai/gpt-6.1-sol
+      model: openai/gpt-6-astra
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       service_tiers:
@@ -119,6 +119,8 @@ model_list:
           name: Ultrafast
           description: Fastest responses, higher cost
 ```
+
+Only list tiers supported by the upstream model and your provider account. Both deployments above use GPT-6 Astra; see [Ultrafast supported models and availability](../../providers/openai/ultrafast.md#supported-models-and-availability) before advertising the tier on another model.
 
 The same `model_info` works for a model added through the Admin UI or `POST /model/new`. Codex caches the catalog for five minutes in `models_cache.json` under its home directory, so a model added to the gateway shows up in `/model` on a launch after that cache lapses. An invalid `service_tiers` value (not a list, an empty id, an unknown object key) offers no tier for that model, Codex's built-in ones included, and the gateway logs one warning naming it; the rest of the listing is unaffected
 

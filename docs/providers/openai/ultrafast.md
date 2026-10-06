@@ -9,21 +9,36 @@ import TabItem from '@theme/TabItem';
 
 # OpenAI Ultrafast mode
 
-To use Ultrafast through LiteLLM, send a [Responses API](./responses_api.md) request to `gpt-6-astra` with `service_tier: "ultrafast"`. You can set that tier as a deployment default in the Admin UI or `config.yaml`, or choose it per request.
+To use Ultrafast through LiteLLM, send a [Responses API](./responses_api.md) request to a supported OpenAI model with `service_tier: "ultrafast"`. You can set that tier as a deployment default in the Admin UI or `config.yaml`, or choose it per request.
 
 This guide creates the gateway alias `gpt-6-astra-ultrafast`, backed by OpenAI's `gpt-6-astra`. The alias is a name you choose; the `service_tier` parameter selects Ultrafast.
 
+## Supported models and availability
+
+OpenAI's [Ultrafast guide](https://developers.openai.com/api/docs/guides/ultrafast-mode) documents these models, checked October 6, 2026:
+
+| OpenAI model ID | LiteLLM upstream model | Ultrafast access |
+| --- | --- | --- |
+| `gpt-6-astra` | `openai/gpt-6-astra` | Available to all API users, with low initial rate limits. |
+| `gpt-5.6-sol` | `openai/gpt-5.6-sol` | Preview access required from OpenAI. |
+
+If your OpenAI account supports Ultrafast for the selected model, the same setup below works: LiteLLM forwards `service_tier: "ultrafast"` to OpenAI. Availability depends on both the model and your account's access. Adding a tier to LiteLLM's catalog does not enable it at OpenAI, and access to Standard or Fast mode does not imply Ultrafast access.
+
+Use the Responses API over HTTP or WebSocket. Ultrafast supports US data residency and global processing only; EU and other non-US regional processing endpoints are not supported. See OpenAI's [availability section](https://developers.openai.com/api/docs/guides/ultrafast-mode#availability) for current rate limits and regional restrictions.
+
 ## Before you start
 
-Use a recent LiteLLM release with GPT-6 Astra and Ultrafast pricing support, an OpenAI API credential with available credits, and permission to add models to your gateway. The UI walkthrough below was captured on LiteLLM v1.105.0. For a new gateway, follow the [Admin UI quickstart](../../proxy/docker_quick_start.md) first.
+Use a recent LiteLLM release with Responses API support, an OpenAI API credential with access to the selected model and available credits, and permission to add models to your gateway. The UI walkthrough below was captured on LiteLLM v1.105.0. For a new gateway, follow the [Admin UI quickstart](../../proxy/docker_quick_start.md) first.
 
-OpenAI currently offers Ultrafast for GPT-6 Astra at low initial rate limits; GPT-5.6 Sol requires preview access. Ultrafast costs more than Standard. Check OpenAI's [Ultrafast guide](https://developers.openai.com/api/docs/guides/ultrafast-mode) for current access, limits, pricing, and regional availability.
+Ultrafast costs more than Standard. Check OpenAI's [Ultrafast pricing](https://developers.openai.com/api/docs/pricing?latest-pricing=ultrafast) and any preview-specific terms for your account. For LiteLLM spend tracking, confirm that your model's cost-map entry has the applicable `*_ultrafast` rates, including input, output, caching, and long-context rates. If pricing is missing or differs from your agreement, configure [custom pricing](../../proxy/custom_pricing.md) before relying on spend totals or budgets.
 
 ## Set up in the Admin UI
 
 ### 1. Select the model and credentials
 
 Open **Models + Endpoints**, then **Add Model**. Choose **OpenAI** as the provider and `gpt-6-astra` under **LiteLLM Model Name(s)**. In **Model Mappings**, set **Public Model Name** to `gpt-6-astra-ultrafast`.
+
+For GPT-5.6 Sol with preview access, select `gpt-5.6-sol` instead and use a public name such as `gpt-5.6-sol-ultrafast`. The remaining settings are the same; the screenshots show Astra.
 
 Select your OpenAI credential under **Existing Credentials**, or enter your OpenAI API key in the provider credential fields. The screenshot uses an existing credential named `openai`; use your own credential's name.
 
@@ -56,13 +71,16 @@ Enter this JSON in **Model Info**:
 
 ### 3. Test and save
 
-Click **Test Connect**. The test should send `model: "gpt-6-astra"` and `service_tier: "ultrafast"` to OpenAI's `/v1/responses` endpoint. Resolve any credential, quota, or access errors shown by the test, then click **Add Model** to save.
+Click **Test Connect**. The test should send the selected upstream model (`gpt-6-astra` or `gpt-5.6-sol`) and `service_tier: "ultrafast"` to OpenAI's `/v1/responses` endpoint. Resolve any credential, quota, or access errors shown by the test, then click **Add Model** to save.
 
-Under **Deployed Models**, search for `gpt-6-astra-ultrafast`, open its model ID, and select **Raw JSON**. Confirm that `litellm_params.service_tier` is `"ultrafast"` and `model_info.mode` is `"responses"`. Use a [virtual key](../../proxy/virtual_keys.md) with access to this public model name for the requests below.
+Under **Deployed Models**, search for the public name you configured (`gpt-6-astra-ultrafast` or `gpt-5.6-sol-ultrafast`), open its model ID, and select **Raw JSON**. Confirm that `litellm_params.service_tier` is `"ultrafast"` and `model_info.mode` is `"responses"`. Use a [virtual key](../../proxy/virtual_keys.md) with access to this public model name for the requests below.
 
 ## Set up with config.yaml
 
 Add the following deployment to your gateway configuration as an alternative to adding it in the UI:
+
+<Tabs>
+<TabItem value="astra" label="GPT-6 Astra">
 
 ```yaml title="config.yaml"
 model_list:
@@ -76,11 +94,33 @@ model_list:
       service_tiers: ["priority", "ultrafast"]
 ```
 
+</TabItem>
+<TabItem value="sol-preview" label="GPT-5.6 Sol (preview)">
+
+Use this deployment only if your OpenAI account has GPT-5.6 Sol Ultrafast preview access.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: gpt-5.6-sol-ultrafast
+    litellm_params:
+      model: openai/gpt-5.6-sol
+      api_key: os.environ/OPENAI_API_KEY
+      service_tier: ultrafast
+    model_info:
+      mode: responses
+      service_tiers: ["priority", "ultrafast"]
+```
+
+</TabItem>
+</Tabs>
+
 Set `OPENAI_API_KEY` in the gateway's environment and restart with the updated configuration. For a local proxy installation, start it with `litellm --config config.yaml`; see [proxy configuration](../../proxy/configs.md) for deployment options.
 
-The `openai/` prefix selects the upstream provider. Clients call the public `model_name`, `gpt-6-astra-ultrafast`. Keep the provider key on the gateway; clients authenticate with their LiteLLM virtual keys.
+The `openai/` prefix selects the upstream provider. Clients call the selected deployment's public `model_name`, such as `gpt-6-astra-ultrafast`. Keep the provider key on the gateway; clients authenticate with their LiteLLM virtual keys.
 
 ## Send a request through the gateway
+
+The requests below use the Astra alias. For the Sol preview deployment, change the request's `model` to `gpt-5.6-sol-ultrafast`.
 
 Set `LITELLM_BASE_URL` to your gateway URL without a trailing `/v1`, and `LITELLM_API_KEY` to a virtual key that can access the model:
 
@@ -148,6 +188,8 @@ response = litellm.responses(
 print(response)
 ```
 
+For GPT-5.6 Sol preview access, use `model="openai/gpt-5.6-sol"` with the same `service_tier`.
+
 ## Offer /ultrafast in Codex
 
 The `model_info.service_tiers` list above lets Codex offer `/ultrafast` while keeping `/fast` for the `priority` tier. Codex CLI 0.159 or newer also needs `model_catalog_url` pointed at your gateway's `/v1/models` endpoint and `[features] api_key_model_discovery = true`. Follow the [Codex model catalog setup](../../proxy/client_setup/codex_cli.md#model-catalog-and-service-tiers), select your gateway model, then use `/ultrafast`.
@@ -156,12 +198,13 @@ For a model where users toggle Ultrafast on and off, omit the deployment's `lite
 
 ## Verify and troubleshoot
 
-Check the successful response's `service_tier` field for `"ultrafast"` to confirm the tier that served the request. For streaming, inspect the response on the `response.completed` event. A saved model name, a catalog entry, or an outgoing request alone does not confirm that OpenAI served an Ultrafast response.
+Check the successful response's `service_tier` field for `"ultrafast"` to confirm the tier that served the request. OpenAI's [Responses API reference](https://developers.openai.com/api/reference/python/resources/responses/methods/create) distinguishes the requested tier from the tier returned in the response. For streaming, inspect the response on the `response.completed` event. A saved model name, a catalog entry, or an outgoing request alone does not confirm that OpenAI served an Ultrafast response.
 
 | Symptom | What to check |
 | --- | --- |
 | `insufficient_quota` or `credit_balance_exhausted` | Check the OpenAI account's credits and billing. A LiteLLM virtual-key budget does not fund the upstream account. |
-| The provider rejects the model or tier | Confirm the upstream model is `gpt-6-astra`, the tier is `ultrafast`, and your OpenAI project has access. Check the current OpenAI availability requirements. |
+| `Invalid service_tier argument`, or the provider rejects the model or tier | Check the [supported models](#supported-models-and-availability), `service_tier: "ultrafast"`, account access, and regional endpoint. GPT-5.6 Sol requires preview access. Model access alone does not guarantee access to every tier. |
+| Ultrafast requests appear to cost the same as Standard | Confirm the model's `*_ultrafast` pricing fields or configure custom pricing. Provider access and LiteLLM cost tracking are separate. |
 | The request uses a different tier | Inspect the client's `service_tier`; it overrides the deployment default. Confirm the selected alias routes to the intended deployment. |
 | Codex does not show `/ultrafast` | Check both catalog settings and the model's `service_tiers`. If several deployments share an alias, configure the list on each. See the Codex guide for catalog caching and version requirements. |
 
