@@ -760,6 +760,7 @@ router_settings:
 | DEEPINFRA_API_BASE | Base URL for DeepInfra. Default is https://api.deepinfra.com/v1/openai
 | DEEPSEEK_ANTHROPIC_API_BASE | Base URL for DeepSeek's Anthropic-compatible `/messages` endpoint, read before `DEEPSEEK_API_BASE`
 | DEEPSEEK_API_BASE | Base URL for DeepSeek. Default is https://api.deepseek.com/beta
+| DEFER_PYDANTIC_BUILD | Flag to defer pydantic schema construction on LiteLLM's shared base model for faster proxy startup. Set to `false` (or `0`/`off`) to build all schemas eagerly at import time. **Default is True**
 | DISABLE_KEY_NAME | Flag to stop storing the abbreviated key name on generated keys. That abbreviation is what the UI shows to identify which key spent what, so setting this makes spend harder to attribute to a key. **Default is False**
 | DRAIN_ENDPOINT_TOKEN | Shared secret required on the `X-Drain-Token` header to call the `/health/drain` endpoint. When set (here or via `general_settings.drain_endpoint_token`), drain calls without the matching token are rejected with 401; when unset the endpoint keeps its opt-in-only behavior. Have the kubelet send it from the preStop `httpGet.httpHeaders`. |
 | DYNAMOAI_API_KEY | API key for DynamoAI Guardrails service
