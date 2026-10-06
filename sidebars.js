@@ -1326,6 +1326,7 @@ const sidebars = {
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
+        "providers/coralbricks",
         "providers/crusoe",
         "providers/custom_llm_server",
         "providers/dashscope",
