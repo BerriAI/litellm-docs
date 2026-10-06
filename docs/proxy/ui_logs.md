@@ -114,8 +114,6 @@ When the setting is unset, every key is written, which is the default. Setting b
 
 Only the stored row is filtered. Daily spend tables, budgets and logging callbacks still receive every key. The `proxy_server_request` and `response` columns are not affected; `store_prompts_in_spend_logs` keeps controlling those. Rows written before the change keep their metadata until [retention](#automatically-deleting-old-spend-logs) deletes them, and Postgres only returns the disk space after `VACUUM FULL` or `pg_repack`
 
-In our tests, excluding only `model_map_information` cut an average row from about 11.1 KB to 3.8 KB with `store_prompts_in_spend_logs` off, and from about 20.8 KB to 13.5 KB with it on
-
 Some keys are read back from stored rows. Leaving them out turns off the features below for the affected rows
 
 | Key | What stops working for rows without it |
