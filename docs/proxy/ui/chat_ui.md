@@ -29,7 +29,7 @@ The Chat UI is off by default. A proxy admin must enable it.
 <Image
   img={require('../../../img/chat_ui_enable.png')}
   dark={require('../../../img/chat_ui_enable_dark.png')}
-  alt="The [BETA] Enable Chat page switch, on and highlighted, on the UI Settings tab"
+  alt="The Admin Settings page with the [BETA] Enable Chat page switch on and highlighted"
   style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
