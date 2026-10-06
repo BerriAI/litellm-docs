@@ -80,7 +80,9 @@ The investigation summary separates **spent**, **reserved**, and **available** a
 
 Lens determines which reviews it can reuse before requesting model budget. Reusing a completed review makes no model call and needs no reservation. New reviews, grouping, and finding investigation can incur cost.
 
-Before each model call, Lens reserves a conservative allowance based on the input and permitted output. When concurrent calls hold the remaining capacity, another call waits for those reservations to settle, within the proxy's request timeout. A successful call settles to its recorded cost and releases the unused allowance. Failed or timed-out requests release their hold; abandoned holds expire.
+Before each model call, Lens reserves a conservative allowance based on the input and permitted output. When concurrent calls hold the remaining capacity, another call waits up to 60 seconds for budget, or less if the proxy's request timeout is shorter. A timed-out attempt returns HTTP 504 and the worker can retry it. Waiting for budget makes no model call.
+
+The gateway renews each active model call's reservation every 30 seconds. A reservation expires five minutes after its last renewal, so a crashed gateway cannot leave budget reserved for the full model timeout. Long-running model calls retain their allowance through renewal and remain subject to the configured request timeout. If renewal fails, the gateway cancels the call. A successful call settles to its recorded cost and releases the unused allowance. Failed or timed-out requests release their hold; abandoned holds expire.
 
 If a single request's allowance exceeds the unspent budget, Lens stops with the amount it needs and the amount remaining. This can happen before settled spend reaches the monthly limit. Reduce the model deployment's output allowance or increase the investigation limit. When spend reaches the limit, additional paid analysis stops until the limit increases or the next monthly period begins. Completed reviews remain available for reuse.
 
