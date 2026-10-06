@@ -188,7 +188,7 @@ model_list:
 
 ```bash showLineNumbers title="Test request"
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "azure-cohere-parse",
@@ -211,4 +211,3 @@ Health checks (`/health` and the Admin UI's Test Connection button) send Parse a
 - `Cohere-parse-v5` - Cohere Parse, image documents only
 
 Use the Azure AI provider prefix: `azure_ai/<model-name>`
-

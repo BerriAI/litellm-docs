@@ -685,6 +685,7 @@ const sidebars = {
           label: "LiteAdmin",
           items: [
             "proxy/liteadmin_mcp",
+            "proxy/liteadmin_mcp_enterprise",
             "proxy/liteadmin_slack",
           ],
         },
@@ -1325,6 +1326,7 @@ const sidebars = {
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
+        "providers/coralbricks",
         "providers/crusoe",
         "providers/custom_llm_server",
         "providers/dashscope",

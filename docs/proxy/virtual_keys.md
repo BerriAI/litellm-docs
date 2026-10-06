@@ -643,7 +643,7 @@ A request whose alias does not match fails with a `400` that names the pattern:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "Prod Key"}'
 ```
@@ -929,7 +929,6 @@ class LitellmUserRoles(str, enum.Enum):
 ### Teams
 
 #### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
-
 
 
 

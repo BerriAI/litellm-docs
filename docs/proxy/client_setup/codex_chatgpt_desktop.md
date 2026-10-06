@@ -51,10 +51,10 @@ Replace `{{anthropic}}` with a model name configured on your gateway.
 Desktop apps may not inherit variables exported in your terminal. Add your LiteLLM virtual key to `~/.codex/.env` before launching the app:
 
 ```dotenv title="~/.codex/.env"
-LITELLM_API_KEY=sk-1234
+LITELLM_API_KEY=sk-<your-virtual-key>
 ```
 
-Replace the demonstration key with your virtual key, keep this file private, and restart the app after changing it. An existing macOS setup using `launchctl setenv LITELLM_API_KEY <your-key>` can continue supplying the variable that way.
+Replace the placeholder with your virtual key, keep this file private, and restart the app after changing it. An existing macOS setup using `launchctl setenv LITELLM_API_KEY <your-key>` can continue supplying the variable that way.
 
 You can skip `.env` by using the [`auth` command](./codex_cli.md#sign-in-with-litellm-sso) in place of `env_key`, because the app runs the same helper
 
