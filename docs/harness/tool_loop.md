@@ -96,3 +96,5 @@ result = litellm.agent(
 Tool Loop supports `permissions="full"` and `permissions="ask"`. In ask mode, each call to a custom tool requires approval through `on_approval` or an `Approval` event in a stream
 
 Tool Loop does not provide built-in file or shell tools, skills, session resume, or `disable_tools=`. Add the Python functions your task needs in `tools=`
+
+To run the same kind of loop with your own OpenAI-format tool schemas and a single executor function, without `litellm.agent()` or a sandbox, use [`litellm.run_tool_loop()`](../completion/tool_loop.md)
