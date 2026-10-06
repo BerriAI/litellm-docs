@@ -101,7 +101,7 @@ On startup Codex calls `GET /v1/models?client_version=<its version>` with your v
 
 `model_info.service_tiers` sets the service tiers Codex offers for a model, and each tier becomes a slash command. The tier id `ultrafast` becomes `/ultrafast`; toggling it makes Codex send `service_tier: "ultrafast"` on every request, which the gateway forwards upstream and prices with the tier's cost fields (`input_cost_per_token_ultrafast` and the other `*_ultrafast` fields) when the model's pricing entry carries them. Each entry is a tier id string or an object with `id`, `name`, and `description`. A plain string gets the id capitalized as its name and `Sends service_tier=<id> upstream` as its description, and Codex lowercases the name to form the command. A string naming a tier Codex itself ships for that model, such as `priority`, keeps Codex's own name and description, so it still shows as `/fast`. An object sets the name and the description Codex shows in the command popup. The configured list replaces the tiers Codex ships for that model, so list `priority` as well to keep `/fast` next to a new tier. An empty list removes every tier, and leaving `service_tiers` unset keeps Codex's stock tiers for a model it knows (a model it does not know has none)
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: gpt-6-astra
     litellm_params:

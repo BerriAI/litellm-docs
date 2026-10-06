@@ -226,11 +226,11 @@ LITELLM_PROXY_KEY=$(lite auth print-token) opencode
         "apiKey": "{env:LITELLM_PROXY_KEY}"
       },
       "models": {
-        "gpt-5.4-mini": { "name": "gpt-5.4-mini" }
+        "{{openai_small}}": { "name": "{{openai_small}}" }
       }
     }
   },
-  "model": "litellm/gpt-5.4-mini"
+  "model": "litellm/{{openai_small}}"
 }
 ```
 
@@ -357,7 +357,7 @@ The URLs are built from the request's base URL. Behind a load balancer or revers
    curl https://litellm.example.com/v1/chat/completions \
      -H "Authorization: Bearer LneZuxEFqvemEwK6lRzgg6BN..." \
      -H 'content-type: application/json' \
-     -d '{"model": "gpt-5.4-mini", "messages": [{"role": "user", "content": "Say hi in three words."}]}'
+     -d '{"model": "{{openai_small}}", "messages": [{"role": "user", "content": "Say hi in three words."}]}'
    ```
 
 7. Renew the credential before `expires_in` runs out. The response has the same shape as in step 5 and carries a new refresh token. The old refresh token is refused with `400 invalid_grant` if it is used again, so store the new pair before you use the new access token

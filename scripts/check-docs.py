@@ -15,7 +15,7 @@ Every check here is deterministic and fails the build:
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
-  model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
+  model-literal       a fenced block hardcodes a current/historical default or a chatgpt/ model instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
 
@@ -28,8 +28,11 @@ block that is intentionally a fragment.
 Model ids in examples are `{{role}}` placeholders filled from docs-models.json
 at build time (src/remark/docs-models.js). This script applies the same
 substitution before parsing a block, and the model-literal rule fails a block
-that writes the current id itself, because that block would not follow the
-next bump. Add `keep-model-ids` to the fence line when the exact id is the
+that writes a current or recorded historical id itself, because that block
+would not follow the next bump. Any literal chatgpt/ model is also caught,
+even if it has never been a default. Retain earlier defaults in
+docs-models-history.json when updating docs-models.json.
+Add `keep-model-ids` to the fence line when the exact id is the
 point of the block (a price map key, a cache key, a printed log).
 
 The Python version examples use ({{python_version}}, the interpreter in the
@@ -320,7 +323,10 @@ def check_page(page, site, page_cache):
                     if m.group(0) in seen_ids:
                         continue
                     seen_ids.add(m.group(0))
-                    err("model-literal", start + offset + 1, f"hardcoded model id `{m.group(0)}`; write `{{{{{MODEL_ROLES[m.group(0)]}}}}}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
+                    model_id = m.group(0)
+                    role = "chatgpt" if model_id.startswith("chatgpt/") else MODEL_ROLES[model_id]
+                    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if model_id.startswith("chatgpt/") else "{{" + role + "}}"
+                    err("model-literal", start + offset + 1, f"hardcoded model id `{model_id}`; use a shared default such as `{example}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
         if "keep-python-version" not in meta_tokens:
             for offset, l in enumerate(buf):
                 m = PYTHON_LITERAL_RE.search(l)
@@ -435,12 +441,22 @@ ROLE_TO_ID = load_roles()
 PYTHON_ROLES = {"python_version", "python_min_version"}
 # {model id: role}. The Python roles hold bare version numbers, which get their own rule below.
 MODEL_ROLES = {model_id: role for role, model_id in ROLE_TO_ID.items() if role not in PYTHON_ROLES}
+with open(os.path.join(REPO_ROOT, "docs-models-history.json"), encoding="utf-8") as f:
+    MODEL_HISTORY = json.load(f)
+for role, model_ids in MODEL_HISTORY.items():
+    if role not in ROLE_TO_ID or role in PYTHON_ROLES:
+        raise ValueError(f"Invalid model history role: {role}")
+    for model_id in model_ids:
+        MODEL_ROLES.setdefault(model_id, role)
+for role, model_id in ROLE_TO_ID.items():
+    if role not in PYTHON_ROLES and model_id not in MODEL_HISTORY.get(role, []):
+        raise ValueError(f"Record {model_id} under {role} in docs-models-history.json; retain older entries")
 MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
 # alias such as bedrock-claude-sonnet-5 or a header name is left alone.
 MODEL_LITERAL_RE = re.compile(
-    r"(?<![A-Za-z0-9:@-])(?:" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
+    r"(?<![A-Za-z0-9:@-])(?:(?<!/)chatgpt/[A-Za-z0-9][A-Za-z0-9._-]*|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
 # python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
 # `python3 -m venv` and wheel tags such as cp312 are not versions.
