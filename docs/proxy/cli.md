@@ -348,6 +348,8 @@ This page documents all command-line interface (CLI) arguments available for the
      litellm
      ```
 
+   - **EKS deployments:** On Amazon EKS, every pod automatically carries `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN`, and LiteLLM uses them first for RDS IAM authentication. Set `AWS_RDS_IAM_IGNORE_WEB_IDENTITY_TOKEN=True` to skip them, so LiteLLM uses `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` directly, or assumes `AWS_ROLE_NAME` with those credentials when a role name is set.
+
 #### Amazon ECS setup
 
 For LiteLLM running on Amazon ECS:
