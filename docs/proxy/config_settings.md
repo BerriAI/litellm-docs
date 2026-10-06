@@ -990,6 +990,7 @@ router_settings:
 | DEFAULT_SOFT_BUDGET | Default soft budget for LiteLLM proxy keys. Default is 50.0
 | DEFAULT_TRIM_RATIO | Default ratio of tokens to trim from prompt end. Default is 0.75
 | DEFAULT_GOOGLE_VIDEO_DURATION_SECONDS | Default duration for video generation in seconds in google. Default is 8
+| DEFER_PYDANTIC_BUILD | Defer building pydantic model schemas until a model is first used, which lowers import time and memory. Accepts "true", "1", or "on"; any other value builds schemas at import. Default is "true"
 | DIRECT_URL | Direct URL for service endpoint
 | DISABLE_ADMIN_UI | Toggle to disable the admin UI
 | LITELLM_HIDE_DEFAULT_CREDENTIALS_HINT | Flag to hide the "Default Credentials" info card on the admin UI login page (`/ui/login` and `/fallback/login`). Useful when UI credentials are managed via `UI_USERNAME` / `UI_PASSWORD` or SSO and the hardcoded hint about `admin` + `MASTER_KEY` becomes misleading or is flagged by security scanners. **Default is false**
