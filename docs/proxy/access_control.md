@@ -248,6 +248,8 @@ Team member permissions allow you to control what regular team members (with rol
 | `/key/regenerate` | POST | Regenerate virtual keys in the team |
 | `/key/block` | POST | Block virtual keys in the team |
 | `/key/unblock` | POST | Unblock virtual keys in the team |
+| `/team/daily/activity` | GET | View the whole team's usage, not only the member's own |
+| `/spend/logs` | GET | View the whole team's spend logs and its agent traces in [Lens](./lens/api.md#trace-access) |
 
 ### Default Permissions
 
