@@ -116,7 +116,6 @@ answer = litellm.run_tool_loop(
             },
         },
     },
-    temperature=0,
 )
 ```
 
