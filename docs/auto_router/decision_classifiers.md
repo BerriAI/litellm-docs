@@ -6,6 +6,8 @@ description: Connect a self-hosted Laya or Bespoke Nimble endpoint to LiteLLM Au
 
 Connect an existing Laya or Bespoke Nimble endpoint to LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
 
+For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
+
 **Laya and Bespoke Nimble are the supported self-hosted classifier options.** Jev uses TypeSafe's hosted API and shares the same configuration flow. Select **OSS Classifier** in the dashboard, or use `classifier_type: oss_classifier` with a provider inside `opensource_classifier_config`.
 
 ## What you host

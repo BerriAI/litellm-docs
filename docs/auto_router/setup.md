@@ -8,6 +8,8 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 Create an Auto Router for your team using one of the methods below. To connect your coding agent to an existing router, follow [User Setup](/docs/auto_router/user_setup).
 
+After setup, [Customize your classifier](./optimize_classifier.md) explains every classification setting, with dashboard screenshots and matching YAML for heuristic/LLM chains, prompts, context, and self-hosted classifiers.
+
 Five ways in. All of them create the same `auto_router/complexity_router` deployment.
 
 <NavigationCards
