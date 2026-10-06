@@ -3,6 +3,8 @@ title: Trace coding agent sessions
 description: Send your personal Claude Code and Codex sessions to LiteLLM Lens.
 ---
 
+import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
+
 # Trace coding agent sessions
 
 Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
@@ -12,6 +14,10 @@ You need a LiteLLM gateway with [tracing enabled](./deployment.md#configure-an-e
 ## Claude Code
 
 Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporters](https://code.claude.com/docs/en/monitoring-usage) send trace spans and assistant response logs directly to Lens. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged.
+
+Copy this prompt into your coding agent to have it configure this machine, or follow the manual steps below.
+
+<AgentPrompt id="lens-claude-code" />
 
 This setup requires a gateway version that accepts Claude conversation logs at `/v1/logs`. Older gateways only accept trace spans and cannot reconstruct replies that were never recorded. Use a current Claude Code version with assistant response logging support.
 
@@ -47,6 +53,8 @@ Complete a prompt that uses a tool, then open **Lens > Traces**, select **claude
 
 Assistant replies use a separate telemetry stream from trace spans. Keep both exporters enabled. The allowlisted detailed-tracing endpoint is not required. See Claude Code's [monitoring reference](https://code.claude.com/docs/en/monitoring-usage) for the beta exporter's coverage and content limits.
 
+The `/v1/logs` endpoint receives OpenTelemetry events for Lens. These become part of the session trace and do not create entries in the normal LiteLLM **Logs** screen or additional spend records.
+
 Claude's stable tool-output events omit failed executions and some tool kinds. To fill these gaps from the next model request, optionally enable native API-body export:
 
 ```bash
@@ -65,6 +73,10 @@ For persistent configuration, add these variables to the `env` object in your us
 ## Codex
 
 Use the [BerriAI Codex integration on GitHub](https://github.com/BerriAI/litellm-lens-codex-integration). This public preview supports local Codex desktop and CLI sessions. Automatic setup currently supports macOS and requires Python 3.11 or later. {/* keep-python-version: Codex integration prerequisite */}
+
+Copy this prompt into your coding agent to have it install and configure the integration, or follow the manual steps below.
+
+<AgentPrompt id="lens-codex" />
 
 1. Follow **[From Terminal (recommended)](https://github.com/BerriAI/litellm-lens-codex-integration#from-terminal-recommended)** in the installation guide. The same installer works for desktop and CLI.
 2. Enter your **gateway URL**, **LiteLLM virtual key**, and **agent name** in Terminal. Confirm to start recording. Enter the key at the hidden prompt, not in chat.
