@@ -159,7 +159,7 @@ general_settings:
   vector_store_deny_by_default: true
 ```
 
-The setting defaults to `false`. With it on, every store id a request references, through `/v1/rag/query`, `/rag/query`, `retrieval_config.vector_store_id`, or `vector_store_ids` in a `file_search` tool, must be listed in `object_permission.vector_stores` of each identity the request resolves to. A request naming several stores needs a grant for every one of them
+The setting defaults to `false`. With it on, every store id a request references, through `/v1/rag/query` or `/rag/query` (`retrieval_config.vector_store_id`), a `/v1/vector_stores/{vector_store_id}/...` path, a top-level `vector_store_ids`, or `vector_store_ids` in a `file_search` tool, must be listed in `object_permission.vector_stores` of each identity the request resolves to. A request naming several stores needs a grant for every one of them. A `vector_store_ids` value that is not a list of strings is rejected with `400`
 
 | Caller | Grants required |
 |---|---|
