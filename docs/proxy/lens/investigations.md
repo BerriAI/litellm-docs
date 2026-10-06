@@ -84,7 +84,7 @@ Before each model call, Lens reserves a conservative allowance based on the inpu
 
 If a single request's allowance exceeds the unspent budget, Lens stops with the amount it needs and the amount remaining. This can happen before settled spend reaches the monthly limit. Reduce the model deployment's output allowance or increase the investigation limit. When spend reaches the limit, additional paid analysis stops until the limit increases or the next monthly period begins. Completed reviews remain available for reuse.
 
-Budget, authorization, and connection failures stop the run after any applicable retries. Completed review checkpoints survive for a retry. Assessments and verified findings completed before the failure remain visible as partial results, with the error explaining what stopped. Unfinished consolidation remains pending for a later run. Cancellation stops subsequent work, but a model call already in flight may still incur cost.
+Budget, authorization, and connection failures stop the run after any applicable retries. Completed trace reviews and their evidence remain saved, and the run shows its completed assessments with the error explaining what stopped. Findings appear only after comparison with each other and saved findings finishes. If that comparison cannot finish, a later run reuses the completed reviews and retries the remaining grouping and investigation. Cancellation stops subsequent work, but a model call already in flight may still incur cost.
 
 ## Read the findings
 
