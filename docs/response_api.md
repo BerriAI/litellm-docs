@@ -1104,7 +1104,7 @@ LiteLLM passes OpenAI's `background: true` parameter through to the provider. Th
 
 ```bash showLineNumbers title="Create a background response"
 curl http://localhost:4000/v1/responses \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-5.6",
@@ -1115,7 +1115,7 @@ curl http://localhost:4000/v1/responses \
 
 ```bash showLineNumbers title="Poll for the result"
 curl http://localhost:4000/v1/responses/{response_id} \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Cost tracking for background responses
@@ -1980,7 +1980,6 @@ Response:
   }]
 }
 ```
-
 
 
 

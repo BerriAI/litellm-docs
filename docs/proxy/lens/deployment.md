@@ -44,12 +44,13 @@ export LENS_WORKER_IMAGE="litellm-lens-worker:${LITELLM_RELEASE_TAG}"
 export OPENAI_API_KEY='sk-...'
 docker build --build-arg LITELLM_RELEASE_TAG="$LITELLM_RELEASE_TAG" \
   -f deploy/lens/Dockerfile -t "$LENS_WORKER_IMAGE" .
+export LITELLM_MASTER_KEY="${LITELLM_MASTER_KEY:-sk-$(openssl rand -hex 16)}"
 docker compose -f docker/docker-compose.tracing.yml up -d --build
 ```
 
 Replace `sk-...` with your OpenAI key, or configure another provider in `docker/tracing-config.yaml` before starting. The first build takes several minutes. Both images are built locally from the same checkout
 
-Open [http://localhost:4002/ui/](http://localhost:4002/ui/) and sign in as `admin` with password `sk-1234`
+Open [http://localhost:4002/ui/](http://localhost:4002/ui/) and sign in as `admin` with your `LITELLM_MASTER_KEY`
 
 #### 2. Connect the worker
 

@@ -59,7 +59,7 @@ litellm --config config.yaml
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
@@ -76,7 +76,7 @@ The provider receives stand-ins such as `john10@example.net` and `65672116397513
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
