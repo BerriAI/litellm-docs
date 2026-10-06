@@ -713,6 +713,7 @@ const sidebars = {
               items: [
                 "proxy/ai_hub",
                 "proxy/model_compare_ui",
+                "proxy/ui/chat_ui",
               ]
             },
             {
