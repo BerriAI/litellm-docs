@@ -51,10 +51,6 @@ This release is published as [`ghcr.io/berriai/litellm:v1.103.3`](https://github
 
 **The proxy exits when database setup fails at startup** instead of serving against an outdated schema. Set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior. See [PR #44205](https://github.com/BerriAI/litellm/pull/44205)
 
-**Streamed requests through an alias are priced from the deployment's model, not the alias.** This fixes streamed spend recorded as $0 for aliases like `claude-opus-4.6`. An alias that points at a deployment with no pricing, such as `gpt-4o` mapped to `openai/my-finetune`, now records $0 on streamed requests, matching what the same request already recorded without streaming. Add pricing to the deployment to keep billing it. See [PR #44341](https://github.com/BerriAI/litellm/pull/44341)
-
-**Chat replies bridged from the Responses API return text and tool calls in one choice.** `choices[0]` now carries both the text and the tool calls with `finish_reason: "tool_calls"`, where earlier releases put the tool calls in a separate `choices[1]`. Clients that read the tool calls from `choices[1]` need to read `choices[0]` instead. See [PR #44346](https://github.com/BerriAI/litellm/pull/44346)
-
 :::
 
 :::warning Upgrading from `v1.102.x` or earlier
@@ -70,9 +66,11 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_litellm_call_id_idx" 
 
 `v1.103.3` is a patch release on top of [`v1.103.2`](https://github.com/BerriAI/litellm/releases/tag/v1.103.2). Startup exits on database setup failure, the `LiteLLM_SpendLogs` index migrations no longer build anything, streamed requests through an alias are billed correctly, and the base image and several dependencies are bumped. The `v1.103.3` tag points at [`ecae261`](https://github.com/BerriAI/litellm/commit/ecae261b100cdf6bcb1d024ae69e4efa4a891be0)
 
-## Streamed spend through an alias
+## Bug fixes
 
-Streamed chat completions through a dotted alias like `claude-opus-4.6` recorded $0 spend, because pricing looked up the alias instead of the deployment's model. The proxy now writes the alias only onto the chunks it sends to the client and prices the stream from the provider's model, so streamed and non-streamed requests bill the same way. Logged streamed responses still show the alias
+Streamed chat completions through a dotted alias like `claude-opus-4.6` recorded $0 spend, because pricing looked up the alias instead of the deployment's model. Streamed requests are now priced from the deployment's model, the same way as non-streamed ones, and logged streamed responses still show the alias. An alias that points at a deployment with no pricing now records $0 on streamed requests too, matching the non-streamed behavior. See [PR #44341](https://github.com/BerriAI/litellm/pull/44341)
+
+Chat replies bridged from the Responses API put the tool calls in a separate `choices[1]`, so apps that read only `choices[0]` never ran the tool. `choices[0]` now carries both the text and the tool calls with `finish_reason: "tool_calls"`. See [PR #44346](https://github.com/BerriAI/litellm/pull/44346)
 
 ### What's Changed
 
