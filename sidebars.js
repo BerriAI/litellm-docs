@@ -1179,6 +1179,7 @@ const sidebars = {
             "search/apiserpent",
             "search/agentcore",
             "search/nimble",
+            "search/keenable",
             "search/bing_grounding",
           ]
         },
