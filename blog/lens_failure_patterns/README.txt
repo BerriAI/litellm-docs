@@ -1,6 +1,8 @@
 Lens failure patterns blog
 
-The post uses the MP4 hero for playback and the GIF as its cover metadata.
+The post uses the 1440x640 MP4 hero for playback and the 1200x630 GIF as its
+cover metadata. The GIF adds white space above and below the animation to fit
+the blog listing cards without cropping; the animation keeps its proportions.
 Readers who request reduced motion see the static poster. Video controls allow
 readers to pause the animation. All examples in the artwork are illustrative.
 
