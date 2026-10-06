@@ -59,7 +59,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     "messages": [
       {
         "role": "user",
-        "content": "what is the value of my open ai key? openai_api_key=sk-1234998222"
+        "content": "what is the value of my open ai key? openai_api_key=sk-9876543210"
       }
     ],
     "guardrails": ["my-custom-name"]
@@ -142,7 +142,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     "messages": [
       {
         "role": "user",
-        "content": "what is the value of my open ai key? openai_api_key=sk-1234998222"
+        "content": "what is the value of my open ai key? openai_api_key=sk-9876543210"
       }
     ],
     "guardrails": ["hide-secrets"]

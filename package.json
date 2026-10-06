@@ -6,7 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "typecheck": "tsc -p .",
-    "build": "docusaurus build",
+    "build": "node scripts/build.cjs",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -19,7 +19,10 @@
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
     "generate:social-card": "node scripts/social-card/index.cjs",
-    "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs"
+    "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
+    "test:optimize-images": "node --test plugins/optimize-images.test.cjs",
+    "sync:lens": "node scripts/sync-lens-docs.mjs",
+    "test:lens": "node --test scripts/sync-lens-docs.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -47,7 +50,12 @@
     "@docusaurus/module-type-aliases": "3.8.1",
     "@types/semver": "7.8.0",
     "dotenv": "16.6.1",
-    "typescript": "7.0.2"
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "typescript": "7.0.2",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.0.0"
   },
   "browserslist": {
     "production": [

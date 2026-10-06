@@ -185,6 +185,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
+          "proxy/guardrails/llm_shield_proxy",
           { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
         ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
       ],
@@ -438,7 +439,7 @@ const sidebars = {
             },
           ],
         },
-        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents).
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents, Tool Loop).
         // Styled by the "litellm.harness docs" block in src/css/custom.css.
         {
           type: "category",
@@ -466,6 +467,7 @@ const sidebars = {
                 "harness/codex",
                 "harness/opencode",
                 "harness/deepagents",
+                "harness/tool_loop",
               ],
             },
             {
@@ -683,6 +685,7 @@ const sidebars = {
           label: "LiteAdmin",
           items: [
             "proxy/liteadmin_mcp",
+            "proxy/liteadmin_mcp_enterprise",
             "proxy/liteadmin_slack",
           ],
         },
@@ -746,7 +749,8 @@ const sidebars = {
                 "proxy/ui_logs_sessions",
                 "proxy/deleted_keys_teams",
               ]
-            }
+            },
+            "proxy/ui/chat_ui",
           ],
         },
         {
@@ -966,7 +970,7 @@ const sidebars = {
         },
       ]
     },
-    { type: "doc", id: "proxy/lens", label: "LiteLLM Lens", className: "top-level-doc-item" },
+    require('./docs/proxy/lens/sidebar'),
     {
       type: "category",
       label: "Supported Endpoints",
@@ -1217,6 +1221,7 @@ const sidebars = {
             "providers/openai/responses_api",
             "providers/openai/text_to_speech",
             "providers/openai/videos",
+            "providers/openai/ultrafast",
           ]
         },
         "providers/text_completion_openai",
@@ -1323,6 +1328,7 @@ const sidebars = {
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
+        "providers/coralbricks",
         "providers/crusoe",
         "providers/custom_llm_server",
         "providers/dashscope",

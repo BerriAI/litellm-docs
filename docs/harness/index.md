@@ -2,7 +2,7 @@
 title: Agents (litellm.agent)
 slug: /harness
 sidebar_label: Overview
-description: Run Claude Code, Codex, OpenCode and Deep Agents from Python with litellm.agent(), with every model call going through the LiteLLM AI Gateway.
+description: Run Claude Code, Codex, OpenCode, Deep Agents and Tool Loop from Python with litellm.agent(), with model calls routed through the LiteLLM AI Gateway.
 ---
 
 # Agents (`litellm.agent`)
@@ -11,7 +11,7 @@ description: Run Claude Code, Codex, OpenCode and Deep Agents from Python with l
 `litellm.agent()` is in beta. The API may change between releases.
 :::
 
-Run an agent with `litellm.agent()` to drive a complete agent runtime (Claude Code, Codex, OpenCode or Deep Agents) from Python with one API. Every model call the runtime makes goes through the LiteLLM AI Gateway, so all four harnesses share one virtual key, one set of model groups and fallbacks, and one place to see spend.
+Run an agent with `litellm.agent()` to drive Claude Code, Codex, OpenCode, Deep Agents or Tool Loop from Python with one API. Route model calls through the LiteLLM AI Gateway so all five harnesses can share one virtual key, one set of model groups and fallbacks, and one place to see spend
 
 ```python title="fix_flaky.py"
 import litellm
@@ -43,12 +43,13 @@ See [Using with LiteLLM AI Gateway](./gateway.md) for the proxy config, virtual 
 | [`Harness.CODEX`](./codex.md) | OpenAI's Codex CLI | your sandbox |
 | [`Harness.OPENCODE`](./opencode.md) | OpenCode CLI | your sandbox |
 | [`Harness.DEEPAGENTS`](./deepagents.md) | LangChain Deep Agents | your Python process, tools act on your sandbox |
+| [`Harness.TOOL_LOOP`](./tool_loop.md) | LiteLLM tool-calling loop | your Python process, calls your tools |
 
 [Supported harnesses](./supported.md) has the full capability table.
 
 ## What a harness is
 
-A harness is a complete agent program with its own tool loop, file tools, shell, conversation history, compaction and permission model. You don't rebuild any of that. `litellm.agent()` starts the runtime, sends it prompts, and turns what it does into typed Python events.
+A harness gives you a defined way to run agent turns, with capabilities that vary by harness. `litellm.agent()` starts the runtime, sends it prompts, and turns what it does into typed Python events. Tool Loop handles model tool calls for your Python functions without adding built-in file or shell tools
 
 With `litellm.completion` you get one model call and write the loop yourself. With a harness you get a finished loop that somebody else maintains. Use a harness when you want a coding agent working on a repo or a container, and `completion` when you need exact control over each model call.
 
@@ -66,13 +67,13 @@ flowchart LR
 
 For each session, `litellm.agent()` starts a small model endpoint on the host and points the runtime at it with the runtime's own base URL setting, such as `ANTHROPIC_BASE_URL` for Claude Code. The runtime gets a random token that only works for that session. The endpoint forwards each request to the gateway with your virtual key and tags it `harness,<name>`. Neither your virtual key nor any provider key enters the sandbox.
 
-Deep Agents is a Python library, so it runs in your process and talks to the gateway through a `ChatLiteLLM` model. It doesn't need the local endpoint.
+Deep Agents and Tool Loop run in your process and don't need the local endpoint. Deep Agents uses a `ChatLiteLLM` model, while Tool Loop calls `litellm.acompletion()`
 
 ## Core concepts
 
 `Harness` is an enum of the supported runtimes. It's a plain `Enum`, and passing a string like `"codex"` raises `TypeError` with a hint pointing at `Harness.CODEX`.
 
-A `Sandbox` is where the runtime runs and which files it can touch. You always pass one; there is no default that runs on your host. In this release the runtime binary must already be installed in the sandbox.
+A `Sandbox` is required by every call. CLI harnesses run there, but Python tools for in-process harnesses run in your process and are not restricted by the sandbox automatically. In this release CLI runtime binaries must already be installed in the sandbox
 
 A `Session` is a live runtime with its sandbox, working directory and history. `litellm.agent()` opens one for a single turn and closes it after. `litellm.agent_session()` keeps it open across turns.
 

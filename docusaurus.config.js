@@ -77,7 +77,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
-  staticDirectories: ['static', '.docusaurus/social-cards'],
+  staticDirectories: ['static', require('./plugins/social-cards').cacheDir],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -90,7 +90,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/gridMarks.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/llms'),
@@ -101,12 +101,15 @@ const config = {
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
     require('./plugins/optimize-images'),
+    require('./plugins/webpack-cache'),
     require('./plugins/rust-migration-posts'),
     require('./plugins/social-cards'),
     [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
+          {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',

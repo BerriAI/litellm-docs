@@ -8,7 +8,15 @@ The entry points live on the top-level `litellm` module, next to `litellm.comple
 
 ```python
 import litellm
-from litellm import Harness, ClaudeCodeOptions, CodexOptions, OpenCodeOptions, DeepAgentsOptions, sandbox
+from litellm import (
+    Harness,
+    ClaudeCodeOptions,
+    CodexOptions,
+    OpenCodeOptions,
+    DeepAgentsOptions,
+    ToolLoopOptions,
+    sandbox,
+)
 from litellm.harness import Text, ToolCall, FileChange, Done, Result, State
 ```
 
@@ -46,7 +54,14 @@ def agent(
     max_turns: int | None = None,
     timeout: float | None = None,
     metadata: Mapping[str, Any] | None = None,   # sent as x-litellm-spend-logs-metadata
-    options: ClaudeCodeOptions | CodexOptions | OpenCodeOptions | DeepAgentsOptions | None = None,
+    options: (
+        ClaudeCodeOptions
+        | CodexOptions
+        | OpenCodeOptions
+        | DeepAgentsOptions
+        | ToolLoopOptions
+        | None
+    ) = None,
     install: bool = False,                   # runtimes must already be in the sandbox
 ) -> Result | EventStream: ...
 ```
@@ -73,7 +88,7 @@ class Result:
 | `cost: float` | running total across turns |
 | `run(prompt)` / `arun(prompt)` | one turn, returns `Result` |
 | `stream(prompt)` / `astream(prompt)` | one turn, returns `EventStream` |
-| `history()` | the runtime's transcript as OpenAI-format messages (Deep Agents only) |
+| `history()` | the runtime's transcript as OpenAI-format messages (Deep Agents and Tool Loop) |
 | `detach()` | parks the runtime and keeps the sandbox; returns `State` |
 | `stop()` | stops the runtime but stays resumable; returns `State` |
 | `close()` / `aclose()` | stops everything the session owns |

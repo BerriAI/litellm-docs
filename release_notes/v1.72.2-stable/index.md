@@ -268,6 +268,6 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 ## [Git Diff](https://github.com/BerriAI/litellm/releases/tag/v1.72.2-stable)

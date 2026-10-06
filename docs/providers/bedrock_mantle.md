@@ -211,6 +211,8 @@ Auth is the same chain as the rest of the provider: a bearer token from `api_key
 
 Beta features travel in the `anthropic-beta` header: the values the caller sends plus the ones a request needs (a `context_management` edit adds `context-management-2025-06-27`), limited to what Mantle accepts. A value Mantle does not know is left out instead of failing the request with a 400, and nothing is sent in the body `anthropic_beta` field, which Mantle ignores whenever the header is present
 
+Health checks use the same surface. `/health` and the Admin UI's Test Connection button probe a `bedrock_mantle/anthropic.claude-*` deployment with a small `/v1/messages` request, with no `model_info.mode` needed. See [Model modes](../proxy/health.md#model-modes)
+
 ## OpenAI Models (GPT-5.4 / GPT-5.5)
 
 ### /responses

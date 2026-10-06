@@ -643,7 +643,7 @@ A request whose alias does not match fails with a `400` that names the pattern:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "Prod Key"}'
 ```
@@ -760,10 +760,12 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **LiteLLM UI**
 
-On the LiteLLM UI, Navigate to the Keys page and click on `Generate Key` > `Key Lifecycle` > `Enable Auto Rotation`
+On the LiteLLM UI, Navigate to the Keys page and click on `Create New Key` > `Optional Settings` > `Key Lifecycle` > `Auto-Rotation Settings` > `Enable Auto-Rotation`
 <Image 
   img={require('../../img/key_r.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_r_dark.png')}
+  alt="Auto-Rotation Settings in the Key Lifecycle section of the key form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 **Valid rotation_interval formats:**
@@ -794,7 +796,9 @@ On the LiteLLM UI, Navigate to the Keys page. Select the key you want to update 
 
 <Image 
   img={require('../../img/key_u.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_u_dark.png')}
+  alt="Auto-Rotation Settings in the key edit form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 #### Environment variables
@@ -925,7 +929,6 @@ class LitellmUserRoles(str, enum.Enum):
 ### Teams
 
 #### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
-
 
 
 

@@ -82,6 +82,8 @@ LiteLLM supports the following MCP transports:
 
 <Image 
   img={require('../img/add_mcp.png')}
+  dark={require('../img/add_mcp_dark.png')}
+  alt="Add New MCP Server form with a Streamable HTTP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -108,10 +110,22 @@ This video walks through adding and using an SSE MCP server on LiteLLM UI and us
 
 ### Add STDIO MCP Server
 
+:::warning stdio is off by default
+
+stdio MCP servers are disabled unless the proxy is started with `LITELLM_ENABLE_MCP_STDIO=true` in its environment. While it is off, the stdio transport is greyed out in the UI, creating or updating a stdio server returns an error, and existing stdio servers stay listed but never start: their tools are left out of tool listings, direct tool calls return `403`, and their health check reports them as unhealthy
+
+The flag is read from the proxy's process environment only. Setting it under `environment_variables` in config.yaml or in the database has no effect
+
+:::
+
+**Upgrading with existing stdio servers?** Add `LITELLM_ENABLE_MCP_STDIO=true` to the proxy's environment and restart it. Until you do, the proxy logs a warning naming each stdio server it will not start
+
 For stdio MCP servers, select "Standard Input/Output (stdio)" as the transport type and provide the stdio configuration in JSON format:
 
 <Image 
   img={require('../img/add_stdio_mcp.png')}
+  dark={require('../img/add_stdio_mcp_dark.png')}
+  alt="Stdio configuration for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -126,6 +140,8 @@ LiteLLM attempts [OAuth 2.0 Authorization Server Discovery](https://datatracker.
 
 <Image 
   img={require('../img/mcp_oauth.png')}
+  dark={require('../img/mcp_oauth_dark.png')}
+  alt="OAuth authentication settings for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -140,6 +156,8 @@ For MCP servers hosted on [AWS Bedrock AgentCore](https://docs.aws.amazon.com/be
 
 <Image
   img={require('../img/mcp_aws_sigv4_ui.png')}
+  dark={require('../img/mcp_aws_sigv4_ui_dark.png')}
+  alt="AWS SigV4 authentication settings for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -155,6 +173,8 @@ Sometimes your MCP server needs specific headers on every request. Maybe it's an
 
 <Image 
   img={require('../img/static_headers.png')}
+  dark={require('../img/static_headers_dark.png')}
+  alt="Static headers in the MCP server permission settings"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -205,6 +225,7 @@ mcp_servers:
     url: "https://actions.zapier.com/mcp/sk-akxxxxx/sse"
   
   # Standard Input/Output (stdio) Server - CircleCI Example
+  # Requires LITELLM_ENABLE_MCP_STDIO=true in the proxy's environment
   circleci_mcp:
     transport: "stdio"
     command: "npx"

@@ -11,8 +11,13 @@ import styles from './styles.module.css';
 // agents). Plain HTML and SVG, so it renders without an image download and
 // reads the same in light and dark mode. The connecting lines are measured
 // after layout, so they follow the boxes at any width.
+//
+// Options for pages other than /docs/: copyCommand={false} shows the logo as a
+// plain card, without the click to copy the gateway start command.
+// agentPrompt={false} drops the "Copy agent prompt" button. highlight names one
+// group (for example "A2A agents") to emphasize; the others fade back.
 
-const Line = ({d}) => <path d={d} />;
+const Line = ({d, on}) => <path d={d} className={on ? styles.lineOn : undefined} />;
 
 function Icon({children}) {
   return (
@@ -52,7 +57,7 @@ function curve(x1, y1, x2, y2) {
   return `M${x1} ${y1} C ${x1 + k} ${y1}, ${x2 - k} ${y2}, ${x2} ${y2}`;
 }
 
-export default function LiteLLMFlow() {
+export default function LiteLLMFlow({copyCommand = true, agentPrompt = true, highlight}) {
   const ref = useRef(null);
   const [lines, setLines] = useState({w: 0, h: 0, d: []});
   const [copied, copy] = useCopy();
@@ -74,13 +79,18 @@ export default function LiteLLMFlow() {
       fig.querySelectorAll('[data-caller]').forEach((n) => {
         const b = n.getBoundingClientRect();
         if (!b.width) return;
-        d.push(curve(b.right - R.left, b.top + b.height / 2 - R.top, hl, cy));
+        d.push({d: curve(b.right - R.left, b.top + b.height / 2 - R.top, hl, cy)});
       });
       fig.querySelectorAll('[data-dest]').forEach((n) => {
         const b = n.getBoundingClientRect();
         if (!b.width) return;
-        d.push(curve(hr, cy, b.left - R.left - 6, b.top + b.height / 2 - R.top));
+        d.push({
+          d: curve(hr, cy, b.left - R.left - 6, b.top + b.height / 2 - R.top),
+          on: n.hasAttribute('data-on'),
+        });
       });
+      // The highlighted line goes last, so it draws over the others
+      d.sort((a, b) => Number(Boolean(a.on)) - Number(Boolean(b.on)));
       setLines({w: R.width, h: R.height, d});
     };
     draw();
@@ -96,8 +106,8 @@ export default function LiteLLMFlow() {
         className={styles.flow}
         aria-label="Developers, coding agents, and apps call LiteLLM, which reaches 100+ LLM APIs, MCP tools, and A2A agents.">
         <svg className={styles.lines} width={lines.w} height={lines.h} viewBox={`0 0 ${lines.w || 1} ${lines.h || 1}`} aria-hidden="true">
-          {lines.d.map((d, i) => (
-            <Line key={i} d={d} />
+          {lines.d.map((l, i) => (
+            <Line key={i} d={l.d} on={l.on} />
           ))}
         </svg>
 
@@ -112,61 +122,79 @@ export default function LiteLLMFlow() {
         </div>
 
         <div className={styles.hubWrap}>
-          {/* Clicking the logo copies the three commands that start the gateway */}
-          <button
-            type="button"
-            className={styles.hub}
-            data-hub=""
-            title="Copy the command that starts the LiteLLM Gateway"
-            aria-label={hubCopied ? 'Start command copied' : 'Copy the command that starts the LiteLLM Gateway'}
-            onClick={() => {
-              copyHub(GATEWAY_COMPOSE);
-              track('docs_install_copied', {kind: 'gateway', source: 'docs-index-figure'});
-            }}>
-            <img className={styles.monoLight} src={monoBlue} alt="" width="52" height="52" />
-            <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
-            <span className={styles.hubName}>LiteLLM</span>
-            <span className={hubCopied ? `${styles.hubHint} ${styles.hubHintOn}` : styles.hubHint} aria-live="polite">
-              {hubCopied ? 'Gateway start command copied' : 'Copy gateway start command'}
-            </span>
-          </button>
+          {copyCommand ? (
+            /* Clicking the logo copies the three commands that start the gateway */
+            <button
+              type="button"
+              className={styles.hub}
+              data-hub=""
+              title="Copy the command that starts the LiteLLM Gateway"
+              aria-label={hubCopied ? 'Start command copied' : 'Copy the command that starts the LiteLLM Gateway'}
+              onClick={() => {
+                copyHub(GATEWAY_COMPOSE);
+                track('docs_install_copied', {kind: 'gateway', source: 'docs-index-figure'});
+              }}>
+              <img className={styles.monoLight} src={monoBlue} alt="" width="52" height="52" />
+              <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
+              <span className={styles.hubName}>LiteLLM</span>
+              <span className={hubCopied ? `${styles.hubHint} ${styles.hubHintOn}` : styles.hubHint} aria-live="polite">
+                {hubCopied ? 'Gateway start command copied' : 'Copy gateway start command'}
+              </span>
+            </button>
+          ) : (
+            <div className={styles.hub} data-hub="">
+              <img className={styles.monoLight} src={monoBlue} alt="" width="52" height="52" />
+              <img className={styles.monoDark} src={monoWhite} alt="" width="52" height="52" />
+              <span className={styles.hubName}>LiteLLM</span>
+            </div>
+          )}
         </div>
 
-        <div className={styles.dests}>
-          {GROUPS.map((g) => (
-            <div key={g.label} className={styles.group}>
-              <span className={styles.label}>{g.label}</span>
-              <div className={styles.row} data-dest="">
-                {g.items.map(([name, file, invertDark]) => (
-                  <span key={name} className={styles.icon} title={name}>
-                    {file ? (
-                      <img src={integration + file} alt={name} width="15" height="15" className={invertDark ? styles.invertDark : undefined} />
-                    ) : (
-                      AGENT_ICON
-                    )}
-                  </span>
-                ))}
-                <Link className={styles.more} to={g.more[1]}>
-                  {g.more[0]}
-                </Link>
+        <div className={highlight ? `${styles.dests} ${styles.dim}` : styles.dests}>
+          {GROUPS.map((g) => {
+            const on = g.label === highlight;
+            return (
+              <div key={g.label} className={on ? `${styles.group} ${styles.on}` : styles.group}>
+                <span className={styles.label}>{g.label}</span>
+                <div className={styles.row} data-dest="" data-on={on ? '' : undefined}>
+                  {g.items.map(([name, file, invertDark]) => (
+                    <span key={name} className={styles.icon} title={name}>
+                      {file ? (
+                        <img src={integration + file} alt={name} width="15" height="15" className={invertDark ? styles.invertDark : undefined} />
+                      ) : (
+                        AGENT_ICON
+                      )}
+                    </span>
+                  ))}
+                  {/* The highlighted group is the page being read, so no link to itself */}
+                  {on ? (
+                    <span className={styles.more}>{g.more[0]}</span>
+                  ) : (
+                    <Link className={styles.more} to={g.more[1]}>
+                      {g.more[0]}
+                    </Link>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </figure>
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.promptBtn}
-          onClick={() => {
-            copy(PROMPTS.gateway.text);
-            track('docs_agent_prompt_copied', {prompt: 'gateway', source: 'docs-index-figure'});
-          }}>
-          {copied ? <IconCheck size={13} /> : <IconAgent size={13} />}
-          {copied ? 'Copied' : 'Copy agent prompt'}
-        </button>
-      </div>
+      {agentPrompt && (
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.promptBtn}
+            onClick={() => {
+              copy(PROMPTS.gateway.text);
+              track('docs_agent_prompt_copied', {prompt: 'gateway', source: 'docs-index-figure'});
+            }}>
+            {copied ? <IconCheck size={13} /> : <IconAgent size={13} />}
+            {copied ? 'Copied' : 'Copy agent prompt'}
+          </button>
+        </div>
+      )}
     </>
   );
 }

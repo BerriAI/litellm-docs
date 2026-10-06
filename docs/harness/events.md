@@ -52,16 +52,16 @@ That `match` has no `case _`. `Event` is a closed union, so mypy and pyright bot
 
 Built-in tools that do the same thing get the same `name` on every harness, so UI code doesn't need a branch per runtime. `native_name` always has the runtime's original name.
 
-| `name` | Claude Code | Codex | OpenCode | Deep Agents |
-|---|---|---|---|---|
-| `read` | `Read` | | `read` | `read_file` |
-| `write` | `Write` | | `write` | `write_file` |
-| `edit` | `Edit` | | `edit` | `edit_file` |
-| `bash` | `Bash` | command execution | `bash` | `execute` |
-| `glob` | `Glob` | | `glob` | `glob` |
-| `grep` | `Grep` | | `grep` | `grep` |
-| `ls` | `LS` | | `list` | `ls` |
-| `web_search` | `WebSearch` | web search | `webfetch` | |
+| `name` | Claude Code | Codex | OpenCode | Deep Agents | Tool Loop |
+|---|---|---|---|---|---|
+| `read` | `Read` | | `read` | `read_file` | |
+| `write` | `Write` | | `write` | `write_file` | |
+| `edit` | `Edit` | | `edit` | `edit_file` | |
+| `bash` | `Bash` | command execution | `bash` | `execute` | |
+| `glob` | `Glob` | | `glob` | `glob` | |
+| `grep` | `Grep` | | `grep` | `grep` | |
+| `ls` | `LS` | | `list` | `ls` | |
+| `web_search` | `WebSearch` | web search | `webfetch` | | |
 
 Tools that aren't in this table keep their native name in `name`.
 

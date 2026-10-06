@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
 import styles from './styles.module.css';
@@ -120,9 +120,14 @@ export default function ProductsMenu({mobile}) {
   const location = useLocation();
   const current = currentItem(location);
   const [open, setOpen] = useState(false);
-  const close = () => setOpen(false);
+  const leaveTimer = useRef();
+  const close = () => {
+    clearTimeout(leaveTimer.current);
+    setOpen(false);
+  };
 
   useEffect(close, [location.pathname, location.hash]);
+  useEffect(() => () => clearTimeout(leaveTimer.current), []);
 
   if (mobile) {
     return (
@@ -144,17 +149,28 @@ export default function ProductsMenu({mobile}) {
   return (
     <div
       className={`${styles.root} ${open ? styles.open : ''}`}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={close}
+      // Hover opens it for a mouse only; on touch screens a tap would fire
+      // the hover and then the click, opening and closing it at once
+      onPointerEnter={(e) => {
+        if (e.pointerType !== 'mouse') return;
+        clearTimeout(leaveTimer.current);
+        setOpen(true);
+      }}
+      // A short grace period, so a pointer cutting across the gap on its way
+      // to the panel doesn't close it
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') leaveTimer.current = setTimeout(close, 200);
+      }}
       onKeyDown={(e) => e.key === 'Escape' && close()}>
       <button
         type="button"
         className={styles.trigger}
         aria-haspopup="true"
         aria-expanded={open}
+        aria-label={`Products: ${current.title}`}
         onClick={() => setOpen((v) => !v)}>
         <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
-        {current.title}
+        <span className={styles.triggerLabel}>{current.title}</span>
         <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
           <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />

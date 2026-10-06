@@ -26,8 +26,9 @@ import Image from '@theme/IdealImage';
 Export the base URL, your virtual key, and the model, then launch Claude Code:
 
 ```bash
+export LITELLM_API_KEY="sk-<your-virtual-key>"
 export ANTHROPIC_BASE_URL="http://localhost:4000"
-export ANTHROPIC_AUTH_TOKEN="sk-1234"
+export ANTHROPIC_AUTH_TOKEN="$LITELLM_API_KEY"
 export ANTHROPIC_MODEL="{{anthropic}}"
 
 claude
@@ -62,14 +63,14 @@ Expose your LiteLLM [MCP gateway](../../mcp.md) tools inside Claude Code with `c
 ```bash
 claude mcp add --transport http litellm-tools \
   http://localhost:4000/my_mcp_server/mcp \
-  --header "x-litellm-api-key: Bearer sk-1234"
+  --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"
 ```
 
 | Part | Meaning |
 |---|---|
 | `litellm-tools` | The name for this server inside Claude Code; choose anything |
 | `http://localhost:4000/my_mcp_server/mcp` | `<PROXY_URL>/<server_name>/mcp`; `my_mcp_server` must match the key under `mcp_servers:` on the gateway |
-| `--header "x-litellm-api-key: Bearer sk-1234"` | Your virtual key, authenticating you to the gateway |
+| `--header "x-litellm-api-key: Bearer $LITELLM_API_KEY"` | Your virtual key, authenticating you to the gateway |
 
 The key needs access to `my_mcp_server` (see [the overview](./overview.md#the-values-you-will-reuse-everywhere)); otherwise the gateway rejects the connection with `The key is not allowed to access the requested MCP servers`. Start Claude Code and run `/mcp`: the server shows as connected with its tools listed, prefixed with the server name (`my_mcp_server-read_wiki_structure`).
 

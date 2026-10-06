@@ -127,9 +127,11 @@ Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?mode
 LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
 
 ```python
+import os
+
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234")
+client = AsyncOpenAI(base_url="http://0.0.0.0:4000", api_key=os.environ["LITELLM_API_KEY"])
 
 async with client.realtime.connect(model="azure-gpt-realtime") as connection:
     await connection.session.update(

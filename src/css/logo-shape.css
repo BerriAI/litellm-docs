@@ -469,3 +469,43 @@ html[data-theme='dark'] article a.card:hover,
 html[data-theme='dark'] .pagination-nav__link:hover {
   transform: none !important;
 }
+
+/* Phones: a smaller logo and DOCS label, so the product switcher fits
+   beside them. Clear space stays half the logo's height. */
+@media (max-width: 576px) {
+  .navbar__brand-col .navbar__logo,
+  .navbar__logo {
+    height: 20px;
+  }
+  .navbar__brand {
+    padding-right: 10px;
+  }
+  .navbar__brand .navbar__title {
+    flex: none;
+    margin-left: 9px;
+    font-size: 0.78rem;
+  }
+  .navbar__brand,
+  .navbar__brand-col {
+    flex: none;
+  }
+}
+
+/* ---------- Navbar stays on one row ----------
+   Infima lets .navbar__inner wrap, and between 997px and about 1065px the
+   logo with its DOCS label, the links, and the right icons no longer fit, so
+   the icons dropped to a second line. The row never wraps now, and in that
+   range the Trust Center text link steps aside (the footer links it too). */
+@media (min-width: 997px) {
+  .navbar__inner {
+    flex-wrap: nowrap !important;
+  }
+  .navbar__center-col {
+    min-width: 0;
+  }
+}
+@media (min-width: 997px) and (max-width: 1100px) {
+  .navbar__right-col a[href^='https://trust.litellm.ai'] {
+    display: none;
+  }
+}

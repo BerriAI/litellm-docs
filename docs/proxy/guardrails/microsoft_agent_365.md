@@ -88,9 +88,10 @@ litellm --config config.yaml
 ### 3. Call an MCP tool
 
 ```bash
+export LITELLM_API_KEY="sk-<your-virtual-key>"
 TOKEN=$(az account get-access-token --tenant <tenant_id> --resource api://<gateway_client_id> --query accessToken -o tsv)
 curl -X POST http://localhost:4000/mcp-rest/tools/call \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -221,7 +222,7 @@ Entra has no dynamic client registration, so the client needs a registered clien
     "deepwiki": {
       "type": "http",
       "url": "https://litellm.example.com/deepwiki/mcp",
-      "headers": {"x-litellm-api-key": "Bearer sk-1234"},
+      "headers": {"x-litellm-api-key": "Bearer sk-<your-virtual-key>"},
       "oauth": {"clientId": "<public client id>", "callbackPort": 51001}
     }
   }
@@ -232,7 +233,7 @@ On the first call Claude Code opens the browser, the user signs in, and the call
 
 ```bash
 curl -i -X POST https://litellm.example.com/deepwiki/mcp \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
 ```

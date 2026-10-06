@@ -8,8 +8,11 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
 import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
+import QuickStartBox from '@site/src/components/QuickStartBox';
 
-<LiteLLMFlow />
+<LiteLLMFlow copyCommand={false} agentPrompt={false} />
+
+<QuickStartBox source="docs-index" />
 
 **LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 

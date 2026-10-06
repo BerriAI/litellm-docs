@@ -414,6 +414,23 @@
   white-space: nowrap;
 }
 
+.page.horizontalByline {
+  width: 960px;
+}
+
+.horizontalByline .inner {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 32px;
+  padding: 24px 0;
+}
+
+.horizontalByline .author small {
+  white-space: normal;
+}
+
 @media (max-width: 960px) {
   .immersiveByline .authors {
     flex-wrap: wrap;
