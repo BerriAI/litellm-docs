@@ -129,7 +129,7 @@ Prefix a gateway model group with `litellm_proxy/` and pass the gateway URL and 
 answer = litellm.run_tool_loop(
     model="litellm_proxy/my-model-group",
     api_base="http://localhost:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     messages=messages,
     tools=TOOLS,
     execute_tool=functools.partial(read_file, repository_root="/path/to/repo", revision="main"),
