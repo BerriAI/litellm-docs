@@ -1929,6 +1929,7 @@ const autoRouterSidebar = {
   autoRouterSidebar: [
     { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/optimize_classifier", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/decision_classifiers", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
     { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
