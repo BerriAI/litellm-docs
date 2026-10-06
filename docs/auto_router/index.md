@@ -118,6 +118,11 @@ items={[
     to: "/docs/auto_router/evaluate",
   },
   {
+    title: "OTEL Telemetry",
+    description: "Trace the selected configuration, routing reason, classifier failures, and retries in Lens or an OTLP backend.",
+    to: "/docs/auto_router/telemetry",
+  },
+  {
     title: "Feature History",
     description: "Which Auto Router features shipped in which release, with links to the stable GitHub releases.",
     to: "/docs/auto_router/feature_history",

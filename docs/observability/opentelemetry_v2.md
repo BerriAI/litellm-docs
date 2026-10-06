@@ -38,6 +38,8 @@ Highlights:
 
 ## Getting started
 
+For Auto Router configuration identity, selected models and recovered classifier failures, see [Auto Router OTEL Telemetry](/docs/auto_router/telemetry).
+
 Set `LITELLM_OTEL_V2=true` in the proxy environment, then pick a destination below.
 
 ### 1. Send traces to any OTLP collector
