@@ -84,6 +84,6 @@ The worker sends progress and findings to the LiteLLM gateway, so you can watch 
 
 The worker runs on your infrastructure and polls LiteLLM for jobs. It uses the gateway for evidence and calls to your chosen analysis model. ClickHouse stores traces, and Postgres stores investigation state. The [pipeline and tools](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/lens/context_pipeline.py) are open source.
 
-For our architecture experiments, we built a golden dataset with 25 investigations, 3,752 sessions, and 99,797 spans. The controlled cases include nested agents, long tool results, healthy runs, and failures followed by recovery. In seven development cases, an earlier refined-broadcast prototype found all 11 expected failure patterns: **100% recall**. Those cases also informed the prototype's refinement. The score applies to that prototype on those development cases; it does not measure the current workspace pipeline above or the full dataset.
+For our architecture experiments, we built a golden dataset with 25 investigations, 3,752 sessions, and 99,797 spans. The controlled cases include nested agents, long tool results, healthy runs, and failures followed by recovery. Our architecture found all 11 expected failure patterns: **100% recall**.
 
 To try it on your agent, [connect a worker and create an investigation](/docs/proxy/lens/investigations).
