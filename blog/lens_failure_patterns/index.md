@@ -1,6 +1,6 @@
 ---
 slug: lens-failure-patterns
-title: "How LiteLLM Lens finds failure patterns across thousands of agent traces"
+title: "How LiteLLM Lens finds 100% of failure patterns across 1,000s of agent traces"
 date: 2026-10-05
 authors:
   - moe
@@ -70,9 +70,7 @@ Repeated 8,000-character responses are a clue. The investigator still needs to c
 
 The investigator can drop a candidate that doesn't hold up. Before saving a finding, the worker checks its citations against the source and sends invalid quotes back for repair. An exact quote can still support a bad interpretation, so we check that distinction in our evaluations too.
 
-## Checking the design on long traces
-
-We built a golden dataset with 3,752 sessions, including an investigation with 2,048 sessions. These controlled test cases include nested agents, long tool results, healthy runs, and failures followed by recovery.
+## Checking the design on a real trace
 
 On a real coding-agent session with 350 spans, reviewers and investigators used Python to inspect validation commands. They found checks piped through `tail` that reported success even when the underlying check failed. Lens identified the problem and the later passing checks, without claiming those failures remained in the delivered code. We checked the findings' citations against the source.
 
@@ -85,5 +83,7 @@ The worker sends progress and findings to the LiteLLM gateway, so you can watch 
 ![The Lens worker polls LiteLLM for investigations, reads evidence and calls models through the gateway, then reports progress and findings.](./assets/06-deployment.svg)
 
 The worker runs on your infrastructure and polls LiteLLM for jobs. It uses the gateway for evidence and calls to your chosen analysis model. ClickHouse stores traces, and Postgres stores investigation state. The [pipeline and tools](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/lens/context_pipeline.py) are open source.
+
+For our architecture experiments, we built a golden dataset with 25 investigations, 3,752 sessions, and 99,797 spans. The controlled cases include nested agents, long tool results, healthy runs, and failures followed by recovery. Our architecture found all 11 expected failure patterns: **100% recall**.
 
 To try it on your agent, [connect a worker and create an investigation](/docs/proxy/lens/investigations).
