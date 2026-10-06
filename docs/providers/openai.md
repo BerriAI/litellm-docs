@@ -8,7 +8,7 @@ LiteLLM supports OpenAI Chat + Embedding calls.
 **We recommend using `litellm.responses()` / Responses API** for the latest OpenAI models (GPT-5, gpt-5-codex, o3-mini, etc.)
 :::
 
-For GPT-6 Astra with `service_tier: "ultrafast"`, see [Ultrafast mode](./openai/ultrafast.md) for Admin UI setup, gateway configuration, and request examples.
+For Fast mode on supported OpenAI models and Ultrafast on GPT-6 Astra, see [Fast & Ultrafast mode](./openai/ultrafast.md) for Admin UI setup, gateway configuration, and request examples.
 
 ### Required API Keys
 
