@@ -189,7 +189,7 @@ curl http://0.0.0.0:4000/v1/search/my-search \
 
 ### Restrict Search Tool Access
 
-Set `search_tools` under `object_permission` on a key, team or user to limit which search tools it can call. The allowlist applies to `/search`, `/v1/search`, web search interception and `/search_tools/list`
+Set `search_tools` under `object_permission` on a key or team to limit which search tools it can call. The allowlist applies to `/search`, `/v1/search`, `/search/{search_tool_name}`, web search interception, router fallbacks between search tools, and `/search_tools/list`
 
 ```bash showLineNumbers title="Grant a team one search tool"
 curl http://0.0.0.0:4000/team/new \
@@ -201,23 +201,41 @@ curl http://0.0.0.0:4000/team/new \
   }'
 ```
 
-By default an empty or missing `search_tools` list allows every search tool. Set `default_search_list_deny` to make search opt-in instead, so a key, team or user with no grant is denied every search tool
+By default an empty or missing `search_tools` list allows every search tool. To make every search tool opt-in, turn on `search_tool_deny_by_default`:
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
-  default_search_list_deny: true
+  search_tool_deny_by_default: true
 ```
 
-You can also toggle it from the Admin UI under **Settings > Router Settings > General Settings**. With it on, access resolves as follows:
+The setting defaults to `false`. With it on, the requested search tool must be listed in `object_permission.search_tools` of each identity the request resolves to
 
-| Caller | Must be granted by | Also narrowed by |
-|---|---|---|
-| Team key | the team's `search_tools` | the key's and the user's non-empty `search_tools` |
-| Personal key (no team) | the user's `search_tools` | the key's non-empty `search_tools` |
-| Key with no team or user | the key's `search_tools` | |
-| Proxy admin | not restricted | |
+| Caller | Grants required |
+|---|---|
+| Virtual key without a team | The key |
+| Virtual key with a team | The key and its team |
+| Team member without a virtual key (JWT or `lite login` session) | The team the request resolved to |
+| User without a virtual key or team | The user |
 
-A key can never widen what its team or user grants, and existing keys, teams and users with empty lists lose search access as soon as the setting is on. Denied requests return `403` before any search provider is called. Web search interception with no registered search tool also stops falling back to the default provider for anyone but a proxy admin
+A missing permission record, a `null` list, and an empty list all grant nothing. A user's personal grants only count when the request has no virtual key and no team, so they never widen or narrow a key or team request. If a key names a team that cannot be loaded, the request is denied rather than treated as a key without a team. Denied requests return `403` before any search provider is called, with `key_search_tool_access_denied`, `team_search_tool_access_denied`, or `user_search_tool_access_denied`, and `/search_tools/list` only returns the tools the caller may call
+
+For a team key, grant the tool on both objects:
+
+```bash showLineNumbers title="Team and key both grant the search tool"
+curl -X POST 'http://localhost:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_alias": "research", "object_permission": {"search_tools": ["tavily-search"]}}'
+
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_id": "<team_id from above>", "object_permission": {"search_tools": ["tavily-search"]}}'
+```
+
+The master key and dashboard login sessions are not restricted. A proxy admin calling with its own virtual key is restricted like any other key. Web search interception with no registered search tool stops falling back to the default provider for every restricted caller, since there is no tool name a grant could list. Existing keys and teams with empty lists lose search access as soon as the setting is on
+
+Setting the flag back to `false` restores the earlier behavior, where an empty or unset list means unrestricted. A nonempty `search_tools` list that leaves out the requested tool is still rejected
 
 ## **Request/Response Format**
 
@@ -322,4 +340,3 @@ The response follows Perplexity's search format with the following structure:
 | Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
-
