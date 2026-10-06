@@ -749,7 +749,8 @@ const sidebars = {
                 "proxy/ui_logs_sessions",
                 "proxy/deleted_keys_teams",
               ]
-            }
+            },
+            "proxy/ui/chat_ui",
           ],
         },
         {
