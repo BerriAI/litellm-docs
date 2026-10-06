@@ -11,6 +11,12 @@
 | API documentation | [Chat Completions](https://platform.acedata.cloud/documents/openai-chat-completions), [Responses](https://platform.acedata.cloud/documents/openai-responses) |
 | Model catalog and prices | [Models](https://platform.acedata.cloud/models), [machine-readable catalog](https://platform.acedata.cloud/api/v1/models/catalog/) |
 
+:::note Release availability
+
+The `acedatacloud/` prefix requires a LiteLLM version containing [the provider integration](https://github.com/BerriAI/litellm/pull/44817). On older releases, use the [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible) with `openai/gpt-6-luna`, `api_base="https://api.acedata.cloud/openai"`, an explicit API key, and custom prices from the public catalog
+
+:::
+
 ## Get an API key
 
 Sign in to the [Ace Data Cloud console](https://platform.acedata.cloud/console/applications) and create an API token, then set it in your environment
