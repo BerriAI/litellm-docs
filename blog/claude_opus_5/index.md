@@ -7,6 +7,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Opus 5 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
+image: /img/litellm_claude_opus_5_announcement.png
 tags: [anthropic, claude, opus 5, day 0 support]
 hide_table_of_contents: false
 ---
@@ -214,7 +215,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-5",

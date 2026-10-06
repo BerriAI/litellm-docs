@@ -9,7 +9,7 @@ This is available on `/v1/chat/completions`, `/v1/messages` (Anthropic format), 
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.youtube.com/embed/4Ktiwv3ka40" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.youtube.com/embed/4Ktiwv3ka40" frameBorder="0" allowFullScreen></iframe>
 
 ## How it works
 
@@ -130,7 +130,7 @@ When `default_on` is not set, compression runs only for requests that opt in. Th
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
         "guardrails": ["compresr-compression"]
@@ -181,6 +181,10 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 The response includes an `x-litellm-applied-guardrails: compresr-compression` header so the caller can confirm that compression actually ran.
 
+## Compression behind an auto router
+
+A request an [auto router](../auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails this page attaches at the key, team, or request level for them. See [Compression](../auto_routing.md#compression).
+
 ## Rolling out to a team
 
 A platform admin can turn on compression for a whole team without any client changes. The best fit is agent and RAG workloads whose volume is dominated by non-code tool output, such as search results, retrieved documents, ticket threads, CRM records, and transcripts.
@@ -191,7 +195,7 @@ A platform admin can turn on compression for a whole team without any client cha
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
         "key_alias": "support-agent-alice",

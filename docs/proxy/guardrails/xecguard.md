@@ -23,7 +23,7 @@ guardrails:
       mode: "pre_call"
       api_key: os.environ/XECGUARD_API_KEY
       api_base: os.environ/XECGUARD_API_BASE   # Optional
-      policy_names:                             # Optional — defaults to System Prompt Enforcement + Harmful Content Protection
+      policy_names:                             # Optional, defaults to System Prompt Enforcement + Harmful Content Protection + General Prompt Attack Protection
         - Default_Policy_SystemPromptEnforcement
         - Default_Policy_HarmfulContentProtection
 ```
@@ -153,7 +153,7 @@ guardrails:
 |-----------|---------|-------------|
 | `api_base` | `https://api-xecguard.cycraft.ai` | XecGuard API base URL. Falls back to `XECGUARD_API_BASE` env var. |
 | `xecguard_model` | `xecguard_v2` | XecGuard scanning model identifier. |
-| `policy_names` | `["Default_Policy_SystemPromptEnforcement", "Default_Policy_HarmfulContentProtection"]` | Policies applied on each scan. See [Available Policies](#available-policies) below. |
+| `policy_names` | `["Default_Policy_SystemPromptEnforcement", "Default_Policy_HarmfulContentProtection", "Default_Policy_GeneralPromptAttackProtection"]` | Policies applied on each scan. See [Available Policies](#available-policies) below. |
 | `block_on_error` | `true` | Fail-closed by default. Set to `false` for fail-open behaviour (requests pass through when the XecGuard API is unreachable). |
 | `grounding_strictness` | `BALANCED` | Either `BALANCED` or `STRICT`. Controls how strictly the `/grounding` endpoint evaluates response fidelity to supplied context documents. |
 | `default_on` | `false` | When `true`, the guardrail runs on every request without needing to specify it in the request body. |
@@ -303,7 +303,7 @@ Set XECGUARD_API_KEY in the environment or pass api_key in the guardrail config.
 ```
 
 **API Unreachable (fail-closed, default):**
-The request is blocked and a `GuardrailRaisedException` is raised.
+The request is rejected with HTTP 400 and an error message of the form `XecGuard API unreachable (block_on_error=True): <error>`.
 
 **API Unreachable (fail-open, `block_on_error: false`):**
 The request passes through unchanged and a warning is logged.

@@ -35,7 +35,7 @@ Use the `/key/service-account/generate` endpoint to generate a service account k
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "my-unique-team"
@@ -48,7 +48,7 @@ You can optionally provide a `service_account_id` inside `metadata` to give the 
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "my-unique-team",

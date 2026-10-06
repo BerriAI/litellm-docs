@@ -8,7 +8,7 @@ Litellm Proxy has the following release cycle:
 
 In production, we recommend pinning to the latest stable `1.x.x` release.
 
-:::info Versioning changed starting 1.84.0
+:::info[Versioning changed starting 1.84.0]
 
 The `-stable` and `-nightly` suffixes are gone. Stable releases are now plain PEP 440 / SemVer 2.0 (e.g. `1.84.0`), weekly scheduled releases bump the **MINOR** component, and **PATCH** is reserved for hotfixes. Docker publishes both bare (`1.84.0`) and `v`-prefixed (`v1.84.0`) tags pointing to the same image; PyPI uses the bare PEP 440 form (`1.84.0`, never `v1.84.0`). Releases published under the old naming (`v1.83.x-stable`, etc.) stay available forever.
 
@@ -48,7 +48,7 @@ Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-ver
 
 ### Enterprise Support
 
-:::info Support model changing, May 18, 2026
+:::info[Support model changing, May 18, 2026]
 
 As LiteLLM has grown, the current professional support model no longer fits our scale. We're moving to a new model built around clear, predictable communication on when customers can expect support and changes. The model described below is being deprecated, we'll share details on the new system as we finalize it over the next few weeks.
 

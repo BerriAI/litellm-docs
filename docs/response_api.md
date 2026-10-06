@@ -36,7 +36,7 @@ import litellm
 
 # Non-streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -52,7 +52,7 @@ print(response)
     "object": "response",
     "created_at": 1734366691,
     "status": "completed",
-    "model": "o1-pro-2025-01-30",
+    "model": "{{openai_large}}",
     "output": [
         {
             "type": "message",
@@ -82,7 +82,7 @@ import litellm
 
 # Streaming response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -199,7 +199,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -226,7 +226,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -249,7 +249,7 @@ print(cancel_response)
 **REST API:**
 ```bash
 curl -X POST http://localhost:4000/v1/responses/response_id/cancel \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 This will attempt to cancel the in-progress response with the given ID.
@@ -261,7 +261,7 @@ import litellm
 
 # First, create a response
 response = litellm.responses(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     max_output_tokens=100
 )
@@ -471,9 +471,9 @@ litellm --config /path/to/config.yaml
 First, add this to your litellm proxy config.yaml:
 ```yaml showLineNumbers title="OpenAI Proxy Configuration"
 model_list:
-  - model_name: openai/o1-pro
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/o1-pro
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -489,7 +489,7 @@ client = OpenAI(
 
 # Non-streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -508,7 +508,7 @@ client = OpenAI(
 
 # Streaming response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn.",
     stream=True
 )
@@ -522,7 +522,7 @@ for event in response:
 from openai import OpenAI
 import base64
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
     model="{{openai_large}}",
@@ -555,7 +555,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -580,7 +580,7 @@ client = OpenAI(
 
 # First, create a response
 response = client.responses.create(
-    model="openai/o1-pro",
+    model="openai/{{openai_large}}",
     input="Tell me a three sentence bedtime story about a unicorn."
 )
 
@@ -836,7 +836,7 @@ from websocket import create_connection  # uv add websocket-client
 # Connect to LiteLLM proxy WebSocket endpoint
 ws = create_connection(
     "ws://localhost:4000/v1/responses?model={{gemini_flash}}",
-    header=["Authorization: Bearer sk-1234"]
+    header=["Authorization: Bearer sk-<your-litellm-api-key>"]
 )
 
 try:
@@ -900,7 +900,7 @@ const ws = new WebSocket(
     'ws://localhost:4000/v1/responses?model={{gemini_flash}}',
     {
         headers: {
-            'Authorization': 'Bearer sk-1234'
+            'Authorization': 'Bearer sk-<your-litellm-api-key>'
         }
     }
 );
@@ -958,7 +958,7 @@ ws.on('error', (error) => {
 
 # Connect to WebSocket endpoint
 websocat "ws://localhost:4000/v1/responses?model={{gemini_flash}}" \
-  -H="Authorization: Bearer sk-1234"
+  -H="Authorization: Bearer $LITELLM_API_KEY"
 
 # Then send JSON events (paste and press Enter):
 {"type":"response.create","model":"{{gemini_flash}}","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"Hello!"}]}]}
@@ -1098,17 +1098,46 @@ general_settings:
 
 IDs the proxy did issue stay owner-checked either way, and proxy admin keys are exempt from both checks. `disable_responses_id_security: true` turns off the whole feature, this refusal included.
 
+## Background Mode
+
+LiteLLM passes OpenAI's `background: true` parameter through to the provider. The provider returns immediately with a response in `queued` or `in_progress` status, and you fetch the result later with `GET /v1/responses/{response_id}`:
+
+```bash showLineNumbers title="Create a background response"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6",
+    "input": "Write a detailed comparison of the Responses API and the Chat Completions API",
+    "background": true
+  }'
+```
+
+```bash showLineNumbers title="Poll for the result"
+curl http://localhost:4000/v1/responses/{response_id} \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+### Cost tracking for background responses
+
+The create call returns before the model has produced any tokens, so there is no usage to record at request time. To close that gap, the proxy stores every queued background response and prices it with a background polling job, the same machinery the [managed batches cost poller](./proxy/managed_batches#observability) uses for completed batches. It requires a Postgres database and ships with the enterprise package
+
+Every `proxy_batch_polling_interval` seconds (a `general_settings` key, also settable via the `PROXY_BATCH_POLLING_INTERVAL` env var; default `3600`, plus up to 30s of jitter) the job reads pending background responses from the database, oldest first and up to `MAX_OBJECTS_PER_POLL_CYCLE` (default `50`) per cycle, and retrieves each one from the provider with the deployment credentials in your config. Once a response reaches a terminal status (`completed`, `failed`, `cancelled`, or `incomplete`), that retrieval writes a spend log with the final usage, attributed to the user who created the response, and the row stops being polled. Your own `GET /v1/responses/{response_id}` reads are never billed; only the poller's retrieval prices the response
+
+Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7`) days are marked stale and dropped from polling. Set the polling interval to something small like `30` while testing, and set `PROXY_BATCH_POLLING_ENABLED=false` to disable this job and the batch cost poller entirely
+
 ## Supported Responses API Parameters
 
 | Provider | Supported Parameters |
 |----------|---------------------|
 | `openai` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
 | `azure` | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/7c3df984da8e4dff9201e4c5353fdc7a2b441831/litellm/llms/openai/responses/transformation.py#L23) |
+| `azure_ai` on `.services.ai.azure.com` and `.openai.azure.com` hosts | [All Responses API parameters are supported](https://github.com/BerriAI/litellm/blob/913ef6ed49250f28680a1a50850183b5d80f6bbb/litellm/llms/azure_ai/responses/transformation.py#L25) |
+| `azure_ai` on other hosts | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `anthropic` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `bedrock` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `gemini` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | `vertex_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
-| `azure_ai` | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 | All other llm api providers | [See supported parameters here](https://github.com/BerriAI/litellm/blob/f39d9178868662746f159d5ef642c7f34f9bfe5f/litellm/responses/litellm_completion_transformation/transformation.py#L57) |
 
 ## Load Balancing with Session Continuity.
@@ -1186,7 +1215,7 @@ To enable session continuity for Responses API in your LiteLLM proxy, set `optio
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
-:::tip Recommended: Use `encrypted_content_affinity`
+:::tip[Recommended: Use `encrypted_content_affinity`]
 For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
 :::
 
@@ -1292,6 +1321,20 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
    - Scans request `input` for `encitem_` prefixed IDs
    - If found → decodes `model_id`, pins to originating deployment, bypasses rate limits
    - If no encoded items → normal load balancing
+
+### When the originating deployment cannot serve the turn
+
+The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys never count as peers, whatever the provider would accept, so a multi-region group has none. An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
+
+Without a peer the turn is served in degraded form rather than failed. On the Responses API each reasoning item keeps its summary text and loses only its encrypted payload and id (an item with no readable text is dropped whole), and on a `/v1/messages` follow-up the thinking block is dropped whole. The rest of the conversation is untouched, the request goes to the healthy deployments through the normal routing strategy, and the model reasons fresh on that turn. The reasoning items it returns carry the id of the deployment that served it, so later turns pin there. Every degraded turn logs one router warning, so watch for it when reasoning continuity across turns matters to you:
+
+```
+EncryptedContentAffinityCheck: model_id=<id> cannot serve group <model> and no deployment on the same encryption boundary is configured; forwarding without its encrypted reasoning
+```
+
+Only a peer keeps the reasoning across such a turn. On an auto-router, `complexity_router_config.session_affinity: true` keeps a session that carries a `session_id` on the tier that produced the items (see [auto routing](./proxy/auto_routing.md)), so the turn usually stays with its origin, though escalation and routing plugins can still move it. Releases through v1.103.x failed a cooled-down origin with no peer with a 429 or 503 instead of serving the turn, and releases before v1.102.0 failed a removed origin or a group change the same way
+
+The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
 
 ### Configuration
 
@@ -1514,7 +1557,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="non-Responses API Model Request"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic-model",
     "input": "who is Michael Jordan"
@@ -1596,7 +1639,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="Request via bridge"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "my-local-model",
     "input": "Hello!"
@@ -1749,7 +1792,7 @@ LiteLLM Proxy supports session management for all supported models. This allows 
 
 1. Enable storing request / response content in the database
 
-Set `store_prompts_in_cold_storage: true` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
+Set `store_prompts_in_spend_logs: true` under `general_settings` and `cold_storage_custom_logger: s3_v2` under `litellm_settings` in your proxy config.yaml. When this is enabled, LiteLLM will store the request and response content in the s3 bucket you specify.
 
 ```yaml showLineNumbers title="config.yaml with Session Continuity"
 litellm_settings:
@@ -1760,7 +1803,6 @@ litellm_settings:
     s3_region_name: us-west-2      
 
 general_settings:
-  store_prompts_in_cold_storage: true
   store_prompts_in_spend_logs: true
 ```
 
@@ -1774,7 +1816,7 @@ Start a new conversation by making a request without specifying a previous respo
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "who is Michael Jordan"
@@ -1790,7 +1832,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make initial request to start a new conversation
@@ -1832,7 +1874,7 @@ Continue the conversation by referencing the previous response ID to maintain co
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him",
@@ -1849,7 +1891,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make follow-up request in the same conversation session
@@ -1891,7 +1933,7 @@ Start a brand new conversation without referencing previous context to demonstra
 ```curl
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "anthropic/{{anthropic}}",
     "input": "can you tell me more about him"
@@ -1907,7 +1949,7 @@ from openai import OpenAI
 # Initialize the client with your LiteLLM proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 # Make a new request without previous context
@@ -1938,7 +1980,6 @@ Response:
   }]
 }
 ```
-
 
 
 

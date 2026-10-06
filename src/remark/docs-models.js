@@ -1,9 +1,10 @@
-// Fills in {{role}} model-id placeholders from docs-models.json at build time.
+// Fills in {{role}} placeholders from docs-models.json at build time.
 //
-// docs-models.json maps a role (openai_small, anthropic, gemini_flash, ...) to
-// the model id examples use today. Pages write `{{openai_small}}` inside code
-// blocks and inline code (and, if needed, in prose) and the rendered site shows
-// the real id, so moving the docs to a new model is one edit to that file.
+// docs-models.json maps a role (openai_small, anthropic, gemini_flash,
+// python_version, ...) to the value examples use today: a model id, or the
+// Python version. Pages write `{{openai_small}}` inside code blocks and inline
+// code (and, if needed, in prose) and the rendered site shows the real value,
+// so moving the docs to a new model or Python version is one edit to that file.
 // scripts/check-docs.py applies the same substitution before it parses YAML,
 // JSON and Python blocks.
 

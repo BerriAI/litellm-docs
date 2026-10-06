@@ -58,9 +58,7 @@ guardrails:
     litellm_params:
       guardrail: crowdstrike_aidr
       default_on: true                       # Enable for all requests.
-      mode: []                               # Mode is required by LiteLLM but ignored by AIDR.
-                                             # Guardrail always runs in [pre_call, post_call] mode.
-                                             # Policy actions are defined in AIDR console.
+      mode: [pre_call, post_call]            # Scan prompts and responses. Policy actions are defined in AIDR console.
       api_key: os.environ/CS_AIDR_TOKEN      # CrowdStrike AIDR API token
       api_base: os.environ/CS_AIDR_BASE_URL  # CrowdStrike AIDR base URL
       fail_on_error: true                    # Optional. Set false to fail open on AIDR errors (default: true)
@@ -240,7 +238,7 @@ guardrails:
     litellm_params:
       guardrail: crowdstrike_aidr
       default_on: true
-      mode: []
+      mode: [pre_call, post_call]
       api_key: os.environ/CS_AIDR_TOKEN
       api_base: os.environ/CS_AIDR_BASE_URL
       fail_on_error: false                   # Fail open on AIDR guard API errors

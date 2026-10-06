@@ -8,7 +8,7 @@ Multi-tenancy in LiteLLM means running a single proxy that serves many distinct 
 
 The design solves a few problems that show up whenever more than one group shares an LLM gateway. Cost has to be attributed to the right business unit rather than pooled. Access has to differ per tenant, since teams need different models, budgets, and rate limits. Administration has to be delegated, so a team lead can manage their own team without platform-wide admin rights. And the same architecture has to hold from a handful of users to tens of thousands without a redesign.
 
-:::info Open Source vs. Enterprise
+:::info[Open Source vs. Enterprise]
 Teams and Virtual Keys are available in open source, and Teams alone can serve as your top-level tenant boundary. Organizations and Org Admins add a further layer of hierarchy on top and are an enterprise feature ([get a 30 day trial](https://www.litellm.ai/#trial)).
 :::
 
@@ -18,10 +18,10 @@ Teams and Virtual Keys are available in open source, and Teams alone can serve a
 
 LiteLLM models tenancy as four nested levels: Organizations contain Teams, Teams contain Users, and Users and Teams own Keys. Each level is a boundary for isolation and for spend attribution.
 
-- Organizations are the top-level tenant and can hold multiple teams. [API Reference](https://litellm-api.up.railway.app/#/organization%20management)
-- Teams are collections of users and can hold multiple users. [API Reference](https://litellm-api.up.railway.app/#/team%20management)
-- Users belong to teams (possibly several at once) and can own multiple keys. [API Reference](https://litellm-api.up.railway.app/#/user%20management)
-- Keys authenticate requests and belong to a user, a team, or both. [API Reference](https://litellm-api.up.railway.app/#/key%20management)
+- Organizations are the top-level tenant and can hold multiple teams. [API Reference](https://docs.litellm.ai/api-reference/#/organization%20management)
+- Teams are collections of users and can hold multiple users. [API Reference](https://docs.litellm.ai/api-reference/#/team%20management)
+- Users belong to teams (possibly several at once) and can own multiple keys. [API Reference](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
+- Keys authenticate requests and belong to a user, a team, or both. [API Reference](https://docs.litellm.ai/api-reference/#/key%20management)
 
 ### Organizations
 

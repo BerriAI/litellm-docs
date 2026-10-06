@@ -43,7 +43,7 @@ fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}]
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import Router 
 router = Router(
   model_list=[
@@ -75,7 +75,7 @@ router = Router(
 <TabItem value="proxy" label="PROXY">
 
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
@@ -107,7 +107,7 @@ litellm --config /path/to/config.yaml
 
 ### 3. Test Fallbacks
 
-:::warning Deprecated for Proxy requests
+:::warning[Deprecated for Proxy requests]
 Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, and `mock_testing_content_policy_fallbacks` are stripped from incoming Proxy requests and have no effect. These flags remain supported only for direct `litellm.Router` calls in tests.
 :::
 
@@ -225,7 +225,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "zephyr-beta"",
+    "model": "zephyr-beta",
     "messages": [
         {
         "role": "user",
@@ -355,7 +355,7 @@ print(response)
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -601,7 +601,7 @@ If all models in a group are in cooldown (e.g. rate limited), LiteLLM will fallb
 This skips any cooldown check for the fallback model.
 
 1. Specify the model ID in `model_info`
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_large}}
     litellm_params:
@@ -633,7 +633,7 @@ litellm_settings:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -735,7 +735,7 @@ Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -765,7 +765,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -794,7 +794,7 @@ Fallback to larger models if current model is too small.
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -832,7 +832,7 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -861,7 +861,7 @@ print(response)
 
 Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit content policy violation errors. 
 
-```yaml
+```yaml keep-model-ids
 model_list:
     - model_name: gpt-3.5-turbo-small
       litellm_params:
@@ -886,7 +886,7 @@ litellm_settings:
 You can also set default_fallbacks, in case a specific model group is misconfigured / bad.
 
 
-```yaml
+```yaml keep-model-ids
 model_list:
     - model_name: gpt-3.5-turbo-small
       litellm_params:
@@ -918,7 +918,7 @@ Set 'region_name' of deployment.
 
 **1. Set Config**
 
-```yaml
+```yaml keep-model-ids
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -968,7 +968,7 @@ response = client.chat.completions.with_raw_response.create(
 
 print(response)
 
-print(f"response.headers.get('x-litellm-model-api-base')")
+print(response.headers.get('x-litellm-model-api-base'))
 ```
 
 ### Setting Fallbacks for Wildcard Models
@@ -1002,7 +1002,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -1020,13 +1020,40 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
+#### Provider-prefixed fallback keys for bare model names
+
+A request for a bare model name such as `{{anthropic}}`, the form Claude Code sends, is served by the `anthropic/*` deployment, and the fallback lookup matches it against a key written the way that wildcard is, `anthropic/{{anthropic}}`. LiteLLM infers the provider the same way routing does and only tries this when some fallback key ends in `/<model name>`, so an alias that resolves to no provider still falls through to `*`. Precedence is the exact key first, then the sibling key (the `<provider>/<model>` spelling of a bare name, or the bare spelling of a prefixed name), then `*`, and the same lookup serves `fallbacks`, `context_window_fallbacks`, and `content_policy_fallbacks`. A matched chain is terminal: once the `anthropic/{{anthropic}}` chain is chosen, `*` is not tried after its targets fail, so list the `*` targets at the end of that chain when they should run too. Added in [PR #43062](https://github.com/BerriAI/litellm/pull/43062), coming to the next release candidate
+
+```yaml
+model_list:
+  - model_name: "anthropic/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: "openai/{{openai_large}}"
+    litellm_params:
+      model: "openai/{{openai_large}}"
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: "{{openai_small}}"
+    litellm_params:
+      model: "openai/{{openai_small}}"
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  fallbacks:
+    - {"anthropic/{{anthropic}}": ["openai/{{openai_large}}", "{{openai_small}}"]}
+    - {"*": ["{{openai_small}}"]}
+```
+
+A request for `{{anthropic}}` that fails on `anthropic/*` is retried on `openai/{{openai_large}}` and then on `{{openai_small}}`, while a request for any other bare name without a key of its own goes straight to `*`
+
 ### Enforce Key Model Access on Fallbacks
 
 By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `{{anthropic}}` whenever `gpt-5.6` fails and `{{anthropic}}` is its fallback.
 
 Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-5.6
     litellm_params:
@@ -1044,13 +1071,54 @@ router_settings:
     - gpt-5.6: ["{{anthropic}}"]
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   enforce_fallback_model_access: true
 ```
 
 A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
+
+### Enforce Budget on Fallbacks
+
+Budget is checked once, when the request is authenticated, against the model the caller asked for. The fallback target is picked afterwards, so on its own that check cannot see the model that actually bills. This matters most when the primary model is priced at zero: a zero-cost model is exempt from budget checks entirely, so without a second check a request for it is admitted, falls back to the paid model, and bills in full with no cap applied.
+
+The proxy re-checks the calling key's and user's budget against every fallback target before it is tried, so this needs no configuration. Over-budget targets are skipped. When no affordable target remains, the caller gets the primary model's own error. The primary attempt itself is never blocked, so a zero-cost model keeps working at the cap, and a zero-cost fallback target is always allowed. The check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+
+```yaml keep-model-ids
+model_list:
+  - model_name: free-model
+    litellm_params:
+      model: ollama/llama2
+      api_base: http://localhost:11434
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+    model_info:
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks:
+    - free-model: ["{{anthropic}}"]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+A user whose spend has passed their `max_budget` can still call `free-model` and pay nothing. Once `free-model` fails, that user gets the `free-model` error instead of a billed `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A user still under budget keeps falling back to `{{anthropic}}` as before.
+
+To turn this off and let fallbacks run whatever the caller's budget, set `enforce_fallback_budget: false`:
+
+```yaml
+general_settings:
+  enforce_fallback_budget: false
+```
+
+A team key does not inherit the key owner's personal `max_budget` unless `general_settings.apply_user_budget_to_team_keys` is set, matching how personal budgets are enforced elsewhere. Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the spend lookup itself fails, the fallback is skipped rather than allowed.
 
 ### Disable Fallbacks (Per Request/Key)
 
@@ -1059,12 +1127,12 @@ Requests that carry no virtual key, such as the proxy's own health checks, are n
 
 <TabItem value="request" label="Per Request">
 
-You can disable fallbacks per key by setting `disable_fallbacks: true` in your request body.
+You can disable fallbacks per request by setting `disable_fallbacks: true` in your request body.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "messages": [
         {
@@ -1073,7 +1141,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         }
     ],
     "model": "{{openai_small}}",
-    "disable_fallbacks": true # 👈 DISABLE FALLBACKS
+    "disable_fallbacks": true
 }'
 ```
 
@@ -1085,7 +1153,7 @@ You can disable fallbacks per key by setting `disable_fallbacks: true` in your k
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -1096,3 +1164,5 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 </TabItem>
 </Tabs>
+
+Both forms cover every fallback the proxy would otherwise make for that request, the mid-stream one included: when the chosen deployment's stream fails before its first chunk on `/chat/completions`, `/v1/messages`, or `/v1/responses`, the request returns that deployment's own error instead of a fallback deployment's response

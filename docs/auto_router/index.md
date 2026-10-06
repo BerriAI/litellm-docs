@@ -1,5 +1,5 @@
 ---
-title: Auto Router
+title: Auto Router [Add-on]
 sidebar_label: Overview
 description: Route every request to the cheapest model that can answer it well. Benchmarks, setup, recommended configurations, prompt caching, and how to evaluate the router on your own traffic.
 ---
@@ -11,7 +11,7 @@ import AutoRouterDiagram from '@site/src/components/AutoRouterDiagram';
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -21,16 +21,18 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 <AutoRouterDiagram />
 
+- **One-click setup.** Configure automatically checks the models your proxy already serves and fills all four tiers for you; no template to pick.
 - **One model name in your clients.** The gateway classifies each request and picks the model.
 - **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
-- **Three classifiers.** Sub-millisecond heuristic scorer, a small LLM, or keyword rules.
+- **Classifier choices.** Heuristics, an LLM, JEV through TypeSafe System One Choice, keyword rules, or a custom plugin
 - **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
-- **Agent-safe.** Prompt caching, context-window escalation, modality routing, and optional session pinning.
+- **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
 
 ## Results
 
 | Result | Measured on | Read more |
 | --- | --- | --- |
+| JEV: 5.43x as fast as Haiku by median classification latency and 96.12% lower registry-priced classifier cost | 80 authored synthetic cases, three paired repeats, 95.00% vs 73.75% match with authored expected tiers under one fixed rubric | [JEV comparison](/blog/jev-auto-router-benchmark) |
 | Claude Opus-5 solve rate at 27% lower cost | 21-task subset of Terminal-Bench 2.0, 16/21 solved by both | [Terminal-Bench](/blog/auto-router-terminal-bench-benchmark) |
 | Heuristic v2: 27% more tasks solved at 45% lower cost per task than v1 | Same 21-task subset, no LLM classifier call | [Heuristic v2](/blog/heuristic-v2) |
 | 74.5% cheaper at 87.3% of frontier quality | RouterArena, 8,399 graded queries | [Cost and quality](/blog/auto-router-cost-quality-benchmark) |
@@ -40,7 +42,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 
 ## Quick start
 
-- **Dashboard:** Models + Endpoints, Add Model, Auto Router tab, pick a template, Test Routing, save.
+- **Dashboard:** Models + Endpoints, Add Model, Auto Router tab, enter a name, then click **Configure automatically** or pick a template. Review the tiers, Test Routing, and save.
 - **Agent:** tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`.
 - **config.yaml:** one router entry whose tiers name other models in the same file.
 
@@ -80,13 +82,20 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
+Use the **OSS Classifier** with hosted Jev or self-hosted Nimble and Laya. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
+
 <NavigationCards
 columns={3}
 items={[
   {
-    title: "Setup",
-    description: "Dashboard presets, agent skill, config.yaml, the local CLI, and Claude Code.",
+    title: "Admin Setup",
+    description: "Create an Auto Router with dashboard presets, an agent skill, config.yaml, or the CLI.",
     to: "/docs/auto_router/setup",
+  },
+  {
+    title: "User Setup",
+    description: "Connect Claude Code or Codex with lite configure and see live session savings in Claude Code.",
+    to: "/docs/auto_router/user_setup",
   },
   {
     title: "Recommended Configurations",
@@ -123,6 +132,8 @@ items={[
 
 ## Release posts
 
+- [Harness-Aware Routing](/blog/auto-router-harness-aware-classification): Claude Code and Codex context handling, encrypted delegated tasks, and classifier logs
+- [Mid-Task Stall Escalation](/blog/auto-router-stall-escalation): bumps a request one tier when it's stuck in a retry loop
 - [Auto Router v2](/blog/autorouter-v2): one router for complexity, semantic, and adaptive routing
 - [1-click presets and Test Routing](/blog/auto-router-setup-and-testing)
 - [Savings tab and per-request classifier cost](/blog/auto-router-spend-visibility)

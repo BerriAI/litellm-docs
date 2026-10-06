@@ -103,7 +103,7 @@ model_list:
       vertex_location: global
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
@@ -116,7 +116,7 @@ litellm --config config.yaml
 
 ```bash
 curl -sS -X POST http://localhost:4000/v1/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2",

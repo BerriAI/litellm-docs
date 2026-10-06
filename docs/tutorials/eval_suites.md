@@ -103,13 +103,13 @@ $ litellm --model petals/meta-llama/Llama-2-70b-chat-hf
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
+<TabItem value="gemini" label="Gemini (Google AI Studio)">
 
 ```shell
-$ export PALM_API_KEY=my-palm-key
+$ export GEMINI_API_KEY=my-gemini-key
 ```
 ```shell
-$ litellm --model palm/chat-bison
+$ litellm --model gemini/gemini-2.5-flash
 ```
 
 </TabItem>
@@ -184,7 +184,7 @@ eval_data = pd.DataFrame(
 with mlflow.start_run() as run:
     system_prompt = "Answer the following question in two sentences"
     logged_model_info = mlflow.openai.log_model(
-        model="gpt-3.5",
+        model="{{openai_small}}",
         task=openai.ChatCompletion,
         artifact_path="model",
         messages=[

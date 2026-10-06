@@ -1,0 +1,86 @@
+{
+  "integrations": [
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/deepagents",
+      "label": "DeepAgents"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/langgraph",
+      "label": "LangGraph"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/langchain",
+      "label": "LangChain"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/openai-agents",
+      "label": "OpenAI Agents SDK"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/claude-agent-sdk",
+      "label": "Claude Agent SDK"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/crewai",
+      "label": "CrewAI"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/pydantic-ai",
+      "label": "Pydantic AI"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/llamaindex",
+      "label": "LlamaIndex"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/google-adk",
+      "label": "Google ADK"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/strands",
+      "label": "Strands Agents"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/vercel-ai-sdk-js",
+      "label": "Vercel AI SDK (TypeScript)"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/vercel-ai-sdk-py",
+      "label": "Vercel AI SDK (Python)"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/mastra",
+      "label": "Mastra"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/integrations/opentelemetry",
+      "label": "OpenTelemetry"
+    }
+  ],
+  "coding-agents": [
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/coding-agents/claude-code",
+      "label": "Claude Code"
+    },
+    {
+      "type": "doc",
+      "id": "proxy/lens/imported/coding-agents/codex",
+      "label": "Codex"
+    }
+  ]
+}

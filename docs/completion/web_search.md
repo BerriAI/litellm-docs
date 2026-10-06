@@ -24,7 +24,7 @@ Each provider uses their own search backend:
 | **Anthropic** (`claude-3-5-sonnet`) | Anthropic's web search | Real-time web data |
 | **Perplexity** | Perplexity's search engine | AI-powered search and reasoning |
 
-:::warning Important: Only Search Models Support `web_search_options`
+:::warning[Important: Only Search Models Support `web_search_options`]
 For OpenAI, only dedicated search models support the `web_search_options` parameter:
 - `gpt-4o-search-preview`
 - `gpt-4o-mini-search-preview`
@@ -33,7 +33,7 @@ For OpenAI, only dedicated search models support the `web_search_options` parame
 **Regular models like `{{openai_large}}` and `{{openai_small}}` do not support `web_search_options`**
 :::
 
-:::tip The `web_search_options` parameter is optional
+:::tip[The `web_search_options` parameter is optional]
 Search models (like `gpt-4o-search-preview`) **automatically search the web** even without the `web_search_options` parameter.
 
 Use `web_search_options` when you need to:
@@ -54,7 +54,7 @@ OpenAI offers two distinct ways to use web search depending on the endpoint and 
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
 | **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
 
-:::tip Search models search automatically
+:::tip[Search models search automatically]
 Search models like `gpt-5-search-api` **automatically search the web** even without the `web_search_options` parameter. Use `web_search_options` to set `search_context_size` (`"low"`, `"medium"`, `"high"`) or specify `user_location` for localized results.
 :::
 
@@ -139,7 +139,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -186,10 +186,12 @@ response = completion(
 ```
 
 **xAI (using web_search_options)**
+
+xAI no longer runs web search on its own `/chat/completions`, so when `web_search_options` is set LiteLLM sends the request to xAI's Responses API with a `web_search` tool and converts the result back to a chat completion. xAI does not support `search_context_size`, so it is dropped
+
 ```python showLineNumbers
 from litellm import completion
 
-# Customize search context size for xAI
 response = completion(
     model="xai/grok-3",
     messages=[
@@ -198,9 +200,7 @@ response = completion(
             "content": "What was a positive news story from today?",
         }
     ],
-    web_search_options={
-        "search_context_size": "high"  # Options: "low", "medium" (default), "high"
-    }
+    web_search_options={}  # search_context_size is ignored for xAI
 )
 ```
 
@@ -269,7 +269,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -348,7 +348,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -391,7 +391,7 @@ from openai import OpenAI
 
 # Point to your proxy server
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -572,7 +572,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -632,9 +632,9 @@ Web search costs are defined in `model_prices_and_context_window.json` using two
 - **`search_context_cost_per_query`**: the cost per billable unit (per search context size tier).
 - **`web_search_billing_unit`** *(on Gemini models)*: `"per_query"` (each search query is billed individually) or `"per_prompt"` (default; flat fee per API call that uses search).
 
-```json
+```json keep-model-ids
 {
-    "gemini/gemini-3-flash-preview": {
+    "gemini/{{gemini_flash}}": {
         "web_search_billing_unit": "per_query",
         "search_context_cost_per_query": {
             "search_context_size_low": 0.014,
@@ -678,7 +678,7 @@ The number of web search requests is stored in `usage.prompt_tokens_details.web_
 - **Gemini**: Extracted from `groundingMetadata.webSearchQueries` in the response. For Gemini 2.x, clamped to 1 (per-prompt billing).
 - **OpenAI**: Reported directly in the usage metadata.
 - **Anthropic**: Reported via `server_tool_use.web_search_requests`.
-- **xAI**: Mapped from `num_sources_used` in the response.
+- **xAI**: Reported in `usage.server_side_tool_usage_details.web_search_calls` rather than `web_search_requests`. `num_sources_used` is not read. When xAI returns `usage.cost`, LiteLLM uses it as the response cost, which already includes the search charge
 
 ```python
 response = litellm.completion(

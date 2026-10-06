@@ -127,7 +127,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.AnthropicConfig(max_tokens_to_sample=200)
+litellm.AnthropicConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -158,20 +158,9 @@ response_1 = litellm.completion(
         )
 
 response_1_text = response_1.choices[0].message.content
-
-## SET MAX TOKENS - via config
-litellm.HuggingfaceConfig(max_new_tokens=200)
-response_2 = litellm.completion(
-            model="huggingface/mistralai/Mistral-7B-Instruct-v0.1",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-            api_base="https://your-huggingface-api-endpoint"
-        )
-
-response_2_text = response_2.choices[0].message.content
-
-## TEST OUTPUT
-assert len(response_2_text) > len(response_1_text)
 ```
+
+The Huggingface route does not read provider config defaults, so `litellm.HuggingFaceChatConfig(max_tokens=...)` has no effect on the request. Pass `max_tokens` on each `completion()` call instead
 
 </TabItem>
 
@@ -194,7 +183,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.TogetherAIConfig(max_tokens_to_sample=200)
+litellm.TogetherAIConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="together_ai/togethercomputer/llama-2-70b-chat",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -215,7 +204,7 @@ import litellm, os
 
 ## SET MAX TOKENS - via completion()
 response_1 = litellm.completion(
-            model="ollama/llama2",
+            model="ollama_chat/llama2",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -223,9 +212,9 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.OllamConfig(num_predict=200)
+litellm.OllamaChatConfig(num_predict=200)
 response_2 = litellm.completion(
-            model="ollama/llama2",
+            model="ollama_chat/llama2",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -301,37 +290,6 @@ assert len(response_2_text) > len(response_1_text)
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
-
-```python
-import litellm, os 
-
-# set env variables
-os.environ["PALM_API_KEY"] = "your-palm-key"  
-
-## SET MAX TOKENS - via completion()
-response_1 = litellm.completion(
-            model="palm/chat-bison",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-            max_tokens=10
-        )
-
-response_1_text = response_1.choices[0].message.content
-
-## SET MAX TOKENS - via config
-litellm.PalmConfig(maxOutputTokens=10)
-response_2 = litellm.completion(
-            model="palm/chat-bison",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-        )
-
-response_2_text = response_2.choices[0].message.content
-
-## TEST OUTPUT
-assert len(response_2_text) > len(response_1_text)
-```
-</TabItem>
-
 <TabItem value="ai21" label="AI21">
 
 ```python
@@ -382,7 +340,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.CohereConfig(max_tokens=200)
+litellm.CohereChatConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="command-nightly",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -422,7 +380,7 @@ model_list:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "llama-3-8b-instruct",
   "messages": [

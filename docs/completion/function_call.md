@@ -84,7 +84,7 @@ def test_parallel_function_call():
             }
         ]
         response = litellm.completion(
-            model="gpt-3.5-turbo-1106",
+            model="{{openai_small}}",
             messages=messages,
             tools=tools,
             tool_choice="auto",  # auto is default, but we'll be explicit
@@ -122,7 +122,7 @@ def test_parallel_function_call():
                     }
                 )  # extend conversation with function response
             second_response = litellm.completion(
-                model="gpt-3.5-turbo-1106",
+                model="{{openai_small}}",
                 messages=messages,
             )  # get a new response from the model where it can see the function response
             print("\nSecond LLM response:\n", second_response)
@@ -178,7 +178,7 @@ tools = [
 ]
 
 response = litellm.completion(
-    model="gpt-3.5-turbo-1106",
+    model="{{openai_small}}",
     messages=messages,
     tools=tools,
     tool_choice="auto",  # auto is default, but we'll be explicit
@@ -206,7 +206,7 @@ ModelResponse(
         ]))
     ], 
     created=1700319953, 
-    model='gpt-3.5-turbo-1106', 
+    model='{{openai_small}}', 
     object='chat.completion', 
     system_fingerprint='fp_eeff13170a',
     usage={'completion_tokens': 77, 'prompt_tokens': 88, 'total_tokens': 165}, 
@@ -255,7 +255,7 @@ if tool_calls:
 Once the functions are executed, send the model the information for each function call and its response. This allows the model to generate a new response considering the effects of the function calls.
 ```python
 second_response = litellm.completion(
-    model="gpt-3.5-turbo-1106",
+    model="{{openai_small}}",
     messages=messages,
 )
 print("Second Response\n", second_response)
@@ -270,7 +270,7 @@ ModelResponse(
     message=Message(content="The current weather in San Francisco is 72°F, in Tokyo it's 10°C, and in Paris it's 22°C.", role='assistant'))
   ], 
   created=1700319955, 
-  model='gpt-3.5-turbo-1106', 
+  model='{{openai_small}}', 
   object='chat.completion', 
   system_fingerprint='fp_eeff13170a', 
   usage={'completion_tokens': 28, 'prompt_tokens': 169, 'total_tokens': 197}, 
@@ -509,7 +509,7 @@ print(response)
 For Models/providers without function calling support, LiteLLM allows you to add the function to the prompt set: `litellm.add_function_to_prompt = True`
 
 #### Usage
-```python
+```python keep-model-ids
 import os, litellm
 from litellm import completion
 

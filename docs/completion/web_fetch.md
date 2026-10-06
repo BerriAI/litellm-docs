@@ -87,7 +87,7 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
     base_url="http://0.0.0.0:4000"
 )
 

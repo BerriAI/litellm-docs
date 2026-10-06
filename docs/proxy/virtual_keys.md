@@ -48,7 +48,7 @@ model_list:
         model: ollama/llama2
 
 general_settings: 
-  master_key: sk-1234 
+  master_key: os.environ/LITELLM_MASTER_KEY 
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # 👈 KEY CHANGE
 ```
 
@@ -83,9 +83,9 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 ## Spend Tracking 
 
 Get spend per:
-- key - via `/key/info` [Swagger](https://litellm-api.up.railway.app/#/key%20management/info_key_fn_key_info_get)
-- user - via `/user/info` [Swagger](https://litellm-api.up.railway.app/#/user%20management/user_info_user_info_get)
-- team - via `/team/info` [Swagger](https://litellm-api.up.railway.app/#/team%20management/team_info_team_info_get)  
+- key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
+- user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
+- team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
 - ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
@@ -288,7 +288,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 **Step 3: Test the key**
 
 ```bash
-curl -X POST "https://0.0.0.0:4000/key/generate" \
+curl -X POST "http://0.0.0.0:4000/chat/completions" \
 -H "Authorization: Bearer <user-key>" \
 -H "Content-Type: application/json" \
 -d '{
@@ -320,7 +320,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 general_settings: 
-  master_key: sk-1234 
+  master_key: os.environ/LITELLM_MASTER_KEY 
   litellm_key_header_name: "X-Litellm-Key" # 👈 Key Change
 
 ```
@@ -335,7 +335,7 @@ In this request, litellm will use the Virtual key in the `X-Litellm-Key` header
 ```shell
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "X-Litellm-Key: Bearer sk-1234" \
+  -H "X-Litellm-Key: Bearer $LITELLM_API_KEY" \
   -H "Authorization: Bearer bad-key" \
   -d '{
     "model": "fake-openai-endpoint",
@@ -362,7 +362,7 @@ client = openai.OpenAI(
     base_url="https://api-gateway-url.com/llmservc/api/litellmp",
     default_headers={
         "Authorization": f"Bearer {API_GATEWAY_TOKEN}", # (optional) For your API Gateway
-        "X-Litellm-Key": f"Bearer sk-1234"              # For LiteLLM Proxy
+        "X-Litellm-Key": f"Bearer sk-<your-litellm-api-key>"              # For LiteLLM Proxy
     }
 )
 ```
@@ -538,13 +538,13 @@ general_settings:
 
 :::warning
 
-`custom_key_generate` only runs on `/key/generate`. Key edits (`/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and editing a key in the Admin UI, which calls `/key/update`) skip it, so a user can create a compliant key and then edit it out of compliance, e.g. remove its expiration date. Set [`custom_key_update`](#custom-keyupdate) as well if your policy should also hold on edits.
+`custom_key_generate` only runs on `/key/generate`. Key edits (`/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and editing a key in the Admin UI, which calls `/key/update`) skip it, so a user can create a compliant key and then edit it out of compliance, e.g. remove its expiration date. Set [`custom_key_update`](#custom-keyupdate) as well if your policy should also hold on edits, or use [`custom_key_policy`](#custom-key-policy-one-hook-for-every-key-operation), the recommended single hook that runs on every key operation, regenerate included.
 
 :::
 
 ### Custom /key/update
 
-If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, and `/team/key/bulk_update`. The Admin UI edit key flow calls `/key/update`, so this also covers edits made from the UI.
+If you enforce a policy with `custom_key_generate`, set `custom_key_update` to keep enforcing it when keys are edited. It runs on `/key/update`, `/key/bulk_update`, and `/team/key/bulk_update`. The Admin UI edit key flow calls `/key/update`, so this also covers edits made from the UI. For one hook that covers generate, update, and regenerate against the merged key state, see [`custom_key_policy`](#custom-key-policy-one-hook-for-every-key-operation).
 
 #### 1. Write a custom `custom_update_key_fn`
 
@@ -584,6 +584,76 @@ general_settings:
   custom_key_update: custom_auth.custom_update_key_fn
 ```
 
+### Custom key policy (one hook for every key operation)
+
+`custom_key_generate` and `custom_key_update` each see only the raw request of their own endpoint, so a rule like "every key expires within seven days" has to be written twice, and neither hook sees the key it is changing or the absolute expiry a relative `duration` turns into. `custom_key_policy` is one hook that runs on every key operation and receives the operation plus the effective key state: the existing key merged with the requested changes, with a relative `duration` already turned into an absolute `expires`. Write the rule once and it holds whichever endpoint or Admin UI action changes the key.
+
+#### 1. Write a custom `custom_key_policy_fn`
+
+The input is a single parameter, `policy_request`. `policy_request.operation` is one of `"generate"`, `"update"`, or `"regenerate"`. `policy_request.existing_key` is the key row as stored today, `None` on generate. `policy_request.effective_key` is the row as it will be written after the operation: existing values overlaid with the requested changes, `duration` turned into `expires`, `budget_duration` into `budget_reset_at`, `organization_id` into `org_id`, and metadata-style request fields such as `tags` and `guardrails` folded into `metadata`. `policy_request.request` is the request body as received, the same object the legacy hooks get, for a rule that wants the relative duration string.
+
+The output contract is the same as `custom_generate_key_fn`: return `{"decision": True}` to allow the operation, or `{"decision": False, "message": "..."}` to deny it. Denied operations fail with a `403` carrying the message.
+
+This policy caps every key at seven days from now. `effective_key.expires` is an absolute UTC datetime, or `None` for a key that never expires, so the same check holds for a fresh key, an edit that extends `duration`, and a regenerate.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+MAX_KEY_LIFETIME = timedelta(days=7)
+
+
+async def custom_key_policy_fn(policy_request) -> dict:
+    expires = policy_request.effective_key.expires
+    if expires is None or expires > datetime.now(timezone.utc) + MAX_KEY_LIFETIME:
+        return {
+            "decision": False,
+            "message": f"This violates LiteLLM Proxy Rules. Keys must expire within {MAX_KEY_LIFETIME.days} days.",
+        }
+    return {"decision": True}
+```
+
+#### 2. Pass the filepath (relative to the config.yaml)
+
+```yaml
+general_settings:
+  custom_key_policy: custom_auth.custom_key_policy_fn
+```
+
+The hook runs on `/key/generate`, `/key/service-account/generate`, `/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, and `/key/{key}/regenerate`, which covers the Admin UI create, edit, and regenerate key flows. It runs after the request is validated and, on generate, after `default_key_generate_params` and `upperbound_key_generate_params` are applied, right before the key is written, so `effective_key` is what the database would hold if the policy allows the operation.
+
+`custom_key_generate` and `custom_key_update` keep working unchanged. When they are configured alongside `custom_key_policy`, they run first on the raw request and each can deny on its own; the policy then runs on the effective key state. All three can be set at once:
+
+```yaml
+general_settings:
+  custom_key_generate: custom_auth.custom_generate_key_fn
+  custom_key_update: custom_auth.custom_update_key_fn
+  custom_key_policy: custom_auth.custom_key_policy_fn
+```
+
+### Enforce a key_alias naming pattern
+
+Set `litellm_settings.key_alias_pattern` to a regex and every `key_alias` sent to `/key/generate`, `/key/service-account/generate`, `/key/update`, and `/key/{key}/regenerate` has to match it, which covers the Admin UI create, edit, and regenerate key flows. The whole alias has to match (Python `re.fullmatch`), so `team-[a-z]+` accepts `team-search` and rejects `team-search-2`. Aliases are capped at 255 characters before the pattern runs, so a pattern that backtracks badly never sees an unbounded alias
+
+```yaml
+litellm_settings:
+  key_alias_pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+```
+
+A request whose alias does not match fails with a `400` that names the pattern:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"key_alias": "Prod Key"}'
+```
+
+```json
+{"error": {"message": "Invalid key_alias format. Must be at most 255 characters and match the configured key_alias_pattern: ^[a-z0-9]+(-[a-z0-9]+)*$", "type": "bad_request_error", "param": "key_alias", "code": "400"}}
+```
+
+`key_alias_pattern` replaces the built-in rule that `enable_key_alias_format_validation` turns on, so set one or the other. An update or regenerate that leaves `key_alias` unchanged is not checked, so keys named before the pattern was configured can still be edited, and the pattern applies the moment the alias changes. Path traversal and control characters in an alias are rejected whatever the pattern allows. A pattern that does not compile fails proxy startup with `Invalid regex set for litellm_settings.key_alias_pattern`
+
 ### Upperbound /key/generate params
 Use this, if you need to set default upperbounds for `max_budget`, `budget_duration` or any `key/generate` param per key. 
 
@@ -602,7 +672,7 @@ litellm_settings:
 ** Expected Behavior **
 
 - Send a `/key/generate` request with `max_budget=200`
-- Key will be created with `max_budget=100` since 100 is the upper bound
+- The request is rejected with HTTP 400: `max_budget is over max limit set in config - user_value=200; max_value=100`. Values above the upper bound are not clamped. The same applies to `max_parallel_requests`, `tpm_limit`, `rpm_limit`, and to `duration` / `budget_duration` longer than the configured bound
 - Omit `budget_duration`, or send it as `null`: the key is created with `budget_duration="10d"`. Upperbounds also act as defaults and cannot be opted out of
 
 ### Default /key/generate params
@@ -629,9 +699,9 @@ Rotate an existing API Key, while optionally updating its parameters.
 
 ```bash
 
-curl 'http://localhost:4000/key/sk-1234/regenerate' \
+curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
   -X POST \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "max_budget": 100,
@@ -653,7 +723,7 @@ curl 'http://localhost:4000/key/sk-1234/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -690,10 +760,12 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **LiteLLM UI**
 
-On the LiteLLM UI, Navigate to the Keys page and click on `Generate Key` > `Key Lifecycle` > `Enable Auto Rotation`
+On the LiteLLM UI, Navigate to the Keys page and click on `Create New Key` > `Optional Settings` > `Key Lifecycle` > `Auto-Rotation Settings` > `Enable Auto-Rotation`
 <Image 
   img={require('../../img/key_r.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_r_dark.png')}
+  alt="Auto-Rotation Settings in the Key Lifecycle section of the key form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 **Valid rotation_interval formats:**
@@ -724,7 +796,9 @@ On the LiteLLM UI, Navigate to the Keys page. Select the key you want to update 
 
 <Image 
   img={require('../../img/key_u.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_u_dark.png')}
+  alt="Auto-Rotation Settings in the key edit form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 #### Environment variables
@@ -748,16 +822,16 @@ litellm --config config.yaml
 
 ### Temporary Budget Increase
 
-Use the `/key/update` endpoint to increase the budget of an existing key. 
+Use the `/key/update` endpoint to increase the budget of an existing key. `temp_budget_expiry` is a datetime, not a duration string, so pass an ISO date such as `2026-10-15`. See [Temporary Budget Increase](./temporary_budget_increase.md) for details.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
--d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
+-d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "2026-10-15"}'
 ```
 
-[API Reference](https://litellm-api.up.railway.app/#/key%20management/update_key_fn_key_update_post)
+[API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
 
 ### Restricting Key Generation
@@ -845,17 +919,16 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/key%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/user%20management/)
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://litellm-api.up.railway.app/#/team%20management)
-
+#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 
 

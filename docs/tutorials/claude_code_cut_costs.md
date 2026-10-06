@@ -147,9 +147,9 @@ model_list:
     litellm_params:
       model: {{anthropic}}
 
-  - model_name: o1-preview
+  - model_name: claude-opus
     litellm_params:
-      model: o1-preview
+      model: {{anthropic_large}}
 
   # Complexity router
   - model_name: smart-router
@@ -160,7 +160,7 @@ model_list:
           SIMPLE: {{openai_small}}
           MEDIUM: {{openai_large}}
           COMPLEX: claude-sonnet
-          REASONING: o1-preview
+          REASONING: claude-opus
       complexity_router_default_model: {{openai_large}}
 ```
 

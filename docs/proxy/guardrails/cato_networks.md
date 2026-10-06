@@ -40,6 +40,7 @@ guardrails:
       api_key: os.environ/CATO_API_KEY
       api_base: os.environ/CATO_API_BASE
       ssl_verify: False # Optional, set to False to disable SSL verification or a string path to a custom CA bundle
+      inspect_embeddings: false # Optional, set to true to inspect /embeddings input
 ```
 
 Under the `api_key`, insert the API key you were issued. The key can be found in the guard's page.
@@ -70,7 +71,7 @@ When using LiteLLM with virtual keys, an `Authorization` header with the virtual
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [

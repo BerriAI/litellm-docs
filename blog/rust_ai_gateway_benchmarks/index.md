@@ -7,7 +7,7 @@ authors:
 description: "AIGatewayBench measures the overhead an AI gateway adds on top of the upstream model, isolated against a deterministic mock, across LiteLLM (Rust), LiteLLM (Python v1), Portkey, and Bifrost. The LiteLLM Rust gateway has the lowest overhead and memory footprint of the four."
 keywords: [fastest ai gateway, fastest llm gateway, ai gateway benchmark, llm gateway benchmark, rust ai gateway, ai gateway overhead, ai gateway memory, ai gateway cost, litellm rust, high throughput llm gateway, lightweight ai gateway, coding agent gateway]
 image: ./overhead_comparison.png
-tags: [rust, ai-gateway, performance, benchmarks, engineering]
+tags: [rust, rust-migration, ai-gateway, performance, benchmarks, engineering]
 hide_table_of_contents: true
 ---
 

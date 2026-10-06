@@ -117,7 +117,7 @@ Here's how to use `thinking` blocks by Anthropic with tool calling.
 
 ### Important: OpenAI-Compatible API Limitations
 
-:::warning Compatibility Notice
+:::warning[Compatibility Notice]
 
 Anthropic extended thinking with tool calling is **not fully compatible** with OpenAI-compatible API clients. This is due to fundamental architectural differences between how OpenAI and Anthropic handle reasoning in multi-turn conversations.
 
@@ -138,7 +138,7 @@ When using Anthropic models with `thinking` enabled and tool calling, you **must
 3. When these clients reconstruct the assistant message for the next turn, the thinking blocks are lost
 4. Anthropic rejects the request because the assistant message doesn't start with a thinking block
 
-:::tip LiteLLM supports thinking_blocks
+:::tip[LiteLLM supports thinking_blocks]
 LiteLLM's `completion()` API **does support** sending `thinking_blocks` in assistant messages. If you're using LiteLLM directly (not through an OpenAI-compatible client), you can preserve and resend `thinking_blocks` and everything will work correctly.
 :::
 
@@ -515,7 +515,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ```python showLineNumbers
 response = litellm.responses(
-  model="vertex_ai/claude-opus-4-8",
+  model="vertex_ai/{{anthropic_large}}",
   input="How many prime numbers are less than 30?",
   reasoning={"effort": "low"},
 )
@@ -529,7 +529,7 @@ curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-opus-4-8",
+    "model": "{{anthropic_large}}",
     "input": "How many prime numbers are less than 30?",
     "reasoning": {"effort": "low"}
   }'
@@ -566,7 +566,7 @@ curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "claude-opus-4-8",
+    "model": "{{anthropic_large}}",
     "input": "How many prime numbers are less than 30?",
     "thinking": {"type": "adaptive"},
     "output_config": {"effort": "high"}
@@ -590,11 +590,11 @@ Use `litellm.supports_reasoning(model="")` -> returns `True` if model supports r
 import litellm 
 
 # Example models that support reasoning
-assert litellm.supports_reasoning(model="anthropic/claude-3-7-sonnet-20250219") == True
+assert litellm.supports_reasoning(model="anthropic/{{anthropic}}") == True
 assert litellm.supports_reasoning(model="deepseek/deepseek-chat") == True 
 
 # Example models that do not support reasoning
-assert litellm.supports_reasoning(model="openai/gpt-4o-mini") == False 
+assert litellm.supports_reasoning(model="openai/gpt-4.1") == False 
 ```
 </TabItem>
 
@@ -634,7 +634,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -666,7 +666,7 @@ Expected Response
 </TabItem>
 </Tabs>
 
-:::tip gpt-5.4: reasoning_effort + function tools
+:::tip[gpt-5.4: reasoning_effort + function tools]
 
 When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 

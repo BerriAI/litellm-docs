@@ -47,6 +47,7 @@ guardrails:
       api_key: os.environ/AIM_API_KEY
       api_base: os.environ/AIM_API_BASE # Optional, use only when using a self-hosted Aim Outpost
       ssl_verify: False # Optional, set to False to disable SSL verification or a string path to a custom CA bundle
+      inspect_embeddings: false # Optional, set to true to inspect /embeddings input
 ```
 
 Under the `api_key`, insert the API key you were issued. The key can be found in the guard's page.

@@ -4,5 +4,7 @@
   "anthropic": "claude-sonnet-5",
   "anthropic_large": "claude-opus-5",
   "gemini_pro": "gemini-3.1-pro-preview",
-  "gemini_flash": "gemini-3.8-flash"
+  "gemini_flash": "gemini-3.8-flash",
+  "python_version": "3.13",
+  "python_min_version": "3.10"
 }

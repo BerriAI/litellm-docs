@@ -46,7 +46,7 @@ Let's call the AssemblyAI [`/v2/transcripts` endpoint](https://www.assemblyai.co
 import assemblyai as aai
 
 aai.settings.base_url = "http://0.0.0.0:4000/assemblyai" # <your-proxy-base-url>/assemblyai
-aai.settings.api_key = "Bearer sk-1234" # Bearer <your-virtual-key>
+aai.settings.api_key = "Bearer sk-<your-litellm-api-key>" # Bearer <your-virtual-key>
 
 # Use a publicly-accessible URL
 audio_file = "https://assembly.ai/wildfires.mp3"
@@ -86,7 +86,7 @@ print(f"\nFull Transcript:\n\n{transcript.text}")
 import assemblyai as aai
 
 aai.settings.base_url = "http://0.0.0.0:4000/assemblyai" # <your-proxy-base-url>/assemblyai
-aai.settings.api_key = "Bearer sk-1234" # Bearer <your-virtual-key>
+aai.settings.api_key = "Bearer sk-<your-litellm-api-key>" # Bearer <your-virtual-key>
 
 audio_file = "https://assemblyaiassets.com/audios/verbatim.mp3"
 
@@ -110,7 +110,7 @@ If you want to send your request to the AssemblyAI EU endpoint, you can do so by
 import assemblyai as aai
 
 aai.settings.base_url = "http://0.0.0.0:4000/eu.assemblyai" # <your-proxy-base-url>/eu.assemblyai
-aai.settings.api_key = "Bearer sk-1234" # Bearer <your-virtual-key>
+aai.settings.api_key = "Bearer sk-<your-litellm-api-key>" # Bearer <your-virtual-key>
 
 # Use a publicly-accessible URL
 audio_file = "https://assembly.ai/wildfires.mp3"
@@ -174,7 +174,7 @@ litellm --config config.yaml
 import requests
 
 headers = {
-    "authorization": "Bearer sk-1234"  # Bearer <your-virtual-key>
+    "authorization": "Bearer sk-<your-litellm-api-key>"  # Bearer <your-virtual-key>
 }
 
 response = requests.post(

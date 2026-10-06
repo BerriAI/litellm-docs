@@ -6,6 +6,8 @@ import TabItem from '@theme/TabItem';
 
 Setup Prompt Injection Detection, PII Masking on LiteLLM Proxy (AI Gateway)
 
+To see where guardrails and the rest of the gateway stand against the OWASP Top 10 for LLM Applications 2026, read the [OWASP LLM Top 10 mapping](../security_owasp_llm_top10).
+
 ## 1. Define guardrails on your LiteLLM config.yaml
 
 Set your guardrails under the `guardrails` section
@@ -81,7 +83,8 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `pre_call` Run **before** LLM call, on **input**
 - `post_call` Run **after** LLM call, on **input & output**
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
-- A list of the above values to run multiple modes, e.g. `mode: [pre_call, post_call]`
+- `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
+- A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
 ### Skip system messages in guardrail evaluation
 
@@ -108,6 +111,7 @@ litellm_settings:
 
 <Image
   img={require('../../../img/skip_system_message_guardrail_ui.png')}
+  dark={require('../../../img/skip_system_message_guardrail_ui_dark.png')}
   alt="Create guardrail: Skip system messages in guardrail dropdown with Use global default, Yes exclude from guardrail scan, and No always include in scan"
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
@@ -276,6 +280,46 @@ curl -i http://localhost:4000/v1/chat/completions \
     "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
   }'
 ```
+
+### Inspect guardrail results in the response **(OSS)**
+
+Set `include_guardrail_response: true` in the request body to get the guardrail execution records back on the response as a top-level `guardrail_information` list. Without it the response body is unchanged, so existing clients are unaffected. The flag is stripped before the request reaches the provider
+
+```shell
+curl -i http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "{{openai_small}}",
+    "messages": [{"role": "user", "content": "Reply OK"}],
+    "guardrails": ["aporia-pre-guard"],
+    "include_guardrail_response": true
+  }'
+```
+
+Expected response (other fields omitted)
+
+```json
+{
+  "id": "chatcmpl-EQjb0XEZzNUUGhbbYLfB2FApCuPJc",
+  "choices": [{"message": {"role": "assistant", "content": "OK"}}],
+  "guardrail_information": [
+    {
+      "guardrail_name": "aporia-pre-guard",
+      "guardrail_provider": "aporia",
+      "guardrail_mode": "pre_call",
+      "guardrail_status": "success",
+      "guardrail_response": [],
+      "start_time": 1790040506.278482,
+      "end_time": 1790040506.278695,
+      "duration": 0.000214,
+      "masked_entity_count": {}
+    }
+  ]
+}
+```
+
+Each entry has the same shape as `guardrail_information` in the [`StandardLoggingPayload`](../logging_spec#standardloggingguardrailinformation). `guardrail_information` is `[]` when no guardrail ran for the request. Only the exact JSON boolean `true` enables it; `"true"` or `1` are treated as off. Streaming responses do not carry the field. Any `keyword`, `snippet`, `match`, or `regex` values inside `guardrail_response` are returned as `"[REDACTED]"` so masked content is never echoed back to the caller
 
 ### Expose to your users **(Enterprise)**
 
@@ -480,7 +524,7 @@ Use this to control what guardrails run per API Key. In this tutorial we only wa
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
             "guardrails": ["aporia-pre-guard", "aporia-post-guard"]
@@ -491,7 +535,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",
@@ -636,7 +680,7 @@ guardrails:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "4198d93c-d375-4c83-8d5a-71e7c5473e50",
@@ -767,4 +811,3 @@ guardrails: Union[
 class DynamicGuardrailParams:
     extra_body: Dict[str, Any]              # Additional parameters for the guardrail
 ```
-

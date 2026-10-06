@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Use [Noma Security](https://noma.security/) to protect your LLM applications with AI content moderation and safety guardrails.
 
-:::warning Deprecated: `guardrail: noma` (Legacy)
+:::warning[Deprecated: `guardrail: noma` (Legacy)]
 `guardrail: noma` is deprecated and users should migrate to `guardrail: noma_v2`.
 The legacy `guardrail: noma` API will no longer be supported after March 31, 2026.
 

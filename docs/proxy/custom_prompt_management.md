@@ -31,6 +31,7 @@ Create a new file called `custom_prompt.py` and add this code. The key method he
 from typing import List, Tuple, Optional
 from litellm.integrations.custom_prompt_management import CustomPromptManagement
 from litellm.types.llms.openai import AllMessageValues
+from litellm.types.prompts.init_prompts import PromptSpec
 from litellm.types.utils import StandardCallbackDynamicParams
 
 class MyCustomPromptManagement(CustomPromptManagement):
@@ -42,6 +43,11 @@ class MyCustomPromptManagement(CustomPromptManagement):
         prompt_id: str,
         prompt_variables: Optional[dict],
         dynamic_callback_params: StandardCallbackDynamicParams,
+        prompt_spec: Optional[PromptSpec] = None,
+        prompt_label: Optional[str] = None,
+        prompt_version: Optional[int] = None,
+        ignore_prompt_manager_model: Optional[bool] = False,
+        ignore_prompt_manager_optional_params: Optional[bool] = False,
     ) -> Tuple[str, List[AllMessageValues], dict]:
         """
         Retrieve and format prompts based on prompt_id.
@@ -120,7 +126,7 @@ When you pass `prompt_id="1234"`, the custom prompt manager will add a system me
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -144,7 +150,7 @@ from langchain.schema import HumanMessage
 
 chat = ChatOpenAI(
     model="{{openai_large}}",
-    openai_api_key="sk-1234",
+    openai_api_key="sk-<your-api-key>",
     openai_api_base="http://0.0.0.0:4000",
     extra_body={
         "prompt_id": "1234"
@@ -163,7 +169,7 @@ print(response.content)
 ```shell
 curl -X POST http://0.0.0.0:4000/v1/chat/completions \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "hi"}],
@@ -183,7 +189,6 @@ import litellm
 from custom_prompt import prompt_management
 
 litellm.callbacks = [prompt_management]
-litellm.use_litellm_proxy = True
 
 response = litellm.completion(
     model="{{openai_large}}",

@@ -27,6 +27,15 @@ Provider Managed (automatic, no marker needed):
 - OpenAI, models before GPT-5.6 (`openai/`)
 - DeepSeek (`deepseek/`)
 - xAI (`xai/`)
+- Gemini 2.5 and newer (`gemini/`, `vertex_ai/`), through Google's implicit caching
+
+:::warning Leave injection points off Gemini unless you want explicit caching
+
+Gemini 2.5 and newer models cache repeated prefixes on their own, with no marker and no extra cost. Adding `cache_control_injection_points` to a Gemini deployment switches it to Google's explicit [context caching](https://ai.google.dev/gemini-api/docs/caching): LiteLLM moves the marked messages out of the request into a separate `cachedContents` object and sends only a reference to it. That prefix is no longer part of the request, so implicit caching stops applying to it, and Google bills storage for every cache object LiteLLM creates. For most Gemini traffic the better setup is no injection points at all. Use them only when you need a guaranteed discount on a large, stable prefix that is reused often enough to cover the storage cost
+
+Injection points were built for Anthropic-style caching, where nothing is cached unless the request carries a `cache_control` marker. Providers that cache automatically (Gemini 2.5+, OpenAI, DeepSeek, xAI) do not need them
+
+:::
 
 ## How it works
 
@@ -111,6 +120,8 @@ LiteLLM will then automatically add a `cache_control` directive to the specified
 }
 ```
 
+Configured points are added beside any `cache_control` the request already carries. A message the client marked itself is left as is, and a point that would take the request past Anthropic's limit of 4 cached blocks is skipped, counting the client's own marks first, tools included
+
 ### OpenAI GPT-5.6 and newer
 
 The same `cache_control_injection_points` work when the deployment resolves to an OpenAI model that supports [explicit prompt cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints), which the cost map marks with `supports_prompt_cache_breakpoint` (GPT-5.6 and newer on `openai/`). LiteLLM looks at the resolved deployment, not at the shape of the incoming request, so one config pattern covers a mixed Anthropic and OpenAI fleet and Anthropic-shaped clients on `/v1/messages` get the OpenAI markers too
@@ -143,8 +154,8 @@ What to know about the OpenAI mapping:
 
 - **Block-level only.** OpenAI accepts the marker on text, image and file blocks. A string system prompt or message is wrapped into a one-block list before the marker is placed. Assistant blocks and tool results cannot carry a breakpoint, so an injection point that lands there is skipped
 - **`/v1/messages` system prompt.** OpenAI does not accept a breakpoint on the top-level `instructions` field, so when the Anthropic `system` carries a checkpoint LiteLLM sends it as a leading `developer` message instead. OpenAI treats both shapes as the same cache prefix, so switching does not cold-start the cache
-- **Stands down like Anthropic.** A request that already carries its own `cache_control` or `prompt_cache_breakpoint` markers keeps them; configured points are not added. Claude Code sets its own `cache_control`, so a Claude Code session on a GPT-5.6 deployment stays on OpenAI's implicit caching
-- **Respects the 4 breakpoint limit**, counting client-supplied markers toward it
+- **Applies beside client markers.** A request that already carries its own `cache_control` or `prompt_cache_breakpoint` markers keeps them and the configured points are added next to them; a target the client already marked is left as is. Claude Code sets its own `cache_control`, which OpenAI never sees, so a Claude Code session on a GPT-5.6 deployment with configured points runs on the explicit checkpoints you configured; set `prompt_cache_options: {mode: implicit}` on that deployment to keep OpenAI's automatic checkpoint beside them
+- **Respects the 4 breakpoint limit**, counting client-supplied markers first, so a configured point that would be the fifth is skipped
 - **Only for requests that go to OpenAI itself.** The mapping fires for a GPT-5.6 or newer OpenAI model (the cost map's `supports_prompt_cache_breakpoint` flag when the entry carries one, otherwise the GPT version in the model name) when the deployment talks to `api.openai.com` (or a regional `*.api.openai.com` host), meaning no `api_base` (or `base_url`) or one on those hosts. A deployment with a custom `api_base`, such as another LiteLLM proxy or gateway in front of OpenAI, keeps today's behavior unless its `litellm_params` also set `prompt_cache_options`, which opts it in. `litellm_proxy/` deployments and Azure OpenAI deployments are not covered yet
 - **`/v1/responses`.** The marker lands on `input_text` blocks of the targeted message, and a string message is wrapped into a one-block list first. OpenAI does not accept a marker on the top-level `instructions` field, so a system prompt sent there stays on implicit caching; send it as a `developer` or `system` message to get the checkpoint. A `prompt_cache_options` the client sends is forwarded as is
 - **Cost reporting is unchanged.** OpenAI's `cached_tokens` and `cache_write_tokens` already come back as `cache_read_input_tokens` and `cache_creation_input_tokens` on `/v1/messages` and as `prompt_tokens_details` on `/chat/completions`

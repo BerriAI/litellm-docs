@@ -29,11 +29,11 @@ Claude Desktop treats LiteLLM the way it treats Anthropic's own API: it discover
 | Credential, static key | a LiteLLM virtual key |
 | Endpoints used | `GET /v1/models`, `POST /v1/messages`, and `POST /mcp` for MCP servers |
 | LiteLLM version | v1.98.0 or later for model discovery, v1.89.0 or later for the `issuers` JWT config |
-| Claude Desktop version | 1.6889.0 or later for single sign-on |
+| Claude Desktop version | 1.6889.0 or later for single sign-on (2.7032.0 or later for the `external-idp` key names), 1.10628.0 or later for the claude.ai import |
 
 ## Option A: Single sign-on with your identity provider
 
-With `inferenceCredentialKind: interactive`, Claude Desktop runs an OpenID Connect sign-in (authorization code with PKCE) in the system browser against your identity provider, keeps the refresh token in OS secure storage, and sends the ID token to LiteLLM as the bearer credential. LiteLLM checks the signature against the provider's signing keys, the issuer, and the audience, then maps the token's claims to a LiteLLM user and, through a groups claim, to LiteLLM teams. Nobody provisions or rotates keys, a user removed from the identity provider loses access when the token expires, MFA and conditional access apply, and the only thing the user sees is a **Sign in to your organization** button. This path needs a database behind LiteLLM, because users and spend are written to it.
+With single sign-on (`inferenceCredentialKind: interactive`, which Claude Desktop 2.7032.0 and later also accept as `external-idp`), Claude Desktop runs an OpenID Connect sign-in (authorization code with PKCE) in the system browser against your identity provider, keeps the refresh token in OS secure storage, and sends the ID token to LiteLLM as the bearer credential. LiteLLM checks the signature against the provider's signing keys, the issuer, and the audience, then maps the token's claims to a LiteLLM user and, through a groups claim, to LiteLLM teams. Nobody provisions or rotates keys, a user removed from the identity provider loses access when the token expires, MFA and conditional access apply, and the only thing the user sees is a **Sign in to your organization** button. This path needs a database behind LiteLLM, because users and spend are written to it.
 
 ### 1. Register Claude Desktop in your identity provider
 
@@ -52,6 +52,15 @@ The issuer is `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` and the si
 In the Okta admin console create an app integration of type **OIDC, Native Application** with the **Authorization Code** and **Refresh Token** grant types. Okta matches the redirect URI exactly, port included, so pick a fixed port such as `53180`, register `http://127.0.0.1:53180/callback`, and set the same port in Claude Desktop below. Assign the users or groups who should get access.
 
 The issuer is `https://YOUR_ORG.okta.com`, the plain org URL rather than the metadata URI ending in `/.well-known/openid-configuration` (a custom authorization server's issuer is `https://YOUR_ORG.okta.com/oauth2/AUTH_SERVER_ID`), and the signing keys are at `https://YOUR_ORG.okta.com/oauth2/v1/keys`. The stable user id claim is `sub`. Add a `groups` claim to the ID token for team mapping.
+
+</TabItem>
+<TabItem value="cognito" label="AWS Cognito">
+
+In the Cognito console open your user pool and create an app client with the **Mobile app** application type. That is the console's public client type (PKCE, no client secret), and it is the one a desktop app needs: the **Traditional web application** type generates a client secret, Cognito then demands that secret on every token request, Claude Desktop never sends one because it is a public client, and a secret cannot be removed after creation, so sign-in with a web-type client always dies at token exchange. Cognito matches the redirect URI exactly, port included, so pick a fixed port such as `53180`, enter `http://127.0.0.1:53180/callback` as the return URL (Cognito allows plain `http` for `127.0.0.1`), and set the same port in Claude Desktop below.
+
+After creation, open the app client's **Login pages** configuration and enable the OpenID Connect scopes `openid`, `profile`, and `email`. The user pool also needs a domain under **Branding > Domain**, because Cognito's authorize and token endpoints live on that domain; the discovery document at the issuer URL points to them automatically.
+
+The issuer is `https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID` and the signing keys are at `https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID/.well-known/jwks.json`. The stable user id claim is `sub`, and group memberships arrive in the `cognito:groups` claim for users in user pool groups.
 
 </TabItem>
 </Tabs>
@@ -123,17 +132,50 @@ model_list:
 ```
 
 </TabItem>
+<TabItem value="cognito" label="AWS Cognito">
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_upsert: true
+    issuers:
+      - issuer: https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID
+        jwks_url: https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID/.well-known/jwks.json
+        audience: YOUR_CLIENT_ID
+        user_id_jwt_field: sub
+        user_email_jwt_field: email
+        team_ids_jwt_field: cognito:groups
+
+model_list:
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: {{anthropic_large}}
+    litellm_params:
+      model: anthropic/{{anthropic_large}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+```
+
+This validates the ID token, the default bearer. If you set `bearerTokenType: access_token` in Claude Desktop instead, replace `audience: YOUR_CLIENT_ID` with `disable_audience_validation: true`, because Cognito access tokens carry a `client_id` claim but no `aud` claim; LiteLLM refuses a config that sets both keys on one entry.
+
+</TabItem>
 </Tabs>
 
-`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. LiteLLM adds the user to the team the first time a token carries that group, so they also show up under the team's members, and a user who belongs to exactly one team keeps resolving to it even when a later token omits the claim. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
+`jwks_url` is optional: without it LiteLLM reads `jwks_uri` from `{issuer}/.well-known/openid-configuration`. Either way LiteLLM fetches the signing keys from the identity provider over the network, so the proxy needs outbound HTTPS to it from wherever it runs; in a locked-down VPC, allow that egress or the first authenticated requests fail waiting for keys. `user_id_upsert: true` creates the LiteLLM user on first request, so spend accrues per person under **Internal Users** and the `oid` or `sub` value lands on every spend log row; `user_allowed_email_domain: yourcompany.com` refuses tokens from any other email domain. `team_ids_jwt_field: groups` turns the token's group memberships into LiteLLM team memberships: create a team whose `team_id` equals the group's id (an Entra group object id, an Okta group name) and that team's `models`, `max_budget`, rate limits, and MCP server permissions apply to everyone in the group. LiteLLM adds the user to the team the first time a token carries that group, so they also show up under the team's members, and a user who belongs to exactly one team keeps resolving to it even when a later token omits the claim. A token whose groups match no team is still accepted as the user, with no team budget and no MCP servers, so drop the line if you do not need teams. A token whose `iss` matches no entry falls back to the `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE`, and `JWT_ISSUER` environment variables, which is the single-provider setup [JWT auth](../proxy/token_auth.md) describes and works here too.
 
-:::warning `public_key_url` and `audience` are not `litellm_jwtauth` keys
+:::warning[`public_key_url` and `audience` are not `litellm_jwtauth` keys]
 Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `audience` directly under it. LiteLLM has no such keys and refuses to start with `ValueError: Invalid arguments provided: ...` naming `public_key_url` and `audience`. Put them in an `issuers` entry as above, or set `JWT_PUBLIC_KEY_URL` and `JWT_AUDIENCE` as environment variables.
 :::
 
 ### 3. Configure Claude Desktop
 
-Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access`, and fill **Redirect port** only for Okta (`53180`). **Apply locally** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
+Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply Changes** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
 
 The exported keys, in a macOS `.mobileconfig` payload:
 
@@ -148,7 +190,11 @@ The exported keys, in a macOS `.mobileconfig` payload:
 <string>{"issuer":"https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0","clientId":"YOUR_CLIENT_ID"}</string>
 ```
 
-For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLIENT_ID","redirectPort":53180}`. `inferenceGatewayOidc` is one key whose value is a JSON string (a `REG_SZ` on Windows, a native object in Linux's `managed-settings.json`); dotted keys such as `inferenceGatewayOidc.clientId` are never read. Leave `bearerTokenType` at its default `id_token`, which is what the `issuers` entry validates; Google Workspace needs `access_token` there, because it issues no fresh ID token on refresh and re-prompts users about hourly otherwise.
+For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLIENT_ID","redirectPort":53180}`; for Cognito it is `{"issuer":"https://cognito-idp.REGION.amazonaws.com/USER_POOL_ID","clientId":"YOUR_CLIENT_ID","redirectPort":53180,"scopes":"openid profile email"}`. `inferenceGatewayOidc` is one key whose value is a JSON string (a `REG_SZ` on Windows, a native object in Linux's `managed-settings.json`); dotted keys such as `inferenceGatewayOidc.clientId` are never read. Leave `bearerTokenType` at its default `id_token`, which is what the `issuers` entry validates; Google Workspace needs `access_token` there, because it issues no fresh ID token on refresh and re-prompts users about hourly otherwise.
+
+The same JSON also takes `redirectHost: "localhost"`, which moves the callback to `http://localhost:PORT/callback` for an identity provider whose registered redirect URI uses `localhost`. On Entra, `inferenceGatewayOidcAuthFlow: broker` signs in through the OS identity broker (Web Account Manager on Windows, Company Portal on macOS) instead of the browser, which satisfies Conditional Access policies that require a managed device; the app registration then also needs the broker redirect URIs `ms-appx-web://Microsoft.AAD.BrokerPlugin/YOUR_CLIENT_ID` and `msauth.com.anthropic.claudefordesktop://auth` under the same platform, and Linux has no broker.
+
+Claude Desktop 2.7032.0 renamed these keys: `inferenceCredentialKind: external-idp` with the JSON in `inferenceIdpOidc`, and `inferenceIdpAuthFlow` in place of `inferenceGatewayOidcAuthFlow`. The keys above keep working with no end date set and newer releases read them as `external-idp`, so keep them until every device in the fleet runs 2.7032.0 or later; the in-app window still labels the choice **Interactive sign-in**. A profile left over from an older setup that sets `inferenceGatewayAuthScheme: sso` has to replace it with `inferenceCredentialKind` before October 7, 2026, after which the app reports that value as invalid and, with no other credential key present, starts the gateway connection with no credential.
 
 ### 4. Verify
 
@@ -169,7 +215,7 @@ The first returns the Anthropic-shaped model list the picker is built from; the 
 
 A [virtual key](../proxy/virtual_keys.md) is the right credential for a proof of concept, a shared workstation, or a gateway that already hands out per-team keys. Everyone on the same managed profile shares that key and its budget, and rotating it means pushing a new profile, which is why fleets end up on single sign-on.
 
-Create the key in the LiteLLM UI under **Virtual Keys > + Create New Key**, scoped to the Claude models with a `max_budget`, and copy it. In Claude Desktop, enable Developer Mode under **Help > Troubleshooting**, open **Developer > Configure Third-Party Inference…**, set **Inference provider** to **Gateway**, enter the **Gateway base URL** and the key as the **Gateway API key**, keep **Credential kind** at **Static API key** and **Gateway auth scheme** at **Bearer** (LiteLLM also accepts `x-api-key`), and apply.
+Create the key in the LiteLLM UI under **Virtual Keys > + Create New Key**, scoped to the Claude models with a `max_budget`, and copy it. In Claude Desktop, enable Developer Mode under **Help > Troubleshooting**, open **Developer > Configure Third-Party Inference…**, set **Inference provider** to **Gateway**, enter the **Gateway base URL** and the key as the **Gateway API key**, keep **Credential kind** at **Static API key** and **Gateway auth scheme** at **Bearer** (LiteLLM also accepts `x-api-key`), and click **Apply Changes**.
 
 <img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/64274593-33e6-4a7b-a7f3-a08f8aea8209/ascreenshot_8a9c909a978544888dafb6e0c7e3f468_text_export.jpeg" alt="Enable Developer Mode under Help > Troubleshooting" style={{ maxWidth: '700px', marginBottom: '20px' }} />
 
@@ -185,7 +231,7 @@ The exported form is `inferenceProvider: gateway`, `inferenceGatewayBaseUrl`, an
 
 ## Models in the picker
 
-Claude Desktop builds the picker from `GET /v1/models` and keeps only ids that contain `claude` or `anthropic`, case-insensitively, so the `model_name` values in your `model_list` are what matter, not the upstream ids behind them: `{{anthropic}}` served from Bedrock or Vertex AI passes, `smart-router` does not. LiteLLM does not return the `anthropic_family_tier` field that would let an opaque alias through the filter, so either put `claude` in the name or list the model in `inferenceModels`, which replaces discovery with exactly the entries you give (the first is the default):
+Claude Desktop builds the picker from `GET /v1/models` and keeps only ids that contain `claude` or `anthropic`, case-insensitively, so the `model_name` values in your `model_list` are what matter, not the upstream ids behind them: `{{anthropic}}` served from Bedrock or Vertex AI passes, `smart-router` does not. LiteLLM does not return the `anthropic_family_tier` field that would let an opaque alias through the filter, so either put `claude` in the name or list the model in `inferenceModels`, which replaces discovery with exactly the entries you give (the first is the default). What LiteLLM does return on each model is `display_name`, which is the `model_name` unless the deployment sets `model_info.display_name`, and `max_input_tokens` from the model's info; the app treats a discovered model whose `max_input_tokens` is 1,000,000 or more as 1M-capable, so `{{anthropic}}` and `{{anthropic_large}}` get their 1M picker entry from discovery alone. A hand-written `inferenceModels` list looks like this:
 
 ```json
 [
@@ -195,7 +241,7 @@ Claude Desktop builds the picker from `GET /v1/models` and keeps only ids that c
 ]
 ```
 
-`supports1m` adds a second, 1M-context picker entry for that model (the string shorthand `"{{anthropic}}[1m]"` means the same); set it only on a `name` that exactly matches the id your proxy returns and only for deployments that accept 1M-token requests. `anthropicFamilyTier` (`sonnet`, `opus`, `haiku`, `fable`, `mythos`) with `isFamilyDefault: true` tells the app which entry a bare tier alias resolves to. Organizations on Claude for Teams or Enterprise also need each gateway model name on their `availableModels` allowlist, or it shows greyed out; [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers the allowlist rules and how to put an auto router behind a name the picker accepts. Non-Claude models behind LiteLLM work the same way once their `model_name` contains `claude`; add `drop_params: true` to those entries so the Anthropic-specific request fields Cowork and Code sessions send are dropped where the provider has no equivalent instead of failing the request.
+`supports1m` adds a second, 1M-context picker entry for that model (the string shorthand `"{{anthropic}}[1m]"` means the same); set it only on a `name` that exactly matches the id your proxy returns and only for deployments that accept 1M-token requests, and add `prefer1m: true` to make the 1M entry the default selection. `anthropicFamilyTier` (`sonnet`, `opus`, `haiku`, `fable`, `mythos`) with `isFamilyDefault: true` tells the app which entry a bare tier alias resolves to. Organizations on Claude for Teams or Enterprise also need each gateway model name on their `availableModels` allowlist, or it shows greyed out; [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md) covers the allowlist rules and how to put an auto router behind a name the picker accepts. Non-Claude models behind LiteLLM work the same way once their `model_name` contains `claude`; add `drop_params: true` to those entries so the Anthropic-specific request fields Cowork and Code sessions send are dropped where the provider has no equivalent instead of failing the request.
 
 ## MCP servers through the LiteLLM MCP gateway
 
@@ -240,11 +286,34 @@ Static headers cannot carry a signed-in user's own token, so single sign-on flee
 
 Claude Desktop's built-in connectors (`"server": "microsoft365"`, `"github"`, `"websearch"`) run inside the app against those vendors' own APIs and never pass through LiteLLM; only `url` entries do. To keep GitHub or Microsoft 365 traffic under LiteLLM, configure the vendor's MCP server as an `mcp_servers` entry on the proxy and point a `url` entry at it.
 
+On gateway deployments Claude Desktop keeps MCP tool search off, so every tool schema from every server is inlined into each request, and a session with many MCP tools compacts every turn or two. `toolSearchEnabled: true` (Claude Desktop 1.21459.0 or later) loads schemas on demand instead; requests then carry the `tool-search-tool-2025-10-19` value in `anthropic-beta`, deferred tool loading, and `tool_reference` content blocks, which LiteLLM forwards to Anthropic deployments on `/v1/messages`.
+
 ## Rolling out to a fleet
 
-**Export** in the configuration window turns what you applied into the template your MDM expects: a `.mobileconfig` (macOS), a `.reg` file or ADMX (Windows), or Intune OMA-URI JSON. Managed configuration is read from `/Library/Managed Preferences/<user>/com.anthropic.claudefordesktop.plist` on macOS, `HKLM\SOFTWARE\Policies\Claude` (or `HKCU`) on Windows, and `/etc/claude-desktop/managed-settings.json` on Linux, while **Apply locally** writes to `~/Library/Application Support/Claude-3p/configLibrary/`, `%LOCALAPPDATA%\Claude-3p\configLibrary\`, and `~/.config/Claude-3p/configLibrary/`. `bootstrapUrl` lets devices fetch the same configuration from a server you host instead of an MDM profile; LiteLLM does not serve a bootstrap endpoint today.
+**Export** in the configuration window turns what you applied into the template your MDM expects: a `.mobileconfig` (macOS), a `.reg` file or ADMX (Windows), or Intune OMA-URI JSON. Managed configuration is read from `/Library/Managed Preferences/<user>/com.anthropic.claudefordesktop.plist` on macOS, `HKLM\SOFTWARE\Policies\Claude` (or `HKCU`) on Windows, and `/etc/claude-desktop/managed-settings.json` on Linux, while **Apply Changes** writes to `~/Library/Application Support/Claude-3p/configLibrary/`, `%LOCALAPPDATA%\Claude-3p\configLibrary\`, and `~/.config/Claude-3p/configLibrary/`. `bootstrapUrl` lets devices fetch the same configuration from a server you host instead of an MDM profile; LiteLLM does not serve a bootstrap endpoint today. Anthropic's [Enterprise Admin Console](https://claude.com/docs/third-party/claude-desktop/admin-console), in beta, is a third route with no profile or server to run: Anthropic hosts the configuration, and each user's app downloads the settings for their group after they sign in once with a work-email Claude account. A device whose MDM profile sets any key other than the update keys ignores the console.
 
-Two more keys matter behind LiteLLM. `inferenceCustomHeaders`, a JSON object of extra headers sent on every inference and discovery request (routing and tenant headers only, never credentials), is how a profile stamps `x-litellm-tags` on every request, which [tag budgets](../proxy/tag_budgets.md), [tag routing](../proxy/tag_routing.md), and the Usage page all group by; `{"x-litellm-tags": "claude-desktop,finance"}` gives a department its own budget without a separate key or team. `inferenceStreamIdleTimeoutSec` (300 to 1800) extends how long a Cowork or Code session waits for model output on a streaming response, but only when LiteLLM writes SSE keep-alive pings while the upstream model is silent; a response with nothing on it still times out at the default.
+Two more keys matter behind LiteLLM. `inferenceCustomHeaders`, a JSON object of extra headers sent on every inference and discovery request (routing and tenant headers only, never credentials), is how a profile stamps `x-litellm-tags` on every request, which [tag budgets](../proxy/tag_budgets.md), [tag routing](../proxy/tag_routing.md), and the Usage page all group by; `{"x-litellm-tags": "claude-desktop,finance"}` gives a department its own budget without a separate key or team. `inferenceStreamIdleTimeoutSec` (300 to 1800) extends how long a Cowork or Code session waits for model output on a streaming response, but only when LiteLLM writes SSE keep-alive pings while the upstream model is silent, which is off by default; `sse_keepalive_ping_interval_seconds: 15` under `litellm_settings` turns it on for every deployment ([keepalive pings](../proxy/timeout.md#keepalive-pings-for-idle-streaming-connections)). A response with nothing on it still times out at the default.
+
+## Bringing users' claude.ai chats over
+
+A user who moves from a personal Claude subscription to the gateway starts with an empty sidebar. Standard Claude Desktop keeps chats on claude.ai under that account, while Claude Desktop on third-party inference has no Anthropic account and keeps Chat and Cowork history on the device, under `~/Library/Application Support/Claude-3p/` on macOS. The switch deletes nothing: the old chats stay readable at claude.ai, and the two modes coexist on one machine, so the Anthropic option on the sign-in screen brings the standard app back without touching the gateway data. They just do not show up in the gateway app on their own.
+
+Anthropic ships an import for exactly this move, off by default. Add `claudeAiImport` to the managed configuration (an MDM profile or a bootstrap response, which is where Anthropic's reference says the key is read from), and `chatTabEnabled` unless Chat is already on, since the Chat surface is off by default on third-party inference. `claudeAiImport` is one key whose value is a JSON object, the same form as `inferenceGatewayOidc` above (a JSON string in a `.mobileconfig` or `.reg`, a native object in a bootstrap response or `managed-settings.json`), on Claude Desktop 1.10628.0 or later:
+
+```json
+{
+  "chatTabEnabled": true,
+  "claudeAiImport": {"enabled": true, "exportEnabled": true, "bannerBehavior": "show"}
+}
+```
+
+`bannerBehavior` is what makes the move self-serve: `show` puts a prompt to import at the top of a new chat or task, so nobody has to know the settings page exists, and `detect` shows it only on machines that hold sessions from an earlier Claude install. Leave it unset and the app shows no prompt.
+
+Each user then opens **Settings > Import & export**, clicks **Import…**, and signs in to claude.ai from the wizard; **Fetch export** pulls their chats and projects and copies them into the gateway app. Users who would rather not sign in from the app download the zip from **Settings > Privacy > Export data** on claude.ai (the emailed link lasts 24 hours) and pick it with **Choose file…**, and the same wizard picks up Cowork and Code sessions left on the machine by an earlier standard install. An imported chat opens from the sidebar and continues against your proxy after **Trust and resume**. The import is a one-time copy that can be rerun without creating duplicates, attachments and project knowledge files never come over (a claude.ai policy that applies to both paths), and members of a claude.ai Team or Enterprise workspace can only export once an owner turns on **Allow members to export their own data** under the workspace's data and privacy settings. `exportEnabled` adds **Export…** to the same settings page, a zip of this computer's chats and sessions for moving to another device through the same wizard. Anthropic's [import guide](https://claude.com/docs/third-party/claude-desktop/import) has screenshots of each step.
+
+## Prompt caching
+
+Cowork and Code sessions send `cache_control` breakpoints on every turn so the provider reuses the tool definitions, system prompt, and earlier turns instead of billing them again as fresh input, and LiteLLM forwards them on `/v1/messages`. After the first request of a session, the `usage` on most responses should show `cache_read_input_tokens` well above zero. Zero on every turn means something ahead of a breakpoint changes between requests, typically a callback or guardrail that rewrites the system prompt or the tool list per request, so check what runs on the route that serves the Claude models.
 
 ## Usage attribution
 
@@ -254,6 +323,12 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **The model picker is empty, or the connection test passes but no Claude model appears.** Discovery keeps only ids containing `claude` or `anthropic`; rename the `model_name` or set `inferenceModels`. LiteLLM older than v1.98.0 answers `/v1/models` in OpenAI shape only, which the app cannot parse; upgrade, or set `inferenceModels` so the app skips discovery.
 
+**Sign-in succeeds and the tab closes, but `GET /v1/models` answers 401.** The proxy has no `enable_jwt_auth: true` under `general_settings`, so the bearer token fell through to virtual key auth and failed the key lookup; sign-in still looks fine because the browser step only involves the identity provider. Recent LiteLLM versions say so in the 401 body: "This key has the structure of a JWT, but JWT auth is not enabled on this proxy". Add the JWT config from step 2.
+
+**The browser lands on the identity provider's own error page with `redirect_mismatch`.** The callback is not registered on the client, or the provider matches the port exactly while Claude Desktop picked an ephemeral one. Register `http://127.0.0.1:PORT/callback` with a fixed port and set that port as **Redirect port**; Okta and Cognito both match exactly.
+
+**Sign-in bounces straight back to `127.0.0.1` with `error=invalid_request&error_description=invalid_scope` (Cognito).** The request asked for a scope the app client does not have. Either **Scopes** was left empty, so the default set requested `offline_access`, which Cognito does not support, or the OIDC scopes are not enabled on the app client's **Login pages** configuration. Set **Scopes** to `openid profile email` and enable those three on the app client.
+
 **`Authentication Error, Missing JWT Public Key URL from environment.` on every request.** The token's `iss` matched no `issuers` entry (compare the `iss` claim in the token with the `issuer` value; Entra tokens carry `/v2.0` at the end) and no `JWT_PUBLIC_KEY_URL` fallback is set.
 
 **`ValueError: Invalid arguments provided` naming `public_key_url` and `audience` at startup.** The config followed Anthropic's snippet. Move those values into an `issuers` entry.
@@ -262,17 +337,23 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 **`Token Expired`, or users are asked to sign in every hour.** Refresh needs the `offline_access` scope, which the default scopes include; a custom `scopes` value in `id_token` mode must list it explicitly. Google Workspace re-prompts hourly in `id_token` mode regardless; use `bearerTokenType: access_token` there.
 
-**`gateway SSO: server does not advertise device_authorization_endpoint`.** The app could not read `inferenceGatewayOidc`, usually because it was pushed as dotted keys or invalid JSON. Re-export from the configuration window.
+**`gateway SSO: server does not advertise device_authorization_endpoint`.** The app could not read `inferenceGatewayOidc` (or `inferenceIdpOidc`), usually because it was pushed as dotted keys or invalid JSON. Re-export from the configuration window.
 
 **`OIDC discovery failed (HTTP 404)` or `(HTTP 405)`.** The `issuer` value is the metadata URI instead of the issuer base URL; remove the `/.well-known/openid-configuration` suffix.
 
-**The browser shows Connected but the app reports `Token exchange failed (HTTP 401)`.** The identity provider registration is a confidential (Web) client expecting a secret. Register a Native application (Okta) or a Mobile and desktop applications platform (Entra) instead; the type cannot be changed after creation.
+**The browser shows Connected but the app reports `Token exchange failed (HTTP 401)`.** The identity provider registration is a confidential (Web) client expecting a secret. Register a Native application (Okta), a Mobile and desktop applications platform (Entra), or a Mobile app client (Cognito) instead; the client type cannot be changed after creation, and a Cognito client secret cannot be removed after creation, so create a new client.
+
+**`GET /v1/models` was unreachable or timed out right after enabling JWT auth, on a gateway that answered instantly before.** The first validated request makes the proxy fetch the signing keys from `jwks_url`, and blocked egress from the proxy's network to the identity provider stalls that fetch. From inside the proxy container, `curl -m 5 <jwks_url>` should return the key set; if it hangs, open that egress.
 
 **`tools/list` on the LiteLLM MCP endpoint comes back empty.** The signed-in user has no grant on any server: the token's groups match no team, or the team's `object_permission` lists no `mcp_servers`. Add the servers to the team or set `allow_all_keys: true` on the server.
 
 **Requests to a non-Claude model fail with 400.** Cowork and Code sessions send Anthropic-specific fields; set `drop_params: true` on that `model_list` entry.
 
-**The 1M context window entry is missing.** `supports1m` sits on an `inferenceModels` entry whose `name` does not match the discovered id exactly.
+**The 1M context window entry is missing.** With discovery, the model's `max_input_tokens` in LiteLLM's model info is below 1,000,000. With `inferenceModels`, `supports1m` sits on an entry whose `name` does not match the id your proxy returns exactly.
+
+**A user who moved from a personal Claude subscription to the gateway sees none of their old chats.** Nothing was deleted; the chats live on claude.ai under that account, and the gateway app keeps its own local history. Turn on `claudeAiImport` and have the user run **Settings > Import & export > Import…** ([Bringing users' claude.ai chats over](#bringing-users-claudeai-chats-over)).
+
+**Settings > Import & export says import is not enabled for this deployment.** `claudeAiImport` is missing from the managed configuration or its `enabled` is not `true`; a managed profile on the device wins over anything applied locally, so the key has to be in the profile.
 
 ## Related
 
@@ -281,4 +362,4 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 - [MCP gateway](../mcp.md), [MCP access control](../mcp_control.md), and [MCP OAuth passthrough](../mcp_oauth_passthrough.md)
 - [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md)
 - [Claude Code with LiteLLM](./claude_responses_api.md)
-- Anthropic's [gateway guide](https://claude.com/docs/third-party/claude-desktop/gateway), [configuration reference](https://claude.com/docs/third-party/claude-desktop/configuration), and [MCP servers and extensions](https://claude.com/docs/third-party/claude-desktop/extensions) for Claude Desktop on third-party inference
+- Anthropic's [gateway guide](https://claude.com/docs/third-party/claude-desktop/gateway), [configuration reference](https://claude.com/docs/third-party/claude-desktop/configuration), [MCP servers and extensions](https://claude.com/docs/third-party/claude-desktop/extensions), and [import guide](https://claude.com/docs/third-party/claude-desktop/import) for Claude Desktop on third-party inference

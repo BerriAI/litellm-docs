@@ -47,7 +47,7 @@ Alice resolves the application from the authenticated virtual key, so a request 
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "key_alias": "payments-bot",

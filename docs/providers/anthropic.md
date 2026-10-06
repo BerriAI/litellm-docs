@@ -23,7 +23,7 @@ LiteLLM supports all anthropic models.
 | Property | Details |
 |-------|-------|
 | Description | Claude is a highly performant, trustworthy, and intelligent AI platform built by Anthropic. Claude excels at tasks involving language, reasoning, analysis, coding, and more. Also available via Azure Foundry. |
-| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
+| Provider Route on LiteLLM | `anthropic/` (add this prefix to the model name, to route any requests to Anthropic - e.g. `anthropic/claude-3-5-sonnet-20240620`). For Azure Foundry deployments, use `azure_ai/claude-*` (see [Azure Anthropic documentation](../providers/azure/azure_anthropic)) |
 | Provider Doc | [Anthropic ↗](https://docs.anthropic.com/en/docs/build-with-claude/overview), [Azure Foundry Claude ↗](https://learn.microsoft.com/en-us/azure/ai-services/foundry-models/claude) |
 | API Endpoint for Provider | https://api.anthropic.com (or Azure Foundry endpoint: `https://<resource-name>.services.ai.azure.com/anthropic`) |
 | Supported Endpoints | `/chat/completions`, `/v1/messages` (passthrough) |
@@ -53,22 +53,25 @@ Check this in code, [here](../completion/input.md#translated-openai-params)
 
 **Notes:**
 - Anthropic API fails requests when `max_tokens` are not passed. Due to this litellm passes `max_tokens=4096` when no `max_tokens` are passed.
-- `response_format` is fully supported for Claude Sonnet 4.5 and Opus 4.1 models (see [Structured Outputs](#structured-outputs) section)
+- `response_format` uses Anthropic native structured outputs on Claude Sonnet 4.5+, Opus 4.5+ and Haiku 4.5. Older models such as Opus 4.1 fall back to a forced tool call (see [Structured Outputs](#structured-outputs) section)
 - `reasoning_effort` is automatically mapped to `output_config={"effort": ...}` for Claude 4.6 and Opus 4.5 models (see [Effort Parameter](./anthropic_effort.md))
 
 :::
 
 ## **Structured Outputs**
 
-LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Sonnet 4.5 and Opus 4.1 models. When you use `response_format` with these models, LiteLLM automatically:
+LiteLLM supports Anthropic's [structured outputs feature](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) for Claude Sonnet 4.5 and later, Opus 4.5 and later, and Haiku 4.5. When you use `response_format` with these models, LiteLLM automatically:
 - Adds the required `structured-outputs-2025-11-13` beta header
 - Transforms OpenAI's `response_format` to Anthropic's `output_format` format
 
 ### Supported Models
-- `sonnet-4-5` or `sonnet-4.5` (all Sonnet 4.5 variants)
-- `opus-4-1` or `opus-4.1` (all Opus 4.1 variants)
-  - `opus-4-5` or `opus-4.5` (all Opus 4.5 variants)
-  
+Native structured outputs are used when the model has `supports_native_structured_output` set in the model cost map:
+- Sonnet 4.5 and later (`claude-sonnet-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5`)
+- Opus 4.5 and later (`claude-opus-4-5`, `claude-opus-4-6`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5`, `claude-opus-5-5`)
+- Haiku 4.5 (`claude-haiku-4-5`)
+
+Claude Opus 4.1 and older models do not have this flag, so LiteLLM never sends `output_format` for them. It instead adds a `json_tool_call` tool built from your schema and forces the model to call it
+
 ### Example Usage
 
 <Tabs>
@@ -154,9 +157,10 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 :::info
 When using structured outputs with supported models, LiteLLM automatically:
-- Converts OpenAI's `response_format` to Anthropic's `output_schema`
+- Converts OpenAI's `response_format` to Anthropic's `output_format`
 - Adds the `anthropic-beta: structured-outputs-2025-11-13` header
-- Creates a tool with the schema and forces the model to use it
+
+For models without native support, LiteLLM instead creates a `json_tool_call` tool with the schema and forces the model to use it
 :::
 
 ## API Keys
@@ -169,14 +173,14 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 # os.environ["LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX"] = "true" # [OPTIONAL] Disable automatic URL suffix appending
 ```
 
-:::tip Azure Foundry Support
+:::tip[Azure Foundry Support]
 
-Claude models are also available via Microsoft Azure Foundry. Use the `azure/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
+Claude models are also available via Microsoft Azure Foundry. Use the `azure_ai/` prefix instead of `anthropic/` and configure Azure authentication. See the [Azure Anthropic documentation](../providers/azure/azure_anthropic) for details.
 
 Example:
 ```python
 response = completion(
-    model="azure/{{anthropic}}",
+    model="azure_ai/{{anthropic}}",
     api_base="https://<resource-name>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[{"role": "user", "content": "Hello!"}]
@@ -207,7 +211,7 @@ With `LITELLM_ANTHROPIC_DISABLE_URL_SUFFIX=true`:
 
 ### Azure AI Foundry (Alternative Method)
 
-:::tip Recommended Method
+:::tip[Recommended Method]
 For full Azure support including Azure AD authentication, use the dedicated [Azure Anthropic provider](./azure/azure_anthropic) with `azure_ai/` prefix.
 :::
 
@@ -228,6 +232,168 @@ print(response)
 :::info
 **Finding your Azure endpoint:** Go to Azure AI Foundry → Your deployment → Overview. Your base URL will be `https://<resource-name>.services.ai.azure.com/anthropic`
 :::
+
+## Workload Identity Federation
+
+Anthropic supports workload identity federation, so a proxy can exchange an OIDC identity token it already holds for a short-lived `sk-ant-oat01` access token instead of storing a long-lived `sk-ant-` key. This is the Anthropic equivalent of what Vertex AI and Azure already do, and it suits deployments with a no-static-secrets policy.
+
+LiteLLM mints and caches the access token for you. Configure the federation identifiers plus one identity source, and every route that reaches Anthropic uses the minted token: chat completions, `/v1/messages`, files, batches, skills, passthrough, token counting and model discovery.
+
+### Federation identifiers
+
+These come from the federation rule you create in the Anthropic Console, and they are the same whichever identity source you pick:
+
+| Field | Description |
+| --- | --- |
+| `anthropic_federation_rule_id` | The `fdrl_...` id of the federation rule |
+| `anthropic_organization_id` | Your Anthropic organization UUID |
+| `anthropic_service_account_id` | The `svac_...` service account the rule maps to |
+| `anthropic_federation_workspace_id` | Required when the rule is enabled in more than one workspace; scopes the minted token to that workspace |
+
+Anthropic's own reference calls the last one `workspace_id`, but federation reads it from `ANTHROPIC_FEDERATION_WORKSPACE_ID`, not `ANTHROPIC_WORKSPACE_ID`. The shorter name already belongs to the Bedrock Claude platform provider, where it picks the workspace a Bedrock call is billed to, so federation takes the longer one and leaves that behavior alone. Setting `ANTHROPIC_WORKSPACE_ID` does nothing for federation
+
+### Static keys take precedence
+
+A static credential outranks federation everywhere in the Anthropic provider. If `ANTHROPIC_API_KEY` is set, every Anthropic route uses it and nothing is federated; `ANTHROPIC_AUTH_TOKEN` comes next, and federation is the last tier. This matches the Anthropic SDK's own ordering, and it applies to files, batches and model discovery as well as to chat.
+
+So a deployment that is meant to be federated must not carry a static key. If one is set anyway, LiteLLM logs a warning naming the model whose federation is being shadowed. A blank or whitespace-only value counts as unset and falls through to federation
+
+### Configuring by environment instead
+
+Every field below can come from the environment rather than the deployment, which is what you want
+when the same values apply proxy-wide. A value set on the deployment wins over the environment.
+
+| Field | Environment variable |
+| --- | --- |
+| `anthropic_federation_rule_id` | `ANTHROPIC_FEDERATION_RULE_ID` |
+| `anthropic_organization_id` | `ANTHROPIC_ORGANIZATION_ID` |
+| `anthropic_service_account_id` | `ANTHROPIC_SERVICE_ACCOUNT_ID` |
+| `anthropic_federation_workspace_id` | `ANTHROPIC_FEDERATION_WORKSPACE_ID` |
+| `anthropic_identity_source` | `ANTHROPIC_IDENTITY_SOURCE` |
+| `anthropic_identity_token_file` | `ANTHROPIC_IDENTITY_TOKEN_FILE` |
+| `anthropic_identity_token` | `ANTHROPIC_IDENTITY_TOKEN` |
+
+### Identity sources
+
+There are four ways to supply the OIDC assertion. Two need no `anthropic_identity_source` at all, and two are selected with it.
+
+#### Token file (default)
+
+Reads an assertion a platform already projects onto disk, which is how Kubernetes service account tokens and most CI runners work. Set `anthropic_identity_token_file` and leave `anthropic_identity_source` unset. The path must sit under LiteLLM's OIDC file allowlist, which you extend with `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS`. The file is re-read on each mint, so a rotated token is picked up without a restart.
+
+```yaml
+model_list:
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      anthropic_identity_token_file: /var/run/secrets/anthropic.com/token
+      anthropic_federation_rule_id: os.environ/ANTHROPIC_FEDERATION_RULE_ID
+      anthropic_organization_id: os.environ/ANTHROPIC_ORGANIZATION_ID
+      anthropic_service_account_id: os.environ/ANTHROPIC_SERVICE_ACCOUNT_ID
+```
+
+#### Secret reference (default)
+
+`anthropic_identity_token` takes an `oidc/` reference, not a raw token. Accepted forms are `oidc/env/VAR_NAME`, `oidc/file//absolute/path`, `oidc/github/<audience>`, and `oidc/google/<audience>`. Pasting a bare JWT is rejected, so export it and reference the variable instead.
+
+```yaml
+      anthropic_identity_token: oidc/env/MY_WORKLOAD_TOKEN
+```
+
+#### LiteLLM as the issuer
+
+For deployments with no external IdP, LiteLLM signs the assertion itself with an ES256 (P-256) key. Set `anthropic_identity_source: internal_issuer` and point `anthropic_issuer_signing_key_ref` at the key rather than pasting it inline, so custody stays with your secret manager. `anthropic_issuer_ttl_seconds` defaults to 300 and cannot exceed 3600.
+
+```yaml
+credential_list:
+  - credential_name: anthropic_wif
+    credential_values:
+      anthropic_identity_source: internal_issuer
+      anthropic_issuer_url: https://litellm.example.com
+      anthropic_issuer_subject: litellm-proxy
+      anthropic_issuer_audience: https://api.anthropic.com
+      anthropic_issuer_signing_key_ref: os.environ/ANTHROPIC_WIF_SIGNING_KEY
+      anthropic_issuer_ttl_seconds: 300
+      anthropic_federation_rule_id: os.environ/ANTHROPIC_FEDERATION_RULE_ID
+      anthropic_organization_id: os.environ/ANTHROPIC_ORGANIZATION_ID
+      anthropic_service_account_id: os.environ/ANTHROPIC_SERVICE_ACCOUNT_ID
+    credential_info:
+      custom_llm_provider: anthropic
+
+model_list:
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      litellm_credential_name: anthropic_wif
+```
+
+Anthropic needs the matching public key to verify what LiteLLM signs. Export it from the proxy and register it as the **inline** issuer JWKS on your federation rule:
+
+```shell
+curl -s http://localhost:4000/credentials/anthropic_wif/jwks \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+The endpoint is proxy-admin only and never exposes the private key, so paste the JSON it returns into the Anthropic Console rather than pointing Anthropic at the URL. A freshly registered JWKS takes about a minute before Anthropic accepts assertions signed by it.
+
+#### Keycloak
+
+For shops that already run Keycloak as the workload IdP, LiteLLM fetches the assertion with an OAuth client credentials grant. Set `anthropic_identity_source: keycloak` plus:
+
+```yaml
+      anthropic_keycloak_token_url: https://keycloak.example.com/realms/prod/protocol/openid-connect/token
+      anthropic_keycloak_client_id: litellm-proxy
+      anthropic_keycloak_auth_method: client_secret_basic  # or client_secret_post
+      anthropic_keycloak_client_secret_ref: os.environ/KEYCLOAK_CLIENT_SECRET
+      anthropic_keycloak_scope: anthropic-federation
+```
+
+Mixing fields across variants is rejected rather than silently ignored, so a config that names `internal_issuer` while carrying Keycloak fields fails at startup instead of quietly falling back.
+
+### Setting it up in the UI
+
+The Admin UI does not offer these fields yet, so configure federation through the proxy config or the environment as shown above. A follow-up adds them to the LLM Credentials flow.
+
+### Token lifetime and refresh
+
+LiteLLM caches the minted access token per deployment and refreshes it in the background before it expires, so a request rarely waits on an exchange. Refresh is two-tier: an advisory refresh at half the token's lifetime that happens in the background while the old token keeps serving, and a mandatory one at an eighth of the lifetime that blocks. Concurrent requests for the same deployment share a single in-flight exchange rather than each minting their own, so the number of exchanges does not scale with traffic.
+
+Workers on the same host share the minted token through a small on-disk cache under the temp directory, readable only by the proxy's user, so a proxy running several uvicorn workers exchanges each assertion once rather than once per worker. `LITELLM_TOKEN_EXCHANGE_CACHE_DIR` moves that cache, and setting it to an empty string turns it off so every process mints on its own. Replicas on different hosts always mint their own token.
+
+Anthropic accepts each assertion once: a second exchange of the same JWT is denied with the opaque 401 and shows up as `jti_reused` in the rule's authentication history. That is fine for the internal issuer and Keycloak sources, which mint a fresh assertion for every exchange, but a token file or `oidc/env/` value has to rotate faster than the rule's `token_lifetime_seconds`, or the first refresh after the minted token expires fails until a new assertion shows up. Kubernetes rotates a projected service account token once 80% of its `expirationSeconds` has passed, so keep the rule's token lifetime at or above that rotation period; the defaults (a one hour projected token and a one hour rule lifetime) line up.
+
+### Who can configure it
+
+Only a proxy admin can create or change a deployment that uses workload identity federation. A team admin who otherwise manages a team-scoped deployment gets a 403, and that holds however the change is expressed: setting a federation field directly, attaching a credential that carries one by name, or changing `api_base` on a deployment that is already federated. The last one matters because `api_base` decides where the signed assertion is sent and where the minted token is presented, so it is part of the federation configuration even though it is not a federation field.
+
+The same rule covers the stored fallback lists on a key or team. A fallback target cannot carry a federation field, since those are merged over the deployment's own configuration when a failover happens.
+
+Teams keep normal access to a federated deployment. Only editing it moves to the proxy admin.
+
+### Restricting where assertions are sent
+
+The exchange only talks to `api.anthropic.com`. If you front Anthropic with a gateway, list its hostname in `LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS` (comma separated) so the signed assertion is allowed to reach it.
+
+```shell
+export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal"
+```
+
+An entry may name a port, in which case only that port is trusted and another process on the same host is not. An entry without a port trusts every port on that host.
+
+```shell
+export LITELLM_ANTHROPIC_WIF_ALLOWED_HOSTS="anthropic.gateway.internal:8443"
+```
+
+The list is read from the environment only. It is never taken from a model or credential API, because `api_base` decides both where the assertion is sent and where the minted token is presented
+
+### Monitoring
+
+Token health is emitted through the standard service-logging path: `prometheus_system` sends it to Prometheus and `otel` sends it to OpenTelemetry, using the exporter settings from the [OpenTelemetry docs](../observability/opentelemetry_integration). The services are `anthropic_wif` for the exchange itself and `anthropic_wif_cache` for cache hits and misses, giving you mint counts, mint latency, and failures broken out by cause. Enable them with:
+
+```yaml
+litellm_settings:
+  service_callback: ["prometheus_system", "otel"]
+```
 
 ## Usage
 
@@ -348,7 +514,7 @@ $ litellm --model {{anthropic_large}}
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "claude-3",
+      "model": "anthropic/{{anthropic}}",
       "messages": [
         {
           "role": "user",
@@ -369,7 +535,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="claude-3", messages = [
+response = client.chat.completions.create(model="anthropic/{{anthropic}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -393,7 +559,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "claude-3",
+    model = "anthropic/{{anthropic}}",
     temperature=0.1
 )
 
@@ -1138,7 +1304,7 @@ response = completion(
 <Tabs>
 <TabItem value="computer" label="Computer">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [
@@ -1173,7 +1339,7 @@ print(resp)
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 tools = [{
@@ -1197,7 +1363,7 @@ print(resp)
 
 1. Setup config.yaml
 
-```yaml
+```yaml keep-model-ids
 - model_name: claude-3-5-sonnet-latest
   litellm_params:
     model: anthropic/claude-3-5-sonnet-latest
@@ -1212,7 +1378,7 @@ litellm --config /path/to/config.yaml
 
 3. Test it! 
 
-```bash
+```bash keep-model-ids
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
@@ -1494,7 +1660,7 @@ This means **any value other than `"none"` for `reasoning_effort` will automatic
 
 You can disable thinking either by omitting `reasoning_effort` entirely or setting it to `"none"`. LiteLLM will not send a `thinking` field in that case. You can still pass the native `thinking` parameter directly if you wish to explicitly control thinking with a fixed budget on prior models:
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Disable thinking on Claude 4.6/4.7
@@ -1633,7 +1799,7 @@ You can also pass the `thinking` parameter to Anthropic models.
 
 ```python
 response = litellm.completion(
-  model="anthropic/claude-3-7-sonnet-20250219",
+  model="anthropic/{{anthropic}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 1024},
 )
@@ -1647,7 +1813,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-3-7-sonnet-20250219",
+    "model": "anthropic/{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 1024}
   }'
@@ -1693,7 +1859,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ```python
 response = litellm.completion(
-  model="anthropic/claude-opus-4-6",
+  model="anthropic/{{anthropic_large}}",
   messages=[{"role": "user", "content": "What is the capital of France?"}],
   thinking={"type": "enabled", "budget_tokens": 5000},
 )
@@ -1707,7 +1873,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_KEY" \
   -d '{
-    "model": "anthropic/claude-opus-4-6",
+    "model": "anthropic/{{anthropic_large}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "thinking": {"type": "enabled", "budget_tokens": 5000}
   }'
@@ -1720,7 +1886,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 Pass `extra_headers: dict` to `litellm.completion`
 
-```python
+```python keep-model-ids
 from litellm import completion
 messages = [{"role": "user", "content": "What is Anthropic?"}]
 response = completion(
@@ -1740,7 +1906,7 @@ The returned completion will _not_ include your "pre-fill" text, since it is par
 
 :::
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1769,7 +1935,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1793,6 +1959,7 @@ Human: How do I boil water?
 Assistant:
 ```
 
+Mid-conversation `system` messages, and how LiteLLM places them on each provider so preserved thinking blocks keep their binding, are covered in [Preserved Thinking Prefix Stability](./anthropic_preserved_thinking)
 
 ## Usage - PDF
 
@@ -1816,11 +1983,11 @@ file_data = response.content
 
 encoded_file = base64.b64encode(file_data).decode("utf-8")
 
-## check if model supports pdf input - (2024/11/11) only claude-3-5-haiku-20241022 supports it
-supports_pdf_input("anthropic/claude-3-5-haiku-20241022") # True
+## check if model supports pdf input
+supports_pdf_input("anthropic/{{anthropic}}") # True
 
 response = completion(
-    model="anthropic/claude-3-5-haiku-20241022",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -1846,9 +2013,9 @@ print(response.choices[0])
 1. Add model to config 
 
 ```yaml
-- model_name: claude-3-5-haiku-20241022
+- model_name: {{anthropic}}
   litellm_params:
-    model: anthropic/claude-3-5-haiku-20241022
+    model: anthropic/{{anthropic}}
     api_key: os.environ/ANTHROPIC_API_KEY
 ```
 
@@ -1865,7 +2032,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-5-haiku-20241022",
+    "model": "{{anthropic}}",
     "messages": [
       {
         "role": "user",
@@ -1960,7 +2127,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "anthropic-claude",
   "messages": [

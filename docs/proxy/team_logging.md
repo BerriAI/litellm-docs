@@ -74,6 +74,13 @@ Navigate to your configured logging provider and check if you received the logs 
 <br />
 
 ### API Usage
+
+#### Who can call these
+
+A proxy admin, an org admin of the team's organization, and an admin of the team itself can list, set and remove that team's callbacks. Everyone else gets a `403`, and an admin of one team cannot read another team's.
+
+`POST /team/{team_id}/disable_logging` is the exception: it stays proxy-admin only. A team admin who wants to turn one integration off uses `DELETE /team/{team_id}/callback/{callback_name}`.
+
 ### Set Callbacks Per Team
 
 #### 1. Set callback for team 
@@ -83,7 +90,7 @@ We make a request to `POST /team/{team_id}/callback` to add a callback for
 ```shell
 curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "callback_name": "langfuse",
   "callback_type": "success",
@@ -116,7 +123,7 @@ All keys created for team `dbe2f686-a686-4896-864a-4c3924458709` will log to lan
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "team_id": "dbe2f686-a686-4896-864a-4c3924458709"
@@ -195,7 +202,7 @@ Use this to check what success/failure callbacks are active for team=`team_id`
 
 ```shell
 curl -X GET 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
-        -H 'Authorization: Bearer sk-1234'
+        -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Remove a Single Callback from a Team
@@ -208,10 +215,10 @@ Every entry registered under that `callback_name` is removed, across callback ty
 
 ### Team Logging Endpoints
 
-- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://litellm-api.up.railway.app/#/team%20management/add_team_callbacks_team__team_id__callback_post)
-- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://litellm-api.up.railway.app/#/team%20management/get_team_callbacks_team__team_id__callback_get)
-- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://litellm-api.up.railway.app/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
-- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://litellm-api.up.railway.app/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
+- [`POST /team/{team_id}/callback` Add a success/failure callback to a team](https://docs.litellm.ai/api-reference/#/team%20management/add_team_callbacks_team__team_id__callback_post)
+- [`GET /team/{team_id}/callback` - Get the success/failure callbacks and variables for a team](https://docs.litellm.ai/api-reference/#/team%20management/get_team_callbacks_team__team_id__callback_get)
+- [`DELETE /team/{team_id}/callback/{callback_name}` - Remove a single callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/delete_team_callback_team__team_id__callback__callback_name__delete)
+- [`POST /team/{team_id}/disable_logging` - Remove every callback from a team](https://docs.litellm.ai/api-reference/#/team%20management/disable_team_logging_team__team_id__disable_logging_post)
 
 
 
@@ -244,7 +251,7 @@ Now, when you [generate keys](./virtual_keys.md) for this team-id
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "06ed1e01-3fa7-4b9e-95bc-f2e59b74f3a8"}'
 ```
@@ -308,7 +315,7 @@ Navigate to your configured logging provider and check if you received the logs 
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {
@@ -332,7 +339,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
 `os.environ/...` references inside API-supplied `callback_vars` are rejected (since v1.84). Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
 
-<iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameBorder="0" allowFullScreen></iframe>
 
 </TabItem>
 <TabItem label="GCS Bucket" value="gcs_bucket">
@@ -346,7 +353,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
   ```bash
   curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
       "metadata": {
@@ -390,7 +397,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
   ```bash
   curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
       "metadata": {
@@ -511,7 +518,7 @@ Set `turn_off_message_logging` to `false` for the key you want to enable prompt 
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "metadata": {

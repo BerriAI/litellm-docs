@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.99.0: Dark Mode, CLI OAuth Login & Batch Billing](/release_notes/v1.99.0/v1-99-0)
+### [v1.104.0: Claude Opus 5.5, GPT-6, Master Key Enforcement & Team Routing Controls](/release_notes/v1.104.0/v1-104-0)
 
-_September 1, 2026_
+_October 3, 2026_
 
-The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, `antd` and `@ant-design/icons` dropped from the dashboard's dependencies and the dashboard now on React 19; dark mode ships with a light/dark/system toggle, semantic status tokens, and theme-aware logos, surfaces and code blocks; `lite login` becomes a real OAuth flow with authorization code plus PKCE, storing the credential and refresh token in the OS keychain, and `lite login --config-claude` wires up Claude Code at login; batch spend is accounted for end to end, with enqueued-token rate limiting that refunds on completion, atomic cost claims so multi-pod polling cannot double-bill, and billing for cancelled and failed batches that still produced output; provisioned throughput can be declared in `config.yaml`; and the complexity router becomes operator-configurable with custom classifier plugins, tier sets, and per-model reasoning effort. This stable also folds in the v1.99.0-rc.2 fixes.
+Claude Opus 5.5 and GPT-6 on day one, Eden AI and Nadir providers, master key enforcement, team routing controls, and the LiteAdmin assistant. stdio MCP servers are now off by default. Review the Breaking Changes before upgrading
 
 ---
 
@@ -22,6 +22,11 @@ The Admin UI's migration off antd and Tremor is complete, with `@tremor/react`, 
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
 | [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
 | [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
 | [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |

@@ -149,7 +149,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",
@@ -164,7 +164,7 @@ curl -s "http://localhost:4000/v1/responses" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 response = client.responses.create(
     model="{{openai_large}}",
@@ -179,7 +179,7 @@ print(response.output_text)
 
 ```bash
 curl -s "http://localhost:4000/v1/chat/completions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_small}}",
@@ -196,7 +196,7 @@ curl -s "http://localhost:4000/v1/chat/completions" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 response = client.chat.completions.create(
     model="{{openai_small}}",
@@ -232,7 +232,7 @@ By default each request spins up a fresh sandbox that gets deleted when the agen
 ```bash
 # First request: define x
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",
@@ -243,7 +243,7 @@ curl -s "http://localhost:4000/v1/responses" \
 
 # Second request: same session_id, x is still there
 curl -s "http://localhost:4000/v1/responses" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_large}}",
@@ -259,7 +259,7 @@ curl -s "http://localhost:4000/v1/responses" \
 ```python
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000/v1")
 
 client.responses.create(
     model="{{openai_large}}",

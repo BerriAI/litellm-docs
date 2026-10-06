@@ -18,7 +18,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.99.1` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.99.1` will not resolve. If you install LiteLLM from PyPI, stay on `1.99.0`; the change in this release reaches you through the image.
 
