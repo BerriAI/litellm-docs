@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 ## Set up Lens {#quick-start}
 
-Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHouse stores traces, and PostgreSQL stores findings and settings. The worker only needs access to LiteLLM, with no provider keys or database credentials
+Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHouse stores traces, and PostgreSQL stores settings, review checkpoints, findings, and run history. The worker only needs access to LiteLLM, with no provider keys or database credentials
 
 ![LiteLLM Lens architecture: your agent sends LLM calls and traces to LiteLLM, which stores traces in ClickHouse; the Lens worker polls LiteLLM for investigations.](/img/lens-architecture.svg)
 
@@ -21,7 +21,7 @@ Lens runs alongside LiteLLM. The worker investigates recorded activity, ClickHou
 | LiteLLM proxy | Receives traces, serves the Lens UI and API | [`ghcr.io/berriai/litellm`](https://github.com/BerriAI/litellm/pkgs/container/litellm) with [tracing enabled](#configure-an-existing-proxy) |
 | ClickHouse (new) | Stores traces and request logs | [`clickhouse/clickhouse-server:26.9.6.6`](https://hub.docker.com/r/clickhouse/clickhouse-server/tags?name=26.9.6.6) |
 | Lens worker (new) | Runs investigations on your infrastructure. It polls LiteLLM over HTTPS and needs no database access or provider keys | [`ghcr.io/berriai/litellm-lens-worker-dev`](https://github.com/BerriAI/litellm/pkgs/container/litellm-lens-worker-dev), [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml) |
-| PostgreSQL | Stores lenses, findings, and keys | Your existing LiteLLM database, or PostgreSQL from the local tracing stack |
+| PostgreSQL | Stores settings, review checkpoints, findings, run history, and keys | Your existing LiteLLM database, or PostgreSQL from the local tracing stack |
 
 Choose your starting point below. New installations can start all four services with Docker Compose. Existing users can keep their deployment and add only the services they need. If Lens is already installed, go to [upgrading](#upgrade-litellm-and-the-worker)
 
@@ -181,6 +181,10 @@ You choose when to upgrade. Publishing a new release does not update existing co
 
 Review the changes, back up your databases, pause scheduled investigations, and let active investigations finish before upgrading. Preserve your configuration, database volumes, master key, salt key, and worker token. Worker setup is performed once; you do not need a new token for each release
 
+Deploy all gateway replicas as a coordinated replacement or traffic cutover. Keep traffic and workers paused until every gateway replica uses the selected build and its schema migrations have completed. Mixed gateway versions sharing Lens data are not supported: saved review and finding records must remain readable by every replica. Pausing workers alone does not prevent the dashboard or API from writing Lens data
+
+PostgreSQL migrations create the review checkpoint table without rewriting existing Lens records. Saved investigations, findings, history, worker credentials, and billing assignments are preserved. Checkpoints let workers resume completed trace reviews after a restart. Back up the database before deployment; rolling back to a build that cannot read the saved records requires restoring a compatible backup, including planning for other gateway data written since that backup
+
 <Tabs groupId="lens-upgrade">
 <TabItem value="compose" label="Docker Compose" default>
 
@@ -210,7 +214,7 @@ For a worker started with `docker run`, use your saved install command with the 
 </TabItem>
 <TabItem value="helm" label="Helm">
 
-Use the source chart from the selected gateway checkout. Update your component and worker image overrides in your existing values; preserve the release name, namespace, and token Secret. Keep workers paused until all LiteLLM pods have finished upgrading, then restore the worker count from your values:
+Use the source chart from the selected gateway checkout. Update your component and worker image overrides in your existing values; preserve the release name, namespace, and token Secret. Drain traffic through your ingress and stop active investigations before changing images. Keep workers paused until all LiteLLM pods have finished upgrading, then restore the worker count from your values:
 
 ```bash
 helm upgrade litellm ./helm/litellm \
@@ -225,14 +229,14 @@ helm upgrade litellm ./helm/litellm \
   --namespace litellm -f values.yaml --wait
 ```
 
-The chart uses the matching images you selected in your values. Pinning the worker by digest keeps the selected image across restarts even if its registry tag changes. The first Helm command pauses investigations while the gateway and backend update. Wait for the old worker pods to stop, then the final command resumes them with the same token. Use your own release name in the pod selector if it differs from `litellm`. Avoid running different LiteLLM versions against the same Lens data after investigations resume
+The chart uses the matching images you selected in your values. Pinning the worker by digest keeps the selected image across restarts even if its registry tag changes. The first Helm command pauses investigations while the gateway and backend update. Wait for the worker pods to stop and all gateway pods to use the selected build before the final command resumes investigations. Restore ingress traffic after the cutover. Use your own release name in the pod selector if it differs from `litellm`
 
 Update both image tags and digests in your values so neither component remains on an older build. A worker digest takes precedence over its tag. Custom charts and separately managed worker deployments must update both image versions through their normal deployment process
 
 </TabItem>
 </Tabs>
 
-After any upgrade, check for **Worker connected** in the dashboard, run an investigation, and restore any schedules you paused. The gateway checks compatibility before handing out work. An outdated worker waits with an upgrade message, leaving queued investigations untouched; update its image to resume work
+After any upgrade, check for **Worker connected** in the dashboard, run an investigation, and restore any schedules you paused. The gateway checks the worker's release identity and protocol before handing out work. A mismatch returns HTTP 409 and the required worker image, leaving queued investigations untouched. Scanning waits until a compatible worker connects
 
 Hourly development deployments build the gateway and worker from the same selected commit
 

@@ -17,6 +17,8 @@ Once your agents are in production, you cannot manually review every trace.
 
 LiteLLM Lens uses AI agents to analyze your agent traces and find recurring problems. You specify the expected behavior. Lens investigates failures, groups similar problems, and links each finding to the original traces.
 
+Repeated investigations reuse completed reviews when the trace content and criteria are unchanged. New evidence extends matching findings across investigation runs, preserving affected traces, supporting quotes, and feedback. Each investigation tracks its own monthly budget and analysis cost.
+
 Use **Lens > Traces** to manually inspect individual runs. Use **Lens > Investigations** to investigate a set of runs, on demand or on a schedule.
 
 Before setup, click **Preview sample** beside the Lens title to explore sample traces, investigations, and linked evidence. **Exit demo** returns to your own workspace.
