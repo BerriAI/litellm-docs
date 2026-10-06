@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # OpenAI - Response API
 
+To use GPT-6 Astra with `service_tier: "ultrafast"`, see [Ultrafast mode](./ultrafast.md) for Admin UI setup, configuration, and request examples.
+
 ## Usage
 
 ### LiteLLM Python SDK

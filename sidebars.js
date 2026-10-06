@@ -1218,6 +1218,7 @@ const sidebars = {
           items: [
             "providers/openai",
             "providers/openai/responses_api",
+            "providers/openai/ultrafast",
             "providers/openai/text_to_speech",
             "providers/openai/videos",
           ]

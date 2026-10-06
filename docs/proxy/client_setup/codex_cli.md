@@ -80,6 +80,8 @@ The row carries no end user yet, since Codex has no setting that puts one in the
 
 ### 4. Let Codex list the gateway's models and service tiers {#model-catalog-and-service-tiers}
 
+For an OpenAI deployment with UI screenshots, configuration, and request examples, see [Ultrafast mode](../../providers/openai/ultrafast.md). The guide also explains when to set a default `service_tier` and when to let Codex choose it per request.
+
 Codex never asks a custom provider which models it serves unless you tell it to, so its `/model` picker shows Codex's built-in OpenAI models and a gateway-only name such as `my-coding-model` never appears in it. Codex CLI 0.159 or newer can fetch the catalog from the gateway instead. Two settings are needed together: `model_catalog_url` on the provider block, pointed at `<LITELLM_PROXY_BASE_URL>/v1/models`, and the `api_key_model_discovery` feature under `[features]`. Either one alone changes nothing, so `codex --enable api_key_model_discovery` without the URL never calls the gateway. `suppress_unstable_features_warning = true` silences the startup warning that enabling the feature adds
 
 ```toml title="~/.codex/config.toml"
