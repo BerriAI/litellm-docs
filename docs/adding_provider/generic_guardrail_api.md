@@ -259,6 +259,8 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        skip_if_system_prompt_matches: ["internal-agent-[0-9a-f]{4}"]  # optional. Skip calls whose system prompt matches. See "Skipping requests by system prompt or first role" below.
+        skip_if_first_role_in: ["developer"]  # optional. Skip calls whose first message has one of these roles.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -286,6 +288,23 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Skipping requests by system prompt or first role
+
+Two options let you keep known traffic, such as an internal agent with a fixed system prompt, away from the guardrail endpoint:
+
+- `skip_if_system_prompt_matches` is a list of regex patterns. They are searched in the request's instructions: `system` and `developer` messages, an Anthropic top-level `system` prompt and Responses API `instructions`. User text is never searched. Only the first 16384 characters of the instructions, taken together, are searched.
+- `skip_if_first_role_in` is a list of roles. The guardrail is skipped when the request's first message has one of them. A top-level system prompt or a string `instructions` counts as a leading `system` message, and a list of `instructions` items keeps each item's own role.
+
+When a request matches, LiteLLM sends nothing to the guardrail endpoint for that call, neither the request nor its response, and returns the input unchanged. Each skipped side is recorded in the guardrail logs with `guardrail_status: not_run` and a response such as `skipped: skip_if_system_prompt_matches`, so it shows as **not run** on the logs page and does not count as a pass. The response is skipped even when the guardrail only runs on `post_call`, or when `scan_only_tool_results` kept the request itself from the guardrail.
+
+:::warning
+
+These options match the request body, which the caller writes. A caller that knows a configured pattern or role can put it in its own request and exempt itself from the guardrail. Use them only to scope traffic you trust, never as an enforcement control. LiteLLM logs a warning at startup whenever either option is set.
+
+:::
+
+Both options are set in `config.yaml` or through the guardrails API. The Admin UI form does not show them. A value LiteLLM cannot use, such as a single string instead of a list or an invalid regex, is ignored with a warning, and that option then skips nothing. Patterns run on caller-supplied text and Python's `re` has no timeout, so keep them linear-time and avoid nested quantifiers such as `(a+)+`.
 
 ### Static and dynamic headers
 
