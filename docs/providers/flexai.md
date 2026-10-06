@@ -18,21 +18,39 @@ import TabItem from '@theme/TabItem';
 
 **We support ALL FlexAI chat models, just set `flexai/` as a prefix when sending completion requests**
 
-## Available Models (selection)
+## Available Models
 
-The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models). Popular chat models:
+FlexAI's chat models as of 2026-10-05. The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models), and `GET /v1/models` is the source of truth for the current set.
 
 | Model | Capabilities | Context Window |
 |-------|-------------|----------------|
-| `flexai/DeepSeek-V4-Flash-0731` | tool use, reasoning | 768K tokens |
-| `flexai/gpt-oss-120b` | tool use, structured outputs | 128K tokens |
+| `flexai/DeepSeek-V4-Flash-0731` | tool use, reasoning | 1M tokens |
+| `flexai/DeepSeek-V4.1-Flash` | tool use, reasoning, vision | 1M tokens |
+| `flexai/gemma-4-26B-A4B-it` | tool use, reasoning, vision | 256K tokens |
 | `flexai/gemma-4-31b-it` | tool use, reasoning, vision | 256K tokens |
-| `flexai/gemma-4-26B-A4B-it` | tool use, vision | 256K tokens |
-| `flexai/Qwen3-30B-A3B-Thinking-2507-FP8` | tool use, reasoning | 256K tokens |
-| `flexai/Qwen3-Coder-30B-A3B-Instruct-FP8` | tool use, code | 256K tokens |
-| `flexai/Qwen3.5-9B` | tool use, reasoning, vision | 250K tokens |
+| `flexai/GLM-4.5-Air-FP8` | tool use, reasoning | 128K tokens |
 | `flexai/GLM-5.2` | tool use, reasoning | 128K tokens |
-| `flexai/Llama-3.3-70B-Instruct-FP8` | tool use | 64K tokens |
+| `flexai/GLM-5.3-Flash` | tool use, reasoning, vision | 1M tokens |
+| `flexai/gpt-oss-120b` | tool use, reasoning | 128K tokens |
+| `flexai/gpt-oss-20b` | tool use, reasoning | 128K tokens |
+| `flexai/Llama-3.3-70B-Instruct-FP8` | tool use | 128K tokens |
+| `flexai/Meta-Llama-3.1-8B-Instruct-FP8` | tool use | 128K tokens |
+| `flexai/MiniMax-M2.7` | tool use, reasoning | 200K tokens |
+| `flexai/Mistral-Nemo-Instruct-2407-FP8` | tool use | 128K tokens |
+| `flexai/Muse-Glimmer-30B` | tool use, reasoning, vision | 128K tokens |
+| `flexai/NVIDIA-Nemotron-3.5-Lightning-30B-A3B` | tool use, reasoning | 1M tokens |
+| `flexai/PaddleOCR-VL` | vision | 128K tokens |
+| `flexai/Qwen3-30B-A3B-Thinking-2507-FP8` | tool use, reasoning | 256K tokens |
+| `flexai/Qwen3-8B-FP8` | tool use, reasoning | 40K tokens |
+| `flexai/Qwen3-Coder-30B-A3B-Instruct-FP8` | tool use | 256K tokens |
+| `flexai/Qwen3.5-9B` | tool use, reasoning, vision | 256K tokens |
+| `flexai/Qwen3.6-27B-FP8` | tool use, reasoning, vision | 256K tokens |
+| `flexai/Qwen3.6-35B-A3B-FP8` | tool use, reasoning, vision | 256K tokens |
+| `flexai/Qwen3.8-27B` | tool use, reasoning, vision | 256K tokens |
+| `flexai/Qwen3.8-Flash-Next` | tool use, reasoning, vision | 256K tokens |
+| `flexai/Step-3.7-Flash` | tool use, reasoning, vision | 256K tokens |
+
+Tool use and vision were checked against the live API: every model marked "tool use" returned a real tool call, and every model marked "vision" identified two solid-colour test images.
 
 ## Required Variables
 
