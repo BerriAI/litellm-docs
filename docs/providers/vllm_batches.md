@@ -65,7 +65,7 @@ The upload has to name the deployment, either with the `x-litellm-model` header,
 
 ```bash
 curl http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: my-vllm-model" \
   -F purpose="batch" \
   -F file="@batch_requests.jsonl"
@@ -75,7 +75,7 @@ curl http://localhost:4000/v1/files \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "<file id from the upload>",
@@ -88,24 +88,26 @@ curl http://localhost:4000/v1/batches \
 
 ```bash
 curl http://localhost:4000/v1/batches/<batch id> \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Download the results**
 
 ```bash
 curl http://localhost:4000/v1/files/<output_file_id>/content \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
 <TabItem value="python" label="OpenAI SDK">
 
 ```python
+import os
 import time
+
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key=os.environ["LITELLM_API_KEY"], base_url="http://localhost:4000/v1")
 
 input_file = client.files.create(
     file=open("batch_requests.jsonl", "rb"),

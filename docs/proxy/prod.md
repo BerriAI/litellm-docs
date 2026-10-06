@@ -34,7 +34,7 @@ general_settings:
 
 Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
 
-<Image img={require('../../img/ui_alerting_types.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
+<Image img={require('../../img/ui_alerting_types.png')} dark={require('../../img/ui_alerting_types_dark.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
 
 To bake it into config instead, set `alerting: ["slack"]` under `general_settings` and export `SLACK_WEBHOOK_URL` in the environment.
 
@@ -61,7 +61,7 @@ general_settings:
 
 The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Router Settings on the General tab, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
 
-<Image img={require('../../img/proxy_config_reload_interval_ui.png')} />
+<Image img={require('../../img/proxy_config_reload_interval_ui.png')} dark={require('../../img/proxy_config_reload_interval_ui_dark.png')} alt="Router Settings General tab showing proxy_config_reload_interval_seconds set to 12" />
 
 ### Bound database connections
 

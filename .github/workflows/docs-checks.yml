@@ -6,6 +6,18 @@ on:
     branches: [main]
 
 jobs:
+  social-cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:social-cards
+      - run: npm run test:optimize-images
+      - run: npm run test:lens
   writing-style:
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +30,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check for retired master-key prefix
+        run: |
+          status=0
+          git grep -nI -F -- "sk-12""34" || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "Retired master-key prefix found"
+            exit 1
+          fi
+          if [ "$status" -ne 1 ]; then
+            exit "$status"
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

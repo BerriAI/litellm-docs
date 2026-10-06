@@ -27,6 +27,15 @@ Provider Managed (automatic, no marker needed):
 - OpenAI, models before GPT-5.6 (`openai/`)
 - DeepSeek (`deepseek/`)
 - xAI (`xai/`)
+- Gemini 2.5 and newer (`gemini/`, `vertex_ai/`), through Google's implicit caching
+
+:::warning Leave injection points off Gemini unless you want explicit caching
+
+Gemini 2.5 and newer models cache repeated prefixes on their own, with no marker and no extra cost. Adding `cache_control_injection_points` to a Gemini deployment switches it to Google's explicit [context caching](https://ai.google.dev/gemini-api/docs/caching): LiteLLM moves the marked messages out of the request into a separate `cachedContents` object and sends only a reference to it. That prefix is no longer part of the request, so implicit caching stops applying to it, and Google bills storage for every cache object LiteLLM creates. For most Gemini traffic the better setup is no injection points at all. Use them only when you need a guaranteed discount on a large, stable prefix that is reused often enough to cover the storage cost
+
+Injection points were built for Anthropic-style caching, where nothing is cached unless the request carries a `cache_control` marker. Providers that cache automatically (Gemini 2.5+, OpenAI, DeepSeek, xAI) do not need them
+
+:::
 
 ## How it works
 

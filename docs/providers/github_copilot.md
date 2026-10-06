@@ -15,16 +15,12 @@ https://docs.github.com/en/copilot
 |-------|-------|
 | Description | GitHub Copilot Chat API provides access to GitHub's AI-powered coding assistant. |
 | Provider Route on LiteLLM | `github_copilot/` |
-| Supported Endpoints | `/chat/completions`, `/embeddings` |
+| Supported Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/v1/messages` |
 | API Reference | [GitHub Copilot docs](https://docs.github.com/en/copilot) |
 
 ## Authentication
 
-GitHub Copilot uses OAuth device flow for authentication. On first use, you'll be prompted to authenticate via GitHub:
-
-1. LiteLLM will display a device code and verification URL
-2. Visit the URL and enter the code to authenticate
-3. Your credentials will be stored locally for future use
+GitHub Copilot uses the OAuth device flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you visit the URL and enter the code, and the GitHub token is stored in `~/.config/litellm/github_copilot/access-token` for future use. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt (older releases block on it, newer ones fail with `GitHub Copilot device-code login needs a human`), so for the proxy you sign in first and mount the token, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
 ## Usage - LiteLLM Python SDK
 
@@ -59,15 +55,31 @@ for chunk in stream:
 
 ### Responses
 
-For GPT Codex models, only responses API is supported.
+GPT Codex models such as `gpt-5.3-codex` only support the Responses API. Models that support both endpoints, such as `gpt-5.2`, are sent to Copilot's `/chat/completions` unless their `model_info` sets `mode: responses`. This example is async, so it cannot run the first login itself: on a machine with no token yet, sign in first with the one-liner in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy)
 
 ```python showLineNumbers title="GitHub Copilot Responses"
 import litellm
 
 response = await litellm.aresponses(
-    model="github_copilot/gpt-5.1-codex",
+    model="github_copilot/gpt-5.3-codex",
     input="Write a Python hello world",
     max_output_tokens=500
+)
+
+print(response)
+```
+
+### Anthropic Messages
+
+Claude models can be called through Copilot's native Anthropic `/v1/messages` endpoint.
+
+```python showLineNumbers title="GitHub Copilot Anthropic Messages"
+import litellm
+
+response = await litellm.anthropic.messages.acreate(
+    model="github_copilot/claude-sonnet-4.5",
+    messages=[{"role": "user", "content": "Write a Python hello world"}],
+    max_tokens=500,
 )
 
 print(response)
@@ -87,6 +99,52 @@ print(response)
 
 ## Usage - LiteLLM Proxy
 
+### Sign in before starting the proxy
+
+The proxy cannot complete the device flow: it runs in worker processes with no terminal to hand the code to. With no `access-token` on disk, older releases print the code from a worker and hold startup on each `github_copilot/` deployment while they wait for someone to enter it (from a foreground terminal you can, once per worker, with startup held meanwhile; from a service or container log nobody can), and newer releases refuse to initialize the deployment, logging `GitHub Copilot device-code login needs a human and cannot run inside a running event loop or a worker thread` once per deployment in every worker. Either way, every request to those models then returns HTTP 400 `There are no healthy deployments for this model`. Sign in once from a terminal instead:
+
+```bash showLineNumbers title="Sign in once, outside the proxy"
+python -c "from litellm.llms.github_copilot.authenticator import Authenticator; Authenticator().get_access_token()"
+```
+
+Visit the printed URL and enter the code: each code is good for about a minute (the SDK polls twelve times, five seconds apart) and after three codes it gives up with `Failed to get access token after 3 attempts`, so have GitHub open and signed in before you run it. The GitHub token lands in `~/.config/litellm/github_copilot/access-token` (`GITHUB_COPILOT_TOKEN_DIR` and `GITHUB_COPILOT_ACCESS_TOKEN_FILE` change the location). Put that file at the same path on the proxy host, or set `GITHUB_COPILOT_TOKEN_DIR` to the directory that holds it, and only then start the proxy: `model_list` deployments are created at startup, so a proxy started without the file needs a restart after it appears. The directory must be writable by the proxy's user (uid 65534 in the `litellm-non_root` image), because LiteLLM exchanges the GitHub token for a short-lived Copilot API key and caches it next to the token as `api-key.json`; when it cannot write that file, the deployment fails at startup the same way a missing token does, with `Failed to save API key` inside the `Error creating deployment` log line.
+
+On Kubernetes, keep `access-token` in a Secret and copy it into a writable `emptyDir` that `GITHUB_COPILOT_TOKEN_DIR` points at, since Secret volumes are read-only. The GitHub token is long-lived and holds no per-process state, so every worker in every pod shares the same one and each derives its own `api-key.json`.
+
+```bash showLineNumbers title="Create the Secret from your local login"
+kubectl create secret generic litellm-copilot-auth --from-file=access-token=$HOME/.config/litellm/github_copilot/access-token
+```
+
+```yaml showLineNumbers title="Pod spec excerpt"
+spec:
+  initContainers:
+    - name: copilot-token
+      image: busybox:1.37
+      command: ["cp", "/secrets/copilot/access-token", "/tokens/copilot/access-token"]
+      volumeMounts:
+        - name: copilot-secret
+          mountPath: /secrets/copilot
+          readOnly: true
+        - name: copilot-tokens
+          mountPath: /tokens/copilot
+  containers:
+    - name: litellm
+      env:
+        - name: GITHUB_COPILOT_TOKEN_DIR
+          value: /tokens/copilot
+      volumeMounts:
+        - name: copilot-tokens
+          mountPath: /tokens/copilot
+  volumes:
+    - name: copilot-secret
+      secret:
+        secretName: litellm-copilot-auth
+    - name: copilot-tokens
+      emptyDir: {}
+```
+
+### Configure and start the proxy
+
 Add the following to your LiteLLM Proxy configuration file:
 
 ```yaml showLineNumbers title="config.yaml"
@@ -94,11 +152,14 @@ model_list:
   - model_name: github_copilot/gpt-5.2
     litellm_params:
       model: github_copilot/gpt-5.2
-  - model_name: github_copilot/gpt-5.1-codex
+  - model_name: github_copilot/gpt-5.3-codex
     model_info:
       mode: responses
     litellm_params:
-      model: github_copilot/gpt-5.1-codex
+      model: github_copilot/gpt-5.3-codex
+  - model_name: github_copilot/claude-sonnet-4.5
+    litellm_params:
+      model: github_copilot/claude-sonnet-4.5
   - model_name: github_copilot/text-embedding-ada-002
     model_info:
       mode: embedding
@@ -170,12 +231,32 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+Responses and Anthropic Messages requests go to the proxy's `/v1/responses` and `/v1/messages` routes:
+
+```bash showLineNumbers title="GitHub Copilot via Proxy - Responses and Messages"
+curl http://localhost:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-proxy-api-key" \
+  -d '{
+    "model": "github_copilot/gpt-5.3-codex",
+    "input": "Write a Python hello world"
+  }'
+
+curl http://localhost:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-proxy-api-key" \
+  -d '{
+    "model": "github_copilot/claude-sonnet-4.5",
+    "max_tokens": 500,
+    "messages": [{"role": "user", "content": "Write a Python hello world"}]
+  }'
+```
+
 ## Getting Started
 
 1. Ensure you have GitHub Copilot access (paid GitHub subscription required)
-2. Run your first LiteLLM request - you'll be prompted to authenticate
-3. Follow the device flow authentication process
-4. Start making requests to GitHub Copilot through LiteLLM
+2. Sign in once: a first request from a synchronous script walks you through the device flow, while the proxy needs the one-liner from [Sign in before starting the proxy](#sign-in-before-starting-the-proxy) run beforehand
+3. Start making requests to GitHub Copilot through LiteLLM
 
 ## Configuration
 
@@ -199,20 +280,23 @@ export GITHUB_COPILOT_API_BASE="https://copilot-api.my-company.ghe.com"
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://my-company.ghe.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://my-company.ghe.com/login/oauth/access_token"
 export GITHUB_COPILOT_API_KEY_URL="https://my-company.ghe.com/api/v3/copilot_internal/v2/token"
+
+# Optional: Custom OAuth client ID for the device flow
+export GITHUB_COPILOT_CLIENT_ID="Iv1.b507a08c87ecfe98"
 ```
 
 ### Headers
 
-LiteLLM automatically injects the required GitHub Copilot headers (simulating VSCode). You don't need to specify them manually.
+LiteLLM automatically injects the required GitHub Copilot headers (simulating VS Code Copilot Chat). You don't need to specify them manually.
 
-If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`:
+If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`. These are the defaults LiteLLM sends on chat, responses, and embedding requests:
 
 ```python showLineNumbers title="Custom Headers (Optional)"
 extra_headers = {
-    "editor-version": "vscode/1.85.1",           # Editor version
-    "editor-plugin-version": "copilot/1.155.0",  # Plugin version
-    "Copilot-Integration-Id": "vscode-chat",     # Integration ID
-    "user-agent": "GithubCopilot/1.155.0"        # User agent
+    "editor-version": "vscode/1.95.0",                 # Editor version
+    "editor-plugin-version": "copilot-chat/0.26.7",    # Plugin version
+    "copilot-integration-id": "vscode-chat",           # Integration ID
+    "user-agent": "GitHubCopilotChat/0.26.7"           # User agent
 }
 ```
 

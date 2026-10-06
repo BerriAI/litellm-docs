@@ -4,6 +4,7 @@ title: "How Pfizer Improved LiteLLM Gateway Performance and Resiliency at Scale"
 date: 2026-09-11T10:00:00
 authors: [ishaan, krrish, yassin, gabriele, aleksandr-liadov, praveena-mundolimoole, pramod-naik, tung-hoang, alexey-reznichenko]
 description: "How Pfizer AI Platform Engineering isolated a Redis connection handling bug that cut LiteLLM gateway throughput by ~48% with zero HTTP errors, reduced CI load-test latency by 76%, and built a regression prevention framework with LiteLLM."
+image: /img/litellm_pfizer_announcement.png
 tags: [engineering, performance, redis, testing, customer-story]
 hide_table_of_contents: false
 ---

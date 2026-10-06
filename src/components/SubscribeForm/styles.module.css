@@ -23,11 +23,11 @@
 }
 
 .input:focus {
-  border-color: #0ea5e9;
+  border-color: var(--ifm-color-primary);
 }
 
 .btn {
-  background: #0ea5e9;
+  background: var(--ifm-color-primary);
   color: #fff !important;
   font-size: 0.875rem;
   font-weight: 500;
@@ -40,7 +40,7 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: #0284c7;
+  background: var(--ifm-color-primary-dark);
 }
 
 .btn:disabled {
@@ -72,5 +72,5 @@
 }
 
 [data-theme='dark'] .input:focus {
-  border-color: #38bdf8;
+  border-color: var(--ifm-color-primary);
 }
