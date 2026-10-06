@@ -1220,6 +1220,7 @@ const sidebars = {
             "providers/openai/responses_api",
             "providers/openai/text_to_speech",
             "providers/openai/videos",
+            "providers/openai/ultrafast",
           ]
         },
         "providers/text_completion_openai",

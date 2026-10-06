@@ -80,6 +80,8 @@ The row carries no end user yet, since Codex has no setting that puts one in the
 
 ### 4. Let Codex list the gateway's models and service tiers {#model-catalog-and-service-tiers}
 
+For an OpenAI deployment with UI screenshots, configuration, and request examples, see [Fast & Ultrafast mode](../../providers/openai/ultrafast.md). The guide also explains when to set a default `service_tier` and when to let Codex choose it per request.
+
 Codex never asks a custom provider which models it serves unless you tell it to, so its `/model` picker shows Codex's built-in OpenAI models and a gateway-only name such as `my-coding-model` never appears in it. Codex CLI 0.159 or newer can fetch the catalog from the gateway instead. Two settings are needed together: `model_catalog_url` on the provider block, pointed at `<LITELLM_PROXY_BASE_URL>/v1/models`, and the `api_key_model_discovery` feature under `[features]`. Either one alone changes nothing, so `codex --enable api_key_model_discovery` without the URL never calls the gateway. `suppress_unstable_features_warning = true` silences the startup warning that enabling the feature adds
 
 ```toml title="~/.codex/config.toml"
@@ -109,7 +111,7 @@ model_list:
       service_tiers: ["priority", "ultrafast"]
   - model_name: my-coding-model
     litellm_params:
-      model: openai/gpt-6.1-sol
+      model: openai/gpt-6-astra
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       service_tiers:
@@ -117,6 +119,8 @@ model_list:
           name: Ultrafast
           description: Fastest responses, higher cost
 ```
+
+Only list tiers supported by the upstream model and your provider account. Both deployments above use GPT-6 Astra; see [Fast and Ultrafast supported models](../../providers/openai/ultrafast.md#supported-models-and-availability) before advertising a tier on another model.
 
 The same `model_info` works for a model added through the Admin UI or `POST /model/new`. Codex caches the catalog for five minutes in `models_cache.json` under its home directory, so a model added to the gateway shows up in `/model` on a launch after that cache lapses. An invalid `service_tiers` value (not a list, an empty id, an unknown object key) offers no tier for that model, Codex's built-in ones included, and the gateway logs one warning naming it; the rest of the listing is unaffected
 
