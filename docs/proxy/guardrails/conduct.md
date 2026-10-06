@@ -5,14 +5,14 @@ import TabItem from '@theme/TabItem';
 
 The Conduct guardrail sends each prompt to your Conduct workspace before the model is called. Conduct evaluates the user text against the rules configured for the tool the guardrail is registered under and returns a verdict. Blocking verdicts (`block`, `approval`) reject the request with a 400 and the rule id. Non-blocking verdicts (`warning`, `advisory`) let the request through and are recorded as `guardrail_flagged` in LiteLLM's guardrail logs, spend logs, and the Admin UI request detail.
 
-The integration wraps the [`conduct-litellm-guard`](https://pypi.org/project/conduct-litellm-guard/) package, so it works on every endpoint the proxy translates into a guardrail input: `/v1/chat/completions` (including streaming), `/v1/responses`, and `/v1/messages`.
+The integration wraps the [`conduct-litellm-guard`](https://pypi.org/project/conduct-litellm-guard/) package, so it works on every endpoint the proxy translates into a guardrail input: `/v1/chat/completions` (including streaming), `/v1/responses`, and `/v1/messages`. With `pre_mcp_call` enabled it also checks MCP tool calls made through the LiteLLM MCP gateway. See [MCP tool calls](#mcp-tool-calls).
 
 ## Quick Start
 
 ### 1. Install the plugin and get an agent token
 
 ```shell
-pip install "conduct-litellm-guard>=0.2.5"
+pip install "conduct-litellm-guard>=0.2.7"
 ```
 
 Create an agent token in the Conduct console and note the workspace id if your tenant needs one. The token is sent as the bearer credential to the Conduct MCP endpoint at `<api_base>/mcp`.
@@ -114,9 +114,25 @@ The request reaches the model and the response is returned unchanged. If a rule 
 
 ## Supported modes
 
-Conduct supports `pre_call` only. The plugin has no response-side check, so `during_call` and `post_call` are rejected when the config is loaded.
+Conduct supports `pre_call` and `pre_mcp_call`. The plugin has no response-side check, so `during_call`, `post_call`, and `post_mcp_call` are rejected when the config is loaded. `pre_mcp_call` needs `conduct-litellm-guard>=0.2.7`; older versions reject it at load time.
 
 The plugin evaluates the user-authored text of the request: the `prompt`, user messages, and text parts of multipart user content. Text that appears only in system messages or tool results is not sent to Conduct.
+
+## MCP tool calls
+
+Add `pre_mcp_call` to `mode` to check every tool call that goes through the [LiteLLM MCP gateway](/docs/mcp_guardrail) before the tool runs:
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: conduct-guard
+    litellm_params:
+      guardrail: conduct
+      mode: [pre_call, pre_mcp_call]
+      default_on: true
+      api_key: os.environ/CONDUCT_AGENT_TOKEN
+```
+
+For each MCP tool call, Conduct evaluates the tool name and its arguments against the action rules in your workspace, the same rules that govern agent tool use elsewhere. The argument text is also scanned by your prompt rules, so a credential or PII value in a tool argument is caught too. The most severe verdict wins: `block` and `approval` stop the call before it reaches the MCP server and return a 400 with the rule id.
 
 ## Further reading
 
