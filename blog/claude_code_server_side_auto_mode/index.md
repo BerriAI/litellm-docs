@@ -4,7 +4,7 @@ title: "Claude Code server-side auto mode through LiteLLM"
 date: 2026-09-21T12:00:00
 authors:
   - litellm
-description: "Anthropic is moving Claude Code auto mode's safety classifier server-side. LiteLLM's native /v1/messages route now forwards the safeguards contract to the Anthropic API, Bedrock and Vertex AI. Here is the contract, what changed, which releases carry it, and how to verify it."
+description: "Anthropic is moving Claude Code auto mode's safety classifier server-side. LiteLLM's native /v1/messages route now forwards the safeguards contract to the Anthropic API, Bedrock InvokeModel, Bedrock Mantle and Vertex AI. Here is the contract, what changed, which releases carry it, and how to verify it."
 tags: [announcement, claude-code, anthropic, ai-gateway]
 hide_table_of_contents: true
 ---
@@ -33,7 +33,7 @@ Nothing breaks when this happens. Users keep the auto mode they have today and k
 
 ## What LiteLLM was doing wrong
 
-LiteLLM's native `/v1/messages` endpoint builds the outbound request from an allowlist of known Anthropic Messages parameters so that the same endpoint can front Claude on Bedrock, Vertex AI, Azure AI and non-Anthropic models. `safeguards` was not on that list, so it was silently dropped before the request left the proxy. Separately, LiteLLM filters `anthropic-beta` values it does not recognize to protect providers that reject unknown beta flags, and that filter ran even when the upstream was the Anthropic API, so where the beta was not yet on its allowlist, `dangerous-tool-use-2026-09-03` was stripped from the header too.
+LiteLLM's native `/v1/messages` endpoint builds the outbound request from an allowlist of known Anthropic Messages parameters so that the same endpoint can front Claude on Bedrock, Vertex AI, Azure AI and non-Anthropic models. `safeguards` was not on that list, so it was silently dropped before the request left the proxy.
 
 Anthropic therefore received a request with no `safeguards`, returned no evaluated `safeguard_results`, and Claude Code fell back to the paid client-side classifier. Running Claude Code v2.1.278 in auto mode against a LiteLLM release without the fix shows the notice above with your proxy's address in it, and `/status` reports the Auto mode server row as `Disabled`.
 
