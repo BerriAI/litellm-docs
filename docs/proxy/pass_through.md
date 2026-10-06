@@ -237,7 +237,7 @@ An endpoint with `auth: true` rejects non-admin keys with a 403 unless the key o
 
 ```bash
 curl -X POST http://localhost:4000/key/generate \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "allowed_passthrough_routes": ["/custom-api"],
