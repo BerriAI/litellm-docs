@@ -7,13 +7,13 @@ import Image from '@theme/IdealImage';
 
 # Chat UI
 
-The Chat UI is a chat page in the LiteLLM Admin UI. Users can send messages to the models on the gateway and use the tools of MCP servers.
+The Chat UI is a chat page in the LiteLLM Admin UI, at `/ui/chat`. A proxy admin enables it for the gateway. Then each user who can log in to the Admin UI can use it. Users can send messages to the models that they have access to and use the tools of MCP servers.
 
 Each request from the Chat UI goes through the gateway. LiteLLM applies the same model access, budgets, and logs to these requests as to API requests.
 
 :::info Beta
 
-The Chat UI is a beta feature. Its pages and controls can change in new releases. The Chat UI is available in v1.92.0 and newer versions. The screenshots on this page show v1.105.0.
+The Chat UI is a beta feature. Its pages and controls can change in new releases. The Chat UI is available in v1.92.0 and newer versions.
 
 :::
 
@@ -29,8 +29,8 @@ The Chat UI is off by default. A proxy admin must enable it.
 <Image
   img={require('../../../img/chat_ui_enable.png')}
   dark={require('../../../img/chat_ui_enable_dark.png')}
-  alt="The Enable Chat page switch on the UI Settings tab of Admin Settings"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  alt="The [BETA] Enable Chat page switch, on and highlighted, on the UI Settings tab"
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 When the Chat UI is on, the view switcher at the top of the Admin UI shows **Chat**. Select **Chat** to open the Chat UI. You can also go to `PROXY_BASE_URL/ui/chat`.
@@ -39,7 +39,7 @@ When the Chat UI is on, the view switcher at the top of the Admin UI shows **Cha
   img={require('../../../img/chat_ui_switcher.png')}
   dark={require('../../../img/chat_ui_switcher_dark.png')}
   alt="The view switcher with the AI Gateway and Chat options"
-  style={{maxWidth: '640px', display: 'block', margin: '0'}}
+  style={{width: '100%', maxWidth: '640px', display: 'block', margin: '1.5rem 0'}}
 />
 
 When the Chat UI is off, the view switcher shows **Chat** as not available. If a user goes to `/ui/chat`, the Admin UI opens the dashboard.
@@ -66,16 +66,16 @@ LiteLLM keeps this value in the database. The gateway must have a `DATABASE_URL`
   img={require('../../../img/chat_ui_new_chat.png')}
   dark={require('../../../img/chat_ui_new_chat_dark.png')}
   alt="A new chat in the Chat UI with the message box and the model list"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
-The model list shows the models that your login can use. Type in the search box to find a model.
+The model list shows only the models that your user can use. Type in the search box to find a model.
 
 <Image
   img={require('../../../img/chat_ui_model_picker.png')}
   dark={require('../../../img/chat_ui_model_picker_dark.png')}
   alt="The open model list with a search box"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 The Chat UI shows the response as the model sends it. Below each response, the Chat UI shows these metrics for the request:
@@ -89,7 +89,7 @@ The Chat UI shows the response as the model sends it. Below each response, the C
   img={require('../../../img/chat_ui_conversation.png')}
   dark={require('../../../img/chat_ui_conversation_dark.png')}
   alt="A chat with a response and the request metrics below the response"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 ### Chat history
@@ -112,7 +112,7 @@ The Chat UI can give the tools of an MCP server to the model.
   img={require('../../../img/chat_ui_mcp_picker.png')}
   dark={require('../../../img/chat_ui_mcp_picker_dark.png')}
   alt="The MCP server list with one switch for each server"
-  style={{maxWidth: '720px', display: 'block', margin: '0'}}
+  style={{width: '100%', maxWidth: '720px', display: 'block', margin: '1.5rem 0'}}
 />
 
 The model can then call the tools of the servers that you selected. The list shows only the MCP servers that your login can access. To give users access to an MCP server, refer to [Grant access to MCP servers](../../mcp_grant_access.md).
@@ -130,7 +130,7 @@ Some MCP servers must have a sign-in for each user. For these servers, LiteLLM k
   img={require('../../../img/chat_ui_integrations.png')}
   dark={require('../../../img/chat_ui_integrations_dark.png')}
   alt="The Integrations page with one MCP server and one OAuth server with a Connect button"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 The **All** tab shows all the MCP servers that your login can access. Each server shows its number of tools. The **Connected** tab shows the servers that are on for your chats.
@@ -167,7 +167,7 @@ On LiteLLM Enterprise, each key also has a **Rotate** button. **Rotate** makes a
   img={require('../../../img/chat_ui_api_keys.png')}
   dark={require('../../../img/chat_ui_api_keys_dark.png')}
   alt="The API Keys page with two virtual keys"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 ## See your logs
@@ -180,7 +180,7 @@ Click a row to see the details of the request. The details show the request body
   img={require('../../../img/chat_ui_logs.png')}
   dark={require('../../../img/chat_ui_logs_dark.png')}
   alt="The Logs page with three successful requests"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 ## See your usage
@@ -191,7 +191,7 @@ The **Usage** page shows your total spend, the number of API requests, the token
   img={require('../../../img/chat_ui_usage.png')}
   dark={require('../../../img/chat_ui_usage_dark.png')}
   alt="The Usage page with spend, requests, tokens, and success rate"
-  style={{width: '100%', display: 'block', margin: '0'}}
+  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
 />
 
 ## Spend for Chat UI requests
