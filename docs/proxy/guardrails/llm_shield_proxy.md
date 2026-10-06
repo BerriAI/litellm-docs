@@ -59,7 +59,7 @@ litellm --config config.yaml
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
@@ -76,7 +76,7 @@ The provider receives stand-ins such as `john10@example.net` and `65672116397513
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
@@ -108,7 +108,7 @@ Tokens are forwarded as they arrive rather than buffered to the end of the respo
 
 ## What is redacted and what is restored
 
-On the request side the guardrail collects message text and tool-call arguments in chat, Responses `input`, Completions `prompt` and `suffix`, and Anthropic messages, including nested tool results. Also walked: Anthropic document parts (their `title`, `context`, and the text of a `text` source), Responses function-call outputs (a string or `output_text` parts), custom tool-call `input`, code-interpreter `code`, typed prompt variables, and anything under `extra_body`, which LiteLLM merges over the transformed request just before sending it — an unredacted `messages` or `system` there would replace the redacted one on the wire. Each request gets a fresh vault id minted by LiteLLM and namespaced to the process; nothing the caller sends is used to name a vault, so a caller cannot reach another request's values by getting a stand-in echoed back.
+On the request side the guardrail collects message text and tool-call arguments in chat, Responses `input`, Completions `prompt` and `suffix`, and Anthropic messages, including nested tool results. Also walked: Anthropic document parts (their `title`, `context`, and the text of a `text` source), Responses function-call outputs (a string or `output_text` parts), custom tool-call `input`, code-interpreter `code`, typed prompt variables, and anything under `extra_body`, which LiteLLM merges over the transformed request just before sending it. An unredacted `messages` or `system` there would replace the redacted one on the wire. Each request gets a fresh vault id minted by LiteLLM and namespaced to the process; nothing the caller sends is used to name a vault, so a caller cannot reach another request's values by getting a stand-in echoed back.
 
 Text the application wrote rather than the caller is redacted into a second vault that is never restored from: `system` and `developer` turns, `system` and `developer` items in Responses `input`, Anthropic's top-level `system`, Responses `instructions`, tool descriptions and parameter schemas, structured-output schemas, web-search user locations, and the `user` and `safety_identifier` fields. The exception is `enum` and `const` values in a schema, which go to the caller's vault so that a tool call or structured output that uses them comes back with the real value. A request nested deeper than the walk's bound is refused rather than forwarded partly unredacted.
 
@@ -144,7 +144,7 @@ The name passed to `guardrails` must match the guardrail's `guardrail_name` (`ll
 
 ## Caching and telemetry through the proxy
 
-Through the proxy, LiteLLM caches the redacted reply — restoration happens after the cache write — so the response cache never holds plaintext. Guardrail telemetry likewise records the stand-ins the guardrail sent, not the restored values.
+Through the proxy, LiteLLM caches the redacted reply. Restoration happens after the cache write, so the response cache never holds plaintext. Guardrail telemetry likewise records the stand-ins the guardrail sent, not the restored values.
 
 ## Supported parameters
 

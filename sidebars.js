@@ -685,6 +685,7 @@ const sidebars = {
           label: "LiteAdmin",
           items: [
             "proxy/liteadmin_mcp",
+            "proxy/liteadmin_mcp_enterprise",
             "proxy/liteadmin_slack",
           ],
         },
@@ -748,7 +749,8 @@ const sidebars = {
                 "proxy/ui_logs_sessions",
                 "proxy/deleted_keys_teams",
               ]
-            }
+            },
+            "proxy/ui/chat_ui",
           ],
         },
         {
@@ -1219,6 +1221,7 @@ const sidebars = {
             "providers/openai/responses_api",
             "providers/openai/text_to_speech",
             "providers/openai/videos",
+            "providers/openai/ultrafast",
           ]
         },
         "providers/text_completion_openai",
@@ -1325,6 +1328,7 @@ const sidebars = {
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
+        "providers/coralbricks",
         "providers/crusoe",
         "providers/custom_llm_server",
         "providers/dashscope",
