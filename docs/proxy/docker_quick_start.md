@@ -25,12 +25,12 @@ For detailed installation steps, follow the rest of the guide. By the end you wi
 ## 1. Start LiteLLM
 
 ```bash
-curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker-compose.yml
 printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
-docker compose -f docker-compose.quickstart.yml up -d
+docker compose up -d
 ```
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
+This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml) defines those two services (Prometheus sits behind an opt-in `monitoring` profile) and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
