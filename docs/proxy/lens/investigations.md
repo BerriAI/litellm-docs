@@ -74,7 +74,7 @@ While a run is active, Lens distinguishes reviews **eligible for reuse** from tr
 
 ## Budgets and cost
 
-Each investigation has a monthly budget. Model calls also use the worker's assigned virtual key, so that key's budget, model permissions, and rate limits apply independently. A worker key shared by several investigations can reach its limit while one investigation still has budget available.
+Each investigation has a monthly budget. Budget edits apply to subsequent model calls, including those in an active run. A running investigation keeps its analysis settings and selected traces across retries. Model calls also use the worker's assigned virtual key, so that key's budget, model permissions, and rate limits apply independently. A worker key shared by several investigations can reach its limit while one investigation still has budget available.
 
 The investigation summary separates **spent**, **reserved**, and **available** amounts. Spent is settled analysis cost for the current month. Reserved is the temporary allowance held for model calls in progress. Available is the monthly limit minus spent and unexpired reservations. For example, with a $100 limit, $45 spent, and $10 reserved, $45 is available for further calls; the reservation is not another $10 of settled spend.
 

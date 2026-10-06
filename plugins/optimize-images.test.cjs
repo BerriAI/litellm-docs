@@ -94,7 +94,7 @@ test('leaves a corrupt PNG untouched and does not cache it', async (t) => {
   assert.deepEqual(await fs.readdir(cacheDir), []);
 });
 
-test('limits image optimization to two concurrent pipelines', async (t) => {
+test('limits image optimization to two concurrent pipelines', {timeout: 10000}, async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-optimize-concurrency-'));
   t.after(() => fs.rm(root, {recursive: true, force: true}));
   const outDir = path.join(root, 'out');
@@ -112,14 +112,17 @@ test('limits image optimization to two concurrent pipelines', async (t) => {
   let active = 0;
   let peak = 0;
   let completed = 0;
+  const overlapping = Promise.withResolvers();
   const fakeSharp = () => {
     active += 1;
     peak = Math.max(peak, active);
+    if (active === 2) overlapping.resolve();
     return {
       png() { return this; },
       jpeg() { return this; },
       async metadata() { return {width: 1, height: 1}; },
       async toFile(output) {
+        await overlapping.promise;
         await new Promise(setImmediate);
         fsSync.writeFileSync(output, 'small');
         active -= 1;
