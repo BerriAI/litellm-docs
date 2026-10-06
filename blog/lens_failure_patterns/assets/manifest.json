@@ -1,0 +1,46 @@
+{
+  "diagrams": [
+    {
+      "file": "01-pipeline",
+      "title": "Lens investigation pipeline",
+      "alt": "Agent traces are reviewed in parallel, similar observations are grouped in parallel batches and reconciled, candidate patterns are investigated against original traces in parallel, and findings retain source evidence.",
+      "width": 1440,
+      "height": 450
+    },
+    {
+      "file": "02-parallel-review",
+      "title": "Parallel trace review",
+      "alt": "One reviewer per execution opens trace data using tools and returns observations with source quotes. Three illustrative examples show truncated page content, grep recovery through the terminal, and an unread PDF. Recorded subagents remain part of the trace evidence.",
+      "width": 1440,
+      "height": 550
+    },
+    {
+      "file": "03-group-patterns",
+      "title": "Group observations and merge matching patterns",
+      "alt": "Observation batches are grouped concurrently. Matching candidate patterns are merged across batches while different causes stay separate.",
+      "width": 1440,
+      "height": 545
+    },
+    {
+      "file": "04-investigate",
+      "title": "Investigate candidate patterns",
+      "alt": "Each candidate has an investigator with access to original traces and review records. Finding citations are validated. Invalid output returns specific feedback so the agent can retry. An unsupported candidate may yield no finding.",
+      "width": 1440,
+      "height": 530
+    },
+    {
+      "file": "05-evidence-workspace",
+      "title": "On-demand access to trace evidence",
+      "alt": "The agent uses catalog, read, search and confined Python tools to inspect trace data. Only requested source text and computed output enter its context. Python receives selected evidence in data and runs within enforced runtime boundaries. Long investigations can compact conversation while retaining access to evidence and archived history.",
+      "width": 1440,
+      "height": 590
+    },
+    {
+      "file": "06-deployment",
+      "title": "Lens worker deployment",
+      "alt": "The agent sends calls and traces to LiteLLM. LiteLLM accesses ClickHouse for traces and Postgres for investigation state. The Lens worker uses the gateway over HTTPS for jobs, evidence and model calls, and reports progress and findings. It does not connect directly to databases or providers.",
+      "width": 1440,
+      "height": 650
+    }
+  ]
+}
