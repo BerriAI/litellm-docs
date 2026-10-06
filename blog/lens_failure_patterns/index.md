@@ -18,7 +18,7 @@ A research agent can finish a report after reading the first 8,000 characters of
 
 Across thousands of runs, you need to find the affected sessions and what they have in common. [LiteLLM Lens](/blog/litellm-lens-launch) uses agents to do that work.
 
-Here's how the current pipeline works behind the scenes: reviewers inspect executions in parallel, grouping agents connect related observations, and investigators check each candidate pattern against the original traces.
+Here's how it works behind the scenes: reviewers inspect executions in parallel, grouping agents connect related observations, and investigators check each candidate pattern against the original traces.
 
 {/* truncate */}
 
