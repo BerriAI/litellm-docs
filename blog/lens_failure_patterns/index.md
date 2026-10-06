@@ -1,6 +1,6 @@
 ---
 slug: lens-failure-patterns
-title: "How LiteLLM Lens finds 100% of failure patterns across 1,000s of agent traces"
+title: "How LiteLLM Lens finds repeated failures across 1,000s of agent traces"
 date: 2026-10-05
 authors:
   - moe
@@ -66,7 +66,7 @@ We start an investigator for each candidate and run these agents in parallel. Th
 
 We send investigators back to the original traces because a reviewer may have left out context that changes the explanation. In the research case, the investigator compares page responses with final claims. It also looks for counterexamples, such as runs where the agent acknowledged missing information or fetched the rest of the source.
 
-Repeated 8,000-character responses are a clue. The investigator still needs to check whether the missing content explains a false claim, and distinguish that evidence from a plausible guess.
+When different pages repeatedly return exactly 8,000 characters, that suggests the tool is cutting them off at a fixed limit. The investigator still needs to check whether the missing content explains a false claim, and distinguish that evidence from a plausible guess.
 
 The investigator can drop a candidate that doesn't hold up. Before saving a finding, the worker checks its citations against the source and sends invalid quotes back for repair. An exact quote can still support a bad interpretation, so we check that distinction in our evaluations too.
 
