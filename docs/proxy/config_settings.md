@@ -698,6 +698,9 @@ router_settings:
 | CHATGPT_USER_AGENT | Custom user agent string for ChatGPT API requests
 | CHATGPT_USER_AGENT_SUFFIX | Suffix to append to the ChatGPT user agent string
 | CIRCLE_OIDC_TOKEN | OpenID Connect token for CircleCI
+| CLICKHOUSE_DATABASE | Database used by ClickHouse spend logging and agent tracing. Default is `litellm`
+| CLICKHOUSE_FLUSH_INTERVAL_SECONDS | Maximum interval in seconds between ClickHouse spend-log batch flushes. Default is `1.0`; reaching the batch-size limit flushes sooner
+| CLICKHOUSE_URL | ClickHouse connection URL used by spend logging and agent tracing. Required when either ClickHouse feature is enabled
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
 | CLI_SSO_CLAIM_MAP | Comma-separated allowlist mapping OIDC claim paths to LiteLLM user `metadata` keys for CLI SSO (e.g. `employment_type->acme_employment_type,org_info.department->department`). Scalar values are also returned in `/sso/cli/poll` as `attribution_metadata`. Alias: `LITELLM_CLI_SSO_CLAIM_MAP`
