@@ -152,7 +152,7 @@ A request through that key using any other registered store id in `vector_store_
 
 ## Deny vector stores by default
 
-Without restrictions, any key the proxy accepts can query any store id the proxy's provider credentials can reach, including a Bedrock Knowledge Base id that was never registered with LiteLLM. To make every store opt-in, turn on `vector_store_deny_by_default`:
+Without restrictions, any key the proxy accepts can query any store id the proxy's provider credentials can reach. To make every store opt-in, turn on `vector_store_deny_by_default`:
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
