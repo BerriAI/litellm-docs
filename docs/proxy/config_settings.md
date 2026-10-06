@@ -1006,7 +1006,6 @@ router_settings:
 | LITELLM_ENABLE_HSTS | Flag to send the `Strict-Transport-Security` response header on proxy and UI responses. Only takes effect for deployments served over HTTPS. **Default is false**
 | DISABLE_AIOHTTP_TRANSPORT | Flag to disable aiohttp transport. When this is set to True, litellm will use httpx instead of aiohttp. **Default is False**
 | DISABLE_AIOHTTP_TRUST_ENV | Flag to stop LiteLLM from resolving `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` for requests on the aiohttp transport. By default these env vars are honored without any extra setting. Has no effect on the httpx transport (`DISABLE_AIOHTTP_TRANSPORT=True`), which always honors them. **Default is False**
-| DEFER_PYDANTIC_BUILD | Defer building Pydantic validators and serializers until first use. Enabled by default; `true`, `1`, and `on` enable it, and other values disable it. |
 | DISABLE_PRISMA_HEALTH_CHECK_ON_STARTUP | Flag to skip the `SELECT 1` verification query the proxy runs against the database once Prisma has connected and migrations have been applied. The Prisma connection itself is unaffected; only the extra reachability probe is skipped, so a database that accepts the connection but cannot serve queries is discovered on the first request instead of at startup. **Default is False**
 | DISABLE_SCHEMA_UPDATE | Toggle to disable schema updates
 | DYNAMIC_RATE_LIMIT_ERROR_THRESHOLD_PER_MINUTE | Threshold for deployment failures per minute before enforcing rate limits in parallel request limiter. Default is 1
