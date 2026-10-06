@@ -24,7 +24,37 @@ curl -H "Authorization: Bearer <key>" \
   "https://<your-litellm-proxy>/v1/traces"
 ```
 
-Proxy administrators can read all traces. Team keys can read their team's traces. Keys without a team can read traces sent with that key. Read-only proxy administrators cannot ingest traces.
+Proxy administrators and proxy administrator viewers can read every trace. Read-only proxy administrators cannot ingest traces. Every other user, SCIM-provisioned users included, reads the traces sent with their own keys plus the traces of each team that shares them, as described under [who can see which traces](#trace-access). A key that belongs to no user, such as a team service account key, cannot read traces and gets a 403.
+
+### Who can see which traces {#trace-access}
+
+A team shares its traces with its members through the `/spend/logs` member permission. A team admin always sees the team's traces, and a regular member sees them once the team's `team_member_permissions` includes `/spend/logs`. Grant it from the Admin UI (Teams, open the team, Member Permissions tab) or with the API:
+
+```bash
+curl -X POST "https://<your-litellm-proxy>/team/permissions_update" \
+  -H "Authorization: Bearer <admin-key>" \
+  -H "Content-Type: application/json" \
+  -d '{"team_id": "<team-id>", "team_member_permissions": ["/spend/logs"]}'
+```
+
+To grant it to every existing team at once:
+
+```bash
+curl -X POST "https://<your-litellm-proxy>/team/permissions_bulk_update" \
+  -H "Authorization: Bearer <admin-key>" \
+  -H "Content-Type: application/json" \
+  -d '{"permissions": ["/spend/logs"], "apply_to_all_teams": true}'
+```
+
+To have every new team share its traces, including the teams that [SCIM](../identity_provisioning.md) creates from identity provider groups, set it in [`default_team_params`](../self_serve.md#set-default-params-for-new-teams). Group membership in the identity provider then decides who sees which traces, with no per-team step:
+
+```yaml
+litellm_settings:
+  default_team_params:
+    team_member_permissions: ["/spend/logs"]
+```
+
+Later SCIM updates to a group keep the team's permissions. The same permission lets members view the team's spend logs. Investigations and findings under `/lens` stay limited to proxy administrators.
 
 ## Lens API {#use-the-api}
 
