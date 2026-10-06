@@ -1,6 +1,6 @@
 ---
 slug: lens-failure-patterns
-title: "How LiteLLM Lens found 100% of failure patterns across 1,000s of agent traces"
+title: "How LiteLLM Lens finds 100% of failure patterns across 1,000s of agent traces"
 date: 2026-10-05
 authors:
   - moe
