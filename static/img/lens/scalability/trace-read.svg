@@ -35,8 +35,8 @@
 <text x="824" y="147.0" font-size="12.5" fill="#64748b">capped content</text>
 <path d="M720 122H744" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
 <rect x="40" y="206" width="410" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
-<text x="56" y="232" font-size="17" fill="#b45309" font-weight="700">31.7 ms to 14.5 ms</text>
-<text x="56" y="251" font-size="12" fill="#64748b">recent trace, 90 days retained, median of 7 runs</text>
+<text x="56" y="232" font-size="17" fill="#b45309" font-weight="700">16.9 ms to 14.4 ms</text>
+<text x="56" y="251" font-size="12" fill="#64748b">recent trace, 90 days retained, median of 25 runs</text>
 <rect x="474" y="206" width="444" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
 <text x="490" y="232" font-size="17" fill="#334155" font-weight="700">Flat as retention grows</text>
 <text x="490" y="251" font-size="12" fill="#64748b">a recent trace opens 8 of 30 or 9 of 90 partitions</text>

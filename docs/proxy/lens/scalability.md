@@ -14,10 +14,10 @@ Lens stores two kinds of data. Traces and request logs live in ClickHouse, which
 |---|---|---|---|
 | Sample a window | ClickHouse | Spans in the window plus 7 days of slack | Retention, number of pages |
 | Read one trace | ClickHouse | Partitions from the trace start minus 7 days to now | Retention for recent traces, other teams |
-| Claim a job | PostgreSQL | Due lenses, at most 20 per claim | Total lenses, lenses not due |
+| Claim a job | PostgreSQL | Due lenses, read 20 at a time | Total lenses, lenses not due |
 | Heartbeat a job | PostgreSQL | Size of the lens document today; a narrow lease row in the target design | Number of lenses |
 
-The numbers on this page come from a local benchmark with real ClickHouse 26.10 and PostgreSQL 14 running the Lens migrations and the production SQL. The ClickHouse data has 6M spans over 30 daily partitions, or 18M spans over 90 daily partitions, with one team owning half of them. These figures show how cost grows and are not production latency targets
+The charts and tables on this page come from a local benchmark that runs the Lens SQL from before and after each change against real ClickHouse and PostgreSQL. Every timing is repeated and reported as a median with its p10 to p90 spread, and [Benchmark methodology](#methodology) lists the hardware, versions, dataset and run counts. They show how cost grows with data size on one machine and are not production latency targets
 
 ## Every trace query is bounded by time {#time-bounded-queries}
 
@@ -27,30 +27,34 @@ Every Lens query against `otel_traces` and `spend_logs` must therefore put a dir
 
 ![Partition pruning for a 24 hour sample: partitions older than the 7 day slack are never opened](/img/lens/scalability/partitions.svg)
 
-A 24 hour sample with the time bound reads the same 1.77M rows at 30 and at 90 days of retention. Without it, the same single query reads 6.2M rows at 30 days and 18.4M at 90 days
+A 24 hour sample with the time bound reads about 1.0M rows at every retention from 7 to 90 days. Without it, the same single query reads 3.2M rows at 30 days and 9.4M at 90 days
 
 ## Samples are selected once per job {#one-pass-sampling}
 
 A sample is a deterministic selection over every trace eligible in the window. It needs the eligible count and the selection order, and both require the full eligible set. Paging that query 100 rows at a time recomputes the full set on every page, so a single sample costs pages times window size
 
-![Sampling before and now: 48 paged queries that each rank every eligible trace, versus one query whose selection is frozen on the job](/img/lens/scalability/sampling.svg)
+![Sampling before and now: 52 paged queries that each rank every eligible trace, versus one query whose selection is frozen on the job](/img/lens/scalability/sampling.svg)
 
 The worker requests the selection in pages of 10,000, so a normal sample takes one query, then freezes it on the job. Later reads use the frozen selection and do not query ClickHouse again. If a page would exceed the response limit, the worker retries the same cursor with a smaller page. Previews in the dashboard still page, but each page is time bounded
 
-Full worker sample loop for a 24 hour window, about 5,000 traces selected:
+![Sampling cost against retention: rows read and time per sample grow linearly before, and stay flat at about 1M rows and 100 ms now](/img/lens/scalability/bench-sampling.svg)
 
-| Retention | Query | Page size | Queries | Rows read | Bytes read | Wall time |
+The chart runs the full worker sample loop for the same 24 hour window, about 5,100 traces selected, at six retention sizes. Before, rows read grow from 46M at 7 days to 486M at 90 days and the loop takes 4.5 s to 11.5 s. Now every retention reads about 1.0M rows in about 100 ms. Every timed run of both versions selected the same traces in the same order
+
+The table separates the two changes at 30 and 90 days, median of 5 runs:
+
+| Retention | Query | Page size | Queries | Rows read | Bytes read | Median time |
 |---|---|---:|---:|---:|---:|---:|
-| 30 days | before | 100 | 50 | 163.3M | 7.7 GB | 5.5 s |
-| 30 days | before | 10,000 | 1 | 6.2M | 222 MB | 154 ms |
-| 30 days | time bounded | 100 | 51 | 52.7M | 3.2 GB | 5.4 s |
-| 30 days | time bounded | 10,000 | 1 | 1.77M | 80 MB | 135 ms |
-| 90 days | before | 100 | 48 | 455.2M | 19.5 GB | 11.0 s |
-| 90 days | before | 10,000 | 1 | 18.4M | 615 MB | 314 ms |
-| 90 days | time bounded | 100 | 48 | 48.9M | 2.8 GB | 4.0 s |
-| 90 days | time bounded | 10,000 | 1 | 1.77M | 76 MB | 119 ms |
+| 30 days | before | 100 | 52 | 167.2M | 8.4 GB | 5.2 s |
+| 30 days | before | 10,000 | 1 | 3.2M | 162 MB | 130 ms |
+| 30 days | time bounded | 100 | 52 | 52.8M | 3.4 GB | 4.2 s |
+| 30 days | time bounded | 10,000 | 1 | 1.0M | 66 MB | 97 ms |
+| 90 days | before | 100 | 52 | 486.3M | 22.2 GB | 9.4 s |
+| 90 days | before | 10,000 | 1 | 9.4M | 427 MB | 199 ms |
+| 90 days | time bounded | 100 | 52 | 53.2M | 3.4 GB | 4.2 s |
+| 90 days | time bounded | 10,000 | 1 | 1.0M | 66 MB | 105 ms |
 
-Both changes together cut a 30 day sample from 163M rows to 1.77M, and the cost no longer moves when retention triples. The selected traces are identical to the unbounded query
+Most of the gain comes from selecting once, and the time bound is what keeps the cost flat as retention grows. Together they cut a 90 day sample from 486M rows to 1.0M
 
 ## Single trace reads are keyed and windowed {#single-trace-reads}
 
@@ -60,43 +64,60 @@ The bloom filter is still checked on every granule of the team. Lens reads pass 
 
 ![Single trace read: the sampled start time prunes partitions, the TraceId bloom filter picks the granule, and the page is bounded](/img/lens/scalability/trace-read.svg)
 
-Content read for one trace, median of 7 warm runs:
+![Single trace read cost against retention: partitions opened grow with retention before and stay at 9 now, latency stays near 14 ms](/img/lens/scalability/bench-trace-read.svg)
+
+For a trace that started a day ago, the unbounded read opens every partition the team has, 8 at 7 days of retention and 90 at 90 days. The bounded read opens at most 9 at every retention. On this machine opening a partition is cheap, so the latency gain is small: the bounded read stays near 14 ms while the unbounded one moves between 14 and 21 ms. Both return identical spans
+
+Content read for one trace by trace age, median of 25 warm runs:
 
 | Retention | Trace age | Partitions before / now | Rows read before / now | Median before / now |
 |---|---|---:|---:|---:|
-| 30 days | 1 day | 30 / 9 | 13,418 / 6,690 | 12.7 ms / 13.4 ms |
-| 30 days | 15 days | 30 / 23 | 6,594 / 6,594 | 16.4 ms / 17.3 ms |
-| 90 days | 1 day | 90 / 9 | 13,327 / 6,685 | 31.7 ms / 14.5 ms |
-| 90 days | 15 days | 90 / 23 | 34,465 / 6,652 | 29.4 ms / 17.5 ms |
-| 90 days | 45 days | 90 / 53 | 12,946 / 12,946 | 28.4 ms / 22.3 ms |
-| 90 days | 85 days | 90 / 90 | 13,404 / 13,404 | 28.1 ms / 30.3 ms |
+| 30 days | 1 day | 30 / 9 | 20,055 / 7,101 | 13.4 ms / 14.4 ms |
+| 30 days | 15 days | 30 / 23 | 13,378 / 6,693 | 12.8 ms / 17.1 ms |
+| 90 days | 1 day | 90 / 9 | 26,633 / 6,654 | 16.9 ms / 14.4 ms |
+| 90 days | 15 days | 90 / 23 | 13,369 / 6,694 | 16.5 ms / 17.5 ms |
+| 90 days | 45 days | 90 / 53 | 28,134 / 21,462 | 16.1 ms / 23.1 ms |
+| 90 days | 85 days | 90 / 90 | 13,352 / 13,352 | 16.5 ms / 17.8 ms |
 
-A read of a recent trace stays at about 14 ms whatever the retention, while the unbounded read doubles from 30 to 90 days. Lens mostly reads traces it has just sampled, so the common case is the recent one. A trace near the end of retention costs the same as before
+The bound keeps the partitions a read opens tied to the trace's age, and that is what lets recent reads stay flat as retention grows. Lens mostly reads traces it has just sampled, so the common case is the recent one. Older traces open more partitions, and at 15 and 45 days the bounded read was 1 to 7 ms slower in this run even though it read fewer rows. A trace near the end of retention opens the same partitions as before
 
 ## Scheduling does not scan every lens {#scheduling}
 
-A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with an index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
+A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.1 s with 200 lenses and 5.4 s with 800, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with an index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
 
 ![Worker claims before and now: loading every lens, versus paging through batches of due lenses using the due_at index](/img/lens/scalability/claim.svg)
 
 A claim reads pages of up to 20 due lenses in `(due_at, id)` order until it claims one or exhausts the queue. A worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took. Lenses created before the column existed start with a `due_at` in the past, and the first claim that looks at one writes its real value
 
-Lens data a claim loads, each lens holding 100 findings (about 52 KB of JSON):
+![Worker claim cost against lens count: data loaded and time grow linearly with a full scan, and stop growing at 20 due candidates now](/img/lens/scalability/bench-claim.svg)
+
+In the chart each lens holds 100 findings and a 200 trace sample, about 400 KB of JSON, and one lens in ten is due. A full scan loads every document, so its cost doubles each time the lens count doubles. The due query loads at most one page of 20 candidates, so after 200 lenses it stays at 8 MB and about 110 ms however many lenses exist. Time includes validating the documents, median of 7 runs:
 
 | Lenses stored | Due | Loaded with the due queue | Claim time | Loaded by a full scan | Claim time |
 |---:|---:|---:|---:|---:|---:|
-| 21 | 1 | 52 KB (1 lens) | 23 ms | 1.1 MB (21 lenses) | 219 ms |
-| 221 | 1 | 52 KB (1 lens) | 22 ms | 11.5 MB (221 lenses) | 2.8 s |
+| 25 | 3 | 1.2 MB (3 lenses) | 12 ms | 10 MB (25 lenses) | 97 ms |
+| 100 | 10 | 4.0 MB (10 lenses) | 46 ms | 40 MB (100 lenses) | 535 ms |
+| 200 | 20 | 8.0 MB (20 lenses) | 118 ms | 80 MB (200 lenses) | 1.1 s |
+| 400 | 40 | 8.0 MB (20 lenses) | 100 ms | 160 MB (400 lenses) | 2.8 s |
+| 800 | 80 | 8.0 MB (20 lenses) | 112 ms | 320 MB (800 lenses) | 5.4 s |
 
 ## Hot state is narrow and history is append-only {#narrow-hot-state}
 
 A heartbeat or progress update should touch only what changed. Today a lens and all of its jobs, findings, and reservations are stored as one JSONB document. Every heartbeat rewrites the whole document, and every update to a lens contends on the same row
 
-| Lens size | Document | Heartbeat as a document rewrite | Heartbeat as a lease column update |
-|---|---:|---:|---:|
-| 10 findings, 20 traces | 5.3 KB | 1.5 ms, 8 KB WAL | 0.11 ms, 184 B WAL |
-| 100 findings, 200 traces | 33 KB | 9.7 ms, 44 KB WAL | 0.24 ms, 184 B WAL |
-| 500 findings, 1,000 traces | 155 KB | 42.8 ms, 204 KB WAL | 0.12 ms, 184 B WAL |
+![Heartbeat cost against lens size: WAL and time grow with findings for a document rewrite, and stay at 120 B and under 0.2 ms for a narrow lease row](/img/lens/scalability/bench-heartbeat.svg)
+
+One lease renewal, median of 60 renewals per size:
+
+| Findings | Sampled traces | Stored document | Document rewrite | Lease row update |
+|---:|---:|---:|---:|---:|
+| 0 | 50 | 4.0 KB | 0.96 ms, 4.8 KB WAL | 0.08 ms, 120 B WAL |
+| 100 | 200 | 33 KB | 10.2 ms, 36 KB WAL | 0.20 ms, 120 B WAL |
+| 250 | 500 | 79 KB | 22.4 ms, 87 KB WAL | 0.08 ms, 120 B WAL |
+| 500 | 1,000 | 155 KB | 45.1 ms, 171 KB WAL | 0.18 ms, 120 B WAL |
+| 1,000 | 2,000 | 308 KB | 82.1 ms, 338 KB WAL | 0.19 ms, 120 B WAL |
+
+The rewrite costs grow in step with the document, because PostgreSQL writes a new copy of the whole JSONB value on every update. The lease row stays at one small tuple however much history the lens has
 
 The target design moves leases and job progress into narrow rows. Findings, occurrences, and evidence become rows that are only ever appended, and run and review history gets a retention cutoff
 
@@ -105,6 +126,16 @@ The target design moves leases and job progress into narrow rows. Findings, occu
 ## Trace lists use a time-ordered rollup {#trace-list-rollup}
 
 The trace list aggregates spans into one row per trace. Ordering that rollup by `(TeamId, ApiKeyHash, TraceId)` with no time column forces every page to aggregate the team's whole retention before filtering by start time. In the benchmark a one hour trace list page read all 150K of the team's traces in the rollup. The target design orders the rollup by team and trace start, so a page reads only the window it shows. This requires a new table and a backfill, so it ships separately from the query changes above
+
+## Benchmark methodology {#methodology}
+
+All measurements ran on one machine with 8 vCPUs (Intel Xeon Platinum 8559C) and 32 GB of RAM, using ClickHouse 26.10.1 as a single local server and PostgreSQL 14.24, with nothing else under load. The ClickHouse tables come from the Lens migrations, and each query is the exact SQL file from the code before and after the change, bound with the same parameters the proxy sends
+
+The ClickHouse dataset is 18M synthetic spans over 90 daily partitions, about 200K spans a day, spread over 6 teams with one owning half of them. Every trace has 20 spans with attribute maps and message content. The smaller retentions of 7, 15, 30, 45 and 60 days are copies of the newest days of the same data, so every retention holds identical spans for the window being sampled. The sample window is the 24 hours that end at the newest span. `read_rows` and `read_bytes` come from `system.query_log`, partitions opened come from `EXPLAIN indexes = 1`, and times are wall clock at the client. Each sample loop ran once to warm the cache and then 5 times, and each trace read ran 3 times to warm up and then 25 times. The sample result is hashed on every run to check that both versions select the same traces in the same order
+
+The PostgreSQL table matches `LiteLLM_Lens` with its `due_at` index. Lens documents are built with the Lens Pydantic models, and each finding has 5 evidence quotes and 50 occurrences. Claim time covers the query plus validating every returned document, median of 7 runs after a warm-up. Heartbeat WAL is the difference in `pg_current_wal_lsn()` around each update, after a checkpoint, over 60 renewals spread across 20 lenses. The lease row is the narrow table the target design uses: an id, a lease timestamp and a version
+
+These results describe how cost scales on one machine with warm caches. Production clusters have more cores and slower or remote disks, so absolute times will differ, while rows read, partitions opened, bytes loaded and WAL written depend on the data and should carry over
 
 ## Load tests {#load-tests}
 

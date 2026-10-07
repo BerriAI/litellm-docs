@@ -18,11 +18,11 @@
 <rect x="318" y="66" width="262" height="88" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="5 4"/>
 <rect x="336" y="88.0" width="44" height="44" rx="12" fill="#f1f5f9"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linejoin="round"><path d="M348 97.0h14l6 6v20h-20z"/><path d="M362 97.0v6h6"/></g>
 <text x="394" y="95.0" font-size="15.5" fill="#94a3b8" font-weight="600">Load every lens</text>
-<text x="394" y="116.0" font-size="12.5" fill="#64748b">221 documents, 11.5 MB</text>
+<text x="394" y="116.0" font-size="12.5" fill="#64748b">800 documents, 320 MB</text>
 <text x="394" y="135.0" font-size="12.5" fill="#64748b">then filter in Python</text>
 <path d="M278 110H314" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
 <rect x="612" y="81" width="290" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
-<text x="628" y="107" font-size="17" fill="#334155" font-weight="700">2.8 s per claim</text>
+<text x="628" y="107" font-size="17" fill="#334155" font-weight="700">5.4 s per claim</text>
 <text x="628" y="126" font-size="12" fill="#64748b">grows with every lens stored</text>
 <g filter="url(#sh)"><rect x="40" y="232" width="236" height="88" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
 <rect x="58" y="254.0" width="44" height="44" rx="12" fill="#f1f5f9"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="68" y="264.0" width="24" height="24" rx="4"/><path d="M74 272.0l4 4-4 4M81 280.0h6"/></g>
@@ -37,6 +37,6 @@
 <text x="535.1" y="236" font-size="11" fill="#fff" font-weight="700" text-anchor="middle" letter-spacing="0.8">INDEXED</text>
 <path d="M278 276H314" stroke="#d97706" stroke-width="2.4" fill="none" marker-end="url(#ara)"/>
 <rect x="612" y="247" width="290" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
-<text x="628" y="273" font-size="17" fill="#b45309" font-weight="700">52 KB, about 20 ms per claim</text>
-<text x="628" y="292" font-size="12" fill="#64748b">same at 21 or 221 lenses</text>
+<text x="628" y="273" font-size="17" fill="#b45309" font-weight="700">8 MB, about 110 ms per claim</text>
+<text x="628" y="292" font-size="12" fill="#64748b">same at 200 or 800 lenses</text>
 </svg>

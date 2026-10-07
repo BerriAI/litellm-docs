@@ -20,7 +20,7 @@
 <text x="124" y="166.0" font-size="12.5" fill="#64748b">jobs, leases, findings,</text>
 <text x="124" y="185.0" font-size="12.5" fill="#64748b">reservations, executions</text>
 <rect x="48" y="250" width="312" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
-<text x="64" y="276" font-size="17" fill="#334155" font-weight="700">44 KB WAL per heartbeat</text>
+<text x="64" y="276" font-size="17" fill="#334155" font-weight="700">36 KB WAL per heartbeat</text>
 <text x="64" y="295" font-size="12" fill="#64748b">the whole 33 KB document is rewritten</text>
 <g filter="url(#sh)"><rect x="430" y="76" width="216" height="76" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
 <rect x="448" y="92.0" width="44" height="44" rx="12" fill="#f1f5f9"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round"><rect x="458" y="103.0" width="24" height="22" rx="3"/><path d="M458 110.0h24M458 117.0h24"/></g>
@@ -40,7 +40,7 @@
 <text x="742" y="224.0" font-size="12.5" fill="#64748b">append-only, retention</text>
 <path d="M648 208H662" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
 <rect x="430" y="264" width="452" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
-<text x="446" y="290" font-size="17" fill="#b45309" font-weight="700">184 B WAL per heartbeat</text>
-<text x="446" y="309" font-size="12" fill="#64748b">only the lease row changes, 0.24 ms</text>
+<text x="446" y="290" font-size="17" fill="#b45309" font-weight="700">120 B WAL per heartbeat</text>
+<text x="446" y="309" font-size="12" fill="#64748b">only the lease row changes, 0.20 ms</text>
 <path d="M362 150C384 150 386 150 404 150" stroke="#d97706" stroke-width="2.4" stroke-dasharray="6 5" fill="none" marker-end="url(#ara)"/>
 </svg>

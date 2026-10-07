@@ -51,9 +51,9 @@
 <text x="814.0" y="176" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">Later spans</text>
 <text x="814.0" y="194" font-size="12" fill="#64748b" text-anchor="middle">in-progress check</text>
 <rect x="40" y="222" width="410" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
-<text x="56" y="248" font-size="17" fill="#b45309" font-weight="700">1.77M rows at 30 and at 90 days</text>
+<text x="56" y="248" font-size="17" fill="#b45309" font-weight="700">1.0M rows from 7 to 90 days</text>
 <text x="56" y="267" font-size="12" fill="#64748b">with Timestamp &gt;= start - 7 days on every branch</text>
 <rect x="474" y="222" width="410" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
-<text x="490" y="248" font-size="17" fill="#334155" font-weight="700">6.2M rows at 30 days, 18.4M at 90</text>
+<text x="490" y="248" font-size="17" fill="#334155" font-weight="700">3.2M rows at 30 days, 9.4M at 90</text>
 <text x="490" y="267" font-size="12" fill="#64748b">same single query without the time bound</text>
 </svg>

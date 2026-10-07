@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-label="Heartbeat cost against lens size" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif">
+<title>Heartbeat cost against lens size</title>
+<defs>
+<filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08"/></filter>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+</defs>
+<rect x="1" y="1" width="1198" height="558" rx="20" fill="url(#bg)" stroke="#e2e8f0"/>
+<text x="32.0" y="44.0" font-size="19" fill="#0f172a" font-weight="700">Heartbeat cost against lens size</text>
+<text x="32.0" y="68.0" font-size="13" fill="#64748b">One lease renewal. Before rewrites the whole lens document, the narrow row updates only the lease. 60 renewals per point</text>
+<line x1="32" x2="58" y1="98" y2="98" stroke="#94a3b8" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="45" cy="98" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="66.0" y="102.0" font-size="12.5" fill="#0f172a" font-weight="550">Before: rewrite the JSONB document</text>
+<line x1="322.8" x2="348.8" y1="98" y2="98" stroke="#d97706" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="335.8" cy="98" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="356.8" y="102.0" font-size="12.5" fill="#0f172a" font-weight="550">Narrow lease row (target design)</text>
+<g filter="url(#sh)"><rect x="32" y="124" width="556" height="400" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<text x="54.0" y="156.0" font-size="15" fill="#0f172a" font-weight="650">WAL written per heartbeat</text>
+<text x="54.0" y="176.0" font-size="12" fill="#64748b">median, log scale</text>
+<line x1="106" x2="518" y1="466.0" y2="466.0" stroke="#eef2f7"/>
+<text x="96.0" y="470.0" font-size="11" fill="#64748b" text-anchor="end">100 B</text>
+<line x1="106" x2="518" y1="400.0" y2="400.0" stroke="#eef2f7"/>
+<text x="96.0" y="404.0" font-size="11" fill="#64748b" text-anchor="end">1 KB</text>
+<line x1="106" x2="518" y1="334.0" y2="334.0" stroke="#eef2f7"/>
+<text x="96.0" y="338.0" font-size="11" fill="#64748b" text-anchor="end">10 KB</text>
+<line x1="106" x2="518" y1="268.0" y2="268.0" stroke="#eef2f7"/>
+<text x="96.0" y="272.0" font-size="11" fill="#64748b" text-anchor="end">100 KB</text>
+<line x1="106" x2="518" y1="202.0" y2="202.0" stroke="#eef2f7"/>
+<text x="96.0" y="206.0" font-size="11" fill="#64748b" text-anchor="end">1 MB</text>
+<line x1="106.0" x2="106.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="106.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">0</text>
+<line x1="147.2" x2="147.2" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="147.2" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">100</text>
+<line x1="209.0" x2="209.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="209.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">250</text>
+<line x1="312.0" x2="312.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="312.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">500</text>
+<line x1="518.0" x2="518.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="518.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">1000</text>
+<line x1="106" x2="518" y1="466" y2="466" stroke="#cbd5e1"/>
+<text x="312.0" y="506.0" font-size="11.5" fill="#64748b" text-anchor="middle">findings stored on the lens</text>
+<polygon points="106.0,354.8 116.3,329.6 126.6,314.5 147.2,296.9 209.0,272.0 312.0,252.6 518.0,233.0 518.0,233.1 312.0,252.7 209.0,272.1 147.2,297.0 126.6,314.7 116.3,329.7 106.0,356.1" fill="#94a3b8" fill-opacity="0.14"/>
+<polyline points="106.0,355.0 116.3,329.6 126.6,314.6 147.2,296.9 209.0,272.1 312.0,252.7 518.0,233.1" fill="none" stroke="#94a3b8" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="106.0" cy="355.0" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="116.3" cy="329.6" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="126.6" cy="314.6" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="147.2" cy="296.9" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="209.0" cy="272.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="312.0" cy="252.7" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="518.0" cy="233.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="527.0" y="237.1" font-size="12" fill="#475569" font-weight="650">338.4 KB</text>
+<polygon points="106.0,460.8 116.3,460.8 126.6,460.8 147.2,460.8 209.0,460.8 312.0,460.8 518.0,460.8 518.0,460.8 312.0,460.8 209.0,460.8 147.2,460.8 126.6,460.8 116.3,460.8 106.0,460.8" fill="#d97706" fill-opacity="0.14"/>
+<polyline points="106.0,460.8 116.3,460.8 126.6,460.8 147.2,460.8 209.0,460.8 312.0,460.8 518.0,460.8" fill="none" stroke="#d97706" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="106.0" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="116.3" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="126.6" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="147.2" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="209.0" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="312.0" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="518.0" cy="460.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="527.0" y="464.8" font-size="12" fill="#d97706" font-weight="650">120 B</text>
+<g filter="url(#sh)"><rect x="612" y="124" width="556" height="400" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<text x="634.0" y="156.0" font-size="15" fill="#0f172a" font-weight="650">Time per heartbeat</text>
+<text x="634.0" y="176.0" font-size="12" fill="#64748b">median with p10 to p90, log scale</text>
+<line x1="686" x2="1098" y1="466.0" y2="466.0" stroke="#eef2f7"/>
+<text x="676.0" y="470.0" font-size="11" fill="#64748b" text-anchor="end">0.01 ms</text>
+<line x1="686" x2="1098" y1="413.2" y2="413.2" stroke="#eef2f7"/>
+<text x="676.0" y="417.2" font-size="11" fill="#64748b" text-anchor="end">0.1 ms</text>
+<line x1="686" x2="1098" y1="360.4" y2="360.4" stroke="#eef2f7"/>
+<text x="676.0" y="364.4" font-size="11" fill="#64748b" text-anchor="end">1.0 ms</text>
+<line x1="686" x2="1098" y1="307.6" y2="307.6" stroke="#eef2f7"/>
+<text x="676.0" y="311.6" font-size="11" fill="#64748b" text-anchor="end">10 ms</text>
+<line x1="686" x2="1098" y1="254.8" y2="254.8" stroke="#eef2f7"/>
+<text x="676.0" y="258.8" font-size="11" fill="#64748b" text-anchor="end">100 ms</text>
+<line x1="686" x2="1098" y1="202.0" y2="202.0" stroke="#eef2f7"/>
+<text x="676.0" y="206.0" font-size="11" fill="#64748b" text-anchor="end">1.0 s</text>
+<line x1="686.0" x2="686.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="686.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">0</text>
+<line x1="727.2" x2="727.2" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="727.2" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">100</text>
+<line x1="789.0" x2="789.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="789.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">250</text>
+<line x1="892.0" x2="892.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="892.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">500</text>
+<line x1="1098.0" x2="1098.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="1098.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">1000</text>
+<line x1="686" x2="1098" y1="466" y2="466" stroke="#cbd5e1"/>
+<text x="892.0" y="506.0" font-size="11.5" fill="#64748b" text-anchor="middle">findings stored on the lens</text>
+<polygon points="686.0,345.2 696.3,333.6 706.6,314.8 727.2,302.6 789.0,284.8 892.0,268.1 1098.0,254.3 1098.0,259.9 892.0,275.6 789.0,290.9 727.2,309.8 706.6,323.5 696.3,338.2 686.0,365.7" fill="#94a3b8" fill-opacity="0.14"/>
+<polyline points="686.0,361.3 696.3,336.1 706.6,321.1 727.2,307.2 789.0,289.1 892.0,273.1 1098.0,259.3" fill="none" stroke="#94a3b8" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<line x1="686.0" x2="686.0" y1="365.7" y2="345.2" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="686.0" cy="361.3" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="696.3" x2="696.3" y1="338.2" y2="333.6" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="696.3" cy="336.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="706.6" x2="706.6" y1="323.5" y2="314.8" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="706.6" cy="321.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="727.2" x2="727.2" y1="309.8" y2="302.6" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="727.2" cy="307.2" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="789.0" x2="789.0" y1="290.9" y2="284.8" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="789.0" cy="289.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="892.0" x2="892.0" y1="275.6" y2="268.1" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="892.0" cy="273.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="1098.0" x2="1098.0" y1="259.9" y2="254.3" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="1098.0" cy="259.3" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="1107.0" y="263.3" font-size="12" fill="#475569" font-weight="650">82 ms</text>
+<polygon points="686.0,393.1 696.3,394.0 706.6,395.1 727.2,380.8 789.0,394.2 892.0,389.9 1098.0,387.1 1098.0,419.9 892.0,420.1 789.0,419.9 727.2,420.3 706.6,420.7 696.3,421.1 686.0,420.7" fill="#d97706" fill-opacity="0.14"/>
+<polyline points="686.0,419.0 696.3,420.4 706.6,420.0 727.2,397.5 789.0,417.9 892.0,399.8 1098.0,398.2" fill="none" stroke="#d97706" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="686.0" x2="686.0" y1="420.7" y2="393.1" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="686.0" cy="419.0" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="696.3" x2="696.3" y1="421.1" y2="394.0" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="696.3" cy="420.4" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="706.6" x2="706.6" y1="420.7" y2="395.1" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="706.6" cy="420.0" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="727.2" x2="727.2" y1="420.3" y2="380.8" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="727.2" cy="397.5" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="789.0" x2="789.0" y1="419.9" y2="394.2" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="789.0" cy="417.9" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="892.0" x2="892.0" y1="420.1" y2="389.9" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="892.0" cy="399.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="1098.0" x2="1098.0" y1="419.9" y2="387.1" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="1098.0" cy="398.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="1107.0" y="402.2" font-size="12" fill="#d97706" font-weight="650">0.2 ms</text>
+<text x="32.0" y="538.0" font-size="11" fill="#94a3b8">Local PostgreSQL 14.24 (Ubuntu 14.24-0ubuntu0.22.04.1), 8 vCPU Xeon, 32 GB RAM. Band and whiskers show p10 to p90</text>
+</svg>

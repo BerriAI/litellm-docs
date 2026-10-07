@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-label="Single trace read against retention" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif">
+<title>Single trace read against retention</title>
+<defs>
+<filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08"/></filter>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+</defs>
+<rect x="1" y="1" width="1198" height="558" rx="20" fill="url(#bg)" stroke="#e2e8f0"/>
+<text x="32.0" y="44.0" font-size="19" fill="#0f172a" font-weight="700">Single trace read against retention</text>
+<text x="32.0" y="68.0" font-size="13" fill="#64748b">lens_content for one trace that started 24 hours ago, 25 timed runs per point after 3 warm runs, identical result rows</text>
+<line x1="32" x2="58" y1="98" y2="98" stroke="#94a3b8" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="45" cy="98" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="66.0" y="102.0" font-size="12.5" fill="#0f172a" font-weight="550">Before: TraceId bloom filter only</text>
+<line x1="315.6" x2="341.6" y1="98" y2="98" stroke="#d97706" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="328.6" cy="98" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="349.6" y="102.0" font-size="12.5" fill="#0f172a" font-weight="550">Now: bloom filter plus start time window</text>
+<g filter="url(#sh)"><rect x="32" y="124" width="556" height="400" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<text x="54.0" y="156.0" font-size="15" fill="#0f172a" font-weight="650">Partitions opened</text>
+<text x="54.0" y="176.0" font-size="12" fill="#64748b">from EXPLAIN indexes=1</text>
+<line x1="106" x2="518" y1="466.0" y2="466.0" stroke="#eef2f7"/>
+<text x="96.0" y="470.0" font-size="11" fill="#64748b" text-anchor="end">0</text>
+<line x1="106" x2="518" y1="413.2" y2="413.2" stroke="#eef2f7"/>
+<text x="96.0" y="417.2" font-size="11" fill="#64748b" text-anchor="end">20</text>
+<line x1="106" x2="518" y1="360.4" y2="360.4" stroke="#eef2f7"/>
+<text x="96.0" y="364.4" font-size="11" fill="#64748b" text-anchor="end">40</text>
+<line x1="106" x2="518" y1="307.6" y2="307.6" stroke="#eef2f7"/>
+<text x="96.0" y="311.6" font-size="11" fill="#64748b" text-anchor="end">60</text>
+<line x1="106" x2="518" y1="254.8" y2="254.8" stroke="#eef2f7"/>
+<text x="96.0" y="258.8" font-size="11" fill="#64748b" text-anchor="end">80</text>
+<line x1="106" x2="518" y1="202.0" y2="202.0" stroke="#eef2f7"/>
+<text x="96.0" y="206.0" font-size="11" fill="#64748b" text-anchor="end">100</text>
+<line x1="106.0" x2="106.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="106.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">7</text>
+<line x1="145.7" x2="145.7" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="145.7" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">15</text>
+<line x1="220.2" x2="220.2" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="220.2" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">30</text>
+<line x1="294.6" x2="294.6" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="294.6" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">45</text>
+<line x1="369.1" x2="369.1" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="369.1" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">60</text>
+<line x1="518.0" x2="518.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="518.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">90</text>
+<line x1="106" x2="518" y1="466" y2="466" stroke="#cbd5e1"/>
+<text x="312.0" y="506.0" font-size="11.5" fill="#64748b" text-anchor="middle">retention (days of spans stored)</text>
+<polyline points="106.0,444.9 145.7,423.8 220.2,386.8 294.6,344.6 369.1,307.6 518.0,228.4" fill="none" stroke="#94a3b8" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<circle cx="106.0" cy="444.9" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="145.7" cy="423.8" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="220.2" cy="386.8" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="294.6" cy="344.6" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="369.1" cy="307.6" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<circle cx="518.0" cy="228.4" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="527.0" y="232.4" font-size="12" fill="#475569" font-weight="650">90</text>
+<polyline points="106.0,444.9 145.7,442.2 220.2,442.2 294.6,442.2 369.1,442.2 518.0,442.2" fill="none" stroke="#d97706" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="106.0" cy="444.9" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="145.7" cy="442.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="220.2" cy="442.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="294.6" cy="442.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="369.1" cy="442.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="518.0" cy="442.2" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="527.0" y="446.2" font-size="12" fill="#d97706" font-weight="650">9</text>
+<g filter="url(#sh)"><rect x="612" y="124" width="556" height="400" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<text x="634.0" y="156.0" font-size="15" fill="#0f172a" font-weight="650">Query time</text>
+<text x="634.0" y="176.0" font-size="12" fill="#64748b">server elapsed, median with p10 to p90</text>
+<line x1="686" x2="1098" y1="466.0" y2="466.0" stroke="#eef2f7"/>
+<text x="676.0" y="470.0" font-size="11" fill="#64748b" text-anchor="end">0 ms</text>
+<line x1="686" x2="1098" y1="413.2" y2="413.2" stroke="#eef2f7"/>
+<text x="676.0" y="417.2" font-size="11" fill="#64748b" text-anchor="end">5 ms</text>
+<line x1="686" x2="1098" y1="360.4" y2="360.4" stroke="#eef2f7"/>
+<text x="676.0" y="364.4" font-size="11" fill="#64748b" text-anchor="end">10 ms</text>
+<line x1="686" x2="1098" y1="307.6" y2="307.6" stroke="#eef2f7"/>
+<text x="676.0" y="311.6" font-size="11" fill="#64748b" text-anchor="end">15 ms</text>
+<line x1="686" x2="1098" y1="254.8" y2="254.8" stroke="#eef2f7"/>
+<text x="676.0" y="258.8" font-size="11" fill="#64748b" text-anchor="end">20 ms</text>
+<line x1="686" x2="1098" y1="202.0" y2="202.0" stroke="#eef2f7"/>
+<text x="676.0" y="206.0" font-size="11" fill="#64748b" text-anchor="end">25 ms</text>
+<line x1="686.0" x2="686.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="686.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">7</text>
+<line x1="725.7" x2="725.7" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="725.7" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">15</text>
+<line x1="800.2" x2="800.2" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="800.2" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">30</text>
+<line x1="874.6" x2="874.6" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="874.6" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">45</text>
+<line x1="949.1" x2="949.1" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="949.1" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">60</text>
+<line x1="1098.0" x2="1098.0" y1="466" y2="471" stroke="#cbd5e1"/>
+<text x="1098.0" y="486.0" font-size="11" fill="#64748b" text-anchor="middle">90</text>
+<line x1="686" x2="1098" y1="466" y2="466" stroke="#cbd5e1"/>
+<text x="892.0" y="506.0" font-size="11.5" fill="#64748b" text-anchor="middle">retention (days of spans stored)</text>
+<polygon points="686.0,305.4 725.7,291.1 800.2,228.8 874.6,221.4 949.1,286.7 1098.0,207.7 1098.0,288.4 949.1,310.6 874.6,248.1 800.2,277.5 725.7,307.1 686.0,322.9" fill="#94a3b8" fill-opacity="0.14"/>
+<polyline points="686.0,320.1 725.7,302.5 800.2,248.9 874.6,243.1 949.1,305.8 1098.0,276.4" fill="none" stroke="#94a3b8" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 5"/>
+<line x1="686.0" x2="686.0" y1="322.9" y2="305.4" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="686.0" cy="320.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="725.7" x2="725.7" y1="307.1" y2="291.1" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="725.7" cy="302.5" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="800.2" x2="800.2" y1="277.5" y2="228.8" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="800.2" cy="248.9" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="874.6" x2="874.6" y1="248.1" y2="221.4" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="874.6" cy="243.1" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="949.1" x2="949.1" y1="310.6" y2="286.7" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="949.1" cy="305.8" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<line x1="1098.0" x2="1098.0" y1="288.4" y2="207.7" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="1098.0" cy="276.4" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2.2"/>
+<text x="1107.0" y="280.4" font-size="12" fill="#475569" font-weight="650">18 ms</text>
+<polygon points="686.0,297.4 725.7,309.0 800.2,309.2 874.6,307.7 949.1,304.4 1098.0,254.4 1098.0,313.1 949.1,318.0 874.6,316.2 800.2,316.7 725.7,318.3 686.0,318.7" fill="#d97706" fill-opacity="0.14"/>
+<polyline points="686.0,314.7 725.7,315.8 800.2,313.8 874.6,314.4 949.1,314.3 1098.0,303.7" fill="none" stroke="#d97706" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="686.0" x2="686.0" y1="318.7" y2="297.4" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="686.0" cy="314.7" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="725.7" x2="725.7" y1="318.3" y2="309.0" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="725.7" cy="315.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="800.2" x2="800.2" y1="316.7" y2="309.2" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="800.2" cy="313.8" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="874.6" x2="874.6" y1="316.2" y2="307.7" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="874.6" cy="314.4" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="949.1" x2="949.1" y1="318.0" y2="304.4" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="949.1" cy="314.3" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<line x1="1098.0" x2="1098.0" y1="313.1" y2="254.4" stroke="#d97706" stroke-width="1.4"/>
+<circle cx="1098.0" cy="303.7" r="4" fill="#fff" stroke="#d97706" stroke-width="2.2"/>
+<text x="1107.0" y="307.7" font-size="12" fill="#d97706" font-weight="650">15 ms</text>
+<text x="32.0" y="538.0" font-size="11" fill="#94a3b8">Local ClickHouse 26.10, 8 vCPU Xeon, 32 GB RAM. One team holds half of all spans. Band and whiskers show p10 to p90</text>
+</svg>
