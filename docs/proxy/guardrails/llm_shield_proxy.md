@@ -53,11 +53,11 @@ The same fields are available in the Admin UI under **Guardrails > Add Guardrail
 ```shell
 export OPENAI_API_KEY=sk-...
 export LLM_SHIELD_PROXY_API_KEY=sk-shield-change-me
-export LITELLM_MASTER_KEY=sk-1234
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
 litellm --config config.yaml
 ```
 
-`LITELLM_MASTER_KEY` is the key your clients present to LiteLLM; the proxy refuses to start without one.
+`LITELLM_MASTER_KEY` is the key your clients present to LiteLLM; the proxy refuses to start without one. Export the same value in the shell you send the requests below from.
 
 ### 4. Make your first request
 
