@@ -152,6 +152,7 @@ To apply the guardrail to some callers only, leave `default_on` unset and enable
 
 - A message with only an image and no text or tool calls is not sent to Airia at all; it passes through unscanned.
 - If Airia does not respond within `timeout`, the request is refused (fail closed).
+- A streamed `/v1/chat/completions` response is held until it is complete and Airia has answered, then delivered in one delta with any redactions applied. Streamed `/v1/responses` and `/v1/messages` calls cannot carry a rewrite, so the response is held the same way and a **Redact** outcome is enforced as a **Block**; non-streamed calls on those routes are redacted as usual.
 
 ## Troubleshooting
 
