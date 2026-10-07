@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 930 310" role="img" aria-label="Partition pruning for a 24 hour sample: older partitions are skipped, the 7 day slack and the window are read" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif">
+<title>Partition pruning for a 24 hour sample: older partitions are skipped, the 7 day slack and the window are read</title>
+<defs>
+<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/></filter>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#facc15" flood-opacity="0.35"/></filter>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+<linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbeb"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>
+<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1.5L8 5L1 8.5" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="ara" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1.5L8 5L1 8.5" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="1" y="1" width="928" height="308" rx="20" fill="url(#bg)" stroke="#e2e8f0"/>
+<text x="40" y="48" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1.2">DAILY PARTITIONS OF OTEL_TRACES FOR ONE TEAM, 24 HOUR SAMPLE</text>
+<rect x="40" y="70" width="48" height="64" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="64" y="107" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">-90</text>
+<rect x="94" y="70" width="48" height="64" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="118" y="107" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">-89</text>
+<rect x="148" y="70" width="48" height="64" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="172" y="107" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">...</text>
+<rect x="202" y="70" width="48" height="64" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="226" y="107" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">-10</text>
+<rect x="256" y="70" width="48" height="64" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="280" y="107" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">-9</text>
+<rect x="326" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="350" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-8</text>
+<rect x="380" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="404" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-7</text>
+<rect x="434" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="458" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-6</text>
+<rect x="488" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="512" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-5</text>
+<rect x="542" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="566" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-4</text>
+<rect x="596" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="620" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-3</text>
+<rect x="650" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="674" y="107" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">-2</text>
+<g filter="url(#glow)"><rect x="720" y="70" width="48" height="64" rx="10" fill="url(#chg)" stroke="#f59e0b" stroke-width="1.6"/></g>
+<text x="744" y="107" font-size="12.5" fill="#92400e" font-weight="600" text-anchor="middle">-1</text>
+<rect x="790" y="70" width="48" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="814" y="107" font-size="11.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">today</text>
+<path d="M40 148v8H304v-8" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+<text x="172.0" y="176" font-size="12.5" fill="#94a3b8" font-weight="600" text-anchor="middle">Pruned, never opened</text>
+<text x="172.0" y="194" font-size="12" fill="#64748b" text-anchor="middle">rest of retention</text>
+<path d="M326 148v8H698v-8" fill="none" stroke="#1d4ed8" stroke-width="1.4"/>
+<text x="512.0" y="176" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">7 day slack</text>
+<text x="512.0" y="194" font-size="12" fill="#64748b" text-anchor="middle">early spans and late ingest</text>
+<path d="M720 148v8H768v-8" fill="none" stroke="#b45309" stroke-width="1.4"/>
+<text x="744.0" y="176" font-size="12.5" fill="#b45309" font-weight="600" text-anchor="middle">Window</text>
+<text x="744.0" y="194" font-size="12" fill="#64748b" text-anchor="middle"></text>
+<path d="M790 148v8H838v-8" fill="none" stroke="#1d4ed8" stroke-width="1.4"/>
+<text x="814.0" y="176" font-size="12.5" fill="#1d4ed8" font-weight="600" text-anchor="middle">Later spans</text>
+<text x="814.0" y="194" font-size="12" fill="#64748b" text-anchor="middle">in-progress check</text>
+<rect x="40" y="222" width="410" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
+<text x="56" y="248" font-size="17" fill="#b45309" font-weight="700">1.77M rows at 30 and at 90 days</text>
+<text x="56" y="267" font-size="12" fill="#64748b">with Timestamp &gt;= start - 7 days on every branch</text>
+<rect x="474" y="222" width="410" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
+<text x="490" y="248" font-size="17" fill="#334155" font-weight="700">6.2M rows at 30 days, 18.4M at 90</text>
+<text x="490" y="267" font-size="12" fill="#64748b">same single query without the time bound</text>
+</svg>

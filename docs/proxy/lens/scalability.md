@@ -8,14 +8,7 @@ slug: "/proxy/lens/scalability"
 
 Lens stores two kinds of data. Traces and request logs live in ClickHouse, which is append-only and grows with traffic. Lenses, investigation jobs, findings, and worker state live in PostgreSQL, which is small and changes often. Each design rule below keeps the cost of a common operation tied to the work it actually does, so it does not grow with total retention, total traffic, or the number of lenses
 
-```mermaid
-flowchart LR
-    W["Lens workers"] -->|"claim, heartbeat, results"| P["LiteLLM proxy"]
-    W -->|"sample, read trace"| P
-    P -->|"due_at index, version-guarded row updates"| PG[("PostgreSQL<br/>LiteLLM_Lens: id, version, due_at, data")]
-    P -->|"team + time bounded reads"| CH[("ClickHouse<br/>otel_traces, spend_logs<br/>partitioned by day")]
-    T["Instrumented apps"] -->|"spans, request logs"| CH
-```
+![Lens scalability overview: workers and agents talk to LiteLLM, which claims work from Postgres through an indexed due queue and reads ClickHouse with time bounded queries](/img/lens/scalability/overview.svg)
 
 | Operation | Store | Cost grows with | Does not grow with |
 |---|---|---|---|
@@ -32,28 +25,7 @@ The numbers on this page come from a local benchmark with real ClickHouse 26.10 
 
 Every Lens query against `otel_traces` and `spend_logs` must therefore put a direct range on `Timestamp` or `start_time` on top of its own logic. Spans can start before the window being sampled, and they can arrive late, so the lower bound carries a fixed slack of 7 days. That covers multi-day coding agent sessions while still skipping the rest of retention. The upper bound applies only where it cannot hide spans that later checks depend on. For example, the sample query still sees later spans so that traces still in progress stay excluded
 
-```mermaid
-flowchart LR
-    subgraph skipped["Skipped by partition pruning"]
-        direction LR
-        D90["day -90"] ~~~ D30["..."] ~~~ D9["day -9"]
-    end
-    subgraph slack["7 day slack"]
-        direction LR
-        D8["day -8"] ~~~ D5["..."] ~~~ D2["day -2"]
-    end
-    subgraph window["Sampled window"]
-        D1["day -1"]
-    end
-    subgraph later["Read for in-progress check"]
-        D0["today"]
-    end
-    skipped ~~~ slack ~~~ window ~~~ later
-    classDef skip fill:#eeeeee,stroke:#bbbbbb,color:#888888
-    classDef read fill:#d6ecff,stroke:#2b7bd6
-    class D90,D30,D9 skip
-    class D8,D5,D2,D1,D0 read
-```
+![Partition pruning for a 24 hour sample: partitions older than the 7 day slack are never opened](/img/lens/scalability/partitions.svg)
 
 A 24 hour sample with the time bound reads the same 1.77M rows at 30 and at 90 days of retention. Without it, the same single query reads 6.2M rows at 30 days and 18.4M at 90 days
 
@@ -61,21 +33,7 @@ A 24 hour sample with the time bound reads the same 1.77M rows at 30 and at 90 d
 
 A sample is a deterministic selection over every trace eligible in the window. It needs the eligible count and the selection order, and both require the full eligible set. Paging that query 100 rows at a time recomputes the full set on every page, so a single sample costs pages times window size
 
-```mermaid
-sequenceDiagram
-    participant W as Worker
-    participant P as Proxy
-    participant C as ClickHouse
-    Note over W,C: Before: 100 rows per page
-    loop about 50 pages
-        W->>P: sample(after=cursor, page_size=100)
-        P->>C: rank every eligible trace, return 100
-    end
-    Note over W,C: Now: one pass
-    W->>P: sample(page_size=10000)
-    P->>C: rank every eligible trace once, return all
-    W->>P: freeze selection on the job
-```
+![Sampling before and now: 48 paged queries that each rank every eligible trace, versus one query whose selection is frozen on the job](/img/lens/scalability/sampling.svg)
 
 The worker requests the selection in pages of 10,000, so a normal sample takes one query, then freezes it on the job. Later reads use the frozen selection and do not query ClickHouse again. If a page would exceed the response limit, the worker retries the same cursor with a smaller page. Previews in the dashboard still page, but each page is time bounded
 
@@ -100,14 +58,7 @@ Reading one trace is a point lookup. A bloom filter on `TraceId` narrows the rea
 
 The bloom filter is still checked on every granule of the team. Lens reads pass the trace start time saved with the sampled execution, minus the same 7 day slack, so the lookup opens only the partitions that can hold the trace
 
-```mermaid
-flowchart LR
-    E["Sampled execution<br/>trace_id, start_time"] --> Q["lens_content / lens_evidence"]
-    Q --> PR["Partition pruning<br/>Timestamp >= start_time - 7 days"]
-    PR --> PK["Primary key<br/>TeamId"]
-    PK --> BF["Bloom filter<br/>TraceId"]
-    BF --> R["At most 40 spans<br/>bounded content"]
-```
+![Single trace read: the sampled start time prunes partitions, the TraceId bloom filter picks the granule, and the page is bounded](/img/lens/scalability/trace-read.svg)
 
 Content read for one trace, median of 7 warm runs:
 
@@ -126,15 +77,7 @@ A read of a recent trace stays at about 14 ms whatever the retention, while the 
 
 A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with a partial index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
 
-```mermaid
-flowchart TB
-    C["POST /lens/worker/claim"] --> Q["SELECT data FROM LiteLLM_Lens<br/>WHERE due_at <= now AND scope matches<br/>ORDER BY due_at, id LIMIT 20"]
-    Q --> L{"next candidate"}
-    L -->|"claimed, version check passed"| OK["return job to worker"]
-    L -->|"lost race or model unsupported"| S["re-sync due_at for this version"]
-    S --> L
-    L -->|"no candidates left"| N["no work"]
-```
+![Worker claims before and now: loading every lens, versus reading at most 20 due lenses through the due_at index](/img/lens/scalability/claim.svg)
 
 A claim reads at most 20 due lenses in `due_at` order, and a worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took. Lenses created before the column existed start with a `due_at` in the past, and the first claim that looks at one writes its real value
 
@@ -157,22 +100,7 @@ A heartbeat or progress update should touch only what changed. Today a lens and 
 
 The target design moves leases and job progress into narrow rows. Findings, occurrences, and evidence become rows that are only ever appended, and run and review history gets a retention cutoff
 
-```mermaid
-flowchart LR
-    subgraph now["Today"]
-        D["LiteLLM_Lens.data<br/>jobs, leases, findings,<br/>reservations, executions"]
-    end
-    subgraph target["Target"]
-        L["LiteLLM_Lens<br/>settings, due_at"]
-        J["Lens job<br/>status, lease_until, progress"]
-        F["Lens finding<br/>append-only"]
-        O["Occurrence / evidence<br/>append-only, retention cutoff"]
-        L --> J
-        L --> F
-        F --> O
-    end
-    now -.-> target
-```
+![Lens state today in one JSONB document, versus the target with narrow job rows and append-only findings](/img/lens/scalability/hot-state.svg)
 
 ## Trace lists use a time-ordered rollup {#trace-list-rollup}
 
