@@ -949,9 +949,9 @@ A caller with an admin role and no explicit key-level `mcp_servers` list normall
 
 ## Rate Limiting per MCP Server
 
-Cap how many tool calls a key or team can make to a specific MCP server per minute with `mcp_rpm_limit`. This is a `Dict[str, int]` keyed by MCP server name, where the name is the server's alias if one is set, otherwise the configured server name. Each entry sets the requests-per-minute limit for that one server, so a limit on `github` does not affect calls to `slack`. Servers without an entry are uncapped.
+Cap how many requests a key or team can make to a specific MCP server per minute with `mcp_rpm_limit`. This is a `Dict[str, int]` keyed by MCP server name, where the name is the server's alias if one is set, otherwise the configured server name. Each entry sets the requests-per-minute limit for that one server, so a limit on `github` does not affect calls to `slack`. Servers without an entry are uncapped.
 
-Once the limit is exceeded within the window, further tool calls to that server return `429 Too Many Requests` until the window rolls over. The cap only applies to actual MCP tool calls; it has no effect on regular LLM requests.
+Every MCP operation sent to that server counts: `tools/call`, `tools/list`, `prompts/list`, `prompts/get`, `resources/list`, `resources/templates/list` and `resources/read`, plus the REST tool listing at `/mcp-rest/tools/list`. Once the limit is exceeded within the window, further requests to that server are rejected until the window rolls over. On `/mcp` the rejection is an MCP error that names the exhausted limit, and REST routes return `429 Too Many Requests`. The cap has no effect on regular LLM requests.
 
 <Tabs>
 <TabItem value="key" label="On a Key">
@@ -984,6 +984,39 @@ curl -X POST "http://localhost:4000/team/new" \
 </Tabs>
 
 `mcp_rpm_limit` is also accepted on `/key/update`, `/team/update`, `/user/new`, and `/user/update`. A key-level limit takes precedence over a team-level limit for the same server; the team limit otherwise applies to every key on the team as a shared counter.
+
+### Global limit on an MCP server
+
+Set `rpm` on the MCP server itself to cap the total requests it receives from every caller, the same way `rpm` on a model deployment caps that deployment. The counter is keyed by the server's ID only, so all keys, teams and users share one bucket, and when the proxy uses Redis the bucket is shared across every proxy instance. It applies in addition to any key or team `mcp_rpm_limit`, and a request is rejected when the server limit or any applicable key or team limit is exhausted. Leave `rpm` unset for no server-wide limit; `rpm: 0` rejects every request to the server.
+
+<Tabs>
+<TabItem value="config" label="config.yaml">
+
+```yaml title="Cap all callers of github at 300 requests per minute" showLineNumbers
+mcp_servers:
+  github:
+    url: "https://api.githubcopilot.com/mcp"
+    rpm: 300
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+```bash title="Set a server-wide limit on an existing MCP server" showLineNumbers
+curl -X PUT "http://localhost:4000/v1/mcp/server" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{"server_id": "<server_id>", "rpm": 300}'
+```
+
+</TabItem>
+</Tabs>
+
+In the Admin UI the same setting is the **RPM limit (all callers)** field on the MCP server form, next to Max Concurrent Requests.
+
+How requests are counted. Each page of a paginated listing is one request to every server it reads, so a client paging through a large catalog uses one unit per page per server. In a listing that spans several servers, a server that is over its limit on the first page is left out and reported with a `rate_limited` status while the other servers still return their items; if the limit is hit on a later page the whole request is rejected, since dropping a server mid-listing would make the pagination cursor inconsistent. A `server/discover` request charges each server once, even though it runs several listings. Calls rejected before reaching the limiter, for example a tool the key is not allowed to use or invalid arguments, are not counted. A request rejected by one of these limits does not count toward any of them, so a key retrying past its own `mcp_rpm_limit` does not use up the team or server budget. For `tools/call`, the key's ordinary `rpm_limit` and guardrails are checked first, and a call they reject is not counted against MCP limits either. Internal listings are not counted either: the catalog warmup the proxy runs before a first tool call, and the admin configuration view of a server's tools that includes disabled tools.
+
+The window defaults to 60 seconds and starts with the first counted request; set `LITELLM_RATE_LIMIT_WINDOW_SIZE` (in seconds) to change it. These MCP limits are enforced by the default rate limiter only. With `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true`, neither `mcp_rpm_limit` nor the server `rpm` is enforced.
 
 
 ## Dashboard View Modes
