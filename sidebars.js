@@ -973,6 +973,19 @@ const sidebars = {
     require('./docs/proxy/lens/sidebar'),
     {
       type: "category",
+      label: "Self-Hosted Coding Agents",
+      link: {
+        type: "generated-index",
+        title: "Self-Hosted Coding Agents",
+        description: "Run coding agents on your own infrastructure, with LiteLLM as the model gateway",
+        slug: "/self_hosted_coding_agents"
+      },
+      items: [
+        "self_hosted_coding_agents/moyai",
+      ]
+    },
+    {
+      type: "category",
       label: "Supported Endpoints",
       link: {
         type: "generated-index",
