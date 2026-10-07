@@ -256,6 +256,8 @@ curl -X POST http://localhost:4000/key/generate \
 
 An entry matches its exact path and everything under it, a trailing `/` on an entry is ignored, and a trailing `*` matches any route that starts with the text before it (`/custom-api/adm*`). A more specific allow cannot re-open a route under a denied prefix. Team endpoint listings also hide the authenticated endpoints a team denies
 
+The deny list is checked against the path LiteLLM forwards, after `..`, `//` and percent-encoding are resolved, and it matches that path exactly. Variants that LiteLLM forwards unchanged, such as `/custom-api/ADMIN`, `/custom-api/admin;x=1`, a trailing `%20` or a backslash, are not denied. If your upstream treats those as the same path, grant only the routes a key needs with `allowed_passthrough_routes` instead of relying on a deny entry
+
 Both fields are Enterprise features, and only proxy admins can set or change them. A non-admin update that would change, clear or drop an existing deny list, including by replacing `metadata`, gets a 403. Proxy admin keys are not restricted by either list. The deny list only applies to custom endpoints with `auth: true`; endpoints with `auth: false` and LiteLLM's built-in provider routes such as `/anthropic/*` ignore it
 
 ---
