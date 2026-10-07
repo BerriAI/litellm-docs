@@ -1346,6 +1346,8 @@ router_settings:
 | MAX_LANGFUSE_INITIALIZED_CLIENTS | Maximum number of Langfuse clients to initialize on proxy. Default is 50. This is set since langfuse initializes 1 thread everytime a client is initialized. We've had an incident in the past where we reached 100% cpu utilization because Langfuse was initialized several times.
 | MAX_MCP_SEMANTIC_FILTER_TOOLS_HEADER_LENGTH | Maximum header length for MCP semantic filter tools. Default is 150
 | MAX_POLICY_ESTIMATE_IMPACT_ROWS | Maximum number of rows returned when estimating the impact of a policy. Default is 1000
+| MAX_PARALLEL_REQUESTS_QUEUE_DEPTH | Most requests that can wait for a free `max_parallel_requests` slot per key on one proxy worker when the key uses `max_parallel_requests_mode: queue`. Caps the key's own `max_parallel_requests_max_queued`. Default is 1000
+| MAX_PARALLEL_REQUESTS_QUEUE_TIMEOUT_SECONDS | Longest time in seconds a request can wait for a free `max_parallel_requests` slot when the key uses `max_parallel_requests_mode: queue`. Caps the key's own `max_parallel_requests_queue_timeout`. Default is 300
 | MAX_PAYLOAD_SIZE_FOR_DEBUG_LOG | Maximum payload size in bytes for full DEBUG serialization. Payloads exceeding this will be truncated in logs. Default is 102400 (100 KB)
 | MIN_NON_ZERO_TEMPERATURE | Minimum non-zero temperature value. Default is 0.0001
 | MINIMUM_CUSTOM_KEY_LENGTH | Minimum length for user supplied key values on /key/generate and /key/regenerate. Default is 16
