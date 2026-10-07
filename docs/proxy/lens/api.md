@@ -19,6 +19,8 @@ Uploads go directly to the Lens service using a dedicated tracing key in `Author
 | `GET /v1/traces/{trace_id}` | Read the trace's `summary`, `agents`, and `spans`. Accepts optional `trace_ref`. |
 | `GET /v1/traces/{trace_id}/spans/{span_id}` | Read a span's `input`, `output`, and `attributes`. Accepts optional `trace_ref`. |
 
+A trace's `summary.source` holds `type`, `url`, and `title` when the run set [`agent.source.url`](./first-trace.md#link-a-run-to-its-source), and is absent otherwise.
+
 List responses contain `data` and `next_cursor`, with 50 summaries per page by default. Pass `next_cursor` back as `cursor` to read the next page. Use a summary's `trace_ref` when reading the trace or its spans.
 
 ```bash
