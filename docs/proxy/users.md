@@ -1377,6 +1377,29 @@ Expected Response:
 }
 ```
 
+### Queue requests over a key's max_parallel_requests
+
+By default, a request that arrives while a key already has `max_parallel_requests` requests in flight gets a 429 at once. Set `max_parallel_requests_mode` to `queue` and the proxy holds that request instead, sends it as soon as one of the key's requests finishes, and only returns a 429 if no slot frees up within the queue timeout
+
+```shell
+curl --location 'http://0.0.0.0:4000/key/generate' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
+--header 'Content-Type: application/json' \
+--data '{"max_parallel_requests": 4, "max_parallel_requests_mode": "queue", "max_parallel_requests_queue_timeout": 60, "max_parallel_requests_max_queued": 100}'
+```
+
+| Field | Meaning |
+|---|---|
+| `max_parallel_requests_mode` | `reject` (default) returns a 429 right away, `queue` waits for a free slot |
+| `max_parallel_requests_queue_timeout` | Seconds a queued request waits before it gets a 429. Default is 60 |
+| `max_parallel_requests_max_queued` | Most requests that can wait for this key on one proxy worker. Requests beyond it get a 429 at once. Defaults to the server limit |
+
+The same settings are on the key's Settings tab in the Admin UI, under Max Parallel Requests. Send `null` for the timeout or the queue size on `/key/update` to go back to the default
+
+Queued requests wait in the memory of the worker that received them and are served in arrival order on that worker. With Redis, a slot freed on any instance is picked up within a quarter of a second. The 429 body says how long the request waited, or that the queue was full
+
+Key settings are bounded by two environment variables, so a key can never ask for an unbounded wait: `MAX_PARALLEL_REQUESTS_QUEUE_TIMEOUT_SECONDS` (default 300) caps the queue timeout and `MAX_PARALLEL_REQUESTS_QUEUE_DEPTH` (default 1000) caps how many requests can wait per key on one worker
+
 ### Multi-instance rate limiting
 
 
