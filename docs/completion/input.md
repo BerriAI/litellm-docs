@@ -272,6 +272,8 @@ messages=[{"role": "user", "content": [
 
 - `metadata`: *dict (optional)* - Any additional data you want to be logged when the call is made (sent to logging integrations, eg. promptlayer and accessible via custom callback function)
 
+- `drop_params`: *bool (optional)* - Defaults to `False`. When set to `True`, LiteLLM drops any unsupported OpenAI parameters rather than raising an exception. Can also be set globally via `litellm.drop_params = True`.
+
 **CUSTOM MODEL COST** 
 - `input_cost_per_token`: *float (optional)* - The cost per input token for the completion call 
 
