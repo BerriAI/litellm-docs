@@ -58,13 +58,12 @@ The proxy registers a background job that exports FOCUS-formatted spend data on 
 
 ## How it works
 
-On each scheduled run LiteLLM transforms recent spend into a FOCUS 1.2 CSV and POSTs it to your Ternary cost connection:
+On each scheduled run LiteLLM transforms recent spend into FOCUS 1.2 CSV and uploads **one file per UTC day** in the export window:
 
-- **Endpoint:** `POST {TERNARY_BASE_URL}/external-cost-sources/v1/{TERNARY_CONNECTION_ID}/focus`
-- **Auth:** `Authorization: Bearer {TERNARY_API_KEY}`
-- **Body:** `multipart/form-data`, field `csv`
+1. **Request an upload URL.** For each day with data, LiteLLM calls `POST {TERNARY_BASE_URL}/external-cost-sources/v1/{TERNARY_CONNECTION_ID}/upload-url` with `Authorization: Bearer {TERNARY_API_KEY}` and the body `{"day": "YYYY-MM-DD"}`. Ternary returns a short-lived signed Google Cloud Storage URL for exactly that day's file, plus the headers the upload must carry.
+2. **Upload the day.** LiteLLM `PUT`s that day's CSV straight to the signed URL with the returned headers. The CSV never passes through Ternary's API.
 
-Ternary derives the affected date range from the data itself (`ChargePeriodStart`) and replaces those days on each push, so a re-sent day updates in place rather than double-counting. Large exports are chunked (see [Upload limits](#upload-limits)); every chunk of one export shares a stable upload id, so Ternary stages the parts and commits the whole export atomically once all parts have arrived — safe for backfills and retries.
+Each day maps to one file, so re-sending a day replaces it rather than double-counting. If one day's upload fails, the remaining days still upload; the next scheduled run re-sends the window, so a missed day catches up on its own.
 
 ## Privacy
 
@@ -93,14 +92,6 @@ LiteLLM spend data is transformed into the FOCUS 1.2 schema (the same shared tra
 ### Token breakdown
 
 Per-request token counts — `prompt_tokens`, `completion_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens` — which the shared FOCUS transformer does not surface as top-level columns, are carried in the standard FOCUS **`Tags`** column as JSON. Ternary reads them from `Tags` on ingest to enable token-weighted cost allocation. Other metadata (`user_id`, `user_email`, `model`, …) also rides in `Tags`.
-
-## Upload limits
-
-Ternary's receiver accepts large exports; LiteLLM chunks automatically:
-
-- **10,000 rows** per upload; larger exports are split into parts.
-- **2 MB** per upload; oversized batches are split further by size.
-- Each part of one export shares an upload id (`X-Ternary-Upload-Id`) plus its index and total, so Ternary commits the export exactly once, after all parts arrive — no partial or double-counted data.
 
 ## Related Links
 
