@@ -743,6 +743,8 @@ While adding `mcp_servers` using the config:
 - Pass in a list of strings inside `access_groups`
 - These groups can then be used for segregating access using keys, teams and MCP clients using headers
 
+To give an IdP group an access group, grant it to the team SCIM provisions for that group, see [Grant MCP access through SCIM-provisioned teams](./mcp_grant_access#grant-mcp-access-through-scim-provisioned-teams).
+
 ##### B. Creating Access Groups using UI
 
 To create an access group:
