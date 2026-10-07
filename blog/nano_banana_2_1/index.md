@@ -36,21 +36,6 @@ LiteLLM supports `gemini-nano-banana-2.1` on day 0 on Google AI Studio (`gemini/
 ## Quick Start
 
 <Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-import litellm
-
-response = litellm.image_generation(
-    model="gemini/gemini-nano-banana-2.1",
-    prompt="A product shot of a ceramic mug on a walnut desk, soft morning light",
-)
-
-print(response.data[0].b64_json[:64])
-```
-
-</TabItem>
-
 <TabItem value="proxy" label="PROXY">
 
 **1. Setup config.yaml**
@@ -84,6 +69,21 @@ curl http://0.0.0.0:4000/v1/images/generations \
     "model": "nano-banana-2.1",
     "prompt": "A product shot of a ceramic mug on a walnut desk, soft morning light"
   }'
+```
+
+</TabItem>
+
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+
+response = litellm.image_generation(
+    model="gemini/gemini-nano-banana-2.1",
+    prompt="A product shot of a ceramic mug on a walnut desk, soft morning light",
+)
+
+print(response.data[0].b64_json[:64])
 ```
 
 </TabItem>
