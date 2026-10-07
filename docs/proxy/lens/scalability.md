@@ -16,23 +16,23 @@ The numbers on this page come from a local benchmark. It runs ClickHouse 26.10 w
 
 Every Lens query against `otel_traces` and `spend_logs` must therefore put a direct range on `Timestamp` or `start_time` on top of its own logic. Spans can start before the window being sampled, and they can arrive late, so the lower bound carries a fixed slack of 7 days. That covers multi-day coding agent sessions while still skipping the rest of retention. The upper bound applies only where it cannot hide spans that later checks depend on. For example, the sample query still sees later spans so that traces still in progress stay excluded
 
-In the benchmark, a 24 hour sample reads 2.8M rows with the 7 day bound against 9.4M without it, and the gap widens as retention grows
+In the benchmark, a 24 hour sample reads 1.8M rows with the 7 day bound against 6.2M without it, and the gap widens as retention grows
 
 ## Samples are selected once per job {#one-pass-sampling}
 
-A sample is a deterministic selection over every trace eligible in the window. It needs the eligible count and the selection order, and both require the full eligible set. Paging that query 100 rows at a time recomputes the full set on every page, so a single sample costs pages times window size. In the benchmark, one 24 hour sample of 5,096 traces took 51 queries and read 167M rows
+A sample is a deterministic selection over every trace eligible in the window. It needs the eligible count and the selection order, and both require the full eligible set. Paging that query 100 rows at a time recomputes the full set on every page, so a single sample costs pages times window size. In the benchmark, one 24 hour sample of 5,000 traces took 50 queries and read 163M rows
 
-The worker requests the selection in pages of 10,000, so a normal sample takes one query, then freezes it on the job. Later reads use the frozen selection and do not query ClickHouse again. With the time bound, the same sample reads under 1M rows. Previews in the dashboard still page, but each page is time bounded
+The worker requests the selection in pages of 10,000, so a normal sample takes one query, then freezes it on the job. Later reads use the frozen selection and do not query ClickHouse again. With the time bound, the same sample takes one query and reads 1.8M rows. Previews in the dashboard still page, but each page is time bounded
 
 ## Single trace reads are keyed and windowed {#single-trace-reads}
 
 Reading one trace is a point lookup. A bloom filter on `TraceId` narrows the read to the granules that hold the trace, and pages return at most 40 spans, ordered and cursored by `SpanId`, with span content truncated to a fixed budget. Each read therefore returns a bounded payload however large the trace is
 
-The bloom filter is still checked on every granule of the team. Lens reads pass the trace start time saved with the sampled execution, minus the same 7 day slack, so the lookup opens only the partitions that can hold the trace. In the benchmark this cut the partitions opened from 30 to 2 while reading the same single granule
+The bloom filter is still checked on every granule of the team. Lens reads pass the trace start time saved with the sampled execution, minus the same 7 day slack, so the lookup opens only the partitions that can hold the trace. In the benchmark this cut the partitions opened for a recent trace from 30 to 8 while reading the same single granule
 
 ## Scheduling does not scan every lens {#scheduling}
 
-A worker claim must find one due job, and that cost should not grow with the number of lenses. Today a claim loads and validates every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. The target design keeps the scheduling fields in plain columns with a partial index on due lenses, and claims with `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 1`, so concurrent workers never block on the same row
+A worker claim must find one due job, and that cost should not grow with the number of lenses. Today a claim loads and validates every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. Each lens therefore keeps the next time it needs a worker in a `due_at` column with a partial index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. A claim reads at most 20 due lenses in `due_at` order, and a worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took
 
 ## Hot state is narrow and history is append-only {#narrow-hot-state}
 
@@ -48,6 +48,6 @@ Each design rule above has a load test that fails if the rule is broken. Each te
 
 `lens_sample_reads_scale_with_window_not_retention` seeds 8 recent days for one team and measures rows read for a 24 hour sample. It then adds 24 older days at the same volume and asserts that rows read stay within 5%. It lives in `litellm-rust/crates/traces-clickhouse/tests/load.rs`
 
-`lens_content_reads_scale_with_trace_not_retention` does the same for a single trace content read, and lives in the same file
+`lens_content_reads_scale_with_trace_not_retention` does the same for a single trace content read. The older days reuse the trace id being read, so only the time bound keeps them out, and the test lives in the same file
 
-The scheduling and hot state rules get a PostgreSQL load test. It asserts that claim latency stays flat as the number of lenses grows, and that heartbeat WAL stays flat as findings and samples grow. It ships with the scheduling change
+`test_lens_claim_reads_scale_with_due_lenses_not_total_lenses` seeds one due lens and 20 lenses that are not due, each holding about 100 findings. It measures the lens data a claim loads, adds 200 more lenses that are not due, and asserts that the claim loads exactly the same data and still claims the due lens. A heartbeat WAL test ships with the narrow lease change
