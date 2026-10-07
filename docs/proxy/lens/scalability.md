@@ -8,7 +8,9 @@ slug: "/proxy/lens/scalability"
 
 Lens stores two kinds of data. Traces and request logs live in ClickHouse, which is append-only and grows with traffic. Lenses, investigation jobs, findings, and worker state live in PostgreSQL, which is small and changes often. Each design rule below keeps the cost of a common operation tied to the work it actually does, so it does not grow with total retention, total traffic, or the number of lenses
 
-![Lens scalability overview: workers and agents talk to LiteLLM, which claims work from Postgres through an indexed due queue and reads ClickHouse with time bounded queries](/img/lens/scalability/overview.svg)
+The Rust Lens service receives agent telemetry directly and owns ClickHouse access. LiteLLM handles model requests and PostgreSQL state; its trace reads go through the Lens service
+
+![Agents send traces to Lens and model requests to LiteLLM; Lens owns ClickHouse and LiteLLM owns PostgreSQL](/img/lens-architecture.svg)
 
 | Operation | Store | Cost grows with | Does not grow with |
 |---|---|---|---|
@@ -17,7 +19,7 @@ Lens stores two kinds of data. Traces and request logs live in ClickHouse, which
 | Claim a job | PostgreSQL | Due lenses, read 20 at a time | Total lenses, lenses not due |
 | Heartbeat a job | PostgreSQL | Size of the lens document today; a narrow lease row in the target design | Number of lenses |
 
-The charts and tables on this page come from a local benchmark that runs the Lens SQL from before and after each change against real ClickHouse and PostgreSQL. Every timing is repeated and reported as a median with its p10 to p90 spread, and [Benchmark methodology](#methodology) lists the hardware, versions, dataset and run counts. They show how cost grows with data size on one machine and are not production latency targets
+The charts and tables on this page come from a local benchmark that runs the Lens SQL from before and after each change against real ClickHouse and PostgreSQL. Every timing is repeated and reported as a median with its p10 to p90 spread, and [Benchmark methodology](#methodology) lists the hardware, versions, dataset and run counts. They show how cost grows with data size on one machine and are not production latency targets. These measurements cover SQL and scheduling costs, excluding transport between LiteLLM and the Lens service
 
 ## Every trace query is bounded by time {#time-bounded-queries}
 
