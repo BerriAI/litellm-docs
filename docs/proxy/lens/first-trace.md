@@ -53,7 +53,7 @@ When a run starts from a conversation, such as a Slack thread, a Teams chat, or 
 | `agent.source.url` | An `https://` link to the conversation, such as a Slack thread permalink. Other schemes are ignored |
 | `agent.source.title` | Short text shown when hovering the link, such as the thread's first message. Optional |
 
-![A Moyai run with Source set to the Slack thread that started it.](/img/lens/trace-source-slack.png)
+![Lens shows Source: Slack on the trace, and clicking it opens the Slack thread where the agent was asked and replied.](/img/lens/trace-source-slack.png)
 
 The type picks the logo and name, so `slack` shows the Slack logo and **Slack**. Use `custom` for your own bot or anything not listed. If the root span doesn't carry the attributes, Lens uses the earliest span that does.
 
