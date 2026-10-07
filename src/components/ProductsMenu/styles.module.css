@@ -111,6 +111,13 @@
   color: var(--aurora-muted, #646875);
 }
 
+/* A second group in the same column starts below a divider. */
+.column > a + .heading {
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ifm-toc-border-color);
+}
+
 .item {
   display: flex;
   align-items: flex-start;
