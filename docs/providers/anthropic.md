@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 # Anthropic
 LiteLLM supports all anthropic models.
 
-- `claude-haiku-5-5` (see the [day 0 post](/blog/claude-haiku-5-5) for pricing and setup, and [models.litellm.ai](https://models.litellm.ai/models) for prices on every provider)
+- `claude-haiku-5-5`
 - `claude-sonnet-5`
 - `claude-opus-5`
 - `claude-opus-4-6` (`claude-opus-4-6-20260205`)
