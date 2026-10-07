@@ -75,11 +75,11 @@ A read of a recent trace stays at about 14 ms whatever the retention, while the 
 
 ## Scheduling does not scan every lens {#scheduling}
 
-A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with a partial index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
+A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.3 s with 200 medium lenses and 5.7 s with 200 large ones, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with an index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
 
-![Worker claims before and now: loading every lens, versus reading at most 20 due lenses through the due_at index](/img/lens/scalability/claim.svg)
+![Worker claims before and now: loading every lens, versus paging through batches of due lenses using the due_at index](/img/lens/scalability/claim.svg)
 
-A claim reads at most 20 due lenses in `due_at` order, and a worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took. Lenses created before the column existed start with a `due_at` in the past, and the first claim that looks at one writes its real value
+A claim reads pages of up to 20 due lenses in `(due_at, id)` order until it claims one or exhausts the queue. A worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took. Lenses created before the column existed start with a `due_at` in the past, and the first claim that looks at one writes its real value
 
 Lens data a claim loads, each lens holding 100 findings (about 52 KB of JSON):
 
