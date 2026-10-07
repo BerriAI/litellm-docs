@@ -4,6 +4,7 @@ import TabItem from '@theme/TabItem';
 # Anthropic
 LiteLLM supports all anthropic models.
 
+- `claude-haiku-5-5` (see the [day 0 post](/blog/claude-haiku-5-5) for pricing and setup, and [models.litellm.ai](https://models.litellm.ai/models) for prices on every provider)
 - `claude-sonnet-5`
 - `claude-opus-5`
 - `claude-opus-4-6` (`claude-opus-4-6-20260205`)
@@ -68,7 +69,7 @@ LiteLLM supports Anthropic's [structured outputs feature](https://platform.claud
 Native structured outputs are used when the model has `supports_native_structured_output` set in the model cost map:
 - Sonnet 4.5 and later (`claude-sonnet-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5`)
 - Opus 4.5 and later (`claude-opus-4-5`, `claude-opus-4-6`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5`, `claude-opus-5-5`)
-- Haiku 4.5 (`claude-haiku-4-5`)
+- Haiku 4.5 and 5.5 (`claude-haiku-4-5`, `claude-haiku-5-5`)
 
 Claude Opus 4.1 and older models do not have this flag, so LiteLLM never sends `output_format` for them. It instead adds a `json_tool_call` tool built from your schema and forces the model to call it
 
