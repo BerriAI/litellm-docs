@@ -84,7 +84,7 @@ A blocked request or response returns `403` with the reason from the Akto policy
 }
 ```
 
-A blocked MCP tool call returns `400` with `"error": "guardrail_violation"` and the same reason.
+A blocked MCP tool call answers differently per endpoint. On `/mcp` it comes back as an MCP tool error, `result.isError: true` with the reason in `content`, over HTTP `200`. On `/mcp-rest/tools/call` it returns HTTP `400` with `"error": "guardrail_violation"`. When `/v1/responses` runs an MCP tool on its own, the model receives the tool error and the request still returns `200`. See [MCP guardrails](../../mcp_guardrail.md) for how the gateway reports blocks.
 
 ## How It Works
 
@@ -135,7 +135,7 @@ Akto also receives the caller's user email, team alias and key alias as tags, an
 
 | Scenario | `fail_closed` (default) | `fail_open` |
 |----------|------------------------|-------------|
-| Akto unreachable, slow or returning an error | Blocked: `503` for LLM calls, `400` for MCP tool calls, an error frame mid-stream | Passes through |
+| Akto unreachable, slow or returning an error | Blocked: `503` for LLM calls, an error frame mid-stream, and for MCP tool calls the same tool error or `400` as a block | Passes through |
 | Akto flags the traffic | Blocked (`403`) | Blocked (`403`) |
 | Akto returns a masked version that cannot be applied | Blocked (`403`) | Blocked (`403`) |
 
