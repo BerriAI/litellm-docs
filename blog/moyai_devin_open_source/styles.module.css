@@ -30,6 +30,7 @@
   --p: 0;
   position: relative;
   width: 100vw;
+  margin-left: calc(50% - 50vw);
   height: 260vh;
   margin-top: calc(-1 * var(--ifm-navbar-height));
   color: #f4f6ff;
@@ -94,6 +95,11 @@
   width: 0;
   height: 0;
   z-index: 3;
+  visibility: hidden;
+}
+
+.orbitPlaced {
+  visibility: visible;
   animation: fadeIn 1.2s ease-out both;
 }
 
