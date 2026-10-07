@@ -20,5 +20,6 @@ module.exports = {
     },
     'proxy/lens/investigations',
     'proxy/lens/api',
+    {type: 'doc', id: 'proxy/lens/scalability', label: 'Scalability design'},
   ],
 };

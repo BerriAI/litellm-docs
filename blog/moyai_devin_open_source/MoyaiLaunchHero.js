@@ -25,6 +25,63 @@ export const PROVIDERS = [
   {name: 'Bedrock', logo: 'bedrock.svg'},
 ];
 
+const NIGHT_CSS = `
+html:has(#moyai-hero) {
+  color-scheme: dark;
+  --ifm-background-color: #05070d;
+  --ifm-background-surface-color: #161b22;
+  --ifm-navbar-background-color: rgba(5, 7, 13, 0.82);
+  --ifm-footer-background-color: #05070d;
+  --ifm-font-color-base: #e3e3e3;
+  --ifm-heading-color: #f5f6fa;
+  --ifm-color-content: #e3e3e3;
+  --ifm-color-content-secondary: #c2c6d0;
+  --ifm-color-emphasis-300: #444950;
+  --ifm-color-emphasis-400: #606770;
+  --ifm-color-emphasis-500: #8d949e;
+  --ifm-color-emphasis-600: #a6aab3;
+  --ifm-color-emphasis-700: #c2c6d0;
+  --ifm-toc-border-color: #2d3139;
+}
+html:has(#moyai-hero) body,
+html:has(#moyai-hero) .main-wrapper {
+  background: #05070d;
+  color: #e3e3e3;
+}
+html:has(#moyai-hero) [class*='colorModeToggle'] {
+  display: none;
+}
+html:has(#moyai-hero) {
+  --ifm-navbar-background-color: #080b26;
+  --aurora-nav-bg: rgba(8, 11, 38, 0.72);
+  --aurora-line: rgba(255, 255, 255, 0.08);
+  --aurora-line-strong: rgba(159, 171, 255, 0.16);
+  --aurora-muted: #a6a4c6;
+  --ifm-navbar-link-color: #e3e3e3;
+}
+html:has(#moyai-hero) .navbar {
+  background-color: rgba(8, 11, 38, 0.72) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+html:has(#moyai-hero) .navbar__link,
+html:has(#moyai-hero) .navbar__item {
+  color: #e3e3e3;
+}
+html:has(#moyai-hero) .blog-wrapper article .markdown,
+html:has(#moyai-hero) article .markdown {
+  color: #d1d5db;
+}
+html:has(#moyai-hero) article .markdown h2,
+html:has(#moyai-hero) article .markdown h3 {
+  color: #f9fafb;
+}
+html:has(#moyai-hero) article .markdown code {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+`;
+
 const STAGE_AT = [0.1, 0.35, 0.95];
 const PALETTE = ['#cfe3ff', '#9cc3ff', '#ffffff', '#ffb98a', '#8b9bff', '#e9d8ff'];
 
@@ -114,9 +171,15 @@ function useNight() {
   useEffect(() => {
     const root = document.documentElement;
     const previous = root.dataset.theme;
-    root.dataset.theme = 'dark';
-    root.classList.add('moyai-night');
+    const forceDark = () => {
+      if (root.dataset.theme !== 'dark') root.dataset.theme = 'dark';
+      if (!root.classList.contains('moyai-night')) root.classList.add('moyai-night');
+    };
+    forceDark();
+    const observer = new MutationObserver(forceDark);
+    observer.observe(root, {attributes: true, attributeFilter: ['data-theme']});
     return () => {
+      observer.disconnect();
       root.classList.remove('moyai-night');
       if (previous) root.dataset.theme = previous;
     };
@@ -145,6 +208,7 @@ function Orbit({items, radius, speed, orbit, className}) {
       const rx = Math.min(window.innerWidth * radius[0], radius[1]) * scale;
       const ry = rx * orbit.tilt;
       el.style.top = `${(top + bottom) / 2}px`;
+      el.classList.add(styles.orbitPlaced);
       const beam = orbit.flare ? orbit.flare(t) : null;
       [...el.children].forEach((chip, i) => {
         const theta = (i / items.length) * Math.PI * 2 + t * speed;
@@ -192,8 +256,10 @@ export default function MoyaiLaunchHero({date, sections}) {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{__html: NIGHT_CSS}} />
+      <script dangerouslySetInnerHTML={{__html: "document.documentElement.setAttribute('data-theme','dark')"}} />
       <Starfield backdrop={object.backdrop} />
-      <section className={styles.scroller} ref={ref} data-stage={stage} style={{'--accent': object.accent}}>
+      <section id="moyai-hero" className={styles.scroller} ref={ref} data-stage={stage} style={{'--accent': object.accent}}>
         <div className={styles.hero}>
           <canvas ref={swirlRef} className={styles.swirl} aria-hidden="true" />
           <h1 className={styles.split}>
