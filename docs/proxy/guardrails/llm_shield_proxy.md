@@ -12,7 +12,7 @@ The guardrail fails closed. If your Shield deployment is unreachable, times out,
 It covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming.
 
 :::info Which LiteLLM versions include this guardrail
-`llm_shield_proxy` was merged into LiteLLM `main` on 2026-10-05 ([#42645](https://github.com/BerriAI/litellm/pull/42645)) and is not yet in a tagged release; v1.105.0-rc.1 and earlier do not include it. On those versions the proxy starts **without** this guardrail and logs `Skipping guardrail 'llm-shield': invalid configuration, proxy is starting WITHOUT this guardrail: Unsupported guardrail: llm_shield_proxy`; requests then reach the provider unredacted. Check the startup log for that line before sending traffic.
+`llm_shield_proxy` was merged into LiteLLM `main` on 2026-10-05 ([#42645](https://github.com/BerriAI/litellm/pull/42645)). The first release that includes it is the v1.106.0-dev.1 pre-release (`pip install litellm==1.106.0.dev1`); v1.105.0-rc.1, v1.104.0 and earlier do not include it. On those versions the proxy starts **without** this guardrail and logs `Skipping guardrail 'llm-shield': invalid configuration, proxy is starting WITHOUT this guardrail: Unsupported guardrail: llm_shield_proxy`; requests then reach the provider unredacted. Check the startup log for that line before sending traffic.
 :::
 
 ## Quick Start
