@@ -42,3 +42,27 @@ Open **Lens > Traces**. Select a time range that includes your run, then open it
 ![A research_agent trace with its question, model call, and final answer.](/img/lens/first-agent-trace.png)
 
 Check that you can see the task, tool results, and final answer. If these are missing, update your agent's instrumentation before running an investigation.
+
+## Link a run to its conversation {#link-a-run-to-its-source}
+
+When a run starts from a conversation, such as a Slack thread, a Teams chat, or your own bot, set these attributes on the run's root agent span. Lens adds a **Source** field to the top of the trace with the app's logo, and hovering it shows the title.
+
+| Attribute | Value |
+| --- | --- |
+| `agent.source.type` | Where the conversation lives: `slack`, `teams`, `discord`, `linear`, `github`, `jira`, or `custom`. A missing or unknown value is treated as `custom` |
+| `agent.source.url` | An `https://` link to the conversation, such as a Slack thread permalink. Other schemes are ignored |
+| `agent.source.title` | Short text shown when hovering the link, such as the thread's first message. Optional |
+
+![A Moyai run with Source set to the Slack thread that started it.](/img/lens/trace-source-slack.png)
+
+The type picks the logo and name, so `slack` shows the Slack logo and **Slack**. Use `custom` for your own bot or anything not listed. If the root span doesn't carry the attributes, Lens uses the earliest span that does.
+
+```python
+with tracer.start_as_current_span("research_agent") as span:
+    span.set_attribute("agent.source.type", "slack")
+    span.set_attribute("agent.source.url", "https://acme.slack.com/archives/C0123ABCD/p1759869540000100")
+    span.set_attribute("agent.source.title", "Can you add me to the guestlist for the retro?")
+    run_agent(task)
+```
+
+The source is returned as `summary.source`, with `type`, `url`, and `title`, from the [trace API](./api.md#agent-tracing-api).
