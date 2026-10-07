@@ -15,7 +15,7 @@
 <rect x="58" y="136" width="48" height="48" rx="12" fill="#f1f5f9"/>
 <path d="M74 150l-8 10 8 10M90 150l8 10-8 10" fill="none" stroke="#475569" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="118" y="156" font-size="16" font-weight="600" fill="#0f172a">Your agent</text>
-<text x="118" y="177" font-size="12.5" fill="#64748b">LLM calls + traces</text>
+<text x="118" y="177" font-size="12.5" fill="#64748b">models and telemetry</text>
 
 <!-- LiteLLM -->
 <g filter="url(#sh)"><rect x="338" y="112" width="210" height="96" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
@@ -45,16 +45,18 @@
 <rect x="358" y="334" width="44" height="44" rx="12" fill="#fff" stroke="#fde68a"/>
 <g fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="368" y="344" width="24" height="24" rx="4"/><path d="M374 352l4 4-4 4M381 360h6"/></g>
 <text x="414" y="353" font-size="15.5" font-weight="600" fill="#0f172a">Lens worker</text>
-<text x="414" y="373" font-size="12.5" fill="#92400e">Docker container</text>
+<text x="414" y="373" font-size="12.5" fill="#92400e">Rust ingestion + analysis</text>
 <rect x="484" y="300" width="52" height="22" rx="11" fill="#f59e0b"/>
 <text x="510" y="315" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="0.8">NEW</text>
 
 <!-- Arrows -->
+<path d="M140 210V356H334" stroke="#d97706" stroke-width="2.4" fill="none" marker-end="url(#ara)"/>
+<text x="158" y="338" font-size="12" fill="#92400e">traces directly to Lens</text>
 <path d="M240 160H334" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
 <path d="M550 146C598 146 600 80 644 80" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
-<path d="M550 174C598 174 600 240 644 240" stroke="#d97706" stroke-width="2.4" fill="none" marker-end="url(#ara)"/>
+<path d="M550 356C605 356 605 240 644 240" stroke="#d97706" stroke-width="2.4" fill="none" marker-end="url(#ara)"/>
 <path d="M443 308V212" stroke="#d97706" stroke-width="2.4" stroke-dasharray="6 5" fill="none" marker-end="url(#ara)"/>
 <text x="296" y="256" font-size="12" fill="#92400e" text-anchor="end">polls scans over HTTPS</text>
-<text x="296" y="274" font-size="12" fill="#64748b" text-anchor="end">no DB or provider keys</text>
+<text x="296" y="274" font-size="12" fill="#64748b" text-anchor="end">model keys stay on LiteLLM</text>
 <path d="M300 262H436" stroke="#fde68a" stroke-width="1.2" fill="none"/>
 </svg>

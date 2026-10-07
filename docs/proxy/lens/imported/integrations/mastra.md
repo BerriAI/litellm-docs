@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/mastra/README.md at a6cce7983ec78ef9183627a0b05e0e3ce548b98a. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/mastra/README.md at 20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9. Edit the source README. -->
 
 # Mastra
 
@@ -16,7 +16,7 @@ Send Mastra traces to [LiteLLM Lens](/docs/proxy/lens) using the runnable exampl
 
 ## Prerequisites
 
-You need a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), a LiteLLM key, and a configured model alias. The swarm example needs a model that supports tool calls. A Lens worker is required for investigations; viewing traces does not require one.
+You need a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), a LiteLLM key, and a configured model alias. The swarm example needs a model that supports tool calls. The Lens service receives and stores traces separately from the gateway and runs investigations. Generate a dedicated tracing key in **Lens > Traces > Set up tracing**.
 
 Use Node.js with built-in TypeScript support and npm. Install dependencies from the repository root so the shared npm workspaces are available.
 
@@ -32,17 +32,19 @@ cd mastra
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `mastra/`. Run `npm install` from the repository root if you have not installed the workspace dependencies. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/mastra/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `mastra/`. Run `npm install` from the repository root if you have not installed the workspace dependencies. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/mastra/.env.example) to `.env` if it does not exist, then set:
 
-| Variable              | Value                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4002` |
-| `LITELLM_API_KEY`     | Your LiteLLM key                                                                               |
-| `LITELLM_MODEL`       | A model alias configured on your gateway                                                       |
+| Variable              | Value                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4002`                          |
+| `LITELLM_API_KEY`     | Your LiteLLM model key                                                                                                  |
+| `LENS_URL`            | The ingestion URL from Lens tracing setup, for example `http://localhost:4318` or `https://gateway.example/lens-ingest` |
+| `LENS_TRACING_KEY`    | The dedicated tracing key from Lens tracing setup                                                                       |
+| `LITELLM_MODEL`       | A model alias configured on your gateway                                                                                |
 
-The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LITELLM_GATEWAY_URL/v1/traces` with the LiteLLM key as a bearer token.
+The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -54,7 +56,7 @@ A `research_agent` answers one question.
 node --env-file=.env simple/main.ts
 ```
 
-See [simple/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/mastra/simple/main.ts) for the implementation.
+See [simple/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/mastra/simple/main.ts) for the implementation.
 
 ### Agent swarm
 
@@ -64,7 +66,7 @@ A coordinator delegates to `search_agent` and `writer_agent` subagents.
 node --env-file=.env swarm/main.ts
 ```
 
-See [swarm/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/mastra/swarm/main.ts) for the implementation.
+See [swarm/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/mastra/swarm/main.ts) for the implementation.
 
 ## Verify the trace
 
@@ -74,11 +76,11 @@ After the example prints its answer, open **Lens > Traces** on your gateway and 
 
 Mastra’s OtelBridge converts agent, step, model, and tool spans into OpenTelemetry spans exported by the NodeSDK. The shared gateway fetch records request attempts and gateway call IDs.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 
-If model calls fail, check the gateway URL, key, and model alias. If an answer appears but the trace is missing, check the terminal for exporter errors and confirm tracing is enabled on the same gateway. A model call succeeding does not confirm that its trace export succeeded.
+If model calls fail, check the gateway URL, key, and model alias. If an answer appears but the trace is missing, check the terminal for exporter errors and confirm the Lens ingestion service is reachable with your tracing key. A model call succeeding does not confirm that its trace export succeeded.
 
 Install npm dependencies from the repository root so all workspaces use the same OpenTelemetry API instance. An in-memory storage warning is expected for these one-shot examples.
 

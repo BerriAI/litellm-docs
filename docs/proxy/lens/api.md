@@ -8,12 +8,14 @@ slug: "/proxy/lens/api"
 
 ## Agent tracing API
 
-All four endpoints require proxy authentication. Send a proxy key in the `Authorization: Bearer <key>` header.
+Uploads go directly to the Lens service using a dedicated tracing key in `Authorization: Bearer <tracing-key>`. Generate a key with `POST /lens/tracing/keys` on LiteLLM as a proxy administrator, or use **Lens > Traces > Set up tracing**. `GET /lens/service` returns the public ingestion base URL and connection status. Read endpoints stay on LiteLLM and require normal proxy authentication
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /v1/traces` | Ingest OTLP/HTTP traces as protobuf (`application/x-protobuf`) or JSON (`application/json`). Supports gzip with `Content-Encoding: gzip`. |
-| `GET /v1/traces` | List trace summaries. Optional `start_ms` and `end_ms` are Unix milliseconds. The default window is the last 24 hours. |
+| `POST /v1/traces` on Lens | Ingest OTLP/HTTP traces as protobuf (`application/x-protobuf`) or JSON (`application/json`). Supports gzip with `Content-Encoding: gzip`. |
+| `POST /v1/logs` on Lens | Ingest OTLP/HTTP logs, including coding-agent session events |
+| `POST /v1/traces/receipt` on Lens | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
+| `GET /v1/traces` on LiteLLM | List trace summaries. Optional `start_ms` and `end_ms` are Unix milliseconds. The default window is the last 24 hours. |
 | `GET /v1/traces/{trace_id}` | Read the trace's `summary`, `agents`, and `spans`. Accepts optional `trace_ref`. |
 | `GET /v1/traces/{trace_id}/spans/{span_id}` | Read a span's `input`, `output`, and `attributes`. Accepts optional `trace_ref`. |
 
@@ -24,7 +26,9 @@ curl -H "Authorization: Bearer <key>" \
   "https://<your-litellm-proxy>/v1/traces"
 ```
 
-Proxy administrators and proxy administrator viewers can read every trace. Read-only proxy administrators cannot ingest traces. Every other user, SCIM-provisioned users included, reads the traces sent with their own keys plus the traces of each team that shares them, as described under [who can see which traces](#trace-access). A key that belongs to no user, such as a team service account key, cannot read traces and gets a 403.
+Proxy administrators and proxy administrator viewers can read every trace. A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models. Ordinary model keys do not authorize ingestion. The gateway upload routes return 410; exporter URLs must point directly to Lens. Every other user, SCIM-provisioned users included, reads the traces owned by their user plus the traces of each team that shares them, as described under [who can see which traces](#trace-access). A key that belongs to no user, such as a team service account key, cannot read traces and gets a 403.
+
+A successful upload confirms ClickHouse accepted it. A 429 or 503 is retryable; use bounded exporter retries. During an extended outage, traces can be dropped by the exporter. Keys refresh on each Lens replica every 30 seconds, with a 90-second maximum credential snapshot age
 
 ### Who can see which traces {#trace-access}
 
