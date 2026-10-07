@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Conduct Guard
 
-The Conduct guardrail sends each prompt to your Conduct workspace before the model is called. Conduct evaluates the user text against the rules configured for the tool the guardrail is registered under and returns a verdict. Blocking verdicts (`block`, `approval`) reject the request with a 400 and the rule id. Non-blocking verdicts (`warning`, `advisory`) let the request through and are recorded as `guardrail_flagged` in LiteLLM's guardrail logs, spend logs, and the Admin UI request detail.
+The Conduct guardrail sends each prompt to your Conduct workspace before the model is called. Conduct evaluates the user text against the prompt rules in your workspace and returns a verdict. Blocking verdicts (`block`, `approval`) reject the request with a 400 and the rule id. Non-blocking verdicts (`warning`, `advisory`) let the request through and are recorded as `guardrail_flagged` in LiteLLM's guardrail logs, spend logs, and the Admin UI request detail.
 
 The integration wraps the [`conduct-litellm-guard`](https://pypi.org/project/conduct-litellm-guard/) package, so it works on every endpoint the proxy translates into a guardrail input: `/v1/chat/completions` (including streaming), `/v1/responses`, and `/v1/messages`. With `pre_mcp_call` enabled it also checks MCP tool calls made through the LiteLLM MCP gateway. See [MCP tool calls](#mcp-tool-calls).
 
@@ -33,9 +33,8 @@ guardrails:
       mode: pre_call
       default_on: true
       api_key: os.environ/CONDUCT_AGENT_TOKEN
-      api_base: https://api.conductai.ai   # optional, this is the default
+      api_base: https://gateway.conductai.ai   # optional, this is the default
       workspace_id: os.environ/CONDUCT_WORKSPACE_ID   # optional
-      tool_name: llm_call                  # optional, the Conduct tool your rules target
       timeout: 8                           # optional, seconds
       unreachable_fallback: fail_closed    # optional, block if Conduct cannot be reached
 ```
@@ -106,9 +105,9 @@ The request reaches the model and the response is returned unchanged. If a rule 
 
 | Parameter | Default | Description |
 |---|---|---|
-| `api_base` | `https://api.conductai.ai` | Conduct API base URL. The MCP endpoint is derived as `<api_base>/mcp`. Falls back to `CONDUCT_API_URL` |
+| `api_base` | `https://gateway.conductai.ai` | Conduct API base URL. The MCP endpoint is derived as `<api_base>/mcp`. Falls back to `CONDUCT_API_URL` |
 | `workspace_id` | `None` | Conduct workspace id, sent as the `X-Workspace-Id` header. Falls back to `CONDUCT_WORKSPACE_ID` |
-| `tool_name` | `llm_call` | Conduct tool name the prompt is evaluated under. Match the tool your rules target |
+| `tool_name` | `llm_call` | Accepted for backward compatibility and ignored. Prompts are evaluated against the workspace's prompt rules |
 | `timeout` | `8` | Timeout in seconds for the Conduct check |
 | `unreachable_fallback` | `fail_closed` | `fail_closed` rejects the request when Conduct is unreachable, times out, or rejects the token. `fail_open` lets it through |
 
