@@ -4,7 +4,11 @@ const {spawnSync} = require('node:child_process');
 const env = {DOCUSAURUS_SSR_CONCURRENCY: '4', ...process.env};
 console.log(`[build] Rendering up to ${env.DOCUSAURUS_SSR_CONCURRENCY} pages at a time`);
 
+// Node caps the heap near 2 GB inside an 8 GB container, which a cold webpack compile exceeds.
+const heapArgs = /--max-old-space-size/.test(env.NODE_OPTIONS ?? '') ? [] : ['--max-old-space-size=6144'];
+
 const result = spawnSync(process.execPath, [
+  ...heapArgs,
   require.resolve('@docusaurus/core/bin/docusaurus.mjs'),
   'build',
   ...process.argv.slice(2),
