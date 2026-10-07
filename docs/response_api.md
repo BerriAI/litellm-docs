@@ -1050,6 +1050,17 @@ model_list:
 
 Both models will automatically support WebSocket mode at `ws://localhost:4000/v1/responses`.
 
+### Session duration limit
+
+A WebSocket session on `/v1/responses` lasts at most 60 minutes by default, matching OpenAI's own WebSocket connection limit. The limit is counted from when the proxy accepts the connection, so clients that open connections ahead of time, such as Codex, can leave them idle and send their first `response.create` later. When the limit is reached the proxy closes the socket with code `1000` and reason `Session duration limit reached`, whether or not a response is in progress, and the client should reconnect.
+
+To change the limit, set `responses_websocket_session_limit_seconds` under `general_settings`. It accepts values from 60 to 7200 seconds; any other value logs a warning and the proxy uses 3600.
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  responses_websocket_session_limit_seconds: 1800  # 30 minutes
+```
+
 ## Response ID Security
 
 By default, LiteLLM Proxy prevents users from accessing other users' response IDs.
