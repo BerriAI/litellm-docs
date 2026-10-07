@@ -449,6 +449,44 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 | databricks-mpt-7b-instruct    | `completion(model='databricks/databricks-mpt-7b-instruct', messages=messages)`   | 
 
 
+## Decisions (ai_decide)
+
+Databricks serves OpenJev through `ai_decide` on the `databricks-openjev-qwen35-4b` Foundation Model API endpoint. LiteLLM exposes it on the unified `/v1/decisions` route and as an Auto Router classifier. Add the serving endpoint to `model_list`:
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: databricks-decider
+    litellm_params:
+      model: databricks/databricks-openjev-qwen35-4b
+      api_base: os.environ/DATABRICKS_API_BASE
+      api_key: os.environ/DATABRICKS_API_KEY
+```
+
+`DATABRICKS_API_BASE` is `https://<workspace-host>/serving-endpoints`, the same value the chat deployments above use. LiteLLM posts the decision request to `POST /serving-endpoints/databricks-openjev-qwen35-4b/invocations` with the deployment's token as a bearer credential.
+
+```bash
+curl http://localhost:4000/v1/decisions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "databricks-decider",
+    "state": "My invoice has two identical charges for the same month",
+    "questions": {
+      "is_billing": {"type": "noul", "instructions": "Is this a billing problem?"},
+      "intent": {
+        "type": "choice",
+        "instructions": "What does the customer want?",
+        "criteria": {"refund": "Money back", "explanation": "Understand the charge", "cancel": "Close the account"}
+      },
+      "urgency": {"type": "score", "instructions": "How urgent is this?", "criteria": ["low", "medium", "high"]}
+    }
+  }'
+```
+
+The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`; Databricks bills OpenJev in DBUs per token, and LiteLLM has no catalog rate for it, so add a `databricks/databricks-openjev-qwen35-4b` entry to your cost map to price it.
+
+To route Auto Router traffic with the same endpoint, set `opensource_classifier_config.provider: databricks` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-openjev-serving-endpoint).
+
 ## Embedding Models
 
 ### Passing Databricks specific params - 'instruction'
