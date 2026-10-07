@@ -881,9 +881,9 @@ router_settings:
 | VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
 | VLLM_API_BASE | Base URL for a self-hosted vLLM server
 | VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
-| VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
-| VOYAGE_AI_TOKEN | Last of the three accepted names for the Voyage AI API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
-| VOYAGE_API_BASE | Base URL for Voyage AI rerank requests
+| VOYAGE_AI_API_KEY | Alias for the VoyageAI by MongoDB API key, read after `VOYAGE_API_KEY`
+| VOYAGE_AI_TOKEN | Last of the three accepted names for the VoyageAI by MongoDB API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
+| VOYAGE_API_BASE | Base URL for VoyageAI by MongoDB rerank requests; without it a MongoDB-issued key (`al-`) goes to ai.mongodb.com and any other key to api.voyageai.com
 | WANDB_API_BASE | Base URL for Weights & Biases Inference. Default is https://api.inference.wandb.ai/v1
 | WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
 | WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
