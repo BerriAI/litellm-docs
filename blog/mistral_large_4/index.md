@@ -23,6 +23,10 @@ LiteLLM now supports [Mistral Large 4](https://mistral.ai/news/mistral-large-4/)
 
 Mistral Large 4 (Le Chonk) is a natively multimodal model with 1 trillion parameters and 49 billion active, scoring 61.7% on DeepSWE v1.1. It costs $0.68 input, $0.068 cached input and $2.09 output per 1M tokens, against $0.50, $0.05 and $1.50 for Large 3.
 
+:::note
+**No image upgrade needed.** Pricing landed in [PR #44870](https://github.com/BerriAI/litellm/pull/44870); hit **Reload Model Cost Map** in the Admin UI (or `POST /reload/model_cost_map`) to pull it, on `v1.76.0` and above.
+:::
+
 ## Usage
 
 <Tabs>
@@ -83,12 +87,6 @@ print(response.choices[0].message.content)
 
 </TabItem>
 </Tabs>
-
-## Notes
-
-The model card lists a 1M context window, but Mistral's API enforces 524,288 tokens and rejects longer prompts, so LiteLLM's cost map records 524,288. Plan context trimming and fallbacks around that number.
-
-Large 4 accepts `reasoning_effort` of `none` or `high`. From `v1.103.0`, LiteLLM sends `low` and `medium` as `high` rather than letting the call fail, and `none` turns reasoning off. `mistral-large-latest` still points at Large 3, so pin `mistral-large-4` to use the new model.
 
 ## Feedback
 
