@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 296" role="img" aria-label="Single trace read: the sampled start time prunes partitions, the TraceId bloom filter picks the granule, and the page is bounded" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif">
+<title>Single trace read: the sampled start time prunes partitions, the TraceId bloom filter picks the granule, and the page is bounded</title>
+<defs>
+<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/></filter>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#facc15" flood-opacity="0.35"/></filter>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+<linearGradient id="chg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbeb"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>
+<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1.5L8 5L1 8.5" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="ara" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1.5L8 5L1 8.5" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="1" y="1" width="958" height="294" rx="20" fill="url(#bg)" stroke="#e2e8f0"/>
+<text x="40" y="48" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1.2">READING A RECENT TRACE WITH 90 DAYS RETAINED</text>
+<g filter="url(#sh)"><rect x="40" y="70" width="206" height="104" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<rect x="58" y="100.0" width="44" height="44" rx="12" fill="#f1f5f9"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round"><path d="M68 114.0h14M74 122.0h18M80 130.0h10"/></g>
+<text x="116" y="117.0" font-size="15.5" fill="#0f172a" font-weight="600">Sampled trace</text>
+<text x="116" y="138.0" font-size="12.5" fill="#64748b">trace_id, start_time</text>
+<g filter="url(#glow)"><rect x="276" y="70" width="206" height="104" rx="16" fill="url(#chg)" stroke="#f59e0b" stroke-width="1.6"/></g>
+<rect x="294" y="100.0" width="44" height="44" rx="12" fill="#fff" stroke="#fde68a"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round"><circle cx="316" cy="122.0" r="11"/><path d="M316 116.0v6l4 3"/></g>
+<text x="352" y="107.0" font-size="15.5" fill="#0f172a" font-weight="600">Time window</text>
+<text x="352" y="128.0" font-size="12.5" fill="#92400e">start_time - 7 days</text>
+<text x="352" y="147.0" font-size="12.5" fill="#92400e">9 of 90 partitions</text>
+<rect x="433.8" y="59" width="36.2" height="22" rx="11" fill="#f59e0b"/>
+<text x="451.9" y="74" font-size="11" fill="#fff" font-weight="700" text-anchor="middle" letter-spacing="0.8">NEW</text>
+<path d="M248 122H272" stroke="#d97706" stroke-width="2.4" fill="none" marker-end="url(#ara)"/>
+<g filter="url(#sh)"><rect x="512" y="70" width="206" height="104" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<rect x="530" y="100.0" width="44" height="44" rx="12" fill="#f1f5f9"/><path d="M540 112.0h24l-9 11v9l-6 3v-12z" fill="none" stroke="#111827" stroke-width="2" stroke-linejoin="round"/>
+<text x="588" y="107.0" font-size="15.5" fill="#0f172a" font-weight="600">Bloom filter</text>
+<text x="588" y="128.0" font-size="12.5" fill="#64748b">on TraceId</text>
+<text x="588" y="147.0" font-size="12.5" fill="#64748b">1 granule read</text>
+<path d="M484 122H508" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+<g filter="url(#sh)"><rect x="748" y="70" width="206" height="104" rx="16" fill="#fff" stroke="#e2e8f0"/></g>
+<rect x="766" y="100.0" width="44" height="44" rx="12" fill="#f1f5f9"/><g fill="none" stroke="#111827" stroke-width="2" stroke-linejoin="round"><rect x="778" y="109.0" width="20" height="26" rx="3"/><path d="M783 117.0h10M783 122.0h10M783 127.0h6" stroke-linecap="round"/></g>
+<text x="824" y="107.0" font-size="15.5" fill="#0f172a" font-weight="600">One page</text>
+<text x="824" y="128.0" font-size="12.5" fill="#64748b">at most 40 spans</text>
+<text x="824" y="147.0" font-size="12.5" fill="#64748b">capped content</text>
+<path d="M720 122H744" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+<rect x="40" y="206" width="410" height="58" rx="12" fill="#fffbeb" stroke="#fde68a"/>
+<text x="56" y="232" font-size="17" fill="#b45309" font-weight="700">16.9 ms to 14.4 ms</text>
+<text x="56" y="251" font-size="12" fill="#64748b">recent trace, 90 days retained, median of 25 runs</text>
+<rect x="474" y="206" width="444" height="58" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
+<text x="490" y="232" font-size="17" fill="#334155" font-weight="700">Flat as retention grows</text>
+<text x="490" y="251" font-size="12" fill="#64748b">a recent trace opens 8 of 30 or 9 of 90 partitions</text>
+</svg>
