@@ -67,6 +67,11 @@
     },
     {
       "type": "doc",
+      "id": "proxy/lens/imported/integrations/hermes-agent",
+      "label": "Hermes Agent"
+    },
+    {
+      "type": "doc",
       "id": "proxy/lens/imported/integrations/opentelemetry",
       "label": "OpenTelemetry"
     }

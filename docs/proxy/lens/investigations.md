@@ -10,15 +10,13 @@ slug: "/proxy/lens/investigations"
 
 ### Connect the analyzer
 
-Sign in as a proxy administrator and open **Lens > Investigations** under **Observability**. Once activity is available, click **Connect worker**. Choose an **Analysis model** and a **Monthly limit**, then click **Get install command**. The default limit is $100 per month. This creates a virtual key restricted to your chosen model; analysis spend appears under that key in **Virtual Keys**. To use an existing virtual key or change the proxy URL, open **Advanced options**. Existing workers can change their virtual key through the worker's **Settings** without replacing their worker token.
+Sign in as a proxy administrator and open **Lens > Investigations** under **Observability**. Once activity is available, click **Connect worker**. Choose an **Analysis model** and a **Monthly limit**, then click **Enable investigations**. This creates a virtual key restricted to your chosen model; analysis spend appears under that key in **Virtual Keys**. To use an existing virtual key, open **Advanced options**
 
-Run the Docker command on a server that can reach your LiteLLM deployment. Keep the command private because it contains the worker token. Wait for **Worker connected**. Investigation creation unlocks when the worker is ready.
+The [deployed Lens service](./deployment.md) connects automatically. Wait for **Worker connected**, then create an investigation. There is no Docker command or worker token to copy during this setup. Change the analysis key later through the worker's **Settings**
 
-![Lens worker setup with an analysis model and a monthly limit.](/img/lens/worker-setup.png)
+Lens runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations, calls your chosen model through LiteLLM, and sends the results back. It keeps running when you close the dashboard
 
-This worker runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations and sends the results back. It calls your chosen model through LiteLLM and keeps running when you close the dashboard.
-
-The generated command starts one worker process, which runs one investigation at a time. Its concurrency setting controls how many traces it reviews within that investigation. Running more worker processes allows more simultaneous investigations; their analysis costs share the assigned virtual key's budget.
+Each Lens service replica runs one investigation at a time. The investigation's concurrency setting controls how many traces it reviews simultaneously. More replicas allow more simultaneous investigations; their analysis costs share the assigned virtual key's budget
 
 ### Choose the traces
 

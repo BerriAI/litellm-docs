@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/deepagents/README.md at a6cce7983ec78ef9183627a0b05e0e3ce548b98a. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/deepagents/README.md at 20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9. Edit the source README. -->
 
 # DeepAgents
 
@@ -16,7 +16,7 @@ Send DeepAgents traces to [LiteLLM Lens](/docs/proxy/lens) using the runnable ex
 
 ## Prerequisites
 
-You need a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), a LiteLLM key, and a configured model alias. The swarm example needs a model that supports tool calls. A Lens worker is required for investigations; viewing traces does not require one.
+You need a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), a LiteLLM key, and a configured model alias. The swarm example needs a model that supports tool calls. The Lens service receives and stores traces separately from the gateway and runs investigations. Generate a dedicated tracing key in **Lens > Traces > Set up tracing**.
 
 Install uv. It uses the checked-in Python version and resolves each example’s dependencies from its uv workspace.
 
@@ -30,17 +30,19 @@ cd litellm-lens-example/deepagents
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `deepagents/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/deepagents/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `deepagents/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/deepagents/.env.example) to `.env` if it does not exist, then set:
 
-| Variable              | Value                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4002` |
-| `LITELLM_API_KEY`     | Your LiteLLM key                                                                               |
-| `LITELLM_MODEL`       | A model alias configured on your gateway                                                       |
+| Variable              | Value                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4002`                          |
+| `LITELLM_API_KEY`     | Your LiteLLM model key                                                                                                  |
+| `LENS_URL`            | The ingestion URL from Lens tracing setup, for example `http://localhost:4318` or `https://gateway.example/lens-ingest` |
+| `LENS_TRACING_KEY`    | The dedicated tracing key from Lens tracing setup                                                                       |
+| `LITELLM_MODEL`       | A model alias configured on your gateway                                                                                |
 
-The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LITELLM_GATEWAY_URL/v1/traces` with the LiteLLM key as a bearer token.
+The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -52,7 +54,7 @@ A single deep agent answers one question.
 uv run --env-file .env --package lens-deepagents-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/deepagents/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/deepagents/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -62,7 +64,7 @@ A coordinator delegates to `search_agent` and `writer_agent` through the built-i
 uv run --env-file .env --package lens-deepagents-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a6cce7983ec78ef9183627a0b05e0e3ce548b98a/deepagents/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/deepagents/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -74,6 +76,6 @@ OpenInference instruments the LangChain runs used by DeepAgents. The examples ex
 
 ## Troubleshooting
 
-If model calls fail, check the gateway URL, key, and model alias. If an answer appears but the trace is missing, check the terminal for exporter errors and confirm tracing is enabled on the same gateway. A model call succeeding does not confirm that its trace export succeeded.
+If model calls fail, check the gateway URL, key, and model alias. If an answer appears but the trace is missing, check the terminal for exporter errors and confirm the Lens ingestion service is reachable with your tracing key. A model call succeeding does not confirm that its trace export succeeded.
 
 Use a gateway model alias that supports the Responses API and tool calls.
