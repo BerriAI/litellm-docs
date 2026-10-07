@@ -1,12 +1,12 @@
 ---
 slug: moyai-open-source
-title: "Moyai is now open source"
+title: "Open Sourcing Moyai: Self-Hosted Cloud Coding Agent"
 date: 2026-10-07T09:00:00
 authors:
   - ishaan
   - tin
   - moe
-description: "Moyai is now open source: a self-hosted cloud agent that works with Claude Code and Codex across 100+ providers through LiteLLM."
+description: "We open sourced Moyai, the self-hosted cloud coding agent we run at LiteLLM. It runs Claude Code or Codex on 100+ providers through LiteLLM, and cut our coding agent bill by 79%."
 tags: [agents, open-source, infrastructure]
 hide_table_of_contents: true
 custom_hero: true
@@ -30,57 +30,53 @@ export const sections = [
 
 <PostByline />
 
-Today we're open sourcing [Moyai](https://github.com/BerriAI/moyai), the self-hosted cloud agent our team uses every day. It works with Claude Code and Codex, runs on 100+ providers through LiteLLM, and turns a task from Slack or the browser into a pull request while your laptop is closed
+Today we're open sourcing [Moyai](https://github.com/BerriAI/moyai), the self-hosted cloud coding agent our team runs every day. You give it a task in Slack or the browser, and it opens a pull request while your laptop is closed. It runs Claude Code or Codex on any of the 100+ providers LiteLLM supports
 
 {/* truncate */}
 
 ## The problem
 
-Our Devin bill hit $101,872 in a single month, and it was only being used internally. Most of that spend came from sessions and automations our own engineers kicked off, on models and routing we had no control over
+Our Devin bill hit $101,872 in a single month, and only our own team used it. Our engineers kicked off those sessions and automations on models and routing we couldn't control
 
 ![Devin billing dashboard showing $101,872.24 spent between Aug 30 and Sep 29, with daily spend peaking above $10,000.](/img/blog/moyai_devin_open_source/devin-bill.png)
 
-We already run a gateway that routes across 100+ providers. We wanted to point our coding agent at our own models and our own routing logic, and pay for inference instead of seats
+We already run a gateway that routes across 100+ providers. We wanted our coding agent on our own models and routing, paying for inference instead of seats
 
 ## The results: 79% cheaper
 
-Moyai does the same work for about $700 a day. Over the same 31 days that's roughly $21,700 instead of $101,872, so we kept about $80,000 of a single month's bill
+Moyai does the same work for about $700 a day. Over those 31 days we'd have paid about $21,700 instead of $101,872, and kept $80,000 of one month's bill
 
 <CostChart />
 
 ## Why we're open sourcing it
 
-Last week we wrote about [how we built our own internal Devin in 2 days](/blog/internal-devin-two-days). The response was mostly one question: can we run it too?
-
-Now you can. Moyai is the same code we run in production at LiteLLM. Deploy it on your own infrastructure, point it at your own LiteLLM gateway, and keep your code, credentials and spend inside your own accounts
+Last week we wrote about [how we built our own internal Devin in 2 days](/blog/internal-devin-two-days), and most replies asked to run it themselves. Moyai is the same code we run in production at LiteLLM. You deploy it on your own infrastructure and point it at your own LiteLLM gateway, so your code and credentials stay in your accounts
 
 ## A cloud agent that keeps working
 
-Every session gets its own cloud workspace with a terminal, a filesystem and a browser. The agent edits code, runs your tests and prepares a pull request for review, all without touching anyone's laptop
+Each session gets its own cloud workspace with a terminal, a filesystem and a browser. The agent edits code and runs your tests there, then opens a pull request for you to review
 
-Sessions are durable. You can follow along from the web app, send a correction mid-task, or pick the thread back up in Slack the next morning. Large tasks can fan out to parallel worker agents, each on its own machine, and come back together when they finish
-
-<p className="moyai-big">Start a task in Slack. Come back to a PR.</p>
+You can follow along in the web app and send a correction while it works, or pick the thread back up in Slack the next morning. For large tasks, the agent splits the work across parallel workers on separate machines and collects their results
 
 ## Any harness
 
-The agent loop is a choice, not a lock-in. Pick the harness for each session from the composer, and Moyai runs it in the same isolated workspace with the same tools, connections and permissions
+You pick the agent harness for each session from the composer. Moyai runs it in the same isolated workspace with the same tools and permissions
 
 <LogoWall title="Harnesses" items={HARNESSES} />
 
-Hermes is the default. Claude Code, Codex, OpenCode and Deep Agents run through the LiteLLM agent SDK, so adding the next harness is a registry entry instead of a rewrite
+Claude Code, Codex, OpenCode and Deep Agents run through the LiteLLM agent SDK. Adding another harness takes one registry entry
 
 ## Any model, any provider
 
-Every model request goes through LiteLLM. Switch from GPT-6 Astra to Claude Opus 5.5 to GLM-5.3 between messages, and every request is attributed to the teammate who made it. Provider keys stay on the server; the sandbox never sees them
+Moyai sends model requests through LiteLLM. You can switch from GPT-6 Astra to Claude Opus 5.5 between messages, and LiteLLM attributes each request to the teammate who made it. Provider keys stay on the server, out of the sandbox
 
 <LogoWall title="Providers" items={PROVIDERS} />
 
-That's 100+ providers out of the box. If LiteLLM can call it, Moyai can use it
+LiteLLM supports 100+ providers, and Moyai can use any of them
 
 ## Get started
 
-Clone the repo and try the local demo in a couple of minutes, no API keys required
+You can try the local demo in a couple of minutes without API keys
 
 ```sh
 git clone https://github.com/BerriAI/moyai.git
@@ -90,4 +86,4 @@ uv sync --frozen
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8787 --workers 1
 ```
 
-Then [set up cloud execution](https://github.com/BerriAI/moyai/blob/main/docs/deployment.md) with Modal and your LiteLLM gateway, and [connect your apps](https://github.com/BerriAI/moyai/blob/main/docs/integrations.md). Star the [repo on GitHub](https://github.com/BerriAI/moyai), open an issue, or send us a PR. Moyai will probably review it
+To run real tasks, [set up cloud execution](https://github.com/BerriAI/moyai/blob/main/docs/deployment.md) with Modal and your LiteLLM gateway, then [connect your apps](https://github.com/BerriAI/moyai/blob/main/docs/integrations.md). Issues and PRs are welcome on [GitHub](https://github.com/BerriAI/moyai)
