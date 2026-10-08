@@ -1557,137 +1557,33 @@ const sidebars = {
 
 // ════════════════════════════════════════════════════════════
 // ENTERPRISE (the Enterprise tab in the navbar)
-// This sidebar owns the Enterprise program pages: overview, rollout, license,
-// compliance, support, and lifecycle. Feature pages stay owned by the Docs
-// sidebar (tutorialSidebar) or the Integrations sidebar and appear here as
-// `ref` items, so each doc has exactly one `doc` placement.
-// "sidebar-enterprise" adds the Enterprise pill (src/css/custom.css) to
-// license-gated pages; "enterprise-group" styles the caption rows.
+// This sidebar holds only Enterprise pages, so a reader who opens the
+// Enterprise tab stays in it. Feature docs (SSO, multi-region, budgets, and
+// so on) stay in the Docs sidebar with the Enterprise pill. Readers reach
+// them from the feature list on the Overview and from the Production rollout
+// steps. "sidebar-group-label" draws the hairline and cluster name, and
+// "sidebar-xlink" marks the few links that leave the tab.
 // ════════════════════════════════════════════════════════════
 const enterpriseSidebar = {
   enterpriseSidebar: [
-    {
-      type: "category",
-      label: "Get started",
-      className: "enterprise-group",
-      collapsible: false,
-      items: [
-        { type: "doc", id: "enterprise", label: "Overview" },
-        { type: "doc", id: "learn/enterprise_quickstart", label: "Production rollout" },
-        { type: "doc", id: "enterprise/activate", label: "Activate your license" },
-        { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
-      ],
-    },
-    {
-      type: "category",
-      label: "Plan the deployment",
-      className: "enterprise-group",
-      collapsible: false,
-      items: [
-        { type: "ref", id: "proxy/multi_tenant_architecture", label: "Reference architectures" },
-        { type: "ref", id: "proxy/multi_region", label: "Multi-region", className: "sidebar-enterprise" },
-        { type: "ref", id: "proxy/global_control_plane", label: "Global control plane", className: "sidebar-enterprise" },
-        { type: "ref", id: "proxy/db_sizing", label: "Sizing" },
-        { type: "ref", id: "proxy/prod", label: "Production checklist" },
-        { type: "ref", id: "proxy/security_best_practices", label: "Security best practices" },
-        { type: "ref", id: "secret_managers/overview", label: "Secret managers", className: "sidebar-enterprise" },
-      ],
-    },
-    {
-      type: "category",
-      label: "Enterprise features",
-      className: "enterprise-group",
-      collapsible: false,
-      items: [
-        {
-          type: "category",
-          label: "Identity and access",
-          collapsed: true,
-          items: [
-            { type: "ref", id: "proxy/admin_ui_sso", label: "SSO for the Admin UI", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/saml_sso", label: "SAML 2.0 SSO", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/custom_sso", label: "SSO event hooks", className: "sidebar-enterprise" },
-            { type: "ref", id: "tutorials/scim_litellm", label: "SCIM provisioning", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/token_auth", label: "JWT authentication", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/jwt_key_mapping", label: "JWT to virtual key mapping", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/oauth2", label: "OAuth 2.0 authentication", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/access_control", label: "Role-based access control" },
-            { type: "ref", id: "proxy/service_accounts", label: "Service accounts" },
-            { type: "ref", id: "proxy/ip_address", label: "IP address filtering", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/public_routes", label: "Public and private routes", className: "sidebar-enterprise" },
-          ],
-        },
-        {
-          type: "category",
-          label: "Governance and cost",
-          collapsed: true,
-          items: [
-            { type: "ref", id: "proxy/users", label: "Budgets and rate limits" },
-            { type: "ref", id: "proxy/project_management", label: "Projects", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/team_model_add", label: "Team-managed models", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/rate_limit_tiers", label: "Budget and rate limit tiers", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/temporary_budget_increase", label: "Temporary budget increase", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/ui_team_soft_budget_alerts", label: "Soft budget alerts", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/billing_metrics", label: "Billable request metering", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/spend_logs_deletion", label: "Spend log retention" },
-          ],
-        },
-        {
-          type: "category",
-          label: "Observability and audit",
-          collapsed: true,
-          items: [
-            { type: "doc", id: "proxy/multiple_admins", label: "Audit logs", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/team_logging", label: "Team and key logging", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/dynamic_logging", label: "Dynamic callback management", className: "sidebar-enterprise" },
-            { type: "ref", id: "observability/gcs_bucket_integration", label: "Log export to GCS", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/alerting", label: "Alerting" },
-            { type: "ref", id: "proxy/pagerduty", label: "PagerDuty alerting", className: "sidebar-enterprise" },
-            { type: "ref", id: "proxy/email", label: "Email notifications" },
-          ],
-        },
-        {
-          type: "category",
-          label: "Managed resources",
-          collapsed: true,
-          items: [
-            { type: "ref", id: "proxy/litellm_managed_files", label: "Managed files" },
-            { type: "ref", id: "proxy/managed_batches", label: "Managed batches" },
-            { type: "ref", id: "proxy/managed_finetuning", label: "Managed fine-tuning" },
-          ],
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Security review",
-      className: "enterprise-group",
-      collapsible: false,
-      items: [
-        { type: "doc", id: "enterprise/compliance", label: "Compliance and SOC 2 Type II" },
-        { type: "doc", id: "data_security", label: "Data privacy and security" },
-        { type: "doc", id: "shared_responsibility", label: "Shared responsibility" },
-        { type: "doc", id: "proxy/security_encryption_faq", label: "Security and encryption FAQ" },
-        { type: "ref", id: "proxy/security_owasp_llm_top10", label: "OWASP LLM Top 10" },
-        { type: "ref", id: "proxy/docker_image_security", label: "Verify image signatures" },
-        { type: "link", label: "Trust Center", href: "https://trust.litellm.ai/" },
-      ],
-    },
-    {
-      type: "category",
-      label: "Support and lifecycle",
-      className: "enterprise-group",
-      collapsible: false,
-      items: [
-        { type: "doc", id: "enterprise/support", label: "Support and SLA" },
-        { type: "doc", id: "enterprise/version_support", label: "Version support" },
-        { type: "ref", id: "proxy/release_cycle", label: "Release cycle" },
-        { type: "ref", id: "migration_policy", label: "Migration policy" },
-        { type: "ref", id: "api_stability_policy", label: "API stability policy" },
-        { type: "link", label: "Release notes", href: "/release_notes" },
-        { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
-      ],
-    },
+    { type: "doc", id: "enterprise", label: "Overview" },
+    { type: "doc", id: "learn/enterprise_quickstart", label: "Production rollout" },
+    { type: "doc", id: "enterprise/activate", label: "Activate your license" },
+    { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
+    { type: "html", value: "Features", className: "sidebar-group-label", defaultStyle: true },
+    { type: "link", label: "All Enterprise features", href: "/docs/enterprise#full-feature-list" },
+    { type: "doc", id: "proxy/multiple_admins", label: "Audit logs" },
+    { type: "html", value: "Security review", className: "sidebar-group-label", defaultStyle: true },
+    { type: "doc", id: "enterprise/compliance", label: "Compliance and SOC 2 Type II" },
+    { type: "doc", id: "data_security", label: "Data privacy and security" },
+    { type: "doc", id: "shared_responsibility", label: "Shared responsibility" },
+    { type: "doc", id: "proxy/security_encryption_faq", label: "Security and encryption FAQ" },
+    { type: "link", label: "Trust Center", href: "https://trust.litellm.ai/" },
+    { type: "html", value: "Support", className: "sidebar-group-label", defaultStyle: true },
+    { type: "doc", id: "enterprise/support", label: "Support and SLA" },
+    { type: "doc", id: "enterprise/version_support", label: "Version support" },
+    { type: "link", label: "Release notes", href: "/release_notes", className: "sidebar-xlink" },
+    { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
   ],
 };
 
