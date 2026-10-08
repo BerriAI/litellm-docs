@@ -343,13 +343,13 @@ Both functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`
 
 ## Limits
 
-OpenAI requires `instructions` on every question and at least 2 choices or score levels. System One allows a choice with one label, a score with one level and questions without `instructions`, so a body like that sent to an OpenAI model through `/v1/systemone` gets a 400 from OpenAI. A noul question's `criteria` are folded into the instructions OpenAI sees, so a noul with only `criteria` still works
+OpenAI requires `instructions` on every question and at least 2 choices or score levels. When a System One question without `instructions` goes to an OpenAI model, LiteLLM fills in a generic one such as "Which choice best fits the input?", and a noul question's `criteria` are folded into the instructions OpenAI sees. A choice with one label or a score with one level has no OpenAI equivalent, so LiteLLM rejects it with a 400 before OpenAI is called
 
 A choice question cannot have both a boolean value and a string with the same text, such as `true` and `"true"`, because System One providers key choices by their text. LiteLLM rejects that request with a 400
 
 ## Try it in the Admin UI
 
-The Playground **System One** tab has an **Endpoint** selector. Pick **System One · /v1/systemone** to send the request through your `model_list`, with `model` set to a proxy model name such as `jev` or `luna` from the config above. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`. The tab only sends the System One format, so use curl or the SDK for `/v1/decisions` and image input. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) describes the editor, validation and answer view
+The Playground **System One** tab has an **Endpoint** selector. Pick **System One · /v1/systemone** to send the request through your `model_list`, with `model` set to a proxy model name such as `jev` or `luna` from the config above. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`. The tab only sends the System One format and is not in `v1.104.2` or `v1.105.0`, so use curl or the SDK for `/v1/decisions`, image input and those versions. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) describes the editor, validation and answer view
 
 ## Decision routes vs TypeSafe pass-through
 
