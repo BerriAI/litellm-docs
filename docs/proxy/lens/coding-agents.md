@@ -9,9 +9,9 @@ import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
 
-You need a LiteLLM gateway with [tracing enabled](./deployment.md#configure-an-existing-proxy) and a [virtual key](/docs/proxy/virtual_keys). If you are starting from scratch, follow the [Lens deployment guide](./deployment.md#quick-start). The Lens service handles both trace ingestion and investigations.
+You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment.md#quick-start). Your existing Claude Code or Codex model login continues to work.
 
-Copy the ingestion URL and a dedicated tracing key from **Lens > Traces > Set up tracing**. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate
+Open **Lens > Traces > Set up tracing**. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`, and click **Generate tracing key**. Ask your administrator for a tracing key if you cannot create one. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate.
 
 ## Claude Code
 
@@ -23,20 +23,22 @@ Copy this prompt into your coding agent to have it configure this machine, or fo
 
 This setup requires the Lens service with its `/v1/logs` ingestion route. Use a current Claude Code version with assistant response logging support.
 
-In the terminal where you run `claude`, replace the Lens ingestion URL and tracing key, then run:
+In the terminal where you run `claude`, paste the endpoint and tracing key in the first two lines, then run the block. The logs URL uses the same address with `/v1/logs` in place of `/v1/traces`:
 
 ```bash
+export LENS_TRACING_KEY="<paste your Lens tracing key>"
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="<paste the full Traces endpoint>"
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
+export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT%/v1/traces}/v1/logs"
+export OTEL_EXPORTER_OTLP_LOGS_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
+
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
 export OTEL_TRACES_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="https://<your-lens-ingestion-host>/v1/traces"
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
-export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer <your-lens-tracing-key>"
 export OTEL_METRICS_EXPORTER=none
 export OTEL_LOGS_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="https://<your-lens-ingestion-host>/v1/logs"
 export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL="http/protobuf"
-export OTEL_EXPORTER_OTLP_LOGS_HEADERS="Authorization=Bearer <your-lens-tracing-key>"
 export OTEL_RESOURCE_ATTRIBUTES="lens.session.capture=true,gen_ai.agent.name=claude-code"
 
 export OTEL_LOG_USER_PROMPTS=1
@@ -81,7 +83,7 @@ Copy this prompt into your coding agent to have it install and configure the int
 <AgentPrompt id="lens-codex" />
 
 1. Follow **[From Terminal (recommended)](https://github.com/BerriAI/litellm-lens-codex-integration#from-terminal-recommended)** in the installation guide. The same installer works for desktop and CLI.
-2. Enter your **Lens ingestion URL**, **Lens tracing key**, and **agent name** in Terminal. Confirm to start recording. Enter the key at the hidden prompt, not in chat.
+2. At **Lens ingestion URL**, paste the full **Traces endpoint** from the dashboard. The installer accepts that endpoint and keeps `/lens-ingest` when present. Enter your **Lens tracing key** at the hidden prompt, choose an **agent name**, and confirm to start recording.
 3. **Start a new Codex chat and complete a turn.** Open **Lens > Traces** and find the agent name you chose.
 
 Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. Only activity after setup is recorded.

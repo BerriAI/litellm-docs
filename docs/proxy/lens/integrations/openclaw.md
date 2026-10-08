@@ -34,4 +34,11 @@ Enable the [diagnostics-otel plugin](https://docs.openclaw.ai/plugins/reference/
 }
 ```
 
-Set `LENS_TRACING_KEY` to your dedicated Lens tracing key, then run `openclaw agent --local --session-id first-trace --message "What is an agent trace?"`. Select **research_agent** in Lens. Restart an existing gateway after changing the config.
+Restart an existing gateway after changing the config. Run a first session with the agent ID you configured:
+
+```bash
+openclaw agent --local --agent research_agent --session-id first-trace \
+  --message "What is an agent trace?"
+```
+
+Open **Lens > Traces** and select **research_agent**.
