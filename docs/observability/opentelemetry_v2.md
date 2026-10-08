@@ -298,7 +298,9 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 | `llm.invocation_parameters` | JSON blob of request params |
 | `llm.input_messages.{idx}.message.role`, `content` | prompt (content capture on), [capped](#chat-messages-are-capped) |
 | `llm.output_messages.{idx}.message.role`, `content` | response (content capture on), [capped](#chat-messages-are-capped) |
-| `input.value`, `output.value` | JSON arrays of every message's role and text (content capture on) |
+| `llm.output_messages.{idx}.message.tool_calls.{idx}.tool_call.id`, `.tool_call.function.name`, `.tool_call.function.arguments` | assistant tool calls (content capture on), see [OpenInference tool calls and metadata](#openinference-tool-calls-and-metadata) |
+| `metadata` | JSON of the allowlisted request metadata, see [OpenInference tool calls and metadata](#openinference-tool-calls-and-metadata) |
+| `input.value`, `output.value` | JSON arrays of every message's role and text, tool calls included (content capture on) |
 | `llm.tools.{idx}.tool.name`, `description`, `json_schema` | tool definitions, [capped](#tool-definitions-are-capped) |
 
 See the full [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
@@ -595,6 +597,8 @@ Each vendor preset also composes one vendor-specific mapper on top of these cano
 
 LiteLLM emits one canonical set of GenAI attributes and layers other vocabularies on top by adding a mapper; the active set is controlled by `mapper_names`, with `genai` always first. The `legacy` mapper is on by default (`LITELLM_OTEL_LEGACY_COMPAT=true`) and re-emits the same data under the older semconv-ai / Traceloop names, so dashboards built against those keep working through a migration. Turn it off with `LITELLM_OTEL_LEGACY_COMPAT=false` once your queries use the canonical keys. Vendor mappers (`openinference`, `langfuse`, `weave`, `langtrace`) are added by their presets and never replace the canonical keys.
 
+`mapper_names` itself defaults to `genai` alone, so on the [generic OTLP path](#1-send-traces-to-any-otlp-collector) a span carries only the canonical names until you add more. Set it with the `MAPPER_NAMES` env var, comma-separated (`MAPPER_NAMES=genai,openinference`), which every path reads, or as `callback_settings.otel.mapper_names` in config.yaml, a YAML list read on the `otel` callback path. The values stack: list two and every span carries both name sets, with `genai` moved to the front whatever order you write. The presets stamp their own mapper on top of whatever you set, so `arize`, `arize_phoenix`, and `weave_otel` carry `openinference` with no extra setting. Naming `openinference` yourself is what gets tool calls and metadata rendered natively in Arize and Phoenix; see [OpenInference tool calls and metadata](#openinference-tool-calls-and-metadata).
+
 The most common keys line up across vocabularies as follows:
 
 | Canonical (`genai`) | Legacy (Traceloop) | OpenInference |
@@ -604,6 +608,81 @@ The most common keys line up across vocabularies as follows:
 | `gen_ai.provider.name` | `gen_ai.system` | `llm.provider` |
 | `litellm.request.streaming` | `llm.is_streaming` | n/a |
 | `gen_ai.request.model` | n/a | `llm.model_name` |
+
+## OpenInference tool calls and metadata
+
+With the `openinference` mapper active, each LLM-call span carries the model's output tool calls as structured attributes and a `metadata` attribute holding the allowlisted request metadata, on top of the keys in the [Arize table above](#seeing-your-traces). Before, Arize and Phoenix showed a tool-calling reply as `{"role": "assistant", "content": null}` and left the span's metadata panel empty: the tool call lived only as text inside the `input.value` blob, and the request's metadata only under the `litellm.metadata.*` namespace.
+
+![Before: the tool call is visible only as text inside the input.value blob, with no structured fields and no metadata attribute](https://raw.githubusercontent.com/BerriAI/litellm/assets-pr43698/assets/pr43698/pr43698-arize-before-tool-call-1126ca21921b.png)
+
+### Tool calls on output messages
+
+Each assistant tool call is written as its own indexed attribute family, so Arize and Phoenix render the tool name and its arguments as first-class fields you can read, filter, and group by. One tool call on the first output message looks like this:
+
+```text
+llm.output_messages.0.message.tool_calls.0.tool_call.id = "call_uXEPx7V2yQk5IwXzzGxL0mf9"
+llm.output_messages.0.message.tool_calls.0.tool_call.function.name = "lookup_weather"
+llm.output_messages.0.message.tool_calls.0.tool_call.function.arguments = "{\"city\": \"Paris\"}"
+```
+
+`tool_call.function.arguments` is a JSON string of the arguments the model produced. A value Python cannot JSON-encode falls back to that value's `repr` string, so the attribute is always present. Tool calls in the prompt's earlier turns stay inside the `input.value` and `gen_ai.input.messages` blobs rather than getting their own indexed keys, because indexing the whole history would crowd out the keys above on long conversations. Whichever surface the caller used, `/v1/chat/completions`, `/v1/responses`, or `/v1/messages`, the reply's tool calls land in the same `llm.output_messages.*` keys. Like the message `role` and `content` keys, the tool-call keys are written when content capture is on (`span_only` or `span_and_event`).
+
+![After: the chat completion's tool call rendered from the indexed attributes](https://raw.githubusercontent.com/BerriAI/litellm/assets-pr43698/assets/pr43698/pr43698-chat-tool-call-completion-1bef719681bf.png)
+
+![After: a /v1/responses call carrying its tool call on the final span](https://raw.githubusercontent.com/BerriAI/litellm/assets-pr43698/assets/pr43698/pr43698-recorded-responses-call-final-d438e0784b49.png)
+
+![After: the tool result and the model's answer that follows it](https://raw.githubusercontent.com/BerriAI/litellm/assets-pr43698/assets/pr43698/pr43698-recorded-tool-result-and-answer-875a942c3efb.png)
+
+### The metadata attribute
+
+The span also carries a `metadata` attribute: a JSON object holding only the promoted, allowlisted subset of the request's metadata, the same allowlist that feeds the `litellm.metadata.*` namespace documented in [Request identity on every span](#request-identity-on-every-span). The raw `metadata` dict a caller sends is never written whole, and `litellm.metadata.*` keeps exactly the shape it had before. With the default allowlist, `metadata` holds `user_api_key_org_id`, `user_api_key_user_id`, `user_api_key_alias`, `user_api_key_end_user_id`, and `requester_ip_address`:
+
+```text
+metadata = {"user_api_key_alias": "demo-key-alias", "requester_ip_address": "203.0.113.7"}
+```
+
+To promote your callers' own keys into it, use the same `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` setting (a dotted `requester_metadata.trace_marker` reads the caller's nested `metadata.trace_marker`). Arize and Phoenix show this attribute as the span's Metadata panel and let you filter and group traces by it. Note that the default allowlist names the caller's IP address and key alias; if that is more than you want in your observability backend, set the allowlist explicitly.
+
+![After: allowlisted metadata riding the span, rendered in the metadata panel](https://raw.githubusercontent.com/BerriAI/litellm/assets-pr43698/assets/pr43698/pr43698-recorded-allowlisted-metadata-23279e75a073.png)
+
+A response-cache hit opens no LLM-call span, so a served-from-cache reply shows neither the tool calls nor `metadata` in Arize or Phoenix; the request that populated the cache carried both.
+
+### The mapper, not just the endpoint
+
+Setting the Arize or Phoenix OTLP endpoint gets spans delivered, and both tools accept them, but on the generic OTLP path they arrive carrying only the canonical `gen_ai.*` names and render as plain spans: no per-message rows, no structured tool calls, no metadata panel. The two settings answer two different questions. The endpoint decides where spans go; `mapper_names` decides which attribute names get written on them.
+
+To get native rendering while shipping through your own collector or the plain OTLP path, name the `openinference` mapper next to the endpoint. Self-hosted Phoenix:
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["otel"]
+
+callback_settings:
+  otel:
+    mapper_names: ["genai", "openinference"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+OTEL_EXPORTER="otlp_http"
+OTEL_ENDPOINT="http://localhost:6006"
+```
+
+Arize AX over its default gRPC endpoint (`pip install grpcio` for gRPC export), with the credentials as OTLP headers:
+
+```shell
+LITELLM_OTEL_V2=true
+OTEL_EXPORTER="otlp_grpc"
+OTEL_ENDPOINT="https://otlp.arize.com/v1"
+OTEL_HEADERS="space_id=your-space-id,api_key=your-api-key"
+MAPPER_NAMES=genai,openinference   # env alternative to the YAML list above
+```
+
+If you use the `arize` or `arize_phoenix` preset you already have this: the presets stamp `openinference` onto every span with no extra setting, which is the configuration behind the screenshots above. Spans that do not carry the `openinference` mapper are byte-for-byte what they were before, so generic-OTLP setups that add nothing see no change.
+
+### Attribute budget
+
+The indexed OpenInference keys add up: with `openinference` on, count roughly 18 extra attributes per LLM-call span, measured on a single-turn chat call. The span-wide 128-attribute cap, and how the per-index message keys are fitted into the budget the span has left, is covered in [Chat messages are capped](#chat-messages-are-capped) and [Tool definitions are capped](#tool-definitions-are-capped); the tool-call keys count against that same budget. When a span is tight, the mapper sheds the later tool-call groups first, then middle-message indexes, and `metadata` only after every indexed message attribute. Very long conversations still lose middle-message indexes; the full conversation, tool calls included, always survives in the `input.value` and `output.value` blobs.
 
 ## Request identity on every span
 
@@ -896,6 +975,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` | health/metrics/UI routes | Comma-separated paths to exclude from tracing (substring match). Set to `""` to trace everything. |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` | `false` | Also emit the GenAI client metrics (duration, token usage, cost, streaming timings). See [Metrics](#metrics). |
 | `LITELLM_OTEL_LEGACY_COMPAT` | `true` | Also emit attributes under the older Traceloop key names. See [Attribute conventions](#attribute-conventions). |
+| `MAPPER_NAMES` | `genai` | Attribute vocabularies written on each span, comma-separated, for example `genai,openinference`. Also `callback_settings.otel.mapper_names` in config.yaml. See [Attribute conventions](#attribute-conventions) and [OpenInference tool calls and metadata](#openinference-tool-calls-and-metadata). |
 
 The full set of keys on each span kind is in [Span attributes](#span-attributes).
 
