@@ -478,12 +478,6 @@ const config = {
           },
           {
             type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
-          {
-            type: 'docSidebar',
             sidebarId: 'integrationsSidebar',
             position: 'left',
             label: 'Integrations',
@@ -492,6 +486,12 @@ const config = {
             position: 'left',
             label: 'Enterprise',
             to: "docs/enterprise"
+          },
+          {
+            type: 'docSidebar',
+            sidebarId: 'learnSidebar',
+            position: 'left',
+            label: 'Learn',
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
@@ -525,7 +525,7 @@ const config = {
             title: 'Product',
             items: [
               {label: 'Gateway quickstart', to: '/docs/proxy/docker_quick_start'},
-              {label: 'Python SDK', to: '/docs/'},
+              {label: 'Python SDK', to: '/docs/python_sdk'},
               {label: 'Production deployment', to: '/docs/proxy/deploy'},
               {label: 'MCP Gateway', to: '/docs/mcp'},
               {label: 'Agent Gateway', to: '/docs/a2a'},
