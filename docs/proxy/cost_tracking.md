@@ -949,11 +949,9 @@ There are two ways to read every matching row. When `total_is_capped` is `true`,
 
 With `group_by_session=true`, pagination is bounded to the same 10,000-row window and a page starting past it returns no rows, so chunk the time window instead of paging past the cap.
 
-## ✨ Custom Spend Log metadata
+## Custom Spend Log metadata
 
 Log specific key,value pairs as part of the metadata for a spend log
-
-<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
