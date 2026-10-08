@@ -629,7 +629,7 @@ A plain string element carries no options, so to embed one window of a video, or
 
 | Field | Description |
 |-------|-------------|
-| `file.file_id` | `gs://bucket/clip.mp4` or a Gemini Files API reference `files/abc123` |
+| `file.file_id` | `gs://bucket/clip.mp4`, a Gemini Files API reference `files/abc123`, or the id `/v1/files` returns for a Gemini upload (`https://generativelanguage.googleapis.com/v1beta/files/abc123`) |
 | `file.file_data` | A data URI, `data:video/mp4;base64,<encoded_data>` |
 | `file.format` | Optional MIME type that overrides the one inferred from the extension or the data URI |
 | `file.video_metadata` | Optional `fps` (number), `start_offset` and `end_offset` (strings such as `"3s"`), converted to Gemini's `startOffset` and `endOffset` |
