@@ -80,7 +80,7 @@ writer override is `AWS_RDS_REGION` and the reader override is
 `AWS_RDS_READ_REPLICA_REGION`. The reader never inherits `AWS_RDS_REGION`, so a
 writer-only override leaves the reader on its own resolution path. Values that
 are empty or only whitespace count as unset and the resolution moves on to the
-next source.
+next source
 
 For canonical RDS endpoints no overrides are needed; the hostname already
 carries the region. Set them when the signing region must differ from what the
@@ -103,13 +103,13 @@ the writer for reads per the degradation behavior above; a failed writer fails
 the boot. The overrides apply to token mints at startup and to every renewal,
 including readers assembled through `DATABASE_HOST_READ_REPLICA` and writers
 behind the in-container PgBouncer. They do not affect Bedrock or other AWS
-service regions, password authentication, or Azure Entra authentication.
+service regions, password authentication, or Azure Entra authentication
 
 Region overrides only choose the signing region; they do not rewrite the
 hostname the token is signed for. AWS requires the actual RDS endpoint when
 generating an IAM token, so custom DNS names (for example a Route 53 record)
 still need the canonical RDS endpoint in the connection configuration. TLS
-hostname verification is independent of region selection.
+hostname verification is independent of region selection
 
 ## Kubernetes / Helm
 
