@@ -76,7 +76,7 @@ const sidebars = {
           items: [
             "observability/azure_sentinel",
             "observability/datadog",
-            "observability/gcs_bucket_integration",
+            { type: "doc", id: "observability/gcs_bucket_integration", className: "sidebar-enterprise" },
             "observability/newrelic",
             "observability/parseable",
             "observability/posthog_integration",
@@ -130,13 +130,13 @@ const sidebars = {
           type: "category",
           label: "Contributing to Guardrails",
           items: [
-            "adding_provider/generic_guardrail_api",
-            "adding_provider/simple_guardrail_tutorial",
-            "adding_provider/adding_guardrail_support",
+            { type: "ref", id: "adding_provider/generic_guardrail_api" },
+            { type: "ref", id: "adding_provider/simple_guardrail_tutorial" },
+            { type: "ref", id: "adding_provider/adding_guardrail_support" },
           ]
         },
         {
-          type: "doc",
+          type: "ref",
           id: "proxy/guardrails/team_based_guardrails",
           label: "Team Bring-Your-Own Guardrails",
         },
@@ -195,7 +195,7 @@ const sidebars = {
       label: "Alerting & Monitoring",
       items: [
         "proxy/alerting",
-        "proxy/pagerduty",
+        { type: "doc", id: "proxy/pagerduty", className: "sidebar-enterprise" },
         "proxy/prometheus",
         "proxy/pyroscope_profiling"
       ]
@@ -209,7 +209,7 @@ const sidebars = {
           label: "Prompt Compression",
           href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
         },
-        "proxy/headroom",
+        { type: "ref", id: "proxy/headroom" },
       ]
     },
     {
@@ -335,7 +335,7 @@ const sidebars = {
         { type: "doc", id: "integrations/letta", customProps: { icon: "/img/integrations/letta.png" } },
         { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM", customProps: { icon: "/img/integrations/scalekit.png" } },
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
-        { type: "doc", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
+        { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
         { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness" },
       ]
@@ -402,8 +402,8 @@ const sidebars = {
                 "proxy/server_tuning",
                 "proxy/high_throughput",
                 "proxy/db_read_replica",
-                "proxy/multi_region",
-                "proxy/global_control_plane",
+                { type: "doc", id: "proxy/multi_region", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/global_control_plane", className: "sidebar-enterprise" },
                 "proxy/manifests_to_microservices",
               ],
             },
@@ -411,7 +411,7 @@ const sidebars = {
               type: "category",
               label: "Secret Managers",
               items: [
-                "secret_managers/overview",
+                { type: "doc", id: "secret_managers/overview", className: "sidebar-enterprise" },
                 "secret_managers/aws_secret_manager",
                 "secret_managers/aws_kms",
                 "secret_managers/azure_key_vault",
@@ -446,7 +446,7 @@ const sidebars = {
             "proxy/model_access",
             "proxy/model_access_groups",
             "proxy/access_groups",
-            "proxy/team_model_add",
+            { type: "doc", id: "proxy/team_model_add", className: "sidebar-enterprise" },
             "proxy/credential_routing",
             { type: "link", label: "All Providers", href: "/docs/providers" },
           ],
@@ -490,15 +490,16 @@ const sidebars = {
               type: "category",
               label: "Single Sign-On",
               items: [
-                "proxy/admin_ui_sso",
-                "proxy/saml_sso",
-                "proxy/custom_sso",
-                "tutorials/scim_litellm",
+                { type: "doc", id: "proxy/admin_ui_sso", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/saml_sso", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/custom_sso", className: "sidebar-enterprise" },
+                { type: "doc", id: "tutorials/scim_litellm", className: "sidebar-enterprise" },
                 "proxy/cli_sso",
               ],
             },
-            "proxy/token_auth",
-            "proxy/jwt_key_mapping",
+            { type: "doc", id: "proxy/token_auth", className: "sidebar-enterprise" },
+            { type: "doc", id: "proxy/jwt_key_mapping", className: "sidebar-enterprise" },
+            { type: "doc", id: "proxy/oauth2", label: "OAuth 2.0 Authentication", className: "sidebar-enterprise" },
             "proxy/jwt_auth_arch",
             "oidc",
             {
@@ -508,10 +509,10 @@ const sidebars = {
             },
             "proxy/service_accounts",
             "proxy/custom_auth",
-            "proxy/ip_address",
-            "proxy/public_routes",
+            { type: "doc", id: "proxy/ip_address", className: "sidebar-enterprise" },
+            { type: "doc", id: "proxy/public_routes", className: "sidebar-enterprise" },
             "proxy/master_key_rotations",
-            "proxy/multiple_admins",
+            { type: "ref", id: "proxy/multiple_admins", label: "Audit Logs", className: "sidebar-enterprise" },
           ],
         },
         {
@@ -522,7 +523,7 @@ const sidebars = {
             "proxy/request_tags",
             "proxy/spend_capture_rate",
             "proxy/billing",
-            "proxy/billing_metrics",
+            { type: "doc", id: "proxy/billing_metrics", className: "sidebar-enterprise" },
             "proxy/custom_pricing",
             "proxy/custom_model_cost_map",
             "proxy/ptu_flat_cost",
@@ -541,20 +542,21 @@ const sidebars = {
           items: [
             "proxy/users",
             "proxy/team_budgets",
-            "proxy/project_management",
+            { type: "doc", id: "proxy/project_management", className: "sidebar-enterprise" },
             "proxy/customers",
-            "proxy/ui_team_soft_budget_alerts",
+            { type: "doc", id: "proxy/ui_team_soft_budget_alerts", className: "sidebar-enterprise" },
             "proxy/tag_budgets",
             "proxy/model_access_group_budgets",
             "proxy/dynamic_rate_limit",
             "proxy/io_token_rate_limits",
-            "proxy/rate_limit_tiers",
-            "proxy/temporary_budget_increase",
+            { type: "doc", id: "proxy/rate_limit_tiers", className: "sidebar-enterprise" },
+            { type: "doc", id: "proxy/temporary_budget_increase", className: "sidebar-enterprise" },
             "proxy/budget_reset_and_tz",
             "proxy/budget_fallbacks",
           ],
         },
-        { type: "doc", id: "enterprise", label: "Enterprise" },
+        // Enterprise pages live in enterpriseSidebar (the Enterprise tab). This ref is a door into it.
+        { type: "ref", id: "enterprise", label: "Enterprise" },
         {
           type: "link",
           label: "Load Balancing, Routing, Fallbacks (Failover)",
@@ -617,10 +619,10 @@ const sidebars = {
           type: "category",
           label: "Logging, Alerting, Metrics",
           items: [
-            "proxy/dynamic_logging",
+            { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
-            "proxy/team_logging",
+            { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             "proxy/email",
           ],
         },
@@ -777,7 +779,7 @@ const sidebars = {
               label: "image_generation()",
             },
             {
-              type: "doc",
+              type: "ref",
               id: "completion/prompt_compression",
               label: "compress()",
             },
@@ -792,7 +794,7 @@ const sidebars = {
               label: "speech()",
             },
             {
-              type: "doc",
+              type: "ref",
               id: "sandbox",
               label: "acode_interpreter_tool()",
             },
@@ -957,8 +959,8 @@ const sidebars = {
       },
       items: [
         "assistants",
-        "audio_transcription",
-        "text_to_speech",
+        { type: "ref", id: "audio_transcription" },
+        { type: "ref", id: "text_to_speech" },
         {
           type: "category",
           label: "/batches",
@@ -980,15 +982,15 @@ const sidebars = {
             slug: "/completion",
           },
           items: [
-            "completion/input",
+            { type: "ref", id: "completion/input" },
             "completion/output",
             "completion/usage",
             "completion/http_handler_config",
           ],
         },
-        "text_completion",
+        { type: "ref", id: "text_completion" },
         "bedrock_converse",
-        "embedding/supported_embedding",
+        { type: "ref", id: "embedding/supported_embedding" },
         {
           type: "category",
           label: "/files",
@@ -1013,7 +1015,7 @@ const sidebars = {
         "managed_agents",
         "memory_management",
         "image_edits",
-        "image_generation",
+        { type: "ref", id: "image_generation" },
         "image_variations",
         "videos",
         {
@@ -1085,7 +1087,7 @@ const sidebars = {
         "realtime",
         "proxy/realtime_webrtc",
         "rerank",
-        "response_api",
+        { type: "ref", id: "response_api" },
         "prompt_management",
         "response_api_compact",
         {
@@ -1428,11 +1430,11 @@ const sidebars = {
         "routing",
         "fusion",
         "routing_plugins",
-        "adaptive_router",
+        { type: "ref", id: "adaptive_router" },
         "scheduler",
-        "proxy/auto_routing",
-        "proxy/auto_routing_semantic",
-        "proxy/auto_routing_benchmark",
+        { type: "ref", id: "proxy/auto_routing" },
+        { type: "ref", id: "proxy/auto_routing_semantic" },
+        { type: "ref", id: "proxy/auto_routing_benchmark" },
         "proxy/load_balancing",
         "proxy/keys_teams_router_settings",
         "proxy/provider_budget_routing",
@@ -1474,12 +1476,12 @@ const sidebars = {
       items: [
         "sdk_custom_pricing",
         "migration",
-        "data_security",
-        "proxy/security_encryption_faq",
+        { type: "ref", id: "data_security" },
+        { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",
         "migration_policy",
         "api_stability_policy",
-        "shared_responsibility",
+        { type: "ref", id: "shared_responsibility" },
         "proxy/release_cycle",
         "load_test_advanced",
         "load_test_sdk",
@@ -1539,7 +1541,7 @@ const sidebars = {
             type: "category",
             label: "Adding Providers",
             items: [
-              "contributing/adding_openai_compatible_providers",
+              { type: "ref", id: "contributing/adding_openai_compatible_providers" },
               "adding_provider/directory_structure",
               "adding_provider/new_rerank_provider",
             ]
@@ -1548,6 +1550,142 @@ const sidebars = {
           "contributing",
         ]
       },
+      ],
+    },
+  ],
+};
+
+// ════════════════════════════════════════════════════════════
+// ENTERPRISE (the Enterprise tab in the navbar)
+// This sidebar owns the Enterprise program pages: overview, rollout, license,
+// compliance, support, and lifecycle. Feature pages stay owned by the Docs
+// sidebar (tutorialSidebar) or the Integrations sidebar and appear here as
+// `ref` items, so each doc has exactly one `doc` placement.
+// "sidebar-enterprise" adds the Enterprise pill (src/css/custom.css) to
+// license-gated pages; "enterprise-group" styles the caption rows.
+// ════════════════════════════════════════════════════════════
+const enterpriseSidebar = {
+  enterpriseSidebar: [
+    {
+      type: "category",
+      label: "Get started",
+      className: "enterprise-group",
+      collapsible: false,
+      items: [
+        { type: "doc", id: "enterprise", label: "Overview" },
+        { type: "doc", id: "learn/enterprise_quickstart", label: "Production rollout" },
+        { type: "doc", id: "enterprise/activate", label: "Activate your license" },
+        { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
+      ],
+    },
+    {
+      type: "category",
+      label: "Plan the deployment",
+      className: "enterprise-group",
+      collapsible: false,
+      items: [
+        { type: "ref", id: "proxy/multi_tenant_architecture", label: "Reference architectures" },
+        { type: "ref", id: "proxy/multi_region", label: "Multi-region", className: "sidebar-enterprise" },
+        { type: "ref", id: "proxy/global_control_plane", label: "Global control plane", className: "sidebar-enterprise" },
+        { type: "ref", id: "proxy/db_sizing", label: "Sizing" },
+        { type: "ref", id: "proxy/prod", label: "Production checklist" },
+        { type: "ref", id: "proxy/security_best_practices", label: "Security best practices" },
+        { type: "ref", id: "secret_managers/overview", label: "Secret managers", className: "sidebar-enterprise" },
+      ],
+    },
+    {
+      type: "category",
+      label: "Enterprise features",
+      className: "enterprise-group",
+      collapsible: false,
+      items: [
+        {
+          type: "category",
+          label: "Identity and access",
+          collapsed: true,
+          items: [
+            { type: "ref", id: "proxy/admin_ui_sso", label: "SSO for the Admin UI", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/saml_sso", label: "SAML 2.0 SSO", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/custom_sso", label: "SSO event hooks", className: "sidebar-enterprise" },
+            { type: "ref", id: "tutorials/scim_litellm", label: "SCIM provisioning", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/token_auth", label: "JWT authentication", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/jwt_key_mapping", label: "JWT to virtual key mapping", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/oauth2", label: "OAuth 2.0 authentication", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/access_control", label: "Role-based access control" },
+            { type: "ref", id: "proxy/service_accounts", label: "Service accounts" },
+            { type: "ref", id: "proxy/ip_address", label: "IP address filtering", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/public_routes", label: "Public and private routes", className: "sidebar-enterprise" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Governance and cost",
+          collapsed: true,
+          items: [
+            { type: "ref", id: "proxy/users", label: "Budgets and rate limits" },
+            { type: "ref", id: "proxy/project_management", label: "Projects", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/team_model_add", label: "Team-managed models", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/rate_limit_tiers", label: "Budget and rate limit tiers", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/temporary_budget_increase", label: "Temporary budget increase", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/ui_team_soft_budget_alerts", label: "Soft budget alerts", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/billing_metrics", label: "Billable request metering", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/spend_logs_deletion", label: "Spend log retention" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Observability and audit",
+          collapsed: true,
+          items: [
+            { type: "doc", id: "proxy/multiple_admins", label: "Audit logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/team_logging", label: "Team and key logging", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/dynamic_logging", label: "Dynamic callback management", className: "sidebar-enterprise" },
+            { type: "ref", id: "observability/gcs_bucket_integration", label: "Log export to GCS", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/alerting", label: "Alerting" },
+            { type: "ref", id: "proxy/pagerduty", label: "PagerDuty alerting", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/email", label: "Email notifications" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Managed resources",
+          collapsed: true,
+          items: [
+            { type: "ref", id: "proxy/litellm_managed_files", label: "Managed files" },
+            { type: "ref", id: "proxy/managed_batches", label: "Managed batches" },
+            { type: "ref", id: "proxy/managed_finetuning", label: "Managed fine-tuning" },
+          ],
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Security review",
+      className: "enterprise-group",
+      collapsible: false,
+      items: [
+        { type: "doc", id: "enterprise/compliance", label: "Compliance and SOC 2 Type II" },
+        { type: "doc", id: "data_security", label: "Data privacy and security" },
+        { type: "doc", id: "shared_responsibility", label: "Shared responsibility" },
+        { type: "doc", id: "proxy/security_encryption_faq", label: "Security and encryption FAQ" },
+        { type: "ref", id: "proxy/security_owasp_llm_top10", label: "OWASP LLM Top 10" },
+        { type: "ref", id: "proxy/docker_image_security", label: "Verify image signatures" },
+        { type: "link", label: "Trust Center", href: "https://trust.litellm.ai/" },
+      ],
+    },
+    {
+      type: "category",
+      label: "Support and lifecycle",
+      className: "enterprise-group",
+      collapsible: false,
+      items: [
+        { type: "doc", id: "enterprise/support", label: "Support and SLA" },
+        { type: "doc", id: "enterprise/version_support", label: "Version support" },
+        { type: "ref", id: "proxy/release_cycle", label: "Release cycle" },
+        { type: "ref", id: "migration_policy", label: "Migration policy" },
+        { type: "ref", id: "api_stability_policy", label: "API stability policy" },
+        { type: "link", label: "Release notes", href: "/release_notes" },
+        { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
       ],
     },
   ],
@@ -1566,7 +1704,7 @@ const learnSidebar = {
       items: [
         { type: "ref", id: "learn/sdk_quickstart" },
         "learn/gateway_quickstart",
-        "learn/enterprise_quickstart",
+        { type: "ref", id: "learn/enterprise_quickstart", label: "Enterprise production rollout" },
       ],
     },
     { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
@@ -1806,7 +1944,7 @@ const learnSidebar = {
           items: [
             "tutorials/default_team_self_serve",
             "tutorials/msft_sso",
-            "tutorials/scim_litellm",
+            { type: "ref", id: "tutorials/scim_litellm" },
             "tutorials/tag_management",
           ],
         },
@@ -1880,4 +2018,4 @@ const autoRouterSidebar = {
   ],
 };
 
-module.exports = { ...sidebars, ...learnSidebar, ...autoRouterSidebar };
+module.exports = { ...sidebars, ...enterpriseSidebar, ...learnSidebar, ...autoRouterSidebar };

@@ -483,9 +483,10 @@ const config = {
             label: 'Integrations',
           },
           {
+            type: 'docSidebar',
+            sidebarId: 'enterpriseSidebar',
             position: 'left',
             label: 'Enterprise',
-            to: "docs/enterprise"
           },
           {
             type: 'docSidebar',

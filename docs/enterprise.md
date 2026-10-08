@@ -23,14 +23,14 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
   {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
   {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
-  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '#professional-support'},
+  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
 ]} />
 
 <SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout and security review, and start a 30-day trial with a full license." />
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale (100+ users or 10+ production AI use cases) that need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users; beyond that, an Enterprise license is required. Engineers evaluating a trial can follow the [Enterprise Quickstart](/docs/learn/enterprise_quickstart).
+For teams running LiteLLM at scale (100+ users or 10+ production AI use cases) that need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users; beyond that, an Enterprise license is required. Engineers evaluating a trial can follow the [Production rollout](/docs/learn/enterprise_quickstart) guide, and teams already on open source can start with [Moving from OSS](/docs/enterprise/moving_from_oss).
 
 ## Full feature list
 
@@ -92,32 +92,11 @@ Pricing depends on your deployment size. [Get in touch](https://enterprise.litel
 
 ## Support {#professional-support}
 
-### Standard support
-
-Included with every enterprise license: a dedicated Slack or Teams channel with the engineering team for integration, deployment, and provider troubleshooting. Hours are 9am to 9pm PST, Monday through Friday. No guaranteed response time is included.
-
-### 24/7 support SLAs
-
-For teams that need guaranteed response times around the clock, 24/7 support SLAs are available for an additional fee.
-
-| Severity | Response SLA |
-|---|---|
-| **Sev 0**. 100% of production traffic is failing | 1 hour |
-| **Sev 1**. Partial production impact | 6 hours |
-| **Sev 2–3**. Setup issues and non-urgent bugs | 24 hours (7am–7pm PT, Monday–Saturday) |
-| **Security patches** | 72 hours |
-
-Custom SLAs are available on request. For what support covers, see the [Shared Responsibility Model](./shared_responsibility.md).
+Every license includes a dedicated Slack or Teams channel with the engineering team. With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
 
 ## Version support
 
-LiteLLM supports the four most recent stable minor lines. Each of those lines keeps getting patch releases. Anything older reaches end of life and stops receiving updates. This policy takes effect Monday, June 29, 2026. As of mid-June 2026 the supported lines are 1.86, 1.87, 1.88, and 1.89, and the set rolls forward as new stable releases ship.
-
-LiteLLM ships a new minor line roughly every week. Patching every older line meant carrying each fix onto every line still in support, and that cost grows with the number of lines rather than the number of fixes. Four lines is the window that still gets that care.
-
-The window always holds the four most recent stable minor lines. When a new line ships, the oldest one drops out and stops receiving releases. There is no separate long-term maintenance track. For any supported line, use its latest patch. For a rare, high-severity issue, LiteLLM may still act outside that window.
-
-To see where you stand, take the latest stable line and count back four. If your version is older than that, plan an upgrade. Pin to a minor line, take its patches, and move to a newer line before yours drops out.
+LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support).
 
 ## FAQ
 

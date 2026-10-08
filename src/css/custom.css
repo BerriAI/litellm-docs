@@ -559,6 +559,66 @@ li.tabs__item--active {
   color: #f9fafb;
 }
 
+/* Enterprise sidebar: caption rows for the non-collapsible top-level groups
+   (className "enterprise-group" in sidebars.js). */
+.enterprise-group {
+  margin-top: 0.5rem;
+}
+
+.enterprise-group > .menu__list-item-collapsible,
+.enterprise-group > .menu__list-item-collapsible:hover {
+  min-height: 0 !important;
+  background: transparent !important;
+}
+
+.enterprise-group > .menu__list-item-collapsible > .menu__link,
+.enterprise-group > .menu__list-item-collapsible > .menu__link:hover {
+  padding: 0.5rem 0.75rem 0.25rem !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280 !important;
+  background: transparent !important;
+  cursor: default;
+}
+
+[data-theme='dark'] .enterprise-group > .menu__list-item-collapsible > .menu__link {
+  color: #9ca3af !important;
+}
+
+.menu .enterprise-group > ul.menu__list {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  border-left: 0 !important;
+}
+
+/* "Enterprise" pill after the label of license-gated pages
+   (className "sidebar-enterprise" in sidebars.js). */
+.sidebar-enterprise > .menu__link::after {
+  content: 'Enterprise';
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .sidebar-enterprise > .menu__link::after {
+  border-color: rgba(147, 197, 253, 0.3);
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {
