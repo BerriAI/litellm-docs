@@ -838,6 +838,36 @@ The two are independent. A tenant's `llm_only` narrows only that tenant's projec
 
 Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
 
+### Keep prompts and responses out of one tenant's traces
+
+When you capture prompts and responses globally, a team or key can opt its own destination out of them. Set `capture_message_content` in a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "capture_message_content": "no_content"
+    }
+  }'
+```
+
+| Team value | What that tenant's destination receives |
+|------------|------------------------------------------|
+| omitted | Whatever the proxy captures, exactly as before |
+| `span_only` | Whatever the proxy captures, the same as omitting it |
+| `no_content` | No prompt or response content, whatever the proxy captures |
+
+The setting can only narrow what the proxy collects. A tenant receives content only when `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` is `span_only` or `span_and_event` on the proxy (see [Capturing prompts & responses](#capturing-prompts--responses)); with the proxy on `no_content`, every tenant gets metadata only whatever it sets, so a team that wants content needs the proxy operator to enable global capture
+
+`no_content` removes the content attributes of every vocabulary the proxy writes: `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions`, the MCP `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result`, `langfuse.observation.input` and `output`, the OpenInference `input.value`, `output.value` and `llm.input_messages.*` / `llm.output_messages.*` keys, Langtrace's `llm.prompts` and `llm.completions`, and `weave.output`. The spans themselves still arrive with their trace and span ids, their place in the tree, model, token usage, cost and declared tool definitions. Only that tenant's copy changes: your own exporters, a plain `otel` collector and other tenants keep what the global setting captures. When the tenant's destination is the same account as one of your own exporters, that account gets one copy and it has no content
+
+The accepted values are `no_content` and `span_only`, and any other value is rejected when the callback is saved, as is the field on a callback that is not one of the four above. All callback entries of one team or key share one value, so a second entry with a different value is rejected too. A caller cannot set it per request
+
 ### Keep Redis and Postgres spans out of tenant traces
 
 A request also produces spans for the proxy's own datastore work: Redis lookups for the auth and response caches, and the Postgres spend write. A key or team that sends traces to its own account receives those as well. Set `excluded_services` to stop forwarding them to key and team destinations, while the request root, auth, guardrail and model-call spans still go through:
