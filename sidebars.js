@@ -144,6 +144,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/qohash_qostodian_nexus", customProps: { icon: "/img/integrations/qohash.png" } },
           "proxy/guardrails/qualifire",
           { type: "doc", id: "proxy/guardrails/aim_security", customProps: { icon: "/img/integrations/aim-security.png" } },
+          "proxy/guardrails/airia",
           "proxy/guardrails/onyx_security",
           { type: "doc", id: "proxy/guardrails/aporia_api", customProps: { icon: "/img/integrations/aporia.png" } },
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
