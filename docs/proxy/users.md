@@ -1115,6 +1115,19 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
 
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
+
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
 [**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
