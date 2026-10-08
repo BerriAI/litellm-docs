@@ -15,9 +15,11 @@ Give your agent a name, run it, and open its trace in Lens. The examples on this
 
 In the LiteLLM dashboard:
 
-1. Open **Lens > Traces > Set up tracing**.
-2. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`.
-3. Click **Generate tracing key** and save the key. If you cannot create one, ask your administrator for a dedicated Lens tracing key.
+1. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**.
+2. Choose your framework and click **Generate tracing key**. If you cannot create one, ask your administrator for a dedicated Lens tracing key.
+3. Click **Copy tracing configuration**. Paste it into the terminal where you start your agent, then follow the displayed dependency and code snippets.
+
+The configuration includes your endpoint and tracing key. You can also use the examples below. Under **Connection details**, copy the full **Traces endpoint** and save your key for those examples.
 
 **Optional:** Click **Send a test trace**, then **View trace** to check the connection without calling a model.
 
@@ -54,7 +56,7 @@ export LITELLM_API_KEY="<your key with model access>"
 export LITELLM_MODEL="<your configured model alias>"
 ```
 
-Get a model key from your administrator or **Virtual Keys** in the dashboard, and copy the model alias from **Models**. The local Docker gateway uses `http://localhost:4002`. The model key and the tracing key serve different purposes.
+Get a model key from your administrator or **Virtual Keys** in the dashboard, and copy the model alias from **Models**. The local Docker gateway uses `http://localhost:4000`. The model key and the tracing key serve different purposes.
 
 ## 3. Run your agent
 
@@ -687,7 +689,7 @@ python agent.py
 
 </Tabs>
 
-For complete projects and multi-agent examples, use the **Integrations** guides in the sidebar or the [examples repository](https://github.com/BerriAI/litellm-lens-example). Those projects use `LENS_URL` for the ingestion base URL, without `/v1/traces`; their exporters append that path. The dashboard also provides framework snippets under **Set up tracing > Set up manually**.
+For complete projects and multi-agent examples, use the **Integrations** guides in the sidebar or the [examples repository](https://github.com/BerriAI/litellm-lens-example). Those projects use `LENS_URL` for the ingestion base URL, without `/v1/traces`; their exporters append that path. The dashboard shows framework snippets directly in the tracing setup section.
 
 For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=https://<your-lens-ingestion-host>/v1/traces` and `LITELLM_DEV_KEY=<your-lens-tracing-key>` in its `.env` file, then run the agent.
 
