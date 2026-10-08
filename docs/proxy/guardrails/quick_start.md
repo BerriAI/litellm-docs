@@ -86,6 +86,58 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
 - A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
+### Run on streaming or non-streaming requests only with `stream_scope`
+
+A guardrail runs on both streaming and non-streaming requests by default. Set `stream_scope` under the guardrail's `litellm_params` to choose which request shapes it evaluates:
+
+- `streaming` — run only when the client asked for a streamed response
+- `non_streaming` — run only for regular request/response calls
+- `both` — run on every request (the default, and the pre-existing behavior when `stream_scope` is unset)
+
+```yaml
+guardrails:
+  # runs only on streaming requests; non-streaming calls bypass the scan
+  - guardrail_name: "moderate-streams-only"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # runs only on non-streaming requests
+  - guardrail_name: "moderate-non-streams"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: non_streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+A guardrail configured with several modes (for example `mode: [pre_call, post_call]`) can scope each mode separately with a map. Keys are mode names; a mode left out of the map defaults to `both`:
+
+```yaml
+guardrails:
+  - guardrail_name: "scoped-by-mode"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: [pre_call, post_call]
+      stream_scope:
+        pre_call: streaming
+        post_call: both
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+Realtime audio input transcription counts as streaming, so a `streaming` scope also covers guardrails running on realtime transcription events, and a `non_streaming` scope excludes them.
+
+Bedrock pass-through requests report their streaming state from the invoked Bedrock action, so `stream_scope` gates them the same way as native routes.
+
+#### Validation
+
+A `stream_scope` value other than `streaming`, `non_streaming` or `both` (or a map whose keys are not mode names) is rejected with `422` on create and update. At startup, whether loaded from a config file or a stored database row, an invalid `stream_scope` is ignored with a warning log and the guardrail keeps running with the default `both` scope.
+
 ### Observe only one direction with `logging_only_scope`
 
 A `logging_only` guardrail observes the request and the response by default. Set `logging_only_scope` under the guardrail's `litellm_params` to choose which direction the scan observes:
