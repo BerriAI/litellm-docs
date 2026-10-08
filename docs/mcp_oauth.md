@@ -226,7 +226,7 @@ Per-server static registration returns placeholder credentials and does not stor
 
 For OAuth clients, use `https://<proxy>/mcp/<server_name>` as the connection URL. The consent page and session token are scoped to that server.
 
-If a client connects to aggregate `/mcp` with `x-mcp-servers: <server_name>`, the gateway challenge carries `scope="litellm:mcp_server:<server_name>"` and scopes the consent page and session token to that server. A header containing multiple servers or access groups keeps an all-servers consent page. Use one `/mcp/<server_name>` client connection per server instead.
+If a client connects to aggregate `/mcp` with `x-mcp-servers: <server_name>`, the gateway challenge carries `scope="litellm:mcp_server:<server_name>"` and scopes the consent page and session token to that server. A header listing multiple servers scopes consent and the token to that set. Access groups and unknown names remain unscoped. Claude Code sends no custom headers during OAuth discovery, so it must use `/mcp/<server_name>` (one connection per server).
 
 To reject unscoped aggregate requests, set [`mcp_require_explicit_server_scope`](./proxy/config_settings#general_settings---reference). It defaults to `false`; when enabled, a toolset or gateway OAuth session can still provide the scope:
 
