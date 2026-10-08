@@ -7,9 +7,7 @@ Decision models answer typed questions about an input and return probabilities i
 | `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice` and `score` questions | You write against OpenAI's format or need image input |
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice` and `score` questions | You already have TypeSafe Jev request bodies |
 
-:::info
-These routes are not in a published release yet. They are coming to `v1.104.2` and the next `v1.105.0` release candidate. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so send those bodies to `/v1/systemone` after you upgrade
-:::
+Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
