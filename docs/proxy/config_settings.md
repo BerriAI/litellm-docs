@@ -518,7 +518,7 @@ router_settings:
 | allowed_fails | integer | `3` | The number of failures allowed before cooling down a model. [More information here](reliability) |
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
-| default_priority | (Optional[int]) | `null` | The default priority for a request. Only for '.scheduler_acompletion()'. Default is None. |
+| default_priority | (Optional[int]) | `null` | The priority given to every request that sets no `priority` of its own, so `router.acompletion()`, `/chat/completions`, and `/queue/chat/completions` all queue through the scheduler at it. Lower is served first. Default is None (no queueing). |
 | polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
