@@ -8,7 +8,7 @@ Decision models answer typed questions about an input and return probabilities i
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice` and `score` questions | You already have TypeSafe Jev request bodies |
 
 :::info
-These routes are not in a published release yet. They land in `v1.104.2` and the next `v1.105.0` release candidate. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so send those bodies to `/v1/systemone` after you upgrade
+These routes are not in a published release yet. They are coming to `v1.104.2` and the next `v1.105.0` release candidate. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so send those bodies to `/v1/systemone` after you upgrade
 :::
 
 | Feature | Supported | Notes |
