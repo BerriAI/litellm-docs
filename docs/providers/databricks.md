@@ -451,7 +451,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Decisions (ai_decide)
 
-Databricks serves OpenJev through `ai_decide` on the `databricks-openjev-qwen35-4b` Foundation Model API endpoint. LiteLLM exposes it on the unified `/v1/decisions` route and as an Auto Router classifier. Add the serving endpoint to `model_list`:
+Databricks serves OpenJev through `ai_decide` on the `databricks-openjev-qwen35-4b` Foundation Model API endpoint. LiteLLM exposes it on the [unified decision routes](/docs/decisions), `/v1/systemone` for System One bodies and `/v1/decisions` for the OpenAI Decisions format, and as an Auto Router classifier. Add the serving endpoint to `model_list`:
 
 ```yaml title="config.yaml"
 model_list:
@@ -465,7 +465,7 @@ model_list:
 `DATABRICKS_API_BASE` is `https://<workspace-host>/serving-endpoints`, the same value the chat deployments above use. LiteLLM posts the decision request to `POST /serving-endpoints/databricks-openjev-qwen35-4b/invocations` with the deployment's token as a bearer credential.
 
 ```bash
-curl http://localhost:4000/v1/decisions \
+curl http://localhost:4000/v1/systemone \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
@@ -483,7 +483,7 @@ curl http://localhost:4000/v1/decisions \
   }'
 ```
 
-The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`, whose catalog entry has `mode: evaluation` at a zero rate: Databricks bills OpenJev in DBUs and publishes no per-token price. Set `model_info.input_cost_per_token` and `model_info.output_cost_per_token` on the deployment to price it. `/health` probes the deployment through `/v1/decisions`, so no `model_info.mode` is needed.
+The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`, whose catalog entry has `mode: evaluation` at a zero rate: Databricks bills OpenJev in DBUs and publishes no per-token price. Set `model_info.input_cost_per_token` and `model_info.output_cost_per_token` on the deployment to price it. `/health` probes the deployment with a System One request, so no `model_info.mode` is needed. An OpenAI-format body sent to `/v1/decisions` reaches the endpoint as the same System One request and the answers come back in the OpenAI format.
 
 To route Auto Router traffic with the same endpoint, set `opensource_classifier_config.provider: databricks` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-openjev-serving-endpoint).
 

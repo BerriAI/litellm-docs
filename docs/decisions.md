@@ -30,10 +30,11 @@ These routes are not in a published release yet. They are coming to `v1.104.2` a
 | OpenRouter | `openrouter/typesafe/jev-1.13` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/api/alpha/decisions` | No |
 | Cloudflare Workers AI | `cloudflare/clef` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/ai/run/@cf/cloudflare/<model>` | No |
 | Strands Decider (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
+| [Databricks](./providers/databricks.md#decisions-ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_BASE` (`https://<workspace-host>/serving-endpoints`) and `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, or `api_base` and `api_key` on the deployment | `/serving-endpoints/<endpoint>/invocations` | No |
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
-Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`
+Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. A Databricks model name is the bare serving endpoint name after `databricks/`, and the deployment's `api_base` is the workspace's `/serving-endpoints` URL, shared with its chat deployments
 
 ## Proxy setup
 

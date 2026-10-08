@@ -220,7 +220,7 @@ Configure the matching server URL, then use a LiteLLM virtual key with access to
 | --- | --- | --- | --- |
 | Laya | `/laya/v1/systemone` | `english` | `laya/english` |
 | Bespoke Nimble | `/bespoke/v1/systemone` | `nimble-latest` (`nimble` on Ollama) | `bespoke/nimble-latest` (`bespoke/nimble` on Ollama) |
-| Databricks OpenJev | `/v1/decisions` | A `model_list` deployment of `databricks/<endpoint>` | The deployment's model name |
+| Databricks OpenJev | `/v1/systemone` (`/v1/decisions` for the OpenAI format) | A `model_list` deployment of `databricks/<endpoint>` | The deployment's model name |
 
 The following Laya example also works for Nimble after replacing the endpoint and body model with the Nimble row:
 
@@ -244,7 +244,7 @@ curl http://localhost:4000/laya/v1/systemone \
   }'
 ```
 
-Databricks OpenJev is called through the unified `/v1/decisions` route instead of a provider-prefixed path. Add the serving endpoint to `model_list` and name that deployment in the request body:
+Databricks OpenJev is called through the [unified decision routes](/docs/decisions) instead of a provider-prefixed path: `/v1/systemone` takes System One bodies and `/v1/decisions` takes the OpenAI Decisions format. Add the serving endpoint to `model_list` and name that deployment in the request body:
 
 ```yaml
 model_list:
@@ -256,7 +256,7 @@ model_list:
 ```
 
 ```bash
-curl http://localhost:4000/v1/decisions \
+curl http://localhost:4000/v1/systemone \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
