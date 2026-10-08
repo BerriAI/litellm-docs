@@ -4,6 +4,12 @@ import TabItem from '@theme/TabItem';
 
 # Javelin Guardrails
 
+:::info
+
+Javelin is now [Highflame](https://highflame.ai). For new deployments, use the [Highflame guardrail](./highflame.md).
+
+:::
+
 Javelin provides AI safety and content moderation services with support for prompt injection detection, trust & safety violations, and language detection.
 
 ## Quick Start
