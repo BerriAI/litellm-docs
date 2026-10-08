@@ -312,6 +312,29 @@ litellm --config config.yaml --port 4000
 python test_realtime_tool_calling.py
 ```
 
+## Session Configuration (`instructions`, `voice`, `turn_detection`)
+
+Vertex AI Live accepts exactly one `setup` message per connection, and a second one closes the socket with a 1007 error. By default LiteLLM sends that setup itself as soon as the client connects, using its own defaults. Every `session.update` your client sends after `session.created` is then dropped, so `instructions`, `voice`, `turn_detection` and `tools` never reach the model, even though the client still receives `session.updated`
+
+To configure the session from the client, set `gemini_live_defer_setup: true` under `litellm_settings` (or the `LITELLM_GEMINI_LIVE_DEFER_SETUP=true` environment variable). LiteLLM then waits for the client's first `session.update` and builds the Vertex AI setup from it: `instructions` becomes `systemInstruction`, `voice` becomes the speech config, `turn_detection` maps to `realtimeInputConfig.automaticActivityDetection`, and `tools` become function declarations. Send everything in that first `session.update`, since any later one is still dropped
+
+```yaml
+litellm_settings:
+  gemini_live_defer_setup: true
+```
+
+```python
+await ws.send(json.dumps({
+    "type": "session.update",
+    "session": {
+        "instructions": "You are a helpful assistant. Reply only in Hindi.",
+        "voice": "Aoede",
+    },
+}))
+```
+
+`gemini_live_defer_setup` is a proxy-wide setting. If you connect to a shared proxy, ask whoever runs it to enable it
+
 ## Supported OpenAI Realtime Events
 
 **Client → Proxy (→ Vertex AI)**
@@ -320,7 +343,7 @@ python test_realtime_tool_calling.py
 |---|---|
 | `input_audio_buffer.append` | Forwarded as `realtime_input.audio` |
 | `conversation.item.create` | Forwarded as `realtime_input.text` |
-| `session.update` | Silently ignored — Vertex AI does not support mid-session reconfiguration |
+| `session.update` | With `gemini_live_defer_setup: true`, the first one is sent as the Vertex AI `setup`. Otherwise, and for every later one, it is dropped. See [Session Configuration](#session-configuration-instructions-voice-turn_detection) |
 | `response.create` | Silently ignored — Vertex AI responds automatically after each turn |
 
 **Vertex AI → Proxy (→ Client)**
@@ -336,7 +359,7 @@ python test_realtime_tool_calling.py
 
 ## Limitations
 
-- `session.update` is not forwarded (Vertex AI only accepts one setup message per connection).
+- Only the first `session.update` is used, and only when `gemini_live_defer_setup` is enabled (Vertex AI accepts one setup message per connection). The session cannot be reconfigured after setup.
 - Audio transcription requires `outputAudioTranscription: {}` to be set in the initial setup (done automatically by LiteLLM).
 
 ## Precaution
