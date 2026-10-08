@@ -436,14 +436,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      announcementBar: {
-        id: 'decisions_api_2026_10',
-        content:
-          '<strong>Decisions API is here.</strong> Call OpenAI Decisions, TypeSafe Jev, Cloudflare Clef, Perplexity, OpenRouter and Strands Decider through one /v1/decisions endpoint. <a href="/docs/decisions">Read the guide</a>',
-        backgroundColor: '#0078d4',
-        textColor: '#ffffff',
-        isCloseable: false,
-      },
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       docs: {
