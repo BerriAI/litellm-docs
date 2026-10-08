@@ -114,6 +114,8 @@ Use LiteLLM and Lens images from the same release. The published Helm chart supp
 
 ### Using Docker
 
+Lens runs as a standalone container. Use Docker, Docker Compose, or your container platform's deployment controls with the same image and environment variables.
+
 You need a ClickHouse HTTP URL with credentials. Lens creates its tables on startup, so its database user needs permission to create and alter tables, read data, and insert data. Use your existing ClickHouse service or follow the [ClickHouse installation guide](https://clickhouse.com/docs/install).
 
 For a **local deployment**, use `http://localhost:4318` as the public base URL when your agent and browser run on the Docker host. You do not need an HTTPS reverse proxy for this local connection.
@@ -153,19 +155,41 @@ AGENT_TRACING_RETENTION_DAYS=14
 
 Use the same service secret on both containers. `LITELLM_URL` is the gateway address reachable from Lens. URL-encode special characters in the ClickHouse username and password.
 
-Protect the file and start Lens with [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml):
+Protect the file:
 
 ```bash
 chmod 600 ~/lens.env
+```
+
+Choose one way to start Lens.
+
+**With Docker Compose**, use [`deploy/lens/compose.yaml`](https://github.com/BerriAI/litellm/blob/main/deploy/lens/compose.yaml):
+
+```bash
 docker compose --env-file ~/lens.env \
   -f deploy/lens/compose.yaml up -d
 ```
 
+**With Docker directly**, replace the image digest with the same one you chose above:
+
+```bash
+docker run -d --name lens-worker \
+  --env-file ~/lens.env \
+  -p 127.0.0.1:4318:4318 \
+  --memory 2g --cpus 2 --pids-limit 64 \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,size=1g \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --restart unless-stopped \
+  ghcr.io/berriai/litellm-lens-worker@sha256:<matching-release-digest>
+```
+
+**On a managed container platform**, deploy that image with the values from `lens.env`, port `4318`, and the same filesystem, security, and resource settings. Use `/health/live` for process health and `/health/ready` for readiness. You do not need a Compose file.
+
 #### 3. Connect the network and check tracing
 
-The Compose file exposes Lens at `127.0.0.1:4318` on the Docker host. Local agents can use that address directly. For a shared deployment, point your host's HTTPS reverse proxy at it. If LiteLLM or your reverse proxy runs in another container, [connect Lens to its Docker network](#docker-network) and use `http://lens-worker:4318` from that network. `localhost` inside a container refers to that container.
+Both Docker commands expose Lens at `127.0.0.1:4318` on the Docker host. Local agents can use that address directly. For a shared deployment, point your host's HTTPS reverse proxy at it. If LiteLLM or your reverse proxy runs in another container, [connect Lens to its Docker network](#docker-network) and use `http://lens-worker:4318` from that network. `localhost` inside a container refers to that container.
 
-For a shared deployment, apply the HTTPS route you chose above. Then [check the installation](#check-the-installation). On a container host such as Render, run the Lens image as a web service on port 4318 with the same environment variables. Use `/health/live` for process health and `/health/ready` for readiness.
+For a shared deployment, apply the HTTPS route you chose above. On a managed platform, set LiteLLM's internal Lens URL to the platform's private service address. Then [check the installation](#check-the-installation).
 
 ### Using Helm
 
@@ -321,7 +345,15 @@ Find the network used by your LiteLLM container:
 docker inspect "<your-litellm-container>" --format '{{json .NetworkSettings.Networks}}'
 ```
 
-Save this as `lens-network.yaml` in the LiteLLM checkout:
+If you started Lens with `docker run`, connect its container to that network:
+
+```bash
+docker network connect "<your-existing-network>" lens-worker
+```
+
+Include `--network "<your-existing-network>"` in your `docker run` command when you recreate Lens.
+
+For Docker Compose, save this as `lens-network.yaml` in the LiteLLM checkout:
 
 ```yaml title="lens-network.yaml"
 services:
