@@ -357,13 +357,14 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 | `echo` | `Charon` |
 | `fable` | `Umbriel` |
 | `marin` | `Despina` |
-| `nova` | `Zephyr` |
 | `onyx` | `Orus` |
 | `sage` | `Vindemiatrix` |
 | `shimmer` | `Achernar` |
 | `verse` | `Puck` |
 
 Gemini voice names and their characters come from the [Gemini speech generation docs](https://ai.google.dev/gemini-api/docs/speech-generation) (read 2026-10-07).
+
+`nova` is not in the table: Gemini TTS models accept it as a voice name of their own (checked live on 2026-10-08), so it is sent through unchanged.
 
 ### Quick Start
 
