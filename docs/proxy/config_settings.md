@@ -118,6 +118,7 @@ callback_settings:
 general_settings:
   completion_model: string
   store_prompts_in_spend_logs: boolean
+  spend_logs_metadata_fields: object  # {include: [string]} or {exclude: [string]}, which LiteLLM_SpendLogs.metadata keys are written to the db
   forward_client_headers_to_llm_api: boolean
   disable_spend_logs: boolean  # turn off writing each transaction to the db
   disable_master_key_return: boolean  # turn off returning master key on UI (checked on '/user/info' endpoint)
@@ -349,6 +350,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | vector_store_deny_by_default | boolean | `false` | If true, a request may only use a vector store listed in `object_permission.vector_stores` of its key and team, of the team for a keyless team member, or of the user when there is neither. Missing or empty lists grant nothing. The master key and dashboard sessions are exempt. [Doc on denying vector stores by default](../vector_stores/managed_vector_stores#deny-vector-stores-by-default) |
 | user_mcp_management_mode | string | `null` | Controls what non-admins can see on the MCP dashboard. `restricted` (default) only lists MCP servers that the user’s teams are explicitly allowed to access. `view_all` lets every user see the full MCP server list. Tool list/call always respects per-key permissions, so users still cannot run MCP calls without access. |
 | store_prompts_in_spend_logs | boolean | `false` | If true, allows prompts and responses to be stored in the spend logs table. |
+| spend_logs_metadata_fields | object | `null` (every key written) | Which top-level keys of `LiteLLM_SpendLogs.metadata` are written to the database. Set exactly one of `include` (write only these keys) or `exclude` (drop these keys); setting both, neither, or an unknown key stops the proxy at startup. `status` and `cold_storage_object_key` are always written. Daily spend tables, budgets and logging callbacks still see every key. See [Choose which metadata fields are stored](./ui_logs.md#choose-which-metadata-fields-are-stored) |
 | scope_spend_list_endpoints_to_caller | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true` (default), `/spend/keys` and `/spend/users` return only the caller's rows for non-admin API keys. Set to `false` to disable scoping. See [Spend list endpoints](./cost_tracking.md#spend-list-endpoints-spendkeys-and-spendusers). |
 | legacy_unscoped_spend_list_endpoints | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true`, restores pre-scoping behavior for `/spend/keys` and `/spend/users` (non-admin keys may list all rows). Overrides `scope_spend_list_endpoints_to_caller`. Env: `LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS`. |
 | max_request_size_mb | int | `null` (no limit) | The maximum size for requests in MB. Requests above this size will be rejected. |
