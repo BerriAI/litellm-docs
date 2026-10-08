@@ -626,6 +626,8 @@ router_settings:
 | AWS_BEDROCK_RUNTIME_ENDPOINT | Endpoint URL for the Bedrock runtime, used when neither `api_base` nor `aws_bedrock_runtime_endpoint` is passed per request. Overrides the endpoint LiteLLM would otherwise derive from the AWS region
 | AWS_DEFAULT_REGION | Default AWS region for service interactions when AWS_REGION is not set
 | AWS_PROFILE_NAME | AWS CLI profile name to be used
+| AWS_RDS_READ_REPLICA_REGION | Signing-region override for the read-replica RDS IAM token when `IAM_TOKEN_DB_AUTH=True`. Defaults to the region in the replica's RDS hostname, then the process AWS region. Never inherits `AWS_RDS_REGION`; empty or whitespace values count as unset
+| AWS_RDS_REGION | Signing-region override for the writer RDS IAM token when `IAM_TOKEN_DB_AUTH=True`. Defaults to the region in the writer's RDS hostname, then the process AWS region. Empty or whitespace values count as unset
 | AWS_REGION | AWS region for service interactions (takes precedence over AWS_DEFAULT_REGION)
 | AWS_REGION_NAME | Default AWS region for service interactions
 | AWS_ROLE_ARN | ARN of the AWS IAM role to assume for authentication
