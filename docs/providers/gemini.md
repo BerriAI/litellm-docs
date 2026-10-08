@@ -343,6 +343,28 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 
 :::
 
+### Voice names
+
+`audio.voice` takes any Gemini prebuilt voice name (`Kore`, `Puck`, `Zephyr`, ...) and sends it through unchanged. OpenAI voice names map to the nearest Gemini prebuilt voice, so OpenAI-shaped clients and the proxy's default `audio_speech` health check (`alloy`) work without a config change. The lookup is case-insensitive, and any other name is sent through as-is, so a typo still fails at Google with its `No matching speaker voice found` error.
+
+| OpenAI voice | Gemini voice |
+|--------------|--------------|
+| `alloy` | `Kore` |
+| `ash` | `Iapetus` |
+| `ballad` | `Algieba` |
+| `cedar` | `Achird` |
+| `coral` | `Sulafat` |
+| `echo` | `Charon` |
+| `fable` | `Umbriel` |
+| `marin` | `Despina` |
+| `nova` | `Zephyr` |
+| `onyx` | `Orus` |
+| `sage` | `Vindemiatrix` |
+| `shimmer` | `Achernar` |
+| `verse` | `Puck` |
+
+Gemini voice names and their characters come from the [Gemini speech generation docs](https://ai.google.dev/gemini-api/docs/speech-generation) (read 2026-10-07).
+
 ### Quick Start
 
 <Tabs>
