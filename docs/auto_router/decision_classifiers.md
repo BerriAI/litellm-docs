@@ -35,7 +35,7 @@ The completion model still receives the request needed to generate the answer. H
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
-| [Databricks OpenJev](https://docs.databricks.com/aws/en/large-language-models/ai-decide) | A Databricks Foundation Model API serving endpoint in your workspace | The serving endpoint name, such as `databricks-openjev-qwen35-4b` | `databricks` |
+| [Databricks OpenJev](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | A Databricks Foundation Model API serving endpoint in your workspace | The serving endpoint name, such as `databricks-openjev-qwen35-4b` | `databricks` |
 
 All four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /serving-endpoints/<endpoint>/invocations` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
 
@@ -283,7 +283,7 @@ Every native Laya request must explicitly choose `english`, `multilingual` or `t
 
 Compare tier choices on representative prompts before changing production routing. Probabilities describe the supplied choices; confidence scores from different model families are not interchangeable accuracy estimates. Measure downstream answer quality, classifier latency, fallback frequency and total cost using the [evaluation guide](/docs/auto_router/evaluate).
 
-Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya and Bespoke Nimble's built-in catalog token rates are zero; infrastructure is paid separately. Jev uses `typesafe/<model>` classifier log naming, Laya uses `laya/<checkpoint>`, Bespoke Nimble uses `bespoke/<model>` and Databricks uses `databricks/<endpoint>`. Databricks bills OpenJev in DBUs per token on your workspace; LiteLLM has no catalog rate for it, so its classifier cost is unknown unless you add a `databricks/<endpoint>` price to your cost map. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
+Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya and Bespoke Nimble's built-in catalog token rates are zero; infrastructure is paid separately. Jev uses `typesafe/<model>` classifier log naming, Laya uses `laya/<checkpoint>`, Bespoke Nimble uses `bespoke/<model>` and Databricks uses `databricks/<endpoint>`. Databricks OpenJev's catalog rate is zero too: Databricks bills the `databricks-openjev-qwen35-4b` endpoint in DBUs on your workspace and publishes no per-token price, so add a `databricks/<endpoint>` price to your own cost map to see a non-zero classifier cost. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
 
 If the classifier falls back, check the endpoint, checkpoint name, credentials, model warm-up and timeout. A timeout can also open the classifier circuit breaker, which defaults to a 30-second recovery interval. Verify that the server accepts `/v1/systemone`, rather than adding that path to `api_base`.
 

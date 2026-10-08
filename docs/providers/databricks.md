@@ -483,7 +483,7 @@ curl http://localhost:4000/v1/decisions \
   }'
 ```
 
-The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`; Databricks bills OpenJev in DBUs per token, and LiteLLM has no catalog rate for it, so add a `databricks/databricks-openjev-qwen35-4b` entry to your cost map to price it.
+The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`, whose catalog entry has `mode: evaluation` at a zero rate: Databricks bills OpenJev in DBUs and publishes no per-token price. Set `model_info.input_cost_per_token` and `model_info.output_cost_per_token` on the deployment to price it. `/health` probes the deployment through `/v1/decisions`, so no `model_info.mode` is needed.
 
 To route Auto Router traffic with the same endpoint, set `opensource_classifier_config.provider: databricks` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-openjev-serving-endpoint).
 
