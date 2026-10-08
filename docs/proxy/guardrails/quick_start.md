@@ -138,6 +138,14 @@ The dashboard exposes the same control on the guardrail creation form as **Reque
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
 
+The dropdown open, showing the three scope choices:
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_closeup.png')}
+  alt="Closeup: the pre_call applies to dropdown open with Streaming and non-streaming, Streaming only, and Non-streaming only options"
+  style={{ width: '100%', maxWidth: '700px', height: 'auto' }}
+/>
+
 The stored guardrail's detail page shows the per-mode scope summary:
 
 <Image
