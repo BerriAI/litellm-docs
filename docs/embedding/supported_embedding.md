@@ -634,7 +634,7 @@ A plain string element carries no options, so to embed one window of a video, or
 | `file.format` | Optional MIME type that overrides the one inferred from the extension or the data URI |
 | `file.video_metadata` | Optional `fps` (number), `start_offset` and `end_offset` (strings such as `"3s"`), converted to Gemini's `startOffset` and `endOffset` |
 
-Exactly one of `file_id` and `file_data` is required, and an unknown key anywhere in the block answers 400 naming it.
+Exactly one of `file_id` and `file_data` is required. An unknown key anywhere in the block (for example chat's `detail`) answers 400 naming it, or is dropped when `drop_params` is set globally or on the request, the same way an unsupported parameter is.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
