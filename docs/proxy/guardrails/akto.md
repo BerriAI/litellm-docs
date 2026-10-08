@@ -106,7 +106,7 @@ Every check is one awaited call to Akto that both evaluates the traffic and reco
 | `pre_mcp_call` | MCP tool name and arguments | `guardrails=true&ingest_data=true` |
 | `post_mcp_call` | MCP tool result | `response_guardrails=true&ingest_data=true` |
 | `pre_call` | Images and files attached to the request | `file_guardrails=true`, timeout `file_guardrail_timeout` |
-| `logging_only` | Request, attachments and LLM response, after the call finishes | the `pre_call`, file and `post_call` calls above, never blocking |
+| `logging_only` | Request, attachments and LLM response on `/v1/chat/completions`, `/v1/responses` and `/v1/messages`, after the call finishes | the `pre_call`, file and `post_call` calls above, never blocking |
 
 **Streaming.** A streamed response is checked every `streaming_sampling_rate` chunks, and the stream pauses at that chunk until Akto replies. Chunks between two checks reach the caller before Akto sees them, so a flagged stream can show part of the flagged text before it ends with an error frame. Lower the rate to check more often, at the cost of more latency. A masked stream is blocked, because chunks already sent cannot be replaced.
 
