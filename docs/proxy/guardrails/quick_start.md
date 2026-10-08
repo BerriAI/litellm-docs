@@ -130,6 +130,22 @@ guardrails:
       default_on: true
 ```
 
+The dashboard exposes the same control on the guardrail creation form as **Request shape**; each configured mode gets its own dropdown.
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_ui.png')}
+  alt="Create guardrail form: Request shape control with the pre_call applies to dropdown set to Streaming only"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
+The stored guardrail's detail page shows the per-mode scope summary:
+
+<Image
+  img={require('../../../img/stream_scope_guardrail_detail_ui.png')}
+  alt="Guardrail detail page: per-mode stream scope summary showing pre_call Streaming only and post_call Streaming and non-streaming"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
 Realtime audio input transcription counts as streaming, so a `streaming` scope also covers guardrails running on realtime transcription events, and a `non_streaming` scope excludes them.
 
 Bedrock pass-through requests report their streaming state from the invoked Bedrock action, so `stream_scope` gates them the same way as native routes.
