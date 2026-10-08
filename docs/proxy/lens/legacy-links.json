@@ -1,13 +1,13 @@
 {
   "anchors": {
     "litellm-lens": "/docs/proxy/lens#litellm-lens",
-    "quick-start": "/docs/proxy/lens/deployment#quick-start",
-    "one-click-docker": "/docs/proxy/lens/deployment#quick-start",
-    "deploy-with-a-coding-agent": "/docs/proxy/lens/deployment#deploy-with-a-coding-agent",
-    "docker-deployment": "/docs/proxy/lens/deployment#quick-start",
-    "1-deploy-clickhouse": "/docs/proxy/lens/deployment#quick-start",
-    "2-point-litellm-at-clickhouse": "/docs/proxy/lens/deployment#quick-start",
-    "3-deploy-the-lens-worker": "/docs/proxy/lens/deployment#quick-start",
+    "quick-start": "/docs/proxy/lens/deployment/local",
+    "one-click-docker": "/docs/proxy/lens/deployment/local",
+    "deploy-with-a-coding-agent": "/docs/proxy/lens/deployment/local",
+    "docker-deployment": "/docs/proxy/lens/deployment/local",
+    "1-deploy-clickhouse": "/docs/proxy/lens/deployment/local",
+    "2-point-litellm-at-clickhouse": "/docs/proxy/lens/deployment/local",
+    "3-deploy-the-lens-worker": "/docs/proxy/lens/deployment/local",
     "connect-your-agent": "/docs/proxy/lens/first-trace#connect-your-agent",
     "send-your-first-trace": "/docs/proxy/lens/first-trace#send-your-first-trace",
     "view-your-first-trace": "/docs/proxy/lens/first-trace#view-your-first-trace",
@@ -21,7 +21,7 @@
     "configure-an-existing-proxy": "/docs/proxy/lens/deployment#configure-an-existing-proxy",
     "agent-tracing-api": "/docs/proxy/lens/api#agent-tracing-api",
     "use-the-api": "/docs/proxy/lens/api#use-the-api",
-    "upgrade-litellm-and-the-worker": "/docs/proxy/lens/deployment#upgrade-litellm-and-the-worker"
+    "upgrade-litellm-and-the-worker": "/docs/proxy/lens/deployment/upgrades"
   },
   "frameworks": {
     "deepagents": "/docs/proxy/lens/integrations/deepagents",
@@ -38,5 +38,26 @@
     "openclaw": "/docs/proxy/lens/integrations/openclaw",
     "hermes": "/docs/proxy/lens/integrations/hermes",
     "otel": "/docs/proxy/lens/integrations/opentelemetry"
+  },
+  "deploymentAnchors": {
+    "quick-start": "/docs/proxy/lens/deployment/local",
+    "new-shared-deployment": "/docs/proxy/lens/deployment/kubernetes#new-deployment",
+    "new-shared-helm": "/docs/proxy/lens/deployment/kubernetes#new-deployment",
+    "new-shared-docker": "/docs/proxy/lens/deployment/server",
+    "using-helm": "/docs/proxy/lens/deployment/kubernetes#existing-deployment",
+    "using-compose": "/docs/proxy/lens/deployment/docker-compose",
+    "using-docker": "/docs/proxy/lens/deployment/docker",
+    "existing-storage-and-secrets": "/docs/proxy/lens/deployment/storage",
+    "upgrade-litellm-and-the-worker": "/docs/proxy/lens/deployment/upgrades",
+    "networking-examples": "/docs/proxy/lens/deployment/configuration#publish-trace-endpoint",
+    "publish-trace-endpoint": "/docs/proxy/lens/deployment/configuration#publish-trace-endpoint",
+    "dedicated-ingress": "/docs/proxy/lens/deployment/configuration#dedicated-ingress",
+    "docker-network": "/docs/proxy/lens/deployment/configuration#docker-network",
+    "build-from-source": "/docs/proxy/lens/deployment/development",
+    "development": "/docs/proxy/lens/deployment/development#local-development",
+    "service-behavior": "/docs/proxy/lens/deployment/configuration#availability-and-scaling",
+    "configuration-reference": "/docs/proxy/lens/deployment/configuration#configuration-reference",
+    "availability-and-scaling": "/docs/proxy/lens/deployment/configuration#availability-and-scaling",
+    "deploy-with-a-coding-agent": "/docs/proxy/lens/deployment/local"
   }
 }
