@@ -82,7 +82,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
-Use the **OSS Classifier** with hosted Jev or self-hosted Nimble and Laya. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
+Use the **OSS Classifier** with hosted Jev or Cloudflare Clef, or self-hosted Nimble, Laya and Strands Decider. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
 
 <NavigationCards
 columns={3}

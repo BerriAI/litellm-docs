@@ -711,7 +711,9 @@ router_settings:
 | CLICKHOUSE_DATABASE | ClickHouse database LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store. Default `litellm`
 | CLICKHOUSE_FLUSH_INTERVAL_SECONDS | Seconds between flushes of the rows LiteLLM buffers for ClickHouse, such as spend logs when tracing is on. A full batch flushes early. Default `1.0`
 | CLICKHOUSE_URL | ClickHouse HTTP endpoint LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store, for example `http://default:<password>@clickhouse:8123`. Required for ClickHouse tracing. See [Lens](lens)
-| CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
+| CLOUDFLARE_ACCOUNT_ID | Cloudflare account id that builds the default Workers AI endpoint for `cloudflare/<model>` decision models and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: cloudflare` when `CLOUDFLARE_API_BASE` is unset
+| CLOUDFLARE_API_KEY | Workers AI API token sent as the bearer credential for Cloudflare chat, decision and classifier calls. A classifier with an explicit `api_base` uses only its explicit `api_key`
+| CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI, shared by the Cloudflare chat provider and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: cloudflare`. A base ending in `/ai/v1` or `/ai/run` both work; the default is the `CLOUDFLARE_ACCOUNT_ID` account's Workers AI endpoint
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
 | CLOUDZERO_EXPORT_INTERVAL_MINUTES | Interval in minutes for CloudZero data export operations
@@ -1536,6 +1538,8 @@ router_settings:
 | SSL_CERT_FILE | Path to the SSL certificate file for custom CA bundle
 | SUPABASE_KEY | API key for Supabase service
 | SUPABASE_URL | Base URL for Supabase instance
+| STRANDS_DECIDER_API_BASE | HTTP(S) base URL of a self-hosted Strands Decider server, without `/v1/systemone`, for `strands_decider/<model>` decision models and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: strands_decider`. There is no default host |
+| STRANDS_DECIDER_API_KEY | Optional bearer key paired with `STRANDS_DECIDER_API_BASE`; omit it for servers without authentication. Scrubbed from Sentry events |
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
 | STORE_PROMPTS_IN_SPEND_LOGS | Flag to persist the request and response payloads of each call on its SpendLogs row, so prompts and completions are visible in the logs UI. Environment equivalent of `general_settings.store_prompts_in_spend_logs`; either source enabling it is enough. **Default is False**
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
