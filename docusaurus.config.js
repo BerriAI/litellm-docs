@@ -438,6 +438,13 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
+      // The whole bar links to the page; the close button still works.
+      announcementBar: {
+        id: 'decisions_api_2026_10',
+        content:
+          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
+        isCloseable: true,
+      },
       docs: {
         sidebar: {
           // No collapse-sidebar toggle at the bottom of the sidebar
