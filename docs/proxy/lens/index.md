@@ -23,6 +23,8 @@ Before setup, click **Preview sample** beside the Lens title to explore sample t
 
 ## Get started
 
-[Deploy Lens](./deployment.md), then [send your first trace](./first-trace.md). Choose an integration from the sidebar for a runnable project.
+If your team already runs Lens, [send your first trace](./first-trace.md). Choose your framework, give the agent a name, and run the example.
+
+To install Lens, start with a [new deployment](./deployment.md#quick-start) or [add Lens to your existing LiteLLM installation](./deployment.md#configure-an-existing-proxy). The deployment guide includes the commands and a connection check.
 
 Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).

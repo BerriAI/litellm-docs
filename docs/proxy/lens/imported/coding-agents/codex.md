@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/codex/README.md at 20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/codex/README.md at 79e58f44692b09a68b569ff104b36d0b00712272. Edit the source README. -->
 
 # Codex
 
@@ -16,7 +16,7 @@ Send your personal Codex sessions to [LiteLLM Lens](/docs/proxy/lens). This fold
 
 ## Prerequisites
 
-You need Codex, a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), and a dedicated Lens tracing key. Copy the ingestion URL and tracing key from **Lens > Traces > Set up tracing**.
+You need Codex, [Lens installed alongside LiteLLM](/docs/proxy/lens/deployment#configure-an-existing-proxy), and a dedicated Lens tracing key. Open **Lens > Traces > Set up tracing**, copy the full **Traces endpoint** under **Connection details**, and click **Generate tracing key**. Ask your administrator for these if you cannot create a tracing key.
 
 ## Setup
 

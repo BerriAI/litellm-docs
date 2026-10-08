@@ -8,14 +8,25 @@ slug: "/proxy/lens/api"
 
 ## Agent tracing API
 
-Uploads go directly to the Lens service using a dedicated tracing key in `Authorization: Bearer <tracing-key>`. Generate a key with `POST /lens/tracing/keys` on LiteLLM as a proxy administrator, or use **Lens > Traces > Set up tracing**. `GET /lens/service` returns the public ingestion base URL and connection status. Read endpoints stay on LiteLLM and require normal proxy authentication
+Uploads go to Lens using a dedicated tracing key in `Authorization: Bearer <tracing-key>`. Generate a key with `POST /lens/tracing/keys` on LiteLLM as a proxy administrator, or use **Lens > Traces > Set up tracing**. `GET /lens/service` returns the public ingestion base URL and connection status. Trace reads use your LiteLLM URL and normal proxy authentication.
+
+### Upload to Lens
+
+Use the Lens base URL, keeping `/lens-ingest` when present, followed by the path below. The dashboard's **Traces endpoint** already includes `/v1/traces`.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /v1/traces` on Lens | Ingest OTLP/HTTP traces as protobuf (`application/x-protobuf`) or JSON (`application/json`). Supports gzip with `Content-Encoding: gzip`. |
-| `POST /v1/logs` on Lens | Ingest OTLP/HTTP logs, including coding-agent session events |
-| `POST /v1/traces/receipt` on Lens | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
-| `GET /v1/traces` on LiteLLM | List trace summaries. Optional `start_ms` and `end_ms` are Unix milliseconds. The default window is the last 24 hours. |
+| `POST /v1/traces` | Ingest OTLP/HTTP traces as protobuf (`application/x-protobuf`) or JSON (`application/json`). Supports gzip with `Content-Encoding: gzip`. |
+| `POST /v1/logs` | Ingest OTLP/HTTP logs, including coding-agent session events |
+| `POST /v1/traces/receipt` | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
+
+### Read through LiteLLM
+
+Use your LiteLLM base URL and a proxy key associated with a user who can read the traces.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /v1/traces` | List trace summaries. Optional `start_ms` and `end_ms` are Unix milliseconds. The default window is the last 24 hours. |
 | `GET /v1/traces/{trace_id}` | Read the trace's `summary`, `agents`, and `spans`. Accepts optional `trace_ref`. |
 | `GET /v1/traces/{trace_id}/spans/{span_id}` | Read a span's `input`, `output`, and `attributes`. Accepts optional `trace_ref`. |
 
