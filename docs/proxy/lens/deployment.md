@@ -1,6 +1,6 @@
 ---
 title: "Deployment"
-description: "Run Lens ingestion and investigations separately from your LiteLLM gateway."
+description: "Set up Lens locally or for a team, with a new or existing LiteLLM deployment."
 slug: "/proxy/lens/deployment"
 ---
 
@@ -10,9 +10,20 @@ Lens records agent activity and runs investigations alongside LiteLLM. Your agen
 
 ![Your agent sends model requests to LiteLLM and traces directly to Lens.](/img/lens-architecture.svg)
 
-If you are starting from scratch, follow [New deployment](#quick-start). If you already run LiteLLM, follow [Add Lens to LiteLLM](#configure-an-existing-proxy). If your team has already set up Lens, go straight to [send your first trace](./first-trace.md).
+Choose a path based on where you want to run Lens and whether LiteLLM is already installed:
 
-## New deployment {#quick-start}
+| Your setup | Start here |
+| --- | --- |
+| New installation on your machine | [New local deployment](#quick-start): start the full stack with Docker Compose |
+| New installation on a Kubernetes cluster | [New shared deployment with Helm](#new-shared-helm): install LiteLLM and Lens together |
+| New installation on a server or container platform | [New shared deployment with Docker](#new-shared-docker): deploy LiteLLM, then add Lens |
+| LiteLLM is already running, locally or for your team | [Add Lens to an existing deployment](#configure-an-existing-proxy): keep your gateway and add Lens |
+
+**Local** means the dashboard and trace endpoint are reachable from your machine through `localhost`. **Shared** means your team and agents reach them through your server or cluster's addresses, which can be private to your network.
+
+If Lens is already installed, go straight to [send your first trace](./first-trace.md).
+
+## New local deployment {#quick-start}
 
 This local setup starts LiteLLM, Lens, PostgreSQL, and ClickHouse together. You need Git, Python {{python_min_version}} or later, and Docker with Compose. Start Docker before running the commands.
 
@@ -47,7 +58,7 @@ docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml ps
 
 `litellm` and `lens-worker` should be running. `db` and `clickhouse` should be healthy. If a service exits, [check its logs](#check-the-installation).
 
-The dashboard and tracing endpoint are available on localhost. Both databases use persistent volumes and private Docker networks. For a shared deployment, use your organization's HTTPS routing and backups, or [add Lens to your existing LiteLLM deployment](#configure-an-existing-proxy).
+The dashboard and tracing endpoint bind to localhost. Both databases use persistent volumes and private Docker networks. To make Lens available to a team or agents on other machines, follow [New shared deployment](#new-shared-deployment).
 
 ### 3. Open Lens
 
@@ -68,9 +79,36 @@ docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml down
 
 To start it again, repeat the `up -d --wait` command with the same environment file. Do not add `-v` to `down` unless you intend to delete the database volumes.
 
-## Add Lens to LiteLLM {#configure-an-existing-proxy}
+## New shared deployment {#new-shared-deployment}
 
-Keep your gateway, PostgreSQL database, model configuration, and encryption keys. Follow [Using Helm](#using-helm) if you deploy LiteLLM with Helm, or [Using Docker](#using-docker) if you run containers directly.
+Use this path to run LiteLLM and Lens for a team. Choose Helm for Kubernetes, or Docker for a server or container platform. You provide the hostname, HTTPS routing, persistent storage, and backups for your environment.
+
+### Kubernetes with Helm {#new-shared-helm}
+
+1. Follow the [LiteLLM production deployment guide](../deploy.md#provision-the-data-stores) to prepare PostgreSQL, Redis, secrets, and your chart's values file.
+2. Before running the guide's Helm install command, add Lens to that values file:
+
+```yaml
+lensWorker:
+  enabled: true
+```
+
+3. Configure the chart's ingress with your gateway hostname and TLS. With one hostname, the chart supplies the tracing address and routes `/lens-ingest` to Lens. For custom ingress, follow the [Lens routing settings](#using-helm).
+4. Install the matching published chart using the [Helm installation instructions](../deploy.md#deploy-with-helm), then [check the Lens installation](#check-the-installation).
+
+The same Helm installation starts LiteLLM and Lens. Lens's chart settings supply its shared service secret and a ClickHouse instance with persistent storage. The cluster needs a default storage class, or an explicit `lensWorker.clickhouse.storageClassName`. For a database or credentials you already manage, use [Existing storage and secrets](#existing-storage-and-secrets) before installing.
+
+### Docker on a server or container platform {#new-shared-docker}
+
+1. Deploy LiteLLM on your chosen host with PostgreSQL, a persistent master key and encryption key, and an HTTPS address. Use the [LiteLLM deployment guide](../deploy.md) for your platform.
+2. Follow [Using Docker](#using-docker) below to connect ClickHouse, start Lens, and route trace uploads to it. Keep LiteLLM and Lens on the same release.
+3. [Check the installation](#check-the-installation), then share the dashboard address with your team.
+
+This path uses the same Lens container as the local quickstart. You connect it to your hosted gateway and database and configure its public tracing address. The local quickstart's `localhost` addresses are only reachable on the machine running Docker.
+
+## Add Lens to an existing LiteLLM deployment {#configure-an-existing-proxy}
+
+Use this path whether your LiteLLM deployment runs on your machine, a server, or Kubernetes. Keep your gateway, PostgreSQL database, model configuration, and encryption keys. Follow [Using Helm](#using-helm) for a Helm installation, or [Using Docker](#using-docker) for containers you run directly.
 
 Use LiteLLM and Lens images from the same release. The published Helm chart supplies its matching Lens image. For Docker, choose the matching Lens image from the [release](https://github.com/BerriAI/litellm/releases), or [build it from source](#build-from-source).
 
@@ -78,7 +116,9 @@ Use LiteLLM and Lens images from the same release. The published Helm chart supp
 
 You need a ClickHouse HTTP URL with credentials. Lens creates its tables on startup, so its database user needs permission to create and alter tables, read data, and insert data. Use your existing ClickHouse service or follow the [ClickHouse installation guide](https://clickhouse.com/docs/install).
 
-Choose the public address agents will use. With your gateway hostname, route `/lens-ingest` to Lens on port 4318 and use `https://<your-host>/lens-ingest`. With a separate hostname, route `/v1/` to Lens and use `https://<your-trace-host>`. Keep `/internal/` private.
+For a **local deployment**, use `http://localhost:4318` as the public base URL when your agent and browser run on the Docker host. You do not need an HTTPS reverse proxy for this local connection.
+
+For a **shared deployment**, choose the HTTPS address your agents will use. With your gateway hostname, route `/lens-ingest` to Lens on port 4318 and use `https://<your-host>/lens-ingest`. With a separate hostname, route `/v1/` to Lens and use `https://<your-trace-host>`. Keep `/internal/` private.
 
 #### 1. Set the service connection on LiteLLM
 
@@ -88,7 +128,7 @@ Generate a shared service secret once and store it privately:
 openssl rand -hex 32
 ```
 
-Add these variables to LiteLLM's container configuration and redeploy it. Replace the URLs and use the secret you generated:
+Add these variables to LiteLLM's container configuration and redeploy it. Replace the URLs and use the secret you generated. For local agents, set `LITELLM_LENS_PUBLIC_URL` to `http://localhost:4318`:
 
 ```dotenv
 LITELLM_LENS_URL=http://lens-worker:4318
@@ -123,13 +163,13 @@ docker compose --env-file ~/lens.env \
 
 #### 3. Connect the network and check tracing
 
-The Compose file exposes Lens at `127.0.0.1:4318` on the Docker host. Point your host's HTTPS reverse proxy at that address. If LiteLLM or your reverse proxy runs in another container, [connect Lens to its Docker network](#docker-network) and use `http://lens-worker:4318` from that network. `localhost` inside a container refers to that container.
+The Compose file exposes Lens at `127.0.0.1:4318` on the Docker host. Local agents can use that address directly. For a shared deployment, point your host's HTTPS reverse proxy at it. If LiteLLM or your reverse proxy runs in another container, [connect Lens to its Docker network](#docker-network) and use `http://lens-worker:4318` from that network. `localhost` inside a container refers to that container.
 
-Apply the public route you chose above, then [check the installation](#check-the-installation). On a container host such as Render, run the Lens image as a web service on port 4318 with the same environment variables. Use `/health/live` for process health and `/health/ready` for readiness.
+For a shared deployment, apply the HTTPS route you chose above. Then [check the installation](#check-the-installation). On a container host such as Render, run the Lens image as a web service on port 4318 with the same environment variables. Use `/health/live` for process health and `/health/ready` for readiness.
 
 ### Using Helm
 
-Both `helm/litellm` and `helm/litellm-helm` support Lens. Keep your existing chart, release name, namespace, and values file.
+Both `helm/litellm` and `helm/litellm-helm` support Lens on local or hosted Kubernetes clusters. These steps add Lens to an existing Helm release. Keep your chart, release name, namespace, and values file. For a new release, follow [New shared deployment with Helm](#new-shared-helm).
 
 #### 1. Enable Lens
 
