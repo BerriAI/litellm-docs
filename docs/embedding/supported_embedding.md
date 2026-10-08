@@ -529,6 +529,7 @@ For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input elemen
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
 - **Gemini file references:** `files/abc123` (pre-uploaded via Gemini Files API)
+- **File content blocks:** `{"type": "file", "file": {...}}`, the same block chat completions take, when a media part needs an explicit MIME type or a video clip (see [below](#video-clips-and-explicit-mime-types))
 
 **Supported MIME types:** `image/png`, `image/jpeg`, `audio/mpeg`, `audio/wav`, `video/mp4`, `video/quicktime`, `application/pdf`
 
@@ -621,6 +622,70 @@ curl -X POST http://localhost:4000/embeddings \
 </Tabs>
 
 This is useful for representing multi-modal entities (e.g., a product with a name + photo) as a single vector for search and retrieval. Gemini API only. Vertex AI always returns a single combined vector regardless of input shape (see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal)).
+
+#### Video Clips and Explicit MIME Types
+
+A plain string element carries no options, so to embed one window of a video, or to name a MIME type LiteLLM cannot infer, pass the element as the OpenAI file content block that [chat completions](../providers/vertex#video-metadata-control) already take. The block works as a flat element and inside a nested list, and is forwarded as one Gemini `Part` carrying `videoMetadata`.
+
+| Field | Description |
+|-------|-------------|
+| `file.file_id` | `gs://bucket/clip.mp4` or a Gemini Files API reference `files/abc123` |
+| `file.file_data` | A data URI, `data:video/mp4;base64,<encoded_data>` |
+| `file.format` | Optional MIME type that overrides the one inferred from the extension or the data URI |
+| `file.video_metadata` | Optional `fps` (number), `start_offset` and `end_offset` (strings such as `"3s"`), converted to Gemini's `startOffset` and `endOffset` |
+
+Exactly one of `file_id` and `file_data` is required, and an unknown key anywhere in the block answers 400 naming it.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import embedding
+
+response = embedding(
+    model="gemini/gemini-embedding-2-preview",
+    input=[
+        {
+            "type": "file",
+            "file": {
+                "file_id": "files/abc123",
+                "video_metadata": {"fps": 1, "start_offset": "3s", "end_offset": "6s"},
+            },
+        },
+        "a solid blue clip",
+    ],
+)
+# response.data has 2 embeddings: the 3s-6s window of the video, then the text
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl -X POST http://localhost:4000/embeddings \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-embedding-2-preview",
+    "input": [[
+      {
+        "type": "file",
+        "file": {
+          "file_data": "data:video/mp4;base64,...",
+          "video_metadata": {"start_offset": "3s", "end_offset": "6s"}
+        }
+      },
+      "a solid blue clip"
+    ]]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+:::note[PDF OCR]
+The Gemini embeddings API always runs OCR on PDF inputs and has no parameter to turn it on or off, so there is nothing to pass for it.
+:::
 
 
 ## Vertex AI Embedding Models
