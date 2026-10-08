@@ -1088,6 +1088,49 @@ div[class*='announcementBar'] a:hover {
   background: #1a5fb4 !important;
 }
 
+/* Decisions launch bar: a faint wash of the theme accent (logo blue in
+   light, teal in dark) with the text in the accent itself. The whole bar
+   is the link: the stretched ::after covers the bar, and the close button
+   sits above it. */
+/* .theme-announcement-bar is the outer bar only. The older rules above also
+   match its inner placeholder and content divs, so reset those here. */
+.theme-announcement-bar:has(a.announcement-link) {
+  position: relative;
+  background: color-mix(in srgb, var(--ifm-color-primary) 9%, var(--ifm-background-surface-color)) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--ifm-color-primary) 22%, transparent) !important;
+}
+
+.theme-announcement-bar:has(a.announcement-link) div[class*='announcementBar'] {
+  position: static !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+div[class*='announcementBar'] a.announcement-link {
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none !important;
+  font-weight: 400 !important;
+  margin-left: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link:hover {
+  opacity: 1;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+div[class*='announcementBar'] button {
+  position: relative;
+  z-index: 1;
+  color: var(--ifm-color-emphasis-600);
+}
+
 /* Contact page cards */
 .contact-grid {
   display: grid;
