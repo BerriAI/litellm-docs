@@ -20,7 +20,7 @@ LiteLLM provides exact token counting by calling provider-specific token countin
 | OpenAI | [Responses API `/input_tokens`](https://platform.openai.com/docs/api-reference/responses/input-tokens) | OpenAI Responses |
 | Anthropic | [Messages `/count_tokens`](https://docs.anthropic.com/en/docs/build-with-claude/token-counting) | Anthropic Messages |
 | Vertex AI (Claude) | Vertex AI Partner Models Token Counter | Anthropic Messages |
-| Bedrock (Claude) | AWS Bedrock CountTokens API | Anthropic Messages |
+| Bedrock (Claude) | AWS Bedrock CountTokens API, then bedrock-mantle for a Claude model it rejects (see [Bedrock Claude models](#bedrock-claude-models)) | Anthropic Messages |
 | Gemini | Google AI Studio countTokens API | Anthropic Messages |
 | Vertex AI (Gemini) | Vertex AI countTokens API | Anthropic Messages |
 | Other providers | Local tiktoken fallback | N/A |
@@ -90,7 +90,7 @@ TokenCountResponse(
     total_tokens=15,           # Token count
     request_model="openai/{{openai_large}}",  # Model requested
     model_used="{{openai_large}}",      # Model used for counting
-    tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "local_tokenizer"
+    tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "bedrock_api", "bedrock_mantle_api", "local_tokenizer"
     original_response={"input_tokens": 15},  # Raw API response
     error=False,               # True if counting failed
     error_message=None,        # Error details if failed
@@ -111,6 +111,14 @@ print(result.tokenizer_type)  # "local_tokenizer"
 ```
 
 On the proxy, local counting runs in a worker thread, so a large payload does not hold up other requests. Each worker process counts at most `TOKEN_COUNTER_MAX_CONCURRENT_COUNTS` payloads at a time (default 4) and queues the rest, which bounds the memory a burst of large counts can take. Strings longer than `TOKEN_COUNTER_MAX_EXACT_CHARS` characters (default 4,000,000, roughly a million tokens) are estimated by tokenizing 16 evenly spaced samples that together total that many characters and scaling the result by the string's length, which keeps the cost of the largest payloads bounded.
+
+### Bedrock Claude models
+
+The bedrock-runtime CountTokens API rejects some Claude models with a 400 (Claude Opus 4.8, 5 and 5.5 when this was written). For a Claude model it rejects, LiteLLM sends the same body to bedrock-mantle (`https://bedrock-mantle.<region>.api.aws/anthropic/v1/messages/count_tokens`), signed with the deployment's AWS credentials, and reports `tokenizer_type: "bedrock_mantle_api"`. A model bedrock-runtime counts never reaches Mantle and keeps `tokenizer_type: "bedrock_api"`
+
+The credentials need the IAM action `bedrock-mantle:CountTokens` next to `bedrock:CountTokens`. Without it Mantle answers 403 and the count falls back to the local tokenizer, with both errors in the proxy log. A Bedrock API key (`AWS_BEARER_TOKEN_BEDROCK`) is sent to Mantle as the bearer token, so the same policy applies to it
+
+Set `BEDROCK_MANTLE_API_BASE` to send the Mantle call to another host, for example a VPC endpoint. The deployment's `api_base` and `aws_bedrock_runtime_endpoint` apply to bedrock-runtime only. A Claude model Mantle does not serve in the region, and any non-Claude model, keeps the local fallback
 
 ## Proxy Usage
 
