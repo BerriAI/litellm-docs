@@ -22,7 +22,7 @@ items={[
   { title: "Hybrid", icon: <Split size={18} />, tone: "chain", description: "Run v1 or v2 locally; ask the LLM near decision boundaries.", to: "#hybrid" },
   { title: "Capability", icon: <Target size={18} />, tone: "forecast", description: "Forecast whether an efficient solver can finish the task; otherwise use a capable solver.", to: "#capability" },
   { title: "Fuse v2", icon: <Combine size={18} />, tone: "forecast", description: "Compare two solver forecasts and choose within an acceptable quality gap.", to: "#fuse-v2" },
-  { title: "OSS classifier", icon: <Server size={18} />, description: "Connect to self-hosted Laya or Bespoke Nimble, or the hosted Jev classifier.", to: "#connect-a-self-hosted-classifier" },
+  { title: "OSS classifier", icon: <Server size={18} />, description: "Connect to self-hosted Laya, Bespoke Nimble or Strands Decider, or the hosted Cloudflare Clef and Jev classifiers.", to: "#connect-a-self-hosted-classifier" },
   { title: "Custom classifier", icon: <Braces size={18} />, description: "Route with your own Python plugin, configured at gateway startup.", to: "#custom-classifier-startup-configuration-only" },
 ]}
 />
@@ -396,9 +396,11 @@ Select **OSS Classifier**, choose **OSS provider**, then expand **Advanced setti
 | --- | --- | --- | --- |
 | Laya, self-hosted | `laya` | `english`, `multilingual`, `typed-decisions` | `LAYA_API_BASE`, optional `LAYA_API_KEY` |
 | Bespoke Nimble, self-hosted | `bespoke` | `nimble-latest`, `nimble`, `bespokelabs/Bespoke-Nimble-9B` | `BESPOKE_API_BASE`, optional `BESPOKE_API_KEY` |
+| Strands Decider, self-hosted | `strands_decider` | `strands-decider-2B-hobson-v19` by default, or the name your server reports | `STRANDS_DECIDER_API_BASE`, optional `STRANDS_DECIDER_API_KEY` |
+| Cloudflare Clef, Workers AI | `cloudflare` | `clef` by default, or `clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`; optional `CLOUDFLARE_API_BASE` |
 | Jev, hosted TypeSafe API | `jev` | `jev-latest` by default | `TYPESAFE_API_KEY`; optional `TYPESAFE_API_BASE`, default `https://api.typesafe.ai` |
 
-Set the environment on the gateway. An internal hostname is resolved from the gateway's host/container, not your browser. All three use `POST /v1/systemone`; set the base URL without that suffix.
+Set the environment on the gateway. An internal hostname is resolved from the gateway's host/container, not your browser. The self-hosted providers and Jev use `POST /v1/systemone`; set the base URL without that suffix. Clef uses Workers AI's `/ai/run/@cf/cloudflare/<model>` route under the account default or `CLOUDFLARE_API_BASE`.
 
 ```bash title="Laya connection on the gateway"
 export LAYA_API_BASE="http://laya-server:8000"
@@ -417,20 +419,20 @@ classifier_context_window_size: 3
 classifier_context_budget_chars: 8000
 ```
 
-For Nimble, change the provider to `bespoke` and model to a supported name your server serves. A `30000` ms timeout is a reasonable initial test value for that server, not the backend default. For Jev, select `jev` with `jev-latest` and configure the TypeSafe key.
+For Nimble, change the provider to `bespoke` and model to a supported name your server serves. A `30000` ms timeout is a reasonable initial test value for that server, not the backend default. For Strands Decider, select `strands_decider`, keep the default model unless your server reports another name, and start at `120000` ms on a CPU host. For Clef, select `cloudflare` with `clef` or `clef-flash` and configure the Cloudflare account and token. For Jev, select `jev` with `jev-latest` and configure the TypeSafe key. See [OSS classifiers](./decision_classifiers.md) for each provider's connection block.
 
 | UI label | Key under `opensource_classifier_config` | Default / behavior |
 | --- | --- | --- |
-| OSS provider | `provider` | `jev`; accepted values are `jev`, `laya`, `bespoke`. |
-| Classifier Model | `model` | Backend default `jev-latest`; explicitly select the appropriate model for Laya/Nimble. UI provider changes choose that provider's preset default. |
+| OSS provider | `provider` | `jev`; accepted values are `jev`, `laya`, `bespoke`, `strands_decider`, `cloudflare`. |
+| Classifier Model | `model` | Backend default `jev-latest`, `strands-decider-2B-hobson-v19` for `strands_decider` and `clef` for `cloudflare`; explicitly select the appropriate model for Laya/Nimble. Cloudflare accepts only `clef` and `clef-flash`. UI provider changes choose that provider's preset default. |
 | Classifier Timeout (ms) | `timeout_ms` | `3000`, positive integer. Raise it for cold or slower self-hosted inference, then measure. |
 | Classifier Instructions | `instructions` | Omit for built-ins; nonblank text replaces the opening instructions. Custom instructions follow the custom-tier allowance. |
 | Classifier circuit breaker | `circuit_breaker_enabled` | `true`; timeout protection as described for the LLM judge. |
 | Circuit breaker cooldown (seconds) | `circuit_breaker_cooldown_seconds` | `30`, strictly positive. |
-| Endpoint (YAML/admin API only) | `api_base` | Provider environment/default. Laya/Nimble require a reachable HTTP(S) base with no embedded credentials, query, or fragment. |
-| Credential (YAML/admin API only) | `api_key` | Provider environment when using its environment base. Optional for unauthenticated self-hosted servers; required for Jev. |
+| Endpoint (YAML/admin API only) | `api_base` | Provider environment/default. Laya/Nimble require a reachable HTTP(S) base with no embedded credentials, query, or fragment. Strands Decider has no default host. Cloudflare defaults to the `CLOUDFLARE_ACCOUNT_ID` Workers AI endpoint. |
+| Credential (YAML/admin API only) | `api_key` | Provider environment when using its environment base. Optional for unauthenticated self-hosted servers; required for Jev and Cloudflare. |
 
-An explicit `api_base` does **not** inherit the environment API key. Supply a matching explicit key when that endpoint requires authentication; Jev rejects an explicit base without an explicit key. The dashboard intentionally has no endpoint/key fields. Team members cannot set these overrides through management APIs.
+An explicit `api_base` does **not** inherit the environment API key. Supply a matching explicit key when that endpoint requires authentication; Jev and Cloudflare reject an explicit base without an explicit key. The dashboard intentionally has no endpoint/key fields. Team members cannot set these overrides through management APIs.
 
 The canonical keys are `oss_classifier` and `opensource_classifier_config`. Existing `jev`, `jev_classifier_config`, and provider `typesafe` aliases remain accepted; do not supply both classifier blocks.
 

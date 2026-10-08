@@ -42,7 +42,7 @@ Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/
 | Laya | `/laya/v1/systemone` | `LAYA_API_BASE`, optional `LAYA_API_KEY` |
 | Bespoke Nimble | `/bespoke/v1/systemone` | `BESPOKE_API_BASE`, optional `BESPOKE_API_KEY` |
 
-Laya, Nimble and Jev can also pick the model tier for Auto Router. For request examples and the classifier setup, see [Call a native decision API](./auto_router/decision_classifiers.md#call-a-native-decision-api)
+Laya, Nimble, Strands Decider, Clef and Jev can also pick the model tier for Auto Router. For request examples and the classifier setup, see [Call a native decision API](./auto_router/decision_classifiers.md#call-a-native-decision-api)
 
 ## Proxy setup
 
