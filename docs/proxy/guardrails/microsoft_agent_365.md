@@ -24,10 +24,10 @@ Per tool call
 1. LiteLLM admission: key or JWT check, then the key's MCP server and tool permissions. A bad credential fails here with the usual 401 or 403
 2. The guardrail reads the Entra token from `Authorization`. Missing or not a JWT: the call is refused
 3. OBO exchange, cached for the token's lifetime
-4. The pending call goes to Agent 365: tool name, arguments, server name, `conversationId`, the tool's description and input schema when the server published them, and the caller's key alias as the agent id when the key has one. The user's prompt is never sent
+4. The pending call goes to Agent 365: tool name, arguments, server name, `conversationId`, the tool's description and input schema when LiteLLM already has them from an earlier listing of the server's tools, and the caller's key alias as the agent id when the key has one. The user's prompt is never sent
 5. Allow with `defender.status: Evaluated`: LiteLLM runs the tool. Block: the call is refused with the Defender message and correlation id, and the MCP server is never contacted. Allowed but not evaluated (`Skipped`, `FailedOpen`): treated as unscanned, `unreachable_fallback` decides (blocked by default)
 
-How a refusal reaches the client depends on the route. `/mcp-rest/tools/call` answers with the HTTP status in [Failure behavior](#failure-behavior) and the full JSON body. On the `/mcp` transport the HTTP response is 200 and the tool result has `isError: true` with only the short error, for example `Error: Blocked by Microsoft Defender`; the Defender message and correlation id are on the [Logs row](#logs)
+How a refusal reaches the client depends on the route. `/mcp-rest/tools/call` answers with the HTTP status in [Failure behavior](#failure-behavior) and the full JSON body. On the `/mcp` transport the HTTP response is 200 and the tool result has `isError: true` with only the short error, for example `Error: Blocked by Microsoft Defender`. The full body, with the Defender message and correlation id, is in the error details of the call's [Logs row](#logs)
 
 ### MCP server auth types
 
@@ -37,8 +37,10 @@ The guardrail does not check the server's `auth_type`. It always takes the user 
 |-------------|--------------------|
 | `none`, `api_key`, `bearer_token`, `basic`, `authorization`, `token`, `aws_sigv4`, `oauth2` with `oauth2_flow: client_credentials` | Works. The upstream gets the server's own credential, never the user's Entra token. Don't list `Authorization` under `extra_headers`; forwarding another client header such as `x-api-key` is fine |
 | `oauth2_token_exchange` | Works. The same Entra token is the subject token LiteLLM exchanges for the upstream ([MCP OBO auth](/docs/mcp_obo_auth)) |
-| `true_passthrough`, `oauth_delegate`, or `Authorization` under `extra_headers` | Evaluated and blocked like any other server, but the user's Entra token is also forwarded to the upstream on every request, tool listing included. With JWT auth that token is also the user's LiteLLM credential. Avoid these |
-| `oauth2` with `oauth2_flow: authorization_code`, `oauth2_id_jag` | `Authorization` has to carry a token for the upstream or for the ID-JAG exchange, so it cannot also carry the gateway Entra token. Calls fail. Leave the guardrail off these servers or move them to `oauth2_token_exchange` |
+| `true_passthrough`, `Authorization` under `extra_headers` | Evaluated and blocked like any other server, but the user's Entra token is also forwarded to the upstream on every request, tool listing included. With JWT auth that token is also the user's LiteLLM credential. Avoid these |
+| `oauth_delegate` | Same as `true_passthrough` when the call carries a LiteLLM key in `x-litellm-api-key`: the Entra token is forwarded upstream. For JWT-only callers LiteLLM strips it. Avoid |
+| `oauth2` with `oauth2_flow: authorization_code` | LiteLLM drops the client's `Authorization` and sends the upstream the user's stored OAuth token for that server, so the Entra token can stay in `Authorization`. Calls fail before the guardrail runs until the user has a stored credential for the server ([MCP OAuth](/docs/mcp_oauth)) |
+| `oauth2_id_jag` | The Entra token in `Authorization` replaces the SSO assertion as the ID-JAG subject. It is not an ID token, so expect the identity provider to reject the exchange. Leave the guardrail off these servers or move them to `oauth2_token_exchange` |
 
 ## Prerequisites
 
@@ -142,7 +144,7 @@ An allowed call returns the tool result. A blocked one returns HTTP 400
 
 ## Logs
 
-Every guarded tool call, allowed, blocked or refused, on both `/mcp` and `/mcp-rest/tools/call`, gets a row under **Logs** in the Admin UI ([UI logs](/docs/proxy/ui_logs)). The row always shows the guardrail name, mode, duration and status: `success` for an allowed call, `guardrail_intervened` for a block or a refused caller, `guardrail_failed_to_respond` when Agent 365 could not be asked or throttled the call
+Every guarded tool call, allowed, blocked or refused, on both `/mcp` and `/mcp-rest/tools/call`, gets a row under **Logs** in the Admin UI ([UI logs](/docs/proxy/ui_logs)). The row always shows the guardrail name, mode and status, plus the duration of the Agent 365 evaluation when one was made. The status is `success` for an allowed call, `guardrail_intervened` for a Defender block, a refused caller or a request Agent 365 rejected, and `guardrail_failed_to_respond` when Agent 365 or Entra could not be asked, throttled the call, rejected the gateway's own credentials, or Defender did not evaluate. A refused call's error details carry the full error body, including the Defender message and correlation id of a block
 
 The guardrail's response on the row, with the verdict (`Allow`, `Block`, `Rejected`, `Throttled`, `Unavailable`, `Unscanned`), the Defender status, the correlation id, the latency and the failure reason, is stored only when `store_prompts_in_spend_logs` is on. Without it the response shows as `REDACTED_BY_LITELM`
 
@@ -200,7 +202,7 @@ Admitted by LiteLLM, then refused by the guardrail with no tool execution. `/mcp
 {"detail": {"error": "Agent 365 guardrail rejected the tool call", "message": "Tool call 'read_wiki_structure' was blocked because the caller did not present an Entra bearer token; the Agent 365 guardrail authorizes tool calls On-Behalf-Of the signed-in user.", "tool": "read_wiki_structure", "guardrail_name": "agent365-mcp", "guardrail_mode": "pre_mcp_call"}}
 ```
 
-On the `/mcp` transport the tool result is `isError: true` with `Error: Agent 365 guardrail rejected the tool call`. LiteLLM does not send a sign-in challenge, so the client has to obtain and attach the Entra token itself as in scenario B. The refusal only applies where the guardrail runs; the key keeps working on every LLM route and on tool calls the guardrail is not applied to
+On the `/mcp` transport the tool result is `isError: true` with `Error: Agent 365 guardrail rejected the tool call`. The guardrail does not send a sign-in challenge, so the client has to obtain and attach the Entra token itself as in scenario B. The refusal only applies where the guardrail runs; the key keeps working on every LLM route and on tool calls the guardrail is not applied to
 
 ### Two layers of authorization
 
@@ -229,14 +231,14 @@ The status codes below are what `/mcp-rest/tools/call` returns. On the `/mcp` tr
 | Defender blocks | HTTP 400 `Blocked by Microsoft Defender` with the Defender message and correlation id. Always blocks |
 | Agent 365 rejects the request (4xx other than 408/429) | HTTP 400 `Agent 365 rejected the tool evaluation request`. Always blocks |
 | Allowed but Defender did not evaluate (`Skipped`, `FailedOpen`) | `fail_closed` (default): HTTP 503. `fail_open`: allowed, recorded as unscanned |
-| No Entra token, or Entra rejects the caller's token (`invalid_grant`, expired, wrong audience, consent missing, malformed assertion) | HTTP 401 `Agent 365 guardrail rejected the tool call`, with the reason in the message. Always blocks |
+| No Entra token, or Entra rejects the caller's token (`invalid_grant`, expired, wrong audience, consent missing, malformed assertion) | HTTP 401 `Agent 365 guardrail rejected the tool call`. Always blocks. The message names only the Entra error code (`invalid_grant`, or `invalid_client` for a malformed assertion); the full `AADSTS` description is in the error details of the Logs row |
 | Entra rejects the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed` (default): HTTP 503 `Agent 365 guardrail could not authorize the tool call`, naming the setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt |
 | Agent 365 or Entra returns 408 or 429 | HTTP 503, recorded as Throttled. Always blocks |
 | Agent 365 or Entra unreachable, timeout, 5xx or unparseable verdict | `fail_closed` (default): HTTP 503. `fail_open`: allowed, recorded as unscanned |
 
 ### Watching fail-open calls
 
-With `fail_open`, every call let through unscanned is logged at error level with the reason, and its Logs row and OpenTelemetry span carry the status `guardrail_failed_to_respond`. Filter the Logs page on that status; a steady stream of rows means Agent 365 is not evaluating your tool calls. Fail-closed refusals carry the same status, so check the verdict (`Unscanned` or `Unavailable`, needs `store_prompts_in_spend_logs`) or the HTTP result to tell them apart
+With `fail_open`, every call let through unscanned is logged at error level with the reason, and its Logs row and OpenTelemetry span carry the status `guardrail_failed_to_respond`. Filter the Logs page on that status; a steady stream of rows means Agent 365 is not evaluating your tool calls. Fail-closed refusals carry the same status, so check the verdict (`Unscanned` or `Unavailable`) or the HTTP result to tell them apart. The span always carries the verdict; on the Logs row it needs `store_prompts_in_spend_logs`
 
 ## Conversation grouping
 
