@@ -1336,6 +1336,7 @@ const sidebars = {
         "providers/nvidia_riva",
         "providers/oci",
         "providers/ollama",
+        "providers/openinfer",
         "providers/openrouter",
         "providers/sarvam",
         "providers/ovhcloud",
