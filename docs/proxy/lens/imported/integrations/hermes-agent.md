@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/hermes-agent/README.md at 20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/hermes-agent/README.md at 79e58f44692b09a68b569ff104b36d0b00712272. Edit the source README. -->
 
 # Hermes Agent
 
@@ -16,9 +16,9 @@ Send [Hermes Agent](https://github.com/NousResearch/hermes-agent) traces to [Lit
 
 ## Prerequisites
 
-You need a LiteLLM gateway with [tracing enabled](/docs/proxy/lens/deployment#configure-an-existing-proxy), a LiteLLM key, and a configured model alias. The swarm example needs a model that supports tool calls. The Lens service receives and stores traces separately from the gateway and runs investigations. Generate a dedicated tracing key in **Lens > Traces > Set up tracing**.
+You need [Lens installed alongside LiteLLM](/docs/proxy/lens/deployment#configure-an-existing-proxy), a key with model access, and a configured model alias. The swarm example needs a model that supports tool calls. In **Lens > Traces > Set up tracing**, click **Generate tracing key** and copy the **Traces endpoint** under **Connection details**. Ask your administrator for these if you cannot create a tracing key.
 
-Install uv and Git. Hermes requires CPython 3.14 with the GIL; the checked-in `.python-version` selects it, and `uv python install 3.14` installs it if uv only finds a free-threaded build.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. Hermes requires CPython 3.14 with the GIL; the checked-in `.python-version` selects it, and `uv python install 3.14` installs it if uv only finds a free-threaded build.
 
 ## Configuration
 
@@ -34,17 +34,17 @@ HERMES_HOME="$PWD/home" uv run --package lens-hermes-agent-simple hermes plugins
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `hermes-agent/`. The plugin installs into `home/`, the Hermes home directory both examples use. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/hermes-agent/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `hermes-agent/`. The plugin installs into `home/`, the Hermes home directory both examples use. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/hermes-agent/.env.example) to `.env` if it does not exist, then set:
 
-| Variable              | Value                                                                                                                   |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4000`                          |
-| `LITELLM_API_KEY`     | Your LiteLLM model key                                                                                                  |
-| `LENS_URL`            | The ingestion URL from Lens tracing setup, for example `http://localhost:4318` or `https://gateway.example/lens-ingest` |
-| `LENS_TRACING_KEY`    | The dedicated tracing key from Lens tracing setup                                                                       |
-| `LITELLM_MODEL`       | A model alias configured on your gateway                                                                                |
+| Variable              | Value                                                                                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LITELLM_GATEWAY_URL` | Your gateway’s base URL without a trailing slash or `/v1`, for example `http://localhost:4000`                                                                                                    |
+| `LITELLM_API_KEY`     | Your LiteLLM model key                                                                                                                                                                            |
+| `LENS_URL`            | Copy **Traces endpoint** from Lens tracing setup and remove the final `/v1/traces`. Keep `/lens-ingest` if present. For example, `http://localhost:4318` or `https://gateway.example/lens-ingest` |
+| `LENS_TRACING_KEY`    | The dedicated tracing key from Lens tracing setup                                                                                                                                                 |
+| `LITELLM_MODEL`       | A model alias configured on your gateway                                                                                                                                                          |
 
-The checked-in values target a local development gateway. Replace them for your deployment. [home/hermes\_otel.yaml](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/hermes-agent/home/hermes_otel.yaml) sends traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
+The checked-in values target a local development gateway. Replace them for your deployment. [home/hermes\_otel.yaml](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/hermes-agent/home/hermes_otel.yaml) sends traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
 ## Run an example
 
@@ -56,7 +56,7 @@ One Hermes turn with no tools answers a question in a single model call.
 uv run --env-file .env --package lens-hermes-agent-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/hermes-agent/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/hermes-agent/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -66,7 +66,7 @@ The coordinator hands fact gathering and drafting to two subagents with `delegat
 uv run --env-file .env --package lens-hermes-agent-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/hermes-agent/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/hermes-agent/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -76,7 +76,7 @@ For the swarm, the first trace contains the `tool.delegate_task` call and one `s
 
 ## How tracing works
 
-hermes-otel turns Hermes lifecycle hooks into OpenInference and GenAI spans. Its spans carry no gateway response ID, so the examples route Hermes through the `litellm` provider in [home/plugins/model-providers/litellm](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/hermes-agent/home/plugins/model-providers/litellm/__init__.py). That provider gives each Hermes OpenAI client the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/20ab548e9b978fb6dfb681ca9b3e9f5736fb53e9/shared/README.md), which adds a request-attempt span with the gateway call ID under the active `api.<model>` span. hermes-otel never makes its spans current, so the provider looks up the active span for the request's Hermes session through hermes-otel's `get_current_traceparent`.
+hermes-otel turns Hermes lifecycle hooks into OpenInference and GenAI spans. Its spans carry no gateway response ID, so the examples route Hermes through the `litellm` provider in [home/plugins/model-providers/litellm](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/hermes-agent/home/plugins/model-providers/litellm/__init__.py). That provider gives each Hermes OpenAI client the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/shared/README.md), which adds a request-attempt span with the gateway call ID under the active `api.<model>` span. hermes-otel never makes its spans current, so the provider looks up the active span for the request's Hermes session through hermes-otel's `get_current_traceparent`.
 
 To trace your own Hermes install, copy the provider plugin into `~/.hermes/plugins/model-providers/`, install `gateway-tracing` into the Hermes environment, and select the `litellm` provider.
 

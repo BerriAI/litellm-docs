@@ -23,6 +23,28 @@ Before setup, click **Preview sample** beside the Lens title to explore sample t
 
 ## Get started
 
-[Deploy Lens](./deployment.md), then [send your first trace](./first-trace.md). Choose an integration from the sidebar for a runnable project.
+If your team already runs Lens, [send your first trace](./first-trace.md). Choose your framework, give the agent a name, and run the example.
+
+To install Lens, start with a [new deployment](./deployment/local.md) or [add Lens to your existing LiteLLM installation](./deployment.md#configure-an-existing-proxy). The deployment guide includes the commands and a connection check.
 
 Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
+
+## How Lens works
+
+**1. Capture your agent's traces**
+
+Send traces from your agent to Lens. Open a run to inspect its inputs, responses, and tool calls, along with latency and cost.
+
+![Lens Traces page showing support agent runs with inputs, duration, cost, findings, and user feedback.](/img/lens/overview-traces.webp)
+
+**2. Find where your agent falls short**
+
+Run an investigation to find problems across your traces. Review findings with examples, suggested fixes, and how often each problem occurs in the traces analyzed.
+
+![Lens finding showing repeated order lookups, a suggested handoff to support, and the share of affected traces.](/img/lens/overview-finding.webp)
+
+**3. Turn those runs into test cases**
+
+Save runs into a dataset and add the responses you expect. Export the dataset to test changes to your agent's prompts, tools, or models.
+
+![Lens dataset with support requests, recorded replies, expected responses, and an Export JSONL button.](/img/lens/overview-dataset.webp)

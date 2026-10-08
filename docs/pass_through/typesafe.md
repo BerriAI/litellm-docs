@@ -13,6 +13,8 @@ Just replace `https://api.typesafe.ai` with `LITELLM_PROXY_BASE_URL/typesafe` ðŸ
 
 LiteLLM adds the TypeSafe API key from the proxy environment, so clients only need a LiteLLM virtual key.
 
+To call Jev through your `model_list` with load balancing, fallbacks and per-deployment keys, or to send the same request to OpenAI, Perplexity, OpenRouter, Cloudflare or Strands Decider, use the unified [`/v1/systemone` endpoint](../decisions.md#v1systemone) instead. It takes the same System One body, and [`/v1/decisions`](../decisions.md#v1decisions) takes the OpenAI Decisions format
+
 To let JEV pick the model for a completion, configure the [JEV Auto Router](/docs/auto_router/setup#jev-classifier-typesafe-ai) with `classifier_type: jev` and `jev_classifier_config`. It uses one System One Choice question for the configured tiers, then dispatches to the selected completion model. See [routing context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier) and the [measured classifier comparison](/blog/jev-auto-router-benchmark)
 
 The [OSS classifier guide](/docs/auto_router/decision_classifiers) documents the canonical `classifier_type: oss_classifier` and `opensource_classifier_config.provider: jev` names, which require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). Both configurations use the TypeSafe transport; the new backend continues to accept the existing Jev names.

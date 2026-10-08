@@ -8,7 +8,7 @@ slug: "/proxy/lens/scalability"
 
 Lens stores two kinds of data. Traces and request logs live in ClickHouse, which is append-only and grows with traffic. Lenses, investigation jobs, findings, and worker state live in PostgreSQL, which is small and changes often. Each design rule below keeps the cost of a common operation tied to the work it actually does, so it does not grow with total retention, total traffic, or the number of lenses
 
-The Rust Lens service receives agent telemetry directly and owns ClickHouse access. LiteLLM handles model requests and PostgreSQL state; its trace reads go through the Lens service
+The Lens service receives agent traces directly and reads and writes them in ClickHouse. LiteLLM handles model requests and PostgreSQL state. The dashboard reads traces through LiteLLM, which retrieves them from Lens.
 
 ![Agents send traces to Lens and model requests to LiteLLM; Lens owns ClickHouse and LiteLLM owns PostgreSQL](/img/lens-architecture.svg)
 
@@ -103,7 +103,7 @@ In the chart each lens holds 100 findings and a 200 trace sample, about 400 KB o
 | 400 | 40 | 8.0 MB (20 lenses) | 100 ms | 160 MB (400 lenses) | 2.8 s |
 | 800 | 80 | 8.0 MB (20 lenses) | 112 ms | 320 MB (800 lenses) | 5.4 s |
 
-## Hot state is narrow and history is append-only {#narrow-hot-state}
+## Proposed: separate active jobs from history {#narrow-hot-state}
 
 A heartbeat or progress update should touch only what changed. Today a lens and all of its jobs, findings, and reservations are stored as one JSONB document. Every heartbeat rewrites the whole document, and every update to a lens contends on the same row
 
@@ -125,7 +125,7 @@ The target design moves leases and job progress into narrow rows. Findings, occu
 
 ![Lens state today in one JSONB document, versus the target with narrow job rows and append-only findings](/img/lens/scalability/hot-state.svg)
 
-## Trace lists use a time-ordered rollup {#trace-list-rollup}
+## Proposed: order trace summaries by start time {#trace-list-rollup}
 
 The trace list aggregates spans into one row per trace. Ordering that rollup by `(TeamId, ApiKeyHash, TraceId)` with no time column forces every page to aggregate the team's whole retention before filtering by start time. In the benchmark a one hour trace list page read all 150K of the team's traces in the rollup. The target design orders the rollup by team and trace start, so a page reads only the window it shows. This requires a new table and a backfill, so it ships separately from the query changes above
 
@@ -141,7 +141,7 @@ These results describe how cost scales on one machine with warm caches. Producti
 
 ## Load tests {#load-tests}
 
-Each design rule above has a load test that fails if the rule is broken. Each test measures the cost of an operation, adds data the operation should never touch, and asserts that the cost does not grow. Each was also run with its optimization reverted to confirm that it fails
+The implemented query and scheduling changes have the load tests below. Each test measures the cost of an operation, adds data the operation should never touch, and asserts that the cost does not grow. Each was also run with its optimization reverted to confirm that it fails.
 
 | Test | Adds | Measured with the design | With the design reverted |
 |---|---|---|---|

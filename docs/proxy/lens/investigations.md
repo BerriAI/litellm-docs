@@ -8,21 +8,22 @@ slug: "/proxy/lens/investigations"
 
 ## Run your first investigation
 
-### Connect the analyzer
+You need a [running Lens installation](./deployment.md), proxy administrator access, and at least one [recorded agent trace](./first-trace.md).
 
-Sign in as a proxy administrator and open **Lens > Investigations** under **Observability**. Once activity is available, click **Connect worker**. Choose an **Analysis model** and a **Monthly limit**, then click **Enable investigations**. This creates a virtual key restricted to your chosen model; analysis spend appears under that key in **Virtual Keys**. To use an existing virtual key, open **Advanced options**
+### 1. Enable investigations {#connect-the-analyzer}
 
-The [deployed Lens service](./deployment.md) connects automatically. Wait for **Worker connected**, then create an investigation. There is no Docker command or worker token to copy during this setup. Change the analysis key later through the worker's **Settings**
+1. Open **Lens > Investigations** under **Observability**.
+2. Click **Connect worker**.
+3. Choose an **Analysis model** and a **Monthly limit**, then click **Enable investigations**.
+4. Wait for **Worker connected**. Lens connects automatically once these settings are saved.
 
-Lens runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations, calls your chosen model through LiteLLM, and sends the results back. It keeps running when you close the dashboard
+This creates a virtual key restricted to your chosen model; analysis spend appears under that key in **Virtual Keys**. To use an existing virtual key, open **Advanced options**. Change the analysis key later through the worker's **Settings**.
 
-Each Lens service replica runs one investigation at a time. The investigation's concurrency setting controls how many traces it reviews simultaneously. More replicas allow more simultaneous investigations; their analysis costs share the assigned virtual key's budget
-
-### Choose the traces
+### 2. Choose the traces {#choose-the-traces}
 
 Click **New investigation**. In **Activity**, name the investigation and choose an **Agent**. The dropdown lists recorded agent names; leave it blank to include all accessible activity. Open **Advanced filters** to choose agent traces, LLM requests, or both, restrict the selection to a team, or add metadata conditions. Request analysis uses the request logs stored in ClickHouse. Metadata conditions match recorded keys and values exactly.
 
-### Describe what to check
+### 3. Describe what to check {#describe-what-to-check}
 
 Click **Continue** to open **Expectations**. Describe what your agent should do in **What should the agent be doing?**.
 
@@ -42,7 +43,7 @@ After setup, you can review these under **Criteria** and change them through **E
 
 ![Expected behavior and individual checks for an investigation.](/img/lens/investigation-expectations.png)
 
-### Start the run
+### 4. Start the run {#start-the-run}
 
 Click **Continue** to open **Run**. Set the time window and percentage of matching runs to analyze. By default, Lens reviews 100% of matching activity from the last day, with no count limit. The preview shows how many runs match and how many will be analyzed. Click **Open run** to inspect an example. Newly received traces need a two-minute settling period before they appear here.
 
@@ -71,3 +72,9 @@ Findings describe the reviewed sample. **Linked runs** counts cited supporting r
 If Lens flags expected behavior, explain why in **Feedback** and click **This is expected**. Lens uses that feedback in later investigations for the same lens.
 
 After you fix an issue, click **Mark resolved**. Lens can reopen it if the same issue appears in new runs.
+
+## How investigations run
+
+Lens runs on your infrastructure. It checks LiteLLM for scheduled or requested investigations, calls your chosen model through LiteLLM, and sends the results back. It keeps running when you close the dashboard.
+
+Each Lens service replica runs one investigation at a time. The investigation's concurrency setting controls how many traces it reviews simultaneously. More replicas allow more simultaneous investigations; their analysis costs share the assigned virtual key's budget.
