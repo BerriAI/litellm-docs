@@ -49,7 +49,7 @@ Requests use the connection stored for the LiteLLM user making the request. The 
 
 The exchanged short-lived Copilot token is cached in memory by each worker process until `expires_at` minus a 60-second safety margin. Disconnecting removes the stored connection. If GitHub rejects the token exchange with status 401, 403, or 404, LiteLLM clears the cached session and returns an error asking the user to reconnect
 
-Per-user requests use the API host returned by GitHub only when it is an HTTPS `githubcopilot.com` host or subdomain; otherwise LiteLLM uses `https://api.githubcopilot.com`. Give the deployment a public model alias such as `claude-copilot`
+Per-user requests use the API host returned by GitHub only when it is an HTTPS `githubcopilot.com` host or subdomain; otherwise LiteLLM uses `https://api.githubcopilot.com`. Claude Code and Claude Desktop require the public model name to begin with `claude-` or `anth-`; this is a client-side naming constraint. When using either client, give the deployment an alias such as `claude-copilot`
 
 ### Shared device login
 
