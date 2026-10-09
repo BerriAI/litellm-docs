@@ -20,17 +20,17 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models
 
-| Model | Context | Max output | Input / 1M tokens | Output / 1M tokens | Cached input / 1M tokens | Tools | `response_format` |
-|-------|---------|------------|-------------------|--------------------|--------------------------|-------|-------------------|
-| `reka/reka-flash-3` | 64k | 58,982 | $0.10 | $0.20 | n/a | No | `json_schema` |
-| `reka/reka-edge-2603` | 16k | 14,745 | $0.10 | $0.10 | n/a | Yes | `json_schema` |
-| `reka/deepseek4-flash` | 1M | 384,000 | $0.11 | $0.66 | $0.007 | Yes | `json_object`, `json_schema` |
-| `reka/deepseek-v4-pro` | 1M | 393,216 | $1.20 | $3.30 | $0.13 | Yes | `json_object`, `json_schema` |
-| `reka/glm5.3` | 262k | 131,072 | $1.17 | $3.96 | $0.234 | Yes | `json_object`, `json_schema` |
-| `reka/glm5.3-flash` | 262k | 131,072 | $0.15 | $0.50 | $0.03 | Yes | `json_object`, `json_schema` |
-| `reka/qwen3.8-27b` | 262k | 131,072 | $0.20 | $2.50 | $0.05 | Yes | No |
+| Model | Context | Max output | Tools | `response_format` |
+|-------|---------|------------|-------|-------------------|
+| `reka/reka-flash-3` | 64k | 58,982 | No | `json_schema` |
+| `reka/reka-edge-2603` | 16k | 14,745 | Yes | `json_schema` |
+| `reka/deepseek4-flash` | 1M | 384,000 | Yes | `json_object`, `json_schema` |
+| `reka/deepseek-v4-pro` | 1M | 393,216 | Yes | `json_object`, `json_schema` |
+| `reka/glm5.3` | 262k | 131,072 | Yes | `json_object`, `json_schema` |
+| `reka/glm5.3-flash` | 262k | 131,072 | Yes | `json_object`, `json_schema` |
+| `reka/qwen3.8-27b` | 262k | 131,072 | Yes | No |
 
-Rates and limits are from the live model feed on [developer.reka.ai/models](https://developer.reka.ai/models) at the time of writing and change as models are added and retired. `GET https://api.reka.ai/v1/models` is the authoritative list for your account, and each entry's `pricing`, `input_modalities`, `supported_features`, and `supported_sampling_parameters` tell you what that model accepts. Any id it returns works with the `reka/` prefix.
+Limits are from the live model feed on [developer.reka.ai/models](https://developer.reka.ai/models) at the time of writing and change as models are added and retired. `GET https://api.reka.ai/v1/models` is the authoritative list for your account, and each entry's `pricing`, `input_modalities`, `supported_features`, and `supported_sampling_parameters` tell you what that model accepts. Any id it returns works with the `reka/` prefix.
 
 `reka-flash-3` is a 21B reasoning model and is primarily English. `reka-edge-2603` is Reka's model for physical AI and accepts images and video alongside text. The DeepSeek and GLM models are reasoning models that also support `logprobs` (non-streaming only on `deepseek4-flash`). Reasoning models return their thinking trace as `message.reasoning_content` and accept `reasoning_effort` (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`); models without reasoning ignore it.
 
@@ -272,7 +272,7 @@ You can also add Reka from the Admin UI. Go to Models, then Add Model, pick Reka
 
 ## Cost Tracking
 
-Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka bills per token at each model's rate with no platform fee, and publishes the rates on [developer.reka.ai/models](https://developer.reka.ai/models) and in the `pricing` object of `GET /v1/models` (US dollars per token, as strings: `prompt`, `completion`, and `input_cache_read`). Pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it. The table above has the per-million rates; divide by 1,000,000 for the per-token value.
+Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka bills per token at each model's rate with no platform fee, and publishes the rates on [developer.reka.ai/models](https://developer.reka.ai/models) and in the `pricing` object of `GET /v1/models` (US dollars per token, as strings: `prompt`, `completion`, and `input_cache_read`). Pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it. Reka lists rates per million tokens; divide by 1,000,000 for the per-token value.
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
