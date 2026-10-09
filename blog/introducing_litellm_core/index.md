@@ -1,6 +1,6 @@
 ---
 slug: introducing-litellm-core
-title: "Introducing litellm-core: the first step toward a leaner SDK"
+title: "Introducing litellm-core: a 32% smaller SDK install"
 description: "Ongoing work to reduce LiteLLM's dependencies and installation footprint, improve runtime loading, and make imports faster"
 authors:
   - litellm
@@ -9,7 +9,7 @@ date: 2026-10-08
 
 We're introducing `litellm-core` as the first step in ongoing work to make the LiteLLM SDK leaner. We want applications to install fewer dependencies, use less disk space, and spend less time loading the SDK
 
-This first step delivers an **approximately 65.6 MB reduction** in installed disk space, including runtime dependencies, compared with baseline `litellm` in our source-build comparison. We'll continue building on that progress with further dependency reductions and improvements to how the SDK loads
+This first step delivers a **32.2% (approximately 65.6 MB) reduction** in installed disk space, including runtime dependencies, compared with baseline `litellm` in our source-build comparison. We'll continue building on that progress with further dependency reductions and improvements to how the SDK loads
 
 The first step separates SDK packaging from the existing distribution, removes mandatory AWS and Python Hugging Face tokenizer dependencies from core, and leaves out the bundled dashboard. Your application continues to use `import litellm`
 
@@ -41,9 +41,9 @@ Token counting remains available through the supported native and `tiktoken` pat
 
 Core also declares `python-dateutil` directly. Removing three mandatory packages does not mean exactly three fewer installed packages: the total depends on their transitive dependencies and the rest of the application's environment
 
-## Approximately 65.6 MB less installed disk space
+## 32.2% less installed disk space
 
-Our source-build comparison measured an **approximately 65.6 MB reduction** in installed disk space, including runtime dependencies. This is the first measured step in our ongoing work to reduce what applications need to install
+Our source-build comparison measured a **32.2% (approximately 65.6 MB) reduction** in installed disk space, including runtime dependencies. This is the first measured step in our ongoing work to reduce what applications need to install
 
 The comparison covers default installations without optional extras. Core retains the shared SDK APIs, excludes bundled dashboard assets and gateway CLI entry points, and makes AWS and Python Hugging Face tokenizer packages optional. Adding those packages changes the installation footprint
 
