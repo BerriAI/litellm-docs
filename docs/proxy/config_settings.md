@@ -441,6 +441,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | require_key_mcp_access_defined | boolean | `false` | If true, a key with an empty MCP server list no longer inherits its team's servers; the team becomes a ceiling and the key must grant MCP servers explicitly (directly or via an access group). See [MCP Permission Management](../mcp_control#require-keys-to-define-their-own-mcp-access) |
 | role_permissions | list | `null` | List of role-based permission configurations |
 | search_tools | list | `null` | List of search tool configurations for enabling web search capabilities |
+| safeguards_classifier_model | string | `null` (off) | A `model_name` from `model_list` that judges Claude Code auto mode tool calls for models without their own `safeguard_results`, such as open models on Fireworks. [Doc on Claude Code auto mode](../claude_code_auto_mode) |
 | token_rate_limit_type | string | `total` | Rate limit counting method: "total", "output", or "input" tokens |
 | use_redis_transaction_buffer | boolean | `false` | If true, buffers database transactions in Redis before writing |
 | use_shared_health_check | boolean | `false` | If true, uses Redis-backed shared health check state across multiple proxy instances |
