@@ -86,6 +86,32 @@ litellm --config config.yaml
 
 Make a request, and you'll see one trace per request in your backend.
 
+#### Send to more than one collector
+
+`OTEL_ENDPOINT` holds a single URL. To send every trace to several collectors at once, for example a Datadog Agent and Grafana Tempo, list them under `callback_settings.otel.exporters` in config.yaml and add `otel` to `callbacks`:
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["otel"]
+
+callback_settings:
+  otel:
+    exporters:
+      - kind: otlp_http
+        endpoint: http://datadog-agent:4318
+      - kind: otlp_grpc
+        endpoint: http://tempo:4317
+      - kind: otlp_http
+        endpoint: https://collector.example.com
+        headers: os.environ/COLLECTOR_HEADERS
+```
+
+Each entry becomes its own exporter, and every one of them receives the complete trace for each request, root span included. An entry takes a `kind` (`otlp_http`, `otlp_grpc`, or `http/json` for collectors that cannot decode protobuf), an `endpoint`, and optionally `headers` as comma-separated `key=value` pairs; `os.environ/VAR` keeps a header value out of the file. An `otlp_http` endpoint is a base URL that gets `/v1/traces` appended, so when a collector serves traces on another path, set `traces_endpoint` to the complete URL instead.
+
+The list is read only when `otel` is in `callbacks`; without it the proxy falls back to the `OTEL_*` variables, or prints spans to stdout when those are unset. Once the list is set it replaces `OTEL_EXPORTER`, `OTEL_ENDPOINT` and `OTEL_HEADERS` for traces, while [metrics](#metrics) and events keep going to the single `OTEL_*` destination. The list applies proxy-wide; a key or team cannot add a generic collector of its own (see [Per-key / per-team credentials](#per-key--per-team-credentials-multi-tenant)). OpenTelemetry v1 ignores the list.
+
+If you would rather keep one endpoint in LiteLLM, point `OTEL_ENDPOINT` at an [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) and list your backends as exporters in its `traces` pipeline; the collector then copies each trace to all of them.
+
 ### 2. Send traces to a specific tool (presets)
 
 For LLM observability tools, use a **preset**. A preset knows the tool's endpoint and emits attributes in the schema that tool expects. To enable one, add its name to `callbacks` in your config and set the tool's credentials as env vars.
@@ -251,7 +277,7 @@ litellm_settings:
   callbacks: ["langfuse_otel", "arize"]
 ```
 
-Each preset adds its own destination, so your spans reach all of them in parallel, each in that tool's native format.
+Each preset adds its own destination, so your spans reach all of them in parallel, each in that tool's native format. For several generic OTLP collectors rather than vendor tools, see [Send to more than one collector](#send-to-more-than-one-collector).
 
 :::
 
@@ -718,7 +744,7 @@ LITELLM_OTEL_V2=true
 LITELLM_OTEL_INTEGRATION_ENABLE_METRICS=true
 ```
 
-Metrics ship through the exporter you already configured for traces. `OTEL_EXPORTER` (`console`, `otlp_http`, `otlp_grpc`), `OTEL_ENDPOINT`, and `OTEL_HEADERS` decide where the metric stream goes exactly as they do for spans, so the collector that receives your traces receives the metrics too.
+Metrics ship through the exporter you already configured for traces. `OTEL_EXPORTER` (`console`, `otlp_http`, `otlp_grpc`), `OTEL_ENDPOINT`, and `OTEL_HEADERS` decide where the metric stream goes exactly as they do for spans, so the collector that receives your traces receives the metrics too. A `callback_settings.otel.exporters` list does not change this: it routes traces only, and metrics keep following the `OTEL_*` variables.
 
 ### What's recorded
 
@@ -967,7 +993,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
 | `LITELLM_OTEL_EXCLUDED_SERVICES` | none | Comma-separated datastores, `redis` and `postgres`, whose spans are not forwarded to key and team destinations. `callback_settings.otel.excluded_services` overrides it. See [Keep Redis and Postgres spans out of tenant traces](#keep-redis-and-postgres-spans-out-of-tenant-traces). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
-| `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. |
+| `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. For traces, a `callback_settings.otel.exporters` list replaces it; see [Send to more than one collector](#send-to-more-than-one-collector). |
 | `OTEL_HEADERS` (alias `OTEL_EXPORTER_OTLP_HEADERS`) | none | Comma-separated `key=value` auth headers for your backend. |
 | `OTEL_SERVICE_NAME` | `litellm` | `service.name` resource attribute shown in your backend. |
 | `OTEL_ENVIRONMENT_NAME` | none | `deployment.environment` resource attribute (e.g. `production`). |

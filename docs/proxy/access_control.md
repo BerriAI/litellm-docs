@@ -189,19 +189,18 @@ A team admin manages a specific team. They're like a team lead who can add peopl
 **What they can do:**
 - Add or remove team members from their team
 - Update team members' budgets and rate limits within the team
-- Change team rate limits (TPM/RPM) and allowed models
-- Keep or lower the team's `max_budget`
+- Change team rate limits (TPM/RPM) and the team's `max_budget`, limited to the fields a proxy admin enabled under [team admin editable fields](#choosing-what-team-admins-can-edit)
 - Create and delete keys for team members
 - Onboard a [team-BYOK](./team_model_add) model to LiteLLM (e.g. onboarding a team's finetuned model)
 - Configure [team member permissions](#team-member-permissions) to control what regular team members can do
 
 **What they cannot do:**
 - Create new teams
-- Raise the team's `max_budget` above its current value, or remove the budget cap (`max_budget: null`); only a proxy admin can do this
+- Raise the team's `max_budget` unless a proxy admin enabled `raise_max_budget`, or remove the budget cap (`max_budget: null`), which only a proxy admin can do
 - Add/remove global proxy models to their team
 
 :::info[Team budget raises]
-On `/team/update`, team admins may keep or lower `max_budget`. Raising it (or clearing the cap) is reserved for proxy admins so a team admin cannot grow spend authority on their own. Org-scoped teams must also stay within the organization budget.
+On `/team/update`, a team admin can only change the fields a proxy admin enabled under [team admin editable fields](#choosing-what-team-admins-can-edit). With `max_budget` enabled they may keep or lower it; raising it also needs the `raise_max_budget` entry and is capped by the organization's `max_budget` on org-scoped teams. Clearing the cap stays with proxy admins.
 :::
 
 **Who should be a team admin:** Team leads who need to manage their team's API access without bothering IT.
@@ -218,6 +217,32 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
 ```
 
 :::
+
+#### Choosing what team admins can edit
+
+By default team admins cannot change team settings at all: `/team/update` from a team admin returns 403 and names the setting a proxy admin needs to enable. A proxy admin picks the fields in the Admin UI under Settings > UI > "Team admin editable fields", or sets `team_admin_editable_team_fields` through the API. The same key also works under `general_settings` in the proxy config yaml; a value saved through the UI or API takes precedence over the yaml. The list applies to every team admin on the proxy, only for the teams they administer. Proxy admins and org admins are not affected by it.
+
+```shell
+curl -X PATCH 'http://localhost:4000/update/ui_settings' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_admin_editable_team_fields": ["tpm_limit", "rpm_limit", "max_budget", "raise_max_budget"]}'
+```
+
+Read the current value back with `GET /get/ui_settings`.
+
+| Entry | What a team admin may do on the teams they administer |
+|-------|-------------------------------------------------------|
+| `tpm_limit` | Change the team's tokens-per-minute limit on `/team/update` |
+| `rpm_limit` | Change the team's requests-per-minute limit on `/team/update` |
+| `max_budget` | Keep or lower the team's `max_budget` on `/team/update`. Raising or removing it still returns 403 |
+| `raise_max_budget` | Also raise `max_budget`. Only valid together with `max_budget`: the API returns 400 if it is enabled alone, and the UI checkbox sits under Max Budget and stays disabled until Max Budget is checked. Removing the budget (`max_budget: null`) always stays with proxy admins |
+| `projects` | Create and update projects for those teams (`/project/new`, `/project/update`) |
+| `member_key_budgets` | Update budget fields on keys owned by other members of those teams (`/key/update`) |
+
+A raise is capped by the organization's `max_budget` when the team belongs to an organization that has one: going above it returns 400 with `Team max_budget (...) exceeds organization's max_budget (...)`. Teams outside an organization, or in an organization without a budget, have no ceiling. Org-scoped teams must also stay within the organization's budget and TPM/RPM limits no matter who edits them.
+
+A team admin can check what they may edit on `/team/info`: `team_info.caller_edit_access` is `{"kind": "team_admin", "editable_fields": ["max_budget", "rpm_limit"], "may_raise_max_budget": true}` for an enabled team admin, `{"kind": "team_admin_disabled"}` when nothing is enabled, `{"kind": "unrestricted"}` for proxy and org admins, and `{"kind": "none"}` for everyone else.
 
 ---
 
@@ -347,9 +372,9 @@ Here's the quick version:
 | Manage teams in their org | ✅ | ❌ |
 | Manage their specific team | ✅ | ✅ |
 | Add/remove team members | ✅ (in their org) | ✅ (their team only) |
-| Keep / lower team `max_budget` | ✅ (in their org) | ✅ (their team only) |
-| Raise team `max_budget` | ✅ within org limits (org-scoped); proxy admin for standalone | ❌ (proxy admin only) |
-| Update team rate limits | ✅ (in their org) | ✅ (their team only) |
+| Keep / lower team `max_budget` | ✅ (in their org) | ✅ (their team only, when `max_budget` is [enabled](#choosing-what-team-admins-can-edit)) |
+| Raise team `max_budget` | ✅ within org limits (org-scoped); proxy admin for standalone | ✅ (their team only, when `raise_max_budget` is enabled; capped by the org budget) |
+| Update team rate limits | ✅ (in their org) | ✅ (their team only, when `tpm_limit` / `rpm_limit` are enabled) |
 | Create keys for team members | ✅ (in their org) | ✅ (their team only) |
 | View organization spend | ✅ (their org) | ❌ |
 | View team spend | ✅ (in their org) | ✅ (their team) |
@@ -480,7 +505,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
     -d '{"team_id": "01044ee8-441b-45f4-be7d-c70e002722d8", "member": {"role": "admin", "user_id": "john@company.com"}}'
 ```
 
-Now `john@company.com` is a team admin. They can manage the `engineering_team` (add members, update rate limits, keep or lower the team budget, create keys) but they can't touch other teams or raise the team budget above its current cap.
+Now `john@company.com` is a team admin. They can manage the `engineering_team` (add members, create keys, and change whichever team settings a proxy admin enabled under [team admin editable fields](#choosing-what-team-admins-can-edit)) but they can't touch other teams.
 
 Create a Virtual Key for the team admin:
 
@@ -527,7 +552,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 
 ### 6. `Team Admin` - Update Team Settings
 
-The team admin can update rate limits and keep or lower the team budget. Raising `max_budget` above the team's current value requires a proxy admin.
+This step needs a proxy admin to have enabled `rpm_limit` and `max_budget` under [team admin editable fields](#choosing-what-team-admins-can-edit). With those two entries the team admin can change the RPM limit and keep or lower the team budget; raising `max_budget` also needs the `raise_max_budget` entry.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
@@ -540,5 +565,5 @@ curl --location 'http://0.0.0.0:4000/team/update' \
     }'
 ```
 
-In this example, `max_budget: 100` succeeds only if the team's current budget is already `100` or higher (keep / lower). To raise the team budget, use a proxy admin key.
+In this example, `max_budget: 100` succeeds when the team's current budget is already `100` or higher. Going above the current budget needs `raise_max_budget` as well, and on an org-scoped team the new value must stay within the organization's `max_budget`. With no fields enabled the call returns 403 and tells the team admin which setting to ask a proxy admin for.
 
