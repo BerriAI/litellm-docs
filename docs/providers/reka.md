@@ -73,15 +73,26 @@ for chunk in response:
     print(chunk)
 ```
 
+`reka-flash-3` and the DeepSeek and GLM models reason before they answer. The thinking trace is returned as `reasoning_content` on the message (and streamed as `delta.reasoning_content`), and a small `max_tokens` can be used up by the trace before any answer is produced, leaving `content` empty with `finish_reason: length`. Leave `max_tokens` unset or generous on those models, or use `reka-edge-2603` when you need a short, direct reply.
+
 ### Function Calling
 
-Tool calling is supported on every model in the table above except `reka-flash-3`.
+Tool calling is supported on every model in the table above except `reka-flash-3`. Reka models are not in LiteLLM's model cost map yet, and LiteLLM only forwards `tools` to a model it knows supports function calling, so register the model first (on the proxy, set `supports_function_calling: true` under `model_info`, as shown in the proxy section below).
 
 ```python showLineNumbers title="Reka Function Calling"
 import os
+import litellm
 from litellm import completion
 
 os.environ["REKA_API_KEY"] = ""  # your Reka API key
+
+litellm.register_model({
+    "reka/reka-edge-2603": {
+        "litellm_provider": "reka",
+        "mode": "chat",
+        "supports_function_calling": True,
+    }
+})
 
 tools = [{
     "type": "function",
@@ -152,7 +163,7 @@ print(response.output_text)
 
 ### Anthropic Messages API
 
-Anthropic Messages requests are bridged the same way, so Anthropic-shaped clients can talk to Reka through LiteLLM.
+Anthropic Messages requests are bridged the same way, so Anthropic-shaped clients can talk to Reka through LiteLLM. On reasoning models the trace comes back as a `thinking` block ahead of the `text` block, so read the block types rather than assuming `content[0]` is text.
 
 ```python showLineNumbers title="Reka Anthropic Messages API"
 import asyncio
@@ -163,7 +174,7 @@ os.environ["REKA_API_KEY"] = ""  # your Reka API key
 
 async def main():
     response = await litellm.anthropic.messages.acreate(
-        model="reka/reka-flash-3",
+        model="reka/reka-edge-2603",
         messages=[{"role": "user", "content": "Say hello"}],
         max_tokens=64,
     )
@@ -184,6 +195,8 @@ model_list:
     litellm_params:
       model: reka/reka-edge-2603
       api_key: os.environ/REKA_API_KEY
+    model_info:
+      supports_function_calling: true  # lets the proxy forward `tools` to this deployment
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -255,7 +268,7 @@ curl http://localhost:4000/v1/messages \
   -H "anthropic-version: 2023-06-01" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "reka-flash-3",
+    "model": "reka-edge",
     "max_tokens": 64,
     "messages": [{"role": "user", "content": "Hello, how are you?"}]
   }'
@@ -268,7 +281,7 @@ You can also add Reka from the Admin UI. Go to Models, then Add Model, pick Reka
 
 ## Cost Tracking
 
-Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka bills per token at each model's rate with no platform fee, and publishes the rates on [developer.reka.ai/models](https://developer.reka.ai/models) and in the `pricing` object of `GET /v1/models` (US dollars per token, as strings: `prompt`, `completion`, and `input_cache_read`). Pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it. Reka lists rates per million tokens; divide by 1,000,000 for the per-token value.
+Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka bills per token at each model's rate with no platform fee, and publishes the rates on [developer.reka.ai/models](https://developer.reka.ai/models) and in the `pricing` object of `GET /v1/models` (US dollars per token, as strings: `prompt`, `completion`, and `input_cache_read`). Pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it, returning the amount in the `x-litellm-response-cost` response header and recording it in spend logs. Reka lists rates per million tokens; divide by 1,000,000 for the per-token value.
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
