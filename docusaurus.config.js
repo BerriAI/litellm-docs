@@ -108,6 +108,16 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
+          {from: '/docs/tutorials/proxy_features_safety', to: '/docs/learn/add-safety'},
+          {from: '/docs/tutorials/observability_evaluation', to: '/docs/learn/observe-and-evaluate'},
+          {from: '/docs/manage_with_ai_agents', to: '/docs/ai_tools'},
+          {from: '/docs/routing-load-balancing', to: '/docs/proxy/load_balancing'},
+          {from: '/docs/guides/retrieval_knowledge', to: '/docs/guides/tools_integrations'},
+          {from: '/docs/guides/security_network', to: '/docs/guides/security_settings'},
+          {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
@@ -447,8 +457,8 @@ const config = {
       },
       docs: {
         sidebar: {
-          // No collapse-sidebar toggle at the bottom of the sidebar
-          hideable: false,
+          // Collapse chevron at the bottom of the sidebar; see src/theme/DocSidebar
+          hideable: true,
         },
       },
       navbar: {

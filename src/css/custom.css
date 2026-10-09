@@ -2443,3 +2443,63 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 [data-theme='dark'] .themed-media--light {
   display: none;
 }
+
+/* =========================================
+   Sidebar section captions. Set in sidebars.js:
+   { type: "html", className: "sidebar-caption" } heads a set of top-level groups
+   (Get started, Products, Features, Developer Tools, Reference, More).
+   Group labels and cross-section links are styled above, with the
+   Enterprise pill.
+   ========================================= */
+.menu__list-item.sidebar-caption {
+  padding: 18px 12px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ifm-menu-color);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.menu > .menu__list > .menu__list-item.sidebar-caption:first-child {
+  padding-top: 4px;
+}
+
+/* Status tags after a sidebar label (sidebars.js className):
+   "sidebar-beta" and "sidebar-preview". */
+.sidebar-beta > .menu__link::after,
+.sidebar-preview > .menu__link::after {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.sidebar-beta > .menu__link::after {
+  content: "Beta";
+  background: #efe8fb;
+  color: #6b3fb8;
+}
+.sidebar-preview > .menu__link::after {
+  content: "Preview";
+  background: #efe8fb;
+  color: #6b3fb8;
+}
+[data-theme='dark'] .sidebar-beta > .menu__link::after,
+[data-theme='dark'] .sidebar-preview > .menu__link::after {
+  background: rgba(196, 166, 255, 0.14);
+  color: #c4a6ff;
+}
+
+
+/* Collapsed docs sidebar: a 40px strip for the expand chevron. Doubled
+   :root so it wins over the theme's own :root value, which loads later. */
+:root:root {
+  --doc-sidebar-hidden-width: 40px;
+}

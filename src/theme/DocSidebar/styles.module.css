@@ -72,8 +72,9 @@
   padding-top: 0.25rem;
 }
 
-/* Collapse chevron sits under the scroll area, like the docusaurus.io sidebar. */
-.sidebarContainer > button {
-  flex-shrink: 0;
-  width: 100%;
+
+/* Collapsed: the expand strip replaces the search box and the menu. */
+.sidebarContainerHidden {
+  visibility: hidden;
+  opacity: 0;
 }

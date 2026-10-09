@@ -1,6 +1,6 @@
 ---
 title: "[Beta] Auto Routing"
-sidebar_label: "[Beta] Auto Routing"
+sidebar_label: "Auto Routing (Beta)"
 ---
 
 import Image from '@theme/IdealImage';

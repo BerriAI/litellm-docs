@@ -1,3 +1,7 @@
+---
+sidebar_label: "Custom Formats (Adapters)"
+---
+
 # Call any LiteLLM model in your custom format
 
 Use this to call any LiteLLM supported `.completion()` model, in your custom format. Useful if you have a custom API and want to support any LiteLLM supported model.

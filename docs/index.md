@@ -431,7 +431,7 @@ items={[
 icon: "🔀",
 title: "Routing & Load Balancing",
 description: "Load balance across deployments and set automatic fallbacks.",
-to: "/docs/routing-load-balancing",
+to: "/docs/proxy/load_balancing",
 },
 {
 icon: "🔑",

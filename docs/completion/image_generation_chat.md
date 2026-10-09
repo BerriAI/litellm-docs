@@ -1,3 +1,7 @@
+---
+sidebar_label: "Image Generation in Chat"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

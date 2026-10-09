@@ -1,0 +1,57 @@
+.toggle {
+  display: none;
+}
+
+@media (min-width: 997px) {
+  .toggle {
+    display: flex;
+    flex-shrink: 0;
+    /* Stays in view while the announcement bar still pushes the sidebar down */
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    margin: 0;
+    padding: 0 16px;
+    border: 0;
+    border-top: 1px solid var(--ifm-toc-border-color);
+    background: var(--ifm-background-surface-color, transparent);
+    color: var(--ifm-menu-color);
+    cursor: pointer;
+  }
+
+
+  /* The same thin gradient edge and fill as the code blocks. On hover the
+     edge and chevron take the theme's primary color (the logo blue in light
+     mode). Its corners follow the monogram: 10% of the side. */
+  .box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 10%;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--aurora-code-bg), var(--aurora-code-bg)) padding-box,
+      var(--aurora-grad-border) border-box;
+    color: var(--ifm-color-emphasis-700);
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .toggle:hover .box,
+  .toggle:focus-visible .box {
+    background:
+      linear-gradient(var(--aurora-code-bg), var(--aurora-code-bg)) padding-box,
+      var(--ifm-color-primary) border-box;
+    color: var(--ifm-color-primary);
+  }
+
+  .toggle:focus-visible {
+    outline: 2px solid var(--ifm-color-primary);
+    outline-offset: -2px;
+  }
+}

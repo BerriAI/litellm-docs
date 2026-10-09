@@ -12,6 +12,7 @@ keywords:
     high availability,
     reliability,
   ]
+sidebar_label: "Routing Strategies"
 ---
 
 import Image from '@theme/IdealImage';
