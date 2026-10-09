@@ -1276,6 +1276,8 @@ const sidebars = {
         "providers/fal_ai",
         "providers/featherless_ai",
         "providers/fireworks_ai",
+
+        "providers/freeaiapikey",
         "providers/friendliai",
         "providers/galadriel",
         "providers/github",
