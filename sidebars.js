@@ -1358,6 +1358,7 @@ const sidebars = {
         "providers/ragflow",
         "providers/ragflow_vector_store",
         "providers/recraft",
+        "providers/reka",
         "providers/replicate",
         {
           type: "category",
