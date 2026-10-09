@@ -483,6 +483,23 @@ credential_list:
 - `credential_values`: Key-value pairs of credentials/secrets (supports `os.environ/` syntax)
 - `credential_info`: Key-value pairs of user provided credentials information.  No key-value pairs are required, but the dictionary must exist.
 
+#### Credential names are permanent
+
+Models and vector stores point at a credential by its `credential_name`, so the name can't change after the credential is created. `PATCH /credentials/{credential_name}` returns 400 when the body carries a different `credential_name`. Sending the same name, or leaving it out, still works
+
+To change how a credential shows up in the Admin UI, set its `display_name` instead. It is optional, doesn't have to be unique, and is trimmed. A blank value or one longer than 255 characters returns 400. On a PATCH, leaving `display_name` out keeps the current label and sending `null` clears it:
+
+```bash
+curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"display_name": "Azure EU (prod)", "credential_info": {}}'
+```
+
+The UI shows the display name wherever it lists credentials, with the credential name underneath, and keeps saving the credential name on models and vector stores
+
+Credentials defined in `credential_list` belong to `config.yaml`. `PATCH` and `DELETE` on them return 400, and the UI marks them with a Config badge and disables Edit and Delete, so change them in the file instead. `GET /credentials` and `GET /credentials/by_name/{credential_name}` report where each credential comes from in `source` (`db` or `config`), along with its `display_name`
+
 ### Load API Keys from Secret Managers (Azure Vault, etc)
 
 [**Using Secret Managers with LiteLLM Proxy**](../secret)
