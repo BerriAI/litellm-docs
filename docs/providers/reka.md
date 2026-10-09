@@ -18,8 +18,6 @@ import TabItem from '@theme/TabItem';
 
 **We support ALL Reka models, just set `reka/` as a prefix when sending requests**
 
-Reka's own ids carry no namespace, and the upstream API returns a 404 for a prefixed id such as `reka/glm5.3`. LiteLLM strips the `reka/` prefix before forwarding, so you always write `reka/<id>` on the LiteLLM side and Reka receives the bare `<id>`.
-
 ## Available Models
 
 | Model | Context | Max output | Input / 1M tokens | Output / 1M tokens | Cached input / 1M tokens | Tools | `response_format` |
