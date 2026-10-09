@@ -189,7 +189,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Credentials Management
 
-- List, create, get, relabel, and delete credentials for LLM providers. `list` shows each credential's display name and whether it comes from the database or `config.yaml`. Credential names can't change, so `update` only sets or clears the display name the Admin UI shows.
+- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name
 - Example:
 
   ```bash

@@ -485,9 +485,9 @@ credential_list:
 
 #### Credential names are permanent
 
-Models and vector stores point at a credential by its `credential_name`, so the name can't change after the credential is created. `PATCH /credentials/{credential_name}` returns 400 when the body carries a different `credential_name`. Sending the same name, or leaving it out, still works
+Models and vector stores reference a credential by `credential_name`, so it can't change after creation. A `PATCH` with a different `credential_name` returns 400
 
-To change how a credential shows up in the Admin UI, set its `display_name` instead. It is optional, doesn't have to be unique, and is trimmed. A blank value or one longer than 255 characters returns 400. On a PATCH, leaving `display_name` out keeps the current label and sending `null` clears it:
+To relabel a credential in the Admin UI, set `display_name` instead. It is optional, doesn't need to be unique, and is capped at 255 characters. On a `PATCH`, omit it to keep the current label or send `null` to clear it:
 
 ```bash
 curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
@@ -496,9 +496,7 @@ curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
   -d '{"display_name": "Azure EU (prod)", "credential_info": {}}'
 ```
 
-The UI shows the display name wherever it lists credentials, with the credential name underneath, and keeps saving the credential name on models and vector stores
-
-Credentials defined in `credential_list` belong to `config.yaml`. `PATCH` and `DELETE` on them return 405 Method Not Allowed with `Allow: GET`, and the UI marks them with a Config badge and disables Edit and Delete, so change them in the file instead. `GET /credentials` and `GET /credentials/by_name/{credential_name}` report where each credential comes from in `source` (`db` or `config`), along with its `display_name`
+Credentials in `credential_list` can only be changed in `config.yaml`. `PATCH` and `DELETE` on them return 405, the UI disables Edit and Delete, and a `display_name` set there is ignored. `GET /credentials` returns each credential's `display_name` and its `source`, either `db` or `config`
 
 ### Load API Keys from Secret Managers (Azure Vault, etc)
 
