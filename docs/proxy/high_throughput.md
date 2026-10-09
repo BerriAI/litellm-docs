@@ -12,8 +12,6 @@ Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](.
 
 ## Configure the gateway
 
-Each snippet shows the fields to update in `values.yaml`. Comments show the defaults in chart `1.104.2`.
-
 ### 1. Configure HPA
 
 **Use RPS and TPS targets to scale with traffic, alongside CPU and memory targets for resource use.** The HPA uses the metric that asks for the most replicas. This example targets 83 requests and 6.25 million tokens per second per pod.
