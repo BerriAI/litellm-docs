@@ -6,7 +6,9 @@ slug: "/proxy/lens/ci"
 
 # Run evals in CI
 
-Deploy your agent, run its saved Lens eval, and get a pass or fail with a link to the results. Lens loads the test cases, calls your agent, and checks the quality gates you saved with the eval.
+Deploy your agent, run its saved Lens eval, and get a pass or fail with a link to the results.
+
+The SDK runs **inside your CI runner**. It calls Lens to load the saved cases and calls your agent's HTTP API to execute them. Your agent runs on its own configured infrastructure. Lens scores the completed results, and the Action publishes the GitHub check and report link. The SDK does not call or provision a GitHub runner.
 
 :::info Preview
 
