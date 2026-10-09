@@ -2,7 +2,7 @@
 
 Performance test results for LiteLLM Gateway.
 
-## Load test {#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts}
+## High-throughput performance test results {#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts}
 
 **13.5 billion tokens per minute (TPM).**
 
@@ -19,15 +19,15 @@ Performance test results for LiteLLM Gateway.
 
 | Setting | Configuration |
 |---|---|
-| Deployment | [High-throughput Helm configuration](./proxy/high_throughput.md); 33 gateway pods, 4 workers per pod; 132 vCPU and 528 GiB memory requested in total |
-| Load | Distributed Locust with 30 workers; 3,000 users at one request per second each; 24 minutes 22 seconds |
-| Requests | `/v1/chat/completions`; 50K, 75K, and 100K-token prompts in equal shares; 50% streaming; `max_tokens: 16` |
-| Gateway features | Virtual-key authentication, budget checks, token counting, spend tracking, and metrics |
-| Model and network | In-process mock model; response caching disabled; public AWS Application Load Balancer; 60-second client timeout |
+| Deployment | 33 gateway pods; 4 workers, 4 vCPUs, and 16 GiB memory requested per pod |
+| Traffic | Distributed Locust with 30 load-generator workers; 3,000 users at one request per second each |
+| Requests | `/v1/chat/completions`; equal shares of 50K, 75K, and 100K-token prompts; 50% streaming; `max_tokens: 16` |
+| Model and network | In-process mock model; public AWS Application Load Balancer; 60-second client timeout |
+| Configuration | [High-throughput Helm values](./proxy/high_throughput.md); PostgreSQL and Redis; virtual-key budgets, token counting, spend tracking, and metrics; response caching disabled |
+| Duration | 24 minutes 22 seconds |
+| Measurement | Prometheus: throughput and gateway latency. Locust: client success and time to first token, including upload and load-balancer time |
 
-Prometheus measures throughput and gateway latency. Locust measures client success and time to first token, including request upload and the load balancer.
-
-## Realtime API {#realtime-api-benchmarks}
+## Realtime API performance test results {#realtime-api-benchmarks}
 
 **1,207 requests per second.**
 
@@ -42,12 +42,15 @@ Prometheus measures throughput and gateway latency. Locust measures client succe
 
 | Setting | Configuration |
 |---|---|
-| Deployment | 4 gateway instances, each with 4 vCPUs, 8 GB RAM, and 4 workers |
-| Load | Locust with 1,000 users and a 0.5 to 1 second pause between requests |
-| Endpoint | `/realtime` with a mock realtime endpoint |
-| Database | PostgreSQL; Redis disabled |
+| Deployment | 4 gateway instances; 4 workers, 4 vCPUs, and 8 GB RAM per instance |
+| Traffic | Locust; 1,000 users with a 0.5 to 1 second pause between requests |
+| Requests | `/v1/realtime` over persistent WebSockets; text requests for a two-sentence story with a random ID |
+| Model and network | Mock realtime endpoint |
+| Configuration | PostgreSQL; Redis disabled |
+| Duration | Not recorded |
+| Measurement | [Locust script](https://gist.github.com/AlexsanderHamir/73b83ada21d9b84d4fe09665cf1745f5): requests per second and latency through `response.done`, including connection setup when needed |
 
-## Short-prompt chat performance test results
+## Short-prompt chat performance test results {#short-prompt-chat-performance-test-results}
 
 **1,170 requests per second with 8 ms p95 gateway overhead across four instances.**
 
@@ -67,12 +70,13 @@ Prometheus measures throughput and gateway latency. Locust measures client succe
 
 | Setting | Configuration |
 |---|---|
-| Deployment | 2 or 4 gateway instances, each with 4 vCPUs and 8 GB RAM |
-| Load | Locust with 1,000 users and a 0.5 to 1 second pause between requests |
-| Endpoint | `/chat/completions` with a mock OpenAI endpoint |
-| Database | PostgreSQL; Redis disabled |
-
-Request latency measures the full request. Gateway overhead measures the processing time added by LiteLLM.
+| Deployment | 2 or 4 instances; 4 vCPUs and 8 GB RAM per instance. The 4-instance test uses 4 workers per instance; the 2-instance worker count is not recorded |
+| Traffic | Locust; 1,000 users with a 0.5 to 1 second pause between requests |
+| Requests | `/chat/completions`; the [4-instance script](https://gist.github.com/AlexsanderHamir/42c33d7a4dc7a57f56a78b560dee3a42) sends text with a random ID repeated 150 times. The 2-instance payload is not recorded |
+| Model and network | Mock OpenAI endpoint |
+| Configuration | PostgreSQL; Redis disabled |
+| Duration | Not recorded |
+| Measurement | Locust: request throughput and full request latency. Gateway overhead: `x-litellm-overhead-duration-ms` response header |
 
 ## Logging callback performance test results {#logging-callbacks}
 
@@ -84,4 +88,12 @@ Request latency measures the full request. Gateway overhead measures the process
 
 ### Methodology
 
-Each test compares the base proxy with a logging integration enabled. See [GCS bucket logging](./observability/gcs_bucket_integration.md) and [LangSmith logging](./observability/langsmith_integration.md) for configuration.
+| Setting | Configuration |
+|---|---|
+| Deployment | Not recorded |
+| Traffic | Not recorded |
+| Requests | Not recorded |
+| Model and network | Not recorded |
+| Configuration | Base proxy compared with [GCS bucket logging](./observability/gcs_bucket_integration.md) and [LangSmith logging](./observability/langsmith_integration.md) |
+| Duration | Not recorded |
+| Measurement | Requests per second and median request latency |
