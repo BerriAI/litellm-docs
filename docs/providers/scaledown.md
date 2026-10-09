@@ -159,16 +159,18 @@ response = completion(
 ```
 
 The message content is ScaleDown's `/extract` response:
-`{"entities": [...], "structured_result": {...}, "input_tokens": ...}`. Values
-inside `structured_result` for nested definitions are wrapped objects, not plain
-strings, for example:
+`{"entities": [...], "structured_result": {...}, "input_tokens": ...}`. LiteLLM
+passes it through unchanged. For nested definitions, `structured_result`
+currently holds the plain value plus a sibling `<field>_span_anchor` with the
+source span, for example:
 
 ```json
-{"structured_result": {"invoice": {"vendor": {"_value": "Northwind", "_span_anchor": "Invoice from Northwind"}}}}
+{"structured_result": {"invoice": {"vendor": "Northwind", "vendor_span_anchor": "Invoice from Northwind", "amount": 500}}}
 ```
 
-Read the value from `_value`. The wrapper shape is ScaleDown's and is passed
-through unchanged.
+Values keep the type ScaleDown extracts, so `amount` above is a number. Earlier
+responses wrapped each value as `{"_value": ..., "_span_anchor": ...}`; parse
+defensively if you depend on the nested shape.
 
 ## Summarization
 
@@ -192,7 +194,7 @@ response = completion(
 `compress` sends earlier messages as `context` and the last user message as
 `prompt`. Pass `compression_rate` as `"auto"` (the default) or a number between
 0 and 1. The content is ScaleDown's `/compress/raw/` response, with the result
-in `compressed_prompt`.
+in `results.compressed_prompt`.
 
 ```python
 response = completion(
