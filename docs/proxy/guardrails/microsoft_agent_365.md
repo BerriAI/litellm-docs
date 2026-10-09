@@ -194,7 +194,7 @@ Take `<server_id>` from `GET /v1/mcp/server`. Use `https://login.microsoftonline
 
 A script, or an MCP client with a static header, gets a gateway-audience token with MSAL or the Azure CLI (pre-authorized in prerequisite step 4) and sends it next to the LiteLLM key, exactly as in the Quick Start. The client owns refresh; Entra access tokens live about an hour. The same headers work on the `/mcp` transport and in `claude mcp add ... -H "Authorization: Bearer $TOKEN"`. The REST facade is documented on [MCP REST API](/docs/mcp_rest_api)
 
-The guardrail does not send a sign-in challenge, so a call with only a LiteLLM key is refused with 401 (see [Failure behavior](#failure-behavior)) until the client attaches the Entra token itself
+The guardrail does not send a sign-in challenge, so a call with only a LiteLLM key is refused until the client attaches the Entra token itself. `/mcp-rest/tools/call` answers 401 and `/mcp` returns an `isError` tool result, see [Failure behavior](#failure-behavior)
 
 ### Two layers of authorization
 
