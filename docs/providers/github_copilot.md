@@ -39,8 +39,6 @@ response = completion(
 print(response)
 ```
 
-
-
 ```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming"
 from litellm import completion
 
@@ -323,3 +321,4 @@ extra_headers = {
     "user-agent": "GitHubCopilotChat/0.26.7"           # User agent
 }
 ```
+
