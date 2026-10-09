@@ -44,9 +44,10 @@ reachable on `api.scaledown.xyz` at the time of writing.
 | `scaledown/summarize` | Abstractive summarization |
 | `scaledown/compress` | Prompt and context compression |
 
-Every model returns the upstream payload as a JSON string on
-`choices[0].message.content`, so parse that to get the structured object.
-LiteLLM does not reshape it.
+Every model returns its result as a JSON string on
+`choices[0].message.content`, so parse that to get the structured object. For
+extract this is the extracted fields; for the others it is ScaleDown's response
+unchanged, which is also on `response._hidden_params["scaledown_response"]`.
 
 ## Decisions: `classify` and `decisions`
 
@@ -158,19 +159,17 @@ response = completion(
 )
 ```
 
-The message content is ScaleDown's `/extract` response:
-`{"entities": [...], "structured_result": {...}, "input_tokens": ...}`. LiteLLM
-passes it through unchanged. For nested definitions, `structured_result`
-currently holds the plain value plus a sibling `<field>_span_anchor` with the
-source span, for example:
+The message content is the extracted fields as JSON, shaped like the
+`response_format` schema you passed, so it validates against it. Local `$ref`
+and `$defs` in the schema are followed. ScaleDown's span anchors
+(`<field>_span_anchor`) and `_value` wrappers are removed from the content; the
+untouched `/extract` payload, with entities, confidences and spans, is on
+`response._hidden_params["scaledown_response"]`.
 
-```json
-{"structured_result": {"invoice": {"vendor": "Northwind", "vendor_span_anchor": "Invoice from Northwind", "amount": 500}}}
+```python
+fields = json.loads(response.choices[0].message.content)
+spans = response._hidden_params["scaledown_response"]["structured_result"]
 ```
-
-Values keep the type ScaleDown extracts, so `amount` above is a number. Earlier
-responses wrapped each value as `{"_value": ..., "_span_anchor": ...}`; parse
-defensively if you depend on the nested shape.
 
 ## Summarization
 
