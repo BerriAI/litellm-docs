@@ -48,7 +48,7 @@ litellm_settings:
 
 ## Register an Entra application
 
-Register an app in Microsoft Entra ID for the on-behalf-of flow. Add the delegated Microsoft Graph permissions required by the Copilot Chat API in your tenant and grant admin consent. The LiteLLM implementation and the merged LiteLLM PR description do not specify an exact permission list, so confirm the required permissions with your Entra administrator rather than inferring them from this page.
+Register an app in Microsoft Entra ID for the on-behalf-of flow. Add the delegated Microsoft Graph permissions `Sites.Read.All`, `Mail.Read`, `People.Read.All`, `OnlineMeetingTranscript.Read.All`, `Chat.Read`, `ChannelMessage.Read.All`, and `ExternalItem.Read.All`. Grant admin consent for all of them.
 
 Expose an API scope named `access_as_user`, create a client secret, and configure the app for public client flows if you will use device-code sign-in. For Claude Desktop, add the redirect URI `http://127.0.0.1/callback`. If your JWT claim mapping uses them, add the optional `email` and `groups` claims to access tokens.
 
