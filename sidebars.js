@@ -170,6 +170,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/repelloai", customProps: { icon: "/img/integrations/repello.png" } },
           { type: "doc", id: "proxy/guardrails/promptguard", customProps: { icon: "/img/integrations/prompt-security.png" } },
           { type: "doc", id: "proxy/guardrails/pii_masking_v2", customProps: { icon: "/img/integrations/microsoft.png" } },
+          "proxy/guardrails/maskflow",
           { type: "doc", id: "proxy/guardrails/panw_prisma_airs", customProps: { icon: "/img/integrations/panw.png" } },
           { type: "doc", id: "proxy/guardrails/secret_detection", customProps: { icon: "/img/integrations/litellm.png" } },
           { type: "doc", id: "proxy/guardrails/sensitive_data_routing", customProps: { icon: "/img/integrations/litellm.png" } },
