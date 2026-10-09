@@ -21,6 +21,8 @@ uv add litellm
 
 You can also use `pip install litellm`.
 
+For a leaner default installation, use [LiteLLM Core](./litellm_core.md) in a fresh environment. It keeps the same `litellm` imports and makes AWS and Python Hugging Face tokenizer dependencies optional. Install one distribution per environment: `litellm` and `litellm-core` cannot coexist
+
 ## Make a request
 
 Set the API key of your provider. Then call `completion()` with a model name in the format `provider/model`:
