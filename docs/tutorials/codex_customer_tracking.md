@@ -16,8 +16,10 @@ Codex has no setting that puts an end user in the request body, so without a hea
 
 Use this to attribute costs to specific customers or end-users. `x-litellm-customer-id` and `x-litellm-end-user-id` both land as the end user of the spend row.
 
+Set `model` to a model name configured on your LiteLLM proxy; this example uses the shared OpenAI model default.
+
 ```toml
-model = "gpt-5.3-codex"
+model = "{{openai_large}}"
 model_provider = "litellm"
 
 [model_providers.litellm]

@@ -18,6 +18,7 @@
     "check:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs --check",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
+    "test:docs-models": "python3 scripts/test_docs_models.py && node --test scripts/docs-models.test.cjs",
     "generate:social-card": "node scripts/social-card/index.cjs",
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
     "test:optimize-images": "node --test plugins/optimize-images.test.cjs",
