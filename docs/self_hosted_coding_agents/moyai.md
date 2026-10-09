@@ -1,13 +1,14 @@
 ---
 title: Moyai
 sidebar_label: Moyai
-description: Give Moyai a coding task in Slack or your browser. Run it in your cloud, choose the harness and model through LiteLLM, and review the pull request.
+description: Run open source coding agents in your cloud, choose models through LiteLLM, and track each teammate's costs. See Moyai in action and set up your first task.
 hide_title: true
 hide_table_of_contents: true
 ---
 
-import {CostHero, BenefitGrid, GuideCards} from '@site/src/components/Moyai';
+import {CostHero, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
 import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
+import Image from '@theme/IdealImage';
 import styles from '@site/src/components/Moyai/styles.module.css';
 import Heading from '@theme/Heading';
 
@@ -17,33 +18,68 @@ import Heading from '@theme/Heading';
   <Heading as="h2" id="why-moyai">Why Moyai</Heading>
   <BenefitGrid />
   <GuideCards />
+  <p className={styles.setupRequirements}>Start with a Modal account and a LiteLLM gateway. The setup guide verifies a cloud task before you connect a repository.</p>
 </section>
 
 ## Watch a task go from request to PR {#watch-a-task}
 
-Follow a bug fix across Slack and the web: the investigation, regression tests, and pull request. Send a correction or follow-up in the same conversation.
+See a team ask Moyai to investigate a bug, run regression tests, and return a pull request to Slack. You can follow the work in the browser and send a correction in the same conversation.
 
 <BugWorkflowDemo />
 
-## Put Moyai to work
+## See what each teammate spends {#see-agent-spend}
 
-Start with a bounded change in a repository you know. Include the expected behavior and the checks you want the agent to run.
+Use Moyai's spend dashboard to find the users, sessions, and models behind your model bill. Moyai records LiteLLM's reported charge for each tracked request, so you can trace a total back to the same cost data.
 
-| Task | Example request | Review the result |
-|---|---|---|
-| Fix a bug | “Reproduce this issue, add a regression test, fix it, and open a PR.” | Reproduction, test output, and diff |
-| Update a dependency | “Upgrade this package, address breaking changes, and run the affected tests.” | Lockfile, compatibility changes, and test results |
-| Investigate a failure | “Read this failing CI job and identify the cause. Show the evidence before changing code.” | Logs, explanation, and proposed fix |
+<figure className={styles.spendFigure}>
+  <Image
+    img={require('../../img/moyai_spend_users.jpg')}
+    alt="Moyai's LLM spend by user table showing each teammate's recorded cost, session count, model requests, and share of team spend."
+    style={{width: '100%', display: 'block'}}
+  />
+  <figcaption>Moyai's spend dashboard with sample data. Names and figures illustrate the interface; they are not LiteLLM's production usage or evidence for the savings estimate above.</figcaption>
+</figure>
 
-Connect only the apps and repositories the task needs. Enabled app tools can write under their connection policy without a per-use approval prompt. You control access in **Connections**, and GitHub PR approval and merging remain human steps.
+[Check a request against LiteLLM](./moyai/setup.md#track-spend). The [cost accounting guide](./moyai/architecture.md#cost-accounting) explains coverage and missing receipts. Cloud hosting and storage costs remain separate from these model charges.
 
-## Start with one cloud task {#prerequisites}
+## Start with a bug your team already knows {#put-moyai-to-work}
 
-Bring a Modal account, a reachable LiteLLM gateway, and a key for your chosen model. The [setup guide](./moyai/setup.md) walks through deployment, a cloud task, and your first repository connection.
+After the setup checks pass, connect one repository and give Moyai a small, reproducible issue:
 
-Moyai suits a trusted team willing to run its own service. You own updates, credentials, backups, and compute costs. Model requests still go to the provider you select; self-hosting does not keep those requests inside your cloud account.
+> Reproduce this bug, add a regression test, fix it, and open a pull request. Include the failing test before the fix and the passing result afterward.
 
-Read the [architecture guide](./moyai/architecture.md) for the system diagram, checkpoint storage, and recovery behavior.
+Review the diff and test output, then check the session's model cost in Moyai. Use that first result to decide which tasks to delegate next.
+
+## Before you set it up {#prerequisites}
+
+<div className={styles.questions}>
+<details>
+<summary>What do I need to get started?</summary>
+
+A Modal account, a cloud-reachable LiteLLM gateway, and a virtual key for your chosen model. The [setup guide](./moyai/setup.md) walks through installation and a cloud task. Opening GitHub PRs also requires an organization-owned GitHub App; verify the first task before connecting a repository.
+
+</details>
+<details>
+<summary>What will I pay for?</summary>
+
+Model usage plus hosting, agent sandboxes, and storage. Your workload and model choices determine the bill. The $700/day figure is our team's estimate, not a starting price or a promise about your costs. Measure your own tasks before expanding the rollout.
+
+</details>
+<details>
+<summary>What does my team maintain?</summary>
+
+You manage the service, including deployments, updates, credentials, and backups. Moyai fits a trusted engineering team willing to operate its own cloud agent. The [architecture guide](./moyai/architecture.md) explains deployment choices, checkpoints, and recovery before you commit to running it.
+
+</details>
+<details>
+<summary>Can I choose what the agent can access?</summary>
+
+Select the apps and repositories in **Connections**. Enabled app tools can write under their connection policy without a per-use approval prompt. You review and merge GitHub PRs. Model requests go through your LiteLLM gateway to the provider you select, so account for that provider when deciding what code to share.
+
+</details>
+</div>
+
+<SetupCallout />
 
 <details>
 <summary>Looking for the previous gateway instructions?</summary>

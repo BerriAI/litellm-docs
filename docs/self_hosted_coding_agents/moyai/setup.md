@@ -168,7 +168,7 @@ An organization owner or someone with permission to register and install the org
 
 ## 7. Check the spend {#track-spend}
 
-In Moyai, open **Settings > Spend** to inspect costs by user, session, and model. In the LiteLLM Admin UI, open **Logs > Filters** and set **Key Alias** to `moyai`.
+As a Moyai administrator, open **Settings > Administration > Spend & usage** to inspect costs by user, session, and model. Members can see their own costs under **Settings > Workspace > Spend**. In the LiteLLM Admin UI, open **Logs > Filters** and set **Key Alias** to `moyai`.
 
 <Image
   img={require('../../../img/moyai_gateway_logs.png')}
