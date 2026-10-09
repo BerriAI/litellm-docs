@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/local"
 
 # Local quickstart
 
-Start Lens and ClickHouse with Git and Docker Compose v2. This source preview builds the current Lens checkout; an independently published release bundle is still being qualified. You do not need a LiteLLM gateway or PostgreSQL.
+Start Lens and ClickHouse with Git and Docker Compose v2. This source preview requires access to the internal [Lens repository](https://github.com/BerriAI/lens) and builds its current checkout; an independently published release bundle is still being qualified. You do not need a LiteLLM gateway or PostgreSQL.
 
 ## Start Lens
 
