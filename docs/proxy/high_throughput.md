@@ -1,7 +1,5 @@
 # Scale for high-throughput workloads
 
-Use this Helm configuration for high request volumes and large prompts. It runs four gateway workers per pod, shares database connections, and uses separate containers for metrics and spend processing.
-
 Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
 ## Requirements
@@ -12,51 +10,24 @@ Start with a working [microservices Helm deployment](./deploy.md#deploy-with-hel
 - Prometheus Operator to scrape each pod through a ServiceMonitor.
 - Prometheus Adapter with the [RPS and TPS rules](./deploy.md#scale-on-requests-and-tokens-per-pod) for request and token autoscaling.
 
-Keep metrics port `4001` on the internal cluster network. Its endpoint allows unauthenticated Prometheus scrapes.
-
 ## Configure the gateway
 
-Merge these settings into your existing `values.yaml`. Keep your database, Redis, secrets, ingress, and `gateway.config.proxy_config.model_list` settings. Preserve existing entries when updating the `extraEnv` and `callbacks` lists. Match `gateway.serviceMonitor.labels` to your Prometheus instance's ServiceMonitor selector.
+Each snippet shows the fields to update in `values.yaml`.
 
-```yaml title="values.yaml"
-database:
-  connectionPool:
-    enabled: true
-    maxDbConnections: 8
-    maxClientConn: 1000
+### 1. Scale on requests per second
 
+**Set a request-rate target per pod so capacity scales with traffic.** This example targets 83 requests per second per pod. The HPA also tracks tokens, CPU, and memory, and uses the metric that asks for the most replicas.
+
+```yaml
 gateway:
-  numWorkers: 4
-  logLevel: ERROR
-  extraEnv:
-    - name: LITELLM_RUST
-      value: "1"
-    - name: KEEPALIVE_TIMEOUT
-      value: "75"
-
-  metricsServer:
-    enabled: true
-  serviceMonitor:
-    enabled: true
-  collector:
-    enabled: true
-
-  resources:
-    requests:
-      cpu: "4"
-      memory: 16Gi
-    limits:
-      cpu: "16"
-      memory: 16Gi
-
   hpa:
     enabled: true
     minReplicas: 2
     maxReplicas: 200
-    targetCPUUtilizationPercentage: 60
-    targetMemoryUtilizationPercentage: 80
     targetRequestsPerSecond: "83"
     targetTokensPerSecond: "6.25M"
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 80
     behavior:
       scaleUp:
         stabilizationWindowSeconds: 0
@@ -73,17 +44,87 @@ gateway:
           - type: Percent
             value: 25
             periodSeconds: 60
+```
 
+Configure the [Prometheus Adapter rules](./deploy.md#scale-on-requests-and-tokens-per-pod) to expose these metrics to Kubernetes. Token metrics update when responses finish, so use both request and token targets for streaming traffic.
+
+### 2. Set workers and resources
+
+Run four workers per pod. Request 4 vCPUs and 16 GiB of memory, with a 16-vCPU limit for bursts.
+
+```yaml
+gateway:
+  numWorkers: 4
+  logLevel: ERROR
+  resources:
+    requests:
+      cpu: "4"
+      memory: 16Gi
+    limits:
+      cpu: "16"
+      memory: 16Gi
+```
+
+### 3. Share database connections
+
+Enable PgBouncer to share eight PostgreSQL connections across the workers and collector in each pod. Size this pool against your database connection limit and maximum replica count.
+
+```yaml
+database:
+  connectionPool:
+    enabled: true
+    maxDbConnections: 8
+    maxClientConn: 1000
+```
+
+### 4. Run metrics and spend processing in sidecars
+
+Enable the metrics server and spend collector. Add `prometheus` to your callbacks, and use Redis to buffer spend updates for batch writes.
+
+```yaml
+gateway:
+  metricsServer:
+    enabled: true
+  serviceMonitor:
+    enabled: true
+  collector:
+    enabled: true
+  config:
+    proxy_config:
+      general_settings:
+        proxy_batch_write_at: 60
+        use_redis_transaction_buffer: true
+      litellm_settings:
+        callbacks:
+          - prometheus
+        json_logs: true
+```
+
+Set `gateway.serviceMonitor.labels` to match your Prometheus instance's ServiceMonitor selector.
+
+### 5. Set connection and shutdown timeouts
+
+Add `KEEPALIVE_TIMEOUT` to `gateway.extraEnv` with a value above your load balancer's idle timeout. These settings allow 600 seconds per request and 620 seconds for shutdown, including a 10-second connection-draining delay.
+
+```yaml
+gateway:
+  extraEnv:
+    - name: KEEPALIVE_TIMEOUT
+      value: "75"
+  config:
+    proxy_config:
+      litellm_settings:
+        request_timeout: 600
+  terminationGracePeriodSeconds: 620
+  lifecycle:
+    preStop:
+      exec:
+        command: ["sh", "-c", "sleep 10"]
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 25%
-  lifecycle:
-    preStop:
-      exec:
-        command: ["sh", "-c", "sleep 10"]
-  terminationGracePeriodSeconds: 620
   startupProbe:
     httpGet: { path: /health/readiness, port: http }
     failureThreshold: 30
@@ -91,19 +132,9 @@ gateway:
   pdb:
     enabled: true
     maxUnavailable: 10%
-
-  config:
-    proxy_config:
-      general_settings:
-        proxy_batch_write_at: 60
-        use_redis_transaction_buffer: true
-        allow_requests_on_db_unavailable: true
-      litellm_settings:
-        callbacks:
-          - prometheus
-        request_timeout: 600
-        json_logs: true
 ```
+
+Use a load test with your prompt sizes, streaming duration, and callbacks to choose resource limits and autoscaling targets.
 
 ## Deploy
 
@@ -121,25 +152,6 @@ helm upgrade --install litellm \
   -f values.yaml
 ```
 
-## Tune for your workload
-
-Use a load test with your prompt sizes, streaming duration, and callbacks to choose resource limits and autoscaling targets.
-
-| Setting | Purpose |
-|---|---|
-| `numWorkers: 4`, CPU request `4`, CPU limit `16` | Runs four workers with CPU capacity for bursts of token counting. |
-| `LITELLM_RUST=1` | Uses Rust to count prompt tokens for budget checks. |
-| `connectionPool.maxDbConnections: 8` | Shares up to eight PostgreSQL connections across the workers and collector in each pod. Size the pool for your database connection limit and maximum replica count, with capacity for the backend and migrations. |
-| `metricsServer.enabled` | Serves Prometheus metrics from a separate container. |
-| `collector.enabled` | Processes spend logs, counters, and budget reconciliation in a separate container. |
-| `targetRequestsPerSecond: "83"`, `targetTokensPerSecond: "6.25M"` | Sets per-pod targets of 83 requests and 6.25 million tokens per second. The HPA uses the metric that asks for the most replicas. |
-| `KEEPALIVE_TIMEOUT: "75"` | Keeps idle connections open for 75 seconds. Set this above your load balancer's idle timeout. |
-| `request_timeout: 600`, `terminationGracePeriodSeconds: 620` | Allows up to ten minutes per request, with 20 extra seconds for shutdown. |
-| `preStop`, `maxUnavailable`, `pdb` | Gives the load balancer time to drain connections and preserves capacity during rollouts and pod disruptions. |
-| `allow_requests_on_db_unavailable: true` | Keeps the pod ready and permits requests during temporary database connection failures. Set this to match your database failure policy. |
-
-Token metrics update when a response finishes. Use both request and token targets for streaming traffic.
-
 ## Verify
 
 Check that each gateway pod lists `gateway`, `metrics`, and `collector` containers:
@@ -147,13 +159,6 @@ Check that each gateway pod lists `gateway`, `metrics`, and `collector` containe
 ```bash
 kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/component=gateway \
   -o custom-columns='POD:.metadata.name,CONTAINERS:.spec.containers[*].name'
-```
-
-Confirm that the Rust extension loads. The command prints `rust ok`:
-
-```bash
-kubectl -n "$NAMESPACE" exec deploy/litellm-litellm-gateway -c gateway -- \
-  python -c "import litellm.rust_bridge._native; print('rust ok')"
 ```
 
 Send traffic through the gateway, then check the custom metrics and HPA:
