@@ -194,15 +194,7 @@ Take `<server_id>` from `GET /v1/mcp/server`. Use `https://login.microsoftonline
 
 A script, or an MCP client with a static header, gets a gateway-audience token with MSAL or the Azure CLI (pre-authorized in prerequisite step 4) and sends it next to the LiteLLM key, exactly as in the Quick Start. The client owns refresh; Entra access tokens live about an hour. The same headers work on the `/mcp` transport and in `claude mcp add ... -H "Authorization: Bearer $TOKEN"`. The REST facade is documented on [MCP REST API](/docs/mcp_rest_api)
 
-### C. LiteLLM key only
-
-Admitted by LiteLLM, then refused by the guardrail with no tool execution. `/mcp-rest/tools/call` answers HTTP 401
-
-```json
-{"detail": {"error": "Agent 365 guardrail rejected the tool call", "message": "Tool call 'read_wiki_structure' was blocked because the caller did not present an Entra bearer token; the Agent 365 guardrail authorizes tool calls On-Behalf-Of the signed-in user.", "tool": "read_wiki_structure", "guardrail_name": "agent365-mcp", "guardrail_mode": "pre_mcp_call"}}
-```
-
-On the `/mcp` transport the tool result is `isError: true` with `Error: Agent 365 guardrail rejected the tool call`. The guardrail does not send a sign-in challenge, so the client has to obtain and attach the Entra token itself as in scenario B. The refusal only applies where the guardrail runs; the key keeps working on every LLM route and on tool calls the guardrail is not applied to
+The guardrail does not send a sign-in challenge, so a call with only a LiteLLM key is refused until the client attaches the Entra token itself. `/mcp-rest/tools/call` answers 401 and `/mcp` returns an `isError` tool result, see [Failure behavior](#failure-behavior)
 
 ### Two layers of authorization
 
