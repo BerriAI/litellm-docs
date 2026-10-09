@@ -226,15 +226,19 @@ By default the guardrail fails closed: when Agent 365 cannot be asked, the call 
 
 The status codes below are what `/mcp-rest/tools/call` returns. On the `/mcp` transport every refusal is an `isError` tool result carrying the `error` text, see [How it works](#how-it-works)
 
-| Situation | Result |
-|-----------|--------|
-| Defender blocks | HTTP 400 `Blocked by Microsoft Defender` with the Defender message and correlation id. Always blocks |
-| Agent 365 rejects the request (4xx other than 408/429) | HTTP 400 `Agent 365 rejected the tool evaluation request`. Always blocks |
-| Allowed but Defender did not evaluate (`Skipped`, `FailedOpen`) | `fail_closed` (default): HTTP 503. `fail_open`: allowed, recorded as unscanned |
-| No Entra token (missing or not a JWT), or Entra rejects the caller's token (`invalid_grant`, expired, wrong audience, consent missing, malformed assertion) | HTTP 401 `Agent 365 guardrail rejected the tool call`. Always blocks. When Entra rejects the token, the message names only its error code, for example `invalid_grant`, or `invalid_client` for a malformed assertion; the full `AADSTS` description is in the error details of the Logs row |
-| Entra rejects the gateway's credentials (`invalid_client`, `unauthorized_client`, `invalid_scope`, `invalid_resource`) | `fail_closed` (default): HTTP 503 `Agent 365 guardrail could not authorize the tool call`, naming the setting to check. `fail_open`: allowed, recorded as unscanned. Never a 401, so clients do not re-prompt |
-| Agent 365 or Entra returns 408 or 429 | HTTP 503, recorded as Throttled. Always blocks |
-| Agent 365 or Entra unreachable, timeout, 5xx or unparseable verdict | `fail_closed` (default): HTTP 503. `fail_open`: allowed, recorded as unscanned |
+| Situation | Fail closed | Fail open |
+|-----------|-------------|-----------|
+| Defender blocks | 400 | 400 |
+| Agent 365 rejects the request (4xx other than 408 and 429) | 400 | 400 |
+| Caller sent no Entra token, or Entra rejected it | 401 | 401 |
+| Agent 365 or Entra throttles (408 or 429) | 503 | 503 |
+| Entra rejects the gateway's own credentials | 503 | Allowed, unscanned |
+| Agent 365 or Entra unreachable, timed out, 5xx or unparseable answer | 503 | Allowed, unscanned |
+| Defender did not evaluate (`Skipped` or `FailedOpen`) | 503 | Allowed, unscanned |
+
+The `error` field tells the refusals apart. A Defender block is `Blocked by Microsoft Defender` and carries the Defender message and correlation id. An Agent 365 rejection is `Agent 365 rejected the tool evaluation request`, a refused caller is `Agent 365 guardrail rejected the tool call`, and every 503 is `Agent 365 guardrail could not authorize the tool call` with the reason in `message`
+
+A caller is refused when the token is missing or not a JWT, or when Entra answers the OBO exchange with `invalid_grant` (expired, wrong audience, consent missing) or, for a malformed token, `invalid_client`. The message names only that error code, and the full `AADSTS` description is in the error details of the Logs row. The gateway's own credentials are rejected with `invalid_client`, `unauthorized_client`, `invalid_scope` or `invalid_resource`, and the 503 message names the setting to check. That case is never a 401, so clients do not ask the user to sign in again
 
 ### Watching fail-open calls
 
