@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/opentelemetry/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/opentelemetry/README.md at a2294277609202247b71c08d7b491f5212809988. Edit the source README. -->
 
 # OpenTelemetry
 
@@ -34,7 +34,7 @@ cp .env.direct.example .env
 
 If you already cloned the repository, run the remaining commands from `opentelemetry/`. For direct provider calls, set `OPENAI_API_KEY` and `OPENAI_MODEL` in `.env`, then set `LENS_URL` and `LENS_TRACING_KEY` as described below. Leave `LITELLM_GATEWAY_URL` unset. Your model requests go to OpenAI while telemetry goes to Lens
 
-For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/opentelemetry/.env.example) instead and set the three `LITELLM_*` values. These examples retain the gateway request-attempt and spend-correlation behavior
+For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/opentelemetry/.env.example) instead and set the three `LITELLM_*` values. These examples retain the gateway request-attempt and spend-correlation behavior
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,7 +49,7 @@ For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-ex
 
 The gateway template targets a local development gateway. Replace its model connection values for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -61,7 +61,7 @@ A manual `research_agent` span wraps one OpenAI model call.
 uv run --env-file .env --package lens-opentelemetry-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/opentelemetry/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/opentelemetry/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -71,7 +71,7 @@ A `research_agent` span contains `search_agent` and `writer_agent` child spans, 
 uv run --env-file .env --package lens-opentelemetry-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/opentelemetry/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/opentelemetry/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -81,7 +81,7 @@ After the example prints its answer, open **Lens > Traces** in your standalone o
 
 The examples create agent spans manually and set their names, inputs, and outputs. OpenInference instruments the OpenAI client, and, when a gateway is configured, the shared gateway transport adds request-attempt spans with gateway call IDs.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 

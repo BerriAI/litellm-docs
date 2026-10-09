@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/pydantic-ai/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/pydantic-ai/README.md at a2294277609202247b71c08d7b491f5212809988. Edit the source README. -->
 
 # Pydantic AI
 
@@ -32,7 +32,7 @@ cd litellm-lens-example/pydantic-ai
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `pydantic-ai/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/pydantic-ai/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `pydantic-ai/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/pydantic-ai/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ If you already cloned the repository, run the remaining commands from `pydantic-
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -56,7 +56,7 @@ A `research_agent` answers one question.
 uv run --env-file .env --package lens-pydantic-ai-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/pydantic-ai/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/pydantic-ai/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -66,7 +66,7 @@ A coordinator delegates to `search_agent` and `writer_agent` through tools.
 uv run --env-file .env --package lens-pydantic-ai-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/pydantic-ai/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/pydantic-ai/swarm/main.py) for the implementation.
 
 ### Streaming
 
@@ -95,7 +95,7 @@ After the example prints its answer, open **Lens > Traces** on your gateway and 
 
 Pydantic AI emits agent, tool, and model spans through Agent.instrument\_all(). The shared gateway transport records request attempts and gateway call IDs for matching model calls to spend.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 
