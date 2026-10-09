@@ -19,7 +19,7 @@ Open **Models + Endpoints** in the LiteLLM dashboard and click **Add Model**. Se
 
 Set **Auth Type** to **Per-user GitHub OAuth** and click **Create credential**. Enter `copilot-per-user` as the **Credential Name**, then click **Add Credential**. The form selects the new credential. Click **Add Model** to save the model.
 
-Use `claude-copilot` as the model name in requests, including requests from Claude Code or Claude Desktop.
+Use `claude-copilot` as the model name in your app's requests.
 
 <details>
 <summary>Use config.yaml to add the model</summary>
