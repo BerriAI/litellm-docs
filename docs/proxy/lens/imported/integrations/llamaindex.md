@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/llamaindex/README.md at 107517234af67fe6a051477034b7bb53ec3e181b. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/llamaindex/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
 
 # LlamaIndex
 
@@ -32,7 +32,7 @@ cd litellm-lens-example/llamaindex
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `llamaindex/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/llamaindex/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `llamaindex/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/llamaindex/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ If you already cloned the repository, run the remaining commands from `llamainde
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -56,7 +56,7 @@ A `FunctionAgent` answers one question.
 uv run --env-file .env --package lens-llamaindex-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/llamaindex/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/llamaindex/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -66,7 +66,7 @@ An `AgentWorkflow` hands off from `research_agent` to `search_agent`, then `writ
 uv run --env-file .env --package lens-llamaindex-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/llamaindex/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/llamaindex/swarm/main.py) for the implementation.
 
 ## Verify the trace
 

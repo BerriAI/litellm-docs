@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/codex/README.md at 107517234af67fe6a051477034b7bb53ec3e181b. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/codex/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
 
 # Codex
 

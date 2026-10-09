@@ -15,7 +15,7 @@ Give your agent a name, run it, and open its trace in Lens. The examples on this
 
 For optional help from your coding agent, use [Connect an agent to Lens already running](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running). The prompt preserves your model connection and verifies the resulting trace
 
-In standalone Lens, open **Settings > Tracing > Connect an agent**, create a tracing key, and copy the displayed configuration. For a gateway-bundled Lens release, use its dashboard flow:
+In standalone Lens, open **Traces** and choose **Set up tracing** if the setup panel is not already open. Then create a tracing key, and copy the displayed configuration. For a gateway-bundled Lens release, use its dashboard flow:
 
 1. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**.
 2. Choose your framework and click **Generate tracing key**. If you cannot create one, ask your administrator for a dedicated Lens tracing key.

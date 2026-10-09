@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/vercel-ai-sdk-js/README.md at 107517234af67fe6a051477034b7bb53ec3e181b. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/vercel-ai-sdk-js/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
 
 # Vercel AI SDK (TypeScript)
 
@@ -34,7 +34,7 @@ cd vercel-ai-sdk-js
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `vercel-ai-sdk-js/`. Run `npm install` from the repository root if you have not installed the workspace dependencies. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/vercel-ai-sdk-js/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `vercel-ai-sdk-js/`. Run `npm install` from the repository root if you have not installed the workspace dependencies. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/vercel-ai-sdk-js/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,7 +46,7 @@ If you already cloned the repository, run the remaining commands from `vercel-ai
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -58,7 +58,7 @@ A `generateText` call is traced as `research_agent`.
 node --env-file=.env simple/main.ts
 ```
 
-See [simple/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/vercel-ai-sdk-js/simple/main.ts) for the implementation.
+See [simple/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/vercel-ai-sdk-js/simple/main.ts) for the implementation.
 
 ### Agent swarm
 
@@ -68,7 +68,7 @@ A coordinator delegates through tools that run `generateText` as `search_agent` 
 node --env-file=.env swarm/main.ts
 ```
 
-See [swarm/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/vercel-ai-sdk-js/swarm/main.ts) for the implementation.
+See [swarm/main.ts](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/vercel-ai-sdk-js/swarm/main.ts) for the implementation.
 
 ## Verify the trace
 
@@ -78,7 +78,7 @@ After the example prints its answer, open **Lens > Traces** on your gateway and 
 
 The @ai-sdk/otel integration creates OpenTelemetry spans and the NodeSDK exports them to Lens. The example names agent spans from functionId. The shared gateway fetch records request attempts and gateway call IDs.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 

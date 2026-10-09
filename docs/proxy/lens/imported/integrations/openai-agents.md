@@ -8,7 +8,7 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/openai-agents/README.md at 107517234af67fe6a051477034b7bb53ec3e181b. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/openai-agents/README.md at 494724eaf3fe905e8eb9731561a19e8cf5da9610. Edit the source README. -->
 
 # OpenAI Agents SDK
 
@@ -18,7 +18,7 @@ Send OpenAI Agents SDK traces to [LiteLLM Lens](/docs/proxy/lens) using the runn
 
 ## Prerequisites
 
-You need [Lens](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md), either standalone with ClickHouse or connected to LiteLLM. Open **Settings > Tracing > Connect an agent**, create a tracing key, and copy the **Traces endpoint**. Keep provider credentials separate from that telemetry key. The examples support direct OpenAI calls or calls through an existing LiteLLM gateway
+You need [Lens](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md), either standalone with ClickHouse or connected to LiteLLM. Open **Traces** and choose **Set up tracing** if the setup panel is not already open. Then create a tracing key, and copy the **Traces endpoint**. Keep provider credentials separate from that telemetry key. The examples support direct OpenAI calls or calls through an existing LiteLLM gateway
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/). It uses the checked-in Python version and resolves each example’s dependencies from its uv workspace.
 
@@ -34,7 +34,7 @@ cp .env.direct.example .env
 
 If you already cloned the repository, run the remaining commands from `openai-agents/`. For direct provider calls, set `OPENAI_API_KEY` and `OPENAI_MODEL` in `.env`, then set `LENS_URL` and `LENS_TRACING_KEY` as described below. Leave `LITELLM_GATEWAY_URL` unset. Your model requests go to OpenAI while telemetry goes to Lens
 
-For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/openai-agents/.env.example) instead and set the three `LITELLM_*` values. These examples retain the gateway request-attempt and spend-correlation behavior
+For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/openai-agents/.env.example) instead and set the three `LITELLM_*` values. These examples retain the gateway request-attempt and spend-correlation behavior
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,7 +49,7 @@ For gateway calls, use [.env.example](https://github.com/BerriAI/litellm-lens-ex
 
 The gateway template targets a local development gateway. Replace its model connection values for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -61,7 +61,7 @@ A `research_agent` answers one question inside `research_workflow`.
 uv run --env-file .env --package lens-openai-agents-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/openai-agents/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/openai-agents/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -71,7 +71,7 @@ A coordinator invokes `search_agent` and `writer_agent` through agents-as-tools.
 uv run --env-file .env --package lens-openai-agents-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/openai-agents/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/openai-agents/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -81,7 +81,7 @@ After the example prints its answer, open **Lens > Traces** in your standalone o
 
 OpenInference exports SDK agent and Responses API spans to Lens. When a gateway is configured, the shared gateway transport records each physical model request and its gateway call ID, including retries.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/107517234af67fe6a051477034b7bb53ec3e181b/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/494724eaf3fe905e8eb9731561a19e8cf5da9610/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 

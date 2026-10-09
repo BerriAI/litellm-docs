@@ -24,7 +24,7 @@ The first start builds the image, generates private credentials in `deploy/lens/
 
 ## Record a run
 
-Open **Settings > Tracing > Connect an agent**. Choose your framework, create a tracing key and copy its configuration into your agent. Keep your existing model endpoint and model credential. The Lens tracing key authorizes telemetry uploads.
+Open **Traces** and choose **Set up tracing** if the setup panel is not already open. Choose your framework, create a tracing key and copy its configuration into your agent. Keep your existing model endpoint and model credential. The Lens tracing key authorizes telemetry uploads.
 
 Run your agent, then use **Check for traces** or open **Traces**. Select the run and inspect its messages and tool calls. The **Demo data** switch contains examples and does not verify your connection.
 
