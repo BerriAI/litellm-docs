@@ -125,11 +125,13 @@ curl http://localhost:4000/v1/messages \
 }
 ```
 
-A flagged tool call carries the classifier's reason:
+A flagged tool call carries the classifier's reason in one sentence:
 
 ```json
-{"type": "evaluated", "outcome": "flagged", "explanation": "<one sentence from the classifier>"}
+{"type": "evaluated", "outcome": "flagged", "explanation": "Force-pushes to origin and exfiltrates private SSH key, actions not requested by user."}
 ```
+
+Claude Code skips a flagged tool call and shows the reason in place of its output, for example `Denied by auto mode classifier ∙ Uploads a secret deploy_key to an external server, which is disallowed without explicit user request.` The model sees the denial and carries on without that action
 
 ### Streaming
 
