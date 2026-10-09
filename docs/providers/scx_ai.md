@@ -22,10 +22,16 @@ import TabItem from '@theme/TabItem';
 
 | Model | Description | Context Window | Max Output |
 |-------|-------------|----------------|------------|
+| `scx-ai/DeepSeek-V4.1-flash` | DeepSeek V4.1 Flash, a 552B multimodal MoE taking text and image input | 1,048,576 tokens | 384,000 tokens |
 | `scx-ai/GLM-5.2` | Z.ai GLM-5.2, a 753B sparse MoE for long-horizon agentic coding | 1,048,576 tokens | 131,072 tokens |
+| `scx-ai/GLM-5.2-Fast` | Latency-optimised GLM-5.2, tuned for faster time-to-first-token | 1,048,576 tokens | 131,072 tokens |
+| `scx-ai/GLM-5.3` | Z.ai GLM-5.3, a 743B sparse MoE built on GLM-5.2 with scaled post-training for long-horizon agentic coding | 1,048,576 tokens | 131,072 tokens |
+| `scx-ai/GLM-5.3-Fast` | Latency-optimised GLM-5.3, tuned for faster time-to-first-token | 1,048,576 tokens | 131,072 tokens |
+| `scx-ai/GLM-5.3-Flash` | Z.ai GLM-5.3 Flash, a cost-optimised multimodal model taking text and image input | 1,048,576 tokens | 131,072 tokens |
+| `scx-ai/Kimi-K3` | Moonshot Kimi K3, a 2.8T sparse MoE taking text and image input | 1,048,576 tokens | 1,048,576 tokens |
 | `scx-ai/Qwen3.8-Max` | Alibaba Qwen3.8 Max, a 2.4T sparse MoE taking text and image input | 1,000,000 tokens | 131,072 tokens |
 
-Both models support reasoning, function calling, JSON mode and JSON schema output. `scx-ai/Qwen3.8-Max` additionally accepts image input. Prompt caching is applied automatically on both, and cache hits are reported in `usage.prompt_tokens_details.cached_tokens` and billed at the cached input rate.
+Every model supports reasoning, function calling and JSON mode. JSON schema output is supported on all of them except `scx-ai/DeepSeek-V4.1-flash`, `scx-ai/GLM-5.3` and `scx-ai/GLM-5.3-Fast`. `scx-ai/DeepSeek-V4.1-flash`, `scx-ai/GLM-5.3-Flash`, `scx-ai/Kimi-K3` and `scx-ai/Qwen3.8-Max` additionally accept image input. Prompt caching is applied automatically on every model, and cache hits are reported in `usage.prompt_tokens_details.cached_tokens` and billed at the cached input rate.
 
 ## Required Variables
 
@@ -146,7 +152,7 @@ print(response)
 
 ### Vision
 
-Image input is supported on `scx-ai/Qwen3.8-Max`. Images must be at least 10 pixels on each side.
+Image input is supported on `scx-ai/DeepSeek-V4.1-flash`, `scx-ai/GLM-5.3-Flash`, `scx-ai/Kimi-K3` and `scx-ai/Qwen3.8-Max`. Images must be at least 10 pixels on each side.
 
 ```python showLineNumbers title="SCX.ai Image Input"
 import os
