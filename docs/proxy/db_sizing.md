@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 # Database Sizing
 
-This page sizes the Postgres instance behind LiteLLM Proxy, which is required as soon as you use virtual keys or usage tracking. The numbers below start from the [gateway benchmarks](../benchmarks.md), which were run against 4 vCPU / 8GB gateway instances, and extend them to the managed offerings on AWS, Azure, and GCP. Redis is sized separately in [Redis Sizing](./redis_sizing.md). For the configuration knobs that go with this sizing, see [Production Best Practices](./prod.md); for what actually lives in the database, see [What is stored in the DB](./db_info.md).
+This page sizes the Postgres instance behind LiteLLM Proxy, which is required as soon as you use virtual keys or usage tracking. For gateway throughput, latency, and test configurations, see the [gateway benchmarks](../benchmarks.md). Redis is sized separately in [Redis Sizing](./redis_sizing.md). For the configuration knobs that go with this sizing, see [Production Best Practices](./prod.md); for what actually lives in the database, see [What is stored in the DB](./db_info.md).
 
 ## What the proxy asks of the database
 
