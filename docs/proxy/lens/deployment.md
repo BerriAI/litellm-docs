@@ -25,7 +25,7 @@ Recording and inspecting traces requires only Lens and ClickHouse. Add an analys
 
 ## Connect an existing LiteLLM deployment {#configure-an-existing-proxy}
 
-Keep the gateway's model routing, authentication, database and existing keys. Confirm that its actual version contains the compatible Lens adapter and shared UI. Lens and LiteLLM select their versions independently; an embedded UI update requires a LiteLLM UI release
+Keep the gateway's model routing, authentication, database and existing keys. Confirm that its actual version contains the compatible Lens adapter and shared UI. Official paired Lens and LiteLLM releases share a version and are tested together. Lens remains independently deployable; an embedded UI update requires a LiteLLM UI release
 
 Use [Compose integration](./deployment/docker-compose.md), [container integration](./deployment/docker.md) or the [Helm connection](./deployment/kubernetes.md#existing-deployment) for your deployment method. Each points to the current source integration and its release boundary
 

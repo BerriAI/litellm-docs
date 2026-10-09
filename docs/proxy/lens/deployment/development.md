@@ -49,4 +49,4 @@ docker compose -f deploy/lens/compose.yaml stop
 
 Run `npm run dev` again to resume. Keep the environment file and ClickHouse volume so your credentials and saved records survive
 
-For the source installation without development tooling, use [Run Lens](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md). That guide also states the current published-release status. Lens and LiteLLM release independently; connecting a gateway requires the compatible adapter and credentials described in the [gateway integration guide](./docker-compose.md)
+For the source installation without development tooling, use [Run Lens](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md). That guide also states the current published-release status. Official paired releases use the same Lens and LiteLLM version; connecting a gateway requires the compatible adapter and credentials described in the [gateway integration guide](./docker-compose.md)
