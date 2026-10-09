@@ -605,7 +605,7 @@ Notes: always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path, and set `
 
 ### Expected performance
 
-See benchmarks [here](../benchmarks#performance-metrics).
+See the [gateway load-test results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
 ### Confirm debug logging is off
 

@@ -368,7 +368,6 @@ const sidebars = {
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "doc", id: "agent_resources", label: "Agent resources" },
-        { type: "doc", id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -385,6 +384,7 @@ const sidebars = {
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
+        { type: "doc", id: "benchmarks", label: "Benchmarks" },
         {
           type: "category",
           label: "Deploy",
