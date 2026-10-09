@@ -208,6 +208,53 @@ curl -X POST "http://localhost:4000/a2a/agent-456" \
   -d '{"message": {"role": "user", "parts": [{"type": "text", "text": "Hello"}]}}'
 ```
 
+## Require explicit agent grants
+
+By default, a key with no agent grants on itself or its team can reach all agents. Set
+`agent_access_default_deny: true` under `general_settings` to require an explicit grant on the key or
+its team before the key can reach an agent
+
+```yaml title="config.yaml" showLineNumbers
+general_settings:
+  agent_access_default_deny: true
+```
+
+You can enable this setting from the Admin UI under **Settings** and **General Settings**, or update it at runtime
+through the management API:
+
+```bash title="Enable explicit agent grants" showLineNumbers
+curl -X POST "http://localhost:4000/config/field/update" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "config_type": "general_settings",
+    "field_name": "agent_access_default_deny",
+    "field_value": true
+  }'
+```
+
+Runtime updates reach every proxy worker only when `store_model_in_db` is `true`. Without it, set the value in
+`config.yaml` so every worker loads it at startup
+
+With the setting enabled, a key with no direct agent grants and no grants on its team reaches no agents. Its agent
+card requests, `message/send` requests, `/v1/chat/completions` calls using an `a2a/<agent_name>` model, and requests to
+`/v1/agents/{agent_id}` are denied. Its `a2a/<agent_name>` entries are left out of `/v2/model/info` and
+`/model_group/info`. A key with direct grants continues to reach those agents, and a key without direct grants
+inherits the grants from its team. Proxy administrators are exempt from this requirement. A failed grant lookup never
+falls back to open access
+
+The MCP counterpart is [`require_key_mcp_access_defined`](./mcp_control#require-keys-to-define-their-own-mcp-access).
+They differ on team inheritance: the MCP setting treats the team list as a ceiling, so a key must carry its own
+grant, while this setting still lets a key inherit its team's agent grants and only closes the case where neither the
+key nor its team grants anything
+
+:::note
+
+The default remains open for backward compatibility. In a future major version, LiteLLM aims to standardize on
+least privilege so that no grants means no access by default
+
+:::
+
 ## Agent Access Groups
 
 Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels in the dashboard, then grant the **group** to a key or team. Adding a new agent to the group automatically makes it available to every key/team that holds the group.
@@ -253,12 +300,13 @@ flowchart TD
     C -->|No| F[Use key permissions only]
 
     D -->|Yes| G[Inherit team permissions]
-    D -->|No| H[Allow ALL agents]
+    D -->|No| H{agent_access_default_deny enabled?}
 
     E --> I{Agent in allowed list?}
     F --> I
     G --> I
-    H --> J[Allow request]
+    H -->|Yes| K[Return 403 Forbidden]
+    H -->|No| J[Allow ALL agents]
 
     I -->|Yes| J
     I -->|No| K[Return 403 Forbidden]
@@ -268,7 +316,7 @@ A2A permission resolution operates over two levels: Key and Team. (MCP's [permis
 
 | Key Permissions | Team Permissions | Result | Notes |
 |-----------------|------------------|--------|-------|
-| None | None | Key can access **all** agents | Open access by default when no restrictions are set |
+| None | None | Key can access **all** agents by default, or no agents when `agent_access_default_deny` is enabled | Open access remains the default for backward compatibility |
 | `["agent-1", "agent-2"]` | None | Key can access `agent-1` and `agent-2` | Key uses its own permissions |
 | None | `["agent-1", "agent-3"]` | Key can access `agent-1` and `agent-3` | Key inherits team's permissions |
 | `["agent-1", "agent-2"]` | `["agent-1", "agent-3"]` | Key can access `agent-1` only | Intersection of both lists (most restrictive wins) |
