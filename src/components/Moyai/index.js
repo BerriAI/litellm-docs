@@ -65,21 +65,25 @@ export function BenefitGrid() {
       </section>
       <section aria-labelledby="budget-your-agents">
         <span className={styles.number}>03</span>
-        <Heading as="h3" id="budget-your-agents">Put a budget on your agents.</Heading>
-        <p>Set a limit on Moyai's LiteLLM key. Track model spend by teammate, session, and model. Keep provider keys on the gateway.</p>
+        <Heading as="h3" id="budget-your-agents">One source of truth for model costs.</Heading>
+        <p>Moyai uses LiteLLM's reported costs for its per-user, session, and model breakdowns. The totals add up to those same recorded charges.</p>
       </section>
     </div>
   );
 }
 
-export function GuideButtons() {
+export function GuideCards() {
   return (
     <nav className={styles.guides} aria-label="Moyai guides">
-      <Link to={`${root}/setup`} className={styles.primary}>
-        <Terminal size={20} aria-hidden="true" />Setup<ArrowRight size={18} aria-hidden="true" />
+      <Link to={`${root}/setup`} className={styles.guideCard}>
+        <Terminal size={26} aria-hidden="true" />
+        <div><h3>Setup</h3><p>Deploy Moyai. Run your first cloud task.</p></div>
+        <ArrowRight className={styles.guideArrow} size={22} aria-hidden="true" />
       </Link>
-      <Link to={`${root}/architecture`} className={styles.secondary}>
-        <Network size={20} aria-hidden="true" />Architecture<ArrowRight size={18} aria-hidden="true" />
+      <Link to={`${root}/architecture`} className={styles.guideCard}>
+        <Network size={26} aria-hidden="true" />
+        <div><h3>Architecture</h3><p>Explore sandboxes, checkpoints, and recovery.</p></div>
+        <ArrowRight className={styles.guideArrow} size={22} aria-hidden="true" />
       </Link>
     </nav>
   );

@@ -6,7 +6,7 @@ hide_title: true
 hide_table_of_contents: true
 ---
 
-import {CostHero, BenefitGrid, GuideButtons} from '@site/src/components/Moyai';
+import {CostHero, BenefitGrid, GuideCards} from '@site/src/components/Moyai';
 import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
 import styles from '@site/src/components/Moyai/styles.module.css';
 import Heading from '@theme/Heading';
@@ -16,7 +16,7 @@ import Heading from '@theme/Heading';
 <section className={styles.why} aria-labelledby="why-moyai">
   <Heading as="h2" id="why-moyai">Why Moyai</Heading>
   <BenefitGrid />
-  <GuideButtons />
+  <GuideCards />
 </section>
 
 ## Watch a task go from request to PR {#watch-a-task}

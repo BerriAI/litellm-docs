@@ -40,12 +40,25 @@
 .benefits h3 { color: inherit; font-size: clamp(21px, 2vw, 25px) !important; font-weight: 650 !important; line-height: 1.2 !important; letter-spacing: -0.025em; margin: 18px 0 14px; }
 .benefits p { font-size: 15px !important; line-height: 1.7; margin: 0; }
 .benefits :global(.hash-link) { display: none; }
-.guides { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 28px 0 0; }
-.primary, .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 24px; border: 1.5px solid; border-radius: 9px; font-size: 16px; font-weight: 600; min-width: 200px; transition: background 150ms ease; }
-.primary { color: #fff; background: #5141c8; border-color: #5141c8; }
-.primary:hover { color: #fff; background: #4031aa; text-decoration: none; }
-.secondary { color: var(--ifm-font-color-base); background: var(--ifm-background-color); border-color: var(--ifm-color-emphasis-400); }
-.secondary:hover { color: var(--ifm-font-color-base); background: var(--ifm-color-emphasis-100); text-decoration: none; }
+.guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 28px 5px 0 0; }
+.guideCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  color: #292337;
+  background: #eee7ff;
+  border: 1.5px solid #292337;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 #292337;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.guideCard:nth-child(2) { background: #faf5e9; }
+.guideCard:hover { color: #292337; text-decoration: none; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #292337; }
+.guideCard > svg { flex-shrink: 0; }
+.guideCard .guideArrow { margin-left: auto; }
+.guides .guideCard h3 { color: inherit; font-size: 23px !important; font-weight: 650 !important; line-height: 1.2 !important; letter-spacing: -0.025em; margin: 0 0 7px; }
+.guides .guideCard p { color: inherit; font-size: 14px; line-height: 1.5; margin: 0; }
 .nav a:focus-visible, .guides a:focus-visible, .cost a:focus-visible { outline: 3px solid #9870ff; outline-offset: 5px; }
 .cost a:focus-visible { outline-color: #dcf49d; }
 
@@ -54,6 +67,8 @@
 [data-theme='dark'] .benefits section:nth-child(2) { background: #332f28; border-color: #786a50; }
 [data-theme='dark'] .benefits section:nth-child(3) { background: #283325; border-color: #617650; }
 [data-theme='dark'] .number { color: #292337; }
+[data-theme='dark'] .guideCard { color: #f4edff; background: #302643; border-color: #a38aba; box-shadow: 4px 4px 0 #796093; }
+[data-theme='dark'] .guideCard:nth-child(2) { background: #332f28; }
 
 @media (max-width: 1100px) {
   .benefits { gap: 12px; }
@@ -74,9 +89,9 @@
   .barLabel small { display: block; margin: 3px 0 0; }
   .barLabel strong { font-size: 19px; }
   .barTrack { height: 18px; }
-  .guides { gap: 12px; }
-  .guides a { flex: 1; min-width: 0; padding: 14px 16px; }
-  .guides a > svg:last-child { display: none; }
+  .guides { grid-template-columns: 1fr; gap: 16px; }
+  .guideCard { padding: 20px 16px; gap: 12px; }
+  .guides .guideCard h3 { font-size: 22px !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .guides a { transition: none; }
