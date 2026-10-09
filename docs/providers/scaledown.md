@@ -26,7 +26,8 @@ os.environ["SCALEDOWN_API_KEY"] = "your-scaledown-api-key"
 ScaleDown authenticates with the `x-api-key` header rather than a bearer token;
 LiteLLM handles that for you. The default host is `https://api.scaledown.xyz`;
 set `SCALEDOWN_API_BASE` to use another one. A trailing `/v1` is accepted and
-ignored.
+ignored. A per-call `api_base` needs its own `api_key`; the key from
+`SCALEDOWN_API_KEY` is only sent to the default host or `SCALEDOWN_API_BASE`.
 
 LiteLLM calls ScaleDown's native endpoints: `/extract`,
 `/summarization/abstractive`, `/compress/raw/` and `/v1/scaledown`. It does not
@@ -56,8 +57,11 @@ calibrated model call, so a request with three questions bills for three.
 
 `questions` has no OpenAI-native field, so pass it as an extra parameter; the
 Python SDK forwards unknown keyword arguments, and the OpenAI client takes them
-through `extra_body`. The text comes from the last user message, or from an
-explicit `state` object if you pass one.
+through `extra_body`. The text comes from the last user message. A base64 image in the message
+(`image_url` data URL) is sent as the document. `state` may carry only
+`document` and `document_mime_type`, never text, so proxy guardrails always see
+the text. `extra_body` is merged after the request is built and cannot change
+the model.
 
 There are three question types. A `choice` question picks exactly one option
 from a `criteria` map of option key to description. A `noul` question answers an
@@ -110,8 +114,8 @@ chosen option's own probability as `confidence`. A `score` answer adds a
 `legend` echoing your criteria back by level index. Each question is a separate
 model call, and `usage.input_tokens` in the response is summed across them.
 
-To classify an image or a PDF instead of text, pass a `state` object with a
-base64 `document` and its `document_mime_type`.
+To classify a PDF, pass a `state` object with a base64 `document` and its
+`document_mime_type`. Images can also go in as an `image_url` data URL.
 
 ```python
 response = completion(
@@ -167,7 +171,7 @@ through unchanged.
 ## Summarization
 
 The system message carries optional instructions, the last user message carries
-the text, and `max_tokens` limits the summary. The content is ScaleDown's
+the text, and `max_tokens` (or `max_completion_tokens`) limits the summary. The content is ScaleDown's
 `{"summary": ..., "input_tokens": ...}` response.
 
 ```python
@@ -254,7 +258,7 @@ set a LiteLLM master key
 
 ## Cost and token counts
 
-All models are priced at $0.04 per million input tokens, with output tokens at
+All models are priced at $0.05 per million input tokens, with output tokens at
 zero, and LiteLLM computes cost from input tokens. It ignores the `usage.cost`
 field the Decisions API returns, because that value does not match ScaleDown's
 usage dashboard.
@@ -263,8 +267,8 @@ Input tokens come from the response (`input_tokens`, or `original_prompt_tokens`
 for compress). The native extract, summarize and compress responses do not
 include an output token count, so `completion_tokens` is `0` there because it is
 unmeasured. Decisions returns `output_tokens`, which LiteLLM passes through; it
-is not billed. Requests that include an image or document may be billed at a
-higher input rate than the one registered here.
+is not billed. Requests that include an image or document are billed at a higher input rate
+than the one registered here.
 
 ## Supported features
 
@@ -273,7 +277,7 @@ higher input rate than the one registered here.
 | Cost tracking | Yes (input tokens only) |
 | Logging | Yes |
 | Vision (documents on the decisions models) | Yes |
-| Streaming | No |
+| Streaming | Simulated (one chunk) |
 | Function calling | No |
 
 The decisions models take no sampling parameters, since everything they need
