@@ -274,7 +274,7 @@ The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the 
 
 ### Credential storage, refresh, and revocation
 
-Claude Code owns the subscription credential. It stores the login locally (the macOS Keychain, or `~/.claude/.credentials.json` on Linux and Windows, under `CLAUDE_CONFIG_DIR` when that is set), refreshes it on its own, and `/logout` signs it out. LiteLLM stores nothing: the token is used for the one upstream request it arrived with, it is not cached across requests, and it is not written to logs or spend logs. Concurrent requests from different users each go upstream with their own token.
+Claude Code owns the subscription credential. It stores the login locally (the macOS Keychain, or `~/.claude/.credentials.json` on Linux and Windows, under `CLAUDE_CONFIG_DIR` when that is set), refreshes it on its own, and `/logout` signs it out. LiteLLM stores nothing: the token is used for the one upstream request it arrived with, it is not cached across requests, and it is not written to logs or spend logs (spend logs record only whether one was used, see [Seeing Which Requests Were Billed to a Seat](#seeing-which-requests-were-billed-to-a-seat)). Concurrent requests from different users each go upstream with their own token.
 
 When a token is expired or revoked, Anthropic answers `401 OAuth access token is invalid.` and LiteLLM returns that to Claude Code; the user runs `/login` again. LiteLLM cannot revoke a Claude login. To cut a user off at the gateway, [block](/docs/proxy/virtual_keys) or delete their virtual key, which stops their requests through LiteLLM; their Claude login itself still works directly against Anthropic until they or their admin remove it.
 
@@ -284,11 +284,12 @@ One user's expired or revoked token can currently block everyone else on the sam
 router_settings:
   disable_cooldowns: true
 ```
+
 ### Attribution and cost
 
 Spend is attributed to the virtual key in `x-litellm-api-key` and the user and team it belongs to, so per-user and per-team reporting, budgets, and rate limits work as usual. LiteLLM does not see which Claude account or organization the token belongs to. Cost is calculated at Anthropic API list prices and counts toward key, user, and team budgets even though Anthropic bills the usage to the subscription, so treat budgets here as usage caps in API-equivalent dollars.
 
-Starting with v1.105.0, each spend log records `used_client_oauth_token: true` when the request went upstream with the client's subscription token and `false` when it used the configured key. The Logs page shows this as the Credential column ("Client OAuth token" or "Configured key") and can filter on it. Requests through the `/anthropic` pass-through route do not carry the flag.
+To tell subscription-billed requests from key-billed ones, see [Seeing Which Requests Were Billed to a Seat](#seeing-which-requests-were-billed-to-a-seat).
 
 ## Advanced Configuration
 
@@ -346,7 +347,7 @@ curl -X POST "http://localhost:4000/key/generate" \
 
 ### Seeing Which Requests Were Billed to a Seat
 
-Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the Max seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field needs LiteLLM v1.105.0 or later (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field needs LiteLLM v1.105.0 or later (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
 
 `spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
 
