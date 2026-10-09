@@ -60,8 +60,10 @@ Python SDK forwards unknown keyword arguments, and the OpenAI client takes them
 through `extra_body`. The text comes from the last user message. A base64 image in the message
 (`image_url` data URL) is sent as the document. `state` may carry only
 `document` and `document_mime_type`, never text, so proxy guardrails always see
-the text. `extra_body` is merged after the request is built and cannot change
-the model.
+the text. `extra_body` is merged after proxy guardrails run, so each model accepts only
+option keys there (`questions` and `state` for decisions, `threshold` and
+`top_n` for extract, `compression_rate` for compress); text, instructions and
+model overrides are rejected.
 
 There are three question types. A `choice` question picks exactly one option
 from a `criteria` map of option key to description. A `noul` question answers an
