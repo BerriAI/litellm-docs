@@ -1,4 +1,4 @@
-# Scale for high-throughput workloads
+# Scale for 100T+ tokens per month
 
 Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
