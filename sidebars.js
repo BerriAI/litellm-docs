@@ -267,6 +267,7 @@ const sidebars = {
             "tutorials/claude_code_plugin_marketplace",
             "tutorials/claude_code_beta_headers",
             "claude_code_context_management",
+            "claude_code_auto_mode",
           ]
         },
         {

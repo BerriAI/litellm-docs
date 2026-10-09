@@ -9,7 +9,7 @@ tags: [announcement, claude-code, anthropic, ai-gateway]
 hide_table_of_contents: true
 ---
 
-*Last Updated: October 6, 2026*
+*Last Updated: October 9, 2026*
 
 Anthropic is moving Claude Code auto mode's safety classifier from the client to the Claude API. Starting with Claude Code v2.1.278, released September 19, sessions on Enterprise plans and Claude API accounts ask the server to run those checks as part of their own model requests, and Anthropic does not charge for the checks when the server performs them. Anthropic told us the rollout started on September 18 and is gradual, beginning with the Claude Code CLI and VS Code extension and followed by the desktop app and Claude Code on the web over the following week, and that on September 25 auto mode becomes the default permission mode in Claude Code. Today the built-in default is auto on Pro, Max and Team plans and Manual on Enterprise plans and Claude API keys, the accounts that typically sit behind a gateway, per Anthropic's [permission modes reference](https://code.claude.com/docs/en/permission-modes).
 
@@ -44,6 +44,8 @@ The raw pass-through route, `POST /anthropic/v1/messages`, was never affected. I
 [PR #42152](https://github.com/BerriAI/litellm/pull/42152), merged into `main` on September 21, 2026, makes the native `/v1/messages` route preserve the contract. `safeguards` is now a recognized request parameter and is forwarded as sent. When the resolved provider is first-party `anthropic`, the `anthropic-beta` header is forwarded unchanged instead of being filtered against the known-betas list; requests to Claude on Bedrock, Vertex AI and Azure AI keep the existing filtering because those providers still reject unknown flags. `safeguard_results` is declared on the response and streaming chunk types, and it is returned unchanged in both the JSON response and the final `message_delta` event when streaming. LiteLLM does not rewrite tool use IDs on this route, so `safeguard_results` entries still match the tool uses they refer to.
 
 When `/v1/messages` is used to reach a non-Anthropic model through the adapter path, `safeguards` is stripped before the request is translated so those backends do not return a 400.
+
+Non-Claude models behind the proxy are covered too. With `safeguards_classifier_model` set in `general_settings`, the proxy generates the auto mode verdicts itself for any model it reaches through the chat completions adapter, such as an open model on Fireworks or a GPT or Gemini deployment. It asks the configured classifier deployment to judge each tool call of the response and returns `safeguard_results` the way the Anthropic API does, so auto mode stays on when Claude Code is pointed at an open model. Setup, cost and the failure behavior are in [Claude Code auto mode on non-Claude models](https://docs.litellm.ai/docs/claude_code_auto_mode).
 
 This fix covers LiteLLM's route to the Anthropic API. Claude Code also asks for server-side checks on Amazon Bedrock and Google Cloud's Vertex AI, and [PR #42288](https://github.com/BerriAI/litellm/pull/42288), merged on September 21, 2026, covers those too. On `/v1/messages`, Claude on Bedrock InvokeModel (for example `bedrock/us.anthropic.claude-sonnet-5`) and Claude on Vertex AI now get `safeguards` and the `dangerous-tool-use-2026-09-03` beta forwarded, and `safeguard_results` comes back unchanged. That change is in v1.99.3, v1.100.2, v1.101.1, v1.102.1, v1.103.2 and v1.104.0; v1.101.0 and v1.103.0 do not have it. Claude on Bedrock Mantle (`bedrock_mantle/anthropic.claude-sonnet-5`) is served through Mantle's native Anthropic Messages API from v1.104.0 and preserves the contract there too.
 
@@ -126,6 +128,7 @@ An AI Gateway in front of Claude Code has to forward provider contracts it did n
 ## Recommended Reading
 
 - [Claude Code with LiteLLM AI Gateway](https://docs.litellm.ai/docs/tutorials/claude_code_gateway)
+- [Claude Code auto mode on non-Claude models](https://docs.litellm.ai/docs/claude_code_auto_mode)
 - [Claude Code: managing Anthropic beta headers](https://docs.litellm.ai/docs/tutorials/claude_code_beta_headers)
 - [Anthropic pass-through endpoints](https://docs.litellm.ai/docs/pass_through/anthropic_completion)
 - [Anthropic: auto mode classifier request charges](https://code.claude.com/docs/en/auto-mode-classifier-billing)
