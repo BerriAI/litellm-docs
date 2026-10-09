@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/server"
 
 # Docker Compose on a server
 
-The [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) runs Lens and ClickHouse with Keeper and requires access to the internal Lens repository. Install Git and Docker Compose v2, then follow the [local quickstart](./local.md) on your server. Keep its source commit, environment file and persistent volume. Published independent release artifacts are still being qualified
+The [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) runs Lens and ClickHouse with Keeper from the public Lens repository. Install Git and Docker Compose v2, then follow the [local quickstart](./local.md) on your server. Keep its source commit, environment file and persistent volume. Published independent release artifacts are still being qualified
 
 For help configuring an existing deployment, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md). To connect the Lens service to an existing gateway, use the [Compose integration guide](./docker-compose.md)
 

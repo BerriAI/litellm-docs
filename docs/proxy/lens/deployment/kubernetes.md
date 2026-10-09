@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/kubernetes"
 
 # Kubernetes
 
-The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation requires access to the internal Lens repository, a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
+The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation uses the public Lens repository and requires a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
 
 For help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) and specify Helm
 

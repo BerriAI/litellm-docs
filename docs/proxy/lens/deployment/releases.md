@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/releases"
 
 # Releases and images
 
-Lens and LiteLLM release independently. The current [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) requires access to the internal Lens repository while official standalone release artifacts are being qualified. Readers without repository access cannot use those source links yet. Do not infer that an image, chart or release bundle exists from a source version alone
+Lens and LiteLLM release independently. The current [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) is available from the public Lens repository while official standalone release artifacts are being qualified. Do not infer that an image, chart or release bundle exists from a source version alone
 
 A compatible gateway release consumes the shared Lens UI and connects through the supported public API contract. Updating the Lens runtime does not update the UI already embedded in a gateway build. The [current gateway source integration](https://github.com/BerriAI/litellm/blob/d171e208a18d3f3559e3a338f7769387e01749e5/docs/lens-integration.md) records this boundary and its development artifacts
 
