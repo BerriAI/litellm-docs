@@ -4,8 +4,8 @@ Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](.
 
 ## Requirements
 
-Start with a working [microservices Helm deployment](./deploy.md#deploy-with-helm), external PostgreSQL and Redis, and your model configuration. This example also requires:
-
+- [LiteLLM microservices Helm chart](./deploy.md#deploy-with-helm) `1.104.2`.
+- External PostgreSQL and Redis.
 - Kubernetes 1.30+ and Metrics Server for CPU and memory autoscaling.
 - Prometheus Operator to scrape each pod through a ServiceMonitor.
 - Prometheus Adapter with the [RPS and TPS rules](./deploy.md#scale-on-requests-and-tokens-per-pod) for request and token autoscaling.
