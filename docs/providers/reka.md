@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `reka/` |
 | Link to Provider Doc | [Reka Developer Reference ↗](https://developer.reka.ai/reference) |
 | Base URL | `https://api.reka.ai/v1` |
-| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#anthropic-messages-api) |
+| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#usage---litellm-proxy-server) |
 
 <br />
 <br />
@@ -73,52 +73,6 @@ for chunk in response:
     print(chunk)
 ```
 
-`reka-flash-3` and the DeepSeek and GLM models reason before they answer. The thinking trace is returned as `reasoning_content` on the message (and streamed as `delta.reasoning_content`), and a small `max_tokens` can be used up by the trace before any answer is produced, leaving `content` empty with `finish_reason: length`. Leave `max_tokens` unset or generous on those models, or use `reka-edge-2603` when you need a short, direct reply.
-
-### Function Calling
-
-Tool calling is supported on every model in the table above except `reka-flash-3`. Reka models are not in LiteLLM's model cost map yet, and LiteLLM only forwards `tools` to a model it knows supports function calling, so register the model first (on the proxy, set `supports_function_calling: true` under `model_info`, as shown in the proxy section below).
-
-```python showLineNumbers title="Reka Function Calling"
-import os
-import litellm
-from litellm import completion
-
-os.environ["REKA_API_KEY"] = ""  # your Reka API key
-
-litellm.register_model({
-    "reka/reka-edge-2603": {
-        "litellm_provider": "reka",
-        "mode": "chat",
-        "supports_function_calling": True,
-    }
-})
-
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "get_weather",
-        "description": "Get the current weather in a location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "city": {"type": "string", "description": "The city, e.g. San Francisco"}
-            },
-            "required": ["city"],
-        },
-    },
-}]
-
-response = completion(
-    model="reka/reka-edge-2603",
-    messages=[{"role": "user", "content": "What's the weather in San Francisco?"}],
-    tools=tools,
-    tool_choice="auto",
-)
-
-print(response.choices[0].message.tool_calls)
-```
-
 ### Vision
 
 `reka-edge-2603` accepts images and video. Image input uses the OpenAI content-part shape; video uses a `video_url` part the same way. Check `input_modalities` on `GET /v1/models` before sending media to any other model.
@@ -161,28 +115,6 @@ response = litellm.responses(
 print(response.output_text)
 ```
 
-### Anthropic Messages API
-
-Anthropic Messages requests are bridged the same way, so Anthropic-shaped clients can talk to Reka through LiteLLM. On reasoning models the trace comes back as a `thinking` block ahead of the `text` block, so read the block types rather than assuming `content[0]` is text.
-
-```python showLineNumbers title="Reka Anthropic Messages API"
-import asyncio
-import os
-import litellm
-
-os.environ["REKA_API_KEY"] = ""  # your Reka API key
-
-async def main():
-    response = await litellm.anthropic.messages.acreate(
-        model="reka/reka-edge-2603",
-        messages=[{"role": "user", "content": "Say hello"}],
-        max_tokens=64,
-    )
-    print(response["content"][0]["text"])
-
-asyncio.run(main())
-```
-
 ## Usage - LiteLLM Proxy Server
 
 ```yaml showLineNumbers title="config.yaml"
@@ -195,8 +127,6 @@ model_list:
     litellm_params:
       model: reka/reka-edge-2603
       api_key: os.environ/REKA_API_KEY
-    model_info:
-      supports_function_calling: true  # lets the proxy forward `tools` to this deployment
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
