@@ -29,7 +29,7 @@ The streaming and conversation interface is modeled after the Claude Agent SDK, 
 
 ### 1. Install
 
-Use Python 3.11+. This installs liteagents and the two harnesses used below:
+liteagents requires Python 3.11 or later. This command installs liteagents and the two harnesses used below: {/* keep-python-version */}
 
 ```sh
 python -m pip install "liteagents[pydantic-ai,claude-sdk] @ https://github.com/BerriAI/liteagents/releases/download/v0.3.0a6/liteagents-0.3.0a6-py3-none-any.whl"
