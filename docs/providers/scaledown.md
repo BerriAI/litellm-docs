@@ -12,7 +12,7 @@ tokens.
 |----------|---------|
 | Description | Calibrated decisions, extraction, summarization, and prompt compression |
 | Provider Route | `scaledown/` |
-| Supported Endpoints | `/chat/completions` |
+| Supported Endpoints | `/chat/completions` (LiteLLM translates to ScaleDown's native API) |
 | API Reference | [ScaleDown docs ↗](https://docs.scaledown.xyz) |
 
 ## API Key
@@ -24,8 +24,14 @@ os.environ["SCALEDOWN_API_KEY"] = "your-scaledown-api-key"
 ```
 
 ScaleDown authenticates with the `x-api-key` header rather than a bearer token;
-LiteLLM handles that for you. Set `SCALEDOWN_API_BASE` if you point at a host
-other than `https://api.scaledown.xyz/v1`.
+LiteLLM handles that for you. The default host is `https://api.scaledown.xyz`;
+set `SCALEDOWN_API_BASE` to use another one. A trailing `/v1` is accepted and
+ignored.
+
+LiteLLM calls ScaleDown's native endpoints: `/extract`,
+`/summarization/abstractive`, `/compress/raw/` and `/v1/scaledown`. It does not
+use ScaleDown's OpenAI-compatible `/v1/chat/completions` route, which is not
+reachable on `api.scaledown.xyz` at the time of writing.
 
 ## Supported Models
 
@@ -37,8 +43,9 @@ other than `https://api.scaledown.xyz/v1`.
 | `scaledown/summarize` | Abstractive summarization |
 | `scaledown/compress` | Prompt and context compression |
 
-Every model returns its result as a JSON string on
+Every model returns the upstream payload as a JSON string on
 `choices[0].message.content`, so parse that to get the structured object.
+LiteLLM does not reshape it.
 
 ## Decisions: `classify` and `decisions`
 
@@ -100,9 +107,8 @@ print(answers["severity"]["score"])
 
 A `choice` answer carries the chosen key, a probability per option, and the
 chosen option's own probability as `confidence`. A `score` answer adds a
-`legend` echoing your criteria back by level index. Because ScaleDown bills per
-question, LiteLLM reports the cost ScaleDown returns rather than estimating it
-from token counts.
+`legend` echoing your criteria back by level index. Each question is a separate
+model call, and `usage.input_tokens` in the response is summed across them.
 
 To classify an image or a PDF instead of text, pass a `state` object with a
 base64 `document` and its `document_mime_type`.
@@ -119,8 +125,11 @@ response = completion(
 ## Extraction
 
 `extract` takes its field definitions from the standard `response_format` JSON
-schema. Each property name becomes a field and its `description` is the
-extraction hint.
+schema. Each property name becomes an entity and its `description` is the
+extraction hint (the property name is used when there is none). Nested objects
+stay nested, and an array of objects becomes a one-element list holding the
+item's entities. Optional `threshold` and `top_n` can be passed as extra
+parameters.
 
 ```python
 response = completion(
@@ -143,10 +152,23 @@ response = completion(
 )
 ```
 
+The message content is ScaleDown's `/extract` response:
+`{"entities": [...], "structured_result": {...}, "input_tokens": ...}`. Values
+inside `structured_result` for nested definitions are wrapped objects, not plain
+strings, for example:
+
+```json
+{"structured_result": {"invoice": {"vendor": {"_value": "Northwind", "_span_anchor": "Invoice from Northwind"}}}}
+```
+
+Read the value from `_value`. The wrapper shape is ScaleDown's and is passed
+through unchanged.
+
 ## Summarization
 
-`summarize` is plain chat. The system message carries optional instructions, the
-last user message carries the text, and `max_tokens` works as usual.
+The system message carries optional instructions, the last user message carries
+the text, and `max_tokens` limits the summary. The content is ScaleDown's
+`{"summary": ..., "input_tokens": ...}` response.
 
 ```python
 response = completion(
@@ -156,6 +178,24 @@ response = completion(
         {"role": "user", "content": long_document},
     ],
     max_tokens=256,
+)
+```
+
+## Compression
+
+`compress` sends earlier messages as `context` and the last user message as
+`prompt`. Pass `compression_rate` as `"auto"` (the default) or a number between
+0 and 1. The content is ScaleDown's `/compress/raw/` response, with the result
+in `compressed_prompt`.
+
+```python
+response = completion(
+    model="scaledown/compress",
+    messages=[
+        {"role": "system", "content": long_background},
+        {"role": "user", "content": "What changed in Q3?"},
+    ],
+    compression_rate=0.5,
 )
 ```
 
@@ -212,11 +252,25 @@ curl http://localhost:4000/chat/completions \
 `-H "Authorization: Bearer YOUR_LITELLM_MASTER_KEY"` is only required if you have
 set a LiteLLM master key
 
+## Cost and token counts
+
+All models are priced at $0.04 per million input tokens, with output tokens at
+zero, and LiteLLM computes cost from input tokens. It ignores the `usage.cost`
+field the Decisions API returns, because that value does not match ScaleDown's
+usage dashboard.
+
+Input tokens come from the response (`input_tokens`, or `original_prompt_tokens`
+for compress). The native extract, summarize and compress responses do not
+include an output token count, so `completion_tokens` is `0` there because it is
+unmeasured. Decisions returns `output_tokens`, which LiteLLM passes through; it
+is not billed. Requests that include an image or document may be billed at a
+higher input rate than the one registered here.
+
 ## Supported features
 
 | Feature | Supported |
 |---------|-----------|
-| Cost tracking | Yes |
+| Cost tracking | Yes (input tokens only) |
 | Logging | Yes |
 | Vision (documents on the decisions models) | Yes |
 | Streaming | No |
