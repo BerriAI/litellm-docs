@@ -224,7 +224,7 @@ By default team admins cannot change team settings at all: `/team/update` from a
 
 ```shell
 curl -X PATCH 'http://localhost:4000/update/ui_settings' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_admin_editable_team_fields": ["tpm_limit", "rpm_limit", "max_budget", "raise_max_budget"]}'
 ```
