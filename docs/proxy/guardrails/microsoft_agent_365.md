@@ -114,7 +114,7 @@ The `key_alias` is the agent id Agent 365 records with each evaluation
 ### 4. Call an MCP tool
 
 ```bash
-export LITELLM_API_KEY="sk-<key from step 3>"
+export LITELLM_API_KEY="<key from step 3>"
 TOKEN=$(az account get-access-token --tenant <tenant_id> --resource api://<gateway_client_id> --query accessToken -o tsv)
 curl -X POST http://localhost:4000/mcp-rest/tools/call \
   -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
@@ -133,8 +133,8 @@ An allowed call returns the tool result. A blocked one returns HTTP 400
 {
   "detail": {
     "error": "Blocked by Microsoft Defender",
-    "message": "Invocation of 'ask_wiki_question' is blocked by Microsoft Threat Detection policies configured by your administrator.",
-    "tool": "ask_wiki_question",
+    "message": "Invocation of 'read_wiki_structure' is blocked by Microsoft Threat Detection policies configured by your administrator.",
+    "tool": "read_wiki_structure",
     "correlation_id": "<id to look the call up on the Microsoft side>",
     "guardrail_name": "agent365-mcp",
     "guardrail_mode": "pre_mcp_call"
