@@ -498,7 +498,7 @@ curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
 
 The UI shows the display name wherever it lists credentials, with the credential name underneath, and keeps saving the credential name on models and vector stores
 
-Credentials defined in `credential_list` belong to `config.yaml`. `PATCH` and `DELETE` on them return 400, and the UI marks them with a Config badge and disables Edit and Delete, so change them in the file instead. `GET /credentials` and `GET /credentials/by_name/{credential_name}` report where each credential comes from in `source` (`db` or `config`), along with its `display_name`
+Credentials defined in `credential_list` belong to `config.yaml`. `PATCH` and `DELETE` on them return 405 Method Not Allowed with `Allow: GET`, and the UI marks them with a Config badge and disables Edit and Delete, so change them in the file instead. `GET /credentials` and `GET /credentials/by_name/{credential_name}` report where each credential comes from in `source` (`db` or `config`), along with its `display_name`
 
 ### Load API Keys from Secret Managers (Azure Vault, etc)
 
