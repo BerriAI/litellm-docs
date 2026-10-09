@@ -6,6 +6,14 @@ slug: "/proxy/lens/scalability"
 
 # Scalability design
 
+:::note Historical gateway measurements
+
+The measurements below describe the gateway-hosted Lens implementation and its PostgreSQL metadata store, preserved from [documentation revision 6a8ba43c](https://github.com/BerriAI/litellm-docs/blob/6a8ba43c/docs/proxy/lens/scalability.md). They do not qualify the independent ClickHouse-only Lens service. Its current storage and HTTP workloads must be measured against the exact service artifact and resource configuration.
+
+The standalone runtime stores Lens metadata and traces in ClickHouse. PostgreSQL is only a migration source. See the [current Lens benchmark procedure](https://github.com/BerriAI/lens/blob/main/docs/benchmarks.md) for the reproducible service runner and its limits.
+
+:::
+
 Lens stores two kinds of data. Traces and request logs live in ClickHouse, which is append-only and grows with traffic. Lenses, investigation jobs, findings, and worker state live in PostgreSQL, which is small and changes often. Each design rule below keeps the cost of a common operation tied to the work it actually does, so it does not grow with total retention, total traffic, or the number of lenses
 
 The Lens service receives agent traces directly and reads and writes them in ClickHouse. LiteLLM handles model requests and PostgreSQL state. The dashboard reads traces through LiteLLM, which retrieves them from Lens.

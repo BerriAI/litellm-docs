@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/storage"
 
 # Storage and secrets
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Skip this page if you use the chart's bundled ClickHouse and automatically generated credentials.
 
 Choose the setting you need:

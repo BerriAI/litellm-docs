@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/configuration"
 
 # Configuration and troubleshooting
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Use this page when you need to change routing or diagnose a connection. To install Lens, choose a [deployment guide](../deployment.md).
 
 ## Credentials

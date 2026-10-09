@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/server"
 
 # Docker Compose on a server
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 This setup runs LiteLLM, Lens, PostgreSQL, and ClickHouse on one server. If LiteLLM already runs in Compose, [add Lens to that project](./docker-compose.md). To try Lens on your computer, use the [local quickstart](./local.md).
 
 You need Git, Python {{python_min_version}} or later, Docker with Compose, and NGINX installed on the host. Point `llm.example.com` and `traces.example.com` at the server and obtain TLS certificates for both. The example below uses certificates stored under `/etc/letsencrypt/live/`.

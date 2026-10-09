@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/docker-compose"
 
 # Add Lens to Docker Compose
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Add Lens to your existing Compose project. You need a [ClickHouse HTTP endpoint](./storage.md#clickhouse-connection) and [matching LiteLLM and Lens images](./releases.md#container-images). For a new deployment, use [Docker Compose on a server](./server.md).
 
 ## 1. Set the connection values

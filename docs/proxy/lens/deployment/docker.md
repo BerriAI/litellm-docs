@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/docker"
 
 # Standalone Docker
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Use this path when you start LiteLLM with `docker run`. You need Docker, a running LiteLLM container, and a [ClickHouse HTTP endpoint](./storage.md#clickhouse-connection). Use [matching LiteLLM and Lens images](./releases.md#container-images).
 
 ## 1. Configure LiteLLM

@@ -13,7 +13,9 @@ Give your agent a name, run it, and open its trace in Lens. The examples on this
 
 ## 1. Connect your agent {#connect-your-agent}
 
-In the LiteLLM dashboard:
+For optional help from your coding agent, use [Connect an agent to Lens already running](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running). The prompt preserves your model connection and verifies the resulting trace
+
+In standalone Lens, open **Settings > Tracing > Connect an agent**, create a tracing key, and copy the displayed configuration. For a gateway-bundled Lens release, use its dashboard flow:
 
 1. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**.
 2. Choose your framework and click **Generate tracing key**. If you cannot create one, ask your administrator for a dedicated Lens tracing key.
@@ -48,7 +50,9 @@ export OTEL_SERVICE_NAME="research_agent"
 
 Keep your existing model configuration if you are adding tracing to an application. Initialize instrumentation before creating the agent. If your app already has an OpenTelemetry tracer provider, keep it and update its exporter instead of creating a second one.
 
-For the standalone examples below, also set the model connection:
+The framework examples below use LiteLLM for model calls. For a direct provider connection, use the [OpenAI Agents SDK](/docs/proxy/lens/integrations/openai-agents) or [OpenTelemetry](/docs/proxy/lens/integrations/opentelemetry) direct-provider template. Both send telemetry directly to Lens.
+
+For the gateway examples below, also set the model connection:
 
 ```bash
 export LITELLM_GATEWAY_URL="<your gateway base URL without a trailing slash or /v1>"

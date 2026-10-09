@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/development"
 
 # Build from source
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Use this page when developing Lens. For published images, use [Releases and images](./releases.md).
 
 Build from the same source commit and `LITELLM_RELEASE_TAG` as your gateway:

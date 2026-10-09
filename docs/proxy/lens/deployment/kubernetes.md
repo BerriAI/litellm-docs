@@ -6,6 +6,8 @@ slug: "/proxy/lens/deployment/kubernetes"
 
 # Kubernetes
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Use Helm to deploy Lens with LiteLLM. For an installed LiteLLM chart, go to [Add Lens to an existing deployment](#existing-deployment).
 
 ## New deployment {#new-deployment}
