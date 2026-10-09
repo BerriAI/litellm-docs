@@ -49,9 +49,9 @@ model_list:
 
 Credentials come from the usual `aws_*` params (`aws_access_key_id` and `aws_secret_access_key`, `aws_profile_name`, `aws_role_name`, or `aws_web_identity_token`) or from the default AWS credential chain, and the region always comes from the ARN. The identity needs `bedrock-agentcore:InvokeAgentRuntime` on the runtime
 
-All calls to one runtime share a session id derived from its ARN, so they reuse a warm microVM instead of waiting for a cold start on every request. A cold start takes one to two minutes for the 2B model. To pick your own session, set `extra_headers` with `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` (33 to 256 characters). For a runtime that uses JWT inbound auth instead of IAM, set `api_key` to the token, and LiteLLM sends it as a Bearer token without SigV4
+All calls to one deployment share one session id, derived from the runtime ARN unless you set `agentcore_runtime_session_id` (33 to 256 characters), so they reuse a warm microVM instead of waiting for a cold start on every request. A cold start takes one to two minutes for the 2B model. Callers cannot pick the session, since every new session id starts another microVM: a request body with `agentcore_runtime_session_id` is rejected with a 401 unless you allow client-side credentials, and session, `x-amz-*`, and `Host` headers in `extra_headers` are not forwarded. For a runtime that uses JWT inbound auth instead of IAM, set `api_key` to the token, and LiteLLM sends it as a Bearer token without SigV4
 
-One session is one microVM, and it answers one call at a time. To serve more calls at once, list the same ARN as several deployments under one `model_name`, each with its own session id, and LiteLLM spreads the calls across those warm replicas
+One session is one microVM, and it answers one call at a time. To serve more calls at once, list the same ARN as several deployments under one `model_name`, each with its own `agentcore_runtime_session_id`. By default the router picks one of them at random for each call, so concurrent calls spread across the warm replicas, though two can still land on the same one and wait for each other
 
 ```yaml showLineNumbers
 model_list:
@@ -60,18 +60,18 @@ model_list:
       model: strands_decider/strands-decider-2B-hobson-v21
       api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
       aws_profile_name: my-profile
-      extra_headers:
-        X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: strands-decider-replica-a-0000000000
+      agentcore_runtime_session_id: strands-decider-replica-a-0000000000
   - model_name: strands-decider
     litellm_params:
       model: strands_decider/strands-decider-2B-hobson-v21
       api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
       aws_profile_name: my-profile
-      extra_headers:
-        X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: strands-decider-replica-b-0000000000
+      agentcore_runtime_session_id: strands-decider-replica-b-0000000000
 ```
 
 When the runtime refuses a request, for example one with more than 16 questions, LiteLLM returns a 400 with the runtime's message. A runtime that is still loading the model returns a 503, and any other runtime error returns a 500
+
+If a session starts failing every call within a second, for example after the model failed to load during a cold start, stop it with `aws bedrock-agentcore stop-runtime-session --agent-runtime-arn <arn> --runtime-session-id <id>`, and the next call starts a fresh microVM. Otherwise AgentCore ends the session once it has been idle for the runtime's `idleRuntimeSessionTimeout`
 
 ## Self-hosted Laya and Nimble
 
