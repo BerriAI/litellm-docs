@@ -29,6 +29,8 @@ To install Lens, start with a [new deployment](./deployment/local.md) or [add Le
 
 Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
 
+Already have an eval set? [Run evals in CI](./ci.md) to test your agent against a saved Lens eval and fail the build when its quality gate fails. The guide covers the preview SDK, required secrets, and the GitHub Actions steps to add after deployment.
+
 ## How Lens works
 
 **1. Capture your agent's traces**
@@ -46,5 +48,7 @@ Run an investigation to find problems across your traces. Review findings with e
 **3. Turn those runs into test cases**
 
 Save runs into a dataset and add the responses you expect. Export the dataset to test changes to your agent's prompts, tools, or models.
+
+With the preview SDK, you can [run a saved eval in CI](./ci.md) and compare each deployed change with your main baseline.
 
 ![Lens dataset with support requests, recorded replies, expected responses, and an Export JSONL button.](/img/lens/overview-dataset.webp)
