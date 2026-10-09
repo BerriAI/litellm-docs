@@ -39,6 +39,8 @@ response = completion(
 print(response)
 ```
 
+
+
 ```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming"
 from litellm import completion
 
@@ -98,6 +100,28 @@ print(response)
 ```
 
 ## Usage - LiteLLM Proxy
+
+### Per-user GitHub OAuth
+
+Per-user OAuth lets each LiteLLM user connect their own GitHub Copilot account. An admin adds a GitHub Copilot model, creates an LLM credential with **Per-user GitHub OAuth** auth type (`github_copilot_auth_type: per_user_oauth`), and attaches that credential to the deployment. The deployment can expose a Claude Code alias:
+
+```yaml
+model_list:
+  - model_name: claude-copilot
+    litellm_params:
+      model: github_copilot/claude-sonnet-5.5
+      litellm_credential_name: copilot-per-user
+```
+
+Each internal user opens **LLM Credentials**, finds the credential under **Your connections**, clicks **Connect**, and completes GitHub's device flow. The user's requests then use that account's Copilot entitlement. This flow uses LiteLLM's device-code UI and does not require GitHub CLI. The existing shared sign-in flow below is separate and remains available.
+
+The user's GitHub credential is encrypted in the database. When Redis is configured, LiteLLM caches only the ciphertext, or a not-connected marker, for 60 seconds. Without Redis, the request path reads the database. Disconnecting removes the stored connection and prevents later requests from reusing it. The short-lived Copilot token is cached in memory per worker process until `expires_at` minus 60 seconds. If GitHub rejects the Copilot token exchange with 401, 403, or 404, LiteLLM clears the session and returns a credential authentication error with reconnect guidance.
+
+Available models depend on the user's GitHub Copilot plan. GitHub can return `model_not_supported` when the plan does not include the requested model. In tests in October 2026, Copilot Free served `gpt-4.1` and `gpt-4o-mini`; this is a time-bound observation, not a LiteLLM availability guarantee. For Claude Code, configure a public model alias beginning with `claude-`, such as `claude-copilot`, and authenticate to LiteLLM as the user who connected.
+
+Per-user device flow reads `GITHUB_COPILOT_CLIENT_ID` to override the OAuth client ID, `GITHUB_COPILOT_DEVICE_CODE_URL` to override the device-code endpoint, and `GITHUB_COPILOT_ACCESS_TOKEN_URL` to override the access-token endpoint. The endpoint defaults are `https://github.com/login/device/code` and `https://github.com/login/oauth/access_token`. These endpoint overrides can be used with GitHub Enterprise.
+
+Per-user OAuth takes the Copilot API host from GitHub's token response `endpoints.api`. LiteLLM accepts only HTTPS hosts under `*.githubcopilot.com` and otherwise uses `https://api.githubcopilot.com`. `GITHUB_COPILOT_API_BASE` configures the existing shared sign-in path, not per-user OAuth.
 
 ### Sign in before starting the proxy
 
@@ -299,4 +323,3 @@ extra_headers = {
     "user-agent": "GitHubCopilotChat/0.26.7"           # User agent
 }
 ```
-
