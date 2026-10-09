@@ -30,10 +30,6 @@ import TabItem from '@theme/TabItem';
 | `reka/glm5.3-flash` | 262k | 131,072 | Yes | `json_object`, `json_schema` |
 | `reka/qwen3.8-27b` | 262k | 131,072 | Yes | No |
 
-Limits are from the live model feed on [developer.reka.ai/models](https://developer.reka.ai/models) at the time of writing and change as models are added and retired. `GET https://api.reka.ai/v1/models` is the authoritative list for your account, and each entry's `pricing`, `input_modalities`, `supported_features`, and `supported_sampling_parameters` tell you what that model accepts. Any id it returns works with the `reka/` prefix.
-
-`reka-flash-3` is a 21B reasoning model and is primarily English. `reka-edge-2603` is Reka's model for physical AI and accepts images and video alongside text. The DeepSeek and GLM models are reasoning models that also support `logprobs` (non-streaming only on `deepseek4-flash`). Reasoning models return their thinking trace as `message.reasoning_content` and accept `reasoning_effort` (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`); models without reasoning ignore it.
-
 ## Required Variables
 
 ```python showLineNumbers title="Environment Variables"
