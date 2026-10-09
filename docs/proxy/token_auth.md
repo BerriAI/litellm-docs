@@ -761,7 +761,7 @@ general_settings:
 
 ### Allowing other provider routes for Teams
 
-To enable team JWT tokens to access Anthropic-style endpoints such as `/v1/messages`, update `team_allowed_routes` in your `litellm_jwtauth` configuration. `team_allowed_routes` supports the following values:
+Team JWTs can already call `/v1/messages` and `/v1/messages/count_tokens` by default. To enable team JWT tokens to access other Anthropic-style endpoints in `anthropic_routes`, update `team_allowed_routes` in your `litellm_jwtauth` configuration. `team_allowed_routes` supports the following values:
 
 - Named route groups from `LiteLLMRoutes` (e.g., `openai_routes`, `anthropic_routes`, `info_routes`, `mapped_pass_through_routes`).
 - Exact routes, e.g. `/v1/messages`.
@@ -788,7 +788,7 @@ Defaults (what the proxy uses if you don't override them in `litellm_jwtauth`):
 
 - `admin_jwt_scope`: `litellm_proxy_admin`
 - `admin_allowed_routes` (default): `management_routes`, `spend_tracking_routes`, `global_spend_tracking_routes`, `info_routes` 
-- `team_allowed_routes` (default): `openai_routes`, `info_routes` 
+- `team_allowed_routes` (default): `openai_routes`, `info_routes`, `mcp_routes`, `/v1/messages`, `/v1/messages/count_tokens`. Setting `team_allowed_routes` replaces this list, so add `mcp_routes` and the `/v1/messages` routes back if teams still need them
 - `public_allowed_routes` (default): `public_routes`
 
 

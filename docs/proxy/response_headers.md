@@ -39,8 +39,10 @@ These headers are useful for clients to understand the current rate limit status
 | Header | Type | Description |
 |--------|------|-------------|
 | `x-litellm-attempted-retries` | int | Number of retry attempts made |
+| `x-litellm-max-retries` | int | Configured `num_retries`, only sent when at least one retry was attempted |
 | `x-litellm-attempted-fallbacks` | int | Number of fallback attempts made |
-| `x-litellm-max-fallbacks` | int | Maximum number of fallback attempts allowed |
+
+`max_fallbacks` is not returned as a response header
 
 ## Cost Tracking Headers
 | Header | Type | Description | Available on Pass-Through Endpoints |

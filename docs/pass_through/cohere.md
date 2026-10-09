@@ -167,10 +167,11 @@ curl --request POST \
 
 ### **Example 3: Embedding**
 
+#### LiteLLM Proxy Call 
 
 ```bash
 curl --request POST \
-  --url https://api.cohere.com/v1/embed \
+  --url http://0.0.0.0:4000/cohere/v1/embed \
   --header 'accept: application/json' \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-anything" \

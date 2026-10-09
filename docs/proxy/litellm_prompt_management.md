@@ -84,7 +84,7 @@ Now that your prompt is published, you can use it in your application via the Li
 
 ### Basic Usage
 
-Call a prompt using just the prompt ID and model:
+Call a prompt using just the prompt ID and model. The OpenAI Python SDK rejects calls without `messages`, so the Python examples pass `messages=[]` and the proxy fills the conversation from the prompt template:
 
 <Tabs>
 <TabItem value="curl" label="cURL">
@@ -112,6 +112,7 @@ client = openai.OpenAI(
 
 response = client.chat.completions.create(
     model="{{openai_large}}",
+    messages=[],
     extra_body={
         "prompt_id": "your-prompt-id"
     }
@@ -255,6 +256,7 @@ client = openai.OpenAI(
 
 response = client.chat.completions.create(
     model="{{openai_large}}",
+    messages=[],
     extra_body={
         "prompt_id": "your-prompt-id",
         "prompt_variables": {

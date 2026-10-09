@@ -116,7 +116,91 @@
 
 .chartBody {
   padding: 0 0.5rem 0.5rem;
+  position: relative;
 }
+
+.pointHit {
+  fill: transparent;
+  outline: none;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 2;
+  width: max-content;
+  max-width: min(440px, 92%);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 14%);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.tooltipRight {
+  margin-left: 14px;
+}
+
+.tooltipLeft {
+  margin-left: -14px;
+  transform: translate(-100%, -50%);
+}
+
+.tooltipHead {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.tooltipDate,
+.tooltipEmpty {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.tooltipList {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tooltipList li {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.tooltipList li + li {
+  margin-top: 0.3rem;
+}
+
+.tooltipArea {
+  font-weight: 600;
+}
+
+.tooltipArea em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.tooltipStage {
+  color: var(--ifm-color-primary);
+  white-space: nowrap;
+}
+
+.tooltipStage em {
+  font-style: normal;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.tooltipMore {
+  color: var(--ifm-color-emphasis-700);
+}
+
 
 .timeline {
   display: block;

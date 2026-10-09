@@ -183,13 +183,18 @@ _sourceCategory=litellm/logs
 
 #### Changing the Log Format (Advanced)
 
-If you need to change the log format (not recommended for Sumo Logic):
+If you need to change the log format (not recommended for Sumo Logic), define the full `generic_api` callback in `callback_settings`. `endpoint` and `headers` are required; a block with only `log_format` is skipped with a `missing endpoint or headers` warning and the proxy then fails to start with `ValueError: Empty module name`
 
 ```yaml
+litellm_settings:
+  callbacks: ["sumologic"]
+
 callback_settings:
   sumologic:
     callback_type: generic_api
-    callback_name: sumologic
+    endpoint: os.environ/SUMOLOGIC_WEBHOOK_URL
+    headers:
+      Content-Type: application/json
     log_format: json_array  # Override to use JSON array instead
 ```
 
@@ -209,8 +214,8 @@ litellm.callbacks = ["sumologic"]
 
 # Configure batch settings (optional)
 # These are inherited from CustomBatchLogger
-# Default batch_size: 100
-# Default flush_interval: 60 seconds
+# Default batch_size: 512 (override with the DEFAULT_BATCH_SIZE env var)
+# Default flush_interval: 5 seconds (override with the DEFAULT_FLUSH_INTERVAL_SECONDS env var)
 ```
 
 </TabItem>
@@ -304,7 +309,7 @@ The Sumo Logic HTTP Source URL includes the authentication token, so you only ne
 
 1. **Verify the URL**: Make sure `SUMOLOGIC_WEBHOOK_URL` is set correctly
 2. **Check the HTTP Source**: Ensure it's active in Sumo Logic UI
-3. **Wait for batching**: Logs are sent in batches, wait 60 seconds
+3. **Wait for batching**: Logs are sent in batches, flushed every 5 seconds by default (`DEFAULT_FLUSH_INTERVAL_SECONDS`)
 4. **Check for errors**: Enable debug logging in LiteLLM:
    ```python
    litellm.set_verbose = True

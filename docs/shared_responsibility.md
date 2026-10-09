@@ -25,7 +25,7 @@ In a nutshell, we own the behavior of the product as documented on this site, an
 
 We are responsible for the product working. Every feature documented on this site should behave as documented. If it does not, that is a bug for us and you should [open an issue](https://github.com/BerriAI/litellm/issues) or raise it in your enterprise support channel.
 
-That responsibility covers stability, not only correctness. Memory growth, file descriptor or connection leaks, deadlocks, hangs, and throughput regressions within the documented feature set are our responsibility to diagnose and fix. This covers the interfaces you interact with: the public HTTP surface is governed by the [API Stability Policy](./api_stability_policy.md), version numbering and what a patch or minor bump means is documented in [Release Cycle](./proxy/release_cycle.md), and beta features moving behind Enterprise by the [Migration Policy](./migration_policy.md). We maintain the official Docker image, Helm chart, and Terraform modules described in [Production Deployment](./proxy/deploy.md), and we ship security patches for the [supported version window](./enterprise.md#version-support).
+That responsibility covers stability, not only correctness. Memory growth, file descriptor or connection leaks, deadlocks, hangs, and throughput regressions within the documented feature set are our responsibility to diagnose and fix. This covers the interfaces you interact with: the public HTTP surface is governed by the [API Stability Policy](./api_stability_policy.md), version numbering and what a patch or minor bump means is documented in [Release Cycle](./proxy/release_cycle.md), and beta features moving behind Enterprise by the [Migration Policy](./migration_policy.md). We maintain the official Docker image, Helm chart, and Terraform modules described in [Production Deployment](./proxy/deploy.md), and we ship security patches for the [supported version window](./enterprise/version_support.md).
 
 If you are on an end-of-life line, we recommend upgrading as a first step to ensure you have the latest bug fixes and security patches applied.
 
@@ -55,4 +55,4 @@ Please include:
 6. For stability reports, we recommend including the memory or latency curve over time, the request rate, and the worker and container limits
 7. For memory and latency issues, we recommend including [Pyroscope profiling](./proxy/pyroscope_profiling.md) results
 
-Open bugs and feature requests as [GitHub issues](https://github.com/BerriAI/litellm/issues). Enterprise customers can also use their dedicated support channel. See [Professional Support](./enterprise.md#professional-support) for hours and SLA options.
+Open bugs and feature requests as [GitHub issues](https://github.com/BerriAI/litellm/issues). Enterprise customers can also use their dedicated support channel. See [Support and SLA](./enterprise/support.md) for hours and SLA options.

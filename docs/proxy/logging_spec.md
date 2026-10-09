@@ -42,6 +42,7 @@ Terminal success and failure callback events include `kwargs["standard_logging_o
 | `error_information` | `Optional[StandardLoggingPayloadErrorInformation]` | Optional error information |
 | `model_parameters` | `dict` | Model parameters |
 | `hidden_params` | `StandardLoggingHiddenParams` | Hidden parameters |
+| `guardrail_information` | `Optional[list[StandardLoggingGuardrailInformation]]` | One entry per guardrail that ran on the request |
 
 ## Cost Breakdown
 
@@ -100,7 +101,6 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `applied_guardrails` | `Optional[List[str]]` | List of applied guardrail names |
 | `usage_object` | `Optional[dict]` | Raw usage object from the LLM provider |
 | `cold_storage_object_key` | `Optional[str]` | S3/GCS object key for cold storage retrieval |
-| `guardrail_information` | `Optional[list[StandardLoggingGuardrailInformation]]` | Guardrail information |
 
 
 ## StandardLoggingVectorStoreRequest
@@ -187,7 +187,7 @@ A literal type with two possible values:
 | `guardrail_mode`      | `Optional[Union[GuardrailEventHooks, List[GuardrailEventHooks]]]` | Guardrail mode                                                                                                                                                            |
 | `guardrail_request`   | `Optional[dict]` | Guardrail request                                                                                                                                                         |
 | `guardrail_response`  | `Optional[Union[dict, str, List[dict]]]` | Guardrail response                                                                                                                                                        |
-| `guardrail_status`    | `Literal["success", "guardrail_intervened", "guardrail_failed_to_respond"]` | Guardrail execution status: `success` = no violations detected, `blocked` = content blocked/modified due to policy violations, `failure` = technical error or API failure |
+| `guardrail_status`    | `GuardrailStatus` | Guardrail execution status, one of the [GuardrailStatus](#guardrailstatus) values |
 | `start_time`          | `Optional[float]` | Start time of the guardrail                                                                                                                                               |
 | `end_time`            | `Optional[float]` | End time of the guardrail                                                                                                                                                 |
 | `duration`            | `Optional[float]` | Duration of the guardrail in seconds                                                                                                                                      |
@@ -210,8 +210,9 @@ A literal type with two possible values:
 
 ### GuardrailStatus
 
-A literal type with four possible values:
+A literal type with five possible values:
 - `"success"` - Guardrail ran and allowed content through (no violations detected)
+- `"guardrail_flagged"` - Guardrail allowed content through but recorded a non-blocking violation
 - `"guardrail_intervened"` - Guardrail blocked or modified content due to policy violations
 - `"guardrail_failed_to_respond"` - Guardrail had a technical failure or API error
 - `"not_run"` - No guardrail was executed for this request

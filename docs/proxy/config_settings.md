@@ -118,6 +118,7 @@ callback_settings:
 general_settings:
   completion_model: string
   store_prompts_in_spend_logs: boolean
+  spend_logs_metadata_fields: object  # {include: [string]} or {exclude: [string]}, which LiteLLM_SpendLogs.metadata keys are written to the db
   forward_client_headers_to_llm_api: boolean
   disable_spend_logs: boolean  # turn off writing each transaction to the db
   disable_master_key_return: boolean  # turn off returning master key on UI (checked on '/user/info' endpoint)
@@ -125,8 +126,12 @@ general_settings:
   disable_reset_budget: boolean  # turn off reset budget scheduled task
   disable_adding_master_key_hash_to_db: boolean  # turn off storing master key hash in db, for spend tracking
   disable_responses_id_security: boolean  # turn off response ID security checks that prevent users from accessing other users' responses
+  responses_websocket_session_limit_seconds: 3600  # max lifetime of a /v1/responses WebSocket session, from connect. 60-7200, default 3600
   allow_unmanaged_response_ids: boolean  # let keys address response IDs this proxy never issued, e.g. raw provider IDs
+  vector_store_deny_by_default: boolean  # if true, a vector store must be granted in object_permission.vector_stores of the key and its team (or the user when there is neither); empty lists grant nothing
   disable_auto_add_proxy_admin_to_teams: boolean  # if true, a proxy admin calling /team/new is no longer auto-added to the new team as team admin
+  search_tool_deny_by_default: boolean  # if true, a search tool must be granted in object_permission.search_tools of the key and its team (or the user when there is neither); empty lists grant nothing
+  disable_fallbacks_on_per_model_rate_limits: boolean  # if true, a key/team/org/project per-model rate limit (model_rpm_limit / model_tpm_limit) returns 429 instead of retrying on router_settings fallbacks
   enforce_fallback_model_access: boolean  # if true, router_settings fallbacks only run when the calling key, team and project may call the fallback model
   enforce_fallback_budget: boolean  # default true; set false to let router_settings fallbacks run even when the calling key or user is out of budget
   enable_jwt_auth: boolean  # allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims
@@ -138,10 +143,11 @@ general_settings:
   disable_budget_reservation: boolean  # disable pre-request budget reservation; may allow overspend under concurrency
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
   key_management_system: google_kms  # either google_kms or azure_kms
-  master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or sk-1234
-  dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or with sk-1234
+  master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or has a known unsafe value
+  dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or a known unsafe value
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
+  maximum_daily_tag_spend_retention_period: 90d # Optional. Prune LiteLLM_DailyTagSpend rows for days older than this.
   user_mcp_management_mode: restricted  # or "view_all"
 
   # Database Settings
@@ -156,6 +162,7 @@ general_settings:
   database_disable_prepared_statements: boolean  # if true, appends pgbouncer=true to the Prisma connection URL, disabling server-side prepared statements. For PgBouncer transaction pooling and avoiding "cached plan must not change result type" errors during rolling migrations.
   allow_requests_on_db_unavailable: boolean  # if true, will allow requests that can not connect to the DB to verify Virtual Key to still work 
   fail_closed_budget_enforcement: boolean  # if true, validates spend against the DB for every budgeted request and rejects with 503 when spend cannot be verified against Redis or the DB
+  fail_closed_rate_limit_enforcement: boolean  # if true, rejects requests with 503 while the tpm/rpm/max_parallel_requests counters in Redis are unreachable, instead of enforcing the limits per instance from memory
 
   custom_auth: string
   max_parallel_requests: 0 # the max parallel requests allowed per deployment
@@ -228,7 +235,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | json_logs | boolean | `false` | If true, logs will be in json format. If you need to store the logs as JSON, just set the `litellm.json_logs = True`. We currently just log the raw POST request from litellm as a JSON [Further docs](./debugging) |
 | request_correlation_in_logs | boolean | `false` | If true, stamps every log line (plaintext or JSON) with the request's `trace_id` and `session_id`, and adds a `session_id` field to `StandardLoggingPayload`. [Further docs](./debugging#request-correlation-ids) |
 | default_fallbacks | array of strings | `[]` | List of fallback models to use if a specific model group is misconfigured / bad. [Further docs](./reliability#default-fallbacks) |
-| request_timeout | integer | `6000` (seconds) | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) |
+| request_timeout | integer | `6000` (seconds) | The timeout for requests in seconds. If not set, the default value is `6000 seconds`. [For reference OpenAI Python SDK defaults to `600 seconds`.](https://github.com/openai/openai-python/blob/main/src/openai/_constants.py) When set, it also applies to native provider passthrough routes (`/v1/responses`, `/v1/messages`, Bedrock `/converse`), where it outranks `general_settings.pass_through_request_timeout` and sits below any deployment or router timeout. [Docs](./pass_through#request-timeouts) |
 | force_ipv4 | boolean | `false` | If true, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6 + Anthropic API. `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` are still honored on both the aiohttp and httpx transports; on the httpx transport only direct connections are pinned to IPv4, the hop to the proxy itself is not |
 | disable_aiohttp_transport | boolean | `false` | If true, LLM requests go through plain httpx instead of the default aiohttp transport. Set this (or the `DISABLE_AIOHTTP_TRANSPORT` env var) if you see aiohttp connector errors such as a `CancelledError` surfacing as `No response returned` on `/v1/responses`, `/v1/chat/completions` or `/v1/messages`. **Default is False** |
 | http2 | boolean | `false` | If true, LiteLLM negotiates HTTP/2 with LLM providers over TLS (falls back to HTTP/1.1 when the provider does not support it). Routes traffic through httpx instead of the default aiohttp transport. Can also be set with the `LITELLM_HTTP2` env var. Available from v1.103.0. [Further docs](./server_tuning#outbound-http2-to-providers). **Default is False** |
@@ -237,6 +244,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | cache | boolean | `false` | If true, enables caching. [Further docs](./caching) |
 | cache_params | object | `{}` (`type` defaults to `redis`) | Parameters for the cache. [Further docs](./caching_settings#supported-cache_params-on-proxy-configyaml) |
 | enable_redis_auth_cache | boolean | `false` | When `true`, stores virtual-key auth payloads in Redis (same client as response caching) so every worker/pod shares cached auth lookups—fewer repeated database reads on cache misses. **Requires `cache: true` and `cache_params.type: redis`** (Redis or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching_redis#virtual-key-authentication-cache-redis) |
+| force_redis_hash_tag_grouping | boolean | `false` | When `true`, the rate limiter groups the keys of its Redis Lua scripts by hash slot even when the cache is a plain Redis connection rather than a Redis Cluster. Set this for single-endpoint Redis services that still reject cross-slot commands, such as Azure Managed Redis with the Enterprise clustering policy; without it those services fail the batched `EVALSHA` calls with `CROSSSLOT Keys in request don't hash to the same slot` and rate limits fall back to per-pod memory. |
 | disable_end_user_cost_tracking | boolean | `false` | If true, turns off end user cost tracking on prometheus metrics + litellm spend logs table on proxy. |
 | enable_end_user_cost_tracking_prometheus_only | boolean | `false` | If true, includes the `end_user` label on Prometheus metrics. Disabled by default to keep Prometheus cardinality bounded. [Further docs](./prometheus#tracking-end_user-on-prometheus) |
 | cost_discount_config | object | `{}` | Provider-specific percentage discounts applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_discounts) |
@@ -253,7 +261,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | key_alias_pattern | string | `None` | Regex every `key_alias` must fully match on `/key/generate`, `/key/update`, and `/key/{key}/regenerate`. Replaces the built-in rule `enable_key_alias_format_validation` turns on. Aliases are capped at 255 characters. A non-matching alias is rejected with a `400` that names the pattern. [Further docs](./virtual_keys#enforce-a-key_alias-naming-pattern) |
 | require_managed_files | boolean | `false` | When `true`, `POST /v1/files` requires `target_model_names` and rejects classic provider file uploads with `400`. Use to enforce LiteLLM managed files for file ownership and access control. [Further docs](./litellm_managed_files#optional-enforce-managed-files-on-upload) |
 | user_url_validation | boolean | `true` | When `true`, the proxy validates user-controlled URLs (e.g. OpenAPI `spec_path` when it is an `http(s)` URL, image URLs, and similar) before fetching: DNS is resolved and connections to non–globally-routable addresses (RFC1918, loopback, link-local, etc.) are blocked unless the **hostname in the URL** is listed in `user_url_allowed_hosts`. Set to `false` to skip validation (only if you trust who can supply URLs). **Must be set under `litellm_settings`**, not `general_settings`. |
-| user_url_allowed_hosts | array of strings | `[]` | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf). |
+| user_url_allowed_hosts | array of strings | `[]` | Hostnames allowed to resolve to private/internal IPs when `user_url_validation` is `true`. Match the host **as it appears in the URL** (e.g. `api.corp.internal`, `127.0.0.1`, `127.0.0.1:8080`, `[::1]:443`). For split-horizon DNS, allowlist the public hostname, not the resolved `10.x` address. **Must be set under `litellm_settings`**, not `general_settings`. See [MCP from OpenAPI](../mcp_openapi#internal-spec-urls-ssrf) and the [custom code guardrail](guardrails/custom_code_guardrail#blocked-destinations). |
 | disable_copilot_system_to_assistant | boolean | `false` | **DEPRECATED** - GitHub Copilot API supports system prompts. |
 | default_team_params | object | `null` | Default parameters applied to every new team created via `/team/new` (including SSO auto-created teams). Fills in fields that are omitted or `null` in the request, except `budget_duration`: an explicit `"budget_duration": null` skips the default and creates a never-resetting budget. Sub-fields: `max_budget` (float), `budget_duration` (string, e.g. `"30d"`), `tpm_limit` (integer), `rpm_limit` (integer), `team_member_permissions` (array of strings, e.g. `["/team/daily/activity", "/key/generate"]`), `models` (array of strings — only applied to SSO auto-created teams). |
 | budget_reset_time | string | `null` (midnight) | Available in the next release (after `v1.94.0`). Wall-clock time of day (in the configured `timezone`) that day/week/month budgets reset at, as a quoted 24-hour `"HH:MM"` or `"HH:MM:SS"` string, e.g. `"09:00"`. Defaults to midnight when unset; sub-day durations ignore it. A malformed value fails config load at startup. [Further docs](./budget_reset_and_tz#configuring-the-reset-time-of-day) |
@@ -287,8 +295,11 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_reset_budget | boolean | `false` | If true, turns off reset budget scheduled task |
 | disable_adding_master_key_hash_to_db | boolean | n/a | **No longer read by the proxy**; the code that wrote the master key hash to the DB was removed in [litellm#8268](https://github.com/BerriAI/litellm/pull/8268). If true, turns off storing master key hash in db |
 | disable_responses_id_security | boolean | `false` | If true, disables response ID security checks that prevent users from accessing response IDs from other users. When false (default), response IDs are encrypted with user information to ensure users can only access their own responses. Applies to /v1/responses endpoints |
+| responses_websocket_session_limit_seconds | float | `3600` | Maximum lifetime in seconds of a Responses API WebSocket session on `/v1/responses` and `/responses`, counted from when the connection is accepted. Idle connections stay open until their first `response.create` frame, up to this limit. When it is reached the proxy closes the socket with code `1000` and reason `Session duration limit reached`. Must be between 60 and 7200; any other value logs a warning and falls back to 3600. [Docs](../response_api#session-duration-limit) |
 | allow_unmanaged_response_ids | boolean | `false` | If true, lets keys address response IDs this proxy never issued, such as raw provider IDs or IDs handed out before response ID encryption was on. When false (default), those IDs are refused with 403 because the proxy cannot tell who owns them. IDs the proxy did issue stay owner-checked either way. Applies to /v1/responses endpoints |
 | disable_auto_add_proxy_admin_to_teams | boolean | `false` | When a user calls `/team/new`, LiteLLM auto-adds that caller to the new team as a team admin. Set this to `true` so proxy admins are no longer auto-added; members you explicitly list in `members_with_roles` are still added, and non-admin callers (e.g. internal users) are still auto-added. Also toggleable from the Admin UI under **Settings > Router Settings > General Settings**. |
+| search_tool_deny_by_default | boolean | `false` | If true, a request may only use a search tool listed in `object_permission.search_tools` of its key and team, of the team for a keyless team member, or of the user when there is neither. Missing or empty lists grant nothing, and web search interception no longer falls back to the default provider. The master key and dashboard sessions are exempt. [More information here](../search/index.md#restrict-search-tool-access) |
+| disable_fallbacks_on_per_model_rate_limits | boolean | `false` | Default `false`. When `true`, a request rejected by a key, team, organization or project per-model rate limit (`model_rpm_limit` / `model_tpm_limit`) returns 429 instead of retrying on the `router_settings` fallbacks. Other local rate limits keep falling back as before. [More information here](users#per-model-rate-limits-and-fallbacks) |
 | enforce_fallback_model_access | boolean | `false` | Default `false`. When `true`, a fallback configured in `router_settings` (`fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks`, `default_fallbacks`) only runs if the calling key, its team and its project are allowed to call the fallback model; unauthorized targets are skipped and the primary model's error is returned when none remain. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
 | enforce_fallback_budget | boolean | `true` | Default `true`. A fallback configured in `router_settings` only runs if the calling key and user are still within budget; over-budget targets are skipped and the primary model's error is returned when none remain. Zero-cost fallback targets are always allowed, and the primary attempt is never blocked. Set to `false` to let fallbacks run regardless of budget. [More information here](reliability#enforce-budget-on-fallbacks) |
 | enable_jwt_auth | boolean | `false` | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
@@ -301,8 +312,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_budget_reservation | boolean | `false` | Default `false`. Set to `true` to disable pre-request cost reservation. This can allow concurrent requests to exceed a configured budget; requests are still rejected when the budget is already exhausted. LiteLLM logs a warning while this option is enabled. See [Budget reservation](./users#budget-reservation). |
 | allowed_routes | array of strings | `null` (all routes) | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | `null` | Specifies the key management system. [Doc Secret Managers](../secret) |
-| master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Set up Virtual Keys](virtual_keys), [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
-| dangerously_permit_weak_or_unset_master_key | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or is `sk-1234`, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY` env var. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start) |
+| master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy. The proxy will not start when it is not set, is empty, or has a known unsafe value. [Set up Virtual Keys](virtual_keys), [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start) |
+| dangerously_permit_weak_or_unset_master_key | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or has a known unsafe value, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY` env var. [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start) |
 | database_url | string | `null` (falls back to `DATABASE_URL`) | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
 | database_connection_pool_limit | integer | `10` | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
 | database_connection_timeout | integer | `60` (seconds) | The timeout for database connections in seconds [Setting DB Connection Pool limit, timeout](./configs.md#configure-db-pool-limits--connection-timeouts) |
@@ -314,6 +325,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | database_disable_prepared_statements | boolean | `false` | Appends `pgbouncer=true` to the Prisma connection URL, disabling reuse of server-side prepared statements. Use behind PgBouncer transaction pooling, or to avoid `cached plan must not change result type` errors during rolling schema migrations. An explicit `pgbouncer` key in `database_extra_connection_params` takes precedence. [Disable Server-Side Prepared Statements](configs#disable-server-side-prepared-statements) |
 | allow_requests_on_db_unavailable | boolean | `false` | If true, allows requests to succeed even if DB is unreachable. **Only use this if running LiteLLM in your VPC** This will allow requests to work even when LiteLLM cannot connect to the DB to verify a Virtual Key [Doc on graceful db unavailability](prod#gracefully-handle-db-unavailability) |
 | fail_closed_budget_enforcement | boolean | `false` | When `true`, budget checks validate spend against the authoritative database for every budgeted request (key, team, user, organization, end-user, tag, and per-window budgets) instead of trusting only the cross-pod Redis counter, and a request is rejected with a `503` when current spend can be verified against neither Redis nor the database. Use this when a configured budget must be a hard ceiling even while Redis is degraded or restarting; leave it off to keep healthy under-budget traffic off the database. [Doc on budget enforcement](./users#hard-budget-enforcement-fail-closed) |
+| fail_closed_rate_limit_enforcement | boolean | `false` | When `true`, a request whose tpm, rpm, or max_parallel_requests counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance in-memory counter, which admits up to N times the limit across N instances. Use this when a configured rate limit must be a hard ceiling even while Redis is down; leave it off to keep serving through a Redis outage. Has no effect without Redis configured. [Doc on rate limit enforcement](./users#hard-rate-limit-enforcement-fail-closed) |
 | custom_auth | string | `null` | Write your own custom authentication logic [Doc Custom Auth](./custom_auth) |
 | max_parallel_requests | integer | `null` (no limit) | The max parallel requests allowed per deployment |
 | global_max_parallel_requests | integer | `null` (no limit) | The max parallel requests allowed on the proxy overall |
@@ -337,13 +349,18 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | image_generation_model | str | `null` | The default model to use for image generation - ignores model set in request |
 | store_model_in_db | boolean | `false` | If true, enables storing model + credential information in the DB. |
 | supported_db_objects | List[str] | `null` | Fine-grained control over which object types to load from the database when `store_model_in_db` is True. Available types: `"models"`, `"mcp"`, `"guardrails"`, `"vector_stores"`, `"pass_through_endpoints"`, `"prompts"`, `"model_cost_map"`. If not set, all object types are loaded (default behavior). Example: `supported_db_objects: ["mcp"]` to only load MCP servers from DB. |
+| vector_store_deny_by_default | boolean | `false` | If true, a request may only use a vector store listed in `object_permission.vector_stores` of its key and team, of the team for a keyless team member, or of the user when there is neither. Missing or empty lists grant nothing. The master key and dashboard sessions are exempt. [Doc on denying vector stores by default](../vector_stores/managed_vector_stores#deny-vector-stores-by-default) |
 | user_mcp_management_mode | string | `null` | Controls what non-admins can see on the MCP dashboard. `restricted` (default) only lists MCP servers that the user’s teams are explicitly allowed to access. `view_all` lets every user see the full MCP server list. Tool list/call always respects per-key permissions, so users still cannot run MCP calls without access. |
 | store_prompts_in_spend_logs | boolean | `false` | If true, allows prompts and responses to be stored in the spend logs table. |
+| spend_logs_metadata_fields | object | `null` (every key written) | Which top-level keys of `LiteLLM_SpendLogs.metadata` are written to the database. Set exactly one of `include` (write only these keys) or `exclude` (drop these keys); setting both, neither, or an unknown key stops the proxy at startup. `status` and `cold_storage_object_key` are always written. Daily spend tables, budgets and logging callbacks still see every key. See [Choose which metadata fields are stored](./ui_logs.md#choose-which-metadata-fields-are-stored) |
 | scope_spend_list_endpoints_to_caller | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true` (default), `/spend/keys` and `/spend/users` return only the caller's rows for non-admin API keys. Set to `false` to disable scoping. See [Spend list endpoints](./cost_tracking.md#spend-list-endpoints-spendkeys-and-spendusers). |
 | legacy_unscoped_spend_list_endpoints | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true`, restores pre-scoping behavior for `/spend/keys` and `/spend/users` (non-admin keys may list all rows). Overrides `scope_spend_list_endpoints_to_caller`. Env: `LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS`. |
 | max_request_size_mb | int | `null` (no limit) | The maximum size for requests in MB. Requests above this size will be rejected. |
 | max_response_size_mb | int | `null` (no limit) | The maximum size for responses in MB. LLM Responses above this size will not be sent. |
 | max_batch_file_size_mb | int | `null` (no cap) | The maximum size in MB for a batch input file uploaded to `/v1/files` with `purpose="batch"`. Larger uploads are rejected with a `413` before reaching the provider. Unset means no cap. See [Batch input file validation](../batches#batch-input-file-validation) |
+| max_batch_file_records | int | `null` (no cap) | The maximum number of request lines in a batch input file uploaded to `/v1/files` with `purpose="batch"`. Blank lines are not counted. A file with more records is rejected with a `413` before reaching the provider. Applies per key; a proxy admin can override it in a key's metadata and add a team cap in a team's metadata, and the lower of the key's and the team's value wins. Must be a positive integer. See [Batch input file validation](../batches#limit-the-number-of-records-in-a-batch-file) |
+| max_batch_file_uploads_per_day | int | `null` (no cap) | How many batch input files each key (or each user, for JWT callers without a key) can upload to `/v1/files` in one UTC day. Past the limit, uploads get a `429` with a `Retry-After` header counting down to 00:00 UTC. A proxy admin can override it in a key's metadata and add a team-wide limit in a team's metadata. Must be a positive integer. See [Batch upload and download limits](../batches#batch-upload-and-download-limits) |
+| max_file_downloads_per_minute | int | `null` (no cap) | How many times each key (or each user, for JWT callers without a key) can download the content of one file through `/v1/files/{file_id}/content` in one minute. Past the limit, downloads of that file get a `429` with a `Retry-After` header; other files are unaffected. A proxy admin can override it in a key's metadata and add a team-wide limit in a team's metadata. Must be a positive integer. See [Batch upload and download limits](../batches#batch-upload-and-download-limits) |
 | max_file_size_mb | int | `null` (no cap) | The maximum size in MB for a file uploaded to `/v1/files`, for any `purpose`. Larger uploads are rejected with a `413` before reaching the provider. Unset means no cap. |
 | allowed_file_extensions | List[str] | `null` (any extension) | The only file extensions (e.g. `[".jsonl", ".pdf", ".txt"]`) accepted on upload to `/v1/files`, for any `purpose`. Matched case-insensitively against the uploaded filename. Files with any other extension, or with no extension, are rejected with a `400` before reaching the provider. An empty list rejects every upload. Unset means no allowlist is applied. See [Restrict file uploads](./security_best_practices#10-restrict-file-uploads) |
 | blocked_file_extensions | List[str] | `null` (none blocked) | Deprecated, prefer `allowed_file_extensions`. File extensions (e.g. `[".exe", ".sh"]`) rejected on upload to `/v1/files`, for any `purpose`. Matched case-insensitively against the uploaded filename. Still enforced after the allowlist when both are set. Unset means no extensions are blocked. |
@@ -382,14 +399,15 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
-| litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise.md#how-do-i-set-up-and-verify-an-enterprise-license) |
+| litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
-| pass_through_request_timeout | float | `null` | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this. [Docs](./pass_through#request-timeouts) |
+| pass_through_request_timeout | float | `null` | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this on custom endpoints. On native provider passthrough routes a deployment or router timeout and an explicitly set `litellm_settings.request_timeout` override it. [Docs](./pass_through#request-timeouts) |
 | enable_oauth2_proxy_auth | boolean | `false` | (Enterprise Feature) If true, enables oauth2.0 authentication |
 | forward_openai_org_id | boolean | `false` | If true, forwards the OpenAI Organization ID to the backend LLM call (if it's OpenAI). |
 | forward_client_headers_to_llm_api | boolean | `false` | If true, forwards the client headers (any `x-` headers and `anthropic-beta` headers) to the backend LLM call |
 | maximum_spend_logs_retention_period | str                   | `null` (cleanup disabled) | Used to set the max retention time for spend logs in the db, after which they will be auto-purged                                                                                                                                                                                                                             |
+| maximum_daily_tag_spend_retention_period | str                   | `null` (table never pruned) | Deletes `LiteLLM_DailyTagSpend` rows whose day is strictly older than the retention horizon, on the same cleanup job. See [spend logs deletion](./spend_logs_deletion) |
 | maximum_spend_logs_retention_interval | str                   | `1d` | Used to set the interval in which the spend log cleanup task should run in.                                                                                                                                                                                                                                                   |
 | alert_type_config | dict | `null` | Configuration mapping alert types to their handler settings |
 | always_include_stream_usage | boolean | `false` | If true, includes usage metrics in every streaming response chunk |
@@ -555,18 +573,14 @@ router_settings:
 | A2A_API_BASE | Base URL for A2A agent requests
 | ACTIONS_ID_TOKEN_REQUEST_TOKEN | Token for requesting ID in GitHub Actions
 | ACTIONS_ID_TOKEN_REQUEST_URL | URL for requesting ID token in GitHub Actions
-| AGENT365_API_BASE | Base URL of the Microsoft Agent 365 tool evaluation endpoint for the `agent_365` guardrail. Default is https://agent365.svc.cloud.microsoft
 | AGENT365_CLIENT_ID | Client id of the gateway's Entra app registration for the `agent_365` guardrail On-Behalf-Of exchange
 | AGENT365_CLIENT_SECRET | Client secret of the gateway's Entra app registration for the `agent_365` guardrail
-| AGENT365_RESOURCE_APP_ID | Application id of the Agent 365 resource the `agent_365` guardrail mints delegated tokens for. Defaults to the production resource
 | AGENT365_TENANT_ID | Entra tenant id used by the `agent_365` guardrail for the On-Behalf-Of token exchange
 | AGENTOPS_ENVIRONMENT | Environment for AgentOps logging integration
 | AGENTOPS_API_KEY | API Key for AgentOps logging integration
 | AGENTOPS_SERVICE_NAME | Service Name for AgentOps logging integration
 | AI21_API_BASE | Base URL for AI21. Default is https://api.ai21.com/studio/v1
 | AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
-| AISPEND_ACCOUNT_ID | Account ID for AI Spend
-| AISPEND_API_KEY | API Key for AI Spend
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_CONNECTOR_LIMIT_PER_HOST | Connection limit per host for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_KEEPALIVE_TIMEOUT | Keep-alive timeout for aiohttp connections in seconds. **Default is 120**
@@ -604,7 +618,6 @@ router_settings:
 | ARK_API_BASE | Base URL for Volcengine Ark responses, read after `VOLCENGINE_API_BASE`
 | ATHINA_API_KEY | API key for Athina service
 | ATHINA_BASE_URL | Base URL for Athina service (defaults to `https://log.athina.ai`)
-| AUTH_STRATEGY | Strategy used for authentication (e.g., OAuth, API key)
 | AUTO_REDIRECT_UI_LOGIN_TO_SSO | Flag to enable automatic redirect of UI login page to SSO when SSO is configured. Default is **false**
 | AUDIO_SPEECH_CHUNK_SIZE | Chunk size for audio speech processing. Default is 1024
 | ANTHROPIC_API_KEY | API key for Anthropic service. Uses `x-api-key` header for authentication.
@@ -679,7 +692,6 @@ router_settings:
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
-| BERRISPEND_ACCOUNT_ID | Account ID for BerriSpend service
 | BFL_API_BASE | Base URL for Black Forest Labs image generation and editing
 | BLACK_FOREST_LABS_API_KEY | API key for Black Forest Labs, read after `BFL_API_KEY`
 | BRAINTRUST_API_KEY | API key for Braintrust integration
@@ -700,6 +712,9 @@ router_settings:
 | CIRCLE_OIDC_TOKEN_V2 | Version 2 of the OpenID Connect token for CircleCI
 | CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours. Can also be set via LITELLM_CLI_JWT_EXPIRATION_HOURS
 | CLI_SSO_CLAIM_MAP | Comma-separated allowlist mapping OIDC claim paths to LiteLLM user `metadata` keys for CLI SSO (e.g. `employment_type->acme_employment_type,org_info.department->department`). Scalar values are also returned in `/sso/cli/poll` as `attribution_metadata`. Alias: `LITELLM_CLI_SSO_CLAIM_MAP`
+| CLICKHOUSE_DATABASE | ClickHouse database LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store. Default `litellm`
+| CLICKHOUSE_FLUSH_INTERVAL_SECONDS | Seconds between flushes of the rows LiteLLM buffers for ClickHouse, such as spend logs when tracing is on. A full batch flushes early. Default `1.0`
+| CLICKHOUSE_URL | ClickHouse HTTP endpoint LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store, for example `http://default:<password>@clickhouse:8123`. Required for ClickHouse tracing. See [Lens](lens)
 | CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
@@ -763,7 +778,6 @@ router_settings:
 | DYNAMOAI_MODEL_ID | Model ID for DynamoAI tracking/logging purposes
 | DYNAMOAI_POLICY_IDS | Comma-separated list of DynamoAI policy IDs to apply
 | DD_BASE_URL | Base URL for Datadog integration
-| DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
 | EDENAI_API_BASE | Base URL for Eden AI. Default is https://api.edenai.run/v3; set https://api.eu.edenai.run/v3 for the EU endpoint
 | EDENAI_API_KEY | API key for Eden AI
 | ELEVENLABS_API_BASE | Base URL for ElevenLabs. Default is https://api.elevenlabs.io
@@ -799,6 +813,10 @@ router_settings:
 | JINA_API_KEY | Fallback for `JINA_AI_API_KEY`
 | LANGFLOW_API_BASE | Base URL for Langflow. Default is http://localhost:7860
 | LANGFLOW_API_KEY | API key for Langflow
+| BESPOKE_API_BASE | HTTP(S) base URL of a Bespoke Nimble System One server, without `/v1/systemone`, for `/bespoke/v1/systemone` and [OSS classifiers](/docs/auto_router/decision_classifiers) with `provider: bespoke`. Required when no classifier endpoint is supplied |
+| BESPOKE_API_KEY | Optional bearer key paired with `BESPOKE_API_BASE`. An explicit classifier `api_base` uses only its explicit `api_key`; it never inherits the environment key |
+| LAYA_API_BASE | HTTP(S) base URL of a self-hosted Laya server, without `/v1/systemone`, for native gateway decisions and [OSS classifiers](/docs/auto_router/decision_classifiers) with `opensource_classifier_config.provider: laya` that omit `api_base`. Required when no classifier endpoint is supplied. Requires a build containing [LiteLLM #43626](https://github.com/BerriAI/litellm/pull/43626) |
+| LAYA_API_KEY | Optional bearer key paired with `LAYA_API_BASE`. A Laya classifier with an explicit `opensource_classifier_config.api_base` uses only its explicit `api_key`; omitting that key connects without authentication |
 | LEMONADE_API_KEY | API key for Lemonade
 | LINKUP_API_BASE | Base URL for the Linkup search provider
 | LLAMAFILE_API_KEY | API key for llamafile. llamafile does not require one, so a placeholder is used when this is unset
@@ -870,9 +888,9 @@ router_settings:
 | VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
 | VLLM_API_BASE | Base URL for a self-hosted vLLM server
 | VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
-| VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
-| VOYAGE_AI_TOKEN | Last of the three accepted names for the Voyage AI API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
-| VOYAGE_API_BASE | Base URL for Voyage AI rerank requests
+| VOYAGE_AI_API_KEY | Alias for the VoyageAI by MongoDB API key, read after `VOYAGE_API_KEY`
+| VOYAGE_AI_TOKEN | Last of the three accepted names for the VoyageAI by MongoDB API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
+| VOYAGE_API_BASE | Base URL for VoyageAI by MongoDB rerank requests; without it a MongoDB-issued key (`al-`) goes to ai.mongodb.com and any other key to api.voyageai.com
 | WANDB_API_BASE | Base URL for Weights & Biases Inference. Default is https://api.inference.wandb.ai/v1
 | WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
 | WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
@@ -890,7 +908,6 @@ router_settings:
 | XAI_OAUTH_TOKEN_DIR | Directory holding the xAI OAuth token file. Default is ~/.config/litellm/xai_oauth
 | YOUCOM_API_BASE | Base URL for the You.com search provider
 | ZAI_API_BASE | Base URL for Z.ai
-| _DATADOG_BASE_URL | (Alternative to DD_BASE_URL) Base URL for Datadog integration
 | DD_AGENT_HOST | Hostname or IP of DataDog agent (e.g., "localhost"). When set, logs are sent to agent instead of direct API
 | DD_AGENT_PORT | Port of DataDog agent for log intake. Default is 10518
 | DD_API_KEY | API key for Datadog integration
@@ -900,7 +917,6 @@ router_settings:
 | DD_SOURCE | Source identifier for Datadog logs
 | DD_TRACER_STREAMING_CHUNK_YIELD_RESOURCE | Resource name for Datadog tracing of streaming chunk yields. Default is "streaming.chunk.yield"
 | DD_ENV | Environment identifier for Datadog logs. Only supported for `datadog_llm_observability` callback
-| DD_LLMOBS_ML_APP | Default ml_app name for Datadog LLM Observability (Application column). Falls back to DD_SERVICE. Can be overridden per-request via `metadata.ml_app`.
 | DD_SERVICE | Service identifier for Datadog logs. Defaults to "litellm-server"
 | DD_VERSION | Version identifier for Datadog logs. Defaults to "unknown"
 | DATADOG_MOCK | Enable mock mode for Datadog integration testing. When set to true, intercepts Datadog API calls and returns mock responses without making actual network calls. Default is false
@@ -944,6 +960,13 @@ router_settings:
 | LITELLM_MCP_METADATA_TIMEOUT | HTTP client timeout in seconds for OAuth metadata fetching. Default is 10
 | LITELLM_MCP_OAUTH_DISCOVERY_ON_STARTUP | Set to `1`, `true`, `yes`, or `on` to fetch remote MCP OAuth metadata eagerly while servers are registered at startup, which lets an unreachable OAuth server delay proxy readiness. Default is unset: metadata is fetched in a background task that the first request needing it joins, and a failed fetch is retried after a cooldown
 | LITELLM_MCP_HEALTH_CHECK_TIMEOUT | Health check timeout in seconds for MCP servers. Default is 10
+| LITELLM_ENABLE_ADMIN_MCP | Opt in to embedded LiteAdmin MCP at `/admin/mcp` on the unified proxy or backend component. Default `false`. Requires a valid `LITELLM_LICENSE`; unlicensed opt-in fails startup. See [Enterprise deployment and image availability](./liteadmin_mcp_enterprise.md) |
+| LITELLM_ADMIN_READ_ONLY | Set to `true` to expose only reviewed read operations through LiteAdmin MCP. Default `false`; callers still require the `proxy_admin` role. [Docs](./liteadmin_mcp.md#restrict-the-available-tools) |
+| LITELLM_ADMIN_TOOLS | Comma-separated canonical tool names allowed through LiteAdmin MCP. Unset permits all reviewed operations available on the deployment. Combines with read-only restrictions. [Docs](./liteadmin_mcp.md#restrict-the-available-tools) |
+| LITELLM_ADMIN_RESPONSE_VIEW | LiteAdmin MCP response mode: `full` or `compact`. Defaults to `full` for embedded hosting and `compact` for the standalone connector. Compact saved-result reads require the same worker process. [Docs](./liteadmin_mcp_enterprise.md#tool-and-response-settings) |
+| LITELLM_ADMIN_SCHEMA_MODE | LiteAdmin MCP input schema mode: `full` (default) or `discovery`. Discovery defers parameter details to `describe_admin_tool`; execution still validates the complete schema. [Docs](./liteadmin_mcp_enterprise.md#tool-and-response-settings) |
+| LITELLM_MCP_PUBLIC_URL | Public HTTPS origin used by LiteAdmin MCP to validate Host and Origin headers. Embedded hosting falls back to `PROXY_BASE_URL` when unset. [Docs](./liteadmin_mcp_enterprise.md#enable-the-endpoint) |
+| LITELLM_ENABLE_MCP_STDIO | Set to `true` to allow stdio MCP servers on the proxy. **Default is false**: stdio servers cannot be created or updated, and existing ones are not started. Only read from the proxy's process environment, not from `environment_variables` in config.yaml or the database. See [Add STDIO MCP Server](../mcp#add-stdio-mcp-server)
 | LITELLM_MCP_STDIO_EXTRA_COMMANDS | Comma-separated extra command basenames allowed for MCP stdio transport beyond the built-in allowlist. Example: `my-mcp-bin`. Empty by default
 | MCP_OAUTH2_TOKEN_CACHE_DEFAULT_TTL | Default TTL in seconds for MCP OAuth2 token cache. Default is 3600
 | MCP_OAUTH2_TOKEN_CACHE_MAX_SIZE | Maximum number of entries in MCP OAuth2 token cache. Default is 200
@@ -987,6 +1010,7 @@ router_settings:
 | DEFAULT_SOFT_BUDGET | Default soft budget for LiteLLM proxy keys. Default is 50.0
 | DEFAULT_TRIM_RATIO | Default ratio of tokens to trim from prompt end. Default is 0.75
 | DEFAULT_GOOGLE_VIDEO_DURATION_SECONDS | Default duration for video generation in seconds in google. Default is 8
+| DEFER_PYDANTIC_BUILD | Defer building LiteLLM's pydantic model schemas until each model is first used, which speeds up proxy startup and lowers memory. `true`, `1`, or `on` enable it; any other value builds every schema at import time. The OpenAI and Anthropic SDKs read the same variable. Default is true
 | DIRECT_URL | Direct URL for service endpoint
 | DISABLE_ADMIN_UI | Toggle to disable the admin UI
 | LITELLM_HIDE_DEFAULT_CREDENTIALS_HINT | Flag to hide the "Default Credentials" info card on the admin UI login page (`/ui/login` and `/fallback/login`). Useful when UI credentials are managed via `UI_USERNAME` / `UI_PASSWORD` or SSO and the hardcoded hint about `admin` + `MASTER_KEY` becomes misleading or is flagged by security scanners. **Default is false**
@@ -1009,7 +1033,8 @@ router_settings:
 | EMAIL_SUBJECT_KEY_CREATED | Custom subject template for key creation emails. 
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Percentage of max budget that triggers alerts (as decimal: 0.8 = 80%). Default is 0.8
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for budget alert deduplication in seconds. Default is 86400 (24 hours)
-| ENFORCE_PRISMA_MIGRATION_CHECK | When a database migration fails, exit nonzero instead of continuing. The standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) enforces this by default, so a failed migration fails the Job rather than letting a deploy proceed against a stale schema; set it to `false` there to get the old log-and-continue behavior. Proxy startup itself still defaults to log-and-continue and only exits when this is set to `true` or `--enforce_prisma_migration_check` is passed
+| ENABLE_SSO_DEBUG | Flag to enable the [SSO debug routes](./admin_ui_sso.md#debugging-sso-jwt-fields) (`/sso/debug/login` and `/sso/debug/callback`). These routes return 404 unless this is set. Enable it while debugging an SSO setup and unset it afterwards. **Default is false**
+| ENFORCE_PRISMA_MIGRATION_CHECK | Deprecated and ignored. The proxy always exits nonzero when database setup fails at startup (unreachable database, exhausted connection retries, or a failed `prisma migrate deploy`), and the standalone migration entrypoint (`litellm/proxy/prisma_migration.py`, used by the Helm migrations Job and the Docker entrypoint) fails the same way, so a deploy never proceeds against a stale schema. Setting this variable, or passing `--enforce_prisma_migration_check`, changes nothing; remove it from your deployment
 | ENKRYPTAI_API_BASE | Base URL for EnkryptAI Guardrails API. **Default is https://api.enkryptai.com**
 | ENKRYPTAI_API_KEY | API key for EnkryptAI Guardrails service
 | EXPERIMENTAL_OPENAI_BASE_LLM_HTTP_HANDLER | Flag to send `openai` chat completion requests through LiteLLM's shared HTTP handler instead of the OpenAI Python SDK client. **Default is False**
@@ -1086,7 +1111,6 @@ router_settings:
 | GENERIC_ROLE_MAPPINGS_DEFAULT_ROLE | Default LiteLLM role to assign when no role mapping matches in generic SSO. Used with GENERIC_ROLE_MAPPINGS_ROLES
 | GENERIC_ROLE_MAPPINGS_GROUP_CLAIM | The claim/attribute name in the SSO token that contains the user's groups. Used for role mapping
 | GENERIC_ROLE_MAPPINGS_ROLES | Python dict string mapping LiteLLM roles to SSO group names. Example: `{"proxy_admin": ["admin-group"], "internal_user": ["users"]}`
-| GENERIC_USER_ROLE_MAPPINGS | Alternative to GENERIC_ROLE_MAPPINGS_ROLES for configuring user role mappings from SSO
 | GEMINI_API_BASE | Base URL for Gemini API. Default is https://generativelanguage.googleapis.com
 | GALILEO_API_KEY | API key for Galileo Cloud (hosted). Used with the v2 spans API when `success_callback` includes `galileo`.
 | GALILEO_BASE_URL | Base URL for Galileo platform. For Galileo Cloud, use `https://api.galileo.ai`. For enterprise/self-hosted, replace `console` with `api` in your console URL.
@@ -1157,17 +1181,22 @@ router_settings:
 | LAGO_API_CHARGE_BY | Parameter to determine charge basis in Lago
 | LAGO_API_EVENT_CODE | Event code for Lago API events
 | LAGO_API_KEY | API key for accessing Lago services
-| LANGFUSE_BASE_URL | Base URL for Langfuse service |
-| LANGFUSE_DEBUG | Toggle debug mode for Langfuse
-| LANGFUSE_FLUSH_INTERVAL | Interval for flushing Langfuse logs
+| LANGFUSE_BASE_URL | Base URL for Langfuse service. Read as a fallback when `LANGFUSE_HOST` is unset; a per-key/per-team `langfuse_host` always wins over both |
+| LANGFUSE_DEBUG | Toggle debug mode for Langfuse. Only `true` or `1` enable it; any other value is off
+| LANGFUSE_FLUSH_AT | Number of spans the Langfuse callback batches per OTLP export request; defaults to `512`. Values that are not a whole number between `1` and `100000` log a warning and use the default
+| LANGFUSE_FLUSH_INTERVAL | Seconds the Langfuse callback waits between OTLP export batches; defaults to `1`. Values that are not a whole number above `0` log a warning and use the default
+| LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS | How long the Langfuse callback caches a fetched prompt before refreshing it on the next request; defaults to `60`. A refresh that fails keeps serving the cached prompt. Must be a whole number of seconds: the Langfuse SDK reads it as an integer when it is imported, so any other value (for example `abc` or `2.5`) fails the callback with an error naming this variable; a negative value logs a warning and uses the default
 | LANGFUSE_TRACING_ENVIRONMENT | Environment for Langfuse tracing
-| LANGFUSE_HOST | Deprecated host URL for Langfuse service |
+| LANGFUSE_HOST | Host URL for Langfuse service. Takes precedence over `LANGFUSE_BASE_URL` |
 | LANGFUSE_MOCK | Enable mock mode for Langfuse integration testing. When set to true, intercepts Langfuse API calls and returns mock responses without making actual network calls. Default is false
 | LANGFUSE_MOCK_LATENCY_MS | Mock latency in milliseconds for Langfuse API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGFUSE_PUBLIC_KEY | Public key for Langfuse authentication
-| LANGFUSE_RELEASE | Release version of Langfuse integration
+| LANGFUSE_MAX_RETRIES | How many times the Langfuse callback retries an OTLP export request that times out, fails to connect or gets a retryable status before the batch is dropped; defaults to `3`, with waits of 1, 2 and 4 seconds between attempts that keep doubling up to 64 seconds. Values that are not a whole number log a warning and use the default, and values above `1000` log a warning and use `1000`
+| LANGFUSE_RELEASE | Release recorded on every Langfuse trace. When unset, the callback falls back to the first of `RENDER_GIT_COMMIT`, `CI_COMMIT_SHA`, `CIRCLE_SHA1`, `SOURCE_VERSION`, `TRAVIS_COMMIT`, `GIT_COMMIT`, `GITHUB_SHA`, `BITBUCKET_COMMIT`, `BUILD_SOURCEVERSION` and `DRONE_COMMIT_SHA` that is set, the same list the Langfuse SDK reads
 | LANGFUSE_SECRET_KEY | Secret key for Langfuse authentication
-| LANGFUSE_PROPAGATE_TRACE_ID | Flag to enable propagating trace ID to Langfuse. Default is False
+| LANGFUSE_TIMEOUT | Timeout in seconds for each OTLP export request and each REST request (prompts, credential check, project lookup) the Langfuse callback sends; defaults to `20` and accepts decimals such as `2.5`. An export request that times out or fails to connect is retried `LANGFUSE_MAX_RETRIES` times before the batch is dropped
+| LANGFUSE_OTEL_TRACES_EXPORT_PATH | Optional OTLP HTTP path for Langfuse trace export; defaults to `/api/public/otel/v1/traces`
+| LANGFUSE_SAMPLE_RATE | Fraction of traces to export through the Langfuse callback, from `0.0` to `1.0`; defaults to `1.0`. Values outside that range or not numeric log a warning and export every trace
 | LANGSMITH_API_KEY | API key for Langsmith platform
 | LANGSMITH_BASE_URL | Base URL for Langsmith service
 | LANGSMITH_BATCH_SIZE | Batch size for operations in Langsmith
@@ -1177,7 +1206,8 @@ router_settings:
 | LANGSMITH_TENANT_ID | Tenant ID for Langsmith multi-tenant deployments
 | LANGSMITH_MOCK | Enable mock mode for Langsmith integration testing. When set to true, intercepts Langsmith API calls and returns mock responses without making actual network calls. Default is false
 | LANGSMITH_MOCK_LATENCY_MS | Mock latency in milliseconds for Langsmith API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
-| LANGTRACE_API_KEY | API key for Langtrace service
+| LANGTRACE_API_HOST | Base URL of a self-hosted Langtrace server for the `langtrace` callback, e.g. `https://langtrace.example.com`; the callback posts to `<host>/api/trace`. Default is `https://app.langtrace.ai`
+| LANGTRACE_API_KEY | API key for Langtrace service, sent as the `x-api-key` header by the `langtrace` callback
 | LASSO_API_BASE | Base URL for Lasso API
 | LASSO_API_KEY | API key for Lasso service
 | LASSO_USER_ID | User ID for Lasso service
@@ -1201,10 +1231,12 @@ router_settings:
 | LITELLM_BLOG_POSTS_URL | Custom URL for fetching LiteLLM blog posts JSON. Default is the GitHub main branch URL
 | LITELLM_CLI_DISABLE_KEYRING | Set on the machine running the `lite` CLI to `1`, `true`, `yes`, or `on` to keep the CLI away from the OS keychain, so the credential from `lite login` stays in `~/.litellm/token.json` (`0600`) instead. Unset by default, which stores the credential in the keychain whenever one is reachable
 | LITELLM_CLI_JWT_EXPIRATION_HOURS | Expiration time in hours for CLI-generated JWT tokens. Default is 24 hours
+| LITELLM_PROXY_API_OAUTH_REDIRECT_URIS | Comma-separated exact HTTPS callbacks trusted for hosted `proxy:read` grants, which permit model listings and aggregate usage reports. Empty by default. Does not permit admin operations or model calls. See [hosted app sign-in](./cli_sso.md#hosted-app-sign-in)
+| LITELLM_PROXY_API_OAUTH_ADMIN_REDIRECT_URIS | Comma-separated exact HTTPS callbacks trusted to request hosted `proxy:admin` grants. Requires explicit consent from a current `proxy_admin`; the gateway rechecks the role and existing policies on use. Empty by default. Listed apps can also request `proxy:read`. See [hosted app sign-in](./cli_sso.md#hosted-app-sign-in)
 | LITELLM_CLI_SSO_CLAIM_MAP | Alias for `CLI_SSO_CLAIM_MAP` — allowlisted OIDC claims for CLI SSO attribution metadata
 | LITELLM_CORS_ALLOW_CREDENTIALS | Set to `true` to explicitly allow credentials in CORS responses. When not set, credentials are disabled automatically if `LITELLM_CORS_ORIGINS` is `*` (wildcard) to prevent the browser security misconfiguration of reflecting any origin with credentials
 | LITELLM_CORS_ORIGINS | Comma-separated list of allowed CORS origins (e.g. `https://app.example.com,https://admin.example.com`). Defaults to `*` (all origins) when not set
-| LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY | For local development only: set to `true` to let the proxy start when the master key is not set, is empty, or is `sk-1234`. Same as `general_settings.dangerously_permit_weak_or_unset_master_key`. **Default is false**. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY | For local development only: set to `true` to let the proxy start when the master key is not set, is empty, or has a known unsafe value. Same as `general_settings.dangerously_permit_weak_or_unset_master_key`. **Default is false**. [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_DD_AGENT_HOST | Hostname or IP of DataDog agent for LiteLLM-specific logging. When set, logs are sent to agent instead of direct API
 | LITELLM_DEPLOYMENT_ENVIRONMENT | Environment name for the deployment (e.g., "production", "staging"). Used as a fallback when OTEL_ENVIRONMENT_NAME is not set. Sets the `environment` tag in telemetry data
 | LITELLM_DETAILED_TIMING | When true, adds detailed per-phase timing headers to responses (`x-litellm-timing-{pre-processing,llm-api,post-processing,message-copy}-ms`). Default is false. See [latency overhead docs](../troubleshoot/latency_overhead.md)
@@ -1221,11 +1253,11 @@ router_settings:
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of URL paths to exclude from uvicorn access logs (e.g., `/health,/metrics`). Useful for suppressing noisy health-check log entries. |
 | LITELLM_DISABLE_LAZY_LOADING | When set to "1", "true", "yes", or "on", disables lazy loading of attributes (currently only affects encoding/tiktoken). This ensures encoding is initialized before VCR starts recording HTTP requests, fixing VCR cassette creation issues. See [issue #18659](https://github.com/BerriAI/litellm/issues/18659)
+| LITELLM_DISABLE_LAZY_ROUTES | When set to "1", "true", "yes", or "on", registers every optional feature router (MCP, guardrails, agents, vector stores, pass-throughs, and the rest) at worker startup, before `LITELLM_WORKER_STARTUP_HOOKS` run and before the first request, instead of on the first request to their path. Use it when you need the complete route table at startup, for example to filter `app.routes` from a startup hook or audit `GET /routes` before serving traffic. Default: unset, so optional routers load lazily. |
 | LITELLM_DISABLE_NO_REDIS_WARNING | When set to "true", hides the Admin UI banner shown while no Redis is configured. Set it only on single-worker deployments; see [What Needs Redis](./redis_requirements.md).
 | LITELLM_DISABLE_REDACT_SECRETS | When set to "true", disables automatic redaction of secrets (API keys, tokens, credentials) from proxy log output. Secret redaction is enabled by default.
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of exact request paths whose uvicorn access-log lines should be dropped (e.g. health checks, root probes, metrics scrapes that flood logs). Path is matched against the portion before any query string. Empty/unset disables filtering.
 | LITELLM_MIGRATION_DIR | Custom migrations directory for prisma migrations, used for baselining db in read-only file systems.
-| LITELLM_HOSTED_UI | URL of the hosted UI for LiteLLM
 | LITELLM_LITEASK_MODEL | Model alias used by the native LiteAsk admin chat, on gateway versions that include LiteAsk. Unset by default, which hides the widget. Configure a tool-calling model on the gateway or management backend. Only current proxy admins can use it, under their own credentials. Reads work without Redis; approved changes require shared Redis for single-use approvals.
 | LITELLM_UI_API_DOC_BASE_URL | Optional override for the API Reference base URL (used in sample code/docs) when the admin UI runs on a different host than the proxy. Defaults to `PROXY_BASE_URL` when unset.
 | LITELLM_UI_PATH | Path to directory for Admin UI files. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/ui` in Docker.
@@ -1249,7 +1281,6 @@ router_settings:
 | LITELLM_LOCAL_POLICY_TEMPLATES | When set to "true", uses local backup policy templates instead of fetching from GitHub. Policy templates are fetched from https://raw.githubusercontent.com/BerriAI/litellm/main/policy_templates.json by default, with automatic fallback to local backup on failure
 | LITELLM_LOG | Enable detailed logging for LiteLLM
 | LITELLM_MODEL_COST_MAP_URL | URL for fetching model cost map data. Default is https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
-| LITELLM_LOG_FILE | File path to write LiteLLM logs to. When set, logs will be written to both console and the specified file
 | LITELLM_LOGGER_NAME | Name for OTEL logger 
 | LITELLM_METER_NAME | Name for OTEL Meter 
 | LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS | Optionally enable semantic logs (`gen_ai.content.prompt`/`gen_ai.content.completion`, or `gen_ai.client.inference.operation.details` in semconv mode) for OTEL. Default `false`. See [OpenTelemetry](/docs/observability/opentelemetry_integration#configuration-reference)
@@ -1262,13 +1293,12 @@ router_settings:
 | PYROSCOPE_SAMPLE_RATE | Optional. Sample rate for Pyroscope profiling (integer). No default; when unset, the pyroscope-io library default is used.
 | PYROSCOPE_GRAFANA_USER | Optional. Grafana Cloud Pyroscope user/tenant ID for basic auth. Required when PYROSCOPE_GRAFANA_API_TOKEN is set.
 | PYROSCOPE_GRAFANA_API_TOKEN | Optional. Grafana Cloud API/access policy token for Pyroscope basic auth. Required when PYROSCOPE_GRAFANA_USER is set.
-| LITELLM_MASTER_KEY | Master key for proxy authentication. The proxy will not start when it is not set, is empty, or is `sk-1234`. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
-| LITELLM_MIGRATE_FROM_MASTER_KEY | The previous master key. When set together with a new, safe `LITELLM_MASTER_KEY` and no `LITELLM_SALT_KEY`, the proxy re-encrypts every stored value that decrypts under the previous key at boot, before serving traffic, and logs when the variable can be deleted. Leaving it set afterwards is a no-op. [Proxy refuses to start on sk-1234](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_MASTER_KEY | Master key for proxy authentication. The proxy will not start when it is not set, is empty, or has a known unsafe value. [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start)
+| LITELLM_MIGRATE_FROM_MASTER_KEY | The previous master key. When set together with a new, safe `LITELLM_MASTER_KEY` and no `LITELLM_SALT_KEY`, the proxy re-encrypts every stored value that decrypts under the previous key at boot, before serving traffic, and logs when the variable can be deleted. Leaving it set afterwards is a no-op. [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start)
 | LITELLM_MAX_BUDGET_PER_SESSION_TTL | TTL in seconds for session budget counters used by the max-budget-per-session limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_ITERATIONS_TTL | TTL in seconds for session iteration counters used by the max-iterations limiter. Default is 3600 (1 hour)
 | LITELLM_MAX_STREAMING_DURATION_SECONDS | Maximum duration in seconds allowed for a streaming response. Streams exceeding this duration are terminated with a Timeout error. Default is None (no limit)
 | LITELLM_STORE_AUDIT_LOGS | Flag to record an audit log entry for every create, update and delete performed on management objects such as keys, teams and users. Environment equivalent of `litellm_settings.store_audit_logs`, read only when the config leaves that setting unset, and writing the entries requires an enterprise license. **Defaults to True on an enterprise license, False otherwise**
-| LITELLM_STREAM_INACTIVITY_TIMEOUT_SECONDS | Maximum seconds to wait for the next chunk from an async streaming provider before raising a Timeout. Guards against a provider that keeps the connection warm with keepalive bytes but stops sending content. Default is None (disabled)
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
@@ -1278,12 +1308,10 @@ router_settings:
 | LITELLM_SENSITIVE_ROUTING_TTL | TTL in seconds for sticky sensitive-data routing decisions; controls how long a session stays pinned to the on-premise model selected by a routing guardrail. Default is 3600
 | LITELLM_SSL_CIPHERS | SSL/TLS cipher configuration for faster handshakes. Controls cipher suite preferences for OpenSSL connections.
 | LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE | AWS KMS encrypted license for LiteLLM
-| LITELLM_TOKEN | Access token for LiteLLM integration
 | LITELLM_TPM_TOKEN_RESERVATION_ENABLED | Default `true`. Set to `false` to disable pre-request TPM reservation in the v3 rate limiter and apply actual usage after each real-time request completes. This removes one Redis operation per request, but concurrent requests may temporarily exceed the TPM limit. This setting does not apply to `POST /v1/batches`, which uses a [separate input-file limiter](../batches#how-rate-limiting-for-batches-api-works). See [Estimated output tokens](./users#estimated-output-tokens-requests-without-max_tokens). |
 | LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES | When set to "true", routes OpenAI /v1/messages requests through chat/completions instead of the Responses API for Anthropic models. Can also be set via `litellm_settings.use_chat_completions_url_for_anthropic_messages`
 | LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES | When set to "true", routes all OpenAI /chat/completions requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via `litellm_settings.route_all_chat_openai_to_responses`
 | LITELLM_GEMINI_LIVE_DEFER_SETUP | When set to "true", defers Gemini/Vertex Live setup until the client sends `session.update` (required for runtime tool injection). Default is "false" for backwards compatibility, which auto-sends setup on connect. Can also be set via `litellm.gemini_live_defer_setup`
-| LITELLM_USE_LEGACY_INTERACTIONS_SCHEMA | When set to "true", uses the legacy Google Interactions API schema (`outputs` array, `2026-05-07` revision) instead of the new schema (`steps` array, `2026-05-20` revision). The legacy schema will be sunset on June 8, 2026. Can also be set via `litellm_settings.use_legacy_interactions_schema`
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
 | LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/docs/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
@@ -1346,6 +1374,7 @@ router_settings:
 | MICROSOFT_USERINFO_ENDPOINT | Custom userinfo endpoint URL for Microsoft SSO (overrides default Microsoft Graph userinfo endpoint)
 | MODEL_COST_MAP_MAX_SHRINK_RATIO | Maximum allowed shrinkage ratio when validating a fetched model cost map against the local backup. Rejects the fetched map if it is smaller than this fraction of the backup. Default is 0.5
 | MODEL_COST_MAP_MIN_MODEL_COUNT | Minimum number of models a fetched cost map must contain to be considered valid. Default is 50
+| MS_TEAMS_WEBHOOK_URL | Incoming webhook URL for Microsoft Teams alerts, used when `ms_teams` is in `general_settings.alerting`. See [MS Teams alerting](./alerting#ms-teams-webhooks)
 | NEW_RELIC_APP_NAME | Application name for New Relic AI Monitoring integration |
 | NEW_RELIC_LICENSE_KEY | License key for New Relic authentication |
 | NO_DOCS | Flag to disable Swagger UI documentation
@@ -1531,11 +1560,11 @@ router_settings:
 | UI_LOGO_PATH_DARK | Path to the logo image used in the UI in dark mode. Falls back to UI_LOGO_PATH when unset
 | UI_PASSWORD | Password for the built-in Admin UI login. If unset, the master key is accepted as the password. This is a shared cleartext admin credential meant for bootstrapping only; create per-user admin accounts and set `general_settings.disable_env_credential_login: true` to turn this login path off. [Disable environment credential login](./ui#5-create-your-own-admin-account-and-disable-environment-credential-login)
 | UI_USERNAME | Username for the built-in Admin UI login. Default `admin`. Ignored when `disable_env_credential_login` is enabled
-| UPSTREAM_LANGFUSE_DEBUG | Flag to enable debugging for upstream Langfuse
-| UPSTREAM_LANGFUSE_HOST | Host URL for upstream Langfuse service
-| UPSTREAM_LANGFUSE_PUBLIC_KEY | Public key for upstream Langfuse authentication
-| UPSTREAM_LANGFUSE_RELEASE | Release version identifier for upstream Langfuse
-| UPSTREAM_LANGFUSE_SECRET_KEY | Secret key for upstream Langfuse authentication
+| UPSTREAM_LANGFUSE_DEBUG | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_HOST | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_PUBLIC_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_RELEASE | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
+| UPSTREAM_LANGFUSE_SECRET_KEY | Deprecated and ignored: upstream Langfuse forwarding was removed when the `langfuse` callback moved to Langfuse SDK v4. Setting `UPSTREAM_LANGFUSE_SECRET_KEY` logs a startup warning
 | USAGE_TOP_API_KEYS_LIMIT | Max number of API keys (ranked by spend) listed in the Admin Usage aggregated activity response. Totals and the model, provider, MCP and endpoint rollups always cover every key. **Default is 100**
 | USE_AWS_KMS | Flag to enable AWS Key Management Service for encryption
 | USE_DDPROFILER | Flag to start the Datadog continuous profiler when the proxy boots. Independent of `USE_DDTRACE`. **Default is False**
@@ -1560,6 +1589,7 @@ router_settings:
 | SPEND_LOG_QUEUE_SIZE_THRESHOLD | Threshold for spend log queue size before processing. Default is 100
 | SPEND_LOG_WRITE_BATCH_MAX_BYTES | Max serialized payload, in bytes, of a single spend-log write statement sent to the database. Also bounds each `LiteLLM_SpendLogToolIndex` and `LiteLLM_SpendLogGuardrailIndex` write statement, which fan out to one row per tool or guardrail per request. Bounds the Prisma query engine's resident memory, which is a high-water mark set by the largest statement it executes. Lower it if pods store prompts and responses and you need a tighter memory floor. Default is 2000000
 | SPEND_LOG_WRITE_BATCH_MAX_ROWS | Max rows in a single spend-log, tool index, or guardrail index write statement, applied alongside `SPEND_LOG_WRITE_BATCH_MAX_BYTES` so whichever budget binds first splits the statement. The query engine costs memory per row as well as per byte, so this is the budget that binds when `store_prompts_in_spend_logs` is off and rows are small. Raise it to trade memory for fewer round trips. Default is 100
+| SPEND_ROLLUP_LOCK_TIMEOUT_MS | Longest time, in milliseconds, a daily spend rollup transaction (`LiteLLM_DailyUserSpend`, `LiteLLM_DailyToolSpend`, `LiteLLM_DailyModelUsage`, per-entity spend increments) may wait for a row another pod is updating before Postgres cancels the statement (`lock_timeout`, SQLSTATE 55P03). A cancelled statement never applied, so the writer requeues its rows for the next flush and the pooled connection is released instead of staying pinned behind the holder. Lower it when a fleet shares a few hot rollup rows and pods report `too many clients already`; raise it if flush logs show lock timeouts on a healthy database. Default is 5000
 | SPEND_LOG_QUEUE_MAX_BYTES | Memory budget, in bytes, for spend logs waiting in memory to be written. When the database is unreachable the failed batch is requeued instead of dropped, so the queue grows for as long as the outage lasts; past this budget the oldest logs are dropped and an error is logged. Raise it to keep more spend through a longer outage, lower it on memory-constrained pods, especially when prompts and responses are stored in spend logs. Default is 64000000
 | SPEND_LOG_CLEANUP_MAX_CONSECUTIVE_BATCH_FAILURES | Number of consecutive batch failures tolerated before the spend log cleanup run aborts. Default is 3
 | SPEND_LOG_CLEANUP_BATCH_FAILURE_BACKOFF_SECONDS | Backoff in seconds between failed spend log cleanup batches. Default is 0.5

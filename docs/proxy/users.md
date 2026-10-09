@@ -1,3 +1,4 @@
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -215,6 +216,21 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 ```
 
 Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
+
+A budget change is permanent. When the member's `budget_duration` window rolls over, the reset only sets their current cycle spend back to $0 and moves the next reset date forward, so a raised `max_budget_in_team` stays at the new value in every later cycle and does not revert to the earlier amount or to the team default. Raising `team_member_budget` with `/team/update` behaves the same way for every member still on the team default
+
+When a member on the team default gets their own budget this way, their current reset window carries over and the next reset lands on the same date as before. Sending `budget_duration` in the same `/team/member_update` call starts a new window from that point instead
+
+To raise a member's budget for a limited time, send `temp_budget_increase` together with `temp_budget_expiry` (a UTC datetime) on `/team/member_update`, or fill in **Temporary Budget Increase (USD)** and **Temporary Budget Expiry (UTC)** when editing the member in the UI. The increase is added on top of the member's budget, or the team default if they are on it, until `temp_budget_expiry` and stops applying after that without any action. It expires at that time rather than at the next budget reset, so set the expiry to the member's next reset if you want it to last only for the current cycle. A member on the team default who only gets a temporary increase stays on the team default, and the increase has no effect on a member with no budget at all
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "temp_budget_increase": 25, "temp_budget_expiry": "2026-11-01T00:00:00Z"}'
+```
+
+To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. This is available starting in `v1.104.0`
 
 #### Reset a team member's spend
 
@@ -441,26 +457,26 @@ Each window is tracked independently and resets on its own schedule:
 |---|---|
 | `1h`  | Every hour |
 | `24h` | Daily at midnight UTC |
-| `7d`  | Every Sunday at midnight UTC |
+| `7d`  | Every Monday at midnight UTC (or the configured reset time) |
 | `30d` | 1st of every month at midnight UTC |
 
 **Via Dashboard**
 
 Open **Virtual Keys → Create Key → Optional Settings → Budget Windows**.
 
-![Step 1 - open key settings](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/18930ba5-67c0-4031-afc0-57f37b4e59e4/ascreenshot_ef79d8a000bb41cdacf1bd9827732ee8_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_1.png')} dark={require('../../img/key_budget_window_1_dark.png')} alt="Budget Windows section in the key form" />
 
 Click **+ Add Budget Window** to add a row, choose the period from the dropdown, and enter the spend cap.
 
-![Step 2 - add a window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/5ae8c0b3-2d03-41ad-a63c-47b20c350dfe/ascreenshot_1a7dc6c7d65544f38fd8a65604674f22_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_2.png')} dark={require('../../img/key_budget_window_2_dark.png')} alt="A budget window row with a period and spend cap" />
 
 Add a second row for a different time period (e.g. monthly $100 on top of a daily $10).
 
-![Step 3 - add second window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/cbded3a7-1086-4e20-8f0f-de154b76146c/ascreenshot_c51c18752c3b4f8b976d28799b2638b6_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_3.png')} dark={require('../../img/key_budget_window_3_dark.png')} alt="Two budget windows with different periods" />
 
 Each window shows the reset schedule below the input so it's always clear when spend resets.
 
-![Step 4 - reset hints](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/8754f121-1640-4892-9dd0-fd4a870418bf/ascreenshot_8079eb0df2194e8f99e5258ba4b3c082_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_4.png')} dark={require('../../img/key_budget_window_4_dark.png')} alt="Reset schedule shown below each budget window" />
 
 
 ### ✨ Virtual Key (Model Specific)
@@ -1099,6 +1115,19 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
 
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
+
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
 [**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
@@ -1163,7 +1192,7 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}": 1000}}' 
 ```
 
 **Expected Response**
@@ -1365,13 +1394,28 @@ Expected Response:
 
 
 **Important Notes:**
-- **Rate limits do not apply to proxy admin users.** 
-- When testing rate limits, use internal user roles (non-admin) to ensure limits are enforced as expected.
+- Rate limits apply to any key, user or team that has `tpm_limit`, `rpm_limit` or `max_parallel_requests` set, regardless of role. The master key has no limits unless you configure them.
+- When testing rate limits, use a virtual key with explicit limits so the limiter has something to enforce.
 
 Changes: 
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
 - The in-memory cache is synced with redis every 0.01s, to avoid calling redis for every request. 
 - In testing, this was found to be 2x faster than the previous implementation, and reduced drift between expected and actual fails to at most 10 requests at high-traffic (100 RPS across 3 instances). 
+
+### Hard rate limit enforcement (fail closed)
+
+Across several instances, the tpm, rpm, and max_parallel_requests counters live in Redis (`general_settings.coordination_redis` or the `REDIS_*` environment variables) so every instance enforces the same limit. While Redis is unreachable, each instance falls back to counters in its own memory and keeps serving, so a key with `rpm_limit: 2` is admitted up to 2 requests per instance, N times the limit across N instances, until Redis is back
+
+For deployments where a configured rate limit must be a hard ceiling even while Redis is down, set `fail_closed_rate_limit_enforcement`:
+
+```yaml
+general_settings:
+  fail_closed_rate_limit_enforcement: true
+```
+
+With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
+
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 

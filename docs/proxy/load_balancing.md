@@ -339,6 +339,8 @@ When a request to an `order=1` deployment fails (connection error, 404, 429, etc
 
 If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](./reliability.md).
 
+A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./reliability.md#explanation)
+
 ```yaml
 model_list:
   - model_name: {{openai_large}}
@@ -425,5 +427,9 @@ router_settings:
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
+
+When that deployment is not in the healthy pool for a follow-up (it is cooled down, it was removed, or the turn was routed to another model group) and no deployment has the same `api_base` and `api_key`, LiteLLM drops the encrypted reasoning from the request, keeps the rest of the conversation, forwards it to a healthy deployment, and logs a router warning, so the turn succeeds with fresh reasoning instead of failing
+
+A fallback hop does the same whether or not the check is on. An order-based hop to the next `order`, a configured `fallbacks` hop to another model group, and the retry of a Responses stream that broke mid-stream each drop the encrypted reasoning the hop target cannot decrypt and keep the summaries, with no per-deployment switch. Keep the check on for an ordered group of two providers all the same: it marks each reasoning item with the deployment that produced it, so a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops the reasoning too, and the turn after a hop keeps the reasoning of the deployment that answers it instead of paying one failed call first
 
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**

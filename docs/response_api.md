@@ -1050,6 +1050,17 @@ model_list:
 
 Both models will automatically support WebSocket mode at `ws://localhost:4000/v1/responses`.
 
+### Session duration limit
+
+A WebSocket session on `/v1/responses` lasts at most 60 minutes by default, matching OpenAI's own WebSocket connection limit. The limit is counted from when the proxy accepts the connection, so clients that open connections ahead of time, such as Codex, can leave them idle and send their first `response.create` later. When the limit is reached the proxy closes the socket with code `1000` and reason `Session duration limit reached`, whether or not a response is in progress, and the client should reconnect.
+
+To change the limit, set `responses_websocket_session_limit_seconds` under `general_settings`. It accepts values from 60 to 7200 seconds; any other value logs a warning and the proxy uses 3600.
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  responses_websocket_session_limit_seconds: 1800  # 30 minutes
+```
+
 ## Response ID Security
 
 By default, LiteLLM Proxy prevents users from accessing other users' response IDs.
@@ -1104,7 +1115,7 @@ LiteLLM passes OpenAI's `background: true` parameter through to the provider. Th
 
 ```bash showLineNumbers title="Create a background response"
 curl http://localhost:4000/v1/responses \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-5.6",
@@ -1115,7 +1126,7 @@ curl http://localhost:4000/v1/responses \
 
 ```bash showLineNumbers title="Poll for the result"
 curl http://localhost:4000/v1/responses/{response_id} \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Cost tracking for background responses
@@ -1321,6 +1332,24 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
    - Scans request `input` for `encitem_` prefixed IDs
    - If found → decodes `model_id`, pins to originating deployment, bypasses rate limits
    - If no encoded items → normal load balancing
+
+### When the originating deployment cannot serve the turn
+
+The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys never count as peers, whatever the provider would accept, so a multi-region group has none. An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
+
+Without a peer the turn is served in degraded form rather than failed. On the Responses API each reasoning item keeps its summary text and loses only its encrypted payload and id (an item with no readable text is dropped whole), and on a `/v1/messages` follow-up the thinking block is dropped whole. The rest of the conversation is untouched, the request goes to the healthy deployments through the normal routing strategy, and the model reasons fresh on that turn. The reasoning items it returns carry the id of the deployment that served it, so later turns pin there. Every degraded turn logs one router warning, so watch for it when reasoning continuity across turns matters to you:
+
+```
+EncryptedContentAffinityCheck: model_id=<id> cannot serve group <model> and no deployment on the same encryption boundary is configured; forwarding without its encrypted reasoning
+```
+
+Only a peer keeps the reasoning across such a turn. On an auto-router, `complexity_router_config.session_affinity: true` keeps a session that carries a `session_id` on the tier that produced the items (see [auto routing](./proxy/auto_routing.md)), so the turn usually stays with its origin, though escalation and routing plugins can still move it. Releases through v1.103.x failed a cooled-down origin with no peer with a 429 or 503 instead of serving the turn, and releases before v1.102.0 failed a removed origin or a group change the same way
+
+The same strip runs on every fallback hop, with or without the check: an [order-based hop](./proxy/load_balancing.md#how-order-based-fallback-works) to the next `order`, a configured [`fallbacks`](./proxy/reliability.md) hop to another model group, and the retry of a Responses stream that broke before completing. The hop drops the reasoning items its target cannot decrypt and keeps their summaries, so a hop from OpenAI to Bedrock, or between two keys of one provider, answers the turn instead of failing with `invalid_encrypted_content`. There is no per-deployment switch for it. Without the check the items carry no origin marker, so the hop attributes every one of them to the deployment that just failed: a hop to a deployment with the same `api_base` and `api_key` keeps them, any other hop drops them, the ones the hop target produced itself on an earlier turn included, and the turn after a hop replays the hop target's reasoning to `order: 1` first, which fails on it before the request hops again. Such a hop logs only its `Falling back to model_group` line
+
+Turn the check on for an ordered group of two providers all the same. Its marker names the deployment that produced each item, so the turn after a hop keeps the reasoning of the deployment that answers it with no failed call first, a hop logs the warning above as well, and a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops what that deployment cannot decrypt through the pin instead of failing. Releases through v1.105.x replayed the failed deployment's reasoning on the hop, so the target answered 400 (`invalid_encrypted_content` on OpenAI, `invalid encrypted reasoning` on Bedrock), and with the check on, an order-based hop answered 429 `No deployments available` instead
+
+The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
 
 ### Configuration
 
@@ -1966,7 +1995,6 @@ Response:
   }]
 }
 ```
-
 
 
 

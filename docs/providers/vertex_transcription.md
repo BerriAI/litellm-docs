@@ -215,9 +215,11 @@ import asyncio
 import base64
 import wave
 
+import os
+
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(base_url="http://localhost:4000/v1", api_key="sk-1234")
+client = AsyncOpenAI(base_url="http://localhost:4000/v1", api_key=os.environ["LITELLM_API_KEY"])
 
 
 def pcm_chunks(path, chunk_ms=100):

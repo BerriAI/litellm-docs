@@ -1,0 +1,19 @@
+.hero { position: relative; }
+.hero video { display: block; width: 100%; height: auto; }
+.playback {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e5e6e9;
+  border-radius: 6px;
+  background: #fff;
+  color: #555965;
+  cursor: pointer;
+}
+.playback:hover { color: #0117be; border-color: #0117be; }
+.playback:focus-visible { outline: 2px solid #0117be; outline-offset: 2px; }

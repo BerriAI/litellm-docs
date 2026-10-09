@@ -36,7 +36,7 @@ Let's call the Mistral [`/chat/completions` endpoint](https://docs.mistral.ai/ap
 1. Add MISTRAL_API_KEY to your environment 
 
 ```bash
-export MISTRAL_API_KEY="sk-<your-litellm-api-key>"
+export MISTRAL_API_KEY="<your-mistral-api-key>"
 ```
 
 2. Start LiteLLM Proxy 
@@ -169,6 +169,7 @@ Use this, to avoid giving developers the raw Mistral API key, but still letting 
 export DATABASE_URL=""
 export LITELLM_MASTER_KEY=""
 export MISTRAL_API_BASE=""
+export MISTRAL_API_KEY="<your-mistral-api-key>"
 ```
 
 ```bash

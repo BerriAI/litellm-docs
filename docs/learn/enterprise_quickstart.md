@@ -1,35 +1,52 @@
 ---
-title: ✨ Enterprise Quickstart
-sidebar_label: ✨ Enterprise Quickstart
-description: Deploy LiteLLM Enterprise, validate the LLM/MCP/Agent gateway end-to-end, enforce budgets, and enable key enterprise controls.
+title: Production rollout
+sidebar_label: Production rollout
+description: Roll out LiteLLM Enterprise in five steps. Deploy the gateway, give access to models, MCP tools, and agents, connect clients, secure authentication, and allocate costs across projects and business units.
 ---
 
-import NavigationCards from '@site/src/components/NavigationCards';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Use this guide if you are on an **Enterprise trial** to evaluate LiteLLM as a unified **LLM, MCP, and Agent gateway** with enterprise controls and budget enforcement.
+This guide gives the five steps to roll out LiteLLM Enterprise for all the teams in your company. Do the steps in sequence. Each step uses the deployment, the team, and the virtual key from the steps before it.
+
+1. [Deploy LiteLLM](#step-1-deploy-litellm) with the critical deployment settings.
+2. [Give access](#step-2-give-access-to-models-mcp-tools-and-agents) to providers, models, MCP tools, and agents.
+3. [Configure the client endpoints](#step-3-configure-the-client-endpoints).
+4. [Implement secure authentication](#step-4-implement-secure-authentication).
+5. [Set up chargeback](#step-5-set-up-chargeback) and allocate costs across projects and business units.
 
 :::info
 
 - **Free trial**: [30-day enterprise license](https://www.litellm.ai/enterprise#trial)
 - **Talk to us**: [Book a demo](https://enterprise.litellm.ai/demo)
-- **SSO is free for up to 5 users.** Beyond that, an enterprise license is required.
-- **Full feature catalog**: [Enterprise](/docs/enterprise)
+- **Gateway that you run now**: start with [Moving from OSS](/docs/enterprise/moving_from_oss)
+- **All Enterprise features**: [Enterprise overview](/docs/enterprise)
 
 :::
 
+## Step 1. Deploy LiteLLM
 
-## Deploy + Shared Setup
+### Critical deployment settings
 
-All gateway and budget tests share one deployment and one org/team/key. Do this section first.
+Make these decisions before the first deployment. Each one is difficult to change after teams start to use the gateway.
+
+- **Postgres.** The Admin UI, virtual keys, the MCP and agent registries, and budget tracking keep their data in Postgres. Refer to [Database sizing](/docs/proxy/db_sizing).
+- **Redis.** Run Redis 7.0 or newer when you run more than one instance or more than one worker. Without Redis, each instance enforces rate limits and budgets independently. Refer to [What needs Redis](/docs/proxy/redis_requirements).
+- **Salt key.** Set `LITELLM_SALT_KEY` before you add the first model. The salt key encrypts the stored credentials, and you must not change it after you add a model. Refer to [Set the salt key](/docs/proxy/prod#set-the-salt-key).
+- **Master key.** Keep the master key in your secret manager. Applications must use virtual keys, not the master key.
+- **Version.** Pin an exact version or image digest, and [verify the image signature](/docs/proxy/docker_image_security). Stay on a [supported version](/docs/enterprise/version_support).
+- **Topology.** For more than one region, read [Multi-region deployment](/docs/proxy/multi_region) before you deploy.
+
+The full list is in [Production best practices](/docs/proxy/prod) and [Security best practices](/docs/proxy/security_best_practices).
 
 ### Prerequisites
 
-- An LLM provider API key (OpenAI, Azure, Anthropic, etc.)
-- **Postgres** — required for Admin UI, virtual keys, MCP/Agent registries, and budget tracking
+- An API key for an LLM provider (OpenAI, Azure, Anthropic, or a different provider)
+- A Postgres database, or the Postgres database that the deployment method creates
 - Your **Enterprise license key**
 - A deployment target: **Docker Compose**, **Kubernetes** (`kubectl`), or **Helm**
+
+### Deploy the gateway
 
 <Tabs>
 <TabItem value="docker-compose" label="Docker Compose">
@@ -77,7 +94,7 @@ docker compose up
 
 Deploy with raw manifests when you manage your own Postgres and want full control over the resources. You need an existing Postgres reachable from the cluster.
 
-#### Step 1. Create a ConfigMap for `config.yaml`
+#### 1. Create a ConfigMap for `config.yaml`
 
 ```yaml title="litellm-config.yaml" showLineNumbers
 apiVersion: v1
@@ -104,7 +121,7 @@ data:
 kubectl apply -f litellm-config.yaml
 ```
 
-#### Step 2. Create a Secret for keys
+#### 2. Create a Secret for keys
 
 ```bash
 kubectl create secret generic litellm-secrets \
@@ -115,7 +132,7 @@ kubectl create secret generic litellm-secrets \
   --from-literal=DATABASE_URL="postgresql://user:pass@host:5432/litellm"
 ```
 
-#### Step 3. Create `deployment.yaml`
+#### 3. Create `deployment.yaml`
 
 ```yaml title="deployment.yaml" showLineNumbers
 apiVersion: apps/v1
@@ -171,7 +188,7 @@ spec:
 kubectl apply -f deployment.yaml
 ```
 
-#### Step 4. Create `service.yaml`
+#### 4. Create `service.yaml`
 
 ```yaml title="service.yaml" showLineNumbers
 apiVersion: v1
@@ -192,7 +209,7 @@ spec:
 kubectl apply -f service.yaml
 ```
 
-#### Step 5. Start the server
+#### 5. Start the server
 
 ```bash
 kubectl port-forward service/litellm-service 4000:4000
@@ -206,7 +223,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
 
-#### Step 1. Create a Secret for your license + provider keys
+#### 1. Create a Secret for your license + provider keys
 
 ```bash
 kubectl create secret generic litellm-env-secret \
@@ -214,7 +231,7 @@ kubectl create secret generic litellm-env-secret \
   --from-literal=OPENAI_API_KEY="your-api-key"
 ```
 
-#### Step 2. Create `values-enterprise.yaml`
+#### 2. Create `values-enterprise.yaml`
 
 Layer your enterprise settings onto the chart. `environmentSecrets` injects the Secret above as env vars, which `proxy_config` then references with `os.environ/<NAME>`.
 
@@ -257,7 +274,7 @@ db:
     passwordKey: password
 ```
 
-#### Step 3. Deploy with Helm
+#### 3. Deploy with Helm
 
 Install the chart straight from the OCI registry, passing your enterprise values:
 
@@ -268,7 +285,7 @@ helm install \
   oci://docker.litellm.ai/berriai/litellm-helm
 ```
 
-#### Step 4. Expose the service to localhost
+#### 4. Expose the service to localhost
 
 ```bash
 kubectl port-forward service/mydeploy-litellm-helm 4000:4000
@@ -281,29 +298,80 @@ Your LiteLLM Gateway is now running on `http://127.0.0.1:4000`.
 
 ### Verify Enterprise Edition
 
-Open `http://localhost:4000/`. Swagger should show **"Enterprise Edition"** in the description. See the [Enterprise license FAQ](/docs/enterprise#how-do-i-set-up-and-verify-an-enterprise-license).
+Open `http://localhost:4000/`. The API docs page must show **Enterprise Edition** in the description. If it does not, refer to [Activate your license](/docs/enterprise/activate).
 
-Open the Admin UI at `http://localhost:4000/ui` and sign in with your master key.
-
-### Shared tenant setup
-
-Complete these steps in the Admin UI before starting the gateway tracks.
-
-| Step | Action | Why |
-| ---- | ------ | --- |
-| 1 | Create an **Organization** and a **Team** | Organizations are used as top-level entities (Department of Computer Science), which contain multiple Teams (Robotics Club, Frontend Engineering team) |
-| 2 | Invite **Internal Users** | Add multiple users within a team and to govern spend |
-| 2 | Set **team `max_budget`** (e.g. `$10`, duration `30d`) | Creates a hard spend envelope early so you can verify budget enforcement and over-budget behavior after running LLM calls. |
-| 3 | Create a **team-scoped virtual key** with model access | Give admins and internal users access to team models and enforce budgets. Track spend for individual teams. |
-
-
-→ [Multi-tenant Architecture](/docs/proxy/multi_tenant_architecture) · [Virtual Keys](/docs/proxy/virtual_keys)
+Open the Admin UI at `http://localhost:4000/ui` and sign in with your master key. In Step 4, you replace this login with SSO.
 
 ---
 
-## 1. LLM Gateway
+## Step 2. Give access to models, MCP tools, and agents
 
-Prove LiteLLM routes LLM requests through your virtual key, tracks spend, and enforces RBAC.
+In this step, you add providers, models, MCP servers, and agents to the gateway. Then you give one team access to them.
+
+### 2a. Add providers and models
+
+The deployment in Step 1 adds `{{openai_large}}` in `config.yaml`. To add more models, use the **Models** page of the Admin UI or `model_list` in `config.yaml`. Use one source of truth for models. Refer to [Model management](/docs/proxy/model_management) and [all the providers](/docs/providers).
+
+### 2b. Create an organization, a team, and a virtual key
+
+Do these steps in the Admin UI.
+
+| Step | Action | Why |
+| ---- | ------ | --- |
+| 1 | Create an **Organization** and a **Team** | An organization is the top-level entity, for example a business unit. An organization contains teams, for example a frontend team. |
+| 2 | Invite **Internal Users** to the team | Each user gets access to the team models, and the gateway tracks the spend of each user. |
+| 3 | Set the team **`max_budget`** (for example `$10` for `30d`) | The budget gives a hard spend limit. In Step 5, you use it to examine budget enforcement. |
+| 4 | Create a **team virtual key** with access to the model | Applications use this key in Step 3. The gateway records the spend of the key and the team. |
+
+Refer to [Multi-tenant architecture](/docs/proxy/multi_tenant_architecture) and [Virtual keys](/docs/proxy/virtual_keys).
+
+### 2c. Add MCP tools
+
+1. In the Admin UI, go to **MCP Servers** and select **Add New MCP Server**:
+
+   - Name: `deepwiki`
+   - URL: `https://mcp.deepwiki.com/mcp`
+   - Transport: HTTP
+
+   Or add the server to `config.yaml`:
+
+```yaml
+mcp_servers:
+  deepwiki:
+    url: https://mcp.deepwiki.com/mcp
+    transport: http
+    available_on_public_internet: true
+```
+
+2. In the MCP settings of the team or the virtual key, allow the `deepwiki` server. Refer to [MCP permission management](/docs/mcp_control).
+3. Make sure that the tools show in the Admin UI under **MCP Servers > MCP Tools**.
+
+### 2d. Add agents
+
+1. Deploy a sample A2A agent, for example [Multi-agent collaboration using A2A](https://github.com/a2aproject/a2a-samples/tree/main/demo). This agent supports streaming.
+2. In the Admin UI, go to **Agents** and select **Add Agent**. Enter the name and the URL of the agent.
+3. In the agent settings of the virtual key, allow the agent. Refer to [Agent permission management](/docs/a2a_agent_permissions).
+
+```mermaid
+flowchart TD
+    CLIENT["Client (A2A SDK / curl)"]
+    CLIENT -->|"Authorization: Bearer sk-..."| PROXY["LiteLLM Agent Gateway"]
+    PROXY -->|"object_permission.agents"| PERMS["Key / Team agent allowlist"]
+    PERMS -->|"GET /v1/agents filter"| LIST["Agent catalog"]
+    PERMS -->|"POST /a2a/{agent_id}"| AGENT["Downstream A2A Agent"]
+    AGENT -->|"response + nested LLM calls"| PROXY
+    PROXY -->|"X-LiteLLM-Trace-Id · agent spend"| LOGS["Logs tab · Agent cost tracking"]
+```
+
+→ [MCP overview](/docs/mcp) · [Agent Gateway overview](/docs/a2a)
+
+---
+
+## Step 3. Configure the client endpoints
+
+Applications and tools send requests to the gateway URL with the team virtual key. In this step, you send one LLM request, one MCP tool call, and one agent call. Then you connect your client tools.
+
+### 3a. LLM requests
 
 ```mermaid
 flowchart TD
@@ -315,40 +383,23 @@ flowchart TD
     PROXY -->|"request + token spend"| LOGS["Logs tab · Spend dashboard"]
 ```
 
-### Steps
-
-1. **Confirm model** `{{openai_large}}` (or your model) appears in `model_list` (config or Admin UI → Models).
-
-2. **Test with your master key**:
+1. Send a request with the team virtual key:
 
 ```bash
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Authorization: Bearer sk-team-key' \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello from LiteLLM Enterprise Gateway"}]
   }'
 ```
 
-3. **Use your team virtual key** — repeat the same request with the key from shared setup.
+2. Make sure that the response is `200 OK`. The assistant text is in `choices[0].message.content`.
+3. Open the **Logs** page. Make sure that the log shows the key, the team, the model, the latency, and the spend.
+4. Open the **Teams** page and select your team. Make sure that the spend increased.
 
-4. **Verify response** — expect `200 OK`; assistant text is in `choices[0].message.content`.
-
-5. **Verify logs** — open **Logs** tab; confirm key, team, model, latency, and spend appear.
-
-6. **Verify team spend** — open **Teams** tab → select your team; confirm spend incremented toward `max_budget`.
-
-
-→ [Virtual Keys](/docs/proxy/virtual_keys)
-→ [Gateway Quickstart](/docs/learn/gateway_quickstart)
-→ [Role-Based Access Control](/docs/proxy/access_control)
-
----
-
-## 2. MCP Gateway
-
-Prove LiteLLM registers MCP servers, enforces per-key access, routes tool calls, and tracks MCP cost.
+### 3b. MCP tool calls
 
 ```mermaid
 flowchart TD
@@ -360,29 +411,7 @@ flowchart TD
     PROXY -->|"mcp tool call log + cost"| LOGS["Logs tab · MCP cost tracking"]
 ```
 
-### Steps
-
-1. **Register MCP server** — Admin UI → **MCP Servers** → Add New MCP Server:
-
-   - Name: `deepwiki`
-   - URL: `https://mcp.deepwiki.com/mcp`
-   - Transport: HTTP
-
-   Or add to `config.yaml`:
-
-```yaml
-mcp_servers:
-  - server_name: deepwiki
-    url: https://mcp.deepwiki.com/mcp
-    transport: http
-    available_on_public_internet: true
-```
-
-2. **Assign to team/key** — under MCP Settings on the virtual key or team, allow the `deepwiki` server. See [MCP Permission Management](/docs/mcp_control).
-
-3. **List tools** — confirm tools appear in Admin UI under **MCP Servers → MCP Tools**.
-
-4. **Invoke** via `/v1/chat/completions`:
+1. Send a request that uses the `deepwiki` tools:
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/chat/completions' \
@@ -400,45 +429,21 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
   }'
 ```
 
-5. **Verify response** — contains tool output and an assistant summary.
+2. Make sure that the response contains the tool output and a summary from the assistant.
+3. Open the **Logs** page. Make sure that the log shows the MCP tool call with the tool name and the cost.
 
-6. **Verify logs** — **Logs** tab shows MCP tool call with namespaced tool name and cost.
+Refer to [Using your MCP](/docs/mcp_usage).
 
-→ [MCP Overview](/docs/mcp) · [MCP Permission Management](/docs/mcp_control) · [Using your MCP](/docs/mcp_usage)
+### 3c. Agent calls
 
----
-
-## 3. Agent Gateway
-
-Prove LiteLLM registers A2A agents, enforces per-key access, invokes agents, and tracks agent-attributed spend.
-
-```mermaid
-flowchart TD
-    CLIENT["Client (A2A SDK / curl)"]
-    CLIENT -->|"Authorization: Bearer sk-..."| PROXY["LiteLLM Agent Gateway"]
-    PROXY -->|"object_permission.agents"| PERMS["Key / Team agent allowlist"]
-    PERMS -->|"GET /v1/agents filter"| LIST["Agent catalog"]
-    PERMS -->|"POST /a2a/{agent_id}"| AGENT["Downstream A2A Agent"]
-    AGENT -->|"response + nested LLM calls"| PROXY
-    PROXY -->|"X-LiteLLM-Trace-Id · agent spend"| LOGS["Logs tab · Agent cost tracking"]
-```
-
-### Steps
-
-1. **Deploy a sample agent** — use [**Multi-agent collaboration using A2A**](https://github.com/a2aproject/a2a-samples/tree/main/demo) (simple deployable A2A agent with streaming support).
-
-2. **Register in Admin UI** — **Agents** tab → **Add Agent** → enter name and URL.
-
-3. **Assign to team/key** — under Agent Settings on the virtual key, allow the agent. See [Agent Permission Management](/docs/a2a_agent_permissions).
-
-4. **List agents**:
+1. List the agents that the key can use:
 
 ```bash
 curl -H 'Authorization: Bearer sk-team-key' \
   'http://localhost:4000/v1/agents'
 ```
 
-5. **Invoke** via the A2A SDK:
+2. Call the agent with the A2A SDK:
 
 ```python showLineNumbers title="invoke_a2a_agent.py"
 import httpx, asyncio
@@ -477,131 +482,23 @@ async def main():
 asyncio.run(main())
 ```
 
-6. **Verify logs** — **Logs** tab shows key, team, latency, and agent-attributed cost. Cost counts toward team/key spend from Section 0.
+3. Open the **Logs** page. Make sure that the log shows the key, the team, the latency, and the cost of the agent call.
 
-→ [Agent Gateway Overview](/docs/a2a) · [Invoking A2A Agents](/docs/a2a_invoking_agents) · [Agent Cost Tracking](/docs/a2a_cost_tracking)
+Refer to [Invoking A2A agents](/docs/a2a_invoking_agents) and [Agent cost tracking](/docs/a2a_cost_tracking).
 
----
+### 3d. Connect your client tools
 
-## 4. Budgets & Spend
-
-Budget enforcement runs on **all three gateways** through the same virtual key, so one control plane governs LLM, MCP, and Agent spend.
-
-```mermaid
-flowchart TD
-    REQUEST["Client Request (LLM / MCP / Agent)"]
-    REQUEST -->|"Authorization: Bearer sk-..."| PROXY["LiteLLM Enterprise Gateway"]
-
-    PROXY -->|"key.team_id"| TEAMS["Team (Org hierarchy)"]
-    PROXY -->|"virtual key lookup"| KEYS["Virtual Keys"]
-    PROXY -->|"metadata.tags on request"| TAGS["Tag Budget (cross-cutting projects)"]
-
-    TEAMS --> TBUDGET["Team max_budget / Monthly spend envelope"]
-    KEYS --> KBUDGET["Key max_budget + RPM/TPM limits"]
-    TAGS --> TABUDGET["Tag budget limits"]
-
-    TBUDGET --> ENFORCE["Budget check before route"]
-    KBUDGET --> ENFORCE
-    TABUDGET --> ENFORCE
-    ENFORCE --> ROUTES["LLM / MCP / Agent routes"]
-    PROXY --> SPEND["Spend dashboard · GET /spend/tags"]
-```
-
-### 4a. Key budget + rate limits
-
-1. Create a test key with a tight budget and RPM limit:
-
-```bash
-curl -X POST 'http://localhost:4000/key/generate' \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "max_budget": 0.01,
-    "rpm_limit": 1,
-    "team_id": "<your-team-id>"
-  }'
-```
-
-2. **First request** with the new key → `200 OK`.
-3. **Second request within the same minute** → rate limit error (RPM exceeded).
-4. Confirm key spend in Admin UI under **Virtual Keys**.
-
-→ [Virtual Keys](/docs/proxy/virtual_keys) · [Quickstart: RPM test](/docs/proxy/docker_quick_start)
-
-### 4b. Team budget
-
-Team `max_budget` was set in Section 0. After completing Sections 1–3:
-
-1. Open **Teams** tab → select your PoC team.
-2. Confirm **spend** accumulated across LLM, MCP, and Agent calls.
-3. **Optional negative test** — set team `max_budget` very low (e.g. `$0.0001`), make one LLM call, confirm budget-exceeded error.
-
-→ [Multi-tenant Architecture](/docs/proxy/multi_tenant_architecture)
-
-### 4c. Tag budget
-
-1. Add `tag_budget_config` to `config.yaml` and restart the proxy:
-
-```yaml
-litellm_settings:
-  tag_budget_config:
-    poc:chat-app:
-      max_budget: 0.000000000001
-      budget_duration: 1d
-```
-
-2. Make a tagged request:
-
-```bash
-curl -X POST 'http://localhost:4000/chat/completions' \
-  -H 'Authorization: Bearer sk-team-key' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "model": "{{openai_large}}",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "metadata": {"tags": ["poc:chat-app"]}
-  }'
-```
-
-3. **First call** succeeds; **second call** with the same tag fails with a budget-exceeded error.
-
-4. Query tag spend:
-
-```bash
-curl -X GET 'http://localhost:4000/spend/tags' \
-  -H "Authorization: Bearer $LITELLM_API_KEY"
-```
-
-**Verify:** response lists `poc:chat-app` with `total_spend` and `log_count`.
-
-
-
-**Explore next:** [Projects](/docs/proxy/project_management) · [Temporary budget increases](/docs/proxy/temporary_budget_increase) · [Soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts) · [Spend reports](/docs/proxy/cost_tracking) · [Budget Routing](/docs/proxy/provider_budget_routing) · [Enterprise Spend Tracking](/docs/enterprise)
+Code tools and chat apps use the gateway URL and a virtual key or a sign-in token. Each client has a setup page, for example Claude Code, Codex, and Claude Desktop. Refer to [Client setup](/docs/proxy/client_setup/overview).
 
 ---
 
-## 5. Enterprise Controls
+## Step 4. Implement secure authentication
 
-Layer security and compliance on top of working gateways and budgets.
+In this step, you replace the shared master key login with your identity provider. Then you limit what each person and each workload can do.
 
-### Audit logs
+### SSO for the Admin UI
 
-On by default with an enterprise license; set `store_audit_logs: false` under litellm_settings of your `config.yml` to turn it off. Delete a virtual key via API or UI, then check the **Audit Logs** tab.
-
-→ [Audit Logs](/docs/proxy/multiple_admins)
-
-### Team/key guardrails
-
-1. **Guardrails** → create a guardrail (secret detection or content moderation)
-2. **Policies** → attach the guardrail to a team or key
-3. Send a request that should be blocked; confirm the guardrail fires
-
-→ [Guardrail Policies](/docs/proxy/guardrails/guardrail_policies)
-→ [Guardrails Quick Start](/docs/proxy/guardrails/quick_start)
-
-### SSO for Admin UI
-
-SSO controls **Admin UI login**, which is separate from API auth (virtual keys or JWT). Register this redirect URI in your IdP:
+SSO controls the login to the Admin UI. API requests use a different method: virtual keys or JWT. Register this redirect URI in your identity provider:
 
 ```
 https://<your-proxy-base-url>/sso/callback
@@ -641,76 +538,142 @@ PROXY_BASE_URL="https://<your-proxy-base-url>"
 </TabItem>
 </Tabs>
 
-**Verify:** sign in to the Admin UI through your identity provider.
+Sign in to the Admin UI through your identity provider. Then disable the login with the master key and `UI_PASSWORD`. Refer to [Disable environment credential login](/docs/proxy/security_best_practices#disable-environment-credential-login-to-the-admin-ui).
 
-**Also available:** [Custom SSO](/docs/proxy/custom_sso) · [CLI SSO](/docs/proxy/cli_sso) · [SCIM provisioning](/docs/tutorials/scim_litellm)
+To create users and teams from your identity provider, use [SCIM provisioning](/docs/tutorials/scim_litellm). For more options, refer to [SSO for the Admin UI](/docs/proxy/admin_ui_sso), [SSO event hooks](/docs/proxy/custom_sso), and [CLI SSO](/docs/proxy/cli_sso).
 
-→ [SSO for Admin UI](/docs/proxy/admin_ui_sso)
+### JWT authentication for API traffic
 
-### JWT/OIDC Auth
+Workloads can send JWTs from your OIDC provider in place of long-lived virtual keys. The JWT claims can map each request to a LiteLLM user, team, and model access. Refer to [JWT authentication](/docs/proxy/token_auth) and [JWT to virtual key mapping](/docs/proxy/jwt_key_mapping).
 
-Authenticate application requests with your identity provider's JWT tokens instead of static virtual keys.
+### Least-privilege access
 
-→ [JWT-based Authentication](/docs/proxy/token_auth)
+Give each person the minimum [RBAC role](/docs/proxy/access_control), and keep the number of proxy admins small. Give each production workload its own [service account](/docs/proxy/service_accounts) key, so that you can revoke one workload without an effect on the others. To limit the network sources, use [IP address filtering](/docs/proxy/ip_address).
 
 ### Secret manager
 
-Point LiteLLM at your secret manager so provider keys are read from vault instead of config files.
+Keep the provider keys in your secret manager, not in configuration files. Refer to [Secret managers](/docs/secret_managers/overview).
 
-→ [Secret Managers Overview](/docs/secret_managers/overview)
+### Audit logs
 
----
-
-
-## 7. Additional Enterprise Value
-
-<NavigationCards
-columns={3}
-items={[
-  {
-    icon: "💰",
-    title: "Governance & Cost",
-    description: "Tag budgets, soft budget alerts, spend reports, and temporary budget increases.",
-    to: "/docs/proxy/cost_tracking",
-  },
-  {
-    icon: "📡",
-    title: "Observability",
-    description: "Team-based logging, log export to GCS/Azure Blob, per-team Langfuse routing.",
-    to: "/docs/proxy/team_logging",
-  },
-  {
-    icon: "🌐",
-    title: "AI Hub",
-    description: "Public branded page of available models and agents for your users.",
-    to: "/docs/proxy/ai_hub",
-  },
-  {
-    icon: "🏗️",
-    title: "Multi-Region",
-    description: "Multi-region deployment, licensing, and admin/worker split.",
-    to: "/docs/proxy/multi_region",
-  },
-  {
-    icon: "🔒",
-    title: "Data Security",
-    description: "Self-hosted data handling, vulnerability reporting, and compliance FAQs.",
-    to: "/docs/data_security",
-  },
-  {
-    icon: "✨",
-    title: "Full Enterprise Catalog",
-    description: "Complete feature reference, deployment options, and support SLAs.",
-    to: "/docs/enterprise",
-  },
-]}
-/>
+Audit logs are on by default when the gateway has a license. To turn them off, set `store_audit_logs: false` in `litellm_settings`. To do a test, delete a virtual key in the API or the Admin UI. Then open the **Audit Logs** page. Refer to [Audit logs](/docs/proxy/multiple_admins).
 
 ---
 
-## 8. Need Help?
+## Step 5. Set up chargeback
 
-Every Enterprise license includes a dedicated Slack or Teams channel with our engineering team. Reach out to us `support@berri.ai` and we'll be more than happy to help you!
+Chargeback assigns the cost of each request to the business unit or project that sent it. LiteLLM attributes spend at each level of the tenant hierarchy: organization, team, user, and virtual key. Projects and tags add more dimensions. Use organizations for business units and teams for the groups in them. Use projects for applications, and tags for costs that go across teams.
 
-See [Professional Support](/docs/enterprise#professional-support). 
+```mermaid
+flowchart TD
+    REQUEST["Client Request (LLM / MCP / Agent)"]
+    REQUEST -->|"Authorization: Bearer sk-..."| PROXY["LiteLLM Enterprise Gateway"]
 
+    PROXY -->|"key.team_id"| TEAMS["Team (Org hierarchy)"]
+    PROXY -->|"virtual key lookup"| KEYS["Virtual Keys"]
+    PROXY -->|"metadata.tags on request"| TAGS["Tag Budget (cross-cutting projects)"]
+
+    TEAMS --> TBUDGET["Team max_budget / Monthly spend envelope"]
+    KEYS --> KBUDGET["Key max_budget + RPM/TPM limits"]
+    TAGS --> TABUDGET["Tag budget limits"]
+
+    TBUDGET --> ENFORCE["Budget check before route"]
+    KBUDGET --> ENFORCE
+    TABUDGET --> ENFORCE
+    ENFORCE --> ROUTES["LLM / MCP / Agent routes"]
+    PROXY --> SPEND["Spend dashboard · GET /spend/tags"]
+```
+
+The same virtual key and the same budgets apply to LLM, MCP, and agent requests.
+
+### 5a. Team budget
+
+You set the team `max_budget` in Step 2. After Step 3:
+
+1. Open the **Teams** page and select your team.
+2. Make sure that the spend includes the LLM, MCP, and agent calls.
+3. Optional: set the team `max_budget` to a very low value, for example `$0.0001`. Send one LLM request, and make sure that the gateway returns a budget error.
+
+To send an email to a team before it reaches its budget, use [soft budget alerts](/docs/proxy/ui_team_soft_budget_alerts).
+
+### 5b. Projects
+
+A project groups the keys of one application or use case. A project has a budget, owners, rate limits, a model allowlist, and its own spend view. Refer to [Projects](/docs/proxy/project_management).
+
+### 5c. Key budget and rate limits
+
+1. Create a key with a small budget and an RPM limit:
+
+```bash
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "max_budget": 0.01,
+    "rpm_limit": 1,
+    "team_id": "<your-team-id>"
+  }'
+```
+
+2. Send a request with the new key. Make sure that the response is `200 OK`.
+3. Send a second request in the same minute. Make sure that the gateway returns a rate limit error.
+4. Open **Virtual Keys** in the Admin UI and find the spend of the key.
+
+Refer to [Virtual keys](/docs/proxy/virtual_keys).
+
+### 5d. Tag budget
+
+1. Add `tag_budget_config` to `config.yaml` and restart the gateway:
+
+```yaml
+litellm_settings:
+  tag_budget_config:
+    poc:chat-app:
+      max_budget: 0.000000000001
+      budget_duration: 1d
+```
+
+2. Send a request with the tag:
+
+```bash
+curl -X POST 'http://localhost:4000/chat/completions' \
+  -H 'Authorization: Bearer sk-team-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "{{openai_large}}",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "metadata": {"tags": ["poc:chat-app"]}
+  }'
+```
+
+3. Make sure that the first request is successful. Send a second request with the same tag. Make sure that the gateway returns a budget error.
+
+4. Get the spend for each tag:
+
+```bash
+curl -X GET 'http://localhost:4000/spend/tags' \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+Make sure that the response shows `poc:chat-app` with `total_spend` and `log_count`.
+
+Refer to [Request tags](/docs/proxy/request_tags) and [Tag budgets](/docs/proxy/tag_budgets).
+
+### 5e. Spend reports
+
+To send costs to finance, get spend reports by team, key, tag, or model with the API. Refer to [Generate spend reports](/docs/proxy/cost_tracking#-enterprise-generate-spend-reports).
+
+For temporary limits, use a [temporary budget increase](/docs/proxy/temporary_budget_increase). For tiers of limits, use [budget and rate limit tiers](/docs/proxy/rate_limit_tiers).
+
+---
+
+## After the rollout
+
+- **Guardrails.** Create a guardrail, attach it to a team or a key with a policy, and send a request that the guardrail must block. Refer to [Guardrails quick start](/docs/proxy/guardrails/quick_start) and [Guardrail policies](/docs/proxy/guardrails/guardrail_policies).
+- **Team logging.** Send the logs of each team to its own observability project. Refer to [Team and key logging](/docs/proxy/team_logging).
+- **AI Hub.** Show the models, MCP servers, and agents that your users can use on one page. Refer to [AI Hub](/docs/proxy/ai_hub).
+- **Security review.** Collect the SOC 2 Type II report and the answers for your security team. Refer to [Compliance and SOC 2 Type II](/docs/enterprise/compliance).
+
+## Get help
+
+Each Enterprise license includes a dedicated Slack or Teams channel with the LiteLLM engineers. You can also send an email to `support@berri.ai`. Refer to [Support and SLA](/docs/enterprise/support).

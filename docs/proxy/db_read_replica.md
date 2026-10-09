@@ -146,8 +146,10 @@ It is **not** useful when:
 The proxy does not implement read-after-write consistency for the reader
 endpoint. If your replication lag is meaningful (>100ms) and you have flows
 that write then immediately read the same row, those reads may see stale data.
-Code that needs strong consistency on a fresh write should use `query_raw`
-through the writer or rely on transaction-scoped reads.
+`query_raw` and `query_first` on the proxy's Prisma client route to the reader
+like every other read, so code that needs read-your-writes consistency should
+read through `WriterPinnedClient` (from `litellm.proxy.db.routing_prisma_wrapper`)
+or inside a transaction (`tx`), both of which run on the writer
 
 ## Related env vars
 

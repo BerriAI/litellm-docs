@@ -138,18 +138,20 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
          }'
 ```
 
-On the 2nd response - expect to see the following exception
+On the 2nd response - expect an HTTP 422 with the following error
 
 ```shell
 {
  "error": {
-   "message": "Budget has been exceeded! Current cost: 3.5e-06, Max budget: 1e-09",
-   "type": "auth_error",
+   "message": "Budget has been exceeded! Team=de35b29e-6ca8-4f47-b804-2b79d07aa99a Current cost: 3.5e-06, Max budget: 1e-09",
+   "type": "budget_exceeded",
    "param": null,
-   "code": 400
+   "code": "422"
  }
 }
 ```
+
+To return 429 instead, set `budget_exceeded_status_code: 429` under `litellm_settings` in your config.yaml
 
 </TabItem>
 

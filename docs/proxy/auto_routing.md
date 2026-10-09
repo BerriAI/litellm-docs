@@ -128,7 +128,7 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       reminder_markers: ["<system-reminder>", "</system-reminder>"]   # default
 
       # Escalate a prompt that provably does not fit the decided tier, before dispatch
-      enable_context_window_escalation: true   # default
+      enable_context_window_escalation: false   # default; set true to opt in
       context_window_escalation_buffer: 0.95   # default; prompt must fit within this fraction of the window
 
       # Send image-bearing requests to a tier that can see them
@@ -202,6 +202,8 @@ classifier_llm_config:
 ```
 
 ### JEV classifier
+
+This reference retains the field names supported by released builds. A build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626) also accepts `classifier_type: oss_classifier` with `opensource_classifier_config.provider: jev`; the settings below apply inside `opensource_classifier_config`. The existing names remain accepted. See the [OSS classifier guide](/docs/auto_router/decision_classifiers) for migration and the Jev, Nimble and Laya provider configurations.
 
 Set `classifier_type: jev` with `jev_classifier_config` to use [TypeSafe System One](/docs/pass_through/typesafe). It sends one `questions.tier` Choice question to `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
 
@@ -671,11 +673,11 @@ Routing resolves first. The router picks a tier, the marker drops out of the can
 
 ### Context-window escalation
 
-From v1.101.0 the complexity router checks whether the decided tier can hold the prompt before dispatch and moves the request when it provably cannot. This is on by default.
+From v1.101.0 the complexity router can check whether the decided tier can hold the prompt before dispatch and move the request when it provably cannot. This is off by default, so a router that omits the key dispatches on complexity alone; set `enable_context_window_escalation: true` to turn it on.
 
 ```yaml title="config.yaml"
 complexity_router_config:
-  enable_context_window_escalation: true   # default
+  enable_context_window_escalation: true   # default false
   context_window_escalation_buffer: 0.95   # default
 ```
 

@@ -290,7 +290,7 @@ router_settings:
 | `enable_health_check_routing` | `general_settings` | `false` | Route away from deployments that fail health checks |
 | `background_health_checks` | `general_settings` | `false` | Must be `true` for health check routing to work |
 | `health_check_interval` | `general_settings` | `300` | Seconds between full health check cycles |
-| `health_check_staleness_threshold` | `general_settings` | `interval x 2` | Seconds before cached health state is ignored |
+| `health_check_staleness_threshold` | `general_settings` | `600` | Seconds before cached health state is ignored. The default is fixed at 2x the default 300s interval and does not follow `health_check_interval`, so set it explicitly (e.g. `2 x health_check_interval`) when you change the interval |
 | `health_check_ignore_transient_errors` | `general_settings` | `false` | Ignore 429 and 408 from health checks; these never affect routing |
 | `background_health_check_model_groups` | `general_settings` | `null` | Only probe and health-route the listed model groups; unlisted groups keep normal routing |
 | `cooldown_time` | `router_settings` | `5` | Seconds a deployment stays in cooldown after threshold is crossed |

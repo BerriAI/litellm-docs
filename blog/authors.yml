@@ -7,7 +7,10 @@ litellm:
 yujonglee:
   name: Yujong Lee
   title: Senior SWE, LiteLLM
-  url: mailto:yujong@berri.ai
+  url: https://www.linkedin.com/in/yujong1ee/
+  email: yujong@berri.ai
+  socials:
+    x: https://x.com/yujonglee
   image_url: https://avatars.githubusercontent.com/u/61503739?v=4
 
 sameer:
@@ -59,6 +62,11 @@ mateo:
   url: https://www.linkedin.com/in/mateo-wang
   image_url: /img/mateo.jpeg
 
+oliver:
+  name: Oliver Jensen
+  title: Director of Security, LiteLLM
+  image_url: /img/authors/oliver.png
+
 misbah:
   name: Misbah Syed
   title: DevRel Engineer, LiteLLM
@@ -67,7 +75,8 @@ misbah:
 
 tin:
   name: Tin Lo
-  title: Founding AI Product Engineer, LiteLLM
+  title: AI Product Engineer, LiteLLM
+  url: https://www.linkedin.com/in/tinchi-lo/
   image_url: /img/authors/tin.png
 
 mubashir:
@@ -89,15 +98,15 @@ varoon:
 
 moe:
   name: Moe Khalil
-  title: Product Engineer
+  title: AI Product Engineer, LiteLLM
   url: https://www.linkedin.com/in/moe-khalil-73a2371a1/
-  image_url: https://github.com/moe-berri.png
+  image_url: /img/authors/moe.jpg
 
 kerry:
   name: Kerry Lu
-  title: Software Engineer, LiteLLM
-  url: https://github.com/kerry-berri
-  image_url: https://github.com/kerry-berri.png
+  title: Rust Engineer, LiteLLM
+  url: https://github.com/kerrylu-berri
+  image_url: https://github.com/kerrylu-berri.png
 
 gabriele:
   name: Gabriele Michelli

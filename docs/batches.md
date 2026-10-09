@@ -7,7 +7,7 @@ Covers Batches, Files
 
 | Feature | Supported | Notes | 
 |-------|-------|-------|
-| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM | - |
+| Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM, xAI | - |
 | ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
@@ -458,6 +458,7 @@ LiteLLM supports the following provider-native batch APIs:
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
 | Mistral AI | [Mistral AI Batch API](./providers/mistral_batches) |
 | vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
+| xAI | [xAI Batch API](./providers/xai_batches) |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
@@ -492,6 +493,31 @@ A `purpose="batch"` upload larger than the cap is rejected with HTTP `413`:
 
 `max_batch_file_size_mb` applies only to batch input file uploads. It is separate from `max_request_size_mb`, which applies to every proxy route
 
+### Limit the number of records in a batch file
+
+Set `max_batch_file_records` under `general_settings` to cap how many request lines one batch input file can hold. Blank lines are not counted. When it is unset, no record cap applies
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  max_batch_file_records: 1000
+```
+
+A `purpose="batch"` upload with more records than the cap is rejected with HTTP `413`, and the file is not forwarded to the provider:
+
+```json
+{
+  "error": {
+    "message": "Batch input file has more than 1000 records, which exceeds the max_batch_file_records of 1000 set in general_settings. The file was not forwarded to the provider.",
+    "type": "invalid_request_error",
+    "param": "file",
+    "code": "413"
+  }
+}
+```
+
+The `general_settings` value applies to every key. A proxy admin can give one key a different cap with `max_batch_file_records` in that key's metadata, and can add a cap for a whole team in the team's metadata. When both the key and its team have a cap, the lower one applies, and the message says where it was set
+
 ### Content validation
 
 LiteLLM always validates the content of `purpose="batch"` uploads. There is no setting to configure. The filename must end in `.jsonl`, matched case-insensitively. The file must contain at least one non-blank line. Every non-blank line must be valid JSON. Every line must be a JSON object. Every object must contain the `custom_id`, `method`, `url`, and `body` keys
@@ -510,6 +536,60 @@ Each provider enforces its own limits on batch input files. Use them to pick a v
 | [Amazon Bedrock](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) | 1 GB per file | See AWS Service Quotas |
 
 Azure OpenAI raises its file cap to 1 GB with bring-your-own Blob Storage. The Vertex AI cap applies to Cloud Storage input. Amazon Bedrock also caps total job size, at 5 GB for most models. Set `max_batch_file_size_mb` at or below the smallest limit of the providers you route batch traffic to
+
+## Batch Upload and Download Limits
+
+Two settings cap how often a caller can upload batch input files and download file content. Both are off unless set
+
+| Setting | What it counts | Window |
+| --- | --- | --- |
+| `max_batch_file_uploads_per_day` | `POST /v1/files` uploads with `purpose="batch"` | UTC day |
+| `max_file_downloads_per_minute` | `GET /v1/files/{file_id}/content` calls for one file | One minute |
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  max_batch_file_uploads_per_day: 50
+  max_file_downloads_per_minute: 10
+```
+
+A request past either limit is rejected with HTTP `429` and a `Retry-After` header giving the seconds until the window resets. For uploads that is 00:00 UTC. The message names the limit, its value, and where it was set:
+
+```json
+{
+  "error": {
+    "message": "Download limit reached for file file-abc123: max_file_downloads_per_minute is 10 for this key (set in general_settings). Retry in 18 seconds.",
+    "type": "rate_limit_error",
+    "param": null,
+    "code": "429"
+  }
+}
+```
+
+The download limit is counted per file, so a caller that hits it on one file can still download other files. It covers every file id, whether a batch input, output, or error file
+
+### Setting limits per key or team
+
+The `general_settings` value is a default that each key gets its own count against. A JWT caller without a virtual key is counted by its user id instead. A proxy admin can change the limit for one key by setting the same name in that key's metadata, which replaces the default for that key:
+
+```bash
+curl -X POST 'http://localhost:4000/key/update' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "sk-...", "metadata": {"max_file_downloads_per_minute": 2}}'
+```
+
+Setting the name in a team's metadata adds a second limit shared by every key in that team. When both apply, a request must fit both, and a request rejected by one does not use up a slot in the other
+
+Only a proxy admin can set, change, or clear `max_batch_file_records`, `max_batch_file_uploads_per_day`, and `max_file_downloads_per_minute` in key or team metadata, including the metadata sent to `POST /user/new`. Requests from any other role that try to change them are rejected with a `403`. `/config/update` rejects a value that is not a positive integer
+
+### What counts against the limits
+
+An upload that fails batch input file validation (a wrong format, too many records, too large) does not count. An upload that passes validation counts even when a guardrail or the provider rejects it afterwards, and a download counts even when the provider returns an error for it
+
+With Redis configured, the counts are shared across every proxy instance and worker. Without Redis, each worker process keeps its own count, so a caller can reach up to the limit times the number of workers, and the counts reset when the proxy restarts. Each worker keeps up to 20,000 live counters (one per caller and window, and per file id for downloads), and once more than that are live the one closest to expiry is dropped, so that caller starts a fresh window early
+
+The limits apply to the `/v1/files` routes above, including `/files` and `/{provider}/v1/files`. Provider pass-through routes are not counted
 
 ## How Rate Limiting for Batches API Works
 

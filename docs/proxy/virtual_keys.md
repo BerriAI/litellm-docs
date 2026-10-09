@@ -288,7 +288,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 **Step 3: Test the key**
 
 ```bash
-curl -X POST "https://0.0.0.0:4000/key/generate" \
+curl -X POST "http://0.0.0.0:4000/chat/completions" \
 -H "Authorization: Bearer <user-key>" \
 -H "Content-Type: application/json" \
 -d '{
@@ -643,7 +643,7 @@ A request whose alias does not match fails with a `400` that names the pattern:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "Prod Key"}'
 ```
@@ -760,10 +760,12 @@ curl 'http://0.0.0.0:4000/key/generate' \
 
 **LiteLLM UI**
 
-On the LiteLLM UI, Navigate to the Keys page and click on `Generate Key` > `Key Lifecycle` > `Enable Auto Rotation`
+On the LiteLLM UI, Navigate to the Keys page and click on `Create New Key` > `Optional Settings` > `Key Lifecycle` > `Auto-Rotation Settings` > `Enable Auto-Rotation`
 <Image 
   img={require('../../img/key_r.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_r_dark.png')}
+  alt="Auto-Rotation Settings in the Key Lifecycle section of the key form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 **Valid rotation_interval formats:**
@@ -794,7 +796,9 @@ On the LiteLLM UI, Navigate to the Keys page. Select the key you want to update 
 
 <Image 
   img={require('../../img/key_u.png')}
-  style={{width: '30%', display: 'block', margin: '0'}}
+  dark={require('../../img/key_u_dark.png')}
+  alt="Auto-Rotation Settings in the key edit form"
+  style={{maxWidth: '640px', display: 'block', margin: '0'}}
 />
 
 #### Environment variables
@@ -818,13 +822,13 @@ litellm --config config.yaml
 
 ### Temporary Budget Increase
 
-Use the `/key/update` endpoint to increase the budget of an existing key. 
+Use the `/key/update` endpoint to increase the budget of an existing key. `temp_budget_expiry` is a datetime, not a duration string, so pass an ISO date such as `2026-10-15`. See [Temporary Budget Increase](./temporary_budget_increase.md) for details.
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/update' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
--d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "10d"}'
+-d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "2026-10-15"}'
 ```
 
 [API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
@@ -925,7 +929,6 @@ class LitellmUserRoles(str, enum.Enum):
 ### Teams
 
 #### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
-
 
 
 

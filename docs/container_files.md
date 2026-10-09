@@ -15,7 +15,7 @@ Looking for how to use Code Interpreter? See the [Code Interpreter Guide](/docs/
 |---------|-----------|
 | Cost Tracking | ✅ |
 | Logging | ✅ |
-| Supported Providers | `openai` |
+| Supported Providers | `openai`, `azure` |
 
 ## Endpoints
 
@@ -377,6 +377,9 @@ curl -X DELETE "http://localhost:4000/v1/containers/cntr_123.../files/cfile_456.
 | Provider | Status |
 |----------|--------|
 | OpenAI | ✅ Supported |
+| Azure OpenAI | ✅ Supported |
+
+For Azure, pass `custom_llm_provider="azure"` with `api_base` and `api_key` in the SDK, or send `custom-llm-provider: azure` to the proxy. A container created on the proxy with an Azure deployment's `model` returns an ID that routes its file calls to that deployment
 
 ## Related
 

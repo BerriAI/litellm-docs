@@ -1877,7 +1877,7 @@ response = completion(
 
 ## Video Metadata Control
 
-For Gemini 3+ models, LiteLLM supports fine-grained video processing control through the `video_metadata` field. This allows you to specify frame extraction rates and time ranges for video analysis.
+LiteLLM supports fine-grained video processing control through the `video_metadata` field on every Gemini model (2.x and 3+). This allows you to specify frame extraction rates and time ranges for video analysis. Only the per-part `media_resolution` set via `detail` is limited to Gemini 3+
 
 **Supported `video_metadata` parameters:**
 
@@ -1895,7 +1895,6 @@ For Gemini 3+ models, LiteLLM supports fine-grained video processing control thr
 :::
 
 :::warning
-- **Gemini 3+ Only:** This feature is only available for Gemini 3.0 and newer models
 - **Video Files Recommended:** While `video_metadata` is designed for video files, error handling for other media types is delegated to the Vertex AI API
 - **File Formats Supported:** Works with `gs://`, `https://`, and base64-encoded video files
 :::

@@ -110,6 +110,9 @@ The health check picks the operation to test from the model's `model_info.mode`.
 | `ocr` | OCR |
 | `video_generation` | video generation |
 | `image_edit` | image edit |
+| `anthropic_messages` | `/v1/messages` |
+
+Bedrock Mantle serves Claude models only on the Anthropic Messages API, so a `bedrock_mantle/anthropic.claude-*` deployment with `mode` unset is probed with `anthropic_messages` instead of a chat completion. An explicit `mode` still wins
 
 For a wildcard route (`*` in `litellm_params.model`), set `health_check_model` to the concrete model the probe should call. With `mode` unset on a wildcard route, `max_tokens` is left unset on the probe request.
 

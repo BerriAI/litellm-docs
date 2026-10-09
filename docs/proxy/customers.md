@@ -231,9 +231,63 @@ litellm_settings:
 
 ### Bucketing internal traffic under one customer
 
-If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md).
+If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change, while Codex CLI does the same through `http_headers` in its `config.toml`. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md) and [Codex CLI granular cost tracking](../tutorials/codex_customer_tracking.md).
 
 Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
+
+## Restricting Which Models a Customer Can Use
+
+Set `models` on a customer to limit which models requests made on its behalf can call. A request that carries this customer's ID, through the `user` field or the `x-litellm-customer-id` header, is rejected with a 403 when the requested model is not in the list, even if the virtual key and team allow it. An empty or missing list means the customer adds no model restriction. The customer list only narrows access: the key's and team's own model restrictions still apply on top, so listing a model on the customer never grants a key access to it
+
+Entries follow the same rules as key and team `models`, so a wildcard such as `anthropic/*` or a model access group name works here too
+
+Client-supplied `fallbacks` are checked against the customer's list too, as are router fallbacks when `enforce_fallback_model_access` is enabled
+
+```bash showLineNumbers title="Create a customer limited to one model"
+curl -L -X POST 'http://localhost:4000/customer/new' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+    "user_id": "user_1",
+    "models": ["{{openai_small}}"]
+  }'
+```
+
+A request for any other model on behalf of `user_1` then fails with the same error shape as key and team model checks, with `type` set to `customer_model_access_denied`
+
+```bash showLineNumbers title="Request a model outside the customer's list"
+curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-H 'x-litellm-customer-id: user_1' \
+-d '{
+    "model": "{{openai_large}}",
+    "messages": [{"role": "user", "content": "hi"}]
+  }'
+```
+
+```json title="Response (403)"
+{
+  "error": {
+    "message": "The requested model '{{openai_large}}' is not in the allowed models for this customer. Check the models this customer can use and try again.",
+    "type": "customer_model_access_denied",
+    "param": "model",
+    "code": "403"
+  }
+}
+```
+
+Change the list with `/customer/update`. Omitting `models` leaves the current list untouched, and sending `"models": []` removes the restriction. `/customer/info` returns the current list in its `models` field
+
+```bash showLineNumbers title="Remove the customer's model restriction"
+curl -L -X POST 'http://localhost:4000/customer/update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+    "user_id": "user_1",
+    "models": []
+  }'
+```
 
 ## Setting Customer Object Permissions
 
@@ -524,7 +578,7 @@ curl -X POST 'http://localhost:4000/budget/new' \
 
 ```bash
 curl -X POST 'http://localhost:4000/budget/info' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"budgets": ["my-free-tier"]}'
 ```
