@@ -12,23 +12,23 @@ Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](.
 
 ## Configure the gateway
 
-Each snippet shows the fields to update in `values.yaml`.
+Each snippet shows the fields to update in `values.yaml`. Comments show the defaults in chart `1.104.2`.
 
-### 1. Scale on requests per second
+### 1. Configure HPA
 
-**Set a request-rate target per pod so capacity scales with traffic.** This example targets 83 requests per second per pod. The HPA also tracks tokens, CPU, and memory, and uses the metric that asks for the most replicas.
+**Use RPS and TPS targets to scale with traffic, alongside CPU and memory targets for resource use.** The HPA uses the metric that asks for the most replicas. This example targets 83 requests and 6.25 million tokens per second per pod.
 
 ```yaml
 gateway:
   hpa:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 200
-    targetRequestsPerSecond: "83"
-    targetTokensPerSecond: "6.25M"
-    targetCPUUtilizationPercentage: 60
-    targetMemoryUtilizationPercentage: 80
-    behavior:
+    enabled: true # Default: true
+    minReplicas: 2 # Default: 1
+    maxReplicas: 200 # Default: 10
+    targetRequestsPerSecond: "83" # Default: ""
+    targetTokensPerSecond: "6.25M" # Default: ""
+    targetCPUUtilizationPercentage: 60 # Default: 70
+    targetMemoryUtilizationPercentage: 80 # Default: 80
+    behavior: # Default: {}
       scaleUp:
         stabilizationWindowSeconds: 0
         policies:
@@ -54,15 +54,15 @@ Run four workers per pod. Request 4 vCPUs and 16 GiB of memory, with a 16-vCPU l
 
 ```yaml
 gateway:
-  numWorkers: 4
-  logLevel: ERROR
+  numWorkers: 4 # Default: 1
+  logLevel: ERROR # Default: INFO
   resources:
     requests:
-      cpu: "4"
-      memory: 16Gi
+      cpu: "4" # Default: "1"
+      memory: 16Gi # Default: 4Gi
     limits:
-      cpu: "16"
-      memory: 16Gi
+      cpu: "16" # Default: "2"
+      memory: 16Gi # Default: 4Gi
 ```
 
 ### 3. Share database connections
@@ -72,9 +72,9 @@ Enable PgBouncer to share eight PostgreSQL connections across the workers and co
 ```yaml
 database:
   connectionPool:
-    enabled: true
-    maxDbConnections: 8
-    maxClientConn: 1000
+    enabled: true # Default: false
+    maxDbConnections: 8 # Default: 20
+    maxClientConn: 1000 # Default: 1000
 ```
 
 ### 4. Run metrics and spend processing in sidecars
@@ -84,13 +84,13 @@ Enable the metrics server and spend collector. Add `prometheus` to your callback
 ```yaml
 gateway:
   metricsServer:
-    enabled: true
+    enabled: true # Default: false
   serviceMonitor:
-    enabled: true
+    enabled: true # Default: false
   collector:
-    enabled: true
+    enabled: true # Default: false
   config:
-    proxy_config:
+    proxy_config: # Default: {}
       general_settings:
         proxy_batch_write_at: 60
         use_redis_transaction_buffer: true
@@ -108,69 +108,30 @@ Add `KEEPALIVE_TIMEOUT` to `gateway.extraEnv` with a value above your load balan
 
 ```yaml
 gateway:
-  extraEnv:
+  extraEnv: # Default: []
     - name: KEEPALIVE_TIMEOUT
       value: "75"
   config:
-    proxy_config:
+    proxy_config: # Default: {}
       litellm_settings:
         request_timeout: 600
-  terminationGracePeriodSeconds: 620
-  lifecycle:
+  terminationGracePeriodSeconds: 620 # Default: "" (Kubernetes uses 30s)
+  lifecycle: # Default: {}
     preStop:
       exec:
         command: ["sh", "-c", "sleep 10"]
-  strategy:
+  strategy: # Default: {}
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 25%
-  startupProbe:
+  startupProbe: # Default: {}
     httpGet: { path: /health/readiness, port: http }
     failureThreshold: 30
     periodSeconds: 10
   pdb:
-    enabled: true
-    maxUnavailable: 10%
+    enabled: true # Default: false
+    maxUnavailable: 10% # Default: ""
 ```
 
 Use a load test with your prompt sizes, streaming duration, and callbacks to choose resource limits and autoscaling targets.
-
-## Deploy
-
-Chart `1.104.2` uses `v1.104.2` component images. Update any explicit component image tags in your values file to `v1.104.2`.
-
-The commands use release `litellm` and its default resource names. Substitute your release, namespace, and any names set by `fullnameOverride`:
-
-```bash
-export NAMESPACE=litellm
-
-helm upgrade --install litellm \
-  oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.104.2 \
-  --namespace "$NAMESPACE" \
-  -f values.yaml
-```
-
-## Verify
-
-Check that each gateway pod lists `gateway`, `metrics`, and `collector` containers:
-
-```bash
-kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/component=gateway \
-  -o custom-columns='POD:.metadata.name,CONTAINERS:.spec.containers[*].name'
-```
-
-Send traffic through the gateway, then check the custom metrics and HPA:
-
-```bash
-kubectl get --raw \
-  "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$NAMESPACE/pods/*/litellm_requests_per_second"
-
-kubectl get --raw \
-  "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$NAMESPACE/pods/*/litellm_tokens_per_second"
-
-kubectl -n "$NAMESPACE" describe hpa litellm-litellm-gateway
-```
-
-Each metrics response lists per-pod values. The HPA shows request, token, CPU, and memory targets. New pods publish request and token metrics after serving traffic.
