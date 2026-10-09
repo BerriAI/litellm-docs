@@ -5,6 +5,7 @@
 
 .trigger {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
@@ -25,6 +26,35 @@
 
 .triggerIcon {
   display: inline-flex;
+}
+
+/* Long product names stay on one line: the pill never grows taller, and the
+   full name is in the menu and the button's aria-label. */
+.triggerLabel {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The navbar links shrink at this width too; keep the pill from pushing into
+   the logo and the right-hand links. */
+.labelShort {
+  display: none;
+}
+
+@media (max-width: 1330px) {
+  .triggerLabel {
+    max-width: 120px;
+  }
+
+  .labelFull {
+    display: none;
+  }
+
+  .labelShort {
+    display: inline;
+  }
 }
 
 .triggerIcon svg {

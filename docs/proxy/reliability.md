@@ -14,6 +14,7 @@ keywords:
     backup model,
     cross-provider failover,
   ]
+sidebar_label: "Fallbacks"
 ---
 
 import Image from '@theme/IdealImage';

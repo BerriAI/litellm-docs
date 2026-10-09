@@ -5,10 +5,17 @@ description: Start LiteLLM Gateway, add models and keys, then connect applicatio
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
+import QuickStartBox from '@site/src/components/QuickStartBox';
 
 Use this path if you need one shared OpenAI-compatible endpoint for a team or platform.
 
-If you need a Docker or database-first setup, use the [Quickstart](/docs/proxy/docker_quick_start). Otherwise, use the steps below to get to a working request fast.
+<QuickStartBox variant="gateway" showTitle={false} heading="Start the gateway now" source="learn-gateway-quickstart">
+
+When the command completes, open the Admin UI at `http://localhost:4000/ui`. For each step, refer to the [Quickstart](/docs/proxy/docker_quick_start).
+
+</QuickStartBox>
+
+To run the gateway from your own `config.yaml` instead, do the steps below.
 
 ## 1. Install The Gateway
 
@@ -126,43 +133,36 @@ If you need virtual keys, spend tracking, or the admin UI, add a database next.
 columns={3}
 items={[
   {
-    icon: "🖥️",
     title: "Make LLM Requests",
     description: "Point LiteLLM or OpenAI-compatible clients to the gateway.",
     to: "/docs/proxy/user_keys",
   },
   {
-    icon: "🎛️",
     title: "Model Config",
     description: "Add more models and gateway settings.",
     to: "/docs/proxy/configs",
   },
   {
-    icon: "🔑",
     title: "Virtual Keys",
     description: "Create keys, budgets, and access controls.",
     to: "/docs/proxy/virtual_keys",
   },
   {
-    icon: "📈",
     title: "Add Logging",
     description: "Capture logs, spend, and traces.",
     to: "/docs/proxy/logging",
   },
   {
-    icon: "🔀",
     title: "Load Balance",
     description: "Route across deployments, regions, or providers.",
     to: "/docs/proxy/load_balancing",
   },
   {
-    icon: "🛡️",
     title: "Add Guardrails",
     description: "Add safety checks and policy enforcement.",
     to: "/docs/proxy/guardrails/quick_start",
   },
   {
-    icon: "📊",
     title: "Reliability",
     description: "Configure retries, fallbacks, and timeouts.",
     to: "/docs/proxy/reliability",
@@ -172,4 +172,4 @@ items={[
 
 ## When To Use The SDK Path Instead
 
-If you only need to call models from one application and do not need centralized auth or shared infrastructure, start with the [SDK Quickstart](/docs/learn/sdk_quickstart) instead.
+If you only need to call models from one application and do not need centralized auth or shared infrastructure, start with the [SDK Quickstart](/docs/learn/python_sdk_quickstart) instead.
