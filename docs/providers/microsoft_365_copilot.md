@@ -50,13 +50,15 @@ Open **Manifest**, set `api.requestedAccessTokenVersion` to `2`, and save. The p
 
 ### Configure client sign-in
 
-For Claude Desktop, open **Authentication** > **Add a platform** > **Mobile and desktop applications**. Add `http://127.0.0.1/callback` as a redirect URI. See Microsoft's [desktop app registration guide](https://learn.microsoft.com/en-us/entra/identity-platform/scenario-desktop-app-registration).
+Open **Authentication** > **Add a platform**. Choose the platform your app uses and add the exact redirect URI from its sign-in settings. See Microsoft's [redirect URI guide](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url).
+
+The screenshot shows a desktop app example. Use your app's redirect URI.
 
 <Image img={require('../../img/m365_copilot_entra_redirect_uris.png')} style={{ width: '800px', height: 'auto' }} />
 
 ## 2. Add the model in LiteLLM
 
-In the LiteLLM dashboard, open **Models + Endpoints** > **Add Model**. Select **Microsoft 365 Copilot** as the provider and `chat` as the model. Set **Public Model Name** to `claude-m365-copilot`; use this name in client requests.
+In the LiteLLM dashboard, open **Models + Endpoints** > **Add Model**. Select **Microsoft 365 Copilot** as the provider and `chat` as the model. Set **Public Model Name** to `m365-copilot`; use this name in client requests.
 
 Select **OAuth token exchange (on-behalf-of)** as the **Auth Type**, then select **Create credential**.
 
@@ -104,21 +106,29 @@ litellm_settings:
 
 `drop_params: true` removes unsupported parameters, such as tools or temperature, from requests across the proxy. Copilot does not support tool calling, and LiteLLM ignores `max_tokens` for this provider.
 
-## 4. Sign in and send a request
+## 4. Connect your app
 
 Sign in through your client and request the scope `api://<app-client-id>/access_as_user`. Send the resulting **access token** to LiteLLM. An ID token or LiteLLM virtual key cannot complete the on-behalf-of exchange.
 
-### Claude Desktop
+### Configure your app
 
-In your Claude Desktop third-party inference settings, use your LiteLLM proxy URL and the model name `claude-m365-copilot`. Set the OIDC issuer URL to `https://login.microsoftonline.com/<tenant-id>/v2.0` and the OIDC client ID to the Entra app's client ID. Set **Bearer token** to **Access token** and use these scopes:
+Use an app that supports the OpenAI-compatible API and lets you set a custom API base URL and bearer token. Enter these settings:
+
+| Setting | Value |
+| --- | --- |
+| API base URL | `https://litellm.example.com/v1`, using your proxy's address |
+| Model | `m365-copilot`, or the public model name you set in step 2 |
+| API key or bearer token | The user's Entra access token |
+
+If your app supports OpenID Connect (OIDC) sign-in and can send the resulting access token, set the issuer URL to `https://login.microsoftonline.com/<tenant-id>/v2.0` and the client ID to the Entra app's client ID. Request these scopes:
 
 ```text
 openid profile email offline_access api://<app-client-id>/access_as_user
 ```
 
-Sign in with your Microsoft account, then send a prompt such as “Summarize my latest meeting.”
+Sign in with your Microsoft account, then send a prompt such as “Summarize my latest meeting.” If your app does not support sign-in, get an access token with MSAL as shown below.
 
-### Python or other clients
+### Python example
 
 Use [Microsoft Authentication Library (MSAL)](https://learn.microsoft.com/en-us/entra/msal/python/getting-started/acquiring-tokens#acquire-token-interactive) to sign in and get an access token for the same scope. For MSAL Python interactive sign-in, also add `http://localhost` as a **Mobile and desktop applications** redirect URI in Entra.
 
@@ -133,13 +143,11 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="claude-m365-copilot",
+    model="m365-copilot",
     messages=[{"role": "user", "content": "Summarize my latest meeting"}],
 )
 print(response.choices[0].message.content)
 ```
-
-For Claude Code, set `ANTHROPIC_BASE_URL` to your proxy URL and `ANTHROPIC_AUTH_TOKEN` to the Entra access token. Select `claude-m365-copilot` as the model.
 
 ## Optional configuration
 
@@ -155,7 +163,7 @@ If you manage models in `config.yaml`, reference the credential you saved in ste
 
 ```yaml
 model_list:
-  - model_name: claude-m365-copilot
+  - model_name: m365-copilot
     litellm_params:
       model: microsoft_365_copilot/chat
       litellm_credential_name: m365-copilot-obo
