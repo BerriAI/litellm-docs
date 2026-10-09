@@ -7,9 +7,9 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Reka serves its own models and a curated selection of open models over one OpenAI-compatible API, with image and video input on the models that support it. |
+| Description | Reka serves its own models and a curated selection of open models over one OpenAI-compatible API, with automatic prompt caching and no platform fee or markup. |
 | Provider Route on LiteLLM | `reka/` |
-| Link to Provider Doc | [Reka Documentation ↗](https://docs.reka.ai) |
+| Link to Provider Doc | [Reka Developer Reference ↗](https://developer.reka.ai/reference) |
 | Base URL | `https://api.reka.ai/v1` |
 | Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#anthropic-messages-api) |
 
@@ -18,19 +18,23 @@ import TabItem from '@theme/TabItem';
 
 **We support ALL Reka models, just set `reka/` as a prefix when sending requests**
 
+Reka's own ids carry no namespace, and the upstream API returns a 404 for a prefixed id such as `reka/glm5.3`. LiteLLM strips the `reka/` prefix before forwarding, so you always write `reka/<id>` on the LiteLLM side and Reka receives the bare `<id>`.
+
 ## Available Models
 
-| Model | Context | Input | Tools | Structured outputs | Reasoning |
-|-------|---------|-------|-------|--------------------|-----------|
-| `reka/reka-flash-3` | 64k | Text | No | Yes | Yes |
-| `reka/reka-edge-2603` | 16k | Text, image, video | Yes | Yes | No |
-| `reka/deepseek4-flash` | 262k | Text | Yes | Yes | Yes |
-| `reka/gemma4-26b` | 262k | Text, image | Yes | Yes | Yes |
-| `reka/glm5.3` | 262k | Text | Yes | Yes | Yes |
-| `reka/glm5.3-flash` | 262k | Text, image | Yes | Yes | Yes |
-| `reka/qwen3.8-27b` | 262k | Text, image, video | Yes | No | Yes |
+| Model | Context | Max output | Input / 1M tokens | Output / 1M tokens | Cached input / 1M tokens | Tools | `response_format` |
+|-------|---------|------------|-------------------|--------------------|--------------------------|-------|-------------------|
+| `reka/reka-flash-3` | 64k | 58,982 | $0.10 | $0.20 | n/a | No | `json_schema` |
+| `reka/reka-edge-2603` | 16k | 14,745 | $0.10 | $0.10 | n/a | Yes | `json_schema` |
+| `reka/deepseek4-flash` | 1M | 384,000 | $0.11 | $0.66 | $0.007 | Yes | `json_object`, `json_schema` |
+| `reka/deepseek-v4-pro` | 1M | 393,216 | $1.20 | $3.30 | $0.13 | Yes | `json_object`, `json_schema` |
+| `reka/glm5.3` | 262k | 131,072 | $1.17 | $3.96 | $0.234 | Yes | `json_object`, `json_schema` |
+| `reka/glm5.3-flash` | 262k | 131,072 | $0.15 | $0.50 | $0.03 | Yes | `json_object`, `json_schema` |
+| `reka/qwen3.8-27b` | 262k | 131,072 | $0.20 | $2.50 | $0.05 | Yes | No |
 
-Reka's catalog changes as models are added and retired, so `GET https://api.reka.ai/v1/models` is the authoritative list and the [model catalog](https://developer.reka.ai/models) has descriptions and current prices. Any id it returns works with the `reka/` prefix.
+Rates and limits are from the live model feed on [developer.reka.ai/models](https://developer.reka.ai/models) at the time of writing and change as models are added and retired. `GET https://api.reka.ai/v1/models` is the authoritative list for your account, and each entry's `pricing`, `input_modalities`, `supported_features`, and `supported_sampling_parameters` tell you what that model accepts. Any id it returns works with the `reka/` prefix.
+
+`reka-flash-3` is a 21B reasoning model and is primarily English. `reka-edge-2603` is Reka's model for physical AI and accepts images and video alongside text. The DeepSeek and GLM models are reasoning models that also support `logprobs` (non-streaming only on `deepseek4-flash`). Reasoning models return their thinking trace as `message.reasoning_content` and accept `reasoning_effort` (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`); models without reasoning ignore it.
 
 ## Required Variables
 
@@ -112,7 +116,7 @@ print(response.choices[0].message.tool_calls)
 
 ### Vision
 
-Image input uses the OpenAI content-part shape. Video input works the same way with a `video_url` part on models whose `input_modalities` include `video`.
+`reka-edge-2603` accepts images and video. Image input uses the OpenAI content-part shape; video uses a `video_url` part the same way. Check `input_modalities` on `GET /v1/models` before sending media to any other model.
 
 ```python showLineNumbers title="Reka Image Input"
 import os
@@ -270,7 +274,7 @@ You can also add Reka from the Admin UI. Go to Models, then Add Model, pick Reka
 
 ## Cost Tracking
 
-Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka publishes per-token rates on the [model catalog](https://developer.reka.ai/models) and in the `pricing` object returned by `GET /v1/models`; pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it.
+Reka models are not yet in LiteLLM's model cost map, so spend is not computed automatically. Reka bills per token at each model's rate with no platform fee, and publishes the rates on [developer.reka.ai/models](https://developer.reka.ai/models) and in the `pricing` object of `GET /v1/models` (US dollars per token, as strings: `prompt`, `completion`, and `input_cache_read`). Pass those values as `input_cost_per_token` and `output_cost_per_token` on the deployment and LiteLLM will track spend for it. The table above has the per-million rates; divide by 1,000,000 for the per-token value.
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -278,9 +282,17 @@ model_list:
     litellm_params:
       model: reka/reka-edge-2603
       api_key: os.environ/REKA_API_KEY
-      input_cost_per_token: 0.0000001
-      output_cost_per_token: 0.0000001
+      input_cost_per_token: 0.0000001   # $0.10 / 1M
+      output_cost_per_token: 0.0000001  # $0.10 / 1M
+  - model_name: glm5.3-flash
+    litellm_params:
+      model: reka/glm5.3-flash
+      api_key: os.environ/REKA_API_KEY
+      input_cost_per_token: 0.00000015  # $0.15 / 1M
+      output_cost_per_token: 0.0000005  # $0.50 / 1M
 ```
+
+Where a model supports prompt caching, Reka caches repeated prompt prefixes automatically and bills those tokens at the cached-input rate; `usage.reasoning_tokens` is included inside `completion_tokens` and is not billed twice.
 
 ## Custom API Base
 
