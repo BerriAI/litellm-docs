@@ -45,7 +45,7 @@ v1 sets a successful span's status to `OK`. v2 leaves it `UNSET`, the semantic-c
 
 ### More than one collector
 
-v1 has no list of collectors. Exporting to a second one from LiteLLM itself takes a Python handler per collector with `skip_set_global=True` on the extra ones, and only the first handler receives the proxy's root, auth and database spans, so the other collectors get LLM spans whose parent never arrives. v2 reads the collectors from `callback_settings.otel.exporters` in config.yaml and sends each one the complete trace; see [Send to more than one collector](./opentelemetry_v2#send-to-more-than-one-collector). When you switch, move each extra handler's endpoint into that list and drop the handlers. v1 ignores the list, so it does nothing until `LITELLM_OTEL_V2` is on.
+v1 has no list of collectors. Exporting to a second one from LiteLLM itself takes a Python handler per collector with `skip_set_global=True` on the extra ones, and only the first handler receives the proxy's root, auth and database spans, so the other collectors get LLM spans whose parent never arrives. v2 reads the collectors from `callback_settings.otel.exporters` in config.yaml and sends each one the complete trace; see [Send to more than one collector](./opentelemetry_v2#send-to-more-than-one-collector). When you switch, put every collector in that list, the first handler's included even if it came from `OTEL_ENDPOINT`, because the list replaces `OTEL_ENDPOINT` for traces. Then add `otel` to `litellm_settings.callbacks`, which the list needs before it is read, and drop the Python handlers. v1 ignores the list, so it does nothing until `LITELLM_OTEL_V2` is on.
 
 ## Keep the old attribute names during the cutover
 
