@@ -133,5 +133,3 @@ gateway:
     enabled: true # Default: false
     maxUnavailable: 10% # Default: ""
 ```
-
-Use a load test with your prompt sizes, streaming duration, and callbacks to choose resource limits and autoscaling targets.
