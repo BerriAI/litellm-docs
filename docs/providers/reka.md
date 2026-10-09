@@ -20,15 +20,15 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models
 
-| Model | Context | Max output | Tools | `response_format` |
-|-------|---------|------------|-------|-------------------|
-| `reka/reka-flash-3` | 64k | 58,982 | No | `json_schema` |
-| `reka/reka-edge-2603` | 16k | 14,745 | Yes | `json_schema` |
-| `reka/deepseek4-flash` | 1M | 384,000 | Yes | `json_object`, `json_schema` |
-| `reka/deepseek-v4-pro` | 1M | 393,216 | Yes | `json_object`, `json_schema` |
-| `reka/glm5.3` | 262k | 131,072 | Yes | `json_object`, `json_schema` |
-| `reka/glm5.3-flash` | 262k | 131,072 | Yes | `json_object`, `json_schema` |
-| `reka/qwen3.8-27b` | 262k | 131,072 | Yes | No |
+| Model | Context | Max output |
+|-------|---------|------------|
+| `reka/reka-flash-3` | 64k | 58,982 |
+| `reka/reka-edge-2603` | 16k | 14,745 |
+| `reka/deepseek4-flash` | 1M | 384,000 |
+| `reka/deepseek-v4-pro` | 1M | 393,216 |
+| `reka/glm5.3` | 262k | 131,072 |
+| `reka/glm5.3-flash` | 262k | 131,072 |
+| `reka/qwen3.8-27b` | 262k | 131,072 |
 
 ## Required Variables
 
