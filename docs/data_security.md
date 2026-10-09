@@ -8,7 +8,7 @@ At LiteLLM, **safeguarding your data privacy and security** is our top priority.
 
 - **No data or telemetry is stored on LiteLLM Servers when you self-host**
 - For installation and configuration, see: [Self-hosting guide](../docs/proxy/deploy.md)
-- **Telemetry**: We run no telemetry when you self-host LiteLLM
+- **Telemetry**: Usage telemetry is off by default when you self-host LiteLLM. If you turn it on, it only sends aggregate counts to an endpoint you choose, or keeps them in your own database. See [Usage telemetry](./proxy/telemetry.md) for every field it can collect
 
 For security inquiries, please contact us at support@berri.ai
 
