@@ -49,6 +49,8 @@ The classifier runs on every turn that ends in a tool call, so pick a fast, chea
 
 The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried, and it is cut off after 30 seconds
 
+Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budget, and RPM and TPM headroom (checked without using any of it). When one of them fails, see [When the Caller Cannot Use the Classifier](#when-the-caller-cannot-use-the-classifier)
+
 ## How It Works
 
 On each `/v1/messages` request that carries `safeguards` and goes through the chat completions translation, LiteLLM sends the request to the backend as before, with `safeguards` stripped. Once the response is in, it sends one chat completions call to the classifier deployment with:
@@ -61,7 +63,7 @@ The classifier flags a tool call that does something dangerous the user did not 
 
 LiteLLM returns the verdicts as `safeguard_results`, on the response for non-streaming calls and inside the final `message_delta` event for streaming calls. Claude Code blocks a flagged call and runs an unflagged one. A reply with no tool calls gets an empty verdict set without a classifier call
 
-To keep the classifier call small, the conversation is trimmed to about 24,000 characters, oldest turns first, while the user's opening request is always kept. Each transcript entry is clipped to 2,000 characters and each tool result to 500. The pending tool calls are never clipped. The agent's system prompt and thinking blocks are not sent
+The transcript is built from the messages Claude Code sent, before any compaction the proxy applies, and a compaction summary from Claude Code shows up as one entry. To keep the classifier call small, the transcript is trimmed to about 24,000 characters, oldest turns first, while the user's opening request is always kept. Each transcript entry is clipped to 2,000 characters and each tool result to 500. The pending tool calls are never clipped. The agent's system prompt and thinking blocks are not sent
 
 :::caution
 
@@ -154,14 +156,25 @@ If the classifier call fails, the proxy marks every tool call of that response `
 | `timeout` | No answer within 30 seconds |
 | `input_too_long` | Over the classifier's context window |
 | `refused` | Content policy refusal |
+| `truncated` | Tool call was cut off |
 | `error` | Any other failure |
 
-`error` also covers a classifier reply that is not the JSON the proxy asked for. When the reply is JSON but leaves out one of the tool calls, only that tool call gets `unavailable` with `error`, and the others keep their verdicts
+A tool call is cut off when it is the last block of a reply that stopped at `max_tokens`, or when its streamed arguments are not valid JSON. The proxy never sends it to the classifier, and the other tool calls of that response still get verdicts. `error` also covers a classifier reply that is not the JSON the proxy asked for. When the reply is JSON but leaves out one of the tool calls, only that tool call gets `unavailable` with `error`, and the others keep their verdicts
 
 A `safeguard_results` with `unavailable` verdicts still counts as server review, so `/status` keeps reading `Auto mode server: Enabled` and the session does not switch to the local fallback for good. What Claude Code does with the action depends on its version. Anthropic's [errors reference](https://code.claude.com/docs/en/errors#the-server-returned-no-safety-verdict) says auto mode denies an action the server gives no verdict for, and stops the turn after ten responses in a row without one. In our test with Claude Code v2.1.296 and a classifier that always failed with `error`, Claude Code checked each such action with its own classifier request instead, sent through the proxy (to Claude Sonnet 5 first, then to the session's model when the proxy had no Sonnet 5 deployment), and ran the actions that check allowed. Reads and edits inside the working directory never go to a classifier
 
 When tool calls keep coming back `unavailable`, look for `safeguards classifier` warnings in the proxy logs
 
+## When the Caller Cannot Use the Classifier
+
+When the caller fails one of the checks for the classifier model (no access, the per-model budget spent, or no RPM or TPM headroom), the proxy skips the classifier call and returns no per-tool verdicts:
+
+```json
+"safeguard_results": [{"type": "dangerous_tool_use", "status": {"type": "unsupported"}}]
+```
+
+Claude Code treats this the same as a route with no verdicts. It shows its classifier billing notice, sends its own classifier requests through the proxy for the rest of the session, and `/status` reads `Auto mode server: Disabled` after the first reply. Give the key access to the classifier model, or raise the limit it hit, and start a new session
+
 ## Cost and Logs
 
-The classifier call is a normal proxy call. It shows up as its own request on the Logs page and in spend logs, billed to the same virtual key, team, and end user as the Claude Code request that triggered it. The proxy does not check the key's model access for the classifier deployment, since the admin picked it, but the key's budget still counts its spend. Its cost adds to every turn that ends in a tool call, which is why the choice of classifier model matters
+The classifier call is a normal proxy call. It shows up as its own request on the Logs page and in spend logs, billed to the same virtual key, team, and end user as the Claude Code request that triggered it. Its cost adds to every turn that ends in a tool call, which is why the choice of classifier model matters
