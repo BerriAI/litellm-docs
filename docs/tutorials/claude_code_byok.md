@@ -24,6 +24,8 @@ model_list:
     litellm_params:
       model: anthropic/{{anthropic}}
       # No api_key needed — client's key will be used
+    model_info:
+      cooldown_time: 0  # See "Rate Limits and Cooldowns" below
 
 litellm_settings:
   forward_llm_provider_auth_headers: true  # Required for the x-api-key path; not needed for /login
@@ -103,6 +105,14 @@ x-litellm-user-id: my-user-id"
 
 4. LiteLLM authenticates you via `x-litellm-api-key`. It forwards the OAuth `Authorization` header to Anthropic automatically; forwarding `x-api-key` additionally requires `forward_llm_provider_auth_headers: true`. Either way, your Anthropic credential takes precedence over any proxy-configured key.
 
+## Rate Limits and Cooldowns
+
+When Anthropic answers with a 429 on a forwarded client credential, it usually means that one client has used up its own quota, but the router still treats it as a failure of the shared deployment and cools the deployment down. If the deployment sets no `cooldown_time`, the cooldown lasts as long as the provider's `retry-after` header asks, with no upper bound. In a test against LiteLLM v1.104.1 with `allowed_fails_policy.RateLimitErrorAllowedFails: 1`, a 429 carrying `retry-after: 86400` put the deployment into an 86,400 second cooldown on the second 429, and later requests were refused for every user of the model group, or sent to the group's fallback if it had one.
+
+The cooldown is keyed to the deployment (`deployment:<model_id>:cooldown`), not to the credential that caused it, so a user whose usage resets or who buys more credit still cannot use the model. It is held in each worker's memory and in Redis. Restarting the proxy alone does not clear it, because it is read back from Redis, and deleting the Redis key alone does not either, because the worker that recorded it keeps its in-memory copy. There is no endpoint to clear it.
+
+Set `cooldown_time: 0` under `model_info` on deployments that forward client credentials, as in the Step 1 config. The deployment value takes precedence over `retry-after`; in the same test no cooldown was recorded and every request reached Anthropic. The trade-off is that during a real Anthropic outage each request still tries Anthropic before any fallback. A short cap such as `cooldown_time: 30` is a middle ground. See [Cooldowns](../routing.md#cooldowns) for how per-deployment `cooldown_time` works.
+
 ## Summary
 
 | Header | Source | Purpose | Needs `forward_llm_provider_auth_headers`? |
@@ -133,6 +143,10 @@ This applies to the `x-api-key` path; the OAuth `Authorization` header from `/lo
 - Confirm `forward_llm_provider_auth_headers: true` is in your config.
 - The setting can be in `litellm_settings` or `general_settings` depending on your config structure.
 - Enable debug logging: `LITELLM_LOG=DEBUG` to see which key is being forwarded.
+
+### Model is unavailable for everyone after one user hits their limit
+
+One user's 429 has cooled down the shared deployment, possibly for as long as Anthropic's `retry-after` header asked. Set `cooldown_time: 0` on the deployment as described in [Rate Limits and Cooldowns](#rate-limits-and-cooldowns).
 
 ## Related
 

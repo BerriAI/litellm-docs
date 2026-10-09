@@ -191,6 +191,10 @@ A forwarded provider header takes precedence over the deployment's `api_key` for
 
 Do not send the LiteLLM key in `x-api-key`. LiteLLM accepts it there as proxy authentication and then removes it, so it is not forwarded and the request falls back as described above
 
+#### Cooldowns with client keys
+
+A 429 on a client's own key usually reflects that client's quota, but the router still cools down the shared deployment for every caller, and without a deployment `cooldown_time` the cooldown lasts as long as the provider's `retry-after` header asks. Set `cooldown_time: 0` under `model_info` on deployments that forward client credentials; see [Rate Limits and Cooldowns](../tutorials/claude_code_byok.md#rate-limits-and-cooldowns) for the details and trade-off.
+
 ### Security Considerations
 
 **When to Use This Feature:**
