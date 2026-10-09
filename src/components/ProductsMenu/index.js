@@ -70,11 +70,11 @@ const COLUMNS = [
     {
       heading: 'Build',
       items: [
-        {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/proxy/docker_quick_start'},
+        {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/simple_proxy'},
         {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
         {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
         {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
-        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/#litellm-python-sdk'},
+        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
       ],
     },
   ],
@@ -104,9 +104,9 @@ const SECTION_MATCHERS = [
   ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
   ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
-  ['sdk', ({hash}) => hash === '#litellm-python-sdk'],
+  ['sdk', ({pathname, hash}) => pathname.startsWith('/docs/python_sdk') || hash === '#litellm-python-sdk'],
   ['router', ({pathname}) => pathname.startsWith('/docs/auto_router')],
-  ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy')],
+  ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy') || pathname.startsWith('/docs/simple_proxy')],
 ];
 
 function currentItem(location) {

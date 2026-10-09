@@ -105,6 +105,10 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 
 The `openinference` mapper stamps the OpenInference vocabulary onto the LLM-call span alongside the canonical `gen_ai.*` keys, so Arize reads its native schema without dropping the canonical ones. That covers `llm.model_name` and `llm.provider`, the `llm.token_count.*` usage split, `llm.invocation_parameters`, the `llm.input_messages.*` and `llm.output_messages.*` message arrays when content capture is on, and `llm.tools.*` for tool definitions. See the [full attribute table](./opentelemetry_v2#seeing-your-traces) or the [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
 
+The mapper also writes each assistant tool call as structured `llm.output_messages.{idx}.message.tool_calls.{idx}.tool_call.*` attributes and the allowlisted request metadata as a `metadata` attribute, so Arize's LLM view shows the tool name and arguments and the metadata panel fills from the same allowlist as `litellm.metadata.*`. Before, a tool-calling reply showed up as `{"role": "assistant", "content": null}` with an empty metadata panel. See [OpenInference tool calls and metadata](./opentelemetry_v2#openinference-tool-calls-and-metadata) for the attributes, the `mapper_names` setting, and the attribute budget.
+
+The `arize` preset names the `openinference` mapper for you, so no extra setting is needed. `MAPPER_NAMES` (or `callback_settings.otel.mapper_names`) only comes into play when you ship Arize-bound spans through your own collector on the generic OTLP path.
+
 ![LiteLLM trace in Arize](/img/observability/otel_v2_arize.png)
 
 ## Configuration

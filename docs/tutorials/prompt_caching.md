@@ -22,6 +22,7 @@ Supported Providers (`cache_control` marker):
 
 Supported Providers (`prompt_cache_breakpoint` marker):
 - OpenAI GPT-5.6 and newer (`openai/`), see [OpenAI GPT-5.6 and newer](#openai-gpt-56-and-newer)
+- Bedrock Mantle, OpenAI GPT-5.6 and newer (`bedrock_mantle/openai.gpt-5.6-*`, `bedrock_mantle/openai.gpt-6*`), through the same section, on `/chat/completions` (bridged onto the Responses API) and `/v1/responses`; see [Bedrock Mantle explicit breakpoints](../completion/prompt_caching.md#bedrock-mantle-explicit-breakpoints-openai-gpt-56-and-newer) for Mantle's limits
 
 Provider Managed (automatic, no marker needed):
 - OpenAI, models before GPT-5.6 (`openai/`)
