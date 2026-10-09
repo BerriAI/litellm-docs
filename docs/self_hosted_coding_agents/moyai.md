@@ -6,25 +6,24 @@ hide_title: true
 hide_table_of_contents: true
 ---
 
-import {MoyaiHero, GuideCards, CostProof, ModelChoice, CloudWork, StartCard} from '@site/src/components/Moyai';
+import {CostHero, BenefitGrid, GuideButtons} from '@site/src/components/Moyai';
 import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
 import styles from '@site/src/components/Moyai/styles.module.css';
 import Heading from '@theme/Heading';
 
-<MoyaiHero />
-<GuideCards />
+<CostHero />
 
-<div className={styles.whyHeading}>
+<section className={styles.why} aria-labelledby="why-moyai">
   <Heading as="h2" id="why-moyai">Why Moyai</Heading>
-  <p>Spend less on coding agents. Choose how they work.</p>
-</div>
+  <BenefitGrid />
+  <GuideButtons />
+</section>
 
-<CostProof />
-<ModelChoice />
+## Watch a task go from request to PR {#watch-a-task}
 
-<CloudWork>
+Follow a bug fix across Slack and the web: the investigation, regression tests, and pull request. Send a correction or follow-up in the same conversation.
+
 <BugWorkflowDemo />
-</CloudWork>
 
 ## Put Moyai to work
 
@@ -38,7 +37,9 @@ Start with a bounded change in a repository you know. Include the expected behav
 
 Connect only the apps and repositories the task needs. Enabled app tools can write under their connection policy without a per-use approval prompt. You control access in **Connections**, and GitHub PR approval and merging remain human steps.
 
-<StartCard />
+## Start with one cloud task {#prerequisites}
+
+Bring a Modal account, a reachable LiteLLM gateway, and a key for your chosen model. The [setup guide](./moyai/setup.md) walks through deployment, a cloud task, and your first repository connection.
 
 Moyai suits a trusted team willing to run its own service. You own updates, credentials, backups, and compute costs. Model requests still go to the provider you select; self-hosting does not keep those requests inside your cloud account.
 

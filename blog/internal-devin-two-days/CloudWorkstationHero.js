@@ -3,12 +3,7 @@ import {useColorMode} from '@docusaurus/theme-common';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
-export default function CloudWorkstationHero({
-  paused,
-  setPaused,
-  caption = 'Our internal Devin, running in the cloud.',
-  title = 'Animated Moyai cloud workstation: our internal Devin, hosted on Render with Temporal sessions',
-}) {
+export default function CloudWorkstationHero({paused, setPaused}) {
   const frame = useRef(null);
   const {colorMode} = useColorMode();
   const source = useBaseUrl('/animations/internal-devin-two-days/index.html?embed=1');
@@ -27,13 +22,13 @@ export default function CloudWorkstationHero({
           ref={frame}
           className={styles.cloudFrame}
           src={source}
-          title={title}
+          title="Animated Moyai cloud workstation: our internal Devin, hosted on Render with Temporal sessions"
           onLoad={updatePlayer}
           scrolling="no"
         />
       </div>
       <figcaption>
-        <span>{caption}</span>
+        <span>Our internal Devin, running in the cloud.</span>
         <button className={styles.motionToggle} onClick={() => setPaused(!paused)}
           aria-pressed={paused}>{paused ? 'Play animation' : 'Pause animation'}</button>
       </figcaption>
