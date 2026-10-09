@@ -108,7 +108,7 @@ litellm_settings:
 
 ## 4. Connect your app
 
-Sign in through your client and request the scope `api://<app-client-id>/access_as_user`. Send the resulting **access token** to LiteLLM. An ID token or LiteLLM virtual key cannot complete the on-behalf-of exchange.
+Sign in through your client and request the scope `api://<app-client-id>/access_as_user`. Send the resulting **access token** to LiteLLM. An ID token cannot complete the on-behalf-of exchange
 
 ### Configure your app
 
@@ -130,7 +130,7 @@ Sign in with your Microsoft account, then send a prompt such as “Summarize my 
 
 ### Python example
 
-Use [Microsoft Authentication Library (MSAL)](https://learn.microsoft.com/en-us/entra/msal/python/getting-started/acquiring-tokens#acquire-token-interactive) to sign in and get an access token for the same scope. For MSAL Python interactive sign-in, also add `http://localhost` as a **Mobile and desktop applications** redirect URI in Entra.
+Use [Microsoft Authentication Library (MSAL)](https://learn.microsoft.com/en-us/entra/msal/python/getting-started/acquiring-tokens#acquire-token-interactive) to sign in and get an access token for the same scope. For MSAL interactive sign-in, add the redirect URI that MSAL uses as a **Mobile and desktop applications** redirect URI in Entra
 
 Pass the access token as the API key when you call LiteLLM with the OpenAI Python SDK:
 
@@ -199,5 +199,5 @@ Each proxy worker caches exchanged access tokens in memory until 60 seconds befo
 | Problem | What to do |
 | --- | --- |
 | Entra returns `AADSTS240002` | Send an access token for `api://<app-client-id>/access_as_user`. Check that your client is not sending an ID token. |
-| A connection test says it requires the caller's access token | Test with the user's Entra access token in the `Authorization` header. A dashboard session or LiteLLM virtual key alone cannot complete the exchange. |
+| A connection test says it requires the caller's access token | Test with the user's Entra access token in the `Authorization` header. A dashboard session alone cannot complete the exchange |
 | Token audience or issuer does not match | Check that the app issues v2 access tokens. The token's `aud` must match `JWT_AUDIENCE`, and its `iss` must match `JWT_ISSUER`. |
