@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `reka/` |
 | Link to Provider Doc | [Reka Developer Reference ↗](https://developer.reka.ai/reference) |
 | Base URL | `https://api.reka.ai/v1` |
-| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#usage---litellm-proxy-server) |
+| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk) |
 
 <br />
 <br />
