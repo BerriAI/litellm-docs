@@ -343,6 +343,31 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 
 :::
 
+### Voice names
+
+`audio.voice` takes any Gemini prebuilt voice name (`Kore`, `Puck`, `Zephyr`, ...) and sends it through unchanged. OpenAI voice names map to the nearest Gemini prebuilt voice, so OpenAI-shaped clients and the proxy's default `audio_speech` health check (`alloy`) work without a config change. The lookup is case-insensitive, and any other name is sent through as-is, so a typo still fails at Google with its `No matching speaker voice found` error.
+
+The mapping is available from v1.107.0 (first in `v1.107.0-rc.1`). Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
+
+| OpenAI voice | Gemini voice |
+|--------------|--------------|
+| `alloy` | `Kore` |
+| `ash` | `Iapetus` |
+| `ballad` | `Algieba` |
+| `cedar` | `Achird` |
+| `coral` | `Sulafat` |
+| `echo` | `Charon` |
+| `fable` | `Umbriel` |
+| `marin` | `Despina` |
+| `onyx` | `Orus` |
+| `sage` | `Vindemiatrix` |
+| `shimmer` | `Achernar` |
+| `verse` | `Puck` |
+
+Gemini voice names and their characters come from the [Gemini speech generation docs](https://ai.google.dev/gemini-api/docs/speech-generation) (read 2026-10-07).
+
+`nova` is not in the table: Gemini 3.x TTS models accept it as a voice name of their own (checked live on 2026-10-08), so it is sent through unchanged. `gemini-2.5-flash-preview-tts` rejects `nova`, so use a Gemini voice name there.
+
 ### Quick Start
 
 <Tabs>
