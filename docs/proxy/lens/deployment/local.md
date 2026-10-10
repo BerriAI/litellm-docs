@@ -1,62 +1,63 @@
 ---
-title: "Local quickstart"
-description: "Start LiteLLM and Lens on your computer and send a test trace."
+title: "Start standalone Lens"
+description: "Run Lens and ClickHouse locally, sign in, and send a first trace without a LiteLLM gateway."
 slug: "/proxy/lens/deployment/local"
 ---
 
-# Local quickstart
+# Start standalone Lens
 
-This local setup starts LiteLLM, Lens, PostgreSQL, and ClickHouse together. You need Git, Python {{python_min_version}} or later, and Docker with Compose. Start Docker before running the commands.
+Run Lens on your computer to inspect agent traces. You need Git, Docker, and Docker Compose v2. Docker must be running. You do not need a LiteLLM gateway, PostgreSQL, or a model provider key to start Lens.
 
-## 1. Get the configuration
+This quickstart builds Lens from the [source repository](https://github.com/BerriAI/lens). The first build can take several minutes. See [Releases and images](./releases.md) for published artifact availability.
 
-Select a [release with published Lens images](./releases.md). Replace `RELEASE_VERSION` with its version without the `v` prefix, then clone that release:
+## 1. Start Lens
 
-```bash
-export LITELLM_VERSION="RELEASE_VERSION"
-git clone --depth 1 --branch "v${LITELLM_VERSION}" https://github.com/BerriAI/litellm.git
-cd litellm
+Run these commands in a terminal:
+
+```sh
+git clone https://github.com/BerriAI/lens.git
+cd lens
+./deploy/lens/start
 ```
 
-Generate the configuration:
+The script builds Lens, generates credentials in `deploy/lens/.env`, and starts Lens with ClickHouse. Wait for `Lens is ready at http://localhost:4318/ui/`.
 
-```bash
-python3 deploy/lens/configure.py --version "$LITELLM_VERSION"
+The script keeps existing credentials and stored data when you run it again. Keep the environment file private.
+
+## 2. Sign in
+
+Open [Lens at localhost:4318](http://localhost:4318/ui/). Open `deploy/lens/.env` in your editor and copy the `LENS_ADMIN_TOKEN` value into the Lens sign-in page.
+
+This token is for administrator access. The next step creates a separate tracing key for your agent.
+
+## 3. Send a trace
+
+Follow [Send your first trace](../first-trace.md). The example records one model call. Then use your framework guide to connect your own agent.
+
+For an agent on the same computer, the trace endpoint is `http://localhost:4318/v1/traces`. An agent in another container or on another machine needs an address it can reach. Do not use that agent's `localhost` to refer to your Lens server.
+
+## 4. Choose your next step
+
+To use Lens in an existing LiteLLM dashboard, [connect this Lens deployment](./litellm.md#1-get-the-lens-address). To make Lens available to a team, follow [Docker Compose on a server](./server.md) or [Kubernetes](./kubernetes.md).
+
+You can inspect traces before configuring an analysis model. When you want Lens to investigate them, [configure an analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) and [create an investigation](../investigations.md).
+
+## Stop and restart
+
+From the Lens repository root, stop the services while keeping their data:
+
+```sh
+docker compose -f deploy/lens/compose.yaml down
 ```
 
-This saves private credentials in `deploy/lens/.env`. Back up that file with your databases. Running the command again preserves the credentials.
+Start them again with `./deploy/lens/start`. Keep `deploy/lens/.env` and the ClickHouse volume. Adding `--volumes` to the stop command deletes stored Lens data.
 
-## 2. Start the services
+If startup fails, check Docker and the service logs:
 
-```bash
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml up -d --wait
+```sh
+docker info
+docker compose -f deploy/lens/compose.yaml ps
+docker compose -f deploy/lens/compose.yaml logs --tail=100 lens clickhouse
 ```
 
-Docker downloads the images and starts the services. Check their status:
-
-```bash
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml ps
-```
-
-`litellm` and `lens-worker` should be running. `db` and `clickhouse` should be healthy. If a service exits, [check its logs](./configuration.md#troubleshooting).
-
-This stack binds to localhost and stores data in persistent volumes. For agents on other machines, use [Kubernetes](./kubernetes.md) or [Docker Compose on a server](./server.md).
-
-## 3. Open Lens
-
-1. Open [http://localhost:4000/ui/](http://localhost:4000/ui/).
-2. Sign in as `admin`. Use the `LITELLM_MASTER_KEY` value from `deploy/lens/.env` as the password.
-3. Open **Lens**, then **Set up Lens**. Under **Send your first trace**, choose your framework and click **Generate tracing key**.
-4. Click **Copy tracing configuration**, then follow the displayed installation and code snippets in your agent's project.
-
-To check tracing before running an agent, click **Send a test trace** under **Connection details**, then **View trace**. This does not call a model or require a provider key.
-
-Your trace endpoint is `http://localhost:4318/v1/traces`. Model requests use `http://localhost:4000`. To run an agent through this gateway, first add a provider model under **Models** and create a model key under **Virtual Keys**. The [first-trace examples](../first-trace.md) show how to name your agent and record its steps.
-
-To stop the stack while keeping your data, run:
-
-```bash
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml down
-```
-
-To start it again, repeat the `up -d --wait` command with the same environment file. Do not add `-v` to `down` unless you intend to delete the database volumes.
+For help from a coding agent, copy the [standalone setup prompt](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#start-standalone-lens). For persistent data, use the [backup guide](https://github.com/BerriAI/lens/blob/main/docs/backup.md).

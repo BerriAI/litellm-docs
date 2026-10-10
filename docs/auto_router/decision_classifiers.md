@@ -43,7 +43,7 @@ All four use the System One decision protocol. LiteLLM sends a `choice` question
 
 The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
 
-Databricks support requires [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200) and [BerriAI/litellm#45722](https://github.com/BerriAI/litellm/pull/45722), which moves it to the `ai_decide` AI Function route.
+Databricks serving endpoints require [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200), and the `ai_decide` AI Function requires [BerriAI/litellm#45722](https://github.com/BerriAI/litellm/pull/45722).
 
 Existing Jev-compatible configurations can keep `classifier_type: jev` and `jev_classifier_config`. For new routers, use the canonical names below; see [migration](#migrate-an-existing-jev-or-nimble-router) when upgrading an existing router.
 
@@ -128,7 +128,7 @@ export DATABRICKS_API_BASE="https://<workspace-host>"
 export DATABRICKS_API_KEY="<databricks-token>"
 ```
 
-`DATABRICKS_TOKEN` is read when `DATABRICKS_API_KEY` is unset, and a `DATABRICKS_API_BASE` that ends in `/serving-endpoints` also works. Use `provider: databricks` and set `model: ai_decide`, which is required and the only accepted value, since the AI Function picks the model itself. In the [complete router configuration](#configure-the-router), use:
+`DATABRICKS_TOKEN` is read when `DATABRICKS_API_KEY` is unset, and a `DATABRICKS_API_BASE` that ends in `/serving-endpoints` also works. Use `provider: databricks` and set `model: ai_decide`, which is required. A bare serving endpoint name such as `databricks-openjev-qwen35-4b` also works, and LiteLLM then sends the request, `model` included, to that endpoint's `/invocations` route instead. In the [complete router configuration](#configure-the-router), use:
 
 ```yaml
 opensource_classifier_config:

@@ -462,7 +462,7 @@ model_list:
       api_key: os.environ/DATABRICKS_API_KEY
 ```
 
-`DATABRICKS_API_BASE` is `https://<workspace-host>`. The `/serving-endpoints` URL the chat deployments above use also works, since LiteLLM removes that suffix before it adds the AI Function path. `databricks/ai_decide` is the only model name: the AI Function picks the model itself, so LiteLLM rejects any other name with a 400 and sends no `model` field upstream.
+`DATABRICKS_API_BASE` is `https://<workspace-host>`. The `/serving-endpoints` URL the chat deployments above use also works, since LiteLLM removes that suffix before it adds the AI Function path. LiteLLM sends no `model` field to the AI Function, since it picks the model itself. Any other `databricks/<endpoint>` name on the decision routes still goes to that serving endpoint's `/invocations` route.
 
 ```bash
 curl http://localhost:4000/v1/systemone \

@@ -1,81 +1,76 @@
 ---
-title: "Add Lens to Docker Compose"
-description: "Add Lens to your existing LiteLLM Compose project."
+title: "Connect Lens to Docker Compose"
+description: "Add a running Lens service to your existing LiteLLM Compose deployment."
 slug: "/proxy/lens/deployment/docker-compose"
 ---
 
-# Add Lens to Docker Compose
+# Connect Lens to Docker Compose
 
-Add Lens to your existing Compose project. You need a [ClickHouse HTTP endpoint](./storage.md#clickhouse-connection) and [matching LiteLLM and Lens images](./releases.md#container-images). For a new deployment, use [Docker Compose on a server](./server.md).
+Use this guide when LiteLLM already runs with Docker Compose. Lens can run in another Compose project, on Render, or on another reachable server. Keep your gateway's existing services, model configuration, database, and volumes.
 
-## 1. Set the connection values
+## 1. Prepare the connection {#1-set-the-connection-values}
 
-Generate a service secret:
+Complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). You need a ready Lens URL and two connection secrets already configured on Lens.
 
-```bash
-openssl rand -hex 32
-```
-
-Add these values to your Compose project's `.env` file. Replace the placeholders and URLs. URL-encode special characters in the ClickHouse username and password:
+In the directory that contains your gateway's Compose file, create a private `lens-gateway.env` file with these values:
 
 ```dotenv
-LENS_WORKER_IMAGE=ghcr.io/berriai/litellm-lens-worker@sha256:RELEASE_DIGEST
-LITELLM_LENS_SERVICE_TOKEN=<generated-service-secret>
-LITELLM_LENS_PUBLIC_URL=https://traces.example.com
-CLICKHOUSE_URL=https://lens_user:URL_ENCODED_PASSWORD@clickhouse.example.com:8443
+LITELLM_LENS_URL=https://lens.example.com
+LITELLM_LENS_PUBLIC_URL=https://lens.example.com
+LITELLM_LENS_SERVICE_TOKEN=YOUR_SERVICE_SECRET
+LENS_GATEWAY_SECRET=YOUR_SIGNING_SECRET
 ```
 
-For agents on the Docker host, use `http://localhost:4318` as the public URL. For other machines, add the trace-hostname server block from the [NGINX example](./server.md#3-route-https-traffic), using your hostname and TLS certificate. Keep your existing LiteLLM routing.
+Replace the URL and secrets with your values. Keep this file out of Git and restrict access:
 
-Protect the file:
-
-```bash
-chmod 600 .env
+```sh
+chmod 600 lens-gateway.env
 ```
 
-## 2. Add Lens to your Compose file
+Using the public HTTPS Lens URL for both addresses works when the gateway and agents can reach it. For a shared Docker network, the private URL can instead be `http://lens:4318`. Keep the public URL reachable by your agents. See [Docker networking](./configuration.md#docker-network).
 
-Merge these settings into `compose.yaml`, keeping your existing services and settings. Replace `litellm` with your gateway's service name and `4000` with its container port:
+<span id="2-add-lens-to-your-compose-file" />
 
-```yaml title="compose.yaml"
+## 2. Apply the gateway settings {#2-apply-the-gateway-settings}
+
+Add the environment file to your gateway service in its existing Compose file. This example uses the service name `litellm`; use the name in your file. Preserve any existing `env_file` entries:
+
+```yaml
 services:
   litellm:
-    environment:
-      LITELLM_LENS_URL: http://lens-worker:4318
-      LITELLM_LENS_PUBLIC_URL: ${LITELLM_LENS_PUBLIC_URL}
-      LITELLM_LENS_SERVICE_TOKEN: ${LITELLM_LENS_SERVICE_TOKEN}
-  lens-worker:
-    image: ${LENS_WORKER_IMAGE}
-    environment:
-      LITELLM_URL: http://litellm:4000
-      LITELLM_LENS_SERVICE_TOKEN: ${LITELLM_LENS_SERVICE_TOKEN}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
-    ports: ["127.0.0.1:4318:4318"]
-    mem_limit: 2g
-    cpus: 2
-    pids_limit: 64
-    restart: unless-stopped
-    read_only: true
-    tmpfs: ["/tmp:rw,noexec,nosuid,size=1g"]
-    cap_drop: [ALL]
-    security_opt: ["no-new-privileges:true"]
+    env_file:
+      - lens-gateway.env
 ```
 
-If LiteLLM uses a custom Compose network, add `networks: [your-network-name]` under `lens-worker` too. Both services must share a network.
+An explicit `environment` value overrides the same name in an environment file. Update any existing definitions of these four Lens variables so they agree. In a split deployment, add the file to both the gateway and backend/API services.
 
-## 3. Start Lens
+Merge this block into the gateway's existing `config.yaml`:
 
-Use your usual Compose command with the updated configuration:
-
-```bash
-docker compose up -d
+```yaml
+general_settings:
+  tracing:
+    store:
+      type: lens
 ```
 
-## 4. Check the installation
+Do not replace other `general_settings` values or the model list.
 
-1. Sign in to your LiteLLM dashboard as a proxy administrator.
-2. Open **Lens > Set up Lens**, or **Traces > Set up tracing** if you already have traces.
-3. Check the **Traces endpoint**, click **Generate tracing key**, then **Send a test trace**.
-4. Click **View trace**, then [connect your agent](../first-trace.md).
+## 3. Recreate the gateway {#3-start-lens}
 
-If the check fails, use [Troubleshooting](./configuration.md#troubleshooting).
+From your gateway's Compose directory, list the service names:
+
+```sh
+docker compose config --services
+```
+
+Recreate the gateway service so it loads the settings. Replace `litellm` with its service name. Include the backend service too if you use a split deployment:
+
+```sh
+docker compose up -d --no-deps litellm
+```
+
+Keep any Compose file or project flags that your deployment normally uses. This step restarts the selected service and can interrupt requests.
+
+## 4. Check the result {#4-check-the-installation}
+
+Sign in to LiteLLM and select **Lens**. Use [the connection check](./litellm.md#5-open-lens-in-the-gateway), then [send your first trace](../first-trace.md). Your existing model requests should continue to work.

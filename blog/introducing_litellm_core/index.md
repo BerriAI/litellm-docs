@@ -3,9 +3,14 @@ slug: introducing-litellm-core
 title: "Introducing litellm-core: the first step toward a leaner SDK"
 description: "Ongoing work to reduce LiteLLM's dependencies and installation footprint, improve runtime loading, and make imports faster"
 authors:
-  - litellm
+  - joshua
 date: 2026-10-08
+image: ./cover.png
 ---
+
+import CoreHero from './CoreHero';
+
+export const Hero = CoreHero;
 
 We're introducing `litellm-core` as the first step in ongoing work to make the LiteLLM SDK leaner. We want applications to install fewer dependencies, use less disk space, and spend less time loading the SDK
 
