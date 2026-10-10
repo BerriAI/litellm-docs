@@ -1,7 +1,7 @@
-const {fromMarkdown} = require('mdast-util-from-markdown');
+import {fromMarkdown} from 'mdast-util-from-markdown';
 
 // Preserve code such as choices[0] and arrays when validating or linking citations.
-function mapCitations(markdown, transform) {
+export function mapCitations(markdown, transform) {
   const ignored = [];
   function visit(node) {
     if (['code', 'inlineCode', 'html', 'link', 'image'].includes(node.type)) {
@@ -13,4 +13,3 @@ function mapCitations(markdown, transform) {
     ignored.some(([start, end]) => offset >= start && offset < end) ? citation : transform(Number(id), citation));
 }
 
-module.exports = {mapCitations};

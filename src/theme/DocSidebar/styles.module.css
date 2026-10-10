@@ -69,7 +69,8 @@
 }
 
 .sidebarScroll :global(.menu) {
-  padding-top: 0.25rem;
+  /* The search wrapper supplies the gap above the first navigation row. */
+  padding-top: 0 !important;
 }
 
 /* Collapse chevron sits under the scroll area, like the docusaurus.io sidebar. */
