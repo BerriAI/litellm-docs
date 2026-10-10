@@ -77,7 +77,7 @@
   .setupCallout { flex-direction: column; align-items: flex-start; padding: 24px; }
 }
 @container (max-width: 599px) {
-  .heroFrame { aspect-ratio: auto; height: 480px; }
+  .heroFrame { aspect-ratio: auto; height: 560px; }
   .heroCaption { align-items: flex-start; font-size: 11px; padding: 12px; gap: 8px; }
 }
 @media (max-width: 600px) {

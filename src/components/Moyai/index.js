@@ -60,7 +60,7 @@ export function MoyaiHero() {
           ref={frame}
           className={styles.heroFrame}
           src={source}
-          title="Illustrated Moyai workflow: delegate a task, run code and tests in your cloud, review a pull request. LiteLLM records model costs."
+          title="Illustrated Moyai workflow: give a task through Slack or Web, run it in Moyai’s cloud workspace with inference through LiteLLM, and come back to a pull request."
           onLoad={updatePlayer}
           scrolling="no"
         />
