@@ -1,46 +1,42 @@
 ---
 title: "Deployment"
-description: "Choose how to install Lens locally or for a team, with new or existing LiteLLM."
+description: "Run Lens with ClickHouse, independently or connected to LiteLLM."
 slug: "/proxy/lens/deployment"
 ---
 
 # Deployment
 
-Lens runs alongside LiteLLM and stores traces in ClickHouse. Your agents send model requests to LiteLLM and traces to Lens. View traces and investigations in the LiteLLM dashboard.
+Lens includes its UI, Rust API and background processing, with ClickHouse storing its data and coordination state. It runs on its own and can also appear inside the LiteLLM dashboard through the shared Lens UI package. Your agents keep their existing model provider
 
-![Your agent sends model requests to LiteLLM and traces directly to Lens.](/img/lens-architecture.svg)
+The current independent installation builds source and requires access to the internal [Lens repository](https://github.com/BerriAI/lens). Published Lens releases and the corresponding gateway integration must be qualified before you adopt them; source availability alone does not mean those artifacts have shipped. See [Releases and images](./deployment/releases.md)
 
-If Lens is already installed, [send your first trace](./first-trace.md).
+For help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for standalone Lens, existing LiteLLM and external ClickHouse
 
 ## New deployment {#new-deployment}
 
-Choose where you want to run LiteLLM and Lens:
-
-| Where | Guide | What it sets up |
-| --- | --- | --- |
-| On your computer | [Local quickstart](./deployment/local.md) | LiteLLM, Lens, PostgreSQL, and ClickHouse |
-| On a Kubernetes cluster | [Kubernetes](./deployment/kubernetes.md#new-deployment) | LiteLLM, Lens, and ClickHouse, with your PostgreSQL and Redis |
-| On a server with Docker | [Docker Compose](./deployment/server.md) | LiteLLM, Lens, PostgreSQL, and ClickHouse behind your HTTPS proxy |
-
-## Add Lens to an existing deployment {#configure-an-existing-proxy}
-
-Choose how you run LiteLLM. Keep your existing model configuration, database, and keys.
-
-| Your deployment | Guide |
+| Where you want to run Lens | Guide |
 | --- | --- |
-| Helm | [Add Lens with Helm](./deployment/kubernetes.md#existing-deployment) |
-| Docker Compose | [Add Lens to your Compose project](./deployment/docker-compose.md) |
-| Standalone Docker | [Add a Lens container](./deployment/docker.md) |
+| On your computer | [Local quickstart](./deployment/local.md) |
+| On a server behind HTTPS | [Docker Compose on a server](./deployment/server.md) |
+| In Kubernetes | [Lens Helm deployment](./deployment/kubernetes.md#new-deployment) |
+| With source changes and UI reload | [Build from source](./deployment/development.md) |
 
-Each guide includes setup commands and a test trace. Use [Storage and secrets](./deployment/storage.md) for external ClickHouse or GitOps, and [Configuration](./deployment/configuration.md) for credential definitions and custom routing.
+Recording and inspecting traces requires only Lens and ClickHouse. Add an analysis provider when you enable investigations or other model-backed features. PostgreSQL belongs to an optional gateway or a one-time metadata import. For external ClickHouse, check [Storage and secrets](./deployment/storage.md) before choosing its topology
+
+## Connect an existing LiteLLM deployment {#configure-an-existing-proxy}
+
+Keep the gateway's model routing, authentication, database and existing keys. Confirm that its actual version contains the compatible Lens adapter and shared UI. Official paired Lens and LiteLLM releases share a version and are tested together. Lens remains independently deployable; an embedded UI update requires a LiteLLM UI release
+
+Use [Compose integration](./deployment/docker-compose.md), [container integration](./deployment/docker.md) or the [Helm connection](./deployment/kubernetes.md#existing-deployment) for your deployment method. Each points to the current source integration and its release boundary
+
+If the previous Lens implementation has saved records, follow the [metadata migration guide](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before handing its writers to the independent service. Keep existing ClickHouse traces and feedback. PostgreSQL is a one-time import source for Lens metadata; LiteLLM retains its own gateway database
 
 ## Check the installation
 
-1. Sign in to the LiteLLM dashboard as a proxy administrator.
-2. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**. Under **Connection details**, check the **Traces endpoint**. It should include `/v1/traces`.
-3. Click **Generate tracing key**, then **Send a test trace**.
-4. Click **View trace**. Seeing the trace confirms upload, storage, and read access.
+Sign into standalone Lens at `/ui/`, or use your existing LiteLLM session at the embedded `/ui/lens/` page. Open **Traces > Set up tracing**, select your framework, create a tracing key and copy the generated configuration into your agent. Verify that the endpoint is reachable from the agent's network and ends in `/v1/traces`
 
-For investigations, open **Lens > Investigations > Connect worker**. Choose an analysis model and monthly budget, then click **Enable investigations**. Wait for **Worker connected**, then [create an investigation](./investigations.md). The service connects automatically; you do not need to start another worker or copy a worker token.
+Run the agent, use **Check for traces**, then open that exact run and inspect its input, output and tool calls. Demo data and readiness alone do not verify ingestion or access scope. Follow [Send your first trace](./first-trace.md) for the detailed flow
 
-If a check fails, use [Troubleshooting](./deployment/configuration.md#troubleshooting). For a later release, follow [Upgrade Lens](./deployment/upgrades.md).
+For investigations, [configure an analysis provider](https://github.com/BerriAI/lens/blob/main/docs/analysis.md), check it in **Settings > Analysis**, then create an investigation with an analysis model and monthly spending limit. Lens runs the investigation inside its own service
+
+Use [Configuration and troubleshooting](./deployment/configuration.md) for connection problems and [Upgrade Lens](./deployment/upgrades.md) when changing an existing installation

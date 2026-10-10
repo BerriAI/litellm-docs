@@ -1,62 +1,49 @@
 ---
 title: "Docker Compose on a server"
-description: "Run LiteLLM and Lens on one server with persistent storage and HTTPS."
+description: "Run standalone Lens and ClickHouse on one server with persistent storage and HTTPS."
 slug: "/proxy/lens/deployment/server"
 ---
 
 # Docker Compose on a server
 
-This setup runs LiteLLM, Lens, PostgreSQL, and ClickHouse on one server. If LiteLLM already runs in Compose, [add Lens to that project](./docker-compose.md). To try Lens on your computer, use the [local quickstart](./local.md).
+The [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) runs Lens and ClickHouse with Keeper from the public Lens repository. Install Git and Docker Compose v2, then follow the [local quickstart](./local.md) on your server. Keep its source commit, environment file and persistent volume. Published independent release artifacts are still being qualified
 
-You need Git, Python {{python_min_version}} or later, Docker with Compose, and NGINX installed on the host. Point `llm.example.com` and `traces.example.com` at the server and obtain TLS certificates for both. The example below uses certificates stored under `/etc/letsencrypt/live/`.
+For help configuring an existing deployment, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md). To connect the Lens service to an existing gateway, use the [Compose integration guide](./docker-compose.md)
 
-This is a single-server deployment. Keep database backups outside the server. For replication and independent service scaling, use [Kubernetes](./kubernetes.md) with [external ClickHouse](./storage.md#external-clickhouse).
+## Configure the public address {#1-configure-the-services}
 
-## 1. Configure the services
-
-Select a [release with published Lens images](./releases.md). Replace `RELEASE_VERSION` with its version without the `v` prefix, then clone that release:
-
-```bash
-export LITELLM_VERSION="RELEASE_VERSION"
-git clone --depth 1 --branch "v${LITELLM_VERSION}" https://github.com/BerriAI/litellm.git
-cd litellm
-```
-
-Generate the configuration:
-
-```bash
-python3 deploy/lens/configure.py --version "$LITELLM_VERSION"
-```
-
-The helper saves generated credentials in `deploy/lens/.env`. Add your public trace address to that file:
+Point a hostname such as `lens.example.com` at your server and provision its TLS certificate. After the initial setup, set this in `deploy/lens/.env`:
 
 ```dotenv
-LITELLM_LENS_PUBLIC_URL=https://traces.example.com
+LENS_PUBLIC_URL=https://lens.example.com
 ```
 
-Back up this file with the database volumes. Running the helper again preserves the credentials. Keep the file out of Git.
+Replace the hostname with yours. This controls the browser origin, generated tracing address and secure session cookies. Keep the generated admin token and ClickHouse password unchanged
 
-## 2. Start the services
+## Apply the configuration {#2-start-the-services}
 
-```bash
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml up -d --wait
+From the Lens repository root:
+
+```sh
+docker compose -f deploy/lens/compose.yaml up -d --wait
 ```
 
-LiteLLM listens on `127.0.0.1:4000`, and Lens listens on `127.0.0.1:4318`. PostgreSQL and ClickHouse stay on internal Docker networks.
+The starter binds Lens to `127.0.0.1:4318` and keeps ClickHouse on an internal network. When a reverse proxy runs in another container or host, use the [deployment network settings](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md#configure-a-deployment) to give it a reachable private Lens address
 
-## 3. Route HTTPS traffic
+## Route HTTPS traffic {#3-route-https-traffic}
 
-Save this as `/etc/nginx/conf.d/litellm.conf`. Replace the hostnames and certificate paths with yours:
+Forward the standalone UI and API paths to Lens. For NGINX running on the same host, save this configuration with your hostname and certificate paths:
 
-```nginx title="/etc/nginx/conf.d/litellm.conf"
+```nginx title="/etc/nginx/conf.d/lens.conf"
 server {
     listen 443 ssl;
-    server_name llm.example.com;
-    ssl_certificate /etc/letsencrypt/live/llm.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/llm.example.com/privkey.pem;
+    server_name lens.example.com;
+    ssl_certificate /etc/letsencrypt/live/lens.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/lens.example.com/privkey.pem;
+    client_max_body_size 16m;
 
     location / {
-        proxy_pass http://127.0.0.1:4000;
+        proxy_pass http://127.0.0.1:4318;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -64,39 +51,18 @@ server {
         proxy_read_timeout 300s;
     }
 }
-
-server {
-    listen 443 ssl;
-    server_name traces.example.com;
-    ssl_certificate /etc/letsencrypt/live/traces.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/traces.example.com/privkey.pem;
-    client_max_body_size 16m;
-
-    location /v1/ {
-        proxy_pass http://127.0.0.1:4318;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-    location / { return 404; }
-}
 ```
 
-Check the configuration, then reload NGINX:
+Check and reload NGINX using your host's service manager. On a systemd host:
 
-```bash
+```sh
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Allow inbound HTTPS on port `443`. Keep ports `4000` and `4318` bound to localhost. The Lens route exposes `/v1/` and leaves its internal APIs private.
+Allow inbound HTTPS on port 443. Keep the database private and preserve the container's shipped filesystem, sandbox and resource settings
 
-## 4. Check the installation
+## Check the installation {#4-check-the-installation}
 
-1. Open `https://llm.example.com/ui/`, using your hostname.
-2. Sign in as `admin` with the `LITELLM_MASTER_KEY` from `deploy/lens/.env`.
-3. Open **Lens > Set up Lens**. Check that **Traces endpoint** is `https://traces.example.com/v1/traces` with your hostname.
-4. Click **Generate tracing key**, then **Send a test trace** and **View trace**.
+Open `https://lens.example.com/ui/` using your hostname and sign in with the generated admin token. Complete the [first-trace check](../deployment.md#check-the-installation) from the agent's actual network. If you enabled investigations, verify one bounded investigation as well
 
-The test trace does not call a model. To run your agent through LiteLLM, add a provider model under **Models** and create a model key under **Virtual Keys**. Then [send your first agent trace](../first-trace.md).
-
-If the check fails, use [Troubleshooting](./configuration.md#troubleshooting). For future releases, follow [Upgrade Lens](./upgrades.md).
+Use [Back up and restore Lens](https://github.com/BerriAI/lens/blob/main/docs/backup.md) to retain the data, Keeper state, credentials and exact image together. Store backups outside this server and rehearse a restore. The supported database topology is one ClickHouse server; moving to external storage does not itself provide replication or automatic failover

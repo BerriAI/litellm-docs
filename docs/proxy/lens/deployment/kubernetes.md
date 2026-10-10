@@ -1,178 +1,66 @@
 ---
 title: "Kubernetes"
-description: "Install LiteLLM and Lens with Helm, or add Lens to an existing Helm release."
+description: "Deploy independent Lens with its own Helm chart and optional LiteLLM connection."
 slug: "/proxy/lens/deployment/kubernetes"
 ---
 
 # Kubernetes
 
-Use Helm to deploy Lens with LiteLLM. For an installed LiteLLM chart, go to [Add Lens to an existing deployment](#existing-deployment).
+The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation uses the public Lens repository and requires a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
+
+For help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) and specify Helm
 
 ## New deployment {#new-deployment}
 
-This example uses the componentized `litellm` chart, with one HTTPS hostname for LiteLLM and traces. It creates Lens and a single ClickHouse instance with a 20 GiB persistent volume. Use [external ClickHouse](./storage.md#external-clickhouse) if you need database replication or high availability.
+Until an independent release is published, build the source image and push it to a registry your cluster can read. Use a native builder matching the cluster nodes' Linux architecture. From a fresh clone of [BerriAI/lens](https://github.com/BerriAI/lens), replace the example registry and team:
 
-Before you start, you need:
-
-- A Kubernetes cluster, `kubectl`, Helm, and a default storage class.
-- PostgreSQL with a database named `litellm` and a user that can create and alter its schema. This example uses TLS with a certificate trusted by the container's system CA bundle.
-- A Redis endpoint reachable from the cluster.
-- An NGINX ingress controller, a hostname pointing to it, and the hostname's TLS certificate and private key.
-
-### 1. Create the secrets
-
-The examples use namespace `litellm`. Create it and a file for your private configuration:
-
-```bash
-kubectl create namespace litellm
-umask 077
-cat > litellm.env <<EOF_ENV
-LITELLM_MASTER_KEY=sk-$(openssl rand -hex 32)
-LITELLM_SALT_KEY=sk-$(openssl rand -hex 32)
-STORE_MODEL_IN_DB=True
-EOF_ENV
+```sh
+LENS_IMAGE_REPOSITORY=registry.example.com/your-team/lens
+LENS_IMAGE_TAG=$(git rev-parse HEAD)
+docker build --build-arg LENS_VERSION="$LENS_IMAGE_TAG" -f deploy/runtime/Dockerfile \
+  -t "$LENS_IMAGE_REPOSITORY:$LENS_IMAGE_TAG" .
+docker push "$LENS_IMAGE_REPOSITORY:$LENS_IMAGE_TAG"
+helm upgrade --install lens ./helm/lens --namespace lens --create-namespace \
+  --set image.repository="$LENS_IMAGE_REPOSITORY" --set image.tag="$LENS_IMAGE_TAG"
+kubectl --namespace lens port-forward service/lens 4318:4318
 ```
 
-Add your Redis URL to `litellm.env`. Use `rediss://` for TLS and URL-encode special characters in the password:
+Configure image-pull credentials if your registry is private. Open `http://localhost:4318/ui/`. Obtain the generated login credential locally:
 
-```dotenv
-REDIS_URL=rediss://default:URL_ENCODED_PASSWORD@redis.example.com:6379
+```sh
+kubectl --namespace lens get secret lens-admin \
+  -o jsonpath='{.data.admin-token}' | base64 --decode
 ```
 
-Create the application secret:
+Keep that credential private. Helm reuses generated credentials on upgrades, and uninstall retains credentials and the ClickHouse volume. Before exposing Lens to agents, configure `publicUrl`, HTTPS ingress and a reachable ingestion address using the [Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
 
-```bash
-kubectl create secret generic litellm-env --namespace litellm \
-  --from-env-file=litellm.env
-```
+For [external ClickHouse](./storage.md#external-clickhouse), provide a stable endpoint reaching one server with KeeperMap. Multiple Lens replicas may share that server. Multi-server load balancing and automatic failover to a different ClickHouse server are outside the supported topology
 
-Create `postgres.env` with your PostgreSQL credentials, then import it:
+## Connect an existing LiteLLM deployment {#existing-deployment}
 
-```dotenv title="postgres.env"
-username=litellm
-password=YOUR_POSTGRES_PASSWORD
-```
+Keep the gateway's chart family, release name, namespace, model configuration, database and keys. Select a gateway artifact containing the compatible adapter and shared UI. The [current source integration guide](https://github.com/BerriAI/litellm/blob/d171e208a18d3f3559e3a338f7769387e01749e5/docs/lens-integration.md) identifies the source qualification boundary; published gateway support must be checked separately
 
-```bash
-chmod 600 postgres.env
-kubectl create secret generic litellm-db --namespace litellm \
-  --from-env-file=postgres.env
-```
+Both LiteLLM charts consume the Lens chart through `lensWorker` settings:
 
-Keep these files out of Git and store the credentials in your secret manager. Preserve the master and encryption keys with your database backups. Lens's service token and ClickHouse password are generated by the chart.
+| Mode | Ownership |
+| --- | --- |
+| `bundled` | The gateway release renders the shared Lens chart |
+| `external` | Lens has its own release or application, and the gateway connects to it |
+| `disabled` | The gateway does not deploy or connect this Lens service |
 
-Import the certificate, replacing the two file paths:
+The [gateway connection settings](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#connect-a-gateway) cover the private service credential, signing credential and URLs. The Lens administrator credential remains separate. A Lens runtime version does not have to equal the gateway version
 
-```bash
-kubectl create secret tls litellm-tls --namespace litellm \
-  --cert=/path/to/fullchain.pem --key=/path/to/privkey.pem
-```
-
-### 2. Save the values file
-
-Save this as `values.yaml`. Replace `postgres.example.com` and both occurrences of `llm.example.com` with your database host and public hostname:
-
-```yaml title="values.yaml"
-masterKey:
-  secretName: litellm-env
-  secretKey: LITELLM_MASTER_KEY
-
-database:
-  writer:
-    host: postgres.example.com
-    port: 5432
-    dbname: litellm
-    sslMode: verify-full
-    sslRootCert: /etc/ssl/certs/ca-certificates.crt
-    passwordSecret:
-      name: litellm-db
-      usernameKey: username
-      passwordKey: password
-
-gateway:
-  envSecrets: [litellm-env]
-  config:
-    proxy_config:
-      general_settings:
-        coordination_redis:
-          url: os.environ/REDIS_URL
-backend:
-  envSecrets: [litellm-env]
-
-ingress:
-  enabled: true
-  className: nginx
-  controller: nginx
-  host: llm.example.com
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  tls:
-    - secretName: litellm-tls
-      hosts: [llm.example.com]
-
-lensWorker:
-  enabled: true
-```
-
-The chart routes `/lens-ingest` to Lens and supplies the public tracing URL to the dashboard. No separate Lens hostname or connection settings are needed. To choose another storage class, add `lensWorker.clickhouse.storageClassName`.
-
-### 3. Install
-
-Select a [published chart with Lens](./releases.md#helm-charts). Replace `RELEASE_VERSION` with its version, without the `v` prefix, then install:
-
-```bash
-export CHART_VERSION="RELEASE_VERSION"
-helm upgrade --install litellm \
-  oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version "$CHART_VERSION" \
-  --namespace litellm -f values.yaml --wait
-```
-
-The chart runs PostgreSQL migrations and deploys LiteLLM, Lens, and ClickHouse. [Check the installation](#check-the-installation) before connecting your agents.
-
-## Add Lens to an existing deployment {#existing-deployment}
-
-Keep your chart, release name, namespace, model configuration, and database. Select a [matching chart release](./releases.md#helm-charts) with Lens support. Update any gateway or backend image overrides to that release too.
-
-### 1. Enable Lens
-
-Add this to your existing values file:
-
-```yaml
-lensWorker:
-  enabled: true
-```
-
-The chart creates the service token and ClickHouse with a 20 GiB persistent volume. Your cluster needs a default storage class. For external ClickHouse, managed secrets, or GitOps, follow [Storage and secrets](./storage.md) before installing.
-
-With one HTTPS hostname in the chart's main ingress, `/lens-ingest` is routed to Lens and the dashboard receives its public URL. If you use a separate trace hostname, add the [dedicated ingress settings](./configuration.md#dedicated-ingress) to the same values file.
-
-### 2. Deploy
-
-Use your existing release name, namespace, values file, and chart reference. This example uses `litellm` for the release and namespace:
-
-```bash
-export CHART_VERSION="RELEASE_VERSION"
-helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version "$CHART_VERSION" \
-  --namespace litellm -f values.yaml --wait
-```
-
-For the single-container chart, use `oci://ghcr.io/berriai/litellm-helm` instead. Do not switch chart types to enable Lens. Published charts include their Lens image digest; [source charts need it supplied explicitly](./releases.md#source-charts).
+For existing Lens records, complete the [metadata migration](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before changing writers. Moving from bundled to external ownership also requires the [ownership transfer](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently). Preserve names, immutable selectors, credentials and persistent volumes; do not let two controllers own the same deployment
 
 ## Check the installation
 
-Check the pods and ingress in your namespace:
+For the standalone example:
 
-```bash
-kubectl get pods,ingress --namespace litellm
+```sh
+kubectl get pods,services,pvc --namespace lens
+kubectl logs --namespace lens deployment/lens --tail=100
 ```
 
-For the new deployment example, open `https://llm.example.com/ui/`. Sign in as `admin` with the `LITELLM_MASTER_KEY` from `litellm.env`. For an existing deployment, use your usual administrator login.
+Complete the [first-trace flow](../deployment.md#check-the-installation) in standalone Lens or the embedded gateway page, using an endpoint reachable by the agent. Open a stored trace after restarting Lens and verify a bounded investigation when analysis is configured
 
-1. Open **Lens > Set up Lens**, or **Traces > Set up tracing** if you already have traces.
-2. Check that **Traces endpoint** is `https://llm.example.com/lens-ingest/v1/traces`, using your hostname.
-3. Click **Generate tracing key**, then **Send a test trace**.
-4. Click **View trace**, then [connect your agent](../first-trace.md).
-
-If a service is unavailable, use [Troubleshooting](./configuration.md#troubleshooting). Before relying on this installation for production data, configure backups for PostgreSQL, ClickHouse, and secrets. The [production checklist](../../prod.md) covers capacity and availability settings.
+Keep ClickHouse data and Keeper state in the same recovery plan. The [backup guide](https://github.com/BerriAI/lens/blob/main/docs/backup.md) describes the required recovery boundary; its Compose helper does not manage Kubernetes backups. Use your cluster's snapshot and restore procedure and verify records after a restore
