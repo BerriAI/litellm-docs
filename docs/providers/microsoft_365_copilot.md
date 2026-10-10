@@ -42,7 +42,7 @@ ExternalItem.Read.All
 Also add `openid`, `profile`, and `offline_access`. Select **Grant admin consent** for your tenant. See Microsoft's [API permission guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-configure-app-access-web-apis).
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/m365_copilot_entra_api_permissions.png')} alt="Microsoft Graph delegated permissions in Microsoft Entra" width={1720} height={960} />
+  <Image img={require('../../img/m365_copilot_entra_api_permissions.png')} alt="Microsoft Graph delegated permissions in Microsoft Entra" width={2080} height={1145} />
 </div>
 
 ### Create a scope for users to sign in
