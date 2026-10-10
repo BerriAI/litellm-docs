@@ -95,8 +95,8 @@ export function BenefitGrid() {
       <section aria-labelledby="budget-your-agents">
         <span className={styles.number}>03</span>
         <Heading as="h3" id="budget-your-agents">One source of truth for model costs</Heading>
-        <p>Use LiteLLM as your source of truth for model charges. In Moyai, see those same charges by user, session, and model. Trace a teammate's total back to the requests behind it.</p>
-        <Link className={styles.proofLink} to="#see-agent-spend">See the spend breakdown <ArrowRight size={15} aria-hidden="true" /></Link>
+        <p>Check total model spend and per-user costs in Moyai. LiteLLM stays the source of truth: both views use the charges it reports for each tracked request. Drill into sessions and models to understand a teammate's total.</p>
+        <Link className={styles.proofLink} to="#see-agent-spend">See spend in Moyai <ArrowRight size={15} aria-hidden="true" /></Link>
       </section>
       <section aria-labelledby="choose-your-stack">
         <span className={styles.number}>04</span>
