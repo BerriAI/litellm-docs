@@ -838,6 +838,8 @@ router_settings:
 | NSCALE_API_BASE | Base URL for Nscale
 | OLLAMA_API_BASE | Base URL for Ollama. Default is http://localhost:11434
 | OLLAMA_API_KEY | API key for Ollama, for deployments that sit behind an authenticating proxy
+| ONOMEO_API_BASE | Base URL for onomeo. Default is https://onomeo.com/v1
+| ONOMEO_API_KEY | API key for onomeo
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
 | OPENAI_LIKE_API_KEY | API key for the `openai_like` provider. Left empty when unset, since some OpenAI-compatible servers need no key
 | OPENAI_PROJECT | OpenAI project ID sent on OpenAI requests, equivalent to passing `project`
