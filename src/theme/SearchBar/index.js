@@ -3,9 +3,10 @@ import {createPortal} from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import {Search, Sparkles, BookOpen, CornerDownLeft, X, Send, Square, User, Copy} from 'lucide-react';
+import {Search, Sparkles, BookOpen, FileText, History, CornerDownLeft, X, Send, Square, User, Copy} from 'lucide-react';
 import styles from './styles.module.css';
 import {mapCitations} from '../../../search/citations.mjs';
+import {sourceLabel, sourceDetail} from '../../../search/content';
 
 // One owner renders the modal even when the navbar and docs sidebar both mount a trigger.
 const openEvent = 'litellm:open-docs-search';
@@ -34,12 +35,24 @@ function Answer({answer, sources}) {
   }}>{markdown}</ReactMarkdown>;
 }
 
+function SourceIcon({source, size = 16}) {
+  const Icon = source.type === 'blog' ? FileText : source.type === 'release' ? History : BookOpen;
+  return <Icon size={size}/>;
+}
+function SourceMeta({source}) {
+  const detail = sourceDetail(source);
+  return <>{sourceLabel(source)}{detail && <> <span>·</span> {detail}</>}</>;
+}
+
 export default function SearchBar() {
+  const [shortcut, setShortcut] = useState('Ctrl K');
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState('search');
   const [query, setQuery] = useState('');
   const [resolvedQuery, setResolvedQuery] = useState('');
+  const [contentType, setContentType] = useState('all');
+  const [resolvedType, setResolvedType] = useState('all');
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -60,6 +73,7 @@ export default function SearchBar() {
   const avatar = useBaseUrl('/img/favicon.ico');
 
   useEffect(() => {
+    setShortcut(/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K');
     const show = event => {
       if (owner) return;
       owner = identity.current;
@@ -68,7 +82,7 @@ export default function SearchBar() {
       setOpen(true);
     };
     const key = event => {
-      if (event.key.toLowerCase() === 'k' && ((event.metaKey || event.ctrlKey) || !/INPUT|TEXTAREA|SELECT/.test(event.target.tagName) && !event.target.isContentEditable)) {
+      if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.isComposing) {
         event.preventDefault(); show();
       }
     };
@@ -120,17 +134,17 @@ export default function SearchBar() {
         worker.current.onmessage = ({data}) => {
           if (data.id !== requestId.current) return;
           setLoading(false); setSearchError(data.error || ''); setResults(data.results || []);
-          setResolvedQuery(data.query); setSelected(0);
+          setResolvedQuery(data.query); setResolvedType(data.type); setSelected(0);
         };
         worker.current.onerror = () => {
           setLoading(false); setSearchError('Search could not load. Please try again.');
           worker.current?.terminate(); worker.current = null;
         };
       }
-      worker.current.postMessage({id, query, indexUrl});
+      worker.current.postMessage({id, query, indexUrl, type: contentType});
     }, 250);
     return () => {clearTimeout(timeout); requestId.current += 1;};
-  }, [query, open, indexUrl, retry, mode]);
+  }, [query, contentType, open, indexUrl, retry, mode]);
 
   function stopAnswer() {
     controller.current?.abort(); setAsking(false);
@@ -185,7 +199,7 @@ export default function SearchBar() {
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (loading || resolvedQuery !== query) return;
+        if (loading || resolvedQuery !== query || resolvedType !== contentType) return;
         if (results.length) window.location.assign(results[selected].url);
         else openAI(query.trim() || undefined);
       }
@@ -213,8 +227,8 @@ export default function SearchBar() {
   </div>;
   const assistantAvatar = <img className={styles.avatar} src={avatar} alt="AI assistant avatar"/>;
   return <>
-    <button className={styles.trigger} onClick={() => window.dispatchEvent(new Event(openEvent))} aria-label="Search for anything...">
-      <Search size={18}/><span>Search for anything...</span><kbd>K</kbd>
+    <button className={styles.trigger} onClick={() => window.dispatchEvent(new Event(openEvent))} aria-label="Search for anything..." title={`Search (${shortcut})`} aria-keyshortcuts="Meta+k Control+k">
+      <Search size={18}/><span>Search for anything...</span><kbd>{shortcut}</kbd>
     </button>
     {open && createPortal(<div className={styles.backdrop} onClick={event => {if (event.target === event.currentTarget) close();}}>
       <section ref={dialog} className={`${styles.dialog} ${mode === 'ai' ? styles.chatDialog : ''} ${mode === 'ai' && (turns.length || asking || aiError) ? styles.chatActive : ''}`} role="dialog" aria-modal="true" aria-label="Search LiteLLM documentation" onKeyDown={onKeyDown}>
@@ -235,15 +249,19 @@ export default function SearchBar() {
           <div className={`${styles.searchContent} ${query.trim() ? styles.hasQuery : ''}`}>
             {searchError && <p role="alert" className={styles.error}>{searchError} <button onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
             {query.trim() && <>
-              <div className={styles.filters} role="status"><span>{loading && !results.length ? 'Searching...' : `All (${results.length})`}</span>{results[0]?.matchType === 'typo' && <small>Closest matches</small>}</div>
+              <div className={styles.filters} role="group" aria-label="Content type">
+                {Object.entries({all: 'All', docs: 'Docs', blog: 'Blog', release: 'Releases'}).map(([type, label]) =>
+                  <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
+                <small role="status">{loading && !results.length ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : ''}</small>
+              </div>
               <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{results.map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
                 className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
-                <span className={styles.path}>Docs <span>›</span> {result.category} <span>›</span> {result.title}</span>
-                <span className={styles.resultTitle}><BookOpen size={16}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
+                <span className={styles.path}><SourceMeta source={result}/></span>
+                <span className={styles.resultTitle}><SourceIcon source={result}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>
                 {selected === i && <CornerDownLeft className={styles.enterIcon} size={16}/>}
               </a>)}</div>
-              {!loading && !searchError && !results.length && <p className={styles.noResults}>No documentation found for “{query}”. Try fewer words or a feature name.</p>}
+              {!loading && !searchError && !results.length && <p className={styles.noResults}>No {contentType === 'all' ? 'results' : contentType === 'release' ? 'release notes' : contentType === 'blog' ? 'blog posts' : 'docs'} found for “{query}”. {contentType !== 'all' ? <button onClick={() => setContentType('all')}>Search all content</button> : 'Try fewer words or a feature name.'}</p>}
             </>}
           </div>
         </>}
@@ -256,10 +274,10 @@ export default function SearchBar() {
             {turns.map((turn, i) => <article className={styles.turn} key={i} ref={i === turns.length - 1 && !asking ? latestTurn : undefined}>
               <div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{turn.question}</p></div>
               <div className={styles.assistantRow}>{assistantAvatar}<div className={styles.answer}><Answer {...turn}/>
-                {turn.sources.length > 0 && <div className={styles.sources}><p>Sources</p>{turn.sources.map(source => <a key={source.id} href={source.url}><small>Docs <span>›</span> {source.title}</small><span><BookOpen size={15}/>{source.heading || source.title}</span></a>)}</div>}
+                {turn.sources.length > 0 && <div className={styles.sources}><p>Sources</p>{turn.sources.map(source => <a key={source.id} href={source.url}><small><SourceMeta source={source}/></small><span><SourceIcon source={source} size={15}/>{source.title}{source.heading && ` · ${source.heading}`}</span></a>)}</div>}
               </div></div>
             </article>)}
-            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div><div className={styles.assistantRow}>{assistantAvatar}<p role="status" className={styles.thinking}>Searching the documentation...</p></div></article>}
+            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div><div className={styles.assistantRow}>{assistantAvatar}<p role="status" className={styles.thinking}>Searching LiteLLM content...</p></div></article>}
             {aiError && <div role="alert" className={styles.error}>{aiError}<button onClick={() => ask(failedQuestion)}>Retry question</button></div>}
           </div>
           <form className={styles.composer} onSubmit={event => {event.preventDefault(); ask();}}>

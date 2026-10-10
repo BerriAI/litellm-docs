@@ -2,15 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const {loadIndex} = require('./engine');
 const {BASE_URL} = require('./gateway');
-
-function isDocsUrl(value) {
-  if (typeof value !== 'string' || !value.startsWith('/docs/') || /[\\\u0000-\u001f]/.test(value)) return false;
-  try {
-    const url = new URL(value, 'https://docs.litellm.ai');
-    return url.origin === 'https://docs.litellm.ai' && url.pathname.startsWith('/docs/') &&
-      !decodeURIComponent(url.pathname).split('/').includes('..');
-  } catch { return false; }
-}
+const {isContentUrl} = require('./content');
 
 function readConfig(env, defaults = {}) {
   return {
@@ -35,7 +27,7 @@ async function loadCorpusFiles(indexFile, documentsFile) {
     fs.readFile(documentsFile, 'utf8'),
   ]);
   const docs = JSON.parse(documents);
-  if (!Array.isArray(docs) || !docs.length || docs.some(doc => !isDocsUrl(doc.url))) throw new Error('Invalid docs corpus');
+  if (!Array.isArray(docs) || !docs.length || docs.some(doc => !isContentUrl(doc.url))) throw new Error('Invalid search corpus');
   return {index: loadIndex(index), documents: new Map(docs.map(doc => [doc.id, doc]))};
 }
-module.exports = {readConfig, loadCorpus, loadCorpusFiles, isDocsUrl};
+module.exports = {readConfig, loadCorpus, loadCorpusFiles, isContentUrl};

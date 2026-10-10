@@ -2430,40 +2430,31 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   border-top-left-radius: 16px;
 }
 
-/* Search lives in the desktop sidebar and the expanded mobile menu; small
-   screens also get an icon-only trigger in the navbar. */
-@media (min-width: 997px) {
-  [class*='navbarSearchContainer'] {
-    display: none !important;
-  }
+/* Every page gets the same icon-only navbar trigger, including blog pages. */
+.navbar__right-col {
+  display: flex;
+  align-items: center;
 }
 
-@media (max-width: 996px) {
-  .navbar__right-col {
-    display: flex;
-    align-items: center;
-  }
+.navbar [class*='navbarSearchContainer'] {
+  position: static;
+  padding: 0;
+  order: -1;
+}
 
-  .navbar [class*='navbarSearchContainer'] {
-    position: static;
-    padding: 0;
-    order: -1;
-  }
+.navbar [class*='navbarSearchContainer'] > button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: var(--ifm-navbar-link-color);
+}
 
-  .navbar [class*='navbarSearchContainer'] > button {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    justify-content: center;
-    border: 0;
-    background: none;
-    color: var(--ifm-navbar-link-color);
-  }
-
-  .navbar [class*='navbarSearchContainer'] > button > span,
-  .navbar [class*='navbarSearchContainer'] > button > kbd {
-    display: none;
-  }
+.navbar [class*='navbarSearchContainer'] > button > span,
+.navbar [class*='navbarSearchContainer'] > button > kbd {
+  display: none;
 }
 
 @media (max-width: 480px) {

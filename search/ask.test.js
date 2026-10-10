@@ -9,7 +9,7 @@ const {answerQuestion} = require('./answer');
 const {createHandler, allowAI} = require('./server');
 const {createAskHandler} = require('./api');
 const {MODEL, FALLBACKS} = require('./gateway');
-const {readConfig, isDocsUrl} = require('./runtime');
+const {readConfig, isContentUrl} = require('./runtime');
 
 const docs = [
   {id: 'lens', title: 'LiteLLM Lens', heading: 'Prerequisites', url: '/docs/proxy/lens', text: 'Install PostgreSQL and ClickHouse before starting Lens.'},
@@ -68,8 +68,8 @@ test('prompt caching places identical evidence before changing questions and nev
   }
 });
 test('corpus URLs accept docs roots and encoded page names while rejecting foreign URLs and traversal', () => {
-  for (const url of ['/docs/', '/docs/projects/Agent Lightning', '/docs/projects/Agent%20Lightning#setup', '/docs/proxy/lens']) assert.equal(isDocsUrl(url), true, url);
-  for (const url of ['https://evil.example/docs/x', '//evil.example/docs/x', '/docs/../../secret', '/docs/%2e%2e/secret', '/docs/%2F..%2Fsecret', '/docs/\\evil', '/blog/x', '/docs/%ZZ']) assert.equal(isDocsUrl(url), false, url);
+  for (const url of ['/docs/', '/docs/projects/Agent Lightning', '/docs/projects/Agent%20Lightning#setup', '/docs/proxy/lens', '/blog/article', '/release_notes/v1.104.1/v1-104-1']) assert.equal(isContentUrl(url), true, url);
+  for (const url of ['https://evil.example/docs/x', '//evil.example/docs/x', '/docs/../../secret', '/docs/%2e%2e/secret', '/docs/%2F..%2Fsecret', '/docs/\\evil', '/other/x', '/docs/%ZZ']) assert.equal(isContentUrl(url), false, url);
 });
 test('invalid source numbers cannot become documentation links', async () => {
   for (const answer of ['Invented fact. [999]', 'Invented fact. [0]']) {

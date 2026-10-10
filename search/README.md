@@ -1,6 +1,6 @@
 # Documentation search and Ask AI
 
-Search runs locally in the browser over public documentation from the current site build. Ask AI retrieves matching passages, answers LiteLLM questions, and links to those passages. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate
+Search runs locally in the browser over current docs, integration guides, individual blog posts, and release notes from the site build. Ask AI retrieves from the same content and links to its sources. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate.
 
 ## Try locally
 
@@ -26,7 +26,7 @@ The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_U
 npm run search:serve
 ```
 
-Open [localhost:3333/docs](http://localhost:3333/docs), select **Search for anything...**, then **Ask AI**. On mobile, open the navigation menu to find search at the top of the sidebar. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link.
+Open [localhost:3333/docs](http://localhost:3333/docs), select the navbar search icon or press **Cmd+K** on Mac or **Ctrl+K** on Windows/Linux, then select **Ask AI**. Search is available on docs, blogs, release notes, and other pages using the site navbar. Docs also keep the sidebar search button; mobile keeps it in the expanded navigation menu. Plain **K** does not open search. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link.
 
 The server reads `.env.local`; the build and browser do not read the AI credential. Keep it out of `docusaurus.config.js`, public environment variables, and committed files. Plain `npm start` does not build the search index or run the API; use the built preview above
 
@@ -79,7 +79,13 @@ The service has no answer cache and explicitly disables LiteLLM response-cache r
 
 ## Search behavior and security boundaries
 
-Document search waits for a 250ms pause in typing and keeps the previous matches visible until new ones arrive. Stale worker results are ignored, and Enter does not navigate an outdated match while a new query is pending
+Search defaults to **All**, with **Docs**, **Blog**, and **Releases** filters. Each result and AI source identifies its content type; dated sources also show their publication date and release version. Integration guides belong to Docs. Archive, tag, listing, draft, unlisted, redirect, and noindex pages are excluded using Docusaurus article metadata and rendered HTML.
+
+Ordinary feature and setup searches favor current docs. Benchmark and comparison queries can surface relevant articles, explicit blog queries search articles, and exact release versions match without fuzzy version substitution. “Latest stable release” lists the newest indexed stable notes; “latest blog posts” lists articles by publication date. This reflects the current site build, not an independent check of published packages. Separate search collections keep archive growth from changing the docs' term statistics. Titles, section headings, keywords, and paths all contribute to ranking.
+
+Search waits for a 250ms pause in typing and keeps the previous matches visible until new ones arrive. Stale worker results are ignored. Enter opens the selected result, initially the first one, and does not navigate an outdated match while a new query or filter is pending. Select **Ask AI** to start a conversation.
+
+Ask AI receives source types, dates, and versions. It is instructed to use current docs for setup, attribute blog benchmarks to their measured conditions, and use release notes for version-specific changes. It must distinguish stable releases from prereleases and cannot infer first availability from a feature's mention in a release note.
 
 Ask AI uses matching public docs to interpret short topics and follow-ups, then generates an answer with citations. It has no scope classifier or output-verdict gate. General questions can receive an answer without sources; LiteLLM-specific guidance is instructed to use retrieved evidence. Citation numbers and URLs are validated against the built corpus. The renderer disables HTML and images and permits only the returned citation links
 

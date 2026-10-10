@@ -25,9 +25,11 @@
 .askCard:hover {background:var(--search-hover)}
 .searchContent {display:flex;flex-direction:column;min-height:46px;overflow:hidden}
 .hasQuery {height:min(calc(85vh - 160px),503px);padding-bottom:20px}
-.filters {display:flex;align-items:center;gap:12px;padding:0 20px 10px;font-size:13px;flex-shrink:0}
-.filters>span {padding:4px 12px;border:1px solid var(--search-accent);border-radius:99px;color:var(--search-accent);background:var(--search-selected);line-height:18px}
-.filters small {color:var(--search-muted)}
+.filters {display:flex;align-items:center;gap:6px;padding:0 20px 10px;font-size:13px;flex-shrink:0}
+.filters>button {padding:4px 10px;border:1px solid transparent;border-radius:99px;color:var(--search-muted);background:none;line-height:18px;font-size:13px;white-space:nowrap}
+.filters>button[aria-pressed='true'] {border-color:var(--search-accent);color:var(--search-accent);background:var(--search-selected)}
+.filters>button:hover {background:var(--search-hover)}
+.filters small {color:var(--search-muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .results {padding:0 20px 8px;overflow:auto;overscroll-behavior:contain;scroll-padding:8px}
 .result {position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 38px 8px 16px;margin-bottom:10px;border:1px solid var(--search-border);border-radius:8px;color:var(--search-text);text-decoration:none;scroll-margin:8px}
 .result:hover {color:var(--search-text);text-decoration:none}
@@ -41,6 +43,7 @@
 .result mark {padding:0;background:none;color:var(--search-text);font-weight:600}
 .enterIcon {position:absolute;right:16px;top:calc(50% - 8px);color:var(--search-accent)}
 .noResults {padding:16px 20px;color:var(--search-muted);font-size:14px}
+.noResults button {border:0;padding:0;background:none;color:var(--search-accent);font-size:inherit}
 .chatTitle {flex:1;min-width:0;font-size:14px;color:var(--search-muted)}
 .chatContent {padding:24px 32px 32px;overflow:auto;min-height:0;overscroll-behavior:contain;scroll-padding:20px}
 .chatActive {height:85dvh;max-height:850px}
