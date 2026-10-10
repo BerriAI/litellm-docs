@@ -371,6 +371,7 @@ const sidebars = {
         {
           type: "category",
           label: "Migrate to LiteLLM",
+          link: { type: "doc", id: "migrate/index" },
           items: [
             { type: "doc", id: "migrate/bifrost", label: "From Bifrost" },
             { type: "doc", id: "migrate/openrouter", label: "From OpenRouter" },

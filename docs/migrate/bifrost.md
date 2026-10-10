@@ -146,7 +146,7 @@ client = OpenAI(base_url="http://litellm:4000", api_key="sk-bf-...")   # was htt
 | `/anthropic` | `http://litellm:4000` (native `/v1/messages`) |
 | `/genai` | `http://litellm:4000/gemini` ([Google AI Studio pass-through](../pass_through/google_ai_studio.md)) |
 | `x-bf-vk: sk-bf-...` | `Authorization: Bearer sk-bf-...` or `x-api-key: sk-bf-...` (the OpenAI and Anthropic SDKs already send these) |
-| `"fallbacks": ["provider/model"]` in the body | Unchanged |
+| `"fallbacks": ["provider/model"]` in the body | Unchanged; provider-only entries such as `"openai"` must become full model names |
 
 LiteLLM does not read the `x-bf-vk` header, so clients that set only that header must send the key as a bearer token instead. If you embed Bifrost's Go SDK, call LiteLLM over HTTP with any OpenAI-compatible Go client.
 
@@ -179,6 +179,7 @@ For latency-critical Anthropic models, add `rust: true` to `litellm_params` and 
 | `rate_limits[]` (`request_max_limit`, `token_max_limit`) | `rpm_limit`, `tpm_limit` |
 | Virtual key `provider_configs[].allowed_models` | `models` on the key |
 | Routing rules (CEL on headers or metadata) | [Tag routing](../proxy/tag_routing.md) or per-team model lists |
+| Routing rules that send a model to another provider | Deployments under the same `model_name` with `order: 1` and `order: 2` ([deployment ordering](../proxy/load_balancing.md#deployment-ordering-priority)) |
 | `plugins: semantic_cache` | `cache_params.type: redis-semantic` / `qdrant-semantic` |
 | `plugins: otel`, `datadog`, `maxim` | `callbacks: ["otel"]`, `["datadog"]`, or any logging callback |
 | `mcp.client_configs[]` | `mcp_servers:` ([MCP gateway](../mcp.md)) |
