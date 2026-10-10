@@ -38,13 +38,17 @@ ExternalItem.Read.All
 
 Also add `openid`, `profile`, and `offline_access`. Select **Grant admin consent** for your tenant. See Microsoft's [API permission guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-configure-app-access-web-apis).
 
-<Image img={require('../../img/m365_copilot_entra_api_permissions.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_entra_api_permissions.png')} alt="Microsoft Graph delegated permissions in Microsoft Entra" width={1720} height={960} />
+</div>
 
 ### Create a scope for users to sign in
 
 Open **Expose an API**. Set **Application ID URI** to `api://<app-client-id>`. Select **Add a scope**, name it `access_as_user`, and allow admins and users to consent. See Microsoft's [Expose an API guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-configure-app-expose-web-apis).
 
-<Image img={require('../../img/m365_copilot_entra_expose_api.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_entra_expose_api.png')} alt="The access_as_user scope in Microsoft Entra's Expose an API settings" width={1740} height={640} />
+</div>
 
 Open **Manifest**, set `api.requestedAccessTokenVersion` to `2`, and save. The proxy configuration below expects [v2 access tokens](https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens).
 
@@ -54,7 +58,9 @@ Open **Authentication** > **Add a platform**. Choose the platform your app uses 
 
 The screenshot shows a desktop app example. Use your app's redirect URI.
 
-<Image img={require('../../img/m365_copilot_entra_redirect_uris.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_entra_redirect_uris.png')} alt="Desktop app redirect URIs in Microsoft Entra authentication settings" width={1720} height={980} />
+</div>
 
 ## 2. Add the model in LiteLLM
 
@@ -62,7 +68,9 @@ In the LiteLLM dashboard, open **Models + Endpoints** > **Add Model**. Select **
 
 Select **OAuth token exchange (on-behalf-of)** as the **Auth Type**, then select **Create credential**.
 
-<Image img={require('../../img/m365_copilot_litellm_add_model.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_litellm_add_model.png')} alt="Add a Microsoft 365 Copilot model in LiteLLM" width={1001} height={940} />
+</div>
 
 Enter these values:
 
@@ -76,7 +84,9 @@ Enter these values:
 | **Scope** | `https://graph.microsoft.com/.default` |
 | **Audience** | Leave blank |
 
-<Image img={require('../../img/m365_copilot_litellm_credential.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_litellm_credential.png')} alt="Microsoft 365 Copilot token exchange credential in LiteLLM" width={600} height={1070} />
+</div>
 
 Select **Add Credential**, select the saved credential on the model form, then select **Add Model**.
 
@@ -155,7 +165,9 @@ print(response.choices[0].message.content)
 
 If your proxy uses email or group claims, add them under **Token configuration**. Select the **Access token** type for the optional `email` claim, and add `groups` only if your proxy uses it. See Microsoft's [optional claims guide](https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims).
 
-<Image img={require('../../img/m365_copilot_entra_token_configuration.png')} style={{ width: '800px', height: 'auto' }} />
+<div className="docs-screenshot">
+  <Image img={require('../../img/m365_copilot_entra_token_configuration.png')} alt="Optional token claims in Microsoft Entra" width={1740} height={900} />
+</div>
 
 ### Add the model with a configuration file
 
