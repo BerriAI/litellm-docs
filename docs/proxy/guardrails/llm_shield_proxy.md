@@ -11,6 +11,10 @@ The guardrail fails closed. If your Shield deployment is unreachable, times out,
 
 It covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming.
 
+:::info Which LiteLLM versions include this guardrail
+`llm_shield_proxy` was merged into LiteLLM `main` on 2026-10-05 ([#42645](https://github.com/BerriAI/litellm/pull/42645)). The first release that includes it is the v1.106.0-dev.1 pre-release (`pip install litellm==1.106.0.dev1`); v1.105.0-rc.1, v1.104.0 and earlier do not include it. On those versions the proxy starts **without** this guardrail and logs `Skipping guardrail 'llm-shield': invalid configuration, proxy is starting WITHOUT this guardrail: Unsupported guardrail: llm_shield_proxy`; requests then reach the provider unredacted. Check the startup log for that line before sending traffic.
+:::
+
 ## Quick Start
 
 ### 1. Run LLM Shield Proxy
@@ -49,8 +53,11 @@ The same fields are available in the Admin UI under **Guardrails > Add Guardrail
 ```shell
 export OPENAI_API_KEY=sk-...
 export LLM_SHIELD_PROXY_API_KEY=sk-shield-change-me
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
 litellm --config config.yaml
 ```
+
+`LITELLM_MASTER_KEY` is the key your clients present to LiteLLM; the proxy refuses to start without one. Export the same value in the shell you send the requests below from.
 
 ### 4. Make your first request
 
@@ -59,7 +66,7 @@ litellm --config config.yaml
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header "Authorization: Bearer $LITELLM_API_KEY" \
+--header "Authorization: Bearer $LITELLM_MASTER_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
@@ -76,7 +83,7 @@ The provider receives stand-ins such as `john10@example.net` and `65672116397513
 
 ```shell
 curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
---header "Authorization: Bearer $LITELLM_API_KEY" \
+--header "Authorization: Bearer $LITELLM_MASTER_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "model": "{{openai_small}}",
