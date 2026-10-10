@@ -1606,8 +1606,9 @@ body {
   box-shadow: inset 0 0 0 1px var(--aurora-accent-line);
 }
 
-/* ---------- Code blocks: thin gradient edge, soft shadow ---------- */
-.theme-code-block {
+/* ---------- Code blocks and screenshots: thin gradient edge, soft shadow ---------- */
+.theme-code-block,
+.docs-screenshot {
   --prism-background-color: var(--aurora-code-bg) !important;
   border: 1px solid transparent;
   border-radius: 14px !important;
@@ -1616,6 +1617,18 @@ body {
     var(--aurora-grad-border) border-box !important;
   box-shadow: var(--aurora-shadow) !important;
   overflow: hidden;
+}
+
+.docs-screenshot {
+  margin: 0 0 var(--ifm-leading);
+  padding: var(--ifm-pre-padding);
+}
+
+.docs-screenshot img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
 }
 
 .theme-code-block pre {

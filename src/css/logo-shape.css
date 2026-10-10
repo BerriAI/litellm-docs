@@ -43,6 +43,7 @@ html[data-theme='dark'] {
 }
 
 .theme-code-block,
+.docs-screenshot,
 .tabs-container > div > [role='tabpanel'] > .theme-code-block:only-child,
 details {
   border-radius: var(--lite-radius-lg) !important;
