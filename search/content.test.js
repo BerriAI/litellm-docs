@@ -71,6 +71,9 @@ test('latest queries order dates and versions, exclude prereleases on request, a
   const index = createIndex(docs);
   assert.deepEqual(search(index, 'latest stable release').map(hit => hit.version), ['2.10.0', '2.9.3', '2.8.1']);
   assert.equal(search(index, 'latest releases')[0].version, '2.11.0-rc1');
+  for (const query of ['v2.11.0rc1', 'v2.11.0-rc1', 'v2.11.0-rc.1']) {
+    assert.equal(search(index, query)[0].version, '2.11.0-rc1');
+  }
   for (const query of ['latest release candidate', 'latest prerelease', 'latest RC']) {
     assert.deepEqual(search(index, query).map(hit => hit.version), ['2.11.0-rc1']);
   }

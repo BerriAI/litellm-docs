@@ -269,7 +269,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
   const wantsRelease = /\b(releases?|pre-?releases?|rcs?|changelog)\b/i.test(query);
   const stableOnly = /\bstable\b/i.test(query) && !versions.length && (wantsRelease || type === 'release');
   const prereleaseOnly = /\b(release candidates?|pre-?releases?|rcs?)\b/i.test(query) && !stableOnly && !versions.length;
-  let scopedQuery = query.replace(/\b(?:blogs?(?: posts?)?|articles?|release candidates?|pre-?releases?|rcs?|release(?:s| notes?)?|changelog|latest|newest|recent)\b|what['’]?s new/gi, ' ').trim();
+  let scopedQuery = query.replace(/\b(?:blogs?(?: posts?)?|articles?|release candidates?|pre-?releases?|rcs?(?!\.)|release(?:s| notes?)?|changelog|latest|newest|recent)\b|what['’]?s new/gi, ' ').trim();
   if (stableOnly) scopedQuery = scopedQuery.replace(/\bstable\b/gi, ' ');
   const browse = (wantsBlog || wantsRelease || intent === 'latest') && !termsOf(scopedQuery).filter(term => term !== 'litellm').length;
   if (wantsRelease && !browse && !versions.length) scopedQuery += ' release';
