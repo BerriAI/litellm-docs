@@ -559,6 +559,63 @@ li.tabs__item--active {
   color: #f9fafb;
 }
 
+/* Sidebar cluster labels and cross-section links (sidebars.js):
+   - { type: "html", className: "sidebar-group-label" } draws a hairline and a
+     small cluster name inside a long list, without another level of nesting.
+   - className: "sidebar-xlink" adds an arrow to a link that opens a page in
+     another section or tab. */
+.menu__list-item.sidebar-group-label {
+  margin-top: 8px;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  padding: 10px 12px 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-menu-color);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.menu__list-item.sidebar-group-label:first-child {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 4px;
+}
+.sidebar-xlink > .menu__link::after,
+.menu__link.sidebar-xlink::after {
+  content: "\2197";
+  margin-left: 6px;
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+
+/* "Enterprise" pill after the label of license-gated pages
+   (className "sidebar-enterprise" in sidebars.js). */
+.sidebar-enterprise > .menu__link::after {
+  content: 'Enterprise';
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .sidebar-enterprise > .menu__link::after {
+  border-color: rgba(147, 197, 253, 0.3);
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {
@@ -1086,6 +1143,49 @@ div[class*='announcementBar'] a:hover {
 
 [data-theme='dark'] div[class*='announcementBar'] {
   background: #1a5fb4 !important;
+}
+
+/* Decisions launch bar: a faint wash of the theme accent (logo blue in
+   light, teal in dark) with the text in the accent itself. The whole bar
+   is the link: the stretched ::after covers the bar, and the close button
+   sits above it. */
+/* .theme-announcement-bar is the outer bar only. The older rules above also
+   match its inner placeholder and content divs, so reset those here. */
+.theme-announcement-bar:has(a.announcement-link) {
+  position: relative;
+  background: color-mix(in srgb, var(--ifm-color-primary) 9%, var(--ifm-background-surface-color)) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--ifm-color-primary) 22%, transparent) !important;
+}
+
+.theme-announcement-bar:has(a.announcement-link) div[class*='announcementBar'] {
+  position: static !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+div[class*='announcementBar'] a.announcement-link {
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none !important;
+  font-weight: 400 !important;
+  margin-left: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link:hover {
+  opacity: 1;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+div[class*='announcementBar'] button {
+  position: relative;
+  z-index: 1;
+  color: var(--ifm-color-emphasis-600);
 }
 
 /* Contact page cards */

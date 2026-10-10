@@ -6,7 +6,7 @@ authors:
   - tin
 description: "How we built Moyai Devin with Render, Modal, Hermes, Temporal, and LiteLLM: durable sessions, parallel agents, Slack, and shared organization connections."
 tags: [engineering, agents, infrastructure, slack]
-image: ./moyai-getting-started.gif
+image: ./hero.png
 hide_table_of_contents: true
 custom_hero: true
 ---

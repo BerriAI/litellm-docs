@@ -451,18 +451,18 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Decisions (ai_decide)
 
-Databricks serves OpenJev through `ai_decide` on the `databricks-openjev-qwen35-4b` Foundation Model API endpoint. LiteLLM exposes it on the [unified decision routes](/docs/decisions), `/v1/systemone` for System One bodies and `/v1/decisions` for the OpenAI Decisions format, and as an Auto Router classifier. Add the serving endpoint to `model_list`:
+Databricks serves OpenJev as the [`ai_decide` AI Function](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide), which answers decision questions at `POST /api/2.0/ai-functions/ai-decide` on your workspace. The function is in Beta, so a workspace admin must turn on the `ai_decide` preview first. LiteLLM exposes it on the [unified decision routes](/docs/decisions), `/v1/systemone` for System One bodies and `/v1/decisions` for the OpenAI Decisions format, and as an Auto Router classifier. Add it to `model_list`:
 
 ```yaml title="config.yaml"
 model_list:
   - model_name: databricks-decider
     litellm_params:
-      model: databricks/databricks-openjev-qwen35-4b
+      model: databricks/ai_decide
       api_base: os.environ/DATABRICKS_API_BASE
       api_key: os.environ/DATABRICKS_API_KEY
 ```
 
-`DATABRICKS_API_BASE` is `https://<workspace-host>/serving-endpoints`, the same value the chat deployments above use. LiteLLM posts the decision request to `POST /serving-endpoints/databricks-openjev-qwen35-4b/invocations` with the deployment's token as a bearer credential.
+`DATABRICKS_API_BASE` is `https://<workspace-host>`. The `/serving-endpoints` URL the chat deployments above use also works, since LiteLLM removes that suffix before it adds the AI Function path. `databricks/ai_decide` is the only model name: the AI Function picks the model itself, so LiteLLM rejects any other name with a 400 and sends no `model` field upstream.
 
 ```bash
 curl http://localhost:4000/v1/systemone \
@@ -483,9 +483,9 @@ curl http://localhost:4000/v1/systemone \
   }'
 ```
 
-The response keeps the endpoint's `answers`, `usage` and `model` fields. Spend logs attribute the call to `databricks/databricks-openjev-qwen35-4b`, whose catalog entry has `mode: evaluation` at a zero rate: Databricks bills OpenJev in DBUs and publishes no per-token price. Set `model_info.input_cost_per_token` and `model_info.output_cost_per_token` on the deployment to price it. `/health` probes the deployment with a System One request, so no `model_info.mode` is needed. An OpenAI-format body sent to `/v1/decisions` reaches the endpoint as the same System One request and the answers come back in the OpenAI format.
+LiteLLM unwraps the `response` envelope Databricks returns, so the answers come back in the same shape as the other decision providers, and `metadata` is kept. A `noul` answer's `probability` is returned as `noul`, the System One field name. The AI Function reports no token usage and no model name, so `usage` is zero, spend logs record the call as `databricks/ai_decide` at zero cost, and `/v1/systemone` returns `model: null`. Databricks bills AI Functions on your workspace and publishes no per-token price. `/health` probes the deployment with a System One request, so no `model_info.mode` is needed. An OpenAI-format body sent to `/v1/decisions` reaches Databricks as the same System One request, and the answers come back in the OpenAI format.
 
-To route Auto Router traffic with the same endpoint, set `opensource_classifier_config.provider: databricks` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-openjev-serving-endpoint).
+To route Auto Router traffic with the same AI Function, set `opensource_classifier_config.provider: databricks` and `model: ai_decide` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-ai-decide).
 
 ## Embedding Models
 

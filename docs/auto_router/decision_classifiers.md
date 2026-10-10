@@ -1,14 +1,14 @@
 ---
 title: Connect self-hosted classifiers
 sidebar_label: Self-hosted classifiers
-description: Connect a self-hosted Laya or Bespoke Nimble endpoint, or a Databricks OpenJev serving endpoint, to LiteLLM Auto Router. Set the endpoint, credentials, classifier model, and routing tiers.
+description: Connect a self-hosted Laya or Bespoke Nimble endpoint, or the Databricks `ai_decide` AI Function, to LiteLLM Auto Router. Set the endpoint, credentials, classifier model, and routing tiers.
 ---
 
-Connect an existing Laya or Bespoke Nimble endpoint, or a Databricks OpenJev serving endpoint, to LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
+Connect an existing Laya or Bespoke Nimble endpoint, or the Databricks `ai_decide` AI Function, to LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Laya and Bespoke Nimble are the supported self-hosted classifier options.** Jev uses TypeSafe's hosted API, and Databricks serves OpenJev from your workspace through `ai_decide`; both share the same configuration flow. Select **OSS Classifier** in the dashboard, or use `classifier_type: oss_classifier` with a provider inside `opensource_classifier_config`.
+**Laya and Bespoke Nimble are the supported self-hosted classifier options.** Jev uses TypeSafe's hosted API, and Databricks serves OpenJev from your workspace as the `ai_decide` AI Function; both share the same configuration flow. Select **OSS Classifier** in the dashboard, or use `classifier_type: oss_classifier` with a provider inside `opensource_classifier_config`.
 
 ## What you host
 
@@ -35,15 +35,15 @@ The completion model still receives the request needed to generate the answer. H
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
-| [Databricks OpenJev](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | A Databricks Foundation Model API serving endpoint in your workspace | The serving endpoint name, such as `databricks-openjev-qwen35-4b` | `databricks` |
+| [Databricks `ai_decide`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | An AI Function on your Databricks workspace (Beta) | `ai_decide` | `databricks` |
 
-All four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /serving-endpoints/<endpoint>/invocations` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
+All four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
 
 :::info Availability
 
 The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
 
-Databricks support requires [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200).
+Databricks support requires [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200) and [BerriAI/litellm#PRNUM](https://github.com/BerriAI/litellm/pull/PRNUM), which moves it to the `ai_decide` AI Function route.
 
 Existing Jev-compatible configurations can keep `classifier_type: jev` and `jev_classifier_config`. For new routers, use the canonical names below; see [migration](#migrate-an-existing-jev-or-nimble-router) when upgrading an existing router.
 
@@ -119,25 +119,25 @@ opensource_classifier_config:
 
 For a router-specific endpoint, supply both `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit endpoint does not inherit the TypeSafe environment key. The model, timeout, instructions and circuit-breaker fields follow the [Jev reference](/docs/proxy/auto_routing#jev-classifier), whose examples retain the names supported by released builds.
 
-### Databricks: OpenJev on a serving endpoint {#databricks-openjev-serving-endpoint}
+### Databricks: the ai_decide AI Function {#databricks-ai-decide}
 
-Databricks serves OpenJev through `ai_decide` on a pay-per-token Foundation Model API endpoint, `databricks-openjev-qwen35-4b` on current workspaces. Point LiteLLM at your workspace's serving endpoints with the same variables the other `databricks/` models use:
+Databricks serves OpenJev as the `ai_decide` AI Function at `POST /api/2.0/ai-functions/ai-decide` on your workspace. The function is in Beta, so a workspace admin must turn on the `ai_decide` preview first. Point LiteLLM at your workspace with the same variables the other `databricks/` models use:
 
 ```bash
-export DATABRICKS_API_BASE="https://<workspace-host>/serving-endpoints"
+export DATABRICKS_API_BASE="https://<workspace-host>"
 export DATABRICKS_API_KEY="<databricks-token>"
 ```
 
-`DATABRICKS_TOKEN` is read when `DATABRICKS_API_KEY` is unset. Use `provider: databricks` and set `model` to the serving endpoint name; there is no default model for this provider. In the [complete router configuration](#configure-the-router), use:
+`DATABRICKS_TOKEN` is read when `DATABRICKS_API_KEY` is unset, and a `DATABRICKS_API_BASE` that ends in `/serving-endpoints` also works. Use `provider: databricks` and set `model: ai_decide`, which is required and the only accepted value, since the AI Function picks the model itself. In the [complete router configuration](#configure-the-router), use:
 
 ```yaml
 opensource_classifier_config:
   provider: databricks
-  model: databricks-openjev-qwen35-4b
+  model: ai_decide
   timeout_ms: 5000
 ```
 
-LiteLLM posts the System One request to `POST /serving-endpoints/databricks-openjev-qwen35-4b/invocations` and logs the classifier call as `databricks/databricks-openjev-qwen35-4b`. The endpoint reports its own model name in the response; LiteLLM keeps the configured endpoint name for logging and pricing. A router-specific `api_base` requires its matching `api_key`, so a configuration override cannot send the workspace token to another host.
+LiteLLM posts the System One request without a `model` field to `POST /api/2.0/ai-functions/ai-decide` and logs the classifier call as `databricks/ai_decide`. The AI Function reports no token usage, so the classifier call is logged at zero cost and no `x-litellm-classifier-cost` header is returned. A router-specific `api_base` requires its matching `api_key`, so a configuration override cannot send the workspace token to another host.
 
 ## Configure from the dashboard
 
@@ -196,7 +196,7 @@ Start LiteLLM after setting the classifier connection variables and your complet
 litellm --config config.yaml
 ```
 
-In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for all four providers. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/<endpoint>`.
+In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for all four providers. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/ai_decide`.
 
 Use a LiteLLM virtual key with access to `decision-router` to make a completion:
 
@@ -220,7 +220,7 @@ Configure the matching server URL, then use a LiteLLM virtual key with access to
 | --- | --- | --- | --- |
 | Laya | `/laya/v1/systemone` | `english` | `laya/english` |
 | Bespoke Nimble | `/bespoke/v1/systemone` | `nimble-latest` (`nimble` on Ollama) | `bespoke/nimble-latest` (`bespoke/nimble` on Ollama) |
-| Databricks OpenJev | `/v1/systemone` (`/v1/decisions` for the OpenAI format) | A `model_list` deployment of `databricks/<endpoint>` | The deployment's model name |
+| Databricks `ai_decide` | `/v1/systemone` (`/v1/decisions` for the OpenAI format) | A `model_list` deployment of `databricks/ai_decide` | The deployment's model name |
 
 The following Laya example also works for Nimble after replacing the endpoint and body model with the Nimble row:
 
@@ -244,13 +244,13 @@ curl http://localhost:4000/laya/v1/systemone \
   }'
 ```
 
-Databricks OpenJev is called through the [unified decision routes](/docs/decisions) instead of a provider-prefixed path: `/v1/systemone` takes System One bodies and `/v1/decisions` takes the OpenAI Decisions format. Add the serving endpoint to `model_list` and name that deployment in the request body:
+Databricks `ai_decide` is called through the [unified decision routes](/docs/decisions) instead of a provider-prefixed path: `/v1/systemone` takes System One bodies and `/v1/decisions` takes the OpenAI Decisions format. Add the AI Function to `model_list` and name that deployment in the request body:
 
 ```yaml
 model_list:
   - model_name: databricks-decider
     litellm_params:
-      model: databricks/databricks-openjev-qwen35-4b
+      model: databricks/ai_decide
       api_base: os.environ/DATABRICKS_API_BASE
       api_key: os.environ/DATABRICKS_API_KEY
 ```
@@ -275,7 +275,7 @@ curl http://localhost:4000/v1/systemone \
   }'
 ```
 
-The response preserves the endpoint's `answers`, `usage` and `model` fields. See the [Databricks provider page](/docs/providers/databricks#decisions-ai_decide) for the full deployment example.
+LiteLLM unwraps the `response` envelope Databricks returns and keeps its `metadata`. The AI Function reports no usage or model, so `usage` is zero and `model` is `null`. See the [Databricks provider page](/docs/providers/databricks#decisions-ai_decide) for the full deployment example.
 
 Every native Laya request must explicitly choose `english`, `multilingual` or `typed-decisions`, with permission for the corresponding `laya/<checkpoint>` model. Unknown names and automatic selection are rejected. The response preserves Laya's `answers`, `usage` and `routing` fields. Both native routes support System One requests only; `/v1/evaluate`, chat completions and streaming are not exposed. Nimble preserves its native `answers` and `usage` response.
 
@@ -283,7 +283,7 @@ Every native Laya request must explicitly choose `english`, `multilingual` or `t
 
 Compare tier choices on representative prompts before changing production routing. Probabilities describe the supplied choices; confidence scores from different model families are not interchangeable accuracy estimates. Measure downstream answer quality, classifier latency, fallback frequency and total cost using the [evaluation guide](/docs/auto_router/evaluate).
 
-Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya and Bespoke Nimble's built-in catalog token rates are zero; infrastructure is paid separately. Jev uses `typesafe/<model>` classifier log naming, Laya uses `laya/<checkpoint>`, Bespoke Nimble uses `bespoke/<model>` and Databricks uses `databricks/<endpoint>`. Databricks OpenJev's catalog rate is zero too: Databricks bills the `databricks-openjev-qwen35-4b` endpoint in DBUs on your workspace and publishes no per-token price, so add a `databricks/<endpoint>` price to your own cost map to see a non-zero classifier cost. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
+Jev calls can incur TypeSafe charges. Self-hosting Nimble or Laya has compute costs even without a hosted inference fee. Laya and Bespoke Nimble's built-in catalog token rates are zero; infrastructure is paid separately. Jev uses `typesafe/<model>` classifier log naming, Laya uses `laya/<checkpoint>`, Bespoke Nimble uses `bespoke/<model>` and Databricks uses `databricks/ai_decide`. Databricks `ai_decide` is logged at zero cost: Databricks bills AI Functions on your workspace, and the function reports no token usage for LiteLLM to price. The OSS classifier name does not change the `cause: jev_classifier` value in routing results.
 
 If the classifier falls back, check the endpoint, checkpoint name, credentials, model warm-up and timeout. A timeout can also open the classifier circuit breaker, which defaults to a 30-second recovery interval. Verify that the server accepts `/v1/systemone`, rather than adding that path to `api_base`.
 
