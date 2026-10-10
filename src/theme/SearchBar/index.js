@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {Search, Sparkles, BookOpen, CornerDownLeft, X, Send, Square, User, Copy} from 'lucide-react';
 import styles from './styles.module.css';
-import {mapCitations} from '../../../search/citations';
+import {mapCitations} from '../../../search/citations.mjs';
 
 // One owner renders the modal even when the navbar and docs sidebar both mount a trigger.
 const openEvent = 'litellm:open-docs-search';
@@ -159,7 +159,7 @@ export default function SearchBar() {
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({question, history}), signal: pending.signal});
-      const data = await response.json().catch(() => ({error: 'Ask AI is unavailable on this preview. Document search is still available.'}));
+      const data = await response.json().catch(() => ({error: 'Ask AI is temporarily unavailable. Please try again or use document search.'}));
       if (!response.ok) throw new Error(data.error || 'Ask AI is unavailable.');
       if (typeof data.answer !== 'string' || !Array.isArray(data.sources)) throw new Error('Ask AI is temporarily unavailable.');
       if (!pending.signal.aborted) setTurns(previous => [...previous, {question, ...data}]);
@@ -226,7 +226,7 @@ export default function SearchBar() {
         </header>
         {mode === 'search' && <>
           <button className={styles.askCard} onClick={() => openAI(query.trim() || undefined)}>
-            <img src={avatar} alt=""/><span>Ask AI</span><strong>{query}</strong><small>Start conversation</small><CornerDownLeft size={16}/>
+            <img src={avatar} alt=""/><span>Ask AI</span><strong>{query}</strong><small>Start conversation</small>
           </button>
           <div className={`${styles.searchContent} ${query.trim() ? styles.hasQuery : ''}`}>
             {searchError && <p role="alert" className={styles.error}>{searchError} <button onClick={() => setRetry(value => value + 1)}>Try again</button></p>}

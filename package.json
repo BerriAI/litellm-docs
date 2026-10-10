@@ -18,7 +18,7 @@
     "check:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs --check",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
-    "test:search": "node --test search/*.test.js",
+    "test:search": "node --no-experimental-require-module --test search/*.test.js",
     "search:serve": "node search/server.js",
     "generate:social-card": "node scripts/social-card/index.cjs",
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",

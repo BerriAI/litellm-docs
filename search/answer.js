@@ -1,6 +1,5 @@
 const {search} = require('./engine');
 const {createModelCaller} = require('./gateway');
-const {mapCitations} = require('./citations');
 
 const queryPrompt = `Rewrite the user's question into 1 to 3 concise search queries for the LiteLLM documentation. Return only JSON: {"queries":["search query"]}.
 Use previousQuestions to resolve follow-ups and documentationTopics to recognize documented names and integrations. Short topic searches and definitions such as "codex subscription", "what is codex subscription", "Bedrock", "Langfuse", and "Lens" are valid questions; users do not have to say LiteLLM. Correct obvious typos, preserve the user's intent, and prefer the names used in the matching documentation. Do not classify or reject topics and do not answer the question.
@@ -14,6 +13,8 @@ async function answerQuestion({question, history = [], index, documents, config,
   if (!config.apiKey) {
     return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   }
+  // Lambda disables synchronous require() of ES modules.
+  const {mapCitations} = await import('./citations.mjs');
   const callModel = createModelCaller({config, signal, fetchImpl});
   const previousQuestions = history.map(turn => turn.question);
   const documentationTopics = search(index, question, {limit: 4}).map(hit => {

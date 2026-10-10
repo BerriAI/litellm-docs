@@ -22,7 +22,6 @@
 .askCard strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--search-accent);font-weight:600}
 .askCard>span {white-space:nowrap}
 .askCard small {margin-left:auto;color:var(--search-muted);font-size:12px;white-space:nowrap}
-.askCard>svg {margin-left:4px;flex-shrink:0;color:var(--search-muted)}
 .askCard:hover {background:var(--search-hover)}
 .searchContent {display:flex;flex-direction:column;min-height:46px;overflow:hidden}
 .hasQuery {height:min(calc(85vh - 160px),503px);padding-bottom:20px}
