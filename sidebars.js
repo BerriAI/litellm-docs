@@ -1479,6 +1479,7 @@ const sidebars = {
         "sdk_custom_pricing",
         "migration",
         { type: "ref", id: "data_security" },
+        "proxy/telemetry",
         { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",
         "migration_policy",
