@@ -22,16 +22,16 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 
 ## Supported providers
 
-| Provider | Example model | Credentials | LiteLLM endpoints | Images |
-|----------|---------------|-------------|-------------------|--------|
-| [OpenAI](https://developers.openai.com/api/docs/guides/decisions) | `openai/gpt-6-luna` | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` | `/v1/decisions`, `/v1/systemone` | Yes |
-| [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/decisions`, `/v1/systemone` | No |
-| [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/decisions`, `/v1/systemone` | No |
-| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/decisions`, `/v1/systemone` | No |
-| [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/decisions`, `/v1/systemone` | No |
-| [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/decisions`, `/v1/systemone` | No |
-| [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/decisions`, `/v1/systemone` | No |
-| [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/decisions`, `/v1/systemone` | No |
+| Provider | Example model | Credentials | LiteLLM endpoint | Images |
+|----------|---------------|-------------|------------------|--------|
+| [OpenAI](https://developers.openai.com/api/docs/guides/decisions) | `openai/gpt-6-luna` | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` | `/v1/decisions` | Yes |
+| [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | No |
+| [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
+| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | No |
+| [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
+| [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
+| [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
+| [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
