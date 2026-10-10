@@ -7,10 +7,11 @@ module.exports = {
   items: [
     {
       type: 'category',
-      label: 'Deployment',
+      label: 'Set up Lens',
       link: {type: 'doc', id: 'proxy/lens/deployment'},
       items: [
         'proxy/lens/deployment/local',
+        'proxy/lens/deployment/litellm',
         'proxy/lens/deployment/kubernetes',
         'proxy/lens/deployment/server',
         'proxy/lens/deployment/docker-compose',
@@ -26,7 +27,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Integrations',
-      items: [...imported.integrations, 'proxy/lens/integrations/openclaw', 'proxy/lens/integrations/hermes'],
+      items: ['proxy/lens/framework-examples', ...imported.integrations, 'proxy/lens/integrations/openclaw', 'proxy/lens/integrations/hermes'],
     },
     {
       type: 'category',

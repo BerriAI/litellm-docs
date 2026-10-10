@@ -47,7 +47,7 @@ Inspect the existing gateway networks without changing them:
 docker inspect "<your-litellm-container>" --format '{{json .NetworkSettings.Networks}}'
 ```
 
-Make any shared-network reference persistent in both Compose configurations, including the network override every time you recreate services. Use Lens's service name and port, such as `http://lens:4318`, for the private gateway URL. Follow [Connect Lens to Docker Compose](./docker-compose.md) for the credentials and application settings
+Make any shared-network reference persistent in both Compose configurations, including the network override every time you recreate services. Use Lens's service name and port, such as `http://lens:4318`, for the private gateway URL. Follow [Add Lens to LiteLLM](./litellm.md) for the credentials and application settings
 
 ## Configuration reference
 

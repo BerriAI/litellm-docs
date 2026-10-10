@@ -6,9 +6,13 @@ slug: "/proxy/lens/deployment/releases"
 
 # Releases and images
 
-Official paired Lens and LiteLLM releases share a version and are tested together. Lens remains deployable on its own. The current [Lens source installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) is available from the public Lens repository while official standalone release artifacts are being qualified. Do not infer that an image, chart or release bundle exists from a source version alone
+Lens can run on its own. For the manual setup guides, use the [source quickstart](./local.md) or build the [source Helm chart](./kubernetes.md#new-deployment).
 
-A compatible gateway release consumes the shared Lens UI and connects through the supported public API contract. Updating the Lens runtime does not update the UI already embedded in a gateway build. The [release setup guide](https://github.com/BerriAI/project-releaser/blob/main/LENS_RELEASE_SETUP.md#release-gateway-charts-with-lens) describes how staging selects both source commits, builds the shared UI, and publishes the verified artifacts
+As of October 9, 2026, the Lens repository has no published GitHub release. The latest LiteLLM prerelease, `v1.106.0-dev.3`, was published before the independent Lens integration merged in [PR #45529](https://github.com/BerriAI/litellm/pull/45529). Do not use that version for the gateway connection steps. Those steps need a build that includes the integration. Standalone Lens remains usable while you prepare the gateway build.
+
+The release pipeline builds official paired Lens and LiteLLM artifacts with the same version and tests them together. This does not mean those artifacts have already been published. Check the [Lens releases](https://github.com/BerriAI/lens/releases) and [LiteLLM releases](https://github.com/BerriAI/litellm/releases) before selecting a release.
+
+The Lens UI inside LiteLLM is part of the gateway build. Updating a separate Lens backend does not replace that embedded UI. An existing external Lens deployment also does not upgrade when you upgrade LiteLLM; deploy it through its own release process.
 
 ## Container images {#container-images}
 
