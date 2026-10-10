@@ -845,26 +845,6 @@ video {
 }
 
 /* =========================================
-   SEARCH BAR — hide from navbar (it lives in sidebar)
-   ========================================= */
-[class^='navbarSearchContainer'],
-[class*='navbarSearchContainer'] {
-  display: none !important;
-}
-
-/* =========================================
-   INKEEP AI CHAT BUTTON — minimal floating style
-   ========================================= */
-.ikp-chat-button__button {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
-  margin-right: 1rem !important;
-  margin-bottom: 1rem !important;
-}
-
-/* =========================================
    NAVBAR — mobile fixes
    ========================================= */
 
@@ -1978,8 +1958,7 @@ article a.card:hover {
   border-bottom: 0 !important;
 }
 
-/* When search is not configured (no Inkeep key, e.g. local builds) the slot
-   renders empty; collapse it instead of leaving a gap under the header. */
+/* Collapse an empty search slot instead of leaving a gap under the header. */
 [class*='searchBarSection']:has([class*='searchBarInner']:empty) [class*='searchBarInner'] {
   display: none;
 }
@@ -2449,6 +2428,27 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 
 .tabs-container:has(> ul.tabs.lens-framework-tabs > li.tabs__item--active:first-child) > div {
   border-top-left-radius: 16px;
+}
+
+/* Search lives in the desktop sidebar and the expanded mobile menu. */
+[class*='navbarSearchContainer'] {
+  display: none !important;
+}
+
+.navbar-sidebar .docs-mobile-search {
+  padding: 8px 12px 16px;
+}
+
+.navbar-sidebar .docs-mobile-search > button {
+  min-height: 44px;
+}
+
+.navbar-sidebar .docs-mobile-search kbd {
+  display: none;
+}
+
+.navbar-sidebar .docs-mobile-search + .navbar-sidebar__back {
+  top: 0;
 }
 
 /* Light/dark pairs from IdealImage `dark` and ThemedVideo, before hydration */
