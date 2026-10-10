@@ -156,6 +156,8 @@ Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type:
 
 The ceiling lives on the same per-minute window as a team's `model_tpm_limit`, so it reads and resets the way the limits you already set do, and it needs nothing beyond `LITELLM_ENABLE_PTU_COST_ATTRIBUTION`. The sizing row is looked up by `model_info.base_model` first, then by the model in `litellm_params`, because an Azure deployment name is arbitrary. A shared deployment, or an Azure deployment reserved for one team, whose model has no row logs a warning at startup, sets no ceiling, and reports no PTU-hours; set `base_model` to the Azure model name to fix it. A single-team reservation on another provider only feeds the flat-cost rollup, which needs no sizing, so it is not warned about
 
+A request counts against its team's ceiling however it names the shared deployment: the model group, a `model_group_alias`, a routing group, the deployment's `model_info.id`, its provider model, the `/azure` pass-through route, or a wildcard pattern such as `ptu-*` that the router serves it through. A wildcard name counts only against the pattern the router serves it from, the most specific one that matches, so a request an open `*` route serves never charges a share, and a team holding no share gets the 400 on a name the shared pattern matches even when `*` matches it too
+
 A deployment owned by one team through `team_id` gets no ceiling, since that team already owns all of it, but its usage does report PTU-hours
 
 
