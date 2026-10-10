@@ -6,7 +6,7 @@ hide_title: true
 hide_table_of_contents: true
 ---
 
-import {MoyaiHero, CostComparison, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
+import {MoyaiHero, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
 import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
 import Image from '@theme/IdealImage';
 import styles from '@site/src/components/Moyai/styles.module.css';
@@ -14,22 +14,27 @@ import Heading from '@theme/Heading';
 
 <MoyaiHero />
 
-Our Devin bill reached $101,872 over 31 days. We wanted to choose the models behind that spend, delegate work while our laptops were closed, and see what each teammate spent.
-
-Moyai is the cloud coding agent we built for that work. Give it a task from Slack or the browser, let it work in your cloud, and review the pull request.
+Moyai is an open source coding agent you run in your cloud. Delegate a bug fix or repository change from Slack or the browser, then review the pull request. Connect your LiteLLM gateway to choose models and track what each task costs.
 
 <section className={styles.why} aria-labelledby="why-moyai">
-  <Heading as="h2" id="why-moyai">What Moyai solves</Heading>
+  <Heading as="h2" id="why-moyai">Why Moyai</Heading>
   <BenefitGrid />
   <GuideCards />
   <p className={styles.setupRequirements}>Start with a Modal account and a LiteLLM gateway. The setup guide verifies a cloud task before you connect a repository.</p>
 </section>
 
-## Reduce costs with your choice of agent and model {#cost-comparison}
+## Give Moyai a task from your browser {#start-in-the-browser}
 
-<CostComparison />
+Describe the change, choose an agent and model, and add repository context. Keep your team's sessions in one workspace alongside its skills and app connections.
 
-[See supported agents and models](./moyai/setup.md#configure-litellm). Start with one task and measure its cost before expanding the rollout.
+<figure className={styles.spendFigure}>
+  <Image
+    img={require('../../img/moyai_task_composer.jpg')}
+    alt="Moyai's browser workspace with a bug-fix prompt, agent and model selectors, connected apps, and recent sessions."
+    style={{width: '100%', display: 'block'}}
+  />
+  <figcaption>The Moyai interface with an example prompt and sample workspace data. This screenshot shows task setup; it does not show a completed agent run.</figcaption>
+</figure>
 
 ## Watch a task go from request to PR {#watch-a-task}
 

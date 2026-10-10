@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {useColorMode} from '@docusaurus/theme-common';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import {ArrowRight, GitPullRequest, MessageSquare, Network, Terminal} from 'lucide-react';
+import {ArrowRight, Network, Pause, Play, Terminal} from 'lucide-react';
 import styles from './styles.module.css';
 
 const root = '/docs/self_hosted_coding_agents/moyai';
@@ -24,90 +25,84 @@ export function GuideNav({active}) {
 }
 
 export function MoyaiHero() {
-  const moyaiLogo = useBaseUrl('/img/blog/moyai_devin_open_source/moyai-head.svg');
+  const frame = useRef(null);
+  const figure = useRef(null);
+  const [paused, setPaused] = useState(true);
+  const [visible, setVisible] = useState(true);
+  const {colorMode} = useColorMode();
+  const source = useBaseUrl('/animations/moyai-landing/?embed=1');
+  const updatePlayer = useCallback(() => {
+    frame.current?.contentWindow?.postMessage(
+      {type: 'moyai-landing-hero', paused, visible, theme: colorMode}, window.location.origin,
+    );
+  }, [paused, visible, colorMode]);
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const applyPreference = () => setPaused(preference.matches);
+    applyPreference();
+    preference.addEventListener('change', applyPreference);
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting));
+    observer.observe(figure.current);
+    return () => {
+      preference.removeEventListener('change', applyPreference);
+      observer.disconnect();
+    };
+  }, []);
+  useEffect(updatePlayer, [updatePlayer]);
 
   return (
     <header className={styles.hero}>
       <h1>Moyai</h1>
-      <p className={styles.tagline}>Run open source coding agents in your cloud.</p>
-      <figure className={styles.workflow} aria-label="Send a task from Slack or the browser. Moyai works in the cloud and returns a pull request. LiteLLM supplies models and records their costs.">
-        <div className={styles.workflowSteps}>
-          <div className={styles.workflowStep}>
-            <span className={styles.workflowIcon}><MessageSquare size={25} aria-hidden="true" /></span>
-            <strong>Your task</strong>
-            <span>Slack or browser</span>
-          </div>
-          <ArrowRight className={styles.workflowArrow} size={26} aria-hidden="true" />
-          <div className={styles.cloudWorkspace}>
-            <img src={moyaiLogo} alt="" width="48" height="60" />
-            <div><strong>Moyai</strong><span>Your cloud workspace</span></div>
-            <p>Edit code <span aria-hidden="true">·</span> Run tests <span aria-hidden="true">·</span> Use tools</p>
-          </div>
-          <ArrowRight className={styles.workflowArrow} size={26} aria-hidden="true" />
-          <div className={styles.workflowStep}>
-            <span className={styles.workflowIcon}><GitPullRequest size={25} aria-hidden="true" /></span>
-            <strong>Your pull request</strong>
-            <span>Ready for your review</span>
-          </div>
-        </div>
-        <figcaption className={styles.gatewayLine}>
-          <Network size={19} aria-hidden="true" />
-          <span><strong>Powered by your LiteLLM gateway</strong><span>Your models. One source of truth for model costs.</span></span>
+      <p className={styles.tagline}>Give your coding agents a cloud workspace.</p>
+      <figure ref={figure} className={styles.workflow}>
+        <iframe
+          ref={frame}
+          className={styles.heroFrame}
+          src={source}
+          title="Illustrated Moyai workflow: delegate a task, run code and tests in your cloud, review a pull request. LiteLLM records model costs."
+          onLoad={updatePlayer}
+          scrolling="no"
+        />
+        <figcaption className={styles.heroCaption}>
+          <span>From a task to a pull request, in your cloud.</span>
+          <button type="button" className={styles.motionToggle} onClick={() => setPaused(value => !value)} aria-pressed={paused}>
+            {paused ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}
+            {paused ? 'Play animation' : 'Pause animation'}
+          </button>
         </figcaption>
       </figure>
     </header>
   );
 }
 
-export function CostComparison() {
-  return (
-    <section className={styles.cost} aria-label="LiteLLM's estimated cost reduction">
-      <div className={styles.costHeadline}>
-        <div>
-          <p className={styles.kicker}>Our team's cost comparison</p>
-          <p className={styles.costTitle}>Choose where your agent budget goes.</p>
-          <p className={styles.costIntro}>Run Codex, Claude Agent SDK, or Hermes with a compatible model through LiteLLM. You pay for model usage and hosting.</p>
-        </div>
-        <div className={styles.metric}>
-          <strong>79<span>%</span></strong>
-          <span>lower estimated cost<br />for the LiteLLM team</span>
-        </div>
-      </div>
-      <figure className={styles.comparison} aria-label="LiteLLM's 31-day cost comparison">
-        <div className={styles.barLabel}><span>Devin <small>Actual bill · 31 days</small></span><strong>$101,872</strong></div>
-        <div className={styles.barTrack} aria-hidden="true"><div className={styles.devinBar} /></div>
-        <div className={styles.barLabel}><span>Moyai <small>Estimate · 31 days</small></span><strong>~$21,700</strong></div>
-        <div className={styles.barTrack} aria-hidden="true"><div className={styles.moyaiBar} /></div>
-        <figcaption>
-          Our Devin bill was $101,872 for 31 days. We estimate about $700/day for Moyai, or $21,700 over the same period. This is our internal comparison,
-          not a matched-workload benchmark. Your model mix, compute, and storage affect your costs.{' '}
-          <Link to="/blog/moyai-open-source#the-results-79-cheaper">Read the cost breakdown <span aria-hidden="true">↗</span></Link>
-        </figcaption>
-      </figure>
-    </section>
-  );
-}
-
 export function BenefitGrid() {
   return (
     <div className={styles.benefits}>
-      <section aria-labelledby="choose-your-stack">
+      <section aria-labelledby="cost-comparison">
         <span className={styles.number}>01</span>
-        <Heading as="h3" id="choose-your-stack">Reduced costs</Heading>
-        <p>Choose the agent and model for your budget. Our Moyai estimate is <strong>79% lower</strong> than our team's Devin bill, with model usage and hosting under our control.</p>
-        <Link className={styles.proofLink} to="#cost-comparison">See our cost comparison <ArrowRight size={15} aria-hidden="true" /></Link>
+        <Heading as="h3" id="cost-comparison">Spend less on coding agents</Heading>
+        <p>Our Devin bill reached <strong>$101,872 in 31 days</strong>. We estimate Moyai at <strong>~$21,700 for the same period</strong>, about <strong>79% less</strong>. You choose where to spend on models and cloud compute.</p>
+        <p className={styles.estimateNote}>Our team's estimate, not a matched-workload benchmark. Your costs depend on usage, models, hosting, and storage.</p>
+        <Link className={styles.proofLink} to="/blog/moyai-open-source#the-results-79-cheaper">Read our cost breakdown <ArrowRight size={15} aria-hidden="true" /></Link>
       </section>
       <section aria-labelledby="delegate-cloud-work">
         <span className={styles.number}>02</span>
-        <Heading as="h3" id="delegate-cloud-work">Run tasks in the cloud</Heading>
-        <p>Send a task from Slack or the browser. Close your laptop while Moyai edits code and runs tests. Come back to a pull request to review.</p>
+        <Heading as="h3" id="delegate-cloud-work">Close your laptop. Come back to a PR.</Heading>
+        <p>Send a task from Slack or the browser. Moyai works in a cloud sandbox, edits code, and runs tests while you're away. Review the diff and test results when you return.</p>
         <Link className={styles.proofLink} to="#watch-a-task">Watch a real bug fix <ArrowRight size={15} aria-hidden="true" /></Link>
       </section>
       <section aria-labelledby="budget-your-agents">
         <span className={styles.number}>03</span>
         <Heading as="h3" id="budget-your-agents">One source of truth for model costs</Heading>
-        <p>LiteLLM records the model charges. Moyai uses those same charges for per-user, session, and model breakdowns, so both views add up from the same data.</p>
+        <p>Use LiteLLM as your source of truth for model charges. In Moyai, see those same charges by user, session, and model. Trace a teammate's total back to the requests behind it.</p>
         <Link className={styles.proofLink} to="#see-agent-spend">See the spend breakdown <ArrowRight size={15} aria-hidden="true" /></Link>
+      </section>
+      <section aria-labelledby="choose-your-stack">
+        <span className={styles.number}>04</span>
+        <Heading as="h3" id="choose-your-stack">Choose your agent and model</Heading>
+        <p>Run Codex, Claude Agent SDK, or Hermes with a compatible model through your LiteLLM gateway. Try a different model for the next task and compare the result and cost.</p>
+        <Link className={styles.proofLink} to={`${root}/setup#configure-litellm`}>Explore supported agents <ArrowRight size={15} aria-hidden="true" /></Link>
       </section>
     </div>
   );
