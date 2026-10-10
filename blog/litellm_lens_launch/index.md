@@ -47,7 +47,7 @@ export const sections = [
 
 <SideRails sections={sections} />
 
-Today we're launching LiteLLM Lens
+Today we're launching LiteLLM Lens. Tell Lens what to look for in your agents, let it analyze your traces, then read the findings and go deeper into any trace
 
 ## The agentic swarm developer
 
@@ -65,26 +65,38 @@ Tracing platforms make it harder. Your data sits in someone else's system behind
 
 ## Our solution
 
-We believe the next era of the gateway is using the data flowing through it to help your agents improve. Lens does two things
+We believe the next era of the gateway is using the data flowing through it to help your agents improve. Lens does this in three steps, and puts an agent-first tracing API underneath them
 
-### Making sense of 200K+ traces
+### 1. Tell Lens what to look for
 
-Lens uses AI agents to review your traces for you. You describe what a good run looks like. Lens investigates the runs, groups similar problems, and links every finding back to the original trace step
+For each of your agents, describe what you want Lens to look for. What does a good run look like, and what does a bad one look like? You can also add specific questions, one per line, like "Find tool failures the agent does not recover from"
+
+![Saved agent context and checks for a research agent.](/img/lens/questions-and-checks.png)
+
+### 2. Lens analyzes your traces
+
+Lens uses AI agents to review your traces for you. It investigates the runs, groups similar problems, and shows you its findings for each of your agents: what happened, what to do next, and the runs that support it
 
 ![A finding showing what happened, what to do next, and links to the supporting runs.](/img/lens/finding-detail.png)
+
+### 3. Read the findings, then go deeper into the trace
+
+Start with the findings. When you need more, every finding links back to the exact step in the original trace, so you can read the input, output, and attributes behind it
+
+An individual trace looks like this: the full step tree on the left, and the input and output of the selected step on the right
+
+![An individual trace for a research agent, with its step tree, timing, and the selected step's input and output.](/img/lens/trace-detail-research-lead.png)
 
 ### Agent-first tracing APIs
 
 Own your infra. Traces land in ClickHouse that you run, next to the LiteLLM gateway you already deploy. Query them with simple SQL, or let Codex and Claude Code analyze them through the tracing API without tracing-platform rate limits
-
-![An agent trace with its step tree, timeline, and selected step input and output.](/img/lens/trace-detail.png)
 
 ## Launch partners
 
 Lens was built and designed with our launch partners
 
 <Partner
-  href="https://www.mindfort.ai/"
+  href="https://mindfort.ai?utm_source=litellm&utm_medium=spotlight&utm_campaign=spotlight"
   logo="/img/blog/litellm_lens_launch/partners/mindfort.svg"
   name="MindFort"
   quote={[

@@ -17,6 +17,7 @@ import TabItem from '@theme/TabItem';
 | Codex | `pip install litellm starlette uvicorn` | `npm install -g @openai/codex` |
 | OpenCode | `pip install litellm starlette uvicorn` | `npm install -g opencode-ai` |
 | Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) {/* keep-python-version */} | nothing |
+| Tool Loop | `pip install litellm` | nothing |
 
 `starlette` and `uvicorn` run the small per-session model endpoint the CLI harnesses call. If something is missing, the call raises `HarnessInstallFailed` with the exact install command.
 

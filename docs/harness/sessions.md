@@ -4,7 +4,7 @@ title: Sessions
 
 # Sessions
 
-A session keeps the runtime's working directory and native history alive between turns. `litellm.agent()` creates a session for one turn and closes it afterwards. Use `litellm.agent_session()` when you need more than one turn.
+A session keeps its working directory and conversation history alive between turns. `litellm.agent()` creates a session for one turn and closes it afterwards. Use `litellm.agent_session()` when you need more than one turn
 
 ## Multi-turn
 
@@ -30,7 +30,7 @@ Leaving a `with` block calls `close()` unless you already called `detach()` or `
 
 ## Across processes
 
-`State` holds the harness, the runtime's own session id, the working directory and the model. It never holds credentials. `state.dumps()` gives you bytes to store anywhere.
+For harnesses that support resume, `State` holds the harness, its native session id, the working directory and the model. It never holds credentials. `state.dumps()` gives you bytes to store anywhere
 
 ```python title="app.py"
 from litellm import Harness
@@ -52,7 +52,7 @@ async def chat(chat_id: str, msg: str):
     return {"text": r.text, "cost": r.cost}
 ```
 
-`agent_resume()` raises `StateIncompatible` when the state came from a different harness or can't be read.
+`agent_resume()` raises `StateIncompatible` when the state came from a different harness or can't be read. Tool Loop does not support resume
 
 ## History
 
@@ -60,4 +60,4 @@ async def chat(chat_id: str, msg: str):
 messages = s.history()  # OpenAI-format messages
 ```
 
-Only Deep Agents supports history in this release. On the other harnesses `history()` raises `CapabilityUnsupported`.
+Deep Agents and Tool Loop support history in this release. On the other harnesses `history()` raises `CapabilityUnsupported`. Tool Loop keeps its OpenAI-format messages through a stop/start in the same session, but it does not support detaching and resuming

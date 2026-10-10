@@ -112,7 +112,7 @@ general_settings:
   forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
-For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting.
+For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting. From LiteLLM v1.105.0, each spend log row records which credential the upstream call used in `metadata.used_client_oauth_token` (`true` for a forwarded OAuth token, `false` for the deployment's configured key, never the token itself), filterable on the Logs page **Credential** dropdown or with `GET /spend/logs/ui?used_client_oauth_token=true`.
 
 Client request:
 ```bash
@@ -153,6 +153,43 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
+
+#### Example: custom Anthropic-compatible `api_base`
+
+Use this when the models sit behind your own gateway that speaks the Anthropic Messages API and each user holds their own token for it. A wildcard route passes whatever model the caller names through to the gateway, so newly available models need no config change. Only `forward_llm_provider_auth_headers` is required here
+
+```yaml
+model_list:
+  - model_name: "my-gateway/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_base: "https://gateway.example.com/anthropic"
+      # No api_key: each request supplies its own
+
+general_settings:
+  forward_llm_provider_auth_headers: true
+```
+
+Authenticate to LiteLLM with `Authorization: Bearer` or `x-litellm-api-key`, and put the user's gateway token in `x-api-key`:
+
+```bash
+curl -X POST "http://localhost:4000/v1/chat/completions" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "x-api-key: $USER_GATEWAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "my-gateway/claude-sonnet-4-5",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+LiteLLM drops the `my-gateway/` prefix and calls `https://gateway.example.com/anthropic/v1/messages` with `"model": "claude-sonnet-4-5"` and `x-api-key: $USER_GATEWAY_TOKEN`. Requests to `/v1/messages` and `/v1/chat/completions` both reach the gateway this way. The token always goes out as `x-api-key`, so the gateway must accept that header. To list the gateway's models on `/v1/models`, see [Model Discovery](./model_discovery.md#which-key-discovery-uses)
+
+#### Which key reaches the provider
+
+A forwarded provider header takes precedence over the deployment's `api_key` for that request. When a request carries no provider key, LiteLLM falls back to the deployment's `api_key`, then to the provider's environment variable on the proxy host (for example `ANTHROPIC_API_KEY`), and the call runs on that key without any error. To require every caller to bring their own key, leave both unset; a request without one then fails with `Missing Anthropic API Key` before anything is sent to the provider
+
+Do not send the LiteLLM key in `x-api-key`. LiteLLM accepts it there as proxy authentication and then removes it, so it is not forwarded and the request falls back as described above
 
 ### Security Considerations
 

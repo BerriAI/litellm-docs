@@ -201,7 +201,7 @@ This deploys `gateway`, `backend`, and `ui` as separate services. You can scale 
 
 Pin the chart to `1.89.0` or newer. Each component image tag defaults to the chart version. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) for every option, [Autoscaling](#autoscaling) for scaling configuration, and [Prometheus metrics isolation](./prometheus.md#isolate-prometheus-scraping-from-inference-traffic) for the gateway metrics sidecar.
 
-The [high-throughput deployment profile](./high_throughput.md) adds shared database connections, isolated spend processing, and RPS/TPS autoscaling. This profile is currently available in nightly builds.
+The [high-throughput deployment profile](./high_throughput.md) adds shared database connections, isolated spend processing, and RPS/TPS autoscaling.
 
 </TabItem>
 </Tabs>

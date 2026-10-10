@@ -15,7 +15,7 @@ Use the normalized names from [Events](./events.md#tool-names). Codex can't filt
 
 ## Custom tools
 
-Custom Python tools are supported on Deep Agents in this release. They're plain functions that run in your process.
+Custom Python tools are supported on Deep Agents and Tool Loop. They're plain functions that run in your process
 
 ```python
 from typing import Literal
@@ -37,7 +37,7 @@ litellm.agent(
 )
 ```
 
-The type hints and docstring become the tool's schema. Passing `tools=` to Claude Code, Codex or OpenCode raises `CapabilityUnsupported`.
+The type hints and docstring become the tool's schema. Synchronous functions run in a worker thread and asynchronous functions are awaited. Passing `tools=` to Claude Code, Codex or OpenCode raises `CapabilityUnsupported`
 
 ## Skills
 
@@ -53,5 +53,6 @@ litellm.agent(Harness.CLAUDE_CODE, "Ship the fix.", sandbox=box, model="litellm_
 | `CODEX` | `$CODEX_HOME/skills/<name>/` |
 | `OPENCODE` | `.opencode/skill/<name>/` in the working directory |
 | `DEEPAGENTS` | passed to the agent |
+| `TOOL_LOOP` | not supported |
 
 Skills are copied once when the session starts.

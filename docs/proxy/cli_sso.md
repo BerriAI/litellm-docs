@@ -197,7 +197,7 @@ The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, s
 
 `lite auth print-token` prints the current key to stdout and nothing else (diagnostics go to stderr). It renews the key first when it is about to expire, so a tool that calls it always gets a key that works
 
-Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings). `lite login --pkce --config-claude` writes that for you: it sets `env.ANTHROPIC_BASE_URL` to the proxy and `apiKeyHelper` to `lite auth print-token` (with the absolute path to `lite` and the proxy URL) in `~/.claude/settings.json`, and leaves your other settings alone. To do it by hand:
+Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings). `lite login --pkce --config-claude` sets `env.ANTHROPIC_BASE_URL` to the proxy and `env.ANTHROPIC_AUTH_TOKEN` to this login's key in `~/.claude/settings.json`, leaving your other settings alone. Rerun the command after the key expires. To have Claude Code call `lite auth print-token` on every refresh, set `apiKeyHelper` by hand as shown:
 
 ```json title="~/.claude/settings.json"
 {

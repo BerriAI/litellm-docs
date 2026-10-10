@@ -77,7 +77,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
-  staticDirectories: ['static', '.docusaurus/social-cards'],
+  staticDirectories: ['static', require('./plugins/social-cards').cacheDir],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -90,7 +90,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/gridMarks.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/llms'),
@@ -101,12 +101,15 @@ const config = {
       configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
     }),
     require('./plugins/optimize-images'),
+    require('./plugins/webpack-cache'),
     require('./plugins/rust-migration-posts'),
     require('./plugins/social-cards'),
     [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
+          {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -435,6 +438,13 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
+      // The whole bar links to the page; the close button still works.
+      announcementBar: {
+        id: 'decisions_api_2026_10',
+        content:
+          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
+        isCloseable: true,
+      },
       docs: {
         sidebar: {
           // No collapse-sidebar toggle at the bottom of the sidebar
@@ -468,20 +478,21 @@ const config = {
           },
           {
             type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
-          {
-            type: 'docSidebar',
             sidebarId: 'integrationsSidebar',
             position: 'left',
             label: 'Integrations',
           },
           {
+            type: 'docSidebar',
+            sidebarId: 'enterpriseSidebar',
             position: 'left',
             label: 'Enterprise',
-            to: "docs/enterprise"
+          },
+          {
+            type: 'docSidebar',
+            sidebarId: 'learnSidebar',
+            position: 'left',
+            label: 'Learn',
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
@@ -515,7 +526,7 @@ const config = {
             title: 'Product',
             items: [
               {label: 'Gateway quickstart', to: '/docs/proxy/docker_quick_start'},
-              {label: 'Python SDK', to: '/docs/'},
+              {label: 'Python SDK', to: '/docs/python_sdk'},
               {label: 'Production deployment', to: '/docs/proxy/deploy'},
               {label: 'MCP Gateway', to: '/docs/mcp'},
               {label: 'Agent Gateway', to: '/docs/a2a'},

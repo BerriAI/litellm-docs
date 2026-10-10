@@ -45,6 +45,24 @@ const PROMPTS = {
 4. Codex: follow codex_cli.md to add a litellm provider to ~/.codex/config.toml. Show me the change before writing it.
 5. Verify: send one request from each tool and confirm it appears under Logs at <url>/ui.`,
   },
+  'lens-claude-code': {
+    title: 'Set up Claude Code tracing in Lens',
+    text: `Set up this machine to send my Claude Code sessions to LiteLLM Lens. First read ${DOCS}/docs/proxy/lens/coding-agents.md and ${DOCS}/docs/proxy/lens/deployment.md.
+1. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name, defaulting to claude-code. Preserve any /lens-ingest prefix and include /v1/traces once. Derive the logs endpoint by replacing the final /v1/traces with /v1/logs. Read my dedicated tracing key from an existing environment variable or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it.
+2. Check that tracing is enabled and the Lens service accepts Claude conversation logs at /v1/logs. If it needs an upgrade, explain that before changing my local settings.
+3. Explain which session content will be sent to my Lens service. Configure Claude's built-in OTLP trace and log exporters and the content flags in the guide. Merge them into the env object in my user-level ~/.claude/settings.json, preserving other settings and resource attributes. Keep credentials in private user configuration. Use lens.session.capture=true and my chosen gen_ai.agent.name. Do not install a plugin or helper, change my Claude subscription/API login or model endpoint, or enable optional raw API-body export.
+4. Tell me to restart Claude Code, then complete a small prompt that uses a tool. Verify the new trace under my chosen agent name in Lens > Traces > Conversation contains the prompt, tool activity, and assistant reply. These events belong in Lens, not the normal request Logs screen. Report any missing content or export error instead of claiming setup succeeded.
+5. Show me the configuration changes with credentials hidden, explain how to pause telemetry, and point out the capture limits described in the guide.`,
+  },
+  'lens-codex': {
+    title: 'Set up Codex tracing in Lens',
+    text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-codex-integration/blob/main/README.md.
+1. Check this machine's operating system and Python version against the integration's current prerequisites. If automatic setup is unsupported, explain the limitation rather than inventing installation steps.
+2. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name. The installer accepts that endpoint at its Lens ingestion URL prompt and preserves /lens-ingest when present. Use the documented Terminal setup so I can enter my dedicated tracing key at its hidden prompt and confirm recording. Never ask me to paste the key into chat, print it, or commit it.
+3. Install or update the official BerriAI integration using the README's From Terminal instructions. Reuse an existing installation where possible, and preserve my Codex authentication, model configuration, and unrelated hooks. Explain what will be recorded; only newly captured activity should be exported.
+4. Tell me to start a new Codex chat and complete a small prompt that uses a tool. Verify its trace appears under my chosen agent name in Lens > Traces > Conversation, with the prompt, tool outcome, and assistant reply. Check the integration's status and pending uploads if it does not appear; installation alone is not proof that capture works.
+5. Show me what changed with credentials hidden, explain how to pause recording with lens-setup, and summarize the integration's capture limits.`,
+  },
   enterprise: {
     title: 'Evaluate LiteLLM Enterprise on my gateway',
     text: `Help me evaluate LiteLLM Enterprise on my own LiteLLM Gateway. First read ${DOCS}/docs/enterprise.md and ${DOCS}/docs/learn/enterprise_quickstart.md. Then:
@@ -104,6 +122,16 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
 const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
 printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\nPOSTGRES_PASSWORD=%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" > .env
 docker compose -f docker-compose.quickstart.yml up -d`;
+
+// The one command per system shown in the Quick Start box. The gateway scripts
+// live in the litellm repo: scripts/quickstart.sh and scripts/quickstart.ps1.
+const QUICKSTART = {
+  gateway: {
+    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.sh | sh',
+    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.ps1 | iex',
+  },
+  sdk: 'uv add litellm',
+};
 
 const GATEWAY_DOCKER_RUN = `docker run \\
   -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \\
@@ -234,9 +262,9 @@ const USE_CASES = [
   {
     id: 'sdk',
     product: 'Python SDK',
-    problem: 'Call 100+ LLM providers from Python with one function.',
+    problem: 'Use one Python function for 100+ LLM providers.',
     solution:
-      'completion() takes the same arguments for OpenAI, Anthropic, Bedrock, and 100+ others, and always answers in the OpenAI format, so switching models is a string change. Streaming, retries, fallbacks, and cost per call come with it.',
+      'The completion() function uses the same arguments for OpenAI, Anthropic, Bedrock, and 100+ other providers. It always gives the result in the OpenAI format. To use a different model, you replace one string. The SDK also gives streaming, retries, fallbacks, and the cost of each call.',
     to: '/docs/',
     cta: 'Install the SDK',
     prompt: 'sdk',
@@ -260,9 +288,9 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'gateway',
     product: 'AI Gateway',
-    problem: 'One endpoint for every model, with keys, budgets, and spend tracking for each team.',
+    problem: 'One endpoint for all models, with keys, budgets, and costs for each team.',
     solution:
-      'Every app calls the gateway in the OpenAI format, in any language. Each app or teammate gets a virtual key with its own budget and rate limit, every request is logged with its cost, and your real provider keys never leave the gateway.',
+      'Apps in all programming languages send requests to the gateway in the OpenAI format. Each app or person gets a virtual key with a budget and a rate limit. The gateway records each request and its cost. Your provider keys stay in the gateway.',
     to: '/docs/proxy/docker_quick_start',
     cta: 'Start the Gateway',
     prompt: 'gateway',
@@ -283,9 +311,9 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
   {
     id: 'enterprise',
     product: 'Enterprise',
-    problem: 'Single sign-on, audit logs, and admin roles for a company-wide rollout.',
+    problem: 'Single sign-on, audit logs, and admin roles for all the teams in your company.',
     solution:
-      'Enterprise adds them to the same gateway with a license key: SSO and SCIM, audit logs of every admin action, delegated admins per team, multi-region deployment, and support from the engineers who build LiteLLM.',
+      'A license key adds Enterprise features to the same gateway. These features are SSO, SCIM, audit logs of all admin changes, and admins for each team. Enterprise also gives deployment in more than one region, and the LiteLLM engineers help your team.',
     to: '/docs/enterprise',
     cta: 'Talk to sales',
     sales: true,
@@ -304,16 +332,16 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
 // it with one small text visual.
 const CARD_GROUPS = [
   {title: 'Tools and agents', ids: ['mcp', 'agents']},
-  {title: 'Choose models and harnesses', ids: ['autorouter', 'liteagents']},
-  {title: 'Run it from your terminal or your agent', ids: ['tools', 'liteadmin']},
+  {title: 'Models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Your terminal and your agent', ids: ['tools', 'liteadmin']},
 ];
 
 const PRODUCT_CARDS = [
   {
     id: 'mcp',
     product: 'MCP Gateway',
-    problem: 'Serve every MCP tool from one endpoint.',
-    text: 'Add MCP servers to the gateway once instead of wiring them into every app, and choose which keys and teams can use each server.',
+    problem: 'Make all MCP tools available from one endpoint.',
+    text: 'Add MCP servers to the gateway one time. You do not connect them to each app. Select which keys and teams can use each server.',
     visual: {
       type: 'table',
       head: ['MCP server', 'Search team', 'Support team'],
@@ -328,8 +356,8 @@ const PRODUCT_CARDS = [
   {
     id: 'agents',
     product: 'Agent Gateway',
-    problem: 'Route agent-to-agent calls through the gateway.',
-    text: 'Register your A2A agents on the gateway, so every call to them uses a virtual key, shows up in your logs with its cost, and is limited to the teams you allow.',
+    problem: 'Send agent-to-agent calls through the gateway.',
+    text: 'Register your A2A agents on the gateway. Each call to these agents then uses a virtual key and shows in your logs with its cost. Only the teams that you select can call these agents.',
     visual: {
       type: 'lines',
       lines: [
@@ -343,8 +371,8 @@ const PRODUCT_CARDS = [
   {
     id: 'autorouter',
     product: 'Auto Router (add-on)',
-    problem: 'Send each request to the cheapest model that can answer it.',
-    text: 'Easy prompts stop going to your most expensive model, with no change to your app.',
+    problem: 'Send each request to the model with the lowest cost that can do the task.',
+    text: 'Easy prompts go to a model with a lower cost. Your app stays the same.',
     visual: {
       type: 'table',
       head: ['Request', 'Routed to'],
@@ -359,8 +387,8 @@ const PRODUCT_CARDS = [
   {
     id: 'liteagents',
     product: 'LiteAgents (preview)',
-    problem: 'Switch agent harnesses without rewriting your agent.',
-    text: 'Move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode by changing one field. Your tools and MCP connections stay.',
+    problem: 'Use a different agent harness and keep your agent code.',
+    text: 'Replace one parameter to move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode. Your tools and MCP connections stay the same.',
     visual: {
       type: 'code',
       lang: 'python',
@@ -376,7 +404,7 @@ const PRODUCT_CARDS = [
     id: 'tools',
     product: 'lite CLI',
     problem: 'Run Claude Code and Codex through your gateway.',
-    text: 'Instead of personal API keys, the lite CLI signs in to your gateway and launches the tool through it, so budgets, logs, and guardrails apply per person.',
+    text: 'The lite CLI signs in to your gateway and starts the tool through it. No person uses a provider API key. Budgets, logs, and guardrails apply to each person.',
     visual: {
       type: 'code',
       lang: 'bash',
@@ -389,8 +417,8 @@ lite claude   # Claude Code, through the gateway`,
   {
     id: 'liteadmin',
     product: 'LiteAdmin MCP',
-    problem: 'Manage the gateway by asking your agent.',
-    text: 'Connect Claude or Codex to your gateway and ask it to create keys, add models, manage teams and budgets, or look up a failing request.',
+    problem: 'Control the gateway with instructions to your agent.',
+    text: 'Connect Claude or Codex to your gateway. Then tell the agent to create keys, add models, control teams and budgets, or find a request with an error.',
     visual: {
       type: 'chat',
       lines: [
@@ -430,5 +458,6 @@ module.exports = {
   INSTALLS,
   ONE_CLICK,
   GATEWAY_COMPOSE,
+  QUICKSTART,
   INSTALLER,
 };

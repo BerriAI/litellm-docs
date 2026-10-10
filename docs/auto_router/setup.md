@@ -8,6 +8,8 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 Create an Auto Router for your team using one of the methods below. To connect your coding agent to an existing router, follow [User Setup](/docs/auto_router/user_setup).
 
+After setup, [Customize your classifier](./optimize_classifier.md) explains every classification setting, with dashboard screenshots and matching YAML for heuristic/LLM chains, prompts, context, and self-hosted classifiers.
+
 Five ways in. All of them create the same `auto_router/complexity_router` deployment.
 
 <NavigationCards
@@ -78,6 +80,8 @@ model_list:
 - Everything else (keyword rules, tier pools, session affinity, scorer tuning): [configuration reference](/docs/proxy/auto_routing).
 
 ## JEV classifier (TypeSafe AI)
+
+This section uses the Jev configuration and dashboard labels supported by released builds. The new **OSS Classifier** configuration requires [backend #43626](https://github.com/BerriAI/litellm/pull/43626), and its dashboard requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). See [OSS classifiers](/docs/auto_router/decision_classifiers) for hosted Jev, self-hosted Nimble and Laya, and the [migration from the existing names](/docs/auto_router/decision_classifiers#migrate-an-existing-jev-or-nimble-router). The new backend continues to accept the configuration below.
 
 `classifier_type: jev` uses TypeSafe System One Choice evaluation to select a tier inside the existing Auto Router. LiteLLM sends the classifier input to `POST /v1/systemone` as `state`, with one `questions.tier` question whose criteria describe the configured tiers. The chosen tier's model serves the completion
 
