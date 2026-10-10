@@ -1251,6 +1251,7 @@ const sidebars = {
         "providers/ai21",
         "providers/aiml",
         "providers/aleph_alpha",
+        "providers/alibaba_token_plan",
         "providers/amazon_nova",
         "providers/anyscale",
         "providers/apertis",
