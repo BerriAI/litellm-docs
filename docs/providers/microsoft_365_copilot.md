@@ -179,7 +179,7 @@ LiteLLM reads token exchange settings from the saved credential. Clients cannot 
 
 ## How requests work
 
-LiteLLM calls the Microsoft Graph beta Copilot Chat API. Microsoft chooses the model. LiteLLM lists token costs as `$0` because Microsoft bills Copilot by license.
+LiteLLM calls the Microsoft Graph beta Copilot Chat API. Microsoft chooses the model. LiteLLM lists token costs as `$0` by default because Microsoft bills Copilot by license. Admins can set [custom pricing](https://docs.litellm.ai/docs/proxy/custom_pricing#override-model-cost-map) to track usage costs in LiteLLM.
 
 LiteLLM sends the last user message as the prompt and all other messages, in order, as context. If Graph returns the same reply twice in a row, LiteLLM removes the duplicate only when both copies match exactly.
 
