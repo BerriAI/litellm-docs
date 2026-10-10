@@ -8,9 +8,11 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/langchain/README.md at 79e58f44692b09a68b569ff104b36d0b00712272. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/langchain/README.md at a2294277609202247b71c08d7b491f5212809988. Edit the source README. -->
 
 # LangChain
+
+For optional help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running). It preserves your model connection and verifies a real trace after setup
 
 Send LangChain traces to [LiteLLM Lens](/docs/proxy/lens) using the runnable examples in this repository.
 
@@ -30,7 +32,7 @@ cd litellm-lens-example/langchain
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `langchain/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/langchain/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `langchain/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/langchain/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +44,7 @@ If you already cloned the repository, run the remaining commands from `langchain
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -54,7 +56,7 @@ A `research_agent` built with `create_agent` answers one question.
 uv run --env-file .env --package lens-langchain-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/langchain/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/langchain/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -64,7 +66,7 @@ A coordinator invokes `search_agent` and `writer_agent` through search and write
 uv run --env-file .env --package lens-langchain-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/langchain/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/langchain/swarm/main.py) for the implementation.
 
 ## Verify the trace
 

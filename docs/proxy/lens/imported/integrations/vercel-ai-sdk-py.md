@@ -8,9 +8,11 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/vercel-ai-sdk-py/README.md at 79e58f44692b09a68b569ff104b36d0b00712272. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/vercel-ai-sdk-py/README.md at a2294277609202247b71c08d7b491f5212809988. Edit the source README. -->
 
 # Vercel AI SDK (Python)
+
+For optional help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running). It preserves your model connection and verifies a real trace after setup
 
 Send Vercel AI SDK (Python) traces to [LiteLLM Lens](/docs/proxy/lens) using the runnable examples in this repository.
 
@@ -30,7 +32,7 @@ cd litellm-lens-example/vercel-ai-sdk-py
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `vercel-ai-sdk-py/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/vercel-ai-sdk-py/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `vercel-ai-sdk-py/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/vercel-ai-sdk-py/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +44,7 @@ If you already cloned the repository, run the remaining commands from `vercel-ai
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -54,7 +56,7 @@ A `research_agent` answers one question using the Python ai package.
 uv run --env-file .env --package lens-vercel-ai-sdk-py-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/vercel-ai-sdk-py/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/vercel-ai-sdk-py/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -64,7 +66,7 @@ A coordinator delegates through tools that run `search_agent` and `writer_agent`
 uv run --env-file .env --package lens-vercel-ai-sdk-py-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/vercel-ai-sdk-py/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/vercel-ai-sdk-py/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -74,7 +76,7 @@ After the example prints its answer, open **Lens > Traces** on your gateway and 
 
 The Python ai package’s experimental telemetry adapter exports agent, tool, and model spans. A local adapter keeps model spans in the active context so the shared gateway transport can nest request-attempt spans beneath them.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/shared/README.md) for request-attempt and spend-correlation details.
 
 ## Troubleshooting
 

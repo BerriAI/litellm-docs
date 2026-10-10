@@ -368,7 +368,6 @@ const sidebars = {
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "doc", id: "agent_resources", label: "Agent resources" },
-        { type: "doc", id: "benchmarks", label: "Benchmarks" },
       ],
     },
 
@@ -385,6 +384,7 @@ const sidebars = {
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
+        { type: "doc", id: "benchmarks", label: "Benchmarks" },
         {
           type: "category",
           label: "Deploy",
@@ -945,7 +945,15 @@ const sidebars = {
         slug: "/self_hosted_coding_agents"
       },
       items: [
-        "self_hosted_coding_agents/moyai",
+        {
+          type: "category",
+          label: "Moyai",
+          link: {type: "doc", id: "self_hosted_coding_agents/moyai"},
+          items: [
+            "self_hosted_coding_agents/moyai/setup",
+            "self_hosted_coding_agents/moyai/architecture",
+          ],
+        },
       ]
     },
     {
@@ -1307,6 +1315,7 @@ const sidebars = {
         "providers/manus",
         "providers/meta",
         "providers/meta_llama",
+        "providers/microsoft_365_copilot",
         "providers/milvus_vector_stores",
         {
           type: "category",

@@ -8,9 +8,11 @@ mdx:
   format: md
 ---
 
-<!-- Generated from BerriAI/litellm-lens-example/strands/README.md at 79e58f44692b09a68b569ff104b36d0b00712272. Edit the source README. -->
+<!-- Generated from BerriAI/litellm-lens-example/strands/README.md at a2294277609202247b71c08d7b491f5212809988. Edit the source README. -->
 
 # Strands Agents
+
+For optional help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running). It preserves your model connection and verifies a real trace after setup
 
 Send Strands Agents traces to [LiteLLM Lens](/docs/proxy/lens) using the runnable examples in this repository.
 
@@ -30,7 +32,7 @@ cd litellm-lens-example/strands
 cp .env.example .env
 ```
 
-If you already cloned the repository, run the remaining commands from `strands/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/strands/.env.example) to `.env` if it does not exist, then set:
+If you already cloned the repository, run the remaining commands from `strands/`. Copy [.env.example](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/strands/.env.example) to `.env` if it does not exist, then set:
 
 | Variable              | Value                                                                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +44,7 @@ If you already cloned the repository, run the remaining commands from `strands/`
 
 The checked-in values target a local development gateway. Replace them for your deployment. Keep the exporter settings from `.env.example`; the examples configure their trace exporters in code. They send traces to `LENS_URL/v1/traces` with the tracing key as a bearer token.
 
-Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/recorder/AGENTS.md).
+Leave `MOCK_LITELLM_GATEWAY_URL` unset unless you intend to send an additional trace copy to the local [recorder](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/recorder/AGENTS.md).
 
 ## Run an example
 
@@ -54,7 +56,7 @@ A `research_agent` answers one question.
 uv run --env-file .env --package lens-strands-simple simple/main.py
 ```
 
-See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/strands/simple/main.py) for the implementation.
+See [simple/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/strands/simple/main.py) for the implementation.
 
 ### Agent swarm
 
@@ -64,7 +66,7 @@ A coordinator invokes `search_agent` and `writer_agent` as tools.
 uv run --env-file .env --package lens-strands-swarm swarm/main.py
 ```
 
-See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/strands/swarm/main.py) for the implementation.
+See [swarm/main.py](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/strands/swarm/main.py) for the implementation.
 
 ## Verify the trace
 
@@ -74,7 +76,7 @@ After the example prints its answer, open **Lens > Traces** on your gateway and 
 
 Strands exports agent, tool, and model spans. The shared gateway HTTP client records request attempts under model spans, including gateway call IDs for streamed responses and retries.
 
-See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/79e58f44692b09a68b569ff104b36d0b00712272/shared/README.md) for request-attempt and spend-correlation details.
+See the [shared gateway transport](https://github.com/BerriAI/litellm-lens-example/blob/a2294277609202247b71c08d7b491f5212809988/shared/README.md) for request-attempt and spend-correlation details.
 
 Validate retries and billed response loss against a real gateway with `uv run --env-file .env --package lens-strands-simple validate_attempts.py retry` or `... response-loss`. The driver wraps the real `httpx` transport in a fault-injecting one and passes it as `gateway_http_client(base_url, transport=...)`. The retry scenario reads the first real billed response and replaces it with a client-side HTTP 503 so the OpenAI client retries once, producing two `gateway.request` spans and two spend rows. The response-loss scenario keeps the real status and headers but fails the stream after the billed body was consumed, producing one errored attempt whose spend row still resolves. Neither scenario changes gateway or provider behavior.
 

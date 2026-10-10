@@ -1,6 +1,6 @@
 # ChatGPT Subscription
 
-Use ChatGPT Pro/Max subscription models through LiteLLM with OAuth device flow authentication.
+Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](https://developers.openai.com/codex/pricing) for the plans, from Plus and Pro to Business and Enterprise) through LiteLLM with OAuth device flow authentication.
 
 | Property | Details |
 |-------|-------|
@@ -18,6 +18,8 @@ Notes:
 ## Authentication
 
 ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you open the URL, sign in, and enter the code, and the tokens are stored in `~/.config/litellm/chatgpt/auth.json` for reuse. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt (older releases block on it, newer ones fail with `ChatGPT device-code login needs a human`), so for the proxy you sign in first and mount the resulting file, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
+
+Device code login has to be allowed for the account first: in ChatGPT's security settings for a personal plan, or by a workspace admin in the workspace permissions for Business and Enterprise ([OpenAI docs](https://learn.chatgpt.com/docs/auth)).
 
 ## Usage - LiteLLM Python SDK
 
@@ -150,6 +152,18 @@ model_list:
 ```bash showLineNumbers title="Start LiteLLM Proxy"
 litellm --config config.yaml
 ```
+
+## Credential Scope and Attribution
+
+A proxy uses exactly one ChatGPT login: the `auth.json` in `CHATGPT_TOKEN_DIR`, which is set once for the whole process. Every request to a `chatgpt/` model goes upstream with that file's access token and the `ChatGPT-Account-Id` taken from it, whatever virtual key made the call, and LiteLLM ignores any ChatGPT token a client sends. Every key, user, and team that can call a `chatgpt/` model therefore uses the same ChatGPT account and workspace, and users cannot bring their own ChatGPT subscription through this provider. Serving several ChatGPT accounts takes one proxy deployment per account.
+
+LiteLLM attributes `chatgpt/` requests to the calling virtual key, user, and team like any other model and records their token counts. The models have no price in the cost map, so recorded spend is $0 and `max_budget` limits never trigger; cap usage with `rpm_limit` or `tpm_limit` on keys and teams instead. On the OpenAI side, all of the usage shows up under the account that signed in.
+
+## Refresh Failures and Revocation
+
+LiteLLM refreshes only when the stored access token is expired. A 401 from the ChatGPT backend for a token that has not expired yet, for example after the session was signed out on OpenAI's side, is returned to the caller and does not trigger a refresh. When the refresh token is rejected, the proxy logs `ChatGPT refresh token failed, re-login required` and requests fail with HTTP 400 `ChatGPT device-code login needs a human`; sign in again outside the proxy and replace `auth.json`.
+
+LiteLLM has no logout or revoke call for this provider. To stop the proxy using the account, delete `auth.json` (and the Secret it was seeded from on Kubernetes) and restart the proxy. To invalidate the tokens themselves, sign the session out from the ChatGPT account's security settings.
 
 ## Configuration
 

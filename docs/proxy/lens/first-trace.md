@@ -1,6 +1,6 @@
 ---
 title: "Send your first trace"
-description: "Connect agent instrumentation to the Lens trace endpoint and inspect a run."
+description: "Send one model call to Lens, then connect your existing agent. Works with standalone Lens and LiteLLM."
 slug: "/proxy/lens/first-trace"
 ---
 
@@ -9,711 +9,165 @@ import TabItem from '@theme/TabItem';
 
 # Send your first trace
 
-Give your agent a name, run it, and open its trace in Lens. The examples on this page record the agent's input, output, and steps. You need a running Lens installation; if you do not have one, start with [Deployment](./deployment.md).
+Send a model call to Lens and open it in **Traces**. These steps work with standalone Lens and with Lens inside the LiteLLM dashboard.
 
-## 1. Connect your agent {#connect-your-agent}
+You need a running Lens service, Python {{python_version}}, and a model key. If Lens is not ready, follow [Set up Lens](./deployment.md) first. The example makes one model call, which can incur a provider charge.
 
-In the LiteLLM dashboard:
+If you already have an agent, you can instead follow its [framework guide](#connect-your-existing-agent) and keep its existing model settings.
 
-1. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**.
-2. Choose your framework and click **Generate tracing key**. If you cannot create one, ask your administrator for a dedicated Lens tracing key.
-3. Click **Copy tracing configuration**. Paste it into the terminal where you start your agent, then follow the displayed dependency and code snippets.
+## 1. Get a tracing key and endpoint {#connect-your-agent}
 
-The configuration includes your endpoint and tracing key. You can also use the examples below. Under **Connection details**, copy the full **Traces endpoint** and save your key for those examples.
+Open Lens through the place you intend to use it:
 
-**Optional:** Click **Send a test trace**, then **View trace** to check the connection without calling a model.
-
-Your agent's OpenTelemetry OTLP/HTTP exporter uses these settings:
-
-| Setting | Value |
+| Your setup | Open Lens here |
 | --- | --- |
-| Trace endpoint | `https://<your-lens-ingestion-host>/v1/traces` |
-| HTTP header | `Authorization: Bearer <your-lens-tracing-key>` |
+| Connected to LiteLLM | Sign in to LiteLLM and select **Lens** in the sidebar. |
+| Standalone | Open your Lens URL at `/ui/` and sign in with `LENS_ADMIN_TOKEN`. |
 
-Use the dedicated tracing key to authenticate. It cannot call models or read trace contents. Keep any `/lens-ingest` prefix and include `/v1/traces` exactly once. For the local Docker setup, the full endpoint is `http://localhost:4318/v1/traces`. Record the agent's task, steps, tool calls, inputs, and final answer. Lens uses this content to check what happened.
+On Lens Home, expand **Tracing key** and select **Generate tracing key**. If your Lens version shows the tracing setup panel instead, use **Generate tracing key** there. If the button is unavailable, ask your Lens or gateway administrator for a dedicated tracing key.
 
-## 2. Configure the exporter {#send-your-first-trace}
+Copy the key into your local environment. Copy the full trace endpoint from **Set up manually** or **Connection details** in the setup panel. It ends in `/v1/traces`. For the local quickstart, it is `http://localhost:4318/v1/traces`.
 
-Run these exports in the terminal where you start your agent. Paste the endpoint and key from step 1:
+The tracing key uploads telemetry. It does not call models or read traces. Keep it separate from your model key and admin token.
 
-```bash
-export LENS_TRACING_KEY="<paste your Lens tracing key>"
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="<paste the full Traces endpoint>"
-export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
-export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
-export OTEL_METRICS_EXPORTER="none"
-export OTEL_LOGS_EXPORTER="none"
-export OTEL_SERVICE_NAME="research_agent"
-```
+## 2. Prepare the example {#send-your-first-trace}
 
-Keep your existing model configuration if you are adding tracing to an application. Initialize instrumentation before creating the agent. If your app already has an OpenTelemetry tracer provider, keep it and update its exporter instead of creating a second one.
+In an empty working directory, create a Python environment and install the tracing dependencies:
 
-For the standalone examples below, also set the model connection:
-
-```bash
-export LITELLM_GATEWAY_URL="<your gateway base URL without a trailing slash or /v1>"
-export LITELLM_API_KEY="<your key with model access>"
-export LITELLM_MODEL="<your configured model alias>"
-```
-
-Get a model key from your administrator or **Virtual Keys** in the dashboard, and copy the model alias from **Models**. The local Docker gateway uses `http://localhost:4000`. The model key and the tracing key serve different purposes.
-
-## 3. Run your agent
-
-Choose your framework. Each tab includes dependencies, a complete example, and the run command. The agent is named **research_agent** using the framework's `name`, `role`, or tracing setting. Change it to your own agent's name.
-
-Use a model that supports tool calls for agent frameworks. For Python examples, use Python {{python_version}} and a separate virtual environment:
-
-```bash
+```sh
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install openai openinference-instrumentation-openai \
+  opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
 ```
 
-<Tabs groupId="lens-framework" queryString="framework" defaultValue="langgraph" className="lens-framework-tabs">
+Set the endpoint and tracing key from step 1 in this terminal:
 
-<TabItem value="deepagents" label="DeepAgents">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  deepagents openinference-instrumentation-langchain langchain-openai
+```sh
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="YOUR_FULL_TRACE_ENDPOINT"
+export LENS_TRACING_KEY="YOUR_LENS_TRACING_KEY"
 ```
 
-Save this as `agent.py`:
+Replace the placeholders. Keep an existing path prefix such as `/lens-ingest`, and include `/v1/traces` once. The Python process must be able to reach this address.
 
-```python title="agent.py"
-import os
+Then select your model connection:
 
-AGENT_NAME = "research_agent"
+<Tabs groupId="lens-model-connection" defaultValue="direct">
+<TabItem value="direct" label="Direct provider">
 
-from opentelemetry.instrumentation.auto_instrumentation import initialize
+This example calls OpenAI directly. Use your OpenAI API key and a model available to that key:
 
-initialize()
-
-from deepagents import create_deep_agent
-
-from langchain_openai import ChatOpenAI
-
-model = ChatOpenAI(
-    model=os.environ["LITELLM_MODEL"],
-    base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-)
-
-agent = create_deep_agent(name=AGENT_NAME, model=model, tools=[])
-result = agent.invoke({"messages": [{"role": "user", "content": "What is an agent trace?"}]})
-print(result["messages"][-1].content)
+```sh
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+export OPENAI_BASE_URL="https://api.openai.com/v1"
+export LENS_EXAMPLE_MODEL="YOUR_OPENAI_MODEL"
 ```
 
-```bash
-python agent.py
-```
-
-[Full DeepAgents guide and examples](/docs/proxy/lens/integrations/deepagents)
+For another OpenAI-compatible provider, use its API key, base URL, and model name. For other provider APIs, use the corresponding [framework guide](#connect-your-existing-agent).
 
 </TabItem>
+<TabItem value="gateway" label="Through LiteLLM">
 
-<TabItem value="langgraph" label="LangGraph">
+Use a LiteLLM key with model access, the gateway's OpenAI-compatible base URL, and a model alias from **Models**:
 
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  langgraph openinference-instrumentation-langchain langchain-openai
+```sh
+export OPENAI_API_KEY="YOUR_LITELLM_MODEL_KEY"
+export OPENAI_BASE_URL="https://gateway.example.com/v1"
+export LENS_EXAMPLE_MODEL="YOUR_LITELLM_MODEL_ALIAS"
 ```
 
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from langgraph.graph import END, START, MessagesState, StateGraph
-from langchain_openai import ChatOpenAI
-
-model = ChatOpenAI(
-    model=os.environ["LITELLM_MODEL"],
-    base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-)
-graph = StateGraph(MessagesState)
-graph.add_node("answer", lambda state: {"messages": [model.invoke(state["messages"])]})
-graph.add_edge(START, "answer")
-graph.add_edge("answer", END)
-agent = graph.compile(name=AGENT_NAME)
-result = agent.invoke({"messages": [{"role": "user", "content": "What is an agent trace?"}]})
-print(result["messages"][-1].content)
-```
-
-```bash
-python agent.py
-```
-
-[Full LangGraph guide and examples](/docs/proxy/lens/integrations/langgraph)
+Replace the example host with your gateway. These values are for model calls. The separate tracing settings still send telemetry to Lens.
 
 </TabItem>
-
-<TabItem value="langchain" label="LangChain">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  langchain openinference-instrumentation-langchain langchain-openai
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from langchain.agents import create_agent
-
-from langchain_openai import ChatOpenAI
-
-model = ChatOpenAI(
-    model=os.environ["LITELLM_MODEL"],
-    base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-)
-
-agent = create_agent(name=AGENT_NAME, model=model, tools=[])
-result = agent.invoke({"messages": [{"role": "user", "content": "What is an agent trace?"}]})
-print(result["messages"][-1].content)
-```
-
-```bash
-python agent.py
-```
-
-[Full LangChain guide and examples](/docs/proxy/lens/integrations/langchain)
-
-</TabItem>
-
-<TabItem value="openai-agents" label="OpenAI Agents">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  openai-agents openinference-instrumentation-openai-agents
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from agents import Agent, RunConfig, Runner
-
-from agents import OpenAIChatCompletionsModel
-from openai import AsyncOpenAI
-
-client = AsyncOpenAI(base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1", api_key=os.environ["LITELLM_API_KEY"])
-model = OpenAIChatCompletionsModel(model=os.environ["LITELLM_MODEL"], openai_client=client)
-
-agent = Agent(name=AGENT_NAME, model=model)
-result = Runner.run_sync(
-    agent, "What is an agent trace?",
-    run_config=RunConfig(workflow_name=AGENT_NAME),
-)
-print(result.final_output)
-```
-
-```bash
-python agent.py
-```
-
-[Full OpenAI Agents guide and examples](/docs/proxy/lens/integrations/openai-agents)
-
-</TabItem>
-
-<TabItem value="claude" label="Claude Agent SDK">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  claude-agent-sdk openinference-instrumentation-claude-agent-sdk
-```
-
-Save this as `agent.py`:
-
-Use an Anthropic-compatible model alias for `LITELLM_MODEL`. The SDK must be able to reach the gateway through its Anthropic API.
-
-```python title="agent.py"
-import asyncio
-import os
-
-AGENT_NAME = "research_agent"
-
-os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gen_ai.agent.name={AGENT_NAME}"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
-
-options = ClaudeAgentOptions(
-    model=os.environ["LITELLM_MODEL"],
-    env={"ANTHROPIC_BASE_URL": os.environ["LITELLM_GATEWAY_URL"], "ANTHROPIC_AUTH_TOKEN": os.environ["LITELLM_API_KEY"]},
-    tools=[],
-    setting_sources=[],
-    max_turns=1,
-)
-
-async def main():
-    async for message in query(prompt="What is an agent trace?", options=options):
-        if isinstance(message, ResultMessage):
-            print(message.result)
-
-asyncio.run(main())
-```
-
-```bash
-python agent.py
-```
-
-This captures SDK input and output; internal model calls are not exposed by this instrumentor.
-
-[Full Claude Agent SDK guide and examples](/docs/proxy/lens/integrations/claude-agent-sdk)
-
-</TabItem>
-
-<TabItem value="crewai" label="CrewAI">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  crewai openinference-instrumentation-crewai
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from crewai import Agent, Crew, Task
-
-from crewai import LLM
-
-model = LLM(
-    model=f"openai/{os.environ['LITELLM_MODEL']}",
-    base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-)
-
-agent = Agent(
-    role=AGENT_NAME,
-    goal="Answer questions clearly",
-    backstory="You explain technical concepts.",
-    llm=model,
-)
-task = Task(description="What is an agent trace?", expected_output="A short answer", agent=agent)
-print(Crew(agents=[agent], tasks=[task]).kickoff())
-```
-
-```bash
-python agent.py
-```
-
-[Full CrewAI guide and examples](/docs/proxy/lens/integrations/crewai)
-
-</TabItem>
-
-<TabItem value="pydantic-ai" label="Pydantic AI">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  "pydantic-ai-slim[openai]>=1"
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from pydantic_ai import Agent
-
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openai import OpenAIProvider
-
-model = OpenAIChatModel(
-    os.environ["LITELLM_MODEL"],
-    provider=OpenAIProvider(base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1", api_key=os.environ["LITELLM_API_KEY"]),
-)
-
-Agent.instrument_all()
-agent = Agent(model, name=AGENT_NAME)
-print(agent.run_sync("What is an agent trace?").output)
-```
-
-```bash
-python agent.py
-```
-
-[Full Pydantic AI guide and examples](/docs/proxy/lens/integrations/pydantic-ai)
-
-</TabItem>
-
-<TabItem value="llamaindex" label="LlamaIndex">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  "llama-index-core>=0.14.19" openinference-instrumentation-llama-index \
-  llama-index-llms-openai-like
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import asyncio
-import os
-
-AGENT_NAME = "research_agent"
-
-os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gen_ai.agent.name={AGENT_NAME}"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
-
-LlamaIndexInstrumentor().instrument()
-from llama_index.core.agent.workflow import FunctionAgent
-
-from llama_index.llms.openai_like import OpenAILike
-
-model = OpenAILike(
-    model=os.environ["LITELLM_MODEL"],
-    api_base=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-    is_chat_model=True,
-    is_function_calling_model=True,
-    temperature=1,
-)
-
-agent = FunctionAgent(name=AGENT_NAME, llm=model, tools=[], streaming=False)
-async def main():
-    result = await agent.run(user_msg="What is an agent trace?")
-    print(result)
-
-asyncio.run(main())
-```
-
-```bash
-python agent.py
-```
-
-The resource attribute supplies the agent name because this instrumentor does not export FunctionAgent.name.
-
-[Full LlamaIndex guide and examples](/docs/proxy/lens/integrations/llamaindex)
-
-</TabItem>
-
-<TabItem value="adk" label="Google ADK">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  "google-adk>=1.18" litellm openinference-instrumentation-google-adk
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import asyncio
-import os
-
-AGENT_NAME = "research_agent"
-
-os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "SPAN_ONLY"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
-
-from google.adk.models.lite_llm import LiteLlm
-
-model = LiteLlm(
-    model=f"openai/{os.environ['LITELLM_MODEL']}",
-    api_base=f"{os.environ['LITELLM_GATEWAY_URL']}/v1",
-    api_key=os.environ["LITELLM_API_KEY"],
-)
-
-agent = Agent(name=AGENT_NAME, model=model)
-asyncio.run(InMemoryRunner(agent=agent).run_debug("What is an agent trace?"))
-```
-
-```bash
-python agent.py
-```
-
-`SPAN_ONLY` records the messages needed to inspect and investigate the run.
-
-[Full Google ADK guide and examples](/docs/proxy/lens/integrations/google-adk)
-
-</TabItem>
-
-<TabItem value="strands" label="Strands">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http \
-  "strands-agents[otel]" openai
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = "gen_ai_latest_experimental,gen_ai_span_attributes_only"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from strands import Agent
-
-from strands.models.openai import OpenAIModel
-
-model = OpenAIModel(
-    client_args={"base_url": f"{os.environ['LITELLM_GATEWAY_URL']}/v1", "api_key": os.environ["LITELLM_API_KEY"]},
-    model_id=os.environ["LITELLM_MODEL"],
-)
-
-agent = Agent(name=AGENT_NAME, model=model)
-print(agent("What is an agent trace?"))
-```
-
-```bash
-python agent.py
-```
-
-The semantic-convention setting enables message content in spans.
-
-[Full Strands guide and examples](/docs/proxy/lens/integrations/strands)
-
-</TabItem>
-
-<TabItem value="vercel" label="Vercel AI SDK">
-
-```bash
-npm install ai @ai-sdk/otel @opentelemetry/sdk-node \
-  @opentelemetry/exporter-trace-otlp-http @ai-sdk/openai-compatible
-npm install --save-dev tsx
-```
-
-Save this as `agent.mts`:
-
-```typescript title="agent.mts"
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { OpenTelemetry } from "@ai-sdk/otel";
-import { generateText, registerTelemetry } from "ai";
-
-const sdk = new NodeSDK({ traceExporter: new OTLPTraceExporter() });
-sdk.start();
-registerTelemetry(new OpenTelemetry());
-
-const AGENT_NAME = "research_agent";
-const litellm = createOpenAICompatible({
-  name: "litellm",
-  baseURL: `${process.env.LITELLM_GATEWAY_URL}/v1`,
-  apiKey: process.env.LITELLM_API_KEY,
-});
-const model = litellm(process.env.LITELLM_MODEL!);
-
-try {
-  const { text } = await generateText({
-    model,
-    prompt: "What is an agent trace?",
-    telemetry: { isEnabled: true, functionId: AGENT_NAME },
-  });
-  console.log(text);
-} finally {
-  await sdk.shutdown();
-}
-```
-
-```bash
-npx tsx agent.mts
-```
-
-[Full Vercel AI SDK guide and examples](/docs/proxy/lens/integrations/vercel-ai-sdk-js)
-
-</TabItem>
-
-<TabItem value="openclaw" label="OpenClaw">
-
-Enable the [diagnostics-otel plugin](https://docs.openclaw.ai/plugins/reference/diagnostics-otel) and keep your existing model settings. Add the tracing configuration below to `~/.openclaw/openclaw.json`:
-
-```json title="openclaw.json"
-{
-  "agents": {
-    "list": [{ "id": "research_agent" }]
-  },
-  "plugins": {
-    "entries": { "diagnostics-otel": { "enabled": true } }
-  },
-  "diagnostics": {
-    "enabled": true,
-    "otel": {
-      "enabled": true,
-      "tracesEndpoint": "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}",
-      "headers": { "Authorization": "Bearer ${LENS_TRACING_KEY}" },
-      "captureContent": true,
-      "traces": true,
-      "metrics": false,
-      "logs": false,
-      "sampleRate": 1
-    }
-  }
-}
-```
-
-Run the agent in the terminal where you set the connection details:
-
-```bash
-openclaw agent --local --agent research_agent --session-id first-trace --message "What is an agent trace?"
-```
-
-Select **research_agent** in Lens. Restart an existing OpenClaw gateway after changing the config. Preserve your existing agents when adding the configuration.
-
-[Full OpenClaw guide and examples](/docs/proxy/lens/integrations/openclaw)
-
-</TabItem>
-
-<TabItem value="hermes" label="Hermes">
-
-Enable the [community hermes-otel plugin](https://github.com/briancaffey/hermes-otel#install) and keep your existing model settings. Add the tracing configuration below to `~/.hermes/hermes_otel.yaml`:
-
-```yaml title="hermes_otel.yaml"
-resource_attributes:
-  gen_ai.agent.name: research_agent
-content_capture: full
-backends:
-  - type: otlp
-    endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}
-    headers:
-      Authorization: "Bearer ${LENS_TRACING_KEY}"
-    metrics: false
-    logs: false
-```
-
-Start a new Hermes session and ask a question. The configured name **research_agent** appears in Lens. Hermes' built-in diagnostic telemetry alone does not include the conversation content needed for investigations.
-
-[Full Hermes guide and examples](/docs/proxy/lens/integrations/hermes)
-
-</TabItem>
-
-<TabItem value="otel" label="OpenTelemetry">
-
-```bash
-python -m pip install opentelemetry-distro \
-  opentelemetry-exporter-otlp-proto-http openai
-```
-
-Save this as `agent.py`:
-
-```python title="agent.py"
-import os
-
-AGENT_NAME = "research_agent"
-
-from opentelemetry.instrumentation.auto_instrumentation import initialize
-
-initialize()
-
-from opentelemetry import trace
-from openai import OpenAI
-
-client = OpenAI(base_url=f"{os.environ['LITELLM_GATEWAY_URL']}/v1", api_key=os.environ["LITELLM_API_KEY"])
-
-with trace.get_tracer(__name__).start_as_current_span(AGENT_NAME) as span:
-    span.set_attribute("gen_ai.agent.name", AGENT_NAME)
-    span.set_attribute("openinference.span.kind", "AGENT")
-    span.set_attribute("input.value", "What is an agent trace?")
-    result = client.chat.completions.create(
-        model=os.environ["LITELLM_MODEL"],
-        messages=[{"role": "user", "content": "What is an agent trace?"}],
-    )
-    answer = result.choices[0].message.content
-    span.set_attribute("output.value", str(answer))
-    print(answer)
-```
-
-```bash
-python agent.py
-```
-
-[Full OpenTelemetry guide and examples](/docs/proxy/lens/integrations/opentelemetry)
-
-</TabItem>
-
 </Tabs>
 
-For complete projects and multi-agent examples, use the **Integrations** guides in the sidebar or the [examples repository](https://github.com/BerriAI/litellm-lens-example). Those projects use `LENS_URL` for the ingestion base URL, without `/v1/traces`; their exporters append that path. The dashboard shows framework snippets directly in the tracing setup section.
+The example records prompt and response text. Use a test prompt that you can store in Lens.
 
-For a working example, use [DeepLite](https://github.com/BerriAI/deeplite). Set `LITELLM_DEV_BASE=https://<your-lens-ingestion-host>/v1/traces` and `LITELLM_DEV_KEY=<your-lens-tracing-key>` in its `.env` file, then run the agent.
+## 3. Run one traced call
 
-To record personal coding sessions, follow the [Claude Code and Codex setup](./coding-agents.md).
+Save this file as `first_trace.py`:
 
-## 4. View your first trace {#view-your-first-trace}
+```python title="first_trace.py"
+import os
 
-Open **Lens > Traces**. Select a time range that includes your run, then open it. For the examples above, look for **research_agent**. The same name is available under **Agent** when creating an investigation. Select a step to read its input, output, and attributes.
+from openai import OpenAI
+from openinference.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-![A research_agent trace with its question, model call, and final answer.](/img/lens/first-agent-trace.png)
+provider = TracerProvider(resource=Resource.create({"service.name": "lens-example"}))
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(
+    endpoint=os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"],
+    headers={"Authorization": f"Bearer {os.environ['LENS_TRACING_KEY']}"},
+)))
+trace.set_tracer_provider(provider)
+OpenAIInstrumentor().instrument(tracer_provider=provider)
 
-Check that you can see the task, tool results, and final answer. If these are missing, update your agent's instrumentation before running an investigation.
+try:
+    with trace.get_tracer("lens-example").start_as_current_span(
+        "first_agent",
+        attributes={"openinference.span.kind": "AGENT", "gen_ai.agent.name": "first_agent"},
+    ) as span:
+        prompt = "Explain an agent trace in one sentence."
+        span.set_attribute("input.value", prompt)
+        response = OpenAI().chat.completions.create(
+            model=os.environ["LENS_EXAMPLE_MODEL"],
+            messages=[{"role": "user", "content": prompt}],
+            max_completion_tokens=128,
+        )
+        answer = response.choices[0].message.content or ""
+        span.set_attribute("output.value", answer)
+        print(answer)
+        print(f"Trace ID: {span.get_span_context().trace_id:032x}")
+finally:
+    provider.shutdown()
+```
 
-## Troubleshooting
+Run it in the same terminal:
 
-| What you see | What to check |
+```sh
+python first_trace.py
+```
+
+Expect a response and a trace ID. Wait for the process to exit so the exporter finishes sending the trace.
+
+## 4. Open the trace in Lens {#view-your-first-trace}
+
+Return to Lens and select the **first_agent** agent, then **Traces**. If setup shows **Check for traces**, select it. Open the run with the trace ID printed by the example.
+
+You should see the prompt, response, and a child model span. **Demo data** shows samples; turn it off when checking your own trace.
+
+The example has no tools, so it will not contain tool-call spans. Costs appear only when Lens can match the call to a gateway spend record. A direct-provider trace does not acquire a price from this example.
+
+## Connect your existing agent
+
+Keep your agent's model connection and add instrumentation for its framework. If it already has an OpenTelemetry tracer provider, add or update the exporter on that provider.
+
+| Agent or framework | Guide |
 | --- | --- |
-| A model answer appears, but no trace | Set the exporter variables in the same terminal as your agent. Initialize instrumentation before creating the agent. Check the terminal for exporter errors. |
-| `401` from the trace endpoint | Use a dedicated Lens tracing key. Model keys cannot upload traces. |
-| `404` or `410` from the trace endpoint | Copy the full endpoint from the dashboard. Keep `/lens-ingest` when present and include `/v1/traces` once. |
-| `429` just after creating a key | Allow up to 30 seconds for credential sync and retry. |
-| Setup asks for `LITELLM_LENS_PUBLIC_URL`, or an upload returns `503` | Ask the administrator to [check the service connection](./deployment.md#check-the-installation). |
-| The model request fails | Check the gateway URL, model key, and model alias separately from the tracing settings. |
-| Traces have no input or output | Check the framework's content-capture settings in its integration guide. |
+| OpenAI Agents SDK | [Connect OpenAI Agents](./imported/integrations/openai-agents.md) |
+| LangChain, LangGraph, or DeepAgents | [LangChain](./imported/integrations/langchain.md), [LangGraph](./imported/integrations/langgraph.md), or [DeepAgents](./imported/integrations/deepagents.md) |
+| An application with OpenTelemetry | [OpenTelemetry examples](./imported/integrations/opentelemetry.md) |
+| Claude Code or Codex sessions | [Coding agent sessions](./coding-agents.md) |
+| Other frameworks through LiteLLM | [Complete framework examples](./framework-examples.md) |
+
+Run a real task, then open that trace and check its input, output, and expected steps. After traces arrive, you can [create an investigation](./investigations.md).
+
+**Optional:** Copy the [connect-an-agent prompt](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#connect-an-agent-to-lens-already-running) into your coding agent. Give it the Lens URL and framework. Keep the tracing key in your local environment, not in the prompt.
+
+## If the trace does not appear {#troubleshooting}
+
+| What happens | Next action |
+| --- | --- |
+| The model call fails | Check the model key, base URL, and model name. These are separate from Lens. |
+| The exporter returns `401` or `403` | Use a dedicated Lens tracing key. Check that it is active and belongs to this Lens deployment. |
+| The exporter cannot connect | Check the full endpoint from the machine that runs the agent. Do not use `localhost` for Lens on another machine. |
+| The call works, but Lens is empty | Check exporter errors, turn off demo data, and verify the selected agent and time range. |
+| Another user cannot see the trace | Check the tracing key's user and team scope. Ask an administrator to verify access. |
+| A framework trace lacks text | Enable the framework's content-capture setting if you intend to store prompt and response text. |
 
 ## Link a run to its conversation {#link-a-run-to-its-source}
 

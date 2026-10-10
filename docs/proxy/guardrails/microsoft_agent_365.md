@@ -1,9 +1,12 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 # Microsoft Agent 365 Guardrail
 
 Sends every MCP tool call to the [Microsoft Agent 365](https://learn.microsoft.com/en-us/agent-365/overview) evaluation API before LiteLLM runs it. Microsoft Defender returns allow or block, and the call is recorded on the Microsoft side under the signed-in user
+
+<Image img={require('../../../img/agent365_guardrail_flow.png')} style={{ width: '100%', maxWidth: '4000px' }} alt="An MCP tool call goes from the client to the LiteLLM MCP Gateway, which exchanges the user's Entra token On-Behalf-Of, asks Microsoft Agent 365 and Defender for a verdict, then runs the tool on the MCP server or blocks it, and records the guardrail status in the request log" />
 
 ## Supported modes
 

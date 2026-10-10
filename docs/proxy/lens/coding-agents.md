@@ -7,11 +7,13 @@ import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
+For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
+
 Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
 
 You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
 
-Open **Lens > Traces > Set up tracing**. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`, and click **Generate tracing key**. Ask your administrator for a tracing key if you cannot create one. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate.
+In standalone Lens, open **Traces** and choose **Set up tracing** if the setup panel is not already open. In a gateway-bundled release, open **Lens > Traces > Set up tracing**. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`, and click **Generate tracing key**. Ask your administrator for a tracing key if you cannot create one. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate.
 
 ## Claude Code
 

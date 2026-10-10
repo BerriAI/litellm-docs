@@ -1,80 +1,31 @@
 ---
-title: "Standalone Docker"
-description: "Add Lens to a LiteLLM container started with docker run."
+title: "Lens containers"
+description: "Run the independent Lens container with ClickHouse and optionally connect LiteLLM."
 slug: "/proxy/lens/deployment/docker"
 ---
 
-# Standalone Docker
+# Lens containers
 
-Use this path when you start LiteLLM with `docker run`. You need Docker, a running LiteLLM container, and a [ClickHouse HTTP endpoint](./storage.md#clickhouse-connection). Use [matching LiteLLM and Lens images](./releases.md#container-images).
+Lens's runtime image contains its Rust API, background processing, static UI and calculation sandbox. It requires ClickHouse with KeeperMap and its own administrator credential. Use the [source Compose quickstart](./local.md) for the shortest complete container installation, or the [source Helm chart](./kubernetes.md) in Kubernetes
 
-## 1. Configure LiteLLM
+For a managed container platform, use the current [runtime Dockerfile](https://github.com/BerriAI/lens/blob/main/deploy/runtime/Dockerfile) and [Compose configuration](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) as the deployment reference. [Build from source](./development.md#try-backend-changes) produces a local image; independently published artifacts are still being qualified
 
-Generate a service secret:
+## Configure Lens {#2-configure-lens}
 
-```bash
-openssl rand -hex 32
-```
+Supply `LENS_ADMIN_TOKEN`, the correct `LENS_PUBLIC_URL`, and its ClickHouse connection through private deployment configuration. The [storage requirements](./storage.md#external-clickhouse) include the single-server topology, Keeper configuration and permissions. Retain credentials and storage across container replacements
 
-Add these variables to LiteLLM's environment file, replacing the secret and public URL. Recreate LiteLLM with your usual `docker run` command and that file:
+Preserve the shipped non-root user, read-only filesystem, bounded temporary space, dropped capabilities and sandbox settings. Use native Linux with the capabilities required by the [calculation sandbox](https://github.com/BerriAI/lens/blob/main/docs/sandbox.md) for investigations
 
-```dotenv
-LITELLM_LENS_URL=http://lens-worker:4318
-LITELLM_LENS_PUBLIC_URL=https://traces.example.com
-LITELLM_LENS_SERVICE_TOKEN=<generated-service-secret>
-```
+## Connect an existing gateway {#1-configure-litellm}
 
-For agents on the Docker host, use `http://localhost:4318` as the public URL. For other machines, add the trace-hostname server block from the [NGINX example](./server.md#3-route-https-traffic), using your hostname and TLS certificate. Keep your existing LiteLLM routing.
+A compatible LiteLLM gateway can connect to the running Lens service at a reachable HTTP or HTTPS address. Use the credentials and URL settings in [Add Lens to LiteLLM](./litellm.md), supplied through your existing container environment and recreation command. Keep both containers on a persistent user-defined network or use another reachable private address
 
-## 2. Configure Lens
+Lens's public address serves agents and browsers. Its service and signing credentials authenticate the gateway connection; agent tracing keys and model credentials stay separate. Existing gateway-hosted Lens metadata needs the [documented migration](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before the new runtime takes ownership
 
-Create `~/lens.env` with the same service secret and your ClickHouse HTTP URL. Replace `litellm` with your gateway's container name and `4000` with its container port. URL-encode special characters in the ClickHouse username and password:
+## Start and check {#3-start-lens}
 
-```dotenv title="lens.env"
-LITELLM_URL=http://litellm:4000
-LITELLM_LENS_SERVICE_TOKEN=<same-service-secret>
-CLICKHOUSE_URL=https://lens_user:URL_ENCODED_PASSWORD@clickhouse.example.com:8443
-```
+Set `/health/live` for process health and `/health/ready` for readiness on port 4318. Route the standalone UI and API through your HTTPS proxy following the [server guide](./server.md#3-route-https-traffic)
 
-Protect the file and find LiteLLM's Docker network:
+## Verify useful operation {#4-check-the-installation}
 
-```bash
-chmod 600 ~/lens.env
-docker inspect "<your-litellm-container>" --format '{{json .NetworkSettings.Networks}}'
-```
-
-Use a user-defined network so the containers can reach each other by name. If LiteLLM only uses Docker's default `bridge` network, create a shared network:
-
-```bash
-docker network create lens
-docker network connect lens "<your-litellm-container>"
-```
-
-## 3. Start Lens
-
-Replace the network name and image digest:
-
-```bash
-docker run -d --name lens-worker \
-  --network "<your-litellm-network>" \
-  --env-file ~/lens.env \
-  -p 127.0.0.1:4318:4318 \
-  --memory 2g --cpus 2 --pids-limit 64 \
-  --read-only --tmpfs /tmp:rw,noexec,nosuid,size=1g \
-  --cap-drop ALL --security-opt no-new-privileges:true \
-  --restart unless-stopped \
-  "ghcr.io/berriai/litellm-lens-worker@sha256:RELEASE_DIGEST"
-```
-
-Keep both containers on that network when you recreate them.
-
-For a managed container platform, use the same image, environment variables, filesystem settings, and resource limits. Use private service addresses for the LiteLLM and Lens connection. Set `/health/live` for process health and `/health/ready` for readiness on port `4318`.
-
-## 4. Check the installation
-
-1. Sign in to your LiteLLM dashboard as a proxy administrator.
-2. Open **Lens > Set up Lens**, or **Traces > Set up tracing** if you already have traces.
-3. Check the **Traces endpoint**, click **Generate tracing key**, then **Send a test trace**.
-4. Click **View trace**, then [connect your agent](../first-trace.md).
-
-If the check fails, use [Troubleshooting](./configuration.md#troubleshooting).
+Sign into standalone Lens at `/ui/`, or use the connected gateway's `/ui/lens/` page. Complete the [first-trace check](../deployment.md#check-the-installation), restart the Lens container and confirm the saved trace remains accessible. For recovery, use a backup procedure that retains ClickHouse payloads and Keeper state together
