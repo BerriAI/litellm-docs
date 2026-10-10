@@ -71,7 +71,7 @@ Each request row carries `request_count`, histograms of `latency_to_headers_ms` 
 
 **Admin UI events** (`page_navigation`) count page views and tab clicks as `page`, `action` and `target`, for example `{"page": "playground", "action": "click", "target": "tab=compare", "count": 1}`. The page is the first segment of the dashboard route and never contains an id, and the proxy rejects any event that does not match a short lowercase pattern. The browser asks the proxy whether `page_navigation` is on and only then sends these to the proxy's own `POST /telemetry/ui_events` route, never to a third party
 
-Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms, with a last bucket for anything slower. Each histogram in a report is a list of counts, one per bucket. The bounds are not sent: they are fixed for a given `schema_version`, and changing them bumps it. For `schema_version` 1, `block_count` uses the bounds 1, 5, 20 and 100 and `provider_attempts` uses 0, 1, 2 and 3, each with a last bucket for anything above
+Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms, with a last bucket for anything slower. Each histogram in a report is an object with `counts`, one per bucket, and `invalid`, the number of negative, NaN or infinite values that were left out of the buckets. The bounds are not sent: they are fixed for a given `schema_version`, and changing them bumps it. For `schema_version` 1, `block_count` uses the bounds 1, 5, 20 and 100 and `provider_attempts` uses 0, 1, 2 and 3, each with a last bucket for anything above
 
 ## Export reports
 
