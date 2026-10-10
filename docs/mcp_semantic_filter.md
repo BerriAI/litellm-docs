@@ -55,6 +55,7 @@ litellm_settings:
     embedding_model: "text-embedding-3-small"  # Model for semantic matching
     top_k: 5                                    # Max tools to return
     similarity_threshold: 0.3                   # Min similarity score
+    defer_index_build: true                     # Build the tool index in the background at startup
 ```
 
 **Configuration Options:**
@@ -62,6 +63,9 @@ litellm_settings:
 - `embedding_model` - Model for generating embeddings (default: `"text-embedding-3-small"`)
 - `top_k` - Maximum number of tools to return (default: `10`)
 - `similarity_threshold` - Minimum similarity score for matches (default: `0.3`)
+- `defer_index_build` - Build the tool embedding index in the background instead of blocking startup (default: `false`)
+
+When `defer_index_build` is true, the proxy starts serving traffic immediately and builds the tool index in a background task. Requests get every MCP tool unfiltered until the index is ready, then filtering kicks in. Set it when your MCP servers expose enough tools that embedding them all at startup would exceed your liveness probe budget. You can also set it through `PATCH /update/mcp_semantic_filter_settings` or the "Build Index in Background" switch under the Semantic Filter tab on the MCP Servers page.
 
 ## Usage
 
