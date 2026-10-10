@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # /v1/decisions and /v1/systemone
 
 Decision models answer typed questions about an input and return probabilities instead of text: a yes/no probability, a pick from a fixed list, or a score on a scale. LiteLLM serves them on two routes that share one provider list, so any decision model in your `model_list` works on either route
@@ -374,7 +376,15 @@ A choice question cannot have both a boolean value and a string with the same te
 
 ## Try it in the Admin UI
 
-The Playground **System One** tab has an **Endpoint** selector. Pick **System One · /v1/systemone** to send the request through your `model_list`, with `model` set to a proxy model name such as `jev` or `luna` from the config above. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`. The tab only sends the System One format and is not in `v1.104.2` or `v1.105.0`, so use curl or the SDK for `/v1/decisions`, image input and those versions. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) describes the editor, validation and answer view
+### Add a decision model
+
+Go to **Models + Endpoints**, open the **Add Model** tab and pick the provider. Providers with decision models show them under the provider name in the picker, for example "Decision models: gpt-6-luna" under OpenAI. Pick the decision model under **LiteLLM Model Name(s)**, and a **Decision model** note confirms the pick and links to the Decisions playground. Enter the provider credentials as you would for any other model, then click **Add Model**. The model then answers on `/v1/decisions` and `/v1/systemone` under its public model name. Providers that need an endpoint URL, such as Databricks and Microsoft Foundry, take it in the **API Base** field, matching the `api_base` in the [proxy setup](#proxy-setup) above.
+
+<Image img={require('../img/decisions_add_model.png')} alt="Add Model with OpenAI and gpt-6-luna picked, showing the Decision model note" />
+
+### Decisions playground
+
+The Playground **Decisions** tab has an **Endpoint** selector. Pick **Decisions · /v1/systemone** to send the request through your `model_list`, with `model` set to a proxy model name such as `jev` or `luna` from the config above. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`. The tab only sends the System One format and is not in `v1.104.2` or `v1.105.0`, so use curl or the SDK for `/v1/decisions`, image input and those versions. In `v1.106.0` and earlier the tab is labelled **System One**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) describes the editor, validation and answer view
 
 ## Decision routes vs TypeSafe pass-through
 
