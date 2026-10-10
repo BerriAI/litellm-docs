@@ -1,4 +1,5 @@
 import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -17,7 +18,7 @@ An admin adds the model and a **Per-user GitHub OAuth** credential once. Each us
 Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, which is the only auth type the gateway supports for GitHub Copilot. Click **Add Credential**
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github_copilot_credential.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={600} height={530} />
+  <Image img={require('../../img/github_copilot_credential.png')} dark={require('../../img/github_copilot_credential_dark.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={656} height={585} />
 </div>
 
 ### 2. Admin: add the model
@@ -25,7 +26,7 @@ Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and c
 Open **Add Model**, select **GitHub Copilot** as the provider, and pick a model under **LiteLLM Model Name(s)**, for example `github_copilot/claude-sonnet-5.5`. Under **Model Mappings**, set **Public Model Name** to the name users will request, such as `claude-copilot`. Under **Existing Credentials**, select `github-copilot`, then click **Add Model**
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github_copilot_add_model.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={2250} height={1990} />
+  <Image img={require('../../img/github_copilot_add_model.png')} dark={require('../../img/github_copilot_add_model_dark.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={1096} height={935} />
 </div>
 
 :::note
@@ -54,16 +55,26 @@ model_list:
 Sign in to the LiteLLM dashboard and open **Models + Endpoints** > **LLM Credentials**. Under **Your connections**, find `github-copilot` and click **Connect**
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github_copilot_llm_credentials.png')} alt="Connect a GitHub account from Your connections in LiteLLM" width={1064} height={370} />
+  <Image img={require('../../img/github_copilot_llm_credentials.png')} dark={require('../../img/github_copilot_llm_credentials_dark.png')} alt="Connect a GitHub account from Your connections in LiteLLM" width={1096} height={418} />
 </div>
 
 LiteLLM shows a GitHub verification code. Open https://github.com/login/device, enter the code, and approve the request with the GitHub account that has your Copilot plan
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github_copilot_connect.png')} alt="GitHub verification code and sign-in link in LiteLLM" width={896} height={564} />
+  <Image img={require('../../img/github_copilot_connect.png')} dark={require('../../img/github_copilot_connect_dark.png')} alt="GitHub verification code and sign-in link in LiteLLM" width={504} height={338} />
 </div>
 
 When GitHub approves the request, the status changes to **Connected** with your GitHub username. Every request you send to a model on this credential now uses your own Copilot access. If you have not connected, or GitHub later rejects your saved connection, requests return a 401 that asks you to connect again from this page
+
+This recording runs through steps 1 to 3 in the dashboard, from creating the credential to the GitHub verification code.
+
+<ThemedVideo
+  src={require('../../img/github_copilot_setup_flow.mp4')}
+  dark={require('../../img/github_copilot_setup_flow_dark.mp4')}
+  poster={require('../../img/github_copilot_setup_flow_poster.png')}
+  darkPoster={require('../../img/github_copilot_setup_flow_poster_dark.png')}
+  title="Walkthrough: create the GitHub Copilot credential, add the model, connect a GitHub account"
+/>
 
 ### 4. User: send requests
 
