@@ -48,27 +48,35 @@ credentials; for Vertex, the project, region, and credentials file. A `custom_ho
 
 ## 3. Convert each config
 
-Apply these rules. Portkey `targets` can nest; flatten each nested strategy into its own
-model group and reference it by name.
+Apply these rules. Portkey `targets` can nest. A fallback whose targets are loadbalances flattens cleanly: each
+loadbalance becomes a model group, and `fallbacks` chains the groups. The reverse, a
+loadbalance with a fallback inside one of its slots, cannot be expressed: a deployment cannot
+point at another model group. Put the slot's primary into the loadbalance group and attach the
+fallback to the whole group, then tell the user the fallback now covers every member.
 
 | Portkey | LiteLLM |
 |---|---|
 | A target with `provider: "@slug"` and `override_params.model` | A deployment: `litellm_params.model: <litellm provider>/<model>`, `api_key: os.environ/<VAR>` |
 | `strategy.mode: loadbalance` with `weight` on each target | Several deployments with the same `model_name`, each with `weight` in `litellm_params`; only the ratio matters, so Portkey's `0.7`/`0.3` can be kept as is |
 | `strategy.mode: fallback` | `router_settings.fallbacks: [{"<primary group>": ["<backup group>", ...]}]`; each target becomes its own model group |
-| `strategy.on_status_codes` on a fallback | Usually drop it, since LiteLLM falls back on any error after retries; for context-length or content-policy errors use `context_window_fallbacks` or `content_policy_fallbacks` |
+| `strategy.on_status_codes` on a fallback | LiteLLM falls back on any error after retries, so a fallback limited to 429 or 503 now also fires on other errors; tell the user. For context-length or content-policy errors use `context_window_fallbacks` or `content_policy_fallbacks` |
 | `strategy.mode: conditional` | Tag routing: one deployment per branch with `tags: [...]` in `litellm_params`, `router_settings.enable_tag_filtering: true`, the `default` branch tagged `default`. See the conditional routing note below |
 | `retry.attempts` | `router_settings.num_retries` |
 | `retry.on_status_codes` | `router_settings.retry_policy`, one field per error type: 429 `RateLimitErrorRetries`, 500 `InternalServerErrorRetries`, 502/503 `ServiceUnavailableErrorRetries`, 408/504 `TimeoutErrorRetries`, 401 `AuthenticationErrorRetries`, 400 `BadRequestErrorRetries`. Set the others to 0 if Portkey did not retry them |
 | `request_timeout` (ms) | `router_settings.timeout` (seconds), or `timeout` on one deployment |
 | `cache.mode: simple`, `cache.max_age` (seconds) | `litellm_settings.cache: true`, `cache_params: {type: redis, ttl: <max_age>}` |
 | `cache.mode: semantic` | `cache_params.type: redis-semantic` (with `similarity_threshold` and `redis_semantic_cache_embedding_model`) or `qdrant-semantic`; ask which embedding model to use, and only offer models the gateway serves |
-| `cb_config.failure_threshold` / `cooldown_interval` (ms) | `router_settings.allowed_fails` / `cooldown_time` (seconds) |
+| `cb_config.failure_threshold` / `cooldown_interval` (ms) | `router_settings.allowed_fails` / `cooldown_time` (seconds). `allowed_fails` counts failures per deployment per minute. `failure_threshold_percentage`, `minimum_requests`, and `failure_status_codes` have no equivalent; report them |
 | `override_params` (temperature, max_tokens, and so on) | Same keys inside that deployment's `litellm_params` |
-| `default_params` | No exact equivalent; same keys in `litellm_params` set them for every request, so tell the user the difference |
+| `default_params` | No exact equivalent; the same keys in `litellm_params` are used for every request on that deployment, so tell the user the difference |
 | `drop_params` | `additional_drop_params` in `litellm_params` |
 | `input_guardrails` / `output_guardrails` | Ask which guardrail provider they use, then a `guardrails:` entry with `mode: pre_call` or `post_call`; see https://docs.litellm.ai/docs/proxy/guardrails/quick_start |
+| `override_params.model: "@slug/model"`, or `provider: "@slug/model"` | A deployment for that slug's provider: `model: <litellm provider>/model`, `api_key: os.environ/<slug var>` |
+| A target with a slug but no model | Portkey sends whatever model the request named. Ask which model each such target serves; if the answer is "whatever the caller sends", use a wildcard deployment for that slug instead |
+| Legacy `provider` + `api_key` | `model: <provider>/<model>`, with the key moved into an environment variable. In Portkey `api_key` holds the secret itself, so never copy it into the file |
 | `passthrough: true` with `@slug/model` model strings | A wildcard deployment: `model_name: "@slug/*"`, `litellm_params.model: "<provider>/*"` |
+| `passthrough: true` as one target inside a fallback or loadbalance | No equivalent: a LiteLLM model group cannot defer to whatever model the request named. Ask the user which models that target really served and add those as deployments, or report it as not converted |
+| `strategy.sticky` (hash on metadata fields) | No equivalent in the open-source router; report it. Load balancing becomes per-request |
 | `prompt_id` | Point the user at https://docs.litellm.ai/docs/proxy/prompt_management; do not guess the template |
 
 **Conditional routing needs a caller change.** Portkey matches conditions against request
@@ -80,10 +88,25 @@ instead (`"metadata": {"tags": ["free"]}` in `/key/generate`; the top-level `tag
 field needs an Enterprise license) and its code needs no change. Requests with no
 tag, or with a tag no deployment carries, go to the deployment tagged `default`. Conditions
 with `$in`, `$gt`, or several fields have no direct equivalent: show them to the user and
-ask how they want them split into tags. Tell the user plainly which callers must change.
+ask how they want them split into tags.
+
+`$in` maps exactly: one tag per listed value on the same deployment. A target named by both a
+condition and `default` carries both tags (`tags: ["free", "default"]`). Conditions on request
+fields (`params.model`, `params.temperature`, `params.max_tokens`) or on `url.pathname` have no
+equivalent, because LiteLLM routes on tags rather than inspecting the body; convert each to a
+tag the caller sets, and say that the caller now makes that decision. Name the tag after what
+it selects (`creative`, `high-capacity`), not after a literal value such as `true`.
+
+`enable_tag_filtering` is global, but it only affects model groups whose deployments carry
+tags; groups with no tags route as before. Guardrails cannot be scoped to one tag branch; see
+the guardrails row above. Tell the user plainly which callers must change.
 
 Give model groups that only exist as fallback targets a name that says so, such as
-`<primary>-fallback`, and tell the user clients can call these names directly too.
+`<primary>-fallback`, then `<primary>-fallback-2` for the next hop, and tell the user clients can call these names directly too.
+
+Copy model IDs from the Portkey config as written, but check each against the provider's
+current model list and flag any that look retired or are placeholders (Portkey's own examples
+use names such as `ft://gpt4-xxxxx`), rather than silently correcting them.
 
 Choose `model_name` values from the strings the apps already send (step 1). When an app
 sends Model Catalog strings such as `@openai-prod/gpt-4o`, add a wildcard deployment
@@ -151,8 +174,7 @@ docker run -d -p 4000:4000 -v $(pwd)/config.yaml:/app/config.yaml \
 
 Tell them `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY` must be set first (for example
 `sk-` followed by `openssl rand -hex 32`), and that the salt key must never change once
-credentials are stored. A hosted 1-click deploy (Railway or Render) is linked from
-https://docs.litellm.ai/docs/proxy/docker_quick_start if they would rather not run Docker.
+credentials are stored.
 
 Once it is up, check `curl -s $LITELLM_PROXY_URL/health/readiness`, then send one request per
 model string the apps use, with the exact string they send:

@@ -4,7 +4,7 @@ sidebar_label: From Portkey
 description: Move from Portkey to a self-hosted LiteLLM gateway. In most apps you change only the base URL and API key, and a skill converts your Portkey configs into a LiteLLM config.yaml.
 ---
 
-import {Command, OneClickDeploy} from '@site/src/components/Conversion';
+import {Command} from '@site/src/components/Conversion';
 
 # Migrate from Portkey to LiteLLM
 
@@ -74,8 +74,6 @@ docker run -d -p 4000:4000 -v $(pwd)/config.yaml:/app/config.yaml \
   -e OPENAI_KEY_PROD -e OPENAI_KEY_BACKUP -e ANTHROPIC_API_KEY \
   docker.litellm.ai/berriai/litellm:latest --config /app/config.yaml
 ```
-
-<OneClickDeploy source="migrate-portkey" />
 
 ### 2. Create teams and keys
 
