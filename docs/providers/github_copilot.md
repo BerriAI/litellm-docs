@@ -25,7 +25,7 @@ Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and c
 Open **Add Model**, select **GitHub Copilot** as the provider, and pick a model under **LiteLLM Model Name(s)**, for example `github_copilot/claude-sonnet-5.5`. Under **Model Mappings**, set **Public Model Name** to the name users will request, such as `claude-copilot`. Under **Existing Credentials**, select `github-copilot`, then click **Add Model**
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github_copilot_add_model.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={2288} height={1250} />
+  <Image img={require('../../img/github_copilot_add_model.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={2250} height={1990} />
 </div>
 
 :::note
