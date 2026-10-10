@@ -54,6 +54,7 @@ export default function SearchBar() {
   const input = useRef(null), composer = useRef(null), dialog = useRef(null), worker = useRef(null), latestTurn = useRef(null);
   const requestId = useRef(0), controller = useRef(null), previousFocus = useRef(null);
   const identity = useRef({});
+  const traceContext = useRef(undefined);
   const indexUrl = useBaseUrl('/search-index.json');
   const askUrl = useBaseUrl('/api/docs/ask');
   const avatar = useBaseUrl('/img/favicon.ico');
@@ -148,6 +149,7 @@ export default function SearchBar() {
   }
   function newChat() {
     controller.current?.abort(); setAsking(false); setPendingQuestion('');
+    traceContext.current = undefined;
     setTurns([]); setDraft(''); setAiError(''); setFailedQuestion(''); composer.current?.focus();
   }
   async function ask(question = draft) {
@@ -158,7 +160,9 @@ export default function SearchBar() {
     const history = turns.slice(-4).map(turn => ({question: turn.question}));
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({question, history}), signal: pending.signal});
+        body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});
+      const context = response.headers.get('X-Docs-Trace-Context');
+      if (!pending.signal.aborted && context) traceContext.current = context;
       const data = await response.json().catch(() => ({error: 'Ask AI is temporarily unavailable. Please try again or use document search.'}));
       if (!response.ok) throw new Error(data.error || 'Ask AI is unavailable.');
       if (typeof data.answer !== 'string' || !Array.isArray(data.sources)) throw new Error('Ask AI is temporarily unavailable.');
