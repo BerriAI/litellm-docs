@@ -1307,6 +1307,7 @@ const sidebars = {
         "providers/manus",
         "providers/meta",
         "providers/meta_llama",
+        "providers/microsoft_365_copilot",
         "providers/milvus_vector_stores",
         {
           type: "category",
