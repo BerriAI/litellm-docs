@@ -51,6 +51,8 @@ Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `
 
 ## Strands Decider on AgentCore Runtime
 
+Runtime ARNs landed on `main` after `v1.106.0-dev.3` and after `rc/1.106.0` was cut, so they ship in the first `1.107.0` dev and RC builds
+
 If you run the Strands Decider as an [Amazon Bedrock AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) container, for example with the [strands-decider-agentcore](https://github.com/Vivek0712/strands-decider-agentcore) sample, put the runtime ARN in `api_base`. LiteLLM then calls `InvokeAgentRuntime` on the runtime's DEFAULT endpoint and signs the request with SigV4 for `bedrock-agentcore`, so the runtime needs no public URL or API key
 
 ```yaml showLineNumbers
