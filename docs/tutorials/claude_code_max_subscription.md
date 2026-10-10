@@ -30,7 +30,7 @@ Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) installed
 - A Claude Pro, Max, Team, or Enterprise subscription (Team and Enterprise members sign in with the Claude account their admin invited)
-- LiteLLM Gateway v1.82.3 or later running
+- LiteLLM Gateway v1.81.14 or later running
 
 ## Step 1: Configure LiteLLM Proxy
 
@@ -56,7 +56,7 @@ general_settings:
 
 :::info[No header forwarding setting is needed]
 
-Since v1.82.3, LiteLLM forwards a client's `Authorization: Bearer sk-ant-oat...` subscription token to `anthropic/` deployments without `forward_client_headers_to_llm_api`. The token takes precedence over any `api_key` set on the deployment, and LiteLLM adds the `anthropic-beta: oauth-2025-04-20` header Anthropic requires for OAuth. Turn on `forward_client_headers_to_llm_api` only if you also want other client headers forwarded.
+Since v1.81.14, LiteLLM forwards a client's `Authorization: Bearer sk-ant-oat...` subscription token to `anthropic/` deployments without `forward_client_headers_to_llm_api`. The token takes precedence over any `api_key` set on the deployment, and LiteLLM adds the `anthropic-beta: oauth-2025-04-20` header Anthropic requires for OAuth. Turn on `forward_client_headers_to_llm_api` only if you also want other client headers forwarded.
 
 A deployment without an `api_key` serves only subscription users: a request that arrives without a subscription token fails with `401 Missing Anthropic API Key`. If you set an `api_key`, requests without a token fall back to it and are billed to that API key.
 
@@ -366,7 +366,7 @@ Pass `used_client_oauth_token=false` for the requests the configured key paid fo
 
 **Symptom**: Authentication errors from Anthropic API, or usage billed to the configured API key instead of the subscription
 
-**Solution**: Check that you are on LiteLLM v1.82.3 or later, that the model is an `anthropic/` deployment, and that Claude Code reaches the proxy root (`/v1/messages`) rather than `/anthropic`. In Claude Code, `/status` shows the active login; if `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper` is set, Claude Code sends that instead of the subscription token. A `401 OAuth access token is invalid.` means the login expired or was revoked; run `/login`.
+**Solution**: Check that you are on LiteLLM v1.81.14 or later, that the model is an `anthropic/` deployment, and that Claude Code reaches the proxy root (`/v1/messages`) rather than `/anthropic`. In Claude Code, `/status` shows the active login; if `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper` is set, Claude Code sends that instead of the subscription token. A `401 OAuth access token is invalid.` means the login expired or was revoked; run `/login`.
 
 ### LiteLLM Authentication Failing
 
