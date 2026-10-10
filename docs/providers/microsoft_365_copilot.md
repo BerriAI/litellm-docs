@@ -1,4 +1,5 @@
 import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 
 # Microsoft 365 Copilot
 
@@ -66,7 +67,7 @@ In the LiteLLM dashboard, open **Models + Endpoints** > **Add Model**. Select **
 Select **OAuth token exchange (on-behalf-of)** as the **Auth Type**, then select **Create credential**.
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/m365_copilot_litellm_add_model.png')} alt="Add a Microsoft 365 Copilot model in LiteLLM" width={1001} height={940} />
+  <Image img={require('../../img/m365_copilot_litellm_add_model.png')} dark={require('../../img/m365_copilot_litellm_add_model_dark.png')} alt="Add a Microsoft 365 Copilot model in LiteLLM" width={1096} height={1221} />
 </div>
 
 Enter these values:
@@ -82,10 +83,20 @@ Enter these values:
 | **Audience** | Leave blank |
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/m365_copilot_litellm_credential.png')} alt="Microsoft 365 Copilot token exchange credential in LiteLLM" width={600} height={1070} />
+  <Image img={require('../../img/m365_copilot_litellm_credential.png')} dark={require('../../img/m365_copilot_litellm_credential_dark.png')} alt="Microsoft 365 Copilot token exchange credential in LiteLLM" width={656} height={1125} />
 </div>
 
 Select **Add Credential**, select the saved credential on the model form, then select **Add Model**.
+
+This recording runs through the whole step in the dashboard:
+
+<ThemedVideo
+  src={require('../../img/m365_copilot_setup_flow.mp4')}
+  dark={require('../../img/m365_copilot_setup_flow_dark.mp4')}
+  poster={require('../../img/m365_copilot_setup_flow_poster.png')}
+  darkPoster={require('../../img/m365_copilot_setup_flow_poster_dark.png')}
+  title="Walkthrough: add the Microsoft 365 Copilot model and its on-behalf-of credential"
+/>
 
 ## 3. Configure the gateway to accept Entra access tokens
 
