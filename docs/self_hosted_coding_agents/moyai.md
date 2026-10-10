@@ -6,20 +6,30 @@ hide_title: true
 hide_table_of_contents: true
 ---
 
-import {CostHero, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
+import {MoyaiHero, CostComparison, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
 import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
 import Image from '@theme/IdealImage';
 import styles from '@site/src/components/Moyai/styles.module.css';
 import Heading from '@theme/Heading';
 
-<CostHero />
+<MoyaiHero />
+
+Our Devin bill reached $101,872 over 31 days. We wanted to choose the models behind that spend, delegate work while our laptops were closed, and see what each teammate spent.
+
+Moyai is the cloud coding agent we built for that work. Give it a task from Slack or the browser, let it work in your cloud, and review the pull request.
 
 <section className={styles.why} aria-labelledby="why-moyai">
-  <Heading as="h2" id="why-moyai">Why Moyai</Heading>
+  <Heading as="h2" id="why-moyai">What Moyai solves</Heading>
   <BenefitGrid />
   <GuideCards />
   <p className={styles.setupRequirements}>Start with a Modal account and a LiteLLM gateway. The setup guide verifies a cloud task before you connect a repository.</p>
 </section>
+
+## Reduce costs with your choice of agent and model {#cost-comparison}
+
+<CostComparison />
+
+[See supported agents and models](./moyai/setup.md#configure-litellm). Start with one task and measure its cost before expanding the rollout.
 
 ## Watch a task go from request to PR {#watch-a-task}
 

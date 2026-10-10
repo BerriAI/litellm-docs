@@ -9,10 +9,31 @@
 .nav a { padding: 7px 13px; border-radius: 8px; color: var(--ifm-font-color-base); font-size: 14px; font-weight: 500; }
 .nav a[aria-current='page'] { background: var(--ifm-color-emphasis-200); }
 
+.hero { margin-bottom: 30px; }
+.hero h1 { margin: 0 0 8px; font-size: 44px !important; font-weight: 650 !important; letter-spacing: -0.04em; }
+.hero .tagline { margin: 0 0 26px; color: var(--ifm-color-emphasis-700); font-size: 20px; line-height: 1.5; }
+.workflow { margin: 0; padding: 36px 28px 24px; border: 1px solid var(--ifm-color-emphasis-200); border-radius: 14px; background-color: var(--ifm-background-color); background-image: radial-gradient(var(--ifm-color-emphasis-200) 1px, transparent 1px); background-size: 18px 18px; }
+.workflowSteps { display: grid; grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1.45fr) 26px minmax(0, 1fr); align-items: center; gap: 18px; }
+.workflowStep { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.workflowIcon { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; margin-bottom: 6px; border: 1px solid var(--ifm-color-emphasis-300); border-radius: 14px; background: var(--ifm-background-color); color: #6550c6; }
+.workflowStep strong { font-size: 16px; line-height: 1.3; }
+.workflowStep > span:last-child { color: var(--ifm-color-emphasis-700); font-size: 12px; }
+.workflowArrow { color: #9182c5; }
+.cloudWorkspace { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 16px; padding: 26px 22px 20px; color: #342555; background: #f2ecff; border: 1px solid #cbbcea; border-radius: 16px; box-shadow: 0 8px 26px #5b3fd114; }
+.cloudWorkspace img { display: block; object-fit: contain; margin: 0; }
+.cloudWorkspace strong { display: block; font-size: 28px; font-weight: 650; letter-spacing: -0.035em; }
+.cloudWorkspace span { display: block; font-size: 12px; }
+.cloudWorkspace p { grid-column: 1 / -1; margin: 0; padding-top: 14px; border-top: 1px solid #d8cbed; font-size: 12px !important; text-align: center; }
+.cloudWorkspace p span { display: inline; margin: 0 5px; }
+.gatewayLine { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 26px auto 0; padding: 16px 20px 0; border-top: 1px solid var(--ifm-color-emphasis-300); max-width: 460px; color: var(--ifm-color-emphasis-700); }
+.gatewayLine > svg { flex-shrink: 0; color: #6550c6; }
+.gatewayLine strong { display: block; color: var(--ifm-font-color-base); font-size: 13px; }
+.gatewayLine span span { display: block; font-size: 12px; margin-top: 3px; }
+
 .cost { color: #fff; background: #35236b; padding: 36px; border: 1.5px solid #21193b; border-radius: 16px; box-shadow: 6px 6px 0 #c8b5f5; margin: 0 6px 40px 0; }
 .costHeadline { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 32px; margin-bottom: 32px; }
 .cost .kicker { color: #ddd0ff; font: 600 12px/1.6 var(--ifm-font-family-monospace) !important; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 16px; }
-.cost h1 { color: #fff; font-size: clamp(28px, 3vw, 42px) !important; font-weight: 650 !important; line-height: 1.12 !important; letter-spacing: -0.035em; margin: 0; }
+.cost .costTitle { color: #fff; font-size: clamp(26px, 3vw, 34px) !important; font-weight: 650 !important; line-height: 1.15 !important; letter-spacing: -0.035em; margin: 0; }
 .cost .costIntro { color: #eee7ff; font-size: 16px !important; line-height: 1.65; margin: 18px 0 0; max-width: 38em; }
 .metric { text-align: center; padding-left: 24px; border-left: 1px solid #7c67ab; }
 .metric > strong { display: block; color: #d7c4ff; font-size: clamp(78px, 9vw, 120px); font-weight: 650; line-height: 1; letter-spacing: -0.07em; }
@@ -80,6 +101,9 @@
 .cost a:focus-visible { outline-color: #dcf49d; }
 
 [data-theme='dark'] .cost { box-shadow: 6px 6px 0 #7e649f; border-color: #a38aba; }
+[data-theme='dark'] .workflowIcon, [data-theme='dark'] .gatewayLine > svg { color: #c1acff; }
+[data-theme='dark'] .cloudWorkspace { color: #f4edff; background: #302643; border-color: #75618b; }
+[data-theme='dark'] .cloudWorkspace p { border-color: #75618b; }
 [data-theme='dark'] .benefits section { color: #f4edff; background: #302643; border-color: #75618b; }
 [data-theme='dark'] .benefits section:nth-child(2) { background: #332f28; border-color: #786a50; }
 [data-theme='dark'] .benefits section:nth-child(3) { background: #283325; border-color: #617650; }
@@ -92,6 +116,15 @@
   .benefits section { padding: 20px; }
 }
 @media (max-width: 760px) {
+  .workflow { padding: 24px 18px 20px; }
+  .workflowSteps { grid-template-columns: 1fr; justify-items: center; gap: 14px; }
+  .workflowStep { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 12px; width: 235px; max-width: 100%; align-items: center; text-align: left; }
+  .workflowIcon { grid-row: 1 / 3; width: 44px; height: 44px; margin: 0; border-radius: 12px; }
+  .workflowStep strong { align-self: end; }
+  .workflowStep > span:last-child { align-self: start; }
+  .workflowArrow { transform: rotate(90deg); width: 20px; height: 20px; }
+  .cloudWorkspace { width: 280px; max-width: 100%; padding: 18px; gap: 10px; }
+  .gatewayLine { padding: 16px 0 0; }
   .benefits { grid-template-columns: 1fr; gap: 16px; }
   .benefits h3 { font-size: 24px !important; }
   .benefits section { padding: 24px; }
@@ -100,7 +133,6 @@
 @media (max-width: 600px) {
   .cost { padding: 24px 20px; margin-bottom: 36px; }
   .costHeadline { grid-template-columns: 1fr; gap: 24px; }
-  .cost h1 { font-size: 30px !important; }
   .metric { text-align: left; padding: 0; border: 0; display: flex; align-items: center; gap: 18px; }
   .metric > strong { font-size: clamp(68px, 22vw, 85px); }
   .metric > span { margin: 0; font-size: 13px; }
