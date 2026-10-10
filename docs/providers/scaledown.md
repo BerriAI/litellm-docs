@@ -1,77 +1,35 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # ScaleDown
 
-LiteLLM supports [ScaleDown ↗](https://scaledown.xyz), which serves calibrated
-classification, structured extraction, abstractive summarization, and prompt
-compression. ScaleDown bills on input tokens and charges nothing for output
-tokens.
+Use [ScaleDown](https://scaledown.ai) to classify text, extract fields, summarize documents supplied as text, or compress prompts. LiteLLM calls ScaleDown's native APIs and returns the result through `/chat/completions`.
 
-| Property | Details |
-|----------|---------|
-| Description | Calibrated decisions, extraction, summarization, and prompt compression |
-| Provider Route | `scaledown/` |
-| Supported Endpoints | `/chat/completions` (LiteLLM translates to ScaleDown's native API) |
-| API Reference | [ScaleDown docs ↗](https://docs.scaledown.xyz) |
+This integration supports text inputs. Image and file inputs are rejected because their billing is not covered by the text rate below.
 
-## API Key
+## Set your API key
 
-```python
-import os
+Get a key from the [ScaleDown dashboard](https://scaledown.ai/dashboard), then set it in the shell where you run LiteLLM:
 
-os.environ["SCALEDOWN_API_KEY"] = "your-scaledown-api-key"
+```bash
+export SCALEDOWN_API_KEY="your-scaledown-api-key"
+pip install litellm
 ```
 
-ScaleDown authenticates with the `x-api-key` header rather than a bearer token;
-LiteLLM handles that for you. The default host is `https://api.scaledown.xyz`;
-set `SCALEDOWN_API_BASE` to use another one. A trailing `/v1` is accepted and
-ignored. A per-call `api_base` needs its own `api_key`; the key from
-`SCALEDOWN_API_KEY` is only sent to the default host or `SCALEDOWN_API_BASE`.
+LiteLLM sends the key in the `x-api-key` header to `https://api.scaledown.xyz`. You can also pass `api_key` to `completion`. For a custom host, set `SCALEDOWN_API_BASE`. A per-call `api_base` requires an explicit `api_key` so the adapter does not send an environment key to an unrelated host. A trailing `/v1` on the base URL is accepted.
 
-LiteLLM calls ScaleDown's native endpoints: `/extract`,
-`/summarization/abstractive`, `/compress/raw/` and `/v1/scaledown`. It does not
-use ScaleDown's OpenAI-compatible `/v1/chat/completions` route, which is not
-reachable on `api.scaledown.xyz` at the time of writing.
+## Supported models
 
-## Supported Models
+| Model | Required input | Native endpoint |
+|-------|----------------|-----------------|
+| `scaledown/classify` | User text and `labels` | `/classify` |
+| `scaledown/extract` | User text and a non-strict `response_format` schema | `/extract` |
+| `scaledown/summarize` | User text | `/summarization/abstractive` |
+| `scaledown/decisions` | User text and `questions` | `/v1/scaledown` |
+| `scaledown/compress` | User prompt and earlier context messages | `/compress/raw/` |
 
-| Model | Description |
-|-------|-------------|
-| `scaledown/classify` | Typed decisions over a shared state object |
-| `scaledown/decisions` | The same endpoint under its own name |
-| `scaledown/extract` | Structured field extraction |
-| `scaledown/summarize` | Abstractive summarization |
-| `scaledown/compress` | Prompt and context compression |
+Each model returns a JSON string in `choices[0].message.content`. Parse it with `json.loads`. Classification, summarization, and compression return their native response objects. Extraction returns the requested fields. Decisions returns the `answers` object. The Python SDK also preserves the full upstream payload in `response._hidden_params["scaledown_response"]`.
 
-Every model returns its result as a JSON string on
-`choices[0].message.content`, so parse that to get the structured object. For
-extract this is the extracted fields; for the others it is ScaleDown's response
-unchanged, which is also on `response._hidden_params["scaledown_response"]`.
+## Classification
 
-## Decisions: `classify` and `decisions`
-
-These two models implement the Jev Decisions API. Instead of a prompt, you send
-the text to decide on plus a map of questions, and you get one typed answer per
-question. Questions are answered concurrently, and each one is a separate
-calibrated model call, so a request with three questions bills for three.
-
-`questions` has no OpenAI-native field, so pass it as an extra parameter; the
-Python SDK forwards unknown keyword arguments, and the OpenAI client takes them
-through `extra_body`. The text comes from the last user message. A base64 image in the message
-(`image_url` data URL) is sent as the document. `state` may carry only
-`document` and `document_mime_type`, never text, so proxy guardrails always see
-the text. `extra_body` is merged after proxy guardrails run, so each model accepts only
-option keys there (`questions` and `state` for decisions, `threshold` and
-`top_n` for extract, `compression_rate` for compress); text, instructions and
-model overrides are rejected.
-
-There are three question types. A `choice` question picks exactly one option
-from a `criteria` map of option key to description. A `noul` question answers an
-independent yes/no question as a probability. A `score` question rates against
-an ordered `criteria` list of 2 to 10 levels, lowest to highest, and answers
-with a probability-weighted position on that scale, so a value like `1.43` means
-the model leans toward level 2 without being decided between levels 1 and 2.
+Pass a list of labels, each with a `name` and a `rubric`. The adapter sends the last user message as the text to classify.
 
 ```python
 import json
@@ -79,211 +37,190 @@ from litellm import completion
 
 response = completion(
     model="scaledown/classify",
-    messages=[{"role": "user", "content": "I was charged twice for my subscription this month."}],
-    questions={
-        "category": {
-            "type": "choice",
-            "instructions": "Which single category best describes the post?",
-            "criteria": {
-                "billing": "About a charge, invoice, refund, or payment problem.",
-                "technical": "About a bug or something not working.",
-                "account": "About login, access, or account settings.",
-            },
-        },
-        "is_churn_risk": {
-            "type": "noul",
-            "instructions": "Does this text signal the customer may cancel or leave?",
-        },
-        "severity": {
-            "type": "score",
-            "instructions": "How severe is the reported issue?",
-            "criteria": [
-                "Cosmetic; no impact to functionality",
-                "Broken or degraded feature, but workaround exists",
-                "Blocking issue; no workaround exists",
-            ],
-        },
-    },
+    messages=[{"role": "user", "content": "My server has been down for three hours."}],
+    labels=[
+        {"name": "urgent", "rubric": "Service is unavailable."},
+        {"name": "routine", "rubric": "A question or cosmetic issue."},
+    ],
 )
 
-answers = json.loads(response.choices[0].message.content)
-print(answers["category"]["choice"], answers["category"]["confidence"])
-print(answers["is_churn_risk"]["noul"])
-print(answers["severity"]["score"])
+result = json.loads(response.choices[0].message.content)
+print(result["top_label"])
+print(result["scores"])
 ```
 
-A `choice` answer carries the chosen key, a probability per option, and the
-chosen option's own probability as `confidence`. A `score` answer adds a
-`legend` echoing your criteria back by level index. Each question is a separate
-model call, and `usage.input_tokens` in the response is summed across them.
-
-To classify a PDF, pass a `state` object with a base64 `document` and its
-`document_mime_type`. Images can also go in as an `image_url` data URL; one image or document per
-request.
-
-```python
-response = completion(
-    model="scaledown/classify",
-    messages=[],
-    state={"document": base64_pdf, "document_mime_type": "application/pdf"},
-    questions={"is_invoice": {"type": "noul", "instructions": "Is this an invoice?"}},
-)
-```
+Expect `urgent` as the top label for this example. Use `scaledown/decisions` if you need the separate question-based API described below.
 
 ## Extraction
 
-`extract` takes its field definitions from the standard `response_format` JSON
-schema. Each property name becomes an entity and its `description` is the
-extraction hint (the property name is used when there is none). Nested objects
-stay nested, and an array of objects becomes a one-element list holding the
-item's entities. Optional `threshold` and `top_n` can be passed as extra
-parameters.
+Describe the fields to extract with a JSON schema. Property names become entity names, and descriptions become extraction hints. Nested objects, arrays of objects, and local `$ref` definitions are supported.
 
 ```python
+import json
+from litellm import completion
+
 response = completion(
     model="scaledown/extract",
-    messages=[{"role": "user", "content": "Acme Corp invoiced $500 on 2024-01-05."}],
+    messages=[{"role": "user", "content": "Invoice from Northwind. Total: $500."}],
     response_format={
         "type": "json_schema",
         "json_schema": {
             "name": "invoice",
+            "strict": False,
             "schema": {
                 "type": "object",
                 "properties": {
                     "vendor": {"type": "string", "description": "company name"},
-                    "amount": {"type": "string", "description": "dollar amount"},
-                    "date": {"type": "string", "description": "invoice date"},
+                    "amount": {"type": "string", "description": "total invoice amount"},
                 },
             },
         },
     },
 )
-```
 
-The message content is the extracted fields as JSON, shaped like the
-`response_format` schema you passed, so it validates against it. Local `$ref`
-and `$defs` in the schema are followed. ScaleDown's span anchors
-(`<field>_span_anchor`) and `_value` wrappers are removed from the content; the
-untouched `/extract` payload, with entities, confidences and spans, is on
-`response._hidden_params["scaledown_response"]`.
-
-```python
 fields = json.loads(response.choices[0].message.content)
-spans = response._hidden_params["scaledown_response"]["structured_result"]
+print(fields)
 ```
+
+The content includes fields such as `vendor` and `amount`. For a scalar field with multiple matches, LiteLLM uses ScaleDown's first match, which the provider orders by confidence. Fields with no match may be absent. The adapter removes provider-added span anchors and value wrappers. The full payload retains the matches, confidences, and spans.
+
+**The schema describes what to extract. It does not guarantee JSON Schema validation.** ScaleDown may return a number for a field described as a string, omit a required field, or return a value outside an enum. Validate the result in your application. LiteLLM rejects `strict: true`, including strict schemas generated from Pydantic models, before making an upstream call.
+
+You can pass `threshold` and `top_n` as extra parameters. Put extraction instructions in property descriptions. System messages are not supported for extraction.
 
 ## Summarization
 
-The system message carries optional instructions, the last user message carries
-the text (or one base64 `image_url` image or PDF, sent as the native document), and `max_tokens` (or `max_completion_tokens`) limits the summary. The content is ScaleDown's
-`{"summary": ..., "input_tokens": ...}` response.
+The last user message contains the source text. A system message can supply summary instructions. Use `max_tokens` or `max_completion_tokens` to limit the summary length.
 
 ```python
+import json
+from litellm import completion
+
 response = completion(
     model="scaledown/summarize",
     messages=[
-        {"role": "system", "content": "Be terse; one paragraph."},
-        {"role": "user", "content": long_document},
+        {"role": "system", "content": "Summarize in one sentence."},
+        {
+            "role": "user",
+            "content": "The team shipped the billing fix on Monday. Error rates fell. A follow-up review is scheduled for Friday.",
+        },
     ],
-    max_tokens=256,
+    max_tokens=64,
 )
+
+print(json.loads(response.choices[0].message.content)["summary"])
 ```
 
-## Compression
+## Use the LiteLLM proxy
 
-`compress` sends earlier messages as `context` and the last user message as
-`prompt`. Pass `compression_rate` as `"auto"` (the default) or a number between
-0 and 1. The content is ScaleDown's `/compress/raw/` response, with the result
-in `results.compressed_prompt`.
+Install the proxy dependencies and save this as `config.yaml`:
 
-```python
-response = completion(
-    model="scaledown/compress",
-    messages=[
-        {"role": "system", "content": long_background},
-        {"role": "user", "content": "What changed in Q3?"},
-    ],
-    compression_rate=0.5,
-)
+```bash
+pip install 'litellm[proxy]'
 ```
-
-## Usage with LiteLLM Proxy
-
-### 1. Set ScaleDown models in config.yaml
 
 ```yaml
 model_list:
   - model_name: scaledown-classify
     litellm_params:
       model: scaledown/classify
-      api_key: "os.environ/SCALEDOWN_API_KEY" # ensure you have `SCALEDOWN_API_KEY` in your .env
+      api_key: os.environ/SCALEDOWN_API_KEY
+  - model_name: scaledown-extract
+    litellm_params:
+      model: scaledown/extract
+      api_key: os.environ/SCALEDOWN_API_KEY
   - model_name: scaledown-summarize
     litellm_params:
       model: scaledown/summarize
-      api_key: "os.environ/SCALEDOWN_API_KEY"
+      api_key: os.environ/SCALEDOWN_API_KEY
 ```
 
-### 2. Start proxy
+Start the proxy in the shell where you set `SCALEDOWN_API_KEY`:
 
 ```bash
-litellm --config config.yaml
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
+litellm --config config.yaml --host 127.0.0.1 --port 4000
 ```
 
-### 3. Query proxy
-
-Assuming the proxy is running on [http://localhost:4000](http://localhost:4000):
+In another terminal, set `LITELLM_API_KEY` to the key generated above and send a classification request:
 
 ```bash
-curl http://localhost:4000/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_LITELLM_MASTER_KEY" \
+curl http://127.0.0.1:4000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "scaledown-classify",
-    "messages": [
-      {
-        "role": "user",
-        "content": "I was charged twice for my subscription this month."
-      }
-    ],
-    "questions": {
-      "category": {
-        "type": "choice",
-        "criteria": {
-          "billing": "About a charge, invoice, refund, or payment problem.",
-          "technical": "About a bug or something not working."
-        }
-      }
-    }
+    "messages": [{"role": "user", "content": "My server has been down for three hours."}],
+    "labels": [
+      {"name": "urgent", "rubric": "Service is unavailable."},
+      {"name": "routine", "rubric": "A question or cosmetic issue."}
+    ]
   }'
 ```
 
-`-H "Authorization: Bearer YOUR_LITELLM_MASTER_KEY"` is only required if you have
-set a LiteLLM master key
+Expect HTTP 200 and a JSON string containing `top_label` and `scores` in `choices[0].message.content`. For an existing proxy, use a LiteLLM key authorized for this model. The ScaleDown key belongs on the proxy.
 
-## Cost and token counts
+When using the OpenAI Python client, pass `labels` through `extra_body={"labels": [...]}`. The same applies to `questions`, `threshold`, `top_n`, and `compression_rate`. Text belongs in `messages`; native `text`, `state`, and document overrides are rejected.
 
-All models are priced at $0.05 per million input tokens, with output tokens at
-zero, and LiteLLM computes cost from input tokens. It ignores the `usage.cost`
-field the Decisions API returns, because that value does not match ScaleDown's
-usage dashboard.
+## Decisions
 
-Input tokens come from the response (`input_tokens`, or `original_prompt_tokens`
-for compress). The native extract, summarize and compress responses do not
-include an output token count, so `completion_tokens` is `0` there because it is
-unmeasured. Decisions returns `output_tokens`, which LiteLLM passes through; it
-is not billed. Requests that include an image or document are billed at a higher input rate
-than the one registered here.
+`scaledown/decisions` calls ScaleDown's Decisions API with the upstream model `classify-1`. Supply the text in the last user message and a `questions` map. A `choice` question selects a key from a criteria map. A `noul` question returns a yes/no probability. A `score` question uses an ordered list of two to ten criteria, lowest to highest.
 
-## Supported features
+```python
+import json
+from litellm import completion
 
-| Feature | Supported |
-|---------|-----------|
-| Cost tracking | Yes (input tokens only) |
-| Logging | Yes |
-| Vision (documents on the decisions models) | Yes |
-| Streaming | Simulated (one chunk) |
+response = completion(
+    model="scaledown/decisions",
+    messages=[{"role": "user", "content": "I was charged twice for my subscription this month."}],
+    questions={
+        "category": {
+            "type": "choice",
+            "criteria": {"billing": "A charge or refund.", "technical": "A bug."},
+        }
+    },
+)
+
+print(json.loads(response.choices[0].message.content)["category"]["choice"])
+```
+
+Expect `billing` for this example. Put question instructions inside `questions`; classification and Decisions do not support system messages. Decisions reports input usage across the questions in the request.
+
+## Compression
+
+`scaledown/compress` sends earlier messages as `context` and the last user message as `prompt`. Pass `compression_rate` as `"auto"` or a number between zero and one.
+
+```python
+import json
+from litellm import completion
+
+response = completion(
+    model="scaledown/compress",
+    messages=[
+        {"role": "system", "content": "The team shipped a billing fix. Error rates fell after the release."},
+        {"role": "user", "content": "What changed after the release?"},
+    ],
+    compression_rate="auto",
+)
+
+print(json.loads(response.choices[0].message.content)["results"]["compressed_prompt"])
+```
+
+## Cost and supported features
+
+The registered text rate is **$0.05 per million input tokens**, with no charge for output. LiteLLM calculates cost from reported input usage and its model price map. The Decisions API's `usage.cost` is not used as a billing override. A request with 232 input tokens costs $0.0000116 at this rate.
+
+Classification, extraction, summarization, and compression report input token counts but no output token count. LiteLLM returns `completion_tokens: 0` for those operations because output usage is unmeasured. Decisions reports output tokens, which LiteLLM preserves.
+
+| Feature | Support |
+|---------|---------|
+| Sync and async calls | Yes |
+| Cost tracking and logging | Yes |
+| Text content arrays | Yes |
+| Streaming | Simulated after the upstream response completes |
+| Images and files | No |
+| Strict JSON schemas | No |
 | Function calling | No |
 
-The decisions models take no sampling parameters, since everything they need
-arrives through `state` and `questions`. Pass `litellm.drop_params = True` if
-your caller sends parameters like `temperature` that ScaleDown does not accept.
+For streaming usage, send `stream_options={"include_usage": True}`. The adapter rejects unsupported sampling parameters such as `temperature`; use `drop_params=True` if your caller needs LiteLLM to discard them. Missing labels, questions, or extraction field definitions return a request error before the adapter contacts ScaleDown.
