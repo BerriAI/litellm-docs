@@ -8,7 +8,6 @@ Use Node 24 or later. From the repository root, install dependencies and build t
 
 ```bash
 npm ci
-npm run test:search
 npm run build
 cp .env.example .env.local
 ```
@@ -33,7 +32,7 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 ## Deploy on Vercel
 
-The PR includes the same-origin function `/api/docs/ask` and bundles `build/search-index.json` and `build/search-documents.json` with it. Keep the existing Docusaurus build and `build` output directory. No separate API service or retrieval database is needed
+The PR includes the same-origin function `/api/docs/ask` and bundles `build/search-index.json` and `build/search-documents.json` with it. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed
 
 In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
 
