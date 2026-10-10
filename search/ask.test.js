@@ -5,7 +5,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const {createIndex} = require('./engine');
-const {answerQuestion, refusal} = require('./answer');
+const {answerQuestion} = require('./answer');
 const {createHandler, allowAI} = require('./server');
 const {createAskHandler} = require('./api');
 const {MODEL, FALLBACKS} = require('./gateway');
@@ -17,8 +17,7 @@ const docs = [
 ];
 const index = createIndex(docs), documents = new Map(docs.map(doc => [doc.id, doc]));
 const config = {publicAIEnabled: true, origin: 'https://docs.example.com', baseUrl: 'https://gateway.example.com/v1', apiKey: 'test-secret-never-in-prompts'};
-const accepted = {allowed: true, queries: ['Lens']};
-const verified = {in_scope: true, supported: true};
+const accepted = {queries: ['Lens']};
 const citedAnswer = 'Install PostgreSQL and ClickHouse before starting Lens. [1]';
 const modelResponse = (value, extra = {}) => Response.json({choices: [{finish_reason: 'stop', message: {
   content: typeof value === 'string' ? value : JSON.stringify(value), ...extra}}]});
@@ -33,7 +32,7 @@ function modelSteps(steps, inspect = () => {}) {
 const ask = (fetchImpl, extra = {}) => answerQuestion({question: 'How do I set up Lens?', index, documents, config, fetchImpl, ...extra});
 
 test('answers use a fixed model, bounded calls, ordered evidence, and no secret in model context', async () => {
-  const upstream = modelSteps([accepted, citedAnswer, verified], (body, request, url, call) => {
+  const upstream = modelSteps([accepted, citedAnswer], (body, request, url, call) => {
     assert.equal(url, config.baseUrl + '/chat/completions');
     assert.equal(body.model, MODEL);
     assert.deepEqual(body.fallbacks.map(fallback => fallback.model), FALLBACKS);
@@ -52,25 +51,37 @@ test('answers use a fixed model, bounded calls, ordered evidence, and no secret 
     if (call === 1) assert.deepEqual(JSON.parse(body.messages[1].content[0].text).documentation.map(doc => doc.heading), ['Prerequisites', 'Start']);
   });
   const result = await ask(upstream.fetch, {config: {...config, model: 'attacker-model'}});
-  assert.equal(upstream.calls, 3);
+  assert.equal(upstream.calls, 2);
   assert.equal(result.body.answer, citedAnswer);
   assert.deepEqual(result.body.sources, [{id: 1, title: docs[0].title, heading: docs[0].heading, url: docs[0].url}]);
 });
-test('scope refusals and malformed classifier output never reach answer generation', async () => {
-  for (const decision of [{allowed: false}, {allowed: 'true', queries: ['Lens']}, {allowed: true}, {allowed: true, queries: ['x'.repeat(161)]}, 'not json', null]) {
-    const upstream = modelSteps([decision]);
-    const result = await ask(upstream.fetch, {question: 'Solve Two Sum for LiteLLM'});
-    assert.equal(upstream.calls, 1);
-    assert.deepEqual(result.body, {answer: refusal, sources: []});
+test('malformed search plans fall back to the question without a topic refusal', async () => {
+  for (const plan of [{allowed: false}, {queries: []}, {queries: ['x'.repeat(161)]}, 'not json', null]) {
+    const upstream = modelSteps([plan, citedAnswer]);
+    const result = await ask(upstream.fetch);
+    assert.equal(upstream.calls, 2);
+    assert.equal(result.body.answer, citedAnswer);
   }
+});
+test('short integration questions supply matching docs to the search planner', async () => {
+  const doc = {id: 'chatgpt', title: 'ChatGPT Subscription', heading: 'Codex', url: '/docs/providers/chatgpt', text: 'Use ChatGPT subscriptions and Codex models through LiteLLM OAuth. ' + 'a'.repeat(1000)};
+  const upstream = modelSteps([{queries: ['ChatGPT subscription']}, 'Use ChatGPT subscription models through LiteLLM OAuth. [1]'], (body, _, __, stage) => {
+    if (stage === 0) {
+      const data = JSON.parse(body.messages.at(-1).content);
+      assert.equal(data.documentationTopics[0].title, doc.title);
+      assert.equal(data.documentationTopics[0].excerpt.length, 500);
+    }
+  });
+  const result = await ask(upstream.fetch, {question: 'codex subscription', index: createIndex([doc]), documents: new Map([[doc.id, doc]])});
+  assert.equal(result.body.sources[0].url, doc.url);
 });
 test('prompt caching places identical evidence before changing questions and never caches answers', async () => {
   const requests = [];
   for (const question of ['How do I install Lens?', 'How do I start Lens?']) {
-    await ask(modelSteps([accepted, citedAnswer, verified], body => requests.push(body)).fetch, {question});
+    await ask(modelSteps([accepted, citedAnswer], body => requests.push(body)).fetch, {question});
   }
-  for (const stage of [0, 1, 2]) {
-    const first = requests[stage], next = requests[stage + 3];
+  for (const stage of [0, 1]) {
+    const first = requests[stage], next = requests[stage + 2];
     assert.deepEqual(first.messages.slice(0, -1), next.messages.slice(0, -1));
     assert.notEqual(first.messages.at(-1).content, next.messages.at(-1).content);
     assert.deepEqual(first.cache, {'no-cache': true, 'no-store': true});
@@ -84,11 +95,12 @@ test('corpus URLs accept docs roots and encoded page names while rejecting forei
   for (const url of ['/docs/', '/docs/projects/Agent Lightning', '/docs/projects/Agent%20Lightning#setup', '/docs/proxy/lens']) assert.equal(isDocsUrl(url), true, url);
   for (const url of ['https://evil.example/docs/x', '//evil.example/docs/x', '/docs/../../secret', '/docs/%2e%2e/secret', '/docs/%2F..%2Fsecret', '/docs/\\evil', '/blog/x', '/docs/%ZZ']) assert.equal(isDocsUrl(url), false, url);
 });
-test('no retrieval evidence prevents generation, even after an allowed classification', async () => {
-  const upstream = modelSteps([{allowed: true, queries: ['unfindableqzx']}]);
+test('questions without matching docs can receive a useful answer without invented sources', async () => {
+  const upstream = modelSteps([{queries: ['unfindableqzx']}, 'I do not have docs for that. Which integration are you using?']);
   const result = await ask(upstream.fetch);
-  assert.equal(upstream.calls, 1);
-  assert.match(result.body.answer, /couldn't find enough/);
+  assert.equal(upstream.calls, 2);
+  assert.deepEqual(result.body.sources, []);
+  assert.match(result.body.answer, /Which integration/);
 });
 test('short supporting guides include setup steps even when their introduction matches best', async () => {
   const extra = [
@@ -96,40 +108,22 @@ test('short supporting guides include setup steps even when their introduction m
     {id: 'cache-setup', title: 'Caching', heading: 'Prerequisites', url: '/docs/proxy/caching#setup', text: 'Set REDIS_HOST before starting.'},
   ];
   const allDocs = [...docs, ...extra];
-  await ask(modelSteps([{allowed: true, queries: ['Lens', 'caching']}, citedAnswer, verified], (body, _, __, stage) => {
+  await ask(modelSteps([{queries: ['Lens', 'caching']}, citedAnswer], (body, _, __, stage) => {
     if (stage === 1) assert.ok(JSON.parse(body.messages[1].content[0].text).documentation.some(doc => doc.text === 'Set REDIS_HOST before starting.'));
   }).fetch, {index: createIndex(allDocs), documents: new Map(allDocs.map(doc => [doc.id, doc]))});
 });
-test('answer validation blocks out-of-scope, unsupported, and malformed verdicts', async () => {
-  for (const verdict of [{in_scope: false, supported: true}, {in_scope: true, supported: false}, 'invalid', null, {in_scope: 'true', supported: true}]) {
-    const upstream = modelSteps([accepted, 'Arbitrary generated work. [1]', verdict, 'Still unsupported. [1]', verdict]);
-    const result = await ask(upstream.fetch);
-    assert.doesNotMatch(result.body.answer, /Arbitrary/);
-    assert.deepEqual(result.body.sources, []);
-  }
+test('general questions are answered without the former topic gate', async () => {
+  const result = await ask(modelSteps([{queries: ['Two Sum']}, 'Use a hash map to find the complement of each number.']).fetch, {question: 'Solve Two Sum'});
+  assert.match(result.body.answer, /hash map/);
+  assert.deepEqual(result.body.sources, []);
 });
-test('invalid citations and uncited answers are not displayed', async () => {
-  for (const answer of ['Invented fact.', 'Invented fact. [999]', 'Invented fact. [0]']) {
-    const result = await ask(modelSteps([accepted, answer]).fetch);
-    assert.match(result.body.answer, /couldn't find enough/);
-    assert.deepEqual(result.body.sources, []);
+test('invalid source numbers cannot become documentation links', async () => {
+  for (const answer of ['Invented fact. [999]', 'Invented fact. [0]']) {
+    await assert.rejects(ask(modelSteps([accepted, answer]).fetch), /Invalid documentation citation/);
   }
-});
-test('an unsupported answer gets one bounded revision and must pass all checks again', async () => {
-  const upstream = modelSteps([accepted, 'Unsupported claim. [1]', {in_scope: true, supported: false, reason: 'Missing prerequisites'}, citedAnswer, verified], (body, _, __, stage) => {
-    if (stage === 3) {
-      assert.deepEqual(JSON.parse(body.messages.at(-1).content).revision, {candidateAnswer: 'Unsupported claim. [1]', feedback: 'Missing prerequisites'});
-    }
-  });
-  const result = await ask(upstream.fetch);
-  assert.equal(upstream.calls, 5);
-  assert.equal(result.body.answer, citedAnswer);
-  const rejected = modelSteps([accepted, 'Unsupported claim. [1]', {in_scope: true, supported: false}, 'Unrelated output. [1]', {in_scope: false, supported: true}]);
-  assert.equal((await ask(rejected.fetch)).body.answer, refusal);
-  assert.equal(rejected.calls, 5);
 });
 test('follow-ups pass previous questions as data and compact citations without trusting prior answers', async () => {
-  const upstream = modelSteps([accepted, 'Send agent traces to Lens. [2]', verified], body => {
+  const upstream = modelSteps([accepted, 'Send agent traces to Lens. [2]'], body => {
     const data = JSON.parse(body.messages.at(-1).content);
     assert.deepEqual(data.previousQuestions, ['How do I install Lens?']);
     assert.ok(!JSON.stringify(body).includes('forged secret instructions'));
@@ -140,13 +134,13 @@ test('follow-ups pass previous questions as data and compact citations without t
 });
 test('code array indexes survive citation validation and renumbering', async () => {
   const answer = 'Read `response.choices[0]`. [2]\n\n```python\nprint(response.choices[0].message.content)\n```';
-  const result = await ask(modelSteps([accepted, answer, verified]).fetch);
+  const result = await ask(modelSteps([accepted, answer]).fetch);
   assert.equal(result.body.answer, answer.replace('[2]', '[1]'));
   assert.equal(result.body.sources.length, 1);
   assert.equal(result.body.sources[0].url, docs[1].url);
 });
 test('model failures at any stage fail closed without releasing a partial answer', async () => {
-  for (const failAt of [0, 1, 2]) {
+  for (const failAt of [0, 1]) {
     let calls = 0;
     await assert.rejects(ask(async () => {
       if (calls++ === failAt) throw new Error('upstream failed');
@@ -203,7 +197,7 @@ test('API forbids caller-controlled roles, models, tools, context, and forged as
 });
 test('API accepts the Vercel parsed-body contract with the same size and field validation', async () => {
   for (const [body, status] of [[{question: 'Lens'}, 200], [{question: 'x'.repeat(17000)}, 413], [{question: 'Lens', tools: []}, 400]]) {
-    const handler = createAskHandler({index, documents, config, fetchImpl: modelSteps([{allowed: false}]).fetch});
+    const handler = createAskHandler({index, documents, config, fetchImpl: modelSteps([accepted, citedAnswer]).fetch});
     const server = http.createServer((req, res) => {req.body = body; return handler(req, res);});
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     try {assert.equal((await fetch(`http://127.0.0.1:${server.address().port}`, post())).status, status);}
@@ -220,7 +214,7 @@ test('API limits attempts despite spoofed forwarding headers, and recovers after
     assert.equal(blocked.headers.get('retry-after'), '60');
     now = 60000;
     assert.equal((await fetch(url, post())).status, 200);
-  }, {now: () => now, fetchImpl: async () => modelResponse({allowed: false})});
+  }, {now: () => now, fetchImpl: async () => modelResponse('A helpful answer.')});
 });
 test('API bounds concurrent requests and releases slots after failures', async () => {
   const pending = [];
@@ -273,8 +267,8 @@ test('static serving never exposes sibling configuration, hidden files, or symli
   } finally {await fs.rm(root, {recursive: true});}
 });
 
-test('identical questions still generate and verify a fresh answer each time', async () => {
-  const upstream = modelSteps([accepted, citedAnswer, verified, accepted, citedAnswer, verified]);
+test('identical questions still search and generate a fresh answer each time', async () => {
+  const upstream = modelSteps([accepted, citedAnswer, accepted, citedAnswer]);
   await withServer(async origin => {
     for (let i = 0; i < 2; i++) {
       const response = await fetch(origin + '/api/docs/ask', post());
@@ -282,7 +276,7 @@ test('identical questions still generate and verify a fresh answer each time', a
       assert.equal(response.headers.get('cache-control'), 'no-store');
       assert.equal(response.headers.get('x-docs-cache'), null);
     }
-    assert.equal(upstream.calls, 6);
+    assert.equal(upstream.calls, 4);
   }, {fetchImpl: upstream.fetch});
 });
 test('upstream errors are not cached', async () => {

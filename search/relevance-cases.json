@@ -128,5 +128,15 @@
     "query": "CLICKHOUSE_URL",
     "url": "/docs/proxy/config_settings",
     "top": 3
+  },
+  {
+    "query": "codex subscription",
+    "url": "/docs/providers/chatgpt",
+    "top": 1
+  },
+  {
+    "query": "what is codex subscription",
+    "url": "/docs/providers/chatgpt",
+    "top": 1
   }
 ]

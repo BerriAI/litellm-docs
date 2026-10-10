@@ -39,6 +39,7 @@ export default function SearchBar() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState('search');
   const [query, setQuery] = useState('');
+  const [resolvedQuery, setResolvedQuery] = useState('');
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -105,14 +106,20 @@ export default function SearchBar() {
   useEffect(() => {
     if (!open || mode !== 'search') return;
     const id = ++requestId.current;
-    setSelected(0); setSearchError('');
-    setLoading(true); setResults([]);
+    setSearchError('');
+    if (!query.trim()) {
+      setLoading(false); setResults([]); setResolvedQuery(''); setSelected(0);
+      return;
+    }
+    // Keep the previous matches visible while typing and ignore stale worker replies.
+    setLoading(true);
     const timeout = setTimeout(() => {
       if (!worker.current) {
         worker.current = new Worker(new URL('./search.worker.js', import.meta.url));
         worker.current.onmessage = ({data}) => {
           if (data.id !== requestId.current) return;
           setLoading(false); setSearchError(data.error || ''); setResults(data.results || []);
+          setResolvedQuery(data.query); setSelected(0);
         };
         worker.current.onerror = () => {
           setLoading(false); setSearchError('Search could not load. Please try again.');
@@ -120,8 +127,8 @@ export default function SearchBar() {
         };
       }
       worker.current.postMessage({id, query, indexUrl});
-    }, 80);
-    return () => clearTimeout(timeout);
+    }, 250);
+    return () => {clearTimeout(timeout); requestId.current += 1;};
   }, [query, open, indexUrl, retry, mode]);
 
   function stopAnswer() {
@@ -172,7 +179,12 @@ export default function SearchBar() {
         event.preventDefault();
         setSelected(current => (current + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length);
       }
-      if (event.key === 'Enter') {event.preventDefault(); if (results.length) window.location.assign(results[selected].url); else openAI(query.trim() || undefined);}
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (loading || resolvedQuery !== query) return;
+        if (results.length) window.location.assign(results[selected].url);
+        else openAI(query.trim() || undefined);
+      }
     }
     if (event.key === 'Tab') {
       const elements = [...dialog.current.querySelectorAll('button:not(:disabled),input,textarea:not(:disabled),select,summary,a[href]')].filter(element => element.getClientRects().length);
@@ -219,8 +231,8 @@ export default function SearchBar() {
           <div className={`${styles.searchContent} ${query.trim() ? styles.hasQuery : ''}`}>
             {searchError && <p role="alert" className={styles.error}>{searchError} <button onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
             {query.trim() && <>
-              <div className={styles.filters} role="status"><span>{loading ? 'Searching...' : `All (${results.length})`}</span>{results[0]?.matchType === 'typo' && <small>Closest matches</small>}</div>
-              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation">{results.map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
+              <div className={styles.filters} role="status"><span>{loading && !results.length ? 'Searching...' : `All (${results.length})`}</span>{results[0]?.matchType === 'typo' && <small>Closest matches</small>}</div>
+              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{results.map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
                 className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
                 <span className={styles.path}>Docs <span>›</span> {result.category} <span>›</span> {result.title}</span>
                 <span className={styles.resultTitle}><BookOpen size={16}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
