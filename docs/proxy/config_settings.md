@@ -620,6 +620,7 @@ router_settings:
 | ATHINA_BASE_URL | Base URL for Athina service (defaults to `https://log.athina.ai`)
 | AUTO_REDIRECT_UI_LOGIN_TO_SSO | Flag to enable automatic redirect of UI login page to SSO when SSO is configured. Default is **false**
 | AUDIO_SPEECH_CHUNK_SIZE | Chunk size for audio speech processing. Default is 1024
+| ACEDATACLOUD_API_KEY | API key for Ace Data Cloud
 | ANTHROPIC_API_KEY | API key for Anthropic service. Uses `x-api-key` header for authentication.
 | ANTHROPIC_AUTH_TOKEN | Alternative auth token for Anthropic service. Uses `Authorization: Bearer` header instead of `x-api-key`. Used as fallback when `ANTHROPIC_API_KEY` is not set.
 | ANTHROPIC_API_BASE | Base URL for Anthropic API. Default is https://api.anthropic.com
