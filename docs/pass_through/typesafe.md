@@ -83,7 +83,11 @@ Any path under `/typesafe/` is forwarded, so `GET /typesafe/v1/models` lists the
 
 The Playground has a **System One** tab (Beta) for sending Jev requests without curl. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **System One**. The proxy still needs `TYPESAFE_API_KEY`; without it the upstream error shows inline
 
-The left side is a JSON editor preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score). Edit it or paste your own request; **Reset example** restores it and **Format JSON** reindents it. The `model` is set in the JSON (for example `jev-latest`) rather than picked from the model list
+The left side holds a request preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score). The `model` is set in the request (for example `jev-latest`) rather than picked from the model list, and **Reset example** restores the example
+
+The editor opens on a **Form** tab, so you can build a request without writing JSON. Type the text the model should read into **Input**, then edit each question card: its name, its type (**Choice**, **Yes / no** or **Score**), its **Instructions**, and its criteria. A choice takes options with descriptions, a yes / no question takes **Yes means** and **No means**, and a score takes levels numbered from 0. **Add question**, **Add option** and **Add level** add rows, and the trash buttons remove them
+
+The **JSON** tab edits the same request as raw JSON, so a change in either tab shows up in the other, and fields the form has no input for, such as `metadata`, are kept. A request the form cannot show, such as JSON with a syntax error, gets an **Edit in JSON** button instead. **Format JSON** on that tab reindents the request. Releases without the **Form** tab show only the JSON editor
 
 The request is checked as you type. `state` and a non-empty `questions` object are required, every question needs `instructions`, choice `criteria` must map 1 to 255 labels to descriptions, noul `criteria` is optional with `true` and `false` descriptions, and score `criteria` is a list of at least 2 levels. Errors are listed by JSON path and disable **Send**; more than 10 score levels only shows a warning. Fields outside these are forwarded to TypeSafe unchanged
 
