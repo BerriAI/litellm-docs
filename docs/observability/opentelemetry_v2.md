@@ -993,9 +993,30 @@ Or in the proxy environment:
 LITELLM_OTEL_EXCLUDED_SERVICES=redis,postgres
 ```
 
-The config value wins over the env var when both are set. The accepted names are `redis` and `postgres` (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
+The config value wins over the env var when both are set. The accepted service names are `redis`, `postgres`, `batch_write_to_db` and `redis_*` names (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
 
-The setting only narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team), from the API or from the team's logging settings in the Admin UI. The tenant needs nothing new. Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. There is no Admin UI field for `excluded_services`, since it is a proxy-wide setting
+The global setting narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team). Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. Configure the global setting in proxy YAML or the environment.
+
+### Override exclusions for one team or key
+
+Set `excluded_services` in the destination's `callback_vars` to replace the global exclusion set. The accepted values are the same datastore names as the global setting, supplied as a comma-separated string. For example, `"redis,postgres"` excludes Redis and PostgreSQL spans from that destination, even when the global setting is empty. `"none"` excludes no database spans, even when the global setting excludes them. Omitting the variable follows the global setting. Values replace the global set rather than merging with it.
+
+The override requires `LITELLM_OTEL_V2=true` and a destination-capable callback: `langfuse_otel`, `arize`, `weave_otel` or `newrelic`. It is available on `success` and `success_and_failure` entries, not failure-only entries. For example, register it on a team's New Relic destination:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "newrelic",
+    "callback_type": "success",
+    "callback_vars": {
+      "newrelic_api_key": "<team ingest license key>",
+      "excluded_services": "redis,postgres"
+    }
+  }'
+```
+
+The same `callback_vars` setting is available on key logging callbacks. Invalid or empty values, unknown names such as `"auth"`, and `"none"` combined with another name are rejected when the callback is saved.
 
 `langfuse_span_scope: llm_only` already drops these spans for a Langfuse project, together with the request root, auth and guardrail spans. Use `excluded_services` when the tenant should keep the rest of the request tree
 
