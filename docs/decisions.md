@@ -31,7 +31,7 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 | [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/ai/run/@cf/cloudflare/<model>` | No |
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/serving-endpoints/<endpoint>/invocations` | No |
 | [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/providers/microsoft/v1/systemone` | No |
-| [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
+| [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` (a URL or an AgentCore runtime ARN) required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone`, or `InvokeAgentRuntime` for a runtime ARN | No |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
@@ -49,7 +49,48 @@ model_list:
       base_model: azure_ai/Microsoft-Decision-1
 ```
 
-Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
+Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`, which can also be an [AgentCore runtime ARN](#strands-decider-on-agentcore-runtime). vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
+
+## Strands Decider on AgentCore Runtime
+
+Runtime ARNs landed on `main` after `v1.106.0-dev.3` and after `rc/1.106.0` was cut, so they ship in the first `1.107.0` dev and RC builds
+
+If you run the Strands Decider as an [Amazon Bedrock AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) container, for example with the [strands-decider-agentcore](https://github.com/Vivek0712/strands-decider-agentcore) sample, put the runtime ARN in `api_base`. LiteLLM then calls `InvokeAgentRuntime` on the runtime's DEFAULT endpoint and signs the request with SigV4 for `bedrock-agentcore`, so the runtime needs no public URL or API key
+
+```yaml showLineNumbers
+model_list:
+  - model_name: strands-decider
+    litellm_params:
+      model: strands_decider/strands-decider-2B-hobson-v21
+      api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
+      aws_profile_name: my-profile
+```
+
+Credentials come from the usual `aws_*` params (`aws_access_key_id` and `aws_secret_access_key`, `aws_profile_name`, `aws_role_name`, or `aws_web_identity_token`) or from the default AWS credential chain, and the region always comes from the ARN. The identity needs `bedrock-agentcore:InvokeAgentRuntime` on the runtime
+
+All calls to one deployment share one session id, derived from the runtime ARN unless you set `agentcore_runtime_session_id` (33 to 256 characters), so they reuse a warm microVM instead of waiting for a cold start on every request. A cold start takes one to two minutes for the 2B model. Callers cannot pick the session, since every new session id starts another microVM: a request body with `agentcore_runtime_session_id` is rejected with a 401 unless you allow client-side credentials, and session, `x-amz-*`, and `Host` headers in `extra_headers` are not forwarded. For a runtime that uses JWT inbound auth instead of IAM, set `api_key` to the token, and LiteLLM sends it as a Bearer token without SigV4
+
+One session is one microVM, and it answers one call at a time. To serve more calls at once, list the same ARN as several deployments under one `model_name`, each with its own `agentcore_runtime_session_id`. By default the router picks one of them at random for each call, so concurrent calls spread across the warm replicas, though two can still land on the same one and wait for each other
+
+```yaml showLineNumbers
+model_list:
+  - model_name: strands-decider
+    litellm_params:
+      model: strands_decider/strands-decider-2B-hobson-v21
+      api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
+      aws_profile_name: my-profile
+      agentcore_runtime_session_id: strands-decider-replica-a-0000000000
+  - model_name: strands-decider
+    litellm_params:
+      model: strands_decider/strands-decider-2B-hobson-v21
+      api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
+      aws_profile_name: my-profile
+      agentcore_runtime_session_id: strands-decider-replica-b-0000000000
+```
+
+When the runtime refuses a request, for example one with more than 16 questions, LiteLLM returns a 400 with the runtime's message. A runtime that is still loading the model returns a 503, and any other runtime error returns a 500
+
+If a session starts failing every call within a second, for example after the model failed to load during a cold start, stop it with `aws bedrock-agentcore stop-runtime-session --agent-runtime-arn <arn> --runtime-session-id <id>`, and the next call starts a fresh microVM. Otherwise AgentCore ends the session once it has been idle for the runtime's `idleRuntimeSessionTimeout`
 
 ## Self-hosted Laya and Nimble
 
