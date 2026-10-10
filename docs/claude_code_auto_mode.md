@@ -17,12 +17,12 @@ With `safeguards_classifier_model` set, the proxy asks a deployment from your `m
 | `bedrock/` Claude (InvokeModel) | Amazon Bedrock |
 | `bedrock_mantle/` Claude | Amazon Bedrock |
 | `vertex_ai/` Claude | Vertex AI |
-| `bedrock/converse/` models | LiteLLM classifier |
+| `bedrock/converse/` models, Claude included | LiteLLM classifier |
 | Fireworks, Gemini, and other chat completions providers | LiteLLM classifier |
-| `openai/` models | Nobody by default |
-| DeepSeek, MiniMax | Nobody |
+| `openai/` models | LiteLLM classifier |
+| DeepSeek and other providers with their own `/v1/messages` | LiteLLM classifier |
 
-The LiteLLM classifier runs on every request the proxy translates to chat completions, which covers most providers and `bedrock/converse/` Claude models too. Two routes skip that translation and get no verdicts. `openai/` deployments go through the Responses API bridge, unless you set `use_chat_completions_url_for_anthropic_messages: true` under `litellm_settings` (or `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true`), which sends every `openai/` deployment through chat completions and the classifier. Providers that LiteLLM forwards to their own Anthropic-compatible `/v1/messages`, such as DeepSeek and MiniMax, and any deployment with `model_info.supported_endpoints: ["/v1/messages"]`, are forwarded as they are, and Claude Code falls back to its own classifier requests there.
+The LiteLLM classifier answers for every non-Claude model, whichever way the proxy reaches it: the chat completions translation, the Responses API bridge that `openai/` deployments use, or a provider's own Anthropic-compatible `/v1/messages`, such as DeepSeek's. It also answers for Claude models behind `bedrock/converse/`, since that route goes through the chat completions translation. Claude models that LiteLLM forwards to a provider's own `/v1/messages` are left to that provider, and when any provider returns its own `safeguard_results`, the proxy keeps them and skips the classifier call.
 
 Requests without `safeguards`, which is every client other than Claude Code in auto mode, are untouched.
 
@@ -53,7 +53,7 @@ Every virtual key that runs Claude Code needs access to the classifier model. Be
 
 ## How It Works
 
-On each `/v1/messages` request that carries `safeguards` and goes through the chat completions translation, LiteLLM sends the request to the backend as before, with `safeguards` stripped. Once the response is in, it sends one chat completions call to the classifier deployment with:
+On each `/v1/messages` request that carries `safeguards` and goes to a model the LiteLLM classifier answers for, LiteLLM sends the request to the backend as before. Once the response is in, it sends one chat completions call to the classifier deployment with:
 
 - the tool calls of the response, exactly as the model wrote them
 - the conversation so far, including earlier tool calls and their results
