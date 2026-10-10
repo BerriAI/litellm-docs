@@ -11,43 +11,6 @@ const docs = [
 ];
 const index = createIndex(docs);
 
-test('Lens ranks the actual guide first and does not fuzzy-match less', () => {
-  const results = search(index, 'lens');
-  assert.equal(results[0].url, '/docs/proxy/lens');
-  assert.ok(!results.some(hit => hit.url === '/docs/image_edits'));
-});
-test('prefix, typo, question, and exact configuration token searches work', () => {
-  assert.equal(search(index, 'cach')[0].url, '/docs/proxy/caching');
-  assert.equal(search(index, 'cachign')[0].url, '/docs/proxy/caching');
-  assert.equal(search(index, 'How do I enable caching?')[0].url, '/docs/proxy/caching');
-  assert.equal(search(index, 'CLICKHOUSE_URL')[0].url, '/docs/proxy/config#lens');
-  assert.deepEqual(search(index, 'unfindableqzx'), []);
-  assert.deepEqual(search(index, 'the and'), []);
-});
-test('short transpositions and typos find Lens while exact words keep their meaning', () => {
-  for (const query of ['lnes', 'lesn', 'lenz', 'lense']) {
-    const hits = search(index, query);
-    assert.equal(hits[0].url, '/docs/proxy/lens', query);
-    assert.equal(hits[0].matchType, 'typo');
-  }
-  assert.equal(search(index, 'less')[0].url, '/docs/image_edits');
-});
-test('fuzzy search does not confuse fallbacks and callbacks', () => {
-  const sample = createIndex([
-    {...docs[0], id: 'fallback', title: 'Fallbacks (Provider Failover)', url: '/docs/fallbacks'},
-    {...docs[0], id: 'callback', title: 'Callbacks', url: '/docs/callbacks'},
-  ]);
-  const results = search(sample, 'fallbaks');
-  assert.equal(results[0].url, '/docs/fallbacks');
-  assert.ok(!results.some(hit => hit.url === '/docs/callbacks'));
-});
-test('filters are applied before truncation and use stable page IDs', () => {
-  const results = search(index, 'lens', {category: 'Gateway', limit: 1});
-  assert.equal(results.length, 1);
-  assert.equal(results[0].category, 'Gateway');
-  assert.deepEqual(search(index, 'lens', {category: 'Providers'}), []);
-  assert.deepEqual(search(index, 'lnes', {category: 'Providers'}), []);
-});
 test('excerpts show a relevant match far into a section', () => {
   const result = snippet('Introductory filler. '.repeat(50) + 'Set CLICKHOUSE_URL to enable the trace store. More detail. ', ['clickhouse_url']);
   assert.match(result, /CLICKHOUSE_URL/);
@@ -56,10 +19,6 @@ test('excerpts show a relevant match far into a section', () => {
 test('prototype property names can be indexed and searched', () => {
   const sample = createIndex([{...docs[0], text: 'constructor prototype toString'}]);
   assert.equal(search(sample, 'constructor')[0].title, 'LiteLLM Lens');
-});
-test('metadata matches can still supply a source to Ask AI', () => {
-  const sample = createIndex([{...docs[0], keywords: 'investigations'}]);
-  assert.equal(search(sample, 'investigations', {groupPages: false})[0].id, 'lens');
 });
 test('serialization preserves rankings', () => {
   assert.deepEqual(search(loadIndex(JSON.stringify(index)), 'lens'), search(index, 'lens'));

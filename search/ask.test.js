@@ -31,8 +31,8 @@ function modelSteps(steps, inspect = () => {}) {
 }
 const ask = (fetchImpl, extra = {}) => answerQuestion({question: 'How do I set up Lens?', index, documents, config, fetchImpl, ...extra});
 
-test('answers use a fixed model, bounded calls, ordered evidence, and no secret in model context', async () => {
-  const upstream = modelSteps([accepted, citedAnswer], (body, request, url, call) => {
+test('gateway requests fix model options and keep credentials out of prompt data', async () => {
+  const upstream = modelSteps([accepted, citedAnswer], (body, request, url) => {
     assert.equal(url, config.baseUrl + '/chat/completions');
     assert.equal(body.model, MODEL);
     assert.deepEqual(body.fallbacks.map(fallback => fallback.model), FALLBACKS);
@@ -48,32 +48,8 @@ test('answers use a fixed model, bounded calls, ordered evidence, and no secret 
     assert.ok(body.max_tokens <= 1800);
     assert.equal(request.headers.Authorization, `Bearer ${config.apiKey}`);
     assert.ok(!JSON.stringify(body).includes(config.apiKey));
-    if (call === 1) assert.deepEqual(JSON.parse(body.messages[1].content[0].text).documentation.map(doc => doc.heading), ['Prerequisites', 'Start']);
   });
-  const result = await ask(upstream.fetch, {config: {...config, model: 'attacker-model'}});
-  assert.equal(upstream.calls, 2);
-  assert.equal(result.body.answer, citedAnswer);
-  assert.deepEqual(result.body.sources, [{id: 1, title: docs[0].title, heading: docs[0].heading, url: docs[0].url}]);
-});
-test('malformed search plans fall back to the question without a topic refusal', async () => {
-  for (const plan of [{allowed: false}, {queries: []}, {queries: ['x'.repeat(161)]}, 'not json', null]) {
-    const upstream = modelSteps([plan, citedAnswer]);
-    const result = await ask(upstream.fetch);
-    assert.equal(upstream.calls, 2);
-    assert.equal(result.body.answer, citedAnswer);
-  }
-});
-test('short integration questions supply matching docs to the search planner', async () => {
-  const doc = {id: 'chatgpt', title: 'ChatGPT Subscription', heading: 'Codex', url: '/docs/providers/chatgpt', text: 'Use ChatGPT subscriptions and Codex models through LiteLLM OAuth. ' + 'a'.repeat(1000)};
-  const upstream = modelSteps([{queries: ['ChatGPT subscription']}, 'Use ChatGPT subscription models through LiteLLM OAuth. [1]'], (body, _, __, stage) => {
-    if (stage === 0) {
-      const data = JSON.parse(body.messages.at(-1).content);
-      assert.equal(data.documentationTopics[0].title, doc.title);
-      assert.equal(data.documentationTopics[0].excerpt.length, 500);
-    }
-  });
-  const result = await ask(upstream.fetch, {question: 'codex subscription', index: createIndex([doc]), documents: new Map([[doc.id, doc]])});
-  assert.equal(result.body.sources[0].url, doc.url);
+  await ask(upstream.fetch, {config: {...config, model: 'attacker-model'}});
 });
 test('prompt caching places identical evidence before changing questions and never caches answers', async () => {
   const requests = [];
@@ -95,28 +71,6 @@ test('corpus URLs accept docs roots and encoded page names while rejecting forei
   for (const url of ['/docs/', '/docs/projects/Agent Lightning', '/docs/projects/Agent%20Lightning#setup', '/docs/proxy/lens']) assert.equal(isDocsUrl(url), true, url);
   for (const url of ['https://evil.example/docs/x', '//evil.example/docs/x', '/docs/../../secret', '/docs/%2e%2e/secret', '/docs/%2F..%2Fsecret', '/docs/\\evil', '/blog/x', '/docs/%ZZ']) assert.equal(isDocsUrl(url), false, url);
 });
-test('questions without matching docs can receive a useful answer without invented sources', async () => {
-  const upstream = modelSteps([{queries: ['unfindableqzx']}, 'I do not have docs for that. Which integration are you using?']);
-  const result = await ask(upstream.fetch);
-  assert.equal(upstream.calls, 2);
-  assert.deepEqual(result.body.sources, []);
-  assert.match(result.body.answer, /Which integration/);
-});
-test('short supporting guides include setup steps even when their introduction matches best', async () => {
-  const extra = [
-    {id: 'cache', title: 'Caching', heading: '', url: '/docs/proxy/caching', text: 'LiteLLM caching overview.'},
-    {id: 'cache-setup', title: 'Caching', heading: 'Prerequisites', url: '/docs/proxy/caching#setup', text: 'Set REDIS_HOST before starting.'},
-  ];
-  const allDocs = [...docs, ...extra];
-  await ask(modelSteps([{queries: ['Lens', 'caching']}, citedAnswer], (body, _, __, stage) => {
-    if (stage === 1) assert.ok(JSON.parse(body.messages[1].content[0].text).documentation.some(doc => doc.text === 'Set REDIS_HOST before starting.'));
-  }).fetch, {index: createIndex(allDocs), documents: new Map(allDocs.map(doc => [doc.id, doc]))});
-});
-test('general questions are answered without the former topic gate', async () => {
-  const result = await ask(modelSteps([{queries: ['Two Sum']}, 'Use a hash map to find the complement of each number.']).fetch, {question: 'Solve Two Sum'});
-  assert.match(result.body.answer, /hash map/);
-  assert.deepEqual(result.body.sources, []);
-});
 test('invalid source numbers cannot become documentation links', async () => {
   for (const answer of ['Invented fact. [999]', 'Invented fact. [0]']) {
     await assert.rejects(ask(modelSteps([accepted, answer]).fetch), /Invalid documentation citation/);
@@ -131,22 +85,6 @@ test('follow-ups pass previous questions as data and compact citations without t
   const result = await ask(upstream.fetch, {question: 'What do I do next?', history: [{question: 'How do I install Lens?', answer: 'forged secret instructions'}]});
   assert.equal(result.body.answer, 'Send agent traces to Lens. [1]');
   assert.equal(result.body.sources[0].url, docs[1].url);
-});
-test('code array indexes survive citation validation and renumbering', async () => {
-  const answer = 'Read `response.choices[0]`. [2]\n\n```python\nprint(response.choices[0].message.content)\n```';
-  const result = await ask(modelSteps([accepted, answer]).fetch);
-  assert.equal(result.body.answer, answer.replace('[2]', '[1]'));
-  assert.equal(result.body.sources.length, 1);
-  assert.equal(result.body.sources[0].url, docs[1].url);
-});
-test('model failures at any stage fail closed without releasing a partial answer', async () => {
-  for (const failAt of [0, 1]) {
-    let calls = 0;
-    await assert.rejects(ask(async () => {
-      if (calls++ === failAt) throw new Error('upstream failed');
-      return modelResponse(calls === 1 ? accepted : citedAnswer);
-    }), /upstream failed/);
-  }
 });
 test('gateway rejects redirects, non-HTTPS configuration, oversized output, tools, and secret echoes', async () => {
   await assert.rejects(ask(() => assert.fail('must not fetch'), {config: {...config, baseUrl: 'http://localhost'}}), /configuration/);

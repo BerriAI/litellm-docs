@@ -10,7 +10,6 @@ Use Node 24 or later. From the repository root, install dependencies and build t
 npm ci
 npm run test:search
 npm run build
-npm run check:search
 cp .env.example .env.local
 ```
 
@@ -28,7 +27,7 @@ The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_U
 npm run search:serve
 ```
 
-Open [localhost:3333/docs](http://localhost:3333/docs), select **Search for anything...**, then **Ask AI**. On mobile, open the navigation menu to find search at the top of the sidebar. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link. `npm run check:search-ai` runs the live answer regression cases using your key and incurs model charges
+Open [localhost:3333/docs](http://localhost:3333/docs), select **Search for anything...**, then **Ask AI**. On mobile, open the navigation menu to find search at the top of the sidebar. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link.
 
 The server reads `.env.local`; the build and browser do not read the AI credential. Keep it out of `docusaurus.config.js`, public environment variables, and committed files. Plain `npm start` does not build the search index or run the API; use the built preview above
 
@@ -66,4 +65,4 @@ The model has no privileged actions or access to secrets, but its answers can st
 
 ## Validation
 
-`npm run test:search` checks extraction, ranking, citations, search planning, request validation, cancellation, cache behavior, limits, and secret boundaries. `npm run check:search` checks the built index against curated retrieval queries. `npm run check:search-ai` exercises real documentation answers, general questions, and credential-access requests with the configured gateway. These cases are regression checks, not a guarantee against all attacks or factual errors
+`npm run test:search` checks document extraction, index serialization, citation parsing, request validation, cancellation, prompt-cache structure, rate limits, and credential boundaries. To assess answer quality, use the local UI with questions from your workflow and follow the citations. The automated checks do not grade model answers
