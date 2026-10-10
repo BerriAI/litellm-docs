@@ -25,7 +25,8 @@
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
     "test:optimize-images": "node --test plugins/optimize-images.test.cjs",
     "sync:lens": "node scripts/sync-lens-docs.mjs",
-    "test:lens": "node --test scripts/sync-lens-docs.test.mjs"
+    "test:lens": "node --test scripts/sync-lens-docs.test.mjs",
+    "check:search-ai": "node search/check-ai.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -38,8 +39,9 @@
     "@mdx-js/react": "3.1.1",
     "cheerio": "1.0.0-rc.12",
     "clsx": "2.1.1",
-    "minisearch": "7.2.0",
     "lucide-react": "^0.503.0",
+    "mdast-util-from-markdown": "2.0.2",
+    "minisearch": "7.2.0",
     "posthog-docusaurus": "^2.0.5",
     "prism-react-renderer": "1.3.5",
     "react": "18.3.1",

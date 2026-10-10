@@ -3,8 +3,7 @@
  * Infima (Docusaurus CSS framework) variables + custom styling.
  */
 
-/* ==================================}
-
+/* =========================================
    FONTS
    ========================================= */
 /* Preview: Geist from Google Fonts, same loading path as the Inter import it
@@ -13,8 +12,7 @@
 /* Used only by the litellm.harness docs block at the end of this file */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ==================================}
-
+/* =========================================
    ROOT — Light Mode Variables
    ========================================= */
 :root {
@@ -53,8 +51,7 @@ body,
   min-width: 0;
 }
 
-/* ==================================}
-
+/* =========================================
    DARK MODE Variables
    ========================================= */
 [data-theme='dark'] {
@@ -70,8 +67,7 @@ body,
   --docusaurus-highlighted-code-line-bg: rgb(66 66 66 / 35%);
 }
 
-/* ==================================}
-
+/* =========================================
    TYPOGRAPHY
    ========================================= */
 .theme-doc-markdown h1 {
@@ -105,8 +101,7 @@ body,
   font-size: 0.85rem;
 }
 
-/* ==================================}
-
+/* =========================================
    NAVBAR
    ========================================= */
 [data-theme='light'] .navbar {
@@ -177,8 +172,7 @@ body,
   }
 }
 
-/* ==================================}
-
+/* =========================================
    ALERTS / ADMONITIONS
    ========================================= */
 .alert {
@@ -336,8 +330,7 @@ body,
   --ifm-alert-border-color: #f59e0b !important;
 }
 
-/* ==================================}
-
+/* =========================================
    COLLAPSIBLE / DETAILS
    ========================================= */
 details {
@@ -380,8 +373,7 @@ details [class*='collapsibleContent'] ul {
   border-top: 1px solid #2d3748 !important;
 }
 
-/* ==================================}
-
+/* =========================================
    TABS
    ========================================= */
 .tabs-container > div {
@@ -421,16 +413,14 @@ li.tabs__item--active {
   border-bottom: 2px solid var(--ifm-color-primary) !important;
 }
 
-/* ==================================}
-
+/* =========================================
    CODE BLOCKS
    Container chrome matches docusaurus.io: the Prism theme paints the
    background, Infima supplies the shadow and radius, and we do not
    restyle the fence ourselves.
    ========================================= */
 
-/* ==================================}
-
+/* =========================================
    SIDEBAR / MENU
    ========================================= */
 .menu {
@@ -690,8 +680,7 @@ li.tabs__item--active {
   color: var(--ifm-color-primary);
 }
 
-/* ==================================}
-
+/* =========================================
    TABLE OF CONTENTS
    ========================================= */
 .table-of-contents {
@@ -716,8 +705,7 @@ li.tabs__item--active {
   color: #9ca3af;
 }
 
-/* ==================================}
-
+/* =========================================
    IMAGES & MEDIA
    ========================================= */
 img,
@@ -731,8 +719,7 @@ video {
   max-width: 100%;
 }
 
-/* ==================================}
-
+/* =========================================
    FOOTER
    ========================================= */
 .footer {
@@ -806,16 +793,14 @@ video {
   }
 }
 
-/* ==================================}
-
+/* =========================================
    AVATAR
    ========================================= */
 .avatar__name > a {
   color: inherit;
 }
 
-/* ==================================}
-
+/* =========================================
    NAVBAR ICON LINKS (GitHub, Discord)
    ========================================= */
 .header-github-link,
@@ -859,8 +844,7 @@ video {
     no-repeat center / contain;
 }
 
-/* ==================================}
-
+/* =========================================
    NAVBAR — mobile fixes
    ========================================= */
 
@@ -909,8 +893,7 @@ video {
   display: none !important;
 }
 
-/* ==================================}
-
+/* =========================================
    BASH / SHELL CODE BLOCKS
    ========================================= */
 
@@ -927,8 +910,7 @@ video {
   font-weight: 700;
 }
 
-/* ==================================}
-
+/* =========================================
    LOGO (existing logo toggle logic)
    ========================================= */
 .levo-logo-container {
@@ -959,8 +941,7 @@ video {
   display: block !important;
 }
 
-/* ==================================}
-
+/* =========================================
    DOC CONTENT — wider reading column
    ========================================= */
 
@@ -980,8 +961,7 @@ video {
   }
 }
 
-/* ==================================}
-
+/* =========================================
    BLOG — Ramp-style aesthetic
    ========================================= */
 
@@ -1112,8 +1092,7 @@ video {
   color: #38bdf8;
 }
 
-/* ==================================}
-
+/* =========================================
    ANNOUNCEMENT BAR
    ========================================= */
 div[class*='announcementBar'] {
@@ -1247,8 +1226,7 @@ div[class*='announcementBar'] button {
   text-align: left;
 }
 
-/* ==================================================================}
-
+/* =========================================================================
    SOFT AURORA RESTYLE
    CSS only: same markup, same behavior, same layout as before. The logo
    blue replaces green, Geist replaces Inter, a pale blue mesh sits
@@ -2053,8 +2031,7 @@ article a.card:hover {
   font-size: 13px;
 }
 
-/* ==================================================================}
-
+/* =========================================================================
    LITELLM.AI GRID ACCENTS
    Three small echoes of the website's grid: thin rules on real edges and a
    logo-blue square where they cross.
@@ -2184,8 +2161,7 @@ section.row:has(> article > a.card)::before { right: -3px; top: -3px; }
 [class*='grid_']:has(> a[class*='card_'])::after,
 section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
 
-/* ==================================================================}
-
+/* =========================================================================
    NEW LOGO (preview): official files, never recolored or distorted
    ========================================================================= */
 .navbar__brand-col .navbar__logo,
@@ -2222,8 +2198,7 @@ img[src*='/img/brand/'] {
   }
 }
 
-/* ==================================}
-
+/* =========================================
    litellm.harness docs
    Scoped to the "Agent Harnesses" sidebar category (.harness-sidebar and
    .harness-group in sidebars.js) and to docs/harness/* pages, which
@@ -2455,9 +2430,25 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   border-top-left-radius: 16px;
 }
 
-/* Search stays in its original sidebar location. */
+/* Search lives in the desktop sidebar and the expanded mobile menu. */
 [class*='navbarSearchContainer'] {
   display: none !important;
+}
+
+.navbar-sidebar .docs-mobile-search {
+  padding: 8px 12px 16px;
+}
+
+.navbar-sidebar .docs-mobile-search > button {
+  min-height: 44px;
+}
+
+.navbar-sidebar .docs-mobile-search kbd {
+  display: none;
+}
+
+.navbar-sidebar .docs-mobile-search + .navbar-sidebar__back {
+  top: 0;
 }
 
 /* Light/dark pairs from IdealImage `dark` and ThemedVideo, before hydration */

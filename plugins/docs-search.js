@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const {createIndex} = require('../search/engine');
 
 function extractSections(html, url) {
+  url = new URL(url, 'https://docs.litellm.ai').pathname;
   const $ = cheerio.load(html);
   if (($('meta[name="robots"]').attr('content') || '').includes('noindex') || $('meta[http-equiv="refresh"]').length) return [];
   const article = $('.theme-doc-markdown').first();

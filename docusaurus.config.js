@@ -445,7 +445,6 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          {type: 'search', position: 'right'},
         ],
       },
       footer: {

@@ -1,32 +1,67 @@
 # Documentation search and Ask AI
 
-The Docusaurus build indexes rendered public `/docs/` pages, including their actual heading anchors. It excludes redirects, noindex pages, navigation, blog posts, and release notes. MiniSearch supplies separate page and passage indexes. Page titles, descriptions, keywords, headings, and paths establish which guide is relevant; passage matches provide contextual excerpts and section links. Broad matches open the guide, while configuration names and specific section matches link to anchors. Common word forms such as caching/cache and keys/key share tokens. Exact and prefix matches precede bounded typo recovery, including four-letter transpositions such as lnes → Lens; a distance check excludes unrelated fuzzy matches such as fallbaks → callbacks. Deprecated pages are downranked. Gateway, SDK, provider, and integration filters apply before results are truncated. The versioned index loads when search opens and runs in a worker so typing is not blocked. Serve JSON with compression in production. Every docs deployment publishes its matching index, without a crawler refresh delay.
+Search runs locally in the browser over public documentation from the current site build. Ask AI retrieves matching passages, answers LiteLLM questions, and links to those passages. It declines unrelated requests such as solving Two Sum, writing stories, and revealing server credentials
 
-Ask AI is a conversation view with a persistent composer, stop/retry controls, a new-chat action, inline citations, and expandable sources. History lives in component memory and clears on refresh or new chat. Each request sends at most four recent question/answer pairs to the server and gateway; prior answers are contextual data, never trusted evidence. Follow-ups use a bounded query-planning call to resolve references before searching. First questions that already retrieve docs skip planning; natural-language questions without matches can use it to recover. Planning failures fall back to the latest topic.
+## Try locally
 
-The service gathers up to four matching guides, preserving document order, introductions, and setup prerequisites. Short primary guides are included in full; long guides use selected passages. Context is capped at 22,000 characters and 32 passages. Answers cite only current retrieved evidence; source numbers are compacted before display. It has no tools, arbitrary URL fetching, database, or private corpus. Answers without valid source numbers fall back to an insufficient-evidence response. Citation URLs always come from our index. Markdown rendering disables HTML and images and allows only citation URLs from that index. Citation presence does not prove factual correctness; the UI asks readers to check sources.
+Use Node 24 or later. From the repository root, install dependencies and build the site:
 
-## Local preview
-
-Run `npm install`, `npm run test:search`, `npm run build`, and `npm run check:search`. Put server settings in the ignored `.env.local` file:
-
-```dotenv
-DOCS_AI_BASE_URL=https://your-gateway.example.com/v1
-DOCS_AI_API_KEY=your-restricted-virtual-key
-DOCS_AI_MODEL=your-model-alias
-DOCS_ORIGIN=http://localhost:3333
+```bash
+npm ci
+npm run test:search
+npm run build
+npm run check:search
+cp .env.example .env.local
 ```
 
-Run `npm run search:serve` and open `http://localhost:3333/docs/proxy/lens`. This serves the built site and `/api/docs/ask` on the same origin. Plain `docusaurus start` does not generate the rendered search index; use a production build for search previews. Search works without AI credentials; Ask AI shows an unavailable message. The gateway URL must use HTTPS. Credentials are read only by the server, never by the Docusaurus configuration or browser code.
+Set `DOCS_AI_API_KEY` in `.env.local` to a LiteLLM virtual key that can call these gateway aliases:
 
-## Production
+```text
+anthropic/claude-haiku-5-5
+openai/gpt-6-luna
+openai/gpt-6.1-sol
+```
 
-Keep the docs on their static host and route `/api/docs/ask` to this Node service behind the same HTTPS origin, or serve both from the Node service. Set `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN=https://docs.litellm.ai`, and the AI settings in server secrets. The API runtime needs only Node, `minisearch`, and `dotenv`; the Docusaurus toolchain is needed at build time. Deploy the service with `search/`, those runtime dependencies, and the same build's `search-index.json` and `search-documents.json`. Publish the site and index together. These JSON files contain only already-public documentation.
+The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
 
-Public Ask AI fails closed by default when the listener binds outside loopback or DOCS_ORIGIN is a public hostname. Static search continues to work. Only set `DOCS_AI_PUBLIC_ENABLED=true` after configuring and verifying the following protections.
+```bash
+npm run search:serve
+```
 
-Before exposing Ask AI publicly, provision a dedicated LiteLLM virtual key restricted to the selected model with a hard budget and request/token limits. The local preview credential is not a production credential. Configure shared rate limits at the ingress: the service's in-memory limits (10 requests per IP per minute, 60 total per minute, four concurrent requests) are per process, reset on restart, and are not a durable spending cap. Behind a reverse proxy, the service deliberately uses the socket IP instead of trusting `X-Forwarded-For`; enforce per-client limits at the trusted ingress. CORS/origin checks prevent browser cross-origin calls but do not authenticate a public API or stop direct HTTP clients.
+Open [localhost:3333/docs](http://localhost:3333/docs), select **Search for anything...**, then **Ask AI**. On mobile, open the navigation menu to find search at the top of the sidebar. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “Solve Two Sum in Python” and check that it declines. `npm run check:search-ai` runs the live answer and scope regression cases using your key and incurs model charges
 
-Requests accept a question capped at 500 characters and at most four history pairs. Each prior question is at most 500 characters and each prior answer at most 3,000; history is capped at 14,000 characters and the transport body at 64KB. Role-bearing chat messages are not accepted as history. Query planning times out after 10 seconds with at most 240 output tokens; answering times out after 30 seconds with at most 1,800 output tokens. Both calls disable redirects and return generic errors without gateway details. A question makes at most two model calls under the existing concurrency and request limits. This service does not persist or log conversations; gateway logging/retention follows its configuration. Retrieval remains lexical, with model-assisted query planning for follow-ups and unmatched natural-language questions.
+The server reads `.env.local`; the build and browser do not read the AI credential. Keep it out of `docusaurus.config.js`, public environment variables, and committed files. Plain `npm start` does not build the search index or run the API; use the built preview above
 
-Run `npm run test:search` for ranking, extraction, citation, validation, and abuse-limit tests. Run `npm run check:search` after building to run the 26 curated queries in `search/relevance-cases.json`, including short typos, singular/plural variations, provider names, config identifiers, and setup questions. These development cases are regression checks, not an independent user benchmark. Add real failing queries there before changing ranking. Evaluate answer accuracy separately from citation validity before rollout.
+## Deploy on Vercel
+
+The PR includes the same-origin function `/api/docs/ask` and bundles `build/search-index.json` and `build/search-documents.json` with it. Keep the existing Docusaurus build and `build` output directory. No separate API service or retrieval database is needed
+
+In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
+
+Before enabling public access, use a dedicated virtual key restricted to the three aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
+
+After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
+
+For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets behind HTTPS. Route `/api/docs/ask` to it on the docs origin, and deploy the site and index together
+
+## Model routing and caching
+
+Every model call requests Haiku 5.5 with LiteLLM's native ordered fallbacks to GPT-6 Luna and GPT-6.1 Sol. The backend fixes the aliases and fallback parameters. Luna uses `reasoning_effort=none`; Sol uses `low` and receives an additional 1,024-token reasoning allowance. Per-provider timeouts leave room for the two fallbacks within the request deadline. The service does not retry scope refusals. An in-scope answer with an unsupported claim gets at most one revision and must pass verification again
+
+Provider prompt-prefix caching reuses the processed instructions and documentation, while every request still generates and validates a fresh answer. Stable instructions and retrieved passages come before the question, history, and candidate answer. Anthropic ephemeral cache breakpoints mark the stable prefix. GPT fallbacks use OpenAI's automatic prefix caching
+
+The service has no answer cache and explicitly disables LiteLLM response-cache reads and writes. API responses use `Cache-Control: no-store`. Provider caching still requires an exact matching prefix that meets the provider's minimum token count; short classifier prompts may be too small. Verify real prompt-cache use through provider usage fields such as `cache_creation_input_tokens` and `prompt_tokens_details.cached_tokens`, not by comparing answers or response times
+
+## Scope and security boundaries
+
+A scope classifier runs before retrieval and returns only a bounded search plan or rejection. Retrieval uses only the built public `/docs/` corpus. A separate verification call checks that the candidate answer is exclusively LiteLLM help and supported by the cited passages before anything is shown. Failed or malformed checks reject the response. Citation URLs come from the index; the renderer disables HTML and images and permits only the returned citation links
+
+The API accepts only a question of up to 500 characters and up to four previous questions of the same size. It rejects extra fields, roles, assistant answers, model settings, fallback overrides, tools, URLs as configuration, and caller-supplied documents. The body limit is 16 KiB. Prior questions, retrieved docs, and generated answers are untrusted inputs to the model checks. The model never receives the API key or access to environment variables, tools, arbitrary network requests, or private files
+
+Each question makes at most five gateway calls (three normally, plus two for a revision), with up to three provider attempts per call through native fallbacks. Context is bounded to four guides, 32 passages, and 22,000 text characters. Model response bodies, output tokens, input time, execution time, and concurrent work are bounded. Redirects are disabled, errors are generic, and client disconnects cancel upstream requests. Static serving denies dotfiles, traversal, and symlinks outside the build directory
+
+These controls reduce prompt-injection and off-topic use; probabilistic model checks cannot prove that every possible attack will be rejected. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. The service does not store or log questions or answers. Gateway retention follows its own configuration
+
+## Validation
+
+`npm run test:search` checks extraction, ranking, citations, scope and answer gates, request validation, cancellation, cache behavior, limits, and secret boundaries. `npm run check:search` checks the built index against curated retrieval queries. `npm run check:search-ai` exercises real answers and adversarial requests with the configured gateway. These cases are regression checks, not a guarantee against all attacks or factual errors
