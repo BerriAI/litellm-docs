@@ -10,7 +10,7 @@ On the gateway, each person connects their own GitHub account and their requests
 
 ## Set up the gateway
 
-An admin adds the model and a **Per-user GitHub OAuth** credential once. Each user then connects their GitHub account from the dashboard before sending requests. Nobody signs in from a terminal, and the gateway does not need GitHub CLI
+An admin adds the model and a **Per-user GitHub OAuth** credential once. Each user then connects their GitHub account from the dashboard before sending requests.
 
 ### 1. Admin: create the credential
 
@@ -20,8 +20,6 @@ Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and c
   <Image img={require('../../img/github_copilot_credential.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={600} height={530} />
 </div>
 
-The credential holds no GitHub token. It tells LiteLLM to use the GitHub account connected by whoever sends the request
-
 ### 2. Admin: add the model
 
 Open **Add Model**, select **GitHub Copilot** as the provider, and pick a model under **LiteLLM Model Name(s)**, for example `github_copilot/claude-sonnet-5.5`. Under **Model Mappings**, set **Public Model Name** to the name users will request, such as `claude-copilot`. Under **Existing Credentials**, select `github-copilot`, then click **Add Model**
@@ -30,7 +28,11 @@ Open **Add Model**, select **GitHub Copilot** as the provider, and pick a model 
   <Image img={require('../../img/github_copilot_add_model.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={2288} height={1250} />
 </div>
 
-Claude Code and Claude Desktop only accept model names that start with `claude-` or `anth-`, so give models used from those apps a public name like `claude-copilot`. Other apps can use any name
+:::note
+
+Claude Code and Claude Desktop only accept model names that start with `claude-` or `anth-`, so give models used from those apps a public name like `claude-copilot`. Other apps can use any name.
+
+:::
 
 <details>
 <summary>Use config.yaml to add the model</summary>
