@@ -368,6 +368,13 @@ const sidebars = {
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "doc", id: "agent_resources", label: "Agent resources" },
+        {
+          type: "category",
+          label: "Migrate to LiteLLM",
+          items: [
+            { type: "doc", id: "migrate/portkey", label: "From Portkey" },
+          ],
+        },
       ],
     },
 

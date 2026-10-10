@@ -1,0 +1,176 @@
+# Skill: convert a Portkey setup into a LiteLLM gateway config
+
+You are helping the user move from Portkey to a self-hosted LiteLLM gateway. You read their
+Portkey configs and write a LiteLLM `config.yaml`, plus the commands that recreate their
+workspaces and keys as LiteLLM teams and virtual keys. The goal is that client code changes
+only its base URL and API key.
+
+Reference documentation: https://docs.litellm.ai/docs/migrate/portkey
+
+Never invent a credential, a model, or a budget. Provider keys are always referenced as
+`os.environ/NAME`, never written into the file. Batch questions into as few messages as you
+can, and skip anything the user already told you.
+
+## 1. Collect the Portkey configs
+
+Ask the user which of these they have, and use whichever is quickest:
+
+1. Config JSON pasted into the chat or saved in files (the JSON from the Portkey Configs page,
+   or the object passed as `config=` to the Portkey SDK or in an `x-portkey-config` header).
+2. A Portkey API key with read access, so you can pull every config:
+
+```bash
+curl -s https://api.portkey.ai/v1/configs -H "x-portkey-api-key: $PORTKEY_API_KEY"
+curl -s https://api.portkey.ai/v1/configs/<slug> -H "x-portkey-api-key: $PORTKEY_API_KEY"
+```
+
+   The list returns metadata only; the config body is `data.config` on the second call. Use
+   the self-hosted control plane URL instead of `api.portkey.ai` if they run one.
+3. Their application code. Search it for `x-portkey-config`, `config=`, `PORTKEY_GATEWAY_URL`,
+   `createHeaders(`, `Portkey(`, `@<slug>/` model strings, and `virtual_key`, and collect the
+   config IDs and inline configs it uses.
+
+Also search the code for the model strings each app sends in requests. Those strings become
+`model_name` values, which is what lets the client code stay unchanged. If you cannot find
+them, ask.
+
+## 2. Inventory providers and ask for credentials
+
+List every distinct provider reference across all configs: Model Catalog slugs such as
+`@openai-prod`, legacy `virtual_key` values, and `provider` + `api_key` pairs. Show the user
+a table with one row per reference: the reference, the provider it points at, and the
+environment variable name you propose for its key (for example `@openai-prod` becomes
+`OPENAI_KEY_PROD`). Portkey never returns the underlying provider secret, so ask the user to
+confirm each name and to put the real key in that variable. For Azure, also ask for the
+resource endpoint and API version; for Bedrock, the region and how the gateway gets AWS
+credentials; for Vertex, the project, region, and credentials file. A `custom_host` becomes
+`api_base`.
+
+## 3. Convert each config
+
+Apply these rules. Portkey `targets` can nest; flatten each nested strategy into its own
+model group and reference it by name.
+
+| Portkey | LiteLLM |
+|---|---|
+| A target with `provider: "@slug"` and `override_params.model` | A deployment: `litellm_params.model: <litellm provider>/<model>`, `api_key: os.environ/<VAR>` |
+| `strategy.mode: loadbalance` with `weight` on each target | Several deployments with the same `model_name`, each with `weight` in `litellm_params`; only the ratio matters, so Portkey's `0.7`/`0.3` can be kept as is |
+| `strategy.mode: fallback` | `router_settings.fallbacks: [{"<primary group>": ["<backup group>", ...]}]`; each target becomes its own model group |
+| `strategy.on_status_codes` on a fallback | Usually drop it, since LiteLLM falls back on any error after retries; for context-length or content-policy errors use `context_window_fallbacks` or `content_policy_fallbacks` |
+| `strategy.mode: conditional` | Tag routing: one deployment per branch with `tags: [...]` in `litellm_params`, `router_settings.enable_tag_filtering: true`, the `default` branch tagged `default`. See the conditional routing note below |
+| `retry.attempts` | `router_settings.num_retries` |
+| `retry.on_status_codes` | `router_settings.retry_policy`, one field per error type: 429 `RateLimitErrorRetries`, 500 `InternalServerErrorRetries`, 502/503 `ServiceUnavailableErrorRetries`, 408/504 `TimeoutErrorRetries`, 401 `AuthenticationErrorRetries`, 400 `BadRequestErrorRetries`. Set the others to 0 if Portkey did not retry them |
+| `request_timeout` (ms) | `router_settings.timeout` (seconds), or `timeout` on one deployment |
+| `cache.mode: simple`, `cache.max_age` (seconds) | `litellm_settings.cache: true`, `cache_params: {type: redis, ttl: <max_age>}` |
+| `cache.mode: semantic` | `cache_params.type: redis-semantic` (with `similarity_threshold` and `redis_semantic_cache_embedding_model`) or `qdrant-semantic`; ask which embedding model to use, and only offer models the gateway serves |
+| `cb_config.failure_threshold` / `cooldown_interval` (ms) | `router_settings.allowed_fails` / `cooldown_time` (seconds) |
+| `override_params` (temperature, max_tokens, and so on) | Same keys inside that deployment's `litellm_params` |
+| `default_params` | No exact equivalent; same keys in `litellm_params` set them for every request, so tell the user the difference |
+| `drop_params` | `additional_drop_params` in `litellm_params` |
+| `input_guardrails` / `output_guardrails` | Ask which guardrail provider they use, then a `guardrails:` entry with `mode: pre_call` or `post_call`; see https://docs.litellm.ai/docs/proxy/guardrails/quick_start |
+| `passthrough: true` with `@slug/model` model strings | A wildcard deployment: `model_name: "@slug/*"`, `litellm_params.model: "<provider>/*"` |
+| `prompt_id` | Point the user at https://docs.litellm.ai/docs/proxy/prompt_management; do not guess the template |
+
+**Conditional routing needs a caller change.** Portkey matches conditions against request
+metadata; LiteLLM routes on tags. Turn each condition into one tag named after the value it
+matches (`{"metadata.tier": {"$eq": "free"}}` becomes the tag `free`). The caller then sends
+`x-litellm-tags: free`, or `"metadata": {"tags": ["free"]}` in the body, in place of the
+Portkey metadata. If a caller always falls in one branch, put the tag on its virtual key
+instead (`"metadata": {"tags": ["free"]}` in `/key/generate`; the top-level `tags`
+field needs an Enterprise license) and its code needs no change. Requests with no
+tag, or with a tag no deployment carries, go to the deployment tagged `default`. Conditions
+with `$in`, `$gt`, or several fields have no direct equivalent: show them to the user and
+ask how they want them split into tags. Tell the user plainly which callers must change.
+
+Give model groups that only exist as fallback targets a name that says so, such as
+`<primary>-fallback`, and tell the user clients can call these names directly too.
+
+Choose `model_name` values from the strings the apps already send (step 1). When an app
+sends Model Catalog strings such as `@openai-prod/gpt-4o`, add a wildcard deployment
+`model_name: "@openai-prod/*"` with `model: "openai/*"` for that slug, so every model behind
+the slug keeps working. Exact names take priority over wildcards.
+
+Portkey scopes retries, caching, and the circuit breaker to one config; in LiteLLM,
+`router_settings` and `litellm_settings` apply to every model group. `timeout` and
+`num_retries` can go on a single deployment's `litellm_params` and override the global value
+there. Cache, `retry_policy`, and `allowed_fails`/`cooldown_time` cannot be scoped that way, so
+when configs disagree, pick the global value with the user and list which groups gain or lose
+the behaviour. A caller can skip the cache on one request with `"cache": {"no-cache": true}`.
+
+Always add:
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+```
+
+With caching on, the gateway reads `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` from
+the environment; list them alongside the provider variables.
+
+## 4. Show the result and ask before writing
+
+Show the user the full `config.yaml` and, under it, a short table mapping each Portkey config
+ID to the LiteLLM model group(s) that replace it and the model string the app should keep
+sending. Call out anything you dropped or changed in meaning. Write the file only after they
+confirm, and do not overwrite an existing `config.yaml` without asking.
+
+## 5. Teams and keys
+
+Ask for the Portkey workspaces, which services use each, and any budgets or rate limits. Then
+write the commands; do not run them against a gateway unless the user asks you to:
+
+```bash
+TEAM_ID=$(curl -s -X POST $LITELLM_PROXY_URL/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_alias": "<workspace>", "max_budget": <usd>, "budget_duration": "30d"}' \
+  | python3 -c 'import sys, json; print(json.load(sys.stdin)["team_id"])')
+
+curl -s -X POST $LITELLM_PROXY_URL/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_id": "'"$TEAM_ID"'", "key_alias": "<service>", "rpm_limit": <n>, "tpm_limit": <n>}'
+```
+
+The `Content-Type` header is required; without it the gateway rejects the body. The `key`
+field of the second response is the virtual key the service sends. The same steps are
+available under **Teams** and **Virtual Keys** in the Admin UI at `/ui`.
+
+Omit any limit the user did not give you rather than inventing one.
+
+## 6. Start and verify
+
+If the user does not already run LiteLLM, give them the command, with one `-e` per variable
+you named:
+
+```bash
+docker run -d -p 4000:4000 -v $(pwd)/config.yaml:/app/config.yaml \
+  -e LITELLM_MASTER_KEY -e LITELLM_SALT_KEY -e DATABASE_URL -e REDIS_HOST -e REDIS_PORT \
+  -e <PROVIDER_KEY_VARS> \
+  docker.litellm.ai/berriai/litellm:latest --config /app/config.yaml
+```
+
+Tell them `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY` must be set first (for example
+`sk-` followed by `openssl rand -hex 32`), and that the salt key must never change once
+credentials are stored. A hosted 1-click deploy (Railway or Render) is linked from
+https://docs.litellm.ai/docs/proxy/docker_quick_start if they would rather not run Docker.
+
+Once it is up, check `curl -s $LITELLM_PROXY_URL/health/readiness`, then send one request per
+model string the apps use, with the exact string they send:
+
+```bash
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "<model string the app sends>", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Show the user each response, and the `x-litellm-model-group` and
+`x-litellm-overhead-duration-ms` response headers. Report any string that fails rather than
+renaming it.
+
+## 7. Hand back
+
+Tell the user the two changes each client needs, plus the tag change for any caller of a
+conditional config that did not get the tag on its key: the base URL becomes the LiteLLM gateway
+URL, and the API key becomes the virtual key from step 5. Leftover `x-portkey-*` headers are
+ignored, and Portkey SDK users switch to the OpenAI SDK with the same calls. Point them at
+https://docs.litellm.ai/docs/migrate/portkey#feature-mapping for anything not covered here.
