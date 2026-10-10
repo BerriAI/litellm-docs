@@ -17,6 +17,7 @@ With `safeguards_classifier_model` set, the proxy asks a deployment from your `m
 | `bedrock/` Claude (InvokeModel) | Amazon Bedrock |
 | `bedrock_mantle/` Claude | Amazon Bedrock |
 | `vertex_ai/` Claude | Vertex AI |
+| `azure_ai/` Claude | LiteLLM forwards to Foundry's own `/v1/messages` and does not classify |
 | `bedrock/converse/` models, Claude included | LiteLLM classifier |
 | Fireworks, Gemini, and other chat completions providers | LiteLLM classifier |
 | `openai/` models | LiteLLM classifier |
@@ -63,7 +64,7 @@ The classifier flags a tool call that does something dangerous the user did not 
 
 LiteLLM returns the verdicts as `safeguard_results`, on the response for non-streaming calls and inside the final `message_delta` event for streaming calls. Claude Code blocks a flagged call and runs an unflagged one. A reply with no tool calls gets an empty verdict set without a classifier call.
 
-The transcript is built from the messages Claude Code sent, before any compaction the proxy applies, and a compaction summary from Claude Code shows up as one entry. To keep the classifier call small, the transcript is trimmed to about 24,000 characters, oldest turns first, while the user's opening request is always kept. Each transcript entry is clipped to 2,000 characters and each tool result to 500. The pending tool calls are never clipped. The agent's system prompt and thinking blocks are not sent.
+The transcript is built from the messages Claude Code sent, before any compaction the proxy applies, and a compaction summary from Claude Code shows up as one entry. To keep the classifier call small, the transcript is trimmed to about 24,000 characters, oldest turns first, while the first block of the user's opening message is always kept. Each transcript entry is clipped to 2,000 characters and each tool result to 500. The pending tool calls are never clipped. The agent's system prompt and thinking blocks are not sent.
 
 :::caution
 
@@ -175,7 +176,7 @@ When the caller fails one of the checks for the classifier model (no access, the
 "safeguard_results": [{"type": "dangerous_tool_use", "status": {"type": "unsupported"}}]
 ```
 
-Claude Code treats this the same as a route with no verdicts. It shows its classifier billing notice, sends its own classifier requests through the proxy for the rest of the session, and `/status` reads `Auto mode server: Disabled` after the first reply. Give the key access to the classifier model, or raise the limit it hit, and start a new session.
+Claude Code treats this the same as a route with no verdicts. It shows its classifier billing notice, sends its own classifier requests through the proxy for the rest of the session, and `/status` reads `Auto mode server: Disabled` after the first reply that carries a tool call, since a reply without tool calls skips the check and still counts as server review. Give the key access to the classifier model, or raise the limit it hit, and start a new session.
 
 ## Cost and Logs
 
