@@ -325,9 +325,9 @@ On both routes, requests that break these rules, such as no questions at all, du
 
 ## SDK usage
 
-`litellm.decisions` takes `input` for the OpenAI format or `state` for the System One format, and returns the matching response type. Passing both raises a `BadRequestError`
+The SDK has one function per request format. `litellm.decisions` takes the OpenAI Decisions shape (`input`, a `questions` list and an optional `safety_identifier`) and returns the OpenAI response, with `answers` as a list. `litellm.systemone` takes the System One shape (`state` and a `questions` mapping keyed by question name) and returns the System One response, with `answers` keyed by question name. Both work with every supported provider, so you pick the function by the request shape you write, not by the provider you call.
 
-```python showLineNumbers
+```python showLineNumbers title="OpenAI Decisions format"
 import os
 import litellm
 
@@ -344,7 +344,23 @@ print(response.answers[0].probability)
 print(response.usage)
 ```
 
-The async version is `litellm.adecisions` and takes the same arguments
+```python showLineNumbers title="System One format"
+import os
+import litellm
+
+os.environ["TYPESAFE_API_KEY"] = ""
+
+response = litellm.systemone(
+    model="typesafe/jev-latest",
+    state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
+    questions={
+        "is_refund_request": {"type": "noul", "instructions": "Is the customer asking for a refund?"},
+    },
+)
+print(response.answers["is_refund_request"].noul)
+```
+
+The async versions are `litellm.adecisions` and `litellm.asystemone` and take the same arguments.
 
 ```python showLineNumbers
 import asyncio
@@ -354,7 +370,7 @@ import litellm
 os.environ["TYPESAFE_API_KEY"] = ""
 
 async def main():
-    response = await litellm.adecisions(
+    response = await litellm.asystemone(
         model="typesafe/jev-latest",
         state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
         questions={
@@ -366,7 +382,13 @@ async def main():
 asyncio.run(main())
 ```
 
-Both functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones
+All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. Passing `state` to `litellm.decisions` or `input` to `litellm.systemone` raises a `BadRequestError` that names the function to use instead. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
+
+Through the Router the same split applies: `router.decisions` and `router.adecisions` take the OpenAI shape, `router.systemone` and `router.asystemone` take the System One shape. On the proxy, `/v1/systemone` requests are logged with call type `asystemone` and `/v1/decisions` requests with `adecisions`.
+
+:::info Upgrading from v1.104.x
+In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Calls that pass `state` now go through `litellm.systemone`, and `litellm.decisions` only accepts `input`. Rename the function, the arguments stay the same.
+:::
 
 ## Limits
 
