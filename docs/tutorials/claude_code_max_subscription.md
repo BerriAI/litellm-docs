@@ -28,31 +28,27 @@ Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
 ## Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) installed
+- [Claude Code](https://code.claude.com/docs/en/overview) installed
 - A Claude Pro, Max, Team, or Enterprise subscription (Team and Enterprise members sign in with the Claude account their admin invited)
-- LiteLLM Gateway v1.81.14 or later running
+- LiteLLM Gateway v1.81.14 or later
+- A PostgreSQL database for the proxy, which the Dashboard needs for virtual keys and logs
 
 ## Step 1: Configure LiteLLM Proxy
 
-Create a `config.yaml` with your Anthropic models:
+Create a `config.yaml` that routes every Claude model to Anthropic:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: anthropic-claude
+  - model_name: "anthropic/*"
     litellm_params:
-      model: anthropic/{{anthropic}}
-
-  - model_name: {{anthropic}}
-    litellm_params:
-      model: anthropic/{{anthropic}}
-
-  - model_name: {{anthropic_large}}
-    litellm_params:
-      model: anthropic/{{anthropic_large}}
+      model: "anthropic/*"
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
 ```
+
+Claude Code asks for Claude model ids such as `{{anthropic}}`, and the model depends on your plan and on what you pick with `/model`. The `anthropic/*` wildcard routes whichever Claude model Claude Code asks for, so you do not need a `model_name` per model. The Dashboard steps below need the `database_url`.
 
 :::info[No header forwarding setting is needed]
 
@@ -65,6 +61,8 @@ A deployment without an `api_key` serves only subscription users: a request that
 ## Step 2: Start LiteLLM Proxy
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+export LITELLM_MASTER_KEY="sk-<a-long-random-key>"
+export DATABASE_URL="postgresql://<user>:<password>@<host>:5432/<database>"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -72,47 +70,43 @@ litellm --config /path/to/config.yaml
 
 ## Walkthrough
 
+The screenshots below are from LiteLLM v1.104.2 and Claude Code v2.1.296.
+
 ### Part 1: Create a Virtual Key in LiteLLM
 
-Navigate to the LiteLLM Dashboard and create a new virtual key for Claude Code usage.
+Create a virtual key in the LiteLLM Dashboard for Claude Code to use.
 
-#### 1.1 Open Virtual Keys Page
+#### 1.1 Open the Virtual Keys Page
 
-Navigate to the Virtual Keys section in the LiteLLM Dashboard.
+Open the Dashboard at `http://localhost:4000/ui`, sign in with the username `admin` and your master key as the password, and go to **Virtual Keys**.
 
-<Image img={require('../../img/claude_code_max/step1.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/virtual-keys-page.png')} style={{ width: '800px', height: 'auto' }} />
 
 #### 1.2 Click "Create New Key"
 
-<Image img={require('../../img/claude_code_max/step2.jpeg')} style={{ width: '800px', height: 'auto' }} />
+Click **+ Create New Key**. Leave **Owned By** set to **You** and enter a **Key Name**, for example `claude-code-test`.
 
-#### 1.3 Configure Key Details
+<Image img={require('../../img/claude_code_max/create-key-modal.png')} style={{ width: '800px', height: 'auto' }} />
 
-Enter a key name (e.g., `claude-code-test`) and select the models you want to allow access to.
+#### 1.3 Select Models
 
-<Image img={require('../../img/claude_code_max/step3.jpeg')} style={{ width: '800px', height: 'auto' }} />
+Open **Models** and pick **All anthropic models**. It matches the `anthropic/*` wildcard in your config, so the key can call every Claude model and nothing else. If you leave **Models** empty, the key can call every model on the proxy.
 
-#### 1.4 Select Models
+<Image img={require('../../img/claude_code_max/models-dropdown.png')} style={{ width: '800px', height: 'auto' }} />
 
-Choose the Anthropic models that should be accessible via this key (e.g., `anthropic-claude`, `claude-4.5-haiku`).
+<Image img={require('../../img/claude_code_max/models-selected.png')} style={{ width: '800px', height: 'auto' }} />
 
-<Image img={require('../../img/claude_code_max/step5.jpeg')} style={{ width: '800px', height: 'auto' }} />
+#### 1.4 Create the Key
 
-#### 1.5 Confirm Model Selection
+Scroll to the bottom of the form and click **Create Key**. Copy the virtual key from the **Save your Key** dialog, since the Dashboard shows it only once.
 
-<Image img={require('../../img/claude_code_max/step7.jpeg')} style={{ width: '800px', height: 'auto' }} />
-
-#### 1.6 Create the Key
-
-Click "Create Key" to generate your virtual key. Copy the generated key value (e.g., `sk-otsclFlEblQ-6D60ua2IZg`).
-
-<Image img={require('../../img/claude_code_max/step8.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/key-created.png')} style={{ width: '800px', height: 'auto' }} />
 
 ---
 
 ### Part 2: Sign into Claude Code with Your Subscription (Client Side)
 
-Set up Claude Code environment variables and authenticate with your Claude subscription.
+Point Claude Code at LiteLLM Gateway and sign in with your Claude subscription.
 
 #### 2.1 Set Environment Variables
 
@@ -120,88 +114,81 @@ Configure Claude Code to use LiteLLM Gateway with your virtual key:
 
 ```bash showLineNumbers title="Configure Claude Code Environment Variables"
 export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_MODEL="anthropic-claude"
-export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-otsclFlEblQ-6D60ua2IZg"
+export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-<your-virtual-key>"
 ```
-
-<Image img={require('../../img/claude_code_max/step15.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
 #### Environment Variables Explained
 
 | Variable | Description |
 |----------|-------------|
 | `ANTHROPIC_BASE_URL` | Points Claude Code to your LiteLLM Gateway endpoint |
-| `ANTHROPIC_MODEL` | The model name configured in your LiteLLM `config.yaml` |
 | `ANTHROPIC_CUSTOM_HEADERS` | The `x-litellm-api-key` header for LiteLLM authentication |
+
+You do not need `ANTHROPIC_MODEL`. Claude Code uses your plan's default model, `/model` switches it, and the wildcard in Step 1 routes either one. If you do set `ANTHROPIC_MODEL`, use a Claude model id such as `{{anthropic_large}}` rather than a custom alias, because Claude Code warns about model names it does not recognize.
 
 Do not also set `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper`. Claude Code sends any of those in place of the subscription login, so the request no longer uses the subscription.
 
 #### 2.2 Launch Claude Code
 
-Start Claude Code:
+Start Claude Code in your project folder:
 
 ```bash showLineNumbers title="Launch Claude Code"
 claude
 ```
 
-<Image img={require('../../img/claude_code_max/step16.jpeg')} style={{ width: '800px', height: 'auto' }} />
+On the first run, Claude Code asks you to choose a text style. Pick one and press Enter.
+
+<Image img={require('../../img/claude_code_max/claude-code-theme.png')} style={{ width: '800px', height: 'auto' }} />
 
 #### 2.3 Select Login Method
 
-Choose "Claude account with subscription" (Pro, Max, Team, or Enterprise).
+Choose **Claude account with subscription** (Pro, Max, Team, or Enterprise).
 
-<Image img={require('../../img/claude_code_max/step17.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/claude-code-login-method.png')} style={{ width: '800px', height: 'auto' }} />
 
-#### 2.4 Authorize in Browser
+#### 2.4 Sign In in Your Browser
 
-Claude Code opens your browser to authenticate. Click "Authorize" to connect your Claude account.
+Claude Code opens claude.com in your browser. Sign in with the Claude account that has your subscription and approve the access request. If the browser shows a code, paste it at the **Paste code here if prompted** line. If the browser does not open, press `c` to copy the sign-in URL and open it yourself.
 
-<Image img={require('../../img/claude_code_max/step19.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/claude-code-sign-in.png')} style={{ width: '800px', height: 'auto' }} />
 
-#### 2.5 Login Successful
+#### 2.5 Trust the Project Folder
 
-After authorization, you'll see the login success confirmation.
+After sign-in, press Enter through the remaining setup screens. Claude Code then asks whether you trust the current folder; choose **Yes, I trust this folder**.
 
-<Image img={require('../../img/claude_code_max/step20.jpeg')} style={{ width: '800px', height: 'auto' }} />
-
-#### 2.6 Complete Setup
-
-Press Enter to continue past the security notes and complete the setup.
-
-<Image img={require('../../img/claude_code_max/step21.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/claude-code-trust-folder.png')} style={{ width: '800px', height: 'auto' }} />
 
 ---
 
 ### Part 3: Use Claude Code with LiteLLM
 
-Now you can use Claude Code normally, and all requests will be tracked in LiteLLM.
+Now you can use Claude Code normally, and LiteLLM tracks every request.
 
 #### 3.1 Make a Request in Claude Code
 
-Start using Claude Code - requests will flow through LiteLLM Gateway.
+Use Claude Code as usual. The header shows the model and your plan, and every request goes through LiteLLM Gateway.
 
-<Image img={require('../../img/claude_code_max/step24.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/claude-code-request.png')} style={{ width: '800px', height: 'auto' }} />
 
 #### 3.2 View Logs in LiteLLM Dashboard
 
-Navigate to the Logs page in LiteLLM Dashboard to see all Claude Code requests.
+Open **Logs** in the Dashboard. The requests from one Claude Code session are grouped into one row, which shows the number of requests and the session's total cost and duration.
 
-<Image img={require('../../img/claude_code_max/step25.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/logs-page.png')} style={{ width: '800px', height: 'auto' }} />
 
 #### 3.3 View Request Details
 
-Click on a request to see detailed information including tokens, cost, duration, and model used.
+Click the row to open the session. The left side lists each request in the session, and the right side shows the selected request.
 
-<Image img={require('../../img/claude_code_max/step27.jpeg')} style={{ width: '800px', height: 'auto' }} />
+<Image img={require('../../img/claude_code_max/request-details.png')} style={{ width: '800px', height: 'auto' }} />
 
-The logs show:
-- **Key Name**: `claude-code-test` (the virtual key you created)
-- **Model**: `anthropic/claude-sonnet-4-20250514`
-- **Tokens**: 65012 (64679 prompt + 333 completion)
-- **Cost**: $0.249754
+The request details show:
+- **Key Alias** (on the Logs page): `claude-code-test`, the virtual key you created
+- **Model**: the Claude model Claude Code used, for example `anthropic/claude-opus-5-5`
+- **Tokens**: input, output, and prompt cache tokens
+- **Cost**: calculated at Anthropic API list prices, see [Attribution and cost](#attribution-and-cost)
+- **Tags**: Claude Code's `User-Agent`, for example `claude-cli/2.1.296`
 - **Status**: Success
-
-<Image img={require('../../img/claude_code_max/step28.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
 ---
 
@@ -245,11 +232,11 @@ Here's what a typical request looks like when Claude Code makes a call through L
 
 ```bash showLineNumbers title="Example Request from Claude Code to LiteLLM"
 curl -X POST "http://localhost:4000/v1/messages" \
-  -H "x-litellm-api-key: Bearer sk-otsclFlEblQ-6D60ua2IZg" \
+  -H "x-litellm-api-key: Bearer sk-<your-virtual-key>" \
   -H "Authorization: Bearer sk-ant-oat01-..." \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "anthropic-claude",
+    "model": "{{anthropic}}",
     "max_tokens": 1024,
     "messages": [{"role": "user", "content": "Hello, Claude!"}]
   }'
@@ -319,20 +306,7 @@ litellm_settings:
 
 ### Budget Controls
 
-Set up per-user budgets while using Claude subscriptions (cost is tracked at API list prices, see [Attribution and cost](#attribution-and-cost)):
-
-```yaml showLineNumbers title="config.yaml - With Database for Budget Tracking"
-model_list:
-  - model_name: anthropic-claude
-    litellm_params:
-      model: anthropic/{{anthropic}}
-
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: "postgresql://..."
-```
-
-Then create virtual keys with budgets:
+Set up per-user budgets while using Claude subscriptions (cost is tracked at API list prices, see [Attribution and cost](#attribution-and-cost)). With the `database_url` from Step 1 in place, create virtual keys with budgets:
 
 ```bash showLineNumbers title="Create Virtual Key with Budget"
 curl -X POST "http://localhost:4000/key/generate" \
@@ -372,22 +346,22 @@ Pass `used_client_oauth_token=false` for the requests the configured key paid fo
 
 **Symptom**: 401 errors from LiteLLM Gateway
 
-**Solution**: Verify `x-litellm-api-key` header is set correctly in `ANTHROPIC_CUSTOM_HEADERS`:
+**Solution**: Verify the `x-litellm-api-key` header is set correctly in `ANTHROPIC_CUSTOM_HEADERS` by sending the same header yourself. A `200` means the key works; a `401` with `Invalid proxy server token passed` means the key is wrong or was deleted:
 
-```bash showLineNumbers title="Verify Key Info"
-curl -X GET "http://localhost:4000/key/info" \
-  -H "Authorization: Bearer sk-otsclFlEblQ-6D60ua2IZg"
+```bash showLineNumbers title="Verify the Virtual Key"
+curl "http://localhost:4000/v1/models" \
+  -H "x-litellm-api-key: Bearer sk-<your-virtual-key>"
 ```
 
 ### Model Not Found
 
-**Symptom**: Model not found errors
+**Symptom**: Model not found errors, or the key is not allowed to access the model
 
-**Solution**: Ensure the `ANTHROPIC_MODEL` matches a model name in your config:
+**Solution**: Check that the config has the `anthropic/*` wildcard from Step 1 (or a `model_name` for each model Claude Code asks for) and that the virtual key's **Models** include it; **All anthropic models** covers every Claude model. If you set `ANTHROPIC_MODEL`, it must be a model the proxy serves. List the models your key can call:
 
 ```bash showLineNumbers title="List Available Models"
 curl "http://localhost:4000/v1/models" \
-  -H "Authorization: Bearer sk-otsclFlEblQ-6D60ua2IZg"
+  -H "Authorization: Bearer sk-<your-virtual-key>"
 ```
 
 ## Related Documentation
