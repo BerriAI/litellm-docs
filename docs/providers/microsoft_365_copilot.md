@@ -2,9 +2,9 @@ import Image from '@theme/IdealImage';
 
 # Microsoft 365 Copilot
 
-Use Microsoft 365 Copilot through LiteLLM to ask questions about your Microsoft 365 data. Copilot uses the signed-in user's permissions to access that data.
+Connect an app with Microsoft Entra single sign-on (SSO) to your remotely deployed LiteLLM gateway. Users sign in with their Microsoft account, then ask Copilot about the Microsoft 365 data they can access.
 
-This guide shows administrators how to set up Microsoft Entra ID and LiteLLM, then shows users how to sign in and send a request. LiteLLM exchanges each user's Entra access token for a Microsoft Graph access token. Microsoft calls this the [on-behalf-of (OBO) flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow).
+An admin configures Entra ID, the gateway, and the app once. The app sends each signed-in user's access token to LiteLLM, which exchanges it for a Microsoft Graph access token. Microsoft calls this the [on-behalf-of (OBO) flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow).
 
 ## Before you start
 
@@ -12,13 +12,16 @@ You need:
 
 - A Microsoft 365 Copilot license for each user.
 - Access to register an app in Microsoft Entra ID and grant admin consent.
-- A running LiteLLM proxy with dashboard access and [JWT authentication](../proxy/token_auth.md), an enterprise feature.
+- A remotely deployed LiteLLM gateway with an HTTPS URL, dashboard access, and [JWT authentication](../proxy/token_auth.md), an enterprise feature.
+- An app that supports Entra SSO and can send the signed-in user's access token to an OpenAI-compatible API.
 
 ## 1. Register an app in Microsoft Entra ID
 
 ### Create the app and client secret
 
 In the [Microsoft Entra admin center](https://entra.microsoft.com), open **App registrations** > **New registration**. Select **Accounts in this organizational directory only**, then register the app. Copy the **Application (client) ID** and **Directory (tenant) ID** from its overview page. See Microsoft's [app registration guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app).
+
+Use this registration for both your app's SSO settings and the LiteLLM credential.
 
 Open **Certificates & secrets** > **New client secret**. Create a secret and copy its **Value** immediately; Entra only shows it once. Keep it for the LiteLLM credential. See Microsoft's [client credentials guide](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials).
 
@@ -50,17 +53,11 @@ Open **Expose an API**. Set **Application ID URI** to `api://<app-client-id>`. S
   <Image img={require('../../img/m365_copilot_entra_expose_api.png')} alt="The access_as_user scope in Microsoft Entra's Expose an API settings" width={1740} height={640} />
 </div>
 
-Open **Manifest**, set `api.requestedAccessTokenVersion` to `2`, and save. The proxy configuration below expects [v2 access tokens](https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens).
+Open **Manifest**, set `api.requestedAccessTokenVersion` to `2`, and save. The gateway configuration below expects [v2 access tokens](https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens).
 
 ### Configure client sign-in
 
 Open **Authentication** > **Add a platform**. Choose the platform your app uses and add the exact redirect URI from its sign-in settings. See Microsoft's [redirect URI guide](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url).
-
-The screenshot shows a desktop app example. Use your app's redirect URI.
-
-<div className="docs-screenshot">
-  <Image img={require('../../img/m365_copilot_entra_redirect_uris.png')} alt="Desktop app redirect URIs in Microsoft Entra authentication settings" width={1720} height={980} />
-</div>
 
 ## 2. Add the model in LiteLLM
 
@@ -90,17 +87,17 @@ Enter these values:
 
 Select **Add Credential**, select the saved credential on the model form, then select **Add Model**.
 
-## 3. Configure the proxy to accept Entra access tokens
+## 3. Configure the gateway to accept Entra access tokens
 
-Set these environment variables on the proxy. Replace `<tenant-id>` and `<app-client-id>` with the IDs from step 1:
+Set these environment variables in your gateway deployment. Replace `<tenant-id>` and `<app-client-id>` with the IDs from step 1:
 
-```bash
-export JWT_PUBLIC_KEY_URL="https://login.microsoftonline.com/<tenant-id>/discovery/v2.0/keys"
-export JWT_AUDIENCE="<app-client-id>"
-export JWT_ISSUER="https://login.microsoftonline.com/<tenant-id>/v2.0"
-```
+| Environment variable | Value |
+| --- | --- |
+| `JWT_PUBLIC_KEY_URL` | `https://login.microsoftonline.com/<tenant-id>/discovery/v2.0/keys` |
+| `JWT_AUDIENCE` | `<app-client-id>` |
+| `JWT_ISSUER` | `https://login.microsoftonline.com/<tenant-id>/v2.0` |
 
-Add this to your proxy's `config.yaml`, then restart the proxy:
+Add this to your gateway's `config.yaml`, then restart the gateway:
 
 ```yaml
 general_settings:
@@ -114,56 +111,42 @@ litellm_settings:
   drop_params: true
 ```
 
-`drop_params: true` removes unsupported parameters, such as tools or temperature, from requests across the proxy. Copilot does not support tool calling, and LiteLLM ignores `max_tokens` for this provider.
+`drop_params: true` removes unsupported parameters, such as tools or temperature, from requests across the gateway. Copilot does not support tool calling, and LiteLLM ignores `max_tokens` for this provider.
 
-## 4. Connect your app
+## 4. Connect your app with SSO
 
-Sign in through your client and request the scope `api://<app-client-id>/access_as_user`. Send the resulting **access token** to LiteLLM. An ID token cannot complete the on-behalf-of exchange
-
-### Configure your app
-
-Use an app that supports the OpenAI-compatible API and lets you set a custom API base URL and bearer token. Enter these settings:
+As the app admin, configure OpenID Connect (OIDC) sign-in with Microsoft Entra:
 
 | Setting | Value |
 | --- | --- |
-| API base URL | `https://litellm.example.com/v1`, using your proxy's address |
+| Issuer URL | `https://login.microsoftonline.com/<tenant-id>/v2.0` |
+| Client ID | The Entra app's client ID from step 1 |
+| Redirect URI | The app's SSO callback URL, registered in step 1 |
+| Scopes | `openid profile email offline_access api://<app-client-id>/access_as_user` |
+
+Then configure the app's model connection:
+
+| Setting | Value |
+| --- | --- |
+| API base URL | `https://litellm.example.com/v1`, using your gateway's address |
 | Model | `m365-copilot`, or the public model name you set in step 2 |
-| API key or bearer token | The user's Entra access token |
+| Authentication | Send the signed-in user's Entra access token in the `Authorization: Bearer <access-token>` header |
 
-If your app supports OpenID Connect (OIDC) sign-in and can send the resulting access token, set the issuer URL to `https://login.microsoftonline.com/<tenant-id>/v2.0` and the client ID to the Entra app's client ID. Request these scopes:
+:::note
 
-```text
-openid profile email offline_access api://<app-client-id>/access_as_user
-```
+The app must send the **access token** issued for `api://<app-client-id>/access_as_user` with each model request. SSO sign-in alone is not enough. An ID token cannot complete the on-behalf-of exchange.
 
-Sign in with your Microsoft account, then send a prompt such as “Summarize my latest meeting.” If your app does not support sign-in, get an access token with MSAL as shown below.
+:::
 
-### Python example
+## 5. Sign in and use Copilot
 
-Use [Microsoft Authentication Library (MSAL)](https://learn.microsoft.com/en-us/entra/msal/python/getting-started/acquiring-tokens#acquire-token-interactive) to sign in and get an access token for the same scope. For MSAL interactive sign-in, add the redirect URI that MSAL uses as a **Mobile and desktop applications** redirect URI in Entra
-
-Pass the access token as the API key when you call LiteLLM with the OpenAI Python SDK:
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    api_key="<entra-access-token>",
-    base_url="https://litellm.example.com/v1",
-)
-
-response = client.chat.completions.create(
-    model="m365-copilot",
-    messages=[{"role": "user", "content": "Summarize my latest meeting"}],
-)
-print(response.choices[0].message.content)
-```
+Open the app and sign in with your Microsoft work account. Select `m365-copilot` and send a prompt such as “Summarize my latest meeting.” The app handles authentication for each request, and Copilot uses your Microsoft 365 permissions to answer.
 
 ## Optional configuration
 
 ### Add email or group claims
 
-If your proxy uses email or group claims, add them under **Token configuration**. Select the **Access token** type for the optional `email` claim, and add `groups` only if your proxy uses it. See Microsoft's [optional claims guide](https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims).
+If your gateway uses email or group claims, add them under **Token configuration**. Select the **Access token** type for the optional `email` claim, and add `groups` only if your gateway uses it. See Microsoft's [optional claims guide](https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims).
 
 <div className="docs-screenshot">
   <Image img={require('../../img/m365_copilot_entra_token_configuration.png')} alt="Optional token claims in Microsoft Entra" width={1740} height={900} />
@@ -194,22 +177,18 @@ LiteLLM reads token exchange settings from the saved credential. Clients cannot 
 | `token_exchange_scope` | Defaults to `https://graph.microsoft.com/.default` |
 | `token_exchange_audience` | Optional; applies only to `rfc8693` |
 
-### Use a static access token
-
-You can set `api_key` to a Microsoft Graph delegated access token instead of using token exchange. LiteLLM uses that token for every caller and does not refresh it. Replace it when it expires.
-
 ## How requests work
 
 LiteLLM calls the Microsoft Graph beta Copilot Chat API. Microsoft chooses the model. LiteLLM lists token costs as `$0` because Microsoft bills Copilot by license.
 
 LiteLLM sends the last user message as the prompt and all other messages, in order, as context. If Graph returns the same reply twice in a row, LiteLLM removes the duplicate only when both copies match exactly.
 
-Each proxy worker caches exchanged access tokens in memory until 60 seconds before they expire. LiteLLM does not store refresh tokens.
+Each gateway worker caches exchanged access tokens in memory until 60 seconds before they expire. LiteLLM does not store refresh tokens.
 
 ## Troubleshooting
 
 | Problem | What to do |
 | --- | --- |
-| Entra returns `AADSTS240002` | Send an access token for `api://<app-client-id>/access_as_user`. Check that your client is not sending an ID token. |
-| A connection test says it requires the caller's access token | Test with the user's Entra access token in the `Authorization` header. A dashboard session alone cannot complete the exchange |
+| Entra returns `AADSTS240002` | Check that the app requests `api://<app-client-id>/access_as_user` and forwards the resulting access token, not an ID token. |
+| A connection test says it requires the caller's access token | Sign in through the app and send a prompt. A LiteLLM dashboard session alone cannot complete the exchange. |
 | Token audience or issuer does not match | Check that the app issues v2 access tokens. The token's `aud` must match `JWT_AUDIENCE`, and its `iss` must match `JWT_ISSUER`. |
