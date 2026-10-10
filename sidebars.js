@@ -368,6 +368,14 @@ const sidebars = {
       items: [
         { type: "doc", id: "index", label: "Quickstart" },
         { type: "doc", id: "agent_resources", label: "Agent resources" },
+        {
+          type: "category",
+          label: "Migrate to LiteLLM",
+          items: [
+            { type: "doc", id: "migrate/bifrost", label: "From Bifrost" },
+            { type: "doc", id: "migrate/openrouter", label: "From OpenRouter" },
+          ],
+        },
       ],
     },
 

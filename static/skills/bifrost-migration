@@ -1,0 +1,167 @@
+# Skill: convert a Bifrost setup into a LiteLLM gateway config
+
+You are helping the user move from Bifrost to a LiteLLM gateway. You read their Bifrost
+`config.json` and write a LiteLLM `config.yaml`, plus the commands that recreate their teams,
+customers, and virtual keys in LiteLLM with the same `sk-bf-*` key values. The goal is that
+clients keep their `provider/model` strings and their keys, and change only the base URL.
+
+Reference documentation: https://docs.litellm.ai/docs/migrate/bifrost
+
+Never invent a credential, a model, a budget, or a limit. Provider keys are always referenced
+as `os.environ/NAME`, never written into the file. Batch questions into as few messages as you
+can, and skip anything the user already told you.
+
+## 1. Collect the Bifrost config
+
+Ask the user for their Bifrost `config.json` (by default in the Bifrost app directory, or the
+file passed with `-app-dir`). If Bifrost was configured through its web UI and stores config
+in its database, ask them to export it or to paste the relevant sections; the Bifrost HTTP API
+redacts virtual key values, so it cannot be used to copy keys.
+
+Also search their application code for the Bifrost base URL (`:8080`, `/openai`, `/anthropic`,
+`/genai`, `/litellm`), the `x-bf-vk` header, and the model strings each app sends. Those
+strings decide the `model_name` values below.
+
+## 2. Inventory providers and credentials
+
+List every provider under `providers` and every key under `providers.<name>.keys[]`. Show the
+user a table with one row per key: provider, key `name`, the environment variable its `value`
+references (`env.OPENAI_KEY_1` becomes `os.environ/OPENAI_KEY_1`), `models`, and `weight`.
+If a `value` is a literal secret rather than `env.VAR`, do not copy it; propose a variable name
+and ask the user to put the secret there. `vault.<path>` values need a LiteLLM secret manager,
+which is an Enterprise feature; ask how they want to handle them.
+
+For Azure keys also carry over `azure_key_config.endpoint`; for Bedrock, `region` and how the
+gateway gets AWS credentials (`access_key`/`secret_key` env vars, or `role_arn`); for Vertex,
+`project_id`, `region`, and `auth_credentials`.
+
+## 3. Convert providers
+
+| Bifrost | LiteLLM |
+|---|---|
+| A key with `models: ["*"]` | A wildcard deployment: `model_name: "<provider>/*"`, `litellm_params.model: "<provider>/*"` |
+| Several keys on one provider with `weight` | One deployment per key, all with the same `model_name`, each with `weight` in `litellm_params` |
+| A key with a specific `models` list | One deployment per model: `model_name: "<provider>/<model>"`, `model: "<provider>/<model>"` |
+| key `aliases` (`"gpt-4o": "my-deployment"`) | `model_name: "<provider>/gpt-4o"`, `model: "<provider>/my-deployment"` |
+| `env.VAR` | `os.environ/VAR` |
+| `network_config.base_url` | `api_base` |
+| `network_config.extra_headers` | `extra_headers` in `litellm_params` |
+| `network_config.default_request_timeout_in_seconds` | `router_settings.timeout`, or `timeout` on one deployment if providers differ |
+| `network_config.max_retries` | `router_settings.num_retries`, or `num_retries` on one deployment |
+| `azure_key_config.endpoint` | `api_base` on an `azure/<deployment>` model; ask for `api_version` |
+| `bedrock_key_config` (`region`, `access_key`, `secret_key`, `role_arn`) | `aws_region_name`, `aws_access_key_id`, `aws_secret_access_key`, `aws_role_name` |
+| `vertex_key_config` (`project_id`, `region`, `auth_credentials`) | `vertex_project`, `vertex_location`, `vertex_credentials` |
+| `custom_provider_config.base_provider_type: openai` | `model: "openai/<model>"` with `api_base` set to the custom provider's `base_url` |
+| `concurrency_and_buffer_size` | Usually drop it; `max_parallel_requests` on a deployment is the closest LiteLLM setting |
+
+Keep the Bifrost model naming (`openai/gpt-4o-mini`) so no client changes its model strings.
+When a key uses a `regex:` model pattern, tell the user LiteLLM wildcards only match `*`, and
+list the models explicitly or fall back to a `provider/*` wildcard with their agreement.
+
+## 4. Convert governance, routing, and plugins
+
+| Bifrost | LiteLLM |
+|---|---|
+| `routing_rules[]` with `cel_expression: "true"` and `fallbacks` | `litellm_settings.default_fallbacks: [...]` |
+| A routing rule whose `targets` name one model and has `fallbacks` | `router_settings.fallbacks: [{"<provider>/<model>": ["<fallback>", ...]}]` |
+| A routing rule with a CEL expression on headers or metadata | Tag routing: deployments with `tags: [...]`, `router_settings.enable_tag_filtering: true`; callers send `x-litellm-tags`. Show the user each rule and the tag you chose |
+| `scope: team` / `virtual_key` routing rules | `models` on that team or key |
+| `plugins: semantic_cache` (`ttl`, `threshold`, `embedding_model`) | `litellm_settings.cache: true`, `cache_params: {type: redis-semantic, ttl, similarity_threshold, redis_semantic_cache_embedding_model}`; the embedding model must be a `model_name` the gateway serves |
+| `plugins: otel` (`collector_url`) | `litellm_settings.callbacks: ["otel"]` with `OTEL_EXPORTER_OTLP_ENDPOINT` set to the collector URL |
+| `plugins: datadog` | `litellm_settings.callbacks: ["datadog"]` with `DD_API_KEY` and `DD_SITE` |
+| `plugins: maxim`, `logging`, others | Ask which tool they log to and use the matching callback from https://docs.litellm.ai/docs/observability/callbacks |
+| `mcp.client_configs[]` (`name`, `connection_type`, `connection_string`, `stdio_config`) | `mcp_servers: {<name>: {url: ..., transport: http or sse}}`, or `transport: stdio` with `command` and `args`; stdio needs `LITELLM_ENABLE_MCP_STDIO=true` |
+| `config_store: postgres` | `general_settings.database_url: os.environ/DATABASE_URL` (LiteLLM needs Postgres; SQLite is not supported) |
+| `client.allowed_origins`, `drop_excess_requests` | Usually drop them and say so |
+
+Always add:
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+```
+
+## 5. Show the result and ask before writing
+
+Show the user the full `config.yaml` and, under it, a short table mapping each Bifrost
+provider key and routing rule to the LiteLLM deployments or settings that replace it. Call out
+anything you dropped or changed in meaning. Write the file only after they confirm, and do not
+overwrite an existing `config.yaml` without asking.
+
+## 6. Teams, customers, and virtual keys
+
+Read `governance.teams[]`, `customers[]`, `virtual_keys[]`, `budgets[]`, and `rate_limits[]`.
+A budget is linked to its owner by `virtual_key_id`, `team_id`, or `customer_id` on the budget
+(or by `budget_id` on older configs), and a rate limit by `rate_limit_id` on the owner.
+
+Convert durations: `1M` becomes `1mo`, `1w` becomes `7d`, `1Q` becomes `90d`, `1Y` becomes
+`365d`; `30s`, `5m`, `1h`, and `1d` stay the same. `max_limit` becomes `max_budget`,
+`request_max_limit` becomes `rpm_limit` and `token_max_limit` becomes `tpm_limit`, but only
+when the matching reset duration is `1m`; otherwise tell the user LiteLLM limits are per minute
+and ask what value to use.
+
+A virtual key's `provider_configs[].allowed_models` becomes the key's `models` list, written in
+`provider/model` form (`["openai/*"]` when it allows a whole provider). `is_active: false`
+becomes `"blocked": true`.
+
+Write the commands in this order, and do not run them against a gateway unless the user asks:
+
+```bash
+curl -X POST $LITELLM_PROXY_URL/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_alias": "<team name>", "max_budget": <usd>, "budget_duration": "<duration>"}'
+
+curl -X POST $LITELLM_PROXY_URL/customer/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"user_id": "<customer id>", "max_budget": <usd>, "budget_duration": "<duration>"}'
+
+curl -X POST $LITELLM_PROXY_URL/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"key": "<sk-bf-... value>", "key_alias": "<virtual key name>", "team_id": "<team_id from team/new>",
+       "models": ["<provider>/<model or *>"], "max_budget": <usd>, "budget_duration": "<duration>",
+       "rpm_limit": <n>, "tpm_limit": <n>}'
+```
+
+`key` must be the existing `sk-bf-*` value so clients keep working; read it from the config
+or ask for it, and if a key's `value` is `env.VAR`, reference that variable in the command
+rather than printing the secret. Omit any field the user's config does not set.
+
+## 7. Start and verify
+
+If the user does not already run LiteLLM, give them the command, with one `-e` per variable
+you named:
+
+```bash
+docker run -d -p 4000:4000 -v $(pwd)/config.yaml:/app/config.yaml \
+  -e LITELLM_MASTER_KEY -e LITELLM_SALT_KEY -e DATABASE_URL \
+  -e <PROVIDER_KEY_VARS> \
+  docker.litellm.ai/berriai/litellm:latest --config /app/config.yaml
+```
+
+Tell them `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY` must be set first (for example `sk-`
+followed by `openssl rand -hex 32`), and that the salt key must never change once credentials
+are stored. A hosted 1-click deploy (Railway or Render) is linked from
+https://docs.litellm.ai/docs/migrate/bifrost if they would rather not run Docker. For more than
+one replica, add `redis_host`, `redis_port`, and `redis_password` under `router_settings`.
+
+Once it is up, check `curl -s $LITELLM_PROXY_URL/health/readiness`, then send one request per
+model string the apps use, with one of the imported `sk-bf-*` keys:
+
+```bash
+curl -s $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer <sk-bf-... key>" -H "Content-Type: application/json" \
+  -d '{"model": "<provider/model the app sends>", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Show the user each response and the `x-litellm-model-group` and
+`x-litellm-overhead-duration-ms` response headers. Report any string that fails rather than
+renaming it.
+
+## 8. Hand back
+
+Tell the user what each client changes: the base URL becomes the LiteLLM gateway URL (`/openai`
+and `/anthropic` both become the root URL, `/genai` becomes `/gemini`), and clients that send
+the key only in `x-bf-vk` must send it as `Authorization: Bearer` instead. Model strings, key
+values, and `fallbacks` in the request body stay the same. Point them at
+https://docs.litellm.ai/docs/migrate/bifrost#feature-mapping for anything not covered here.
