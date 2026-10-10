@@ -1487,6 +1487,15 @@ const sidebars = {
       items: [
         "sdk_custom_pricing",
         "migration",
+        {
+          type: "category",
+          label: "Migrate to LiteLLM",
+          link: { type: "doc", id: "migrate/index" },
+          items: [
+            { type: "doc", id: "migrate/bifrost", label: "From Bifrost" },
+            { type: "doc", id: "migrate/openrouter", label: "From OpenRouter" },
+          ],
+        },
         { type: "ref", id: "data_security" },
         { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",

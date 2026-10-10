@@ -1,0 +1,151 @@
+# Skill: move an OpenRouter setup onto a LiteLLM gateway
+
+You are helping the user move from OpenRouter to a LiteLLM gateway. First you put LiteLLM in
+front of OpenRouter so nothing about model behavior changes. Then, only if the user wants it,
+you move their highest-spend models to direct provider accounts with OpenRouter kept as the
+fallback. The goal is that client code changes only its base URL and API key.
+
+Reference documentation: https://docs.litellm.ai/docs/migrate/openrouter
+
+Never invent a credential, a model, or a budget. Provider keys are always referenced as
+`os.environ/NAME`, never written into the file. Batch questions into as few messages as you
+can, and skip anything the user already told you.
+
+## 1. Find what the apps send
+
+Search the user's code for `openrouter.ai`, `OPENROUTER_API_KEY`, `HTTP-Referer`,
+`X-OpenRouter-Title` (or `X-Title`), and the OpenRouter SDK. For every call, record:
+
+1. The model ID it sends, including any variant suffix (`:nitro`, `:floor`, `:free`,
+   `:online`, `:thinking`) and `openrouter/auto`.
+2. OpenRouter-only request fields: `models` (fallback array), `provider` (`order`, `only`,
+   `ignore`, `sort`, `allow_fallbacks`, `data_collection`), `transforms`, `plugins`, `route`,
+   `reasoning`, and `usage: {include: true}`.
+
+Show the user the list as a table: model ID, where it is used, and the OpenRouter-only fields
+it sends. If you cannot find the code, ask for the model IDs. If the user can export their
+OpenRouter activity, ask which models carry the most spend; that decides step 4.
+
+## 2. Write the pass-through config
+
+Start with one wildcard that serves every OpenRouter model under the ID the apps already send:
+
+```yaml
+model_list:
+  - model_name: "*"
+    litellm_params:
+      model: "openrouter/*"
+      api_key: os.environ/OPENROUTER_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+```
+
+Requests pass through unchanged, including variant suffixes and the `models` and `transforms`
+fields, and LiteLLM records the cost OpenRouter reports. Nothing else is needed for step 1 of
+the migration. If the user only wants to expose certain models, list them as separate entries
+with `model_name: <id>` and `model: openrouter/<id>` instead of the wildcard, and say so.
+
+## 3. Show the result and ask before writing
+
+Show the user the `config.yaml`. Write it only after they confirm, and do not overwrite an
+existing `config.yaml` without asking.
+
+## 4. Move models to direct providers (only if the user wants this)
+
+Ask which models, if any, they want billed to their own provider accounts, and through which
+provider (Anthropic, OpenAI, Azure, Bedrock, Vertex, and so on). For each one:
+
+1. Add a deployment whose `model_name` is the exact OpenRouter ID the apps send (for example
+   `anthropic/claude-sonnet-4.5`) and whose `model` is the direct provider's model
+   (`anthropic/claude-sonnet-4-5`). OpenRouter IDs and provider IDs often differ in dots,
+   dashes, and date suffixes; look up the provider's ID in https://docs.litellm.ai/docs/providers
+   and confirm it with the user rather than guessing.
+2. Add a second deployment named `<something>-openrouter` with
+   `model: openrouter/<the OpenRouter ID>`, and a fallback from the direct name to it:
+
+```yaml
+router_settings:
+  fallbacks:
+    - {"<OpenRouter ID the app sends>": ["<name>-openrouter"]}
+```
+
+3. Ask for the credential variable and any provider-specific settings: `api_base` and
+   `api_version` for Azure, `aws_region_name` and AWS credentials for Bedrock, `vertex_project`
+   and `vertex_location` for Vertex.
+
+Keep the `"*"` wildcard last; an exact `model_name` always wins over it, so every other model
+stays on OpenRouter.
+
+## 5. Replace OpenRouter-only fields on direct models
+
+Direct providers do not understand OpenRouter fields. For each model moved in step 4, tell the
+user which fields their code sends to it and what replaces them:
+
+| OpenRouter | LiteLLM |
+|---|---|
+| `models: [...]` | `router_settings.fallbacks`, or `"fallbacks": [...]` in the request body |
+| `provider.order` / `only` / `ignore` | The deployments listed under that `model_name`, with `order: 1`, `order: 2` in `litellm_params` |
+| `provider.sort: price` / `latency` | `router_settings.routing_strategy: cost-based-routing` / `latency-based-routing` |
+| `:nitro` / `:floor` | Separate model names (for example `chat-fast`, `chat-cheap`) pointing at different deployments |
+| `openrouter/auto` | The auto router: `curl -fsSL https://docs.litellm.ai/skills/auto-router` |
+| `reasoning: {effort}` | `reasoning_effort` |
+| `plugins: [{id: "web"}]`, `:online` | `web_search_options` |
+| `transforms: ["middle-out"]` | `context_window_fallbacks` to a model with a larger window |
+| `usage: {include: true}`, `usage.cost` | The `x-litellm-response-cost` response header |
+| `HTTP-Referer`, `X-OpenRouter-Title` | `x-litellm-tags` header for spend attribution |
+
+Requests that stay on the wildcard keep working with the OpenRouter fields, so only change
+code paths that hit direct models. Show the diff before editing any application code.
+
+## 6. Keys and teams
+
+Ask how many apps or teams use OpenRouter and whether each had a credit limit. Write one
+command per app; do not run them against a gateway unless the user asks:
+
+```bash
+curl -X POST $LITELLM_PROXY_URL/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"key_alias": "<app>", "max_budget": <usd>, "budget_duration": "30d", "rpm_limit": <n>}'
+```
+
+OpenRouter workspaces become teams (`POST /team/new` with `team_alias`, then `team_id` on the
+key). Omit any limit the user did not give you rather than inventing one.
+
+## 7. Start and verify
+
+If the user does not already run LiteLLM, give them the command, with one `-e` per variable
+you named:
+
+```bash
+docker run -d -p 4000:4000 -v $(pwd)/config.yaml:/app/config.yaml \
+  -e LITELLM_MASTER_KEY -e LITELLM_SALT_KEY -e DATABASE_URL -e OPENROUTER_API_KEY \
+  -e <DIRECT_PROVIDER_KEY_VARS> \
+  docker.litellm.ai/berriai/litellm:latest --config /app/config.yaml
+```
+
+Tell them `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY` must be set first (for example `sk-`
+followed by `openssl rand -hex 32`), and that the salt key must never change once credentials
+are stored. A hosted 1-click deploy (Railway or Render) is linked from
+https://docs.litellm.ai/docs/migrate/openrouter if they would rather not run Docker.
+
+Once it is up, check `curl -s $LITELLM_PROXY_URL/health/readiness`, then send one request per
+model ID from step 1, with the exact ID the app sends:
+
+```bash
+curl -s -i $LITELLM_PROXY_URL/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "<model ID the app sends>", "messages": [{"role": "user", "content": "ping"}]}'
+```
+
+Show the user each response with its `x-litellm-model-group`, `x-litellm-model-api-base`, and
+`x-litellm-response-cost` headers, which confirm whether a request went direct or through
+OpenRouter. Report any ID that fails rather than renaming it.
+
+## 8. Hand back
+
+Tell the user the two changes each client needs: the base URL becomes the LiteLLM gateway URL
+(instead of `https://openrouter.ai/api/v1`), and the API key becomes the virtual key from
+step 6. Model IDs stay the same. Point them at
+https://docs.litellm.ai/docs/migrate/openrouter#feature-mapping for anything not covered here.
