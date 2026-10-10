@@ -35,7 +35,7 @@ Each group needs the one it builds on. `token_info` and `request_taxonomy` both 
 
 ## What a report contains
 
-Each worker folds what it sees into in-memory counters and emits one report per window (5 minutes by default). Reports are counts, sums and fixed-bucket histograms instead of individual requests
+Each worker folds what it sees into in-memory counters and emits one report per 5 minute window. Reports are counts, sums and fixed-bucket histograms instead of individual requests
 
 **Report header**
 
@@ -91,7 +91,6 @@ The response holds `reports` plus `next_after` and `next_after_id`. Pass those b
 | `LITELLM_TELEMETRY_DISABLED` | `true` forces every group off, whatever is set elsewhere |
 | `LITELLM_TELEMETRY_GROUPS` | Comma-separated groups to turn on. When set, it overrides the Admin UI settings, and an empty value means off |
 | `LITELLM_TELEMETRY_ENDPOINT` | HTTPS URL that receives one JSON report per window. When unset, reports go to the local table |
-| `LITELLM_TELEMETRY_FLUSH_INTERVAL_SECONDS` | Length of a report window. Default is `300` |
 | `LITELLM_TELEMETRY_SETTLE_TIMEOUT_SECONDS` | How long a finished request waits for its provider attempts to be logged before its row is written. Default is `2` |
 | `LITELLM_TELEMETRY_RETENTION_DAYS` | How long locally kept reports are retained. Default is `30` |
 
