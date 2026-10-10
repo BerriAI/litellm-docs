@@ -56,7 +56,7 @@ Each worker folds what it sees into in-memory counters and emits one report per 
 | `endpoint` | Route template, such as `/chat/completions`. Never the raw path |
 | `handled_by_rust` | Whether the response came from the Rust gateway, read from its `x-litellm-rust: true` response header |
 | `provider` | `request_taxonomy` only. Provider of the deployment that served the request, such as `anthropic`, or `null` when no provider was called |
-| `deployment_hash` | `request_taxonomy` only. First 16 hex characters of SHA-256 over the instance id and the deployment id, so it cannot be matched across installs |
+| `deployment_hash` | `request_taxonomy` only. First 16 hex characters of an HMAC-SHA256 of the deployment id, keyed by a random secret the proxy creates once and keeps in `LiteLLM_Config`, so it stays the same across workers and restarts and cannot be matched across installs. A proxy without a database keys it from `LITELLM_SALT_KEY` or the master key |
 | `litellm_status` | Status class the client got: `2xx`, `3xx`, `4xx`, `5xx` |
 | `provider_status` | Status class of the last provider call, or `none` |
 | `litellm_cache_hit` | Whether the LiteLLM response cache answered |
