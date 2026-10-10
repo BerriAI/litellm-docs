@@ -2466,6 +2466,21 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   }
 }
 
+@media (max-width: 480px) {
+  .navbar {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .navbar__brand {
+    margin-right: 8px;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button {
+    width: 32px;
+  }
+}
+
 .navbar-sidebar .docs-mobile-search {
   padding: 8px 12px 16px;
 }
