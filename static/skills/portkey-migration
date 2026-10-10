@@ -48,6 +48,13 @@ credentials; for Vertex, the project, region, and credentials file. A `custom_ho
 
 ## 3. Convert each config
 
+As you convert, keep a running list of every field that does not carry over exactly. Give
+each entry a status: **not converted** (dropped, no LiteLLM equivalent), **approximate**
+(converted, but behaves differently), or **caller change** (works only if the app changes
+more than its base URL and key). Every row below marked "report", "tell the user", or "no
+equivalent" goes on this list. So does any field not in the table at all: never drop an
+unknown field silently; list it as not converted with the raw JSON. Step 4 shows this list.
+
 Apply these rules. Portkey `targets` can nest. A fallback whose targets are loadbalances flattens cleanly: each
 loadbalance becomes a model group, and `fallbacks` chains the groups. The reverse, a
 loadbalance with a fallback inside one of its slots, cannot be expressed: a deployment cannot
@@ -133,10 +140,29 @@ the environment; list them alongside the provider variables.
 
 ## 4. Show the result and ask before writing
 
-Show the user the full `config.yaml` and, under it, a short table mapping each Portkey config
-ID to the LiteLLM model group(s) that replace it and the model string the app should keep
-sending. Call out anything you dropped or changed in meaning. Write the file only after they
-confirm, and do not overwrite an existing `config.yaml` without asking.
+Start with a one-line summary: how many configs converted exactly, how many approximately,
+and how many have parts that did not convert at all.
+
+Then show the conversion report from step 3, before the YAML so it is not missed. Use one
+row per issue, grouped by status, with "not converted" first:
+
+| Status | Portkey config | Field | What happens in LiteLLM | What the user can do |
+|---|---|---|---|---|
+| not converted | `pc-checkout` | `strategy.sticky` | Each request is load-balanced independently | Accept it, or keep that traffic on Portkey for now |
+| approximate | `pc-checkout` | `strategy.on_status_codes: [429]` | Fallback fires on any error, not only 429 | Accept it, or set `retry_policy` so other errors fail fast |
+| caller change | `pc-tiers` | condition on `metadata.plan` | Routed by the `paid` tag | App sends `x-litellm-tags: paid`, or set `metadata.tags` on its key |
+
+If nothing falls outside an exact conversion, say so in one line instead of the table.
+
+After the report, show the full `config.yaml`. Put a `# NOT CONVERTED: <field> from <config>`
+or `# APPROXIMATE: <what differs>` comment in the YAML right where the original setting would
+have gone, so the gaps stay visible to whoever reads the file later. Under the YAML, add a
+short table mapping each Portkey config ID to the LiteLLM model group(s) that replace it and
+the model string the app should keep sending.
+
+Write the file only after the user confirms, and do not overwrite an existing `config.yaml`
+without asking. If they ask, also save the report as `portkey-migration-report.md` next to
+the config.
 
 ## 5. Teams and keys
 
@@ -191,8 +217,9 @@ renaming it.
 
 ## 7. Hand back
 
-Tell the user the two changes each client needs, plus the tag change for any caller of a
-conditional config that did not get the tag on its key: the base URL becomes the LiteLLM gateway
+Repeat the "not converted" rows from the step 4 report in one short list, so nothing that
+was dropped gets lost in the handover. Then tell the user the two changes each client needs,
+plus the tag change for any caller of a conditional config that did not get the tag on its key: the base URL becomes the LiteLLM gateway
 URL, and the API key becomes the virtual key from step 5. Leftover `x-portkey-*` headers are
 ignored, and Portkey SDK users switch to the OpenAI SDK with the same calls. Point them at
 https://docs.litellm.ai/docs/migrate/portkey#feature-mapping for anything not covered here.
