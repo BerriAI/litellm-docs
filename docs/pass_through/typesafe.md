@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # TypeSafe AI (Jev)
 
 Pass-through endpoint for the [TypeSafe AI](https://docs.typesafe.ai/api) System One API. Jev returns typed decisions (a choice, a score, or a yes/no probability) instead of text, so it is called through its own evaluate endpoint rather than `/chat/completions`.
