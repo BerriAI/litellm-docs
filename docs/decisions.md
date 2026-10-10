@@ -382,12 +382,12 @@ async def main():
 asyncio.run(main())
 ```
 
-All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `DeprecationWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
+All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
 
 Through the Router the same split applies: `router.decisions` and `router.adecisions` take the OpenAI shape, `router.systemone` and `router.asystemone` take the System One shape. On the proxy, `/v1/systemone` requests are logged with call type `asystemone` and `/v1/decisions` requests with `adecisions`.
 
 :::info Upgrading from v1.104.x
-In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Those calls keep working unchanged, with a `DeprecationWarning`. Rename `litellm.decisions(state=...)` to `litellm.systemone(state=...)` when convenient, the arguments stay the same.
+In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Those calls keep working unchanged, with a `UserWarning`. Rename `litellm.decisions(state=...)` to `litellm.systemone(state=...)` when convenient, the arguments stay the same.
 :::
 
 ## Limits
