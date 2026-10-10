@@ -35,13 +35,13 @@ function isExternal(src) {
   return /^(https?:)?\/\//.test(src);
 }
 
-function Cover({image}) {
+function Cover({image, Hero}) {
   const resolved = useBaseUrl(typeof image === 'string' ? image : '');
-  if (!image) return null;
+  if (!image && !Hero) return null;
   const src = typeof image === 'string' && !isExternal(image) ? resolved : image;
   return (
     <div className={styles.cover}>
-      <img src={src} alt="" />
+      {Hero ? <Hero /> : <img src={src} alt="" />}
     </div>
   );
 }
@@ -73,11 +73,11 @@ function Author({author, imageURL}) {
   );
 }
 
-export function PostByline() {
+export function PostByline({horizontal = false}) {
   const {metadata, assets} = useBlogPost();
   const authorImages = assets.authorsImageUrls || [];
   return (
-    <div className={clsx(styles.page, styles.immersiveByline)}>
+    <div className={clsx(styles.page, styles.immersiveByline, horizontal && styles.horizontalByline)}>
       <div className={styles.inner}>
         <span className={styles.published}>
           Published: <time dateTime={metadata.date}>{formatDate(metadata.date)}</time>
@@ -111,11 +111,11 @@ function useEmbedMode() {
   }, []);
 }
 
-function BlogPostPageContent({children}) {
+function BlogPostPageContent({children, Hero}) {
   useEmbedMode();
   const {metadata, assets} = useBlogPost();
   const {title, date, tags, authors, nextItem, prevItem, frontMatter} = metadata;
-  const coverImage = assets.image ?? frontMatter.image;
+  const coverImage = frontMatter.hide_cover ? undefined : (assets.image ?? frontMatter.image);
   const authorImages = assets.authorsImageUrls || [];
 
   if (frontMatter.custom_hero) {
@@ -155,7 +155,7 @@ function BlogPostPageContent({children}) {
                     </div>
                   )}
                   <h1 className={styles.title}>{title}</h1>
-                  <Cover image={coverImage} />
+                  <Cover image={coverImage} Hero={Hero} />
                 </div>
               </header>
 
@@ -178,7 +178,7 @@ function BlogPostPageContent({children}) {
                 </div>
               </div>
 
-              <div className={clsx(styles.body, coverImage && styles.hasCover)}>
+              <div className={clsx(styles.body, (coverImage || Hero) && styles.hasCover)}>
                 <ContentVisibility metadata={metadata} />
                 <div id={blogPostContainerID} className="markdown">
                   <MDXContent>{children}</MDXContent>
@@ -206,7 +206,7 @@ export default function BlogPostPage(props) {
         className={clsx(ThemeClassNames.wrapper.blogPages, ThemeClassNames.page.blogPostPage)}>
         <BlogPostPageMetadata />
         <BlogPostPageStructuredData />
-        <BlogPostPageContent>
+        <BlogPostPageContent Hero={BlogPostContent.Hero}>
           <BlogPostContent />
         </BlogPostPageContent>
       </HtmlClassNameProvider>

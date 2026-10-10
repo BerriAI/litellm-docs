@@ -4,19 +4,25 @@ description: Start LiteLLM with one command or one click and go from zero to you
 ---
 
 import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import QuickStartBox from '@site/src/components/QuickStartBox';
+import {OneClickDeploy} from '@site/src/components/Conversion';
 
 # Quickstart
 
 LiteLLM ships as a ready-to-run gateway. You start it with one command (or one click), then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
 
-By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
+<QuickStartBox variant="gateway" showTitle={false} heading="Up and running in a minute" source="docker-quickstart">
+
+When the command finishes, open the Admin UI. Then you can [add your models](#3-add-your-first-model), [create virtual keys](#5-create-a-virtual-key), and [call the gateway from your apps](#6-call-the-gateway-from-your-app).
+
+</QuickStartBox>
+
+For detailed installation steps, follow the rest of the guide. By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
 
 ## 1. Start LiteLLM
-
-<Tabs>
-<TabItem value="local" label="Run locally" default>
 
 ```bash
 curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
@@ -28,18 +34,7 @@ This brings up the gateway on port 4000 and a Postgres database that stores your
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
-</TabItem>
-<TabItem value="cloud" label="1-click deploy">
-
-<div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
-  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
-  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
-</div>
-
-For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
-
-</TabItem>
-</Tabs>
+<OneClickDeploy source="docker-quickstart" />
 
 :::warning[What the two keys do]
 Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
@@ -53,17 +48,17 @@ Running locally, the command above generated both into `.env` and the compose fi
 
 Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value, the one in the `.env` file you just generated.
 
-<Image img={require('../../img/ui_quickstart_login.png')} alt="LiteLLM Admin UI login page" />
+<Image img={require('../../img/ui_quickstart_login.png')} dark={require('../../img/ui_quickstart_login_dark.png')} alt="LiteLLM Admin UI login page" />
 
 ## 3. Add your first model
 
 Go to **Models + Endpoints**, open the **Add Model** tab, pick your provider and the models you want to expose, and paste your provider API key. LiteLLM ships with each provider's model catalog, so you select models rather than type them.
 
-<Image img={require('../../img/ui_quickstart_add_model.png')} alt="Add Model form with OpenAI provider and gpt-5.5 selected" />
+<Image img={require('../../img/ui_quickstart_add_model.png')} dark={require('../../img/ui_quickstart_add_model_dark.png')} alt="Add Model form with OpenAI provider and gpt-5.5 selected" />
 
-Click **Test Connect** to verify the key against the provider, then **Add Model**. It appears under **All Models** with its pricing already mapped:
+Click **Test Connect** to verify the key against the provider, then **Add Model**. It appears under **Deployed Models** with its pricing already mapped:
 
-<Image img={require('../../img/ui_quickstart_models_list.png')} alt="All Models list showing the newly added model with cost data" />
+<Image img={require('../../img/ui_quickstart_models_list.png')} dark={require('../../img/ui_quickstart_models_list_dark.png')} alt="Deployed Models list showing the newly added model with cost data" />
 
 :::tip[Keep provider keys out of the UI]
 If you prefer to manage provider keys as environment variables, download the compose file, add them to the `litellm` service (for example `OPENAI_API_KEY: ${OPENAI_API_KEY}`), and enter `os.environ/OPENAI_API_KEY` in the API key field instead of the raw key.
@@ -73,7 +68,7 @@ If you prefer to manage provider keys as environment variables, download the com
 
 Go to **Playground**, select your model, and send a message. The request goes through the gateway to your provider, and the response comes back with latency and token counts:
 
-<Image img={require('../../img/ui_quickstart_playground.png')} alt="Playground showing a live response from the model with latency and token metrics" />
+<Image img={require('../../img/ui_quickstart_playground.png')} dark={require('../../img/ui_quickstart_playground_dark.png')} alt="Playground showing a live response from the model with latency and token metrics" />
 
 Your gateway works end to end. The **Get Code** button in the Playground generates the equivalent API call for your language.
 
@@ -83,7 +78,7 @@ Virtual keys are what you hand to applications and teammates instead of raw prov
 
 Go to **Virtual Keys**, click **+ Create New Key**, give it a name, and click **Create Key**:
 
-<Image img={require('../../img/ui_quickstart_create_key.png')} alt="Save your Key modal showing the newly created virtual key" />
+<Image img={require('../../img/ui_quickstart_create_key.png')} dark={require('../../img/ui_quickstart_create_key_dark.png')} alt="Save your Key modal showing the newly created virtual key" />
 
 Copy the key now; it is shown only once.
 
@@ -170,7 +165,13 @@ console.log(response.choices[0].message.content);
 
 ## The whole flow, end to end
 
-<Image img={require('../../img/ui_quickstart_flow.gif')} alt="Animated walkthrough: add a model, test it in the Playground, create a virtual key" />
+<ThemedVideo
+  src={require('../../img/ui_quickstart_flow.mp4')}
+  dark={require('../../img/ui_quickstart_flow_dark.mp4')}
+  poster={require('../../img/ui_quickstart_flow_poster.png')}
+  darkPoster={require('../../img/ui_quickstart_flow_poster_dark.png')}
+  title="Walkthrough: add a model, test it in the Playground, create a virtual key"
+/>
 
 ## Running without a database
 

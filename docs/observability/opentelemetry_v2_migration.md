@@ -43,6 +43,10 @@ v1 stamps team and key identity onto each span with explicit per-span code. v2 p
 
 v1 sets a successful span's status to `OK`. v2 leaves it `UNSET`, the semantic-convention default that matches the FastAPI server span, and sets `ERROR` only on a genuine error. An alert keyed on status `OK` should switch to counting non-error spans.
 
+### More than one collector
+
+v1 has no list of collectors. Exporting to a second one from LiteLLM itself takes a Python handler per collector with `skip_set_global=True` on the extra ones, and only the first handler receives the proxy's root, auth and database spans, so the other collectors get LLM spans whose parent never arrives. v2 reads the collectors from `callback_settings.otel.exporters` in config.yaml and sends each one the complete trace; see [Send to more than one collector](./opentelemetry_v2#send-to-more-than-one-collector). When you switch, put every collector in that list, the first handler's included even if it came from `OTEL_ENDPOINT`, because the list replaces `OTEL_ENDPOINT` for traces. Then add `otel` to `litellm_settings.callbacks`, which the list needs before it is read, and drop the Python handlers. v1 ignores the list, so it does nothing until `LITELLM_OTEL_V2` is on.
+
 ## Keep the old attribute names during the cutover
 
 v2 ships with a legacy-compatibility mapper on by default (`LITELLM_OTEL_LEGACY_COMPAT=true`) that emits the same data under the older Traceloop key names (`gen_ai.system`, `gen_ai.usage.prompt_tokens`, `gen_ai.usage.completion_tokens`, `llm.is_streaming`, and so on) alongside the canonical keys. This is what makes a gradual migration possible: turn v2 on and your dashboards that read the old token-count and provider keys keep working. Migrate each query to the canonical `gen_ai.*` keys at your own pace, then set `LITELLM_OTEL_LEGACY_COMPAT=false` to drop the duplicates.

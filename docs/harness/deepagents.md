@@ -5,7 +5,7 @@ sidebar_label: Deep Agents
 
 # Deep Agents
 
-`Harness.DEEPAGENTS` runs LangChain's [Deep Agents](https://docs.langchain.com/oss/python/deepagents/overview) in your Python process. It's the only harness here that's a Python library rather than a CLI, so there's no process to launch and nothing to install in the sandbox.
+`Harness.DEEPAGENTS` runs LangChain's [Deep Agents](https://docs.langchain.com/oss/python/deepagents/overview) in your Python process. There's no process to launch and nothing to install in the sandbox
 
 ## Install
 
@@ -128,7 +128,7 @@ The agent loop runs in your process, but its file tools and its `execute` shell 
 
 ## Sessions and history
 
-Deep Agents is the only harness with custom Python tools and history in this release. A session keeps a LangGraph checkpointer and a thread id, and `s.history()` returns the thread's messages in OpenAI format.
+Deep Agents and Tool Loop support custom Python tools and history in this release. A Deep Agents session keeps a LangGraph checkpointer and a thread id, and `s.history()` returns the thread's messages in OpenAI format
 
 ```python
 with litellm.agent_session(Harness.DEEPAGENTS, sandbox=box, model="litellm_proxy/claude") as s:

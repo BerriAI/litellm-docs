@@ -1,3 +1,4 @@
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -463,19 +464,19 @@ Each window is tracked independently and resets on its own schedule:
 
 Open **Virtual Keys → Create Key → Optional Settings → Budget Windows**.
 
-![Step 1 - open key settings](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/18930ba5-67c0-4031-afc0-57f37b4e59e4/ascreenshot_ef79d8a000bb41cdacf1bd9827732ee8_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_1.png')} dark={require('../../img/key_budget_window_1_dark.png')} alt="Budget Windows section in the key form" />
 
 Click **+ Add Budget Window** to add a row, choose the period from the dropdown, and enter the spend cap.
 
-![Step 2 - add a window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/5ae8c0b3-2d03-41ad-a63c-47b20c350dfe/ascreenshot_1a7dc6c7d65544f38fd8a65604674f22_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_2.png')} dark={require('../../img/key_budget_window_2_dark.png')} alt="A budget window row with a period and spend cap" />
 
 Add a second row for a different time period (e.g. monthly $100 on top of a daily $10).
 
-![Step 3 - add second window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/cbded3a7-1086-4e20-8f0f-de154b76146c/ascreenshot_c51c18752c3b4f8b976d28799b2638b6_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_3.png')} dark={require('../../img/key_budget_window_3_dark.png')} alt="Two budget windows with different periods" />
 
 Each window shows the reset schedule below the input so it's always clear when spend resets.
 
-![Step 4 - reset hints](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/8754f121-1640-4892-9dd0-fd4a870418bf/ascreenshot_8079eb0df2194e8f99e5258ba4b3c082_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_4.png')} dark={require('../../img/key_budget_window_4_dark.png')} alt="Reset schedule shown below each budget window" />
 
 
 ### ✨ Virtual Key (Model Specific)
@@ -1113,6 +1114,19 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 ```
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
+
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
 
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 

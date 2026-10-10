@@ -19,7 +19,7 @@ const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
-const {ONE_CLICK, PROMPTS, INSTALLS, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
+const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
 
@@ -104,7 +104,7 @@ function useCasesMarkdown() {
     '',
     '### Built on the gateway',
     '',
-    'Once your apps call the gateway, the same deployment can serve MCP tools and agents, pick the right model for each request, and be run from your terminal or by your coding agent.',
+    'When your apps call the gateway, the same deployment can also give MCP tools and agents to your apps. It can select the correct model for each request. You can operate it from your terminal or from your coding agent.',
     '',
     ...CARD_GROUPS.flatMap((g) => [
       `#### ${g.title}`,
@@ -150,6 +150,15 @@ function expandComponent(tag) {
     ].join('\n');
   }
   if (/^<Command\b/.test(tag)) return commandMarkdown(tag);
+  if (/^<QuickStartBox\b/.test(tag)) {
+    const block = (lang, code) => `\`\`\`${lang}\n${code}\n\`\`\`\n`;
+    const sdk = JSX_ATTR(tag, 'variant') === 'gateway' ? '' : `\nPython SDK:\n\n${block('bash', QUICKSTART.sdk)}`;
+    const heading = JSX_ATTR(tag, 'heading') || 'Quick Start: start the LiteLLM Gateway';
+    return (
+      `**${heading}**\n\nmacOS and Linux:\n\n${block('bash', QUICKSTART.gateway.mac)}\n` +
+      `Windows (PowerShell):\n\n${block('powershell', QUICKSTART.gateway.windows)}${sdk}`
+    );
+  }
   if (/^<OneClickDeploy\b/.test(tag)) {
     return `Deploy to the cloud in one click: ${ONE_CLICK.map(([name, url]) => `[${name}](${url})`).join(' or ')}. Use your deployment's URL in place of http://localhost:4000.\n`;
   }
@@ -259,7 +268,7 @@ function mdxToMarkdown(raw) {
       out.push(`> **LiteLLM Enterprise feature.** ${note || 'Requires an Enterprise license.'} Talk to sales: ${SALES_URL}`, '');
       continue;
     }
-    if (trimmed === '</EnterpriseFeature>') continue;
+    if (trimmed === '</EnterpriseFeature>' || trimmed === '</QuickStartBox>') continue;
     if (/^<\/?Tabs\b[^>]*>$/.test(trimmed) || trimmed === '</TabItem>') continue;
     if (/^<TabItem\b/.test(trimmed)) {
       const label = JSX_ATTR(trimmed, 'label') || JSX_ATTR(trimmed, 'value');
@@ -481,7 +490,7 @@ module.exports = function llmsPlugin(context) {
       await fs.promises.writeFile(
         path.join(outDir, 'index.md'),
         frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
-          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${facts()}\n\n## Start here\n\n` +
+          `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<QuickStartBox />')}\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${facts()}\n\n## Start here\n\n` +
           START_HERE.filter(([id]) => byId.has(id))
             .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
             .join('\n') +

@@ -174,7 +174,7 @@ The proxy only honors this header on keys or teams whose metadata has `allow_cli
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_MASTER_KEY" \
     --header 'Content-Type: application/json' \
     --data '{"metadata": {"allow_client_message_redaction_opt_out": true}}'
 ```

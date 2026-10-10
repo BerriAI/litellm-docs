@@ -351,6 +351,10 @@ model_list:
 export AWS_S3_BUCKET_OWNER=123456789012
 ```
 
+### How does LiteLLM get Bedrock output file details?
+
+Bedrock has no file details API, so LiteLLM reads the size and last-modified time straight from the S3 object, with the same credentials as the batch's deployment. An empty output or error file shows as `bytes: 0`. See [Output and error files](../proxy/managed_batches#output-and-error-files) for when LiteLLM looks these up.
+
 
 
 ## Further Reading

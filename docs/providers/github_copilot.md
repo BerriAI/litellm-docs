@@ -1,55 +1,131 @@
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # GitHub Copilot
 
-https://docs.github.com/en/copilot
+Use [GitHub Copilot](https://docs.github.com/en/copilot) models through the LiteLLM gateway or the Python SDK. LiteLLM supports Chat Completions, Responses, Embeddings, and Anthropic Messages
 
-:::tip
+On the gateway, each person connects their own GitHub account and their requests use their own Copilot plan. Your GitHub Copilot plan determines which models you can use, and each model supports specific endpoints. See [supported endpoints and models](#supported-endpoints-and-models)
 
-**We support GitHub Copilot Chat API with automatic authentication handling**
+## Set up the gateway
+
+An admin adds the model and a **Per-user GitHub OAuth** credential once. Each user then connects their GitHub account from the dashboard before sending requests.
+
+### 1. Admin: create the credential
+
+Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, which is the only auth type the gateway supports for GitHub Copilot. Click **Add Credential**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_credential.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={600} height={530} />
+</div>
+
+### 2. Admin: add the model
+
+Open **Add Model**, select **GitHub Copilot** as the provider, and pick a model under **LiteLLM Model Name(s)**, for example `github_copilot/claude-sonnet-5.5`. Under **Model Mappings**, set **Public Model Name** to the name users will request, such as `claude-copilot`. Under **Existing Credentials**, select `github-copilot`, then click **Add Model**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_add_model.png')} alt="Add a GitHub Copilot model with the saved credential in LiteLLM" width={2250} height={1990} />
+</div>
+
+:::note
+
+Claude Code and Claude Desktop only accept model names that start with `claude-` or `anth-`, so give models used from those apps a public name like `claude-copilot`. Other apps can use any name.
 
 :::
 
-| Property | Details |
+<details>
+<summary>Use config.yaml to add the model</summary>
+
+If you manage models in `config.yaml`, create the credential in the dashboard and reference it from the model:
+
+```yaml showLineNumbers keep-model-ids title="config.yaml"
+model_list:
+  - model_name: claude-copilot
+    litellm_params:
+      model: github_copilot/claude-sonnet-5.5
+      litellm_credential_name: github-copilot
+```
+
+</details>
+
+### 3. User: connect your GitHub account
+
+Sign in to the LiteLLM dashboard and open **Models + Endpoints** > **LLM Credentials**. Under **Your connections**, find `github-copilot` and click **Connect**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_llm_credentials.png')} alt="Connect a GitHub account from Your connections in LiteLLM" width={1064} height={370} />
+</div>
+
+LiteLLM shows a GitHub verification code. Open https://github.com/login/device, enter the code, and approve the request with the GitHub account that has your Copilot plan
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_connect.png')} alt="GitHub verification code and sign-in link in LiteLLM" width={896} height={564} />
+</div>
+
+When GitHub approves the request, the status changes to **Connected** with your GitHub username. Every request you send to a model on this credential now uses your own Copilot access. If you have not connected, or GitHub later rejects your saved connection, requests return a 401 that asks you to connect again from this page
+
+### 4. User: send requests
+
+Point your app at the gateway and sign in the way your organization has set it up. Requests must come from the same LiteLLM user who connected GitHub. For Claude Code, set `ANTHROPIC_BASE_URL` to the gateway URL and `ANTHROPIC_MODEL` to `claude-copilot`. For apps that use the OpenAI API, set the base URL to `https://litellm.example.com/v1`, using your gateway's address, and the model to `claude-copilot`
+
+```python showLineNumbers title="Send a chat request"
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://litellm.example.com/v1",
+    api_key="<your LiteLLM sign-in token>",
+)
+
+response = client.chat.completions.create(
+    model="claude-copilot",
+    messages=[{"role": "user", "content": "Write a Python hello world"}],
+)
+print(response.choices[0].message.content)
+```
+
+## Supported endpoints and models
+
+Use the `github_copilot/` prefix when configuring a model. Requests to the gateway use the public model name
+
+| Endpoint | Example model |
 |-------|-------|
-| Description | GitHub Copilot Chat API provides access to GitHub's AI-powered coding assistant. |
-| Provider Route on LiteLLM | `github_copilot/` |
-| Supported Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/v1/messages` |
-| API Reference | [GitHub Copilot docs](https://docs.github.com/en/copilot) |
+| `/v1/chat/completions` | `github_copilot/claude-sonnet-5.5` |
+| `/v1/messages` | `github_copilot/claude-sonnet-5.5` |
+| `/v1/responses` | `github_copilot/gpt-5.3-codex` or `github_copilot/gpt-5.5` |
+| `/v1/embeddings` | `github_copilot/text-embedding-3-small` |
 
-## Authentication
+These examples match LiteLLM's model catalog. GitHub controls which models each account can use, so a model outside your plan returns an error from GitHub even when the gateway has it configured
 
-GitHub Copilot uses OAuth device flow for authentication. On first use, you'll be prompted to authenticate via GitHub:
+To serve Responses or Embeddings, add a model for that endpoint with the same `github-copilot` credential, such as `github_copilot/gpt-5.3-codex` or `github_copilot/text-embedding-3-small`
 
-1. LiteLLM will display a device code and verification URL
-2. Visit the URL and enter the code to authenticate
-3. Your credentials will be stored locally for future use
+## Usage with the LiteLLM Python SDK
 
-## Usage - LiteLLM Python SDK
+Direct SDK calls run in your own process, outside the gateway, and sign in with one GitHub account. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. The gateway never uses this sign-in. Direct SDK calls use the full model name, including the `github_copilot/` prefix
 
-### Chat Completion
+<Tabs>
+<TabItem value="chat" label="Chat Completions">
 
-```python showLineNumbers title="GitHub Copilot Chat Completion"
+```python showLineNumbers keep-model-ids title="Chat Completions"
 from litellm import completion
 
 response = completion(
-    model="github_copilot/gpt-5.2",
-    messages=[
-        {"role": "system", "content": "You are a helpful coding assistant"},
-        {"role": "user", "content": "Write a Python function to calculate fibonacci numbers"}
-    ]
+    model="github_copilot/claude-sonnet-5.5",
+    messages=[{"role": "user", "content": "Write a Python hello world"}],
 )
-print(response)
+print(response.choices[0].message.content)
 ```
 
-```python showLineNumbers title="GitHub Copilot Chat Completion - Streaming"
+</TabItem>
+<TabItem value="streaming" label="Streaming">
+
+```python showLineNumbers keep-model-ids title="Stream a chat response"
 from litellm import completion
 
 stream = completion(
-    model="github_copilot/gpt-5.2",
-    messages=[{"role": "user", "content": "Explain async/await in Python"}],
-    stream=True
+    model="github_copilot/claude-sonnet-5.5",
+    messages=[{"role": "user", "content": "Write a Python hello world"}],
+    stream=True,
 )
 
 for chunk in stream:
@@ -57,205 +133,127 @@ for chunk in stream:
         print(chunk.choices[0].delta.content, end="")
 ```
 
-### Responses
+</TabItem>
+<TabItem value="responses" label="Responses">
 
-GPT Codex models such as `gpt-5.3-codex` only support the Responses API. Models that support both endpoints, such as `gpt-5.2`, are sent to Copilot's `/chat/completions` unless their `model_info` sets `mode: responses`
+```python showLineNumbers keep-model-ids title="Responses"
+import asyncio
 
-```python showLineNumbers title="GitHub Copilot Responses"
 import litellm
 
-response = await litellm.aresponses(
-    model="github_copilot/gpt-5.3-codex",
-    input="Write a Python hello world",
-    max_output_tokens=500
-)
 
-print(response)
+async def main():
+    response = await litellm.aresponses(
+        model="github_copilot/gpt-5.3-codex",
+        input="Write a Python hello world",
+        max_output_tokens=500,
+    )
+    print(response)
+
+
+asyncio.run(main())
 ```
 
-### Anthropic Messages
+</TabItem>
+<TabItem value="messages" label="Anthropic Messages">
 
-Claude models can be called through Copilot's native Anthropic `/v1/messages` endpoint.
+```python showLineNumbers keep-model-ids title="Anthropic Messages"
+import asyncio
 
-```python showLineNumbers title="GitHub Copilot Anthropic Messages"
 import litellm
 
-response = await litellm.anthropic.messages.acreate(
-    model="github_copilot/claude-sonnet-4.5",
-    messages=[{"role": "user", "content": "Write a Python hello world"}],
-    max_tokens=500,
-)
 
-print(response)
+async def main():
+    response = await litellm.anthropic.messages.acreate(
+        model="github_copilot/claude-sonnet-5.5",
+        messages=[{"role": "user", "content": "Write a Python hello world"}],
+        max_tokens=500,
+    )
+    print(response)
+
+
+asyncio.run(main())
 ```
 
-### Embedding
+</TabItem>
+<TabItem value="embeddings" label="Embeddings">
 
-```python showLineNumbers title="GitHub Copilot Embedding"
+```python showLineNumbers title="Embeddings"
 import litellm
 
 response = litellm.embedding(
     model="github_copilot/text-embedding-3-small",
-    input=["good morning from litellm"]
+    input=["good morning from LiteLLM"],
 )
 print(response)
-```
-
-## Usage - LiteLLM Proxy
-
-Add the following to your LiteLLM Proxy configuration file:
-
-```yaml showLineNumbers title="config.yaml"
-model_list:
-  - model_name: github_copilot/gpt-5.2
-    litellm_params:
-      model: github_copilot/gpt-5.2
-  - model_name: github_copilot/gpt-5.3-codex
-    model_info:
-      mode: responses
-    litellm_params:
-      model: github_copilot/gpt-5.3-codex
-  - model_name: github_copilot/claude-sonnet-4.5
-    litellm_params:
-      model: github_copilot/claude-sonnet-4.5
-  - model_name: github_copilot/text-embedding-ada-002
-    model_info:
-      mode: embedding
-    litellm_params:
-      model: github_copilot/text-embedding-ada-002
-```
-
-Start your LiteLLM Proxy server:
-
-```bash showLineNumbers title="Start LiteLLM Proxy"
-litellm --config config.yaml
-
-# RUNNING on http://0.0.0.0:4000
-```
-
-<Tabs>
-<TabItem value="openai-sdk" label="OpenAI SDK">
-
-```python showLineNumbers title="GitHub Copilot via Proxy - Non-streaming"
-from openai import OpenAI
-
-# Initialize client with your proxy URL
-client = OpenAI(
-    base_url="http://localhost:4000",  # Your proxy URL
-    api_key="your-proxy-api-key"       # Your proxy API key
-)
-
-# Non-streaming response
-response = client.chat.completions.create(
-    model="github_copilot/gpt-5.2",
-    messages=[{"role": "user", "content": "How do I optimize this SQL query?"}]
-)
-
-print(response.choices[0].message.content)
-```
-
-</TabItem>
-
-<TabItem value="litellm-sdk" label="LiteLLM SDK">
-
-```python showLineNumbers title="GitHub Copilot via Proxy - LiteLLM SDK"
-import litellm
-
-# Configure LiteLLM to use your proxy
-response = litellm.completion(
-    model="litellm_proxy/github_copilot/gpt-5.2",
-    messages=[{"role": "user", "content": "Review this code for bugs"}],
-    api_base="http://localhost:4000",
-    api_key="your-proxy-api-key"
-)
-
-print(response.choices[0].message.content)
-```
-
-</TabItem>
-
-<TabItem value="curl" label="cURL">
-
-```bash showLineNumbers title="GitHub Copilot via Proxy - cURL"
-curl http://localhost:4000/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-proxy-api-key" \
-  -d '{
-    "model": "github_copilot/gpt-5.2",
-    "messages": [{"role": "user", "content": "Explain this error message"}]
-  }'
 ```
 
 </TabItem>
 </Tabs>
 
-Responses and Anthropic Messages requests go to the proxy's `/v1/responses` and `/v1/messages` routes:
+## Environment variables
 
-```bash showLineNumbers title="GitHub Copilot via Proxy - Responses and Messages"
-curl http://localhost:4000/v1/responses \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-proxy-api-key" \
-  -d '{
-    "model": "github_copilot/gpt-5.3-codex",
-    "input": "Write a Python hello world"
-  }'
+The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`
 
-curl http://localhost:4000/v1/messages \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-proxy-api-key" \
-  -d '{
-    "model": "github_copilot/claude-sonnet-4.5",
-    "max_tokens": 500,
-    "messages": [{"role": "user", "content": "Write a Python hello world"}]
-  }'
-```
+| Variable | Default | Purpose |
+|-------|-------|-------|
+| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token and Copilot API token cache |
+| `GITHUB_COPILOT_ACCESS_TOKEN_FILE` | `access-token` | SDK only. Access-token file name in the token directory |
+| `GITHUB_COPILOT_API_KEY_FILE` | `api-key.json` | SDK only. Copilot API token cache file name in the token directory |
+| `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in |
+| `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
+| `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
+| `GITHUB_COPILOT_API_KEY_URL` | `https://api.github.com/copilot_internal/v2/token` | Endpoint that exchanges a GitHub token for a Copilot API token |
+| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | SDK only. Fallback API base for Chat Completions, Responses, and Embeddings |
 
-## Getting Started
+## Authentication details
 
-1. Ensure you have GitHub Copilot access (paid GitHub subscription required)
-2. Run your first LiteLLM request - you'll be prompted to authenticate
-3. Follow the device flow authentication process
-4. Start making requests to GitHub Copilot through LiteLLM
+<details>
+<summary>Token storage and caching</summary>
 
-## Configuration
+On the gateway, LiteLLM encrypts each user's GitHub access token and stores it in the database. It does not store a refresh token. Disconnecting removes the stored connection.
 
-### Environment Variables
+With Redis, LiteLLM caches the encrypted credential or a record of no connection for 60 seconds. Without Redis, requests read the database.
 
-You can customize token storage locations:
+Each worker caches the short-lived Copilot token in memory until 60 seconds before its expiry. If GitHub returns 401, 403, or 404 during token exchange, LiteLLM clears the cached session and asks the user to reconnect.
 
-```bash showLineNumbers title="Environment Variables"
-# Optional: Custom token directory
-export GITHUB_COPILOT_TOKEN_DIR="~/.config/litellm/github_copilot"
+Direct SDK calls read the GitHub access token from disk and exchange it for a Copilot API token, cached in `api-key.json` until it expires
 
-# Optional: Custom access token file name
-export GITHUB_COPILOT_ACCESS_TOKEN_FILE="access-token"
+</details>
 
-# Optional: Custom API key file name
-export GITHUB_COPILOT_API_KEY_FILE="api-key.json"
+<details>
+<summary>API base URL</summary>
 
-# Optional: Custom Copilot endpoints for authentication and usage
-# (needed when using GitHub Enterprise subscriptions with custom endpoints or self-hosted GitHub servers
-export GITHUB_COPILOT_API_BASE="https://copilot-api.my-company.ghe.com"
-export GITHUB_COPILOT_DEVICE_CODE_URL="https://my-company.ghe.com/login/device/code"
-export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://my-company.ghe.com/login/oauth/access_token"
-export GITHUB_COPILOT_API_KEY_URL="https://my-company.ghe.com/api/v3/copilot_internal/v2/token"
+On the gateway, LiteLLM uses the API host from GitHub's token response if it uses HTTPS and the host is `githubcopilot.com` or a subdomain. Otherwise, it uses `https://api.githubcopilot.com`. The gateway does not use `GITHUB_COPILOT_API_BASE`
 
-# Optional: Custom OAuth client ID for the device flow
-export GITHUB_COPILOT_CLIENT_ID="Iv1.b507a08c87ecfe98"
-```
+For direct SDK Chat Completions, Responses, and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` in the token response, `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`.
 
-### Headers
+Anthropic Messages uses the authenticated Copilot endpoint. It ignores a caller-supplied `api_base` and `GITHUB_COPILOT_API_BASE`.
 
-LiteLLM automatically injects the required GitHub Copilot headers (simulating VS Code Copilot Chat). You don't need to specify them manually.
+</details>
 
-If you want to override the defaults (e.g., to simulate a different editor), you can use `extra_headers`. These are the defaults LiteLLM sends on chat, responses, and embedding requests:
+<details>
+<summary>Request headers</summary>
 
-```python showLineNumbers title="Custom Headers (Optional)"
-extra_headers = {
-    "editor-version": "vscode/1.95.0",                 # Editor version
-    "editor-plugin-version": "copilot-chat/0.26.7",    # Plugin version
-    "copilot-integration-id": "vscode-chat",           # Integration ID
-    "user-agent": "GitHubCopilotChat/0.26.7"           # User agent
-}
-```
+LiteLLM adds these headers for Chat Completions, Responses, and Embeddings:
 
+| Header | Default |
+|-------|-------|
+| `Authorization` | Bearer token from the authenticated Copilot session |
+| `content-type` | `application/json` |
+| `copilot-integration-id` | `vscode-chat` |
+| `editor-version` | `vscode/1.95.0` |
+| `editor-plugin-version` | `copilot-chat/0.26.7` |
+| `user-agent` | `GitHubCopilotChat/0.26.7` |
+| `openai-intent` | `conversation-panel` |
+| `x-github-api-version` | `2025-04-01` |
+| `x-request-id` | A new UUID for each request |
+| `x-vscode-user-agent-library-version` | `electron-fetch` |
+
+You can pass `extra_headers` to merge headers with these defaults. On the gateway, `Authorization` always uses the connected user's Copilot token
+
+Chat Completions and Responses set `X-Initiator` to `user` or `agent` based on message roles. They also add a vision-request header with value `true` when the request includes images.
+
+Anthropic Messages sets `openai-intent: messages-proxy`, `x-interaction-type: messages-proxy`, and `x-github-api-version: 2026-06-01`. It sets `anthropic-version: 2023-06-01` if the request does not provide one.
+
+</details>

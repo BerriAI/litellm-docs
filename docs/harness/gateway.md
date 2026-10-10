@@ -6,9 +6,9 @@ description: Run agents with litellm.agent() against one LiteLLM AI Gateway virt
 
 # Using with LiteLLM AI Gateway
 
-The recommended way to run an agent with `litellm.agent()` is against a [LiteLLM AI Gateway](/docs/proxy/docker_quick_start). Claude Code, Codex, OpenCode and Deep Agents each expect a different provider API and a different way to pass credentials. With the gateway they all use one virtual key, the same model groups and fallbacks, and every call lands in the gateway's spend logs tagged with the harness that made it.
+The recommended way to run an agent with `litellm.agent()` is against a [LiteLLM AI Gateway](/docs/proxy/docker_quick_start). Claude Code, Codex, OpenCode, Deep Agents and Tool Loop use different model APIs and ways to pass credentials. With the gateway they share one virtual key, the same model groups and fallbacks, and every call lands in the gateway's spend logs tagged with the harness that made it
 
-Keys stay out of the sandbox. The runtime only ever sees a per-session token for a local endpoint on your host, and that endpoint adds your virtual key when it forwards to the gateway. Provider keys live on the gateway and never reach your machine at all.
+The CLI runtimes only see a per-session token for a local endpoint on your host, and that endpoint adds your virtual key when it forwards to the gateway. Deep Agents and Tool Loop call the gateway from your Python process with the virtual key. Provider keys live on the gateway and never reach your machine
 
 ## How requests flow
 
@@ -17,16 +17,17 @@ flowchart LR
     R[Claude Code / Codex / OpenCode<br/>in sandbox] -->|session token| E[local endpoint<br/>on host]
     E -->|virtual key<br/>x-litellm-tags: harness,codex| G[LiteLLM AI Gateway]
     D[Deep Agents<br/>in your process] -->|virtual key| G
+    T[Tool Loop<br/>in your process] -->|virtual key| G
     G --> P1[Anthropic]
     G --> P2[Bedrock]
     G --> P3[OpenAI]
 ```
 
-Every forwarded request carries `x-litellm-tags: harness,<name>` (see [request tags](/docs/proxy/request_tags)), where `<name>` is `claude_code`, `codex`, `opencode` or `deepagents`, and your `metadata=` is sent as `x-litellm-spend-logs-metadata`. The `model` in each request is rewritten to the model group you passed, so a runtime's own default model name never reaches the gateway.
+Every forwarded request carries `x-litellm-tags: harness,<name>` (see [request tags](/docs/proxy/request_tags)), where `<name>` is `claude_code`, `codex`, `opencode`, `deepagents` or `tool_loop`, and your `metadata=` is sent as `x-litellm-spend-logs-metadata`. The `model` in each request is rewritten to the model group you passed, so a runtime's own default model name never reaches the gateway
 
 ## 1. Configure the gateway
 
-Give each kind of harness a model group that suits it. Claude Code is tuned for Claude, Codex for OpenAI reasoning models, and OpenCode and Deep Agents work with anything.
+Give each kind of harness a model group that suits it. Claude Code is tuned for Claude, Codex for OpenAI reasoning models, and OpenCode, Deep Agents and Tool Loop work with any group that supports their API
 
 ```yaml title="config.yaml"
 model_list:
@@ -48,7 +49,7 @@ model_list:
     litellm_params:
       model: openai/gpt-5
       api_key: os.environ/OPENAI_API_KEY
-  # a cheaper general model for OpenCode and Deep Agents
+  # a cheaper general model for OpenCode, Deep Agents and Tool Loop
   - model_name: gemini
     litellm_params:
       model: gemini/gemini-2.5-pro
@@ -104,7 +105,7 @@ You can pass `api_base=` and `api_key=` on the call instead of using the environ
 
 ## 4. Choosing a harness
 
-All four harnesses take the same call, but they are good at different jobs and each one hits a different gateway route.
+All five harnesses take the same call, but they are good at different jobs and use the gateway route that fits each runtime
 
 | Harness | Gateway route | Best model group | Pick it for |
 |---|---|---|---|
@@ -112,10 +113,11 @@ All four harnesses take the same call, but they are good at different jobs and e
 | Codex | `/v1/responses` | OpenAI reasoning model | hard, well-specified tasks where reasoning depth pays off |
 | OpenCode | `/v1/chat/completions` | any | running a coding agent on non-Claude or self-hosted models |
 | Deep Agents | `/v1/chat/completions` via `litellm_proxy/` | any | agents that call your own Python functions |
+| Tool Loop | `/v1/chat/completions` via `litellm_proxy/` | any tool-calling model | a minimal loop around your own Python functions |
 
 ### Claude Code
 
-Claude Code is the most capable general coding agent of the four. It plans, reads widely before editing, runs tests and recovers from its own mistakes, which makes it the default for refactors, bug hunts and changes that span many files. It is also the most expensive per task.
+Claude Code is the most capable general coding agent of the CLI harnesses. It plans, reads widely before editing, runs tests and recovers from its own mistakes, which makes it the default for refactors, bug hunts and changes that span many files. It is also the most expensive per task
 
 Its prompts are written for Claude, so point it at a Claude group. Bedrock and Vertex Claude behave the same as Anthropic direct; other models work through gateway translation but lose quality. Use `permissions="edit"` on your laptop, or `"full"` inside `sandbox.docker` when it needs to install packages and run the suite.
 
@@ -163,7 +165,7 @@ litellm.agent(
 
 ### Deep Agents
 
-Deep Agents is a Python library that runs in your process, so it is the only harness that can call your own Python functions and the only one with `s.history()`. Use it when the agent needs your internal APIs, a database or a ticket tracker alongside file and shell tools. It is less polished at pure coding than the CLI agents.
+Deep Agents and Tool Loop both run in your process, call your Python functions and support `s.history()`. Deep Agents also has built-in file and shell tools, which makes it useful when a task combines your internal APIs with sandbox access. It is less polished at pure coding than the CLI agents
 
 It calls the gateway directly with `litellm_proxy/<group>` and never uses the local endpoint, and it works with any group that supports tool calling. Its file and shell tools act on the sandbox; use `"edit"` unless it needs a shell.
 
@@ -178,17 +180,33 @@ litellm.agent(
 )
 ```
 
+### Tool Loop
+
+Tool Loop is a minimal in-process loop around `litellm.acompletion()`. Use it when your task can be handled by your own Python functions and you don't need built-in file or shell tools
+
+```python
+litellm.agent(
+    Harness.TOOL_LOOP,
+    "Search the repository and summarize the relevant changes.",
+    sandbox=sandbox.local("./repo"),
+    model="litellm_proxy/coder",
+    tools=[search_code, read_file],
+)
+```
+
+The gateway sees Chat Completions requests tagged `harness,tool_loop`. See [Tool Loop](./tool_loop.md) for its SDK, options and permission behavior
+
 ## 5. Comparing harnesses
 
 Each harness's requests carry its own tag, so if you try more than one on the same kind of task, the gateway already has the numbers to compare spend, request count and failure rate per harness. Pass a shared `metadata={"experiment": "..."}` to group the runs.
 
 ## 6. See spend by harness
 
-In the gateway UI, open **Usage** and switch to the tag view. Each harness shows up as its own tag (`claude_code`, `codex`, `opencode`, `deepagents`) next to the shared `harness` tag. The same data is available from the API.
+In the gateway UI, open **Usage** and switch to the tag view. Each harness shows up as its own tag (`claude_code`, `codex`, `opencode`, `deepagents`, `tool_loop`) next to the shared `harness` tag. The same data is available from the API
 
 ```bash
 # daily spend and tokens for each harness tag
-curl "http://localhost:4000/tag/daily/activity?tags=claude_code,codex,opencode,deepagents&start_date=2026-09-01&end_date=2026-09-30" \
+curl "http://localhost:4000/tag/daily/activity?tags=claude_code,codex,opencode,deepagents,tool_loop&start_date=2026-09-01&end_date=2026-09-30" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 
 # individual requests made with the agents key
@@ -211,4 +229,4 @@ result = litellm.agent(
 )
 ```
 
-The per-session endpoint still keeps the key on the host, and cost is computed locally from LiteLLM's model cost map. You lose central spend logs, shared keys and gateway-side fallbacks. See [Models and routing](./models.md#sdk-mode) for details.
+CLI harnesses still use the per-session endpoint to keep provider keys on the host. In-process harnesses call the LiteLLM SDK from your Python process. Cost is computed locally from LiteLLM's model cost map. You lose central spend logs, shared keys and gateway-side fallbacks. See [Models and routing](./models.md#sdk-mode) for details

@@ -43,9 +43,9 @@ function collectPages(allContent) {
   return [...new Map([...docs, ...posts].filter((page) => !page.image).map((page) => [page.permalink, page])).values()];
 }
 
-module.exports = function socialCardsPlugin({siteDir, generatedFilesDir}) {
+function socialCardsPlugin({siteDir}, {cacheDir = path.join(siteDir, socialCardsPlugin.cacheDir)} = {}) {
   const templateDir = path.join(siteDir, 'scripts/social-card');
-  const outputDir = path.join(generatedFilesDir, 'social-cards/img/og');
+  const outputDir = path.join(cacheDir, 'img/og');
   const templateFiles = ['index.cjs', 'assets/litellm-logo-blue.svg',
     'assets/LiberationSans-Regular.ttf', 'assets/LiberationSans-Bold.ttf'];
 
@@ -60,6 +60,8 @@ module.exports = function socialCardsPlugin({siteDir, generatedFilesDir}) {
       const cachedFiles = new Set(await fs.readdir(outputDir));
       const images = {};
       const files = new Set();
+      let rendered = 0;
+      let cached = 0;
       for (let offset = 0; offset < pages.length; offset += 4) {
         await Promise.all(pages.slice(offset, offset + 4).map(async (page) => {
           const hash = createHash('sha256').update(templateVersion).update(JSON.stringify(page)).digest('hex').slice(0, 20);
@@ -72,6 +74,9 @@ module.exports = function socialCardsPlugin({siteDir, generatedFilesDir}) {
             } catch (error) {
               throw new Error(`Could not generate the social preview for ${page.permalink}`, {cause: error});
             }
+            rendered++;
+          } else {
+            cached++;
           }
           images[page.permalink] = `img/og/${filename}`;
           files.add(filename);
@@ -79,7 +84,11 @@ module.exports = function socialCardsPlugin({siteDir, generatedFilesDir}) {
       }
       await Promise.all([...cachedFiles].filter((file) => !files.has(file)).map((file) => fs.unlink(path.join(outputDir, file))));
       actions.setGlobalData({images});
-      console.log(`[social-cards] Ready: ${pages.length} page previews`);
+      console.log(`[social-cards] Ready: ${pages.length} page previews (${rendered} rendered, ${cached} from cache)`);
     },
   };
-};
+}
+
+socialCardsPlugin.cacheDir = 'node_modules/.cache/social-cards';
+
+module.exports = socialCardsPlugin;

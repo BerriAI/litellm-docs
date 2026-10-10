@@ -8,8 +8,11 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
 import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
+import QuickStartBox from '@site/src/components/QuickStartBox';
 
-<LiteLLMFlow />
+<LiteLLMFlow copyCommand={false} agentPrompt={false} />
+
+<QuickStartBox source="docs-index" />
 
 **LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 
@@ -28,6 +31,14 @@ import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
 ```shell
 uv add litellm
 ```
+
+### A leaner SDK installation
+
+For applications that use the Python SDK directly, `litellm-core` provides the shared SDK with fewer mandatory dependencies and without the bundled dashboard or gateway CLI entry points. Python imports remain unchanged: continue using `litellm`
+
+Install `litellm-core` in a fresh environment instead of installing `litellm`. Add AWS and Python Hugging Face tokenizer packages when your application needs them. The two distributions cannot be installed together because they share the same Python files
+
+See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, package selection, and optional dependencies. Existing `litellm` installations retain their current dependency defaults
 
 To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
 

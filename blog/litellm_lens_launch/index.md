@@ -96,7 +96,7 @@ Own your infra. Traces land in ClickHouse that you run, next to the LiteLLM gate
 Lens was built and designed with our launch partners
 
 <Partner
-  href="https://www.mindfort.ai/"
+  href="https://mindfort.ai?utm_source=litellm&utm_medium=spotlight&utm_campaign=spotlight"
   logo="/img/blog/litellm_lens_launch/partners/mindfort.svg"
   name="MindFort"
   quote={[
