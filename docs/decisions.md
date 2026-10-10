@@ -7,7 +7,7 @@ Decision models answer typed questions about an input and return probabilities i
 | `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice` and `score` questions | You write against OpenAI's format or need image input |
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice` and `score` questions | You already have TypeSafe Jev request bodies |
 
-Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`
+Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -27,12 +27,27 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 | [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/decisions` | No |
 | [OpenRouter](https://openrouter.ai/docs/guides/community/jev) | `openrouter/typesafe/jev-1.13` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/api/alpha/decisions` | No |
 | [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/ai/run/@cf/cloudflare/<model>` | No |
+| [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/serving-endpoints/<endpoint>/invocations` | No |
+| [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/providers/microsoft/v1/systemone` | No |
 | [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
-Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
+Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. On Databricks the model is the bare serving endpoint name and `DATABRICKS_API_BASE` points at `https://<workspace-host>/serving-endpoints`, so the request goes to that endpoint's `/invocations` route. On Microsoft Foundry the model is your deployment name and `AZURE_AI_API_BASE` is the resource host, `https://<resource>.services.ai.azure.com`. A project-scoped base such as `https://<resource>.services.ai.azure.com/api/projects/<project>/openai/v1` is trimmed back to the host. Azure does not let you name a deployment `Microsoft-Decision-1`, so deploy it under another name and set `base_model` so cost tracking finds the price
+
+```yaml showLineNumbers
+model_list:
+  - model_name: decision-1
+    litellm_params:
+      model: azure_ai/decision-1
+      api_base: https://<resource>.services.ai.azure.com
+      api_key: os.environ/AZURE_AI_API_KEY
+    model_info:
+      base_model: azure_ai/Microsoft-Decision-1
+```
+
+Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
 
 ## Self-hosted Laya and Nimble
 
