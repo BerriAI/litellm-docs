@@ -118,7 +118,8 @@ chosen option's own probability as `confidence`. A `score` answer adds a
 model call, and `usage.input_tokens` in the response is summed across them.
 
 To classify a PDF, pass a `state` object with a base64 `document` and its
-`document_mime_type`. Images can also go in as an `image_url` data URL.
+`document_mime_type`. Images can also go in as an `image_url` data URL; one image or document per
+request.
 
 ```python
 response = completion(
@@ -174,7 +175,7 @@ spans = response._hidden_params["scaledown_response"]["structured_result"]
 ## Summarization
 
 The system message carries optional instructions, the last user message carries
-the text, and `max_tokens` (or `max_completion_tokens`) limits the summary. The content is ScaleDown's
+the text (or one base64 `image_url` image or PDF, sent as the native document), and `max_tokens` (or `max_completion_tokens`) limits the summary. The content is ScaleDown's
 `{"summary": ..., "input_tokens": ...}` response.
 
 ```python
