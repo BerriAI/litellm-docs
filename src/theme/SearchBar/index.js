@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {Search, Sparkles, BookOpen, FileText, History, CornerDownLeft, X, Send, Square, User, Copy} from 'lucide-react';
 import styles from './styles.module.css';
+import {readAnswer} from '../../../search/stream.mjs';
 import {mapCitations} from '../../../search/citations.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
 
@@ -60,6 +61,7 @@ export default function SearchBar() {
   const [aiError, setAiError] = useState('');
   const [turns, setTurns] = useState([]);
   const [draft, setDraft] = useState('');
+  const [partialAnswer, setPartialAnswer] = useState('');
   const [pendingQuestion, setPendingQuestion] = useState('');
   const [failedQuestion, setFailedQuestion] = useState('');
   const [asking, setAsking] = useState(false);
@@ -170,14 +172,16 @@ export default function SearchBar() {
     if (!question.trim() || asking) return;
     const pending = new AbortController();
     controller.current?.abort(); controller.current = pending;
-    setAsking(true); setPendingQuestion(question); setDraft(''); setAiError(''); setFailedQuestion('');
+    setPartialAnswer(''); setAsking(true); setPendingQuestion(question); setDraft(''); setAiError(''); setFailedQuestion('');
     const history = turns.slice(-4).map(turn => ({question: turn.question}));
     try {
-      const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json'},
+      const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/x-ndjson'},
         body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});
       const context = response.headers.get('X-Docs-Trace-Context');
       if (!pending.signal.aborted && context) traceContext.current = context;
-      const data = await response.json().catch(() => ({error: 'Ask AI is temporarily unavailable. Please try again or use document search.'}));
+      const data = await readAnswer(response, text => {
+        if (!pending.signal.aborted) setPartialAnswer(previous => previous + text);
+      });
       if (!response.ok) throw new Error(data.error || 'Ask AI is unavailable.');
       if (typeof data.answer !== 'string' || !Array.isArray(data.sources)) throw new Error('Ask AI is temporarily unavailable.');
       if (!pending.signal.aborted) setTurns(previous => [...previous, {question, ...data}]);
@@ -277,7 +281,7 @@ export default function SearchBar() {
                 {turn.sources.length > 0 && <div className={styles.sources}><p>Sources</p>{turn.sources.map(source => <a key={source.id} href={source.url}><small><SourceMeta source={source}/></small><span><SourceIcon source={source} size={15}/>{source.title}{source.heading && ` · ${source.heading}`}</span></a>)}</div>}
               </div></div>
             </article>)}
-            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div><div className={styles.assistantRow}>{assistantAvatar}<p role="status" className={styles.thinking}>Searching LiteLLM content...</p></div></article>}
+            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div><div className={styles.assistantRow}>{assistantAvatar}<div className={styles.answer} aria-busy="true">{partialAnswer ? <Answer answer={partialAnswer} sources={[]}/> : <p role="status" className={styles.thinking}>Searching LiteLLM content...</p>}</div></div></article>}
             {aiError && <div role="alert" className={styles.error}>{aiError}<button onClick={() => ask(failedQuestion)}>Retry question</button></div>}
           </div>
           <form className={styles.composer} onSubmit={event => {event.preventDefault(); ask();}}>

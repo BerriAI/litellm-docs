@@ -2,6 +2,8 @@
 
 Search runs locally in the browser over current docs, integration guides, individual blog posts, and release notes from the site build. Ask AI retrieves from the same content and links to its sources. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate.
 
+Ask AI streams answer text after the search planner finishes retrieving documentation. Clients opt in with `Accept: application/x-ndjson`; each line is a `delta` with `text`, a final `done` with the validated `answer` and `sources`, or an `error`. The browser replaces provisional text with the final answer so citation numbering matches its sources. Clients without this header still receive a single JSON response. When checking a deployment, verify that text appears while the request is still open; reverse proxies must not buffer this response.
+
 ## Try locally
 
 Use Node 24 or later. From the repository root, install dependencies and build the site:

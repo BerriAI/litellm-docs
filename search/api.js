@@ -67,17 +67,30 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now})
     const controller = new AbortController();
     const disconnected = () => {if (!res.writableEnded) controller.abort();};
     res.on('close', disconnected);
+    const streaming = (req.headers.accept || '').split(',').some(type => type.trim() === 'application/x-ndjson');
+    const emit = event => {
+      if (res.destroyed) return;
+      if (!res.headersSent) {
+        res.writeHead(200, {'Content-Type': 'application/x-ndjson; charset=utf-8',
+          'Cache-Control': 'no-store, no-transform', 'X-Accel-Buffering': 'no', 'X-Content-Type-Options': 'nosniff'});
+      }
+      res.write(JSON.stringify(event) + '\n');
+    };
     try {
       const parsed = await readBody(req, AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]));
       if (parsed.error) return send(res, parsed.status, {error: parsed.error});
       if (!validBody(parsed.body)) return send(res, 400, {error: 'Send a question of 1 to 500 characters and up to four previous questions.'});
       const {question, history = [], traceContext} = parsed.body;
       const result = await answerQuestion({question: question.trim(), history, index, documents, config,
+        onDelta: streaming ? text => emit({type: 'delta', text}) : undefined,
         traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50000)]), fetchImpl});
+      if (streaming && result.status === 200) {emit({type: 'done', ...result.body}); return res.end();}
       return send(res, result.status, result.body);
     } catch {
-      return send(res, 502, {error: 'Ask AI is temporarily unavailable. Please try again or use document search.'});
+      const error = 'Ask AI is temporarily unavailable. Please try again or use document search.';
+      if (res.headersSent) {emit({type: 'error', error}); return res.end();}
+      return send(res, 502, {error});
     } finally { active -= 1; res.off('close', disconnected); }
   };
 }

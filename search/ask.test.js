@@ -224,3 +224,57 @@ test('upstream errors are not cached', async () => {
     assert.equal(calls, 2);
   }, {fetchImpl: async () => {calls++; throw new Error('unavailable');}});
 });
+
+test('streaming API delivers text before upstream completion and finishes with validated citations', async () => {
+  const {readAnswer} = await import('./stream.mjs');
+  let upstream, release, calls = 0;
+  const encoder = new TextEncoder();
+  const event = data => encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
+  const fetchImpl = async (_, request) => {
+    if (++calls === 1) return modelResponse(accepted);
+    assert.equal(JSON.parse(request.body).stream, true);
+    return new Response(new ReadableStream({start(controller) {
+      upstream = controller;
+      controller.enqueue(event({choices: [{delta: {content: citedAnswer}}]}));
+      release = () => {
+        controller.enqueue(event({choices: [{delta: {}, finish_reason: 'stop'}]}));
+        controller.enqueue(encoder.encode('data: [DONE]\n\n')); controller.close();
+      };
+    }}));
+  };
+  await withServer(async origin => {
+    const response = await fetch(origin + '/api/docs/ask', post('Lens', {headers: {'Content-Type': 'application/json', Accept: 'application/x-ndjson'}}));
+    assert.match(response.headers.get('content-type'), /ndjson/);
+    let text = '', early = false;
+    const result = await readAnswer(response, delta => {
+      text += delta;
+      if (!early) {early = true; assert.ok(upstream); release();}
+    });
+    assert.ok(early); assert.equal(text, citedAnswer);
+    assert.equal(result.answer, citedAnswer); assert.equal(result.sources[0].url, docs[0].url);
+  }, {fetchImpl});
+});
+
+test('stream decoding preserves split UTF-8 and reports missing completion and streamed errors', async () => {
+  const {readAnswer} = await import('./stream.mjs');
+  const response = text => new Response(new ReadableStream({start(controller) {
+    for (const byte of new TextEncoder().encode(text)) controller.enqueue(Uint8Array.of(byte));
+    controller.close();
+  }}), {headers: {'Content-Type': 'application/x-ndjson'}});
+  let text = '';
+  await readAnswer(response('{"type":"delta","text":"café 🌍"}\n{"type":"done","answer":"café 🌍","sources":[]}\n'), delta => text += delta);
+  assert.equal(text, 'café 🌍');
+  await assert.rejects(readAnswer(response('{"type":"delta","text":"partial"}\n'), () => {}), /interrupted/);
+  await assert.rejects(readAnswer(response('{"type":"error","error":"upstream failed"}\n'), () => {}), /upstream failed/);
+});
+
+test('gateway rejects truncated streams and credentials split across deltas', async () => {
+  const {createModelCaller} = require('./gateway');
+  for (const parts of [['A useful partial answer without completion'], ['hello ', config.apiKey.slice(0, 5), config.apiKey.slice(5)]]) {
+    const emitted = [];
+    const call = createModelCaller({config, fetchImpl: async () => new Response(parts.map(content =>
+      `data: ${JSON.stringify({choices: [{delta: {content}}]})}\n\n`).join(''))});
+    await assert.rejects(call('system', {}, 100, 1000, 'answer', text => emitted.push(text)));
+    assert.ok(!emitted.join('').includes(config.apiKey));
+  }
+});

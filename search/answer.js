@@ -31,7 +31,7 @@ async function answerQuestion(options) {
   }
 }
 
-async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch}) {
+async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch, onDelta}) {
   if (!config.apiKey) {
     return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   }
@@ -95,7 +95,7 @@ async function generateAnswer({question, history = [], index, documents, config,
     return passages;
   });
   const context = passages.map((doc, i) => ({source: i + 1, title: doc.title, heading: doc.heading, type: doc.type || 'docs', date: doc.date || '', version: doc.version || '', releaseChannel: doc.type === 'release' ? /-(rc|alpha|beta)/.test(doc.version) ? 'prerelease' : 'stable' : undefined, text: doc.text}));
-  const answer = await callModel(answerPrompt, {previousQuestions, question, documentation: context}, 1800, 25000, 'answer');
+  const answer = await callModel(answerPrompt, {previousQuestions, question, documentation: context}, 1800, 25000, 'answer', onDelta);
   const cited = [];
   mapCitations(answer, (id, citation) => {cited.push(id); return citation;});
   if (cited.some(id => id < 1 || id > passages.length)) throw new Error('Invalid documentation citation');
