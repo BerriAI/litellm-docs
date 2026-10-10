@@ -169,7 +169,7 @@ A `logging_only` guardrail observes the request and the response by default. Set
 - `input` — scan only the request
 - `output` — scan only the response
 - unset / `null` (default): scans both directions
-- `both` — deprecated alias for unset plus `logging_only_continue_on_input_failure: true`; still accepted everywhere `input` and `output` are
+- `both`: deprecated alias for unset plus `logging_only_continue_on_input_failure: true`, still accepted everywhere `input` and `output` are
 
 ```yaml
 guardrails:
