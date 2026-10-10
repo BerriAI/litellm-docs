@@ -224,6 +224,29 @@ ENV HEADROOM_TELEMETRY=off
 CMD ["headroom", "proxy", "--host", "0.0.0.0", "--port", "8787"]
 ```
 
+### Deploying across regions
+
+Run one Headroom deployment in each region, next to that region's LiteLLM. Headroom never reads the LiteLLM database, and LiteLLM makes both of its Headroom calls from the pod serving the request: `/v1/compress` before the LLM call, and `/v1/retrieve/{hash}` when the model asks for original content during that same request. Nothing has to be shared between regions, so a layout with one primary LiteLLM and read-only deployments elsewhere works unchanged.
+
+Point each region's LiteLLM at its own Headroom by leaving `api_base` off the guardrail and setting `HEADROOM_API_BASE` on that region's LiteLLM pods. This also covers a guardrail created in the Admin UI and stored in a database shared across regions; leave `api_base` empty there and every pod uses its own env var.
+
+```yaml showLineNumbers title="config.yaml"
+guardrails:
+  - guardrail_name: headroom-compression
+    litellm_params:
+      guardrail: headroom
+      mode: pre_call
+```
+
+```shell
+# region A
+HEADROOM_API_BASE=http://headroom.region-a.internal:8787
+# region B
+HEADROOM_API_BASE=http://headroom.region-b.internal:8787
+```
+
+Within a region, a single Headroom replica is the simplest setup. Headroom keeps the original content behind each compressed hash in a local store on the replica that compressed it (a SQLite file under `~/.headroom` in `headroom-ai` 0.27.0), so with several replicas behind a load balancer a retrieve can land on a replica that never saw the hash, and the model gets a not found message instead of the original content. If you need more than one replica, enable client IP session affinity on the load balancer so each LiteLLM pod keeps talking to the same replica, or set `ccr_retrieval: false` on the guardrail to keep compression and turn off retrieval.
+
 ### Why `requests_compressed` can be 0
 
 Headroom protects two message types by default, set on the Headroom container itself, not in LiteLLM's `config.yaml`:
@@ -241,6 +264,7 @@ Headroom protects two message types by default, set on the Headroom container it
 | `api_key`    | str    | Bearer token for the headroom service. Falls back to `HEADROOM_API_KEY`. Optional.                    |
 | `model`      | str    | Model name forwarded to `/v1/compress`. Defaults to the request's `model` field.                      |
 | `default_on` | bool   | Run the guardrail on every request without needing to opt in per call. Defaults to `false`.           |
+| `ccr_retrieval` | bool | Give the model a `headroom_retrieve` tool for content Headroom compressed away. Defaults to `true`.             |
 
 ## Environment variables
 
