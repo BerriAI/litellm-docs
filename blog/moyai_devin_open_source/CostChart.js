@@ -41,15 +41,15 @@ export default function CostChart() {
   return (
     <figure className={styles.cost}>
       <div className={styles.headline}>
-        <span className={styles.pct}>{SAVED_PCT}% less</span>
+        <span className={styles.pct}>{SAVED_PCT}% lower estimate</span>
         <span className={styles.headlineText}>
-          {usd(MOYAI_TOTAL)} on Moyai vs {usd(DEVIN_TOTAL)} on Devin over the same 31 days, for the same output
+          About {usd(MOYAI_TOTAL)} estimated for Moyai vs our {usd(DEVIN_TOTAL)} Devin bill over 31 days.
         </span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label={`Cumulative spend over 31 days. Devin reaches ${usd(DEVIN_TOTAL)}; Moyai reaches ${usd(MOYAI_TOTAL)}, saving ${usd(SAVED)}.`}
+        aria-label={`Internal 31-day comparison. The Devin bill totals ${usd(DEVIN_TOTAL)}; the Moyai estimate is ${usd(MOYAI_TOTAL)}, a difference of ${usd(SAVED)}. This is not a matched-workload benchmark.`}
       >
         {TICKS.map((v) => (
           <g key={v}>
@@ -64,16 +64,17 @@ export default function CostChart() {
         <circle cx={END} cy={y(MOYAI_TOTAL)} r="4" className={styles.moyaiDot} />
         <line x1={END + 6} x2={END + 6} y1={y(DEVIN_TOTAL) + 10} y2={y(MOYAI_TOTAL) - 10} className={styles.bracket} />
         <text x={END + 14} y={y(DEVIN_TOTAL) + 4} className={styles.endLabel}>Devin {usd(DEVIN_TOTAL)}</text>
-        <text x={END + 14} y={y(MID) + 4} className={styles.savedLabel}>saved {usd(SAVED)}</text>
+        <text x={END + 14} y={y(MID) + 4} className={styles.savedLabel}>gap {usd(SAVED)}</text>
         <text x={END + 14} y={y(MOYAI_TOTAL) + 4} className={styles.endLabelMoyai}>Moyai {usd(MOYAI_TOTAL)}</text>
         {LABELS.map((i) => (
           <text key={i} x={x(i)} y={H - 10} textAnchor="middle" className={styles.axis}>{dayLabel(i)}</text>
         ))}
       </svg>
       <figcaption>
-        <span><i className={styles.swatchDevin} />Devin, running total</span>
-        <span><i className={styles.swatchMoyai} />Moyai, running total</span>
-        <span><i className={styles.swatchGap} />Saved</span>
+        <span><i className={styles.swatchDevin} />Devin bill</span>
+        <span><i className={styles.swatchMoyai} />Moyai estimate</span>
+        <span><i className={styles.swatchGap} />Difference</span>
+        <p className={styles.note}>Devin's daily curve is approximated from its billing dashboard and scaled to the invoice total. The Moyai line assumes $700/day for our team. Actual costs depend on your workload and infrastructure.</p>
       </figcaption>
     </figure>
   );
