@@ -222,7 +222,7 @@ The flag only applies when the scope is unset; with `input` or `output` it is ac
 
 #### Admin UI
 
-The Admin UI exposes the scope as three options, `Default (request and response)`, `Input only (request)` and `Output only (response)`, plus a `Continue observing the response after a flagged request` toggle for `logging_only_continue_on_input_failure`. A stored `both` scope shows as `Default` with the toggle on.
+The Admin UI exposes the scope as three options, `Default (request and response)`, `Input only (request)` and `Output only (response)`, plus a `Continue observing the response after a flagged request` toggle for `logging_only_continue_on_input_failure`. The toggle is disabled when `Input only` or `Output only` is selected, because the flag only applies to the `Default` scope. A stored `both` scope shows as `Default` with the toggle on.
 
 #### Validation
 
