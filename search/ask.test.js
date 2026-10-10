@@ -37,7 +37,10 @@ test('gateway requests fix model options and keep credentials out of prompt data
     assert.equal(body.model, MODEL);
     assert.deepEqual(body.fallbacks.map(fallback => fallback.model), FALLBACKS);
     assert.equal(body.fallbacks[1].reasoning_effort, 'low');
-    assert.equal(body.fallbacks[1].max_tokens, body.max_tokens + 1024);
+    for (const options of [body, ...body.fallbacks]) {
+      assert.equal(options.max_tokens, undefined);
+      assert.equal(options.max_completion_tokens, undefined);
+    }
     assert.equal(body.max_fallbacks, 2);
     assert.equal(body.num_retries, 0);
     assert.equal(body.reasoning_effort, 'none');
@@ -45,7 +48,6 @@ test('gateway requests fix model options and keep credentials out of prompt data
     assert.equal(request.redirect, 'error');
     assert.equal(body.tools, undefined);
     assert.equal(body.stream, undefined);
-    assert.ok(body.max_tokens <= 1800);
     assert.equal(request.headers.Authorization, `Bearer ${config.apiKey}`);
     assert.ok(!JSON.stringify(body).includes(config.apiKey));
   });
@@ -86,11 +88,35 @@ test('follow-ups pass previous questions as data and compact citations without t
   assert.equal(result.body.answer, 'Send agent traces to Lens. [1]');
   assert.equal(result.body.sources[0].url, docs[1].url);
 });
-test('gateway rejects redirects, non-HTTPS configuration, oversized output, tools, and secret echoes', async () => {
+test('subscription comparisons retrieve both guides and preserve setup prerequisites without a setup verb', async () => {
+  const guide = (slug, title, topic) => Array.from({length: 14}, (_, i) => ({
+    id: `${slug}-${i}`, title, url: `/docs/${slug}#section-${i}`,
+    heading: i === 0 ? '' : i === 2 ? 'Prerequisites' : i === 3 ? 'Configure the proxy' : i === 11 ? 'Sign in' : `Section ${i}`,
+    text: i === 0 ? `Use a ${topic} subscription.` : i < 12 ? `Required step ${i}.` : 'Unrelated details. '.repeat(500),
+  }));
+  const corpus = [...guide('claude', 'Claude Code Subscription', 'Claude Code'),
+    ...guide('chatgpt', 'ChatGPT Subscription', 'Codex')];
+  const upstream = modelSteps([
+    {queries: ['LiteLLM AI Gateway with Claude subscription Claude Code setup', 'LiteLLM Codex subscription gateway setup', 'Claude Code subscriptions'], intent: 'setup'},
+    'Both subscriptions are documented. [1]',
+  ], (body, _request, _url, call) => {
+    if (call !== 1) return;
+    const context = JSON.parse(body.messages[1].content[0].text).documentation;
+    for (const title of ['Claude Code Subscription', 'ChatGPT Subscription']) {
+      const guide = context.filter(doc => doc.title === title);
+      for (const heading of ['Prerequisites', 'Configure the proxy', 'Sign in']) assert.ok(guide.some(doc => doc.heading === heading), `${title}: ${heading}`);
+    }
+    assert.ok(context.length <= 32);
+    assert.ok(context.reduce((sum, doc) => sum + doc.text.length, 0) <= 22000);
+  });
+  assert.equal((await ask(upstream.fetch, {question: 'litellm with codex/claude subscription??',
+    index: createIndex(corpus), documents: new Map(corpus.map(doc => [doc.id, doc]))})).status, 200);
+});
+test('gateway rejects redirects, non-HTTPS configuration, tools, and secret echoes', async () => {
   await assert.rejects(ask(() => assert.fail('must not fetch'), {config: {...config, baseUrl: 'http://localhost'}}), /configuration/);
   for (const response of [
-    new Response('redirect', {status: 302}), new Response('x'.repeat(131073)),
-    modelResponse(config.apiKey), modelResponse('x'.repeat(16001)), modelResponse('tool', {tool_calls: [{id: '1'}]}),
+    new Response('redirect', {status: 302}),
+    modelResponse(config.apiKey), modelResponse('tool', {tool_calls: [{id: '1'}]}),
     Response.json({choices: [{finish_reason: 'length', message: {content: 'truncated'}}]}),
   ]) await assert.rejects(ask(async () => response));
 });
