@@ -42,6 +42,33 @@ After deploying, repeat the two local example questions through the public UI. I
 
 For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets behind HTTPS. Route `/api/docs/ask` to it on the docs origin, and deploy the site and index together
 
+## Record Ask AI traces in Lens
+
+To connect an existing Lens installation, copy a dedicated key from **Lens Home → Tracing key** into this project's ignored `.env.local`. Add the tracing endpoint shown by Lens and its UI address:
+
+```dotenv
+LITELLM_TRACING_KEY=your-dedicated-lens-tracing-key
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://your-lens.example.com/v1/traces
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+LENS_UI_URL=https://your-lens.example.com/ui/
+```
+
+The exporter constructs `Authorization: Bearer ...` from `LITELLM_TRACING_KEY`. Keep `DOCS_AI_API_KEY` and the model gateway configuration unchanged; model and Lens admin keys cannot replace the tracing key. Lens and ClickHouse are sufficient for trace storage, with no analysis provider or gateway tracing integration required
+
+Restart `npm run search:serve`, then ask a question. Lens records the agent as `litellm-docs-search`. Follow-up questions share the conversation's trace, with each question's search planning, document retrieval, and answer nested beneath it. Select **Clear** to start a new conversation and trace. The browser carries a signed trace reference between requests, so follow-ups stay together across Vercel instances. It contains no credentials and is never passed to the model
+
+Traces contain questions, prompt context, retrieved document references, answers, model names, timing, and token usage. The exporter excludes request headers and redacts the configured model and tracing credentials. Tracing is optional and exporter failures do not fail the answer
+
+To run a real conversation and verify storage of all its exported spans in one trace:
+
+```bash
+npm run search:verify-trace -- "How do I use my Codex subscription with LiteLLM?" "How do I log in?"
+```
+
+This uses the existing model credentials and makes the normal planning and answer calls for each quoted question. It flushes the exporter, requires one shared trace, records actual exported trace and span IDs in `.cache-loader/docs-trace-receipt.json`, and checks Lens's receipt endpoint with the same tracing key. Only `received: true` confirms delivery. Authentication errors stop verification; other receipt checks are bounded to 30 attempts and 60 seconds. Open the printed trace URL after confirmation
+
+For Vercel, add the same tracing environment variables as server secrets and redeploy. OpenTelemetry runs only in the API function. Each question flushes its spans before the function returns, with a bounded export timeout
+
 ## Model routing and caching
 
 Every model call requests Haiku 5.5 with LiteLLM's native ordered fallbacks to GPT-6 Luna and GPT-6.1 Sol. The backend fixes the aliases and fallback parameters. Luna uses `reasoning_effort=none`; Sol uses `low` and receives an additional 1,024-token reasoning allowance. Per-provider timeouts leave room for the two fallbacks within the request deadline. A search planner rewrites the question, retrieves matching guides, and passes those guides to the answer model. Malformed search plans fall back to the original question
@@ -56,11 +83,11 @@ Document search waits for a 250ms pause in typing and keeps the previous matches
 
 Ask AI uses matching public docs to interpret short topics and follow-ups, then generates an answer with citations. It has no scope classifier or output-verdict gate. General questions can receive an answer without sources; LiteLLM-specific guidance is instructed to use retrieved evidence. Citation numbers and URLs are validated against the built corpus. The renderer disables HTML and images and permits only the returned citation links
 
-The API accepts only a question of up to 500 characters and up to four previous questions of the same size. It rejects extra fields, roles, assistant answers, model settings, fallback overrides, tools, URLs as configuration, and caller-supplied documents. The body limit is 16 KiB. Prior questions and retrieved docs are untrusted reference material. The model never receives the API key or access to environment variables, tools, arbitrary network requests, or private files
+The API accepts a question of up to 500 characters, up to four previous questions of the same size, and an optional signed trace reference. It rejects extra fields, roles, assistant answers, model settings, fallback overrides, tools, URLs as configuration, and caller-supplied documents. The body limit is 16 KiB. Prior questions and retrieved docs are untrusted reference material. The model never receives the API key or access to environment variables, tools, arbitrary network requests, or private files
 
 Each question makes at most two gateway calls (search planning and answering), with up to three provider attempts per call through native fallbacks. Context is bounded to four guides, 32 passages, and 22,000 text characters. Model response bodies, output tokens, input time, execution time, and concurrent work are bounded. Redirects are disabled, errors are generic, and client disconnects cancel upstream requests. Static serving denies dotfiles, traversal, and symlinks outside the build directory
 
-The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. The service does not store or log questions or answers. Gateway retention follows its own configuration
+The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. When Lens tracing is enabled, questions and answers are exported to Lens; otherwise the service does not store or log them. Gateway retention follows its own configuration
 
 ## Validation
 

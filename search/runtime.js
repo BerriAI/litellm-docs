@@ -19,6 +19,11 @@ function readConfig(env, defaults = {}) {
     apiKey: env.DOCS_AI_API_KEY,
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
     origin: env.DOCS_ORIGIN || defaults.origin || 'https://docs.litellm.ai',
+    tracing: {
+      endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+      key: env.LITELLM_TRACING_KEY,
+      protocol: env.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL || env.OTEL_EXPORTER_OTLP_PROTOCOL,
+    },
   };
 }
 async function loadCorpus(buildDir) {

@@ -9,7 +9,15 @@ const forms = {
   settings: 'setting', credentials: 'credential', quickstart: 'setup', configuring: 'configure',
 };
 const words = text => text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) || [];
-const tokenize = text => words(text.replace(/\b(?:set\s+up|quick\s+start)\b/gi, 'setup')).flatMap(word => word.includes('_') ? [word, ...word.split('_')] : [word]);
+const titlePairs = title => {
+  const parts = words(title).flatMap(word => word.split('_'));
+  return parts.slice(1).map((word, i) => [parts[i], word])
+    .filter(pair => pair.every(word => !stopWords.has(word)));
+};
+const tokenize = (text, field) => [
+  ...words(text.replace(/\b(?:set\s+up|quick\s+start)\b/gi, 'setup')).flatMap(word => word.includes('_') ? [word, ...word.split('_')] : [word]),
+  ...(field === 'title' ? titlePairs(text).map(pair => pair.join('')) : []),
+];
 const normalize = term => stopWords.has(term) ? null : Object.hasOwn(forms, term) ? forms[term] : term;
 const termsOf = text => [...new Set(tokenize(text).map(normalize).filter(Boolean))];
 const indexTerm = term => {
@@ -80,7 +88,11 @@ function retrieve(index, terms, boost) {
   hits = index.search(query, {...options, prefix: term => term.length >= 3});
   if (hits.length) return hits;
   hits = index.search(query, {...options, fuzzy: term => term.length >= 5 ? 0.3 : term.length === 4 ? 0.5 : false})
-    .filter(hit => terms.every(term => Object.keys(hit.match).some(match => distance(term, match) <= (term.length >= 9 ? 2 : term.length >= 4 ? 1 : 0))));
+    .filter(hit => terms.every(term => Object.entries(hit.match).some(([match, fields]) => {
+      // Joined aliases match literally; they must not invent spelling corrections for other words.
+      if (match !== term && fields.every(field => field === 'title') && !termsOf(hit.title).includes(normalize(match))) return false;
+      return distance(term, match) <= (term.length >= 9 ? 2 : term.length >= 4 ? 1 : 0);
+    })));
   if (hits.length) return hits.map(hit => ({...hit, matchType: 'typo'}));
   if (terms.length > 2) return index.search(query, {...options, combineWith: 'OR'})
     .filter(hit => hit.queryTerms.length >= Math.ceil(terms.length * 0.6));
@@ -110,13 +122,21 @@ function snippet(text, matchTerms, maxLength = 210) {
   return `${best > 0 ? '…' : ''}${text.slice(best, end)}${end < text.length ? '…' : ''}`;
 }
 
-function titleRelevance(title, terms) {
+function titleRelevance(title, terms, queryTerms) {
   const clean = title.replace(/\[[^\]]*\]/g, '').replace(/\([^)]*\)/g, '');
   const core = termsOf(clean).filter(term => !['litellm', 'aws', 'overview', 'introduction'].includes(term));
+  terms = expandTitleTerms(clean, terms, queryTerms);
   const matched = terms.filter(term => core.includes(term));
   const coverage = matched.length / terms.length;
   const precision = matched.length / Math.max(core.length, 1);
   return coverage * 70 + precision * 35 + (coverage === 1 && precision === 1 ? 90 : 0);
+}
+
+// Use the original words for ranking and navigation when a query uses a joined title pair.
+function expandTitleTerms(title, terms, queryTerms = terms) {
+  const pairs = new Map(titlePairs(title).map(pair => [pair.join(''), pair]));
+  return [...new Set(terms.flatMap(term => queryTerms.includes(term) && pairs.has(term) ? pairs.get(term) : [term])
+    .map(normalize).filter(Boolean))];
 }
 
 function search(index, query, {limit = 10, groupPages = true, category = 'All docs', correctTypo = true} = {}) {
@@ -150,12 +170,14 @@ function search(index, query, {limit = 10, groupPages = true, category = 'All do
       const correctedTitle = words(group.title).filter(word => terms.some(term => distance(term, word) <= (term.length >= 9 ? 2 : 1)));
       if (correctedTitle.length) effective = correctedTitle.map(normalize).filter(Boolean);
     }
-    const titleScore = titleRelevance(group.title, effective);
+    const titleScore = titleRelevance(group.title, effective, terms);
     let score = titleScore + Math.log1p(group.pageScore) * 6 + Math.log1p(group.passages[0]?.score || 0) * 2;
-    if (group.category === 'Providers' && effective.every(term => termsOf(group.title).includes(term))) score += 12;
+    const effectiveTitleTerms = expandTitleTerms(group.title, effective, terms);
+    if (group.category === 'Providers' && effectiveTitleTerms.every(term => termsOf(group.title).includes(term))) score += 12;
     if (/\b(old|removed|deprecated)\b/i.test(group.title)) score *= 0.1;
     const titleTerms = termsOf(group.title);
-    const sectionTerms = terms.filter(term => !titleTerms.includes(term));
+    const queryTitleTerms = expandTitleTerms(group.title, terms);
+    const sectionTerms = queryTitleTerms.filter(term => !titleTerms.includes(term));
     group.passages.sort((a, b) => {
       const boost = hit => {
         const heading = termsOf(hit.heading);
@@ -164,11 +186,11 @@ function search(index, query, {limit = 10, groupPages = true, category = 'All do
       };
       return boost(b) - boost(a);
     });
-    const titleCoverage = terms.filter(term => titleTerms.includes(term)).length;
-    const titleMatch = effective.every(term => titleTerms.includes(term)) ||
-      (titleCoverage >= 2 && titleCoverage / terms.length >= 2 / 3 && !/[_/]/.test(query));
+    const titleCoverage = queryTitleTerms.filter(term => titleTerms.includes(term)).length;
+    const titleMatch = effectiveTitleTerms.every(term => titleTerms.includes(term)) ||
+      (titleCoverage >= 2 && titleCoverage / queryTitleTerms.length >= 2 / 3 && !/[_/]/.test(query));
     const best = group.passages[0];
-    const highlights = [...new Set([...words(query).filter(word => !stopWords.has(word)), ...effective])];
+    const highlights = [...new Set([...words(query).filter(word => !stopWords.has(word)), ...effective, ...effectiveTitleTerms])];
     return {...group, score, best, highlights, correction: group.matchType === 'typo' && titleMatch ? effective.join(' ') : '',
       // Broad title matches open the guide; specific queries jump straight to the relevant section.
       destination: titleMatch || !best ? group.url : best.url,
