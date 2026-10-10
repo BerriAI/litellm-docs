@@ -2,21 +2,21 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Using Claude Code Max Subscription
+# Using Claude Code with a Claude Subscription (Pro, Max, Team, Enterprise)
 
 <div style={{ textAlign: 'center' }}>
 <Image img={require('../../img/claude_code_max.png')} style={{ width: '100%', maxWidth: '800px', height: 'auto' }} />
 
-Route Claude Code Max subscription traffic through LiteLLM AI Gateway.
+Route Claude Code traffic signed in with a Claude Pro, Max, Team, or Enterprise subscription through LiteLLM AI Gateway.
 </div>
 
-**Why Claude Code Max over direct API?**
-- **Lower costs** — Claude Code Max subscriptions are cheaper for Claude Code power users than per-token API pricing
+**Why a Claude subscription over direct API?**
+- **Lower costs**: Claude subscriptions are cheaper for Claude Code power users than per-token API pricing
 
 **Why route through LiteLLM?**
-- **Cost attribution** — Track spend per user, team, or key
-- **Budgets & rate limits** — Set spending caps and request limits
-- **Guardrails** — Apply content filtering and safety controls to all requests
+- **Cost attribution**: Track spend per user, team, or key
+- **Budgets & rate limits**: Set spending caps and request limits
+- **Guardrails**: Apply content filtering and safety controls to all requests
 
 
 
@@ -29,12 +29,12 @@ Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) installed
-- Claude Max subscription
-- LiteLLM Gateway running
+- A Claude Pro, Max, Team, or Enterprise subscription (Team and Enterprise members sign in with the Claude account their admin invited)
+- LiteLLM Gateway v1.81.14 or later running
 
 ## Step 1: Configure LiteLLM Proxy
 
-Create a `config.yaml` with the critical `forward_client_headers_to_llm_api: true` setting:
+Create a `config.yaml` with your Anthropic models:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -52,12 +52,13 @@ model_list:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  forward_client_headers_to_llm_api: true  # Required: forwards OAuth token to Anthropic
 ```
 
-:::info[Why `forward_client_headers_to_llm_api`?]
+:::info[No header forwarding setting is needed]
 
-This setting forwards the user's OAuth token (in the `Authorization` header) through LiteLLM to the Anthropic API, enabling per-user authentication with their Max subscription while LiteLLM handles tracking and controls.
+Since v1.81.14, LiteLLM forwards a client's `Authorization: Bearer sk-ant-oat...` subscription token to `anthropic/` deployments without `forward_client_headers_to_llm_api`. The token takes precedence over any `api_key` set on the deployment, and LiteLLM adds the `anthropic-beta: oauth-2025-04-20` header Anthropic requires for OAuth. Turn on `forward_client_headers_to_llm_api` only if you also want other client headers forwarded.
+
+A deployment without an `api_key` serves only subscription users: a request that arrives without a subscription token fails with `401 Missing Anthropic API Key`. If you set an `api_key`, requests without a token fall back to it and are billed to that API key.
 
 :::
 
@@ -109,9 +110,9 @@ Click "Create Key" to generate your virtual key. Copy the generated key value (e
 
 ---
 
-### Part 2: Sign into Claude Code Max Plan (Client Side)
+### Part 2: Sign into Claude Code with Your Subscription (Client Side)
 
-Set up Claude Code environment variables and authenticate with your Max subscription.
+Set up Claude Code environment variables and authenticate with your Claude subscription.
 
 #### 2.1 Set Environment Variables
 
@@ -133,6 +134,8 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-otsclFlEblQ-6D60ua
 | `ANTHROPIC_MODEL` | The model name configured in your LiteLLM `config.yaml` |
 | `ANTHROPIC_CUSTOM_HEADERS` | The `x-litellm-api-key` header for LiteLLM authentication |
 
+Do not also set `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper`. Claude Code sends any of those in place of the subscription login, so the request no longer uses the subscription.
+
 #### 2.2 Launch Claude Code
 
 Start Claude Code:
@@ -151,7 +154,7 @@ Choose "Claude account with subscription" (Pro, Max, Team, or Enterprise).
 
 #### 2.4 Authorize in Browser
 
-Claude Code opens your browser to authenticate. Click "Authorize" to connect your Claude Max account.
+Claude Code opens your browser to authenticate. Click "Authorize" to connect your Claude account.
 
 <Image img={require('../../img/claude_code_max/step19.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
@@ -206,7 +209,7 @@ The logs show:
 
 LiteLLM Gateway handles two types of authentication:
 1. **`x-litellm-api-key`**: Authenticates the request with LiteLLM (usage tracking, budgets, rate limits)
-2. **OAuth Token (via `Authorization` header)**: Forwarded to Anthropic API for Claude Max authentication
+2. **OAuth Token (via `Authorization` header)**: Forwarded to Anthropic API for Claude subscription authentication
 
 ```mermaid
 sequenceDiagram
@@ -218,9 +221,9 @@ sequenceDiagram
 
     Note over LiteLLM: 1. Validate x-litellm-api-key<br/>2. Check budgets/rate limits<br/>3. Log request for tracking
 
-    LiteLLM->>Anthropic: Forward request with:<br/>- Authorization: Bearer {oauth_token}<br/>(User's Claude Max OAuth token)
+    LiteLLM->>Anthropic: Forward request with:<br/>- Authorization: Bearer {oauth_token}<br/>(User's Claude subscription OAuth token)
 
-    Note over Anthropic: Authenticate user via<br/>OAuth token from Max plan
+    Note over Anthropic: Authenticate user via<br/>OAuth token from their plan
 
     Anthropic-->>LiteLLM: Response
 
@@ -234,7 +237,7 @@ sequenceDiagram
 | Header | Purpose | Handled By |
 |--------|---------|------------|
 | `x-litellm-api-key` | LiteLLM Gateway authentication, budget tracking, rate limits | LiteLLM |
-| `Authorization: Bearer {oauth_token}` | Claude Max subscription authentication | Anthropic API |
+| `Authorization: Bearer {oauth_token}` | Claude subscription authentication | Anthropic API |
 
 ### Complete Request Flow Example
 
@@ -243,7 +246,7 @@ Here's what a typical request looks like when Claude Code makes a call through L
 ```bash showLineNumbers title="Example Request from Claude Code to LiteLLM"
 curl -X POST "http://localhost:4000/v1/messages" \
   -H "x-litellm-api-key: Bearer sk-otsclFlEblQ-6D60ua2IZg" \
-  -H "Authorization: Bearer oauth_token_from_max_plan" \
+  -H "Authorization: Bearer sk-ant-oat01-..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "anthropic-claude",
@@ -255,13 +258,44 @@ curl -X POST "http://localhost:4000/v1/messages" \
 LiteLLM then:
 1. Validates `x-litellm-api-key` for gateway access
 2. Logs the request for usage tracking
-3. Forwards the request to Anthropic with the OAuth `Authorization` header (because of `forward_client_headers_to_llm_api: true`)
+3. Forwards the request to Anthropic with the OAuth `Authorization` header in place of any configured `x-api-key`
+
+## Plans, Credentials, and Attribution
+
+### Supported plans
+
+LiteLLM does not check which plan issued the token. Pro, Max, Team, and Enterprise logins all give Claude Code an `sk-ant-oat` OAuth token, and LiteLLM handles every one of them the same way. Plan limits, usage reporting, and billing are applied by Anthropic to the Claude account that signed in, and Team and Enterprise admin controls such as seat assignment, SSO, and member removal stay in Claude's admin console. To keep members on your organization instead of a personal account, set Claude Code's `forceLoginOrgUUID` [setting](https://code.claude.com/docs/en/authentication#restrict-login-to-your-organization).
+
+Anthropic's [Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) page restricts using subscription credentials on behalf of other users. Each developer signs in with their own account and LiteLLM passes that token through per request; do not put a subscription token in a deployment's `api_key` to share it.
+
+### Which requests use the subscription token
+
+The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the model is an `anthropic/` deployment. It is never sent to other providers, including Claude on Bedrock or Vertex AI, which keep using their own credentials (since v1.99.0). `/v1/messages/count_tokens` uses the deployment's configured key, not the subscription token. The `/anthropic` pass-through route does not use the subscription token when the proxy has an Anthropic key configured, so point `ANTHROPIC_BASE_URL` at the proxy root as shown above rather than at `/anthropic`.
+
+### Credential storage, refresh, and revocation
+
+Claude Code owns the subscription credential. It stores the login locally (the macOS Keychain, or `~/.claude/.credentials.json` on Linux and Windows, under `CLAUDE_CONFIG_DIR` when that is set), refreshes it on its own, and `/logout` signs it out. LiteLLM stores nothing: the token is used for the one upstream request it arrived with, it is not cached across requests, and it is not written to logs or spend logs (spend logs record only whether one was used, see [Seeing Which Requests Were Billed to a Seat](#seeing-which-requests-were-billed-to-a-seat)). Concurrent requests from different users each go upstream with their own token.
+
+When a token is expired or revoked, Anthropic answers `401 OAuth access token is invalid.` and LiteLLM returns that to Claude Code; the user runs `/login` again. LiteLLM cannot revoke a Claude login. To cut a user off at the gateway, [block](/docs/proxy/virtual_keys) or delete their virtual key, which stops their requests through LiteLLM; their Claude login itself still works directly against Anthropic until they or their admin remove it.
+
+One user's expired or revoked token can currently block everyone else on the same model. LiteLLM counts the upstream 401 as a deployment failure and puts the deployment into cooldown, and while the cooldown lasts every other user's request to that model fails with `429 No deployments available for selected model` without reaching Anthropic. On proxies that serve subscription users, turn cooldowns off:
+
+```yaml showLineNumbers title="config.yaml - Keep one user's 401 from blocking others"
+router_settings:
+  disable_cooldowns: true
+```
+
+### Attribution and cost
+
+Spend is attributed to the virtual key in `x-litellm-api-key` and the user and team it belongs to, so per-user and per-team reporting, budgets, and rate limits work as usual. LiteLLM does not see which Claude account or organization the token belongs to. Cost is calculated at Anthropic API list prices and counts toward key, user, and team budgets even though Anthropic bills the usage to the subscription, so treat budgets here as usage caps in API-equivalent dollars.
+
+To tell subscription-billed requests from key-billed ones, see [Seeing Which Requests Were Billed to a Seat](#seeing-which-requests-were-billed-to-a-seat).
 
 ## Advanced Configuration
 
 ### Per-Model Header Forwarding
 
-For more granular control, you can enable header forwarding only for specific models:
+The subscription token is forwarded without this setting. If you also want other client headers forwarded, you can enable header forwarding only for specific models:
 
 ```yaml showLineNumbers title="config.yaml - Per-Model Header Forwarding"
 model_list:
@@ -285,7 +319,7 @@ litellm_settings:
 
 ### Budget Controls
 
-Set up per-user budgets while using Max subscriptions:
+Set up per-user budgets while using Claude subscriptions (cost is tracked at API list prices, see [Attribution and cost](#attribution-and-cost)):
 
 ```yaml showLineNumbers title="config.yaml - With Database for Budget Tracking"
 model_list:
@@ -295,7 +329,6 @@ model_list:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  forward_client_headers_to_llm_api: true
   database_url: "postgresql://..."
 ```
 
@@ -314,7 +347,7 @@ curl -X POST "http://localhost:4000/key/generate" \
 
 ### Seeing Which Requests Were Billed to a Seat
 
-Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the Max seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field needs LiteLLM v1.105.0 or later (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field needs LiteLLM v1.105.0 or later (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
 
 `spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
 
@@ -331,14 +364,9 @@ Pass `used_client_oauth_token=false` for the requests the configured key paid fo
 
 ### OAuth Token Not Being Forwarded
 
-**Symptom**: Authentication errors from Anthropic API
+**Symptom**: Authentication errors from Anthropic API, or usage billed to the configured API key instead of the subscription
 
-**Solution**: Ensure `forward_client_headers_to_llm_api: true` is set in your config:
-
-```yaml showLineNumbers title="config.yaml - Enable Header Forwarding"
-general_settings:
-  forward_client_headers_to_llm_api: true
-```
+**Solution**: Check that you are on LiteLLM v1.81.14 or later, that the model is an `anthropic/` deployment, and that Claude Code reaches the proxy root (`/v1/messages`) rather than `/anthropic`. In Claude Code, `/status` shows the active login; if `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper` is set, Claude Code sends that instead of the subscription token. A `401 OAuth access token is invalid.` means the login expired or was revoked; run `/login`.
 
 ### LiteLLM Authentication Failing
 
