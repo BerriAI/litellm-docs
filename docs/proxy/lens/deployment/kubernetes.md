@@ -4,6 +4,9 @@ description: "Deploy independent Lens with its own Helm chart and optional LiteL
 slug: "/proxy/lens/deployment/kubernetes"
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Kubernetes
 
 The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation uses the public Lens repository and requires a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
@@ -38,19 +41,103 @@ For [external ClickHouse](./storage.md#external-clickhouse), provide a stable en
 
 ## Connect an existing LiteLLM deployment {#existing-deployment}
 
-Keep the gateway's chart family, release name, namespace, model configuration, database and keys. Select a gateway artifact containing the compatible adapter and shared UI. The [current source integration guide](https://github.com/BerriAI/litellm/blob/d171e208a18d3f3559e3a338f7769387e01749e5/docs/lens-integration.md) identifies the source qualification boundary; published gateway support must be checked separately
+Use **external** mode when Lens already runs in its own release or on a platform such as Render. This connects the gateway to Lens without deploying another Lens or ClickHouse instance.
 
-Both LiteLLM charts consume the Lens chart through `lensWorker` settings:
+First complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). The gateway must have the adapter and UI described in that guide. Keep your existing gateway chart family, release name, namespace, and model configuration.
 
-| Mode | Ownership |
+### 1. Store the connection secrets
+
+Use your Kubernetes secret manager to create `lens-connection` in the **gateway namespace** with these keys:
+
+| Secret key | Value from Lens |
 | --- | --- |
-| `bundled` | The gateway release renders the shared Lens chart |
-| `external` | Lens has its own release or application, and the gateway connects to it |
-| `disabled` | The gateway does not deploy or connect this Lens service |
+| `service-token` | `LITELLM_LENS_SERVICE_TOKEN` |
+| `gateway-secret` | `LENS_GATEWAY_SECRET` |
 
-The [gateway connection settings](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#connect-a-gateway) cover the private service credential, signing credential and URLs. The Lens administrator credential remains separate. A Lens runtime version does not have to equal the gateway version
+For a manual setup, save each value in a separate private file named `service-token` and `gateway-secret`. Do not include a trailing newline. Set your namespace and create the Secret:
 
-For existing Lens records, complete the [metadata migration](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before changing writers. Moving from bundled to external ownership also requires the [ownership transfer](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently). Preserve names, immutable selectors, credentials and persistent volumes; do not let two controllers own the same deployment
+```sh
+export GATEWAY_NAMESPACE="YOUR_GATEWAY_NAMESPACE"
+kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic lens-connection \
+  --from-file=service-token=./service-token \
+  --from-file=gateway-secret=./gateway-secret
+```
+
+If this Secret already exists, reuse it after confirming the values match Lens. Keep the files out of Git. For GitOps, declare the Secret through your existing secret-management controller.
+
+### 2. Add the Lens values
+
+Save this as `lens-connection.yaml`, using the address of your existing Lens service:
+
+```yaml
+lensWorker:
+  mode: external
+  externalUrl: https://lens.example.com
+  publicUrl: https://lens.example.com
+  serviceTokenSecret:
+    name: lens-connection
+    key: service-token
+  gateway:
+    secretName: lens-connection
+    secretKey: gateway-secret
+```
+
+`externalUrl` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`.
+
+Add the tracing store setting in the same file. Use the block for your existing chart:
+
+<Tabs groupId="litellm-chart">
+<TabItem value="combined" label="litellm-helm chart">
+
+```yaml
+proxy_config:
+  general_settings:
+    tracing:
+      store:
+        type: lens
+```
+
+</TabItem>
+<TabItem value="split" label="Componentized litellm chart">
+
+```yaml
+gateway:
+  config:
+    proxy_config:
+      general_settings:
+        tracing:
+          store:
+            type: lens
+```
+
+</TabItem>
+</Tabs>
+
+If your deployment supplies `config.yaml` from an external ConfigMap instead, add `general_settings.tracing.store.type: lens` to that file through its existing owner.
+
+### 3. Apply and check
+
+Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to the same compatible chart package or local chart directory used by your gateway deployment. Do not switch chart families. You can inspect the installed release with:
+
+```sh
+helm list --namespace "$GATEWAY_NAMESPACE"
+```
+
+Apply the added values while retaining the release's saved values:
+
+```sh
+export GATEWAY_RELEASE="YOUR_GATEWAY_RELEASE"
+export GATEWAY_CHART="PATH_TO_YOUR_EXISTING_CHART_PACKAGE"
+helm upgrade "$GATEWAY_RELEASE" "$GATEWAY_CHART" \
+  --namespace "$GATEWAY_NAMESPACE" --reuse-values \
+  -f lens-connection.yaml --wait
+```
+
+This rolls the gateway pods to load the connection settings. For GitOps, commit the values and Secret references through your normal review and sync process instead.
+
+Sign in to LiteLLM, select **Lens**, and complete [the connection check](./litellm.md#5-open-lens-in-the-gateway). Then [send your first trace](../first-trace.md).
+
+If Lens is already owned by the gateway's Helm release, do not change it to external mode with this procedure. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
 
 ## Check the installation
 

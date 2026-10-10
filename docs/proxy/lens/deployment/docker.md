@@ -18,7 +18,7 @@ Preserve the shipped non-root user, read-only filesystem, bounded temporary spac
 
 ## Connect an existing gateway {#1-configure-litellm}
 
-A compatible LiteLLM gateway can connect to the running Lens service over a private network. Use the credentials and URL settings in [Connect Lens to Docker Compose](./docker-compose.md#1-set-the-connection-values), supplied through your existing container environment and recreation command. Keep both containers on a persistent user-defined network or use another reachable private address
+A compatible LiteLLM gateway can connect to the running Lens service at a reachable HTTP or HTTPS address. Use the credentials and URL settings in [Add Lens to LiteLLM](./litellm.md), supplied through your existing container environment and recreation command. Keep both containers on a persistent user-defined network or use another reachable private address
 
 Lens's public address serves agents and browsers. Its service and signing credentials authenticate the gateway connection; agent tracing keys and model credentials stay separate. Existing gateway-hosted Lens metadata needs the [documented migration](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before the new runtime takes ownership
 

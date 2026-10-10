@@ -1,40 +1,50 @@
 ---
 title: "Connect Lens to Docker Compose"
-description: "Connect independent Lens to an existing LiteLLM Compose deployment."
+description: "Add a running Lens service to your existing LiteLLM Compose deployment."
 slug: "/proxy/lens/deployment/docker-compose"
 ---
 
 # Connect Lens to Docker Compose
 
-Start Lens with its own [source Compose installation](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md), then connect your existing LiteLLM deployment. Lens owns its UI, processing and ClickHouse data. Keep the gateway's model configuration, authentication, PostgreSQL database and other services
+Use this guide when LiteLLM already runs with Docker Compose. Lens can run in another Compose project, on Render, or on another reachable server. Keep your gateway's existing services, model configuration, database, and volumes.
 
-The gateway must contain the compatible adapter and shared Lens UI. The [current source integration guide](https://github.com/BerriAI/litellm/blob/d171e208a18d3f3559e3a338f7769387e01749e5/docs/lens-integration.md) describes the qualified source boundary; it is not a claim that an installable gateway release already contains it. Select [available artifacts](./releases.md) before changing your deployment
+## 1. Prepare the connection {#1-set-the-connection-values}
 
-For help adapting your existing deployment, copy the [existing LiteLLM setup prompt](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md#add-lens-to-existing-litellm) into your coding agent
+Complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). You need a ready Lens URL and two connection secrets already configured on Lens.
 
-## Set the private connection {#1-set-the-connection-values}
-
-Reuse existing connection credentials when they are already configured. Otherwise generate separate private service and signing secrets with at least 32 characters each, using your secret manager. Put both in Lens's `deploy/lens/.env`:
+In the directory that contains your gateway's Compose file, create a private `lens-gateway.env` file with these values:
 
 ```dotenv
-LITELLM_LENS_SERVICE_TOKEN=<private-service-secret>
-LENS_GATEWAY_SECRET=<private-signing-secret>
-```
-
-Give the gateway those same two values and the addresses it needs:
-
-```dotenv
-LITELLM_LENS_URL=http://lens:4318
+LITELLM_LENS_URL=https://lens.example.com
 LITELLM_LENS_PUBLIC_URL=https://lens.example.com
-LITELLM_LENS_SERVICE_TOKEN=<same-private-service-secret>
-LENS_GATEWAY_SECRET=<same-private-signing-secret>
+LITELLM_LENS_SERVICE_TOKEN=YOUR_SERVICE_SECRET
+LENS_GATEWAY_SECRET=YOUR_SIGNING_SECRET
 ```
 
-The example internal hostname `lens` requires a shared Docker network. Use an address reachable from the gateway container. The public address must be reachable by the browser and agent exporters, without `/v1/traces` appended. See [network and routing configuration](./configuration.md#docker-network)
+Replace the URL and secrets with your values. Keep this file out of Git and restrict access:
 
-## Preserve the existing deployment {#2-add-lens-to-your-compose-file}
+```sh
+chmod 600 lens-gateway.env
+```
 
-Supply the gateway variables through its existing Compose environment or secret configuration. Merge this tracing block into the gateway's configuration, preserving the other values under `general_settings` and the rest of the file:
+Using the public HTTPS Lens URL for both addresses works when the gateway and agents can reach it. For a shared Docker network, the private URL can instead be `http://lens:4318`. Keep the public URL reachable by your agents. See [Docker networking](./configuration.md#docker-network).
+
+<span id="2-add-lens-to-your-compose-file" />
+
+## 2. Apply the gateway settings {#2-apply-the-gateway-settings}
+
+Add the environment file to your gateway service in its existing Compose file. This example uses the service name `litellm`; use the name in your file. Preserve any existing `env_file` entries:
+
+```yaml
+services:
+  litellm:
+    env_file:
+      - lens-gateway.env
+```
+
+An explicit `environment` value overrides the same name in an environment file. Update any existing definitions of these four Lens variables so they agree. In a split deployment, add the file to both the gateway and backend/API services.
+
+Merge this block into the gateway's existing `config.yaml`:
 
 ```yaml
 general_settings:
@@ -43,22 +53,24 @@ general_settings:
       type: lens
 ```
 
-Lens retains its own administrator credential and ClickHouse connection
+Do not replace other `general_settings` values or the model list.
 
-If the old gateway-hosted Lens has saved metadata, complete the [migration and writer handoff](https://github.com/BerriAI/lens/blob/main/docs/migration.md) before starting the new runtime against that data. A service token does not migrate records or replace an old enrolled-worker token
+## 3. Recreate the gateway {#3-start-lens}
 
-## Apply the changes {#3-start-lens}
-
-From the Lens repository root, apply its environment change:
+From your gateway's Compose directory, list the service names:
 
 ```sh
-docker compose -f deploy/lens/compose.yaml up -d --wait
+docker compose config --services
 ```
 
-Recreate the gateway through its existing deployment command so it receives the new environment and tracing configuration. Preserve its unrelated services, volumes and credentials
+Recreate the gateway service so it loads the settings. Replace `litellm` with its service name. Include the backend service too if you use a split deployment:
 
-## Check the embedded flow {#4-check-the-installation}
+```sh
+docker compose up -d --no-deps litellm
+```
 
-Verify ordinary gateway inference, then sign into LiteLLM and open `/ui/lens/`. The embedded UI uses your existing gateway session. Complete the [first-trace check](../deployment.md#check-the-installation) there and verify the same user and team access scope you had before
+Keep any Compose file or project flags that your deployment normally uses. This step restarts the selected service and can interrupt requests.
 
-The integration guide also describes the authenticated `/lens/service` check. Expect `connected: true`, storage readiness and public contract 1. That check establishes connectivity; the real trace establishes ingestion, storage and authorized reads
+## 4. Check the result {#4-check-the-installation}
+
+Sign in to LiteLLM and select **Lens**. Use [the connection check](./litellm.md#5-open-lens-in-the-gateway), then [send your first trace](../first-trace.md). Your existing model requests should continue to work.
