@@ -55,6 +55,8 @@ Expect `urgent` as the top label for this example. Use `scaledown/decisions` if 
 
 Describe the fields to extract with a JSON schema. Property names become entity names, and descriptions become extraction hints. Nested objects, arrays of objects, and local `$ref` definitions are supported.
 
+Nullable fields can use `anyOf` or `oneOf` with one schema and one `null` branch. Keep each field's type, properties, and items inside the non-null branch or referenced definition. LiteLLM returns HTTP 400 for sibling schema definitions, `allOf`, and unions with multiple non-null branches.
+
 ```python
 import json
 from litellm import completion
