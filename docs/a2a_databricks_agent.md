@@ -116,7 +116,7 @@ curl -X POST http://localhost:4000/v1/agents \
 
 ```bash
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer sk-client-key" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "a2a/dbx-serving",
@@ -132,7 +132,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ```bash
 curl http://localhost:4000/a2a/dbx-serving \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer sk-client-key" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -165,4 +165,4 @@ The agent's `custom_outputs`, when present, come back under `provider_specific_f
 
 - [Invoking A2A Agents](a2a_invoking_agents)
 - [A2A Agent Authentication Headers](a2a_agent_headers)
-- [Databricks model provider](../providers/databricks)
+- [Databricks model provider](/docs/providers/databricks)
