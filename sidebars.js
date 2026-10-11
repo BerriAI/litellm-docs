@@ -247,6 +247,11 @@ const sidebars = {
           customProps: { icon: "/img/integrations/openwebui.png" },
         },
         {
+          type: "doc",
+          id: "tutorials/openwebui_org_rollout",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
+        {
           type: "category",
           label: "Claude Code",
           customProps: { icon: "/img/integrations/anthropic.png" },
