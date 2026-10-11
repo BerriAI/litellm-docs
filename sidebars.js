@@ -149,6 +149,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
           { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
           { type: "doc", id: "proxy/guardrails/compresr", customProps: { icon: "/img/integrations/compresr.png" } },
+          { type: "doc", id: "proxy/guardrails/decision_model", customProps: { icon: "/img/integrations/litellm.png" } },
           "proxy/guardrails/typesafe",
           { type: "doc", id: "proxy/guardrails/crowdstrike_aidr", customProps: { icon: "/img/integrations/crowdstrike.png" } },
           { type: "doc", id: "proxy/guardrails/enkryptai", customProps: { icon: "/img/integrations/enkrypt.png" } },

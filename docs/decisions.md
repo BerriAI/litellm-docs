@@ -414,6 +414,10 @@ The Playground **Decisions** tab sends requests to both routes. Open it at `LITE
 
 The tab is not in `v1.104.2` or `v1.105.0`. Releases before this UI change label it **System One** and only send the System One format, so use curl or the SDK for `/v1/decisions` there. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
 
+## Use a decision model as a guardrail
+
+The [Decision Model guardrail](./proxy/guardrails/decision_model.md) asks any model on this page yes/no questions you write about each request or response, and blocks or logs the call when a probability reaches its threshold
+
 ## Decision routes vs TypeSafe pass-through
 
 The [TypeSafe pass-through](./pass_through/typesafe.md) at `/typesafe/v1/systemone` forwards raw requests to TypeSafe only and reads the key from the proxy environment. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
