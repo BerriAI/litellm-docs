@@ -22,9 +22,18 @@ We are hosting our October townhall on **Thursday, 22 October at 7:30 AM PT**.
 
 ## Agenda
 
-- **Security:** security update
-- **Stability:** stability update, Rust path for the messages/responses APIs, performance improvements
-- **Product:** Lens, Moyai, LiteLLM Relay, Claude Code + Codex through the gateway (SSO, per-user spend), OpenAI Decisions API (`/v1/decisions`), Auto Router updates
+- **Security:** Security update
+- **Stability:**
+  - Stability update
+  - Rust path for the messages/responses APIs
+  - Performance improvements
+- **Product:**
+  - Lens
+  - Moyai
+  - LiteLLM Relay
+  - Claude Code + Codex through the gateway (SSO, per-user spend)
+  - OpenAI Decisions API (`/v1/decisions`)
+  - Auto Router updates
 - Open Q&A
 
 ## Stability
@@ -37,9 +46,7 @@ Add the topics and questions you'd like us to cover when you register below. We 
 
 ## Register
 
-{/* TODO: Replace the September registration form URL with the October form URL. */}
-
-Register here: [LiteLLM October Townhall Form](https://forms.gle/QDK1Fq5HqouGNG9Z6)
+Register here: [LiteLLM October Townhall Form](https://forms.gle/F8tTYR8rfjKBA4D67)
 
 We will hold the townhall from **7:30 AM to 8:30 AM PT on Zoom**.
 
