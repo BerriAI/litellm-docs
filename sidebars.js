@@ -1271,6 +1271,7 @@ const sidebars = {
         "providers/lemonade",
         "providers/llamafile",
         "providers/llamagate",
+        "providers/llmman",
         "providers/lm_studio",
         "providers/manus",
         "providers/meta",
