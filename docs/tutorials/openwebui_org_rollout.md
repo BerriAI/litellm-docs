@@ -111,7 +111,7 @@ export JWT_ISSUER="https://<idp>/realms/acme"
 litellm --config config.yaml
 ```
 
-`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI. Use a long random value such as the output of `openssl rand -hex 32`, because LiteLLM refuses to serve traffic with a publicly known or short key like `sk-1234`.
+`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI. Use a long random value such as the output of `openssl rand -hex 32`, because LiteLLM refuses to serve traffic with a short or publicly known key, such as one copied from an example config.
 
 A token for the same user minted by another client without the `litellm` audience is rejected:
 
