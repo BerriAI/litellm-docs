@@ -140,7 +140,7 @@ docker run --rm --network owui -p 4000:4000 \
   -v "$PWD/config.yaml:/app/config.yaml:ro" \
   -e LITELLM_LICENSE -e LITELLM_MASTER_KEY -e DATABASE_URL \
   -e ANTHROPIC_API_KEY -e JWT_PUBLIC_KEY_URL -e JWT_AUDIENCE -e JWT_ISSUER \
-  docker.litellm.ai/berriai/litellm:v1.90.2 \
+  ghcr.io/berriai/litellm:v1.105.0 \
   --config /app/config.yaml
 ```
 
@@ -239,7 +239,7 @@ Use the group permissions on the same page to decide who can create workspace mo
 
 ## Step 6. Share skills with a team
 
-Skills are reusable instruction sets, the Open WebUI equivalent of Claude skills or custom GPT instructions. Under **Workspace > Skills**, create a skill named **Release notes** with the description `Use when the user asks for release notes or a changelog.` and Markdown instructions such as:
+Skills are reusable instruction sets, the Open WebUI equivalent of Claude skills or custom GPT instructions. Under **Workspace > Skills**, create a skill named **Release notes** with the description `Use when the user asks for release notes or a changelog.` and Markdown instructions such as the following. Version history and multi-file skills are kept per skill, and skills can also be imported from a URL, GitHub, or a ZIP.
 
 ```markdown
 # Release notes house style
@@ -271,7 +271,7 @@ Each Open WebUI chat now shows up in LiteLLM under the real user, team, and orga
 psql "$DATABASE_URL" -c 'SELECT "user", team_id, organization_id, model_group FROM "LiteLLM_SpendLogs" ORDER BY "startTime" DESC LIMIT 2;'
 ```
 
-Each chat writes several spend-log rows because Open WebUI also calls the model for the chat title, tags, and follow-up suggestions with the same user token. **Admin Panel > Settings > Interface** includes **Task Model** for background tasks. The setting description says the current model follows the active chat model, so you can choose a separate task model if needed.
+Each chat writes several spend-log rows because Open WebUI also calls the model for the chat title, tags, and follow-up suggestions with the same user token. By default these background calls use the chat's model. To send them to a cheaper model, set **Task Model** under **Admin Panel > Settings > Interface**.
 
 ```
 bob@acme.com   | data-science | acme-eu | claude-haiku
@@ -286,6 +286,7 @@ Budgets, rate limits, guardrails, and logging callbacks set on a team or organiz
 |---|---|
 | No models in Open WebUI for a regular user | Model access not granted to their group in **Admin Panel > Settings > Models**, or their token has no group matching a LiteLLM team |
 | No models for anyone, LiteLLM logs `403 No teams found in token` | `groups` claim missing from the access token or not matching any LiteLLM `team_id` |
+| LiteLLM logs `401 No api key passed in` | The connection auth type is not **OAuth** |
 | Open WebUI API-key request returns `400 Model not found` | Open WebUI API keys have no OAuth session; LiteLLM logs `401 No api key passed in` |
 | New users stuck on "account activation pending" | `DEFAULT_USER_ROLE` not set to `user` |
 | LiteLLM rejects tokens with an audience or issuer error | `JWT_AUDIENCE` or `JWT_ISSUER` does not match the decoded token from Step 1 |
