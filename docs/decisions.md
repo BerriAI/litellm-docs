@@ -26,6 +26,7 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 |----------|---------------|-------------|------------------|--------|
 | [OpenAI](https://developers.openai.com/api/docs/guides/decisions) | `openai/gpt-6-luna` | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` | `/v1/decisions` | Yes |
 | [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | No |
+| [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
 | [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
 | [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | No |
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
