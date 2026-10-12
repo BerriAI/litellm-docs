@@ -49,7 +49,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.104.3`](https://github
 
 :::danger Breaking Changes
 
-**Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400** instead of 200 with the identifier silently dropped. This covers Perplexity, TypeSafe, OpenRouter, Strands Decider, Cloudflare, hosted vLLM and Azure AI on `/v1/decisions`, `/v1/systemone` and `litellm.decisions()`. Set `drop_params: true` on the deployment, under `litellm_settings`, in the request body or on `litellm.drop_params` to keep the old behavior. `/v1/systemone` requests are also logged with call type `asystemone` instead of `adecisions`. See [PR #44955](https://github.com/BerriAI/litellm/pull/44955) and [PR #45846](https://github.com/BerriAI/litellm/pull/45846)
+**Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400** instead of 200 with the identifier silently dropped. This covers Perplexity, TypeSafe, OpenRouter, Strands Decider and Cloudflare on `/v1/decisions`, `/v1/systemone` and `litellm.decisions()`. Set `drop_params: true` on the deployment, under `litellm_settings`, in the request body or on `litellm.drop_params` to keep the old behavior. `/v1/systemone` requests are also logged with call type `asystemone` instead of `adecisions`. See [PR #44955](https://github.com/BerriAI/litellm/pull/44955) and [PR #45846](https://github.com/BerriAI/litellm/pull/45846)
 
 :::
 
