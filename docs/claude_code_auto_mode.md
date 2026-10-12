@@ -48,9 +48,9 @@ general_settings:
 
 The classifier runs on every turn that ends in a tool call, so pick a fast, cheap model that reliably answers in JSON. An open model on the same provider as the coding model works well. The example above uses one Fireworks deployment for coding and another for the verdicts.
 
-The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried, and it is cut off after 30 seconds.
+The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried. The proxy waits 30 seconds for its answer, or as long as the `timeout` under the classifier deployment's `litellm_params` says when that is set.
 
-Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budgets of the key, team, user, team member, and end user, and RPM and TPM headroom (checked without using any of it). When one of them fails, see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used).
+Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budgets of the key, team, user, team member, and end user, and RPM and TPM headroom (checked without using any of it). A failed access check or a spent budget turns the classifier off for the session (see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used)). A full RPM or TPM window, or a check the proxy could not run, only skips the classifier for that one response (see [When the Classifier Fails](#when-the-classifier-fails)).
 
 ## How It Works
 
@@ -156,7 +156,7 @@ If the classifier call fails, the proxy marks every tool call of that response `
 
 | `reason` | When |
 |---|---|
-| `timeout` | No answer within 30 seconds |
+| `timeout` | No answer within the deployment's `timeout` (30 seconds by default) |
 | `input_too_long` | Over the classifier's context window |
 | `refused` | Content policy refusal |
 | `truncated` | Tool call was cut off |
@@ -166,11 +166,13 @@ A tool call is cut off when it is the last block of a reply that stopped at `max
 
 A `safeguard_results` with `unavailable` verdicts still counts as server review, so `/status` keeps reading `Auto mode server: Enabled` and the session does not switch to the local fallback for good. What Claude Code does with the action depends on its version. Anthropic's [errors reference](https://code.claude.com/docs/en/errors#the-server-returned-no-safety-verdict) says auto mode denies an action the server gives no verdict for, and stops the turn after ten responses in a row without one. In our test with Claude Code v2.1.296 and a classifier that always failed with `error`, Claude Code checked each such action with its own classifier request instead, sent through the proxy (to Claude Sonnet 5 first, then to the session's model when the proxy had no Sonnet 5 deployment), and ran the actions that check allowed. Reads and edits inside the working directory never go to a classifier.
 
+The proxy also skips the classifier call and marks every tool call of the response `unavailable` with `error` when the caller's RPM or TPM window for the classifier model is full, or when the proxy could not run one of the caller's checks (a team membership or rate-limit counter it could not read). The next response runs the checks again, so the verdicts come back once the window turns over. The log line for this case says `is over the caller's rate limit for this window, or the limit could not be read`.
+
 When tool calls keep coming back `unavailable`, look for `safeguards classifier` warnings in the proxy logs.
 
 ## When the Classifier Cannot Be Used
 
-When the caller fails one of the checks for the classifier model (no access, a per-model budget spent, or no RPM or TPM headroom), or the proxy has no deployment for the model the setting names, the proxy returns no per-tool verdicts:
+When the caller has no access to the classifier model, has spent a per-model budget that covers it, or the proxy has no deployment for the model the setting names, the proxy returns no per-tool verdicts:
 
 ```json
 "safeguard_results": [{"type": "dangerous_tool_use", "status": {"type": "unsupported"}}]
