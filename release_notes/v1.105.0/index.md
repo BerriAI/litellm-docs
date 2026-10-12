@@ -1,7 +1,7 @@
 ---
-title: "1.105.0rc1 - Claude Sonnet 5.5, GPT-6.1 Sol, litellm.agent(), Lens & Agent Traces"
-slug: "v1-105-0-rc-1"
-date: 2026-10-03T16:48:15
+title: "v1.105.0 - Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens"
+slug: "v1-105-0"
+date: 2026-10-11T00:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -32,26 +32,28 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.105.0-rc.1
+docker.litellm.ai/berriai/litellm:1.105.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.105.0rc1
+pip install litellm==1.105.0
 ```
 
 </TabItem>
 </Tabs>
 
-The published GitHub tag is `v1.105.0-rc.1`. These notes compare it with `v1.104.0-rc.1`, the previous release candidate cut from `main`. Changes backported onto `rc/1.104.0` and already shipped in `v1.104.0` are omitted
+This release is published as [`ghcr.io/berriai/litellm:v1.105.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.105.0) and the full [releases page](https://github.com/BerriAI/litellm/releases).
+
+These notes cover everything since `v1.104.0`. Changes added to the release line after rc.1, including rc.2, rc.3 and the Decisions follow-ups merged before the stable tag, are under [Included after the v1.105.0-rc.1 cut](#included-after-the-v11050-rc1-cut)
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom
 
 :::danger[Breaking Changes]
 
-These callouts cover user-facing behavior that differs from `v1.104.0`, the latest stable release
+These callouts cover user-facing behavior that differs from `v1.104.0`, the previous stable release
 
 **`ENFORCE_PRISMA_MIGRATION_CHECK=false` is now ignored**, so a proxy whose migrations fail will not start. This keeps a new version from serving traffic against an outdated database schema and failing requests. See the [`v1.104.0` breaking changes](/release_notes/v1.104.0/v1-104-0) and [PR #44141](https://github.com/BerriAI/litellm/pull/44141)
 
@@ -59,16 +61,28 @@ These callouts cover user-facing behavior that differs from `v1.104.0`, the late
 
 **`/sso/debug/*` returns 404 unless `ENABLE_SSO_DEBUG=true`.** See [PR #43150](https://github.com/BerriAI/litellm/pull/43150)
 
+**Upgrading from `v1.104.2`: Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400** instead of 200 with the identifier silently dropped. This covers Perplexity, TypeSafe, OpenRouter, Strands Decider, Cloudflare, hosted vLLM and Azure AI on `/v1/decisions`, `/v1/systemone` and `litellm.decisions()`. Set `drop_params: true` on the deployment, under `litellm_settings`, in the request body or on `litellm.drop_params` to keep the old behavior. `/v1/systemone` requests are also logged with call type `asystemone` instead of `adecisions`. See [PR #44955](https://github.com/BerriAI/litellm/pull/44955) and [PR #45846](https://github.com/BerriAI/litellm/pull/45846)
+
 :::
 
 ## Key Highlights
 
 - **New models on day one**: Claude Sonnet 5.5 across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI, OpenRouter and Perplexity, GPT-6.1 Sol across OpenAI, Azure, Bedrock and OpenRouter, and Grok 4.7 on Bedrock and Vertex AI, among 78 new catalog entries
 - **New providers and routes**: Prism, Sail and Cortecs providers, native xAI batches and files, Fireworks router models, and Bedrock GPT-5.6+ served on native Chat Completions
+- **Decisions API**: decision models answer typed yes/no, choice and score questions on `/v1/decisions` (OpenAI format) and `/v1/systemone` (System One format) across OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare, Strands Decider, hosted vLLM and Azure AI Microsoft-Decision-1, with a decision model guardrail and onboarded decision models as Auto Router classifiers
 - **`litellm.agent()`**: run Claude Code, Codex, OpenCode and Deep Agents through the AI gateway from the SDK
 - **Lens and Agent Traces**: OTLP trace ingestion stored in ClickHouse with matched spend, scoped SQL over traces, a chat-style run view, and Lens (Beta) investigations run by a separate worker
 - **Agent identities**: register agents with Entra ID identities, authenticate delegated requests and enforce authoritative agent permissions
 - **Faster proxy at scale**: one request-scoped Redis pipeline for auth, spend, rate-limit and routing reads, gzip for buffered responses, and usage pages that page keys from the server instead of loading every key into the browser
+
+## Included after the v1.105.0-rc.1 cut
+
+- Decisions API on `/v1/decisions` and `/v1/systemone` with OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare and Strands Decider providers (rc.3) - [PR #45189](https://github.com/BerriAI/litellm/pull/45189)
+- Decisions follow-ups: hosted vLLM and Azure AI Microsoft-Decision-1 providers, Strands Decider on an AgentCore runtime ARN, `litellm.systemone()`, OpenRouter billing from `usage.cost`, `safety_identifier` refused where unsupported, and TypeSafe and Strands Decider in the Add Model form - [PR #45905](https://github.com/BerriAI/litellm/pull/45905)
+- Decision model guardrail with an Admin UI flow - [PR #45894](https://github.com/BerriAI/litellm/pull/45894)
+- Auto Router setup that picks an onboarded decision model as its classifier - [PR #45915](https://github.com/BerriAI/litellm/pull/45915)
+- pgbouncer 1.26.0 so the Docker images build again, and locked dependency refreshes (rc.2) - [PR #45013](https://github.com/BerriAI/litellm/pull/45013), [PR #44803](https://github.com/BerriAI/litellm/pull/44803)
+- Admin UI bundle rebuilt for the stable tag - [PR #45927](https://github.com/BerriAI/litellm/pull/45927)
 
 ## New Providers and Endpoints
 
@@ -87,6 +101,52 @@ These callouts cover user-facing behavior that differs from `v1.104.0`, the late
 | [xAI](../../docs/providers/xai) | `/v1/files`, `/v1/batches` | Run native xAI batches and files |
 | [Amazon Bedrock](../../docs/providers/bedrock) | `/v1/chat/completions` | Serve GPT-5.6, GPT-6 and GPT-6.1 on bedrock-runtime's native Chat Completions, with a `chat_completions/` opt-in for gpt-oss and Grok |
 | [Fireworks AI](../../docs/providers/fireworks_ai) | `/v1/chat/completions` | Route to and list the `auto`, `auto-instant` and `firerouter` routers |
+
+## Decisions API
+
+The proxy now serves decision models, which answer typed questions (yes/no predicates, choices and scores) about an input. Requests go through the usual keys, budgets, spend tracking and guardrails. See the [Decisions docs](../../docs/decisions)
+
+- **Two request formats**
+    - `POST /v1/decisions` and `POST /decisions` take OpenAI's Decisions API format: `input` plus a `questions` list, answered as an `answers` list with OpenAI-style `usage`
+    - `POST /v1/systemone` and `POST /systemone` take the System One format: `state` plus a named `questions` map, answered as an `answers` map keyed by question name
+    - Both routes go through one shared format inside the proxy, so any Decisions model can be called on either route
+- **Providers**: `openai/` (`gpt-6-luna`), `perplexity/`, `typesafe/`, `openrouter/`, `cloudflare/clef` and `cloudflare/clef-flash`, `azure_ai/` for Microsoft-Decision-1, and self-hosted `strands_decider/` and `hosted_vllm/` (both require `api_base`). A `strands_decider/` deployment whose `api_base` is an AgentCore runtime ARN calls `InvokeAgentRuntime`, signed with the deployment's `aws_*` credentials
+- **SDK**: `litellm.decisions()` takes the OpenAI format and the new `litellm.systemone()` takes the System One format. `litellm.decisions(state=...)` still works and warns that it is deprecated in favor of `litellm.systemone()`
+- **OpenAI**: images, multi-message input, `safety_identifier`, names and refusals pass through on `/v1/decisions`. The provider reads `litellm.api_key`, `litellm.openai_key`, `litellm.api_base`, `OPENAI_BASE_URL` and `OPENAI_API_BASE` in the same order as other OpenAI calls. Other providers return 400 for `safety_identifier` unless `drop_params` drops it
+- **Validation before any upstream call**: a missing `state`, a malformed question, more than 128 questions, a single-option question or a body that is not JSON returns 400. Image input sent to a provider that only accepts text returns a clear 400
+- **Spend tracking**: per-token pricing from the cost map, with cached and cache-write input tokens billed at their own rates. OpenRouter calls, including the `/openrouter/alpha/decisions` pass-through, bill the cost OpenRouter reports in `usage.cost`
+- **Health checks**: `/health` probes `mode: evaluation` deployments with a one-question Decisions call, and `health_check_params` can override its `state` and `questions`
+- **Guardrails**: OpenAI-format responses include `guardrail_information` when the caller sets `include_guardrail_response`. A new `decision_model` guardrail screens messages and tool-call arguments with admin-written yes/no questions, each set to block or log above its threshold, and is configured from the Admin UI and the Guardrail Garden
+- **Auto Router**: a new router can use an onboarded decision model deployment as its classifier, and existing router configurations keep working
+- **Admin UI and docs**: TypeSafe and Strands Decider are in the Add Model provider list, and Swagger UI describes both routes
+- **Pass-through**: an existing `pass_through_endpoints` entry at `/v1/decisions` keeps answering that path, while `/decisions` serves the native route
+
+#### New Decisions model support (7 new models)
+
+| Provider | Model | Context Window | Input ($/1M tokens) | Output ($/1M tokens) |
+| --- | --- | --- | --- | --- |
+| Perplexity | `perplexity/pplx-decider-v1-27b` | 262K | $0.04 | $0.00 |
+| Cloudflare | `cloudflare/clef` | 65K | $0.24 | $0.00 |
+| Cloudflare | `cloudflare/clef-flash` | 65K | $0.09 | $0.00 |
+| Cloudflare | `cloudflare/@cf/cloudflare/clef` | 65K | $0.24 | $0.00 |
+| Cloudflare | `cloudflare/@cf/cloudflare/clef-flash` | 65K | $0.09 | $0.00 |
+| Azure AI | `azure_ai/Microsoft-Decision-1` | - | $0.042 | $0.00 |
+| Strands Decider | `strands_decider/strands-decider-2B-hobson-v19` | - | $0.00 (self-hosted) | $0.00 |
+
+The existing `gpt-6-luna` entry now lists `/v1/decisions` among its supported endpoints. These models are not counted in the 78 below
+
+- Add a unified `/v1/decisions` endpoint, serve the System One format at `/v1/systemone`, and add OpenAI as a Decisions provider - [PR #44236](https://github.com/BerriAI/litellm/pull/44236), [PR #45184](https://github.com/BerriAI/litellm/pull/45184), [PR #45214](https://github.com/BerriAI/litellm/pull/45214), backported in [PR #45189](https://github.com/BerriAI/litellm/pull/45189)
+- Dispatch Decisions through per-provider configs and the shared HTTP handler - [PR #45129](https://github.com/BerriAI/litellm/pull/45129), [PR #45130](https://github.com/BerriAI/litellm/pull/45130), [PR #45442](https://github.com/BerriAI/litellm/pull/45442)
+- Add the hosted vLLM and Azure AI Microsoft-Decision-1 providers - [PR #45501](https://github.com/BerriAI/litellm/pull/45501), [PR #45639](https://github.com/BerriAI/litellm/pull/45639), [PR #45673](https://github.com/BerriAI/litellm/pull/45673), [PR #45717](https://github.com/BerriAI/litellm/pull/45717)
+- Call a Strands Decider on an AgentCore runtime ARN - [PR #45678](https://github.com/BerriAI/litellm/pull/45678)
+- Add `litellm.systemone()` and keep `litellm.decisions()` to the OpenAI format - [PR #45846](https://github.com/BerriAI/litellm/pull/45846)
+- Refuse `safety_identifier` on providers that cannot take it unless `drop_params` drops it - [PR #44955](https://github.com/BerriAI/litellm/pull/44955)
+- Bill OpenRouter Decisions and the Decisions pass-through from `usage.cost` - [PR #45640](https://github.com/BerriAI/litellm/pull/45640)
+- Add TypeSafe and Strands Decider to the Add Model provider list, and describe both routes in Swagger UI - [PR #45335](https://github.com/BerriAI/litellm/pull/45335), [PR #45838](https://github.com/BerriAI/litellm/pull/45838)
+- Add the decision model guardrail with an Admin UI flow - [PR #45663](https://github.com/BerriAI/litellm/pull/45663), backported in [PR #45894](https://github.com/BerriAI/litellm/pull/45894)
+- Pick an onboarded decision model as the Auto Router classifier - [PR #45913](https://github.com/BerriAI/litellm/pull/45913), backported in [PR #45915](https://github.com/BerriAI/litellm/pull/45915)
+
+The post-rc.1 Decisions follow-ups were backported together in [PR #45905](https://github.com/BerriAI/litellm/pull/45905)
 
 ## New Models / Updated Models
 
@@ -772,4 +832,4 @@ Customer-facing PRs in rc.1: **238**. Tests, CI and internal PRs: **98**. Total:
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.104.0-rc.1...v1.105.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.104.0...v1.105.0
