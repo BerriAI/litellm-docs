@@ -1539,6 +1539,7 @@ const sidebars = {
             "projects/GPTLocalhost",
             "projects/HolmesGPT",
             "projects/Railtracks",
+            "projects/CacheCanary",
           ],
         },
         "extras/code_quality",
