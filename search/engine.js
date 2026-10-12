@@ -11,6 +11,7 @@ const forms = {
   embeddings: 'embedding', batches: 'batch', configurations: 'config', configuration: 'config', configs: 'config',
   guardrails: 'guardrail', routers: 'router', routing: 'router', classifiers: 'classifier', releases: 'release',
   reranking: 'rerank', aliases: 'alias', costs: 'spend', cost: 'spend', spending: 'spend',
+  subscriptions: 'subscription',
 };
 // Keep numeric identifiers whole: 5.5 must not match 5.43 or 1.104.1 match 1.104.10.
 const words = text => text.toLowerCase().replace(/(\p{L})-(\d+)-(\d+)(?![-.\w])/gu, '$1-$2.$3')
@@ -165,6 +166,11 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
   const rawTerms = termsOf(query.slice(0, 500));
   // Setup verbs and the product name add noise when someone names a specific feature.
   const optional = new Set(['litellm', 'setup', 'configure', 'enable', 'set', 'up']);
+  // The planner often adds the product name to an otherwise specific topic.
+  // Requiring those words can hide guides whose title uses the provider's name.
+  if (rawTerms.filter(term => !optional.has(term) && !['ai', 'gateway'].includes(term)).length >= 2) {
+    optional.add('ai'); optional.add('gateway');
+  }
   const focused = rawTerms.filter(term => !optional.has(term));
   const terms = focused.length ? focused : rawTerms;
   if (rawTerms.includes('setup') && focused.length && (/\bquick\s?start\b/i.test(query) || focused.length === 1 && ['proxy', 'gateway'].includes(focused[0]))) terms.push('setup');

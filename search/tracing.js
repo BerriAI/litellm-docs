@@ -126,8 +126,11 @@ function createTracing(config) {
         span.setStatus({code: failed ? SpanStatusCode.ERROR : SpanStatusCode.OK});
         return result;
       } catch (error) {
-        span.setStatus({code: SpanStatusCode.ERROR});
-        span.setAttribute('error.type', clean(error?.name || 'Error'));
+        const type = clean(error?.name || 'Error');
+        // Only our fixed diagnostic messages are safe to export. Fetch errors can contain secrets.
+        const message = clean(error?.safeMessage || type);
+        span.setStatus({code: SpanStatusCode.ERROR, message});
+        span.setAttributes({'error.type': type, 'error.message': message});
         throw error;
       } finally { span.end(); exportState.endedSpans += 1; }
     },

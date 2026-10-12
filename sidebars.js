@@ -248,6 +248,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
           { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
           { type: "doc", id: "proxy/guardrails/compresr", customProps: { icon: "/img/integrations/compresr.png" } },
+          { type: "doc", id: "proxy/guardrails/decision_model", customProps: { icon: "/img/integrations/litellm.png" } },
           "proxy/guardrails/typesafe",
           { type: "doc", id: "proxy/guardrails/crowdstrike_aidr", customProps: { icon: "/img/integrations/crowdstrike.png" } },
           { type: "doc", id: "proxy/guardrails/enkryptai", customProps: { icon: "/img/integrations/enkrypt.png" } },
@@ -836,6 +837,7 @@ const sidebars = {
         { type: "doc", id: "a2a_invoking_agents", label: "Quickstart" },
         { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
         "a2a_agent_card",
+        "a2a_databricks_agent",
         "a2a_agent_headers",
         "a2a_agent_permissions",
         "a2a_cost_tracking",
@@ -1512,6 +1514,7 @@ const sidebars = {
           "providers/qwencloud",
           "providers/ragflow",
           "providers/recraft",
+          "providers/reka",
           "providers/replicate",
           { type: "category", label: "RunwayML", items: [
             "providers/runwayml/images",

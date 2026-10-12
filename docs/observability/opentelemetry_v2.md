@@ -943,6 +943,40 @@ The two are independent. A tenant's `llm_only` narrows only that tenant's projec
 
 Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
 
+### Choose prompt capture per tenant
+
+A team or key can choose whether its own destination receives prompts and responses, independent of what the proxy captures globally. Set `capture_message_content` in a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "capture_message_content": "span_only"
+    }
+  }'
+```
+
+| Team value | What that tenant's destination receives |
+|------------|------------------------------------------|
+| `span_only` | Prompts and responses, even when global capture is `no_content` |
+| `no_content` | No prompt or response content, even when global capture is on |
+| omitted | The mode of your own callback for the same backend when the proxy loads one, otherwise the global mode |
+
+The global mode is `callback_settings.otel.capture_message_content`, or `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` when that is not set (see [Capturing prompts & responses](#capturing-prompts--responses)). For an omitted value, "your own callback for the same backend" means a team `langfuse_otel` entry follows the proxy's own `langfuse_otel` exporter, a team `arize` entry follows the proxy's own `arize`, and so on; a team `arize` entry on a proxy that exports only to Langfuse follows the global mode. The order of `litellm_settings.callbacks` does not change the result. The proxy's own `langfuse_otel` and `arize` exporters read `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` only, so a team entry that follows them gets `no_content` unless that env var turns capture on
+
+The value changes only that tenant's copy. With global capture on `no_content`, a `span_only` tenant gets prompts and responses while your own exporters, a plain `otel` collector and other tenants still get metadata only. With global capture on, a `no_content` tenant gets metadata only while everyone else keeps the content
+
+`no_content` removes the content attributes of every vocabulary the proxy writes: `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions`, the MCP `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result`, `langfuse.observation.input` and `output`, the OpenInference `input.value`, `output.value` and `llm.input_messages.*` / `llm.output_messages.*` keys, Langtrace's `llm.prompts` and `llm.completions`, and `weave.output`. The spans themselves still arrive with their trace and span ids, their place in the tree, model, token usage, cost and declared tool definitions. When a `no_content` tenant destination is the same account as one of your own exporters, that account gets one copy and it has no content
+
+The accepted values are `no_content` and `span_only`. `event_only` and `span_and_event` stay proxy-wide values, since OTel v2 writes content to span attributes only. The team callback route, `/key/generate` and `/key/update` reject any other value, the field on a callback that is not one of the four above, the field on a failure-only entry, the field on any callback while the proxy runs without `LITELLM_OTEL_V2=true`, and two entries for the same backend that disagree. Entries for different backends may use different values. A caller cannot set it per request
+
+When upgrading, a stored team or key entry with no value used to receive whatever the first OTel callback in `litellm_settings.callbacks` captured. On a proxy that also loads the same callback itself, for example `callbacks: ["otel", "langfuse_otel"]`, that entry now follows the proxy's own exporter for that backend. Set `capture_message_content: span_only` on each entry that should keep prompts and responses
+
 ### Keep Redis and Postgres spans out of tenant traces
 
 A request also produces spans for the proxy's own datastore work: Redis lookups for the auth and response caches, and the Postgres spend write. A key or team that sends traces to its own account receives those as well. Set `excluded_services` to stop forwarding them to key and team destinations, while the request root, auth, guardrail and model-call spans still go through:

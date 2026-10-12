@@ -23,6 +23,21 @@ test('prototype property names can be indexed and searched', () => {
 test('serialization preserves rankings', () => {
   assert.deepEqual(search(loadIndex(JSON.stringify(index)), 'lens'), search(index, 'lens'));
 });
+test('planner-added AI Gateway wording preserves specific subscription matches', () => {
+  const index = createIndex([
+    {id: 'codex', title: 'ChatGPT Subscription', heading: 'Authentication', url: '/docs/providers/chatgpt',
+      text: 'Use a ChatGPT subscription that includes Codex through LiteLLM with OAuth device flow authentication.'},
+    {id: 'harness', title: 'LiteLLM AI Gateway with Claude Code and Codex', heading: '', url: '/blog/harness', type: 'blog',
+      text: 'Route harness requests through the LiteLLM AI Gateway.'},
+    {id: 'claude', title: 'Claude Code with a Claude Subscription', heading: '', url: '/docs/tutorials/claude',
+      text: 'Use a Claude subscription with LiteLLM AI Gateway.'},
+  ]);
+  for (const query of ['Codex subscription', 'LiteLLM AI Gateway with Codex subscription setup',
+    'LiteLLM Codex subscription gateway setup', 'Codex subscriptions']) {
+    assert.equal(search(index, query, {intent: 'setup'})[0].url, '/docs/providers/chatgpt');
+  }
+  assert.ok(search(index, 'LiteLLM AI Gateway').length);
+});
 test('rendered docs preserve actual heading anchors, code, and exclude page furniture', () => {
   const html = '<nav>Secret nav noise</nav><article><div class="theme-doc-markdown"><h1>Lens</h1><p>Investigations</p><h2 id="custom-anchor">Set up<a class="hash-link">#</a></h2><pre><code>cache: true\nredis: localhost</code><button>Copy</button></pre><ul><li>Enable tracing</li></ul></div></article><footer>Footer noise</footer>';
   const sections = extractSections(html, '/docs/lens');
