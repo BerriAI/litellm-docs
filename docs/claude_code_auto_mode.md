@@ -29,7 +29,7 @@ Requests without `safeguards`, which is every client other than Claude Code in a
 
 ## Setup
 
-Add `safeguards_classifier_model` to `general_settings`, naming a `model_name` from your `model_list`. The setting is off by default, and the deployment it names must exist in `model_list`:
+Add `safeguards_classifier_model` to `general_settings`, naming a `model_name` from your `model_list`. The setting is off by default. The name must be one the proxy can route, since a name with no deployment behind it makes every check come back `unsupported` (see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used)):
 
 ```yaml
 model_list:
@@ -50,7 +50,7 @@ The classifier runs on every turn that ends in a tool call, so pick a fast, chea
 
 The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried, and it is cut off after 30 seconds.
 
-Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budget, and RPM and TPM headroom (checked without using any of it). When one of them fails, see [When the Caller Cannot Use the Classifier](#when-the-caller-cannot-use-the-classifier).
+Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budgets of the key, team, user, team member, and end user, and RPM and TPM headroom (checked without using any of it). When one of them fails, see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used).
 
 ## How It Works
 
@@ -168,15 +168,15 @@ A `safeguard_results` with `unavailable` verdicts still counts as server review,
 
 When tool calls keep coming back `unavailable`, look for `safeguards classifier` warnings in the proxy logs.
 
-## When the Caller Cannot Use the Classifier
+## When the Classifier Cannot Be Used
 
-When the caller fails one of the checks for the classifier model (no access, the per-model budget spent, or no RPM or TPM headroom), the proxy skips the classifier call and returns no per-tool verdicts:
+When the caller fails one of the checks for the classifier model (no access, a per-model budget spent, or no RPM or TPM headroom), or the proxy has no deployment for the model the setting names, the proxy returns no per-tool verdicts:
 
 ```json
 "safeguard_results": [{"type": "dangerous_tool_use", "status": {"type": "unsupported"}}]
 ```
 
-Claude Code treats this the same as a route with no verdicts. It shows its classifier billing notice, sends its own classifier requests through the proxy for the rest of the session, and `/status` reads `Auto mode server: Disabled` after the first reply that carries a tool call, since a reply without tool calls skips the check and still counts as server review. Give the key access to the classifier model, or raise the limit it hit, and start a new session.
+Claude Code treats this the same as a route with no verdicts. It shows its classifier billing notice, sends its own classifier requests through the proxy for the rest of the session, and `/status` reads `Auto mode server: Disabled` after the first reply that carries a tool call, since a reply without tool calls skips the check and still counts as server review. Give the key access to the classifier model, raise the limit it hit, or point the setting at a `model_name` in `model_list`, and start a new session. The second case logs `safeguards classifier <name> is not served by this proxy` on every request.
 
 ## Cost and Logs
 
