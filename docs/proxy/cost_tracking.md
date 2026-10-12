@@ -890,9 +890,9 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 ### Scheduled and On-Demand Email Spend Reports
 
-In addition to programmatic JSON spend reports via `/global/spend/report`, LiteLLM can automatically aggregate spend and send formatted HTML spend reports to recipient email addresses on daily or monthly schedules, or on demand.
+In addition to programmatic JSON spend reports via `/global/spend/report`, LiteLLM can automatically aggregate spend and send formatted HTML spend reports to recipient email addresses on daily, weekly, or monthly schedules, or on demand.
 
-Daily reports aggregate usage from the previous calendar day; monthly reports run on the first day of each month and aggregate usage across the preceding calendar month. Reports support cumulative grouping breakdowns by `team`, `team_key`, `team_model`, and `team_key_model`, and can be filtered by team.
+Daily reports aggregate usage from the previous calendar day; weekly reports aggregate usage across the previous 7 days on a configured day of the week; monthly reports run on the first day of each month and aggregate usage across the preceding calendar month. Reports support cumulative grouping breakdowns by `team`, `team_key`, `team_model`, and `team_key_model`, and can be filtered by team.
 
 Proxy administrators can schedule reports in `proxy_config.yaml` under `litellm_settings.spend_report_email_settings`, configure them dynamically in the Admin UI under **Logging & Alerts > Email Alerts**, or dispatch on-demand summaries directly from the **Usage** page. Immediate reports can also be triggered programmatically via `POST /spend/report/email/send`. See [Email Notifications](./email.md#scheduled-alerts) for full configuration details.
 

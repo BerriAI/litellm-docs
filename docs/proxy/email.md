@@ -17,7 +17,7 @@ Send LiteLLM Proxy users emails for event-driven actions and scheduled alerts.
 | Category | Details |
 |----------|---------|
 | Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget<br/>• On-demand usage spend summary |
-| Scheduled Alerts | • Daily spend reports<br/>• Monthly spend reports |
+| Scheduled Alerts | • Daily spend reports<br/>• Weekly spend reports<br/>• Monthly spend reports |
 | Supported Email Integrations | • Resend API<br/>• SendGrid API<br/>• SMTP |
 
 ## Usage
@@ -186,13 +186,13 @@ LiteLLM can automatically aggregate proxy spend and send formatted HTML spend re
 
 ### Scheduling and Cadence
 
-Reports support daily and monthly frequencies. A daily report aggregates spend and request counts from the previous calendar day; a monthly report triggers on the first calendar day of the month and aggregates usage across the entire previous month.
+Reports support daily, weekly, and monthly frequencies. A daily report aggregates spend and request counts from the previous calendar day; a weekly report aggregates usage across the previous 7 days prior to the send day (for example, selecting Friday aggregates usage from the prior Friday through Thursday midnight); a monthly report triggers on the first calendar day of the month and aggregates usage across the entire previous month.
 
 Send times are evaluated in 24-hour format against the local timezone of the proxy server or container rather than UTC, preventing scheduling offsets across day boundaries. In clustered or multi-pod deployments, LiteLLM coordinates execution with a distributed pod lock so that only one pod delivers the report per scheduled run.
 
 ### Multi-Alert Configuration
 
-You can configure multiple independent spend report alert instances. Each alert defines its own frequency, send time, recipients, cumulative groupings, and optional team scope.
+You can configure multiple independent spend report alert instances. Each alert defines its own frequency, send time, recipients, cumulative groupings, and optional team scope. For weekly alerts, `day_of_week` specifies the scheduled delivery day (`monday` through `sunday`, case-insensitive), defaulting to `monday`.
 
 The cumulative grouping option controls which breakdown tables are generated in the email:
 `team` for spend and request count grouped by team; `team_key` for spend grouped by team and virtual API key; `team_model` for spend grouped by team and LLM model name; and `team_key_model` for spend grouped by team, API key, and model name.
@@ -214,6 +214,13 @@ litellm_settings:
         recipient_emails: ["eng-leads@your-company.com"]
         group_by: ["team", "team_key"]
         team_id: "engineering"
+      - name: "Weekly Operations Summary"
+        enabled: true
+        frequency: "weekly"
+        day_of_week: "monday"
+        send_time: "09:00"
+        recipient_emails: ["ops-team@your-company.com"]
+        group_by: ["team", "team_model"]
       - name: "Monthly Executive Summary"
         enabled: true
         frequency: "monthly"
@@ -231,7 +238,7 @@ Proxy administrators can configure, update, and test spend report alerts directl
   style={{width: '100%', display: 'block', margin: '0 0 2rem 0'}}
 />
 
-Under **Logging & Alerts > Email Alerts** in the Admin UI, the **Spend Reports** section displays active alerts along with the server local timezone detected by the proxy. Administrators can add new alert cards, toggle alert status, adjust send times, enter recipient emails, choose cumulative grouping breakdowns, and filter by team.
+Under **Logging & Alerts > Email Alerts** in the Admin UI, the **Spend Reports** section displays active alerts along with the server local timezone detected by the proxy. Administrators can add new alert cards, toggle alert status, select frequency (`Daily`, `Weekly`, or `Monthly`), choose the delivery day of the week for weekly alerts, adjust send times, enter recipient emails, choose cumulative grouping breakdowns, and filter by team.
 
 Clicking **Save Spend Report Settings** updates the proxy database settings and reschedules background cron jobs immediately. Administrators can also click **Send Test Report Now** on any alert card to verify email delivery and inspect the generated HTML report immediately.
 
@@ -243,7 +250,7 @@ Proxy administrators can dispatch an immediate spend summary directly from the A
 
 Spend reports and delivery readiness can also be managed programmatically:
 
-`POST /spend/report/email/send` triggers an immediate spend report email to specified recipients; it accepts `recipient_emails`, `frequency` (`daily` or `monthly`), `group_by`, `start_date`, `end_date`, and optional `team_id`, and requires the `proxy_admin` role.
+`POST /spend/report/email/send` triggers an immediate spend report email to specified recipients; it accepts `recipient_emails`, `frequency` (`daily`, `weekly`, or `monthly`), `group_by`, `start_date`, `end_date`, and optional `team_id`, and requires the `proxy_admin` role.
 
 `GET /spend/report/email/status` returns whether email delivery is configured, the active provider (`smtp`, `sendgrid`, or `resend`), and the server timezone. Requires the `proxy_admin` role.
 
@@ -331,7 +338,7 @@ After regenerating the key, the user will receive an email notification with:
 
 ### 4. Spend Report Email
 
-This email is sent on a daily or monthly schedule, or on demand via the Usage dashboard and `/spend/report/email/send`.
+This email is sent on a daily, weekly, or monthly schedule, or on demand via the Usage dashboard and `/spend/report/email/send`.
 
 <Image 
   img={require('../../img/spend_report_email.png')}
