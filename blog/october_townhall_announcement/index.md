@@ -10,31 +10,32 @@ tags: [announcement, townhall]
 hide_table_of_contents: true
 ---
 
-import OctoberTownhallBanner from '../../img/october_townhall_banner.svg';
+import Image from '@theme/IdealImage';
 
 We are hosting our October townhall on **Thursday, 22 October at 7:30 AM PT**.
 
-<OctoberTownhallBanner
-  style={{width: '900px', maxWidth: '100%', height: 'auto', display: 'block'}}
+<Image
+  img={require('../../img/october_townhall_banner.png')}
+  style={{width: '900px', height: 'auto', display: 'block'}}
 />
 
 {/* truncate */}
 
 ## Agenda
 
-- **Security:** Security update
-- **Stability:**
-  - Stability update
-  - Rust path for the messages/responses APIs
-  - Performance improvements
-- **Product:**
-  - Lens
-  - Moyai
-  - LiteLLM Relay
-  - Claude Code + Codex through the gateway (SSO, per-user spend)
-  - OpenAI Decisions API (`/v1/decisions`)
-  - Auto Router updates
-- Open Q&A
+- **Security.** This month's fixes and the hardening work behind them.
+- **Stability**
+  - **Bug fixes.** The month's count, and where they landed.
+  - **Rust path.** The messages and responses APIs.
+  - **Performance.** Where the gateway got faster.
+- **Product**
+  - **Lens.** Trace agent runs, investigate recurring failures.
+  - **Moyai.** Open source coding agents in your cloud.
+  - **LiteLLM Relay.** Point company Macs at the gateway.
+  - **Claude Code and Codex.** SSO and per-user spend through the gateway.
+  - **Decisions API.** Typed questions on `/v1/decisions`.
+  - **Auto Router.** What changed since September.
+- **Open Q&A.** Bring your questions for the team.
 
 ## Stability
 
