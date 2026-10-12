@@ -405,12 +405,12 @@ The official modules deploy the full microservices stack (network, database, Red
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
   <a href="https://console.aws.amazon.com/cloudshell/home" target="_blank" rel="nofollow"><img src="/img/deploy-on-aws.png" alt="Deploy on AWS" height="40" /></a>
-  <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Flitellm&cloudshell_workspace=terraform%2Flitellm%2Fgcp%2Fexamples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true" target="_blank" rel="nofollow"><img src="/img/deploy-on-gcp.png" alt="Deploy on GCP" height="40" /></a>
+  <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true" target="_blank" rel="nofollow"><img src="/img/deploy-on-gcp.png" alt="Deploy on GCP" height="40" /></a>
 </div>
 
 Both buttons run the default example stacks from the [LiteLLM repo](https://github.com/BerriAI/litellm/tree/main/terraform/litellm) in a browser shell that is already authenticated to your cloud account, so there is nothing to install locally.
 
-**GCP** clones the repo into Cloud Shell and opens a guided [DeployStack tutorial](https://github.com/BerriAI/litellm/blob/main/terraform/litellm/gcp/examples/default/TUTORIAL.md). You pick the project and answer a few prompts; the tutorial creates the Artifact Registry remote repository that Cloud Run needs to pull from `ghcr.io`, writes `terraform.tfvars` from your answers, and runs `terraform apply`.
+**GCP** clones the [terraform-google-litellm](https://github.com/BerriAI/terraform-google-litellm) module mirror at the latest stable release into Cloud Shell, which is a much smaller download than the full LiteLLM repo, and opens a guided [DeployStack tutorial](https://github.com/BerriAI/terraform-google-litellm/blob/v1.105.0/examples/default/TUTORIAL.md). You pick the project and answer a few prompts; the tutorial creates the Artifact Registry remote repository that Cloud Run needs to pull from `ghcr.io`, writes `terraform.tfvars` from your answers, and runs `terraform apply`.
 
 **AWS** opens CloudShell. From there, clone the repo and apply the default example:
 
