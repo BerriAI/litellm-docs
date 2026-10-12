@@ -122,7 +122,7 @@ The request's top-level `user` field is always sent, with no setting needed, as 
 {"direction": "IN", "content": "...", "policyId": 100, "user": "alice@example.com"}
 ```
 
-The value is whatever the client put in `user`, so treat it as attribution rather than a verified identity. The proxy can also fill it in: from the header named by `general_settings.user_header_name`, with the key owner's user id on `/v1/audio/speech`, or with a hash of the virtual key when `litellm_settings.overwrite_user_with_key_hash` is on.
+The value is whatever the client put in `user`, so treat it as attribution rather than a verified identity. The proxy can also fill it in: from the header named by `general_settings.user_header_name`, with the key owner's user id on `/v1/audio/speech`, or with a hash of the virtual key when `litellm_settings.overwrite_user_with_key_hash` is on. With that setting, requests made with the master key send the fixed value `litellm_proxy_master_key` instead of a hash, as described in [virtual keys](../virtual_keys.md#overwrite-outgoing-user-with-the-key-hash).
 
 ## 7. Using a Custom Zscaler AI Guard Policy (Optional)
 If an end user wants to use their own custom Zscaler AI Guard policy instead of the default policy for LiteLLM, they can do so by providing metadata in their LiteLLM request. Follow the steps below to implement this functionality:
