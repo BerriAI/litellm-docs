@@ -13,7 +13,7 @@ This tutorial sets up Open WebUI as a company-wide chat workspace in front of Li
 For a basic single-key connection, see [Open WebUI](./openweb_ui.md) instead.
 
 :::info
-LiteLLM JWT auth is an [enterprise feature](https://www.litellm.ai/enterprise). Every step on this page was tested end to end with Open WebUI v0.12.0, Keycloak 26.4, and LiteLLM main.
+LiteLLM JWT auth is an [enterprise feature](https://www.litellm.ai/enterprise) and requires `LITELLM_LICENSE` to be set. Every step on this page was tested end to end with Open WebUI v0.12.0, Keycloak 26.4, and LiteLLM main and v1.105.0.
 :::
 
 ## How it fits together
@@ -53,18 +53,26 @@ In Keycloak this means three mappers on the client's dedicated scope: a Group Me
 
 Set the access token lifetime to 15 minutes or more. Open WebUI refreshes the user's token when it is within 5 minutes of expiring, so with a 5 minute token (the Keycloak default) it refreshes on every request.
 
+Set `CLIENT_SECRET`, `ALICE_PASSWORD`, and `BOB_PASSWORD` to the client secret and each user's Keycloak password. The password-grant command below requires **Direct access grants** to be enabled in the client's **Capability config** in Keycloak.
+
 Decode a token to confirm the claims before moving on:
 
 ```bash
-curl -s -X POST https://<idp>/realms/acme/protocol/openid-connect/token \
+ALICE_TOKEN=$(curl -s -X POST https://<idp>/realms/acme/protocol/openid-connect/token \
   -d grant_type=password -d client_id=open-webui -d client_secret=$CLIENT_SECRET \
-  -d username=alice@acme.com -d password=$PASSWORD -d scope=openid \
-  | jq -r .access_token | cut -d. -f2 | base64 -d 2>/dev/null | jq '{iss,aud,email,groups,org_id,exp,iat}'
+  -d username=alice@acme.com -d password="$ALICE_PASSWORD" -d scope=openid \
+  | jq -r .access_token)
+
+printf '%s' "$ALICE_TOKEN" | cut -d. -f2 | tr '_-' '/+' \
+  | awk '{ padding = (4 - length($0) % 4) % 4; printf "%s", $0; for (i = 0; i < padding; i++) printf "="; print "" }' \
+  | base64 -d | jq '{iss,aud,email,groups,org_id,exp,iat}'
 ```
+
+Set `BOB_TOKEN` the same way, using `username=bob@acme.com` and `$BOB_PASSWORD`.
 
 ```json
 {
-  "iss": "http://localhost:8080/realms/acme",
+  "iss": "http://keycloak.localhost:8080/realms/acme",
   "aud": ["litellm", "account"],
   "email": "alice@acme.com",
   "groups": ["engineering"],
@@ -76,9 +84,25 @@ curl -s -X POST https://<idp>/realms/acme/protocol/openid-connect/token \
 
 The password grant is only for this check. Disable direct access grants on the client afterwards.
 
-For a local test, the browser, Open WebUI, and LiteLLM must all reach the IdP at the same URL, because the token's `iss` has to match both Open WebUI's discovery URL and `JWT_ISSUER` exactly. `localhost` inside a container points at the container itself, so either run all three with host networking or give the IdP a hostname such as `keycloak.localhost` with a Docker network alias. Browsers resolve `*.localhost` to `127.0.0.1` without an `/etc/hosts` edit.
+For a local Docker test, use `http://keycloak.localhost:8080` as the IdP URL everywhere so the token issuer is identical inside and outside the containers. Set `KC_BOOTSTRAP_ADMIN_PASSWORD` to a test-only value before running these commands:
+
+```bash
+docker network create owui
+
+docker run -d --name keycloak --network owui --network-alias keycloak.localhost \
+  -p 8080:8080 \
+  -e KC_HOSTNAME=http://keycloak.localhost:8080 \
+  -e KC_HTTP_ENABLED=true \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD \
+  quay.io/keycloak/keycloak:26.4 start-dev
+```
+
+LiteLLM and Open WebUI must join the same `owui` network, and Keycloak's port must be 8080 both inside and outside the container. This route also works on macOS Docker Desktop, where host networking is not an option.
 
 ## Step 2. Configure LiteLLM JWT auth
+
+Set `LITELLM_LICENSE` when starting LiteLLM. Without it, JWT authentication is rejected with `JWT Auth is an enterprise only feature`.
 
 ```yaml title="config.yaml"
 model_list:
@@ -111,12 +135,21 @@ export JWT_ISSUER="https://<idp>/realms/acme"
 litellm --config config.yaml
 ```
 
-`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI. Use a long random value such as the output of `openssl rand -hex 32`, because LiteLLM refuses to serve traffic with a short or publicly known key, such as one copied from an example config.
+```bash
+docker run --rm --network owui -p 4000:4000 \
+  -v "$PWD/config.yaml:/app/config.yaml:ro" \
+  -e LITELLM_LICENSE -e LITELLM_MASTER_KEY -e DATABASE_URL \
+  -e ANTHROPIC_API_KEY -e JWT_PUBLIC_KEY_URL -e JWT_AUDIENCE -e JWT_ISSUER \
+  docker.litellm.ai/berriai/litellm:v1.90.2 \
+  --config /app/config.yaml
+```
+
+`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI. LiteLLM refuses to start only when the master key is unset, empty, or the publicly known default from the example configs; it does not check the key length. Generate a random value with `openssl rand -hex 32`. For local development only, `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` overrides this check.
 
 A token for the same user minted by another client without the `litellm` audience is rejected:
 
 ```json
-{"error": "Authentication Error, Validation fails: Audience doesn't match"}
+{"error": {"message": "Authentication Error, Validation fails: Audience doesn't match", "type": "auth_error", "param": "None", "code": "401"}}
 ```
 
 See [OIDC JWT-based Auth](../proxy/token_auth.md) for every claim mapping option, including `team_alias_jwt_field`, role mapping with `jwt_litellm_role_map`, and `sync_user_role_and_teams`.
@@ -126,6 +159,9 @@ See [OIDC JWT-based Auth](../proxy/token_auth.md) for every claim mapping option
 Teams must exist before a group claim can match them. Create them with the master key, using the IdP group name as `team_id`. The same objects can be created in the Admin UI under **Organizations** and **Teams**.
 
 ```bash
+export LITELLM=https://litellm.acme.com
+export LITELLM_MASTER_KEY="<master-key>"
+
 curl -X POST "$LITELLM/organization/new" -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
   -d '{"organization_id": "acme-us", "organization_alias": "Acme US", "models": ["claude-sonnet", "claude-haiku"]}'
 
@@ -139,11 +175,11 @@ curl -X POST "$LITELLM/team/new" -H "Authorization: Bearer $LITELLM_MASTER_KEY" 
   -d '{"team_id": "data-science", "team_alias": "Data Science", "organization_id": "acme-eu", "models": ["claude-haiku"], "max_budget": 50}'
 ```
 
-Check the result with a real user token before involving Open WebUI:
+Set `ALICE_TOKEN` and `BOB_TOKEN` as shown in Step 1, then check the result with real user tokens before involving Open WebUI:
 
 ```bash
 curl -s "$LITELLM/v1/models" -H "Authorization: Bearer $ALICE_TOKEN" | jq -c '[.data[].id]'
-# ["claude-haiku","claude-sonnet"]
+# ["claude-sonnet","claude-haiku"]
 
 curl -s "$LITELLM/v1/chat/completions" -H "Authorization: Bearer $BOB_TOKEN" -H "Content-Type: application/json" \
   -d '{"model": "claude-sonnet", "messages": [{"role": "user", "content": "hi"}]}' | jq -r .error.message
@@ -189,21 +225,21 @@ docker run -d --name open-webui -p 3000:8080 --env-file openwebui.env \
 
 `auth_type: system_oauth` is the setting that makes this work. For every model call, Open WebUI looks up the user's stored OAuth session, refreshes the access token if needed, and sends it to LiteLLM as `Authorization: Bearer <token>`. You can set the same thing in the UI under **Admin Panel > Settings > Connections**, editing the LiteLLM connection and choosing **OAuth** as the auth type. The model list is fetched per user with their own token, so LiteLLM's team checks decide which models each user's Open WebUI can list.
 
-`DEFAULT_USER_ROLE=user` lets SSO users chat right away. Without it new accounts land in `pending` and wait for an admin to approve them. The first account to sign in becomes the Open WebUI admin, so sign in yourself first. A fresh install shows a **Create Admin Account** form next to the SSO button; use the SSO button so the admin is your SSO account rather than a separate local one. Most of these variables are persisted in Open WebUI's database on first start, so later changes go through the Admin Panel unless you reset the volume.
+`WEBUI_URL` must match the origin users open in their browser, or the SSO redirect fails. `DEFAULT_USER_ROLE=user` lets SSO users chat right away. Without it new accounts land in `pending` and wait for an admin to approve them. On v0.12.0, a fresh install first shows a **Get started** splash. Click it, then use the SSO button, not **Create Admin Account**. The first account to sign in becomes the Open WebUI admin, so sign in with your admin IdP account first. Most of these variables are persisted in Open WebUI's database on first start, so later changes go through the Admin Panel unless you reset the volume.
 
-Two things do not carry the IdP token. Requests made with an Open WebUI API key (for example from scripts calling Open WebUI's own API) have no OAuth session, so LiteLLM receives no credential and returns `401 No api key passed in`. And if a user's IdP session can no longer be refreshed, model calls fail until they sign in again.
+Open WebUI API keys are off by default (`ENABLE_API_KEYS`). This is persisted configuration, so changing the environment variable after first start has no effect; enable API keys in the Admin Panel settings. A request made with an Open WebUI API key has no OAuth session: the caller sees `400 Model not found`, while LiteLLM logs `401 No api key passed in`. If a user's IdP session can no longer be refreshed, model calls fail until they sign in again.
 
 ## Step 5. Map groups to models and permissions in Open WebUI
 
-After the first login of each user, **Admin Panel > Users > Groups** shows `engineering` and `data-science`, with members kept in sync from the `groups` claim on every login.
+An IdP group appears in **Admin Panel > Users > Groups** only after at least one of its members has signed in. After that login, the groups are kept in sync from the `groups` claim, so grant model access after the group appears.
 
-Open WebUI hides models coming from a connection from non-admin users until an admin grants access, even when LiteLLM allows them. Open **Admin Panel > Settings > Models**, edit each LiteLLM model, open **Access** (it starts as Private), add each group that should see it, and save. Access is set per model, so repeat this for every model, mirroring the LiteLLM team models: `claude-sonnet` to `engineering`, `claude-haiku` to `engineering` and `data-science`. With that in place Alice sees both models and Bob only sees `claude-haiku`. LiteLLM still enforces access, so a model shared too widely in Open WebUI fails with a 403 from LiteLLM instead of leaking.
+Open WebUI hides models coming from a connection from non-admin users until an admin grants access, even when LiteLLM allows them. Open **Admin Panel > Settings > Models**, select the pencil icon for each LiteLLM model, choose **Access**, click **Add Access**, tick the groups, click **Add**, close the dialog, then click **Save & Update**. The label continues to read **Private** after group grants. Access is set per model, so repeat this for every model, mirroring the LiteLLM team models: `claude-sonnet` to `engineering`, `claude-haiku` to `engineering` and `data-science`. With that in place Alice sees both models and Bob only sees `claude-haiku`. LiteLLM still enforces access, so a model shared too widely in Open WebUI fails with a 403 from LiteLLM instead of leaking.
 
 Use the group permissions on the same page to decide who can create workspace models, prompts, knowledge, tools, and skills. A common rollout lets every employee use shared skills and lets one platform group author them.
 
 ## Step 6. Share skills with a team
 
-Skills are reusable instruction sets, the Open WebUI equivalent of Claude skills or custom GPT instructions. Create one under **Workspace > Skills** with a name, a description that says when it applies, and Markdown instructions. Version history and multi-file skills are kept per skill, and skills can also be imported from a URL, GitHub, or a ZIP.
+Skills are reusable instruction sets, the Open WebUI equivalent of Claude skills or custom GPT instructions. Under **Workspace > Skills**, create a skill named **Release notes** with the description `Use when the user asks for release notes or a changelog.` and Markdown instructions such as:
 
 ```markdown
 # Release notes house style
@@ -231,9 +267,11 @@ Artifacts render in a sandboxed iframe in the user's browser. Two interface sett
 
 Each Open WebUI chat now shows up in LiteLLM under the real user, team, and organization. In the Admin UI, **Logs** and **Usage** filter by user, team, and organization, and team budgets apply as soon as spend accrues.
 
-```sql
-SELECT "user", team_id, organization_id, model_group FROM "LiteLLM_SpendLogs" ORDER BY "startTime" DESC LIMIT 2;
+```bash
+psql "$DATABASE_URL" -c 'SELECT "user", team_id, organization_id, model_group FROM "LiteLLM_SpendLogs" ORDER BY "startTime" DESC LIMIT 2;'
 ```
+
+Each chat writes several spend-log rows because Open WebUI also calls the model for the chat title, tags, and follow-up suggestions with the same user token. **Admin Panel > Settings > Interface** includes **Task Model** for background tasks. The setting description says the current model follows the active chat model, so you can choose a separate task model if needed.
 
 ```
 bob@acme.com   | data-science | acme-eu | claude-haiku
@@ -248,7 +286,8 @@ Budgets, rate limits, guardrails, and logging callbacks set on a team or organiz
 |---|---|
 | No models in Open WebUI for a regular user | Model access not granted to their group in **Admin Panel > Settings > Models**, or their token has no group matching a LiteLLM team |
 | No models for anyone, LiteLLM logs `403 No teams found in token` | `groups` claim missing from the access token or not matching any LiteLLM `team_id` |
-| LiteLLM logs `401 No api key passed in` | The connection auth type is not **OAuth**, or the request came from an Open WebUI API key instead of a browser session |
+| Open WebUI API-key request returns `400 Model not found` | Open WebUI API keys have no OAuth session; LiteLLM logs `401 No api key passed in` |
 | New users stuck on "account activation pending" | `DEFAULT_USER_ROLE` not set to `user` |
 | LiteLLM rejects tokens with an audience or issuer error | `JWT_AUDIENCE` or `JWT_ISSUER` does not match the decoded token from Step 1 |
+| Proxy exits at startup with `LiteLLM proxy refused to start: the master key is a publicly known default.` | Set a random `LITELLM_MASTER_KEY` |
 | Model shown in Open WebUI but chat fails with a 403 | Group can see the model in Open WebUI but its LiteLLM team does not allow it |
