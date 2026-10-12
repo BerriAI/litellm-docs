@@ -1366,6 +1366,7 @@ const sidebars = {
         },
         "providers/petals",
         "providers/poe",
+        "providers/polder",
         "providers/publicai",
         "providers/predibase",
         "providers/prism",
