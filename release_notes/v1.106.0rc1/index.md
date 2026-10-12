@@ -55,21 +55,9 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 These callouts cover user-facing behavior that differs from `v1.105.0`, the latest stable release
 
-**Lens moves to a standalone Rust service.** The gateway's old trace upload URLs return 410 and existing Python Lens workers stop claiming investigations. Deploy the matching `litellm-lens` image, create a tracing key under Lens > Traces > Set up tracing, point agent OTLP exporters at the Lens ingestion URL, and retire the Python workers. See [PR #45148](https://github.com/BerriAI/litellm/pull/45148) and [PR #44428](https://github.com/BerriAI/litellm/pull/44428)
-
-**Tracing storage settings are unified.** The string form `store: clickhouse`, `CLICKHOUSE_READER_URL` and `AGENT_TRACING_SPEND_LOG_RETENTION_DAYS` no longer work. Use `general_settings.tracing.store.type: clickhouse` with `store.url` (and optionally `database` and `retention_days`), and `AGENT_TRACING_RETENTION_DAYS` for retention. See [PR #43941](https://github.com/BerriAI/litellm/pull/43941)
-
-**Trace API responses and access change.** `POST /v1/traces/query` returns only `{"data": [...]}`, without `meta`, `rows` or `statistics`. Trace reads follow log visibility (the caller's user, key or permitted teams) and no longer grant access through API key ownership, and `GET /v1/traces/{trace_id}` returns 400 when a trace id spans several runs, so pass `?trace_ref={run_id}`. See [PR #44609](https://github.com/BerriAI/litellm/pull/44609), [PR #44228](https://github.com/BerriAI/litellm/pull/44228) and [PR #44239](https://github.com/BerriAI/litellm/pull/44239)
-
-**LiteAdmin is enterprise-only.** Proxies without an enterprise license lose the LiteAdmin button, panel and Cmd/Ctrl+J shortcut. See [PR #44399](https://github.com/BerriAI/litellm/pull/44399)
-
-**The integrated ROI Calculator is retired.** Its dashboard page, API routes, OAuth callbacks and scheduled refresh are removed and `/ui/roi-calculator/` returns 404. Stored calculator configuration stays in the database, and the standalone litellm-roi-calculator project remains available. See [PR #44477](https://github.com/BerriAI/litellm/pull/44477)
-
 **The response cache skips requests with more than 4 messages by default.** The new `cache_params.max_messages` defaults to 4, so longer conversations and Responses inputs are neither looked up nor stored, exact or semantic. Raise it, or set it to `null` to remove the limit. See [PR #43878](https://github.com/BerriAI/litellm/pull/43878)
 
 **Responses WebSocket sessions are capped at 60 minutes by default.** Sessions on `/v1/responses` close with code 1000 after `general_settings.responses_websocket_session_limit_seconds` (default 3600, maximum 7200), idle or not. The old 30 second first-message timeout is gone. See [PR #44433](https://github.com/BerriAI/litellm/pull/44433)
-
-**Gateway-injected prompt cache breakpoints default to implicit mode.** `cache_control_injection_points` on OpenAI-dialect deployments now use `prompt_cache_options` mode `implicit` instead of `explicit` on `/v1/chat/completions`, `/v1/responses` and `/v1/messages`. Set `prompt_cache_options: {mode: explicit}` in `litellm_params` to keep explicit-only writes. See [PR #42281](https://github.com/BerriAI/litellm/pull/42281) and [PR #45121](https://github.com/BerriAI/litellm/pull/45121)
 
 **Bridged Chat Completions and Responses output changes shape.** A chat completion bridged to the Responses API that returns text and tool calls now comes back as one choice with `finish_reason: tool_calls` instead of two choices, and truncated bridged Responses output reports `status: incomplete` and ends streams with `response.incomplete`. Read tool calls from `choices[0]` and treat `incomplete` as terminal. See [PR #44346](https://github.com/BerriAI/litellm/pull/44346) and [PR #44460](https://github.com/BerriAI/litellm/pull/44460)
 
