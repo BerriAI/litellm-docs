@@ -79,7 +79,7 @@ Pass the GCS URI as `input_file_id`:
 
 ```bash
 curl -X POST http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "gs://my-bucket/batches/publishers/google/models/{{gemini_flash}}/batch.jsonl",
@@ -97,7 +97,7 @@ Pass `custom_llm_provider=vertex_ai` so the proxy routes to Vertex instead of Op
 
 ```bash
 curl -X GET "http://localhost:4000/v1/batches/8823717160934178816?custom_llm_provider=vertex_ai" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### 4. Retrieve results
@@ -141,6 +141,8 @@ Skipping unmanaged vertex batch 8823717160934178816: no vertex_ai deployment con
 | Format conversion | Automatic | None |
 | Batch ID format | Base64-encoded unified ID | Raw Vertex numeric ID |
 | Cost tracking | On by default | Opt-in flag |
+
+A managed batch can also take Vertex native input: set `passthrough=true` on the upload and LiteLLM stores the file byte for byte and returns the native output. See [Native Vertex JSONL passthrough](/docs/providers/vertex_batch#native-vertex-jsonl-passthrough).
 
 ## See also
 

@@ -14,7 +14,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::danger Known Issue - CPU Usage
+:::danger[Known Issue - CPU Usage]
 
 This release had known issues with CPU usage. This has been fixed in [v1.81.9-stable](/release_notes/v1.81.9/v1-81-9).
 

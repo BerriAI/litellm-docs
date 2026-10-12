@@ -3,11 +3,10 @@ title: "Auto Router: Maximize Quality & Savings with Our Fuse LLM Classifier"
 slug: auto-router-fuse-v2
 date: 2026-09-14T10:00:00
 authors: [tin]
-draft: true
 image: ./hero.svg
 hide_table_of_contents: false
 description: "We’re improving Fuse V2 by combining complexity and capability assessment to learn where each model succeeds, fails, and needs an upgrade."
-tags: [routing, cost, benchmarks]
+tags: [auto-router, routing, cost, benchmarks]
 ---
 
 We’re improving Fuse V2 by combining complexity and capability assessment to learn where each model succeeds, fails, and needs an upgrade.
@@ -20,7 +19,7 @@ We’re improving Fuse V2 by combining complexity and capability assessment to l
 
 Work with the LiteLLM team to evaluate routing on your production traffic.
 
-<a className="button button--primary button--lg" style={{color: "#102c25"}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::
 
@@ -83,6 +82,6 @@ Our goal is to match the capability classifier’s cost while delivering the com
 
 Work with the LiteLLM team to test Fuse V2 on your workload and help improve model selection.
 
-<a className="button button--primary button--lg" style={{color: "#102c25"}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::

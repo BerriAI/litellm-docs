@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 
 ### Video Walkthrough
 
-<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameBorder="0" allowFullScreen></iframe>
 
 #### Step 1: Create an OIDC Application in Okta
 
@@ -186,9 +186,10 @@ For certain Microsoft Entra ID configurations, you may need to override the defa
 
 First, inspect the JWT fields returned by your Microsoft SSO provider using the [SSO Debug Route](#debugging-sso-jwt-fields).
 
-1. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
-2. Navigate to `https://<proxy_base_url>/sso/debug/login`
-3. Complete the SSO flow to see the returned user attributes
+1. Set `ENABLE_SSO_DEBUG="true"` on the proxy and restart it (the debug routes return 404 otherwise)
+2. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
+3. Navigate to `https://<proxy_base_url>/sso/debug/login`
+4. Complete the SSO flow to see the returned user attributes
 
 **Step 2: Identify Field Attribute Names**
 
@@ -260,7 +261,7 @@ Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token co
 - `proxy_admin` - Admin over the platform
 - `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
 - `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_view_only` - Can login, view their own keys, view their own spend
+- `internal_user_viewer` - Can login, view their own keys, view their own spend
 
 Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
 
@@ -326,7 +327,7 @@ PROXY_LOGOUT_URL="https://www.google.com"
 
 Set this in your .env (so the proxy can set the correct redirect url)
 ```shell
-PROXY_BASE_URL=https://litellm-api.up.railway.app
+PROXY_BASE_URL=https://your-proxy-domain.com
 ```
 
 #### Step 4. Test flow
@@ -378,7 +379,7 @@ For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the to
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
 ```
@@ -565,7 +566,15 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
 <Image img={require('../../img/debug_sso.png')}  style={{ width: '500px', height: 'auto' }} />
 <br />
 
-1. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
+1. Enable the debug routes on the proxy
+
+  The debug routes are disabled by default and return 404. Set the following environment variable and restart the proxy (unset it again once you are done debugging):
+
+  ```bash showLineNumbers title="Environment variable"
+  ENABLE_SSO_DEBUG="true"
+  ```
+
+2. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
 
   In your SSO provider's settings, add the following URL as a new redirect (callback) URL:
 
@@ -574,7 +583,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
   ```
 
 
-2. Navigate to the debug login page on your browser 
+3. Navigate to the debug login page on your browser 
 
     Navigate to the following URL on your browser:
 
@@ -585,7 +594,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
     This will initiate the standard SSO flow. You will be redirected to your SSO provider's login screen, and after successful authentication, you will be redirected back to LiteLLM's debug callback route.
 
 
-3. View the JWT fields 
+4. View the JWT fields 
 
 Once redirected, you should see a page called "SSO Debug Information". This page displays the JWT fields received from your SSO provider (as shown in the image above)
 

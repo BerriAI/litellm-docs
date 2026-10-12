@@ -136,7 +136,7 @@ litellm --config config.yaml
 ```python
 import os
 os.environ["ANTHROPIC_BASE_URL"] = "http://localhost:4000"
-os.environ["ANTHROPIC_API_KEY"] = "sk-1234"  # Your LiteLLM proxy key
+os.environ["ANTHROPIC_API_KEY"] = "sk-<your-api-key>"  # Your LiteLLM proxy key
 
 import anthropic
 
@@ -306,7 +306,7 @@ litellm --config config.yaml
 ```python
 import os
 os.environ["OPENAI_BASE_URL"] = "http://localhost:4000"
-os.environ["OPENAI_API_KEY"] = "sk-1234"  # Your LiteLLM proxy key
+os.environ["OPENAI_API_KEY"] = "sk-<your-api-key>"  # Your LiteLLM proxy key
 
 from openai import OpenAI
 
@@ -551,7 +551,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tts",
@@ -565,7 +565,7 @@ With custom parameters:
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tts",

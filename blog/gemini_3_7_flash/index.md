@@ -112,7 +112,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::warning Known limitation at launch
+:::warning[Known limitation at launch]
 The `minimal` thinking level is not yet supported on `gemini-3.7-flash`. The Gemini API returns a 400 (`Thinking level MINIMAL is not supported for this model`). Google plans minimal thinking support as a fast follow. All other thinking levels work as expected.
 :::
 

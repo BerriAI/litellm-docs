@@ -85,7 +85,7 @@ Benchmark Results for 'When will BerriAI IPO?':
 **🤝 Schedule a 1-on-1 Session:** Book a [1-on-1 session](https://enterprise.litellm.ai/demo) with Krrish and Ishaan, the founders, to discuss any issues, provide feedback, or explore how we can improve LiteLLM for you.
 
 
-<!-- 
+{/* 
 ## Pre-requisites:
 ```bash
 uv add litellm
@@ -367,4 +367,4 @@ for question, group_data in grouped_by_question:
       <td>0.001022</td>
     </tr>
   </tbody>
-</table> -->
+</table> */}

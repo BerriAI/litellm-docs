@@ -156,7 +156,7 @@ Set the `ANTHROPIC_API_KEY` environment variable. Requests without a `model` par
 ```bash
 # Request will use ANTHROPIC_API_KEY from environment
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -194,7 +194,7 @@ You can upload either a ZIP file or directly upload the SKILL.md file:
 ```bash showLineNumbers title="create_skill_zip.sh"
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
   -X POST \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02" \
   -F "display_title=My Skill" \
@@ -206,7 +206,7 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true" \
 ```bash showLineNumbers title="create_skill_md.sh"
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
   -X POST \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02" \
   -F "display_title=My Skill" \
@@ -217,7 +217,7 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true" \
 
 ```bash showLineNumbers title="list_skills.sh"
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -226,7 +226,7 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true" \
 
 ```bash showLineNumbers title="get_skill.sh"
 curl "http://0.0.0.0:4000/v1/skills/skill_01abc?beta=true" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -236,7 +236,7 @@ curl "http://0.0.0.0:4000/v1/skills/skill_01abc?beta=true" \
 ```bash showLineNumbers title="delete_skill.sh"
 curl "http://0.0.0.0:4000/v1/skills/skill_01abc?beta=true" \
   -X DELETE \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -266,7 +266,7 @@ Then route to specific accounts using the `model` parameter:
 # Route to Team A - using ZIP file
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
   -X POST \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02" \
   -F "model=claude-team-a" \
@@ -276,7 +276,7 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true" \
 # Route to Team B - using direct SKILL.md upload
 curl "http://0.0.0.0:4000/v1/skills?beta=true" \
   -X POST \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02" \
   -F "model=claude-team-b" \
@@ -289,13 +289,13 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true" \
 ```bash showLineNumbers title="list_with_routing.sh"
 # List Team A skills
 curl "http://0.0.0.0:4000/v1/skills?beta=true&model=claude-team-a" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 
 # List Team B skills
 curl "http://0.0.0.0:4000/v1/skills?beta=true&model=claude-team-b" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -305,13 +305,13 @@ curl "http://0.0.0.0:4000/v1/skills?beta=true&model=claude-team-b" \
 ```bash showLineNumbers title="get_with_routing.sh"
 # Get skill from Team A
 curl "http://0.0.0.0:4000/v1/skills/skill_01abc?beta=true&model=claude-team-a" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 
 # Get skill from Team B
 curl "http://0.0.0.0:4000/v1/skills/skill_01xyz?beta=true&model=claude-team-b" \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -322,14 +322,14 @@ curl "http://0.0.0.0:4000/v1/skills/skill_01xyz?beta=true&model=claude-team-b" \
 # Delete skill from Team A
 curl "http://0.0.0.0:4000/v1/skills/skill_01abc?beta=true&model=claude-team-a" \
   -X DELETE \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 
 # Delete skill from Team B
 curl "http://0.0.0.0:4000/v1/skills/skill_01xyz?beta=true&model=claude-team-b" \
   -X DELETE \
-  -H "X-Api-Key: sk-1234" \
+  -H "X-Api-Key: sk-<your-litellm-api-key>" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: skills-2025-10-02"
 ```
@@ -447,7 +447,7 @@ This tells the API that `SKILL.md` belongs to the `test-skill` directory.
 
 `custom_llm_provider=litellm_proxy` skills (stored in the proxy's own database rather than proxied to Anthropic) support ranking by semantic similarity, so a caller can describe what they need instead of paging through the whole registry.
 
-:::info Related Documentation
+:::info[Related Documentation]
 - [MCP Tool Search](./mcp_tool_search.md#how-it-works) for the `skill_search` MCP virtual tool
 :::
 

@@ -128,7 +128,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "Zapier_Gmail,Server2"
       }
     }

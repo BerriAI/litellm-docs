@@ -84,7 +84,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_large}}",
   "messages": [
@@ -103,7 +103,9 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 Open Phoenix; the project comes from `PHOENIX_PROJECT_NAME` (default `default`), stamped as the `openinference.project.name` resource attribute. Each request shows up as a `chat <model>` span under the request root. On the proxy you can send a team's or key's LLM spans to a different Phoenix project; see [Route traces to a Phoenix project per team or key](#route-traces-to-a-phoenix-project-per-team-or-key).
 
-Phoenix uses the same OpenInference vocabulary as Arize AX, so the LLM-call span carries `llm.model_name`, `llm.provider`, the `llm.token_count.*` usage split, `llm.invocation_parameters`, the message arrays when content capture is on, and `llm.tools.*`, alongside the canonical `gen_ai.*` keys. See the [full attribute table](./opentelemetry_v2#seeing-your-traces).
+Phoenix uses the same OpenInference vocabulary as Arize AX, so the LLM-call span carries `llm.model_name`, `llm.provider`, the `llm.token_count.*` usage split, `llm.invocation_parameters`, the message arrays when content capture is on, and `llm.tools.*`, alongside the canonical `gen_ai.*` keys. The span also carries each assistant tool call as structured `llm.output_messages.{idx}.message.tool_calls.{idx}.tool_call.*` attributes and the allowlisted request metadata as a `metadata` attribute, which is what fills Phoenix's Output tool-call row and its Metadata section. See the [full attribute table](./opentelemetry_v2#seeing-your-traces) and [OpenInference tool calls and metadata](./opentelemetry_v2#openinference-tool-calls-and-metadata).
+
+The `arize_phoenix` preset names the `openinference` mapper for you. If you point the generic OTLP path at Phoenix instead (your own collector, `OTEL_ENDPOINT` at the Phoenix `/v1/traces` URL), the spans arrive with only the canonical `gen_ai.*` names and render plainly until you name the mapper with `MAPPER_NAMES=genai,openinference` or `callback_settings.otel.mapper_names`.
 
 ![LiteLLM trace in Phoenix](/img/observability/otel_v2_phoenix.png)
 
@@ -148,7 +150,7 @@ Every key on the team sends its LLM spans to the named project.
 
 ```bash
 curl -X POST 'http://localhost:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_alias": "payments", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -157,7 +159,7 @@ Update an existing team the same way:
 
 ```bash
 curl -X POST 'http://localhost:4000/team/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>", "metadata": {"phoenix_project_name": "payments-prod"}}'
 ```
@@ -166,7 +168,7 @@ Then generate a key for that team and call the proxy as usual:
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "<team-id>"}'
 ```
@@ -185,7 +187,7 @@ A single key can name its own project, including keys that do not belong to a te
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"metadata": {"phoenix_project_name": "payments-canary"}}'
 ```

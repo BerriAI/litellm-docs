@@ -6,7 +6,7 @@ The advisor tool lets a fast, lower-cost executor model (Sonnet or Haiku) consul
 
 This pattern is well-suited for long-horizon agentic workloads (coding agents, computer use, multi-step research) where most turns are mechanical but having an excellent plan is crucial. You get close to advisor-solo quality while the bulk of token generation happens at executor-model rates.
 
-:::info Beta
+:::info[Beta]
 
 The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` in your requests; LiteLLM adds this automatically when it detects the advisor tool in your `tools` array.
 
@@ -55,7 +55,7 @@ flowchart TD
 - When the executor calls it, intercepts before the result reaches you, runs the advisor sub-call, and injects the advice
 - Strips any `advisor_tool_result` / `server_tool_use` blocks from message history on re-send so non-Anthropic providers never see Anthropic-specific types
 - Wraps the final response in an SSE stream if you requested `stream=True`
-- Enforces `max_uses` as a hard cap; `AdvisorMaxIterationsError` is raised if exceeded, and `max_uses=0` disables the advisor entirely
+- Enforces `max_uses` (default 5) as a hard cap: when the executor asks for more advisor calls than `max_uses` allows, the whole request fails with `AdvisorMaxIterationsError`, so `max_uses=0` fails on the first advisor call. To run without the advisor, omit the advisor tool from `tools`
 
 ## Model Compatibility
 
@@ -145,7 +145,7 @@ for chunk in response:
         print(chunk.choices[0].delta.content, end="")
 ```
 
-:::note Streaming behavior
+:::note[Streaming behavior]
 
 The advisor sub-inference does not stream. The executor's stream pauses while the advisor runs, then the full advisor result arrives in a single event. Executor output resumes streaming afterward.
 
@@ -189,7 +189,7 @@ response2 = litellm.completion(
 )
 ```
 
-:::tip Auto-strip on follow-up turns
+:::tip[Auto-strip on follow-up turns]
 
 LiteLLM automatically strips `advisor_tool_result` blocks from message history when the advisor tool is not present in the current request. This prevents the Anthropic 400 error that would otherwise occur.
 
@@ -447,7 +447,7 @@ Top-level `usage` reflects executor tokens only. Advisor tokens appear in `itera
 
 **Tips:**
 - Enable `caching` on the tool definition only when you expect 3+ advisor calls per conversation; it costs more than it saves below that threshold.
-- Use `max_uses` to cap advisor calls per request. Once reached, the executor continues without further advice.
+- Use `max_uses` to cap advisor calls per request. On the Anthropic API it must be at least 1, and once it is reached the advisor returns a `max_uses_exceeded` error result and the executor continues without further advice. On the LiteLLM orchestration loop (non-Anthropic providers), exceeding it raises `AdvisorMaxIterationsError` and the request fails
 - For conversation-level caps, count advisor calls client-side. When you reach your limit, remove the advisor tool from `tools`.
 
 ---

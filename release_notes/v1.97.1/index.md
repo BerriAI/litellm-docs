@@ -18,7 +18,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.97.1` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.97.1` will not resolve. If you install LiteLLM from PyPI, stay on `1.97.0`; everything in this release is either a container-image build fix or a dependency refresh that only reaches you through the image.
 

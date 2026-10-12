@@ -9,7 +9,7 @@ LiteLLM supports Vertex AI's Veo video generation models using the unified OpenA
 |-------|-------|
 | Description | Google Cloud Vertex AI Veo video generation models |
 | Provider Route on LiteLLM | `vertex_ai/` |
-| Supported Models | `veo-2.0-generate-001`, `veo-3.0-generate-preview`, `veo-3.0-fast-generate-preview`, `veo-3.1-generate-preview`, `veo-3.1-fast-generate-preview`, `veo-3.1-lite-generate-001` |
+| Supported Models | `veo-2.0-generate-001`, `veo-3.0-generate-001`, `veo-3.0-fast-generate-001`, `veo-3.1-generate-preview`, `veo-3.1-fast-generate-preview`, `veo-3.1-lite-generate-001` |
 | Cost Tracking | ✅ Duration-based pricing, with 720p and 1080p tiers where Google prices them (Veo 3.1 Lite) |
 | Logging Support | ✅ Full request/response logging |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
@@ -47,7 +47,7 @@ with open("/path/to/service_account.json", "r", encoding="utf-8") as f:
     vertex_credentials = f.read()
 
 response = video_generation(
-    model="vertex_ai/veo-3.0-generate-preview",
+    model="vertex_ai/veo-3.0-generate-001",
     prompt="A cat playing with a ball of yarn in a sunny garden",
     vertex_project="your-gcp-project-id",
     vertex_location="us-central1",
@@ -94,8 +94,8 @@ with open("generated_video.mp4", "wb") as f:
 | Model Name | Description | Max Duration | Status |
 |------------|-------------|--------------|--------|
 | veo-2.0-generate-001 | Veo 2.0 video generation | 5 seconds | GA |
-| veo-3.0-generate-preview | Veo 3.0 high quality | 8 seconds | Preview |
-| veo-3.0-fast-generate-preview | Veo 3.0 fast generation | 8 seconds | Preview |
+| veo-3.0-generate-001 | Veo 3.0 high quality | 8 seconds | GA |
+| veo-3.0-fast-generate-001 | Veo 3.0 fast generation | 8 seconds | GA |
 | veo-3.1-generate-preview | Veo 3.1 high quality | 10 seconds | Preview |
 | veo-3.1-fast-generate-preview | Veo 3.1 fast | 10 seconds | Preview |
 | veo-3.1-lite-generate-001 | Veo 3.1 Lite, the lowest-cost tier, 720p or 1080p output | 8 seconds | Preview |
@@ -136,7 +136,7 @@ Any other `size` value maps to an aspect ratio only and leaves the resolution to
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
   "model": "veo-3.1-lite-generate-001",
   "prompt": "A slow aerial shot of a lighthouse at sunrise",
@@ -210,7 +210,7 @@ Add Veo models to your `config.yaml`:
 model_list:
   - model_name: veo-3
     litellm_params:
-      model: vertex_ai/veo-3.0-generate-preview
+      model: vertex_ai/veo-3.0-generate-001
       vertex_project: os.environ/VERTEXAI_PROJECT
       vertex_location: os.environ/VERTEXAI_LOCATION
       vertex_credentials: os.environ/VERTEXAI_CREDENTIALS
@@ -225,7 +225,7 @@ Start the proxy and make requests:
 # Step 1: Generate video
 curl --location 'http://0.0.0.0:4000/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
   "model": "veo-3",
   "prompt": "Aerial shot over a futuristic city at sunrise",
@@ -234,11 +234,11 @@ curl --location 'http://0.0.0.0:4000/videos' \
 
 # Step 2: Poll status
 curl --location 'http://localhost:4000/v1/videos/{video_id}' \
---header 'x-litellm-api-key: sk-1234'
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>'
 
 # Step 3: Download video
 curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --output video.mp4
 ```
 
@@ -249,7 +249,7 @@ curl --location 'http://localhost:4000/v1/videos/{video_id}/content' \
 import litellm
 
 litellm.api_base = "http://0.0.0.0:4000"
-litellm.api_key = "sk-1234"
+litellm.api_key = "sk-<your-litellm-api-key>"
 
 response = litellm.video_generation(
     model="veo-3",

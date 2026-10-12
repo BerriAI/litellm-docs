@@ -118,7 +118,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Register the index"
 curl -X POST 'http://localhost:4000/vector_store/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "vector_store_id": "my-search-index",
@@ -147,7 +147,7 @@ The same search over HTTP:
 
 ```bash showLineNumbers title="Search the index"
 curl -X POST 'http://localhost:4000/v1/vector_stores/my-search-index/search' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"query": "how long does a refund take?", "max_num_results": 3}'
 ```

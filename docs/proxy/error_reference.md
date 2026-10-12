@@ -150,8 +150,9 @@ These `error.type` values are produced by the gateway itself. Seeing one of them
 | `key_model_access_denied` | 403 | The key's `models` list does not include the requested model | Add the model to the key, or call `/v1/models` to see what the key may use |
 | `team_model_access_denied`, `user_model_access_denied`, `org_model_access_denied`, `project_model_access_denied` | 403 | The same restriction applied at the team, user, organization, or project level | Grant access on the object named by the type |
 | `tool_access_denied` | 403 | The requested tool is not in the key's or team's allowed-tools list | Add the tool to the allowed list |
-| `key_vector_store_access_denied`, `team_vector_store_access_denied`, `org_vector_store_access_denied` | 403 | The caller may not use the requested vector store | Grant access on the object named by the type |
+| `key_vector_store_access_denied`, `team_vector_store_access_denied`, `user_vector_store_access_denied`, `org_vector_store_access_denied` | 401 | The caller may not use the requested vector store | Add the store to `object_permission.vector_stores` on the object named by the type |
 | `team_member_permission_error` | 401 | The caller lacks the team-member permission for this management action | Ask a team admin to perform it or to grant the permission |
+| `key_search_tool_access_denied`, `team_search_tool_access_denied`, `user_search_tool_access_denied` | 403 | `search_tool_deny_by_default` is on and the key, team, or user named by the type does not grant the requested search tool | Add the tool to `object_permission.search_tools` on the object named by the type |
 | `budget_exceeded` | 429 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget | Raise the budget, or wait for the budget window to reset |
 | `throttling_error` | 429 | An RPM, TPM, or max-parallel-requests ceiling was exceeded. Also used for provider 429s, so check the headers to tell them apart | Back off using `retry-after` |
 | `invalid_request_error` | 400 | A required parameter is missing or malformed. `error.param` names it | Fix the request body |
@@ -307,19 +308,19 @@ The `unreachable` deployment above needs no mock server at all; port 9 refuses c
 ```bash showLineNumbers
 # 403 key_model_access_denied
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "restricted", "models": ["{{openai_small}}"]}'
 
 # 429 throttling_error, on the second call within the same minute
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "capped", "rpm_limit": 1}'
 
 # 429 budget_exceeded, once accrued spend passes the cap
 curl -X POST 'http://localhost:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "tiny-budget", "max_budget": 0.05}'
 ```
@@ -331,5 +332,30 @@ To exercise fallback exhaustion, configure a fallback from one always-failing mo
 Include the `x-litellm-call-id` from the failed response. It is the join key across the gateway logs, the spend-log row, the request's OpenTelemetry trace, and the Logs page of the Admin UI, and it is the fastest way to get an answer
 
 Alongside it, include the full `error` object, the HTTP status, the response headers, and the `model` you requested. If the message contains a `<Provider>Exception`, check the provider's own status page first; the gateway reported the failure but did not cause it
+
+Clients that only print `str(e)` (`Error code: 400 - {...}`) drop the headers, so the id can also be written into the error body. Set `general_settings.include_call_id_in_error_body: true` and every JSON error the gateway writes carries the same value as the header. It is off by default, so error bodies stay byte-identical to today's until you turn it on
+
+```yaml
+general_settings:
+  include_call_id_in_error_body: true
+```
+
+On the OpenAI-shaped routes (`/v1/chat/completions`, `/v1/responses`, streaming first-chunk errors included) and on `/v1/messages`, the id sits inside the `error` object, which is the part the OpenAI SDK keeps as `e.body`:
+
+```json
+{"error": {"message": "Invalid model name passed in model=gpt-nope", "type": "invalid_request_error", "param": "model", "code": "400", "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}}
+```
+
+```json
+{"type": "error", "error": {"type": "invalid_request_error", "message": "Invalid model name passed in model=gpt-nope", "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}}
+```
+
+Pass-through routes relay the provider's own error body, so the id is added at the top level and the provider's `error` object is left as it was:
+
+```json
+{"type": "error", "error": {"type": "not_found_error", "message": "model: claude-nope"}, "litellm_call_id": "019b2c4d-e5f6-7890-abcd-ef1234567890"}
+```
+
+The setting only adds the id where the gateway already set the `x-litellm-call-id` header on a JSON body, so 422 request-validation errors, authentication failures rejected before an id exists, errors that arrive mid-stream, and non-JSON pass-through bodies are unchanged
 
 To see the exact request the gateway sent upstream, restart with `--detailed_debug` or set `LITELLM_LOG=DEBUG`, or add `"litellm_request_debug": true` to a single request body. See [Debugging](/docs/proxy/debugging)

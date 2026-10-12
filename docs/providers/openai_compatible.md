@@ -32,7 +32,7 @@ import os
 
 response = litellm.completion(
     model="openai/mistral",               # add `openai/` prefix to model so litellm knows to route to OpenAI
-    api_key="sk-1234",                  # api key to your openai compatible endpoint
+    api_key="sk-<your-litellm-api-key>",                  # api key to your openai compatible endpoint
     api_base="http://0.0.0.0:4000",     # set API Base of your Custom OpenAI Endpoint
     messages=[
                 {
@@ -52,7 +52,7 @@ import os
 
 response = litellm.embedding(
     model="openai/GPT-J",               # add `openai/` prefix to model so litellm knows to route to OpenAI
-    api_key="sk-1234",                  # api key to your openai compatible endpoint
+    api_key="sk-<your-litellm-api-key>",                  # api key to your openai compatible endpoint
     api_base="http://0.0.0.0:4000",     # set API Base of your Custom OpenAI Endpoint
     input=["good morning from litellm"]
 )
@@ -99,7 +99,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -121,7 +121,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",

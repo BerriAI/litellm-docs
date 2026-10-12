@@ -123,7 +123,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "azure-model-router",
     "messages": [{"role": "user", "content": "Hello!"}]

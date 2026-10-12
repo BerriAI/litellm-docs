@@ -10,8 +10,8 @@ LiteLLM supports all models from [DataRobot](https://datarobot.com). Select `dat
 ```python
 import os
 from litellm import completion
-os.environ["DATAROBOT_API_KEY"] = ""
-os.environ["DATAROBOT_API_BASE"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
+os.environ["DATAROBOT_API_TOKEN"] = ""
+os.environ["DATAROBOT_ENDPOINT"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
 
 response = completion(
             model="datarobot/openai/{{openai_small}}",

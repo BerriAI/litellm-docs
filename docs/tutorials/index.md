@@ -11,22 +11,6 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 ---
 
-## Getting Started
-
-<NavigationCards
-columns={2}
-items={[
-  {
-    icon: "⚡",
-    title: "Getting Started",
-    description: "Installation, playground, text completion, and mock completions.",
-    to: "/docs/tutorials/getting_started",
-  },
-]}
-/>
-
----
-
 ## Integrations
 
 <NavigationCards

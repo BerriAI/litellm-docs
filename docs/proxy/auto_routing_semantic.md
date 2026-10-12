@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Semantic Auto Router (deprecated)
 
-:::warning Deprecated
+:::warning[Deprecated]
 
 The semantic Auto Router is superseded by [Auto Routing](./auto_routing.md), which folds semantic keyword matching, complexity scoring, and adaptive routing into a single `auto_router/complexity_router`. New deployments should start there; the semantic router page is preserved for existing configs.
 
@@ -185,7 +185,7 @@ Once added developers need to select the model=`auto_router1` in the `model` fie
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234", # replace with your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>", # replace with your LiteLLM API key
     base_url="http://localhost:4000"
 )
 

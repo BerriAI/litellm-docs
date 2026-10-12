@@ -43,7 +43,7 @@ pip install litellm==1.95.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **User budgets are no longer enforced on team keys.** This reverts [PR #32005](https://github.com/BerriAI/litellm/pull/32005), which shipped in `v1.94.0` and made a user's personal `max_budget` stack on top of the team and team-member budgets. Team keys are back to team budgets only, and the `skip_user_budget_on_team_key` opt-out introduced alongside it is removed; leaving it in `general_settings` is now a no-op. If you added that flag to restore the old behavior, you can drop it. See [PR #35271](https://github.com/BerriAI/litellm/pull/35271).
 

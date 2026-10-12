@@ -210,7 +210,7 @@ response = completion(
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # LiteLLM proxy key
     base_url="http://0.0.0.0:4000"
 )
 

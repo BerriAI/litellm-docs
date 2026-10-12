@@ -57,8 +57,10 @@ For example:
 ```shell
 REDIS_SSL = "True"
 REDIS_SSL_CERT_REQS = "None" 
-REDIS_CONNECTION_POOL_KWARGS = '{"max_connections": 20}'
+REDIS_MAX_CONNECTIONS = "20"
 ```
+
+The variable name is `REDIS_` plus the upper-cased kwarg name, so the pool size is `REDIS_MAX_CONNECTIONS`. There is no `REDIS_CONNECTION_POOL_KWARGS` variable; setting it does nothing
 
 :::warning
 **Note**: For non-string Redis parameters (like integers, booleans, or complex objects), avoid using `REDIS_*` environment variables as they may fail during Redis client initialization. Instead, use `cache_kwargs` in your router configuration for such parameters.
@@ -110,6 +112,8 @@ Two more things to know when scoping ACLs:
 If you see `No permissions to access a key` in the proxy logs and spend tracking repeatedly logs `Restoring N transaction sets to in-memory queues`, the connecting user's ACL is missing one of the grants above. On proxy versions without [the namespace delimiter fix](https://github.com/BerriAI/litellm/pull/38403), internal keys whose literal names begin with the namespace string (for example `litellm_spend_update_buffer` under namespace `litellm`) were written outside the namespace and denied even with the grants in place; upgrade if the denied keys in your Redis `ACL LOG` show up unprefixed
 
 ## Redis Cluster
+
+Point the proxy at a Redis Cluster either with `redis_startup_nodes` under `cache_params` in `config.yaml`, or with the `REDIS_CLUSTER_NODES` environment variable, a JSON list of `{"host": ..., "port": ...}` objects. Only one of the two is needed.
 
 <Tabs>
 
@@ -167,6 +171,8 @@ print("REDIS_CLUSTER_NODES", os.environ["REDIS_CLUSTER_NODES"])
 </Tabs>
 
 ## Redis Sentinel
+
+Point the proxy at a Redis Sentinel deployment either with `service_name` and `sentinel_nodes` under `cache_params` in `config.yaml`, or with the `REDIS_SENTINEL_NODES`, `REDIS_SERVICE_NAME` and `REDIS_SENTINEL_PASSWORD` environment variables.
 
 <Tabs>
 
@@ -268,6 +274,24 @@ litellm_settings:
     max_connections: 100
 ```
 
+`cache_params` only sizes the response cache client. The proxy can hold two more Redis clients, each with its own pool: the coordination Redis from `general_settings.coordination_redis` (spend tracking, cross-pod rate limits, pod locks) and the router Redis from `router_settings.redis_host` / `redis_port` / `redis_password`. Set `max_connections` inside those blocks to size them; `coordination_redis` forwards any extra key to the Redis client, and `router_settings.cache_kwargs` does the same for the router client:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: 6379
+    max_connections: 100
+
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: 6379
+  cache_kwargs:
+    max_connections: 100
+```
+
+With response caching disabled and no `coordination_redis` block, the coordination client is built from the `REDIS_*` environment variables alone, so `REDIS_MAX_CONNECTIONS` is the way to size its pool
+
 ## Redis socket_timeout
 
 The proxy cache client waits at most `socket_timeout` seconds for each Redis command before it raises a timeout. The default is **5.0 s**, set by `RedisCache.__init__` in `litellm/caching/redis_cache.py`. Set it with `cache_params.socket_timeout`; the value is passed to the Redis client as is and applies to every topology (standalone, `REDIS_URL`, cluster and Sentinel):
@@ -280,7 +304,23 @@ litellm_settings:
     socket_timeout: 1.0 # seconds per Redis command, default 5.0
 ```
 
-The `REDIS_SOCKET_TIMEOUT` environment variable (default `0.1`) does not change the cache client's timeout. LiteLLM only applies it to Redis clients built without an explicit `socket_timeout`, which today is the Sentinel connection path in `litellm/_redis.py`. The proxy cache client always passes its own `socket_timeout` (the 5.0 s default or your `cache_params` value), and a caller kwarg outranks the `REDIS_*` environment mapping, so with `REDIS_SOCKET_TIMEOUT` set the cache client still runs at 5.0 s. That holds when the cache client connects through Sentinel too, since its kwarg is already present when the Sentinel default would apply. The one exception is `socket_timeout: null` in `cache_params`, which drops the kwarg and lets `REDIS_SOCKET_TIMEOUT` through
+The coordination and router clients have their own 5.0 s default and read the same key from their own blocks. A `Timeout reading from <host>:6379` logged by spend tracking or rate limiting under load comes from the coordination client, so raise `socket_timeout` there rather than in `cache_params`:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: 6379
+    socket_timeout: 10.0
+
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: 6379
+  cache_kwargs:
+    socket_timeout: 10.0
+```
+
+The `REDIS_SOCKET_TIMEOUT` environment variable (default `0.1`) does not change the cache client's timeout. LiteLLM only applies it to Redis clients built without an explicit `socket_timeout`, which today is the Sentinel connection path in `litellm/_redis.py`. The proxy cache client always passes its own `socket_timeout` (the 5.0 s default or your `cache_params` value), and a caller kwarg outranks the `REDIS_*` environment mapping, so with `REDIS_SOCKET_TIMEOUT` set the cache client still runs at 5.0 s. The same applies to the coordination and router clients, which are built the same way. That holds when the cache client connects through Sentinel too, since its kwarg is already present when the Sentinel default would apply. The one exception is `socket_timeout: null` in `cache_params`, which drops the kwarg and lets `REDIS_SOCKET_TIMEOUT` through
 
 ## Virtual Key Authentication Cache (Redis)
 

@@ -175,7 +175,7 @@ Manus operates as an **asynchronous agent API**:
 - `completed` - Task finished successfully
 - `error` - Task failed
 
-:::tip Production Usage
+:::tip[Production Usage]
 For production applications, use [webhooks](https://open.manus.im/docs/webhooks) instead of polling to get notified when tasks complete.
 :::
 

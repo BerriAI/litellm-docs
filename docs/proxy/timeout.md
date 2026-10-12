@@ -38,6 +38,8 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+`litellm_settings.request_timeout` (or the `REQUEST_TIMEOUT` env var) is the proxy-wide default when no router or deployment timeout is set. It applies to the native `/v1/responses` and `/v1/messages` streams as well, where it bounds each wait for the next chunk, so a stalled upstream ends the stream with an error instead of hanging. See [request timeouts on pass-through routes](./pass_through#request-timeouts) for the full precedence
+
 ### Custom Timeouts & Stream Timeouts (Per Model)
 
 For each model, you can set `timeout` and `stream_timeout` under `litellm_params`:
@@ -132,7 +134,7 @@ model_list:
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -157,7 +159,7 @@ With override allowed, a request can change the deployment's default, including 
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -173,7 +175,7 @@ If `allow_client_keepalive_override` isn't set, that same request body is silent
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'x-litellm-keepalive-seconds: 1' \
   -d '{
     "model": "claude-opus",
@@ -285,7 +287,7 @@ This is currently only supported on `/chat/completions` and `/completions` endpo
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     -H 'Content-Type: application/json' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     --data-raw '{
         "model": "gemini/{{gemini_flash}}",
         "messages": [

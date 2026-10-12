@@ -13,6 +13,8 @@ hide_table_of_contents: true
 
 Harnesses are the next frontier of vendor lock-in. LiteLLM was built to swap across model providers easily. However, as the models get saturated, the next area for competition becomes the harnesses and managed agents. To make it easy to go across vendors at the harness layer, we're launching the Lite-Harness SDK. This is a simple TypeScript+Python SDK which allows developers to change harnesses, like they change models. 
 
+{/* truncate */}
+
 It exposes harnesses in a unified Claude Agents SDK spec. This means that if you wrote your app with the Claude Agents SDK, and want to try another harness (Pi AI, Hermes, Codex, OpenCode), you can do so without rewriting your code. 
 
 Today, it supports 3 harnesses - Claude Code, Codex, and Pi AI. Please file an issue [here](https://github.com/LiteLLM-Labs/lite-harness/issues), if you want us to add another harness. 

@@ -34,13 +34,13 @@ For security inquiries, please contact us at support@berri.ai
 
 ## Security Vulnerability Reporting Guidelines
 
-We value the security community's role in protecting our systems and users. To report a security vulnerability:
+We value the security community's role in protecting our systems and users.
 
-- Email support@berri.ai with details
-- Include steps to reproduce the issue
-- Provide any relevant additional information
+The canonical vulnerability disclosure policy lives in [`security.md` in the LiteLLM repository](https://github.com/BerriAI/litellm/blob/main/security.md), which includes information about our bug bounty.
 
-We'll review all reports promptly. Note that we don't currently offer a bug bounty program.
+The preferred channel for reporting a vulnerability is to file a private vulnerability report through [GitHub Security Advisories](https://github.com/BerriAI/litellm/security/advisories/new). If you cannot use GitHub, emailing [support@berri.ai](mailto:support@berri.ai) with the same details works in a pinch, though may be triaged more slowly.
+
+Please note that in order to combat low-quality AI spam, all vulnerability reports require a video or screen recording of you demonstrating the full exploit.
 
 ## Vulnerability Scanning
 

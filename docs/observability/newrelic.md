@@ -40,9 +40,9 @@ The [New Relic Python Agent](https://docs.newrelic.com/docs/apm/agents/python-ag
 
 The official LiteLLM containers include the New Relic callback, but do not include the New Relic Python Agent. The easiest way to include the New Relic Python Agent is to create a new container image that layers the agent on top of an existing LiteLLM image. By doing this, you will be able to define the official LiteLLM image version to use as a base.
 
-To build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add new entrypoint and supervisord configuration files. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
+To build a LiteLLM container with the New Relic Python Agent inside of it, you can use the following `Dockerfile` and `entrypoint.sh` files. This process will use an official LiteLLM container as a base image, install the New Relic Python Agent, and add a new entrypoint. The resulting container will run LiteLLM with the New Relic Python Agent reporting APM telemetry to New Relic. With the callback enabled and the environment variables set above, you will also report the LLM messages to New Relic.
 
-To build the container image, copy the `Dockerfile`, `entrypoint.sh`, and `supervisord.conf` files to a directory. From this directory, you can build an image from the CLI using the following command.
+To build the container image, copy the `Dockerfile` and `entrypoint.sh` files to a directory. From this directory, you can build an image from the CLI using the following command.
 
 ```shell
 docker build -f Dockerfile -t litellm-newrelic:local .
@@ -64,7 +64,7 @@ You may use any docker name for the output image that suits your image naming po
 
 #### `Dockerfile`
 
-The Dockerfile defines the layers added on top of an official LiteLLM container. You should pick the version you want to use by setting `BASE_TAG` when you actually build the image. This Dockerfile installs the New Relic Python Agent, then adds new supervisor and entrypoint files that run LiteLLM with the New Relic Python Agent.
+The Dockerfile defines the layers added on top of an official LiteLLM container. You should pick the version you want to use by setting `BASE_TAG` when you actually build the image. This Dockerfile installs the New Relic Python Agent, then adds a new entrypoint that runs LiteLLM with the New Relic Python Agent.
 
 ```dockerfile
 ARG BASE_IMAGE=docker.litellm.ai/berriai/litellm
@@ -76,8 +76,7 @@ USER root
 # Install New Relic agent (ensurepip bootstraps pip in case base image venv omits it)
 RUN python -m ensurepip && python -m pip install --no-cache-dir 'newrelic>=12.1.0,<13'
 
-# Copy New Relic-specific configuration files
-COPY supervisord.conf /etc/supervisord_newrelic.conf
+# Copy the New Relic entrypoint
 COPY entrypoint.sh /app/docker/newrelic/entrypoint.sh
 RUN chmod +x /app/docker/newrelic/entrypoint.sh
 
@@ -89,79 +88,11 @@ LABEL org.opencontainers.image.description="LiteLLM with New Relic APM and AI mo
 
 #### `entrypoint.sh`
 
-This `entrypoint.sh` is a copy of LiteLLM's default `docker/prod_entrypoint.sh`, modified to run either supervisord or the `litellm` process wrapped by the New Relic Python Agent.
+This `entrypoint.sh` replaces LiteLLM's default `docker/prod_entrypoint.sh` and runs the `litellm` process wrapped by the New Relic Python Agent.
 
 ```sh
 #!/bin/sh
-# This entry point is a copy of the litellm docker/prod_entrypoint.sh file
-# with these changes:
-#
-#  - Use the New Relic-specific supervisor file
-#  - Wrap the litellm command with New Relic Python Agent
-
-if [ "$SEPARATE_HEALTH_APP" = "1" ]; then
-    export LITELLM_ARGS="$@"
-    export SUPERVISORD_STOPWAITSECS="${SUPERVISORD_STOPWAITSECS:-3600}"
-    exec supervisord -c /etc/supervisord_newrelic.conf
-fi
-
 exec newrelic-admin run-program litellm "$@"
-```
-
-#### `supervisord.conf`
-
-If you use supervisord to run LiteLLM alongside the separate health app, this version will ensure the main LiteLLM process is started with the New Relic Python Agent.
-
-```ini
-# This config is a copy of the litellm docker/supervisord.conf with a change to the `main` program
-# to wrap the litellm command with the New Relic Python Agent.
-
-[supervisord]
-nodaemon=true
-loglevel=info
-logfile=/tmp/supervisord.log
-pidfile=/tmp/supervisord.pid
-
-[group:litellm]
-programs=main,health
-
-[program:main]
-command=sh -c 'exec newrelic-admin run-program python -m litellm.proxy.proxy_cli --host 0.0.0.0 --port=4000 $LITELLM_ARGS'
-autostart=true
-autorestart=true
-startretries=3
-priority=1
-exitcodes=0
-stopasgroup=true
-killasgroup=true
-stopwaitsecs=%(ENV_SUPERVISORD_STOPWAITSECS)s
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
-stdout_logfile_maxbytes = 0
-stderr_logfile_maxbytes = 0
-environment=PYTHONUNBUFFERED=true
-
-[program:health]
-command=sh -c '[ "$SEPARATE_HEALTH_APP" = "1" ] && exec uvicorn litellm.proxy.health_endpoints.health_app_factory:build_health_app --factory --host 0.0.0.0 --port=${SEPARATE_HEALTH_PORT:-4001} || exit 0'
-autostart=true
-autorestart=true
-startretries=3
-priority=2
-exitcodes=0
-stopasgroup=true
-killasgroup=true
-stopwaitsecs=%(ENV_SUPERVISORD_STOPWAITSECS)s
-stdout_logfile=/dev/stdout
-stderr_logfile=/dev/stderr
-stdout_logfile_maxbytes = 0
-stderr_logfile_maxbytes = 0
-environment=PYTHONUNBUFFERED=true
-
-[eventlistener:process_monitor]
-command=python -c "from supervisor import childutils; import os, signal; [os.kill(os.getppid(), signal.SIGTERM) for h,p in iter(lambda: childutils.listener.wait(), None) if h['eventname'] in ['PROCESS_STATE_FATAL', 'PROCESS_STATE_EXITED'] and dict([x.split(':') for x in p.split(' ')])['processname'] in ['main', 'health'] or childutils.listener.ok()]"
-events=PROCESS_STATE_EXITED,PROCESS_STATE_FATAL
-autostart=true
-autorestart=true
 ```
 
 ### Running from LiteLLM source

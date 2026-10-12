@@ -14,6 +14,7 @@ Terminal success and failure callback events include `kwargs["standard_logging_o
 | `response_cost` | `float` | Cost of the response in USD ($) |
 | `cost_breakdown` | `Optional[CostBreakdown]` | Detailed cost breakdown object |
 | `response_cost_failure_debug_info` | `StandardLoggingModelCostFailureDebugInformation` | Debug information if cost tracking fails |
+| `zero_cost_diagnostic` | `Optional[StandardLoggingZeroCostDiagnostic]` | Why a billable request priced to $0. `None` when the cost is non-zero, the model is free or unmapped, or the request carried no usage. [Further docs](./cost_tracking#requests-that-price-to-0) |
 | `status` | `StandardLoggingPayloadStatus` | Status of the payload |
 | `status_fields` | `StandardLoggingPayloadStatusFields` | Typed status fields for easy filtering and analytics |
 | `total_tokens` | `int` | Total number of tokens |
@@ -41,6 +42,7 @@ Terminal success and failure callback events include `kwargs["standard_logging_o
 | `error_information` | `Optional[StandardLoggingPayloadErrorInformation]` | Optional error information |
 | `model_parameters` | `dict` | Model parameters |
 | `hidden_params` | `StandardLoggingHiddenParams` | Hidden parameters |
+| `guardrail_information` | `Optional[list[StandardLoggingGuardrailInformation]]` | One entry per guardrail that ran on the request |
 
 ## Cost Breakdown
 
@@ -99,7 +101,6 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `applied_guardrails` | `Optional[List[str]]` | List of applied guardrail names |
 | `usage_object` | `Optional[dict]` | Raw usage object from the LLM provider |
 | `cold_storage_object_key` | `Optional[str]` | S3/GCS object key for cold storage retrieval |
-| `guardrail_information` | `Optional[list[StandardLoggingGuardrailInformation]]` | Guardrail information |
 
 
 ## StandardLoggingVectorStoreRequest
@@ -155,6 +156,14 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `call_type` | `str` | Call type |
 | `custom_pricing` | `Optional[bool]` | Whether custom pricing was used |
 
+## StandardLoggingZeroCostDiagnostic
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `reason` | `Literal["missing_pricing_key", "pricing_not_applied", "cost_calculation_error"]` | Why the request priced to $0, the same value as the `reason` label on `litellm_zero_cost_requests_total` |
+| `pricing_model` | `str` | The pricing entry the request was judged against, a deployment id or a model cost map key |
+| `missing_pricing_keys` | `Tuple[str, ...]` | The rate keys the usage needed that the entry does not declare, empty unless `reason` is `missing_pricing_key` |
+
 ## StandardLoggingPayloadErrorInformation
 
 | Field | Type | Description |
@@ -178,7 +187,7 @@ A literal type with two possible values:
 | `guardrail_mode`      | `Optional[Union[GuardrailEventHooks, List[GuardrailEventHooks]]]` | Guardrail mode                                                                                                                                                            |
 | `guardrail_request`   | `Optional[dict]` | Guardrail request                                                                                                                                                         |
 | `guardrail_response`  | `Optional[Union[dict, str, List[dict]]]` | Guardrail response                                                                                                                                                        |
-| `guardrail_status`    | `Literal["success", "guardrail_intervened", "guardrail_failed_to_respond"]` | Guardrail execution status: `success` = no violations detected, `blocked` = content blocked/modified due to policy violations, `failure` = technical error or API failure |
+| `guardrail_status`    | `GuardrailStatus` | Guardrail execution status, one of the [GuardrailStatus](#guardrailstatus) values |
 | `start_time`          | `Optional[float]` | Start time of the guardrail                                                                                                                                               |
 | `end_time`            | `Optional[float]` | End time of the guardrail                                                                                                                                                 |
 | `duration`            | `Optional[float]` | Duration of the guardrail in seconds                                                                                                                                      |
@@ -201,8 +210,9 @@ A literal type with two possible values:
 
 ### GuardrailStatus
 
-A literal type with four possible values:
+A literal type with five possible values:
 - `"success"` - Guardrail ran and allowed content through (no violations detected)
+- `"guardrail_flagged"` - Guardrail allowed content through but recorded a non-blocking violation
 - `"guardrail_intervened"` - Guardrail blocked or modified content due to policy violations
 - `"guardrail_failed_to_respond"` - Guardrail had a technical failure or API error
 - `"not_run"` - No guardrail was executed for this request

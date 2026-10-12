@@ -12,8 +12,7 @@ Requires v1.72.3 or higher.
 
 :::
 
-Limitations:
-- This does not work in [litellm non-root](./docker_image_security) images, as it requires write access to the UI files.
+The proxy rewrites the UI files at startup to use the custom path, so the UI directory must be writable. [Non-root images](./docker_image_security) copy the UI to `/var/lib/litellm/ui`, which the runtime user owns, so this works there out of the box. On a read-only root filesystem, point `LITELLM_UI_PATH` at a writable volume (e.g. a Kubernetes `emptyDir`), otherwise the proxy logs `Cannot apply server_root_path replacements` and the UI assets fail to load under the custom path
 
 ## Usage
 

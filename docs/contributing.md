@@ -21,7 +21,7 @@ model_list:
       model: openai/{{openai_large}}
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   database_url: postgresql://<user>:<password>@<host>:<port>/<dbname>
   store_model_in_db: true
 ```

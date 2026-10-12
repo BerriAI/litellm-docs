@@ -47,7 +47,7 @@ model_list:
     model: vertex_ai/textembedding-gecko
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Start proxy 
@@ -65,7 +65,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/embeddings' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"input": ["Academia.edu uses"], "model": "textembedding-gecko", "encoding_format": "base64"}'
 ```
@@ -76,7 +76,7 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 ```python
 from openai import OpenAI
 client = OpenAI(
-  api_key="sk-1234",
+  api_key="sk-<your-litellm-api-key>",
   base_url="http://0.0.0.0:4000"
 )
 
@@ -92,7 +92,7 @@ client.embeddings.create(
 ```python
 from langchain_openai import OpenAIEmbeddings
 
-embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-1234")
+embeddings = OpenAIEmbeddings(model="textembedding-gecko", openai_api_base="http://0.0.0.0:4000", openai_api_key="sk-<your-api-key>")
 
 text = "This is a test document."
 
@@ -519,7 +519,7 @@ All models listed [here](https://ai.google.dev/gemini-api/docs/models/gemini) ar
 
 `gemini-embedding-2-preview` supports **multimodal embeddings**: text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior, so swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
 
-:::info Response shape
+:::info[Response shape]
 
 For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input element returns its **own** embedding (indexed `0..N-1`), the same semantics as OpenAI's `/embeddings`. LiteLLM routes to Gemini's `batchEmbedContents` endpoint with one `EmbedContentRequest` per input. This differs from the Vertex AI path, which combines all parts into a single unified vector; see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal).
 
@@ -529,6 +529,7 @@ For the Gemini API path (`gemini/gemini-embedding-2-preview`), each input elemen
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
 - **Gemini file references:** `files/abc123` (pre-uploaded via Gemini Files API)
+- **File content blocks:** `{"type": "file", "file": {...}}`, the same block chat completions take, when a media part needs an explicit MIME type or a video clip (see [below](#video-clips-and-explicit-mime-types))
 
 **Supported MIME types:** `image/png`, `image/jpeg`, `audio/mpeg`, `audio/wav`, `video/mp4`, `video/quicktime`, `application/pdf`
 
@@ -556,7 +557,7 @@ print(response)
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",
@@ -609,7 +610,7 @@ response = embedding(
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-embedding-2-preview",
@@ -621,6 +622,70 @@ curl -X POST http://localhost:4000/embeddings \
 </Tabs>
 
 This is useful for representing multi-modal entities (e.g., a product with a name + photo) as a single vector for search and retrieval. Gemini API only. Vertex AI always returns a single combined vector regardless of input shape (see [Vertex AI embeddings docs](../providers/vertex_embedding#gemini-embedding-2-preview-multimodal)).
+
+#### Video Clips and Explicit MIME Types
+
+A plain string element carries no options, so to embed one window of a video, or to name a MIME type LiteLLM cannot infer, pass the element as the OpenAI file content block that [chat completions](../providers/vertex#video-metadata-control) already take. The block works as a flat element and inside a nested list, and is forwarded as one Gemini `Part` carrying `videoMetadata`.
+
+| Field | Description |
+|-------|-------------|
+| `file.file_id` | `gs://bucket/clip.mp4`, a Gemini Files API reference `files/abc123`, or the id `/v1/files` returns for a Gemini upload (`https://generativelanguage.googleapis.com/v1beta/files/abc123`) |
+| `file.file_data` | A data URI, `data:video/mp4;base64,<encoded_data>` |
+| `file.format` | Optional MIME type that overrides the one inferred from the extension or the data URI |
+| `file.video_metadata` | Optional `fps` (number), `start_offset` and `end_offset` (strings such as `"3s"`), converted to Gemini's `startOffset` and `endOffset` |
+
+Exactly one of `file_id` and `file_data` is required. An unknown key anywhere in the block (for example chat's `detail`) answers 400 naming it, or is dropped when `drop_params` is set globally or on the request, the same way an unsupported parameter is.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import embedding
+
+response = embedding(
+    model="gemini/gemini-embedding-2-preview",
+    input=[
+        {
+            "type": "file",
+            "file": {
+                "file_id": "files/abc123",
+                "video_metadata": {"fps": 1, "start_offset": "3s", "end_offset": "6s"},
+            },
+        },
+        "a solid blue clip",
+    ],
+)
+# response.data has 2 embeddings: the 3s-6s window of the video, then the text
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl -X POST http://localhost:4000/embeddings \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-embedding-2-preview",
+    "input": [[
+      {
+        "type": "file",
+        "file": {
+          "file_data": "data:video/mp4;base64,...",
+          "video_metadata": {"start_offset": "3s", "end_offset": "6s"}
+        }
+      },
+      "a solid blue clip"
+    ]]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+:::note[PDF OCR]
+The Gemini embeddings API always runs OCR on PDF inputs and has no parameter to turn it on or off, so there is nothing to pass for it.
+:::
 
 
 ## Vertex AI Embedding Models
@@ -652,7 +717,7 @@ All models listed [here](https://github.com/BerriAI/litellm/blob/57f37f743886a02
 | text-embedding-preview-0409 | `embedding(model="vertex_ai/text-embedding-preview-0409", input)` |
 | text-multilingual-embedding-preview-0409 | `embedding(model="vertex_ai/text-multilingual-embedding-preview-0409", input)` | 
 
-## Voyage AI Embedding Models
+## VoyageAI by MongoDB Embedding Models
 
 ### Usage - Embedding
 ```python

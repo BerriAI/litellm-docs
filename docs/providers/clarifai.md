@@ -21,8 +21,10 @@ uv add litellm
 To obtain your Clarifai Personal access token follow this [link](https://docs.clarifai.com/clarifai-basics/authentication/personal-access-tokens/).
 
 ```python
-os.environ["CLARIFAI_PAT"] = "CLARIFAI_API_KEY"  # CLARIFAI_PAT
+os.environ["CLARIFAI_API_KEY"] = "your-clarifai-pat"
 ```
+
+LiteLLM reads the PAT from `CLARIFAI_API_KEY` or the `api_key` argument. `CLARIFAI_PAT` is not read
 
 ## Usage
 
@@ -169,7 +171,7 @@ Here's how to call Clarifai with the LiteLLM Proxy Server
 ### 1. Save key in your environment
 
 ```bash
-export CLARIFAI_PAT="CLARIFAI_API_KEY"
+export CLARIFAI_API_KEY="your-clarifai-pat"
 ```
 
 ### 2. Start the proxy
@@ -182,7 +184,7 @@ model_list:
   - model_name: clarifai-model
     litellm_params:
       model: clarifai/openai.chat-completion.gpt-oss-20b
-      api_key: os.environ/CLARIFAI_PAT
+      api_key: os.environ/CLARIFAI_API_KEY
 ```
 
 ```bash

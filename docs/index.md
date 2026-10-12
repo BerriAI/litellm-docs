@@ -7,16 +7,19 @@ sidebar_label: Quickstart
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
-import Image from '@theme/IdealImage';
+import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
+import QuickStartBox from '@site/src/components/QuickStartBox';
 
-<Image style={{padding: '10px', margin: '0 0 2.5rem'}} img={require('../img/hero.png')} />
+<LiteLLMFlow copyCommand={false} agentPrompt={false} />
+
+<QuickStartBox source="docs-index" />
 
 **LiteLLM** is an open-source library that gives you a single, unified interface to call 100+ LLMs (OpenAI, Anthropic, Vertex AI, Bedrock, and more) using the OpenAI format.
 
 - Call any provider using the same `completion()` interface, with no API to re-learn for each one
 - Consistent output format regardless of which provider or model you use
 - Built-in retry / fallback logic across multiple deployments via the [Router](./routing.md)
-- Self-hosted [LLM Gateway (Proxy)](./simple_proxy) with virtual keys, cost tracking, and an admin UI
+- Self-hosted [LLM Gateway (Proxy)](/docs/simple_proxy) with virtual keys, cost tracking, and an admin UI
 
 [![PyPI](https://img.shields.io/pypi/v/litellm.svg)](https://pypi.org/project/litellm/)
 [![GitHub Stars](https://img.shields.io/github/stars/BerriAI/litellm?style=social)](https://github.com/BerriAI/litellm)
@@ -28,6 +31,14 @@ import Image from '@theme/IdealImage';
 ```shell
 uv add litellm
 ```
+
+### A leaner SDK installation
+
+For applications that use the Python SDK directly, `litellm-core` provides the shared SDK with fewer mandatory dependencies and without the bundled dashboard or gateway CLI entry points. Python imports remain unchanged: continue using `litellm`
+
+Install `litellm-core` in a fresh environment instead of installing `litellm`. Add AWS and Python Hugging Face tokenizer packages when your application needs them. The two distributions cannot be installed together because they share the same Python files
+
+See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, package selection, and optional dependencies. Existing `litellm` installations retain their current dependency defaults
 
 To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
 
@@ -191,9 +202,9 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 }
 ```
 
-📖 [Full output format reference →](./completion/output)
+📖 [Full output format reference →](/docs/completion/output)
 
-:::tip Open in Colab
+:::tip[Open in Colab]
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_Getting_Started.ipynb">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
@@ -319,7 +330,7 @@ litellm.completion(
 )
 ```
 
-📖 [Custom callback docs →](./observability/custom_callback)
+📖 [Custom callback docs →](/docs/observability/custom_callback)
 
 ---
 
@@ -379,13 +390,13 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-👉 [Full proxy quickstart →](./proxy/docker_quick_start)
+👉 [Full proxy quickstart →](/docs/proxy/docker_quick_start)
 
-:::tip Debugging tool
+:::tip[Debugging tool]
 Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
-🔗 [Interactive API explorer (Swagger) →](https://litellm-api.up.railway.app/)
+🔗 [Interactive API explorer (Swagger) →](https://docs.litellm.ai/api-reference/)
 
 ---
 

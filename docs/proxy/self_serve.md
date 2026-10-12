@@ -176,7 +176,7 @@ This walks through setting up sso auto-add for **Okta, Google SSO**
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
     team_ids_jwt_field: "groups" # 👈 CAN BE ANY FIELD
 ```
@@ -249,6 +249,8 @@ This budget only applies to personal keys created by that user - seen under `Def
 
 This budget does not apply to keys created under non-default teams.
 
+A user's personal `max_budget` is also the ceiling for the personal keys they create from the UI. A user with a $500 budget can create a personal key with a $100 `max_budget`, while a $600 request is rejected with `max_budget (600.0) cannot exceed the caller's own max_budget (500.0)`. A user with no personal budget falls back to the UI session budget ([`max_ui_session_budget`](./config_settings.md), default $1; `null` removes the ceiling) as the cap for an explicit key `max_budget`. Leaving `max_budget` off the key sets no key-level cap; spend on that key is still limited by the user's own budget. Changing a user's `max_budget` through `/user/update`, `/user/bulk_update`, or the Internal Users page takes effect on the instance that handled the update immediately. With Redis configured the change is broadcast to the other proxy instances as well; without Redis, other instances can keep enforcing the previous ceiling until their cached user record expires (about 60 seconds)
+
 
 ### Set max budget for teams
 
@@ -287,9 +289,11 @@ litellm_settings:
 
 ### Team Member Budgets
 
-Set a max budget for a team member. 
+Set a default max budget that applies to each member of a team. 
 
 You can do this when creating a new team, or by updating an existing team. 
+
+`team_member_budget` is a single team-wide default. Every member added without their own `max_budget_in_team` is linked to it, so changing it through `/team/update` (or the team's Default Budget field in the UI) applies to those members on their next request, not just to members added afterwards. A member given `max_budget_in_team` on `/team/member_add`, or later edited through [`/team/member_update`](./users.md#update-a-team-members-budget), gets their own budget and stops following the team default
 
 <Tabs>
 <TabItem value="ui" label="UI">
@@ -312,6 +316,10 @@ curl -X POST '<PROXY_BASE_URL>/team/new' \
 
 </TabItem>
 </Tabs>
+
+:::info
+Setting `team_member_budget` on an existing team links it to every member that has no budget yet, and the spend those members already accrued counts against it right away. See [Existing spend counts against a budget added later](./users.md#existing-spend-counts-against-a-budget-added-later) for how to unblock a member who is already over the new budget.
+:::
 
 ### Team Member Rate Limits
 

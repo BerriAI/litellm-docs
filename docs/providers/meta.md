@@ -153,10 +153,11 @@ import base64
 import json
 import wave
 
+import os
 import websockets
 
 URL = "ws://localhost:4000/v1/realtime?model=muse-voice-transcribe&intent=transcription"
-HEADERS = {"Authorization": "Bearer sk-1234"}  # your proxy API key
+HEADERS = {"Authorization": f'Bearer {os.environ["LITELLM_API_KEY"]}'}
 
 
 def pcm_chunks(path, chunk_ms=100):

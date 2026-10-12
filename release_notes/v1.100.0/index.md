@@ -49,7 +49,7 @@ PyPI and Docker artifacts for this release were built from different SHAs, but a
 
 :::
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **MCP toolsets attached to a team, organization, or internal user are now enforced.** Previously a toolset attached at those levels was ignored: every tool on the granted servers stayed callable, and an inert team toolset let the org's full server list substitute in. Toolsets now restrict `tools/list` and `tools/call` to exactly the tools and servers they name, at every level. A team that relied on the fail-open behavior loses access to tools its toolset does not name; widen the toolset to restore them. See [PR #38488](https://github.com/BerriAI/litellm/pull/38488).
 

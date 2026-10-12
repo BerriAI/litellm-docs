@@ -72,7 +72,7 @@ litellm_settings:
   callbacks: ["qualifire_eval"]
 
 general_settings:
-  master_key: "sk-1234"
+  master_key: "sk-<your-litellm-master-key>"
 
 environment_variables:
   QUALIFIRE_API_KEY: "your-qualifire-api-key"
@@ -90,7 +90,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{ "model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hi 👋 - i'm openai"}]}'
 ```
 
