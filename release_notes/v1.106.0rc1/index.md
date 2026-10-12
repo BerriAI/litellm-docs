@@ -59,17 +59,7 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the late
 
 **Responses WebSocket sessions are capped at 60 minutes by default.** Sessions on `/v1/responses` close with code 1000 after `general_settings.responses_websocket_session_limit_seconds` (default 3600, maximum 7200), idle or not. The old 30 second first-message timeout is gone. See [PR #44433](https://github.com/BerriAI/litellm/pull/44433)
 
-**Bridged Chat Completions and Responses output changes shape.** A chat completion bridged to the Responses API that returns text and tool calls now comes back as one choice with `finish_reason: tool_calls` instead of two choices, and truncated bridged Responses output reports `status: incomplete` and ends streams with `response.incomplete`. Read tool calls from `choices[0]` and treat `incomplete` as terminal. See [PR #44346](https://github.com/BerriAI/litellm/pull/44346) and [PR #44460](https://github.com/BerriAI/litellm/pull/44460)
-
-**MCP rate limits count every MCP operation.** Per-key and per-team limits such as `mcp_rpm_limit` now apply to listing and reading tools, prompts and resources, not only `tools/call`. Raise the limits for clients that list often. See [PR #44600](https://github.com/BerriAI/litellm/pull/44600)
-
-**The caller's LiteLLM key is never forwarded to MCP servers**, including `x-litellm-api-key` configured under a server's Extra Headers. Give upstream servers their own credential through a static header or OAuth. See [PR #45401](https://github.com/BerriAI/litellm/pull/45401)
-
 **`PATCH /credentials/{name}` no longer renames a credential.** A different `credential_name` returns 400. Use the new `display_name` to relabel a credential, or create a new one to change its name. See [PR #43148](https://github.com/BerriAI/litellm/pull/43148)
-
-**Only proxy admins can set batch limits**, including `batch_enqueued_token_limit`, on the key created by `POST /user/new` or `POST /management/v1/users/bulk`. See [PR #43632](https://github.com/BerriAI/litellm/pull/43632)
-
-**The over-budget waiver for free models follows model group aliases.** A name that is both an alias and a real model gets its alias target's answer, so over-budget callers lose access when the target is free only through the cost map. Set `input_cost_per_token: 0` and `output_cost_per_token: 0` on the target deployment to keep it free. See [PR #44638](https://github.com/BerriAI/litellm/pull/44638)
 
 :::
 
