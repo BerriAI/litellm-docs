@@ -49,7 +49,7 @@ Make the access token carry the claims both Open WebUI and LiteLLM read:
 | `aud` | contains a dedicated audience such as `litellm` | LiteLLM audience check |
 | `org_id` (optional) | organization ID such as `acme-us` | LiteLLM organization attribution |
 
-In Keycloak this means three mappers on the client's dedicated scope: a Group Membership mapper with claim name `groups` and "Full group path" off, an Audience mapper with included custom audience `litellm`, and, if you use the `org_id` claim, a User Attribute mapper from a user attribute such as `org` to claim `org_id`. Enable "Add to access token" on all three. In Entra ID, add `groups` as an optional claim (or app roles) and expose an API for the audience; group values are object IDs unless you emit names, so use the IDs as LiteLLM team IDs or map them with `team_alias_jwt_field`.
+In Keycloak this means three mappers on the client's dedicated scope: a Group Membership mapper with claim name `groups` and "Full group path" off, an Audience mapper with included custom audience `litellm`, and, if you use the `org_id` claim, a User Attribute mapper from a user attribute such as `org` to claim `org_id`. Enable "Add to access token" on all three. Keycloak 24 and later only emit attributes declared in the realm user profile, so the `org_id` claim is silently missing until you either declare `org` in **Realm settings > User profile** or set **Realm settings > General > Unmanaged Attributes** to Enabled. In Entra ID, add `groups` as an optional claim (or app roles) and expose an API for the audience; group values are object IDs unless you emit names, so use the IDs as LiteLLM team IDs or map them with `team_alias_jwt_field`.
 
 Set the access token lifetime to 15 minutes or more. Open WebUI refreshes the user's token when it is within 5 minutes of expiring, so with a 5 minute token (the Keycloak default) it refreshes on every request.
 
@@ -75,6 +75,8 @@ curl -s -X POST https://<idp>/realms/acme/protocol/openid-connect/token \
 ```
 
 The password grant is only for this check. Disable direct access grants on the client afterwards.
+
+For a local test, the browser, Open WebUI, and LiteLLM must all reach the IdP at the same URL, because the token's `iss` has to match both Open WebUI's discovery URL and `JWT_ISSUER` exactly. `localhost` inside a container points at the container itself, so either run all three with host networking or give the IdP a hostname such as `keycloak.localhost` with a Docker network alias. Browsers resolve `*.localhost` to `127.0.0.1` without an `/etc/hosts` edit.
 
 ## Step 2. Configure LiteLLM JWT auth
 
@@ -109,7 +111,7 @@ export JWT_ISSUER="https://<idp>/realms/acme"
 litellm --config config.yaml
 ```
 
-`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI.
+`user_id_jwt_field: "email"` makes the LiteLLM user ID the readable email instead of the IdP's opaque `sub`, and `user_id_upsert` creates the user on first request. `team_ids_jwt_field: "groups"` treats every group in the token as a candidate LiteLLM team, and `enforce_team_based_model_access` only lets the request through when one of those teams allows the requested model. Without `JWT_AUDIENCE` and `JWT_ISSUER`, LiteLLM accepts any token signed by the IdP, including tokens minted for unrelated applications, so set both. The master key keeps working for admin API calls and the Admin UI. Use a long random value such as the output of `openssl rand -hex 32`, because LiteLLM refuses to serve traffic with a publicly known or short key like `sk-1234`.
 
 A token for the same user minted by another client without the `litellm` audience is rejected:
 
@@ -187,7 +189,7 @@ docker run -d --name open-webui -p 3000:8080 --env-file openwebui.env \
 
 `auth_type: system_oauth` is the setting that makes this work. For every model call, Open WebUI looks up the user's stored OAuth session, refreshes the access token if needed, and sends it to LiteLLM as `Authorization: Bearer <token>`. You can set the same thing in the UI under **Admin Panel > Settings > Connections**, editing the LiteLLM connection and choosing **OAuth** as the auth type. The model list is fetched per user with their own token, so LiteLLM's team checks decide which models each user's Open WebUI can list.
 
-`DEFAULT_USER_ROLE=user` lets SSO users chat right away. Without it new accounts land in `pending` and wait for an admin to approve them. The first account to sign in becomes the Open WebUI admin, so sign in yourself first. Most of these variables are persisted in Open WebUI's database on first start, so later changes go through the Admin Panel unless you reset the volume.
+`DEFAULT_USER_ROLE=user` lets SSO users chat right away. Without it new accounts land in `pending` and wait for an admin to approve them. The first account to sign in becomes the Open WebUI admin, so sign in yourself first. A fresh install shows a **Create Admin Account** form next to the SSO button; use the SSO button so the admin is your SSO account rather than a separate local one. Most of these variables are persisted in Open WebUI's database on first start, so later changes go through the Admin Panel unless you reset the volume.
 
 Two things do not carry the IdP token. Requests made with an Open WebUI API key (for example from scripts calling Open WebUI's own API) have no OAuth session, so LiteLLM receives no credential and returns `401 No api key passed in`. And if a user's IdP session can no longer be refreshed, model calls fail until they sign in again.
 
@@ -195,7 +197,7 @@ Two things do not carry the IdP token. Requests made with an Open WebUI API key 
 
 After the first login of each user, **Admin Panel > Users > Groups** shows `engineering` and `data-science`, with members kept in sync from the `groups` claim on every login.
 
-Open WebUI hides models coming from a connection from non-admin users until an admin grants access, even when LiteLLM allows them. Open **Admin Panel > Settings > Models**, edit each LiteLLM model, and under **Access** add the groups that should see it, mirroring the LiteLLM team models: `claude-sonnet` to `engineering`, `claude-haiku` to `engineering` and `data-science`. With that in place Alice sees both models and Bob only sees `claude-haiku`. LiteLLM still enforces access, so a model shared too widely in Open WebUI fails with a 403 from LiteLLM instead of leaking.
+Open WebUI hides models coming from a connection from non-admin users until an admin grants access, even when LiteLLM allows them. Open **Admin Panel > Settings > Models**, edit each LiteLLM model, open **Access** (it starts as Private), add each group that should see it, and save. Access is set per model, so repeat this for every model, mirroring the LiteLLM team models: `claude-sonnet` to `engineering`, `claude-haiku` to `engineering` and `data-science`. With that in place Alice sees both models and Bob only sees `claude-haiku`. LiteLLM still enforces access, so a model shared too widely in Open WebUI fails with a 403 from LiteLLM instead of leaking.
 
 Use the group permissions on the same page to decide who can create workspace models, prompts, knowledge, tools, and skills. A common rollout lets every employee use shared skills and lets one platform group author them.
 
@@ -215,7 +217,7 @@ Set its access to the `engineering` group. When a user in that group asks for re
 
 <Image img={require('../../img/openwebui_org/skill.png')} />
 
-Skill discovery uses tool calling, so it needs a model with native function calling (all current Claude, GPT, and Gemini models through LiteLLM qualify) and the **Skills** built-in tool left enabled in the model's settings. The skill body is sent to LiteLLM as part of the conversation, so it is billed and logged like any other prompt.
+Skill discovery uses tool calling, so it needs a model with native function calling (all current Claude, GPT, and Gemini models through LiteLLM qualify) and the **Skills** built-in tool left enabled in the model's settings. The skill body is sent to LiteLLM as part of the conversation, so it is billed and logged like any other prompt. Discovery happens in chats from the Open WebUI chat interface. A direct call to Open WebUI's `/api/chat/completions` did not call `view_skill` in testing, so do not rely on skills for scripted access through the API.
 
 ## Step 7. Use artifacts
 
