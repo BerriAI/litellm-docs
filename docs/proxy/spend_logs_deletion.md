@@ -82,7 +82,7 @@ How often the cleanup job should run. Uses the same format as above. If not set,
 
 #### `maximum_spend_logs_cleanup_run_on_startup` (optional)
 
-Defaults to `false`. When `true`, the interval-scheduled cleanup also runs once shortly after every proxy startup, and later runs follow `maximum_spend_logs_retention_interval` from there. The first run lands `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` (default 60) plus a random offset of up to `SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS` (default 300) seconds after startup, so replicas that boot together do not all clean up at the same instant. The same first run is scheduled when retention settings change at runtime. Turn it on for deployments that restart more often than the interval, where the cleanup would otherwise never run. It has no effect when `maximum_spend_logs_cleanup_cron` is set.
+Defaults to `false`. When `true`, the interval-scheduled cleanup also runs once shortly after every proxy startup, and later runs follow `maximum_spend_logs_retention_interval` from there. The first run lands `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` (default 60) plus a random offset of up to `SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS` (default 300) seconds after startup, so replicas that boot together do not all clean up at the same instant. That delay is capped at the interval, so a short interval never waits longer than it would without the setting. The same first run is scheduled when retention settings change at runtime. Turn it on for deployments that restart more often than the interval, where the cleanup would otherwise never run. It has no effect when `maximum_spend_logs_cleanup_cron` is set.
 
 #### `maximum_spend_logs_cleanup_cron` (optional)
 
