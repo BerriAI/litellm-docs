@@ -48,7 +48,7 @@ general_settings:
 
 The classifier runs on every turn that ends in a tool call, so pick a fast, cheap model that reliably answers in JSON. An open model on the same provider as the coding model works well. The example above uses one Fireworks deployment for coding and another for the verdicts.
 
-The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried. The proxy waits 30 seconds for its answer, or as long as the `timeout` under the classifier deployment's `litellm_params` says when that is set.
+The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried. The proxy waits at most 30 seconds for its answer, and a shorter `timeout` under the classifier deployment's `litellm_params` ends the wait earlier.
 
 Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same checks it would run if the caller asked for that model directly: model access for the key, team, user, project, and team member, the per-model budgets of the key, team, user, team member, and end user, and RPM and TPM headroom (checked without using any of it). A failed access check or a spent budget turns the classifier off for the session (see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used)). A full RPM or TPM window, or a check the proxy could not run, only skips the classifier for that one response (see [When the Classifier Fails](#when-the-classifier-fails)).
 
@@ -156,7 +156,7 @@ If the classifier call fails, the proxy marks every tool call of that response `
 
 | `reason` | When |
 |---|---|
-| `timeout` | No answer within the deployment's `timeout` (30 seconds by default) |
+| `timeout` | No answer within 30 seconds, or within the deployment's `timeout` when that is shorter |
 | `input_too_long` | Over the classifier's context window |
 | `refused` | Content policy refusal |
 | `truncated` | Tool call was cut off |
