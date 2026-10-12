@@ -59,8 +59,6 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the late
 
 **Responses WebSocket sessions are capped at 60 minutes by default.** Sessions on `/v1/responses` close with code 1000 after `general_settings.responses_websocket_session_limit_seconds` (default 3600, maximum 7200), idle or not. The old 30 second first-message timeout is gone. See [PR #44433](https://github.com/BerriAI/litellm/pull/44433)
 
-**MCP rate limits count every MCP operation.** Per-key and per-team limits such as `mcp_rpm_limit` now apply to listing and reading tools, prompts and resources, not only `tools/call`. Raise the limits for clients that list often. See [PR #44600](https://github.com/BerriAI/litellm/pull/44600)
-
 **The caller's LiteLLM key is never forwarded to MCP servers**, including `x-litellm-api-key` configured under a server's Extra Headers. Give upstream servers their own credential through a static header or OAuth. See [PR #45401](https://github.com/BerriAI/litellm/pull/45401)
 
 **`PATCH /credentials/{name}` no longer renames a credential.** A different `credential_name` returns 400. Use the new `display_name` to relabel a credential, or create a new one to change its name. See [PR #43148](https://github.com/BerriAI/litellm/pull/43148)
