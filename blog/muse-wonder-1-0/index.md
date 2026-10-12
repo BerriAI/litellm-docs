@@ -18,7 +18,7 @@ import MuseWonderHero from './Hero';
 
 export const Hero = MuseWonderHero;
 
-LiteLLM now supports [Muse Wonder](https://about.fb.com/news/2026/10/introducing-muse-wonder-models/), Meta's most capable model, on Day 0 through the `meta/` route on the Meta Model API. Switching from Muse Spark is a model ID change, with spend, rate limits, and logging in one place.
+As of October 12, 2026, Meta Muse Wonder 1.0 (`meta/muse-wonder-1.0`) costs $4 per 1M input tokens and $20 per 1M output tokens on the Meta Model API. LiteLLM supports [Muse Wonder](https://about.fb.com/news/2026/10/introducing-muse-wonder-models/), Meta's most capable model, on Day 0 through the `meta/` route. Switching from Muse Spark is a model ID change, with spend, rate limits, and logging in one place.
 
 {/* truncate */}
 
@@ -29,7 +29,7 @@ LiteLLM now supports [Muse Wonder](https://about.fb.com/news/2026/10/introducing
 - **Output:** $20.00 / MTok
 - **Web search:** $2.50 per 1,000 queries
 
-The rate is the same at any context length, and Muse Wonder has no contributor tier. Prices on every provider: https://models.litellm.ai/models
+The rate is the same at any context length, and Muse Wonder has no contributor tier. Live pricing and limits: [Muse Wonder 1.0 on models.litellm.ai](https://models.litellm.ai/models/muse-wonder-1.0)
 
 ## What's new in Muse Wonder 1.0
 

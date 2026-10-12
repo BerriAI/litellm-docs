@@ -33,7 +33,7 @@ We actively maintain the list of models, pricing, token window, etc. [here](http
 
 `muse-spark-1.1` supports function calling, parallel function calling, structured outputs, prompt caching, web search grounding, and reasoning via `reasoning_effort` (`"minimal"` through `"xhigh"`).
 
-`muse-wonder-1.0` supports the same features, with `reasoning_effort` from `"minimal"` through `"max"`; `"none"` returns an error.
+`muse-wonder-1.0` supports the same features, with `reasoning_effort` from `"minimal"` through `"max"`; `"none"` returns an error. See the [day 0 post](/blog/muse-wonder-1-0) and [Muse Wonder 1.0 pricing](https://models.litellm.ai/models/muse-wonder-1.0).
 
 `muse-voice-transcribe-1.0` is a realtime speech-to-text model served over the proxy's `/v1/realtime` WebSocket and billed per second of audio. It is realtime only: `/v1/audio/transcriptions` and other batch or file transcription endpoints are not supported.
 
