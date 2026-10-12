@@ -65,15 +65,7 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the late
 
 **The caller's LiteLLM key is never forwarded to MCP servers**, including `x-litellm-api-key` configured under a server's Extra Headers. Give upstream servers their own credential through a static header or OAuth. See [PR #45401](https://github.com/BerriAI/litellm/pull/45401)
 
-**Akto guardrails in `post_call` mode now block or mask flagged replies** instead of only logging them, and wait for Akto on every reply. Move the guardrail out of `post_call` to keep log-only behavior. See [PR #44343](https://github.com/BerriAI/litellm/pull/44343)
-
-**`disable_model_add_for_internal_users` also blocks team admins and opted-in members** from creating models or auto routers through the API, and creation returns 503 if the setting cannot be read. Have a proxy admin create models, or turn the setting off. See [PR #44438](https://github.com/BerriAI/litellm/pull/44438)
-
 **`PATCH /credentials/{name}` no longer renames a credential.** A different `credential_name` returns 400. Use the new `display_name` to relabel a credential, or create a new one to change its name. See [PR #43148](https://github.com/BerriAI/litellm/pull/43148)
-
-**ChatGPT and GitHub Copilot device-code sign-in no longer runs inside a request.** A proxy with no cached token returns 400 instead of printing a sign-in code to its log and waiting. Complete the device-code login outside the proxy before serving `chatgpt/*` or `github_copilot/*` traffic. See [PR #39585](https://github.com/BerriAI/litellm/pull/39585)
-
-**`tpm_limit: null` and `rpm_limit: null` now clear the limit** on `/user/update` and `/user/bulk_update` instead of being ignored. Omit the fields to leave limits unchanged. See [PR #44130](https://github.com/BerriAI/litellm/pull/44130)
 
 **Only proxy admins can set batch limits**, including `batch_enqueued_token_limit`, on the key created by `POST /user/new` or `POST /management/v1/users/bulk`. See [PR #43632](https://github.com/BerriAI/litellm/pull/43632)
 
