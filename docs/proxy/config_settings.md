@@ -718,6 +718,8 @@ router_settings:
 | CLICKHOUSE_DATABASE | ClickHouse database LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store. Default `litellm`
 | CLICKHOUSE_FLUSH_INTERVAL_SECONDS | Seconds between flushes of the rows LiteLLM buffers for ClickHouse, such as spend logs when tracing is on. A full batch flushes early. Default `1.0`
 | CLICKHOUSE_URL | ClickHouse HTTP endpoint LiteLLM writes spend logs and traces to when tracing uses the ClickHouse store, for example `http://default:<password>@clickhouse:8123`. Required for ClickHouse tracing. See [Lens](lens)
+| CLINEPASS_API_BASE | Base URL for ClinePass. Default is https://api.cline.bot/api/v1 |
+| CLINEPASS_API_KEY | API key for ClinePass |
 | CLOUDFLARE_API_BASE | Base URL for Cloudflare Workers AI
 | CLOUDZERO_API_KEY | CloudZero API key for authentication
 | CLOUDZERO_CONNECTION_ID | CloudZero connection ID for data submission
