@@ -874,7 +874,9 @@ print(response.usage)
 </TabItem>
 </Tabs>
 
-### Deepeek Example 
+<a id="deepeek-example"></a>
+
+### DeepSeek Example
 
 Works the same as OpenAI. 
 
