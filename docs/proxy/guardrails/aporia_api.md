@@ -58,9 +58,10 @@ guardrails:
 
 ### Supported values for `mode`
 
-- `pre_call` Run **before** LLM call, on **input**
+- `during_call` Run **during** LLM call, on **input**. Runs in parallel with the LLM call; response not returned until guardrail check completes
 - `post_call` Run **after** LLM call, on **input & output**
-- `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
+
+`pre_call` is not supported by the Aporia guardrail. Setting `mode: "pre_call"` raises a validation error at proxy startup (set `LITELLM_STRICT_GUARDRAIL_MODES=false` to downgrade this to a warning).
 
 ## 3. Start LiteLLM Gateway 
 
