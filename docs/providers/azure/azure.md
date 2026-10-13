@@ -321,7 +321,7 @@ response = completion(
 
 Azure OpenAI O-Series models are supported on LiteLLM. 
 
-LiteLLM routes any deployment name with `o1` or `o3` in the model name, to the O-Series [transformation](https://github.com/BerriAI/litellm/blob/91ed05df2962b8eee8492374b048d27cc144d08c/litellm/llms/azure/chat/o1_transformation.py#L4) logic.
+LiteLLM routes any deployment name with `o1` or `o3` in the model name, to the O-Series [transformation](https://github.com/BerriAI/litellm/blob/main/litellm/llms/azure/chat/o_series_transformation.py) logic.
 
 To set this explicitly, set `model` to `azure/o_series/<your-deployment-name>`.
 
