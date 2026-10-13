@@ -219,6 +219,36 @@ if result_file_id:
 
 To cancel a batch before it completes, call `client.batches.cancel(batch.id)`: its status becomes `cancelling`, then `cancelled`.
 
+## Output and error files
+
+When a managed batch finishes, the provider creates an output file and, if any requests failed, an error file. LiteLLM saves a managed file row for each one with the same owner and team as the batch, so they show up in the files endpoints like an uploaded file and follow the same access rules.
+
+- `GET /v1/files` lists input, output and error files.
+- `GET /v1/files?purpose=batch` lists input files only.
+- `GET /v1/files?purpose=batch_output` lists output and error files.
+
+### File details
+
+When LiteLLM first saves an output or error file row, it asks the provider for the file's details, such as its size and creation time. Each lookup retries timeouts, connection errors, 429 and 5xx responses up to 3 times, and gives up after 10 seconds in total.
+
+If the provider still does not answer, LiteLLM saves a basic entry instead, with `purpose: "batch_output"`, `status: "processed"` and `bytes: 0` (or the real size, when the background poller has already downloaded the file to calculate cost). The file is listed and downloadable right away.
+
+LiteLLM replaces a basic entry with the provider's details later, on the next `GET /v1/files/{file_id}` call, or on the next batch retrieve, cancel or poller run once the entry is at least 60 seconds old. Only the file details change: the owner, team and provider mapping stay the same, and a file deleted while its details are being fetched stays deleted. Rows that already have the provider's details are never fetched again.
+
+### Which endpoints call the provider
+
+| Endpoint | Asks the provider for file details | Saves or changes the file row | If the provider lookup fails |
+| --- | --- | --- | --- |
+| `GET /v1/files` | No | No | Not applicable |
+| `GET /v1/files/{file_id}` | Only for a basic entry, or an older row with no saved details | Updates a basic entry with the provider's details | Returns the basic entry. An older row with no saved details returns an error |
+| `GET /v1/files/{file_id}/content` | No, it downloads the content | No | Returns an error |
+| `DELETE /v1/files/{file_id}` | No, it asks the provider to delete the file | Deletes the row | Returns an error and keeps the row |
+| `GET /v1/batches` | No | Saves a basic entry for an output or error file that has no row yet | Not applicable |
+| `GET /v1/batches/{batch_id}` | For output or error files with no row, or with a basic entry at least 60 seconds old | Saves the row, or updates the basic entry | Saves or keeps the basic entry, and still returns the batch |
+| `POST /v1/batches/{batch_id}/cancel` | Same as batch retrieve | Same as batch retrieve | Same as batch retrieve |
+
+The background poller that tracks batch cost behaves like batch retrieve. When `GET /v1/files` or `GET /v1/batches` is called with a provider or model, the list comes straight from that provider instead of the database.
+
 ## Observability
 
 Once a managed batch reaches `completed`, the proxy's batch cost poller downloads its output file, prices every line, and writes a single spend log row for the whole batch. That row is what `/spend/logs` and the Logs page read, and it is where the per-request outcome counts, the reasoning token totals, and the batch's cost live

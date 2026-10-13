@@ -67,7 +67,7 @@ Set the header `x-litellm-api-key` to `Bearer <your virtual key>`. Grant the key
     "name": "litellm",
     "transport": "http",
     "url": "http://localhost:4000/mcp",
-    "headers": {"x-litellm-api-key": "Bearer sk-1234"}
+    "headers": {"x-litellm-api-key": "Bearer sk-<your-virtual-key>"}
   }
 ]
 ```
@@ -78,7 +78,7 @@ Click **Sign in & test** (called **Test this connection** in some versions). Cla
 
 <Image img={require('../../../img/client_setup/claude_desktop_02_mcp_connector_connected_tools.png')} alt="Claude connector settings showing the LiteLLM MCP URL, a demonstration key, and three discovered tools" />
 
-The screenshot uses the local demonstration key `sk-1234`; use your own virtual key. Claude may flag a static authentication header as credential-like. For managed deployments, the [advanced guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers a credential helper instead.
+Use your own virtual key in this field. Claude may flag a static authentication header as credential-like. For managed deployments, the [advanced guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers a credential helper instead.
 
 ### 3. Verify in Cowork
 

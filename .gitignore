@@ -24,3 +24,6 @@ pnpm-lock.yaml
 
 # Python bytecode from scripts/
 __pycache__/
+
+# Temporary import staging directories
+/docs/proxy/lens/.import-*/

@@ -5,7 +5,9 @@ import TabItem from '@theme/TabItem';
 
 > Reach Outlook mail and calendar, OneDrive and SharePoint files, and Teams through Microsoft Graph, with every tool call running under the signed-in user's own Entra ID account.
 
-Microsoft Graph is the API behind Microsoft 365, and the open source [ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) exposes it over MCP. You run that server next to the proxy in organization mode, where it calls Graph with whatever bearer token arrives on the request, and LiteLLM supplies that token: it runs the Entra ID sign-in for each user, stores the resulting Graph token against that LiteLLM user, and attaches it to every tool call. No shared mailbox credential or tenant-wide application secret is involved. LiteLLM adds centralized auth, access control by key and team, cost tracking per tool call, and one audit trail across every MCP server you expose.
+Microsoft Graph is the API behind Microsoft 365, and the open source [ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) exposes it over MCP. You run that server next to the proxy over Streamable HTTP, where it signs nobody in and calls Graph with whatever bearer token arrives on the request, and LiteLLM supplies that token: it runs the Entra ID sign-in for each user, stores the resulting Graph token against that LiteLLM user, and attaches it to every tool call. No shared mailbox credential or tenant-wide application secret is involved. LiteLLM adds centralized auth, access control by key and team, cost tracking per tool call, and one audit trail across every MCP server you expose.
+
+The server only translates MCP calls into Graph calls. Sign-in, consent, token storage, and refresh happen between LiteLLM and Entra ID, so swapping the server changes nothing about how users authenticate: any MCP server that calls Graph with the `Authorization: Bearer` token it receives works with the same LiteLLM configuration and a different `url`.
 
 ## When should you use this server
 
@@ -22,9 +24,15 @@ Microsoft Graph is the API behind Microsoft 365, and the open source [ms-365-mcp
 
 ## Authentication
 
-- **Method:** OAuth 2.0 authorization code with PKCE against Microsoft Entra ID. Entra does not support dynamic client registration, so you register an app and give LiteLLM its client ID and secret. The Graph server publishes no OAuth metadata of its own, so LiteLLM publishes the discovery documents for the server itself (`per_server_oauth_discovery: true` below).
+- **Method:** OAuth 2.0 authorization code with PKCE against Microsoft Entra ID. Entra does not support dynamic client registration, so you register an app and give LiteLLM its client ID and secret. LiteLLM then publishes OAuth discovery documents for the server that point MCP clients at its own sign-in endpoints in front of Entra (`per_server_oauth_discovery: true` below).
 - **App registration:** Create one in the [Microsoft Entra admin center](https://entra.microsoft.com) under **App registrations**. You will add a Web redirect URI, a client secret, and delegated Microsoft Graph permissions.
 - **Consent:** Each user approves the delegated permissions on first sign-in. A tenant that restricts user consent needs an admin to grant consent once on the app registration's **API permissions** page.
+
+### Single sign-on through Okta or another identity provider
+
+Microsoft Graph accepts only access tokens that Entra ID issues, so neither an Okta token nor the credential from your LiteLLM single sign-on can stand in for the Graph token, and LiteLLM does not convert one into the other. What carries over is the sign-in itself. When your Microsoft 365 tenant federates authentication to Okta or another identity provider, the Entra sign-in LiteLLM starts redirects there like any other Microsoft 365 sign-in, so users see their usual SSO page, and Entra issues the Graph token once they return. Each user does this once; LiteLLM refreshes the token afterwards.
+
+Three other LiteLLM auth modes come up in this setup and none of them replaces the flow above. [On-behalf-of token exchange](../mcp_obo_auth.md) trades an Entra ID token the client already presents to LiteLLM, so it applies only when users authenticate to LiteLLM with Entra ID tokens rather than through Okta. [ID-JAG](../mcp_id_jag.md) gets tokens from an Okta authorization server, which Graph does not trust. [OAuth passthrough](../mcp_oauth_passthrough.md) forwards the client's bearer token unchanged and exchanges nothing, so the client would still have to obtain a Graph token on its own.
 
 ## Endpoint
 
@@ -34,7 +42,7 @@ Microsoft Graph is the API behind Microsoft 365, and the open source [ms-365-mcp
 npx -y @softeria/ms-365-mcp-server --http 3000 --org-mode
 ```
 
-The server then listens at `http://localhost:3000/mcp`. Add `--read-only` to drop every write tool, or `--enabled-tools <regex>` to expose a subset. In organization mode the server signs nobody in itself: it trusts the bearer token on each request, which is the one LiteLLM forwards, so keep it reachable from the proxy only.
+The server then listens at `http://localhost:3000/mcp`. `--http` is what makes it take the bearer token on each request, which is the one LiteLLM forwards, instead of signing in on its own; it checks only that the token is present and unexpired and leaves the rest to Graph. `--org-mode` adds the work and school tools (Teams, SharePoint, shared mailboxes) and their permissions. Add `--read-only` to drop every write tool, or `--enabled-tools <regex>` to expose a subset, and pin a version (`@softeria/ms-365-mcp-server@<version>`) in production, since the tool list changes between releases. Keep the port reachable from the proxy only.
 
 ***
 
@@ -62,7 +70,7 @@ Microsoft 365 is one of the servers that needs explicit client credentials. Lite
 
 ### Step 2: Run the Graph MCP server
 
-Start the server on the proxy host or on a machine only the proxy can reach. `--org-mode` is what makes it use the token LiteLLM forwards instead of prompting for its own sign-in:
+Start the server on the proxy host or on a machine only the proxy can reach. `--http` makes it use the token LiteLLM forwards instead of prompting for its own sign-in, and `--org-mode` turns on the work and school tools:
 
 ```bash
 npx -y @softeria/ms-365-mcp-server --http 3000 --org-mode
@@ -96,7 +104,7 @@ mcp_servers:
       - Sites.Read.All
 ```
 
-`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it. `per_server_oauth_discovery: true` makes LiteLLM publish the OAuth discovery documents for `/microsoft_365/mcp` itself, with its own `/microsoft_365/authorize` and `/microsoft_365/token` endpoints fronting the Entra URLs above. The Graph server publishes none of its own, so without it an MCP client that asks where to sign in gets nothing back. Storing MCP servers also needs `store_model_in_db: true`, covered in [Prerequisites](../mcp.md#prerequisites).
+`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it. `per_server_oauth_discovery: true` makes LiteLLM publish the OAuth discovery documents for `/microsoft_365/mcp` itself, with its own `/microsoft_365/authorize` and `/microsoft_365/token` endpoints fronting the Entra URLs above. Without it, the server's protected-resource metadata sends MCP clients to the gateway's shared `/mcp` authorization server, which signs users in to LiteLLM rather than to Entra, so the browser ends on a "The connection cannot continue" page and no Graph token is ever stored. Storing MCP servers also needs `store_model_in_db: true`, covered in [Prerequisites](../mcp.md#prerequisites).
 
 </TabItem>
 <TabItem value="ui" label="LiteLLM UI">
@@ -139,7 +147,7 @@ export PROXY_BASE_URL=https://llm.example.com
 
 ### Step 5: Give users access to the server
 
-LiteLLM stores each Entra token against the LiteLLM user behind the key, so the key or its team needs the server in `object_permission.mcp_servers`, and the key needs a user behind it. A key without that completes the sign-in but has nowhere to keep the token, so the next session signs in again, and the proxy log says `OAuth credential storage not authorized`. See [MCP Permission Management](../mcp_control.md).
+LiteLLM stores each Entra token against the LiteLLM user behind the key, so the key or its team needs the server in `object_permission.mcp_servers`, and the key needs a user behind it. A key without that completes the sign-in but has nowhere to keep the token, so the next session signs in again, and the proxy log says `OAuth credential storage not authorized`. See [MCP Permission Management](../mcp_control.md). Users who sign in to LiteLLM through SSO already have a LiteLLM user, so granting the server to the team their identity-provider group maps to is enough.
 
 ### Step 6: Connect from an agent
 
@@ -155,30 +163,40 @@ claude mcp add --transport http microsoft_365 http://localhost:4000/microsoft_36
 
 `/mcp` inside Claude Code shows the server and starts the Entra sign-in. Claude Code caches the OAuth client it registered with the gateway, so if you turn on `per_server_oauth_discovery` after adding the server, remove it and add it again.
 
-</TabItem>
-<TabItem value="claude-desktop" label="Claude Desktop">
+Users who sign in to LiteLLM through SSO have no `sk-` key to paste. After `lite login` ([CLI authentication](../proxy/cli_sso.md)), let Claude Code fetch the header itself with `headersHelper`, a command whose output is the headers as JSON:
 
-When Claude Desktop is set up against a third-party gateway, its **Connectors** settings are unavailable, so add the server through `claude_desktop_config.json` with [mcp-remote](https://www.npmjs.com/package/mcp-remote) as the stdio bridge. It handles the browser sign-in and forwards the LiteLLM key header:
-
-```json title="claude_desktop_config.json" showLineNumbers
+```json title=".mcp.json" showLineNumbers
 {
   "mcpServers": {
     "microsoft_365": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@0.14.3",
-        "http://localhost:4000/microsoft_365/mcp",
-        "--header",
-        "x-litellm-api-key:${LITELLM_API_KEY}"
-      ],
-      "env": {
-        "LITELLM_API_KEY": "Bearer sk-<your-litellm-api-key>"
-      }
+      "type": "http",
+      "url": "http://localhost:4000/microsoft_365/mcp",
+      "headersHelper": "printf '{\"x-litellm-api-key\": \"Bearer %s\"}' \"$(lite auth print-token)\""
     }
   }
 }
 ```
+
+The Microsoft sign-in that follows is stored against the LiteLLM user that SSO created, so the same person keeps their Graph token across keys and sessions.
+
+</TabItem>
+<TabItem value="claude-desktop" label="Claude Desktop">
+
+Claude Desktop on third-party inference adds MCP servers under **Configure Third-Party Inference** > **Connectors**, which exports as a `managedMcpServers` entry. Point it at the per-server path and set `"oauth": true` so Claude Desktop runs the Microsoft sign-in when LiteLLM answers with a 401:
+
+```json title="managedMcpServers" showLineNumbers
+[
+  {
+    "name": "microsoft_365",
+    "transport": "http",
+    "url": "http://localhost:4000/mcp/microsoft_365",
+    "headers": {"x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"},
+    "oauth": true
+  }
+]
+```
+
+Fleets that sign in through SSO replace `headers` with `headersHelper`, covered in [Claude Desktop (Cowork)](../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway). The built-in Microsoft 365 connector in Claude Desktop calls Microsoft directly and never passes through LiteLLM, so it gets none of the access control or logging above; use the `url` entry instead.
 
 </TabItem>
 <TabItem value="cursor" label="Cursor">
@@ -225,7 +243,7 @@ Every tool reaches an agent as `microsoft_365-<tool>` (see [Tool naming](../mcp_
 
 ### Known limitations
 
-Organization mode trusts the bearer on every request, so the server must only be reachable through the proxy. OneDrive tools return `itemNotFound` for a user whose OneDrive was never provisioned (they have not opened OneDrive or Office on the web yet); SharePoint document libraries are unaffected. `search-query` and `search-sharepoint-sites` take Graph search (KQL) syntax, so a bare `*` is rejected. Adding a permission to the app registration after users consented needs a fresh consent: revoke the stored credential with `DELETE /v1/mcp/server/{server_id}/oauth-user-credential` and sign in again. Entra access tokens last about an hour; LiteLLM refreshes them with the `offline_access` refresh token, so leaving that scope out means a sign-in prompt every hour.
+The server calls Graph with any unexpired bearer token it receives and serves sign-in endpoints of its own, so it must only be reachable through the proxy. OneDrive tools return `itemNotFound` for a user whose OneDrive was never provisioned (they have not opened OneDrive or Office on the web yet); SharePoint document libraries are unaffected. `search-query` and `search-sharepoint-sites` take Graph search (KQL) syntax, so a bare `*` is rejected. Adding a permission to the app registration after users consented needs a fresh consent: revoke the stored credential with `DELETE /v1/mcp/server/{server_id}/oauth-user-credential` and sign in again. Entra access tokens last about an hour; LiteLLM refreshes them with the `offline_access` refresh token, so leaving that scope out means a sign-in prompt every hour.
 
 ***
 

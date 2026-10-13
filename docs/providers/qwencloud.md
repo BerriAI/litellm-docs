@@ -26,8 +26,9 @@ Use the `qwencloud/` prefix outside mainland China
 | Default API base | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
 | Rerank endpoint | `https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks` |
 | Image generation endpoint | `https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation` |
+| Video generation host | `https://dashscope-intl.aliyuncs.com` |
 | API key env var | `QWENCLOUD_API_KEY` (falls back to `DASHSCOPE_API_KEY`) |
-| Base URL overrides | `QWENCLOUD_API_BASE`, `QWENCLOUD_API_BASE_RERANK`, `QWENCLOUD_API_BASE_IMAGE` |
+| Base URL overrides | `QWENCLOUD_API_BASE`, `QWENCLOUD_API_BASE_RERANK`, `QWENCLOUD_API_BASE_IMAGE`, `QWENCLOUD_API_BASE_VIDEO` |
 
 ## Qianwen AI Platform (mainland China)
 
@@ -39,8 +40,9 @@ Use the `qwen_ai_platform/` prefix in mainland China. It hits the same paths on 
 | Default API base | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | Rerank endpoint | `https://dashscope.aliyuncs.com/compatible-api/v1/reranks` |
 | Image generation endpoint | `https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation` |
+| Video generation host | `https://dashscope.aliyuncs.com` |
 | API key env var | `QWEN_AI_PLATFORM_API_KEY` (falls back to `DASHSCOPE_API_KEY`) |
-| Base URL overrides | `QWEN_AI_PLATFORM_API_BASE`, `QWEN_AI_PLATFORM_API_BASE_RERANK`, `QWEN_AI_PLATFORM_API_BASE_IMAGE` |
+| Base URL overrides | `QWEN_AI_PLATFORM_API_BASE`, `QWEN_AI_PLATFORM_API_BASE_RERANK`, `QWEN_AI_PLATFORM_API_BASE_IMAGE`, `QWEN_AI_PLATFORM_API_BASE_VIDEO` |
 
 ## API Key
 
@@ -139,6 +141,67 @@ response = image_generation(
 )
 
 print(response.data[0].url)
+```
+
+### Video Generation
+
+Video generation runs as an async task on the DashScope task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`.
+
+```python showLineNumbers title="QwenCloud Video Generation"
+import os
+import time
+from litellm import video_content, video_generation, video_status
+
+os.environ["QWENCLOUD_API_KEY"] = "your-api-key"
+
+video = video_generation(
+    model="qwencloud/wan3.0-video",
+    prompt="A paper boat drifting down a rain-soaked city gutter",
+    seconds="5",
+    size="1280x720",
+)
+
+while video.status not in ("completed", "failed"):
+    time.sleep(20)
+    video = video_status(video_id=video.id)
+
+with open("video.mp4", "wb") as f:
+    f.write(video_content(video_id=video.id))
+```
+
+The supported models are `wan3.0-video`, `wan3.0-video-prime`, `wan2.7-t2v`, `wan2.7-i2v`, `wan2.7-r2v`, `happyhorse-1.1-t2v`, `happyhorse-1.1-i2v`, `happyhorse-1.1-r2v`, `happyhorse-1.0-t2v`, `happyhorse-1.0-i2v` and `happyhorse-1.0-r2v`, under any of the `qwencloud/`, `qwen_ai_platform/` and `dashscope/` prefixes. Each prefix is priced from the rate card of the region its default host serves.
+
+`seconds` sets the duration. `size` picks the aspect ratio closest to it out of 16:9, 9:16, 1:1, 4:3 and 3:4, and picks the billed resolution tier from its shorter side: under 600 px is 480P, under 900 px is 720P, and anything larger is 1080P. To get another ratio a model supports, such as 21:9 on Wan 3.0, pass `ratio` directly. Without `size` the job runs and bills at 1080P, and without `seconds` it runs for 5 seconds. Image-to-video and reference-to-video models take their image through `input_reference`, as a URL or as a file (an open file, bytes or a `pathlib.Path`). DashScope request fields such as `resolution`, `ratio`, `audio`, `seed`, `negative_prompt`, `prompt_extend` and `watermark` pass through as extra parameters. Smart duration (`duration: -1`) is rejected, and DashScope has no list, delete or remix endpoint.
+
+To serve these models on the proxy, set `mode: video_generation` on the deployment and call `/v1/videos`:
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: wan3-video
+    litellm_params:
+      model: qwencloud/wan3.0-video
+      api_key: os.environ/QWENCLOUD_API_KEY
+    model_info:
+      mode: video_generation
+```
+
+```bash showLineNumbers title="Video generation via Proxy - cURL"
+curl http://localhost:4000/v1/videos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "wan3-video",
+    "prompt": "A paper boat drifting down a rain-soaked city gutter",
+    "seconds": "5",
+    "size": "1280x720"
+  }'
+
+curl http://localhost:4000/v1/videos/$VIDEO_ID \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+
+curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -o video.mp4
 ```
 
 ## Usage - LiteLLM Proxy

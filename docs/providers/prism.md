@@ -230,7 +230,7 @@ A deployment configured this way serves all three endpoints on the proxy: `/v1/c
 
 ```bash showLineNumbers title="curl"
 curl http://0.0.0.0:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "deepseek-v4.1-flash",
@@ -243,7 +243,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ```bash showLineNumbers title="curl"
 curl http://0.0.0.0:4000/v1/responses \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "deepseek-v4.1-flash",
@@ -256,7 +256,7 @@ curl http://0.0.0.0:4000/v1/responses \
 
 ```bash showLineNumbers title="curl"
 curl http://0.0.0.0:4000/v1/messages \
-  -H "x-api-key: sk-1234" \
+  -H "x-api-key: $LITELLM_API_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -H "Content-Type: application/json" \
   -d '{

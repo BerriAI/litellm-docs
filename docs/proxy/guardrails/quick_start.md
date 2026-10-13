@@ -86,6 +86,152 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
 - A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
+### Run on streaming or non-streaming requests only with `stream_scope`
+
+A guardrail runs on both streaming and non-streaming requests by default. Set `stream_scope` under the guardrail's `litellm_params` to choose which request shapes it evaluates:
+
+- `streaming` — run only when the client asked for a streamed response
+- `non_streaming` — run only for regular request/response calls
+- `both` — run on every request (the default, and the pre-existing behavior when `stream_scope` is unset)
+
+```yaml
+guardrails:
+  # runs only on streaming requests; non-streaming calls bypass the scan
+  - guardrail_name: "moderate-streams-only"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # runs only on non-streaming requests
+  - guardrail_name: "moderate-non-streams"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: non_streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+A guardrail configured with several modes (for example `mode: [pre_call, post_call]`) can scope each mode separately with a map. Keys are mode names; a mode left out of the map defaults to `both`:
+
+```yaml
+guardrails:
+  - guardrail_name: "scoped-by-mode"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: [pre_call, post_call]
+      stream_scope:
+        pre_call: streaming
+        post_call: both
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+The dashboard exposes the same control on the guardrail creation form as **Request shape**; each configured mode gets its own dropdown.
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_ui.png')}
+  alt="Create guardrail form: Request shape control with the pre_call applies to dropdown set to Streaming only"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
+The dropdown open, showing the three scope choices:
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_closeup.png')}
+  alt="Closeup: the pre_call applies to dropdown open with Streaming and non-streaming, Streaming only, and Non-streaming only options"
+  style={{ width: '100%', maxWidth: '700px', height: 'auto' }}
+/>
+
+The stored guardrail's detail page shows the per-mode scope summary:
+
+<Image
+  img={require('../../../img/stream_scope_guardrail_detail_ui.png')}
+  alt="Guardrail detail page: per-mode stream scope summary showing pre_call Streaming only and post_call Streaming and non-streaming"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
+Realtime audio input transcription counts as streaming, so a `streaming` scope also covers guardrails running on realtime transcription events, and a `non_streaming` scope excludes them.
+
+Bedrock pass-through requests report their streaming state from the invoked Bedrock action, so `stream_scope` gates them the same way as native routes.
+
+#### Validation
+
+A `stream_scope` value other than `streaming`, `non_streaming` or `both` (or a map whose keys are not mode names) is rejected with `422` on create and update. At startup, whether loaded from a config file or a stored database row, an invalid `stream_scope` is ignored with a warning log and the guardrail keeps running with the default `both` scope.
+
+### Observe only one direction with `logging_only_scope`
+
+A `logging_only` guardrail observes the request and the response by default. Set `logging_only_scope` under the guardrail's `litellm_params` to choose which direction the scan observes:
+
+- `input` — scan only the request
+- `output` — scan only the response
+- `both` — scan both directions (the default directions)
+- unset / `null` (default): scans both directions and keeps the pre-existing behavior, so existing deployments are unchanged
+
+```yaml
+guardrails:
+  # unset (default): scans request and response, pre-existing behavior
+  - guardrail_name: "observe-default"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # scans only the request
+  - guardrail_name: "observe-requests"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_scope: input
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # scans only the response
+  - guardrail_name: "observe-responses"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_scope: output
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # explicitly scans both directions
+  - guardrail_name: "observe-both"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_scope: both
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+The scan never blocks or changes the client call in any of these cases; each verdict, including a would-block verdict, is recorded in `guardrail_information` on the spend log and counted in the Guardrails Monitor.
+
+#### If the input scan fails
+
+In `logging_only` mode nothing is actually blocked, so a request the input scan flags still reaches the model and the conversation continues. The scope decides whether the response is still observed:
+
+- **Scope unset** (default): if the input scan fails (the guardrail errors, or returns a verdict that would have blocked the call), the output scan is skipped and only the input verdict/error is logged. This is the pre-existing behavior, unchanged for existing deployments.
+- **Explicit `both`**: the input failure is logged as a warning and the response is **still scanned**, so you get both verdicts. Since nothing is blocked in `logging_only` mode, explicit `both` keeps watching the responses of flagged conversations.
+
+`input` and `output` only ever scan one direction, so this distinction applies to unset and `both`.
+
+#### Validation
+
+- A `logging_only_scope` value other than `input`, `output` or `both` is rejected with `422` on create and update.
+- A scope the guardrail cannot use (`logging_only_scope` set without `logging_only` in `mode`, or `input`/`output` on a guardrail that runs its own logging hook) returns `400` on create, and `422` on an update that sets such a scope. The rejected write is rolled back, so the stored guardrail keeps its previous configuration.
+- At startup, whether loaded from a config file or a stored database row, an invalid `logging_only_scope` is ignored with an error log and the guardrail keeps its configured mode.
+
+`logging_only_scope` only narrows the `logging_only` scan. Enforcement modes (`pre_call`, `during_call`, `post_call`) on the same guardrail are unaffected and still block: `mode: [pre_call, logging_only]` with `logging_only_scope: output` blocks bad requests and records response verdicts without blocking them. To observe a direction without ever blocking it, leave the matching blocking mode out of `mode`.
+
+Directional scopes apply to guardrails that run their `logging_only` scan through the generic `apply_guardrail` interface. Guardrails with their own logging hook, such as Presidio (which has its own `presidio_filter_scope`), ignore `input`/`output` here.
+
+Editing a guardrail (for example, a description-only PUT) no longer reorders guardrail execution: guardrail order is stable across updates, so which guardrail wins between a BLOCK and a MASK over the same content does not change.
+
 ### Skip system messages in guardrail evaluation
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
@@ -111,6 +257,7 @@ litellm_settings:
 
 <Image
   img={require('../../../img/skip_system_message_guardrail_ui.png')}
+  dark={require('../../../img/skip_system_message_guardrail_ui_dark.png')}
   alt="Create guardrail: Skip system messages in guardrail dropdown with Use global default, Yes exclude from guardrail scan, and No always include in scan"
   style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
 />
@@ -287,7 +434,7 @@ Set `include_guardrail_response: true` in the request body to get the guardrail 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Reply OK"}],
@@ -739,6 +886,7 @@ guardrails:
       api_key: string          # Required: API key for the guardrail service
       api_base: string         # Optional: Base URL for the guardrail service
       default_on: boolean      # Optional: Default False. When set to True, will run on every request, does not need client to specify guardrail in request
+      logging_only_scope: string # Optional: "input" (request only), "output" (response only), or "both" (both directions). Unset scans both directions and keeps the pre-existing behavior
     guardrail_info:            # Optional[Dict]: Additional information about the guardrail
       
 ```
@@ -810,4 +958,3 @@ guardrails: Union[
 class DynamicGuardrailParams:
     extra_body: Dict[str, Any]              # Additional parameters for the guardrail
 ```
-

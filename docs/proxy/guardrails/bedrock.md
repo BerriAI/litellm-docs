@@ -142,6 +142,38 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 </Tabs>
 
+## Images and Attachments
+
+`pre_call` and `during_call` guardrails check what a request attaches as well as its text. This covers `/v1/chat/completions`, `/v1/messages`, `/v1/responses` and the Bedrock Converse pass-through (`/bedrock/model/{model}/converse`), including attachments returned inside tool results. Settings that narrow which messages get scanned, such as `experimental_use_latest_role_message_only`, narrow the attachment check the same way.
+
+| Attachment | What happens |
+|---|---|
+| Inline base64 PNG or JPEG, up to 4 MB and 8000 pixels on a side | Sent to ApplyGuardrail as an image. A blocked image returns HTTP 400 |
+| Converse `guardContent` image | Scanned like any other image, before the model is called |
+| Text document (a Messages or Converse `document` whose source is `text` or `content`) | Scanned as text. A blocked document returns HTTP 400 |
+| Title, name and context of any document, PDFs included | Scanned as text |
+| PDF, file, audio, video, GIF, WebP, an image sent by URL, file id or S3 location, an image over the size limits, or a Converse document sent as `bytes` or `s3Location` | Bedrock can't scan it, so the request returns HTTP 400 |
+
+The 400 for an unscannable attachment names what was refused, for example `Bedrock guardrail cannot scan 1 attachment(s) (file), so the request was blocked`. To let those attachments through unscanned instead, set `skip_unscannable_attachments: true`. Images LiteLLM can scan, text documents, and every document's title, name and context are still checked.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+guardrails:
+  - guardrail_name: "bedrock-pre-guard"
+    litellm_params:
+      guardrail: bedrock
+      mode: "pre_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      skip_unscannable_attachments: true
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `skip_unscannable_attachments` | `false` | Let attachments Bedrock can't scan through unscanned instead of returning HTTP 400 |
+
+Images go to Bedrock in batches of up to 20 per ApplyGuardrail call and text documents add one more call, so a request with attachments makes extra Bedrock calls, each billed and logged as its own guardrail entry on the request's spend log. If Bedrock is unreachable, a request with an image or text document fails, the same as a text-only request. Document text can't be rewritten, so a policy that would mask something in a document blocks the request instead; `mask_request_content` only applies to message text. Documents nested more than three levels deep are refused, and Bedrock `/invoke` pass-through bodies are not checked for attachments.
+
 ## Streaming
 
 Streaming responses are scanned on `post_call`. By default the stream is buffered: every chunk is withheld until the assembled response passes one ApplyGuardrail OUTPUT scan, so no flagged content reaches the client before a block. The client sees nothing until the scan completes, then the whole response arrives in one burst.
@@ -251,6 +283,8 @@ Scores range from 0 to 1 and each threshold defaults to `0.5`. A score at or abo
 `disable_exception_on_block: true` (see [below](#disabling-exceptions-on-bedrock-block)) works here too; a block then returns HTTP 200 with `finish_reason: "content_filter"`.
 
 Callers can't weaken the configured checks: per-request guardrail params are ignored in this mode, and all input is checked as `user` content so a `system`-labeled injection can't dodge the prompt-attack check.
+
+InvokeGuardrailChecks only reads text, so in this mode every image counts as an [unscannable attachment](#images-and-attachments) and returns HTTP 400 unless `skip_unscannable_attachments` is set.
 
 ## PII Masking with Bedrock Guardrails
 

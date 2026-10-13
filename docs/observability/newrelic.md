@@ -195,6 +195,8 @@ curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
 
 `newrelic_region` accepts `us` or `eu` and picks the data center for both traces (OTLP) and cost metrics (Metric API). The key is stored encrypted and reads back masked. Request bodies cannot supply `newrelic_api_key` or `newrelic_region`; only admin-configured team or key callback settings are honored.
 
+To keep internal Redis and PostgreSQL spans out of a team's destination, set the per-destination `excluded_services` callback variable. See [the OTel v2 exclusion settings](./opentelemetry_v2#keep-redis-and-postgres-spans-out-of-tenant-traces).
+
 Traces arrive as OTLP `gen_ai.*` spans with `litellm.team.id`, `litellm.team.alias` and `litellm.cost.*` attributes. Cost metrics arrive as `litellm.requests`, `litellm.cost.usd`, `litellm.tokens.*` counts and a `litellm.request.duration_ms` summary, faceted by `team_id`, `team_alias`, `model_group`, `model`, `custom_llm_provider` and `status`.
 
 Team budgets arrive as two gauges faceted by `team_id` and `team_alias`: `litellm.team.max_budget` is the team's configured `max_budget`, and `litellm.team.remaining_budget` is `max_budget` minus the team's spend including the request that produced it. Teams without a `max_budget` send neither gauge. Query them in NRQL with `SELECT latest(litellm.team.remaining_budget) FROM Metric FACET team_alias`.

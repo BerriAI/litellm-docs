@@ -18,13 +18,15 @@ Use **LiteAdmin MCP** ([LiteLLM Admin MCP](https://github.com/BerriAI/litellm-ad
 
 Your client runs the agent and model. The MCP server calls your gateway's management API with your personal admin credential. Connecting it leaves your client's model-provider settings unchanged.
 
-For gateway management in Slack, follow the [LiteAdmin Slack app setup](./liteadmin_slack.md). To route third-party MCP tools through LiteLLM, see the separate [MCP Gateway](../mcp.md) guide.
+To host MCP inside your Enterprise deployment, follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) for unified and componentized Docker images.
+
+For gateway management in Slack, follow the [LiteAdmin Slack app setup](./liteadmin_slack.md) and choose the Enterprise or standalone deployment. To route third-party MCP tools through LiteLLM, see the separate [MCP Gateway](../mcp.md) guide.
 
 ## Before you start
 
 You need a running LiteLLM gateway and a personal [virtual key](./virtual_keys.md) belonging to a user with the [`proxy_admin` role](./access_control.md#global-proxy-roles). The connector requires this role for **all tools, including reads**; `proxy_admin_viewer` and team-admin accounts cannot use it.
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the computer that runs your MCP client. The connector requires Python 3.12 or later; uv can download a compatible interpreter. {/* keep-python-version */}
+For the local client setup below, install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the computer that runs your MCP client. The connector requires Python 3.12 or later; uv can download a compatible interpreter. {/* keep-python-version */}
 
 Have these values ready:
 
@@ -161,6 +163,14 @@ Set these variables in the MCP server's environment, then restart the connection
 | `LITELLM_ADMIN_TOOLS=list_keys,list_teams` | Limit the server to these canonical tool names. |
 
 The connector discovers schemas from your gateway and exposes the reviewed operations available there. Use the [operation catalog](https://github.com/BerriAI/litellm-admin-mcp/blob/main/src/litellm_admin_mcp/operations.json) to find tool names. If you set both restrictions, only tools allowed by both remain available.
+
+## Run LiteAdmin MCP inside LiteLLM
+
+Follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) to serve `/admin/mcp` from a unified LiteLLM image or the management backend in a componentized deployment. The guide covers the opt-in flag, Enterprise license, ingress routing, authentication, client configuration, and verification
+
+### Embedded tool and response settings
+
+See [Tool and response settings](./liteadmin_mcp_enterprise.md#tool-and-response-settings) for embedded defaults, read-only restrictions, and worker requirements for compact results
 
 ## Host a shared MCP endpoint
 

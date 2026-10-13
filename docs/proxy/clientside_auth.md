@@ -169,11 +169,14 @@ model_list:
       configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # 👈 regex
 ```
 
-Specify any/all auth params you want the user to be able to configure:
+Specify the endpoint params you want the user to be able to configure:
 
-- api_base (✅ regex supported)
-- api_key
-- base_url 
+- api_base (regex supported)
+- base_url
+
+Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
+
+`api_key` does not need to be listed. A request-body `api_key` is accepted on any deployment, wildcard or not, and replaces the deployment's configured key for that request only. To send the user's key as a provider header instead, such as `x-api-key` for Anthropic, see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)
 
 (check [provider docs](../providers/) for provider-specific auth params - e.g. `vertex_project`)
 

@@ -1,66 +1,40 @@
-# ✨ Enterprise
+---
+title: Enterprise
+hide_title: true
+description: LiteLLM Enterprise is the open-source AI Gateway plus SSO, audit logs, delegated admin roles, multi-region deployment, and support SLAs, self-hosted in your cloud.
+---
 
-:::info
+import {EnterpriseHero, TierStack} from '@site/src/components/Conversion/Enterprise';
+import {Tiles, SalesBand} from '@site/src/components/Conversion';
 
-New here? Start with the [Enterprise Quickstart](/docs/learn/enterprise_quickstart). You can also start a [30-day trial](https://www.litellm.ai/enterprise#trial) or [book a demo](https://enterprise.litellm.ai/demo).
+<EnterpriseHero />
 
-:::
+## What you get on top of open source
+
+Enterprise is a license key on the same Gateway image you may already run. Nothing to migrate: each layer includes everything below it.
+
+<TierStack />
+
+## What changes for your organization
+
+<Tiles size="lg" columns={3} items={[
+  {icon: 'compliance', title: 'Audited security you can hand to your review team', text: 'SOC 2 Type II audited, self-hosted so no data leaves your environment, and signed Docker images you can verify.', to: 'https://trust.litellm.ai/', more: 'Verify the signed images', moreTo: '/docs/proxy/docker_image_security'},
+  {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
+  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
+  {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
+  {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
+  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
+]} />
+
+<SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout and security review, and start a 30-day trial with a full license." />
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale (100+ users or 10+ production AI use-cases) that need SSO, audit logs, fine-grained access control, and professional support on top of OSS. SSO is free for up to 5 users. Beyond that, an enterprise license is required. Not sure if you qualify? [Get in touch](https://enterprise.litellm.ai/demo).
+For teams running LiteLLM at scale (100+ users or 10+ production AI use cases) that need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users; beyond that, an Enterprise license is required. Engineers evaluating a trial can follow the [Production rollout](/docs/learn/enterprise_quickstart) guide, and teams already on open source can start with [Moving from OSS](/docs/enterprise/moving_from_oss).
 
-## Why Enterprise?
+## Full feature list
 
-LiteLLM OSS already covers the fundamentals: an OpenAI-compatible gateway, virtual keys, spend tracking, budgets, fallbacks, and request/response logging. Enterprise adds the controls larger organizations need to safely give hundreds of users and dozens of applications access to LLMs.
-
-<div className="enterprise-compare">
-
-<div className="enterprise-compare-head">
-<span></span>
-<span>OSS</span>
-<span>Enterprise</span>
-</div>
-
-<div>
-<strong>Auth</strong>
-<span>Master key, <a href="./proxy/ui#4-sign-in-for-the-first-time"><code>UI_USERNAME</code> and <code>UI_PASSWORD</code></a></span>
-<span>SSO + SCIM, OIDC/JWT</span>
-</div>
-
-<div>
-<strong>Key Management</strong>
-<span>Virtual keys, users, teams across LLM APIs, MCPs, and Agents</span>
-<span>Organizations, org/team admins, delegated admin roles</span>
-</div>
-
-<div>
-<strong>Security</strong>
-<span>Master key, virtual keys, and [master key rotation](./proxy/master_key_rotations)</span>
-<span>Virtual key rotations, read/write to secret manager, [IP allowlists](./proxy/ip_address), [public and private route controls](./proxy/public_routes)</span>
-</div>
-
-<div>
-<strong>Guardrails</strong>
-<span>Always-on / request-based. Custom guardrails and Presidio (PII masking) are included. Built-in moderation callbacks need a license; see the <a href="#guardrails-oss-vs-enterprise">note below</a>.</span>
-<span>Key and team scoped guardrails</span>
-</div>
-
-<div>
-<strong>Logging</strong>
-<span>Request/response logging, Prometheus metrics</span>
-<span>Per-key / per-team routing to Langfuse, Langsmith, Arize and more. Management-op logs</span>
-</div>
-
-<div>
-<strong>Deployment</strong>
-<span>Single-region proxy</span>
-<span><a href="./proxy/multi_region">Multi-region deployment</a> under one license, admin/worker split</span>
-</div>
-
-</div>
-
-## Features
+Everything below is enabled by the license key. Each item links to its setup guide.
 
 ### Security and access
 
@@ -86,6 +60,7 @@ LiteLLM OSS already covers the fundamentals: an OpenAI-compatible gateway, virtu
 
 ### Observability and compliance
 
+- **[SOC 2 Type II](https://trust.litellm.ai/)**. Audited controls; request the report through the Trust Center
 - **[Team-Based Logging](./proxy/team_logging.md)**. Route each team's logs to their own Langfuse project or callback
 - **[Disable logging per team](./proxy/team_logging.md#disable-logging-for-a-team)**. GDPR-friendly opt-out at the team level
 - **[Log export to GCS / Azure Blob](./observability/gcs_bucket_integration.md)**. Durable storage for compliance
@@ -111,38 +86,17 @@ Deploy the Docker image, or build from the pip package, on your own infrastructu
 LITELLM_LICENSE="eyJ..."
 ```
 
-No data leaves your environment. [Procurement is available through AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
+No data leaves your environment, and LiteLLM is [SOC 2 Type II](https://trust.litellm.ai/) audited. [Procurement is available through AWS and Azure Marketplace.](./data_security.md#legalcompliance-faqs)
 
 Pricing depends on your deployment size. [Get in touch](https://enterprise.litellm.ai/demo) to scope it.
 
 ## Support {#professional-support}
 
-### Standard support
-
-Included with every enterprise license: a dedicated Slack or Teams channel with the engineering team for integration, deployment, and provider troubleshooting. Hours are 9am to 9pm PST, Monday through Friday. No guaranteed response time is included.
-
-### 24/7 support SLAs
-
-For teams that need guaranteed response times around the clock, 24/7 support SLAs are available for an additional fee.
-
-| Severity | Response SLA |
-|---|---|
-| **Sev 0**. 100% of production traffic is failing | 1 hour |
-| **Sev 1**. Partial production impact | 6 hours |
-| **Sev 2–3**. Setup issues and non-urgent bugs | 24 hours (7am–7pm PT, Monday–Saturday) |
-| **Security patches** | 72 hours |
-
-Custom SLAs are available on request. For what support covers, see the [Shared Responsibility Model](./shared_responsibility.md).
+Every license includes a dedicated Slack or Teams channel with the engineering team. With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
 
 ## Version support
 
-LiteLLM supports the four most recent stable minor lines. Each of those lines keeps getting patch releases. Anything older reaches end of life and stops receiving updates. This policy takes effect Monday, June 29, 2026. As of mid-June 2026 the supported lines are 1.86, 1.87, 1.88, and 1.89, and the set rolls forward as new stable releases ship.
-
-LiteLLM ships a new minor line roughly every week. Patching every older line meant carrying each fix onto every line still in support, and that cost grows with the number of lines rather than the number of fixes. Four lines is the window that still gets that care.
-
-The window always holds the four most recent stable minor lines. When a new line ships, the oldest one drops out and stops receiving releases. There is no separate long-term maintenance track. For any supported line, use its latest patch. For a rare, high-severity issue, LiteLLM may still act outside that window.
-
-To see where you stand, take the latest stable line and count back four. If your version is older than that, plan an upgrade. Pin to a minor line, take its patches, and move to a newer line before yours drops out.
+LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support).
 
 ## FAQ
 
@@ -160,6 +114,28 @@ LITELLM_LICENSE="eyJ..."
 ```
 
 Open `http://<your-proxy-host>:<port>/`. The API docs page should show **Enterprise Edition** in the description. If it does not, confirm the key is correct and unexpired, and that the proxy was fully restarted.
+
+</details>
+
+<details>
+<summary>
+
+### Is LiteLLM SOC 2 compliant?
+
+</summary>
+
+Yes. LiteLLM is SOC 2 Type II audited. Request the current report through the [LiteLLM Trust Center](https://trust.litellm.ai/). For data handling, vulnerability reporting, and the rest of the security review, see [Data Security, Legal, and Compliance FAQs](./data_security.md).
+
+</details>
+
+<details>
+<summary>
+
+### Can we buy through AWS or Azure Marketplace?
+
+</summary>
+
+Yes. You can buy an Enterprise license through AWS Marketplace or Azure Marketplace, or directly by invoice. See [Procurement Options](./data_security.md#legalcompliance-faqs).
 
 </details>
 
@@ -195,3 +171,5 @@ Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for 
 Use [Auto Sync New Models](./proxy/sync_models_github.md) to pull the latest pricing and context-window data from GitHub on demand or on a schedule, with no restart required. Trigger a manual sync with `POST /reload/model_cost_map`, or schedule periodic syncs with `POST /schedule/model_cost_map_reload?hours=6`.
 
 </details>
+
+<SalesBand source="enterprise-page-bottom" />

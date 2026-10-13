@@ -9,6 +9,7 @@ Supported Providers:
 - Google AI Studio (`gemini/`)
 - Vertex AI (`vertex_ai/`, `vertex_ai_beta/`)
 - Bedrock (`bedrock/`, `bedrock/invoke/`, `bedrock/converse`) ([All models bedrock supports prompt caching on](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html))
+- Bedrock Mantle, OpenAI GPT-5.6 and newer (`bedrock_mantle/openai.gpt-5.6-*`, `bedrock_mantle/openai.gpt-6*`), see [Bedrock Mantle explicit breakpoints](#bedrock-mantle-explicit-breakpoints-openai-gpt-56-and-newer)
 - Deepseek API (`deepseek/`)
 - xAI (`xai/`)
 
@@ -346,6 +347,95 @@ print(response.usage.input_tokens_details)
 </TabItem>
 </Tabs>
 
+### Bedrock Mantle explicit breakpoints (OpenAI GPT-5.6 and newer)
+
+The OpenAI GPT-5.6 and newer models on [Amazon Bedrock Mantle](../providers/bedrock_mantle.md) take the same `prompt_cache_breakpoint` marker and `prompt_cache_options` request field, on the Responses API only. LiteLLM passes both through on `/responses`, and a `/chat/completions` call to one of these models is bridged onto the Responses API with the marker kept on the content block, so `cache_control_injection_points` on the deployment work the same way they do for `openai/gpt-5.6` ([auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)). Mantle's limits, from the [AWS announcement](https://aws.amazon.com/blogs/machine-learning/introducing-explicit-prompt-caching-for-openai-gpt-5-6-models-on-amazon-bedrock/): each cached prefix needs at least 1,024 tokens, a request can carry up to 4 breakpoints on `input_text`, `input_image` and `input_file` blocks, a cached prefix stays available for at least 30 minutes, cache writes bill at 1.25x the input rate and cache reads at a 90% discount. The response reports `usage.input_tokens_details.cache_write_tokens` on the call that writes the cache and `cached_tokens` on the calls that read it, and LiteLLM prices both from the model's `cache_creation_input_token_cost` and `cache_read_input_token_cost`
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+import os
+
+os.environ["AWS_BEARER_TOKEN_BEDROCK"] = ""
+
+response = litellm.responses(
+    model="bedrock_mantle/openai.gpt-5.6-sol",
+    aws_region_name="us-east-1",
+    input=[
+        {
+            "type": "message",
+            "role": "developer",
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "You are an AI assistant tasked with analyzing legal documents. "
+                    + "Here is the full text of a complex legal agreement " * 400,
+                    "prompt_cache_breakpoint": {"mode": "explicit"},
+                }
+            ],
+        },
+        {
+            "type": "message",
+            "role": "user",
+            "content": [{"type": "input_text", "text": "What are the key terms and conditions?"}],
+        },
+    ],
+    prompt_cache_options={"mode": "explicit", "ttl": "30m"},
+)
+print(response.usage.input_tokens_details)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: gpt-5.6-mantle
+    litellm_params:
+      model: bedrock_mantle/openai.gpt-5.6-sol
+      aws_region_name: us-east-1
+      api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="LITELLM_PROXY_KEY",
+    base_url="LITELLM_PROXY_BASE",
+)
+
+response = client.responses.create(
+    model="gpt-5.6-mantle",
+    input=[
+        {
+            "type": "message",
+            "role": "developer",
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "You are an AI assistant tasked with analyzing legal documents. "
+                    + "Here is the full text of a complex legal agreement " * 400,
+                    "prompt_cache_breakpoint": {"mode": "explicit"},
+                }
+            ],
+        },
+        {
+            "type": "message",
+            "role": "user",
+            "content": [{"type": "input_text", "text": "What are the key terms and conditions?"}],
+        },
+    ],
+    extra_body={"prompt_cache_options": {"mode": "explicit", "ttl": "30m"}},
+)
+print(response.usage.input_tokens_details)
+```
+
+</TabItem>
+</Tabs>
+
 ### Anthropic Example 
 
 Anthropic charges for cache writes. 
@@ -585,6 +675,12 @@ Use the same Anthropic-style `cache_control` format; LiteLLM automatically trans
 2. The cached content ID is then passed as `cachedContent` in the Gemini request body
 3. Works across all three providers: `gemini/` (Google AI Studio), `vertex_ai/`, and `vertex_ai_beta/`
 4. Requires a minimum of **1024 tokens** in the cached content. Below that, caching is silently skipped
+
+:::warning
+
+Gemini 2.5 and newer already cache repeated prefixes implicitly, for free. Sending `cache_control` (by hand or through `cache_control_injection_points`) opts the request into explicit caching instead: the marked prefix is moved into a `cachedContents` object, so implicit caching no longer applies to it, and Google charges storage for each cache object. Only add `cache_control` for Gemini when you want explicit caching on purpose. See the [auto-inject tutorial](../tutorials/prompt_caching.md)
+
+:::
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
