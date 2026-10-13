@@ -55,6 +55,8 @@ Use `fail_closed` on `pre_call` so an outage cannot let unscreened traffic reach
 
 You can also set `mode: [pre_call, post_call]` on a single guardrail entry instead of registering two.
 
+To add it from the Admin UI instead, open the Guardrails page and pick the Wingback card. The Create Guardrail form opens with Wingback already selected.
+
 ### 3. Start LiteLLM Proxy
 
 ```shell
@@ -85,14 +87,14 @@ curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 {
   "error": {
     "message": "Prompt injection detected",
-    "type": "None",
-    "param": "None",
+    "type": "invalid_request_error",
+    "param": null,
     "code": "400"
   }
 }
 ```
 
-The message is the `blocked_reason` returned by Wingback, falling back to a generic policy message when none is supplied.
+The message is the `blocked_reason` returned by Wingback, falling back to `Content violates policy` when none is supplied.
 
 </TabItem>
 <TabItem label="Permitted request" value="allowed">
@@ -115,7 +117,7 @@ The request reaches the model and the response is returned unchanged.
 
 ## Attribute requests to an application
 
-Set `wingback_app_id` in guardrail config (or per-request via `additional_provider_specific_params`) to attribute LiteLLM traffic to a named Wingback external gateway integration. This value is sent to Wingback on every guardrail call.
+Set `wingback_app_id` in the guardrail config to attribute LiteLLM traffic to a named Wingback external gateway integration. It is sent to Wingback on every guardrail call as `additional_provider_specific_params.wingback_app_id`. If `additional_provider_specific_params` in the same config already sets `wingback_app_id`, that value is used instead.
 
 ```yaml title="config.yaml"
 guardrails:
@@ -128,7 +130,7 @@ guardrails:
       default_on: true
 ```
 
-LiteLLM also forwards virtual-key metadata (`user_api_key_alias`, `user_api_key_user_email`, team identifiers, and related fields) so Wingback can correlate detections with LiteLLM tenants, teams, and end users.
+LiteLLM also sends virtual key metadata (`user_api_key_hash`, `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_user_email`, `user_api_key_team_id`, `user_api_key_team_alias`, `user_api_key_end_user_id` and `user_api_key_org_id`, when set) so Wingback can correlate detections with LiteLLM keys, teams, and end users.
 
 ## Supported parameters
 
@@ -137,29 +139,33 @@ LiteLLM also forwards virtual-key metadata (`user_api_key_alias`, `user_api_key_
 | `api_key` | `WINGBACK_INTEGRATION_API_KEY` env var | Wingback external gateway integration API key (`wbk_eg_*`). Sent as the `x-api-key` header to Wingback |
 | `api_base` | `https://api.wingback.ai/connectors` | Connectors service base URL. LiteLLM appends `/beta/litellm_basic_guardrail_api`. Override with `WINGBACK_API_BASE` |
 | `wingback_app_id` | `None` | Integration name for request attribution in Wingback |
-| `unreachable_fallback` | `fail_closed` | Behavior when Wingback cannot be reached: `fail_closed` blocks traffic; `fail_open` allows it (monitor-only rollouts) |
-| `fail_on_error` | `true` | If `true`, a non-success response from Wingback (other than an explicit `BLOCKED`) fails the call. If `false`, those errors are logged and the request proceeds. `BLOCKED` still blocks. Outages and timeouts are controlled by `unreachable_fallback`, not this flag |
+| `unreachable_fallback` | `fail_closed` | Behavior when Wingback cannot be reached, times out, or answers 502, 503 or 504: `fail_closed` fails the call; `fail_open` lets it through (monitor-only rollouts) |
+| `fail_on_error` | `true` | If `true`, any other error from Wingback, such as a 500 or a rejected API key, fails the call. If `false`, every Wingback error lets the call through, outages included. `BLOCKED` always blocks |
+| `timeout` | 600 seconds | Seconds to wait for Wingback on each check. A timeout counts as unreachable, so `unreachable_fallback` decides what happens next |
 | `default_on` | `false` | Apply this guardrail to all requests by default |
 | `extra_headers` | `None` | Additional inbound client header names whose values may be forwarded to Wingback (see [Generic Guardrail API](https://docs.litellm.ai/docs/adding_provider/generic_guardrail_api)) |
 
+A 4xx from Wingback, such as a rejected API key, is not treated as unreachable, so it fails the call even with `fail_open`. If no API key is set at all, the proxy still starts and the first checked request fails this way. Failed checks return an error whose message starts with `Generic Guardrail API failed:`.
+
 :::info
-LiteLLM credential headers such as `x-litellm-api-key` are never forwarded to Wingback. Only allowlisted header values are sent; all other headers appear as `[present]`.
+Wingback receives the inbound request headers as `request_headers`. Values are sent for `host`, `accept`, `accept-encoding`, `connection`, `content-length`, `content-type`, `user-agent`, `x-litellm-*`, `x-stainless-*`, and the names listed in `extra_headers`. Every other header is sent with the value `[present]`. The proxy removes the caller's `Authorization` and LiteLLM API key headers before guardrails run, so they never reach Wingback.
 :::
 
 ## Supported modes
 
-Wingback supports `pre_call` and `post_call`. Both can block requests or responses.
+Wingback supports `pre_call`, `during_call`, and `post_call`, on `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`. Each selected mode checks a request once.
 
 | Mode | When it runs | Typical `unreachable_fallback` |
 |---|---|---|
 | `pre_call` | Before the LLM call | `fail_closed` (do not bypass input screening on outage) |
+| `during_call` | In parallel with the LLM call, before the response is returned | `fail_closed` |
 | `post_call` | After the LLM response | `fail_open` (do not drop responses already generated) |
 
-Streaming responses are evaluated on `post_call` using the Generic Guardrail API streaming behavior.
+On a streaming request, a `pre_call` block returns a 400 before any chunk is sent. A `post_call` block on a streamed response arrives after streaming has started, so the client gets a 200 whose stream ends with an error event. Masking works on prompts and on non-streamed responses but not on streamed responses: LiteLLM's default streaming transform discards returned text rewrites, so the original streamed text reaches the client while a block still stops the stream. The Generic Guardrail API and Alice behave the same way. Screen prompts on `pre_call` if you need masking to apply reliably.
 
 ## Monitor vs enforce
 
-Wingback integrations can run in **monitor** mode (scan and log, return `NONE`) or **enforce** mode (return `BLOCKED` or modified text via `GUARDRAIL_INTERVENED`). Configure the mode on the Wingback integration credential. Pair `unreachable_fallback: fail_open` with monitor rollouts and `fail_closed` when enforcing.
+Wingback integrations can run in **monitor** mode (scan and log, return `NONE`) or **enforce** mode (return `BLOCKED`, or modified text via `GUARDRAIL_INTERVENED`, which streamed responses do not apply as described above). Configure the mode on the Wingback integration credential. Pair `unreachable_fallback: fail_open` with monitor rollouts and `fail_closed` when enforcing.
 
 ## Further reading
 
