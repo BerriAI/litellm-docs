@@ -168,11 +168,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
 
-If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
-
-```shell
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
-```
+Do not combine `--num_workers 1` with `--max_requests_before_restart`. With a single worker the flag does not recycle anything; once the limit is hit the whole pod stops serving. Under Uvicorn the process exits with code 0 and Kubernetes restarts the container, and under Gunicorn nothing accepts connections until the old worker has drained and a replacement has booted, which is long enough for liveness probes to fail. Health probes count toward the limit too, so two probes every 15 seconds use up 11,520 requests a day before any real traffic. If you see gradual memory growth under sustained load, rely on Kubernetes replacing pods, or run two or more workers with jitter as described in [Recycle workers](./server_tuning.md#recycle-workers).
 
 For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
