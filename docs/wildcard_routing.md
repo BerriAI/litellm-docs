@@ -141,4 +141,34 @@ curl http://localhost:4000/v1/chat/completions \
 </Tabs>
 
 
+
+## [PROXY-Only] List wildcard routes in `/v1/models`
+
+By default `GET /v1/models` returns only the models a wildcard route expands to, so a config with `openai/*` lists `openai/gpt-4o` and the rest but not `openai/*` itself. A single request can ask for the routes with `?return_wildcard_routes=true`, but a client that fills its model picker from `/v1/models` (Open WebUI, for example) sends the plain request and never sees them.
+
+Set `general_settings.model_list_return_wildcard_routes` to make every plain `GET /v1/models` include the wildcard routes. The same switch is on the Admin UI under Router Settings, General, and a value saved there applies to every proxy instance after its next settings reload.
+
+```yaml
+model_list:
+  - model_name: "openai/*"
+    litellm_params:
+      model: "openai/*"
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  model_list_return_wildcard_routes: true
+```
+
+```bash
+curl http://localhost:4000/v1/models \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+The response now has `openai/*` next to the expanded models. `GET /v1/models/{model_id}` follows the same setting and query parameter, so a slash-free route such as `gpt-5*` also resolves at `GET /v1/models/gpt-5*` while it is listed.
+
+A request that passes `?return_wildcard_routes=false` still gets the list without them, whatever the setting says, and `?return_wildcard_routes=true` keeps working when the setting is off. The Admin UI's own model pickers and `/cursor/v1/models` always leave wildcard routes out, since both offer every listed id as a callable model.
+
+Keep in mind that a wildcard route is a routing pattern rather than a model. A request that names `openai/*` as its model is forwarded to the provider, which rejects it with a `400 invalid model ID`, exactly as it does for anyone listing with `?return_wildcard_routes=true` today.
+
 ## [[PROXY-Only] Control Wildcard Model Access](/docs/proxy/model_access#advanced-model-access-groups)
