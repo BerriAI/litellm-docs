@@ -1050,9 +1050,7 @@ A request for `{{anthropic}}` that fails on `anthropic/*` is retried on `openai/
 
 ### Enforce Key Model Access on Fallbacks
 
-By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `{{anthropic}}` whenever `gpt-5.6` fails and `{{anthropic}}` is its fallback.
-
-Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+The proxy applies the calling key's, team's and project's model access checks to every fallback target before it is tried, so a fallback never serves a model the caller could not call directly. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
 ```yaml keep-model-ids
 model_list:
@@ -1073,12 +1071,24 @@ router_settings:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  enforce_fallback_model_access: true
 ```
 
-A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. A failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
+
+Set `general_settings.enforce_fallback_model_access: false` to skip this check, so every configured fallback runs whatever the caller's model access. Fallbacks of a search request are still checked against the key's, team's and user's search tool grants.
+
+```yaml
+general_settings:
+  enforce_fallback_model_access: false
+```
+
+:::warning
+
+Earlier releases ran a fallback even when the caller could not call the fallback model. If your deployment relies on that, grant the callers access to the fallback models or set `enforce_fallback_model_access: false`. Otherwise those requests return the primary model's error after you upgrade.
+
+:::
 
 ### Enforce Budget on Fallbacks
 
