@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/workshop/signup",
+      "destination": "/api/workshop/signup"
+    },
+    {
       "source": "/api/docs/ask",
       "destination": "/api/docs/ask"
     },
@@ -56,6 +60,10 @@
     }
   ],
   "functions": {
+    "api/workshop/signup.js": {
+      "maxDuration": 15,
+      "memory": 256
+    },
     "api/docs/ask.js": {
       "includeFiles": "build/search-*.json",
       "maxDuration": 60,

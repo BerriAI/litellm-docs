@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:search
+      - run: npm run test:workshop
       - run: npm run build
   social-cards:
     runs-on: ubuntu-latest

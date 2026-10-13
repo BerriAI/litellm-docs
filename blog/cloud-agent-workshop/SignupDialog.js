@@ -1,6 +1,6 @@
 import React, {useEffect, useId, useRef, useState} from 'react';
 import {newSubmissionId} from '@site/src/components/SalesForm/routing';
-import {submitToWebflow} from '@site/src/components/SalesForm/webflow';
+import {submitWorkshopSignup} from './signup-client.mjs';
 import {FIELD_LIMITS, buildWorkshopSubmission, normalizeWorkshopValues, validateWorkshopValues} from './signup-payload.mjs';
 import styles from './signup.module.css';
 
@@ -68,8 +68,9 @@ export default function SignupDialog({open, onClose}) {
     try {
       const fields = buildWorkshopSubmission(values, {
         submissionId: submissionId.current,
+        source: window.location.href,
       });
-      await submitToWebflow(fields);
+      await submitWorkshopSignup(fields);
       setEmail(values.email);
       setStatus('success');
     } catch {
@@ -93,7 +94,7 @@ export default function SignupDialog({open, onClose}) {
       {status === 'success' ? <div className={styles.success}>
         <h2 className={styles.title} ref={heading} tabIndex={-1} id={`${id}-title`}>Workshop request received.</h2>
         <p id={`${id}-description`}>The LiteLLM team will follow up at <strong>{email}</strong> to arrange your 30-minute intake and discuss what you want to build.</p>
-        <p className={styles.note}>Your request is saved. A session time has not been booked.</p>
+        <p className={styles.note}>Your request was received. A session time has not been booked.</p>
         <button className={styles.submit} type="button" onClick={onClose}>Back to the workshop</button>
       </div> : <>
         <h2 className={styles.title} ref={heading} tabIndex={-1} id={`${id}-title`}>Build a self-hosted cloud agent.</h2>

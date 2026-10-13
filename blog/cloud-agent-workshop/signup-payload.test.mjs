@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import {buildWorkshopSubmission, normalizeWorkshopValues, validateWorkshopValues} from './signup-payload.mjs';
 
 const base = {
@@ -10,26 +9,15 @@ const base = {
   linkedin: 'https://www.linkedin.com/in/alex-chen/',
   workflow: 'Turn a Slack bug report into a tested pull request.',
 };
-const metadata = {submissionId: 'qa-stable-id'};
+const metadata = {submissionId: 'qa-stable-id', source: 'https://docs.litellm.ai/blog/cloud-agent-workshop'};
 
-test('all simplified workshop answers survive the shared Webflow field whitelist', () => {
+test('client payload contains every workshop answer and stable metadata', () => {
   const values = {...base, onsiteInterest: 'Yes'};
   const payload = buildWorkshopSubmission(values, metadata);
-  const webflowSource = readFileSync(new URL('../../src/components/SalesForm/webflow.js', import.meta.url), 'utf8');
-  const fieldOrderSource = webflowSource.match(/export const FIELD_ORDER = (\[[\s\S]*?\]);/)[1];
-  const fieldOrder = [...fieldOrderSource.matchAll(/'([^']+)'/g)].map(match => match[1]);
-  assert.ok(Object.keys(payload).every(key => fieldOrder.includes(key)));
-  for (const value of Object.values(values)) assert.ok(payload.notes.includes(value), `Missing answer: ${value}`);
-  assert.equal(payload.linkedin, base.linkedin);
-  assert.match(payload.notes, /Workshop: Build a self-hosted cloud agent\./);
-  assert.match(payload.notes, /October 19–30, 2026/);
-  assert.match(payload.notes, /What are you hoping to achieve\?: Turn a Slack bug report/);
-  assert.match(payload.notes, /Would you like the LiteLLM team to work with you on-site\?: Yes/);
-  assert.match(payload['hoping-to-learn'], /Slack bug report/);
-  assert.equal(payload.intent, 'talk-to-sales');
+  assert.deepEqual(payload, {...values, ...metadata});
 });
 
-test('removed fields are not captured and follow-up does not infer company size', () => {
+test('removed fields and sales routing are not sent in workshop payload', () => {
   const removed = {
     companySize: '10000+',
     harness: 'Hermes',
@@ -43,20 +31,19 @@ test('removed fields are not captured and follow-up does not infer company size'
   const payload = buildWorkshopSubmission({...base, ...removed}, metadata);
   for (const [key, value] of Object.entries(removed)) {
     assert.equal(values[key], undefined);
-    assert.ok(!payload.notes.includes(value), `Removed answer persisted: ${key}`);
+    assert.ok(!JSON.stringify(payload).includes(value), `Removed answer persisted: ${key}`);
   }
   assert.equal(payload['company-size'], undefined);
-  assert.equal(payload['lead-route'], 'Sales email follow-up');
-  assert.equal(payload['lead-routing-reason'], 'Workshop signup; company size not collected');
-  assert.doesNotMatch(payload.notes, /Company size:/i);
+  assert.equal(payload['lead-route'], undefined);
+  assert.equal(payload['lead-routing-reason'], undefined);
   assert.doesNotMatch(JSON.stringify(payload), /below 500/i);
 });
 
 test('optional on-site answer is clearly absent and retries preserve the submission id', () => {
   const first = buildWorkshopSubmission(base, metadata);
   const retry = buildWorkshopSubmission(base, metadata);
-  assert.equal(first['submission-id'], retry['submission-id']);
-  assert.match(first.notes, /Would you like the LiteLLM team to work with you on-site\?: Not provided/);
+  assert.equal(first.submissionId, retry.submissionId);
+  assert.equal(first.onsiteInterest, '');
 });
 
 test('all required answers, including LinkedIn, reject missing or whitespace-only values', () => {
@@ -77,7 +64,6 @@ test('scheme-less LinkedIn profile URLs normalize to HTTPS and persist', () => {
     assert.deepEqual(validateWorkshopValues(values), {});
     const payload = buildWorkshopSubmission({...base, linkedin}, metadata);
     assert.equal(payload.linkedin, `https://${linkedin}`);
-    assert.ok(payload.notes.includes(`LinkedIn profile: https://${linkedin}`));
   }
 });
 

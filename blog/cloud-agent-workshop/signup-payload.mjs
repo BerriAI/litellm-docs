@@ -63,36 +63,23 @@ export function validateWorkshopValues(values) {
   if (values.linkedin && !errors.linkedin && !linkedInProfile(values.linkedin)) {
     errors.linkedin = 'Enter a LinkedIn profile URL, such as https://www.linkedin.com/in/your-name.';
   }
+  if (values.email && !errors.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+    errors.email = 'Enter a valid email address.';
+  }
+  if (values.onsiteInterest && !errors.onsiteInterest && !['Yes', 'Maybe', 'No'].includes(values.onsiteInterest)) {
+    errors.onsiteInterest = 'Choose an on-site preference from the list.';
+  }
   return errors;
 }
 
-// The shared Webflow helper only sends its FIELD_ORDER. Keep the workshop
-// answers in its supported notes field so optional fields are not dropped.
-// Preserve the existing talk-to-sales intent and routing contract.
-export function buildWorkshopSubmission(raw, {submissionId} = {}) {
+// Only intake answers and a stable request ID cross the browser/API boundary.
+// Workshop event metadata and the destination are controlled by the server.
+export function buildWorkshopSubmission(raw, {submissionId, source} = {}) {
   const values = normalizeWorkshopValues(raw);
   const errors = validateWorkshopValues(values);
   if (Object.keys(errors).length) throw new Error('Workshop intake is incomplete or exceeds a field limit.');
-  if (!submissionId) throw new Error('Workshop submission metadata is required.');
-
-  const notes = [
-    WORKSHOP_TITLE,
-    `Dates: ${WORKSHOP_DATES}`,
-    'Format: Remote, two weeks; optional on-site work by arrangement',
-    '',
-    ...Object.entries(LABELS).map(([key, label]) => `${label}: ${values[key] || 'Not provided'}`),
-  ].join('\n');
-
-  return {
-    intent: 'talk-to-sales',
-    'first-name': values.name,
-    email: values.email,
-    'company-name': values.company,
-    linkedin: values.linkedin,
-    'hoping-to-learn': `${WORKSHOP_TITLE}\n${WORKSHOP_DATES}\n${values.workflow}`,
-    notes,
-    'submission-id': submissionId,
-    'lead-route': 'Sales email follow-up',
-    'lead-routing-reason': 'Workshop signup; company size not collected',
-  };
+  if (typeof submissionId !== 'string' || !/^[A-Za-z0-9_-]{8,128}$/.test(submissionId)) {
+    throw new Error('Workshop submission metadata is required.');
+  }
+  return {...values, submissionId, source: typeof source === 'string' ? source : ''};
 }

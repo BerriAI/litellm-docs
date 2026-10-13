@@ -19,6 +19,7 @@
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
     "test:search": "node --no-experimental-require-module --test search/*.test.js",
+    "test:workshop": "node --test workshop/signup.test.mjs blog/cloud-agent-workshop/signup-payload.test.mjs blog/cloud-agent-workshop/signup-client.test.mjs",
     "search:serve": "node search/server.js",
     "search:verify-trace": "node search/verify-trace.js",
     "generate:social-card": "node scripts/social-card/index.cjs",
