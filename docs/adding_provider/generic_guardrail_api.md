@@ -259,6 +259,7 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        guardrail_information_scope: per_call  # default: per_call. Set to per_session or off to log fewer unchanged allows. See "Guardrail information scope" below.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -286,6 +287,22 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Guardrail information scope
+
+Each guardrail call records a guardrail information entry in spend logs, OTEL traces and logging callbacks. In a long agent session that is a request entry and a response entry for every turn, and almost all of them are identical allows. `guardrail_information_scope` sets how often a call that allows the content unchanged records that entry:
+
+| `guardrail_information_scope` | Unchanged allows that are recorded |
+| --- | --- |
+| `per_call` (default) | Every one, which is the existing behavior |
+| `per_session` | The first one of each session, once for the request side and once for the response side |
+| `off` | None |
+
+The guardrail still checks every call under every scope. Blocks, rewrites (`GUARDRAIL_INTERVENED`, or returned content that differs from what was sent), errors and fail-open passthroughs are always recorded, and they never count as a session's first call.
+
+`per_session` keys a session by the caller and the session id. The caller is the authenticated key hash, or the team id when there is no key hash. The session id is `litellm_session_id` or `metadata.session_id`, and a call without one is recorded as it would be under `per_call`. Seen sessions are kept in memory in each proxy worker for an hour, so with several workers each one records a session's first call, and a session that runs longer than an hour is recorded again.
+
+Entries that are not recorded are also missing from everything that reads them, such as the pass counts on the guardrail usage dashboard and `include_guardrail_response` bodies. An unknown value, such as a misspelled `per-session`, is ignored with a warning in the proxy log, and the guardrail records every call as it would under `per_call`.
 
 ### Static and dynamic headers
 
