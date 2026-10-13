@@ -491,7 +491,7 @@ To route Auto Router traffic with the same AI Function, set `opensource_classifi
 
 ### Passing Databricks specific params - 'instruction'
 
-For embedding models, databricks lets you pass in an additional param 'instruction'. [Full Spec](https://github.com/BerriAI/litellm/blob/43353c28b341df0d9992b45c6ce464222ebd7984/litellm/llms/databricks.py#L164)
+For embedding models, databricks lets you pass in an additional param 'instruction'. [Full Spec](https://github.com/BerriAI/litellm/blob/main/litellm/llms/databricks/embed/transformation.py)
 
 
 ```python
