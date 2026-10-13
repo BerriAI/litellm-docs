@@ -1664,6 +1664,7 @@ const learnSidebar = {
           },
           items: [
             "completion/function_call",
+            "completion/tool_loop",
             "completion/web_search",
             {
               type: "doc",
