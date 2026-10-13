@@ -1303,6 +1303,7 @@ const sidebars = {
         "providers/groq",
         "providers/helicone",
         "providers/heroku",
+        "providers/hesperan",
         {
           type: "category",
           label: "HuggingFace",
