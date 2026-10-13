@@ -1174,6 +1174,7 @@ const sidebars = {
         },
         "providers/text_completion_openai",
         "providers/openai_compatible",
+        "providers/api_route",
         {
           type: "category",
           label: "Azure OpenAI",
