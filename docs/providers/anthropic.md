@@ -1927,7 +1927,7 @@ Assistant: {
 ```
 
 ## Usage - "System" messages
-If you're using Anthropic's Claude 2.1, `system` role messages are properly formatted for you.
+If you're using Anthropic Claude models, `system` role messages are properly formatted for you.
 
 ```python keep-model-ids
 import os
