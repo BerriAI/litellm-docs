@@ -1280,6 +1280,7 @@ const sidebars = {
         "providers/coralbricks",
         "providers/crusoe",
         "providers/custom_llm_server",
+        "providers/daoxe",
         "providers/dashscope",
         "providers/databricks",
         "providers/datarobot",
