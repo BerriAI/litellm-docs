@@ -17,7 +17,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 - `Virtual Keys` - Keys are used for authentication to the LiteLLM API. Each key can optionally be associated with a `user_id`, a `team_id`, or both:
   - **User-only key**: Has a `user_id` but no `team_id`. Tracked individually, deleted when the user is deleted.
   - **Team key (Service Account)**: Has a `team_id` but no `user_id`. Shared by the team, not deleted when users are removed. [Learn more about service account keys](https://docs.litellm.ai/docs/proxy/virtual_keys#service-account-keys).
-  - **User + Team key**: Has both `user_id` and `team_id`. Belongs to a specific user within a team context.
+  - **User + Team key**: Has both `user_id` and `team_id`. Belongs to a specific user within a team context. Deleted when the user is removed from that team or when the user is deleted. Removed keys appear in the [Deleted Keys](./deleted_keys_teams.md) audit log.
 
 ### When to Use Each Key Type
 
@@ -25,7 +25,7 @@ Role-based access control (RBAC) is based on Organizations, Teams and Internal U
 |----------|----------|----------------|-----------|
 | **User-only** | Personal API keys for individual developers | Tracked to the user | Deleted when user is deleted |
 | **Team (Service Account)** | Production apps, CI/CD pipelines, shared services | Tracked to the team only | Persists even when team members leave |
-| **User + Team** | User working within a team context | Tracked to both user and team | Deleted when user is deleted |
+| **User + Team** | User working within a team context | Tracked to both user and team | Deleted when the user is removed from the team or deleted |
 
 **Example scenarios:**
 - Use **user-only keys** for developers testing locally
