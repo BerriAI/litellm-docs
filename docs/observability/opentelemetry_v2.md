@@ -943,6 +943,40 @@ The two are independent. A tenant's `llm_only` narrows only that tenant's projec
 
 Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
 
+### Choose prompt capture per tenant
+
+A team or key can choose whether its own destination receives prompts and responses, independent of what the proxy captures globally. Set `capture_message_content` in a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback next to its credentials:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "langfuse_otel",
+    "callback_type": "success",
+    "callback_vars": {
+      "langfuse_public_key": "pk-lf-...",
+      "langfuse_secret_key": "sk-lf-...",
+      "capture_message_content": "span_only"
+    }
+  }'
+```
+
+| Team value | What that tenant's destination receives |
+|------------|------------------------------------------|
+| `span_only` | Prompts and responses, even when global capture is `no_content` |
+| `no_content` | No prompt or response content, even when global capture is on |
+| omitted | The mode of your own callback for the same backend when the proxy loads one, otherwise the global mode |
+
+The global mode is `callback_settings.otel.capture_message_content`, or `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` when that is not set (see [Capturing prompts & responses](#capturing-prompts--responses)). For an omitted value, "your own callback for the same backend" means a team `langfuse_otel` entry follows the proxy's own `langfuse_otel` exporter, a team `arize` entry follows the proxy's own `arize`, and so on; a team `arize` entry on a proxy that exports only to Langfuse follows the global mode. The order of `litellm_settings.callbacks` does not change the result. The proxy's own `langfuse_otel` and `arize` exporters read `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` only, so a team entry that follows them gets `no_content` unless that env var turns capture on
+
+The value changes only that tenant's copy. With global capture on `no_content`, a `span_only` tenant gets prompts and responses while your own exporters, a plain `otel` collector and other tenants still get metadata only. With global capture on, a `no_content` tenant gets metadata only while everyone else keeps the content
+
+`no_content` removes the content attributes of every vocabulary the proxy writes: `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions`, the MCP `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result`, `langfuse.observation.input` and `output`, the OpenInference `input.value`, `output.value` and `llm.input_messages.*` / `llm.output_messages.*` keys, Langtrace's `llm.prompts` and `llm.completions`, and `weave.output`. The spans themselves still arrive with their trace and span ids, their place in the tree, model, token usage, cost and declared tool definitions. When a `no_content` tenant destination is the same account as one of your own exporters, that account gets one copy and it has no content
+
+The accepted values are `no_content` and `span_only`. `event_only` and `span_and_event` stay proxy-wide values, since OTel v2 writes content to span attributes only. The team callback route, `/key/generate` and `/key/update` reject any other value, the field on a callback that is not one of the four above, the field on a failure-only entry, the field on any callback while the proxy runs without `LITELLM_OTEL_V2=true`, and two entries for the same backend that disagree. Entries for different backends may use different values. A caller cannot set it per request
+
+When upgrading, a stored team or key entry with no value used to receive whatever the first OTel callback in `litellm_settings.callbacks` captured. On a proxy that also loads the same callback itself, for example `callbacks: ["otel", "langfuse_otel"]`, that entry now follows the proxy's own exporter for that backend. Set `capture_message_content: span_only` on each entry that should keep prompts and responses
+
 ### Keep Redis and Postgres spans out of tenant traces
 
 A request also produces spans for the proxy's own datastore work: Redis lookups for the auth and response caches, and the Postgres spend write. A key or team that sends traces to its own account receives those as well. Set `excluded_services` to stop forwarding them to key and team destinations, while the request root, auth, guardrail and model-call spans still go through:
@@ -959,9 +993,30 @@ Or in the proxy environment:
 LITELLM_OTEL_EXCLUDED_SERVICES=redis,postgres
 ```
 
-The config value wins over the env var when both are set. The accepted names are `redis` and `postgres` (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
+The config value wins over the env var when both are set. The accepted service names are `redis`, `postgres`, `batch_write_to_db` and `redis_*` names (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
 
-The setting only narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team), from the API or from the team's logging settings in the Admin UI. The tenant needs nothing new. Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. There is no Admin UI field for `excluded_services`, since it is a proxy-wide setting
+The global setting narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team). Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. Configure the global setting in proxy YAML or the environment.
+
+### Override exclusions for one team or key
+
+Set `excluded_services` in the destination's `callback_vars` to replace the global exclusion set. The accepted values are the same datastore names as the global setting, supplied as a comma-separated string. For example, `"redis,postgres"` excludes Redis and PostgreSQL spans from that destination, even when the global setting is empty. `"none"` excludes no database spans, even when the global setting excludes them. Omitting the variable follows the global setting. Values replace the global set rather than merging with it.
+
+The override requires `LITELLM_OTEL_V2=true` and a destination-capable callback: `langfuse_otel`, `arize`, `weave_otel` or `newrelic`. It is available on `success` and `success_and_failure` entries, not failure-only entries. For example, register it on a team's New Relic destination:
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "newrelic",
+    "callback_type": "success",
+    "callback_vars": {
+      "newrelic_api_key": "<team ingest license key>",
+      "excluded_services": "redis,postgres"
+    }
+  }'
+```
+
+The same `callback_vars` setting is available on key logging callbacks. Invalid or empty values, unknown names such as `"auth"`, and `"none"` combined with another name are rejected when the callback is saved.
 
 `langfuse_span_scope: llm_only` already drops these spans for a Langfuse project, together with the request root, auth and guardrail spans. Use `excluded_services` when the tenant should keep the rest of the request tree
 

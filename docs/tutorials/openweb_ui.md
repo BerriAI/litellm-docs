@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Open WebUI
 
+Rolling Open WebUI out to a whole company with SSO, IdP groups mapped to LiteLLM teams, skills, and artifacts? See [Open WebUI for Organizations](./openwebui_org_rollout.md).
+
 This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM with Open WebUI allows teams to 
 - Access 100+ LLMs on Open WebUI
 - Track Spend / Usage, Set Budget Limits 

@@ -17,7 +17,9 @@ const fieldsAre = (value, fields) => value && typeof value === 'object' && !Arra
   Object.keys(value).every(key => fields.includes(key));
 const validQuestion = question => typeof question === 'string' && question.trim().length > 0 && question.length <= 500;
 function validBody(body) {
-  return fieldsAre(body, ['question', 'history']) && validQuestion(body.question) &&
+  return fieldsAre(body, ['question', 'history', 'traceContext']) && validQuestion(body.question) &&
+    (body.traceContext === undefined || (typeof body.traceContext === 'string' &&
+      /^[a-f0-9]{32}\.[a-f0-9]{16}\.[A-Za-z0-9_-]{43}$/.test(body.traceContext))) &&
     (body.history === undefined || (Array.isArray(body.history) && body.history.length <= 4 &&
       body.history.every(turn => fieldsAre(turn, ['question']) && validQuestion(turn.question))));
 }
@@ -69,8 +71,9 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now})
       const parsed = await readBody(req, AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]));
       if (parsed.error) return send(res, parsed.status, {error: parsed.error});
       if (!validBody(parsed.body)) return send(res, 400, {error: 'Send a question of 1 to 500 characters and up to four previous questions.'});
-      const {question, history = []} = parsed.body;
+      const {question, history = [], traceContext} = parsed.body;
       const result = await answerQuestion({question: question.trim(), history, index, documents, config,
+        traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50000)]), fetchImpl});
       return send(res, result.status, result.body);
     } catch {

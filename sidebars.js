@@ -100,6 +100,7 @@ const sidebars = {
             "observability/openmeter",
             "observability/pointfive",
             "observability/ramp_integration",
+            "observability/ternary",
             "observability/vantage",
           ],
         },
@@ -149,6 +150,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
           { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
           { type: "doc", id: "proxy/guardrails/compresr", customProps: { icon: "/img/integrations/compresr.png" } },
+          { type: "doc", id: "proxy/guardrails/decision_model", customProps: { icon: "/img/integrations/litellm.png" } },
           "proxy/guardrails/typesafe",
           { type: "doc", id: "proxy/guardrails/crowdstrike_aidr", customProps: { icon: "/img/integrations/crowdstrike.png" } },
           { type: "doc", id: "proxy/guardrails/enkryptai", customProps: { icon: "/img/integrations/enkrypt.png" } },
@@ -243,6 +245,11 @@ const sidebars = {
         {
           type: "doc",
           id: "tutorials/openweb_ui",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/openwebui_org_rollout",
           customProps: { icon: "/img/integrations/openwebui.png" },
         },
         {
@@ -926,6 +933,7 @@ const sidebars = {
       items: [
         "a2a_agent_card",
         "a2a_invoking_agents",
+        "a2a_databricks_agent",
         "a2a_agent_headers",
         "a2a_cost_tracking",
         "a2a_agent_permissions",
@@ -1367,6 +1375,7 @@ const sidebars = {
         "providers/ragflow",
         "providers/ragflow_vector_store",
         "providers/recraft",
+        "providers/reka",
         "providers/replicate",
         {
           type: "category",
@@ -1379,6 +1388,7 @@ const sidebars = {
         "providers/s3_vectors",
         "providers/sambanova",
         "providers/sap",
+        "providers/scaledown",
         "providers/scaleway",
         "providers/scx_ai",
         "providers/stability",

@@ -214,12 +214,12 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 :::warning
 **Temperature Recommendation for Gemini 3 Models**
 
-For Gemini 3 models, LiteLLM defaults `temperature` to `1.0` and strongly recommends keeping it at this default. Setting `temperature < 1.0` can cause:
+Leave `temperature` unset for Gemini 3 models. LiteLLM forwards only the sampling parameters you set, so an omitted `temperature` lets Google apply its own default of `1.0`. Setting `temperature < 1.0` can cause:
 - Infinite loops
 - Degraded reasoning performance
 - Failure on complex tasks
 
-LiteLLM will automatically set `temperature=1.0` if not specified for Gemini 3+ models.
+An explicit `temperature`, including `1.0` pinned in `litellm_params`, is still forwarded as given. Remove it if you want LiteLLM to stop sending the parameter.
 :::
 
 **Expected Response**
