@@ -1289,6 +1289,7 @@ const sidebars = {
         "providers/docker_model_runner",
         "providers/edenai",
         "providers/elevenlabs",
+        "providers/flowspeech",
         "providers/empiriolabs",
         "providers/fal_ai",
         "providers/featherless_ai",
