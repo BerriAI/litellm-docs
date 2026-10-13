@@ -1,6 +1,6 @@
 # Ternary
 
-LiteLLM can export proxy spend data to [Ternary](https://ternary.app) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you allocate and analyse LLM spend alongside your cloud costs in Ternary's FinOps platform — for example, splitting a shared AI invoice across teams, projects, and API keys.
+LiteLLM can export proxy spend data to [Ternary](https://ternary.app) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you allocate and analyse LLM spend alongside your cloud costs in Ternary's FinOps platform, for example by splitting a shared AI invoice across teams, projects, and API keys.
 
 ## Overview
 
@@ -10,17 +10,17 @@ LiteLLM can export proxy spend data to [Ternary](https://ternary.app) as [FOCUS 
 | Data format | FOCUS CSV (automatically transformed from LiteLLM spend data) |
 | Supported operations | Automatic scheduled export (daily; interval for setup validation) |
 | Authentication | Ternary API key + connection ID (per-connection bearer token) |
-| Privacy | Cost and usage metadata only — no prompt or completion content leaves the gateway |
+| Privacy | Cost and usage metadata only. No prompt or completion content leaves the gateway |
 
 ## Prerequisites
 
 You need three values from Ternary:
 
-1. **Connection ID** (`TERNARY_CONNECTION_ID`) — identifies the cost connection the data lands in; it appears in the export URL path.
-2. **API Key** (`TERNARY_API_KEY`) — a per-connection bearer token that authenticates the push.
-3. **API host** (`TERNARY_BASE_URL`) — your Ternary API host, which differs by region (US vs EU).
+1. **Connection ID** (`TERNARY_CONNECTION_ID`): identifies the cost connection the data lands in. It appears in the export URL path.
+2. **API Key** (`TERNARY_API_KEY`): a per-connection bearer token that authenticates the push.
+3. **API host** (`TERNARY_BASE_URL`): your Ternary API host, which differs by region (US vs EU).
 
-The Connection ID and API Key are minted when you add an **AI Gateway** integration in Ternary (**Settings → Integrations → Add integration → AI Gateway**). The API host is the base URL of the Ternary instance you sign in to — the US and EU regions have different hosts.
+The Connection ID and API Key are minted when you add an **AI Gateway** integration in Ternary (**Settings → Integrations → Add integration → AI Gateway**). The API host is the base URL of the Ternary instance you sign in to. The US and EU regions have different hosts.
 
 ## Setup
 
@@ -67,11 +67,11 @@ Each day maps to one file, so re-sending a day replaces it rather than double-co
 
 ## Privacy
 
-Only cost and usage **metadata** is exported — spend, token counts, model, provider, and team/key identifiers. Prompt and completion **content never leaves the gateway**.
+Only cost and usage **metadata** is exported: spend, token counts, model, provider, and team/key identifiers. Prompt and completion **content never leaves the gateway**.
 
 ## Cost provenance (estimate vs. billed)
 
-Gateway-reported spend is a rate-card **estimate**, not a billed invoice. Ternary tags every row landed through this connection with its provenance (a cost source of `"LiteLLM estimate"`), derived server-side from the connection — so estimated gateway spend is never mistaken for, or reallocated as, billed cloud cost. Keep the gateway's spend scoped as the estimate it is to avoid double-counting against a separate provider invoice.
+Gateway-reported spend is a rate-card **estimate**, not a billed invoice. Ternary tags every row landed through this connection with its provenance (a cost source of `"LiteLLM estimate"`), derived server-side from the connection, so estimated gateway spend is never mistaken for, or reallocated as, billed cloud cost. Keep the gateway's spend scoped as the estimate it is to avoid double-counting against a separate provider invoice.
 
 ## FOCUS field mapping
 
@@ -91,7 +91,7 @@ LiteLLM spend data is transformed into the FOCUS 1.2 schema (the same shared tra
 
 ### Token breakdown
 
-Per-request token counts — `prompt_tokens`, `completion_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens` — which the shared FOCUS transformer does not surface as top-level columns, are carried in the standard FOCUS **`Tags`** column as JSON. Ternary reads them from `Tags` on ingest to enable token-weighted cost allocation. Other metadata (`user_id`, `user_email`, `model`, …) also rides in `Tags`.
+Per-request token counts (`prompt_tokens`, `completion_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`), which the shared FOCUS transformer does not surface as top-level columns, are carried in the standard FOCUS **`Tags`** column as JSON. Ternary reads them from `Tags` on ingest to enable token-weighted cost allocation. Other metadata (`user_id`, `user_email`, `model`, …) also rides in `Tags`.
 
 ## Related Links
 
