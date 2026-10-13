@@ -7,6 +7,8 @@ authors:
   - mateo
   - kerry
 description: "Gemini 4 Argon costs $2.00 per 1M input tokens and $10.00 per 1M output tokens until Nov 30. LiteLLM supports it on day 0 on AI Studio and Google Cloud."
+card_title: "Gemini 4 Argon"
+card_summary: "Gemini 4 Argon costs $2.00 per 1M input tokens and $10.00 per 1M output tokens until Nov 30."
 image: ./hero.png
 tags: [gemini, gemini 4, gemini-4-argon, pricing, day 0 support]
 hide_table_of_contents: false

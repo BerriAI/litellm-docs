@@ -7,6 +7,8 @@ authors:
   - misbah
   - mateo
 description: "Day 0 support for Xiaomi MiMo V2.6 Pro and Flash on LiteLLM, priced on the native route for the first time."
+card_title: "Xiaomi MiMo V2.6"
+card_summary: "Day 0 support for Xiaomi MiMo V2.6 Pro and Flash on LiteLLM, priced on the native route for the first time."
 tags: [xiaomi, mimo, mimo-v2.6, day 0 support]
 hide_table_of_contents: false
 ---

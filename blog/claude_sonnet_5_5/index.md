@@ -7,6 +7,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for Claude Sonnet 5.5 on the LiteLLM AI Gateway. Use it across Anthropic, Bedrock, Gemini Enterprise Agent Platform, and Azure."
+card_title: "Claude Sonnet 5.5"
+card_summary: "Day 0 support for Claude Sonnet 5.5 on the LiteLLM AI Gateway."
 image: /img/litellm_claude_sonnet_5_5_announcement.png
 tags: [anthropic, claude, sonnet 5.5, day 0 support]
 hide_table_of_contents: false

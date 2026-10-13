@@ -8,6 +8,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for GPT-6 Sol and GPT-6 Luna on LiteLLM, at half the price of their GPT-5.6 counterparts."
+card_title: "GPT-6 Sol and GPT-6 Luna"
+card_summary: "Day 0 support for GPT-6 Sol and GPT-6 Luna on LiteLLM, at half the price of their GPT-5.6 counterparts."
 tags: [openai, gpt-6, gpt-6-sol, gpt-6-luna, completion, day 0 support]
 hide_table_of_contents: false
 ---

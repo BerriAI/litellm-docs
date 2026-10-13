@@ -57,3 +57,4 @@ jobs:
           python-version: "3.13"
       - run: pip install pyyaml
       - run: python3 scripts/check-docs.py docs
+      - run: python3 scripts/check-docs.py blog --only=card-missing,card-too-long

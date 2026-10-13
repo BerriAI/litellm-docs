@@ -228,6 +228,10 @@ const config = {
         remarkPlugins: [require('./src/remark/raw-markdown')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
+        feedOptions: {
+          limit: 50,
+          createFeedItems: require('./src/feed/card-categories').createFeedItems,
+        },
       },
     ],
 
