@@ -123,7 +123,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="azure_anthropic/{{anthropic}}",
+    model="azure_ai/claude-sonnet-4-5",
     api_base="https://<your-resource>.services.ai.azure.com/anthropic",
     api_key="your-azure-api-key",
     messages=[
@@ -320,7 +320,7 @@ print(response)
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="azure_anthropic/{{anthropic}}",
+    model="azure_ai/claude-sonnet-4-5",
     messages=[
         {
             "role": "user",
