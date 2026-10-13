@@ -50,10 +50,10 @@ class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observabilit
     async def async_pre_call_hook(self, user_api_key_dict: UserAPIKeyAuth, cache: DualCache, data: dict, call_type: Literal[
             "completion",
             "text_completion",
-            "embeddings",
+            "embedding",
             "image_generation",
             "moderation",
-            "audio_transcription",
+            "transcription",
         ]): 
         data["model"] = "my-new-model"
         return data 
@@ -93,7 +93,7 @@ class MyCustomHandler(CustomLogger): # https://docs.litellm.ai/docs/observabilit
         self,
         data: dict,
         user_api_key_dict: UserAPIKeyAuth,
-        call_type: Literal["completion", "embeddings", "image_generation", "moderation", "audio_transcription"],
+        call_type: Literal["completion", "embedding", "image_generation", "moderation", "transcription"],
     ):
         pass
 
@@ -285,10 +285,10 @@ class MyCustomHandler(CustomLogger):
     async def async_pre_call_hook(self, user_api_key_dict: UserAPIKeyAuth, cache: DualCache, data: dict, call_type: Literal[
             "completion",
             "text_completion",
-            "embeddings",
+            "embedding",
             "image_generation",
             "moderation",
-            "audio_transcription",
+            "transcription",
         ]) -> Optional[dict, str, Exception]: 
         formatted_prompt = get_formatted_prompt(data=data, call_type=call_type)
 
