@@ -517,6 +517,14 @@ A read replica takes the same key under `database.reader`, and it requires the w
      litellm --health
      ```
 
+### --validate_config
+   - **Type:** `bool` (Flag)
+   - Loads and validates the config file (including `mcp_servers`) through the same code path as startup, without starting the server. Exits `0` when the config is valid and `1` on any config error, so you can run it in CI before deploying or bumping a version.
+   - **Usage:** 
+     ```shell
+     litellm --config config.yaml --validate_config
+     ```
+
 ## Other Options
 
 ### --version
