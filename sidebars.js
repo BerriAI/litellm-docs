@@ -1261,6 +1261,7 @@ const sidebars = {
         "providers/aleph_alpha",
         "providers/amazon_nova",
         "providers/anyscale",
+        "providers/apimodels",
         "providers/apertis",
         "providers/baseten",
         "providers/black_forest_labs",
