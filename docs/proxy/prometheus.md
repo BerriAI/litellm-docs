@@ -353,6 +353,7 @@ Enterprise only. Emitted when using [LiteLLM managed batches](managed_batches) a
 | `litellm_check_batch_cost_jobs_polled` | Number of unprocessed batches found by the last CheckBatchCost poll |
 | `litellm_check_batch_cost_jobs_processed_total` | Total number of batches successfully cost-tracked by CheckBatchCost. Labels: `"model", "api_provider"` |
 | `litellm_check_batch_cost_errors_total` | Total number of errors in CheckBatchCost by error type. Labels: `"error_type"` |
+| `litellm_check_batch_cost_stale_expired_total` | Total number of batches CheckBatchCost gave up on after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` days without recording their cost |
 | `litellm_check_batch_cost_last_run_timestamp` | Unix timestamp of the last CheckBatchCost job run |
 
 ## LLM Provider Metrics
