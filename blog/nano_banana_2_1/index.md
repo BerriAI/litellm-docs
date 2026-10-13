@@ -9,7 +9,7 @@ authors:
   - kerry
 description: "Day 0 support for Gemini Nano Banana 2.1 on LiteLLM, on Google AI Studio and Gemini Enterprise Agent Platform, with image output at half Nano Banana 2's price."
 card_title: "Nano Banana 2.1"
-card_summary: "Image output at half Nano Banana 2's price, on Google AI Studio and Gemini Enterprise Agent Platform."
+card_summary: "Gemini image model with image output at half Nano Banana 2's price: $30 / MTok image out, $1.50 text in."
 tags: [gemini, gemini enterprise agent platform, nano banana, image generation, day 0 support]
 hide_table_of_contents: false
 ---

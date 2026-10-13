@@ -8,7 +8,7 @@ authors:
   - mateo
 description: "Day 0 support for Qwen3.8-Omni-Flash on LiteLLM, with text, image, audio and video input."
 card_title: "Qwen3.8-Omni-Flash"
-card_summary: "Day 0 support for Qwen3.8-Omni-Flash on LiteLLM, with text, image, audio and video input."
+card_summary: "Qwen's first omni model: text, image, audio and video input with text output, through DashScope."
 tags: [qwen, dashscope, qwen3.8-omni-flash, day 0 support]
 hide_table_of_contents: false
 ---
