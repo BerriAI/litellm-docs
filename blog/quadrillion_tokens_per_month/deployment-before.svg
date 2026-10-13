@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="579" viewBox="0 0 800 579" role="img" aria-labelledby="title desc">
+<title id="title">Earlier LiteLLM test deployment</title>
+<desc id="desc">A Kubernetes Service sends requests to a gateway pod with one request worker. Authentication, budgets, token counting, metrics and spend processing share that worker. Its database pool connects to Postgres, and Redis holds shared state. The gateway sends model requests to providers.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8da0b2"/></marker>
+  <marker id="greenArrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#82b545"/></marker>
+</defs>
+<rect width="800" height="579" fill="#ffffff"/>
+<g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif">
+<text x="24" y="42" font-size="28" font-weight="650" fill="#12283e">Earlier test deployment</text><text x="24" y="73" font-size="16" font-weight="400" fill="#536a7e">One request worker per gateway pod</text>
+<rect x="186" y="118" width="410" height="332" rx="20" fill="#f7f9fc" stroke="#8da0b2" stroke-width="1.7" stroke-dasharray="7 6"/>
+<text x="208" y="150" font-size="20" font-weight="650" fill="#12283e">Gateway pod</text>
+<rect x="208" y="174" width="366" height="252" rx="15" fill="#eff7e7" stroke="#82b545" stroke-width="1.7"/>
+<text x="230" y="205" font-size="16" font-weight="400" fill="#536a7e">Gateway container</text>
+<text x="391" y="241" font-size="24" font-weight="650" fill="#12283e" text-anchor="middle">1 request worker</text>
+<text x="391" y="276" font-size="17" font-weight="400" fill="#12283e" text-anchor="middle">Auth · budgets · token counting</text>
+<text x="391" y="309" font-size="17" font-weight="400" fill="#12283e" text-anchor="middle">Metrics · spend processing</text>
+<rect x="234" y="351" width="314" height="57" rx="15" fill="#fff" stroke="#c8d3de" stroke-width="1.7"/>
+<text x="391" y="386" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Per-worker database pool</text>
+<rect x="24" y="203" width="130" height="88" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="89" y="241" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Kubernetes</text><text x="89" y="264" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">Service</text>
+<rect x="638" y="203" width="138" height="88" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="241" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Model</text><text x="707" y="264" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">providers</text>
+<rect x="638" y="340" width="138" height="80" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="385" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Postgres</text>
+<rect x="638" y="469" width="138" height="70" rx="15" fill="#f7f9fc" stroke="#c8d3de" stroke-width="1.7"/><text x="707" y="498" font-size="17" font-weight="650" fill="#12283e" text-anchor="middle">Redis</text><text x="707" y="521" font-size="15" font-weight="400" fill="#536a7e" text-anchor="middle">Shared state</text>
+<path d="M154 247 H206" fill="none" stroke="#8da0b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M574 247 H636" fill="none" stroke="#8da0b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M548 380 H636" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<path d="M225 426 V504 H636" fill="none" stroke="#8da0b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+<text x="24" y="554" font-size="16" font-weight="400" fill="#536a7e">Metrics and spend processing share the request worker.</text>
+</g>
+</svg>
