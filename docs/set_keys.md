@@ -184,6 +184,8 @@ os.environ = old_environ
 
 This helper will check the provider's endpoint for valid models.
 
+Without `check_provider_endpoint=True`, the returned list comes from LiteLLM's static model map, which holds pricing data for every model LiteLLM knows about; it can include models that are retired, not yet generally available, or gated to specific accounts, so it is not an availability signal. With `check_provider_endpoint=True`, each provider's live model endpoint is queried instead, and the result is the set of models your keys can call right now. Use it when availability matters, for example to seed a model picker or validate a user-supplied model name.
+
 Currently implemented for:
 - OpenAI (if OPENAI_API_KEY is set)
 - Fireworks AI (if FIREWORKS_AI_API_KEY is set)
@@ -208,6 +210,16 @@ from litellm import get_valid_models
 
 valid_models = get_valid_models(check_provider_endpoint=True, custom_llm_provider="openai")
 print(valid_models)
+```
+
+**Seed a model picker**:
+```python
+from litellm import get_valid_models
+
+# only models the configured keys can call right now,
+# unlike litellm.model_cost, which also holds pricing for retired / gated models
+available = get_valid_models(check_provider_endpoint=True)
+picker_options = sorted(available)
 ```
 
 ### `validate_environment(model: str)`
