@@ -23,6 +23,12 @@ Browser                  LiteLLM Proxy              OpenAI/Azure
   |===== audio P2P direct ===============================>|
 ```
 
+## Spend tracking
+
+The client-secret and SDP endpoints only set up the WebRTC connection. Media and usage events then go directly between the client and provider, so LiteLLM cannot record inference spend or enforce spend-based budgets for that session. This also applies to the `/v1/realtime/translations/client_secrets` and `/v1/realtime/translations/calls` endpoints
+
+Use the proxied WebSocket transport when spend logs and budgets must include Realtime inference. WebRTC setup is disabled by default because its inference usage bypasses the proxy. Enable it only if you accept that limitation
+
 ## Proxy Setup
 
 ```yaml
@@ -33,6 +39,8 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: realtime
+general_settings:
+  allow_non_billable_realtime_protocols: true
 ```
 
 **Azure:** `model: azure/gpt-4o-realtime-preview`, `api_key`, `api_base`.
