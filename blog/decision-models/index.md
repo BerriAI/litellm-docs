@@ -32,9 +32,9 @@ That is what makes them the natural building block for the gateway layer: routin
 
 ## Decision models in the Auto Router
 
-The [Auto Router](/docs/auto_router/decision_classifiers) can use any decision model deployed on your proxy as its classifier. In **Models + Endpoints**, open **Auto-Routers**, click **Add Auto Router**, pick **Decisions Model** under **Choose your classifier** and choose a deployment such as `jev-latest`. Each request is classified into one of your tiers and LiteLLM calls the model assigned to that tier, so clients keep sending one model name. **Test Routing** shows the tier the decision model picked, the probability for every tier and what the classification cost. In the run below, `jev-latest` put a Postgres failover design question in COMPLEX with 100% confidence for $0.00001848.
+The [Auto Router](/docs/auto_router/decision_classifiers) can use any decision model deployed on your proxy as its classifier. In **Models + Endpoints**, open **Auto-Routers**, click **Add Auto Router**, pick **Decisions Model** under **Choose your classifier** and choose a deployment such as `jev-latest`. Each request is classified into one of your tiers and LiteLLM calls the model assigned to that tier, so clients keep sending one model name. **Test Routing** shows the tier the decision model picked, the probability for every tier and what the classification cost. In the run below, `jev-latest` put a Postgres failover design question in COMPLEX with 99% confidence for $0.00001848.
 
-<img src={require('./auto_router.gif').default} width="800" alt="Add Auto Router in the Admin UI: Decisions Model picked as the classifier, jev-latest chosen from the deployed decision models, then Test Routing classifies a Postgres failover question as COMPLEX with 100% confidence and routes it to gpt-6-astra" />
+<img src={require('./auto_router.gif').default} width="800" alt="Add Auto Router in the Admin UI: Decisions Model picked as the classifier, jev-latest chosen from the deployed decision models, then Test Routing classifies a Postgres failover question as COMPLEX with 99% confidence and routes it to gpt-6-astra" />
 
 ## Decision models as guardrails
 
