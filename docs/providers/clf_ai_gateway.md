@@ -8,31 +8,30 @@ CLF AI Gateway is an OpenAI-compatible gateway that serves open-weight models. I
 
 :::tip
 
-Set `model=clf_ai_gateway/<model>` to route a request through CLF AI Gateway. The current model list is at https://clfaigateway.dev/models and from `GET /v1/models`
+LiteLLM has no dedicated `clf_ai_gateway/` provider. Because the gateway is OpenAI-compatible, route requests through it with the generic `openai/<model>` prefix and `api_base="https://api.clfaigateway.dev/v1"`. The current model list is at https://clfaigateway.dev/models and from `GET /v1/models`
 
 :::
 
 ## API Key
 
+Pass your gateway key as `api_key` and the gateway URL as `api_base` (or set `OPENAI_API_KEY` / `OPENAI_BASE_URL`, which the `openai/` provider reads by default).
+
 ```python
 import os
 
-os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
-os.environ["CLF_AI_GATEWAY_API_BASE"] = "https://api.clfaigateway.dev/v1"  # optional, this is the default
+os.environ["OPENAI_API_KEY"] = "sk-gw-..."
+os.environ["OPENAI_BASE_URL"] = "https://api.clfaigateway.dev/v1"
 ```
-
-`CLF_AI_GATEWAY_API_BASE` only needs to be set when you are pointing LiteLLM at a different endpoint. Leaving it unset uses `https://api.clfaigateway.dev/v1`
 
 ## Sample Usage
 
 ```python
 from litellm import completion
-import os
-
-os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key="sk-gw-...",
     messages=[{"role": "user", "content": "What character was Wall-e in love with?"}],
 )
 print(response)
@@ -42,12 +41,11 @@ print(response)
 
 ```python
 from litellm import completion
-import os
-
-os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key="sk-gw-...",
     messages=[{"role": "user", "content": "What character was Wall-e in love with?"}],
     stream=True,
 )
@@ -58,16 +56,15 @@ for chunk in response:
 
 ## Reasoning
 
-Every model on the gateway is a reasoning model, so `reasoning_effort` is accepted on all of them. The levels each model takes differ, and LiteLLM reads them from the model map rather than assuming a single set
+Every model on the gateway is a reasoning model, so `reasoning_effort` is accepted on all of them. The levels each model takes differ; check the gateway's model docs for the values a model supports
 
 ```python
 from litellm import completion
-import os
-
-os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key="sk-gw-...",
     messages=[{"role": "user", "content": "How many r's are in strawberry?"}],
     reasoning_effort="high",
 )
@@ -84,7 +81,8 @@ Reasoning tokens are counted inside `completion_tokens`, so they are billed at t
   model_list:
     - model_name: my-model
       litellm_params:
-        model: clf_ai_gateway/glm-5.3
+        model: openai/glm-5.3
+        api_base: https://api.clfaigateway.dev/v1
         api_key: os.environ/CLF_AI_GATEWAY_API_KEY
   ```
 
@@ -139,19 +137,19 @@ Reasoning tokens are counted inside `completion_tokens`, so they are billed at t
 
 ## Supported Models
 
-All of these support tool calling, JSON mode, and reasoning
+All of these support tool calling, JSON mode, and reasoning. Use them as `openai/<model>` with the gateway `api_base`
 
 | Model | Context window | Vision |
 | ----- | -------------- | ------ |
-| clf_ai_gateway/glm-5.3 | 1,048,576 | no |
-| clf_ai_gateway/glm-5.3-flash | 1,048,576 | yes |
-| clf_ai_gateway/glm-5.2 | 262,144 | no |
-| clf_ai_gateway/glm-4.7-flash | 131,072 | no |
-| clf_ai_gateway/kimi-k2.7-code | 262,144 | yes |
-| clf_ai_gateway/kimi-k2.6 | 262,144 | yes |
-| clf_ai_gateway/deepseek-v4-pro | 1,048,576 | no |
-| clf_ai_gateway/deepseek-v4-flash | 1,048,576 | no |
-| clf_ai_gateway/qwen3.8-27b | 262,144 | yes |
+| glm-5.3 | 1,048,576 | no |
+| glm-5.3-flash | 1,048,576 | yes |
+| glm-5.2 | 262,144 | no |
+| glm-4.7-flash | 131,072 | no |
+| kimi-k2.7-code | 262,144 | yes |
+| kimi-k2.6 | 262,144 | yes |
+| deepseek-v4-pro | 1,048,576 | no |
+| deepseek-v4-flash | 1,048,576 | no |
+| qwen3.8-27b | 262,144 | yes |
 
 ## Supported Parameters
 
@@ -177,4 +175,4 @@ All of these support tool calling, JSON mode, and reasoning
 
 ## Prompt Caching
 
-The gateway caches recognized prompt prefixes automatically. Cached input tokens come back in `prompt_tokens_details.cached_tokens` and are billed at the model's cached input price, which LiteLLM reads from the model map for cost tracking
+The gateway caches recognized prompt prefixes automatically. Cached input tokens come back in `prompt_tokens_details.cached_tokens` and are billed at the model's cached input price. These models are not in LiteLLM's model map, so set `input_cost_per_token` / `output_cost_per_token` in `litellm_params` if you want LiteLLM cost tracking
