@@ -1312,6 +1312,7 @@ const sidebars = {
           ]
         },
         "providers/hyperbolic",
+        "providers/infercom",
         "providers/inception",
         "providers/infinity",
         "providers/jina_ai",
