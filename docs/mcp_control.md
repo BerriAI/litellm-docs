@@ -204,7 +204,7 @@ curl -s -X POST http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
 }
 ```
 
-The snapshot is taken after the [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery), so a description a guardrail blocks never gets pinned and a description it masks is pinned in its masked form; a server with no tool left to pin returns `400`. A `tool_name_to_description` override in effect at pin time is what gets pinned
+The snapshot holds the upstream text as the server reports it, before any `tool_name_to_description` override or guardrail masking is applied. The [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) still runs at pin time on the text that would be served, so a tool whose description a guardrail blocks is never pinned, and a server with no tool left to pin returns `400`. Overrides and masking apply on top of the pin at every listing
 
 Unpin to serve the live upstream catalog again:
 
@@ -243,7 +243,7 @@ mcp_servers:
 What clients see once a server is pinned:
 
 - `tools/list` (over `/mcp`, `/mcp-rest/tools/list`, and LLM-driven discovery) returns the pinned tools only, each with its pinned description and input schema
-- A tool the upstream added after the pin is not listed, and a call to it returns `403`
+- A tool the upstream added after the pin is not listed, and a call to it is refused inside the MCP result with `isError: true`
 - A tool the upstream removed after the pin is not listed either, since the gateway has nothing to call
 - A description or input schema the upstream changed after the pin is served as pinned
 
@@ -259,8 +259,8 @@ changed: `get_note`
 
 - A pin covers tool names, descriptions, and input schemas; anything else the upstream reports about a tool (annotations, output schema) is served live
 - `allowed_tools`, `disallowed_tools`, and per-key tool permissions still apply on top of the pin
-- The [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) still runs on a pinned server, on the pinned text the proxy is about to serve: a pinned tool keeps serving its pinned description while the upstream's text is poisoned (reported as changed), and a pinned description the guardrails themselves block is hidden and reported as blocked until the admin re-pins the server
-- A `tool_name_to_description` override edited after the pin reads as a changed tool: the pinned text is served until the server is re-pinned
+- The [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) still runs on a pinned server, on the pinned text with overrides applied: a pinned tool keeps serving its pinned description while the upstream's text is poisoned (reported as changed), and a pinned description the guardrails themselves block is hidden and reported as blocked until the admin re-pins the server
+- A `tool_name_to_description` override applies on top of the pin, so editing one never reads as drift, and an upstream description change is reported as changed even while the override hides it from clients
 
 ## Public MCP Servers (allow_all_keys)
 
