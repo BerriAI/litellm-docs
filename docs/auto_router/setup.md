@@ -81,7 +81,7 @@ model_list:
 
 ## JEV classifier (TypeSafe AI)
 
-This section uses the Jev configuration and dashboard labels supported by released builds. The new **OSS Classifier** configuration requires [backend #43626](https://github.com/BerriAI/litellm/pull/43626), and its dashboard requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). See [OSS classifiers](/docs/auto_router/decision_classifiers) for hosted Jev, self-hosted Nimble and Laya, and the [migration from the existing names](/docs/auto_router/decision_classifiers#migrate-an-existing-jev-or-nimble-router). The new backend continues to accept the configuration below.
+This section uses the Jev configuration and dashboard labels supported by released builds. The new **OSS Classifier** configuration requires [backend #43626](https://github.com/BerriAI/litellm/pull/43626), and its dashboard requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). See [OSS classifiers](/docs/auto_router/decision_classifiers) for hosted Jev, self-hosted Nimble and Laya, the Databricks `ai_decide` AI Function, and the [migration from the existing names](/docs/auto_router/decision_classifiers#migrate-an-existing-jev-or-nimble-router). The new backend continues to accept the configuration below.
 
 `classifier_type: jev` uses TypeSafe System One Choice evaluation to select a tier inside the existing Auto Router. LiteLLM sends the classifier input to `POST /v1/systemone` as `state`, with one `questions.tier` question whose criteria describe the configured tiers. The chosen tier's model serves the completion
 

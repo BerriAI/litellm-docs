@@ -32,6 +32,11 @@ const sidebars = {
           customProps: { icon: "/img/integrations/openwebui.png" },
         },
         {
+          type: "doc",
+          id: "tutorials/openwebui_org_rollout",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
+        {
           type: "category",
           label: "Claude Code",
           customProps: { icon: "/img/integrations/anthropic.png" },
@@ -213,6 +218,7 @@ const sidebars = {
             "observability/openmeter",
             "observability/pointfive",
             "observability/ramp_integration",
+            "observability/ternary",
             "observability/vantage",
         {
           type: "link",
@@ -282,6 +288,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/javelin", customProps: { icon: "/img/integrations/javelin.png" } },
           { type: "doc", id: "proxy/guardrails/akto", customProps: { icon: "/img/integrations/akto.png" } },
           "proxy/guardrails/vigil_guard",
+          "proxy/guardrails/wingback",
           { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
