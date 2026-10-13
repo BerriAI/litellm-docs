@@ -2,7 +2,7 @@
 
 Redact messages / mask PII before sending data to logging integrations (langfuse/etc.).
 
-See our [**Presidio PII Masking**](https://github.com/BerriAI/litellm/blob/a176feeacc5fdf504747978d82056eb84679c4be/litellm/proxy/hooks/presidio_pii_masking.py#L286) for reference.
+See our [**Presidio PII Masking**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/guardrails/guardrail_hooks/presidio.py) for reference.
 
 1. Setup a custom callback 
 
