@@ -695,6 +695,7 @@ router_settings:
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
+| BEDROCK_REALTIME_CLOSE_TIMEOUT_SECONDS | Timeout in seconds for the Bedrock Nova Sonic realtime input-stream close sequence after a client disconnects. Default is 5.0
 | BFL_API_BASE | Base URL for Black Forest Labs image generation and editing
 | BLACK_FOREST_LABS_API_KEY | API key for Black Forest Labs, read after `BFL_API_KEY`
 | BRAINTRUST_API_KEY | API key for Braintrust integration
