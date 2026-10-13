@@ -259,6 +259,7 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        skip_call_types: ["aembedding"]  # optional. Call types the guardrail does not run on. See "Choosing which call types the guardrail runs on" below.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
@@ -286,6 +287,23 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Choosing which call types the guardrail runs on
+
+Two options decide which calls reach your endpoint, by the call type LiteLLM logs for the request (the `call_type` in spend logs):
+
+- `skip_call_types` lists call types the guardrail does not run on, such as `["aembedding", "aimage_generation"]`. Every other call type is scanned.
+- `run_only_on_call_types` lists the only call types the guardrail runs on. Every other call type is passed through without calling your endpoint. When both are set, `run_only_on_call_types` wins, even when it is invalid, and `skip_call_types` is ignored with a warning.
+
+Values are the `CallTypes` values LiteLLM logs as `call_type`, for example `acompletion`, `aresponses`, `anthropic_messages`, `aembedding` and `pass_through_endpoint`. The call type comes from the route the authenticated request arrived on, not from anything in the request body. `/anthropic/v1/messages` pass-through calls are `anthropic_messages`, other pass-through calls are `pass_through_endpoint`, and a batch-file record is classified by its own endpoint. A call whose type cannot be resolved still runs the guardrail.
+
+:::warning
+
+An allowlist only scans what it lists. With `run_only_on_call_types: ["acompletion"]`, a caller can send the same prompt to the same model through `/v1/completions` or `/v1/responses` and your guardrail never sees it. Prefer `skip_call_types` to exempt the call types you know you do not need, so a new or forgotten endpoint stays scanned.
+
+:::
+
+Both options are set in `config.yaml` or through the guardrails API, and the Admin UI form does not show them. An invalid value never turns the guardrail off. A value that is not a list of strings, or an allowlist with an unknown call type, is ignored with a warning and every call type is scanned. An unknown entry in `skip_call_types` is dropped with a warning, so that call type stays scanned. A sync name such as `completion` or `embedding` counts as unknown, because the proxy logs `acompletion` and `aembedding`. So does `avideo_generation`, since `/v1/videos` resolves to `acreate_video`. The warning names the value to use instead.
 
 ### Static and dynamic headers
 
