@@ -100,7 +100,7 @@ export function Closing() {
     <div>
       <h2 id="closing-title">Build with the LiteLLM team.</h2>
       <p>Remote for two weeks. Want us at your office for several days? Tell us in the signup form.</p>
-      <p className={styles.signupNote}>Share your first workflow and your stack. We’ll follow up to arrange a 30-minute intake.</p>
+      <p className={styles.signupNote}>Tell us what you hope to achieve. We’ll follow up to arrange a 30-minute intake.</p>
     </div>
     <SignupButton className={styles.signup} />
   </section>;

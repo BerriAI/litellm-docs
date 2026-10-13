@@ -15,12 +15,9 @@
 .dialog .field input::placeholder, .dialog .field textarea::placeholder { color: #8a95a5; opacity: 1; }
 .dialog .field [aria-invalid='true'] { border-color: #b42318; }
 .dialog .fieldError { color: #b42318; font-size: 12px; font-weight: 400; }
-.dialog input:focus-visible, .dialog textarea:focus-visible, .dialog select:focus-visible, .dialog button:focus-visible, .dialog summary:focus-visible { outline: 3px solid #a8b6ff; outline-offset: 2px; }
-.details { margin: 22px 0; padding: 17px 0; border-top: 1px solid #e1e6ee; border-bottom: 1px solid #e1e6ee; }
-.dialog .details summary { cursor: pointer; color: #344258; font-size: 13px; font-weight: 500; line-height: 1.6; }
-.details summary > span { margin-left: 8px; color: #7c899b; font-size: 11px; font-weight: 400; }
-.details[open] > .grid { margin-top: 20px; }
+.dialog input:focus-visible, .dialog textarea:focus-visible, .dialog select:focus-visible, .dialog button:focus-visible { outline: 3px solid #a8b6ff; outline-offset: 2px; }
 .dialog .submit { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 12px 22px; border: 1px solid #0117be; border-radius: 7px; background: #0117be; color: #fff; font: 500 15px/1.4 Geist, sans-serif; cursor: pointer; }
+.dialog .fieldset > .submit { margin-top: 24px; }
 .dialog .submit:hover:not(:disabled) { background: #142cc3; }
 .dialog .submit:disabled { cursor: wait; opacity: .65; }
 .dialog .note { margin: 14px 0 0; color: #778397; font-size: 11px; line-height: 1.7; }
@@ -41,8 +38,7 @@
 :global(html[data-theme='dark']) .dialog .eyebrow { color: #a2b5e1; }
 :global(html[data-theme='dark']) .dialog .description,
 :global(html[data-theme='dark']) .dialog .success > p { color: #b0bdd0; }
-:global(html[data-theme='dark']) .dialog .field,
-:global(html[data-theme='dark']) .dialog .details summary { color: #d0daea; }
+:global(html[data-theme='dark']) .dialog .field { color: #d0daea; }
 :global(html[data-theme='dark']) .dialog .field input,
 :global(html[data-theme='dark']) .dialog .field select,
 :global(html[data-theme='dark']) .dialog .field textarea {
@@ -56,8 +52,6 @@
 :global(html[data-theme='dark']) .dialog .field textarea::placeholder { color: #8f9eb3; }
 :global(html[data-theme='dark']) .dialog .field [aria-invalid='true'] { border-color: #ee9e99; }
 :global(html[data-theme='dark']) .dialog .fieldError { color: #ffb8b2; }
-:global(html[data-theme='dark']) .dialog .details { border-color: #344155; }
-:global(html[data-theme='dark']) .dialog .details summary > span,
 :global(html[data-theme='dark']) .dialog .note,
 :global(html[data-theme='dark']) .dialog .success .note { color: #9eacc0; }
 :global(html[data-theme='dark']) .dialog .close { color: #aab9ce; }
@@ -67,8 +61,7 @@
 :global(html[data-theme='dark']) .dialog input:focus-visible,
 :global(html[data-theme='dark']) .dialog textarea:focus-visible,
 :global(html[data-theme='dark']) .dialog select:focus-visible,
-:global(html[data-theme='dark']) .dialog button:focus-visible,
-:global(html[data-theme='dark']) .dialog summary:focus-visible { outline-color: #a6b7ff; }
+:global(html[data-theme='dark']) .dialog button:focus-visible { outline-color: #a6b7ff; }
 :global(html[data-theme='dark']) .dialog .error { background: #351e25; color: #ffb8b2; border-color: #85505a; }
 
 @media (max-width: 540px) { .panel { padding: 28px 22px; } .grid { grid-template-columns: 1fr; } .dialog .panel h2.title { font-size: 27px; } .dialog .eyebrow { max-width: 230px; } .dialog .submit { width: 100%; } }

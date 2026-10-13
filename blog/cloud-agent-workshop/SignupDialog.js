@@ -1,5 +1,5 @@
 import React, {useEffect, useId, useRef, useState} from 'react';
-import {COMPANY_SIZES, newSubmissionId, routeLead} from '@site/src/components/SalesForm/routing';
+import {newSubmissionId} from '@site/src/components/SalesForm/routing';
 import {submitToWebflow} from '@site/src/components/SalesForm/webflow';
 import {FIELD_LIMITS, buildWorkshopSubmission, normalizeWorkshopValues, validateWorkshopValues} from './signup-payload.mjs';
 import styles from './signup.module.css';
@@ -66,11 +66,8 @@ export default function SignupDialog({open, onClose}) {
     setStatus('sending');
     submissionId.current ||= newSubmissionId();
     try {
-      const routed = routeLead({intent: 'talk-to-sales', size: values.companySize});
       const fields = buildWorkshopSubmission(values, {
         submissionId: submissionId.current,
-        route: routed.route,
-        reason: routed.reason,
       });
       await submitToWebflow(fields);
       setEmail(values.email);
@@ -100,7 +97,7 @@ export default function SignupDialog({open, onClose}) {
         <button className={styles.submit} type="button" onClick={onClose}>Back to the workshop</button>
       </div> : <>
         <h2 className={styles.title} ref={heading} tabIndex={-1} id={`${id}-title`}>Build a self-hosted cloud agent.</h2>
-        <p id={`${id}-description`} className={styles.description}>Tell us about your team and first workflow. We’ll follow up to arrange a 30-minute intake. Remote, over two weeks.</p>
+        <p id={`${id}-description`} className={styles.description}>Tell us about your team and what you want to achieve. We’ll follow up to arrange a 30-minute intake. Remote, over two weeks.</p>
         <form onSubmit={handleSubmit} aria-busy={status === 'sending'} onInput={() => {
           if (error) setError('');
           if (Object.keys(errors).length) setErrors({});
@@ -111,21 +108,10 @@ export default function SignupDialog({open, onClose}) {
               {field('name', 'Your name', <input type="text" autoComplete="name" />, {required: true})}
               {field('email', 'Work email', <input type="email" autoComplete="email" />, {required: true})}
               {field('company', 'Company', <input type="text" autoComplete="organization" />, {required: true})}
-              {field('companySize', 'Company size', <select defaultValue=""><option value="" disabled>Select company size</option>{COMPANY_SIZES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>, {required: true})}
-              {field('workflow', 'What should your agent help your team do?', <textarea rows={3} placeholder="For example: take a Slack request, fix a bug, run tests, and open a PR." />, {required: true, wide: true})}
+              {field('linkedin', 'LinkedIn profile', <input type="text" inputMode="url" autoComplete="url" autoCapitalize="none" spellCheck={false} placeholder="linkedin.com/in/your-profile" />, {required: true})}
+              {field('workflow', 'What are you hoping to achieve?', <textarea rows={3} placeholder="For example: let engineers send tasks in Slack and get tested pull requests from an agent running in our cloud." />, {required: true, wide: true})}
+              {field('onsiteInterest', 'Would you like the LiteLLM team to work with you on-site? (optional)', <select defaultValue=""><option value="">No preference yet</option><option value="Yes">Yes, I’d like to discuss it</option><option value="Maybe">Maybe, tell me more</option><option value="No">No, remote works for us</option></select>, {wide: true})}
             </div>
-            <details className={styles.details}>
-              <summary>Your stack and on-site preferences <span>Optional</span></summary>
-              <div className={styles.grid}>
-                {field('harness', 'Agent or harness', <select defaultValue=""><option value="">No preference yet</option>{['Moyai', 'Claude Code', 'Codex', 'Hermes', 'OpenClaw', 'Pi', 'Other'].map(name => <option key={name}>{name}</option>)}</select>)}
-                {field('location', 'Where is your team based?', <input type="text" placeholder="City, country, or time zone" />)}
-                {field('providers', 'AI providers', <input type="text" placeholder="OpenAI, Anthropic, Bedrock…" />)}
-                {field('sandbox', 'Sandbox and cloud', <input type="text" placeholder="Your sandbox or cloud preference" />)}
-                {field('onsiteInterest', 'Interested in several days with our team at your office?', <select defaultValue=""><option value="">Select if you know</option><option value="Yes">Yes, let’s discuss an on-site build</option><option value="Maybe">Maybe, tell me more</option><option value="No">No, remote sessions work for us</option></select>, {wide: true})}
-                {field('priorAttempts', 'What have you tried before?', <textarea rows={2} placeholder="What worked, and where you got stuck." />, {wide: true})}
-                {field('litellmBlockers', 'Any other LiteLLM problems we can help with?', <textarea rows={2} placeholder="Deployment, routing, observability, or another blocker." />, {wide: true})}
-              </div>
-            </details>
             {error && <p className={styles.error} ref={errorMessage} tabIndex={-1} role="alert">{error}</p>}
             <button className={styles.submit} type="submit" disabled={status === 'sending'}>{status === 'sending' ? 'Saving your request…' : 'Sign up'}</button>
             <p className={styles.note}>* Required. We’ll use your details to arrange your workshop intake. Submitting this form does not reserve a time slot.</p>
