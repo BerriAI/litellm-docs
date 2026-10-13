@@ -29,7 +29,7 @@ See a complete example with our [parallel request rate limiter](https://github.c
 
 1. In your Custom Handler add a new `async_pre_call_hook` function
 
-This function is called just before a litellm completion call is made, and allows you to modify the data going into the litellm call [**See Code**](https://github.com/BerriAI/litellm/blob/589a6ca863000ba8e92c897ba0f776796e7a5904/litellm/proxy/proxy_server.py#L1000)
+This function is called just before a litellm completion call is made, and allows you to modify the data going into the litellm call [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/utils.py#L2421)
 
 ```python
 from litellm.integrations.custom_logger import CustomLogger
@@ -247,7 +247,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Set `enforce_user_param` to true, to require all calls to the openai endpoints to have the 'user' param. 
 
-[**See Code**](https://github.com/BerriAI/litellm/blob/4777921a31c4c70e4d87b927cb233b6a09cd8b51/litellm/proxy/auth/auth_checks.py#L72)
+[**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/auth/auth_checks.py#L859)
 
 ```yaml
 general_settings:
