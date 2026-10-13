@@ -1367,6 +1367,7 @@ const sidebars = {
         },
         "providers/petals",
         "providers/poe",
+        "providers/powertokens",
         "providers/publicai",
         "providers/predibase",
         "providers/prism",
