@@ -1378,6 +1378,7 @@ const sidebars = {
         "providers/recraft",
         "providers/reka",
         "providers/replicate",
+        "providers/runware",
         {
           type: "category",
           label: "RunwayML",
