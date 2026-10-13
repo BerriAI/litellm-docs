@@ -17,16 +17,16 @@ The advisor tool is in beta. Include `anthropic-beta: advisor-tool-2026-03-01` i
 | Provider | Chat Completions API | Messages API | Notes |
 |----------|---------------------|--------------|-------|
 | **Anthropic API** | ✅ | ✅ | Native — runs server-side |
-| **OpenAI / Azure OpenAI** | ✅ | ✅ | LiteLLM orchestration loop |
-| **Amazon Bedrock** | ✅ | ✅ | LiteLLM orchestration loop |
-| **Google Vertex AI** | ✅ | ✅ | LiteLLM orchestration loop |
-| **Groq / Mistral / others** | ✅ | ✅ | LiteLLM orchestration loop |
+| **OpenAI / Azure OpenAI** | ❌ | ✅ | LiteLLM orchestration loop (Messages API only) |
+| **Amazon Bedrock** | ❌ | ✅ | LiteLLM orchestration loop (Messages API only) |
+| **Google Vertex AI** | ❌ | ✅ | LiteLLM orchestration loop (Messages API only) |
+| **Groq / Mistral / others** | ❌ | ✅ | LiteLLM orchestration loop (Messages API only) |
 
 ## How it works (LiteLLM native orchestration)
 
-For non-Anthropic providers, LiteLLM implements the advisor loop itself. The API you call is identical; LiteLLM runs the loop for you.
+For non-Anthropic providers, LiteLLM implements the advisor loop itself on the Messages API (`litellm.anthropic.messages` / `/v1/messages`). The API you call is identical; LiteLLM runs the loop for you. The Chat Completions API (`litellm.completion` / `/v1/chat/completions`) does not run this loop, so the advisor tool there is only supported with the Anthropic provider, where it is passed through natively.
 
-When a request arrives with an `advisor_20260301` tool and a non-Anthropic provider, `AdvisorOrchestrationHandler` intercepts it. It translates the advisor tool into a regular function tool the provider understands, then runs an orchestration loop:
+When a Messages API request arrives with an `advisor_20260301` tool and a non-Anthropic provider, `AdvisorOrchestrationHandler` intercepts it. It translates the advisor tool into a regular function tool the provider understands, then runs an orchestration loop:
 
 ```mermaid
 flowchart TD
