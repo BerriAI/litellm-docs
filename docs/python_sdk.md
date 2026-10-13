@@ -83,8 +83,6 @@ For all the endpoints that LiteLLM supports, refer to [Supported Endpoints](/doc
 
 The SDK is not thread-safe. Settings such as `litellm.api_key`, `litellm.callbacks`, `litellm.cache`, and the logging setup are global to the process, and the SDK does not lock them.
 
-If your application uses threads, import `litellm` on the main thread when your application starts, before you start worker threads. Do not import `litellm` for the first time from a worker thread. If a worker thread imports `litellm` while a different thread writes a log, the import can deadlock. Set global `litellm.*` settings at startup, not from worker threads.
-
 Free-threaded (no-GIL) Python builds are not supported.
 
 To send many requests at the same time, use the async functions, such as `acompletion()`, on one event loop. You can also send the requests to an [AI Gateway](/docs/simple_proxy).
