@@ -10,6 +10,32 @@ The gateway and upstream MCP servers negotiate a protocol version during `initia
 
 There is no supported per-server `spec_version` configuration field. The legacy delegated-auth discovery probe sends `2025-06-18`; that probe is separate from client and upstream SDK negotiation
 
+### Restrict gateway revisions and pin upstream revisions
+
+These settings require a LiteLLM build containing [PR #43169](https://github.com/BerriAI/litellm/pull/43169). They are independent of the older `spec_version` metadata
+
+Use `general_settings.mcp_advertised_versions` to restrict accepted gateway revisions, and `protocol_version` on an upstream to require a specific revision:
+
+```yaml
+general_settings:
+  mcp_advertised_versions: ["2025-06-18", "2025-11-25"]
+mcp_servers:
+  example:
+    url: https://example.com/mcp
+    transport: http
+    protocol_version: "2025-06-18"
+```
+
+Without `mcp_advertised_versions`, the gateway accepts the four completed legacy revisions: `2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`. An empty list, an unknown revision, or a modern revision is rejected. A handshake selecting a disabled revision fails explicitly; include every revision your clients require
+
+An upstream's `protocol_version` defaults to `"auto"`, which uses legacy SDK initialization and accepts only those four revisions. A pinned revision is offered exactly, and a different upstream selection is rejected before listing or calling tools. Auto does not probe modern discovery or fall back to it
+
+For database-backed servers, put `protocol_version` inside `mcp_info` in the existing MCP server create/update API. YAML accepts that metadata form too; a top-level `protocol_version` takes precedence. SDK callers can use `MCPClient(protocol_version="2025-06-18", ...)`
+
+Remove the gateway setting to restore all completed legacy revisions. Remove an upstream pin, or set it to `"auto"`, to restore default negotiation
+
+The `2026-07-28` candidate remains disabled for public serving. Apps and Tasks are not advertised. Discovery uses the caller's existing access checks and returns private, uncached results
+
 ## Two layers of authentication
 
 Gateway and upstream authentication are configured separately. Keep their credentials separate
