@@ -279,6 +279,13 @@ litellm_settings:
 
 Each preset adds its own destination, so your spans reach all of them in parallel, each in that tool's native format. For several generic OTLP collectors rather than vendor tools, see [Send to more than one collector](#send-to-more-than-one-collector).
 
+A preset exports only to its own backend. To also send plain `gen_ai.*` spans to your own OTLP collector, list `otel` next to the presets and set the `OTEL_*` env vars; a preset on its own ignores them, so vendor vocabulary such as `langfuse.*` or OpenInference never lands on your collector.
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["otel", "langfuse_otel"]
+```
+
 :::
 
 ### Preset reference
