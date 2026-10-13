@@ -1735,6 +1735,7 @@ const learnSidebar = {
             "completion/message_trimming",
             "completion/prompt_caching",
             "completion/prompt_formatting",
+            "completion/developer_role",
           ],
         },
         {
