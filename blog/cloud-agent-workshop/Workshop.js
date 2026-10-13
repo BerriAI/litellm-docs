@@ -10,8 +10,13 @@ export function WorkshopImage({file, ...props}) {
   return <img src={useBaseUrl(`${assetPath}${file}`)} {...props} />;
 }
 
-export function LiteLLMLogo(props) {
-  return <img src={useBaseUrl('/img/brand/litellm-logo-blue.png')} alt="LiteLLM" {...props} />;
+export function LiteLLMLogo({className = '', ...props}) {
+  const blueLogo = useBaseUrl('/img/brand/litellm-logo-blue.png');
+  const whiteLogo = useBaseUrl('/img/brand/litellm-logo-white.png');
+  return <>
+    <img src={blueLogo} alt="LiteLLM" className={`${className} ${styles.brandLight}`} {...props} />
+    <img src={whiteLogo} alt="LiteLLM" className={`${className} ${styles.brandDark}`} {...props} />
+  </>;
 }
 
 export function WorkshopShell({children}) {
@@ -40,7 +45,7 @@ export function WorkshopHero() {
       <p>Work with your preferred agent</p>
       <div className={styles.harnesses} aria-label="Agent options">
         {agents.map(([name, file]) => <div className={styles.harness} key={name}>
-          <WorkshopImage file={file} alt="" width="26" height="26" />
+          <WorkshopImage file={file} className={file === 'hermes-agent.svg' ? styles.monochromeHarness : undefined} alt="" width="26" height="26" />
           <span>{name}</span>
         </div>)}
       </div>

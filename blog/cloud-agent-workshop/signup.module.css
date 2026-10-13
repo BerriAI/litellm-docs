@@ -27,4 +27,48 @@
 .dialog .error { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #f1c5c1; border-radius: 6px; background: #fff4f3; color: #972a21; font-size: 13px; line-height: 1.6; }
 .dialog .success .note { margin-bottom: 24px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Keep the complete intake surface in the selected docs theme. */
+:global(html[data-theme='dark']) .dialog {
+  color-scheme: dark;
+  background: #151b25;
+  color: #e9edf5;
+  border-color: #39475d;
+  box-shadow: 0 24px 90px #0009;
+}
+:global(html[data-theme='dark']) .dialog::backdrop { background: #030810b3; }
+:global(html[data-theme='dark']) .dialog .panel h2.title { color: #e9edf5 !important; }
+:global(html[data-theme='dark']) .dialog .eyebrow { color: #a2b5e1; }
+:global(html[data-theme='dark']) .dialog .description,
+:global(html[data-theme='dark']) .dialog .success > p { color: #b0bdd0; }
+:global(html[data-theme='dark']) .dialog .field,
+:global(html[data-theme='dark']) .dialog .details summary { color: #d0daea; }
+:global(html[data-theme='dark']) .dialog .field input,
+:global(html[data-theme='dark']) .dialog .field select,
+:global(html[data-theme='dark']) .dialog .field textarea {
+  color-scheme: dark;
+  background: #101722;
+  color: #e9edf5;
+  border-color: #46556c;
+  accent-color: #8298ff;
+}
+:global(html[data-theme='dark']) .dialog .field input::placeholder,
+:global(html[data-theme='dark']) .dialog .field textarea::placeholder { color: #8f9eb3; }
+:global(html[data-theme='dark']) .dialog .field [aria-invalid='true'] { border-color: #ee9e99; }
+:global(html[data-theme='dark']) .dialog .fieldError { color: #ffb8b2; }
+:global(html[data-theme='dark']) .dialog .details { border-color: #344155; }
+:global(html[data-theme='dark']) .dialog .details summary > span,
+:global(html[data-theme='dark']) .dialog .note,
+:global(html[data-theme='dark']) .dialog .success .note { color: #9eacc0; }
+:global(html[data-theme='dark']) .dialog .close { color: #aab9ce; }
+:global(html[data-theme='dark']) .dialog .close:hover { color: #f0f4fb; background: #263246; }
+:global(html[data-theme='dark']) .dialog .submit { background: #0117be; border-color: #596eea; color: #fff; }
+:global(html[data-theme='dark']) .dialog .submit:hover:not(:disabled) { background: #142cc3; border-color: #8495f4; }
+:global(html[data-theme='dark']) .dialog input:focus-visible,
+:global(html[data-theme='dark']) .dialog textarea:focus-visible,
+:global(html[data-theme='dark']) .dialog select:focus-visible,
+:global(html[data-theme='dark']) .dialog button:focus-visible,
+:global(html[data-theme='dark']) .dialog summary:focus-visible { outline-color: #a6b7ff; }
+:global(html[data-theme='dark']) .dialog .error { background: #351e25; color: #ffb8b2; border-color: #85505a; }
+
 @media (max-width: 540px) { .panel { padding: 28px 22px; } .grid { grid-template-columns: 1fr; } .dialog .panel h2.title { font-size: 27px; } .dialog .eyebrow { max-width: 230px; } .dialog .submit { width: 100%; } }
