@@ -1911,7 +1911,7 @@ messages = [
     {"role": "user", "content": "How do you say 'Hello' in German? Return your answer as a JSON object, like this:\n\n{ \"Hello\": \"Hallo\" }"},
     {"role": "assistant", "content": "{"},
 ]
-response = completion(model="claude-2.1", messages=messages)
+response = completion(model="claude-sonnet-4-5", messages=messages)
 print(response)
 ```
 
@@ -1940,7 +1940,7 @@ messages = [
     {"role": "system", "content": "You are a snarky assistant."},
     {"role": "user", "content": "How do I boil water?"},
 ]
-response = completion(model="claude-2.1", messages=messages)
+response = completion(model="claude-sonnet-4-5", messages=messages)
 ```
 
 #### Example prompt sent to Claude
