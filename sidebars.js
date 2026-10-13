@@ -1403,6 +1403,7 @@ const sidebars = {
         "providers/v0",
         "providers/valkey_vector_stores",
         "providers/vercel_ai_gateway",
+        "providers/viktor",
         {
           type: "category",
           label: "vLLM",
