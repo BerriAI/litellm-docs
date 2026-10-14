@@ -694,13 +694,13 @@
   font-weight: 600;
 }
 
-/* AIGatewayBench panels. Bars are plain elements rather than SVG so they reflow
-   with the column, and every colour is an Infima token so the section follows
-   the theme without a second asset. */
+/* AIGatewayBench panels. Columns are plain elements rather than SVG so they
+   reflow with the grid, and every colour is an Infima token so the section
+   follows the theme without a second asset. */
 .benchPanels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .benchPanel {
@@ -708,47 +708,49 @@
 }
 
 .benchPanelLabel {
-  margin: 0 0 1rem;
+  margin: 0 0 1.25rem;
   color: var(--ifm-color-emphasis-800);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
+/* Four columns sharing one baseline. */
 .benchRows {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 0.7rem;
 }
 
-/* Name column is fixed so both panels line up; the value column is sized to the
-   longest reading, which is "257.7 ms". */
+/* Value above, bar in the middle, name below. The middle row takes the slack,
+   so every bar measures against the same height. */
 .benchRow {
   display: grid;
-  grid-template-columns: 8.5rem 1fr 4.5rem;
-  align-items: center;
-  gap: 0.75rem;
+  grid-template-rows: 1fr auto;
+  gap: 0.5rem;
+  height: 15rem;
+  min-width: 0;
 }
 
-.benchName {
-  color: var(--ifm-color-emphasis-700);
-  font-size: 0.8rem;
-  overflow-wrap: anywhere;
-}
-
+/* The track is the measured area. The bar grows from its floor and the reading
+   is pinned to the same percentage, so the two move together. */
 .benchTrack {
-  height: 0.6rem;
-  border-radius: 999px;
-  background: var(--ifm-color-emphasis-200);
-  overflow: hidden;
+  position: relative;
+  min-height: 0;
 }
 
 .benchBar {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 3.25rem;
+  min-height: 2px;
+  border-radius: 0.3rem 0.3rem 0 0;
   background: var(--ifm-color-emphasis-400);
 }
 
@@ -756,11 +758,26 @@
   background: var(--ifm-color-primary);
 }
 
-.benchValue {
+.benchName {
   color: var(--ifm-color-emphasis-700);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding-top: 0.5rem;
+}
+
+.benchValue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-bottom: 0.4rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .benchValueLead {
@@ -782,22 +799,16 @@
   line-height: 1.6;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .benchRow {
-    grid-template-columns: 1fr 3.9rem;
-    grid-template-areas: 'name value' 'track track';
-    gap: 0.3rem 0.5rem;
-  }
-
-  .benchName {
-    grid-area: name;
+    height: 11rem;
   }
 
   .benchValue {
-    grid-area: value;
+    font-size: 0.7rem;
   }
 
-  .benchTrack {
-    grid-area: track;
+  .benchName {
+    font-size: 0.68rem;
   }
 }

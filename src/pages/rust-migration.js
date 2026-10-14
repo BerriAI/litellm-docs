@@ -685,7 +685,7 @@ function SectionHeading({id, kicker, title}) {
 const BENCHMARK = [
   {
     id: 'overhead',
-    label: 'Gateway overhead, p99 added latency',
+    label: 'Added latency at p99',
     unit: 'ms',
     // 0.7ms against 257.7ms is a 368x spread, so a linear bar would render the
     // Rust result as a hairline. Widths are log scaled and the axis says so.
@@ -699,7 +699,7 @@ const BENCHMARK = [
   },
   {
     id: 'memory',
-    label: 'Peak memory footprint',
+    label: 'Maximum memory use',
     unit: 'MB',
     rows: [
       {name: 'LiteLLM Rust', value: 21.8, lead: true},
@@ -726,43 +726,52 @@ function barWidth(panel, value) {
 function GatewayBenchmark() {
   return (
     <section className={styles.section} aria-labelledby="benchmark-title">
-      <SectionHeading id="benchmark-title" kicker="Where this lands" title="What the move is worth" />
+      <SectionHeading id="benchmark-title" kicker="Result" title="The result of the move to Rust" />
       <p className={styles.sectionLead}>
-        The tracker above is the route by route progress. This is what it adds up to. AIGatewayBench put the Rust
-        gateway, Portkey, Bifrost and today&apos;s Python proxy in front of the same deterministic mock and measured
-        what each one costs on top of it. Every route that finishes the move lands here.
+        The tracker above shows the progress of each route. This section shows the result of that work.
+        AIGatewayBench measured four gateways against the same mock server: the Rust gateway, Portkey, Bifrost, and
+        the current Python proxy. The test measured the delay and the memory that each gateway adds to the mock
+        server. Each route that moves to Rust has these results.
       </p>
       <div className={styles.benchPanels}>
         {BENCHMARK.map(panel => (
           <div className={styles.benchPanel} key={panel.id}>
             <p className={styles.benchPanelLabel}>{panel.label}</p>
             <ul className={styles.benchRows}>
-              {panel.rows.map(row => (
-                <li className={styles.benchRow} key={row.name}>
-                  <span className={styles.benchName}>{row.name}</span>
-                  <span className={styles.benchTrack}>
-                    <span
-                      className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''}`}
-                      style={{width: `${barWidth(panel, row.value)}%`}}
-                    />
-                  </span>
-                  <span className={`${styles.benchValue} ${row.lead ? styles.benchValueLead : ''}`}>
-                    {row.value} {panel.unit}
-                  </span>
-                </li>
-              ))}
+              {panel.rows.map(row => {
+                // The column height and the label sitting on top of it are the
+                // same percentage, so the reading always rides its own bar.
+                const height = `${barWidth(panel, row.value)}%`;
+                return (
+                  <li className={styles.benchRow} key={row.name}>
+                    <span className={styles.benchTrack}>
+                      <span
+                        className={`${styles.benchValue} ${row.lead ? styles.benchValueLead : ''}`}
+                        style={{bottom: height}}>
+                        {row.value} {panel.unit}
+                      </span>
+                      <span
+                        className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''}`}
+                        style={{height}}
+                      />
+                    </span>
+                    <span className={styles.benchName}>{row.name}</span>
+                  </li>
+                );
+              })}
             </ul>
             <p className={styles.benchAxis}>
-              {panel.log ? 'Log scale. Lower is better.' : 'Lower is better.'}
+              {panel.log ? 'Logarithmic scale. A low value is better.' : 'A low value is better.'}
             </p>
           </div>
         ))}
       </div>
       <p className={styles.benchNote}>
-        Overhead is the gateway&apos;s p99 minus the direct to mock p99 on the same endpoint. n=5000 per endpoint on
-        one host, single runs without repeated trial error bars, so read them as order of magnitude differences. Full
-        method and raw data in{' '}
-        <Link to="/blog/rust-ai-gateway-benchmarks">the AIGatewayBench writeup</Link>.
+        To get the overhead, subtract the p99 of the mock server from the p99 of the gateway on the same endpoint.
+        Each test used 5000 requests for each endpoint on one host. We did each test one time and did not
+        calculate error bars. Use these numbers to compare the order of magnitude only. The{' '}
+        <Link to="/blog/rust-ai-gateway-benchmarks">AIGatewayBench report</Link> gives the full method and the raw
+        data.
       </p>
     </section>
   );
