@@ -66,6 +66,7 @@
 }
 
 .chartCard {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 12px;
@@ -128,7 +129,7 @@
   position: absolute;
   z-index: 2;
   width: max-content;
-  max-width: min(440px, 92%);
+  max-width: min(440px, calc(100% - 16px));
   padding: 0.7rem 0.9rem;
   font-size: 0.82rem;
   line-height: 1.45;
@@ -138,16 +139,6 @@
   border-radius: 8px;
   box-shadow: 0 6px 20px rgb(0 0 0 / 14%);
   pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.tooltipRight {
-  margin-left: 14px;
-}
-
-.tooltipLeft {
-  margin-left: -14px;
-  transform: translate(-100%, -50%);
 }
 
 .tooltipHead {
@@ -285,6 +276,22 @@
   fill: var(--ifm-color-primary);
   stroke: var(--ifm-background-surface-color);
   stroke-width: 2;
+}
+
+/* Plans are projections, so they stay grey until a release makes them real. */
+.planPoint {
+  fill: var(--ifm-color-emphasis-500);
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 2;
+}
+
+.planValue {
+  fill: var(--ifm-color-emphasis-700);
+}
+
+.planVersionLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-weight: 600;
 }
 
 .goal circle {
@@ -427,6 +434,12 @@
 .nodeMeta.onRust {
   color: var(--ifm-color-primary);
   font-weight: 600;
+}
+
+.nodePoints {
+  margin-left: 0.35rem;
+  color: var(--ifm-color-emphasis-500);
+  font-weight: 400;
 }
 
 .sectionLead {
@@ -642,4 +655,41 @@
     padding-right: 1rem;
     padding-left: 1rem;
   }
+}
+
+.scoring {
+  display: table;
+  width: 100%;
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoring th,
+.scoring td {
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  text-align: right;
+}
+
+.scoring tr,
+.scoring tr:nth-child(2n) {
+  background: transparent;
+}
+
+.scoring th:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.scoring thead th {
+  color: var(--ifm-color-emphasis-600);
+  font-weight: 500;
+}
+
+.scoring tfoot th,
+.scoring tfoot td {
+  border-bottom: 0;
+  font-weight: 600;
 }

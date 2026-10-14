@@ -1,13 +1,13 @@
 import * as semver from 'semver';
 import {AREAS} from './areas';
-import type {AreaId} from './areas';
+import type {Unit} from './areas';
 import {fail} from './fail';
 import {GOAL_DECLARATIONS} from './goals';
+import {PLANS} from './plans';
 import {PROVIDERS} from './providers';
-import type {ProviderId} from './providers';
-import {checkVersion} from './releases';
+import {CURRENT_VERSION, checkVersion} from './releases';
 import {ROLLOUTS} from './rollouts';
-import type {RcVersion} from './rollouts';
+import type {RcVersion, Rollout} from './rollouts';
 import {STAGES} from './stages';
 import type {Area, Feature, Goal, Group} from './types';
 
@@ -15,57 +15,55 @@ const DONE = 'done';
 const DONE_STAGE = STAGES.length - 1;
 const STAGE_INDEX = new Map<string, number>(STAGES.map((stage, index) => [stage.id, index]));
 
-interface UnitDeclaration {
-  id: string;
-  text: string;
-  task?: boolean;
-  units?: readonly (ProviderId | UnitDeclaration)[];
-}
-
-const areasById = new Map<string, Area>();
-
-function group(id: string, text: string, children: (Feature | Group)[]): Group {
+function checkUnique(id: string, children: {id: string}[]) {
   if (new Set(children.map(child => child.id)).size !== children.length) {
     fail(`${id} lists a unit twice`);
   }
-  return {id, text, children, features: children.flatMap(child => child.features)};
 }
 
-function buildUnit(parentId: string, parentPath: string[], unit: ProviderId | UnitDeclaration): Feature | Group {
-  const {id, text, task = false, units}: UnitDeclaration =
-    typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
+// Builds a unit or group under `area`, keyed by its path of ids from the area.
+function buildUnit(area: Area, parentId: string, parentPath: string[], unit: Unit): Feature | Group {
+  const {id, text, task = false, weight = 1, units} = typeof unit === 'string' ? {id: unit, text: PROVIDERS[unit]} : unit;
   const key = `${parentId}/${id}`;
   const path = [...parentPath, text];
   if (!text) {
     fail(`${key} has no display name in PROVIDERS`);
   }
-  if (units) {
-    return group(key, text, units.map(child => buildUnit(key, path, child)));
+  if (!(weight > 0)) {
+    fail(`${key} needs a positive weight`);
   }
-  // `area` is filled in once the area exists, right below.
-  const feature = {id: key, text, path, task, children: [], rollout: []} as unknown as Feature;
-  feature.features = [feature];
+  if (units) {
+    const children = units.map(child => buildUnit(area, key, path, child));
+    checkUnique(key, children);
+    return {id: key, text, weight, children, features: children.flatMap(child => child.features)};
+  }
+  const feature: Feature = {id: key, text, weight, path, task, children: [], features: [], rollout: [], plan: [], area};
+  feature.features.push(feature);
   return feature;
 }
 
-for (const area of AREAS) {
-  if (areasById.has(area.id)) {
-    fail(`duplicate area: ${area.id}`);
+const areasById = new Map<string, Area>();
+for (const declaration of AREAS) {
+  if (areasById.has(declaration.id)) {
+    fail(`duplicate area: ${declaration.id}`);
   }
-  const units = area.units.map(unit => buildUnit(area.id, [area.text], unit));
-  const node: Area = {...group(area.id, area.text, units), groundwork: 'groundwork' in area ? area.groundwork : false};
-  node.features.forEach(feature => {
-    feature.area = node;
-  });
-  areasById.set(area.id, node);
+  const area: Area = {
+    id: declaration.id,
+    text: declaration.text,
+    weight: 1,
+    groundwork: 'groundwork' in declaration && declaration.groundwork,
+    children: [],
+    features: [],
+  };
+  area.children = declaration.units.map(unit => buildUnit(area, area.id, [area.text], unit));
+  checkUnique(area.id, area.children);
+  area.features = area.children.flatMap(child => child.features);
+  areasById.set(area.id, area);
 }
 
 // Every unit in every area, in declaration order.
 export const FEATURES: Feature[] = [...areasById.values()].flatMap(area => area.features);
 const featuresById = new Map(FEATURES.map(feature => [feature.id, feature]));
-
-// Versions with a rollout, oldest first.
-export const ROLLOUT_VERSIONS = (Object.keys(ROLLOUTS) as RcVersion[]).sort(semver.compare);
 
 // The units a release names under one area, as features.
 function unitsIn(version: string, areaId: string, names: readonly string[] | '*'): Feature[] {
@@ -85,13 +83,13 @@ function unitsIn(version: string, areaId: string, names: readonly string[] | '*'
   });
 }
 
-// Turns the per-release history into each unit's own steps. The types already
-// rule out unknown areas, units and stages; these checks cover what they can't
-// see, like a task under a stage or a unit named twice in one release.
-for (const version of ROLLOUT_VERSIONS) {
-  checkVersion(version);
+// Records one release's rollout as a step on each unit it names, under
+// `steps`. The types already rule out unknown areas, units and stages; these
+// checks cover what they can't see, like a task under a stage or a unit named
+// twice in one release.
+function record(version: RcVersion, rollout: Rollout, steps: 'rollout' | 'plan') {
   const moved = new Set<Feature>();
-  for (const [stageId, areas] of Object.entries(ROLLOUTS[version] ?? {})) {
+  for (const [stageId, areas] of Object.entries(rollout)) {
     if (stageId !== DONE && !STAGE_INDEX.has(stageId)) {
       fail(`${version} has unknown rollout stage: ${stageId}`);
     }
@@ -104,34 +102,47 @@ for (const version of ROLLOUT_VERSIONS) {
           fail(`${feature.id} appears twice in ${version}`);
         }
         moved.add(feature);
-        feature.rollout.push({version, stage: feature.task ? DONE_STAGE : STAGE_INDEX.get(stageId)!});
+        feature[steps].push({version, stage: feature.task ? DONE_STAGE : STAGE_INDEX.get(stageId)!});
       }
     }
   }
 }
 
-// Goals in declaration order, shaped like nodes so the page treats a goal as
-// the root of its own tree.
-const goalsById = new Map<string, Goal>();
-for (const {scope, ...goal} of GOAL_DECLARATIONS) {
-  const children = new Set<Area>(scope.flatMap(id => {
-    const earlier = goalsById.get(id);
-    if (earlier) {
-      return earlier.children;
-    }
-    const area = areasById.get(id);
-    if (!area) {
-      fail(`goal ${goal.id} has unknown scope: ${id}`);
-    }
-    return [area];
-  }));
-  const features = [...children].flatMap(child => child.features);
-  goalsById.set(goal.id, {...goal, children: [...children], features});
+// Versions that moved something, oldest first.
+export const ROLLOUT_VERSIONS = (Object.keys(ROLLOUTS) as RcVersion[]).sort(semver.compare);
+
+for (const version of ROLLOUT_VERSIONS) {
+  checkVersion(version);
+  record(version, ROLLOUTS[version]!, 'rollout');
 }
-export const GOALS: Goal[] = [...goalsById.values()];
+
+// Plans sit past the last published release, oldest first, and stop being
+// plans the moment their RC ships.
+PLANS.forEach((plan, index) => {
+  if (semver.lte(plan.version, CURRENT_VERSION)) {
+    fail(`${plan.version} is published; move what shipped into ROLLOUTS and drop its plan`);
+  }
+  if (index > 0 && semver.lte(plan.version, PLANS[index - 1].version)) {
+    fail(`plans must be in release order: ${plan.version}`);
+  }
+  record(plan.version, plan.rollout, 'plan');
+});
+
+// Goals in declaration order, shaped like nodes so the page treats a goal as
+// the root of its own tree. Each goal holds its own copy of an area, weighted
+// by the points the goal gives it.
+export const GOALS: Goal[] = GOAL_DECLARATIONS.map(({areas, ...goal}) => {
+  const children = Object.entries(areas).map(([id, points]): Area => ({...areasById.get(id)!, weight: points!}));
+  return {
+    ...goal,
+    points: children.reduce((sum, area) => sum + area.weight, 0),
+    children,
+    features: children.flatMap(area => area.features),
+  };
+});
 
 for (const area of areasById.values()) {
-  if (!GOALS.some(goal => goal.children.includes(area))) {
-    fail(`no goal's scope includes ${area.id}`);
+  if (!GOALS.some(goal => goal.children.some(child => child.id === area.id))) {
+    fail(`no goal covers ${area.id}`);
   }
 }

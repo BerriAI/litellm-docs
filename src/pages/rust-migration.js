@@ -1,12 +1,13 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
 import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import {Select} from '@base-ui/react/select';
 import {
+  CURRENT_VERSION,
   GOALS,
-  MAIN_VERSION,
+  PLANS,
   RELEASES,
   STAGES,
   changesIn,
@@ -22,11 +23,28 @@ const FULL_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeri
 
 const formatDate = (formatter, date) => formatter.format(new Date(date));
 
-// Each goal's progress at every release on the timeline.
+// Each goal's progress at every published release, then where the plans
+// should take it. The last published release is today.
 const GOAL_TIMELINES = new Map(GOALS.map(goal => [
   goal.id,
-  RELEASES.map(release => ({...release, percent: progressAt(goal, release.version)})),
+  [
+    ...RELEASES.map(release => ({
+      ...release,
+      percent: progressAt(goal, release.version),
+      isCurrent: release.version === CURRENT_VERSION,
+    })),
+    ...PLANS.map(plan => ({...plan, percent: progressAt(goal, plan.version, true), isPlan: true})),
+  ],
 ]));
+
+// Every percent on the page is a whole number, like 13.5% as 14%.
+const wholePercent = percent => Math.round(percent);
+
+// Points keep one decimal, since a single provider can be worth a fraction of one.
+const formatPoints = value => (Math.round(value * 10) / 10).toString();
+
+// A goal's progress in points of its weight, like 11.8 of 100.
+const pointsAt = (goal, version, projected = false) => (progressAt(goal, version, projected) * goal.points) / 100;
 
 function useElementWidth(fallback) {
   const ref = useRef(null);
@@ -50,11 +68,12 @@ function useElementWidth(fallback) {
 
 const LABEL_SPACING = 100;
 
-// Label as many releases as fit without overlapping. The first release, main,
-// and releases where progress moved claim their spots before the rest.
+// Label as many points as fit without overlapping. The first release, today,
+// and the plans claim their spots first, then releases where progress moved.
 function pickLabeledPoints(points, x, goalX) {
+  const pinned = point => point.isCurrent || point.isPlan;
   const priority = index => {
-    if (index === 0 || points[index].isMain) {
+    if (index === 0 || pinned(points[index])) {
       return 2;
     }
     return points[index - 1].percent !== points[index].percent ? 1 : 0;
@@ -65,7 +84,7 @@ function pickLabeledPoints(points, x, goalX) {
   const labeled = new Set();
   for (const index of byPriority) {
     const fits = [...labeled].every(other => Math.abs(x(index) - x(other)) >= LABEL_SPACING)
-      && (points[index].isMain || goalX - x(index) >= LABEL_SPACING);
+      && (pinned(points[index]) || goalX - x(index) >= LABEL_SPACING);
     if (priority(index) === 2 || fits) {
       labeled.add(index);
     }
@@ -84,16 +103,28 @@ function MigrationTimeline({goal}) {
     : {left: 48, right: 40, top: 40, bottom: 64};
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const goalGap = compact ? 72 : 120;
-  const x = index => plot.left + (index / (points.length - 1)) * (plotWidth - goalGap);
+  const goalGap = compact ? 64 : 112;
+  // Plans get wider steps than releases so their labels never collide.
+  const planGap = compact ? 60 : 100;
+  const releaseCount = RELEASES.length;
+  const releaseEnd = plot.left + plotWidth - goalGap - PLANS.length * planGap;
+  const x = index => (index < releaseCount
+    ? plot.left + (index / (releaseCount - 1)) * (releaseEnd - plot.left)
+    : releaseEnd + (index - releaseCount + 1) * planGap);
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
   const goalX = plot.left + plotWidth;
-  const latest = points.at(-1);
+  const current = releaseCount - 1;
   const linePath = points
+    .slice(0, releaseCount)
     .map((point, index) => (index === 0 ? `M${x(0)},${y(point.percent)}` : `H${x(index)}V${y(point.percent)}`))
     .join('');
   const areaPath = `${linePath}V${baseline}H${x(0)}Z`;
+  // From today through each plan to the goal, as one dashed projection.
+  const projectionPath = points
+    .slice(current)
+    .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
+    .join('') + `L${goalX},${y(100)}`;
   const labeled = pickLabeledPoints(points, x, goalX);
 
   return (
@@ -104,12 +135,17 @@ function MigrationTimeline({goal}) {
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-labelledby="timeline-title timeline-description"
+        // A label rather than <title>, which browsers show as a tooltip over the whole chart.
+        aria-label="Rust migration progress over time"
+        aria-describedby="timeline-description"
       >
-        <title id="timeline-title">Rust migration progress over time</title>
         <desc id="timeline-description">
-          {latest.percent} percent of the work for {goal.text} is done in {MAIN_VERSION}.
-          The goal targets 100 percent by {goal.endsOn}.
+          {wholePercent(points[current].percent)} percent of {goal.text} is migrated in {CURRENT_VERSION}.
+          {PLANS.map(plan => {
+            const point = points.find(candidate => candidate.version === plan.version);
+            return ` ${plan.label} is planned to reach ${wholePercent(point.percent)} percent.`;
+          })}
+          {' '}The goal targets 100 percent by {goal.endsOn}.
         </desc>
         <defs>
           <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
@@ -130,18 +166,14 @@ function MigrationTimeline({goal}) {
           </g>
         ))}
         <path d={areaPath} fill="url(#progress-area)" />
-        <line
-          className={styles.goalLine}
-          x1={x(points.length - 1)}
-          x2={goalX}
-          y1={y(latest.percent)}
-          y2={y(100)}
-        />
+        <path className={styles.goalLine} d={projectionPath} fill="none" />
         <path className={styles.progressLine} d={linePath} />
         {points.map((point, index) => {
           const cx = x(index);
           const cy = y(point.percent);
           const date = formatDate(SHORT_DATE, point.date);
+          const pinned = point.isCurrent || point.isPlan;
+          const pointClass = point.isPlan ? styles.planPoint : point.isCurrent ? styles.mainPoint : styles.progressPoint;
           return (
             <g
               key={point.version}
@@ -153,27 +185,27 @@ function MigrationTimeline({goal}) {
               onClick={() => setHovered(index)}
             >
               <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
-              <circle
-                className={point.isMain ? styles.mainPoint : styles.progressPoint}
-                cx={cx}
-                cy={cy}
-                r={point.isMain ? 5 : 3.5}
-              />
-              {point.isMain && (
-                <text className={styles.pointValue} x={cx} y={cy - 12} textAnchor="middle">
-                  {point.percent}%
+              <circle className={pointClass} cx={cx} cy={cy} r={pinned ? 5 : 3.5} />
+              {pinned && (
+                <text
+                  className={`${styles.pointValue} ${point.isPlan ? styles.planValue : ''}`}
+                  x={cx}
+                  y={cy - 12}
+                  textAnchor="middle"
+                >
+                  {wholePercent(point.percent)}%
                 </text>
               )}
               {labeled.has(index) && (
                 <text
-                  className={`${styles.versionLabel} ${point.isMain ? styles.mainVersionLabel : ''}`}
+                  className={`${styles.versionLabel} ${point.isCurrent ? styles.mainVersionLabel : ''} ${point.isPlan ? styles.planVersionLabel : ''}`}
                   x={cx}
                   y={baseline + 26}
                   textAnchor={compact && index === 0 ? 'start' : 'middle'}
                 >
-                  <tspan x={cx}>{compactVersion(point.version)}</tspan>
+                  <tspan x={cx}>{point.isPlan ? point.label : compactVersion(point.version)}</tspan>
                   <tspan className={styles.versionDate} x={cx} dy="16">
-                    {point.isMain && !compact ? `${date} · main` : date}
+                    {point.isCurrent && !compact ? `${date} · today` : date}
                   </tspan>
                 </text>
               )}
@@ -195,53 +227,95 @@ function MigrationTimeline({goal}) {
         </g>
       </svg>
       {hovered !== null && (
-        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} left={x(hovered)} top={y(points[hovered].percent)} width={width} />
+        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} anchor={{x: x(hovered), y: y(points[hovered].percent)}} />
       )}
     </div>
   );
 }
 
-const TOOLTIP_LINES = 3;
-const TOOLTIP_PROVIDERS = 4;
+const TOOLTIP_LINES = 4;
+const TOOLTIP_UNITS = 4;
 
 // One line per area and stage, so six providers moving together read as one
-// change. Foundation work is left out, since it isn't an API and provider pair.
-// `from` is where the providers stood before, when they all stood in one place.
+// change. `from` is where the units stood before, when they all stood in one
+// place. A plan's lines come from what it expects to move.
 function summarizeChanges(goal, point, previous) {
-  const apiFeatures = goal.features.filter(feature => !feature.area.groundwork);
-  return changesIn(point.version, apiFeatures).map(({key, area, stage, features}) => {
-    const before = new Set(features.map(feature => stageAt(feature, previous.version)));
+  const projected = Boolean(point.isPlan);
+  return changesIn(point.version, goal.features, projected).map(({key, area, stage, features}) => {
+    const before = new Set(features.map(feature => stageAt(feature, previous.version, projected)));
     const names = features.map(feature => feature.path.slice(1).join(' / '));
+    // A whole provider list reads as "All providers"; shared work is named,
+    // since "All" says nothing about what got done.
     return {
       key,
       area: area.text,
-      providers: features.length === area.features.length && names.length > 1
+      units: !area.groundwork && features.length === area.features.length && names.length > 1
         ? 'All providers'
-        : names.length > TOOLTIP_PROVIDERS
-          ? `${names.slice(0, TOOLTIP_PROVIDERS).join(', ')} +${names.length - TOOLTIP_PROVIDERS} more`
+        : names.length > TOOLTIP_UNITS
+          ? `${names.slice(0, TOOLTIP_UNITS).join(', ')} +${names.length - TOOLTIP_UNITS} more`
           : names.join(', '),
-      from: before.size === 1 ? STAGES[[...before][0]].label : null,
-      to: STAGES[stage].label,
+      from: before.size === 1 && !features[0].task ? STAGES[[...before][0]].label : null,
+      to: features[0].task ? 'Done' : STAGES[stage].label,
     };
   });
 }
 
-function PointTooltip({goal, point, previous, left, top, width}) {
+const TOOLTIP_GAP = 14;
+const TOOLTIP_MARGIN = 8;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+
+// Where a tooltip of `size` goes inside `bounds` next to `anchor`: beside the
+// point on whichever side has room, or centered over it and kept inside the
+// card when neither side does, as on a phone. `bounds.top` is negative, since
+// a tall tooltip may rise over the sentence above the chart.
+function placeTooltip(anchor, size, bounds) {
+  const right = anchor.x + TOOLTIP_GAP;
+  const left = anchor.x - TOOLTIP_GAP - size.width;
+  const fitsRight = right + size.width <= bounds.width - TOOLTIP_MARGIN;
+  const fitsLeft = left >= TOOLTIP_MARGIN;
+  const preferLeft = anchor.x > bounds.width / 2;
+  const x = fitsLeft && (preferLeft || !fitsRight)
+    ? left
+    : fitsRight
+      ? right
+      : clamp(anchor.x - size.width / 2, TOOLTIP_MARGIN, bounds.width - size.width - TOOLTIP_MARGIN);
+  const y = clamp(anchor.y - size.height / 2, bounds.top + TOOLTIP_MARGIN, bounds.bottom - size.height - TOOLTIP_MARGIN);
+  return {left: x, top: y};
+}
+
+function PointTooltip({goal, point, previous, anchor}) {
   const lines = summarizeChanges(goal, point, previous);
   const shown = lines.slice(0, TOOLTIP_LINES);
-  const flipped = left > width / 2;
+  const ref = useRef(null);
+  // Hidden until measured, since where it fits depends on its own size.
+  const [position, setPosition] = useState(null);
+  useLayoutEffect(() => {
+    const tooltip = ref.current;
+    const chart = tooltip.offsetParent;
+    // The anchor is in SVG coordinates, and the SVG sits inside the chart's
+    // padding. SVG elements have no offsetLeft, so measure the gap directly.
+    const svgBox = chart.querySelector('svg').getBoundingClientRect();
+    const chartBox = chart.getBoundingClientRect();
+    setPosition(placeTooltip(
+      {x: anchor.x + svgBox.left - chartBox.left, y: anchor.y + svgBox.top - chartBox.top},
+      {width: tooltip.offsetWidth, height: tooltip.offsetHeight},
+      {width: chart.clientWidth, top: -chart.offsetTop, bottom: chart.clientHeight},
+    ));
+  }, [anchor.x, anchor.y, point.version, goal.id]);
   return (
     <div
-      className={`${styles.tooltip} ${flipped ? styles.tooltipLeft : styles.tooltipRight}`}
-      style={{left, top}}
+      ref={ref}
+      className={styles.tooltip}
+      style={position ?? {left: 0, top: 0, visibility: 'hidden'}}
       role="tooltip"
     >
       <div className={styles.tooltipHead}>
-        <strong>{compactVersion(point.version)}</strong>
-        <span>{point.percent}%</span>
+        <strong>{point.isPlan ? `${point.label} · ${compactVersion(point.version)}` : compactVersion(point.version)}</strong>
+        <span>{wholePercent(point.percent)}%</span>
       </div>
       <div className={styles.tooltipDate}>
-        {point.isMain ? 'Planned for' : 'Released'} {formatDate(FULL_DATE, point.date)}
+        {point.isPlan ? `Planned for ${formatDate(FULL_DATE, point.date)}: ${point.summary}` : `Released ${formatDate(FULL_DATE, point.date)}`}
       </div>
       {lines.length === 0 ? (
         <div className={styles.tooltipEmpty}>Nothing moved for {goal.text} in this release.</div>
@@ -251,7 +325,7 @@ function PointTooltip({goal, point, previous, left, top, width}) {
             <li key={line.key}>
               <span className={styles.tooltipArea}>
                 {line.area}
-                <em> · {line.providers}</em>
+                <em> · {line.units}</em>
               </span>
               <span className={styles.tooltipStage}>
                 {line.from && <em>{line.from} → </em>}
@@ -272,7 +346,7 @@ function PointTooltip({goal, point, previous, left, top, width}) {
 // draws its chevron inside, and once a node is complete the ring fills solid
 // with the glyph cut out of it: the chevron for a group, a check otherwise.
 function ProgressMarker({percent, expandable}) {
-  const complete = percent === 100;
+  const complete = Math.round(percent) === 100;
   return (
     <svg className={`${styles.marker} ${complete ? styles.markerComplete : ''}`} viewBox="0 0 16 16" aria-hidden="true">
       <circle className={styles.markerTrack} cx="8" cy="8" r="6.5" />
@@ -292,7 +366,7 @@ function GraphNode({node}) {
   return (
     <li>
       <div className={styles.node}>
-        <ProgressMarker percent={progressAt(node, MAIN_VERSION)} />
+        <ProgressMarker percent={progressAt(node, CURRENT_VERSION)} />
         <span className={styles.nodeText}>{node.text}</span>
         <span className={styles.nodeMeta}><StageBadge feature={node} /></span>
       </div>
@@ -300,16 +374,20 @@ function GraphNode({node}) {
   );
 }
 
-// Groups start collapsed so the list stays scannable; opening one shows what it holds.
-function GroupNode({group}) {
-  const percent = progressAt(group, MAIN_VERSION);
+// Groups start collapsed so the list stays scannable; opening one shows what it
+// holds. A goal's areas also show how many points of the goal they carry.
+function GroupNode({group, points}) {
+  const percent = progressAt(group, CURRENT_VERSION);
   return (
     <li>
       <details className={styles.group}>
         <summary className={styles.node}>
           <ProgressMarker percent={percent} expandable />
           <span className={styles.nodeText}>{group.text}</span>
-          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>{percent}%</span>
+          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>
+            {wholePercent(percent)}%
+            {points !== undefined && <span className={styles.nodePoints}>of {points} pts</span>}
+          </span>
         </summary>
         <ul>
           {group.children.map(child => <GraphNode node={child} key={child.id} />)}
@@ -379,8 +457,11 @@ function MigrationTracker() {
       <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
       <div className={styles.chartCard}>
         <p className={styles.goalSentence}>
-          <strong className={styles.progressSummary} title={`Across ${goal.features.length} features`}>
-            {progressAt(goal, MAIN_VERSION)}%
+          <strong
+            className={styles.progressSummary}
+            title={`${formatPoints(pointsAt(goal, CURRENT_VERSION))} of ${goal.points} points as of ${CURRENT_VERSION}`}
+          >
+            {wholePercent(progressAt(goal, CURRENT_VERSION))}%
           </strong>
           {' of '}
           <GoalSelect goal={goal} onChange={setGoal} />
@@ -408,7 +489,7 @@ function MigrationTracker() {
         </div>
         {/* The sentence above already names the goal, so the tree starts at its children. */}
         <ul className={styles.tree} hidden={view !== 'breakdown'}>
-          {goal.children.map(area => <GroupNode group={area} key={area.id} />)}
+          {goal.children.map(area => <GroupNode group={area} points={area.weight} key={area.id} />)}
         </ul>
       </div>
     </section>
@@ -456,7 +537,72 @@ function RolloutStages() {
   );
 }
 
+// How `other` weighs areas differently from `goal`, like `Long tail from 4 to 23 points`.
+function reweighed(goal, other) {
+  return other.children
+    .map(area => [area, goal.children.find(candidate => candidate.id === area.id)])
+    .filter(([area, base]) => base && base.weight !== area.weight)
+    .map(([area, base]) => `${area.text} from ${base.weight} to ${area.weight} points`)
+    .join(' and ');
+}
+
+// The goal's areas with their weights, what they hold today, and what the plans
+// should add, straight from the data the chart uses.
+function Scoring() {
+  const [goal] = GOALS;
+  const lastPlan = PLANS.at(-1);
+  const rows = goal.children.map(area => {
+    const points = area.weight;
+    return {
+      area,
+      points,
+      today: (progressAt(area, CURRENT_VERSION) * points) / 100,
+      planned: lastPlan && (progressAt(area, lastPlan.version, true) * points) / 100,
+    };
+  });
+  return (
+    <>
+      <p className={styles.sectionLead}>
+        Each area of work carries a share of {goal.points} points for {goal.text}, and within an area its providers or
+        pieces split those points evenly. A piece earns 80% of its share once anyone can turn it on, even as an opt-in,
+        and the last 20% once it runs on Rust by default or the Python path is gone. Shared groundwork, like cloud auth,
+        counts in full once it is done.
+        {GOALS.slice(1).map(other => ` ${other.text} reweighs ${reweighed(goal, other)}, for ${other.points} in all.`)}
+      </p>
+      <table className={styles.scoring}>
+        <thead>
+          <tr>
+            <th scope="col">{goal.text}</th>
+            <th scope="col">Points</th>
+            <th scope="col">Today</th>
+            {lastPlan && <th scope="col">By {formatDate(SHORT_DATE, lastPlan.date)}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => (
+            <tr key={row.area.id}>
+              <th scope="row">{row.area.text}</th>
+              <td>{row.points}</td>
+              <td>{formatPoints(row.today)}</td>
+              {lastPlan && <td>{formatPoints(row.planned)}</td>}
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Total</th>
+            <td>{goal.points}</td>
+            <td>{formatPoints(pointsAt(goal, CURRENT_VERSION))}</td>
+            {lastPlan && <td>{formatPoints(pointsAt(goal, lastPlan.version, true))}</td>}
+          </tr>
+        </tfoot>
+      </table>
+    </>
+  );
+}
+
 const FAQ = [
+  {id: 'faq-scoring', question: 'How is the percentage calculated?', answer: <Scoring />},
   {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
 ];
 

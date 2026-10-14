@@ -5,11 +5,14 @@ import type {Release} from './types';
 
 export const MAIN_VERSION = releaseSnapshot.main.version;
 
-// Every release on the timeline, oldest first, ending with the upcoming one on main.
-export const RELEASES: Release[] = [
-  ...releaseSnapshot.published.map(release => ({version: release.version, date: release.releasedAt, isMain: false})),
-  {version: MAIN_VERSION, date: releaseSnapshot.main.plannedFor, isMain: true},
-].sort((left, right) => semver.compare(left.version, right.version));
+// Every published release on the timeline, oldest first. Main is not on it:
+// what lands there next shows up as the plans past the last release.
+export const RELEASES: Release[] = releaseSnapshot.published
+  .map(release => ({version: release.version, date: release.releasedAt}))
+  .sort((left, right) => semver.compare(left.version, right.version));
+
+// The newest published RC, which is what "today" means on the page.
+export const CURRENT_VERSION = RELEASES.at(-1)!.version;
 
 // Stable releases, oldest first. A stable release carries the rollouts of the
 // RCs it was cut from, which semver ordering already gives: v1.102.1 sorts
@@ -40,6 +43,6 @@ if (RELEASES.length < 10) {
   fail('the timeline needs at least 10 RC versions');
 }
 RELEASES.forEach(release => checkVersion(release.version));
-if (!RELEASES.at(-1)?.isMain) {
+if (semver.lte(MAIN_VERSION, CURRENT_VERSION)) {
   fail(`main (${MAIN_VERSION}) must be newer than every published release`);
 }
