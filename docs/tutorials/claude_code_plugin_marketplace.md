@@ -254,7 +254,7 @@ Claude Desktop honors a per-plugin `installationPreference` only when `marketpla
 
 Claude Desktop 2.31226.1 treats a per-plugin `required` the same as `auto_install`. It installs the plugin on its own, but the user can still turn it off or remove it, and a removed plugin stays removed on the next sync. A whole-marketplace `required` setting in Claude Desktop is the one that stops users from removing plugins.
 
-Claude Desktop sends the marketplace URL without `?key=`, so it sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. In Claude Desktop's own marketplace configuration, leave the entry's `installationPreference` at `available` and let the per-plugin values decide. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
+Claude Desktop sends the marketplace URL without `?key=`, and LiteLLM does not read the bearer token Desktop sends with it, so Desktop sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. Enabling makes the plugin public, so its name, description, archive URL, and `sha256` show up without auth in `marketplace.json` and `GET /public/skill_hub`. In Claude Desktop's own marketplace configuration, leave the entry's `installationPreference` at `available` and let the per-plugin values decide. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
 
 :::warning Older Claude Code releases
 
