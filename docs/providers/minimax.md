@@ -637,3 +637,75 @@ Pass these via `extra_body`:
 | bitrate | int | Bitrate for MP3: 64000, 128000, 192000, 256000 | 128000 |
 | channel | int | Audio channels: 1 (mono) or 2 (stereo) | 1 |
 | output_format | string | Output format: "hex" or "url" (url returns a URL valid for 24 hours) | hex |
+
+## MiniMax - Video Generation
+
+MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`.
+
+```python showLineNumbers title="MiniMax Video Generation"
+import os
+import time
+from litellm import video_content, video_generation, video_status
+
+os.environ["MINIMAX_API_KEY"] = "your-api-key"
+
+video = video_generation(
+    model="minimax/MiniMax-H3",
+    prompt="A paper boat drifting down a rain-soaked city gutter",
+    seconds="5",
+    size="1280x720",
+)
+
+while video.status not in ("completed", "failed"):
+    time.sleep(20)
+    video = video_status(video_id=video.id)
+
+with open("video.mp4", "wb") as f:
+    f.write(video_content(video_id=video.id))
+```
+
+`seconds` sets the duration and `size` sets the aspect ratio, so `1280x720` is sent as `16:9`. You can also pass `ratio` directly. `resolution` picks the output tier: `768P` (the default) or `2K` on MiniMax-H3, and `480P` or `768P` on MiniMax-H3-Max. Without `seconds` the job runs for 5 seconds, and a text-only request without `size` or `ratio` runs at 16:9.
+
+For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). Extra image and audio references go in `content` as MiniMax `image_url` and `audio_url` items. The text of the request always comes from `prompt`, so text items in `content` are rejected and every word MiniMax sees passes through your prompt guardrails.
+
+These requests return a 400 instead of reaching MiniMax:
+
+- reference video input (a `video_url` item in `content`), since MiniMax bills its duration only after the task is created
+- remix, since MiniMax regeneration only upscales a finished 768P task to 2K and ignores the prompt
+- `video_list` with `after` or `order="asc"`, since MiniMax pages by number and returns newest first. Pass `extra_query={"page_num": 2}` for a later page
+- `characters` or `image`, unless `drop_params` is on
+
+Spend is logged at create time from the model's per-second rate at the requested resolution, plus each input image beyond MiniMax's free allowance (5 on MiniMax-H3, 2 on MiniMax-H3-Max).
+
+To serve these models on the proxy, set `mode: video_generation` on the deployment and call `/v1/videos`:
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: minimax-h3
+    litellm_params:
+      model: minimax/MiniMax-H3
+      api_key: os.environ/MINIMAX_API_KEY
+    model_info:
+      mode: video_generation
+```
+
+```bash showLineNumbers title="Video generation via Proxy - cURL"
+curl http://localhost:4000/v1/videos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "A paper boat drifting down a rain-soaked city gutter",
+    "seconds": "5",
+    "size": "1280x720"
+  }'
+
+curl http://localhost:4000/v1/videos/$VIDEO_ID \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+
+curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -o video.mp4
+```
+
+To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK.
