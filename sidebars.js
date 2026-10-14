@@ -1319,6 +1319,7 @@ const sidebars = {
         "providers/meta_llama",
         "providers/microsoft_365_copilot",
         "providers/milvus_vector_stores",
+        "providers/qdrant_vector_stores",
         {
           type: "category",
           label: "Mistral AI",
