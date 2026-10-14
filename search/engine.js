@@ -1,4 +1,5 @@
 const MiniSearch = require('minisearch');
+const pluralize = require('pluralize');
 const {contentTypes, contentType, versionsIn, normalizeVersion} = require('./content');
 
 const stopWords = new Set('a an and are as at be by can do does for from how i in is it me my of on or our per please the this to use using what when where which with you your was did'.split(' '));
@@ -19,13 +20,23 @@ const words = text => text.toLowerCase().replace(/(\p{L})-(\d+)-(\d+)(?![-.\w])/
 const titlePairs = title => {
   const parts = words(title).flatMap(word => word.split('_'));
   return parts.slice(1).map((word, i) => [parts[i], word])
-    .filter(pair => pair.every(word => !stopWords.has(word)));
+    .filter(pair => pair.every(word => normalize(word)));
 };
+const titleAliases = title => new Map(titlePairs(title).flatMap(pair => [
+  [pair.join(''), pair], [pair.map(normalize).join(''), pair],
+]));
 const tokenize = (text, field) => [
-  ...words(text.replace(/\b(?:set\s+up|quick\s+start)\b/gi, 'setup')).flatMap(word => word.includes('_') ? [word, ...word.split('_')] : [word]),
-  ...(field === 'title' ? titlePairs(text).map(pair => pair.join('')) : []),
+  ...words(text.replace(/\b(?:set\s+up|quick\s+start)\b/gi, 'setup')).flatMap(word => word.split('_')),
+  ...(field === 'title' ? titleAliases(text).keys() : []),
 ];
-const normalize = term => stopWords.has(term) ? null : /^v?\d+\.\d+\.\d+/.test(term) ? normalizeVersion(term) : Object.hasOwn(forms, term) ? forms[term] : term;
+const normalize = term => {
+  if (stopWords.has(term)) return null;
+  const canonical = /^v?\d+\.\d+\.\d+/.test(term) ? normalizeVersion(term)
+    : Object.hasOwn(forms, term) ? forms[term]
+    // Keep short names and typos such as "lens" and "lnes" intact for fuzzy matching.
+    : term.length > 4 && /^[a-z]+$/.test(term) ? pluralize.singular(term) : term;
+  return stopWords.has(canonical) ? null : canonical;
+};
 const termsOf = text => [...new Set(tokenize(text).map(normalize).filter(Boolean))];
 const indexTerm = term => {
   const canonical = normalize(term);
@@ -75,13 +86,13 @@ function createIndex(documents) {
   const collections = Object.fromEntries(contentTypes.map(type => [type,
     createCollection(documents.filter(doc => (doc.type || contentType(doc.url)) === type))]));
   // Separate term statistics keep new archives from changing matches within the docs collection.
-  return {version: 3, collections};
+  return {version: 4, collections};
 }
 
 function loadIndex(json) {
   const data = JSON.parse(json);
-  if (data.version !== 3) throw new Error('Rebuild the documentation search index');
-  return {version: 3, collections: Object.fromEntries(contentTypes.map(type => [type, {
+  if (data.version !== 4) throw new Error('Rebuild the documentation search index');
+  return {version: 4, collections: Object.fromEntries(contentTypes.map(type => [type, {
     pages: MiniSearch.loadJS(data.collections[type].pages, pageOptions),
     passages: MiniSearch.loadJS(data.collections[type].passages, passageOptions),
   }]))};
@@ -101,9 +112,15 @@ function distance(a, b) {
 function retrieve(index, terms, boost) {
   const query = terms.join(' ');
   const options = {boost, combineWith: 'AND'};
-  let hits = index.search(query, options);
-  if (hits.length) return hits;
-  hits = index.search(query, {...options, prefix: term => term.length >= 3 && !/^\d/.test(term)});
+  const exact = index.search(query, options);
+  const exactIds = new Set(exact.map(hit => hit.id));
+  // Keep exact scores and matched terms: aliases such as "azureopenai" must not
+  // dilute an exact "azure" title match. Still consider titles missed by exact search.
+  const prefix = index.search(query, {...options, prefix: term => term.length >= 3 && !/^\d/.test(term)})
+    .filter(hit => !exactIds.has(hit.id))
+    .map(hit => ({...hit, terms: terms.map(term => hit.terms.filter(match => match.startsWith(term))
+      .sort((a, b) => a.length - b.length || a.localeCompare(b))[0] || term)}));
+  let hits = [...exact, ...prefix];
   if (hits.length) return hits;
   if (terms.some(term => /^\d/.test(term))) return [];
   hits = index.search(query, {...options, fuzzy: term => term.length >= 5 ? 0.3 : term.length === 4 ? 0.5 : false})
@@ -157,7 +174,7 @@ function titleRelevance(title, terms, queryTerms, exactBoost = 90) {
 
 // Use the original words for ranking and navigation when a query uses a joined title pair.
 function expandTitleTerms(title, terms, queryTerms = terms) {
-  const pairs = new Map(titlePairs(title).map(pair => [pair.join(''), pair]));
+  const pairs = titleAliases(title);
   return [...new Set(terms.flatMap(term => queryTerms.includes(term) && pairs.has(term) ? pairs.get(term) : [term])
     .map(normalize).filter(Boolean))];
 }
@@ -195,8 +212,8 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
     }
     let effective = [...new Set((group.pageTerms || group.passages[0]?.terms || terms).map(normalize).filter(Boolean))];
     if (group.matchType === 'typo') {
-      const correctedTitle = words(group.title).filter(word => terms.some(term => distance(term, word) <= (term.length >= 9 ? 2 : 1)));
-      if (correctedTitle.length) effective = correctedTitle.map(normalize).filter(Boolean);
+      const correctedTitle = words(group.title).map(normalize).filter(word => word && terms.some(term => distance(term, word) <= (term.length >= 9 ? 2 : 1)));
+      if (correctedTitle.length) effective = correctedTitle;
     }
     const contextualTitle = `${group.title} ${group.url.replace(/[/_-]/g, ' ')}`;
     const titleScore = Math.max(titleRelevance(group.title, effective, terms),
