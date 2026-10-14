@@ -239,6 +239,7 @@ Read the current value back with `GET /get/ui_settings`.
 | `raise_max_budget` | Also raise `max_budget`. Only valid together with `max_budget`: the API returns 400 if it is enabled alone, and the UI checkbox sits under Max Budget and stays disabled until Max Budget is checked. Removing the budget (`max_budget: null`) always stays with proxy admins |
 | `projects` | Create and update projects for those teams (`/project/new`, `/project/update`) |
 | `member_key_budgets` | Update budget fields on keys owned by other members of those teams (`/key/update`) |
+| `metadata` | Add, change and remove the team's own metadata keys on `/team/update`. Keys the proxy reads as settings (guardrails, tags, callbacks, rate limit tiers and similar) stay with proxy admins and return 403 naming the key. Keys declared in `team_metadata_schema` can be changed but not removed or left empty |
 
 A raise is capped by the organization's `max_budget` when the team belongs to an organization that has one: going above it returns 400 with `Team max_budget (...) exceeds organization's max_budget (...)`. Teams outside an organization, or in an organization without a budget, have no ceiling. Org-scoped teams must also stay within the organization's budget and TPM/RPM limits no matter who edits them.
 
