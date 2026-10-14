@@ -732,8 +732,10 @@ function GatewayBenchmark() {
         same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
         delay and the memory that each gateway adds. Each route that moves to Rust has these results.
       </p>
-      <div className={styles.benchPanels}>
-        {BENCHMARK.map(panel => (
+      {/* Same card as the tracker above, so the two charts read as one page. */}
+      <div className={styles.chartCard}>
+        <div className={styles.benchPanels}>
+          {BENCHMARK.map(panel => (
           <div className={styles.benchPanel} key={panel.id}>
             <p className={styles.benchPanelLabel}>{panel.label}</p>
             <ul className={styles.benchRows}>
@@ -763,7 +765,8 @@ function GatewayBenchmark() {
               {panel.log ? 'Logarithmic scale. A low value is better.' : 'A low value is better.'}
             </p>
           </div>
-        ))}
+          ))}
+        </div>
       </div>
       <p className={styles.benchNote}>
         These numbers are the delay the gateway itself adds. Each gateway handled 5000 requests for each endpoint,

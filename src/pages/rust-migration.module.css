@@ -701,6 +701,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2.5rem;
+  /* The card has no padding of its own; its children supply it, the same way
+     the tracker's sentence and chart body do. */
+  padding: 1.5rem;
 }
 
 .benchPanel {
