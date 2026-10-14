@@ -384,8 +384,13 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       // The whole bar links to the page; the close button still works.
+      // Entries live in src/announcements.js and are rotated by
+      // src/theme/AnnouncementBar/Content, which also drops an entry once its
+      // expiresAt passes. `content` is required by the theme schema but is not
+      // rendered; it holds the evergreen entry so the config still reads true.
+      // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'decisions_api_2026_10',
+        id: 'townhall_oct_2026_decisions_api',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
