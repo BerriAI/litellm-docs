@@ -218,7 +218,9 @@ curl -X DELETE http://localhost:4000/claude-code/plugins/my-plugin \
 
 ## Auto-install plugins in Claude Desktop
 
-Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry:
+Available from v1.107.0.
+
+Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry. The field is API only, since the Admin UI has no control for it yet. `GET /claude-code/plugins`, `GET /claude-code/plugins/{name}`, and `GET /public/skill_hub` return it as `installation_preference`. The `sha256` must be the zip's 64-character hex SHA-256 digest:
 
 ```bash
 curl -X POST http://localhost:4000/claude-code/plugins \
@@ -229,7 +231,7 @@ curl -X POST http://localhost:4000/claude-code/plugins \
     "source": {
       "source": "archive",
       "url": "https://litellm.example.com/plugins/my-plugin-1.0.0.zip",
-      "sha256": "9f2c04d1...b8e7"
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "installation_preference": "auto_install"
   }'
@@ -241,7 +243,7 @@ curl -X POST http://localhost:4000/claude-code/plugins \
   "source": {
     "source": "archive",
     "url": "https://litellm.example.com/plugins/my-plugin-1.0.0.zip",
-    "sha256": "9f2c04d1...b8e7"
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "version": "1.0.0",
   "installationPreference": "auto_install"
@@ -254,7 +256,7 @@ Claude Desktop sends the marketplace URL without `?key=`, so it sees only enable
 
 :::warning Older Claude Code releases
 
-Older Claude Code releases, 2.1.100 and earlier for example, reject a `marketplace.json` that lists any `archive` plugin, so `claude plugin marketplace add` and `claude plugin marketplace update` fail for every plugin in it. LiteLLM serves `installationPreference` only on `archive` plugins, so the field adds no new break. Upgrade every Claude Code user of this marketplace to a release that reads `archive` sources before you add one. Those releases ignore `installationPreference`, so plugins still install there with `/plugin install`.
+Claude Code 2.1.100 and earlier reject a `marketplace.json` that lists any `archive` plugin, so `claude plugin marketplace add` and `claude plugin marketplace update` fail for every plugin in it. Releases 2.1.200 and 2.1.223, for example, add the marketplace but fail `claude plugin install` on an `archive` plugin. Claude Code 2.1.224 is the first release that installs `archive` plugins, per the [plugin marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference). LiteLLM serves `installationPreference` only on `archive` plugins, so the field adds no new break. Upgrade every Claude Code user of this marketplace to 2.1.224 or later before you add an `archive` plugin. Claude Code ignores `installationPreference`, so those users still install the plugin with `/plugin install`.
 
 :::
 
