@@ -128,7 +128,7 @@ When both the key and its team list skills, the key gets the intersection of the
 | `category` | Category shown in the marketplace |
 | `keywords` | Tags for search and filtering |
 | `version` | Semver string; defaults to `1.0.0` on create |
-| `installation_preference` | Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop). `auto_install` and `required` need an `archive` source with a `sha256`, and Claude Code 2.1.75 and older reject a marketplace that carries the field |
+| `installation_preference` | Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop). Needs an `archive` source, and `auto_install` and `required` also need its `sha256` |
 | `author` | `{"name": "...", "email": "..."}` |
 | `homepage` | Homepage URL |
 

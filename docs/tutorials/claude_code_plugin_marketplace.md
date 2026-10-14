@@ -248,11 +248,13 @@ curl -X POST http://localhost:4000/claude-code/plugins \
 }
 ```
 
-Claude Desktop honors a per-plugin `installationPreference` only when `marketplace.json` is served from its `inferenceGatewayBaseUrl` or `bootstrapUrl` origin, and only for an `archive` source with a `sha256` whose zip sits on that same origin. It ignores the mark on any other origin or source type, so LiteLLM answers 400 when `auto_install` or `required` is set on a plugin that is not an `archive` source with a `sha256`. LiteLLM also accepts the request key as `installationPreference`, the name Claude Desktop reads. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
+Claude Desktop honors a per-plugin `installationPreference` only when `marketplace.json` is served from its `inferenceGatewayBaseUrl` or `bootstrapUrl` origin, and only for an `archive` source with a `sha256` whose zip sits on that same origin. It does not list other source types from a `marketplace.json` URL at all, so LiteLLM answers 400 when `installation_preference` is set on a plugin that is not an `archive` source, or when `auto_install` or `required` is set on an archive without a `sha256`. LiteLLM does not check the archive's origin, so serve the zip from the same origin as the proxy yourself, for example through a path on your ingress. LiteLLM also accepts the request key as `installationPreference`, the name Claude Desktop reads, and answers 422 when one request sends both spellings.
 
-:::warning Claude Code 2.1.75 and older
+Claude Desktop sends the marketplace URL without `?key=`, so it sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
 
-Claude Code 2.1.76 and later ignore `installationPreference`, so plugins still install there with `/plugin install`. Claude Code 2.1.75 and older reject the whole `marketplace.json` once any plugin carries the field, so `claude plugin marketplace add` and `claude plugin marketplace update` fail for every plugin in it. Upgrade every Claude Code user of this marketplace to 2.1.76 or later before you set `installation_preference` on any plugin.
+:::warning Older Claude Code releases
+
+Older Claude Code releases, 2.1.100 and earlier for example, reject a `marketplace.json` that lists any `archive` plugin, so `claude plugin marketplace add` and `claude plugin marketplace update` fail for every plugin in it. LiteLLM serves `installationPreference` only on `archive` plugins, so the field adds no new break. Upgrade every Claude Code user of this marketplace to a release that reads `archive` sources before you add one. Those releases ignore `installationPreference`, so plugins still install there with `/plugin install`.
 
 :::
 
