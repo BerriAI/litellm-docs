@@ -2,34 +2,6 @@
   "source": "BerriAI/litellm",
   "published": [
     {
-      "version": "v1.97.0-rc.1",
-      "releasedAt": "2026-08-08T23:40:43Z"
-    },
-    {
-      "version": "v1.98.0-rc.1",
-      "releasedAt": "2026-08-16T03:12:53Z"
-    },
-    {
-      "version": "v1.99.0-rc.1",
-      "releasedAt": "2026-08-23T00:23:56Z"
-    },
-    {
-      "version": "v1.99.0-rc.2",
-      "releasedAt": "2026-08-30T03:47:19Z"
-    },
-    {
-      "version": "v1.100.0-rc.1",
-      "releasedAt": "2026-08-30T03:26:35Z"
-    },
-    {
-      "version": "v1.101.0-rc.1",
-      "releasedAt": "2026-09-06T03:20:59Z"
-    },
-    {
-      "version": "v1.101.0-rc.2",
-      "releasedAt": "2026-09-10T07:39:23Z"
-    },
-    {
       "version": "v1.102.0-rc.1",
       "releasedAt": "2026-09-13T04:56:38Z"
     },
@@ -40,33 +12,37 @@
     {
       "version": "v1.103.0-rc.1",
       "releasedAt": "2026-09-20T07:10:47Z"
+    },
+    {
+      "version": "v1.104.0-rc.1",
+      "releasedAt": "2026-09-28T08:01:07Z"
+    },
+    {
+      "version": "v1.104.0-rc.2",
+      "releasedAt": "2026-09-30T00:59:57Z"
+    },
+    {
+      "version": "v1.105.0-rc.1",
+      "releasedAt": "2026-10-04T01:41:07Z"
+    },
+    {
+      "version": "v1.105.0-rc.2",
+      "releasedAt": "2026-10-07T21:28:51Z"
+    },
+    {
+      "version": "v1.105.0-rc.3",
+      "releasedAt": "2026-10-08T09:26:45Z"
+    },
+    {
+      "version": "v1.106.0-rc.1",
+      "releasedAt": "2026-10-11T09:40:31Z"
+    },
+    {
+      "version": "v1.106.0-rc.2",
+      "releasedAt": "2026-10-13T23:59:21Z"
     }
   ],
   "candidates": [
-    {
-      "version": "v1.91.0-rc.1",
-      "releasedAt": "2026-06-28T03:46:48Z"
-    },
-    {
-      "version": "v1.92.0-rc.1",
-      "releasedAt": "2026-07-05T00:32:05Z"
-    },
-    {
-      "version": "v1.92.0-rc.2",
-      "releasedAt": "2026-07-09T00:15:47Z"
-    },
-    {
-      "version": "v1.93.0-rc.1",
-      "releasedAt": "2026-07-12T01:31:27Z"
-    },
-    {
-      "version": "v1.93.0-rc.2",
-      "releasedAt": "2026-07-16T05:26:50Z"
-    },
-    {
-      "version": "v1.94.0-rc.1",
-      "releasedAt": "2026-07-19T00:14:52Z"
-    },
     {
       "version": "v1.94.0-rc.2",
       "releasedAt": "2026-07-20T22:12:27Z"
@@ -130,116 +106,56 @@
     {
       "version": "v1.103.0-rc.1",
       "releasedAt": "2026-09-20T07:10:47Z"
+    },
+    {
+      "version": "v1.104.0-rc.1",
+      "releasedAt": "2026-09-28T08:01:07Z"
+    },
+    {
+      "version": "v1.104.0-rc.2",
+      "releasedAt": "2026-09-30T00:59:57Z"
+    },
+    {
+      "version": "v1.105.0-rc.1",
+      "releasedAt": "2026-10-04T01:41:07Z"
+    },
+    {
+      "version": "v1.105.0-rc.2",
+      "releasedAt": "2026-10-07T21:28:51Z"
+    },
+    {
+      "version": "v1.105.0-rc.3",
+      "releasedAt": "2026-10-08T09:26:45Z"
+    },
+    {
+      "version": "v1.106.0-rc.1",
+      "releasedAt": "2026-10-11T09:40:31Z"
+    },
+    {
+      "version": "v1.106.0-rc.2",
+      "releasedAt": "2026-10-13T23:59:21Z"
     }
   ],
   "stable": [
     {
-      "version": "v1.85.7",
-      "releasedAt": "2026-06-26T18:50:58Z"
-    },
-    {
-      "version": "v1.86.7",
-      "releasedAt": "2026-06-24T18:44:09Z"
-    },
-    {
-      "version": "v1.87.5",
-      "releasedAt": "2026-06-26T18:51:05Z"
-    },
-    {
-      "version": "v1.88.5",
-      "releasedAt": "2026-06-25T00:16:27Z"
-    },
-    {
       "version": "v1.88.6",
       "releasedAt": "2026-08-11T22:06:08Z"
-    },
-    {
-      "version": "v1.89.4",
-      "releasedAt": "2026-06-25T02:56:04Z"
-    },
-    {
-      "version": "v1.89.5",
-      "releasedAt": "2026-07-02T17:24:38Z"
-    },
-    {
-      "version": "v1.89.6",
-      "releasedAt": "2026-08-11T22:06:57Z"
     },
     {
       "version": "v1.89.7",
       "releasedAt": "2026-08-11T22:07:11Z"
     },
     {
-      "version": "v1.90.0",
-      "releasedAt": "2026-06-27T05:06:10Z"
-    },
-    {
-      "version": "v1.90.1",
-      "releasedAt": "2026-07-03T04:47:10Z"
-    },
-    {
-      "version": "v1.90.2",
-      "releasedAt": "2026-07-03T04:48:03Z"
-    },
-    {
-      "version": "v1.90.3",
-      "releasedAt": "2026-07-03T21:06:58Z"
-    },
-    {
-      "version": "v1.90.4",
-      "releasedAt": "2026-07-14T07:39:33Z"
-    },
-    {
-      "version": "v1.90.5",
-      "releasedAt": "2026-07-17T02:17:22Z"
-    },
-    {
-      "version": "v1.90.6",
-      "releasedAt": "2026-07-19T07:49:58Z"
-    },
-    {
       "version": "v1.90.7",
       "releasedAt": "2026-08-11T22:07:29Z"
-    },
-    {
-      "version": "v1.91.0",
-      "releasedAt": "2026-07-04T19:37:12Z"
-    },
-    {
-      "version": "v1.91.1",
-      "releasedAt": "2026-07-08T23:23:39Z"
-    },
-    {
-      "version": "v1.91.2",
-      "releasedAt": "2026-07-11T06:21:26Z"
-    },
-    {
-      "version": "v1.91.3",
-      "releasedAt": "2026-07-11T23:00:17Z"
-    },
-    {
-      "version": "v1.91.4",
-      "releasedAt": "2026-07-19T07:51:35Z"
     },
     {
       "version": "v1.91.5",
       "releasedAt": "2026-08-11T22:07:47Z"
     },
     {
-      "version": "v1.92.0",
-      "releasedAt": "2026-07-12T01:55:00Z"
-    },
-    {
-      "version": "v1.92.1",
-      "releasedAt": "2026-07-19T07:53:53Z"
-    },
-    {
       "version": "v1.92.2",
       "releasedAt": "2026-08-11T22:08:11Z"
-    },
-    {
-      "version": "v1.93.0",
-      "releasedAt": "2026-07-19T07:57:31Z"
     },
     {
       "version": "v1.93.1",
@@ -294,6 +210,10 @@
       "releasedAt": "2026-08-23T00:28:24Z"
     },
     {
+      "version": "v1.98.1",
+      "releasedAt": "2026-09-25T06:20:07Z"
+    },
+    {
       "version": "v1.99.0",
       "releasedAt": "2026-09-01T04:50:50Z"
     },
@@ -304,6 +224,10 @@
     {
       "version": "v1.99.3",
       "releasedAt": "2026-09-23T07:10:52Z"
+    },
+    {
+      "version": "v1.99.4",
+      "releasedAt": "2026-09-25T06:20:07Z"
     },
     {
       "version": "v1.100.0",
@@ -318,6 +242,18 @@
       "releasedAt": "2026-09-23T06:12:15Z"
     },
     {
+      "version": "v1.100.3",
+      "releasedAt": "2026-09-25T06:21:39Z"
+    },
+    {
+      "version": "v1.100.4",
+      "releasedAt": "2026-09-30T00:56:11Z"
+    },
+    {
+      "version": "v1.100.5",
+      "releasedAt": "2026-10-07T18:48:25Z"
+    },
+    {
       "version": "v1.101.0",
       "releasedAt": "2026-09-15T03:41:59Z"
     },
@@ -330,16 +266,88 @@
       "releasedAt": "2026-09-24T00:17:20Z"
     },
     {
+      "version": "v1.101.3",
+      "releasedAt": "2026-09-30T00:58:12Z"
+    },
+    {
+      "version": "v1.101.4",
+      "releasedAt": "2026-10-01T05:10:19Z"
+    },
+    {
+      "version": "v1.101.5",
+      "releasedAt": "2026-10-07T18:44:55Z"
+    },
+    {
+      "version": "v1.101.6",
+      "releasedAt": "2026-10-08T07:46:30Z"
+    },
+    {
       "version": "v1.102.0",
       "releasedAt": "2026-09-22T17:56:26Z"
     },
     {
       "version": "v1.102.1",
       "releasedAt": "2026-09-23T06:12:28Z"
+    },
+    {
+      "version": "v1.102.2",
+      "releasedAt": "2026-09-30T00:58:27Z"
+    },
+    {
+      "version": "v1.102.3",
+      "releasedAt": "2026-10-07T18:50:10Z"
+    },
+    {
+      "version": "v1.102.4",
+      "releasedAt": "2026-10-08T07:49:06Z"
+    },
+    {
+      "version": "v1.103.0",
+      "releasedAt": "2026-09-28T05:43:48Z"
+    },
+    {
+      "version": "v1.103.1",
+      "releasedAt": "2026-09-30T00:59:43Z"
+    },
+    {
+      "version": "v1.103.2",
+      "releasedAt": "2026-10-01T06:37:31Z"
+    },
+    {
+      "version": "v1.103.3",
+      "releasedAt": "2026-10-03T23:33:58Z"
+    },
+    {
+      "version": "v1.103.4",
+      "releasedAt": "2026-10-07T19:31:38Z"
+    },
+    {
+      "version": "v1.104.0",
+      "releasedAt": "2026-10-03T22:50:14Z"
+    },
+    {
+      "version": "v1.104.1",
+      "releasedAt": "2026-10-07T20:17:52Z"
+    },
+    {
+      "version": "v1.104.2",
+      "releasedAt": "2026-10-08T08:39:07Z"
+    },
+    {
+      "version": "v1.104.3",
+      "releasedAt": "2026-10-11T10:37:40Z"
+    },
+    {
+      "version": "v1.105.0",
+      "releasedAt": "2026-10-11T09:53:26Z"
+    },
+    {
+      "version": "v1.105.1",
+      "releasedAt": "2026-10-14T04:33:53Z"
     }
   ],
   "main": {
-    "version": "v1.104.0-rc.1",
-    "plannedFor": "2026-09-26"
+    "version": "v1.107.0-rc.1",
+    "plannedFor": "2026-10-17"
   }
 }
