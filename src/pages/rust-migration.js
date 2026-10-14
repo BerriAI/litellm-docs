@@ -730,7 +730,7 @@ function GatewayBenchmark() {
       <p className={styles.sectionLead}>
         This is where the migration takes us. AIGatewayBench measured four gateways against the
         same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
-        delay and the memory that each gateway adds. Each route that moves to Rust has these results.
+        delay and the memory that each gateway adds.
       </p>
       {/* One card per panel. The two use different scales, so they are two
           measurements rather than one chart cut in half. */}
