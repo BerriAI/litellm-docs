@@ -728,10 +728,9 @@ function GatewayBenchmark() {
     <section className={styles.section} aria-labelledby="benchmark-title">
       <SectionHeading id="benchmark-title" kicker="Result" title="The result of the move to Rust" />
       <p className={styles.sectionLead}>
-        The tracker above shows the progress of each route. This section shows the result of that work.
-        AIGatewayBench measured four gateways against the same mock server: the Rust gateway, Portkey, Bifrost, and
-        the current Python proxy. The test measured the delay and the memory that each gateway adds to the mock
-        server. Each route that moves to Rust has these results.
+        This is where the migration takes us. AIGatewayBench measured four gateways against the
+        same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
+        delay and the memory that each gateway adds. Each route that moves to Rust has these results.
       </p>
       <div className={styles.benchPanels}>
         {BENCHMARK.map(panel => (
@@ -767,11 +766,10 @@ function GatewayBenchmark() {
         ))}
       </div>
       <p className={styles.benchNote}>
-        To get the overhead, subtract the p99 of the mock server from the p99 of the gateway on the same endpoint.
-        Each test used 5000 requests for each endpoint on one host. We did each test one time and did not
-        calculate error bars. Use these numbers to compare the order of magnitude only. The{' '}
-        <Link to="/blog/rust-ai-gateway-benchmarks">AIGatewayBench report</Link> gives the full method and the raw
-        data.
+        These numbers are the delay the gateway itself adds. Each gateway handled 5000 requests for each endpoint,
+        and p99 is the slowest request in every 100. The{' '}
+        <Link to="/blog/rust-ai-gateway-benchmarks">AIGatewayBench report</Link> gives the full method, the raw data,
+        and the limits of the test.
       </p>
     </section>
   );
