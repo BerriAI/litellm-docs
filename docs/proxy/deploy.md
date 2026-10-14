@@ -190,6 +190,8 @@ ingress:
       service: gateway     # default; backend and ui also work
 ```
 
+For one DNS hostname per component without path-based routing, see [Separate hostname per component](./manifests_to_microservices.md#separate-hostname-per-component).
+
 ```bash
 helm upgrade --install litellm \
   oci://ghcr.io/berriai/litellm/chart/litellm \
