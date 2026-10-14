@@ -1446,6 +1446,7 @@ const sidebars = {
         ] },
         { type: "category", label: "All Providers A-Z", items: [
           "providers/abliteration",
+          "providers/acedatacloud",
           "providers/ai21",
           "providers/aiml",
           "providers/aleph_alpha",
