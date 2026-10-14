@@ -6,7 +6,7 @@ Decision models answer typed questions about an input and return probabilities i
 
 | Route | Alias | Request format | Use it when |
 |-------|-------|----------------|-------------|
-| `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice` and `score` questions | You write against OpenAI's format or need image input |
+| `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice` and `score` questions | You write against OpenAI's format |
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice` and `score` questions | You already have TypeSafe Jev request bodies |
 
 Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build
@@ -17,7 +17,7 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
-| Image input | OpenAI only | Other providers return a 400 |
+| Image input | OpenAI and Cloudflare Clef | Other providers return a 400, or drop the images under `drop_params` |
 | Streaming | No | |
 
 ## Supported providers
@@ -28,7 +28,7 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 | [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | No |
 | [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
 | [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
-| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | No |
+| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | Yes |
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Databricks `ai_decide`](./providers/databricks.md#decisions-ai_decide) | `databricks/ai_decide` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
@@ -167,7 +167,7 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
 | `questions` | array | 1 to 128 questions. Answers come back in the same order |
-| `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI and dropped for other providers |
+| `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
 
 Every question takes `instructions` and an optional `name` that is echoed in its answer
 
@@ -181,7 +181,7 @@ A question the model will not answer comes back as `{"type": "refusal", "name": 
 
 ### Image input
 
-`input_image` parts only work on OpenAI models. `detail` is optional
+OpenAI and Cloudflare Clef models take `input_image` parts. `image_url` is an image URL or a data URL, and `detail` is optional and only used by OpenAI.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
@@ -241,18 +241,51 @@ Response for a solid red square
 }
 ```
 
-System One providers accept text only, so the same request with `"model": "jev"` is rejected before TypeSafe is called
+Changing `"model"` to `"clef"` sends the image to Cloudflare. Cloudflare does not take `safety_identifier`, so remove that field or turn on `drop_params`. The same swatch then returns
+
+```json
+{
+  "model": "clef",
+  "answers": [
+    {"type": "predicate", "name": "is_red", "probability": 0.995},
+    {
+      "type": "choice",
+      "name": "color",
+      "choice": "red",
+      "probabilities": [
+        {"value": "red", "probability": 0.9908},
+        {"value": "green", "probability": 0.0043},
+        {"value": "blue", "probability": 0.0049}
+      ],
+      "confidence": 0.9727
+    }
+  ],
+  "usage": {
+    "input_tokens": 289,
+    "input_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0},
+    "output_tokens": 0,
+    "output_tokens_details": {"reasoning_tokens": 0},
+    "total_tokens": 289
+  }
+}
+```
+
+Before calling Cloudflare, LiteLLM downloads image URLs into data URLs and checks Clef's limits: at most 4 images per request, each a PNG, JPEG or WebP of at most 4 MiB, and 8 MiB in total. A request over a limit gets a 400 before Cloudflare is called. With `drop_params` on, images of another type are dropped instead, and the 4-image limit counts only the images that are left. Cloudflare receives the text parts joined into `state` and the images as a separate list, so the model does not see which text sat next to which image.
+
+Other providers do not take images, so the same request with `"model": "jev"` and no `safety_identifier` is rejected before TypeSafe is called
 
 ```json
 {
   "error": {
-    "message": "litellm.BadRequestError: Decisions provider 'typesafe' cannot serve this request: input_image content parts are not supported because System One providers accept text input only\n\nLiteLLM: model group 'jev' failed with the error above. No fallback was attempted.",
+    "message": "litellm.UnsupportedParamsError: typesafe does not support parameters: ['input_image'], for model=typesafe/jev-latest. To drop these, set `litellm.drop_params=True` or for proxy:\n\n`litellm_settings:\n drop_params: true`\n\n\nLiteLLM: model group 'jev' failed with the error above. No fallback was attempted.",
     "type": "invalid_request_error",
     "param": null,
     "code": "400"
   }
 }
 ```
+
+With `drop_params: true` in `litellm_settings` or on the deployment, LiteLLM drops the images and sends only the text. A request that has no text left after the drop still gets a 400.
 
 ## /v1/systemone
 
@@ -313,6 +346,7 @@ Changing `"model"` to `"luna"` asks OpenAI instead and still returns System One 
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `state` | string, object or array | The thing being judged, such as a support ticket, a document or a chat transcript |
 | `questions` | object | 1 to 128 named questions. Each key becomes a key in `answers` |
+| `images` | array, optional | Image URLs or data URLs. OpenAI and Cloudflare Clef only, with the rules in [Image input](#image-input) |
 
 Every question has a `type` and an optional `instructions` field. Extra fields on a question are forwarded to System One providers unchanged
 
@@ -383,7 +417,7 @@ async def main():
 asyncio.run(main())
 ```
 
-All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
+All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. `litellm.systemone` and `litellm.asystemone` also take `images`, a list of image URLs or data URLs. Passing `images` to `litellm.decisions` raises a `BadRequestError` unless `drop_params` is on, since the OpenAI format carries images as `input_image` parts. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
 
 Through the Router the same split applies: `router.decisions` and `router.adecisions` take the OpenAI shape, `router.systemone` and `router.asystemone` take the System One shape. On the proxy, `/v1/systemone` requests are logged with call type `asystemone` and `/v1/decisions` requests with `adecisions`.
 
