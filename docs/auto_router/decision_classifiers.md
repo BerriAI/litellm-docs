@@ -102,7 +102,7 @@ For an Ollama endpoint, use `model: nimble`. Other deployments may serve `nimble
 
 Restart the gateway after changing its environment. You can then [configure the Auto Router in the dashboard](#configure-from-the-dashboard) or [use YAML](#configure-the-router).
 
-For a router-specific connection, set `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit `api_base` does not inherit the environment key. If your endpoint requires another authentication scheme, such as Modal's `Modal-Key` and `Modal-Secret` headers, use a proxy that translates the bearer credential to the required headers.
+For a router-specific connection, set `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit `api_base` gets `LAYA_API_KEY` or `BESPOKE_API_KEY` only when it names the same server as `LAYA_API_BASE` or `BESPOKE_API_BASE`, ignoring a trailing `/` or `/v1`. Builds before [LiteLLM #45260](https://github.com/BerriAI/litellm/pull/45260) never send the environment key to an explicit `api_base`. If your endpoint requires another authentication scheme, such as Modal's `Modal-Key` and `Modal-Secret` headers, use a proxy that translates the bearer credential to the required headers.
 
 ### Jev: hosted TypeSafe API
 
@@ -151,7 +151,7 @@ First set the [connection variables above](#connect-the-classifier-to-the-gatewa
 
 Built-in OSS classification uses the shipped tier criteria and is available without a LiteLLM license. Custom instructions and custom tiers follow the dashboard's displayed allowance.
 
-Administrators can configure `api_base` and `api_key` overrides through the management API. An explicit `api_base` does not inherit the environment key; supply its matching `api_key` when the server requires one. The dashboard edits model and classifier options while the gateway owns the connection. Saving the same provider preserves its stored connection; changing providers drops the previous provider's endpoint and key. Team members cannot submit endpoint or credential overrides through the management API.
+Administrators can configure `api_base` and `api_key` overrides through the management API. An explicit `api_base` inherits the environment key only when it names the `LAYA_API_BASE` or `BESPOKE_API_BASE` server, so supply its matching `api_key` when the server requires one. The dashboard edits model and classifier options while the gateway owns the connection. Saving the same provider preserves its stored connection; changing providers drops the previous provider's endpoint and key. Team members cannot submit endpoint or credential overrides through the management API.
 
 ## Configure the router in YAML {#configure-the-router}
 
