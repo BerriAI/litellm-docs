@@ -584,7 +584,7 @@ router_settings:
 | AIMLAPI_KEY | Alternative spelling of `AIML_API_KEY` for AI/ML API image generation, read only when `AIML_API_KEY` is unset
 | AIOHTTP_CONNECTOR_LIMIT | Connection limit for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
 | AIOHTTP_CONNECTOR_LIMIT_PER_HOST | Connection limit per host for aiohttp connector. When set to 0, no limit is applied. **Default is 0**
-| AIOHTTP_KEEPALIVE_TIMEOUT | Keep-alive timeout for aiohttp connections in seconds. **Default is 120**
+| AIOHTTP_KEEPALIVE_TIMEOUT | Seconds an idle pooled upstream connection is kept for reuse, in both the Python (aiohttp) and Rust HTTP clients. If a gateway or self-hosted server in front of your provider closes idle connections sooner, set this below its idle timeout, or a request that reuses a closed connection fails. **Default is 15**
 | AIOHTTP_SO_KEEPALIVE | Enable TCP `SO_KEEPALIVE` on aiohttp sockets so idle provider connections are detected and reaped before NAT/load balancers silently drop them. **Default is False**
 | AIOHTTP_TCP_KEEPCNT | Number of unacknowledged TCP keepalive probes before the connection is considered dead (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 5**
 | AIOHTTP_TCP_KEEPIDLE | Seconds an aiohttp TCP connection must be idle before keepalive probes are sent (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 60**
