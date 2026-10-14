@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 import {useThemeConfig} from '@docusaurus/theme-common';
 import DocSidebarDesktop from '@theme/DocSidebar/Desktop';
 import DocSidebarMobile from '@theme/DocSidebar/Mobile';
@@ -16,7 +17,7 @@ export default function DocSidebar({onCollapse, ...props}) {
   return (
     <>
       <div className={styles.sidebarDesktop}>
-        <div className={styles.sidebarContainer}>
+        <div className={clsx(styles.sidebarContainer, props.isHidden && styles.sidebarContainerHidden)}>
           <div className={styles.searchBarSection}>
             <div className={styles.searchBarInner}>
               <SearchBar />

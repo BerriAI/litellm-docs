@@ -113,6 +113,8 @@
   gap: 8px;
 }
 
+.cost figcaption .note { flex-basis: 100%; line-height: 1.6; margin: 8px 0 0; }
+
 .swatchDevin,
 .swatchMoyai,
 .swatchGap {

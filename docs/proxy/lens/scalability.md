@@ -1,16 +1,20 @@
 ---
-title: "Scalability design"
-description: "How Lens keeps sampling, trace reads, and investigation state fast as trace volume, retention, and the number of lenses grow."
+title: "Historical scalability measurements"
+description: "Archived measurements of gateway-hosted Lens, with the current standalone benchmark procedure."
 slug: "/proxy/lens/scalability"
 ---
 
-# Scalability design
+# Historical scalability measurements
 
-Lens stores two kinds of data. Traces and request logs live in ClickHouse, which is append-only and grows with traffic. Lenses, investigation jobs, findings, and worker state live in PostgreSQL, which is small and changes often. Each design rule below keeps the cost of a common operation tied to the work it actually does, so it does not grow with total retention, total traffic, or the number of lenses
+:::note Historical gateway measurements
 
-The Lens service receives agent traces directly and reads and writes them in ClickHouse. LiteLLM handles model requests and PostgreSQL state. The dashboard reads traces through LiteLLM, which retrieves them from Lens.
+The design and measurements below describe the previous gateway-hosted Lens implementation and its PostgreSQL metadata store, preserved from [documentation revision 6a8ba43c](https://github.com/BerriAI/litellm-docs/blob/6a8ba43c/docs/proxy/lens/scalability.md). References to "before", "now", "today" and proposed changes belong to that revision. They do not describe or qualify the independent Lens runtime
 
-![Agents send traces to Lens and model requests to LiteLLM; Lens owns ClickHouse and LiteLLM owns PostgreSQL](/img/lens-architecture.svg)
+The standalone Rust runtime stores Lens metadata and traces in ClickHouse and coordinates work through ClickHouse KeeperMap. PostgreSQL is only a migration source. See [Run Lens](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) for the supported deployment topology and the [current Lens benchmark procedure](https://github.com/BerriAI/lens/blob/main/docs/benchmarks.md) for reproducible HTTP measurements against exact service artifacts and resource limits
+
+:::
+
+The measured gateway implementation stored traces and request logs in ClickHouse, and lenses, investigation jobs, findings and worker state in PostgreSQL. The sections below retain its original design explanations and benchmark results for comparison
 
 | Operation | Store | Cost grows with | Does not grow with |
 |---|---|---|---|
@@ -87,7 +91,7 @@ The bound keeps the partitions a read opens tied to the trace's age, and that is
 
 A worker claim must find one due job, and that cost should not grow with the number of lenses. Before this design a claim loaded and validated every lens, which took 1.1 s with 200 lenses and 5.4 s with 800, per attempt. Each lens now keeps the next time it needs a worker in a `due_at` column with an index. That is when its queued job was created, when its running job's lease expires, or its next scheduled run. Every full update of a lens writes `due_at` in the same statement, so the column cannot drift from the document
 
-![Worker claims before and now: loading every lens, versus paging through batches of due lenses using the due_at index](/img/lens/scalability/claim.svg)
+The [archived worker-claim diagram](https://github.com/BerriAI/litellm-docs/blob/6a8ba43c/static/img/lens/scalability/claim.svg) shows the old gateway protocol. Its worker-claim endpoint was removed during the standalone extraction; current Lens schedules work inside its Rust service
 
 A claim reads pages of up to 20 due lenses in `(due_at, id)` order until it claims one or exhausts the queue. A worker that loses the race for one moves on to the next instead of retrying against a lens another worker just took. Lenses created before the column existed start with a `due_at` in the past, and the first claim that looks at one writes its real value
 

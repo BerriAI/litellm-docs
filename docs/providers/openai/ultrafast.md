@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # OpenAI Fast & Ultrafast mode
 
-Use `service_tier: "priority"` for Fast mode or `service_tier: "ultrafast"` for Ultrafast on GPT-6 Astra. You can set the tier as a deployment default in the Admin UI or `config.yaml`, or choose it per request. The examples below use the [Responses API](./responses_api.md).
+Use `service_tier: "priority"` for Fast mode or `service_tier: "ultrafast"` for Ultrafast on GPT-6 Astra or GPT-6.1 Sol. You can set the tier as a deployment default in the Admin UI or `config.yaml`, or choose it per request. The examples below use the [Responses API](./responses_api.md).
 
 The walkthrough creates `gpt-6-astra-ultrafast` for Astra Ultrafast, with a Fast alternative named `gpt-6.1-sol-fast`. These gateway aliases are names you choose; the `service_tier` parameter selects the processing mode.
 
@@ -35,9 +35,9 @@ These are the current models tested for this guide, not an exhaustive list. See 
 
 ### Ultrafast mode
 
-Use **GPT-6 Astra** (`openai/gpt-6-astra`) with `service_tier: "ultrafast"`. A completed Responses API call through LiteLLM returned `service_tier: "ultrafast"` in testing. The Ultrafast setup in this guide uses Astra only.
+Use **GPT-6 Astra** (`openai/gpt-6-astra`) or **GPT-6.1 Sol** (`openai/gpt-6.1-sol`) with `service_tier: "ultrafast"`. OpenAI's [Ultrafast guide](https://developers.openai.com/api/docs/guides/ultrafast-mode) lists both models as of October 10, 2026, and LiteLLM's cost map carries `*_ultrafast` rates for both. A completed Responses API call through LiteLLM on Astra returned `service_tier: "ultrafast"` in testing. The Ultrafast setup in this guide uses Astra; for Sol, swap in `openai/gpt-6.1-sol` and a public name such as `gpt-6.1-sol-ultrafast`.
 
-OpenAI makes Astra Ultrafast available to all API users with low initial rate limits. Use the Responses API over HTTP or WebSocket. Ultrafast supports US data residency and global processing only; EU and other non-US regional processing endpoints are not supported. See OpenAI's [Ultrafast guide](https://developers.openai.com/api/docs/guides/ultrafast-mode) for current availability and limits.
+OpenAI makes Ultrafast available to all API users with low initial rate limits. Use the Responses API over HTTP or WebSocket. Ultrafast supports US data residency and global processing only; EU and other non-US regional processing endpoints are not supported. See OpenAI's [Ultrafast guide](https://developers.openai.com/api/docs/guides/ultrafast-mode) for current availability and limits.
 
 Your OpenAI account must support the selected tier for the model. Adding a tier to LiteLLM's catalog does not enable it at OpenAI, and Fast mode support does not imply Ultrafast support.
 
@@ -237,7 +237,7 @@ For Fast mode, use `model="openai/gpt-6.1-sol"` and `service_tier="priority"`, o
 
 ## Offer /fast and /ultrafast in Codex
 
-Use `model_info.service_tiers: ["priority"]` to offer `/fast`. For Astra, use `["priority", "ultrafast"]` to offer both `/fast` and `/ultrafast`. Codex CLI 0.159 or newer also needs `model_catalog_url` pointed at your gateway's `/v1/models` endpoint and `[features] api_key_model_discovery = true`. Follow the [Codex model catalog setup](../../proxy/client_setup/codex_cli.md#model-catalog-and-service-tiers), select your gateway model, then choose a mode.
+Use `model_info.service_tiers: ["priority"]` to offer `/fast`. For Astra or GPT-6.1 Sol, use `["priority", "ultrafast"]` to offer both `/fast` and `/ultrafast`. Codex CLI 0.159 or newer also needs `model_catalog_url` pointed at your gateway's `/v1/models` endpoint and `[features] api_key_model_discovery = true`. Follow the [Codex model catalog setup](../../proxy/client_setup/codex_cli.md#model-catalog-and-service-tiers), select your gateway model, then choose a mode.
 
 For a model where users toggle modes on and off, omit the deployment's `litellm_params.service_tier` and keep `model_info.service_tiers`. Otherwise, a client that stops sending a tier still inherits the deployment's default. Advertising a tier does not grant OpenAI access to it.
 
@@ -248,7 +248,7 @@ Check the completed response's `service_tier` field to confirm the tier that ser
 | Symptom | What to check |
 | --- | --- |
 | `insufficient_quota` or `credit_balance_exhausted` | Check the OpenAI account's credits and billing. A LiteLLM virtual-key budget does not fund the upstream account. |
-| `Invalid service_tier argument`, or the provider rejects the model or tier | Check the [supported models](#supported-models-and-availability), account access, regional endpoint, and requested tier. Use Astra for the Ultrafast setup above. Model access alone does not guarantee access to every tier. |
+| `Invalid service_tier argument`, or the provider rejects the model or tier | Check the [supported models](#supported-models-and-availability), account access, regional endpoint, and requested tier. Ultrafast is limited to GPT-6 Astra and GPT-6.1 Sol. Model access alone does not guarantee access to every tier. |
 | Fast or Ultrafast requests appear to cost the same as Standard | Confirm the model's `*_priority` or `*_ultrafast` pricing fields, or configure custom pricing. Provider access and LiteLLM cost tracking are separate. |
 | The request uses a different tier | Inspect the client's `service_tier`; it overrides the deployment default. Confirm the selected alias routes to the intended deployment. |
 | A Fast request returns `service_tier: "default"` | OpenAI can downgrade requests when traffic ramps too quickly. Check the provider's ramp limits; HTTP 200 alone does not prove Fast processing. |

@@ -1,24 +1,35 @@
 ---
 title: "Upgrade Lens"
-description: "Update an installed Lens deployment while preserving its data and credentials."
+description: "Update Lens independently while retaining its records, credentials and recovery point."
 slug: "/proxy/lens/deployment/upgrades"
 ---
 
 # Upgrade Lens
 
-To update an installed Lens deployment to a later release:
+Select an available [Lens artifact](./releases.md) and read its migration requirements. Lens and gateway versions can differ when their contracts are compatible. An embedded UI change requires the corresponding gateway UI update
 
-1. Read the release notes and select matching LiteLLM and Lens images, or the chart version for that release.
-2. Pause scheduled investigations and finish or cancel active runs. Update the images through the same Docker or Helm deployment process you used to install Lens.
-3. [Check the installation](../deployment.md#check-the-installation) and run an investigation before resuming schedules.
+Before changing a persistent installation, [back up and rehearse recovery](https://github.com/BerriAI/lens/blob/main/docs/backup.md). Retain the exact installed image, source or installation bundle, environment file, ClickHouse data and Keeper state. Pause scheduled work and finish or cancel active investigations before the maintenance window
 
-Keep your databases, encryption keys, shared service secret, and public trace URL. Reuse your environment or values file. For the local stack, update the saved version and start the matching images:
+## Move from gateway-hosted Lens
 
-```bash
-python3 deploy/lens/configure.py --version "<next-release-version>"
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml up -d --wait
+If Lens metadata still lives in PostgreSQL, follow the [metadata migration guide](https://github.com/BerriAI/lens/blob/main/docs/migration.md). Stop old writers, inspect the import plan, apply it and verify saved identities and records before starting the new Lens runtime. If metadata already lives in ClickHouse, preserve that database and its Keeper state instead of running the importer over it
+
+A deployment ownership change also requires one controller per resource. Use the [Helm ownership-transfer procedure](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) when separating a bundled Lens deployment from a gateway release. Keep existing resource names, selectors, secrets and volumes
+
+## Update an independent installation
+
+For Compose, update `LENS_IMAGE` in the retained `deploy/lens/.env` to the verified artifact, then apply it from the matching Lens checkout or installation bundle:
+
+```sh
+docker compose -f deploy/lens/compose.yaml up -d --wait
 ```
 
-Normal Helm upgrades reuse generated credentials. Helm retains the generated secrets on uninstall, and Kubernetes retains the ClickHouse volume. Back them up together. Changing the database, storage class, or secret reference requires a separate data migration plan.
+For Helm, retain your release name, namespace and values and update the Lens image or chart through the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md). Generated credentials are reused by Helm with cluster access; GitOps uses [pre-provisioned secrets](./storage.md#gitops)
 
-Do not run `docker compose down -v`; it deletes the database volumes.
+Complete the [first-trace check](../deployment.md#check-the-installation), open a previously stored trace and dataset, and run a bounded investigation before resuming schedules. When connected to LiteLLM, also verify ordinary inference and existing user scopes in the embedded page
+
+## Roll back with the matching data
+
+Keep the prior artifact and recovery point until verification finishes. Confirm that a rollback target can read the current state before switching images. Returning to a PostgreSQL-writing implementation requires the matching snapshot and reconciliation of any new writes; the [migration guide](https://github.com/BerriAI/lens/blob/main/docs/migration.md#interrupted-import-and-rollback) explains that boundary
+
+Retain the environment file and ClickHouse volume. `docker compose down --volumes` deletes stored Lens data

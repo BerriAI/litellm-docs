@@ -1,6 +1,7 @@
 ---
 title: Auto Router [Add-on]
 sidebar_label: Overview
+keywords: [autorouter, auto router]
 description: Route every request to the cheapest model that can answer it well. Benchmarks, setup, recommended configurations, prompt caching, and how to evaluate the router on your own traffic.
 ---
 
@@ -82,7 +83,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
-Use the **OSS Classifier** with hosted Jev or self-hosted Nimble and Laya. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
+Use the **OSS Classifier** with hosted Jev, self-hosted Nimble and Laya, or the Databricks `ai_decide` AI Function. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
 
 <NavigationCards
 columns={3}

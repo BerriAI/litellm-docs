@@ -1,0 +1,106 @@
+.trigger {display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px;background:var(--ifm-background-surface-color);color:var(--ifm-color-emphasis-600);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.trigger span {overflow:hidden;text-overflow:ellipsis}
+.trigger svg {flex-shrink:0}
+.trigger kbd {margin-left:auto;padding:0 5px;border:1px solid var(--ifm-color-emphasis-300);border-radius:3px;background:none;box-shadow:none;font-family:inherit;font-size:12px;line-height:20px}
+.backdrop {position:fixed;inset:0;z-index:10000;display:flex;justify-content:center;align-items:flex-start;padding:5vh 5vw;background:rgba(107,114,128,.5);backdrop-filter:blur(4px)}
+.dialog {--search-bg:#fff;--search-text:#24292f;--search-muted:#6b7280;--search-border:#e5e7eb;--search-hover:#f3f4f6;--search-selected:#f0f3ff;--search-accent:#5365d9;width:720px;max-width:100%;max-height:85dvh;display:flex;flex-direction:column;overflow:hidden;border:0;border-radius:6px;background:var(--search-bg);color:var(--search-text);box-shadow:0 10px 25px #0002;font:16px/1.5 Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+:global([data-theme='dark']) .dialog {--search-bg:#191919;--search-text:rgba(255,255,255,.9);--search-muted:rgba(255,255,255,.5);--search-border:rgba(255,255,255,.15);--search-hover:#242424;--search-selected:rgba(255,255,255,.15);--search-accent:#90a2fd;box-shadow:none}
+.dialog button {font-family:inherit;cursor:pointer}
+.dialog button:disabled {cursor:default}
+.header {display:flex;align-items:center;gap:12px;padding:12px 20px;min-height:62px;flex-shrink:0}
+.searchIcon {color:var(--search-muted);flex-shrink:0}
+.header input {width:100%;flex:1;min-width:0;min-height:38px;padding:6px 0;border:0;outline:0;background:none;color:var(--search-text);font:inherit;box-shadow:none}
+.header input::placeholder {color:var(--search-muted)}
+.tabs {display:flex;flex-shrink:0;padding:2px;margin-left:auto;border:1px solid transparent;border-radius:6px;background:var(--search-hover)}
+.tabs button {display:flex;align-items:center;justify-content:center;gap:4px;height:24px;padding:0 8px;border:0;border-radius:4px;background:none;color:var(--search-muted);font-size:12px;line-height:18px;font-weight:600;white-space:nowrap}
+.tabs button[aria-pressed='true'] {background:var(--search-bg);color:var(--search-text);box-shadow:0 1px 3px #0002}
+:global([data-theme='dark']) .tabs {border-color:#313131;background:none}
+:global([data-theme='dark']) .tabs button[aria-pressed='true'] {background:#313131;box-shadow:none}
+.close {display:none;align-items:center;justify-content:center;flex-shrink:0;padding:0;border:0;background:none;color:var(--search-muted)}
+.askCard {display:flex;align-items:center;gap:8px;min-height:44px;flex-shrink:0;margin:0 20px 16px;padding:8px 16px;border:1px solid var(--search-border);border-radius:8px;background:none;color:var(--search-text);text-align:left;font-size:16px;line-height:24px}
+.askCard img {width:20px;height:20px;object-fit:contain}
+.askCard strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--search-accent);font-weight:600}
+.askCard>span {white-space:nowrap}
+.askCard small {margin-left:auto;color:var(--search-muted);font-size:12px;white-space:nowrap}
+.askCard:hover {background:var(--search-hover)}
+.searchContent {display:flex;flex-direction:column;min-height:46px;overflow:hidden}
+.hasQuery {height:min(calc(85vh - 160px),503px);padding-bottom:20px}
+.filters {display:flex;align-items:center;gap:6px;padding:0 20px 10px;font-size:13px;flex-shrink:0}
+.filters>button {padding:4px 10px;border:1px solid transparent;border-radius:99px;color:var(--search-muted);background:none;line-height:18px;font-size:13px;white-space:nowrap}
+.filters>button[aria-pressed='true'] {border-color:var(--search-accent);color:var(--search-accent);background:var(--search-selected)}
+.filters>button:hover {background:var(--search-hover)}
+.filters small {color:var(--search-muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.results {padding:0 20px 8px;overflow:auto;overscroll-behavior:contain;scroll-padding:8px}
+.result {position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 38px 8px 16px;margin-bottom:10px;border:1px solid var(--search-border);border-radius:8px;color:var(--search-text);text-decoration:none;scroll-margin:8px}
+.result:hover {color:var(--search-text);text-decoration:none}
+.selected {background:var(--search-selected);border-color:var(--search-accent)}
+.path {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--search-muted);font-size:12px;line-height:18px}
+.path>span {padding:0 5px}
+.resultTitle {display:flex;align-items:center;gap:8px;font-size:16px;line-height:24px}
+.resultTitle>svg {flex-shrink:0;color:var(--search-muted)}
+.resultTitle>span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snippet {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:20px;color:var(--search-muted)}
+.result mark {padding:0;background:none;color:var(--search-text);font-weight:600}
+.enterIcon {position:absolute;right:16px;top:calc(50% - 8px);color:var(--search-accent)}
+.noResults {padding:16px 20px;color:var(--search-muted);font-size:14px}
+.noResults button {border:0;padding:0;background:none;color:var(--search-accent);font-size:inherit}
+.chatTitle {flex:1;min-width:0;font-size:14px;color:var(--search-muted)}
+.chatContent {padding:24px 32px 32px;overflow:auto;min-height:0;overscroll-behavior:contain;scroll-padding:20px}
+.chatActive {height:85dvh;max-height:850px}
+.chatActive .chatContent {flex:1}
+.assistantRow,.userRow {display:flex;align-items:flex-start;gap:24px}
+.avatar {width:32px;height:32px;flex-shrink:0;object-fit:contain;margin-top:4px}
+.welcome,.answer {min-width:0;flex:1;font-size:15px;line-height:24px}
+.welcome p {margin:0}
+.welcome h3 {font-size:10px;font-weight:500;letter-spacing:1px;color:var(--search-muted);margin:26px 0 8px}
+.commonQuestions {display:flex;flex-wrap:wrap;gap:8px}
+.commonQuestions button {border:1px solid var(--search-border);border-radius:6px;background:none;color:var(--search-text);padding:8px 12px;text-align:left;font-size:14px;line-height:21px}
+.commonQuestions button:hover {background:var(--search-hover)}
+.turn {padding-top:28px;scroll-margin:20px}
+.userRow {margin-bottom:28px;font-size:15px;line-height:24px;white-space:pre-wrap;overflow-wrap:anywhere}
+.userRow p {margin:4px 0 0}
+.userAvatar {display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--search-hover);color:var(--search-muted)}
+.answer {overflow-wrap:anywhere}
+.answer p {margin:0 0 18px}
+.answer pre {padding:14px;border-radius:6px;background:var(--search-hover);font-size:13px;line-height:20px;overflow:auto;max-width:100%;white-space:pre}
+.answer pre code {background:none;padding:0;border:0;color:var(--search-text)}
+.answer code {font-size:13px}
+.answer .citation {display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:15px;min-width:14px;padding:0 3px;margin:0 2px;border-radius:2px;background:var(--search-selected);color:var(--search-accent);text-decoration:none;vertical-align:super}
+.sources {margin-top:24px}
+.sources>p {font-size:12px;color:var(--search-muted);margin:0 0 8px}
+.sources a {display:flex;flex-direction:column;gap:4px;margin-top:8px;padding:8px 16px;border:1px solid var(--search-border);border-radius:8px;color:var(--search-text);text-decoration:none;font-size:14px}
+.sources a:hover {background:var(--search-hover)}
+.sources small {color:var(--search-muted);font-size:12px}
+.sources small span {padding:0 4px}
+.sources a>span {display:flex;align-items:center;gap:8px}
+.sources svg {flex-shrink:0;color:var(--search-muted)}
+.thinking {color:var(--search-muted);font-size:14px;margin:4px 0}
+.error {margin:12px 20px;font-size:14px;color:var(--search-text)}
+.error button {display:block;margin-top:8px;color:var(--search-accent);background:none;border:0;padding:0;font-size:14px}
+.composer {display:flex;align-items:center;flex-shrink:0;gap:8px;padding:8px;margin:24px 20px 0;border:1px solid transparent;border-radius:8px;background:var(--search-hover)}
+.composer:focus-within {border-color:var(--search-border)}
+.composer textarea {flex:1;min-width:0;width:100%;height:40px;max-height:120px;padding:8px 12px;border:0;outline:0;resize:none;background:none;color:var(--search-text);font-family:inherit;font-size:16px;line-height:24px;box-shadow:none}
+.composer textarea::placeholder {color:var(--search-muted)}
+.composer button {display:flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;border:0;border-radius:8px;background:none;color:var(--search-accent)}
+.composer button:disabled {opacity:.25;color:var(--search-muted)}
+.footer {display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:52px;padding:12px 20px 16px;font-size:11px;color:var(--search-muted);flex-shrink:0}
+.footer>div {display:flex;gap:10px}
+.footer button {display:flex;align-items:center;gap:4px;height:24px;border:1px solid var(--search-border);border-radius:6px;background:none;color:var(--search-muted);padding:0 8px;font-size:12px}
+.dialog button:focus-visible,.result:focus-visible,.sources a:focus-visible,.trigger:focus-visible {outline:2px solid var(--search-accent,#5365d9);outline-offset:2px}
+@media(max-width:640px) {
+  .backdrop {padding:0}
+  .dialog {width:100%;max-width:100%;height:100dvh;max-height:100dvh;border-radius:0}
+  .header {gap:8px;padding:16px;min-height:72px}
+  .header input {font-size:16px}
+  .close {display:flex;margin-left:4px}
+  .askCard {margin:0 16px 16px;padding:8px 12px}
+  .askCard small {font-size:11px}
+  .searchContent {flex:1;height:auto;min-height:0}
+  .filters,.results {padding-left:16px;padding-right:16px}
+  .chatContent {padding:20px 16px;flex:1}
+  .assistantRow,.userRow {gap:12px}
+  .commonQuestions {gap:8px}
+  .commonQuestions button {font-size:13px}
+  .composer {margin:12px 16px 0}
+  .footer {padding:12px 16px 16px}
+}

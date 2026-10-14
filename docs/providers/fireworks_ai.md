@@ -301,6 +301,73 @@ print(response)
 </TabItem>
 </Tabs>
 
+## Decisions (System One)
+
+Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import os
+from litellm import systemone
+
+os.environ["FIREWORKS_AI_API_KEY"] = "YOUR_API_KEY"
+
+response = systemone(
+    model="fireworks_ai/accounts/fireworks/routers/rune",
+    state={"tool_name": "Bash", "tool_input": "rm -rf ./build", "user_request": "clean the build dir"},
+    questions={
+        "allowed": {"type": "noul", "instructions": "Is this tool call safe to run without asking the user?"},
+        "risk": {"type": "score", "instructions": "How risky is this tool call?", "criteria": ["none", "low", "medium", "high"]},
+    },
+)
+print(response.answers)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: rune
+    litellm_params:
+      model: fireworks_ai/accounts/fireworks/routers/rune
+      api_key: os.environ/FIREWORKS_AI_API_KEY
+```
+
+```bash
+curl http://0.0.0.0:4000/v1/systemone \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "rune",
+    "state": {"tool_name": "Bash", "tool_input": "rm -rf ./build", "user_request": "clean the build dir"},
+    "questions": {
+      "allowed": {"type": "noul", "instructions": "Is this tool call safe to run without asking the user?"}
+    }
+  }'
+```
+
+The same deployment answers OpenAI-format requests on `/v1/decisions`:
+
+```bash
+curl http://0.0.0.0:4000/v1/decisions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "rune",
+    "input": "Customer wrote: the package arrived late and damaged, I want my money back.",
+    "questions": [
+      {"type": "predicate", "name": "refund", "instructions": "Does the customer ask for a refund?"},
+      {"type": "choice", "name": "tone", "instructions": "What is the tone?", "choices": [{"value": "angry"}, {"value": "neutral"}, {"value": "positive"}]}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 ## Responses API
 
 `fireworks_ai/` models on `/v1/responses` go straight to Fireworks' native `https://api.fireworks.ai/inference/v1/responses` endpoint, so server-side features such as MCP tools (`"type": "mcp"`), `previous_response_id`, and reasoning output items work the same as they do against Fireworks directly

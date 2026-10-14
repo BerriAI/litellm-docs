@@ -28,11 +28,12 @@ os.environ["CORALBRICKS_API_BASE"] = "https://inference.coralbricks.ai/v1"  # op
 
 | Model | Input / 1M tokens | Output / 1M tokens | Cache write / 1M tokens | Cache read / 1M tokens |
 |-------|-------------------|--------------------|-------------------------|------------------------|
-| `coralbricks/glm-5.3-fp4` | $1.12 | $4.40 | $1.68 | $0 |
-| `coralbricks/glm-5.3-flash-fp4` | $0.15 | $0.50 | $0.23 | $0 |
-| `coralbricks/deepseek-v4.1-flash-fast-fp4` | $0.30 | $1.20 | $0.09 | $0 |
+| `coralbricks/glm-5.3-fast` | $1.12 | $4.40 | $1.68 | $0 |
+| `coralbricks/deepseek-v4.1-flash-fast` | $0.01 | $1.20 | $0.09 | $0 |
 
 Every model takes up to 1,048,576 input tokens and supports tool calling, reasoning, and prompt caching. Pricing follows the [CoralBricks pricing page](https://www.coralbricks.ai/pricing): cache writes are billed at the cache write rate and cached reads are free. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
+
+CoralBricks still accepts the older `glm-5.3-fp4` and `deepseek-v4.1-flash-fast-fp4` names as deprecated aliases, but LiteLLM prices only the current names above, so use those in new deployments
 
 ## Usage - LiteLLM Python SDK
 
@@ -45,7 +46,7 @@ from litellm import completion
 os.environ["CORALBRICKS_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="coralbricks/glm-5.3-flash-fp4",
+    model="coralbricks/deepseek-v4.1-flash-fast",
     messages=[{"role": "user", "content": "Write a python function that reverses a string"}],
 )
 
@@ -61,7 +62,7 @@ from litellm import completion
 os.environ["CORALBRICKS_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="coralbricks/glm-5.3-flash-fp4",
+    model="coralbricks/deepseek-v4.1-flash-fast",
     messages=[{"role": "user", "content": "Explain a binary search in two sentences"}],
     stream=True,
 )
@@ -79,7 +80,7 @@ import litellm
 os.environ["CORALBRICKS_API_KEY"] = "your-api-key"
 
 response = litellm.responses(
-    model="coralbricks/glm-5.3-flash-fp4",
+    model="coralbricks/deepseek-v4.1-flash-fast",
     input="Explain a binary search in two sentences",
     max_output_tokens=256,
 )
@@ -93,9 +94,9 @@ Add CoralBricks to your LiteLLM Proxy configuration:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: glm-5.3-flash
+  - model_name: deepseek-v4.1-flash
     litellm_params:
-      model: coralbricks/glm-5.3-flash-fp4
+      model: coralbricks/deepseek-v4.1-flash-fast
       api_key: os.environ/CORALBRICKS_API_KEY
 
 general_settings:
@@ -124,7 +125,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="glm-5.3-flash",
+    model="deepseek-v4.1-flash",
     messages=[{"role": "user", "content": "hello from litellm"}],
 )
 
@@ -140,7 +141,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
-    "model": "glm-5.3-flash",
+    "model": "deepseek-v4.1-flash",
     "messages": [{"role": "user", "content": "hello from litellm"}]
   }'
 ```
@@ -159,7 +160,7 @@ curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
-    "model": "glm-5.3-flash",
+    "model": "deepseek-v4.1-flash",
     "input": "hello from litellm",
     "max_output_tokens": 128
   }'
@@ -175,7 +176,7 @@ curl http://localhost:4000/v1/messages \
   -H "x-api-key: $LITELLM_MASTER_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "glm-5.3-flash",
+    "model": "deepseek-v4.1-flash",
     "max_tokens": 128,
     "messages": [{"role": "user", "content": "hello from litellm"}]
   }'
@@ -191,9 +192,9 @@ Set `CORALBRICKS_API_BASE` or pass `api_base` explicitly to route through a diff
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: glm-5.3-flash
+  - model_name: deepseek-v4.1-flash
     litellm_params:
-      model: coralbricks/glm-5.3-flash-fp4
+      model: coralbricks/deepseek-v4.1-flash-fast
       api_base: https://your-coralbricks-endpoint/v1
       api_key: os.environ/CORALBRICKS_API_KEY
 ```

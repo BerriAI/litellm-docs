@@ -1,27 +1,65 @@
 {
+  "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/docs/ask",
+      "destination": "/api/docs/ask"
+    },
+    {
       "source": "/",
-      "has": [{ "type": "header", "key": "accept", "value": "(.*)text/markdown(.*)" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/markdown(.*)"
+        }
+      ],
       "destination": "/index.md"
     },
     {
       "source": "/:path((?:.*/)?[^./]+){/}?",
-      "has": [{ "type": "header", "key": "accept", "value": "(.*)text/markdown(.*)" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/markdown(.*)"
+        }
+      ],
       "destination": "/:path.md"
     }
   ],
   "headers": [
     {
       "source": "/:path*.md",
-      "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }]
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        }
+      ]
     },
     {
       "source": "/:path((?:.*/)?[^./]*){/}?",
-      "headers": [{ "key": "Vary", "value": "Accept" }]
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
     }
   ],
   "redirects": [
-    {"source": "/docs/proxy/lens/coding_agents", "destination": "/docs/proxy/lens/coding-agents", "permanent": true}
-  ]
+    {
+      "source": "/docs/proxy/lens/coding_agents",
+      "destination": "/docs/proxy/lens/coding-agents",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "api/docs/ask.js": {
+      "includeFiles": "build/search-*.json",
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
 }

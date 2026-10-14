@@ -1,0 +1,30 @@
+.dialog { position: fixed; inset: 0; width: min(680px, calc(100vw - 32px)); max-width: none; max-height: min(90dvh, 1100px); margin: auto; padding: 0; border: 1px solid #dce3ec; border-radius: 16px; background: #fff; color: #272b37; overflow-y: auto; overscroll-behavior: contain; font-family: Geist, var(--ifm-font-family-base); box-shadow: 0 24px 90px #17223538; }
+.dialog::backdrop { background: #17223580; }
+.panel { position: relative; padding: 32px; }
+.dialog .close { position: absolute; right: 16px; top: 12px; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #687487; font: 28px/1 Geist, sans-serif; cursor: pointer; }
+.dialog .close:hover { color: #272b37; background: #f3f5f8; }
+.dialog .eyebrow { margin: 0 38px 14px 0; color: #52688e; font: 10px/1.6 'Geist Mono', monospace; letter-spacing: .045em; }
+.dialog .panel h2.title { margin: 0 0 14px; color: #272b37 !important; font: 500 30px/1.12 Geist, sans-serif; letter-spacing: -.035em; }
+.dialog .description, .dialog .success > p { margin: 0 0 24px; color: #647083; font-size: 14px; line-height: 1.7; }
+.dialog .fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field { display: flex; min-width: 0; flex-direction: column; gap: 7px; color: #344258; font-size: 12px; line-height: 1.5; font-weight: 500; }
+.wide { grid-column: 1 / -1; }
+.dialog .field input, .dialog .field select, .dialog .field textarea { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #cdd7e4; border-radius: 6px; background: #fff; color: #272b37; font: 400 14px/1.5 Geist, sans-serif; }
+.dialog .field textarea { resize: vertical; min-height: 84px; }
+.dialog .field input::placeholder, .dialog .field textarea::placeholder { color: #8a95a5; opacity: 1; }
+.dialog .field [aria-invalid='true'] { border-color: #b42318; }
+.dialog .fieldError { color: #b42318; font-size: 12px; font-weight: 400; }
+.dialog input:focus-visible, .dialog textarea:focus-visible, .dialog select:focus-visible, .dialog button:focus-visible, .dialog summary:focus-visible { outline: 3px solid #a8b6ff; outline-offset: 2px; }
+.details { margin: 22px 0; padding: 17px 0; border-top: 1px solid #e1e6ee; border-bottom: 1px solid #e1e6ee; }
+.dialog .details summary { cursor: pointer; color: #344258; font-size: 13px; font-weight: 500; line-height: 1.6; }
+.details summary > span { margin-left: 8px; color: #7c899b; font-size: 11px; font-weight: 400; }
+.details[open] > .grid { margin-top: 20px; }
+.dialog .submit { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 12px 22px; border: 1px solid #0117be; border-radius: 7px; background: #0117be; color: #fff; font: 500 15px/1.4 Geist, sans-serif; cursor: pointer; }
+.dialog .submit:hover:not(:disabled) { background: #142cc3; }
+.dialog .submit:disabled { cursor: wait; opacity: .65; }
+.dialog .note { margin: 14px 0 0; color: #778397; font-size: 11px; line-height: 1.7; }
+.dialog .error { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #f1c5c1; border-radius: 6px; background: #fff4f3; color: #972a21; font-size: 13px; line-height: 1.6; }
+.dialog .success .note { margin-bottom: 24px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 540px) { .panel { padding: 28px 22px; } .grid { grid-template-columns: 1fr; } .dialog .panel h2.title { font-size: 27px; } .dialog .eyebrow { max-width: 230px; } .dialog .submit { width: 100%; } }

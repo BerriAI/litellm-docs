@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # /v1/decisions and /v1/systemone
 
 Decision models answer typed questions about an input and return probabilities instead of text: a yes/no probability, a pick from a fixed list, or a score on a scale. LiteLLM serves them on two routes that share one provider list, so any decision model in your `model_list` works on either route
@@ -7,7 +9,7 @@ Decision models answer typed questions about an input and return probabilities i
 | `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice` and `score` questions | You write against OpenAI's format or need image input |
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice` and `score` questions | You already have TypeSafe Jev request bodies |
 
-Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`
+Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -20,19 +22,35 @@ Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` a
 
 ## Supported providers
 
-| Provider | Example model | Credentials | Upstream path | Images |
-|----------|---------------|-------------|---------------|--------|
+| Provider | Example model | Credentials | LiteLLM endpoint | Images |
+|----------|---------------|-------------|------------------|--------|
 | [OpenAI](https://developers.openai.com/api/docs/guides/decisions) | `openai/gpt-6-luna` | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` | `/v1/decisions` | Yes |
 | [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | No |
-| [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/decisions` | No |
-| [OpenRouter](https://openrouter.ai/docs/guides/community/jev) | `openrouter/typesafe/jev-1.13` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/api/alpha/decisions` | No |
-| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/ai/run/@cf/cloudflare/<model>` | No |
+| [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
+| [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
+| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | No |
+| [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
+| [Databricks `ai_decide`](./providers/databricks.md#decisions-ai_decide) | `databricks/ai_decide` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
+| [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
 | [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
-Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
+Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. On Databricks the model is the bare serving endpoint name and `DATABRICKS_API_BASE` points at `https://<workspace-host>/serving-endpoints`, so the request goes to that endpoint's `/invocations` route. `databricks/ai_decide` instead calls the `ai_decide` AI Function at `/api/2.0/ai-functions/ai-decide` on the same workspace, which needs the `ai_decide` preview turned on and reports no token usage. On Microsoft Foundry the model is your deployment name and `AZURE_AI_API_BASE` is the resource host, `https://<resource>.services.ai.azure.com`. A project-scoped base such as `https://<resource>.services.ai.azure.com/api/projects/<project>/openai/v1` is trimmed back to the host. Azure does not let you name a deployment `Microsoft-Decision-1`, so deploy it under another name and set `base_model` so cost tracking finds the price
+
+```yaml showLineNumbers
+model_list:
+  - model_name: decision-1
+    litellm_params:
+      model: azure_ai/decision-1
+      api_base: https://<resource>.services.ai.azure.com
+      api_key: os.environ/AZURE_AI_API_KEY
+    model_info:
+      base_model: azure_ai/Microsoft-Decision-1
+```
+
+Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
 
 ## Self-hosted Laya and Nimble
 
@@ -308,9 +326,9 @@ On both routes, requests that break these rules, such as no questions at all, du
 
 ## SDK usage
 
-`litellm.decisions` takes `input` for the OpenAI format or `state` for the System One format, and returns the matching response type. Passing both raises a `BadRequestError`
+The SDK has one function per request format. `litellm.decisions` takes the OpenAI Decisions shape (`input`, a `questions` list and an optional `safety_identifier`) and returns the OpenAI response, with `answers` as a list. `litellm.systemone` takes the System One shape (`state` and a `questions` mapping keyed by question name) and returns the System One response, with `answers` keyed by question name. Both work with every supported provider, so you pick the function by the request shape you write, not by the provider you call.
 
-```python showLineNumbers
+```python showLineNumbers title="OpenAI Decisions format"
 import os
 import litellm
 
@@ -327,7 +345,23 @@ print(response.answers[0].probability)
 print(response.usage)
 ```
 
-The async version is `litellm.adecisions` and takes the same arguments
+```python showLineNumbers title="System One format"
+import os
+import litellm
+
+os.environ["TYPESAFE_API_KEY"] = ""
+
+response = litellm.systemone(
+    model="typesafe/jev-latest",
+    state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
+    questions={
+        "is_refund_request": {"type": "noul", "instructions": "Is the customer asking for a refund?"},
+    },
+)
+print(response.answers["is_refund_request"].noul)
+```
+
+The async versions are `litellm.adecisions` and `litellm.asystemone` and take the same arguments.
 
 ```python showLineNumbers
 import asyncio
@@ -337,7 +371,7 @@ import litellm
 os.environ["TYPESAFE_API_KEY"] = ""
 
 async def main():
-    response = await litellm.adecisions(
+    response = await litellm.asystemone(
         model="typesafe/jev-latest",
         state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
         questions={
@@ -349,7 +383,13 @@ async def main():
 asyncio.run(main())
 ```
 
-Both functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones
+All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
+
+Through the Router the same split applies: `router.decisions` and `router.adecisions` take the OpenAI shape, `router.systemone` and `router.asystemone` take the System One shape. On the proxy, `/v1/systemone` requests are logged with call type `asystemone` and `/v1/decisions` requests with `adecisions`.
+
+:::info Upgrading from v1.104.x
+In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Those calls keep working unchanged, with a `UserWarning`. Rename `litellm.decisions(state=...)` to `litellm.systemone(state=...)` when convenient, the arguments stay the same.
+:::
 
 ## Limits
 
@@ -359,7 +399,25 @@ A choice question cannot have both a boolean value and a string with the same te
 
 ## Try it in the Admin UI
 
-The Playground **System One** tab has an **Endpoint** selector. Pick **System One · /v1/systemone** to send the request through your `model_list`, with `model` set to a proxy model name such as `jev` or `luna` from the config above. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`. The tab only sends the System One format and is not in `v1.104.2` or `v1.105.0`, so use curl or the SDK for `/v1/decisions`, image input and those versions. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) describes the editor, validation and answer view
+### Add a decision model
+
+Go to **Models + Endpoints**, open the **Add Model** tab and pick the provider, for example OpenAI. Pick the decision model under **LiteLLM Model Name(s)**, for example `gpt-6-luna`, and a **Decision model** note confirms the pick and links to the Decisions playground. Enter the provider credentials as you would for any other model, then click **Add Model**. The model then answers on `/v1/decisions` and `/v1/systemone` under its public model name. Providers that need an endpoint URL, such as Databricks and Microsoft Foundry, take it in the **API Base** field, matching the `api_base` in the [proxy setup](#proxy-setup) above. The optional **Mode** dropdown has an **Evaluation - /v1/decisions** entry for health checking the model over `/v1/decisions`.
+
+<Image img={require('../img/decisions_add_model.png')} alt="Add Model with OpenAI and gpt-6-luna picked, showing the Decision model note" />
+
+### Decisions playground
+
+The Playground **Decisions** tab sends requests to both routes. Open it at `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **Decisions**. The **Endpoint** selector picks `/v1/decisions` (OpenAI Decisions format) or `/v1/systemone` (System One format), and the **Model** selector lists the decision models in your `model_list`, such as `jev` or `luna` from the config above; a proxy with no decision models shows an **Add a decision model** link instead. Both endpoints have a **Form** tab for building the request without JSON and a **JSON** tab for the raw request. Image input on `/v1/decisions` is edited in JSON, since the form keeps `messages` and image parts as they are. **Virtual Key Source** picks the key: **Current UI Session** uses your dashboard login and **Virtual Key** attributes the call to a key you paste. Once the call returns, each question shows its answer and probabilities, with the model the provider reported, token usage, latency and the raw JSON response under them.
+
+<Image img={require('../img/decisions_playground_systemone.png')} alt="Decisions playground with /v1/systemone picked, the jev model, the Form tab and the answers for the issue triage example" />
+
+<Image img={require('../img/decisions_playground_openai.png')} alt="Decisions playground with /v1/decisions picked, showing the OpenAI Decisions form with predicate, choice and score questions" />
+
+The tab is not in `v1.104.2` or `v1.105.0`. Releases before this UI change label it **System One** and only send the System One format, so use curl or the SDK for `/v1/decisions` there. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
+
+## Use a decision model as a guardrail
+
+The [Decision Model guardrail](./proxy/guardrails/decision_model.md) asks any model on this page yes/no questions you write about each request or response, and blocks or logs the call when a probability reaches its threshold
 
 ## Decision routes vs TypeSafe pass-through
 

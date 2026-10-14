@@ -1,3 +1,5 @@
+import Image from '@theme/IdealImage';
+
 # TypeSafe AI (Jev)
 
 Pass-through endpoint for the [TypeSafe AI](https://docs.typesafe.ai/api) System One API. Jev returns typed decisions (a choice, a score, or a yes/no probability) instead of text, so it is called through its own evaluate endpoint rather than `/chat/completions`.
@@ -13,7 +15,7 @@ Just replace `https://api.typesafe.ai` with `LITELLM_PROXY_BASE_URL/typesafe` ðŸ
 
 LiteLLM adds the TypeSafe API key from the proxy environment, so clients only need a LiteLLM virtual key.
 
-To call Jev through your `model_list` with load balancing, fallbacks and per-deployment keys, or to send the same request to OpenAI, Perplexity, OpenRouter, Cloudflare or Strands Decider, use the unified [`/v1/systemone` endpoint](../decisions.md#v1systemone) instead. It takes the same System One body, and [`/v1/decisions`](../decisions.md#v1decisions) takes the OpenAI Decisions format
+To call Jev through your `model_list` with load balancing, fallbacks and per-deployment keys, or to send the same request to OpenAI, Perplexity, Cloudflare or Strands Decider, use the unified [`/v1/systemone` endpoint](../decisions.md#v1systemone) instead. It takes the same System One body, and [`/v1/decisions`](../decisions.md#v1decisions) takes the OpenAI Decisions format
 
 To let JEV pick the model for a completion, configure the [JEV Auto Router](/docs/auto_router/setup#jev-classifier-typesafe-ai) with `classifier_type: jev` and `jev_classifier_config`. It uses one System One Choice question for the configured tiers, then dispatches to the selected completion model. See [routing context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier) and the [measured classifier comparison](/blog/jev-auto-router-benchmark)
 
@@ -81,15 +83,21 @@ Any path under `/typesafe/` is forwarded, so `GET /typesafe/v1/models` lists the
 
 ## Try it in the Admin UI
 
-The Playground has a **System One** tab (Beta) for sending Jev requests without curl. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **System One**. The proxy still needs `TYPESAFE_API_KEY`; without it the upstream error shows inline
+The Playground **Decisions** tab (Beta) sends Jev requests without curl. It calls the proxy's `/v1/systemone` route rather than this pass-through, so add a `typesafe/` model to your `model_list` first, for example `jev` from the [proxy setup](../decisions.md#proxy-setup) on the Decisions page, and set `TYPESAFE_API_KEY`; without the key the upstream error shows inline. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **Decisions**. In releases before the rename the tab is labelled **System One**.
 
-The left side is a JSON editor preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score). Edit it or paste your own request; **Reset example** restores it and **Format JSON** reindents it. The `model` is set in the JSON (for example `jev-latest`) rather than picked from the model list
+Pick `/v1/systemone` under **Endpoint** and your Jev model under **Model**. The left side holds a request preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score), and **Reset example** restores it.
 
-The request is checked as you type. `state` and a non-empty `questions` object are required, every question needs `instructions`, choice `criteria` must map 1 to 255 labels to descriptions, noul `criteria` is optional with `true` and `false` descriptions, and score `criteria` is a list of at least 2 levels. Errors are listed by JSON path and disable **Send**; more than 10 score levels only shows a warning. Fields outside these are forwarded to TypeSafe unchanged
+<Image img={require('../../img/decisions_playground_systemone.png')} alt="Decisions playground with /v1/systemone and the jev model picked, showing the form and the answers" />
 
-**Virtual Key Source** picks the key: **Current UI Session** uses your dashboard login, and **Virtual Key** lets you paste one so the call is attributed and budgeted against that key. **Send** posts to `/typesafe/v1/systemone`, the same endpoint as the curl above, so spend and logs land the same way
+The editor opens on a **Form** tab, so you can build a request without writing JSON. Type the text the model should read into **Input**, then edit each question card: its name, its type (**Choice**, **Yes / no** or **Score**), its **Instructions**, and its criteria. A choice takes options with descriptions, a yes / no question takes **Yes means** and **No means**, and a score takes levels numbered from 0. **Add question**, **Add option** and **Add level** add rows, and the trash buttons remove them.
 
-The right side shows a **Question breakdown** of the state and each question's criteria, and once the call returns, the answers above it: the picked choice with confidence and a probability bar per option, the noul probability, and the score with its legend and per-level probabilities. The model TypeSafe reports, input and output tokens, latency and the raw JSON response are shown under the answers. Auth and upstream errors, such as a 401 for an unknown key, show inline
+The **JSON** tab edits the same request as raw JSON, so a change in either tab shows up in the other, and fields the form has no input for, such as `metadata`, are kept. A request the form cannot show, such as JSON with a syntax error, gets an **Edit in JSON** button instead. **Format JSON** on that tab reindents the request. Releases without the **Form** tab show only the JSON editor.
+
+The request is checked as you type. `state` and a non-empty `questions` object are required and every question needs `instructions`; errors are listed by JSON path and disable **Send**. Fields outside the form are forwarded unchanged.
+
+**Virtual Key Source** picks the key: **Current UI Session** uses your dashboard login, and **Virtual Key** lets you paste one so the call is attributed and budgeted against that key. **Send** posts to `/v1/systemone` through your `model_list`, so spend and logs land under the proxy model name like any other request. The `/typesafe/v1/systemone` pass-through from the curl above is not selectable in the Playground.
+
+The right side shows a **Question breakdown** of the state and each question's criteria, and once the call returns, the answers above it: the picked choice with confidence and a probability bar per option, the noul probability, and the score with its legend and per-level probabilities. The model TypeSafe reports, input and output tokens, latency and the raw JSON response are shown under the answers. Auth and upstream errors, such as a 401 for an unknown key, show inline.
 
 ## Cost Tracking
 

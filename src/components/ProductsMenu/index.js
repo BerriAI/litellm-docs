@@ -83,7 +83,7 @@ const COLUMNS = [
       heading: 'Monitor',
       items: [
         {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
-        {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
+        {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
       ],
     },
     {
@@ -184,9 +184,20 @@ export default function ProductsMenu({mobile}) {
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={`Products: ${current.title}`}
+        title={current.title}
         onClick={() => setOpen((v) => !v)}>
         <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
-        <span className={styles.triggerLabel}>{current.title}</span>
+        {/* A long name gets a short form on narrower screens */}
+        <span className={styles.triggerLabel}>
+          {current.short ? (
+            <>
+              <span className={styles.labelFull}>{current.title}</span>
+              <span className={styles.labelShort}>{current.short}</span>
+            </>
+          ) : (
+            current.title
+          )}
+        </span>
         <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
           <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />

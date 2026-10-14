@@ -1,3 +1,7 @@
+---
+sidebar_label: "Load Balancing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -4,6 +4,12 @@ litellm:
   url: https://github.com/BerriAI/litellm
   image_url: https://github.com/BerriAI.png
 
+joshua:
+  name: Joshua Valluru
+  title: SWE, LiteLLM
+  url: https://github.com/joshua-berri
+  image_url: https://github.com/joshua-berri.png
+
 yujonglee:
   name: Yujong Lee
   title: Senior SWE, LiteLLM

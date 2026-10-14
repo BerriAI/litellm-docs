@@ -1,3 +1,7 @@
+---
+sidebar_label: "Traffic Mirroring"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

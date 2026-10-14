@@ -1,0 +1,169 @@
+.workshop {
+  --workshop-ink: #272b37;
+  --workshop-muted: #687487;
+  --workshop-line: #dde2e9;
+  --workshop-blue: #0117be;
+  position: relative;
+  left: 50%;
+  width: min(1120px, calc(100vw - 48px));
+  transform: translateX(-50%);
+  color: var(--workshop-ink);
+  background: #fff;
+  font-family: Geist, var(--ifm-font-family-base);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.workshop *, .workshop *::before, .workshop *::after { box-sizing: border-box; }
+.workshop img { display: block; height: auto; object-fit: contain; }
+/* This white workshop surface remains legible within either docs theme. */
+.workshop h1, .workshop h2, .workshop h3 { color: var(--workshop-ink) !important; }
+.workshop a:focus-visible, .workshop button:focus-visible { outline: 3px solid #316fe3; outline-offset: 5px; }
+.hero { padding-top: 42px; }
+.brandRow { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 44px; }
+.workshop .brandRow .logo { width: 174px; height: auto; border-radius: 0; }
+.backLink { color: var(--workshop-muted); font-size: 13px; text-decoration: none; }
+.workshop .hero h1 { color: var(--workshop-ink); font-size: clamp(40px, 5.3vw, 64px); letter-spacing: -.055em; line-height: 1.09; font-weight: 500; margin: 0; }
+.workshop .heroLead { max-width: 640px; font-size: 18px; line-height: 1.6; color: var(--workshop-muted); margin: 24px 0 0; }
+.heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 22px 30px; margin-top: 28px; }
+.workshop .signup { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 55px; padding: 14px 24px; border: 1px solid var(--workshop-blue); border-radius: 8px; background: var(--workshop-blue); color: #fff; font: inherit; font-weight: 500; line-height: 1.3; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.workshop .signup:hover { background: #142cc3; color: #fff; text-decoration: none; }
+.workshop .facts { color: #52617a; font-size: 14px; margin: 0; }
+.facts span { padding: 0 8px; color: #8d97a5; }
+.harnessRow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px 30px; margin-top: 40px; padding: 24px 0; border-top: 1px solid var(--workshop-line); }
+.workshop .harnessRow > p { font-size: 12px; color: #687487; margin: 0; }
+.harnesses { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
+.harness { display: flex; align-items: center; gap: 9px; color: #3c4452; font-size: 13px; white-space: nowrap; }
+.workshop .harnesses .harness img { width: 26px; height: 26px; border-radius: 0; }
+.blueprint { margin: 0; padding: 16px; border: 1px solid #e1e6ef; border-radius: 14px; background: #fff; }
+.blueprintFrame { position: relative; overflow: hidden; aspect-ratio: 894 / 650; max-width: 894px; margin: auto; }
+.workshop .blueprintFrame img.blueprintImage { position: absolute; width: 140.269%; max-width: none; height: auto; left: -40.269%; top: -80%; border-radius: 0; }
+.workshop .blueprintFrame img.blueprintSlack { position: absolute; width: 5.705%; height: auto; left: 9.843%; top: 32.154%; border-radius: 0; }
+
+.section { margin-top: 76px; padding-top: 56px; border-top: 1px solid var(--workshop-line); scroll-margin-top: 100px; }
+.workshop section.section > h2 { font-size: 40px; font-weight: 500; line-height: 1.15; letter-spacing: -.045em; color: var(--workshop-ink); margin: 0 0 20px; }
+.workshop section.section > p { max-width: 760px; font-size: 16px; line-height: 1.75; color: var(--workshop-muted); margin: 0 0 24px; }
+.workshop section.section > .eyebrow { font: 11px/1.5 'Geist Mono', monospace; letter-spacing: .045em; color: #53708b; margin: 0 0 15px; }
+.teams { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; padding-top: 30px; border-top: 1px solid var(--workshop-line); }
+.team { padding-right: 28px; }
+.team + .team { padding-left: 28px; border-left: 1px solid var(--workshop-line); }
+.teamNumber { font: 11px 'Geist Mono', monospace; color: #7c8da3; }
+.workshop .teams .team h3 { font-size: 19px; font-weight: 500; line-height: 1.3; letter-spacing: -.025em; color: var(--workshop-ink); margin: 18px 0 12px; }
+.workshop .team p { color: var(--workshop-muted); font-size: 14px; line-height: 1.7; margin: 0; }
+
+.workshop .timeline { list-style: none; padding: 0; margin: 38px 0 0; }
+.workshop .timelineItem { position: relative; padding: 0 0 42px 77px; margin: 0; }
+.timelineItem::before { content: ''; position: absolute; left: 24px; top: 48px; bottom: 0; width: 2px; background: #ccdaed; }
+.timelineItem:last-child::before { display: none; }
+.timelineNode { position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 50px; height: 50px; border: 1px solid #b9ccea; border-radius: 50%; background: #eaf1fb; font: 15px 'Geist Mono', monospace; color: #255794; }
+.milestone { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: center; padding: 0 0 42px; border-bottom: 1px solid var(--workshop-line); min-height: 260px; scroll-margin-top: 100px; }
+.timelineItem:last-child { padding-bottom: 0; }
+.timelineItem:last-child .milestone { padding-bottom: 0; border-bottom: 0; }
+.workshop .milestoneMeta { display: flex; flex-wrap: wrap; gap: 8px 17px; font: 11px/1.5 'Geist Mono', monospace; letter-spacing: .01em; color: #738298; margin: 0 0 16px; }
+.milestoneMeta span:first-child { color: #3f69a0; }
+.workshop .timeline .milestone h3 { font-size: 29px; line-height: 1.18; letter-spacing: -.04em; font-weight: 500; color: var(--workshop-ink); margin: 0 0 16px; }
+.workshop .milestoneCopy > p:not(.milestoneMeta) { color: var(--workshop-muted); font-size: 14px; line-height: 1.75; margin: 0 0 14px; }
+.workshop .milestoneCopy > p.scopeNote { font-size: 12px; color: #728095; }
+.result { margin-top: 24px; padding-left: 15px; border-left: 2px solid #86a8d7; }
+.result > span { font: 10px 'Geist Mono', monospace; letter-spacing: .03em; color: #6280a7; }
+.workshop .result p { color: #2e4561; font-size: 16px; line-height: 1.45; letter-spacing: -.02em; margin: 8px 0 0; }
+.closing { display: flex; justify-content: space-between; align-items: center; gap: 40px; margin-top: 52px; padding: 40px 0 25px; border-top: 1px solid var(--workshop-line); }
+.workshop section.closing > div > h2 { font-size: 29px; font-weight: 500; line-height: 1.2; letter-spacing: -.04em; color: var(--workshop-ink); margin: 0 0 14px; }
+.workshop .closing p { max-width: 680px; font-size: 14px; line-height: 1.7; color: var(--workshop-muted); margin: 0; }
+.workshop .closing .signupNote { margin-top: 10px; }
+
+.visual { width: 100%; min-width: 0; margin: 0; padding: 20px; background: #fff; border: 1px solid #dce3ec; border-radius: 12px; color: #26384e; font-size: 12px; line-height: 1.4; }
+.visualHeading { display: flex; align-items: center; gap: 8px; margin: 0 0 18px; color: #26384e; font-size: 12px; font-weight: 500; line-height: 1.4; }
+.visualHeading > svg { color: #5f7da6; flex-shrink: 0; }
+.visualBadge { margin-left: auto; padding: 3px 7px; border: 1px solid #e0e7f0; border-radius: 4px; color: #68809e; font-size: 11px; font-weight: 400; white-space: nowrap; }
+.briefRow { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-top: 1px solid #eef1f6; }
+.briefRow:last-child { padding-bottom: 0; }
+.briefRow > svg { margin-top: 2px; color: #587aab; flex-shrink: 0; }
+.briefRow > div { display: flex; flex-direction: column; gap: 2px; }
+.briefRow strong { font-size: 12px; font-weight: 500; }
+.briefRow span { font-size: 11px; color: #728095; line-height: 1.4; }
+.clients { display: grid; grid-template-columns: 1fr 1fr; gap: 19px; }
+.clients > div { display: flex; justify-content: center; align-items: center; gap: 7px; border: 1px solid #dde5ef; background: #f8faff; border-radius: 6px; padding: 8px; font-size: 12px; white-space: nowrap; }
+.clients svg { color: #6e85a5; }
+.workshop .visual .clients img { width: 15px; height: 15px; border-radius: 0; }
+.join { position: relative; display: flex; justify-content: center; height: 28px; padding-top: 13px; color: #849bb8; }
+.join::before { position: absolute; content: ''; top: 0; left: 25%; right: 25%; height: 10px; border: solid #c4d2e4; border-width: 0 1px 1px; border-radius: 0 0 3px 3px; }
+.join::after { position: absolute; content: ''; top: 10px; left: 50%; height: 6px; border-left: 1px solid #c4d2e4; }
+.join > svg { position: relative; z-index: 1; }
+.sandbox { position: relative; border: 1px dashed #b4c8e2; background: #f2f6fc; border-radius: 7px; padding: 23px 17px 12px; }
+.sandboxLabel { position: absolute; left: 12px; top: 6px; font-size: 11px; color: #7389a6; }
+.harnessModule { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 8px; background: #fff; border: 1px solid #cbd9ec; border-radius: 5px; font-size: 12px; font-weight: 500; }
+.harnessModule > svg { color: #446fab; }
+.powered { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; font-size: 11px; color: #728095; }
+.workshop .visual .powered img { width: 72px; height: auto; border-radius: 0; }
+.betaFlow { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); align-items: center; gap: 0 3px; }
+.flowStep { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 7px; min-height: 57px; border: 1px solid #dfe7f1; border-radius: 7px; background: #f8faff; }
+.flowStep > svg { color: #6685ae; }
+.flowStep strong { font-size: 11px; font-weight: 400; white-space: nowrap; }
+.flowArrow { justify-self: center; color: #94a8c4; }
+.flowTurn { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding-right: calc((100% - 30px) / 4 - 9px); height: 23px; align-items: center; color: #94a8c4; }
+.workshop .visualCaption { margin: 13px 0 0; font-size: 11px; color: #728095; text-align: center; }
+.collaboration { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); gap: 5px; align-items: center; padding: 8px 0 17px; }
+.visualTeam { display: flex; align-items: center; flex-direction: column; gap: 10px; }
+.teamIcon { display: flex; align-items: center; justify-content: center; height: 52px; width: 70px; border: 1px solid #dce5f1; border-radius: 9px; background: #f4f7fc; color: #6080ae; }
+.brandIcon { width: 90px; background: #fff; }
+.workshop .visual .brandIcon img { width: 73px; height: auto; border-radius: 0; }
+.visualTeam strong { font-size: 12px; font-weight: 400; white-space: nowrap; }
+.teamArrow { color: #a1b3ca; margin-top: -24px; justify-self: center; }
+.supportNotes { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #edf1f6; padding-top: 13px; color: #728095; font-size: 11px; }
+.supportNotes > span { display: flex; align-items: center; gap: 8px; }
+.supportNotes svg { color: #6b8bb6; flex-shrink: 0; }
+
+@media (max-width: 960px) {
+  .milestone { grid-template-columns: minmax(0, 1fr) 290px; gap: 25px; }
+  .workshop .timelineItem { padding-left: 66px; }
+  .workshop .timeline .milestone h3 { font-size: 26px; }
+  .harnesses { gap: 20px; }
+  .team { padding-right: 20px; }
+  .team + .team { padding-left: 20px; }
+}
+
+@media (max-width: 760px) {
+  .hero { padding-top: 28px; }
+  .brandRow { margin-bottom: 32px; }
+  .workshop .brandRow .logo { width: 145px; }
+  .workshop .hero h1 { font-size: clamp(37px, 6vw, 49px); line-height: 1.12; }
+  .titleBreak { display: none; }
+  .workshop .heroLead { font-size: 16px; margin-top: 20px; }
+  .heroActions { gap: 20px; }
+  .workshop .facts { font-size: 13px; }
+  .facts span { padding: 0 5px; }
+  .harnessRow { margin-top: 30px; padding: 21px 0; }
+  .harnesses { gap: 18px 25px; }
+  .blueprint { padding: 8px; }
+  .section { margin-top: 52px; padding-top: 42px; }
+  .workshop section.section > h2 { font-size: 33px; }
+  .workshop section.section > p { font-size: 15px; }
+  .teams { grid-template-columns: 1fr; margin-top: 28px; padding-top: 0; }
+  .team, .team + .team { position: relative; padding: 23px 0 23px 39px; border-left: 0; border-bottom: 1px solid var(--workshop-line); }
+  .teamNumber { position: absolute; left: 0; top: 26px; }
+  .workshop .teams .team h3 { font-size: 19px; margin: 0 0 9px; }
+  .workshop .timelineItem { padding: 0 0 35px 52px; }
+  .timelineNode { width: 36px; height: 36px; font-size: 11px; }
+  .timelineItem::before { left: 17px; top: 36px; }
+  .milestone { grid-template-columns: 1fr; gap: 25px; padding-bottom: 35px; }
+  .workshop .timeline .milestone h3 { font-size: 26px; }
+  .milestone > .visual { max-width: 430px; }
+  .closing { display: block; margin-top: 36px; padding-top: 32px; }
+  .closing .signup { margin-top: 24px; }
+}
+
+@media (max-width: 420px) {
+  .workshop { width: calc(100vw - 36px); }
+  .workshop .hero h1 { font-size: 36px; }
+  .heroActions { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .harnesses { display: grid; grid-template-columns: 1fr 1fr; gap: 19px 24px; }
+  .harness { font-size: 12px; }
+  .workshop section.section > h2 { font-size: 30px; }
+  .workshop .timelineItem { padding-left: 43px; }
+  .timelineNode { width: 31px; height: 31px; font-size: 10px; }
+  .timelineItem::before { left: 15px; top: 31px; }
+  .workshop .timeline .milestone h3 { font-size: 24px; }
+  .visual { padding: 15px; }
+  .clients { gap: 12px; }
+}

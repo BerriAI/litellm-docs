@@ -1,134 +1,95 @@
 ---
 title: "Configuration and troubleshooting"
-description: "Lens credentials, networking, service settings, and connection troubleshooting."
+description: "Configure standalone Lens credentials, networking and the optional LiteLLM connection."
 slug: "/proxy/lens/deployment/configuration"
 ---
 
 # Configuration and troubleshooting
 
-Use this page when you need to change routing or diagnose a connection. To install Lens, choose a [deployment guide](../deployment.md).
+Use the [Lens installation guide](https://github.com/BerriAI/lens/blob/main/deploy/lens/README.md) as the source of deployment settings. For help configuring an existing project, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) provides prompts for standalone Lens, a gateway connection and external storage
 
 ## Credentials
 
-Use the credential for the task you are performing:
-
-| Credential | Used by | Purpose |
-| --- | --- | --- |
-| Master key | Proxy administrator | Sign in and manage LiteLLM |
-| Model key | Your application | Make model requests through LiteLLM |
-| Tracing key | Your agent | Send traces directly to Lens |
-| Service token | LiteLLM and Lens | Authenticate their internal connection |
-| Database credentials | LiteLLM for PostgreSQL; Lens for ClickHouse | Connect to each service's database |
-
-The local setup and Helm chart generate the Lens service token for you. Developers only need a tracing key to send traces. `LITELLM_SALT_KEY` is a separate encryption key that LiteLLM uses for stored provider credentials; preserve it with your database backups.
-
-## Publish the trace endpoint {#publish-trace-endpoint}
-
-For agents on other machines, route HTTPS traffic to Lens on port `4318`:
-
-| Public base URL | Route to Lens |
+| Credential | Purpose |
 | --- | --- |
-| `https://gateway.example.com/lens-ingest` | `/lens-ingest/` on your gateway hostname |
-| `https://traces.example.com` | `/v1/` on a separate hostname |
+| Lens administrator token | Sign into standalone Lens and administer its API |
+| Lens tracing key | Upload agent telemetry under its assigned scope |
+| ClickHouse credential | Let Lens initialize, read and write its storage |
+| Analysis or evaluation provider key | Let Lens call the configured provider |
+| Gateway service and signing credentials | Authenticate the optional internal connection and delegated identity |
+| LiteLLM user or model key | Access the gateway under its existing authentication and model rules |
 
-For a complete NGINX configuration, use the [server example](./server.md#3-route-https-traffic). Keep `/internal/` private. For Docker, a reverse proxy on the host can reach Lens at `127.0.0.1:4318`. A reverse proxy in a container must share Lens's network and use `http://lens-worker:4318`.
+The standalone starter creates its admin token and database password in `deploy/lens/.env`. A standalone tracing installation needs those credentials and a tracing key. Investigations, Signals and eval judging require their corresponding provider configuration. Gateway connection secrets are needed only when connecting LiteLLM
 
-Set `LITELLM_LENS_PUBLIC_URL` on LiteLLM, or `lensWorker.publicUrl` in Helm, to the base URL. Leave off `/v1/traces`; the dashboard adds it.
+Keep deployment secrets private and retain them with your recovery materials. The gateway keeps its own database and encryption keys; those are separate from Lens's ClickHouse storage
 
-## Use a separate trace hostname with Helm {#dedicated-ingress}
+## Publish the endpoint {#publish-trace-endpoint}
 
-Point your trace hostname at the ingress controller and provision its TLS certificate. Merge these fields into the existing `lensWorker` block, keeping its image, secret, and database settings. Replace the hostname, ingress class, and TLS secret name with yours:
+Set `LENS_PUBLIC_URL` to the browser origin, such as `https://lens.example.com`. The starter uses it for its UI, generated tracing address and secure session cookies. Forward the standalone UI and API to Lens port 4318 with the [HTTPS server example](./server.md#3-route-https-traffic)
 
-```yaml
-lensWorker:
-  publicUrl: https://traces.example.com
-  ingress:
-    enabled: true
-    className: nginx
-    host: traces.example.com
-    tls:
-      - secretName: lens-tls
-        hosts:
-          - traces.example.com
-```
+An optional separate ingestion address uses `LITELLM_LENS_PUBLIC_URL` on Lens, or `ingestionUrl` in its Helm chart. It defaults to the Lens public URL. Retain an existing path prefix such as `/lens-ingest` and leave off `/v1/traces`; setup adds that suffix
 
-The chart routes `/v1/` on this hostname to Lens. Redeploy with your Helm upgrade command, then [check the installation](../deployment.md#check-the-installation).
+The gateway separately uses `LITELLM_LENS_URL` for its private connection and `LITELLM_LENS_PUBLIC_URL` for the tracing address shown to users. Verify reachability from the actual gateway, browser and agent networks
 
-## Connect Lens to an existing Docker network {#docker-network}
+## Use an ingress with Helm {#dedicated-ingress}
 
-If LiteLLM and Lens run in separate Compose projects, find LiteLLM's network:
+The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
 
-```bash
+When a gateway chart owns the Lens deployment, the adapter settings live under `lensWorker`. An external Lens deployment can preserve the gateway's `/lens-ingest` route through `lensWorker.externalServiceName`. Use the values for the chart and version you actually deploy
+
+## Connect Docker networks {#docker-network}
+
+Containers need a reachable service address. A gateway container's `127.0.0.1` points at itself. Give Lens and the gateway a shared user-defined network, preserving Lens's existing default and storage networks, or route through another private address reachable by both
+
+Inspect the existing gateway networks without changing them:
+
+```sh
 docker inspect "<your-litellm-container>" --format '{{json .NetworkSettings.Networks}}'
 ```
 
-Save this as `lens-network.yaml` in Lens's Compose project:
-
-```yaml title="lens-network.yaml"
-services:
-  lens-worker:
-    networks: [gateway]
-networks:
-  gateway:
-    external: true
-    name: ${LITELLM_DOCKER_NETWORK}
-```
-
-Set the network name from the first command and start Lens with the override:
-
-```bash
-export LITELLM_DOCKER_NETWORK="<your-existing-network>"
-docker compose -f compose.yaml -f lens-network.yaml up -d
-```
-
-Include both Compose files whenever you recreate Lens. LiteLLM and your reverse proxy can reach it at `http://lens-worker:4318` on that network. Set Lens's `LITELLM_URL` to the gateway's service name and container port.
+Make any shared-network reference persistent in both Compose configurations, including the network override every time you recreate services. Use Lens's service name and port, such as `http://lens:4318`, for the private gateway URL. Follow [Add Lens to LiteLLM](./litellm.md) for the credentials and application settings
 
 ## Configuration reference
 
-The [Compose](./docker-compose.md) and [Docker](./docker.md) guides show the values to set on each service. Helm supplies the connection settings from your `lensWorker` values.
-
-| Variable | Used by LiteLLM | Used by Lens |
+| Setting | Service | Meaning |
 | --- | --- | --- |
-| `LITELLM_LENS_SERVICE_TOKEN` | Yes | Yes |
-| `LITELLM_LENS_URL` | Yes | No |
-| `LITELLM_LENS_PUBLIC_URL` | Yes | No |
-| `LITELLM_URL` | No | Yes |
-| `CLICKHOUSE_URL`, or `CLICKHOUSE_HOST` and `CLICKHOUSE_PASSWORD` | No | Yes |
-| `CLICKHOUSE_DATABASE` | No | Yes |
-| `AGENT_TRACING_RETENTION_DAYS` | No | Yes |
+| `LENS_ADMIN_TOKEN` | Lens | Standalone administrator credential |
+| `LENS_PUBLIC_URL` | Lens | Browser origin and default ingestion address |
+| `LITELLM_LENS_PUBLIC_URL` | Lens and gateway | Address advertised for agent ingestion |
+| `LITELLM_LENS_URL` | Gateway | Private Lens API base address |
+| `LITELLM_LENS_SERVICE_TOKEN` | Lens and gateway | Shared internal service credential |
+| `LENS_GATEWAY_SECRET` | Lens and gateway | Shared delegated-identity signing credential |
+| `CLICKHOUSE_URL`, or host/user/password settings | Lens | ClickHouse HTTP connection |
+| `CLICKHOUSE_DATABASE` | Lens | Selected database, default `lens` in standalone Lens |
+| `AGENT_TRACING_RETENTION_DAYS` | Lens | Trace retention, default 14 days |
 
-Use the same private service secret on LiteLLM and Lens, with at least 32 characters. `CLICKHOUSE_DATABASE` defaults to `litellm`, and `AGENT_TRACING_RETENTION_DAYS` defaults to `14`. Agents authenticate with dedicated tracing keys from the dashboard.
+Existing gateway integrations can retain the `litellm` ClickHouse database. Preserve the actual database that holds your records. See [analysis models](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) and [Signals](https://github.com/BerriAI/lens/blob/main/docs/signals.md) for server-side provider configuration
 
 ## Availability and scaling
 
-Agent exporters send traces directly to Lens. LiteLLM sends optional request logs through a bounded background queue. If Lens or ClickHouse is unavailable, model requests continue. Traces can be delayed or dropped according to the exporter's retry policy. The gateway does not wait for ClickHouse during startup or inference.
+Standalone Lens initializes its ClickHouse schema and state before accepting requests. Missing Keeper configuration or insufficient permissions prevents readiness. See [external storage requirements](./storage.md#external-clickhouse)
 
-Bundled ClickHouse is a single instance. Use an external ClickHouse deployment when you need replication or high availability.
+Multiple Lens replicas can share one supported ClickHouse server. Keeper coordinates state publication; it does not replicate the local payload tables between servers. External storage does not make multi-server load balancing or automatic failover supported
 
-`lensWorker.replicaCount` scales ingestion and investigations. Each replica needs access to the same ClickHouse and gateway. Credentials refresh every 30 seconds; a newly created key may briefly receive a retryable `429`. Revocations propagate on refresh, and a replica stops accepting traces when its credential snapshot reaches 90 seconds.
-
-Lens does not need provider credentials, PostgreSQL credentials, or a GPU. Its image includes the runtime for the investigator's calculation tool. Keep the shipped security settings, temporary filesystem, and resource limits.
+The gateway forwards telemetry through a bounded asynchronous queue. If Lens is unavailable, ordinary gateway inference continues, while telemetry may be delayed or dropped after retry or queue limits. Agent exporters have their own retry behavior. Verify outage behavior for your selected deployment and exporter
 
 ## Troubleshooting
 
-If the service does not start, read its logs. For the local stack:
+From a source Compose installation:
 
-```bash
-docker compose --env-file deploy/lens/.env -f deploy/lens/stack.yaml logs --tail=100 litellm lens-worker
-```
-
-For a Helm deployment, replace the namespace:
-
-```bash
-kubectl logs --namespace "<your-namespace>" -l app.kubernetes.io/component=lens-worker --tail=100
+```sh
+docker compose -f deploy/lens/compose.yaml ps
+docker compose -f deploy/lens/compose.yaml logs --tail=100 lens clickhouse
+curl --fail http://localhost:4318/health/ready
 ```
 
 | What you see | What to check |
 | --- | --- |
-| Setup asks for `LITELLM_LENS_PUBLIC_URL` | Set the public base URL on LiteLLM, or `lensWorker.publicUrl` in Helm. Roll out that change. |
-| Lens service unavailable | Check the internal URL, connectivity between the services, and that their shared secrets match. |
-| ClickHouse unavailable | Check Lens's database URL, credentials, permissions, and network access. |
-| The test upload cannot connect | Check HTTPS routing and that the endpoint is reachable from the browser. |
-| `429` just after creating a tracing key | Wait up to 30 seconds for credential sync and retry. If it persists, check the internal service connection. |
+| Lens fails before readiness | ClickHouse connectivity, KeeperMap configuration and schema/write permissions |
+| Gateway reports Lens unavailable | Private API URL, matching service and signing credentials, compatible contract and Lens readiness |
+| Agent cannot upload | Reachable ingestion address, retained prefix and a valid tracing key |
+| Standalone login fails through HTTPS | Correct `LENS_PUBLIC_URL`, forwarded HTTPS information and the retained admin token |
+| No analysis provider is configured | Apply the analysis model settings and its server-side credential, restart and check **Settings > Analysis** |
+| A saved trace is missing after replacement | Verify the original database, persistent volume and current user's scope |
 
-Share the dashboard URL and [first-trace guide](../first-trace.md) with your developers. Give them a dedicated tracing key if they cannot create one. They do not need the shared service secret or database credentials.
+After resolving the connection, complete the [first-trace check](../deployment.md#check-the-installation). A health response does not verify stored data or provider access

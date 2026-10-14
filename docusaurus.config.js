@@ -7,61 +7,6 @@ require('dotenv').config();
 const lightCodeTheme = require('./src/utils/prismLight');
 const darkCodeTheme = require('./src/utils/prismDark');
 
-const inkeepApiKey = process.env.INKEEP_API_KEY;
-// Conditional check: docs should work if this key is missing.
-const hasInkeepSearch = Boolean(inkeepApiKey);
-
-const inkeepConfig = {
-  baseSettings: {
-    apiKey: inkeepApiKey,
-    organizationDisplayName: 'liteLLM',
-    primaryBrandColor: '#4965f5',
-    theme: {
-      styles: [
-        {
-          key: "custom-theme",
-          type: "style",
-          value: `
-            .ikp-chat-button__button {
-              margin-right: 80px !important;
-            }
-          `,
-        },
-      ],
-      syntaxHighlighter: {
-        lightTheme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    },
-  },
-  searchSettings: {
-    searchBarPlaceholder: 'Search docs, guides, API reference...',
-    debounceTimeMs: 0,
-    maxResults: 7 
-  },
-  aiChatSettings: {
-    aiAssistantName: 'LiteLLM AI',
-    chatSubjectName: 'LiteLLM',
-    aiAssistantAvatar: '/img/favicon.ico',
-    placeholder: 'Ask anything about LiteLLM...',
-    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
-    exampleQuestions: [
-      'How do I set up the LiteLLM proxy?',
-      'How do I route requests across multiple models?',
-      'How do I enable response caching?',
-      'How do I track spend per team or API key?',
-    ],
-    exampleQuestionsLabel: 'Common questions',
-    isFirstExampleQuestionHighlighted: true,
-    shouldOpenLinksInNewTab: true,
-    isCopyChatButtonVisible: true,
-    isShareButtonVisible: false,
-    prompts: [
-      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
-    ],
-  },
-};
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'liteLLM',
@@ -108,6 +53,16 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
+          {from: '/docs/tutorials/proxy_features_safety', to: '/docs/learn/add-safety'},
+          {from: '/docs/tutorials/observability_evaluation', to: '/docs/learn/observe-and-evaluate'},
+          {from: '/docs/manage_with_ai_agents', to: '/docs/ai_tools'},
+          {from: '/docs/routing-load-balancing', to: '/docs/proxy/load_balancing'},
+          {from: '/docs/guides/retrieval_knowledge', to: '/docs/guides/tools_integrations'},
+          {from: '/docs/guides/security_network', to: '/docs/guides/security_settings'},
+          {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
@@ -161,21 +116,7 @@ const config = {
         ],
       },
     ],
-    ...(hasInkeepSearch
-      ? [
-          [
-            '@inkeep/cxkit-docusaurus',
-            {
-              SearchBar: {
-                ...inkeepConfig,
-              },
-              ChatButton: {
-                ...inkeepConfig,
-              },
-            },
-          ],
-        ]
-      : []),
+    require('./plugins/docs-search'),
     [
       '@docusaurus/plugin-ideal-image',
       {
@@ -297,6 +238,10 @@ const config = {
         remarkPlugins: [require('./src/remark/raw-markdown')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
+        feedOptions: {
+          limit: 50,
+          createFeedItems: require('./src/feed/card-categories').createFeedItems,
+        },
       },
     ],
 
@@ -447,8 +392,8 @@ const config = {
       },
       docs: {
         sidebar: {
-          // No collapse-sidebar toggle at the bottom of the sidebar
-          hideable: false,
+          // Collapse chevron at the bottom of the sidebar; see src/theme/DocSidebar
+          hideable: true,
         },
       },
       navbar: {
@@ -514,9 +459,6 @@ const config = {
             className: 'header-discord-link',
             'aria-label': 'Discord / Slack community',
           },
-          ...(hasInkeepSearch
-            ? [{type: 'search', position: 'right'}]
-            : []),
         ],
       },
       footer: {

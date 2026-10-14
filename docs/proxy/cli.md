@@ -94,7 +94,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --max_requests_before_restart
    - **Default:** `None`
    - **Type:** `int`
-   - Restart worker after this many requests. This is useful for mitigating memory growth over time.
+   - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
+   - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
