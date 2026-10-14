@@ -150,7 +150,7 @@ curl -X POST http://localhost:4000/claude-code/plugins \
   }'
 ```
 
-`installation_preference` is optional and takes `available`, `auto_install`, or `required`. See [Auto-install plugins in Claude Desktop](#auto-install-plugins-in-claude-desktop).
+`installation_preference` is optional and takes `available`, `auto_install`, or `required`. It needs an `archive` source, so adding it to the github example above returns `400`. See [Auto-install plugins in Claude Desktop](#auto-install-plugins-in-claude-desktop).
 
 #### GET `/claude-code/plugins`
 
@@ -218,7 +218,7 @@ curl -X DELETE http://localhost:4000/claude-code/plugins/my-plugin \
 
 Available from v1.107.0.
 
-Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry. The field is API only, since the Admin UI has no control for it yet. `GET /claude-code/plugins`, `GET /claude-code/plugins/{name}`, and `GET /public/skill_hub` return it as `installation_preference`. The `sha256` must be the zip's 64-character hex SHA-256 digest. The digest below is only an example, so replace it with the output of `shasum -a 256 my-plugin-1.0.0.zip`:
+Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry. The field is API only, since the Admin UI has no control for it yet. `GET /claude-code/plugins`, `GET /claude-code/plugins/{name}`, and `GET /public/skill_hub` return it as `installation_preference`. The `sha256` must be the zip's 64-character hex SHA-256 digest. The digest below is only an example, so replace it with the output of `shasum -a 256 my-plugin-1.0.0.zip`. LiteLLM checks only that the digest is 64 hex characters, not that it matches the zip, and Claude Desktop installs nothing from a sync when any archive in it fails to download or fails its digest check, so one wrong digest blocks every auto-install from this marketplace:
 
 ```bash
 curl -X POST http://localhost:4000/claude-code/plugins \
@@ -250,11 +250,11 @@ The plugin's entry in `marketplace.json` then looks like this:
 }
 ```
 
-Claude Desktop honors a per-plugin `installationPreference` only when `marketplace.json` is served from its `inferenceGatewayBaseUrl` or `bootstrapUrl` origin, and only for an `archive` source with a `sha256` whose zip sits on that same origin. It does not list other source types from a `marketplace.json` URL at all, so LiteLLM answers 400 when `installation_preference` is set on a plugin that is not an `archive` source, or when `auto_install` or `required` is set on an archive without a `sha256`. LiteLLM does not check the archive's origin, so serve the zip from the same origin as the proxy yourself, for example through a path on your ingress. LiteLLM also accepts the request key as `installationPreference`, the name Claude Desktop reads, and answers 422 when one request sends both spellings.
+Claude Desktop honors a per-plugin `installationPreference` only when `marketplace.json` is served from its `inferenceGatewayBaseUrl` or `bootstrapUrl` origin, and only for an `archive` source with a `sha256` whose zip sits on that same origin. It does not list other source types from a `marketplace.json` URL at all, so LiteLLM answers 400 when `installation_preference` is set on a plugin that is not an `archive` source, or when `auto_install` or `required` is set on an archive without a `sha256`. LiteLLM does not check the archive's origin and does not serve plugin zips itself, so a path like `/plugins/` in the example returns `404` until you route it to your own file server at your ingress, on the same origin as the proxy. LiteLLM also accepts the request key as `installationPreference`, the name Claude Desktop reads, and answers 422 when one request sends both spellings.
 
 Claude Desktop 2.31226.1 treats a per-plugin `required` the same as `auto_install`. It installs the plugin on its own, but the user can still turn it off or remove it, and a removed plugin stays removed on the next sync. A whole-marketplace `required` setting in Claude Desktop is the one that stops users from removing plugins.
 
-Claude Desktop sends the marketplace URL without `?key=`, so it sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
+Claude Desktop sends the marketplace URL without `?key=`, so it sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. In Claude Desktop's own marketplace configuration, leave the entry's `installationPreference` at `available` and let the per-plugin values decide. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
 
 :::warning Older Claude Code releases
 
