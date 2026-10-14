@@ -748,7 +748,7 @@ router_settings:
 | CURSOR_API_BASE | API base URL for Cursor AI provider integration. Default is https://api.cursor.com
 | DASHSCOPE_API_BASE_IMAGE | Base URL for DashScope image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
-| DASHSCOPE_API_BASE_VIDEO | Base URL for DashScope video generation. Default is https://dashscope.aliyuncs.com
+| DASHSCOPE_API_BASE_VIDEO | Base URL for DashScope video generation. Falls back to DASHSCOPE_API_BASE without its /compatible-mode/v1 path, then https://dashscope.aliyuncs.com
 | DATABASE_HOST | Hostname for the database server
 | DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from the discrete database env vars
 | DATABASE_NAME | Name of the database
