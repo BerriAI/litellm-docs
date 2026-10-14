@@ -1,11 +1,12 @@
 import * as semver from 'semver';
 import {AREAS} from './areas';
 import type {Unit} from './areas';
+import {isoDay} from './days';
 import {fail} from './fail';
 import {GOAL_DECLARATIONS} from './goals';
 import {PLANS} from './plans';
 import {PROVIDERS} from './providers';
-import {CURRENT_VERSION, checkVersion} from './releases';
+import {CURRENT_VERSION, RELEASES, checkVersion} from './releases';
 import {ROLLOUTS} from './rollouts';
 import type {RcVersion, Rollout} from './rollouts';
 import {STAGES} from './stages';
@@ -125,6 +126,11 @@ PLANS.forEach((plan, index) => {
   if (index > 0 && semver.lte(plan.version, PLANS[index - 1].version)) {
     fail(`plans must be in release order: ${plan.version}`);
   }
+  // The timeline draws plans by date, so their dates must follow their order.
+  const after = index > 0 ? PLANS[index - 1].date : RELEASES.at(-1)!.date;
+  if (isoDay(plan.date, plan.version) !== plan.date || plan.date <= after) {
+    fail(`${plan.version} needs a day after ${after}: ${plan.date}`);
+  }
   record(plan.version, plan.rollout, 'plan');
 });
 
@@ -132,6 +138,10 @@ PLANS.forEach((plan, index) => {
 // the root of its own tree. Each goal holds its own copy of an area, weighted
 // by the points the goal gives it.
 export const GOALS: Goal[] = GOAL_DECLARATIONS.map(({areas, ...goal}) => {
+  const lastDay = PLANS.at(-1)?.date ?? RELEASES.at(-1)!.date;
+  if (isoDay(goal.endsOn, goal.id) !== goal.endsOn || goal.endsOn <= lastDay) {
+    fail(`${goal.id} needs to end after ${lastDay}: ${goal.endsOn}`);
+  }
   const children = Object.entries(areas).map(([id, points]): Area => ({...areasById.get(id)!, weight: points!}));
   return {
     ...goal,

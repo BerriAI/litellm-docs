@@ -16,6 +16,7 @@
     "update:openapi": "bash scripts/update-openapi.sh",
     "update:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs",
     "check:rust-migration-releases": "node scripts/update-rust-migration-releases.mjs --check",
+    "test:rust-migration": "node --import ./scripts/resolve-ts.mjs --test src/components/RustMigration/timeline.test.mjs src/data/rustMigration/model.test.mjs",
     "lint:writing": "node scripts/check-writing-style.js docs blog release_notes",
     "lint:docs": "python3 scripts/check-docs.py docs",
     "test:search": "node --no-experimental-require-module --test search/*.test.js",
@@ -55,6 +56,7 @@
     "remark-gfm": "4.0.1",
     "semver": "^7.8.5",
     "sharp": "0.32.6",
+    "usehooks-ts": "3.1.1",
     "vega": "^6.4.0",
     "vega-embed": "^7.2.0",
     "vega-lite": "^6.4.3"

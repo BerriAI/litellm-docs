@@ -31,3 +31,11 @@ export const STAGES = [
 ] as const satisfies readonly Stage[];
 
 export type StageId = (typeof STAGES)[number]['id'];
+
+// A stage as it reads: its id, or `done` for a finished task, which counts as
+// the last stage but has no rollout of its own.
+export type StageKind = StageId | 'done';
+
+export const kindOf = (feature: {task: boolean}, stage: number): StageKind => (feature.task ? 'done' : STAGES[stage].id);
+
+export const labelOf = (kind: StageKind): string => (kind === 'done' ? 'Done' : STAGES.find(stage => stage.id === kind)!.label);

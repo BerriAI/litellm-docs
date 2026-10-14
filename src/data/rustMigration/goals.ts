@@ -1,4 +1,5 @@
 import type {AreaId} from './areas';
+import type {IsoDay} from './days';
 
 // Goals are milestones over the areas in areas.ts. `areas` is the goal's
 // weighted scale: each area it covers and the points that area is worth, in
@@ -7,7 +8,7 @@ import type {AreaId} from './areas';
 interface GoalDeclaration {
   id: string;
   text: string;
-  endsOn: string;
+  endsOn: IsoDay;
   areas: Partial<Record<AreaId, number>>;
   summary?: string;
 }

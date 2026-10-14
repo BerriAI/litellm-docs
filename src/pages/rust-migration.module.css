@@ -129,7 +129,7 @@
   position: absolute;
   z-index: 2;
   width: max-content;
-  max-width: min(440px, calc(100% - 16px));
+  max-width: min(340px, calc(100% - 16px));
   padding: 0.7rem 0.9rem;
   font-size: 0.82rem;
   line-height: 1.45;
@@ -145,23 +145,37 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  font-weight: 600;
+}
+
+.tooltipGain {
+  font-style: normal;
+  color: var(--ifm-color-primary);
 }
 
 .tooltipDate,
 .tooltipEmpty {
+  font-size: 0.76rem;
   color: var(--ifm-color-emphasis-700);
 }
 
+.tooltipEmpty {
+  margin-top: 0.5rem;
+}
+
+/* A rule separates the change lines from the head, like a table body. */
 .tooltipList {
-  margin: 0.5rem 0 0;
-  padding: 0;
+  margin: 0.55rem 0 0;
+  padding: 0.55rem 0 0;
   list-style: none;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
 }
 
 .tooltipList li {
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1rem;
+  align-items: baseline;
 }
 
 .tooltipList li + li {
@@ -172,8 +186,9 @@
   font-weight: 600;
 }
 
-.tooltipArea em {
-  font-style: normal;
+.tooltipUnits {
+  grid-column: 1 / -1;
+  font-size: 0.76rem;
   font-weight: 400;
   color: var(--ifm-color-emphasis-700);
 }
@@ -205,6 +220,19 @@
   stroke-dasharray: 2 4;
 }
 
+/* Month lines give the long stretch before the goal a calendar scale. */
+.monthLine {
+  stroke: var(--ifm-color-emphasis-200);
+  stroke-dasharray: 2 4;
+}
+
+.monthLabel {
+  fill: var(--ifm-color-emphasis-500);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .baseline {
   stroke: var(--ifm-color-emphasis-300);
 }
@@ -218,6 +246,16 @@
   fill: var(--ifm-color-emphasis-700);
   font-size: 11px;
   font-weight: 500;
+}
+
+.labelGuide {
+  fill: none;
+  stroke: var(--ifm-color-emphasis-300);
+  pointer-events: none;
+}
+
+.labelBackground {
+  fill: var(--ifm-background-surface-color);
 }
 
 .versionDate {

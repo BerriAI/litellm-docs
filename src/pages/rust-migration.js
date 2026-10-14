@@ -1,5 +1,6 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
+import {useEventListener, useResizeObserver} from 'usehooks-ts';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
 import useBrokenLinks from '@docusaurus/useBrokenLinks';
@@ -8,34 +9,24 @@ import {
   CURRENT_VERSION,
   GOALS,
   PLANS,
-  RELEASES,
   STAGES,
-  changesIn,
+  changesBetween,
+  labelOf,
   progressAt,
-  stageAt,
+  timelineFor,
 } from '@site/src/data/rustMigration';
 import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
+import {createTimeScale, labelWidth, layoutTimelineLabels, layoutTimelineValues, monthTicks, LABEL_ROW_HEIGHT} from '@site/src/components/RustMigration/timeline';
 import picker from '@site/src/components/RustMigration/Picker.module.css';
 import styles from './rust-migration.module.css';
 
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
+const MONTH = new Intl.DateTimeFormat('en-US', {month: 'short', timeZone: 'UTC'});
 const FULL_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
 
 const formatDate = (formatter, date) => formatter.format(new Date(date));
 
-// Each goal's progress at every published release, then where the plans
-// should take it. The last published release is today.
-const GOAL_TIMELINES = new Map(GOALS.map(goal => [
-  goal.id,
-  [
-    ...RELEASES.map(release => ({
-      ...release,
-      percent: progressAt(goal, release.version),
-      isCurrent: release.version === CURRENT_VERSION,
-    })),
-    ...PLANS.map(plan => ({...plan, percent: progressAt(goal, plan.version, true), isPlan: true})),
-  ],
-]));
+const GOAL_TIMELINES = new Map(GOALS.map(goal => [goal.id, timelineFor(goal)]));
 
 // Every percent on the page is a whole number, like 13.5% as 14%.
 const wholePercent = percent => Math.round(percent);
@@ -46,77 +37,38 @@ const formatPoints = value => (Math.round(value * 10) / 10).toString();
 // A goal's progress in points of its weight, like 11.8 of 100.
 const pointsAt = (goal, version, projected = false) => (progressAt(goal, version, projected) * goal.points) / 100;
 
-function useElementWidth(fallback) {
-  const ref = useRef(null);
-  const [width, setWidth] = useState(fallback);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return undefined;
-    }
-    const observer = new ResizeObserver(([entry]) => {
-      const nextWidth = Math.round(entry.contentRect.width);
-      if (nextWidth > 0) {
-        setWidth(nextWidth);
-      }
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, width];
-}
-
-const LABEL_SPACING = 100;
-
-// Label as many points as fit without overlapping. The first release, today,
-// and the plans claim their spots first, then releases where progress moved.
-function pickLabeledPoints(points, x, goalX) {
-  const pinned = point => point.isCurrent || point.isPlan;
-  const priority = index => {
-    if (index === 0 || pinned(points[index])) {
-      return 2;
-    }
-    return points[index - 1].percent !== points[index].percent ? 1 : 0;
-  };
-  const byPriority = points
-    .map((point, index) => index)
-    .sort((a, b) => priority(b) - priority(a) || a - b);
-  const labeled = new Set();
-  for (const index of byPriority) {
-    const fits = [...labeled].every(other => Math.abs(x(index) - x(other)) >= LABEL_SPACING)
-      && (pinned(points[index]) || goalX - x(index) >= LABEL_SPACING);
-    if (priority(index) === 2 || fits) {
-      labeled.add(index);
-    }
-  }
-  return labeled;
-}
-
 function MigrationTimeline({goal}) {
   const points = GOAL_TIMELINES.get(goal.id);
-  const [chartRef, width] = useElementWidth(920);
+  const chartRef = useRef(null);
+  // Nothing is measured on the server or before the first resize, so start at a desktop width.
+  const width = Math.round(useResizeObserver({ref: chartRef}).width || 920);
   const [hovered, setHovered] = useState(null);
   const compact = width < 560;
-  const height = compact ? 240 : 336;
+  const baseHeight = compact ? 240 : 336;
   const plot = compact
     ? {left: 40, right: 20, top: 36, bottom: 56}
     : {left: 48, right: 40, top: 40, bottom: 64};
   const plotWidth = width - plot.left - plot.right;
-  const plotHeight = height - plot.top - plot.bottom;
-  const goalGap = compact ? 64 : 112;
-  // Plans get wider steps than releases so their labels never collide.
-  const planGap = compact ? 60 : 100;
-  const releaseCount = RELEASES.length;
-  const releaseEnd = plot.left + plotWidth - goalGap - PLANS.length * planGap;
-  const x = index => (index < releaseCount
-    ? plot.left + (index / (releaseCount - 1)) * (releaseEnd - plot.left)
-    : releaseEnd + (index - releaseCount + 1) * planGap);
+  const plotHeight = baseHeight - plot.top - plot.bottom;
+  const goalX = plot.left + plotWidth;
+  const dateX = createTimeScale(points[0].date, goal.endsOn, plot.left, goalX);
+  const x = index => dateX(points[index].date);
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
-  const goalX = plot.left + plotWidth;
-  const current = releaseCount - 1;
+  const axisLabel = point => ({
+    name: point.kind === 'plan' ? point.label : compactVersion(point.version),
+    date: point.kind === 'latest' && !compact ? `${formatDate(SHORT_DATE, point.date)} · latest` : formatDate(SHORT_DATE, point.date),
+  });
+  const {labels, rowCount} = layoutTimelineLabels(points.map((point, index) => {
+    const {name, date} = axisLabel(point);
+    const moved = index > 0 && points[index - 1].percent !== point.percent;
+    return {key: index, anchor: x(index), width: labelWidth(name, date), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
+  }), goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)), width);
+  const values = layoutTimelineValues(points, x, y);
+  const height = baseHeight + (rowCount - 1) * LABEL_ROW_HEIGHT;
+  const current = points.findIndex(point => point.kind === 'latest');
   const linePath = points
-    .slice(0, releaseCount)
+    .slice(0, current + 1)
     .map((point, index) => (index === 0 ? `M${x(0)},${y(point.percent)}` : `H${x(index)}V${y(point.percent)}`))
     .join('');
   const areaPath = `${linePath}V${baseline}H${x(0)}Z`;
@@ -125,7 +77,6 @@ function MigrationTimeline({goal}) {
     .slice(current)
     .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
     .join('') + `L${goalX},${y(100)}`;
-  const labeled = pickLabeledPoints(points, x, goalX);
 
   return (
     <div className={styles.chartBody} ref={chartRef}>
@@ -141,11 +92,9 @@ function MigrationTimeline({goal}) {
       >
         <desc id="timeline-description">
           {wholePercent(points[current].percent)} percent of {goal.text} is migrated in {CURRENT_VERSION}.
-          {PLANS.map(plan => {
-            const point = points.find(candidate => candidate.version === plan.version);
-            return ` ${plan.label} is planned to reach ${wholePercent(point.percent)} percent.`;
-          })}
+          {points.filter(point => point.kind === 'plan').map(point => ` ${point.label} is planned to reach ${wholePercent(point.percent)} percent.`)}
           {' '}The goal targets 100 percent by {goal.endsOn}.
+          {' '}Horizontal distance represents elapsed time on the same scale for releases, plans, and the goal.
         </desc>
         <defs>
           <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
@@ -153,6 +102,16 @@ function MigrationTimeline({goal}) {
             <stop offset="100%" className={styles.areaEnd} />
           </linearGradient>
         </defs>
+        {monthTicks(points[0].date, goal.endsOn).map(month => (
+          <g key={month}>
+            <line className={styles.monthLine} x1={dateX(month)} x2={dateX(month)} y1={plot.top - 18} y2={baseline} />
+            {goalX - dateX(month) >= 96 && (
+              <text className={styles.monthLabel} x={dateX(month) + 4} y={plot.top - 8}>
+                {formatDate(MONTH, month)}
+              </text>
+            )}
+          </g>
+        ))}
         {[0, 50, 100].map(tick => (
           <g key={tick}>
             <line
@@ -168,12 +127,22 @@ function MigrationTimeline({goal}) {
         <path d={areaPath} fill="url(#progress-area)" />
         <path className={styles.goalLine} d={projectionPath} fill="none" />
         <path className={styles.progressLine} d={linePath} />
+        {[...labels].map(([index, label]) => (
+          <path
+            key={index}
+            className={styles.labelGuide}
+            // Straight down when the date still falls under its label.
+            d={`M${x(index)},${baseline + 4}L${Math.min(Math.max(x(index), label.x - label.width / 2), label.x + label.width / 2)},${baseline + 12 + label.row * LABEL_ROW_HEIGHT}`}
+          />
+        ))}
         {points.map((point, index) => {
           const cx = x(index);
           const cy = y(point.percent);
-          const date = formatDate(SHORT_DATE, point.date);
-          const pinned = point.isCurrent || point.isPlan;
-          const pointClass = point.isPlan ? styles.planPoint : point.isCurrent ? styles.mainPoint : styles.progressPoint;
+          const pinned = point.kind !== 'release';
+          const pointClass = {release: styles.progressPoint, latest: styles.mainPoint, plan: styles.planPoint}[point.kind];
+          const label = labels.get(index);
+          const labelY = label && baseline + 26 + label.row * LABEL_ROW_HEIGHT;
+          const value = values.get(index);
           return (
             <g
               key={point.version}
@@ -186,28 +155,33 @@ function MigrationTimeline({goal}) {
             >
               <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
               <circle className={pointClass} cx={cx} cy={cy} r={pinned ? 5 : 3.5} />
-              {pinned && (
-                <text
-                  className={`${styles.pointValue} ${point.isPlan ? styles.planValue : ''}`}
-                  x={cx}
-                  y={cy - 12}
-                  textAnchor="middle"
-                >
+              {point.kind === 'latest' && (
+                // Up and to the left, clear of the projection rising to the right.
+                <text className={styles.pointValue} x={cx - 6} y={cy - 9} textAnchor="end">
                   {wholePercent(point.percent)}%
                 </text>
               )}
-              {labeled.has(index) && (
-                <text
-                  className={`${styles.versionLabel} ${point.isCurrent ? styles.mainVersionLabel : ''} ${point.isPlan ? styles.planVersionLabel : ''}`}
-                  x={cx}
-                  y={baseline + 26}
-                  textAnchor={compact && index === 0 ? 'start' : 'middle'}
-                >
-                  <tspan x={cx}>{point.isPlan ? point.label : compactVersion(point.version)}</tspan>
-                  <tspan className={styles.versionDate} x={cx} dy="16">
-                    {point.isCurrent && !compact ? `${date} · today` : date}
-                  </tspan>
-                </text>
+              {value && (
+                <>
+                  {value.y < cy - 12 && <line className={styles.labelGuide} x1={cx} x2={cx} y1={cy - 7} y2={value.y + 3} />}
+                  <text className={`${styles.pointValue} ${styles.planValue}`} x={cx} y={value.y} textAnchor="middle">
+                    {wholePercent(point.percent)}%
+                  </text>
+                </>
+              )}
+              {label && (
+                <>
+                  <rect className={styles.labelBackground} x={label.x - label.width / 2 - 4} y={labelY - 12} width={label.width + 8} height={34} />
+                  <text
+                    className={`${styles.versionLabel} ${{release: '', latest: styles.mainVersionLabel, plan: styles.planVersionLabel}[point.kind]}`}
+                    x={label.x}
+                    y={labelY}
+                    textAnchor="middle"
+                  >
+                    <tspan x={label.x}>{axisLabel(point).name}</tspan>
+                    <tspan className={styles.versionDate} x={label.x} dy="16">{axisLabel(point).date}</tspan>
+                  </text>
+                </>
               )}
             </g>
           );
@@ -227,37 +201,38 @@ function MigrationTimeline({goal}) {
         </g>
       </svg>
       {hovered !== null && (
-        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} anchor={{x: x(hovered), y: y(points[hovered].percent)}} />
+        <PointTooltip goal={goal} point={points[hovered]} previous={points[hovered - 1] ?? null} anchor={{x: x(hovered), y: y(points[hovered].percent)}} />
       )}
     </div>
   );
 }
 
 const TOOLTIP_LINES = 4;
-const TOOLTIP_UNITS = 4;
+const TOOLTIP_UNITS = 3;
+
+// Units under one group share its name once, like `Cloud auth: Azure, Google
+// Cloud`, and a long list ends in a count.
+function unitList(features) {
+  const groups = new Set(features.map(feature => feature.path.length > 2 ? feature.path[1] : null));
+  const group = groups.size === 1 ? [...groups][0] : null;
+  const names = features.map(feature => feature.path.slice(group ? 2 : 1).join(' / '));
+  const list = names.length > TOOLTIP_UNITS
+    ? `${names.slice(0, TOOLTIP_UNITS).join(', ')} +${names.length - TOOLTIP_UNITS} more`
+    : names.join(', ');
+  return group ? `${group}: ${list}` : list;
+}
 
 // One line per area and stage, so six providers moving together read as one
-// change. `from` is where the units stood before, when they all stood in one
-// place. A plan's lines come from what it expects to move.
+// change. A plan's lines come from what it expects to move. A whole area needs
+// no unit list; anything less names its units, since that is what moved.
 function summarizeChanges(goal, point, previous) {
-  const projected = Boolean(point.isPlan);
-  return changesIn(point.version, goal.features, projected).map(({key, area, stage, features}) => {
-    const before = new Set(features.map(feature => stageAt(feature, previous.version, projected)));
-    const names = features.map(feature => feature.path.slice(1).join(' / '));
-    // A whole provider list reads as "All providers"; shared work is named,
-    // since "All" says nothing about what got done.
-    return {
-      key,
-      area: area.text,
-      units: !area.groundwork && features.length === area.features.length && names.length > 1
-        ? 'All providers'
-        : names.length > TOOLTIP_UNITS
-          ? `${names.slice(0, TOOLTIP_UNITS).join(', ')} +${names.length - TOOLTIP_UNITS} more`
-          : names.join(', '),
-      from: before.size === 1 && !features[0].task ? STAGES[[...before][0]].label : null,
-      to: features[0].task ? 'Done' : STAGES[stage].label,
-    };
-  });
+  return changesBetween(goal, point.version, previous?.version ?? null, point.kind === 'plan').map(change => ({
+    key: change.key,
+    area: change.area.text,
+    units: change.wholeArea ? null : unitList(change.features),
+    from: change.from && labelOf(change.from),
+    to: labelOf(change.kind),
+  }));
 }
 
 const TOOLTIP_GAP = 14;
@@ -267,26 +242,27 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, 
 
 // Where a tooltip of `size` goes inside `bounds` next to `anchor`: beside the
 // point on whichever side has room, or centered over it and kept inside the
-// card when neither side does, as on a phone. `bounds.top` is negative, since
-// a tall tooltip may rise over the sentence above the chart.
+// card when neither side does, as on a phone. Points sit low on the chart, so
+// the tooltip rises from the point into the empty space above the line rather
+// than covering the axis labels. `bounds.top` is negative, since a tall tooltip
+// may rise over the sentence above the chart.
 function placeTooltip(anchor, size, bounds) {
   const right = anchor.x + TOOLTIP_GAP;
   const left = anchor.x - TOOLTIP_GAP - size.width;
   const fitsRight = right + size.width <= bounds.width - TOOLTIP_MARGIN;
   const fitsLeft = left >= TOOLTIP_MARGIN;
   const preferLeft = anchor.x > bounds.width / 2;
-  const x = fitsLeft && (preferLeft || !fitsRight)
-    ? left
-    : fitsRight
-      ? right
-      : clamp(anchor.x - size.width / 2, TOOLTIP_MARGIN, bounds.width - size.width - TOOLTIP_MARGIN);
-  const y = clamp(anchor.y - size.height / 2, bounds.top + TOOLTIP_MARGIN, bounds.bottom - size.height - TOOLTIP_MARGIN);
+  const beside = fitsLeft && (preferLeft || !fitsRight) ? left : fitsRight ? right : null;
+  const x = beside ?? clamp(anchor.x - size.width / 2, TOOLTIP_MARGIN, bounds.width - size.width - TOOLTIP_MARGIN);
+  const bottom = beside === null ? anchor.y - TOOLTIP_GAP : anchor.y + TOOLTIP_GAP;
+  const y = clamp(bottom - size.height, bounds.top + TOOLTIP_MARGIN, bounds.bottom - size.height - TOOLTIP_MARGIN);
   return {left: x, top: y};
 }
 
 function PointTooltip({goal, point, previous, anchor}) {
   const lines = summarizeChanges(goal, point, previous);
   const shown = lines.slice(0, TOOLTIP_LINES);
+  const gain = previous ? wholePercent(point.percent) - wholePercent(previous.percent) : 0;
   const ref = useRef(null);
   // Hidden until measured, since where it fits depends on its own size.
   const [position, setPosition] = useState(null);
@@ -311,26 +287,29 @@ function PointTooltip({goal, point, previous, anchor}) {
       role="tooltip"
     >
       <div className={styles.tooltipHead}>
-        <strong>{point.isPlan ? `${point.label} · ${compactVersion(point.version)}` : compactVersion(point.version)}</strong>
-        <span>{wholePercent(point.percent)}%</span>
+        <strong>{point.kind === 'plan' ? point.label : compactVersion(point.version)}</strong>
+        <span>
+          {wholePercent(point.percent)}%
+          {gain > 0 && <em className={styles.tooltipGain}> +{gain}</em>}
+        </span>
       </div>
       <div className={styles.tooltipDate}>
-        {point.isPlan ? `Planned for ${formatDate(FULL_DATE, point.date)}: ${point.summary}` : `Released ${formatDate(FULL_DATE, point.date)}`}
+        {point.kind === 'plan'
+          ? `${compactVersion(point.version)} · planned for ${formatDate(SHORT_DATE, point.date)}`
+          : `Released ${formatDate(SHORT_DATE, point.date)}`}
       </div>
       {lines.length === 0 ? (
-        <div className={styles.tooltipEmpty}>Nothing moved for {goal.text} in this release.</div>
+        <div className={styles.tooltipEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</div>
       ) : (
         <ul className={styles.tooltipList}>
           {shown.map(line => (
             <li key={line.key}>
-              <span className={styles.tooltipArea}>
-                {line.area}
-                <em> · {line.units}</em>
-              </span>
+              <span className={styles.tooltipArea}>{line.area}</span>
               <span className={styles.tooltipStage}>
                 {line.from && <em>{line.from} → </em>}
                 {line.to}
               </span>
+              {line.units && <span className={styles.tooltipUnits}>{line.units}</span>}
             </li>
           ))}
           {lines.length > shown.length && (
@@ -635,20 +614,18 @@ function syncHash(details) {
 // opens it first so the target is visible.
 function Faq() {
   const listRef = useRef(null);
-  useEffect(() => {
-    const openHashTarget = () => {
-      const id = hashId();
-      const target = id && document.getElementById(id);
-      const details = target && listRef.current?.contains(target) && target.closest('details');
-      if (details && !details.open) {
-        details.open = true;
-        target.scrollIntoView();
-      }
-    };
-    openHashTarget();
-    window.addEventListener('hashchange', openHashTarget);
-    return () => window.removeEventListener('hashchange', openHashTarget);
-  }, []);
+  const openHashTarget = () => {
+    const id = hashId();
+    // Only targets inside the list, which may sit deep inside an answer.
+    const target = id ? listRef.current?.querySelector(`#${CSS.escape(id)}`) : null;
+    const details = target?.closest('details');
+    if (details && !details.open) {
+      details.open = true;
+      target.scrollIntoView();
+    }
+  };
+  useEffect(openHashTarget, []);
+  useEventListener('hashchange', openHashTarget);
 
   return (
     <section className={styles.section} id="faq" aria-labelledby="faq-title">

@@ -1,4 +1,6 @@
+import type {IsoDay} from './days';
 import type {RcVersion} from './rollouts';
+import type {StageKind} from './stages';
 
 // The page model is a tree. Every node below a goal has a `weight` among its
 // siblings, and its progress is the weighted mean of its children's, down to
@@ -45,7 +47,7 @@ export interface Area extends Group {
 export interface Goal {
   id: string;
   text: string;
-  endsOn: string;
+  endsOn: IsoDay;
   summary?: string;
   // The sum of its areas' points.
   points: number;
@@ -55,13 +57,33 @@ export interface Goal {
 
 export interface Release {
   version: string;
-  date: string;
+  date: IsoDay;
 }
 
-// One area entering one stage together, like six OCR providers going Rust default.
+// One area entering one stage together, like six OCR providers going Rust
+// default. Finished tasks are their own change even beside units going Rust only.
 export interface Change {
   key: string;
   area: Area;
-  stage: number;
+  kind: StageKind;
   features: Feature[];
 }
+
+// A change as a goal's timeline describes it: the stage its units left when
+// they all left the same one, and whether they are the whole of a real area.
+export interface ChangeSummary extends Change {
+  from: StageKind | null;
+  wholeArea: boolean;
+}
+
+interface PointBase {
+  version: string;
+  date: IsoDay;
+  // Unrounded, like progressAt.
+  percent: number;
+}
+
+// One dot on a goal's timeline: a published release, the latest one, or a plan.
+export type TimelinePoint =
+  | (PointBase & {kind: 'release' | 'latest'})
+  | (PointBase & {kind: 'plan'; label: string});

@@ -1,19 +1,18 @@
 import * as semver from 'semver';
-import {STAGES} from './stages';
-import type {Change, Feature, Goal, Group} from './types';
+import {PLANS} from './plans';
+import {CURRENT_VERSION, RELEASES} from './releases';
+import {STAGES, kindOf} from './stages';
+import type {StageKind} from './stages';
+import type {Change, ChangeSummary, Feature, Goal, Group, TimelinePoint} from './types';
 
-export {STAGES};
-export {PLANS} from './plans';
+export {STAGES, PLANS, kindOf};
+export {labelOf} from './stages';
+export type {StageKind} from './stages';
+export type {IsoDay} from './days';
 export type {Plan} from './plans';
-export type {Area, Change, Feature, Goal, Group, Release} from './types';
-export {
-  CURRENT_VERSION,
-  LATEST_STABLE_VERSION,
-  MAIN_VERSION,
-  RC_RELEASES,
-  RELEASES,
-  STABLE_RELEASES,
-} from './releases';
+export type {Area, Change, ChangeSummary, Feature, Goal, Group, Release, TimelinePoint} from './types';
+export {CURRENT_VERSION, RELEASES};
+export {LATEST_STABLE_VERSION, MAIN_VERSION, RC_RELEASES, STABLE_RELEASES} from './releases';
 export {FEATURES, GOALS, ROLLOUT_VERSIONS} from './model';
 
 // The steps that count: shipped ones, plus planned ones when `projected`.
@@ -54,11 +53,47 @@ export function changesIn(version: string, features: Feature[], projected = fals
       .filter(step => step.version === version)
       .reduce((highest, step) => Math.max(highest, step.stage), -1);
     if (stage >= 0) {
-      const key = `${feature.area.id}:${stage}`;
-      const change = changes.get(key) ?? {key, area: feature.area, stage, features: []};
+      const kind = kindOf(feature, stage);
+      const key = `${feature.area.id}:${kind}`;
+      const change = changes.get(key) ?? {key, area: feature.area, kind, features: []};
       change.features.push(feature);
       changes.set(key, change);
     }
   }
   return [...changes.values()];
+}
+
+// What `version` moved for `goal` since `previous`, the point before it on the
+// timeline. The first point has no previous one, so nothing says where it came from.
+export function changesBetween(goal: Goal, version: string, previous: string | null, projected = false): ChangeSummary[] {
+  return changesIn(version, goal.features, projected).map(change => {
+    const before = new Set<StageKind>(previous === null
+      ? []
+      : change.features.map(feature => STAGES[stageAt(feature, previous, projected)].id));
+    return {
+      ...change,
+      from: change.kind !== 'done' && before.size === 1 ? [...before][0] : null,
+      wholeArea: !change.area.groundwork && change.features.length > 1 && change.features.length === change.area.features.length,
+    };
+  });
+}
+
+// A goal's progress at every published release, the last of which is the
+// latest, then where the plans should take it.
+export function timelineFor(goal: Goal): TimelinePoint[] {
+  return [
+    ...RELEASES.map(({version, date}): TimelinePoint => ({
+      kind: version === CURRENT_VERSION ? 'latest' : 'release',
+      version,
+      date,
+      percent: progressAt(goal, version),
+    })),
+    ...PLANS.map(({version, date, label}): TimelinePoint => ({
+      kind: 'plan',
+      version,
+      date,
+      label,
+      percent: progressAt(goal, version, true),
+    })),
+  ];
 }

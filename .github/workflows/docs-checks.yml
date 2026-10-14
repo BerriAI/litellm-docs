@@ -17,6 +17,8 @@ jobs:
       - run: npm ci
       - run: npm run test:search
       - run: npm run test:workshop
+      - run: npm run typecheck
+      - run: npm run test:rust-migration
       - run: npm run build
   social-cards:
     runs-on: ubuntu-latest
