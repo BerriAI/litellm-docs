@@ -62,7 +62,7 @@ The examples below assume an Airia guardrail targeted at LiteLLM that blocks sec
 
 ```shell
 curl -sSL http://0.0.0.0:4000/v1/chat/completions \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "gpt-4o-mini",
@@ -88,7 +88,7 @@ The text after `Message:` is the block message configured on the Airia guardrail
 
 ```shell
 curl -sSL http://0.0.0.0:4000/v1/chat/completions \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "gpt-4o-mini",
@@ -103,7 +103,7 @@ The call succeeds. The model receives `Contact me at [EmailAddress1]` and respon
 
 ```shell
 curl -sSL http://0.0.0.0:4000/v1/chat/completions \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "gpt-4o-mini",
