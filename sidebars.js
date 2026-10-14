@@ -1485,6 +1485,7 @@ const sidebars = {
           "providers/github_copilot",
           "providers/gmi",
           "providers/gradient_ai",
+          "providers/gradium",
           "providers/heroku",
           { type: "category", label: "HuggingFace", items: [
             "providers/huggingface",
