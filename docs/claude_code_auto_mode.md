@@ -50,7 +50,7 @@ The classifier runs on every turn that ends in a tool call, so pick a fast, chea
 
 The classifier call goes through the router like any other request, so `model_list` aliases, fallbacks, and cooldowns apply to it. It is never retried. The proxy waits at most 30 seconds for its answer, and a shorter `timeout` under the classifier deployment's `litellm_params` ends the wait earlier.
 
-Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same model access checks it would run if the caller asked for that model directly, for the key, team, team member, user, project, end user, and agent. It then checks the per-model budgets of the key, team, user, team member, and end user, the caller's TPM headroom, and any RPM limit set on the classifier model itself, without using any of it. The overall RPM limits of the key, team, and user are left out of that check, since the Claude Code request already counted against them. The classifier call's tokens count toward the caller's TPM and spend, but the call takes no request slot, so it adds nothing to any RPM count. A failed access check or a spent budget turns the classifier off for the session (see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used)). A full RPM or TPM window, or a check the proxy could not run, only skips the classifier for that one response (see [When the Classifier Fails](#when-the-classifier-fails)).
+Every virtual key that runs Claude Code needs access to the classifier model. Before the classifier call, the proxy runs the same model access checks it would run if the caller asked for that model directly, for the key, team, team member, user, project, end user, and agent. It then checks the overall and per-model budgets of the key, team, user, team member, and end user, the caller's TPM headroom, and any RPM limit set on the classifier model itself, without using any of it. As on a direct call, a classifier model priced at zero skips the budget checks. The overall RPM limits of the key, team, and user are left out of that check, since the Claude Code request already counted against them. The classifier call's tokens count toward the caller's TPM and spend, but the call takes no request slot, so it adds nothing to any RPM count. A refused access check or a spent budget turns the classifier off for the session (see [When the Classifier Cannot Be Used](#when-the-classifier-cannot-be-used)). A full RPM or TPM window, or a check the proxy could not run, only skips the classifier for that one response (see [When the Classifier Fails](#when-the-classifier-fails)).
 
 ## How It Works
 
@@ -172,7 +172,7 @@ When tool calls keep coming back `unavailable`, look for `safeguards classifier`
 
 ## When the Classifier Cannot Be Used
 
-When the caller has no access to the classifier model, has spent a per-model budget that covers it, or the proxy has no deployment for the model the setting names, the proxy returns no per-tool verdicts:
+When the caller has no access to the classifier model, has spent a budget that covers it, or the proxy has no deployment for the model the setting names, the proxy returns no per-tool verdicts:
 
 ```json
 "safeguard_results": [{"type": "dangerous_tool_use", "status": {"type": "unsupported"}}]
