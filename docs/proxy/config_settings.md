@@ -118,6 +118,7 @@ callback_settings:
 general_settings:
   completion_model: string
   store_prompts_in_spend_logs: boolean
+  spend_logs_metadata_fields: object  # {include: [string]} or {exclude: [string]}, which LiteLLM_SpendLogs.metadata keys are written to the db
   forward_client_headers_to_llm_api: boolean
   disable_spend_logs: boolean  # turn off writing each transaction to the db
   disable_master_key_return: boolean  # turn off returning master key on UI (checked on '/user/info' endpoint)
@@ -125,9 +126,13 @@ general_settings:
   disable_reset_budget: boolean  # turn off reset budget scheduled task
   disable_adding_master_key_hash_to_db: boolean  # turn off storing master key hash in db, for spend tracking
   disable_responses_id_security: boolean  # turn off response ID security checks that prevent users from accessing other users' responses
+  responses_websocket_session_limit_seconds: 3600  # max lifetime of a /v1/responses WebSocket session, from connect. 60-7200, default 3600
   allow_unmanaged_response_ids: boolean  # let keys address response IDs this proxy never issued, e.g. raw provider IDs
+  vector_store_deny_by_default: boolean  # if true, a vector store must be granted in object_permission.vector_stores of the key and its team (or the user when there is neither); empty lists grant nothing
   disable_auto_add_proxy_admin_to_teams: boolean  # if true, a proxy admin calling /team/new is no longer auto-added to the new team as team admin
-  enforce_fallback_model_access: boolean  # if true, router_settings fallbacks only run when the calling key, team and project may call the fallback model
+  search_tool_deny_by_default: boolean  # if true, a search tool must be granted in object_permission.search_tools of the key and its team (or the user when there is neither); empty lists grant nothing
+  disable_fallbacks_on_per_model_rate_limits: boolean  # if true, a key/team/org/project per-model rate limit (model_rpm_limit / model_tpm_limit) returns 429 instead of retrying on router_settings fallbacks
+  enforce_fallback_model_access: boolean  # default true; router_settings fallbacks only run when the calling key, team and project may call the fallback model. Set false to run them regardless
   enforce_fallback_budget: boolean  # default true; set false to let router_settings fallbacks run even when the calling key or user is out of budget
   enable_jwt_auth: boolean  # allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims
   enforce_user_param: boolean  # requires all openai endpoint requests to have a 'user' param
@@ -239,6 +244,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | cache | boolean | `false` | If true, enables caching. [Further docs](./caching) |
 | cache_params | object | `{}` (`type` defaults to `redis`) | Parameters for the cache. [Further docs](./caching_settings#supported-cache_params-on-proxy-configyaml) |
 | enable_redis_auth_cache | boolean | `false` | When `true`, stores virtual-key auth payloads in Redis (same client as response caching) so every worker/pod shares cached auth lookups—fewer repeated database reads on cache misses. **Requires `cache: true` and `cache_params.type: redis`** (Redis or Redis Cluster). Optional: set `general_settings.user_api_key_cache_ttl` so TTL applies consistently to memory and Redis. [Further docs](./caching_redis#virtual-key-authentication-cache-redis) |
+| force_redis_hash_tag_grouping | boolean | `false` | When `true`, the rate limiter groups the keys of its Redis Lua scripts by hash slot even when the cache is a plain Redis connection rather than a Redis Cluster. Set this for single-endpoint Redis services that still reject cross-slot commands, such as Azure Managed Redis with the Enterprise clustering policy; without it those services fail the batched `EVALSHA` calls with `CROSSSLOT Keys in request don't hash to the same slot` and rate limits fall back to per-pod memory. |
 | disable_end_user_cost_tracking | boolean | `false` | If true, turns off end user cost tracking on prometheus metrics + litellm spend logs table on proxy. |
 | enable_end_user_cost_tracking_prometheus_only | boolean | `false` | If true, includes the `end_user` label on Prometheus metrics. Disabled by default to keep Prometheus cardinality bounded. [Further docs](./prometheus#tracking-end_user-on-prometheus) |
 | cost_discount_config | object | `{}` | Provider-specific percentage discounts applied to cost calculations. Configure under `litellm_settings`. [Further docs](./provider_discounts) |
@@ -289,9 +295,12 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | disable_reset_budget | boolean | `false` | If true, turns off reset budget scheduled task |
 | disable_adding_master_key_hash_to_db | boolean | n/a | **No longer read by the proxy**; the code that wrote the master key hash to the DB was removed in [litellm#8268](https://github.com/BerriAI/litellm/pull/8268). If true, turns off storing master key hash in db |
 | disable_responses_id_security | boolean | `false` | If true, disables response ID security checks that prevent users from accessing response IDs from other users. When false (default), response IDs are encrypted with user information to ensure users can only access their own responses. Applies to /v1/responses endpoints |
+| responses_websocket_session_limit_seconds | float | `3600` | Maximum lifetime in seconds of a Responses API WebSocket session on `/v1/responses` and `/responses`, counted from when the connection is accepted. Idle connections stay open until their first `response.create` frame, up to this limit. When it is reached the proxy closes the socket with code `1000` and reason `Session duration limit reached`. Must be between 60 and 7200; any other value logs a warning and falls back to 3600. [Docs](../response_api#session-duration-limit) |
 | allow_unmanaged_response_ids | boolean | `false` | If true, lets keys address response IDs this proxy never issued, such as raw provider IDs or IDs handed out before response ID encryption was on. When false (default), those IDs are refused with 403 because the proxy cannot tell who owns them. IDs the proxy did issue stay owner-checked either way. Applies to /v1/responses endpoints |
 | disable_auto_add_proxy_admin_to_teams | boolean | `false` | When a user calls `/team/new`, LiteLLM auto-adds that caller to the new team as a team admin. Set this to `true` so proxy admins are no longer auto-added; members you explicitly list in `members_with_roles` are still added, and non-admin callers (e.g. internal users) are still auto-added. Also toggleable from the Admin UI under **Settings > Router Settings > General Settings**. |
-| enforce_fallback_model_access | boolean | `false` | Default `false`. When `true`, a fallback configured in `router_settings` (`fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks`, `default_fallbacks`) only runs if the calling key, its team and its project are allowed to call the fallback model; unauthorized targets are skipped and the primary model's error is returned when none remain. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
+| search_tool_deny_by_default | boolean | `false` | If true, a request may only use a search tool listed in `object_permission.search_tools` of its key and team, of the team for a keyless team member, or of the user when there is neither. Missing or empty lists grant nothing, and web search interception no longer falls back to the default provider. The master key and dashboard sessions are exempt. [More information here](../search/index.md#restrict-search-tool-access) |
+| disable_fallbacks_on_per_model_rate_limits | boolean | `false` | Default `false`. When `true`, a request rejected by a key, team, organization or project per-model rate limit (`model_rpm_limit` / `model_tpm_limit`) returns 429 instead of retrying on the `router_settings` fallbacks. Other local rate limits keep falling back as before. [More information here](users#per-model-rate-limits-and-fallbacks) |
+| enforce_fallback_model_access | boolean | `true` | Default `true`. A fallback configured in `router_settings` (`fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks`, `default_fallbacks`) only runs if the calling key, its team and its project are allowed to call the fallback model; unauthorized targets are skipped and the primary model's error is returned when none remain. Set to `false` to let fallbacks run regardless of model access. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
 | enforce_fallback_budget | boolean | `true` | Default `true`. A fallback configured in `router_settings` only runs if the calling key and user are still within budget; over-budget targets are skipped and the primary model's error is returned when none remain. Zero-cost fallback targets are always allowed, and the primary attempt is never blocked. Set to `false` to let fallbacks run regardless of budget. [More information here](reliability#enforce-budget-on-fallbacks) |
 | enable_jwt_auth | boolean | `false` | allow proxy admin to auth in via jwt tokens with 'litellm_proxy_admin' in claims. [Doc on JWT Tokens](token_auth) |
 | enforce_user_param | boolean | `false` | If true, requires all OpenAI endpoint requests to have a 'user' param. [Doc on call hooks](call_hooks)|
@@ -340,8 +349,10 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | image_generation_model | str | `null` | The default model to use for image generation - ignores model set in request |
 | store_model_in_db | boolean | `false` | If true, enables storing model + credential information in the DB. |
 | supported_db_objects | List[str] | `null` | Fine-grained control over which object types to load from the database when `store_model_in_db` is True. Available types: `"models"`, `"mcp"`, `"guardrails"`, `"vector_stores"`, `"pass_through_endpoints"`, `"prompts"`, `"model_cost_map"`. If not set, all object types are loaded (default behavior). Example: `supported_db_objects: ["mcp"]` to only load MCP servers from DB. |
+| vector_store_deny_by_default | boolean | `false` | If true, a request may only use a vector store listed in `object_permission.vector_stores` of its key and team, of the team for a keyless team member, or of the user when there is neither. Missing or empty lists grant nothing. The master key and dashboard sessions are exempt. [Doc on denying vector stores by default](../vector_stores/managed_vector_stores#deny-vector-stores-by-default) |
 | user_mcp_management_mode | string | `null` | Controls what non-admins can see on the MCP dashboard. `restricted` (default) only lists MCP servers that the user’s teams are explicitly allowed to access. `view_all` lets every user see the full MCP server list. Tool list/call always respects per-key permissions, so users still cannot run MCP calls without access. |
 | store_prompts_in_spend_logs | boolean | `false` | If true, allows prompts and responses to be stored in the spend logs table. |
+| spend_logs_metadata_fields | object | `null` (every key written) | Which top-level keys of `LiteLLM_SpendLogs.metadata` are written to the database. Set exactly one of `include` (write only these keys) or `exclude` (drop these keys); setting both, neither, or an unknown key stops the proxy at startup. `status` and `cold_storage_object_key` are always written. Daily spend tables, budgets and logging callbacks still see every key. See [Choose which metadata fields are stored](./ui_logs.md#choose-which-metadata-fields-are-stored) |
 | scope_spend_list_endpoints_to_caller | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true` (default), `/spend/keys` and `/spend/users` return only the caller's rows for non-admin API keys. Set to `false` to disable scoping. See [Spend list endpoints](./cost_tracking.md#spend-list-endpoints-spendkeys-and-spendusers). |
 | legacy_unscoped_spend_list_endpoints | boolean | n/a | **No longer read by the proxy**; `/spend/keys` and `/spend/users` always scope non-admin callers to their own rows. When `true`, restores pre-scoping behavior for `/spend/keys` and `/spend/users` (non-admin keys may list all rows). Overrides `scope_spend_list_endpoints_to_caller`. Env: `LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS`. |
 | max_request_size_mb | int | `null` (no limit) | The maximum size for requests in MB. Requests above this size will be rejected. |
@@ -355,7 +366,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | blocked_file_extensions | List[str] | `null` (none blocked) | Deprecated, prefer `allowed_file_extensions`. File extensions (e.g. `[".exe", ".sh"]`) rejected on upload to `/v1/files`, for any `purpose`. Matched case-insensitively against the uploaded filename. Still enforced after the allowlist when both are set. Unset means no extensions are blocked. |
 | proxy_budget_rescheduler_min_time | int | `597` (seconds) | The minimum time (in seconds) to wait before checking db for budget resets. **Default is 597 seconds** |
 | proxy_budget_rescheduler_max_time | int | `605` (seconds) | The maximum time (in seconds) to wait before checking db for budget resets. **Default is 605 seconds** |
-| proxy_batch_write_at | int | `10` (seconds) | Time (in seconds) to wait before batch writing spend logs to the db. **Default is 10 seconds** |
+| proxy_batch_write_at | int | `10` (seconds) | Time (in seconds) to wait before batch writing spend logs to the db. **Default is 10 seconds**. It also sets the Redis TTL of the spend counters that enforce budgets to 10x this value, with a floor of 1 hour, so a counter outlives the batched write. A larger `litellm_settings.default_redis_ttl` applies to those counters instead |
 | proxy_batch_polling_interval | int | `3600` (seconds) | Time (in seconds) to wait before polling a batch, to check if it's completed. The poller adds up to 30s of jitter on top. **Default is 3600 seconds (1 hour)** |
 | proxy_config_reload_interval_seconds | int | `30` | How often each pod reloads config-in-DB objects (models, credentials, guardrails, etc.) from the database when `store_model_in_db` is enabled. Lower values speed up cross-pod convergence at the cost of more DB load; applied on proxy startup. Env: `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS`. **Default is 30 seconds** |
 | scheduled_job_stagger | dict | `null` (staggering on, 300s window) | Spreads the proxy's scheduled background jobs across a window instead of firing them together on every replica. Keys: `enabled` (bool, default `true`), `window_seconds` (int, default `300`), `identity` (str, replaces the `POD_NAME`/`HOSTNAME`-derived component of the offset hash), `offsets` (dict of scheduler job id to seconds, where `0` pins a job to its unshifted schedule). See [Staggering scheduled jobs](./prod.md#stagger-scheduled-background-jobs) |
@@ -388,7 +399,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
-| litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise.md#how-do-i-set-up-and-verify-an-enterprise-license) |
+| litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
 | pass_through_request_timeout | float | `null` | Upstream request timeout in seconds for pass-through routes (custom endpoints and native provider passthrough). Default: `600`. Per-endpoint `timeout` overrides this on custom endpoints. On native provider passthrough routes a deployment or router timeout and an explicitly set `litellm_settings.request_timeout` override it. [Docs](./pass_through#request-timeouts) |
@@ -398,6 +409,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | maximum_spend_logs_retention_period | str                   | `null` (cleanup disabled) | Used to set the max retention time for spend logs in the db, after which they will be auto-purged                                                                                                                                                                                                                             |
 | maximum_daily_tag_spend_retention_period | str                   | `null` (table never pruned) | Deletes `LiteLLM_DailyTagSpend` rows whose day is strictly older than the retention horizon, on the same cleanup job. See [spend logs deletion](./spend_logs_deletion) |
 | maximum_spend_logs_retention_interval | str                   | `1d` | Used to set the interval in which the spend log cleanup task should run in.                                                                                                                                                                                                                                                   |
+| maximum_spend_logs_cleanup_run_on_startup | boolean | `false` | If true, the interval-scheduled retention cleanup runs once shortly after every proxy startup (60 to 360 seconds by default, tuned with `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` and `SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS`, and never later than one interval) and after retention settings change at runtime, then follows `maximum_spend_logs_retention_interval`. Use it when the proxy restarts more often than the interval. Ignored when `maximum_spend_logs_cleanup_cron` is set. See [spend log deletion](spend_logs_deletion). |
 | alert_type_config | dict | `null` | Configuration mapping alert types to their handler settings |
 | always_include_stream_usage | boolean | `false` | If true, includes usage metrics in every streaming response chunk |
 | sse_keepalive_ping_interval_seconds | Optional[float] | `null` (off) | Proxy-wide default for the streaming keepalive described in [Timeouts](./timeout#keepalive-pings-for-idle-streaming-connections). Applies to every deployment that doesn't set its own `keepalive_seconds`, and to pass-through routes, which have no deployment of their own. Also covers the window before the upstream has answered at all, which per-deployment `keepalive_seconds` cannot reach. Defaults to None (off). |
@@ -619,6 +631,8 @@ router_settings:
 | AWS_BEDROCK_RUNTIME_ENDPOINT | Endpoint URL for the Bedrock runtime, used when neither `api_base` nor `aws_bedrock_runtime_endpoint` is passed per request. Overrides the endpoint LiteLLM would otherwise derive from the AWS region
 | AWS_DEFAULT_REGION | Default AWS region for service interactions when AWS_REGION is not set
 | AWS_PROFILE_NAME | AWS CLI profile name to be used
+| AWS_RDS_READ_REPLICA_REGION | Signing-region override for the read-replica RDS IAM token when `IAM_TOKEN_DB_AUTH=True`. Defaults to the region in the replica's RDS hostname, then the process AWS region. Never inherits `AWS_RDS_REGION`; empty or whitespace values count as unset
+| AWS_RDS_REGION | Signing-region override for the writer RDS IAM token when `IAM_TOKEN_DB_AUTH=True`. Defaults to the region in the writer's RDS hostname, then the process AWS region. Empty or whitespace values count as unset
 | AWS_REGION | AWS region for service interactions (takes precedence over AWS_DEFAULT_REGION)
 | AWS_REGION_NAME | Default AWS region for service interactions
 | AWS_ROLE_ARN | ARN of the AWS IAM role to assume for authentication
@@ -681,6 +695,7 @@ router_settings:
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
 | BEDROCK_MIN_THINKING_BUDGET_TOKENS | Minimum thinking budget in tokens for Bedrock reasoning models. Bedrock returns a 400 error if budget_tokens is below this value. Requests with lower values are clamped to this minimum. Default is 1024
+| BEDROCK_REALTIME_CLOSE_TIMEOUT_SECONDS | Timeout in seconds for the Bedrock Nova Sonic realtime input-stream close sequence after a client disconnects. Default is 5.0
 | BFL_API_BASE | Base URL for Black Forest Labs image generation and editing
 | BLACK_FOREST_LABS_API_KEY | API key for Black Forest Labs, read after `BFL_API_KEY`
 | BRAINTRUST_API_KEY | API key for Braintrust integration
@@ -733,6 +748,7 @@ router_settings:
 | CURSOR_API_BASE | API base URL for Cursor AI provider integration. Default is https://api.cursor.com
 | DASHSCOPE_API_BASE_IMAGE | Base URL for DashScope image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
+| DASHSCOPE_API_BASE_VIDEO | Base URL for DashScope video generation. Default is https://dashscope.aliyuncs.com
 | DATABASE_HOST | Hostname for the database server
 | DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from the discrete database env vars
 | DATABASE_NAME | Name of the database
@@ -839,10 +855,12 @@ router_settings:
 | QWEN_AI_PLATFORM_API_BASE | Base URL for Qianwen AI Platform (mainland China). Default is https://dashscope.aliyuncs.com/compatible-mode/v1
 | QWEN_AI_PLATFORM_API_BASE_IMAGE | Base URL for Qianwen AI Platform image generation. Default is https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | QWEN_AI_PLATFORM_API_BASE_RERANK | Base URL for Qianwen AI Platform rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
+| QWEN_AI_PLATFORM_API_BASE_VIDEO | Base URL for Qianwen AI Platform video generation. Default is https://dashscope.aliyuncs.com
 | QWEN_AI_PLATFORM_API_KEY | API key for Qianwen AI Platform, read before the `DASHSCOPE_API_KEY` fallback
 | QWENCLOUD_API_BASE | Base URL for QwenCloud. Default is https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 | QWENCLOUD_API_BASE_IMAGE | Base URL for QwenCloud image generation. Default is https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 | QWENCLOUD_API_BASE_RERANK | Base URL for QwenCloud rerank. Default is https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks
+| QWENCLOUD_API_BASE_VIDEO | Base URL for QwenCloud video generation. Default is https://dashscope-intl.aliyuncs.com
 | QWENCLOUD_API_KEY | API key for QwenCloud, read before the `DASHSCOPE_API_KEY` fallback
 | REDIS_AZURE_AD_TOKEN | Flag enabling Azure AD authentication for Redis. Set it to `true`, not to a token. Ignored with a warning when a GCP IAM service account is configured as well. **Default is False**
 | REDUCTO_API_KEY | API key for Reducto OCR
@@ -877,9 +895,9 @@ router_settings:
 | VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
 | VLLM_API_BASE | Base URL for a self-hosted vLLM server
 | VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
-| VOYAGE_AI_API_KEY | Alias for the Voyage AI API key, read after `VOYAGE_API_KEY`
-| VOYAGE_AI_TOKEN | Last of the three accepted names for the Voyage AI API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
-| VOYAGE_API_BASE | Base URL for Voyage AI rerank requests
+| VOYAGE_AI_API_KEY | Alias for the VoyageAI by MongoDB API key, read after `VOYAGE_API_KEY`
+| VOYAGE_AI_TOKEN | Last of the three accepted names for the VoyageAI by MongoDB API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
+| VOYAGE_API_BASE | Base URL for VoyageAI by MongoDB rerank requests; without it a MongoDB-issued key (`al-`) goes to ai.mongodb.com and any other key to api.voyageai.com
 | WANDB_API_BASE | Base URL for Weights & Biases Inference. Default is https://api.inference.wandb.ai/v1
 | WATSONX_IAM_URL | IBM Cloud IAM token endpoint used to exchange a watsonx API key for a bearer token. Default is https://iam.cloud.ibm.com/identity/token
 | WATSONX_REGION | Region for watsonx.ai, with `WX_REGION` and then `REGION` accepted as fallbacks
@@ -1268,6 +1286,7 @@ router_settings:
 | LITELLM_LOCAL_BLOG_POSTS | When set to `True`, uses the local bundled blog posts only, disabling remote fetching from GitHub. Default is `False`
 | LITELLM_LOCAL_MODEL_COST_MAP | Set to `True` to use the model cost map bundled with the package (`litellm/model_prices_and_context_window_backup.json`) only, disabling the remote fetch from GitHub at startup and on `/reload/model_cost_map`. Default is `False`: the remote file is fetched at startup and the bundled copy is only used as a fallback if the fetch fails
 | LITELLM_LOCAL_POLICY_TEMPLATES | When set to "true", uses local backup policy templates instead of fetching from GitHub. Policy templates are fetched from https://raw.githubusercontent.com/BerriAI/litellm/main/policy_templates.json by default, with automatic fallback to local backup on failure
+| LITELLM_LOCAL_WHATS_NEW | When set to `True`, uses the What's new launch list bundled with the package only, disabling the remote fetch from GitHub. Default is `False`
 | LITELLM_LOG | Enable detailed logging for LiteLLM
 | LITELLM_MODEL_COST_MAP_URL | URL for fetching model cost map data. Default is https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
 | LITELLM_LOGGER_NAME | Name for OTEL logger 
@@ -1302,6 +1321,7 @@ router_settings:
 | LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES | When set to "true", routes all OpenAI /chat/completions requests through the Responses API bridge. Recommended for OpenAI models. Can also be set via `litellm_settings.route_all_chat_openai_to_responses`
 | LITELLM_GEMINI_LIVE_DEFER_SETUP | When set to "true", defers Gemini/Vertex Live setup until the client sends `session.update` (required for runtime tool injection). Default is "false" for backwards compatibility, which auto-sends setup on connect. Can also be set via `litellm.gemini_live_defer_setup`
 | LITELLM_USER_AGENT | Custom user agent string for LiteLLM API requests. Used for partner telemetry attribution
+| LITELLM_WHATS_NEW_URL | Custom URL for the JSON list of launches shown under What's new on the Admin UI Home page. Default is the `litellm/proxy/public_endpoints/whats_new.json` file on the GitHub main branch
 | LITELLM_WORKER_STARTUP_HOOKS | Comma-separated list of `module.path:function_name` callables to run in each worker process during startup. Runs early in the worker lifecycle (before config/DB loading). Useful for re-initializing per-process state like [gflags](https://github.com/google/python-gflags). See [Worker Startup Hooks](/docs/proxy/worker_startup_hooks) for details
 | LITELLM_PRINT_STANDARD_LOGGING_PAYLOAD | If true, prints the standard logging payload to the console - useful for debugging
 | LITELLM_PRISMA_BOOTSTRAP_TIMEOUT | Seconds allowed for the one-time install of the Node toolchain the Prisma CLI runs on, performed once per container before any migration. Raise it on slow or bandwidth-constrained nodes where the install takes longer than ten minutes. A non-positive or non-numeric value is ignored with a warning and the default applies. **Default is 600**
@@ -1578,12 +1598,15 @@ router_settings:
 | SPEND_LOG_QUEUE_SIZE_THRESHOLD | Threshold for spend log queue size before processing. Default is 100
 | SPEND_LOG_WRITE_BATCH_MAX_BYTES | Max serialized payload, in bytes, of a single spend-log write statement sent to the database. Also bounds each `LiteLLM_SpendLogToolIndex` and `LiteLLM_SpendLogGuardrailIndex` write statement, which fan out to one row per tool or guardrail per request. Bounds the Prisma query engine's resident memory, which is a high-water mark set by the largest statement it executes. Lower it if pods store prompts and responses and you need a tighter memory floor. Default is 2000000
 | SPEND_LOG_WRITE_BATCH_MAX_ROWS | Max rows in a single spend-log, tool index, or guardrail index write statement, applied alongside `SPEND_LOG_WRITE_BATCH_MAX_BYTES` so whichever budget binds first splits the statement. The query engine costs memory per row as well as per byte, so this is the budget that binds when `store_prompts_in_spend_logs` is off and rows are small. Raise it to trade memory for fewer round trips. Default is 100
+| SPEND_ROLLUP_LOCK_TIMEOUT_MS | Longest time, in milliseconds, a daily spend rollup transaction (`LiteLLM_DailyUserSpend`, `LiteLLM_DailyToolSpend`, `LiteLLM_DailyModelUsage`, per-entity spend increments) may wait for a row another pod is updating before Postgres cancels the statement (`lock_timeout`, SQLSTATE 55P03). A cancelled statement never applied, so the writer requeues its rows for the next flush and the pooled connection is released instead of staying pinned behind the holder. Lower it when a fleet shares a few hot rollup rows and pods report `too many clients already`; raise it if flush logs show lock timeouts on a healthy database. Default is 5000
 | SPEND_LOG_QUEUE_MAX_BYTES | Memory budget, in bytes, for spend logs waiting in memory to be written. When the database is unreachable the failed batch is requeued instead of dropped, so the queue grows for as long as the outage lasts; past this budget the oldest logs are dropped and an error is logged. Raise it to keep more spend through a longer outage, lower it on memory-constrained pods, especially when prompts and responses are stored in spend logs. Default is 64000000
 | SPEND_LOG_CLEANUP_MAX_CONSECUTIVE_BATCH_FAILURES | Number of consecutive batch failures tolerated before the spend log cleanup run aborts. Default is 3
 | SPEND_LOG_CLEANUP_BATCH_FAILURE_BACKOFF_SECONDS | Backoff in seconds between failed spend log cleanup batches. Default is 0.5
 | SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS | Wall-clock budget in seconds for a whole spend log cleanup run, shared across every table it cleans. The run stops when the budget is spent and resumes from the same cutoff on the next tick. Sets the default for `general_settings.maximum_spend_logs_cleanup_run_budget`, which overrides it when set. Default is 300
 | SPEND_LOG_CLEANUP_BATCH_TIMEOUT_SECONDS | Postgres `statement_timeout` and `lock_timeout` in seconds applied to every statement a spend log cleanup run issues, so no single statement holds a lock while user traffic queues behind it. Sets the default for `general_settings.maximum_spend_logs_cleanup_batch_timeout`, which overrides it when set. Default is 30
 | SPEND_LOG_CLEANUP_REMAINING_COUNT_CAP | Upper bound on the probe that counts how many expired rows are still waiting, so reporting the backlog cannot itself become a full scan of a large table. Counts saturate at this value. Default is 100000
+| SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS | Seconds after proxy startup before the first interval-scheduled retention cleanup run (spend logs, health checks, autorouter sessions, daily tag spend). Only used when `general_settings.maximum_spend_logs_cleanup_run_on_startup` is true. Later runs follow `maximum_spend_logs_retention_interval`. Default is 60
+| SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS | Upper bound on the random extra delay added to `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` so replicas that boot together do not all run the first cleanup at once. Only used when `general_settings.maximum_spend_logs_cleanup_run_on_startup` is true. Default is 300
 | SPEND_COUNTER_RESEED_LOCKS_MAX_SIZE | Max size of the per-counter LRU lock dict used to coalesce concurrent spend-counter reseeds from the DB on the enforcement path. Default is 10000.
 | COROUTINE_CHECKER_MAX_SIZE_IN_MEMORY | Maximum size for CoroutineChecker in-memory cache. Default is 1000
 | DEFAULT_SHARED_HEALTH_CHECK_TTL | Time-to-live in seconds for cached health check results in shared health check mode. Default is 300 (5 minutes)

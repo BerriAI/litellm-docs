@@ -360,8 +360,9 @@
 .oneClickBadges {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.6rem;
-  flex: none;
+  flex: 0 1 auto;
 }
 .oneClickBadges img {
   display: block;

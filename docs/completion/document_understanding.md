@@ -1,3 +1,7 @@
+---
+sidebar_label: "PDF Input"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

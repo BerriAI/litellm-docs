@@ -1,3 +1,7 @@
+---
+sidebar_label: "Retries & Fallbacks"
+---
+
 # Reliability - Retries, Fallbacks
 
 LiteLLM helps prevent failed requests in 2 ways: 

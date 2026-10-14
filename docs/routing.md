@@ -12,6 +12,7 @@ keywords:
     high availability,
     reliability,
   ]
+sidebar_label: "Routing Strategies"
 ---
 
 import Image from '@theme/IdealImage';
@@ -1072,6 +1073,8 @@ Traffic mirroring allows you to "mimic" production traffic to a secondary (silen
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
+
+A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./proxy/reliability.md#explanation)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">

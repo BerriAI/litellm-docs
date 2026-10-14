@@ -128,6 +128,7 @@ When both the key and its team list skills, the key gets the intersection of the
 | `category` | Category shown in the marketplace |
 | `keywords` | Tags for search and filtering |
 | `version` | Semver string; defaults to `1.0.0` on create |
+| `installation_preference` | From v1.107.0. Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop). Needs an `archive` source, and `auto_install` and `required` also need its `sha256`. Claude Desktop treats a per-plugin `required` like `auto_install`, so users can still remove it |
 | `author` | `{"name": "...", "email": "..."}` |
 | `homepage` | Homepage URL |
 
@@ -149,7 +150,7 @@ When both the key and its team list skills, the key gets the intersection of the
 | `POST /claude-code/plugins` | Proxy admin | Create a skill (`409` if the name exists) |
 | `GET /claude-code/plugins` | Any key | List the skills visible to the caller. `?enabled_only=true` returns only public skills |
 | `GET /claude-code/plugins/{name}` | Any key | Get one skill (`403` if it is disabled and not granted to the caller) |
-| `PUT /claude-code/plugins/{name}` | Proxy admin | Replace a skill. Omitted fields reset to their defaults, and `version` is cleared if omitted |
+| `PUT /claude-code/plugins/{name}` | Proxy admin | Replace a skill. Omitted fields reset to their defaults, and `version` and `installation_preference` are cleared if omitted |
 | `POST /claude-code/plugins/{name}/enable` | Proxy admin | Publish a skill |
 | `POST /claude-code/plugins/{name}/disable` | Proxy admin | Unpublish a skill |
 | `DELETE /claude-code/plugins/{name}` | Proxy admin | Delete a skill |

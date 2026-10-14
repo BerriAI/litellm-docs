@@ -195,6 +195,8 @@ curl http://0.0.0.0:4000/v1/audio/speech \
   --output gemini_speech.mp3
 ```
 
+From v1.107.0, OpenAI voice names such as `alloy` map to a Gemini prebuilt voice (`alloy` becomes `Kore`). Pass a Gemini voice name such as `Kore` or `Puck` to pick one directly; the full mapping is in the [Gemini provider docs](./providers/gemini#voice-names).
+
 ### Vertex AI Text-to-Speech
 
 #### Python SDK Usage

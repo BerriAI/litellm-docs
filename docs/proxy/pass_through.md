@@ -231,6 +231,35 @@ general_settings:
 | `include_subpath: false` (default) | Only `/custom-api` is forwarded |
 | `include_subpath: true` | `/custom-api`, `/custom-api/v1/chat`, `/custom-api/anything` are all forwarded |
 
+### Restricting Keys and Teams to Routes
+
+An endpoint with `auth: true` rejects non-admin keys with a 403 unless the key or its team lists the route in `allowed_passthrough_routes`. The key's list is used when it has one; otherwise the team's list applies. To carve a route back out of a broader grant, add it to `denied_passthrough_routes`. A deny on the key or on its team always wins over an allow, so a team can grant `/custom-api` while one key, or the whole team, is blocked from `/custom-api/admin`
+
+```bash
+curl -X POST http://localhost:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "allowed_passthrough_routes": ["/custom-api"],
+    "denied_passthrough_routes": ["/custom-api/admin"]
+  }'
+```
+
+`/team/new`, `/team/update` and `/key/update` take the same two fields, and both are stored in the key or team `metadata`. With the key above:
+
+| Request | Result |
+|---------|--------|
+| `/custom-api/v1/chat` | Forwarded |
+| `/custom-api/admin`, `/custom-api/admin/users` | 403 naming the matched `denied_passthrough_routes` entry |
+| `/custom-api/administrator` | Forwarded, since an entry only matches whole path segments |
+| `/custom-api/public/../admin/users`, `/custom-api//admin/users` | 403, the path is checked as it will be forwarded |
+
+An entry matches its exact path and everything under it, a trailing `/` on an entry is ignored, and a trailing `*` matches any route that starts with the text before it (`/custom-api/adm*`). A more specific allow cannot re-open a route under a denied prefix. Team endpoint listings also hide the authenticated endpoints a team denies
+
+The deny list is checked against the path LiteLLM forwards, after `..`, `//` and percent-encoding are resolved, and it matches that path exactly. Variants that LiteLLM forwards unchanged, such as `/custom-api/ADMIN`, `/custom-api/admin;x=1`, a trailing `%20` or a backslash, are not denied. If your upstream treats those as the same path, grant only the routes a key needs with `allowed_passthrough_routes` instead of relying on a deny entry
+
+Both fields are Enterprise features, and only proxy admins can set or change them. A non-admin update that would change, clear or drop an existing deny list, including by replacing `metadata`, gets a 403. Proxy admin keys are not restricted by either list. The deny list only applies to custom endpoints with `auth: true`; endpoints with `auth: false` and LiteLLM's built-in provider routes such as `/anthropic/*` ignore it
+
 ---
 
 ### Default Query Parameters

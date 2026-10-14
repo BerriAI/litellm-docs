@@ -4,6 +4,8 @@
 
 This is available on `/v1/chat/completions`, `/v1/messages` (Anthropic format), and `/v1/responses`.
 
+This guardrail only compacts tool results and never blocks a request. To block prompt injection or other policy violations with Jev, use the [Decision Model guardrail](./decision_model.md).
+
 ## How it works
 
 The guardrail runs in-process during the `pre_call` step and calls TypeSafe's hosted API (`https://api.typesafe.ai`), so there is no extra service to deploy. Only the proxy talks to TypeSafe. Request input is the only thing rewritten; responses pass through untouched.

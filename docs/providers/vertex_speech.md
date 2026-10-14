@@ -307,6 +307,8 @@ asyncio.run(main())
 
 Gemini models with audio output capabilities using the chat completions API.
 
+The Voice Mapping table above is for Chirp. For Gemini TTS, pass a Gemini prebuilt voice name such as `Kore`, or from v1.107.0 an OpenAI voice name, which maps to a Gemini voice as listed in the [Gemini provider docs](./gemini#voice-names).
+
 :::warning
 **Limitations:**
 - Only supports `pcm16` audio format

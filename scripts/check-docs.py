@@ -18,9 +18,12 @@ Every check here is deterministic and fails the build:
   model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
+  card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
+  card-too-long       card_title over 40 characters or card_summary over 120, which the Home card cannot show in full
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
+  python3 scripts/check-docs.py blog --only=card-missing,card-too-long   run only the named rules
 
 Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
 block that is intentionally a fragment.
@@ -292,6 +295,22 @@ def strip_inline_code(text):
     return INLINE_CODE_RE.sub("", text)
 
 
+DAY_ZERO_TAG = "day 0 support"
+CARD_FIELD_MAX = {"card_title": 40, "card_summary": 120}
+
+
+def check_launch_card(page, err):
+    tags = page.frontmatter.get("tags", "")
+    if DAY_ZERO_TAG not in tags.lower():
+        return
+    for field, limit in CARD_FIELD_MAX.items():
+        value = page.frontmatter.get(field, "").strip()
+        if not value:
+            err("card-missing", 1, f"`{DAY_ZERO_TAG}` post has no `{field}`; the Admin UI Home card needs it")
+        elif len(value) > limit:
+            err("card-too-long", 1, f"`{field}` is {len(value)} characters, max {limit}")
+
+
 def check_page(page, site, page_cache):
     errors = []
     rel = os.path.relpath(page.path, REPO_ROOT)
@@ -301,6 +320,8 @@ def check_page(page, site, page_cache):
 
     if page.unclosed_fence_line:
         err("fence-unclosed", page.unclosed_fence_line, "code fence is never closed")
+
+    check_launch_card(page, err)
 
     for line_no, raw in enumerate(page.lines, 1):
         for name in unknown_model_roles(raw):
@@ -567,6 +588,7 @@ def summarize_yaml_error(e):
 
 def main(argv):
     roots = [a for a in argv if not a.startswith("--")] or ["docs"]
+    only = {rule for a in argv if a.startswith("--only=") for rule in a[len("--only="):].split(",") if rule}
     files = []
     for root in roots:
         files.extend(collect_files(os.path.join(REPO_ROOT, root) if not os.path.isabs(root) else root))
@@ -576,7 +598,7 @@ def main(argv):
     for path in files:
         page = page_cache.get(path) or Page(path)
         page_cache[path] = page
-        all_errors.extend(check_page(page, site, page_cache))
+        all_errors.extend(e for e in check_page(page, site, page_cache) if not only or e[0] in only)
 
     by_rule = {}
     for rule, rel, line_no, message in all_errors:

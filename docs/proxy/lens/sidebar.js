@@ -5,12 +5,29 @@ module.exports = {
   label: 'LiteLLM Lens',
   link: {type: 'doc', id: 'proxy/lens/index'},
   items: [
-    {type: 'doc', id: 'proxy/lens/deployment', label: 'Deployment'},
+    {
+      type: 'category',
+      label: 'Set up Lens',
+      link: {type: 'doc', id: 'proxy/lens/deployment'},
+      items: [
+        'proxy/lens/deployment/local',
+        'proxy/lens/deployment/litellm',
+        'proxy/lens/deployment/kubernetes',
+        'proxy/lens/deployment/server',
+        'proxy/lens/deployment/docker-compose',
+        'proxy/lens/deployment/docker',
+        'proxy/lens/deployment/storage',
+        'proxy/lens/deployment/configuration',
+        'proxy/lens/deployment/releases',
+        'proxy/lens/deployment/upgrades',
+        'proxy/lens/deployment/development',
+      ],
+    },
     {type: 'doc', id: 'proxy/lens/first-trace', label: 'Send your first trace'},
     {
       type: 'category',
       label: 'Integrations',
-      items: [...imported.integrations, 'proxy/lens/integrations/openclaw', 'proxy/lens/integrations/hermes'],
+      items: ['proxy/lens/framework-examples', ...imported.integrations, 'proxy/lens/integrations/openclaw', 'proxy/lens/integrations/hermes'],
     },
     {
       type: 'category',
@@ -20,5 +37,6 @@ module.exports = {
     },
     'proxy/lens/investigations',
     'proxy/lens/api',
+    {type: 'doc', id: 'proxy/lens/scalability', label: 'Scalability design'},
   ],
 };

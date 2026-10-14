@@ -241,7 +241,7 @@ Set `models` on a customer to limit which models requests made on its behalf can
 
 Entries follow the same rules as key and team `models`, so a wildcard such as `anthropic/*` or a model access group name works here too
 
-Client-supplied `fallbacks` are checked against the customer's list too, as are router fallbacks when `enforce_fallback_model_access` is enabled
+Client-supplied `fallbacks` are checked against the customer's list too, as are router fallbacks unless `enforce_fallback_model_access` is set to `false`
 
 ```bash showLineNumbers title="Create a customer limited to one model"
 curl -L -X POST 'http://localhost:4000/customer/new' \

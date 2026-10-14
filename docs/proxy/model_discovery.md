@@ -14,6 +14,7 @@ Use this to give users an accurate list of models available behind provider endp
 - VLLM
 - Vertex AI
 - Eden AI
+- Bedrock
 
 ### Usage
 
@@ -128,6 +129,25 @@ litellm_settings:
 ```
 
 The listing reflects that one key's access. A provider key that a caller forwards on the `/v1/models` request (see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)) is not used for discovery, so users whose own keys can see different models all get the same list, and a listed model can still fail with a given user's key. When neither the deployment key nor the environment variable is set, the wildcard route adds nothing to `/v1/models`
+
+## Bedrock
+
+A `bedrock/*` deployment lists the ids its credentials can invoke on demand in its region: the active system-defined inference profiles (`us.`, `global.` and the other regional prefixes) plus the foundation models that support on-demand throughput. Models that only run through a profile, application inference profiles and provisioned throughput are not listed, so every id in the list answers a request
+
+```yaml
+model_list:
+  - model_name: bedrock/*
+    litellm_params:
+      model: bedrock/*
+      aws_region_name: us-east-1
+      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+The listing signs with the deployment's AWS credentials (keys, `aws_role_name`, `aws_profile_name`, web identity, or the default chain), or with a Bedrock API key (`api_key` or `AWS_BEARER_TOKEN_BEDROCK`), and needs two IAM permissions the invoke path does not: `bedrock:ListInferenceProfiles` and `bedrock:ListFoundationModels`. It calls the Bedrock control plane (`bedrock.<region>.amazonaws.com`), not the runtime endpoint, so a VPC that only exposes `bedrock-runtime` needs a `bedrock` interface endpoint too. When the permissions are missing or the control plane does not answer, the deployment adds nothing to `/v1/models` and the proxy logs `Error getting valid models` on each listing call
 
 ## Hide a model from `/v1/models`
 

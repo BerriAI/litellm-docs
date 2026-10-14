@@ -559,6 +559,63 @@ li.tabs__item--active {
   color: #f9fafb;
 }
 
+/* Sidebar cluster labels and cross-section links (sidebars.js):
+   - { type: "html", className: "sidebar-group-label" } draws a hairline and a
+     small cluster name inside a long list, without another level of nesting.
+   - className: "sidebar-xlink" adds an arrow to a link that opens a page in
+     another section or tab. */
+.menu__list-item.sidebar-group-label {
+  margin-top: 8px;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  padding: 10px 12px 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-menu-color);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.menu__list-item.sidebar-group-label:first-child {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 4px;
+}
+.sidebar-xlink > .menu__link::after,
+.menu__link.sidebar-xlink::after {
+  content: "\2197";
+  margin-left: 6px;
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+
+/* "Enterprise" pill after the label of license-gated pages
+   (className "sidebar-enterprise" in sidebars.js). */
+.sidebar-enterprise > .menu__link::after {
+  content: 'Enterprise';
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .sidebar-enterprise > .menu__link::after {
+  border-color: rgba(147, 197, 253, 0.3);
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+}
+
 /* Consistent row height for all top-level items */
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible,
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible--active {
@@ -785,26 +842,6 @@ video {
 [data-theme='dark'] .header-discord-link::before {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E")
     no-repeat center / contain;
-}
-
-/* =========================================
-   SEARCH BAR — hide from navbar (it lives in sidebar)
-   ========================================= */
-[class^='navbarSearchContainer'],
-[class*='navbarSearchContainer'] {
-  display: none !important;
-}
-
-/* =========================================
-   INKEEP AI CHAT BUTTON — minimal floating style
-   ========================================= */
-.ikp-chat-button__button {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
-  margin-right: 1rem !important;
-  margin-bottom: 1rem !important;
 }
 
 /* =========================================
@@ -1086,6 +1123,49 @@ div[class*='announcementBar'] a:hover {
 
 [data-theme='dark'] div[class*='announcementBar'] {
   background: #1a5fb4 !important;
+}
+
+/* Decisions launch bar: a faint wash of the theme accent (logo blue in
+   light, teal in dark) with the text in the accent itself. The whole bar
+   is the link: the stretched ::after covers the bar, and the close button
+   sits above it. */
+/* .theme-announcement-bar is the outer bar only. The older rules above also
+   match its inner placeholder and content divs, so reset those here. */
+.theme-announcement-bar:has(a.announcement-link) {
+  position: relative;
+  background: color-mix(in srgb, var(--ifm-color-primary) 9%, var(--ifm-background-surface-color)) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--ifm-color-primary) 22%, transparent) !important;
+}
+
+.theme-announcement-bar:has(a.announcement-link) div[class*='announcementBar'] {
+  position: static !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+div[class*='announcementBar'] a.announcement-link {
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none !important;
+  font-weight: 400 !important;
+  margin-left: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+div[class*='announcementBar'] a.announcement-link:hover {
+  opacity: 1;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+div[class*='announcementBar'] button {
+  position: relative;
+  z-index: 1;
+  color: var(--ifm-color-emphasis-600);
 }
 
 /* Contact page cards */
@@ -1506,8 +1586,9 @@ body {
   box-shadow: inset 0 0 0 1px var(--aurora-accent-line);
 }
 
-/* ---------- Code blocks: thin gradient edge, soft shadow ---------- */
-.theme-code-block {
+/* ---------- Code blocks and screenshots: thin gradient edge, soft shadow ---------- */
+.theme-code-block,
+.docs-screenshot {
   --prism-background-color: var(--aurora-code-bg) !important;
   border: 1px solid transparent;
   border-radius: 14px !important;
@@ -1516,6 +1597,18 @@ body {
     var(--aurora-grad-border) border-box !important;
   box-shadow: var(--aurora-shadow) !important;
   overflow: hidden;
+}
+
+.docs-screenshot {
+  margin: 0 0 var(--ifm-leading);
+  padding: var(--ifm-pre-padding);
+}
+
+.docs-screenshot img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
 }
 
 .theme-code-block pre {
@@ -1865,8 +1958,7 @@ article a.card:hover {
   border-bottom: 0 !important;
 }
 
-/* When search is not configured (no Inkeep key, e.g. local builds) the slot
-   renders empty; collapse it instead of leaving a gap under the header. */
+/* Collapse an empty search slot instead of leaving a gap under the header. */
 [class*='searchBarSection']:has([class*='searchBarInner']:empty) [class*='searchBarInner'] {
   display: none;
 }
@@ -2338,8 +2430,141 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   border-top-left-radius: 16px;
 }
 
+/* Every page gets the same icon-only navbar trigger, including blog pages. */
+.navbar__right-col {
+  display: flex;
+  align-items: center;
+}
+
+.navbar [class*='navbarSearchContainer'] {
+  position: static;
+  padding: 0;
+  order: -1;
+}
+
+.navbar [class*='navbarSearchContainer'] > button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: var(--ifm-navbar-link-color);
+}
+
+.navbar [class*='navbarSearchContainer'] > button > span,
+.navbar [class*='navbarSearchContainer'] > button > kbd {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .navbar__brand {
+    margin-right: 8px;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button {
+    width: 32px;
+  }
+}
+
+.navbar-sidebar .docs-mobile-search {
+  padding: 8px 12px 16px;
+}
+
+.navbar-sidebar .docs-mobile-search > button {
+  min-height: 44px;
+}
+
+.navbar-sidebar .docs-mobile-search kbd {
+  display: none;
+}
+
+.navbar-sidebar .docs-mobile-search + .navbar-sidebar__back {
+  top: 0;
+}
+
 /* Light/dark pairs from IdealImage `dark` and ThemedVideo, before hydration */
 [data-theme='light'] .themed-media--dark,
 [data-theme='dark'] .themed-media--light {
   display: none;
+}
+
+/* =========================================
+   Sidebar section captions. Set in sidebars.js:
+   { type: "html", className: "sidebar-caption" } heads a set of top-level groups
+   (Get started, Products, Features, Developer Tools, Reference, More).
+   Group labels and cross-section links are styled above, with the
+   Enterprise pill.
+   ========================================= */
+.menu__list-item.sidebar-caption {
+  padding: 18px 12px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ifm-menu-color);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.menu > .menu__list > .menu__list-item.sidebar-caption:first-child {
+  padding-top: 4px;
+}
+
+/* Parts of the LiteLLM Gateway (className "sidebar-rail" in sidebars.js): a
+   thin rail in a faint tint of the primary color ties AI Gateway, MCP Gateway,
+   Agent Gateway and Auto Router to the LiteLLM Gateway item above them. The rail runs through
+   the spacing between items, so it reads as one continuous line. */
+.menu > .menu__list > .menu__list-item.sidebar-rail {
+  margin-top: 0;
+  /* Level-1 categories carry margin-bottom: 0.25rem !important elsewhere */
+  margin-bottom: 0 !important;
+  margin-left: 14px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  border-left: 1.5px solid color-mix(in srgb, var(--ifm-color-primary) 28%, transparent);
+}
+
+/* Status tags after a sidebar label (sidebars.js className):
+   "sidebar-beta" and "sidebar-preview". */
+.sidebar-beta > .menu__link::after,
+.sidebar-preview > .menu__link::after {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.sidebar-beta > .menu__link::after {
+  content: "Beta";
+  background: #efe8fb;
+  color: #6b3fb8;
+}
+.sidebar-preview > .menu__link::after {
+  content: "Preview";
+  background: #efe8fb;
+  color: #6b3fb8;
+}
+[data-theme='dark'] .sidebar-beta > .menu__link::after,
+[data-theme='dark'] .sidebar-preview > .menu__link::after {
+  background: rgba(196, 166, 255, 0.14);
+  color: #c4a6ff;
+}
+
+
+/* Collapsed docs sidebar: a 40px strip for the expand chevron. Doubled
+   :root so it wins over the theme's own :root value, which loads later. */
+:root:root {
+  --doc-sidebar-hidden-width: 40px;
 }

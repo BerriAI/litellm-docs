@@ -32,6 +32,14 @@ import QuickStartBox from '@site/src/components/QuickStartBox';
 uv add litellm
 ```
 
+### A leaner SDK installation
+
+For applications that use the Python SDK directly, `litellm-core` provides the shared SDK with fewer mandatory dependencies and without the bundled dashboard or gateway CLI entry points. Python imports remain unchanged: continue using `litellm`
+
+Install `litellm-core` in a fresh environment instead of installing `litellm`. Add AWS and Python Hugging Face tokenizer packages when your application needs them. The two distributions cannot be installed together because they share the same Python files
+
+See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, package selection, and optional dependencies. Existing `litellm` installations retain their current dependency defaults
+
 To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
 
 ---
@@ -431,7 +439,7 @@ items={[
 icon: "🔀",
 title: "Routing & Load Balancing",
 description: "Load balance across deployments and set automatic fallbacks.",
-to: "/docs/routing-load-balancing",
+to: "/docs/proxy/load_balancing",
 },
 {
 icon: "🔑",

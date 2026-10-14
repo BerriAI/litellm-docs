@@ -6,6 +6,18 @@ on:
     branches: [main]
 
 jobs:
+  docs-search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:search
+      - run: npm run test:workshop
+      - run: npm run build
   social-cards:
     runs-on: ubuntu-latest
     steps:
@@ -46,3 +58,4 @@ jobs:
           python-version: "3.13"
       - run: pip install pyyaml
       - run: python3 scripts/check-docs.py docs
+      - run: python3 scripts/check-docs.py blog --only=card-missing,card-too-long
