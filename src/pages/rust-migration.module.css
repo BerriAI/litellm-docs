@@ -643,3 +643,111 @@
     padding-left: 1rem;
   }
 }
+
+/* AIGatewayBench panels. Bars are plain elements rather than SVG so they reflow
+   with the column, and every colour is an Infima token so the section follows
+   the theme without a second asset. */
+.benchPanels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.benchPanel {
+  min-width: 0;
+}
+
+.benchPanelLabel {
+  margin: 0 0 1rem;
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.benchRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+/* Name column is fixed so both panels line up; the value column is sized to the
+   longest reading, which is "257.7 ms". */
+.benchRow {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr 4.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.benchName {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.benchTrack {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-200);
+  overflow: hidden;
+}
+
+.benchBar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-400);
+}
+
+.benchBarLead {
+  background: var(--ifm-color-primary);
+}
+
+.benchValue {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.benchValueLead {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.benchAxis {
+  margin: 0.85rem 0 0;
+  color: var(--ifm-color-emphasis-500);
+  font-size: 0.72rem;
+}
+
+.benchNote {
+  max-width: 720px;
+  margin: 1.75rem 0 0;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .benchRow {
+    grid-template-columns: 1fr 3.9rem;
+    grid-template-areas: 'name value' 'track track';
+    gap: 0.3rem 0.5rem;
+  }
+
+  .benchName {
+    grid-area: name;
+  }
+
+  .benchValue {
+    grid-area: value;
+  }
+
+  .benchTrack {
+    grid-area: track;
+  }
+}

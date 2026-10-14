@@ -533,6 +533,95 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
+// AIGatewayBench results for the finished Rust gateway. Every figure is from
+// blog/rust_ai_gateway_benchmarks; do not edit one here without editing it
+// there. Rows are ascending in both panels, so the order is the same in each.
+const BENCHMARK = [
+  {
+    id: 'overhead',
+    label: 'Gateway overhead, p99 added latency',
+    unit: 'ms',
+    // 0.7ms against 257.7ms is a 368x spread, so a linear bar would render the
+    // Rust result as a hairline. Widths are log scaled and the axis says so.
+    log: true,
+    rows: [
+      {name: 'LiteLLM Rust', value: 0.7, lead: true},
+      {name: 'Portkey', value: 2.3},
+      {name: 'Bifrost', value: 4.5},
+      {name: 'LiteLLM Python v1', value: 257.7},
+    ],
+  },
+  {
+    id: 'memory',
+    label: 'Peak memory footprint',
+    unit: 'MB',
+    rows: [
+      {name: 'LiteLLM Rust', value: 21.8, lead: true},
+      {name: 'Portkey', value: 90.4},
+      {name: 'Bifrost', value: 199.1},
+      {name: 'LiteLLM Python v1', value: 329.5},
+    ],
+  },
+];
+
+// Log widths run from a tenth of a millisecond so the smallest bar still reads
+// as a bar rather than a sliver.
+const LOG_FLOOR = 0.1;
+
+function barWidth(panel, value) {
+  const max = Math.max(...panel.rows.map(row => row.value));
+  if (!panel.log) {
+    return (value / max) * 100;
+  }
+  const floor = Math.log10(LOG_FLOOR);
+  return ((Math.log10(value) - floor) / (Math.log10(max) - floor)) * 100;
+}
+
+function GatewayBenchmark() {
+  return (
+    <section className={styles.section} aria-labelledby="benchmark-title">
+      <SectionHeading id="benchmark-title" kicker="Where this lands" title="What the move is worth" />
+      <p className={styles.sectionLead}>
+        The tracker above is the route by route progress. This is what it adds up to. AIGatewayBench put the Rust
+        gateway, Portkey, Bifrost and today&apos;s Python proxy in front of the same deterministic mock and measured
+        what each one costs on top of it. Every route that finishes the move lands here.
+      </p>
+      <div className={styles.benchPanels}>
+        {BENCHMARK.map(panel => (
+          <div className={styles.benchPanel} key={panel.id}>
+            <p className={styles.benchPanelLabel}>{panel.label}</p>
+            <ul className={styles.benchRows}>
+              {panel.rows.map(row => (
+                <li className={styles.benchRow} key={row.name}>
+                  <span className={styles.benchName}>{row.name}</span>
+                  <span className={styles.benchTrack}>
+                    <span
+                      className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''}`}
+                      style={{width: `${barWidth(panel, row.value)}%`}}
+                    />
+                  </span>
+                  <span className={`${styles.benchValue} ${row.lead ? styles.benchValueLead : ''}`}>
+                    {row.value} {panel.unit}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className={styles.benchAxis}>
+              {panel.log ? 'Log scale. Lower is better.' : 'Lower is better.'}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className={styles.benchNote}>
+        Overhead is the gateway&apos;s p99 minus the direct to mock p99 on the same endpoint. n=5000 per endpoint on
+        one host, single runs without repeated trial error bars, so read them as order of magnitude differences. Full
+        method and raw data in{' '}
+        <Link to="/blog/rust-ai-gateway-benchmarks">the AIGatewayBench writeup</Link>.
+      </p>
+    </section>
+  );
+}
+
 function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
@@ -569,6 +658,7 @@ export default function RustMigrationPage() {
           <p className={styles.description}>See what already runs on Rust and what is next.</p>
         </header>
         <MigrationTracker />
+        <GatewayBenchmark />
         <MigrationUpdates />
         <Faq />
       </main>
