@@ -221,7 +221,7 @@ Start your LiteLLM Proxy server:
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
 export NEOSANTARA_API_KEY="your-neosantara-api-key"
-export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 16)"
+export LITELLM_MASTER_KEY="${LITELLM_MASTER_KEY:-sk-$(openssl rand -hex 16)}"
 printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config config.yaml
 
@@ -297,7 +297,7 @@ curl http://localhost:4000/v1/responses \
 
 ### Tools and reasoning_effort on the Proxy
 
-LiteLLM has no capability data for Neosantara models, so the proxy can answer 400 `UnsupportedParamsError` to `tools`, `tool_choice`, or `reasoning_effort`, as it does for `glm-4.7-flash`. Allow the params on the deployment, the same way `allowed_openai_params` works on `completion()`:
+Depending on the model, the proxy can answer 400 `UnsupportedParamsError` to `tools`, `tool_choice`, `parallel_tool_calls`, or `reasoning_effort`, as it does for `glm-4.7-flash`. Allow the params on the deployment, the same way `allowed_openai_params` works on `completion()`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -305,7 +305,7 @@ model_list:
     litellm_params:
       model: neosantara/glm-4.7-flash
       api_key: os.environ/NEOSANTARA_API_KEY
-      allowed_openai_params: ["tools", "tool_choice", "reasoning_effort"]
+      allowed_openai_params: ["tools", "tool_choice", "parallel_tool_calls", "reasoning_effort"]
 ```
 
 ### Spend Tracking on the Proxy
@@ -318,4 +318,4 @@ Neosantara models are not in LiteLLM's model cost map, so the proxy records $0 s
 - The default auth env var is `NEOSANTARA_API_KEY`.
 - `NEOSANTARA_API_BASE` can be used to point LiteLLM at a custom Neosantara-compatible base URL.
 - `max_completion_tokens` is mapped to `max_tokens` automatically.
-- On `completion()` and on the proxy, `tools`, `tool_choice`, and `reasoning_effort` may require `allowed_openai_params` so LiteLLM will pass them through.
+- On `completion()` and on the proxy, `tools`, `tool_choice`, `parallel_tool_calls`, and `reasoning_effort` may require `allowed_openai_params` so LiteLLM will pass them through.
