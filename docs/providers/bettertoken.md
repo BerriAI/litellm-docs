@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `bettertoken/` |
 | Link to Provider Doc | [BetterToken Documentation ↗](https://docs.bettertoken.ai) |
 | Base URL | `https://bettertoken.ai/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage), `/responses`, `/messages` |
+| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), `/responses`, `/messages` |
 | Pricing | [bettertoken.ai/pricing](https://bettertoken.ai/pricing) |
 
 **We support ALL BetterToken chat models, just set `bettertoken/` as a prefix when sending completion requests.** The live model list is at `GET https://bettertoken.ai/v1/models`.
