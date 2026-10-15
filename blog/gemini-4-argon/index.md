@@ -40,7 +40,7 @@ Prices on every provider: https://models.litellm.ai/models
 ## What's new in Gemini 4 Argon
 
 - **77.9% on DeepSWE v1.1**, per Google
-- **1M-token context window** for input and output together, with up to 65,536 output tokens for each request
+- **1M-token context window** for input and output together. Google caps each request at 32,768 output tokens (65,536 when streaming), and LiteLLM continues past that cap for you
 - **Thinking levels low, medium and high.** Argon does not support `thinking_budget`.
 
 ## Use Gemini 4 Argon with LiteLLM
@@ -67,7 +67,7 @@ docker run -d \
   -p 4000:4000 \
   -e GEMINI_API_KEY=$GEMINI_API_KEY \
   -v $(pwd)/config.yaml:/app/config.yaml \
-  ghcr.io/berriai/litellm:v1.105.0 \
+  ghcr.io/berriai/litellm:v1.107.0-dev.3 \
   --config /app/config.yaml
 ```
 
@@ -94,7 +94,7 @@ docker run -d \
   -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/credentials.json:/app/credentials.json \
-  ghcr.io/berriai/litellm:v1.105.0 \
+  ghcr.io/berriai/litellm:v1.107.0-dev.3 \
   --config /app/config.yaml
 ```
 
@@ -121,6 +121,15 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 LiteLLM sends `reasoning_effort` to Argon as its `thinking_level`.
 
+## Long outputs
+
+From `v1.107.0-dev.3`, set `max_tokens` above Google's per-request cap and LiteLLM keeps going. When Google ends a request with a `continuationToken`, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent. This works for unary and streaming calls on `/chat/completions`, `/v1/messages` and `/v1/responses`, on Google AI Studio and Gemini Enterprise Agent Platform. A request with no integer `max_tokens`, or with `n` above 1, is sent once.
+
+- **Usage** is summed across the requests, so cost and spend match Google's bill. The first request's prompt count is kept as `usage.prompt_tokens_details.initial_prompt_tokens` on an answer that took more than one request.
+- **A cut-off answer** on `/chat/completions` ends with `finish_reason: "length"` and returns `provider_specific_fields.continuation_token`. Send the request again with that `"continuation_token"` and a higher `max_tokens` to continue it, since Google counts `max_tokens` across the whole answer.
+- **A dropped stream** ends with the error. LiteLLM does not yet pick it back up from Google's mid-stream resume tokens.
+- **Timeouts:** each request to Google runs under the deployment's `timeout`, 600 seconds when unset. A non-streamed request at the 32,768 cap takes about 10 minutes, so set `timeout: 1200` on deployments that serve long answers and give your client room for the whole answer.
+
 ## FAQ
 
 ### How much does Gemini 4 Argon cost?
@@ -129,7 +138,7 @@ Until November 30, 2026, it costs $2.00 per 1M input tokens and $10.00 per 1M ou
 
 ### What is the context window of Gemini 4 Argon?
 
-1,048,576 tokens for input and output together. One request returns up to 65,536 output tokens by default.
+1,048,576 tokens for input and output together. Google returns up to 32,768 output tokens per request (65,536 when streaming), and from `v1.107.0-dev.3` LiteLLM continues across requests until `max_tokens` is spent.
 
 ### How do I call Gemini 4 Argon with an OpenAI-compatible API?
 
@@ -142,4 +151,5 @@ Questions and feedback go in [GitHub discussion #46238](https://github.com/Berri
 ## References
 
 - LiteLLM pricing for `gemini/gemini-4-argon`: [PR #46227](https://github.com/BerriAI/litellm/pull/46227)
+- LiteLLM long outputs for Gemini 4: [PR #46240](https://github.com/BerriAI/litellm/pull/46240)
 - Google: [Gemini 4 Argon announcement](https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-argon/), [model page](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon) and [pricing](https://ai.google.dev/gemini-api/docs/pricing)
