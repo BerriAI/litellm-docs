@@ -34,6 +34,8 @@ import TabItem from '@theme/TabItem';
 
 Crusoe retires models often. See [Crusoe's available models](https://docs.crusoecloud.com/serverless-inference/available-models) for the current list.
 
+LiteLLM's cost map does not price every model above yet, and spend for an unpriced model logs as $0. To track it, set `input_cost_per_token` and `output_cost_per_token` in that model's `litellm_params` from [Crusoe's pricing](https://www.crusoe.ai/cloud/pricing#Serverless-Inference).
+
 ## Required Variables
 
 ```python showLineNumbers title="Environment Variables"
@@ -153,7 +155,7 @@ model_list:
 
 **Option 1: Environment variable**
 
-Older LiteLLM versions send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1`. If yours does, set `CRUSOE_API_BASE` to the current endpoint. Newer versions call `https://api.inference.crusoecloud.com/v1` by default, so allow that host if your deployment restricts outbound traffic.
+LiteLLM v1.106 and earlier send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1`, and the proxy's `x-litellm-model-api-base` response header shows which host your version calls. To use the current endpoint on an older version, set `CRUSOE_API_BASE` to it. If your deployment restricts outbound traffic, allow the host your version calls.
 
 ```python showLineNumbers title="Custom API Base via env var"
 import os
@@ -176,7 +178,7 @@ from litellm import completion
 response = completion(
     model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=[{"content": "Hello!", "role": "user"}],
-    api_base="https://custom.crusoecloud.com/v1",
+    api_base="https://api.inference.crusoecloud.com/v1",
     api_key="your-api-key",
 )
 ```
