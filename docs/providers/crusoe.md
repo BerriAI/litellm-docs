@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 | Description | Crusoe Cloud provides GPU-accelerated inference for open-source large language models, optimized for performance and cost efficiency. |
 | Provider Route on LiteLLM | `crusoe/` |
 | Link to Provider Doc | [Crusoe Serverless Inference Documentation ↗](https://docs.crusoecloud.com/serverless-inference/available-models) |
-| Base URL | `https://api.inference.crusoecloud.com/v1` (some older LiteLLM versions call a different host, see [Custom API Base](#custom-api-base)) |
+| Base URL | `https://api.inference.crusoecloud.com/v1` (older LiteLLM versions call a different host by default, see [Custom API Base](#custom-api-base)) |
 | Supported Operations | [`/chat/completions`](/docs/providers/crusoe#usage---litellm-python-sdk) |
 
 <br />
@@ -33,13 +33,13 @@ import TabItem from '@theme/TabItem';
 | `crusoe/nvidia/Nemotron-3.5-Lightning-30B-A3B` | NVIDIA | 262,144 tokens |
 | `crusoe/openai/gpt-oss-120b` | OpenAI | 131,072 tokens |
 | `crusoe/Qwen/Qwen3.8-27B` | Qwen | 262,144 tokens |
-| `crusoe/zai-org/GLM-5.3` | Z.ai | 1,048,576 tokens |
 | `crusoe/yutori/n2` | Yutori | 262,144 tokens |
+| `crusoe/zai-org/GLM-5.3` | Z.ai | 1,048,576 tokens |
 | `crusoe/zai-org/GLM-5.3-Flash` | Z.ai | 1,048,576 tokens |
 
-Crusoe retires models often. See [Crusoe's available models](https://docs.crusoecloud.com/serverless-inference/available-models) for the current list.
+Crusoe retires models often. To list the model ids your key can call, send `GET https://api.inference.crusoecloud.com/v1/models` with your Crusoe API key, and put `crusoe/` in front of each `id`. Copy ids from that endpoint rather than from Crusoe's docs pages, which spell some of them differently.
 
-LiteLLM's cost map does not have current prices for most of these models, so their spend can log as $0 or at an outdated price. To track spend, set `input_cost_per_token` and `output_cost_per_token` for each model you use from [Crusoe's pricing](https://www.crusoe.ai/cloud/pricing#Serverless-Inference), in the model's `litellm_params` on the proxy or as `completion()` arguments in the SDK.
+LiteLLM's cost map does not have current prices for these models, so their spend logs as $0 or at an outdated price. To track spend, set `input_cost_per_token` and `output_cost_per_token` for each model you use from [Crusoe's pricing](https://www.crusoe.ai/cloud/pricing#Serverless-Inference), in the model's `litellm_params` on the proxy or as `completion()` arguments in the SDK.
 
 ## Required Variables
 
@@ -160,7 +160,7 @@ model_list:
 
 **Option 1: Environment variable**
 
-Some LiteLLM versions, including v1.106 and earlier, send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1`. That host's firewall answers some prompts with an HTTP 403 "Sorry, you have been blocked" page, for example prompts that contain file paths like `../../etc/passwd` or SQL statements. To see which host your version calls, read the `x-litellm-model-api-base` response header on the proxy, or `response._hidden_params["api_base"]` in the SDK. If it is the old host, set `CRUSOE_API_BASE` to `https://api.inference.crusoecloud.com/v1` as below. If your deployment restricts outbound traffic, allow the host your version calls.
+Older LiteLLM versions, including v1.106 and earlier, send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1` by default. That host's firewall answers some prompts with an HTTP 403 "Sorry, you have been blocked" page, for example prompts that contain file paths like `../../etc/passwd` or SQL injection strings like `' OR 1=1 --`. To see which host your version calls, send a request that succeeds and read the `x-litellm-model-api-base` response header on the proxy, or `response._hidden_params["api_base"]` in the SDK. A blocked request does not show the host. If it is the old host, set `CRUSOE_API_BASE` to `https://api.inference.crusoecloud.com/v1` as below. If your deployment restricts outbound traffic, allow the host your version calls.
 
 ```python showLineNumbers title="Custom API Base via env var"
 import os
