@@ -346,7 +346,7 @@ Pass `used_client_oauth_token=false` for the requests the configured key paid fo
 
 **Symptom**: 401 errors from LiteLLM Gateway
 
-**Solution**: Verify the `x-litellm-api-key` header is set correctly in `ANTHROPIC_CUSTOM_HEADERS` by sending the same header yourself. A `200` means the key works; a `401` with `Invalid proxy server token passed` means the key is wrong or was deleted:
+**Solution**: Verify the `x-litellm-api-key` header is set correctly in `ANTHROPIC_CUSTOM_HEADERS` by sending the same header yourself. A `200` means the key works; a `401` with `Invalid API key provided.` (`Invalid proxy server token passed` before v1.107.0) means the key is wrong or was deleted:
 
 ```bash showLineNumbers title="Verify the Virtual Key"
 curl "http://localhost:4000/v1/models" \
