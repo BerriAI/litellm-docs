@@ -695,6 +695,8 @@ router_settings:
 | BASETEN_API_BASE | Base URL for Baseten. Default is https://inference.baseten.co/v1
 | BATCH_STATUS_POLL_INTERVAL_SECONDS | Interval in seconds for polling batch status. Default is 3600 (1 hour)
 | BATCH_STATUS_POLL_MAX_ATTEMPTS | Maximum number of attempts for polling batch status. Default is 24 (for 24 hours)
+| BETTERTOKEN_API_BASE | Base URL for BetterToken. Default is https://bettertoken.ai/v1
+| BETTERTOKEN_API_KEY | API key for BetterToken
 | BEDROCK_API_BASE | Base URL for Bedrock rerank requests
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
