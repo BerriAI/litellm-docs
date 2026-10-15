@@ -288,19 +288,19 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### MS Teams Webhooks
 
-MS Teams provides a slack compatible webhook url that you can use for alerting
+LiteLLM sends alerts to Microsoft Teams natively through the `ms_teams` alerting destination, available from v1.100.0. Each alert is posted as an Adaptive Card, which both Teams Workflows webhooks and legacy incoming webhook connectors accept
 
 ##### Quick Start
 
-1. [Get a webhook url](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook) for your Microsoft Teams channel 
+1. [Create an incoming webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook) for your Microsoft Teams channel
 
 2. Add it to your .env
 
 ```bash
-SLACK_WEBHOOK_URL="https://berriai.webhook.office.com/webhookb2/...6901/IncomingWebhook/b55fa0c2a48647be8e6effedcd540266/e04b1092-4a3e-44a2-ab6b-29a0a4854d1d"
+MS_TEAMS_WEBHOOK_URL="https://<your-tenant>.webhook.office.com/webhookb2/<...>/IncomingWebhook/<...>"
 ```
 
-3. Add it to your litellm config 
+3. Add `ms_teams` to `alerting` in your litellm config. It can sit alongside other destinations such as `slack` or `email`
 
 ```yaml
 model_list: 
@@ -310,23 +310,32 @@ model_list:
         api_key: "my-bad-key" # 👈 bad key
 
 general_settings: 
-    alerting: ["slack"]
+    alerting: ["ms_teams"]
     alerting_threshold: 300 # sends alerts if requests hang for 5min+ and responses take 5min+ 
 ```
 
 4. Run health check!
 
-Call the proxy `/health/services` endpoint to test if your alerting connection is correctly setup.
+Call the proxy `/health/services` endpoint with `service=ms_teams` to send a test alert to your channel
 
 ```bash
-curl --location 'http://0.0.0.0:4000/health/services?service=slack' \
+curl --location 'http://0.0.0.0:4000/health/services?service=ms_teams' \
 --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
-
 **Expected Response**
 
-<Image img={require('../../img/ms_teams_alerting.png')}/>
+```json
+{
+  "status": "success",
+  "message": "Mock MS Teams Alert sent, verify MS Teams Alert Received in your channel"
+}
+```
+
+You can also set the webhook URL from the Admin UI on the **Logging & Alerts** page under the **MS Teams Alerts** tab, which saves `MS_TEAMS_WEBHOOK_URL` and adds `ms_teams` to `alerting` for you
+
+`alert_types` applies to Teams the same way it applies to Slack. `alert_to_webhook_url` and digest mode only route Slack alerts; Teams alerts always go to `MS_TEAMS_WEBHOOK_URL` and are sent individually rather than digested
+
 
 ### Discord Webhooks
 

@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Overview
+# Config.yaml
 Set model list, `api_base`, `api_key`, `temperature` & proxy server settings (`master-key`) on the config.yaml. 
 
 | Param Name           | Description                                                   |
@@ -482,6 +482,21 @@ credential_list:
 - `credential_name`: Unique identifier for the credential set
 - `credential_values`: Key-value pairs of credentials/secrets (supports `os.environ/` syntax)
 - `credential_info`: Key-value pairs of user provided credentials information.  No key-value pairs are required, but the dictionary must exist.
+
+#### Credential names are permanent
+
+Models and vector stores reference a credential by `credential_name`, so it can't change after creation. A `PATCH` with a different `credential_name` returns 400
+
+To relabel a credential in the Admin UI, set `display_name` instead. It is optional, doesn't need to be unique, and is capped at 255 characters. On a `PATCH`, omit it to keep the current label or send `null` to clear it:
+
+```bash
+curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"display_name": "Azure EU (prod)", "credential_info": {}}'
+```
+
+Credentials in `credential_list` can only be changed in `config.yaml`. `PATCH` and `DELETE` on them return 405, the UI disables Edit and Delete, and a `display_name` set there is ignored. `GET /credentials` returns each credential's `display_name` and its `source`, either `db` or `config`
 
 ### Load API Keys from Secret Managers (Azure Vault, etc)
 

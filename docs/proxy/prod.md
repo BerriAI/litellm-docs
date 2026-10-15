@@ -34,7 +34,7 @@ general_settings:
 
 Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
 
-<Image img={require('../../img/ui_alerting_types.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
+<Image img={require('../../img/ui_alerting_types.png')} dark={require('../../img/ui_alerting_types_dark.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
 
 To bake it into config instead, set `alerting: ["slack"]` under `general_settings` and export `SLACK_WEBHOOK_URL` in the environment.
 
@@ -61,7 +61,7 @@ general_settings:
 
 The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Router Settings on the General tab, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
 
-<Image img={require('../../img/proxy_config_reload_interval_ui.png')} />
+<Image img={require('../../img/proxy_config_reload_interval_ui.png')} dark={require('../../img/proxy_config_reload_interval_ui_dark.png')} alt="Router Settings General tab showing proxy_config_reload_interval_seconds set to 12" />
 
 ### Bound database connections
 
@@ -168,11 +168,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
 
-If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
-
-```shell
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
-```
+Do not combine `--num_workers 1` with `--max_requests_before_restart`. With a single worker the flag does not recycle anything; once the limit is hit the whole pod stops serving. Under Uvicorn the process exits with code 0 and Kubernetes restarts the container, and under Gunicorn nothing accepts connections until the old worker has drained and a replacement has booted, which is long enough for liveness probes to fail. Health probes count toward the limit too, so two probes every 15 seconds use up 11,520 requests a day before any real traffic. If you see gradual memory growth under sustained load, rely on Kubernetes replacing pods, or run two or more workers with jitter as described in [Recycle workers](./server_tuning.md#recycle-workers).
 
 For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
@@ -605,7 +601,7 @@ Notes: always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path, and set `
 
 ### Expected performance
 
-See benchmarks [here](../benchmarks#performance-metrics).
+See the [gateway load-test results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
 ### Confirm debug logging is off
 

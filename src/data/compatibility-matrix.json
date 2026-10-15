@@ -1,8 +1,8 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-09-29T06:11:22Z",
-  "litellm_version": "v1.103.0",
-  "claude_code_version": "2.1.283",
+  "generated_at": "2026-10-14T06:15:27Z",
+  "litellm_version": "v1.105.1",
+  "claude_code_version": "2.1.296",
   "providers": [
     "anthropic",
     "bedrock_invoke",

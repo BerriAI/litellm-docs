@@ -31,12 +31,12 @@ When you use VS Code chat with LiteLLM you get the following benefits:
 
 Before you begin, ensure you have:
 - A running LiteLLM Proxy instance
-- A valid LiteLLM Proxy API key
+- A LiteLLM Proxy API key, or on a gateway where users sign in through SSO, the [`lite` CLI](#sign-in-with-sso-instead-of-a-virtual-key)
 - VS Code 1.115 or newer with the GitHub Copilot Chat extension (the chat view and model picker come from it)
 
 ## Option 1: LiteLLM extension for VS Code
 
-The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort menu in the chat toolbar, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
+The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort option in the model picker, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
 
 ### Step 1: Build and install the extension
 
@@ -53,13 +53,27 @@ Every push to `main` that touches the extension also builds a `litellm-vscode` a
 ### Step 2: Connect to your gateway
 
 1. Run `Chat: Manage Language Models` from the Command Palette and pick `LiteLLM`
-2. Enter a name for the connection, the gateway URL (for example `https://litellm.example.com`), and a LiteLLM virtual key. The key is stored in VS Code's secret storage
+2. Enter a name for the connection, the gateway URL (for example `https://litellm.example.com`), and a LiteLLM API key: a virtual key, or on an SSO gateway the output of `lite auth print-token` (see [the next section](#sign-in-with-sso-instead-of-a-virtual-key)). The key is stored in VS Code's secret storage
 
 The Language Models editor now lists the chat models that key can reach under the name you chose. Add `LiteLLM` again with another name to reach a second gateway or a second key.
 
+### Sign in with SSO instead of a virtual key
+
+If your users sign in to LiteLLM through your identity provider and nobody issues them virtual keys, each developer gets the extension's key from the LiteLLM CLI instead. This needs a proxy with SSO configured and `EXPERIMENTAL_UI_LOGIN=True`, as described in [CLI Authentication](../proxy/cli_sso.md). Option 2 below sets no LiteLLM credential on the client, so use this option on an SSO-only gateway
+
+```shell
+export LITELLM_PROXY_URL=https://litellm.example.com
+lite login --pkce
+lite auth print-token
+```
+
+`lite login --pkce` opens your browser at your identity provider's sign-in, then at a LiteLLM consent page where you pick the team to attribute requests to and click Approve. `lite auth print-token` prints the resulting key, which starts with `litellm_login_`; paste it as the API key in Step 2. The picker then lists the chat models that user and team can reach, and spend is logged against the signed-in user
+
+The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default), and the extension keeps the key you pasted without renewing it. When requests start failing with an authentication error, run `lite auth print-token` again, which renews the key without a browser sign-in, and paste the new value through the gear on the connection's row and `Update API Key`. If it prints `Key expired. Run 'lite login --pkce' again.`, sign in again first. To make this less frequent, raise `LITELLM_CLI_JWT_EXPIRATION_HOURS` on the proxy
+
 ### Step 3: Pick a model and its reasoning effort
 
-Open the chat view and click the model name in the toolbar. The gateway's models are listed with their price per 1M tokens, and hovering a model shows its context limits and the reasoning efforts it supports. After picking a model that supports reasoning efforts, the toolbar shows a Reasoning Effort control whose choices are the efforts the gateway reports for that model plus `Gateway default`, which sends no `reasoning_effort` and lets the proxy's own default apply.
+Open the chat view and click the model name in the toolbar. The gateway's models are listed with their price per 1M tokens, and hovering a model shows its context limits and the reasoning efforts it supports. After picking a model that supports reasoning efforts, the model picker shows a Reasoning Effort option whose choices are the efforts the gateway reports for that model plus `Gateway default`, which sends no `reasoning_effort` and lets the proxy's own default apply.
 
 ### Keeping the list current
 

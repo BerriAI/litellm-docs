@@ -10,7 +10,7 @@ The flow works with any SSO provider LiteLLM supports (Google, Microsoft Entra I
 
 ## How it works
 
-Claude Code reads the gateway URL from a managed settings file, fetches the gateway's OAuth discovery document, and asks the developer once to trust the gateway. It then starts an [OAuth device authorization](https://www.rfc-editor.org/rfc/rfc8628) flow: the terminal shows a short code and opens the browser on LiteLLM's SSO login, the developer signs in with your identity provider and confirms the code, and Claude Code, which has been polling the token endpoint, receives a LiteLLM CLI token. That token is a JWT scoped to the developer's user and team, valid for 24 hours by default. Claude Code stores it, fetches managed settings with it, and sends every inference request to `/claude_code_gateway/v1/messages` with it as the bearer token. Under the hood the gateway reuses the proxy's existing [CLI SSO device flow](../proxy/cli_sso), so anything that works for `lite login` (SSO providers, team membership, model access, budgets) works here
+Claude Code reads the gateway URL from a managed settings file, fetches the gateway's OAuth discovery document, and asks the developer once to trust the gateway. It then starts an [OAuth device authorization](https://www.rfc-editor.org/rfc/rfc8628) flow: the terminal shows a short code and opens the browser on LiteLLM's SSO login, the developer signs in with your identity provider and confirms the code, and Claude Code, which has been polling the token endpoint, receives a LiteLLM CLI token and a refresh token. The CLI token is a JWT scoped to the developer's user and team, valid for 24 hours by default, and Claude Code renews it with the refresh token before it expires, so a developer who keeps using Claude Code is not sent back to the browser (see [Session lifetime and sign-out](#session-lifetime-and-sign-out)). Claude Code stores both, fetches managed settings with the CLI token, and sends every inference request to `/claude_code_gateway/v1/messages` with it as the bearer token. Under the hood the gateway reuses the proxy's existing [CLI SSO device flow](../proxy/cli_sso), so anything that works for `lite login` (SSO providers, team membership, model access, budgets) works here
 
 ## 1. Turn the gateway on
 
@@ -44,9 +44,9 @@ litellm --config config.yaml
 
 `PROXY_BASE_URL` is the origin developers reach. The gateway builds the discovery document, the token endpoint, and the browser verification URL from it, so behind a load balancer or TLS terminator it must name the public-facing origin, not the pod. Claude Code only signs in to a gateway whose hostname resolves to private addresses (RFC 1918, link-local, CGNAT `100.64.0.0/10`, IPv6 ULA `fc00::/7`, or loopback), because a trusted gateway can push settings that run commands on developer machines. Put the proxy on an internal hostname behind TLS; the CLI pins the TLS certificate per hostname on first connect. Plain `http://` on loopback, as in the screenshots below, is accepted for local testing
 
-Two optional settings tune the flow. `LITELLM_CLI_JWT_EXPIRATION_HOURS` sets the token lifetime (default `24`); the gateway issues no refresh tokens, so this is how long a developer stays signed in before `/login` asks again. `allow_cli_sso_verification_uri_complete: true` under `general_settings` adds `verification_uri_complete` to the device authorization response, which carries the code in the URL so a client that honors it opens the browser page with the code already filled in. It is off by default because typing the code is what ties the browser page to the terminal that started the login; see [Pre-fill the verification code](../proxy/cli_sso#pre-fill-the-verification-code)
+Two optional settings tune the flow. `LITELLM_CLI_JWT_EXPIRATION_HOURS` sets the session token's lifetime between renewals (default `24`). Claude Code renews the session token with the refresh token before it expires, so a developer stays signed in past that lifetime. A session ends when 14 days pass without a renewal, when a renewal is refused, or when the developer runs `/logout` (see [Session lifetime and sign-out](#session-lifetime-and-sign-out)). Keep it at or below `336`, since a session token that lives longer than the 14-day refresh token outlives the token that would renew it, and the developer is back to `/login` when it expires. `allow_cli_sso_verification_uri_complete: true` under `general_settings` adds `verification_uri_complete` to the device authorization response, which carries the code in the URL so a client that honors it opens the browser page with the code already filled in. It is off by default because typing the code is what ties the browser page to the terminal that started the login; see [Pre-fill the verification code](../proxy/cli_sso#pre-fill-the-verification-code)
 
-With more than one worker or replica, the browser leg and the terminal's polling can land on different processes, and the sign-in state lives in the proxy's CLI SSO cache. Configure Redis (`REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` in the environment, or `general_settings.coordination_redis`) so that cache is shared, or run a single worker
+With more than one worker or replica, the browser leg and the terminal's polling can land on different processes, and the sign-in state lives in the proxy's CLI SSO cache. The record of which refresh tokens were already used or revoked lives in the proxy's cache too, and a process that never saw that record accepts a refresh token another process already rotated or revoked. Configure Redis (`REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` in the environment, or `general_settings.coordination_redis`) so that cache is shared, or run a single worker. While Redis is unreachable a renewal or a sign-out answers `503 temporarily_unavailable` rather than guessing, and Claude Code keeps using the session token it has and renews again later
 
 ## 2. Verify from the command line
 
@@ -61,6 +61,7 @@ curl http://localhost:4000/claude_code_gateway/.well-known/oauth-authorization-s
   "issuer": "http://localhost:4000/claude_code_gateway",
   "device_authorization_endpoint": "http://localhost:4000/claude_code_gateway/oauth/device_authorization",
   "token_endpoint": "http://localhost:4000/claude_code_gateway/oauth/token",
+  "revocation_endpoint": "http://localhost:4000/claude_code_gateway/oauth/revoke",
   "grant_types_supported": ["urn:ietf:params:oauth:grant-type:device_code", "refresh_token"]
 }
 ```
@@ -91,6 +92,44 @@ curl -X POST http://localhost:4000/claude_code_gateway/oauth/token \
 
 ```json
 {"error": "authorization_pending"}
+```
+
+Once the developer has approved the code in the browser (the next section shows that leg), the same poll answers the session token with a refresh token next to it, served with `cache-control: no-store`. `expires_in` is `LITELLM_CLI_JWT_EXPIRATION_HOURS` in seconds, and `user_id` and `team_id` name the user and team the session is scoped to
+
+```json
+{
+  "access_token": "litellm_login_<redacted>",
+  "token_type": "Bearer",
+  "expires_in": 86400,
+  "refresh_token": "llm_srefresh_e<redacted>",
+  "user_id": "<the signed-in user id>",
+  "team_id": "<the first team on the user record, or null when it has none>"
+}
+```
+
+Renewal is the `refresh_token` grant on the same endpoint, with no `client_id`, which is exactly what Claude Code sends. The response has the same shape with a new session token and a new refresh token, and the refresh token just presented is spent
+
+```bash
+curl -X POST http://localhost:4000/claude_code_gateway/oauth/token \
+  -d grant_type=refresh_token \
+  -d refresh_token="$REFRESH_TOKEN"
+```
+
+A refresh token presented a second time, one that was revoked, or a value that was never a refresh token answers `400 invalid_grant`
+
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "the refresh token was already used"
+}
+```
+
+Sign-out is [RFC 7009](https://www.rfc-editor.org/rfc/rfc7009) revocation on the `revocation_endpoint`. `/logout` posts the session token and the refresh token there, one request each. Revoking the refresh token is what ends the sign-in; the session token is stateless and expires on its own, so its request changes nothing. The endpoint answers `200` with `{}` whether or not it recognizes the token, so calling it twice is safe
+
+```bash
+curl -X POST http://localhost:4000/claude_code_gateway/oauth/revoke \
+  -d token="$REFRESH_TOKEN" \
+  -d token_type_hint=refresh_token
 ```
 
 ## 3. Point Claude Code at the proxy
@@ -132,7 +171,15 @@ From here Claude Code continues with its usual first-run prompts (security notes
 
 <Image img={require('../../img/claude_code_gateway/signed_in_session.png')} style={{ width: '800px', height: 'auto' }} />
 
-When the token expires (24 hours by default), Claude Code asks the developer to run `/login` again and the same flow repeats. The token is self-contained and stays valid until then, and every new sign-in goes back through your identity provider, so a developer you deprovision there cannot sign in again once their current token lapses; `LITELLM_CLI_JWT_EXPIRATION_HOURS` is that bound
+### Session lifetime and sign-out
+
+Claude Code stores the session token together with the refresh token. Five minutes before the session token expires (24 hours by default), it posts the refresh token to the token endpoint and stores the new session token and refresh token it gets back, so a developer who keeps using Claude Code is not sent back to the browser. Each refresh token is single-use and lives 14 days, and every renewal issues a new one, so a session ends after 14 days without a renewal, and Claude Code asks for `/login` once the session token it holds expires. Two Claude Code terminals on one machine share the stored credential but renew on their own, so the second one to renew presents the refresh token the first already rotated, is refused (one or more `400`s on `/claude_code_gateway/oauth/token` in the proxy's access log) and carries on with the credential the first terminal saved
+
+Every renewal re-reads the developer's user record and team membership in LiteLLM. Deactivating or deleting the user in LiteLLM, or removing them from the team the session was issued for, refuses the next renewal with `400 invalid_grant`, and Claude Code asks for `/login` once the current session token expires, within `LITELLM_CLI_JWT_EXPIRATION_HOURS`. A deleted user's requests to `/claude_code_gateway/v1/messages` answer `401` right away, before that session token expires. Deprovisioning a developer at the identity provider alone does not end a session in progress, because renewal checks LiteLLM's own user and team state and not the identity provider, so that session keeps renewing until 14 days pass without a renewal. Deactivate the user in LiteLLM as well to end it sooner
+
+`/logout` posts the session token and the refresh token to `POST /claude_code_gateway/oauth/revoke`, the `revocation_endpoint` from the discovery document, then removes the stored credential. Revoking the refresh token ends that sign-in, since every refresh token rotated from it, whoever holds one, is refused from then on. The session token itself is self-contained and is not revoked; it stays valid until it expires
+
+Renewal and revocation need LiteLLM v1.106.0 or later (first in `v1.106.0-rc.1`). Earlier releases issue no refresh token and answer every refresh with `401`, so Claude Code asks for `/login` again at every expiry, and during a rolling upgrade a renewal served by a replica still on the previous release does the same for that developer once
 
 ## 4. Push managed settings from the proxy
 
@@ -203,7 +250,11 @@ upstreams:
 
 ## Known limits
 
-The gateway issues no refresh tokens. The discovery document lists the `refresh_token` grant because Claude Code expects it, and a refresh request is answered with `401 invalid_grant` and `This gateway does not issue refresh tokens; sign in again`. Claude Code then asks for `/login`, so the session length is `LITELLM_CLI_JWT_EXPIRATION_HOURS`
+Revocation covers the refresh token only. The session token is self-contained, so after `/logout` the session token a developer held keeps working until it expires, within `LITELLM_CLI_JWT_EXPIRATION_HOURS`
+
+A replayed refresh token is refused on its own and ends nothing else, so a copy of a refresh token that renews before the real one keeps its chain alive. The real Claude Code drops its refresh token on that refusal, which leaves `/logout` nothing to revoke, so deactivating or deleting the user in LiteLLM, or removing them from the team, is what ends that chain
+
+The refresh token is signed with the MCP gateway's session signing keys, derived from `master_key` unless `general_settings.mcp_session_token_signing` is set. On a proxy where that block cannot be loaded, sign-in still succeeds but returns no refresh token and the proxy logs the fault, so the developer is back to signing in at every expiry until it is fixed
 
 The token is scoped to the first team on the developer's user record. A developer who belongs to several teams has no team picker in this flow and gets the first team's models and budget; `lite login` offers the picker if a developer needs a token for another team
 
@@ -215,7 +266,7 @@ Claude Code disables server-side WebSearch on gateway sessions and uses the 5-mi
 
 ## Related docs
 
-- [CLI SSO Authentication](../proxy/cli_sso): the device flow the gateway reuses, token lifetime, PKCE sign-in, and the native client contract
+- [CLI SSO Authentication](../proxy/cli_sso): the device flow the gateway reuses, token lifetime, the PKCE sign-in whose refresh token family and revocation this gateway reuses, and the native client contract
 - [SSO for Admin UI](../proxy/admin_ui_sso): configuring Google, Microsoft, Okta, or generic OIDC on the proxy
 - [Claude Code with Okta SSO (JWT Auth)](./claude_code_okta_sso): the `apiKeyHelper` alternative, where Claude Code sends the IdP token itself
 - [Claude Code Quickstart](./claude_responses_api): basic Claude Code with LiteLLM setup using an API key

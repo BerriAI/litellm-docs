@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Create keys, track spend, add models without worrying about the config / CRUD endpoints.
 
-<Image img={require('../../img/litellm_ui_create_key.png')} />
+<Image img={require('../../img/litellm_ui_create_key.png')} dark={require('../../img/litellm_ui_create_key_dark.png')} alt="The Virtual Keys page with the Create New Key button" />
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ http://0.0.0.0:4000/ui # <proxy_base_url>/ui
 
 Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhost:4000/`
 
-<Image img={require('../../img/ui_link.png')} />
+<Image img={require('../../img/ui_link.png')} alt="Swagger page with the Admin UI link" />
 
 ### 4. Sign in for the first time
 
@@ -136,4 +136,4 @@ Useful, if your security team has additional restrictions on UI usage.
 
 **Expected Response**
 
-<Image img={require('../../img/admin_ui_disabled.png')}/>
+<Image img={require('../../img/admin_ui_disabled.png')} dark={require('../../img/admin_ui_disabled_dark.png')} alt="Admin UI Disabled message" />

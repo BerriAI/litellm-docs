@@ -25,6 +25,9 @@ general_settings:
   # Optional: set how frequently cleanup should run - default is daily
   maximum_spend_logs_retention_interval: "1d"  # Run cleanup daily
 
+  # Optional: also run cleanup a few minutes after every startup - default is false
+  maximum_spend_logs_cleanup_run_on_startup: true
+
   # Optional: set exact time for cleanup (Cron syntax)
   maximum_spend_logs_cleanup_cron: "0 4 * * *" # Run at 04:00 AM daily
 
@@ -44,7 +47,7 @@ litellm_settings:
 
 The cleanup job exists only if you ask for it. It is registered at proxy startup when any of `maximum_spend_logs_retention_period`, `maximum_autorouter_session_retention_period`, `maximum_health_check_retention_period` or `maximum_daily_tag_spend_retention_period` is set, and not otherwise. Setting one of them later through `/config/update` registers the job on the next config sync without a restart. With none set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
 
-When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
+When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. The schedule lives in the process, so a proxy that restarts more often than the interval never reaches its first run. Set `maximum_spend_logs_cleanup_run_on_startup: true` to also run the cleanup shortly after every startup, or set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead.
 
 ### What gets deleted
 
@@ -76,6 +79,10 @@ How long logs should be kept before deletion. Supported formats:
 #### `maximum_spend_logs_retention_interval` (optional)
 
 How often the cleanup job should run. Uses the same format as above. If not set, cleanup will run every 24 hours if and only if `maximum_spend_logs_retention_period` is set.
+
+#### `maximum_spend_logs_cleanup_run_on_startup` (optional)
+
+Defaults to `false`. When `true`, the interval-scheduled cleanup also runs once shortly after every proxy startup, and later runs follow `maximum_spend_logs_retention_interval` from there. The first run lands `SPEND_LOG_CLEANUP_STARTUP_DELAY_SECONDS` (default 60) plus a random offset of up to `SPEND_LOG_CLEANUP_STARTUP_JITTER_SECONDS` (default 300) seconds after startup, so replicas that boot together do not all clean up at the same instant. That delay is capped at the interval, so a short interval never waits longer than it would without the setting. The same first run is scheduled when retention settings change at runtime. Turn it on for deployments that restart more often than the interval, where the cleanup would otherwise never run. It has no effect when `maximum_spend_logs_cleanup_cron` is set.
 
 #### `maximum_spend_logs_cleanup_cron` (optional)
 

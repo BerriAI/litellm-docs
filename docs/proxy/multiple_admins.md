@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 
-# ✨ Audit Logs
+# Audit Logs
 
 <Image 
   img={require('../../img/release_notes/ui_audit_log.png')}

@@ -7,6 +7,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for Gemini 3.8 Flash TTS and Flash-Lite TTS on LiteLLM's /v1/audio/speech, with launch pricing tracked through 2026."
+card_title: "Gemini 3.8 Flash TTS and Flash-Lite TTS"
+card_summary: "Gemini speech models on /v1/audio/speech, Flash and Flash-Lite, with launch pricing tracked through 2026."
 image: ./hero.png
 tags: [gemini, gemini-3.8-flash-tts, text to speech, day 0 support]
 hide_table_of_contents: false
