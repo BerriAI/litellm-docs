@@ -305,6 +305,40 @@ import litellm
 litellm.enable_gemini_default_thinking_level_low = True
 ```
 
+### Thinking without thought summaries
+
+Gemini returns a summary of its thinking in `reasoning_content` whenever thinking is on. To keep the thinking but drop the summary text on every Gemini request, turn the summaries off.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+
+litellm.gemini_include_thoughts_default = False
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+litellm_settings:
+  gemini_include_thoughts_default: false
+```
+
+</TabItem>
+</Tabs>
+
+The model still thinks and `usage.completion_tokens_details.reasoning_tokens` is still billed, but the response carries no thought text. A request that asks for the summary still gets it:
+
+- `/v1/chat/completions`: `reasoning_effort={"effort": "medium", "summary": "auto"}`, the AI SDK `reasoning_summary` (or `reasoningSummary`) next to `reasoning_effort`, or `thinking` with a `summary` string or any `display` other than `"omitted"`.
+- `/v1/messages`: `thinking` with a `summary` string or any `display` other than `"omitted"`, such as `"summarized"`.
+- `/v1/responses`: `reasoning={"effort": "medium", "summary": "auto"}`.
+
+`"display": "omitted"` is not an ask, so the setting decides. On `/v1/messages` this setting also wins over `reasoning_auto_summary`, since that summary is added by the gateway, not asked for by the request. A text value such as `"false"` is read as `false`, and a value that reads as neither keeps the summaries on.
+
+Available from v1.107.0.
+
 ## Usage - `service_tier`
 
 LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extracts it from the response headers (`x-gemini-service-tier`) into `model_response.service_tier`.
