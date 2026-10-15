@@ -32,7 +32,7 @@ Highlights:
 - **One trace, end to end** — the HTTP request, auth, guardrails, the LLM call, and DB writes all live in the same trace, correctly nested.
 - **Rich GenAI attributes** — every LLM-call span carries `gen_ai.*` attributes: model, provider, token usage, cost, finish reasons, request parameters, and more.
 - **Standards-based** — built on the official OpenTelemetry GenAI semantic conventions, so it works with any OTel-compatible backend.
-- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, or SigNoz in the format each tool expects.
+- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz, or nOps in the format each tool expects.
 - **Safe by default** — prompts and responses are **not** captured unless you explicitly opt in. Noisy routes (health checks, metrics scrapes, UI assets) are excluded automatically.
 - **Distributed tracing** — if your client sends a `traceparent` header, LiteLLM's spans nest inside your existing trace.
 
@@ -266,6 +266,20 @@ SIGNOZ_INGESTION_KEY="your-ingestion-key"                              # omit fo
 
 </TabItem>
 
+<TabItem value="nops" label="nOps">
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["nops"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+NOPS_API_KEY="your-api-key"   # needs the telemetry:write permission
+```
+
+</TabItem>
+
 </Tabs>
 
 :::tip[Send to several backends at once]
@@ -295,6 +309,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
 | SigNoz | `signoz` | `SIGNOZ_INGESTION_ENDPOINT` (OTLP base URL; `/v1/traces` is appended) | `SIGNOZ_INGESTION_KEY` (sent as `signoz-ingestion-key`; omit for self-hosted) | SigNoz Cloud or self-hosted SigNoz, OTLP HTTP | canonical `gen_ai.*` only | Yes |
+| nOps | `nops` | `NOPS_API_KEY` (sent as `Authorization: Bearer`) | `NOPS_OTEL_ENDPOINT` (OTLP base URL, default `https://api.nops.io/otel`; `/v1/traces` is appended) | nOps, OTLP HTTP | canonical `gen_ai.*` only | No |
 
 Notes:
 
@@ -504,6 +519,25 @@ No vendor mapper is added. Spans carry only the canonical keys from [Span attrib
 - `SIGNOZ_INGESTION_ENDPOINT` is the OTLP base URL for both SigNoz Cloud (`https://ingest.<region>.signoz.cloud:443`) and a self-hosted collector (`http://<host>:4318`). The preset appends `/v1/traces`; a value that already ends in `/v1/traces` is used as is. An unset or empty value fails at startup with an error naming the variable, and nothing is exported.
 - `SIGNOZ_INGESTION_KEY` is optional. When set it is sent as the `signoz-ingestion-key` header; when unset no auth header is sent, which is the self-hosted case.
 - Per-team and per-key routing is supported, including a per-tenant endpoint. See [SigNoz](./signoz#per-team-and-per-key-routing).
+
+</TabItem>
+
+<TabItem value="nops-shot" label="nOps">
+
+#### What nOps receives
+
+Each request is one trace with the server span at the root and the `chat <model>` span under it. nOps reads the model, provider, token usage and `litellm.cost.*` attributes from that span, and the [request identity](#request-identity-on-every-span) attributes to attribute spend to a team or key. The data shows up as metadata on the nOps **Explorer** page, filterable and groupable under the **AI** category, for example **AI > Source** or **AI > User**.
+
+#### Attributes added by the nOps preset
+
+No vendor mapper is added. Spans carry only the canonical keys from [Span attributes](#span-attributes).
+
+#### Setup notes
+
+- `NOPS_API_KEY` is required and is sent as an `Authorization: Bearer` header. An unset or empty value logs an error naming the variable at startup, and nothing is exported to nOps.
+- `NOPS_OTEL_ENDPOINT` defaults to `https://api.nops.io/otel`. The preset appends `/v1/traces`; a value that already ends in `/v1/traces` is used as is.
+- No prompt or response text is sent unless `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` turns capture on. See [Capturing prompts & responses](#capturing-prompts--responses).
+- Per-team and per-key routing is not supported; every trace uses the proxy-wide key. See [nOps](./nops), and [Send OpenTelemetry data to nOps](https://help.nops.io/telemetry/opentelemetry) for creating the key.
 
 </TabItem>
 
@@ -838,7 +872,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
 | SigNoz | `signoz` | `signoz_ingestion_key`, `signoz_ingestion_endpoint` | The SigNoz account, and optionally the SigNoz Cloud region or self-hosted collector it is sent to |
 
-Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
+Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`, `nops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
 
 ### Set it on a team
 
