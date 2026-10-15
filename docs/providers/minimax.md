@@ -642,7 +642,7 @@ Pass these via `extra_body`:
 
 MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`. Calling `video_content` before then returns a 400 that says the video is still processing.
 
-MiniMax video is available from v1.107.0 (first in `v1.107.0-rc.1`). Earlier releases return a 500 that says video generation is not supported for minimax.
+MiniMax video is available from v1.107.0. Earlier releases return a 500 that says video generation is not supported for minimax.
 
 ```python showLineNumbers title="MiniMax Video Generation"
 import os
@@ -666,9 +666,11 @@ with open("video.mp4", "wb") as f:
     f.write(video_content(video_id=video.id))
 ```
 
-`seconds` sets the duration and `size` sets the aspect ratio, so `1280x720` is sent as `16:9`. You can also pass `ratio` directly. `resolution` picks the output tier: `768P` (the default) or `2K` on MiniMax-H3, and `480P` or `768P` on MiniMax-H3-Max. Without `seconds` the job runs for 5 seconds, and a text-only request without `size` or `ratio` runs at 16:9. MiniMax accepts the ratios 16:9, 4:3, 1:1, 3:4, 9:16 and 21:9, so a `size` such as `1792x1024` (7:4) gets MiniMax's 400. MiniMax-H3 runs 4 to 15 seconds and MiniMax-H3-Max 5 to 15.
+`seconds` sets the duration and `size` sets the aspect ratio, so `1280x720` is sent as `16:9`. You can also pass `ratio` directly. `resolution` picks the output tier: `768P` (the default) or `2K` on MiniMax-H3, and `480P` or `768P` on MiniMax-H3-Max. Without `seconds` the job runs for 5 seconds, and a text-only request without `size` or `ratio` runs at 16:9. MiniMax accepts the ratios 16:9, 4:3, 1:1, 3:4, 9:16, 21:9 and `adaptive`, so a `size` such as `1792x1024` (7:4) gets MiniMax's 400. MiniMax-H3 runs 4 to 15 seconds and MiniMax-H3-Max 5 to 15.
 
-For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). Extra image and audio references go in `content` as MiniMax `image_url` and `audio_url` items, and an `audio_url` item needs `"role": "reference_audio"`. The text of the request always comes from `prompt`, so text items in `content` are rejected and all request text passes through your prompt guardrails. Guardrails do not scan the image and audio references themselves.
+For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). For reference-to-video, pass MiniMax `image_url` and `audio_url` items in `content` instead, each with a `role` of `reference_image` or `reference_audio`. MiniMax does not take references together with a first frame, and an audio reference needs at least one image reference beside it.
+
+The text of the request always comes from `prompt`, so text items in `content` are rejected. Guardrails that implement `apply_guardrail` (the [unified guardrail path](../proxy/guardrails/quick_start#where-the-skip-flags-apply)) scan that `prompt`, while other guardrail hooks may not scan `/v1/videos` requests, and no guardrail scans the image and audio references.
 
 Video calls read `MINIMAX_API_BASE` too. If you exported the `/anthropic/v1/messages` URL from the `/v1/messages` section, video calls return a 404, so set it to `https://api.minimax.io/v1` or pass `api_base="https://api.minimax.io/v1"` on video calls.
 
