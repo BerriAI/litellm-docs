@@ -555,7 +555,7 @@ Budget and Spend Alerts
 | Alert Type | Description | Default On|
 |------------|-------------|---------|
 | `budget_alerts` | Notifications related to budget limits or thresholds | ✅ |
-| `spend_reports` | Periodic reports on spending across teams or tags | ✅ |
+| `spend_reports` | Periodic reports on spending across teams or tags. For automated or on-demand HTML email reports delivered to specified recipients with team, key, and model breakdowns, see [Email Spend Reports](./email.md#scheduled-alerts). | ✅ |
 | `failed_tracking_spend` | Alerts when spend tracking fails | ✅ |
 | `daily_reports` | Daily Spend reports | ✅ |
 | `fallback_reports` | Weekly Reports on LLM fallback occurrences | ✅ |
