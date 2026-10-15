@@ -17,7 +17,7 @@ LiteLLM is a single control plane for three resource types:
 | **MCP Server** | `mcp_servers` in config or via UI |
 | **Agent** | A2A routes |
 
-All three share the same auth (LiteLLM API key), rate limiting, and usage dashboard — a central catalog without separate registries.
+All three share the same auth (LiteLLM API key), rate limiting, and usage dashboard, giving you a central catalog without separate registries.
 
 ---
 
@@ -56,22 +56,24 @@ general_settings:
     - "100.64.0.0/10"   # VPN/Tailscale range
 
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:
-  - server_name: internal-db
+  internal_db:
     url: http://db-mcp.internal:8000/mcp
     transport: http
     available_on_public_internet: false  # internal callers only
 
-  - server_name: web-search
+  web_search:
     url: https://mcp.exa.ai/mcp
     transport: http
-    available_on_public_internet: true   # visible to ChatGPT / Claude Desktop
+    available_on_public_internet: true   # visible to ChatGPT / Claude Desktop (the default)
 ```
+
+Server names may not contain a hyphen; the proxy rejects `mcp_servers` keys like `internal-db` at startup. Use underscores instead.
 
 ---
 
@@ -107,9 +109,9 @@ LiteLLM exposes all resource types through standard endpoints:
 | `GET /v1/models` | All registered LLMs |
 | `GET /v1/mcp/server` | All MCP servers |
 | `GET /mcp` | All MCP tools (across all servers) |
-| `GET /.well-known/agent.json` | A2A agent card |
+| `GET /a2a/{agent_id}/.well-known/agent-card.json` | A2A agent card |
 
-**MCP registry** (opt-in) — expose a discovery endpoint for Claude Desktop / Cursor:
+**MCP registry** (opt-in): expose a discovery endpoint for Claude Desktop / Cursor:
 
 ```yaml title="config.yaml"
 general_settings:
@@ -136,7 +138,7 @@ general_settings:
 If you expose LiteLLM's port to the internet (for Claude Desktop / ChatGPT), `/v1/chat/completions` is also reachable externally. LLM credentials stay protected by key auth, but be deliberate about this.
 
 **Mitigations:**
-1. **Separate deployments** (Option B) — the LLM gateway never gets a public port
+1. **Separate deployments** (Option B): the LLM gateway never gets a public port
 2. **Firewall** — block `/v1/chat/completions` from public IPs at the network layer
 3. **Short-lived scoped keys** — limit blast radius if a key leaks
 
@@ -144,7 +146,7 @@ If you expose LiteLLM's port to the internet (for Claude Desktop / ChatGPT), `/v
 
 When you register an external MCP URL (e.g. `https://mcp.exa.ai/mcp`), LiteLLM makes outbound requests to it on every tool call. Check that your network policy allows it and that your security team is comfortable with data leaving the perimeter.
 
-For air-gapped networks: only register MCP servers inside your perimeter and leave `available_on_public_internet: false` (the default).
+For air-gapped networks: only register MCP servers inside your perimeter and set `available_on_public_internet: false` on each of them. The default is `true`, so a server is visible to external callers unless you explicitly set it to `false`.
 
 ### Access controls
 

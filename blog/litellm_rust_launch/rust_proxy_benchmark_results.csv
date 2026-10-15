@@ -1,0 +1,7 @@
+measurement,concurrency,target,metric,value
+per_request_overhead,10,Rust gateway,median_ms,0.05
+per_request_overhead,10,LiteLLM (Python),median_ms,7.5
+sustained_load,50,Rust gateway,throughput_rps,6782
+sustained_load,50,LiteLLM (Python),throughput_rps,453
+sustained_load,50,Rust gateway,peak_memory_mb,31.7
+sustained_load,50,LiteLLM (Python),peak_memory_mb,358.9

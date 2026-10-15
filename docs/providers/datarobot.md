@@ -10,13 +10,14 @@ LiteLLM supports all models from [DataRobot](https://datarobot.com). Select `dat
 ```python
 import os
 from litellm import completion
-os.environ["DATAROBOT_API_KEY"] = ""
-os.environ["DATAROBOT_API_BASE"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
+os.environ["DATAROBOT_API_TOKEN"] = ""
+os.environ["DATAROBOT_ENDPOINT"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
 
 response = completion(
-            model="datarobot/openai/gpt-4o-mini",
+            model="datarobot/openai/{{openai_small}}",
             messages=messages,
         )
+```
 
 
 ### Completion
@@ -25,7 +26,7 @@ import litellm
 import os
 
 response = litellm.completion(
-    model="datarobot/openai/gpt-4o-mini",   # add `datarobot/` prefix to model so litellm knows to route through DataRobot
+    model="datarobot/openai/{{openai_small}}",   # add `datarobot/` prefix to model so litellm knows to route through DataRobot
     messages=[
                 {
                     "role": "user",

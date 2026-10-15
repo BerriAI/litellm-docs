@@ -10,21 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.87.0 — OCI Generative AI Provider, Gemini 3.5 Flash Day-0, MCP UI for OAuth Servers](/release_notes/v1.87.0/v1-87-0)
+### [v1.105.0: Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens](/release_notes/v1.105.0/v1-105-0)
 
-_May 23, 2026_
+_October 11, 2026_
 
-OCI Generative AI as a first-class provider (chat, embeddings, streaming, reasoning, tool use across Cohere, Llama, Grok, Gemini, and GPT-5 on OCI with full pricing catalog), Gemini 3.5 Flash and Gemini 3.1 Flash-Lite day-0 on Vertex AI / Google AI Studio / OpenRouter, MCP UI for OAuth-protected tool calls plus Cursor MCP OAuth, Codex CLI JWT team-alias and SSO form-URL auth hardening, and a hot-path Anthropic `/v1/messages` streaming rewrite with byte-identical wire output and ~90% lower TTFT overhead measured on a real 4-pod deployment.
-
----
-
-## Latest Release Candidate
-
-### [v1.88.0rc3 — Claude Opus 4.8, MCP Access-Group Authorization & Typed OpenTelemetry](/release_notes/v1.88.0rc3/v1-88-0-rc-3)
-
-_June 4, 2026_
-
-Claude Opus 4.8 across Anthropic, Bedrock (with `global` / `us` / `eu` / `au` regional routes), Azure AI, and Vertex at 1M context with adaptive thinking and `output_config` goal mode, a full rework of MCP access-group authorization (key and team access groups resolve to MCP servers, additive opt-in grants, stateful/stateless session routing), typed semconv-aligned OpenTelemetry spans carrying `team_metadata` and `http.route` on inference spans, and a ~30% cheaper per-chunk Anthropic/Bedrock streaming path.
+Claude Sonnet 5.5 and GPT-6.1 Sol on day one, the Decisions API on `/v1/decisions` and `/v1/systemone` across eight providers with a decision model guardrail, Prism, Sail and Cortecs providers, `litellm.agent()` for coding agents through the gateway, and Lens with Agent Traces. Review the Breaking Changes before upgrading
 
 ---
 
@@ -32,6 +22,24 @@ Claude Opus 4.8 across Anthropic, Bedrock (with `global` / `us` / `eu` / `au` re
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.105.0](/release_notes/v1.105.0/v1-105-0) | Oct 11, 2026 | Claude Sonnet 5.5 and GPT-6.1 Sol, Decisions API, `litellm.agent()`, Lens |
+| [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
+| [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
+| [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
+| [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |
+| [v1.90.0](/release_notes/v1.90.0/v1-90-0)   | Jun 26, 2026 | Six new providers, OpenTelemetry v2 metrics parity, streaming-reliability sweep |
+| [v1.89.0](/release_notes/v1.89.0/v1-89-0)   | Jun 10, 2026 | Claude Fable 5, A2A agent providers, MCP per-server controls |
+| [v1.88.0](/release_notes/v1.88.0/v1-88-0)   | Jun 4, 2026  | Claude Opus 4.8, MCP access-group authorization, typed OpenTelemetry |
 | [v1.87.0](/release_notes/v1.87.0/v1-87-0)   | May 23, 2026 | OCI Generative AI provider, Gemini 3.5 Flash day-0, MCP UI for OAuth servers |
 | [v1.86.0](/release_notes/v1.86.0/v1-86-0)   | May 16, 2026 | Weighted-Routing Failover, native Anthropic web-search citations, OTel-standard server spans |
 | [v1.85.1](/release_notes/v1.85.1/v1-85-1)   | May 20, 2026 | Patch — Gemini 3.5 Flash day-0 + cross-pod spend fix       |

@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# 🔭 DeepEval - Open-Source Evals with Tracing
+# DeepEval
 
 ### What is DeepEval?
 [DeepEval](https://deepeval.com) is an open-source evaluation framework for LLMs ([Github](https://github.com/confident-ai/deepeval)). 
@@ -33,7 +33,7 @@ litellm.failure_callback = ["deepeval"]
 
 try:
     response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {"role": "user", "content": "What's the weather like in San Francisco?"}
         ],

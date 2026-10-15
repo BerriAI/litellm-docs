@@ -58,7 +58,7 @@ oidc/config_name_here/
 #### Unofficial Providers (not recommended)
 
 For the unofficial `file` provider, you can use the following format
-(note the double slash — the path after `oidc/file/` must be absolute):
+(note the double slash; the path after `oidc/file/` must be absolute):
 
 ```
 oidc/file//var/run/secrets/my-token
@@ -106,9 +106,9 @@ If you are tempted to use oidc/env_path/AZURE_FEDERATED_TOKEN_FILE, don't do tha
 
 ```yaml
 model_list:
-  - model_name: claude-3-haiku-20240307
+  - model_name: {{anthropic}}
     litellm_params:
-      model: bedrock/anthropic.claude-3-haiku-20240307-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: us-west-2
       aws_session_name: "litellm"
       aws_role_name: "arn:aws:iam::YOUR_THING_HERE:role/litellm-google-demo"
@@ -134,7 +134,7 @@ The configuration below is only an example. You should adjust the permissions an
 
 Permissions:
 
-```json
+```json keep-model-ids
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -199,14 +199,14 @@ You should _never_ need to create an IAM user. If you did, you're not using OIDC
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-2024-05-13
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o-2024-05-13
+      model: azure/{{openai_large}}
       azure_ad_token: "oidc/google/https://example.com"
       api_version: "2024-06-01"
       api_base: "https://demo-here.openai.azure.com"
     model_info:
-      base_model: azure/gpt-4o-2024-05-13
+      base_model: azure/{{openai_large}}
 ```
 
 For Azure OpenAI, you need to define `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and optionally `AZURE_AUTHORITY_HOST` in your environment.
@@ -285,9 +285,9 @@ Please contact us for paid enterprise support if you need help setting up Azure 
 ### Azure AD -> Amazon Bedrock
 ```yaml
 model list:
-  - model_name: aws/claude-3-5-sonnet
+  - model_name: aws/{{anthropic}}
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_region_name: "eu-central-1"
       aws_role_name: "arn:aws:iam::12345678:role/bedrock-role"
       aws_web_identity_token: "oidc/azure/api://123-456-789-9d04"

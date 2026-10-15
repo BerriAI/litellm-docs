@@ -1,18 +1,13 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
+import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
 
 # Agent Gateway (A2A Protocol) - Overview
 
 Add A2A Agents on LiteLLM AI Gateway, Invoke agents in A2A Protocol, track request/response logs in LiteLLM Logs. Manage which Teams, Keys can access which Agents onboarded.
 
-<Image 
-  img={require('../img/a2a_gateway.png')}
-  style={{width: '80%', display: 'block', margin: '0', borderRadius: '8px'}}
-/>
-
-<br />
-<br />
+<LiteLLMFlow copyCommand={false} agentPrompt={false} highlight="A2A agents" />
 
 | Feature | Supported | 
 |---------|-----------|
@@ -35,21 +30,60 @@ LiteLLM follows the [A2A (Agent-to-Agent) Protocol](https://github.com/google/A2
 
 You can add A2A-compatible agents through the LiteLLM Admin UI.
 
-1. Navigate to the **Agents** tab
-2. Click **Add Agent**
-3. Enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
+1. Navigate to **Agentic** > **Agents**
+2. Click **Add New Agent**
+3. In the **Configure** step, enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
+4. Choose a **Protocol Version** (`1.0` or `0.3`) - the wire format LiteLLM serves to clients for this agent
+5. Continue through the remaining steps and save the agent
 
 <Image 
   img={require('../img/add_agent_1.png')}
+  dark={require('../img/add_agent_1_dark.png')}
+  alt="Add New Agent dialog showing the agent name, URL and protocol version"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
 The URL should be the invocation URL for your A2A agent (e.g., `http://localhost:10001`).
 
+#### Define agents in config.yaml
+
+Agents can also be declared in `config.yaml` under the top-level `agents` key, which is useful when the gateway is deployed from a ConfigMap or another read-only source. `agent_name` and `agent_card_params` are both required; entries missing either one are skipped at startup.
+
+```yaml title="config.yaml"
+agents:
+  - agent_name: my-agent
+    agent_card_params:
+      name: "My Agent"
+      url: "http://localhost:10001"
+      protocolVersion: "1.0"  # or "0.3"
+```
+
+`protocolVersion` can be set the same way when registering through the API.
+
+An optional `litellm_params` block carries per-agent settings such as `api_key`, `headers`, `agent_card_path`, and Microsoft Entra credentials; [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a) shows a full entry
+
+Config-defined agents show up in the Agents tab and in `GET /v1/agents` alongside agents created in the UI, and they survive the periodic reload from the database. Verify them with:
+
+```shell
+curl -s http://localhost:4000/v1/agents \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+If an agent created in the UI already uses a name you then declare in `config.yaml`, the database record wins and the config entry with that name is skipped, so the name always resolves to the record you can edit. Delete the database agent and the config entry takes the name back on the next reload.
+
+:::info
+
+Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
+
+The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+
+:::
 
 ### Add Azure AI Foundry Agents
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
+
+Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 
@@ -61,11 +95,53 @@ Follow [this guide, to add your bedrock agentcore agent to LiteLLM Agent Gateway
 
 ### Add LangGraph Agents
 
-Follow [this guide to register a LangGraph agent and configure its agent card](./providers/langgraph#register-a-langgraph-platform-agent)
+Follow [this guide to register a LangGraph agent and configure its agent card](/docs/providers/langgraph)
 
 ### Add Pydantic AI Agents
 
 Follow [this guide, to add your pydantic ai agent to LiteLLM Agent Gateway](./providers/pydantic_ai_agent#litellm-a2a-gateway)
+
+
+## Protocol versioning
+
+LiteLLM proxy routes A2A agents using **a2a-sdk 1.x** and can serve either **A2A 0.3** or **1.0** wire format to clients per agent. Upstream agents may speak either version; LiteLLM normalizes `message/send`, `message/stream`, and extended-card responses to the version you pin.
+
+| Version | Wire shape | Example send result |
+|---------|------------|---------------------|
+| **0.3** | Objects discriminated by `kind` (`message`, `task`, `status-update`, …) | `{"kind": "message", "role": "user", "parts": [{"kind": "text", "text": "..."}]}` |
+| **1.0** | Protobuf JSON envelopes (`message`, `task`, `statusUpdate`, `artifactUpdate`) | `{"message": {"role": "ROLE_USER", "parts": [{"text": "..."}]}}` |
+
+### Pinning a version
+
+Set `agent_card_params.protocolVersion` to `"0.3"` or `"1.0"` when registering an agent (UI dropdown or API). LiteLLM serves that version on the proxied agent card and converts upstream responses to match.
+
+Only `"0.3"` and `"1.0"` are accepted; other values return HTTP 400 at registration.
+
+### When `protocolVersion` is not pinned
+
+If an agent has no pinned version, LiteLLM infers the served version from the client request:
+
+| Client signal | Served version |
+|---------------|----------------|
+| JSON-RPC method `SendMessage` or `SendStreamingMessage` | `1.0` |
+| Request header `a2a-version: 1.x` | `1.0` |
+| Otherwise (e.g. `message/send` with no header) | `0.3` |
+
+:::tip[Always pin `protocolVersion`]
+
+The proxied agent card defaults to `1.0` when unset, but legacy `message/send` callers without an `a2a-version` header receive **0.3**-shaped responses. Pin `protocolVersion` explicitly so your card and responses always match.
+
+:::
+
+Task methods (`tasks/get`, `tasks/list`, …) are forwarded to the upstream agent unchanged. Version conversion applies to LiteLLM-integrated messaging paths only.
+
+### Dependency
+
+LiteLLM proxy A2A routes require **a2a-sdk >= 1.1.0** (included in the `proxy` / `proxy-dev` dependency groups). If you call agents from your own code, install the matching SDK version:
+
+```bash
+pip install "a2a-sdk>=1.1.0,<2.0"
+```
 
 ## Invoking your Agents
 
@@ -78,12 +154,14 @@ See the [Invoking A2A Agents](./a2a_invoking_agents) guide to learn how to call 
 After invoking an agent, you can view the request logs in the LiteLLM **Logs** tab.
 
 The logs show:
-- **Request/Response content** sent to and received from the agent
+- **Request/Response content** sent to and received from the agent (open a row, then switch the **Request & Response** section to **JSON**; requires `store_prompts_in_spend_logs: true`)
 - **User, Key, Team** information for tracking who made the request
 - **Latency and cost** metrics
 
 <Image 
   img={require('../img/agent2.png')}
+  dark={require('../img/agent2_dark.png')}
+  alt="Request log details for an A2A agent call showing the request JSON"
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
 
@@ -105,7 +183,8 @@ To enable these features, your A2A server must **forward these headers** to any 
 ### Implementation Steps
 
 **Step 1: Extract headers from incoming A2A request**
-```python def get_litellm_headers(request) -> dict:
+```python
+def get_litellm_headers(request) -> dict:
     """Extract X-LiteLLM-* headers from incoming A2A request."""
     all_headers = request.call_context.state.get('headers', {})
     return {
@@ -119,7 +198,8 @@ Pass the extracted headers when making calls back to LiteLLM:
 <Tabs>
 <TabItem value="openai" label="OpenAI SDK" default>
 
-```python from openai import OpenAI
+```python
+from openai import OpenAI
 
 headers = get_litellm_headers(request)
 
@@ -130,7 +210,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -144,7 +224,7 @@ from langchain_openai import ChatOpenAI
 headers = get_litellm_headers(request)
 
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="{{openai_large}}",
     openai_api_key="sk-your-litellm-key",
     base_url="http://localhost:4000",
     default_headers=headers,  # Forward headers
@@ -159,7 +239,7 @@ import litellm
 headers = get_litellm_headers(request)
 
 response = litellm.completion(
-    model="gpt-4o",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
     api_base="http://localhost:4000",
     extra_headers=headers,  # Forward headers
@@ -177,7 +257,7 @@ headers["Authorization"] = "Bearer sk-your-litellm-key"
 response = httpx.post(
     "http://localhost:4000/v1/chat/completions",
     headers=headers,
-    json={"model": "gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}
+    json={"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}
 )
 ```
 </TabItem>
@@ -196,8 +276,12 @@ With header forwarding enabled, you'll see:
 
 **Agent Spend Attribution:**
 
+Open **Usage**, choose **Agent Usage (A2A)** and stay on the **Cost** tab to see spend per agent.
+
 <Image
   img={require('../img/a2a_agent_spend.png')}
+  dark={require('../img/a2a_agent_spend_dark.png')}
+  alt="Agent Usage (A2A) page showing daily spend and spend by agent"
   style={{width: '80%', display: 'block', margin: '0', borderRadius: '8px'}}
 />
 
@@ -233,7 +317,6 @@ Send any of these in the `method` field of `POST /a2a/{agent_id}`:
 | `tasks/pushNotificationConfig/delete` | Delete push config |
 | `agent/getAuthenticatedExtendedCard` | Extended agent card |
 
-PascalCase SDK names (`GetTask`, `ListTasks`, …) are normalized to the slash form automatically.
 
 **Routing:** `message/send` and `message/stream` go through LiteLLM's A2A client (logging, guardrails, spend). All other methods are forwarded to the upstream URL in `agent_card_params.url`. Task APIs require that URL; completion-bridge-only agents support messaging methods only.
 
@@ -241,7 +324,7 @@ See [Supported A2A methods](./a2a_agent_card#supported-a2a-methods) for examples
 
 ### Authentication
 
-Include your LiteLLM Virtual Key in either of two headers — `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3--convention-based-forwarding) to forward the caller's identity).
+Include your LiteLLM Virtual Key in either of two headers. `x-litellm-api-key` is preferred when the inbound `Authorization` header may carry a token destined for the backend agent (e.g. when using the [convention-based passthrough](./a2a_agent_headers#method-3-convention-based-forwarding) to forward the caller's identity).
 
 ```
 Authorization: Bearer sk-your-litellm-key
@@ -270,7 +353,7 @@ curl -X POST http://localhost:4000/v1/agents \
   }'
 ```
 
-The reverse direction — enforcing trace ID on **outbound** calls made by a key owned by an agent — is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
+Enforcing a trace ID on **outbound** calls made by a key owned by an agent is controlled by `require_trace_id_on_calls_by_agent` on the same `litellm_params` block.
 
 #### Sub-agent identity propagation
 
@@ -283,9 +366,12 @@ The caller's **virtual key** and **end-user ID** are not automatically forwarded
 
 ### Request Format
 
-LiteLLM follows the [A2A JSON-RPC 2.0 specification](https://github.com/google/A2A):
+LiteLLM follows the [A2A JSON-RPC 2.0 specification](https://github.com/google/A2A). The message body shape depends on the agent's pinned `protocolVersion` (or the client signals above when unpinned).
 
-```json title="Request Body"
+<Tabs>
+<TabItem value="v03" label="0.3 wire format" default>
+
+```json title="Request Body (0.3)"
 {
   "jsonrpc": "2.0",
   "id": "unique-request-id",
@@ -300,9 +386,24 @@ LiteLLM follows the [A2A JSON-RPC 2.0 specification](https://github.com/google/A
 }
 ```
 
+</TabItem>
+<TabItem value="v10" label="1.0 wire format">
+
+Use the [a2a-sdk 1.x client](./a2a_invoking_agents#a2a-sdk) (recommended) or send JSON-RPC with PascalCase methods / an `a2a-version: 1.0` header when the agent is pinned to `1.0`.
+
+```json title="Request Body (1.0 SDK — protobuf types)"
+// Build with a2a.types.Message, Part, Role, then wrap in SendMessageRequest
+```
+
+</TabItem>
+</Tabs>
+
 ### Response Format
 
-```json title="Response"
+<Tabs>
+<TabItem value="resp03" label="0.3 response" default>
+
+```json title="Response (0.3 task result)"
 {
   "jsonrpc": "2.0",
   "id": "unique-request-id",
@@ -322,13 +423,35 @@ LiteLLM follows the [A2A JSON-RPC 2.0 specification](https://github.com/google/A
 }
 ```
 
+</TabItem>
+<TabItem value="resp10" label="1.0 response">
+
+```json title="Response (1.0 message envelope)"
+{
+  "jsonrpc": "2.0",
+  "id": "unique-request-id",
+  "result": {
+    "message": {
+      "role": "ROLE_AGENT",
+      "messageId": "msg-abc",
+      "parts": [{"text": "Agent response here"}]
+    }
+  }
+}
+```
+
+Streaming events use `statusUpdate` / `artifactUpdate` keys instead of `kind: "status-update"`.
+
+</TabItem>
+</Tabs>
+
 Agent JSON-RPC errors are returned in the `error` field with the same `id` as the request when possible. Poll long-running work with `tasks/get` after `message/send` returns a `submitted` task.
 
 ### Example: `tasks/get`
 
 ```bash title="Poll task after message/send"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -343,3 +466,48 @@ curl -X POST "http://localhost:4000/a2a/my-agent" \
 Want to create a central registry so your team can discover what agents are available within your company?
 
 Use the [AI Hub](./proxy/ai_hub) to make agents public and discoverable across your organization. This allows developers to browse available agents without needing to rebuild them.
+
+### Search the registry
+
+`GET /v1/agents` lists every agent the key can reach. Add `query=<task>` to rank those same agents by semantic similarity between the task and each agent's name, description, and skills. Pick the embedding model first:
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  agent_search_embedding_model: text-embedding-3-small
+```
+
+```console title="Rank agents for a task" showLineNumbers
+$ curl -s "http://localhost:4000/v1/agents?query=translate+a+pdf+document&top_k=3" \
+    -H "Authorization: Bearer $LITELLM_KEY" | jq -c '.[] | {agent_name, search_score}'
+{"agent_name":"document-translator","search_score":0.6732403392080719}
+{"agent_name":"trip-planner","search_score":0.1121043964671429}
+{"agent_name":"warehouse-sql-analyst","search_score":0.0946962275274791}
+```
+
+`top_k` defaults to 5 and caps at 100. Each result is the normal agent object plus a `search_score` (cosine similarity, higher is better). Ranking only ever covers agents the key is allowed to see, so a key restricted to two agents gets those two back whatever the query. Without `agent_search_embedding_model` a `query` returns `400 agent_search_not_configured`; if the embedding call fails, the request returns `503 agent_search_unavailable`. Agent embeddings are computed once per process and reused until the agent card changes.
+
+MCP clients get the same search as a virtual tool. A key with `mcp_tool_search_enabled: true` on its `object_permission` sees `agent_search(query, top_k)` next to `mcp_tool_search` and `mcp_tool_call` on `tools/list`, over both `/mcp/` and `/mcp-rest`:
+
+```console title="agent_search over /mcp-rest" showLineNumbers
+$ curl -s -X POST http://localhost:4000/mcp-rest/tools/call \
+    -H "Authorization: Bearer $KEY" \
+    -d '{"name":"agent_search","arguments":{"query":"check how many units are left in stock","top_k":1}}' \
+  | jq -r '.content[0].text | fromjson'
+[
+  {
+    "agent_id": "b21b8787-8b9e-4c5f-a45c-3f5e4061d70e",
+    "agent_name": "warehouse-sql-analyst",
+    "description": "Answers questions about stock by running SQL queries against the inventory database",
+    "skills": [{"name": "Query stock levels", "description": "Run a SQL query against the inventory database and summarize the stock levels it returns", "tags": ["sql", "analytics"]}],
+    "score": 0.37912064119364597
+  }
+]
+```
+
+See [MCP Tool Search](./mcp_tool_search.md) for how to enable the virtual tools on a key.

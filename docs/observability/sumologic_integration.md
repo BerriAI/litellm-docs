@@ -56,7 +56,7 @@ litellm.callbacks = ["sumologic"]
 
 # OpenAI call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - I'm testing Sumo Logic integration"}
   ]
@@ -70,9 +70,9 @@ response = litellm.completion(
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -93,9 +93,9 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -123,7 +123,7 @@ Example payload:
 {
   "id": "chatcmpl-123",
   "call_type": "litellm.completion",
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {"role": "user", "content": "Hello"}
   ],
@@ -140,7 +140,7 @@ Example payload:
     "completion_tokens": 5,
     "total_tokens": 15
   },
-  "response_cost": 0.0001,
+  "response_cost": 0.000008,
   "start_time": "2024-01-01T00:00:00",
   "end_time": "2024-01-01T00:00:01"
 }
@@ -156,9 +156,9 @@ The Sumo Logic integration uses **NDJSON (newline-delimited JSON)** format by de
 
 Each log entry is sent as a separate line in the HTTP request:
 ```
-{"id":"chatcmpl-1","model":"gpt-3.5-turbo","response_cost":0.0001,...}
-{"id":"chatcmpl-2","model":"gpt-4","response_cost":0.0003,...}
-{"id":"chatcmpl-3","model":"gpt-3.5-turbo","response_cost":0.0001,...}
+{"id":"chatcmpl-1","model":"{{openai_small}}","response_cost":0.0001,...}
+{"id":"chatcmpl-2","model":"{{openai_large}}","response_cost":0.0003,...}
+{"id":"chatcmpl-3","model":"{{openai_small}}","response_cost":0.0001,...}
 ```
 
 #### Benefits for Field Extraction Rules (FERs)
@@ -183,13 +183,18 @@ _sourceCategory=litellm/logs
 
 #### Changing the Log Format (Advanced)
 
-If you need to change the log format (not recommended for Sumo Logic):
+If you need to change the log format (not recommended for Sumo Logic), define the full `generic_api` callback in `callback_settings`. `endpoint` and `headers` are required; a block with only `log_format` is skipped with a `missing endpoint or headers` warning and the proxy then fails to start with `ValueError: Empty module name`
 
 ```yaml
+litellm_settings:
+  callbacks: ["sumologic"]
+
 callback_settings:
   sumologic:
     callback_type: generic_api
-    callback_name: sumologic
+    endpoint: os.environ/SUMOLOGIC_WEBHOOK_URL
+    headers:
+      Content-Type: application/json
     log_format: json_array  # Override to use JSON array instead
 ```
 
@@ -209,8 +214,8 @@ litellm.callbacks = ["sumologic"]
 
 # Configure batch settings (optional)
 # These are inherited from CustomBatchLogger
-# Default batch_size: 100
-# Default flush_interval: 60 seconds
+# Default batch_size: 512 (override with the DEFAULT_BATCH_SIZE env var)
+# Default flush_interval: 5 seconds (override with the DEFAULT_FLUSH_INTERVAL_SECONDS env var)
 ```
 
 </TabItem>
@@ -304,7 +309,7 @@ The Sumo Logic HTTP Source URL includes the authentication token, so you only ne
 
 1. **Verify the URL**: Make sure `SUMOLOGIC_WEBHOOK_URL` is set correctly
 2. **Check the HTTP Source**: Ensure it's active in Sumo Logic UI
-3. **Wait for batching**: Logs are sent in batches, wait 60 seconds
+3. **Wait for batching**: Logs are sent in batches, flushed every 5 seconds by default (`DEFAULT_FLUSH_INTERVAL_SECONDS`)
 4. **Check for errors**: Enable debug logging in LiteLLM:
    ```python
    litellm.set_verbose = True

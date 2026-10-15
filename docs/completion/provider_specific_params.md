@@ -7,7 +7,7 @@ Providers might offer params not supported by OpenAI (e.g. top_k). LiteLLM treat
 
 You can pass those in 2 ways: 
 - via completion(): We'll pass the non-openai param, straight to the provider as part of the request body.
-    - e.g. `completion(model="claude-instant-1", top_k=3)`
+    - e.g. `completion(model="{{anthropic}}", top_k=3)`
 - via provider-specific config variable (e.g. `litellm.OpenAIConfig()`). 
 
 ## SDK Usage
@@ -22,7 +22,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-key"
 
 ## SET MAX TOKENS - via completion() 
 response_1 = litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -33,7 +33,7 @@ response_1_text = response_1.choices[0].message.content
 litellm.OpenAIConfig(max_tokens=10)
 
 response_2 = litellm.completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -55,7 +55,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-key"
 
 ## SET MAX TOKENS - via completion() 
 response_1 = litellm.completion(
-            model="text-davinci-003",
+            model="gpt-3.5-turbo-instruct",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -65,7 +65,7 @@ response_1_text = response_1.choices[0].message.content
 ## SET MAX TOKENS - via config
 litellm.OpenAITextCompletionConfig(max_tokens=10)
 response_2 = litellm.completion(
-            model="text-davinci-003",
+            model="gpt-3.5-turbo-instruct",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -119,7 +119,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
 
 ## SET MAX TOKENS - via completion()
 response_1 = litellm.completion(
-            model="claude-instant-1",
+            model="{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -127,9 +127,9 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.AnthropicConfig(max_tokens_to_sample=200)
+litellm.AnthropicConfig(max_tokens=200)
 response_2 = litellm.completion(
-            model="claude-instant-1",
+            model="{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -158,20 +158,9 @@ response_1 = litellm.completion(
         )
 
 response_1_text = response_1.choices[0].message.content
-
-## SET MAX TOKENS - via config
-litellm.HuggingfaceConfig(max_new_tokens=200)
-response_2 = litellm.completion(
-            model="huggingface/mistralai/Mistral-7B-Instruct-v0.1",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-            api_base="https://your-huggingface-api-endpoint"
-        )
-
-response_2_text = response_2.choices[0].message.content
-
-## TEST OUTPUT
-assert len(response_2_text) > len(response_1_text)
 ```
+
+The Huggingface route does not read provider config defaults, so `litellm.HuggingFaceChatConfig(max_tokens=...)` has no effect on the request. Pass `max_tokens` on each `completion()` call instead
 
 </TabItem>
 
@@ -194,7 +183,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.TogetherAIConfig(max_tokens_to_sample=200)
+litellm.TogetherAIConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="together_ai/togethercomputer/llama-2-70b-chat",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -215,7 +204,7 @@ import litellm, os
 
 ## SET MAX TOKENS - via completion()
 response_1 = litellm.completion(
-            model="ollama/llama2",
+            model="ollama_chat/llama2",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -223,9 +212,9 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.OllamConfig(num_predict=200)
+litellm.OllamaChatConfig(num_predict=200)
 response_2 = litellm.completion(
-            model="ollama/llama2",
+            model="ollama_chat/llama2",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -301,37 +290,6 @@ assert len(response_2_text) > len(response_1_text)
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
-
-```python
-import litellm, os 
-
-# set env variables
-os.environ["PALM_API_KEY"] = "your-palm-key"  
-
-## SET MAX TOKENS - via completion()
-response_1 = litellm.completion(
-            model="palm/chat-bison",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-            max_tokens=10
-        )
-
-response_1_text = response_1.choices[0].message.content
-
-## SET MAX TOKENS - via config
-litellm.PalmConfig(maxOutputTokens=10)
-response_2 = litellm.completion(
-            model="palm/chat-bison",
-            messages=[{ "content": "Hello, how are you?","role": "user"}],
-        )
-
-response_2_text = response_2.choices[0].message.content
-
-## TEST OUTPUT
-assert len(response_2_text) > len(response_1_text)
-```
-</TabItem>
-
 <TabItem value="ai21" label="AI21">
 
 ```python
@@ -382,7 +340,7 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.CohereConfig(max_tokens=200)
+litellm.CohereChatConfig(max_tokens=200)
 response_2 = litellm.completion(
             model="command-nightly",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
@@ -422,7 +380,7 @@ model_list:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "llama-3-8b-instruct",
   "messages": [
@@ -450,7 +408,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 import litellm
 
 response = litellm.completion(
-    model="bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello!"}],
     requestMetadata={"cost_center": "engineering"}
 )
@@ -463,7 +421,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="vertex_ai/gemini-pro",
+    model="vertex_ai/{{gemini_flash}}",
     messages=[{"role": "user", "content": "Hello!"}],
     labels={"environment": "production"}
 )
@@ -476,7 +434,7 @@ response = litellm.completion(
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-3-sonnet-20240229",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Hello!"}],
     metadata={"user_id": "user123"}
 )

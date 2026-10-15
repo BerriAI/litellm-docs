@@ -1,15 +1,10 @@
 import Image from '@theme/IdealImage';
 
-# Google Cloud Storage Buckets
+# Google Cloud Storage
 
 Log LLM Logs to [Google Cloud Storage Buckets](https://cloud.google.com/storage?hl=en)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 ### Usage
 

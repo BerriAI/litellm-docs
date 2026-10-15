@@ -92,9 +92,7 @@ response = litellm.image_generation(
     model="gemini/imagen-4.0-generate-001",
     prompt="A futuristic cityscape at night with neon lights",
     n=1,
-    size="1024x1024",
-    quality="standard",
-    response_format="url"
+    size="1024x1024"
 )
 
 for image in response.data:
@@ -114,11 +112,11 @@ model_list:
     litellm_params:
       model: gemini/imagen-4.0-generate-001
       api_key: os.environ/GEMINI_API_KEY
-  model_info:
-    mode: image_generation
+    model_info:
+      mode: image_generation
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -140,7 +138,7 @@ from openai import OpenAI
 # Initialize client with your proxy URL
 client = OpenAI(
     base_url="http://localhost:4000",  # Your proxy URL
-    api_key="sk-1234"                  # Your proxy API key
+    api_key="sk-<your-litellm-api-key>"                  # Your proxy API key
 )
 
 # Generate image
@@ -166,7 +164,7 @@ response = litellm.image_generation(
     model="litellm_proxy/google-imagen",
     prompt="A serene Japanese garden with cherry blossoms",
     api_base="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 print(response.data[0].url)
@@ -179,7 +177,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Google AI Studio Image Generation via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "google-imagen",
     "prompt": "A cozy coffee shop interior with warm lighting",
@@ -191,6 +189,84 @@ curl --location 'http://localhost:4000/v1/images/generations' \
 </TabItem>
 </Tabs>
 
+## Gemini Image Models
+
+Gemini image models (e.g. `gemini-3.1-flash-image-preview`, `gemini-3-pro-image-preview`) use the `generateContent` API and return base64 images. They also support **Google Search grounding** on `/v1/images/generations`.
+
+```python showLineNumbers title="Gemini image generation with Google Search"
+import litellm
+import os
+
+os.environ["GEMINI_API_KEY"] = "your-api-key-here"
+
+response = litellm.image_generation(
+    model="gemini/gemini-3.1-flash-image-preview",
+    prompt="Generate an image of the latest iPhone design",
+    web_search_options={},
+)
+
+print(response.data[0].b64_json)
+```
+
+```bash showLineNumbers title="Proxy request with web_search_options"
+curl --location 'http://localhost:4000/v1/images/generations' \
+--header 'Content-Type: application/json' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
+--data '{
+    "model": "gemini-3.1-flash-image-preview",
+    "prompt": "Generate an image of the latest iPhone design",
+    "web_search_options": {}
+}'
+```
+
+You can also pass `tools=[{"type": "web_search"}]` or native `tools=[{"googleSearch": {}}]`.
+
+### Passing imageConfig
+
+Gemini image models accept a full `imageConfig` object. All fields map directly to `generationConfig.imageConfig` on the underlying `generateContent` request.
+
+```python showLineNumbers title="imageConfig with all fields"
+import litellm
+import os
+
+os.environ["GEMINI_API_KEY"] = "your-api-key-here"
+
+response = litellm.image_generation(
+    model="gemini/gemini-3.1-flash-image-preview",
+    prompt="A nano banana on a desk",
+    imageConfig={
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85,
+        },
+    },
+)
+
+print(response.data[0].b64_json)
+```
+
+```bash showLineNumbers title="imageConfig via Proxy"
+curl --location 'http://localhost:4000/v1/images/generations' \
+--header 'Content-Type: application/json' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
+--data '{
+    "model": "gemini-3.1-flash-image-preview",
+    "prompt": "A nano banana on a desk",
+    "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "2K",
+        "personGeneration": "DONT_ALLOW",
+        "imageOutputOptions": {
+            "mimeType": "image/jpeg",
+            "compressionQuality": 85
+        }
+    }
+}'
+```
+
 ## Supported Parameters
 
 Google AI Studio Image Generation supports the following OpenAI-compatible parameters:
@@ -201,6 +277,9 @@ Google AI Studio Image Generation supports the following OpenAI-compatible param
 | `model` | string | The model to use for generation | Required | `"gemini/imagen-4.0-generate-001"` |
 | `n` | integer | Number of images to generate (1-4) | `1` | `2` |
 | `size` | string | Image dimensions | `"1024x1024"` | `"512x512"`, `"1024x1024"` |
+| `web_search_options` | object | Enable Google Search grounding (Gemini image models only) | - | `{}` |
+| `tools` | array | Pass `{"type": "web_search"}` or `{"googleSearch": {}}` (Gemini image models only) | - | `[{"type": "web_search"}]` |
+| `imageConfig` | object | Full [ImageConfig](https://cloud.google.com/vertex-ai/docs/reference/rpc/google.cloud.aiplatform.v1#imageconfig) object (Gemini image models only). Fields: `aspectRatio`, `imageSize`, `personGeneration`, `imageOutputOptions` | - | `{"aspectRatio": "16:9", "imageSize": "2K"}` |
 
 1. Create an account at [Google AI Studio](https://aistudio.google.com/)
 2. Generate an API key from [API Keys section](https://aistudio.google.com/app/apikey)
@@ -211,4 +290,4 @@ Google AI Studio Image Generation supports the following OpenAI-compatible param
 
 - [Google AI Studio Documentation](https://ai.google.dev/gemini-api/docs)
 - [Imagen Model Overview](https://ai.google.dev/gemini-api/docs/imagen)
-- [LiteLLM Image Generation Guide](../../completion/image_generation)
+- [LiteLLM Image Generation Guide](/docs/image_generation)

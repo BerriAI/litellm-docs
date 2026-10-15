@@ -16,7 +16,7 @@ LiteLLM provides image editing functionality that maps to OpenAI's `/images/edit
 | Supported operations | Create image edits | Single and multiple images supported |
 | Supported LiteLLM SDK Versions | 1.63.8+ | Gemini support requires 1.79.3+ |
 | Supported LiteLLM Proxy Versions | 1.71.1+ | Gemini support requires 1.79.3+ |
-| Supported LLM providers | **OpenAI**, **Gemini (Google AI Studio)**, **Vertex AI**, **OpenRouter**, **Stability AI**, **AWS Bedrock (Stability)**, **Black Forest Labs** | Gemini supports the new `gemini-2.5-flash-image` family. Vertex AI supports both Gemini and Imagen models. OpenRouter routes image edits through chat completions. Stability AI and Bedrock Stability support various image editing operations. Black Forest Labs supports FLUX Kontext models. |
+| Supported LLM providers | **OpenAI**, **Gemini (Google AI Studio)**, **Vertex AI**, **OpenRouter**, **Stability AI**, **AWS Bedrock (Stability)**, **Black Forest Labs**, **Azure AI (FLUX)**, **Hosted vLLM (vLLM-Omni)** | Gemini supports the new `gemini-2.5-flash-image` family. Vertex AI supports both Gemini and Imagen models. OpenRouter routes image edits through chat completions. Stability AI and Bedrock Stability support various image editing operations. Black Forest Labs supports FLUX Kontext models. Hosted vLLM routes to a vLLM-Omni server's OpenAI-compatible `/v1/images/edits`. |
 
  #### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
 
@@ -269,7 +269,7 @@ os.environ["VERTEXAI_LOCATION"] = "us-central1"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/path/to/service-account.json"
 
 response = litellm.image_edit(
-    model="vertex_ai/gemini-2.5-flash",
+    model="vertex_ai/gemini-2.5-flash-image",
     image=open("original_image.png", "rb"),
     prompt="Add neon lights in the background",
     size="1024x1024",
@@ -337,6 +337,25 @@ response = image_edit(
     prompt="Blend the reference style into the scene",
     size="1536x1024",   # mapped to aspect_ratio 3:2
     quality="high",      # mapped to image_size 4K
+)
+
+print(response)
+```
+
+</TabItem>
+<TabItem value="hosted_vllm" label="Hosted vLLM">
+
+#### Basic Image Edit
+```python showLineNumbers title="Hosted vLLM Image Edit"
+import os
+from litellm import image_edit
+
+os.environ["HOSTED_VLLM_API_BASE"] = "http://localhost:8091"
+
+response = image_edit(
+    model="hosted_vllm/Qwen/Qwen-Image-Edit-2511",
+    image=open("original_image.png", "rb"),
+    prompt="Add a red hat to the person in the image",
 )
 
 print(response)
@@ -485,7 +504,7 @@ curl -X POST "http://0.0.0.0:4000/v1/images/edits" \
 model_list:
   - model_name: vertex-gemini-image-edit
     litellm_params:
-      model: vertex_ai/gemini-2.5-flash
+      model: vertex_ai/gemini-2.5-flash-image
       vertex_project: os.environ/VERTEXAI_PROJECT
       vertex_location: os.environ/VERTEXAI_LOCATION
       vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
@@ -551,6 +570,34 @@ curl -X POST "http://0.0.0.0:4000/v1/images/edits" \
   -F "image=@original_image.png" \
   -F "prompt=Make the sky a vibrant purple sunset" \
   -F "size=1024x1024"
+```
+
+</TabItem>
+<TabItem value="hosted_vllm" label="Hosted vLLM">
+
+1. Add the vLLM-Omni image edit model to your `config.yaml`:
+```yaml showLineNumbers title="Hosted vLLM Proxy Configuration"
+model_list:
+  - model_name: qwen-image-edit
+    litellm_params:
+      model: hosted_vllm/Qwen/Qwen-Image-Edit-2511
+      api_base: http://localhost:8091
+    model_info:
+      mode: image_edit
+```
+
+2. Start the LiteLLM proxy server:
+```bash showLineNumbers title="Start LiteLLM Proxy Server"
+litellm --config /path/to/config.yaml
+```
+
+3. Make an image edit request:
+```bash showLineNumbers title="Hosted vLLM Proxy Image Edit"
+curl -X POST "http://0.0.0.0:4000/v1/images/edits" \
+  -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
+  -F "model=qwen-image-edit" \
+  -F "image=@original_image.png" \
+  -F "prompt=Add a red hat to the person in the image"
 ```
 
 </TabItem>

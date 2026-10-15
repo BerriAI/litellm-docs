@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Argilla 
+# Argilla
 
 Argilla is a collaborative annotation tool for AI engineers and domain experts who need to build high-quality datasets for their projects.
 
@@ -73,7 +73,7 @@ litellm.argilla_transformation_object = {
 
 ## LLM CALL ## 
 response = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 ```

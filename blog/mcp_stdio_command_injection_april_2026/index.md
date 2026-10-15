@@ -16,8 +16,8 @@ The fix landed in [commit `7b7f304`](https://github.com/BerriAI/litellm/commit/7
 
 ## TLDR;
 
-- **This was not exploitable by unauthenticated users.** The affected endpoints (MCP server creation and the `/mcp-rest/test/*` preview endpoints) all sit behind LiteLLM's auth. An attacker needed a valid LiteLLM API key — and, with the patch, the `PROXY_ADMIN` role — before they could reach this code path.
-- **The fix has been live since `v1.83.6-nightly`.** The first stable release with the fix is **`v1.83.7-stable`**. Full list of patched versions [below](#versions-with-the-fix).
+- **This was not exploitable by unauthenticated users.** The affected endpoints (MCP server creation and the `/mcp-rest/test/*` preview endpoints) all sit behind LiteLLM's auth. An attacker needed a valid LiteLLM API key, and with the patch the `PROXY_ADMIN` role, before they could reach this code path.
+- **The fix has been live since `v1.83.6-nightly`.** The first stable release with the fix is **`v1.83.7-stable`**. Full list of patched versions [below](/blog/mcp-stdio-command-injection-april-2026#versions-with-the-fix).
 - **If you find other vulnerabilities, please send them our way.** We run a [bug bounty program](https://github.com/BerriAI/litellm/security) and pay out for P0 (supply chain) and P1 (unauthenticated proxy access) issues. See our [previous security update](https://docs.litellm.ai/blog/security-hardening-april-2026#bug-bounty-program) for the current bounty table.
 
 {/* truncate */}
@@ -52,7 +52,7 @@ Commit [`7b7f304`](https://github.com/BerriAI/litellm/commit/7b7f304675) lands f
 
     The list is extensible at deploy time via the `LITELLM_MCP_STDIO_EXTRA_COMMANDS` env var (comma-separated) if you need to allow additional binaries.
 
-2. **Pydantic-level validation.** Both `NewMCPServerRequest` and `UpdateMCPServerRequest` now reject configs whose `command` basename is not in the allowlist — so the bad input never makes it past request parsing.
+2. **Pydantic-level validation.** Both `NewMCPServerRequest` and `UpdateMCPServerRequest` now reject configs whose `command` basename is not in the allowlist, so the bad input never makes it past request parsing.
 
 3. **Defense-in-depth at runtime.** `_create_mcp_client` re-validates the command when instantiating the stdio client, so any `MCPServer` reconstructed from an older DB row or config file (predating the allowlist) is also blocked at spawn time.
 
@@ -81,6 +81,6 @@ Any LiteLLM release newer than these also includes the fix.
 
 ## Credit
 
-Thanks to the OX Security research team — **Moshe Siman Tov Bustan**, **Mustafa Naamnih**, and **Nir Zadok** — for the disclosure. Their full cross-ecosystem writeup is [here](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/).
+Thanks to the OX Security research team, **Moshe Siman Tov Bustan**, **Mustafa Naamnih**, and **Nir Zadok**, for the disclosure. Their full cross-ecosystem writeup is [here](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/).
 
 If you find a security issue in LiteLLM, please report it through our [bug bounty program](https://github.com/BerriAI/litellm/security).

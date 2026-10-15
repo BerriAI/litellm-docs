@@ -163,7 +163,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "llama3.1",
   "messages": [
@@ -264,7 +264,7 @@ print(response)
 </Tabs>
 
 ## Using ollama `api/chat` 
-In order to send ollama requests to `POST /api/chat` on your ollama server, set the model prefix to `ollama_chat`
+To send ollama requests to `POST /api/chat` on your ollama server, set the model prefix to `ollama_chat`
 
 ```python
 from litellm import completion

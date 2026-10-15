@@ -4,6 +4,8 @@ LiteLLM maps exceptions across all providers to their OpenAI counterparts.
 
 All exceptions can be imported from `litellm` - e.g. `from litellm import BadRequestError`
 
+Calling through the AI Gateway rather than the SDK? See the [Error Reference](/docs/proxy/error_reference) for the JSON error payload, the response headers, and how to tell a gateway error from a provider error
+
 ## LiteLLM Exceptions
 
 | Status Code | Error Type               | Inherits from | Description |
@@ -15,6 +17,7 @@ All exceptions can be imported from `litellm` - e.g. `from litellm import BadReq
 | 400         | ImageFetchError | litellm.BadRequestError | Raised when there are errors fetching or processing images |
 | 400 | InvalidRequestError | openai.BadRequestError | Deprecated error, use BadRequestError instead |
 | 401         | AuthenticationError      | openai.AuthenticationError |
+| 402         | PaymentRequiredError     | litellm.BadRequestError | Raised when the provider answers 402, for example an account that is out of credits. The router cools that deployment down when its model group has another deployment |
 | 403         | PermissionDeniedError    | openai.PermissionDeniedError |
 | 404         | NotFoundError            | openai.NotFoundError | raise when invalid models passed, example gpt-8 |
 | 408 | Timeout | openai.APITimeoutError | Raised when a timeout occurs |
@@ -49,7 +52,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -69,7 +72,7 @@ except openai.APITimeoutError as e:
 import litellm
 try:
     response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -98,7 +101,7 @@ import openai
 
 try:
     response = litellm.completion(
-                model="gpt-4",
+                model="{{openai_large}}",
                 messages=[
                     {
                         "role": "user",
@@ -128,7 +131,7 @@ from litellm.exceptions import ContentPolicyViolationError
 
 try:
     response = litellm.completion(
-        model="azure/gpt-4",
+        model="azure/{{openai_large}}",
         messages=[
             {
                 "role": "user", 
@@ -190,6 +193,7 @@ When calling the LiteLLM proxy, content policy violations will return detailed f
     }
   }
 }
+```
 
 ## Details 
 

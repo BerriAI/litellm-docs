@@ -56,9 +56,9 @@ general_settings:
     custom_secret_manager: my_secret_manager.InMemorySecretManager  # 👈 KEY CHANGE
 
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY  # Read from custom secret manager
 ```
 
@@ -76,7 +76,7 @@ docker run -d \
   --name litellm-proxy \
   -v $(pwd)/config.yaml:/app/config.yaml \
   -v $(pwd)/my_secret_manager.py:/app/my_secret_manager.py \
-  docker.litellm.ai/berriai/litellm:main-latest \
+  docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml \
   --port 4000 \
   --detailed_debug

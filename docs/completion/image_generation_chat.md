@@ -1,3 +1,7 @@
+---
+sidebar_label: "Image Generation in Chat"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -17,7 +21,7 @@ Supported Providers:
 
 LiteLLM will standardize the `images` response in the assistant message for models that support image generation during chat completions.
 
-```python title="Example response from litellm"
+```json title="Example response from litellm"
 "message": {
     ...
     "content": "Here's the image you requested:",
@@ -231,7 +235,7 @@ asyncio.run(generate_image())
 
 The `images` field in the response follows this structure:
 
-```python
+```json
 "images": [
     {
         "image_url": {

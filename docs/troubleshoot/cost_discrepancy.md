@@ -2,6 +2,8 @@
 
 Cost discrepancies between LiteLLM and your provider bill usually come from one of three areas: token ingestion, the cost formula LiteLLM applies, or stale or incorrect pricing in the model map. This page walks through how to tell which case you are in.
 
+For OpenAI, LiteLLM can run this comparison for you. The [spend capture-rate check](../proxy/spend_capture_rate) reads the OpenAI bill through the Organization Costs API, compares it to the spend LiteLLM tracked for the same UTC days, and alerts when the share LiteLLM captured drops under a threshold. Use the steps below for other providers, or to work out where a gap the check reports comes from
+
 ## Step 1: Pick a time range
 
 Lock down a specific window where the discrepancy is visible.
@@ -44,7 +46,7 @@ With the same time range on both sides, fill in:
 | Cache read tokens | — | — | — |
 | Cache write tokens | — | — | — |
 
-LiteLLM surfaces per-category token usage for the selected model—for example prompt, completion, and cache-related tokens.
+LiteLLM surfaces per-category token usage for the selected model, for example prompt, completion, and cache-related tokens.
 
 ![LiteLLM usage breakdown by token category](/img/cost-discrepancy-debug/token-categories.png)
 
@@ -125,14 +127,14 @@ Provider dashboards and LiteLLM do not bucket requests on identical timestamps. 
 
 ## Path A: Token quantity mismatch
 
-If any category is off by more than about 10%, LiteLLM may not be ingesting that category correctly (or the provider dashboard is categorizing tokens differently—recheck Step 3 first).
+If any category is off by more than about 10%, LiteLLM may not be ingesting that category correctly (or the provider dashboard is categorizing tokens differently, so recheck Step 3 first).
 
 **What to send the LiteLLM team:**
 
 1. Screenshots of both dashboards with the date range visible.
 2. Which category is off (input, output, cache reads, cache writes, or request count).
 3. Endpoints used (for example `/chat/completions`, `/responses`, `/embeddings`).
-4. Model names as sent in the request (for example `anthropic.claude-opus-4-5`, `gpt-4o`).
+4. Model names as sent in the request (for example `anthropic.{{anthropic_large}}`, `{{openai_large}}`).
 
 ### For maintainers debugging ingestion
 
@@ -185,7 +187,7 @@ On the issue, it helps to clarify:
 
 ### For LiteLLM maintainers
 
-If Path A and Path B do not close the case after triage, **you** should reach out and **schedule a call with the customer** (support or engineering), with the Step 3 table and screenshots—before treating the issue.
+If Path A and Path B do not close the case after triage, **you** should reach out and **schedule a call with the customer** (support or engineering), with the Step 3 table and screenshots, before treating the issue.
 
 ## Checklist
 
@@ -202,4 +204,6 @@ If Path A and Path B do not close the case after triage, **you** should reach ou
 ## See also
 
 - [Spend tracking](../proxy/cost_tracking)
+- [Spend capture rate](../proxy/spend_capture_rate)
 - [Sync model pricing from GitHub](../proxy/sync_models_github)
+- [Model missing after Reload Price Data](./missing_model)

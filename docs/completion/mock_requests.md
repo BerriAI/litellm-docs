@@ -1,3 +1,7 @@
+---
+sidebar_label: "Mock Responses"
+---
+
 # Mock Completion() Responses - Save Testing Costs 💰
 
 For testing purposes, you can use `completion()` with `mock_response` to mock calling the completion endpoint. 
@@ -8,7 +12,7 @@ This will return a response object with a default response (works for streaming 
 ```python
 from litellm import completion 
 
-model = "gpt-3.5-turbo"
+model = "{{openai_small}}"
 messages = [{"role":"user", "content":"This is a test request"}]
 
 completion(model=model, messages=messages, mock_response="It's simple to use and easy to get started")
@@ -18,7 +22,7 @@ completion(model=model, messages=messages, mock_response="It's simple to use and
 
 ```python
 from litellm import completion 
-model = "gpt-3.5-turbo"
+model = "{{openai_small}}"
 messages = [{"role": "user", "content": "Hey, I'm a mock request"}]
 response = completion(model=model, messages=messages, stream=True, mock_response="It's simple to use and easy to get started")
 for chunk in response: 
@@ -60,7 +64,7 @@ import pytest
 def test_completion_openai():
     try:
         response = completion(
-            model="gpt-3.5-turbo",
+            model="{{openai_small}}",
             messages=[{"role":"user", "content":"Why is LiteLLM amazing?"}],
             mock_response="LiteLLM is awesome"
         )

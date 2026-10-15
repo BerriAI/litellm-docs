@@ -24,7 +24,7 @@ model_list:
 ```bash
 litellm --config /path/to/config.yaml 
 
-# RUNNING on http://0.0.0.0:8000
+# RUNNING on http://0.0.0.0:4000
 ```
 
 ### Test 
@@ -109,8 +109,8 @@ async def main():
     async with websockets.connect(
         PROXY_URL,
         additional_headers={
-            "Authorization": "Bearer sk-1234",
-            "X-Serverless-Authorization": "Bearer sk-1234",
+            "Authorization": "Bearer sk-<your-litellm-api-key>",
+            "X-Serverless-Authorization": "Bearer sk-<your-litellm-api-key>",
         },
     ) as ws:
         _ = json.loads(await ws.recv())  # session.created

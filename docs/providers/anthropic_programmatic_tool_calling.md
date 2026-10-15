@@ -29,7 +29,7 @@ Here's a simple example where Claude programmatically queries a database multipl
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -152,7 +152,7 @@ Programmatic tool calling uses code execution containers:
 ```python
 # First request - creates a new container
 response1 = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[{"role": "user", "content": "Query the database"}],
     tools=[...]
 )
@@ -162,7 +162,7 @@ container_id = response1.get("container", {}).get("id")
 
 # Second request - reuse the same container
 response2 = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[...],
     tools=[...],
     container=container_id  # Reuse container
@@ -181,7 +181,7 @@ When a tool is called programmatically and the container is waiting for your too
 import litellm
 
 response = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=[{
         "role": "user",
         "content": "Query customer purchase history from the last quarter and identify our top 5 customers by revenue"
@@ -270,7 +270,7 @@ messages = [
 
 # Continue the conversation
 response2 = litellm.completion(
-    model="anthropic/claude-sonnet-4-5-20250929",
+    model="anthropic/{{anthropic}}",
     messages=messages,
     tools=[...]
 )
@@ -386,10 +386,10 @@ For example, calling 10 tools directly uses ~10x the tokens of calling them prog
 
 LiteLLM supports programmatic tool calling across the following Anthropic-compatible providers:
 
-- **Standard Anthropic API** (`anthropic/claude-sonnet-4-5-20250929`) ✅
-- **Azure Anthropic / Microsoft Foundry** (`azure/claude-sonnet-4-5-20250929`) ✅
-- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-sonnet-4-5-20250929-v1:0`) ✅
-- **Google Cloud Vertex AI** (`vertex_ai/claude-sonnet-4-5-20250929`) ❌ Not supported
+- **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
+- **Azure Anthropic / Microsoft Foundry** (`azure/{{anthropic}}`) ✅
+- **Amazon Bedrock** (`bedrock/invoke/anthropic.{{anthropic}}`) ✅
+- **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
 The beta header (`advanced-tool-use-2025-11-20`) is automatically added when LiteLLM detects tools with the `allowed_callers` field.
 

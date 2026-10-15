@@ -13,9 +13,9 @@ import { CascadeFailure, CircuitBreakerStates, CircuitBreakerFlow, IncidentTimel
 
 *Last Updated: April 2026*
 
-Enterprise AI Gateway deployments put Redis in the hot path for nearly every request: rate limiting, cache lookups, spend tracking. When Redis is healthy, the latency contribution is single-digit milliseconds — invisible to end users. When it degrades, a production AI Gateway needs to stay up regardless.
+Enterprise AI Gateway deployments put Redis in the hot path for nearly every request: rate limiting, cache lookups, spend tracking. When Redis is healthy, the latency contribution is single-digit milliseconds, invisible to end users. When it degrades, a production AI Gateway needs to stay up regardless.
 
-Running LiteLLM at scale across 100+ pods means designing for failure modes before they appear. The easy case is Redis going fully down: fail fast, fall through to the database, continue serving requests. The hard case — the one that takes down gateways — is a *slow* Redis: still accepting connections, still responding, but timing out after 20-30 seconds per operation.
+Running LiteLLM at scale across 100+ pods means designing for failure modes before they appear. The easy case is Redis going fully down: fail fast, fall through to the database, continue serving requests. The hard case, the one that takes down gateways, is a *slow* Redis: still accepting connections, still responding, but timing out after 20-30 seconds per operation.
 
 {/* truncate */}
 
@@ -27,7 +27,7 @@ With 100 pods each hanging 30 seconds on every auth check, threadpools fill up a
 
 ## The fix: circuit breaker pattern
 
-The circuit breaker pattern tracks consecutive failures and cuts off the unhealthy dependency before it cascades. Instead of hanging 30 seconds on each Redis call, the circuit opens after 5 consecutive failures and fast-fails at 0ms — no network call, no wait.
+The circuit breaker pattern tracks consecutive failures and cuts off the unhealthy dependency before it cascades. Instead of hanging 30 seconds on each Redis call, the circuit opens after 5 consecutive failures and fast-fails at 0ms, with no network call and no wait.
 
 <CircuitBreakerStates />
 
@@ -43,7 +43,7 @@ This is how a reliable AI Gateway handles infrastructure degradation: stay up, d
 
 <CircuitBreakerFlow />
 
-When the circuit is open, the gateway does not stall. Auth checks fall back to Postgres — slower, but bounded. The database absorbs the load because it receives *some* requests via DB fallback, not *all* 100 pods simultaneously dumping their queued requests after a 30-second timeout.
+When the circuit is open, the gateway does not stall. Auth checks fall back to Postgres, which is slower but bounded. The database absorbs the load because it receives *some* requests via DB fallback, not *all* 100 pods simultaneously dumping their queued requests after a 30-second timeout.
 
 The difference between a resilient AI Gateway and a fragile one: controlled degradation vs. uncontrolled cascade.
 
@@ -84,13 +84,13 @@ async def async_get_cache(self, key: str):
     ...
 ```
 
-The decorator handles all bookkeeping — success resets nothing, failures increment the counter, exceptions trigger `record_failure()`. The caller sees a clean exception and falls through to its normal non-Redis path. No changes required in calling code.
+The decorator handles all bookkeeping: success resets nothing, failures increment the counter, exceptions trigger `record_failure()`. The caller sees a clean exception and falls through to its normal non-Redis path. No changes required in calling code.
 
 ## AI Gateway resilience in production
 
 <IncidentTimeline />
 
-Redis degradation events no longer cascade in production. The observable symptom during a Redis slowdown is a temporary bump in cache miss rate — the right failure mode for a resilient AI Gateway. Auth still works. Rate limiting still works. Spend tracking still works, at slightly higher DB cost. Recovery is fully automatic when Redis comes back.
+Redis degradation events no longer cascade in production. The observable symptom during a Redis slowdown is a temporary bump in cache miss rate, the right failure mode for a resilient AI Gateway. Auth still works. Rate limiting still works. Spend tracking still works, at slightly higher DB cost. Recovery is fully automatic when Redis comes back.
 
 ```bash
 # configure via environment variables
@@ -106,7 +106,7 @@ The circuit breaker ships on by default in all LiteLLM versions since `v1.82.0`.
 - LiteLLM's AI Gateway uses a circuit breaker that fast-fails Redis calls at 0ms after 5 consecutive failures
 - Three states: CLOSED (normal), OPEN (fast-fail + DB fallback), HALF-OPEN (probe recovery)
 - Auth, rate limiting, and spend tracking continue working during Redis outages
-- Resilient, production-grade behavior — enabled by default since `v1.82.0`, no configuration required
+- Resilient, production-grade behavior, enabled by default since `v1.82.0` with no configuration required
 
 ---
 
@@ -114,7 +114,7 @@ The circuit breaker ships on by default in all LiteLLM versions since `v1.82.0`.
 
 ### Does the circuit breaker affect normal Redis performance?
 
-No. When Redis is healthy (circuit CLOSED), every call passes through with zero overhead. The breaker only activates after 5 consecutive failures — transparent under normal conditions.
+No. When Redis is healthy (circuit CLOSED), every call passes through with zero overhead. The breaker only activates after 5 consecutive failures, so it is transparent under normal conditions.
 
 ### What happens to rate limiting when the circuit is open?
 
@@ -132,10 +132,10 @@ Yes. The circuit breaker ships in LiteLLM OSS (Apache 2.0) by default since `v1.
 
 ## Conclusion
 
-Redis resilience is one layer of what makes LiteLLM a production-grade, reliable AI Gateway at scale. The circuit breaker pattern ensures infrastructure degradation stays contained — the right failure mode is a temporary cache miss rate bump, not a full outage. This is how AI Gateway infrastructure should behave under pressure: degrade gracefully, recover automatically, keep serving traffic. For teams with strict uptime and compliance requirements, [LiteLLM Enterprise](https://litellm.ai/enterprise) provides the additional controls needed for regulated production environments.
+Redis resilience is one layer of what makes LiteLLM a production-grade, reliable AI Gateway at scale. The circuit breaker pattern keeps infrastructure degradation contained, so the failure mode is a temporary cache miss rate bump rather than a full outage. This is how AI Gateway infrastructure should behave under pressure: degrade gracefully, recover automatically, keep serving traffic. For teams with strict uptime and compliance requirements, [LiteLLM Enterprise](https://litellm.ai/enterprise) provides the additional controls needed for regulated production environments.
 
 ## Recommended Reading
 
-- [LiteLLM AI Gateway — full feature overview](https://docs.litellm.ai/docs/simple_proxy)
+- [LiteLLM AI Gateway: full feature overview](https://docs.litellm.ai/docs/simple_proxy)
 - [Load balancing and routing across 100+ LLM providers](https://docs.litellm.ai/docs/routing)
 - [Spend tracking and budget controls](https://docs.litellm.ai/docs/proxy/cost_tracking)

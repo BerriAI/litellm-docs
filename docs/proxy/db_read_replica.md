@@ -20,7 +20,7 @@ export DATABASE_URL_READ_REPLICA=postgresql://user:pass@reader.db.example.com:54
 The proxy automatically detects the env var on startup and switches the
 internal Prisma client into a routing mode that splits traffic between the two
 endpoints. If `DATABASE_URL_READ_REPLICA` is unset, the proxy continues to use
-single-database behavior — no other configuration is required.
+single-database behavior; no other configuration is required.
 
 ## What gets routed
 
@@ -34,7 +34,7 @@ single-database behavior — no other configuration is required.
 | Transactions (`tx`, `batch_`) | Writer |
 
 Reads originating in code (e.g. virtual key lookup, team membership, spend
-queries) are dispatched to the reader without changes to call sites — the
+queries) are dispatched to the reader without changes to call sites. The
 routing wrapper intercepts the per-model action accessor and chooses the
 backend per method.
 
@@ -52,20 +52,64 @@ The same fallback applies if the reader fails during a reconnect cycle. The
 next successful reader recreate clears the degraded flag and reads start
 hitting the reader again.
 
-This means: enabling read-replica routing **never reduces availability** — at
+This means: enabling read-replica routing **never reduces availability**. At
 worst it degrades to single-database performance.
 
-## RDS IAM authentication
+## Token-based database authentication
 
-When `IAM_TOKEN_DB_AUTH=True`, both the writer and the reader refresh their
-IAM tokens independently on the same ~12-minute cadence. The reader does not
-need parallel `DATABASE_HOST_READ_REPLICA` / `DATABASE_USER_READ_REPLICA`
-env vars — host, port, user, and database name are parsed once from
-`DATABASE_URL_READ_REPLICA` at startup, and only the IAM token rotates after
-that.
+When `IAM_TOKEN_DB_AUTH=True` (AWS RDS IAM) or `AZURE_POSTGRESQL_AUTH=True`
+(Microsoft Entra ID), both the writer and the reader refresh their tokens
+independently, each ahead of its own expiry. You can supply the reader either
+as a single `DATABASE_URL_READ_REPLICA` or assembled from the component vars
+(`DATABASE_HOST_READ_REPLICA`, `DATABASE_USER_READ_REPLICA`, and friends); the
+token-refresh path re-parses the resulting reader URL, so only the token
+rotates after startup.
 
-This pairs naturally with Aurora's reader endpoint, which resolves to the
-reader instances in the cluster.
+On AWS this pairs naturally with Aurora's reader endpoint, which resolves to
+the reader instances in the cluster. On Azure it pairs with the read replicas
+of an Azure Database for PostgreSQL Flexible Server.
+
+### RDS IAM auth across regions
+
+With `IAM_TOKEN_DB_AUTH=True`, LiteLLM signs the writer and reader tokens
+independently, so a writer and a cross-region read replica can each be signed
+in their own region. For each connection the signing region resolves in this
+order: the connection's override, then the region in its RDS hostname, then the
+process AWS region (`AWS_REGION_NAME`, falling back to `AWS_REGION`). The
+writer override is `AWS_RDS_REGION` and the reader override is
+`AWS_RDS_READ_REPLICA_REGION`. The reader never inherits `AWS_RDS_REGION`, so a
+writer-only override leaves the reader on its own resolution path. Values that
+are empty or only whitespace count as unset and the resolution moves on to the
+next source
+
+For canonical RDS endpoints no overrides are needed; the hostname already
+carries the region. Set them when the signing region must differ from what the
+hostname implies:
+
+```shell
+export IAM_TOKEN_DB_AUTH=true
+export DATABASE_HOST=writer.abc123.us-east-1.rds.amazonaws.com
+export DATABASE_PORT=5432
+export DATABASE_USER=iam_user
+export DATABASE_NAME=litellm
+export DATABASE_URL_READ_REPLICA=postgresql://iam_user@reader.abc123.ap-northeast-1.rds.amazonaws.com:5432/litellm?sslmode=require
+export AWS_RDS_REGION=us-east-1
+export AWS_RDS_READ_REPLICA_REGION=ap-northeast-1
+```
+
+An explicit override wins even when it disagrees with the hostname, so a wrong
+region fails authentication on that connection. A failed reader falls back to
+the writer for reads per the degradation behavior above; a failed writer fails
+the boot. The overrides apply to token mints at startup and to every renewal,
+including readers assembled through `DATABASE_HOST_READ_REPLICA` and writers
+behind the in-container PgBouncer. They do not affect Bedrock or other AWS
+service regions, password authentication, or Azure Entra authentication
+
+Region overrides only choose the signing region; they do not rewrite the
+hostname the token is signed for. AWS requires the actual RDS endpoint when
+generating an IAM token, so custom DNS names (for example a Route 53 record)
+still need the canonical RDS endpoint in the connection configuration. TLS
+hostname verification is independent of region selection
 
 ## Kubernetes / Helm
 
@@ -94,15 +138,16 @@ db:
 
 <TabItem value="plain" label="Plaintext value">
 
-For credential-less URLs (for example, when `IAM_TOKEN_DB_AUTH` supplies
-the password at runtime), `db.readReplicaUrl` works:
+For credential-less URLs (for example, when `IAM_TOKEN_DB_AUTH` or
+`AZURE_POSTGRESQL_AUTH` supplies the password at runtime),
+`db.readReplicaUrl` works:
 
 ```yaml
 db:
   readReplicaUrl: "postgresql://litellm@reader.aurora.local:5432/litellm"
 ```
 
-Avoid this form if the URL embeds a password — the value renders into the
+Avoid this form if the URL embeds a password, since the value renders into the
 pod spec and the Helm release secret.
 
 </TabItem>
@@ -134,7 +179,7 @@ It is **not** useful when:
 
 - Your primary and replica are the same physical endpoint.
 - You're running a single-node Postgres without replicas.
-- Replication lag would invalidate consistency assumptions in your app — note
+- Replication lag would invalidate consistency assumptions in your app. Note
   that all reads route to the reader, including reads that immediately follow
   a write.
 
@@ -143,8 +188,10 @@ It is **not** useful when:
 The proxy does not implement read-after-write consistency for the reader
 endpoint. If your replication lag is meaningful (>100ms) and you have flows
 that write then immediately read the same row, those reads may see stale data.
-Code that needs strong consistency on a fresh write should use `query_raw`
-through the writer or rely on transaction-scoped reads.
+`query_raw` and `query_first` on the proxy's Prisma client route to the reader
+like every other read, so code that needs read-your-writes consistency should
+read through `WriterPinnedClient` (from `litellm.proxy.db.routing_prisma_wrapper`)
+or inside a transaction (`tx`), both of which run on the writer
 
 ## Related env vars
 
@@ -152,7 +199,8 @@ through the writer or rely on transaction-scoped reads.
 | --- | --- |
 | `DATABASE_URL` | Writer connection URL (required). |
 | `DATABASE_URL_READ_REPLICA` | Reader connection URL (optional). When unset, all reads go to the writer. |
-| `IAM_TOKEN_DB_AUTH` | When `True`, both writer and reader refresh RDS IAM tokens automatically. |
+| `IAM_TOKEN_DB_AUTH` | When `True`, both writer and reader refresh AWS RDS IAM tokens automatically. |
+| `AZURE_POSTGRESQL_AUTH` | When `True`, both writer and reader refresh Microsoft Entra ID tokens automatically. |
 
 See [environment variables - Reference](./config_settings#environment-variables---reference)
 for the full list.

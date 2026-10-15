@@ -210,7 +210,7 @@ curl -X POST "http://localhost:4000/a2a/agent-456" \
 
 ## Agent Access Groups
 
-Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels in the dashboard, then grant the **group** to a key or team — adding a new agent to the group automatically makes it available to every key/team that holds the group.
+Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels in the dashboard, then grant the **group** to a key or team. Adding a new agent to the group automatically makes it available to every key/team that holds the group.
 
 ### 1. Tag the agent with one or more groups
 
@@ -237,7 +237,7 @@ curl -X POST "http://localhost:4000/key/generate" \
   }'
 ```
 
-The key now has access to every agent tagged with either group — no per-agent enumeration required. The same `agent_access_groups` field is also valid on a team's `object_permission`.
+The key now has access to every agent tagged with either group, with no per-agent enumeration required. The same `agent_access_groups` field is also valid on a team's `object_permission`.
 
 When a key has **both** a direct `agents` list and `agent_access_groups`, the union is computed (any agent reached by either path is allowed), and then the team-level intersection is applied as described below.
 
@@ -264,7 +264,7 @@ flowchart TD
     I -->|No| K[Return 403 Forbidden]
 ```
 
-A2A permission resolution operates over two levels: Key and Team. (MCP's [permission hierarchy](./mcp_control#permission-hierarchy) extends to End-user / Agent / Org additionally — agent permissions are a narrower model today.)
+A2A permission resolution operates over two levels: Key and Team. (MCP's [permission hierarchy](./mcp_control#permission-hierarchy) extends to End-user / Agent / Org additionally; agent permissions are a narrower model today.)
 
 | Key Permissions | Team Permissions | Result | Notes |
 |-----------------|------------------|--------|-------|

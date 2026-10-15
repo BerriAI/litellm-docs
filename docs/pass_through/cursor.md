@@ -1,8 +1,6 @@
-import Image from '@theme/IdealImage';
-
 # Cursor Cloud Agents
 
-Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api) — launch and manage cloud agents that work on your repositories, in native format (no translation).
+Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com/account/api). Launch and manage cloud agents that work on your repositories, in native format (no translation).
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -12,6 +10,8 @@ Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com
 | Streaming | ❌ | Cursor API does not use streaming |
 
 Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
+
+This route fronts the Cloud Agents REST API only. Cursor CLI agent sessions log in to `api2.cursor.sh` by default (`agent --endpoint` only moves that login), not to `api.cursor.com`, so they cannot use this route, see [Cursor CLI](../tutorials/cursor_integration.md#cursor-cli-cursor-agent).
 
 **Supported endpoints:**
 
@@ -30,11 +30,9 @@ Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
 
 ## Quick Start
 
-### 1. Add Cursor API Key on the UI
+### 1. Add Your Cursor API Key to the Proxy
 
-Navigate to **Models + Endpoints → LLM Credentials** and click **Add Credential**. Select **Cursor** from the provider dropdown — you'll see the Cursor logo. Enter your API key from [cursor.com/settings](https://cursor.com/settings).
-
-<Image img={require('../../img/cursor_add_credential.png')} alt="Add Cursor credential with logo" style={{maxWidth: '800px'}} />
+The proxy needs your Cursor API key to authenticate to the Cursor Cloud Agents API on your behalf. Add it as a credential under **Models + Endpoints → LLM Credentials** (select **Cursor** from the provider dropdown), or set the `CURSOR_API_KEY` environment variable on the proxy.
 
 ### 2. Launch a Cursor Agent
 
@@ -80,11 +78,7 @@ curl -X POST http://0.0.0.0:4000/cursor/v0/agents \
 
 Navigate to **Logs** in the sidebar. Filter by "cursor" to see your agent requests. Each request shows the operation type (e.g., `cursor/cursor:agent:create`), status, duration, and cost.
 
-<Image img={require('../../img/cursor_logs.png')} alt="Cursor requests in Logs page" style={{maxWidth: '800px'}} />
-
 Click on any log entry to see full request details including provider, API base, and metadata.
-
-<Image img={require('../../img/cursor_log_detail.png')} alt="Cursor log entry detail" style={{maxWidth: '800px'}} />
 
 ## Examples
 

@@ -41,7 +41,7 @@ user_config = {
         {
             'model_name': 'user-openai-instance',
             'litellm_params': {
-                'model': 'gpt-3.5-turbo',
+                'model': '{{openai_small}}',
                 'api_key': os.getenv('OPENAI_API_KEY'),
                 'timeout': 10,
             },
@@ -65,7 +65,7 @@ user_config = {
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -109,7 +109,7 @@ const userConfig = {
         {
             model_name: 'user-openai-instance',
             litellm_params: {
-                model: 'gpt-3.5-turbo',
+                model: '{{openai_small}}',
                 api_key: process.env.OPENAI_API_KEY,
                 timeout: 10,
             },
@@ -133,14 +133,14 @@ const userConfig = {
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   baseURL: "http://0.0.0.0:4000"
 });
 
 async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
-    model: 'gpt-3.5-turbo',
+    model: '{{openai_small}}',
     user_config: userConfig // # 👈 User config
   });
 }
@@ -166,14 +166,17 @@ model_list:
       model: "fireworks_ai/*"
       configurable_clientside_auth_params: ["api_base"]
       # OR 
-      configurable_clientside_auth_params: [{"api_base": "^https://litellm.*direct\.fireworks\.ai/v1$"}] # 👈 regex
+      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # 👈 regex
 ```
 
-Specify any/all auth params you want the user to be able to configure:
+Specify the endpoint params you want the user to be able to configure:
 
-- api_base (✅ regex supported)
-- api_key
-- base_url 
+- api_base (regex supported)
+- base_url
+
+Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
+
+`api_key` does not need to be listed. A request-body `api_key` is accepted on any deployment, wildcard or not, and replaces the deployment's configured key for that request only. To send the user's key as a provider header instead, such as `x-api-key` for Anthropic, see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)
 
 (check [provider docs](../providers/) for provider-specific auth params - e.g. `vertex_project`)
 
@@ -183,12 +186,12 @@ Specify any/all auth params you want the user to be able to configure:
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -208,12 +211,12 @@ Pass in the litellm_params (E.g. api_key, api_base, etc.) via the `extra_body` p
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+response = client.chat.completions.create(model="{{openai_small}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -238,14 +241,14 @@ For JS, the OpenAI client accepts passing params in the `create(..)` body as nor
 const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   baseURL: "http://0.0.0.0:4000"
 });
 
 async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
-    model: 'gpt-3.5-turbo',
+    model: '{{openai_small}}',
     api_key: "my-bad-key" // 👈 User Key
   });
 }
@@ -272,7 +275,7 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",

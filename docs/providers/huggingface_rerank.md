@@ -21,7 +21,7 @@ import litellm
 import os
 
 # Set your HuggingFace token
-os.environ["HF_TOKEN"] = "hf_xxxxxx"
+os.environ["HUGGINGFACE_API_KEY"] = "hf_xxxxxx"
 
 # Basic rerank usage
 response = litellm.rerank(
@@ -63,7 +63,7 @@ import litellm
 import asyncio
 import os
 
-os.environ["HF_TOKEN"] = "hf_xxxxxx"
+os.environ["HUGGINGFACE_API_KEY"] = "hf_xxxxxx"
 
 async def async_rerank_example():
     response = await litellm.arerank(
@@ -206,7 +206,7 @@ print(response.json())
 #### Using HuggingFace Token (Serverless)
 ```python
 import os
-os.environ["HF_TOKEN"] = "hf_xxxxxx"
+os.environ["HUGGINGFACE_API_KEY"] = "hf_xxxxxx"
 
 # Or pass directly
 litellm.rerank(

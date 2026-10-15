@@ -134,9 +134,9 @@ print(result)
 - **[Image Edits API](../../docs/image_generation)**
     - Azure support for /v1/images/edits - [PR](https://github.com/BerriAI/litellm/pull/11160)
     - Cost tracking for image edits endpoint (OpenAI, Azure) - [PR](https://github.com/BerriAI/litellm/pull/11186)
-- **[Completions API](../../docs/completion/chat)**
+- **[Completions API](/docs/completion)**
     - Codestral latency overhead tracking on /v1/completions - [PR](https://github.com/BerriAI/litellm/pull/10879)
-- **[Audio Transcriptions API](../../docs/audio/speech)**
+- **[Audio Transcriptions API](/docs/text_to_speech)**
     - GPT-4o mini audio preview pricing without date - [PR](https://github.com/BerriAI/litellm/pull/11207)
     - Non-default params support for audio transcription - [PR](https://github.com/BerriAI/litellm/pull/11212)
 - **[Responses API](../../docs/response_api)**
@@ -229,6 +229,6 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 ## [Git Diff](https://github.com/BerriAI/litellm/releases)

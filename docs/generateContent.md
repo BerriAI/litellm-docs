@@ -43,7 +43,7 @@ contents = ContentDict(
 
 response = await agenerate_content(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
 )
 print(response)
@@ -67,7 +67,7 @@ contents = ContentDict(
 
 response = await agenerate_content_stream(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=500,
 )
 
@@ -97,7 +97,7 @@ contents = ContentDict(
 
 response = generate_content(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=100,
 )
 print(response)
@@ -121,7 +121,7 @@ contents = ContentDict(
 
 response = generate_content_stream(
     contents=contents,
-    model="gemini/gemini-2.0-flash",
+    model="gemini/{{gemini_flash}}",
     max_tokens=500,
 )
 
@@ -140,7 +140,7 @@ for chunk in response:
 model_list:
     - model_name: gemini-flash
       litellm_params:
-        model: gemini/gemini-2.0-flash
+        model: gemini/{{gemini_flash}}
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -161,7 +161,7 @@ import os
 
 # Configure Google GenAI SDK to use LiteLLM proxy
 os.environ["GOOGLE_GEMINI_BASE_URL"] = "http://localhost:4000"
-os.environ["GEMINI_API_KEY"] = "sk-1234"
+os.environ["GEMINI_API_KEY"] = "sk-<your-litellm-api-key>"
 
 client = Client()
 
@@ -187,7 +187,7 @@ response = client.models.generate_content(
 ```bash showLineNumbers title="generateContent via LiteLLM Proxy"
 curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateContent' \
 -H 'content-type: application/json' \
--H 'authorization: Bearer sk-1234' \
+-H "authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "contents": [
     {
@@ -210,7 +210,7 @@ curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateConten
 ```bash showLineNumbers title="streamGenerateContent via LiteLLM Proxy"
 curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:streamGenerateContent' \
 -H 'content-type: application/json' \
--H 'authorization: Bearer sk-1234' \
+-H "authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "contents": [
     {
@@ -226,6 +226,65 @@ curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:streamGenerate
     "maxOutputTokens": 500
   }
 }'
+```
+
+</TabItem>
+</Tabs>
+
+
+## Native request fields
+
+The `generateContent` endpoint is a drop-in for Google's [Generative Language REST API](https://ai.google.dev/api/generate-content), so the top-level fields that Google's `GenerateContentRequest` carries as siblings of `generationConfig` are forwarded to Google verbatim. This covers `safetySettings`, `toolConfig`, `cachedContent`, and `labels`. Send them at the top level of the request body exactly as you would when calling Google directly; there is no need to wrap them in `extra_body`. If you do pass `extra_body`, an explicit value there wins on conflict.
+
+<Tabs>
+<TabItem value="curl-native" label="curl">
+
+```bash showLineNumbers title="Native top-level fields via LiteLLM Proxy"
+curl -L -X POST 'http://localhost:4000/v1beta/models/gemini-flash:generateContent' \
+-H 'content-type: application/json' \
+-H "authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+  "contents": [
+    {
+      "parts": [{"text": "Say hi"}],
+      "role": "user"
+    }
+  ],
+  "generationConfig": {
+    "maxOutputTokens": 100
+  },
+  "safetySettings": [
+    {
+      "category": "HARM_CATEGORY_HATE_SPEECH",
+      "threshold": "BLOCK_NONE"
+    }
+  ],
+  "toolConfig": {
+    "functionCallingConfig": {"mode": "AUTO"}
+  }
+}'
+```
+
+</TabItem>
+
+<TabItem value="sdk-native" label="LiteLLM Python SDK">
+
+```python showLineNumbers title="Native top-level fields via LiteLLM Python SDK"
+from litellm.google_genai import generate_content
+import os
+
+# Set API key
+os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
+
+response = generate_content(
+    model="gemini/{{gemini_flash}}",
+    contents=[{"role": "user", "parts": [{"text": "Say hi"}]}],
+    safetySettings=[
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"}
+    ],
+    toolConfig={"functionCallingConfig": {"mode": "AUTO"}},
+)
+print(response)
 ```
 
 </TabItem>

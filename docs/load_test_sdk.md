@@ -10,7 +10,7 @@ import time, asyncio, litellm
 # logging.basicConfig(level=logging.DEBUG)
 #### LITELLM PROXY #### 
 litellm_client = AsyncOpenAI(
-    api_key="sk-1234", # [CHANGE THIS]
+    api_key="sk-<your-litellm-api-key>", # [CHANGE THIS]
     base_url="http://0.0.0.0:4000"
 )
 
@@ -40,7 +40,7 @@ router = litellm.Router(model_list=model_list)
 async def openai_completion():
   try:
     response = await client.chat.completions.create(
-              model="gpt-35-turbo",
+              model="{{openai_small}}",
               messages=[{"role": "user", "content": f"This is a test: {uuid.uuid4()}"}],
               stream=True
           )

@@ -1,3 +1,7 @@
+---
+sidebar_label: "Traffic Mirroring"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -22,17 +26,17 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-3.5-turbo",
+        "model_name": "{{openai_small}}",
         "litellm_params": {
             "model": "azure/chatgpt-v-2",
             "api_key": "...",
-            "silent_model": "gpt-4" # 👈 Mirror traffic to gpt-4
+            "silent_model": "{{openai_large}}" # 👈 Mirror traffic to {{openai_large}}
         },
     },
     {
-        "model_name": "gpt-4",
+        "model_name": "{{openai_large}}",
         "litellm_params": {
-            "model": "openai/gpt-4",
+            "model": "openai/{{openai_large}}",
             "api_key": "..."
         },
     }
@@ -40,9 +44,9 @@ model_list = [
 
 router = Router(model_list=model_list)
 
-# The request to "gpt-3.5-turbo" will trigger a background call to "gpt-4"
+# The request to "{{openai_small}}" will trigger a background call to "{{openai_large}}"
 response = await router.acompletion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "How does traffic mirroring work?"}]
 )
 ```
@@ -56,12 +60,12 @@ Add `silent_model` to your `config.yaml`:
 model_list:
   - model_name: primary-model
     litellm_params:
-      model: azure/gpt-35-turbo
+      model: azure/{{openai_small}}
       api_key: os.environ/AZURE_API_KEY
       silent_model: evaluation-model # 👈 Mirror traffic here
   - model_name: evaluation-model
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 

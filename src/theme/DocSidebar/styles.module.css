@@ -65,9 +65,17 @@
    the dead space below the search bar. */
 .sidebarScroll > div {
   padding-top: 0 !important;
-  height: 100%;
+  height: auto;
 }
 
 .sidebarScroll :global(.menu) {
-  padding-top: 0.25rem;
+  /* The search wrapper supplies the gap above the first navigation row. */
+  padding-top: 0 !important;
+}
+
+
+/* Collapsed: the expand strip replaces the search box and the menu. */
+.sidebarContainerHidden {
+  visibility: hidden;
+  opacity: 0;
 }

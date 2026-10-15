@@ -293,7 +293,7 @@ print(response)
 
 ## Pass provider-specific params 
 
-If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#provider-specific-params)
+If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#litellm-specific-params)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -524,6 +524,55 @@ os.environ["AWS_REGION_NAME"] = ""
 response = litellm.embedding(model="sagemaker/<your-deployment-name>", input=["good morning from litellm", "this is another item"])
 print(f"response: {response}")
 ```
+
+### Embeddings on inference components
+
+If the endpoint hosts inference components, pass the component to call via `model_id`, same as for completions. LiteLLM sends it as the `InferenceComponentName` of the invoke call and keeps it out of the request body.
+
+```python
+response = litellm.embedding(
+    model="sagemaker/<your-endpoint-name>",
+    model_id="<your-inference-component-name>",
+    input=["good morning from litellm"],
+)
+```
+
+### OpenAI-compatible embedding endpoints
+
+By default LiteLLM sends embedding requests in the Hugging Face shape (`{"inputs": [...]}`) and reads a list of vectors back. If the container behind your endpoint serves the OpenAI embeddings API instead (`{"input": [...]}` in, `{"data": [{"embedding": [...]}], "usage": {...}}` out), add the `openai/` route in front of the endpoint name. The request then goes out in the OpenAI shape with any `extra_body` fields merged in, and `data[].embedding` and `usage` are read from the response.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+response = litellm.embedding(
+    model="sagemaker/openai/<your-endpoint-name>",
+    model_id="<your-inference-component-name>",  # only for endpoints with inference components
+    extra_body={"model": "<model name the container expects>"},  # only if the container needs one
+    input=["good morning from litellm"],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: my-embeddings
+    litellm_params:
+      model: sagemaker/openai/<your-endpoint-name>
+      model_id: <your-inference-component-name>
+      extra_body:
+        model: <model name the container expects>
+      aws_region_name: us-east-1
+    model_info:
+      mode: embedding
+```
+
+</TabItem>
+</Tabs>
+
+Provider-specific keys in `litellm_params` are sent in the request body as-is, so keep only the ones your container accepts.
 
 
 

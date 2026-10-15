@@ -36,7 +36,7 @@ model_list = [
     {
         "model_name": "fake-openai-endpoint",
         "litellm_params": {
-            "model": "gpt-3.5-turbo",
+            "model": "{{openai_small}}",
             "api_key": "my-fake-key",
             "api_base": "http://0.0.0.0:8080",
             "rpm": 100
@@ -45,7 +45,7 @@ model_list = [
     {
         "model_name": "fake-openai-endpoint",
         "litellm_params": {
-            "model": "gpt-3.5-turbo",
+            "model": "{{openai_small}}",
             "api_key": "my-fake-key",
             "api_base": "http://0.0.0.0:8081",
             "rpm": 100
@@ -175,11 +175,11 @@ import time, asyncio, litellm
 # logging.basicConfig(level=logging.DEBUG)
 #### LITELLM PROXY #### 
 litellm_client = AsyncOpenAI(
-    api_key="sk-1234", # [CHANGE THIS]
+    api_key="sk-<your-litellm-api-key>", # [CHANGE THIS]
     base_url="http://0.0.0.0:4000"
 )
 litellm_client_2 = AsyncOpenAI(
-    api_key="sk-1234", # [CHANGE THIS]
+    api_key="sk-<your-litellm-api-key>", # [CHANGE THIS]
     base_url="http://0.0.0.0:4001"
 )
 

@@ -73,9 +73,9 @@ Use MCP tools normally with the Responses API or Chat Completions. The semantic 
 ```bash title="Responses API with Semantic Filtering" showLineNumbers
 curl --location 'http://localhost:4000/v1/responses' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "input": [
     {
       "role": "user",
@@ -100,9 +100,9 @@ curl --location 'http://localhost:4000/v1/responses' \
 ```bash title="Chat Completions with Semantic Filtering" showLineNumbers
 curl --location 'http://localhost:4000/v1/chat/completions' \
 --header 'Content-Type: application/json' \
---header "Authorization: Bearer sk-1234" \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "messages": [
     {"role": "user", "content": "Search Wikipedia for LiteLLM"}
   ],

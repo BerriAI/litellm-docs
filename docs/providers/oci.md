@@ -8,7 +8,7 @@ Check the [OCI Models List](https://docs.oracle.com/en-us/iaas/Content/generativ
 
 ## Supported Models
 
-For model lifecycle, retirement dates, and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm) — Oracle is the authoritative source.
+For model lifecycle, retirement dates, and recommended replacements, see [OCI's on-demand model retirement page](https://docs.oracle.com/en-us/iaas/Content/generative-ai/deprecating-on-demand.htm). Oracle is the authoritative source.
 
 ### Chat / Text Generation
 
@@ -81,7 +81,7 @@ This is the default method for LiteLLM AI Gateway (LLM Proxy) access to OCI GenA
 
 **Environment Variables**
 
-Instead of passing credentials in code, you can set the following environment variables — LiteLLM will read them automatically:
+Instead of passing credentials in code, you can set the following environment variables and LiteLLM will read them automatically:
 
 ```bash
 export OCI_REGION="us-chicago-1"
@@ -96,7 +96,7 @@ export OCI_KEY_FILE="/path/to/oci_api_key.pem"
 
 ### Method 2: OCI SDK Signer
 Use an OCI SDK `Signer` object for authentication. This method:
-- Leverages the official [OCI SDK for signing](https://docs.oracle.com/en-us/iaas/tools/python/latest/api/signing.html)
+- Uses the official [OCI SDK for signing](https://docs.oracle.com/en-us/iaas/tools/python/latest/api/signing.html)
 - Supports additional authentication methods (instance principals, workload identity, etc.)
 
 To use this method, install the OCI SDK:
@@ -105,6 +105,101 @@ uv add oci
 ```
 
 This method is an alternative when using the LiteLLM SDK on Oracle Cloud Infrastructure (instances or Oracle Kubernetes Engine).
+
+## Regions and Government Realms
+
+LiteLLM builds the inference endpoint as `https://inference.generativeai.{region}.oci.{realm_domain}`. The region is `oci_region` (or the `OCI_REGION` environment variable, defaulting to `us-ashburn-1`). The realm domain depends on which OCI realm hosts that region: `oraclecloud.com` for the commercial realm (OC1), `oraclegovcloud.com` for the US Government realms (OC2 and OC3), `oraclegovcloud.uk` for the UK Government realm (OC4), and the matching domain for every other realm the OCI SDK knows. A request in `us-luke-1` therefore goes to `https://inference.generativeai.us-luke-1.oci.oraclegovcloud.com` without any endpoint configuration.
+
+LiteLLM takes the realm domain from the first of these sources that answers:
+
+1. The realm key inside `oci_compartment_id`. Every OCID carries it as its third segment, so `ocid1.compartment.oc2..` selects the US Government realm and `ocid1.compartment.oc1..` the commercial realm.
+2. The region registry of the OCI Python SDK (`oci.regions`), when the `oci` package is installed.
+3. The region metadata the OCI SDK also reads: `~/.oci/regions-config.json` (a JSON array) first, then the `OCI_REGION_METADATA` environment variable (one JSON object). The entry whose `regionIdentifier` matches the region supplies `realmDomainComponent`.
+4. The commercial realm, `oraclecloud.com`.
+
+Setting `api_base` skips this resolution entirely, see [Overriding the endpoint with api_base](#overriding-the-endpoint-with-api_base).
+
+Because the compartment OCID already names the realm, a Government deployment needs the same parameters as a commercial one:
+
+<Tabs>
+<TabItem value="gov-sdk" label="SDK" default>
+
+```python
+from litellm import completion
+
+response = completion(
+    model="oci/meta.llama-3.3-70b-instruct",
+    messages=[{"role": "user", "content": "Hello"}],
+    oci_region="us-luke-1",
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
+    oci_key_file="<path/to/oci_key.pem>",
+    oci_compartment_id="ocid1.compartment.oc2..",
+)
+```
+
+</TabItem>
+<TabItem value="gov-proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: oci-gov-llama
+    litellm_params:
+      model: oci/meta.llama-3.3-70b-instruct
+      oci_region: us-luke-1
+      oci_user: os.environ/OCI_USER
+      oci_fingerprint: os.environ/OCI_FINGERPRINT
+      oci_tenancy: os.environ/OCI_TENANCY
+      oci_key_file: os.environ/OCI_KEY_FILE
+      oci_compartment_id: os.environ/OCI_COMPARTMENT_ID
+```
+
+</TabItem>
+</Tabs>
+
+Sources 2 and 3 only matter when `oci_compartment_id` is missing or is not an OCID with a realm key LiteLLM recognizes. Metadata entries that fail validation are skipped with a warning instead of failing the request, and a region that no source describes keeps the commercial endpoint, so a Government model never changes the endpoint of the other OCI models on the same proxy.
+
+### Overriding the endpoint with api_base
+
+Set `api_base` to send requests to an exact host, for example a realm LiteLLM does not know yet, a private endpoint, or a gateway in front of OCI. LiteLLM uses the value as given and appends the action path itself (`/20231130/actions/chat` for chat, `/20231130/actions/embedText` for embeddings). If `api_base` already ends with one of those paths, that suffix is removed first so the URL is not doubled. Requests are still signed with your OCI credentials against the host in `api_base`, and `oci_region` no longer affects the URL.
+
+<Tabs>
+<TabItem value="api-base-sdk" label="SDK" default>
+
+```python
+from litellm import completion
+
+response = completion(
+    model="oci/meta.llama-3.3-70b-instruct",
+    messages=[{"role": "user", "content": "Hello"}],
+    api_base="https://inference.generativeai.us-gov-ashburn-1.oci.oraclegovcloud.com",
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
+    oci_key_file="<path/to/oci_key.pem>",
+    oci_compartment_id="<oci_compartment_id>",
+)
+```
+
+</TabItem>
+<TabItem value="api-base-proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: oci-gov-llama
+    litellm_params:
+      model: oci/meta.llama-3.3-70b-instruct
+      api_base: https://inference.generativeai.us-gov-ashburn-1.oci.oraclegovcloud.com
+      oci_user: os.environ/OCI_USER
+      oci_fingerprint: os.environ/OCI_FINGERPRINT
+      oci_tenancy: os.environ/OCI_TENANCY
+      oci_key_file: os.environ/OCI_KEY_FILE
+      oci_compartment_id: os.environ/OCI_COMPARTMENT_ID
+```
+
+</TabItem>
+</Tabs>
 
 ## Usage
 
@@ -120,17 +215,17 @@ messages = [{"role": "user", "content": "Hey! how's it going?"}]
 response = completion(
     model="oci/xai.grok-4",
     messages=messages,
-    oci_region=<your_oci_region>,
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
+    oci_region="<your_oci_region>",
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
     oci_serving_mode="ON_DEMAND",  # Optional, default is "ON_DEMAND". Other option is "DEDICATED"
     # Provide either the private key string OR the path to the key file:
     # Option 1: pass the private key as a string
-    oci_key=<string_with_content_of_oci_key>,
+    oci_key="<string_with_content_of_oci_key>",
     # Option 2: pass the private key file path
     # oci_key_file="<path/to/oci_key.pem>",
-    oci_compartment_id=<oci_compartment_id>,
+    oci_compartment_id="<oci_compartment_id>",
 )
 print(response)
 ```
@@ -341,17 +436,17 @@ response = completion(
     model="oci/xai.grok-4",
     messages=messages,
     stream=True,
-    oci_region=<your_oci_region>,
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
+    oci_region="<your_oci_region>",
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
     oci_serving_mode="ON_DEMAND",  # Optional, default is "ON_DEMAND". Other option is "DEDICATED"
     # Provide either the private key string OR the path to the key file:
     # Option 1: pass the private key as a string
-    oci_key=<string_with_content_of_oci_key>,
+    oci_key="<string_with_content_of_oci_key>",
     # Option 2: pass the private key file path
     # oci_key_file="<path/to/oci_key.pem>",
-    oci_compartment_id=<oci_compartment_id>,
+    oci_compartment_id="<oci_compartment_id>",
 )
 for chunk in response:
     print(chunk["choices"][0]["delta"]["content"])  # same as openai format
@@ -402,11 +497,11 @@ response = completion(
     model="oci/cohere.command-latest",
     messages=messages,
     oci_region="us-chicago-1",
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
-    oci_key=<string_with_content_of_oci_key>,
-    oci_compartment_id=<oci_compartment_id>,
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
+    oci_key="<string_with_content_of_oci_key>",
+    oci_compartment_id="<oci_compartment_id>",
 )
 print(response)
 ```
@@ -453,14 +548,14 @@ messages = [{"role": "user", "content": "Hey! how's it going?"}]
 response = completion(
     model="oci/xai.grok-4",  # Must match the model type hosted on the endpoint
     messages=messages,
-    oci_region=<your_oci_region>,
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
+    oci_region="<your_oci_region>",
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
     oci_serving_mode="DEDICATED",
     oci_endpoint_id="ocid1.generativeaiendpoint.oc1...",  # Your dedicated endpoint OCID
-    oci_key=<string_with_content_of_oci_key>,
-    oci_compartment_id=<oci_compartment_id>,
+    oci_key="<string_with_content_of_oci_key>",
+    oci_compartment_id="<oci_compartment_id>",
 )
 print(response)
 ```
@@ -508,13 +603,13 @@ response = completion(
     model="oci/cohere.command-latest",  # Use Cohere model name to get Cohere API format
     messages=messages,
     oci_region="us-chicago-1",
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
     oci_serving_mode="DEDICATED",
     oci_endpoint_id="ocid1.generativeaiendpoint.oc1...",  # Your Cohere endpoint OCID
-    oci_key=<string_with_content_of_oci_key>,
-    oci_compartment_id=<oci_compartment_id>,
+    oci_key="<string_with_content_of_oci_key>",
+    oci_compartment_id="<oci_compartment_id>",
 )
 ```
 
@@ -602,7 +697,7 @@ print(response.choices[0].message.tool_calls)
 </TabItem>
 </Tabs>
 
-Tool calling works with both Cohere (`cohere.command-*`) and Generic (`xai.grok-*`, `meta.llama-*`, `google.gemini-*`) model families — LiteLLM adapts the OpenAI tool schema to each vendor's native format internally.
+Tool calling works with both Cohere (`cohere.command-*`) and Generic (`xai.grok-*`, `meta.llama-*`, `google.gemini-*`) model families. LiteLLM adapts the OpenAI tool schema to each vendor's native format internally.
 
 ## Usage - Vision / Multimodal
 
@@ -650,7 +745,7 @@ Both URL and base64-encoded data URIs are supported.
 
 ## Usage - Reasoning / Thinking
 
-OCI Generic-vendor models (xAI Grok reasoning variants, Google Gemini, etc.) support a reasoning step. LiteLLM exposes this via the OpenAI-compatible `reasoning_effort` parameter — accepted values are `"low"`, `"medium"`, `"high"`, and `"disable"` (mapped to OCI's `NONE`).
+OCI Generic-vendor models (xAI Grok reasoning variants, Google Gemini, etc.) support a reasoning step. LiteLLM exposes this via the OpenAI-compatible `reasoning_effort` parameter; accepted values are `"low"`, `"medium"`, `"high"`, and `"disable"` (mapped to OCI's `NONE`).
 
 Returned reasoning tokens are surfaced on `usage.completion_tokens_details.reasoning_tokens`, matching the OpenAI shape.
 
@@ -729,11 +824,11 @@ response = embedding(
     model="oci/cohere.embed-english-v3.0",
     input=["Hello world", "Goodbye world"],
     oci_region="us-ashburn-1",
-    oci_user=<your_oci_user>,
-    oci_fingerprint=<your_oci_fingerprint>,
-    oci_tenancy=<your_oci_tenancy>,
-    oci_key=<string_with_content_of_oci_key>,
-    oci_compartment_id=<oci_compartment_id>,
+    oci_user="<your_oci_user>",
+    oci_fingerprint="<your_oci_fingerprint>",
+    oci_tenancy="<your_oci_tenancy>",
+    oci_key="<string_with_content_of_oci_key>",
+    oci_compartment_id="<oci_compartment_id>",
 )
 print(response)
 ```

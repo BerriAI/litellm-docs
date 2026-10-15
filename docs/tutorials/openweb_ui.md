@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Open WebUI
 
+Rolling Open WebUI out to a whole company with SSO, IdP groups mapped to LiteLLM teams, skills, and artifacts? See [Open WebUI for Organizations](./openwebui_org_rollout.md).
+
 This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM with Open WebUI allows teams to 
 - Access 100+ LLMs on Open WebUI
 - Track Spend / Usage, Set Budget Limits 
@@ -12,7 +14,7 @@ This guide walks you through connecting Open WebUI to LiteLLM. Using LiteLLM wit
 
 ## Quickstart
 
-- Make sure to setup LiteLLM with the [LiteLLM Getting Started Guide](https://docs.litellm.ai/docs/proxy/docker_quick_start)
+- Make sure to setup LiteLLM with the [LiteLLM Quickstart](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 
 
 ## 1. Start LiteLLM & Open WebUI
@@ -115,7 +117,7 @@ To track spend and usage for each Open WebUI user, configure both Open WebUI and
 
 This video walks through on how we can map the openweb ui headers to LiteLLM user roles 
 
-<iframe src="https://www.loom.com/embed/a1b6a4635fc0478ba4fd34cae16e2ffd?sid=791c2dcc-7e65-45be-bf7f-27d2601c123e" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen width="840" height="500"></iframe>
+<iframe src="https://www.loom.com/embed/a1b6a4635fc0478ba4fd34cae16e2ffd?sid=791c2dcc-7e65-45be-bf7f-27d2601c123e" frameBorder="0" allowFullScreen width="840" height="500"></iframe>
 
 <br/>
 <br/>
@@ -123,28 +125,28 @@ This video walks through on how we can map the openweb ui headers to LiteLLM use
 
 ## Render `thinking` content on Open WebUI
 
-Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. In order to render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
+Open WebUI requires reasoning/thinking content to be rendered with `<think></think>` tags. To render this for specific models, you can use the `merge_reasoning_content_in_choices` litellm parameter.
 
 Example litellm config.yaml:
 
 ```yaml
 model_list:
-  - model_name: thinking-anthropic-claude-3-7-sonnet # Bedrock Anthropic
+  - model_name: thinking-anthropic-claude-sonnet-5 # Bedrock Anthropic
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       thinking: {"type": "enabled", "budget_tokens": 1024}
       max_tokens: 1080
       merge_reasoning_content_in_choices: true
-  - model_name: vertex_ai/gemini-2.5-pro # Vertex AI Gemini
+  - model_name: vertex_ai/{{gemini_pro}} # Vertex AI Gemini
     litellm_params:
-      model: vertex_ai/gemini-2.5-pro
+      model: vertex_ai/{{gemini_pro}}
       thinking: {"type": "enabled", "budget_tokens": 1024}
       merge_reasoning_content_in_choices: true
 ```
 
 ### Test it on Open WebUI
 
-On the models dropdown select `thinking-anthropic-claude-3-7-sonnet`
+On the models dropdown select `thinking-anthropic-claude-sonnet-5`
 
 <Image img={require('../../img/litellm_thinking_openweb.gif')} />
 

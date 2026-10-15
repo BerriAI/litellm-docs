@@ -1,8 +1,11 @@
 # Oobabooga Text Web API Tutorial
 
 ### Install + Import LiteLLM 
-```python 
-!uv add litellm
+```bash
+uv add litellm
+```
+
+```python
 from litellm import completion 
 import os
 ```

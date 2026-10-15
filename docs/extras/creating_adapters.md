@@ -1,3 +1,7 @@
+---
+sidebar_label: "Custom Formats (Adapters)"
+---
+
 # Call any LiteLLM model in your custom format
 
 Use this to call any LiteLLM supported `.completion()` model, in your custom format. Useful if you have a custom API and want to support any LiteLLM supported model.
@@ -56,7 +60,7 @@ from litellm import adapter_completion
 # Now you can use your provider's format with any LiteLLM model
 response = adapter_completion(
     adapter_id="my_provider",
-    model="gpt-4",  # or any LiteLLM model
+    model="{{openai_large}}",  # or any LiteLLM model
     messages=[{"role": "user", "content": "hello"}],
     max_tokens=100
 )
@@ -67,7 +71,7 @@ response = adapter_completion(
 ```python
 stream = adapter_completion(
     adapter_id="my_provider",
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     stream=True
 )
@@ -83,7 +87,7 @@ from litellm import aadapter_completion
 
 response = await aadapter_completion(
     adapter_id="my_provider",
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}]
 )
 ```
@@ -187,8 +191,8 @@ Then call it:
 
 ```bash
 curl http://localhost:4000/v1/messages \
-  -H "Authorization: Bearer sk-1234" \
-  -d '{"model": "gpt-4", "messages": [...]}'
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{"model": "{{openai_large}}", "messages": [...]}'
 ```
 
 ## Real Example

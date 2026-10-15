@@ -2,7 +2,7 @@
 
 Upload docs, ask questions --> get answers.
 
-Leverage GenAI with your confidential documents to increase efficiency and collaboration.
+Use GenAI with your confidential documents to increase efficiency and collaboration.
 
 OSS core, everything can run in your environment. An extensible platform you can build your GenAI strategy on. Support a variety of popular LLMs including embedded for air gap use cases.
 
@@ -10,8 +10,8 @@ OSS core, everything can run in your environment. An extensible platform you can
 [![Static Badge][github-shield]][github-url]
 [![X (formerly Twitter) Follow][twitter-shield]][twitter-url]
 
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+{/* MARKDOWN LINKS & IMAGES */}
+{/* https://www.markdownguide.org/basic-syntax/#reference-style-links */}
 
 [docs-shield]: https://img.shields.io/badge/docs-site-black?logo=materialformkdocs
 [docs-url]: https://docqai.github.io/docq/

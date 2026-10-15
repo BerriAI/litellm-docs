@@ -1,39 +1,43 @@
 # LiteLLM Proxy CLI
 
-The `litellm-proxy` CLI is a command-line tool for managing your LiteLLM proxy
-server. It provides commands for managing models, credentials, API keys, users,
-and more, as well as making chat and HTTP requests to the proxy server.
+The `lite` CLI is a command-line tool for managing your LiteLLM proxy
+server and for running coding agents through it. It manages models, credentials,
+API keys, teams, and users, runs chat and HTTP requests against the proxy,
+migrates at-rest credential encryption, and launches coding agents (Claude Code,
+Codex, OpenCode) with their LLM traffic routed through the proxy.
 
-| Feature                | What you can do                                 |
-|------------------------|-------------------------------------------------|
-| Models Management      | List, add, update, and delete models            |
-| Credentials Management | Manage provider credentials                     |
-| Keys Management        | Generate, list, and delete API keys             |
-| User Management        | Create, list, and delete users                  |
-| Chat Completions       | Run chat completions                            |
-| HTTP Requests          | Make custom HTTP requests to the proxy server   |
+| Feature                | What you can do                                            |
+|------------------------|-----------------------------------------------------------|
+| Coding Agents          | Run Claude Code, Codex, or OpenCode through the proxy      |
+| Models Management      | List, add, update, and delete models                      |
+| Credentials Management | Manage provider credentials                               |
+| Keys Management        | Generate, list, delete, and import API keys               |
+| Teams Management       | List teams, list joinable teams, assign your key to a team |
+| User Management        | Create, list, and delete users                            |
+| Chat Completions       | Run chat completions                                      |
+| HTTP Requests          | Make custom HTTP requests to the proxy server             |
+| Encryption Migration   | Re-encrypt at-rest credentials to AES-256-GCM             |
 
 ## Quick Start
 
 1. **Install the CLI**
 
-   If you have [uv](https://github.com/astral-sh/uv) installed, you can try this:
+   The `lite` client is a thin laptop install: it points at a LiteLLM proxy and runs your coding agents through it, with none of the proxy server runtime pulled in. The one-line installer needs only `curl`; it bootstraps [uv](https://github.com/astral-sh/uv) when it's missing and lets uv provision a compatible Python for you:
 
    ```shell
-   uv tool install 'litellm[proxy]'
+   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
    ```
 
-   If that works, you'll see something like this:
+   Already have uv and prefer to drive it yourself? Install the package directly:
 
    ```shell
-   ...
-   Installed 2 executables: litellm, litellm-proxy
+   uv tool install 'litellm[cli]'
    ```
 
-   and now you can use the tool by just typing `litellm-proxy` in your terminal:
+   Any of these gives you the `lite` command. A proxy server installed from `litellm[proxy]` ships it too, but that extra leaves out `keyring`, so its credential stays in a file instead of your OS keychain. Start by typing it in your terminal:
 
    ```shell
-   litellm-proxy
+   lite
    ```
 
 2. **Set up environment variables**
@@ -48,7 +52,7 @@ and more, as well as making chat and HTTP requests to the proxy server.
 3. **Make your first request (list models)**
 
    ```bash
-   litellm-proxy models list
+   lite models list
    ```
 
    If the CLI is set up correctly, you should see a list of available models or a table output.
@@ -99,18 +103,71 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 2. **Login**
 
    ```bash
-   litellm-proxy login
+   lite login
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you can login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
 
+   To sign in through your system browser with OAuth authorization code and PKCE instead, run `lite login --pkce`. That credential renews itself with a refresh token, and `lite auth print-token` hands it to Claude Code, OpenCode, or any OpenAI-compatible client. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
 3. **Test your authentication**
 
    ```bash
-   litellm-proxy models list
+   lite models list
    ```
 
    This will list all the models available to you.
+
+## Run coding agents through the proxy
+
+Launch a coding agent with all of its LLM traffic routed through your LiteLLM proxy. Each supported agent is its own command, so there is nothing to remember beyond the agent's name:
+
+```bash
+lite claude
+lite codex
+lite opencode
+```
+
+Anything after the agent name is forwarded to the agent untouched, so its own flags keep working:
+
+```bash
+lite claude --resume
+lite codex exec "summarize the repo"
+```
+
+Each command resolves your LiteLLM key (logging in via SSO when none is stored and you are at a terminal; otherwise it reads `LITELLM_PROXY_API_KEY` or `--api-key`), checks the key against the proxy so bad credentials fail right away instead of deep inside the agent, exports the environment variables the agent reads, then replaces itself with the agent process.
+
+The variables are chosen per agent. Claude Code gets `ANTHROPIC_BASE_URL` (the proxy root, so it appends `/v1/messages`) and `ANTHROPIC_AUTH_TOKEN`, with any stray `ANTHROPIC_API_KEY` cleared so the proxy token wins. Codex and OpenCode get `OPENAI_BASE_URL` (the proxy plus `/v1`) and `OPENAI_API_KEY`. Codex ignores `OPENAI_BASE_URL`, so it is additionally pointed at the proxy through a custom provider passed as `-c` config overrides (HTTP/SSE Responses transport, since the proxy does not speak the Responses WebSocket protocol).
+
+`--skip-verify` skips the pre-launch key check, which helps offline or with non-standard auth. It belongs to the wrapper, so put it before the agent's own flags:
+
+```bash
+lite claude --skip-verify --resume
+```
+
+To pin the model, pass the agent's own model flag (`lite claude --model my-proxy-model` or `lite codex -m my-proxy-model`) or export the variable the agent reads (`ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` for Claude Code); the wrapper preserves anything you already set. Whatever model the agent requests must exist on the proxy, since requests land on the proxy's `/v1/messages` (Anthropic) or `/v1/chat/completions` and `/v1/responses` (OpenAI) endpoints.
+
+### The `lite login` credential
+
+The token minted by `lite login` is a short-lived, per-session agent credential, not a managed virtual key. It is scoped to the user and team you authenticated as, inherits that user's and team's models and budgets, and is enforced on the proxy exactly like a virtual key on the same team (guardrails, routing, logging, spend). Spend is tracked against the shared team and user budgets, so running several agents (or logging in more than once) does not give each session its own budget; they all draw down the same team and user allowance, and there is no separate per-session cap.
+
+The credential is short-lived by design (default 24h, configurable via `LITELLM_CLI_JWT_EXPIRATION_HOURS`); run `lite login` again to refresh it, which also re-reads your latest team and user settings. It does not appear in the Keys UI and cannot be rotated or revoked mid-session, and `lite claude`, `lite codex`, and `lite opencode` work with it on a default deployment. If you need a long-lived, rotatable key that shows up in the Keys UI, create a dedicated virtual key in the dashboard and pass it via `--api-key` or `LITELLM_PROXY_API_KEY` instead.
+
+`lite login` keeps the credential in your OS keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service) under the service `litellm-cli` and the account `credential`. Only the non-secret half lands in `~/.litellm/token.json`: the gateway URL, your user id, email, and role, the auth header name, and the sign-in timestamp. That file is created `0600` inside a `0700` directory. Reaching the keychain needs the `keyring` package, which ships with the `cli` extra, so install with `pip install 'litellm[cli]'` rather than a bare `pip install litellm` or `pip install 'litellm[proxy]'` if you want keychain storage. Code that reads the credential back through `litellm.get_litellm_gateway_api_key()` needs `keyring` for the same reason: without it the call cannot see a keychain entry and returns `None`, even though `lite login` stored one
+
+A machine with no keychain, a headless Linux box for example, keeps the credential in that same owner-only file instead, and so do installs missing `keyring` and shells that set `LITELLM_CLI_DISABLE_KEYRING` to `1`, `true`, `yes`, or `on`, which turns keychain storage off entirely. `lite login` prints where the credential ended up either way. A credential written into `token.json` in plaintext by an older `lite` still authenticates: the next command that reads it moves it into the keychain and takes it out of the file
+
+A credential from `lite login --pkce` also comes with a refresh token: the CLI renews the key on its next use, `lite auth print-token` hands the current key to other tools, and `lite logout` revokes the refresh token on the proxy. Each renewed key goes to the keychain like the one before it, and so does the refresh token that bought it. See [Browser sign-in with PKCE](./cli_sso#browser-sign-in-with-pkce)
+
+When you authenticate to a team during login, or want to move your stored key onto a different team afterward, use `lite teams assign-key` (see [Teams Management](#teams-management)). Inspect or clear the stored credential with:
+
+```bash
+lite whoami             # show the authenticated user and the token age
+lite auth print-token   # print the current key, renewing a --pkce credential first when needed
+lite logout             # clear the keychain entry and the token file, and revoke a --pkce refresh token
+```
+
+`lite logout` clears both stores. When the keychain refuses to release the entry, or cannot be reached to check, it warns you and tells you what to do rather than reporting a clean logout
 
 ## Main Commands
 
@@ -120,49 +177,61 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 - Example:
 
   ```bash
-  litellm-proxy models list
-  litellm-proxy models add gpt-4 \
+  lite models list
+  lite models add {{openai_large}} \
     --param api_key=sk-123 \
     --param max_tokens=2048
-  litellm-proxy models update <model-id> -p temperature=0.7
-  litellm-proxy models delete <model-id>
+  lite models update <model-id> -p temperature=0.7
+  lite models delete <model-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/model%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/model%20management)
 
 ### Credentials Management
 
-- List, create, get, and delete credentials for LLM providers.
+- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name
 - Example:
 
   ```bash
-  litellm-proxy credentials list
-  litellm-proxy credentials create azure-prod \
+  lite credentials list
+  lite credentials create azure-prod \
     --info='{"custom_llm_provider": "azure"}' \
-    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}'
-  litellm-proxy credentials get azure-cred
-  litellm-proxy credentials delete azure-cred
+    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}' \
+    --display-name="Azure (prod)"
+  lite credentials update azure-prod --display-name="Azure EU (prod)"
+  lite credentials update azure-prod --clear-display-name
+  lite credentials get azure-cred
+  lite credentials delete azure-cred
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/credential%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/credential%20management)
 
 ### Keys Management
 
-- List, generate, get info, and delete API keys.
+- List, generate, delete, and import API keys. To look up a single key, filter `lite keys list` by `--key-alias` or `--key-hash`.
 - Example:
 
   ```bash
-  litellm-proxy keys list
-  litellm-proxy keys generate \
-    --models=gpt-4 \
+  lite keys list
+  lite keys generate \
+    --models={{openai_large}} \
     --spend=100 \
     --duration=24h \
     --key-alias=my-key
-  litellm-proxy keys info --key sk-key1
-  litellm-proxy keys delete --keys sk-key1,sk-key2 --key-aliases alias1,alias2
+  lite keys list --key-alias my-key
+  lite keys delete --keys sk-key1,sk-key2 --key-aliases alias1,alias2
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/key%20management)
+  `lite keys import` copies keys from another LiteLLM instance into this one. Add `--dry-run` to preview without writing, and `--created-since` (`YYYY-MM-DD` or `YYYY-MM-DD_HH:MM`) to limit the import by creation date:
+
+  ```bash
+  lite keys import \
+    --source-base-url https://old-proxy.example.com \
+    --source-api-key sk-source-admin \
+    --created-since 2026-01-01
+  ```
+
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/key%20management)
 
 ### User Management
 
@@ -170,29 +239,45 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 - Example:
 
   ```bash
-  litellm-proxy users list
-  litellm-proxy users create \
+  lite users list
+  lite users create \
     --email=user@example.com \
     --role=internal_user \
     --alias="Alice" \
     --team=team1 \
     --max-budget=100.0
-  litellm-proxy users get --id <user-id>
-  litellm-proxy users delete <user-id>
+  lite users get --id <user-id>
+  lite users delete <user-id>
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/Internal%20User%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
 
-### Chat Completions
+### Teams Management
 
-- Ask for chat completions from the proxy server.
+- List the teams you belong to, list teams available to join, and assign your current CLI key to a team.
 - Example:
 
   ```bash
-  litellm-proxy chat completions gpt-4 -m "user:Hello, how are you?"
+  lite teams list
+  lite teams available
+  lite teams assign-key --team-id team123
   ```
 
-  [API used (OpenAPI)](https://litellm-api.up.railway.app/#/chat%2Fcompletions)
+  Running `lite teams assign-key` without `--team-id` prompts you to pick a team interactively.
+
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/team%20management)
+
+### Chat Completions
+
+- Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
+- Example:
+
+  ```bash
+  lite chat {{openai_large}}
+  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
+  ```
+
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
 
 ### General HTTP Requests
 
@@ -200,12 +285,25 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 - Example:
 
   ```bash
-  litellm-proxy http request \
+  lite http request \
     POST /chat/completions \
-    --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+    --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
-  [All APIs (OpenAPI)](https://litellm-api.up.railway.app/#/)
+  [All APIs (OpenAPI)](https://docs.litellm.ai/api-reference/#/)
+
+### Encryption Migration
+
+- Re-encrypt at-rest credentials into the AES-256-GCM (`v2:gcm:`) format. This is an admin operation; start the proxy with `general_settings.encryption_algorithm: aes-256-gcm` first. The migration is idempotent and resumable, so it is safe to re-run after an interruption.
+- Example:
+
+  ```bash
+  lite encryption migrate --check    # read-only residual scan, no writes
+  lite encryption migrate --dry-run  # run the walkers without writing changes
+  lite encryption migrate            # perform the migration
+  ```
+
+  `--check` reports how many legacy values remain; a residual of `0` means everything is on the new format.
 
 ## Environment Variables
 
@@ -217,13 +315,13 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 1. **List all models:**
 
    ```bash
-   litellm-proxy models list
+   lite models list
    ```
 
 2. **Add a new model:**
 
    ```bash
-   litellm-proxy models add gpt-4 \
+   lite models add {{openai_large}} \
      --param api_key=sk-123 \
      --param max_tokens=2048
    ```
@@ -231,7 +329,7 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 3. **Create a credential:**
 
    ```bash
-   litellm-proxy credentials create azure-prod \
+   lite credentials create azure-prod \
      --info='{"custom_llm_provider": "azure"}' \
      --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}'
    ```
@@ -239,26 +337,26 @@ EXPERIMENTAL_UI_LOGIN="True" litellm --config config.yaml
 4. **Generate an API key:**
 
    ```bash
-   litellm-proxy keys generate \
-     --models=gpt-4 \
+   lite keys generate \
+     --models={{openai_large}} \
      --spend=100 \
      --duration=24h \
      --key-alias=my-key
    ```
 
-5. **Chat completion:**
+5. **Interactive chat:**
 
    ```bash
-   litellm-proxy chat completions gpt-4 \
-     -m "user:Write a story"
+   lite chat {{openai_large}} \
+     --system "You are a helpful coding assistant"
    ```
 
 6. **Custom HTTP request:**
 
    ```bash
-   litellm-proxy http request \
+   lite http request \
      POST /chat/completions \
-     --json '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+     --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
    ```
 
 ## Error Handling

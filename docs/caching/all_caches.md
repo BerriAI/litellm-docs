@@ -35,15 +35,15 @@ import litellm
 from litellm import completion
 from litellm.caching.caching import Cache
 
-litellm.cache = Cache(type="redis", host=<host>, port=<port>, password=<password>)
+litellm.cache = Cache(type="redis", host="<host>", port="<port>", password="<password>")
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -77,11 +77,11 @@ litellm.cache = RedisClusterCache(
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -132,11 +132,11 @@ from litellm.caching.caching import Cache
 litellm.cache = Cache(type="gcs", gcs_bucket_name="my-cache-bucket", gcs_path_service_account="/path/to/service_account.json")
 
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -170,11 +170,11 @@ litellm.cache = Cache(type="s3", s3_bucket_name="cache-bucket-litellm", s3_regio
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -201,11 +201,11 @@ litellm.cache = Cache(type="azure-blob", azure_account_url="https://example.blob
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me a joke."}]
 )
 
@@ -244,7 +244,7 @@ litellm.cache = Cache(
     redis_semantic_cache_embedding_model="text-embedding-ada-002", # this model is passed to litellm.embedding(), any litellm.embedding() model is supported here
 )
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -258,7 +258,7 @@ print(f"response1: {response1}")
 random_number = random.randint(1, 100000)
 
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -301,7 +301,7 @@ litellm.cache = Cache(
 )
 
 response1 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -315,7 +315,7 @@ print(f"response1: {response1}")
 random_number = random.randint(1, 100000)
 
 response2 = completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[
         {
             "role": "user",
@@ -331,6 +331,75 @@ assert response1.id == response2.id
 
 </TabItem>
 
+<TabItem value="valkey-sem" label="valkey-semantic cache">
+
+Use this when your vector store is a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, for example [AWS ElastiCache for Valkey](https://aws.amazon.com/elasticache/). RediSearch and RedisVL are not required; LiteLLM drives valkey-search directly over the Redis protocol.
+
+:::info[Requirements]
+
+The `valkey-search` module must be loaded on the server (run `MODULE LIST` and look for `search`, or `FT._LIST`). On AWS ElastiCache, vector search is available on **node-based Valkey 8.2+ clusters**; a cluster-mode-disabled node group is supported and is the recommended target, and a primary with read replicas is fine since only horizontal sharding is unsupported. ElastiCache **Serverless does not support vector search**, so a serverless endpoint will not work here. Multi-shard (cluster-mode-enabled) endpoints are not supported by this backend, since the async client cannot route the `FT.*` search commands across shards; scale vertically instead.
+
+:::
+
+To run a Valkey instance with valkey-search locally, the `valkey/valkey-bundle` image ships the module:
+
+```shell
+docker run -d -p 6379:6379 valkey/valkey-bundle:8.1
+```
+
+```python
+import litellm
+from litellm import completion
+from litellm.caching.caching import Cache
+
+random_number = random.randint(
+    1, 100000
+)  # add a random number to ensure it's always adding / reading from cache
+
+print("testing semantic caching")
+litellm.cache = Cache(
+    type="valkey-semantic",
+    host=os.environ["VALKEY_HOST"],
+    port=os.environ["VALKEY_PORT"],
+    password=os.environ.get("VALKEY_PASSWORD"),  # omit for passwordless / IAM-auth clusters
+    similarity_threshold=0.8, # similarity threshold for cache hits, 0 == no similarity, 1 = exact matches, 0.5 == 50% similarity
+    ttl=120,
+    valkey_semantic_cache_embedding_model="text-embedding-ada-002", # this model is passed to litellm.embedding(), any litellm.embedding() model is supported here
+    valkey_semantic_cache_index_name="litellm_semantic_cache_index", # optional, defaults to litellm_semantic_cache_index
+)
+response1 = completion(
+    model="{{openai_small}}",
+    messages=[
+        {
+            "role": "user",
+            "content": f"write a one sentence poem about: {random_number}",
+        }
+    ],
+    max_tokens=20,
+)
+print(f"response1: {response1}")
+
+random_number = random.randint(1, 100000)
+
+response2 = completion(
+    model="{{openai_small}}",
+    messages=[
+        {
+            "role": "user",
+            "content": f"write a one sentence poem about: {random_number}",
+        }
+    ],
+    max_tokens=20,
+)
+print(f"response2: {response2}")
+assert response1.id == response2.id
+# response1 == response2, response 1 is cached
+```
+
+`VALKEY_HOST`, `VALKEY_PORT`, and `VALKEY_PASSWORD` fall back to `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` if they are not set. For ElastiCache with encryption in transit (TLS), either pass `ssl=True` alongside host and port, or pass a full `redis_url="rediss://..."`.
+
+</TabItem>
+
 <TabItem value="in-mem" label="in memory cache">
 
 ### Quick Start
@@ -343,12 +412,12 @@ litellm.cache = Cache()
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -379,12 +448,12 @@ litellm.cache = Cache(type="disk")
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -416,7 +485,7 @@ Example usage `no-cache` - When `True`, Will not return a cached response
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -435,7 +504,7 @@ Example usage `no-store` - When `True`, Will not cache the response.
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -453,7 +522,7 @@ Example usage `ttl` - cache the response for 10 seconds
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -471,7 +540,7 @@ Example usage `s-maxage` - Will only accept cached responses for 60 seconds
 
 ```python
 response = litellm.completion(
-        model="gpt-3.5-turbo",
+        model="{{openai_small}}",
         messages=[
             {
                 "role": "user",
@@ -500,7 +569,7 @@ litellm.enable_cache()
 Advanced Params
 
 ```python
-litellm.enable_cache(
+def enable_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -509,7 +578,7 @@ litellm.enable_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ### Disabling Cache
@@ -524,7 +593,7 @@ litellm.disable_cache()
 Update the Cache params
 
 ```python
-litellm.update_cache(
+def update_cache(
     type: Optional[Literal["local", "redis", "s3", "gcs", "disk"]] = "local",
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -533,7 +602,7 @@ litellm.update_cache(
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
     **kwargs,
-)
+) -> None: ...
 ```
 
 ## Custom Cache Keys:
@@ -569,10 +638,10 @@ cache = Cache()
 ### 2. Define custom add/get cache functions 
 ```python
 def add_cache(self, result, *args, **kwargs):
-  your logic
+  ...
   
 def get_cache(self, *args, **kwargs):
-  your logic
+  ...
 ```
 
 ### 3. Point cache add/get functions to your add/get functions 
@@ -586,7 +655,7 @@ cache.get_cache = get_cache
 ```python
 def __init__(
     self,
-    type: Optional[Literal["local", "redis", "redis-semantic", "s3", "gcs", "disk"]] = "local",
+    type: Optional[Literal["local", "redis", "redis-semantic", "valkey-semantic", "s3", "gcs", "disk"]] = "local",
     supported_call_types: Optional[
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
@@ -613,6 +682,13 @@ def __init__(
     redis_semantic_cache_embedding_model: str = "text-embedding-ada-002",
     redis_semantic_cache_index_name: Optional[str] = None,
 
+    # valkey semantic cache params (valkey-search module, e.g. ElastiCache for Valkey)
+    valkey_semantic_cache_embedding_model: str = "text-embedding-ada-002",
+    valkey_semantic_cache_index_name: Optional[str] = None,
+
+    # semantic cache tenant scope: "key" (key/team/org) or "end_user" (also per end user)
+    semantic_cache_scope: str = "key",
+
     # s3 Bucket, boto3 configuration
     s3_bucket_name: Optional[str] = None,
     s3_region_name: Optional[str] = None,
@@ -638,7 +714,7 @@ def __init__(
 
     qdrant_semantic_cache_vector_size: Optional[int] = None,
     **kwargs
-):
+): ...
 ```
 
 ## Logging 
@@ -648,7 +724,7 @@ Cache hits are logged in success events as `kwarg["cache_hit"]`.
 Here's an example of accessing it: 
 
   ```python
-  import litellm
+import litellm
 from litellm.integrations.custom_logger import CustomLogger
 from litellm import completion, acompletion, Cache
 
@@ -656,7 +732,7 @@ from litellm import completion, acompletion, Cache
 class MyCustomHandler(CustomLogger):
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time): 
         print(f"On Success")
-        print(f"Value of Cache hit: {kwargs['cache_hit']"})
+        print(f"Value of Cache hit: {kwargs['cache_hit']}")
 
 async def test_async_completion_azure_caching():
     # set custom callback

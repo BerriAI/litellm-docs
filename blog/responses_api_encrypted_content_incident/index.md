@@ -32,8 +32,8 @@ When load balancing OpenAI's Responses API across deployments with **different A
 Encrypted content items are cryptographically tied to the API key's organization that created them. When the router load balanced a follow-up request to a deployment with a different API key, decryption failed.
 
 - **Responses API calls with encrypted content:** Complete failure when routed to wrong deployment
-- **Initial requests:** Unaffected — only follow-up requests containing encrypted items failed
-- **Other API endpoints:** No impact — chat completions, embeddings, etc. functioned normally
+- **Initial requests:** Unaffected. Only follow-up requests containing encrypted items failed
+- **Other API endpoints:** No impact. Chat completions, embeddings, etc. functioned normally
 
 {/* truncate */}
 
@@ -46,7 +46,7 @@ OpenAI's Responses API can return encrypted "reasoning items" (with IDs like `rs
 When load balancing across deployments with different API keys, the existing affinity mechanisms were insufficient:
 
 - **`responses_api_deployment_check`**: Requires `previous_response_id` which some clients (like Codex) don't provide
-- **`deployment_affinity`**: Too broad — pins *all* requests from a user to one deployment, reducing effective quota by the number of users
+- **`deployment_affinity`**: Too broad. Pins *all* requests from a user to one deployment, reducing effective quota by the number of users
 - **`session_affinity`**: Requires explicit session IDs and still reduces quota
 
 ```mermaid
@@ -112,7 +112,7 @@ Implemented a new `encrypted_content_affinity` pre-call check that intelligently
 
 **1. Encoding `model_id` into output items** ([`responses/utils.py`](https://github.com/BerriAI/litellm/blob/main/litellm/litellm/responses/utils.py))
 
-The same approach used for `previous_response_id` affinity — no cache needed. When a response contains output items with `encrypted_content`, LiteLLM encodes the originating deployment's `model_id` in **two places** for redundancy:
+The same approach used for `previous_response_id` affinity, with no cache needed. When a response contains output items with `encrypted_content`, LiteLLM encodes the originating deployment's `model_id` in **two places** for redundancy:
 
 1. **Into the item ID** (if present): `rs_abc123` → `encitem_{base64("litellm:model_id:{model_id};item_id:rs_abc123")}`
 2. **Into the encrypted_content itself**: Wraps the content with `litellm_enc:{base64("model_id:{model_id}")};{original_encrypted_content}`
@@ -146,9 +146,9 @@ Before forwarding to the upstream provider, LiteLLM restores the original item I
 input = ResponsesAPIRequestUtils._restore_encrypted_content_item_ids_in_input(input)
 ```
 
-**2. `EncryptedContentAffinityCheck` — routing only** ([`encrypted_content_affinity_check.py`](https://github.com/BerriAI/litellm/blob/main/litellm/litellm/router_utils/pre_call_checks/encrypted_content_affinity_check.py))
+**2. `EncryptedContentAffinityCheck`, routing only** ([`encrypted_content_affinity_check.py`](https://github.com/BerriAI/litellm/blob/main/litellm/litellm/router_utils/pre_call_checks/encrypted_content_affinity_check.py))
 
-No `async_log_success_event` or cache lookups — the `model_id` is decoded directly from the item ID or encrypted_content:
+No `async_log_success_event` or cache lookups; the `model_id` is decoded directly from the item ID or encrypted_content:
 
 ```python
 class EncryptedContentAffinityCheck(CustomLogger):
@@ -216,7 +216,7 @@ router_settings:
 ✅ **No quota reduction**: Only pins requests containing encrypted items  
 ✅ **Bypasses rate limits**: When encrypted content requires a specific deployment, RPM/TPM limits don't block it  
 ✅ **No `previous_response_id` required**: Works by encoding `model_id` directly into the item ID  
-✅ **No cache required**: `model_id` is decoded on-the-fly from the item ID — no Redis, no TTL  
+✅ **No cache required**: `model_id` is decoded on-the-fly from the item ID, so no Redis and no TTL  
 ✅ **Globally safe**: Can be enabled for all models; non-Responses-API calls are unaffected  
 ✅ **Surgical precision**: Normal requests continue to load balance freely
 

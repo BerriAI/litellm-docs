@@ -110,12 +110,13 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 
 ### Response Format
 
-```json
+```json nolint
 {
   "action": "BLOCKED" | "NONE" | "GUARDRAIL_INTERVENED",
   "blocked_reason": "why content was blocked",  // required if action=BLOCKED
   "texts": ["modified text"],  // optional array of modified text strings
-  "images": ["modified_base64_image"]  // optional array of modified images
+  "images": ["modified_base64_image"],  // optional array of modified images
+  "structured_messages": [{"role": "user", "content": "modified message"}]  // optional array of rewritten chat messages
 }
 ```
 
@@ -124,6 +125,8 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 - `NONE` - Request proceeds unchanged  
 - `GUARDRAIL_INTERVENED` - Request proceeds with modified texts/images (provide `texts` and/or `images` fields)
 
+**Rewriting per message:** `texts` must line up one to one with the `texts` array LiteLLM sent. When your endpoint rewrites the request per chat message instead, return the rewritten rows as `structured_messages` (see [Returning rewritten messages](#returning-rewritten-messages)). On `/v1/responses` a `texts` array that counts one entry per message does not match what LiteLLM extracted, so the request is rejected with a 500 naming the guardrail rather than sent unrewritten
+
 ## Parameters
 
 ### `tools` Parameter
@@ -131,6 +134,8 @@ Implement `POST /beta/litellm_basic_guardrail_api`
 The `tools` parameter provides information about available function/tool definitions in the request.
 
 **Format:** OpenAI `ChatCompletionToolParam` format (see [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools))
+
+Built-in tools that carry only a `type` and no `function` block, such as `{"type": "code_interpreter"}` or `{"type": "file_search", "vector_store_ids": [...]}`, are also accepted and forwarded to your endpoint intact (including their tool-specific config). Your endpoint should treat `function` as optional and branch on `type`.
 
 **Example:**
 ```json
@@ -224,6 +229,21 @@ The `structured_messages` parameter provides the full input in OpenAI chat compl
 - Enforce role-based content restrictions
 - Log structured conversation context
 
+#### Returning rewritten messages
+
+To rewrite the request per message, return `structured_messages` in the response with one row per row you received, in the same order, keeping each row's `role` and shape and changing only the content you want rewritten. LiteLLM writes the rows back onto the original request on every supported endpoint, including `/v1/responses` turns that carry `instructions` or tool items, where a per-message `texts` array cannot be placed. A row you return exactly as you received it counts as unchanged, so you can echo the rows you did not touch; when every row comes back unchanged, LiteLLM applies `texts` instead. A returned array whose length differs from the one you received replaces the conversation as a whole
+
+**Example:**
+```json
+{
+  "action": "GUARDRAIL_INTERVENED",
+  "structured_messages": [
+    {"role": "system", "content": "You are a helpful assistant"},
+    {"role": "user", "content": "My SSN is <US_SSN>"}
+  ]
+}
+```
+
 ## LiteLLM Configuration
 
 Add to `config.yaml`:
@@ -238,11 +258,34 @@ litellm_settings:
         api_base: https://your-guardrail-api.com
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
+        fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
           language: "en"
 ```
+
+### Error handling: `unreachable_fallback` and `fail_on_error`
+
+Two settings control what LiteLLM does when the guardrail itself fails, rather than returning a verdict. They sit on a spectrum from strict to permissive, and they compose:
+
+- `unreachable_fallback` (default `fail_closed`) only reacts to the guardrail endpoint being **unreachable**: network errors, timeouts, or an HTTP 502/503/504 from an upstream proxy/load balancer. Set it to `fail_open` to let requests proceed in just those cases.
+- `fail_on_error` (default `true`) is the broader control. It governs **any** guardrail error, not only unreachability.
+
+| `fail_on_error` | Behavior on a guardrail error |
+| --- | --- |
+| `true` (default) | **Fail closed.** Any error blocks the request: a non-2xx response, a malformed or unparseable body, a network failure, or an internal serialization/validation error. This preserves LiteLLM's existing behavior |
+| `false` | **Fail open (complete).** Any guardrail error is downgraded to a critical-level log line and the request proceeds as if the guardrail were not configured |
+
+Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `BLOCKED` decision still blocks; everything that is not a valid response (errors, malformed bodies, unreachable endpoints) is bypassed. This applies to both the request hook (`pre_call`) and the response hook (`post_call`); on the response path, a fail-open returns the already-generated model output, while fail-closed turns a successful generation into an error.
+
+:::danger
+
+`fail_on_error: false` is a complete bypass on failure. It means that **any** failure in the guardrail or its endpoint, for any reason, will cause the guardrail to be skipped for that request rather than block it. Enable it only if you have understood and accepted that tradeoff: choose it when your availability and operational constraints are stronger than your security constraints. If the guardrail is a hard security boundary, leave it at the default `true` (fail closed).
+
+:::
+
+The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
 
 ### Static and dynamic headers
 
@@ -275,7 +318,7 @@ This mirrors the [MCP static and extra headers](/docs/mcp#forwarding-custom-head
 
 ### Example: Pillar Security
 
-[Pillar Security](https://pillar.security) uses the Generic Guardrail API to provide comprehensive AI security scanning including prompt injection protection, PII/PCI detection, secret detection, and content moderation.
+[Pillar Security](https://pillar.security) uses the Generic Guardrail API to provide AI security scanning, including prompt injection protection, PII/PCI detection, secret detection, and content moderation.
 
 ```yaml
 guardrails:
@@ -300,7 +343,7 @@ Users apply your guardrail by name:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=["my-guardrail"]
 )
@@ -310,7 +353,7 @@ Or with dynamic parameters:
 
 ```python
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="{{openai_large}}",
     messages=[{"role": "user", "content": "hello"}],
     guardrails=[{
         "my-guardrail": {
@@ -352,6 +395,7 @@ class GuardrailResponse(BaseModel):
     blocked_reason: Optional[str] = None
     texts: Optional[List[str]] = None
     images: Optional[List[str]] = None
+    structured_messages: Optional[List[Dict[str, Any]]] = None  # rewritten OpenAI messages, one per row received
 
 @app.post("/beta/litellm_basic_guardrail_api")
 async def apply_guardrail(request: GuardrailRequest):

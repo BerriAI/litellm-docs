@@ -1,83 +1,126 @@
-# 🖇️ AgentOps - LLM Observability Platform
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-:::tip
+# AgentOps
 
-This is community maintained. Please make an issue if you run into a bug:
-https://github.com/BerriAI/litellm
+Observability and DevTool platform for AI agents, at [agentops.ai](https://www.agentops.ai/).
 
+:::info
+We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or
+join our [discord](https://discord.gg/wuPM9dRgDw)
 :::
 
-[AgentOps](https://docs.agentops.ai) is an observability platform that enables tracing and monitoring of LLM calls, providing detailed insights into your AI operations.
+## Pre-Requisites
 
-## Using AgentOps with LiteLLM
+```shell
+uv add litellm
+```
 
-LiteLLM provides `success_callbacks` and `failure_callbacks`, allowing you to easily integrate AgentOps for comprehensive tracing and monitoring of your LLM operations.
+## Quick Start
 
-### Integration
+<Tabs>
+<TabItem value="python" label="SDK">
 
-Use just a few lines of code to instantly trace your responses **across all providers** with AgentOps:
-Get your AgentOps API Keys from https://app.agentops.ai/
 ```python
 import litellm
+import os
 
-# Configure LiteLLM to use AgentOps
-litellm.success_callback = ["agentops"]
+os.environ["LITELLM_OTEL_V2"] = "true"
+os.environ["AGENTOPS_API_KEY"] = ""
+# LLM API Keys
+os.environ["OPENAI_API_KEY"] = ""
 
-# Make your LLM calls as usual
+# set agentops as a callback, litellm will send the data to agentops
+litellm.callbacks = ["agentops"]
+
+# openai call
 response = litellm.completion(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": "Hello, how are you?"}],
+  model="{{openai_large}}",
+  messages=[
+    {"role": "user", "content": "Hi 👋 - i'm openai"}
+  ]
 )
 ```
 
-Complete Code:
+</TabItem>
+<TabItem value="proxy" label="LiteLLM Proxy">
 
-```python
-import os
-from litellm import completion
+1. Setup config.yaml
 
-# Set env variables
-os.environ["OPENAI_API_KEY"] = "your-openai-key"
-os.environ["AGENTOPS_API_KEY"] = "your-agentops-api-key"
+```yaml
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
 
-# Configure LiteLLM to use AgentOps
-litellm.success_callback = ["agentops"]
-
-# OpenAI call
-response = completion(
-    model="gpt-4",
-    messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
-)
-
-print(response)
+litellm_settings:
+  callbacks: ["agentops"]
 ```
 
-### Configuration Options
+2. Set your credentials
 
-The AgentOps integration can be configured through environment variables:
-
-- `AGENTOPS_API_KEY` (str, optional): Your AgentOps API key
-- `AGENTOPS_ENVIRONMENT` (str, optional): Deployment environment (defaults to "production")
-- `AGENTOPS_SERVICE_NAME` (str, optional): Service name for tracing (defaults to "agentops")
-
-### Advanced Usage
-
-You can configure additional settings through environment variables:
-
-```python
-import os
-
-# Configure AgentOps settings
-os.environ["AGENTOPS_API_KEY"] = "your-agentops-api-key"
-os.environ["AGENTOPS_ENVIRONMENT"] = "staging"
-os.environ["AGENTOPS_SERVICE_NAME"] = "my-service"
-
-# Enable AgentOps tracing
-litellm.success_callback = ["agentops"]
+```shell
+LITELLM_OTEL_V2=true
+AGENTOPS_API_KEY="your-api-key"
 ```
 
-### Support
+3. Start LiteLLM Proxy
 
-For issues or questions, please refer to:
-- [AgentOps Documentation](https://docs.agentops.ai)
-- [LiteLLM Documentation](https://docs.litellm.ai) 
+```bash
+litellm --config /path/to/config.yaml
+```
+
+4. Test it!
+
+```bash
+curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+  "model": "{{openai_large}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hey, how are you?"
+    }
+  ]
+}'
+```
+
+</TabItem>
+</Tabs>
+
+## What AgentOps renders
+
+Open the AgentOps dashboard. AgentOps does not add a vendor mapper, so spans arrive in the canonical `gen_ai.*` schema; see [Span attributes](./opentelemetry_v2#span-attributes) for the full list of keys.
+
+The preset sets three resource-level labels on the traces: `service.name` from `AGENTOPS_SERVICE_NAME`, a fixed `telemetry.sdk.name` of `agentops`, and `deployment.environment` from `AGENTOPS_ENVIRONMENT` when you set it. AgentOps routes the trace by the project encoded in the auth token, so the project never appears as a resource attribute.
+
+![LiteLLM trace in AgentOps](/img/observability/otel_v2_agentops.png)
+
+## Configuration
+
+| Variable | Required | Notes |
+|---|---|---|
+| `AGENTOPS_API_KEY` | Yes | Exchanged for a short-lived JWT |
+| `AGENTOPS_SERVICE_NAME` | No | Defaults to `agentops` |
+| `AGENTOPS_ENVIRONMENT` | No | No default; `deployment.environment` is only stamped when you set it |
+
+Traces are sent to `https://otlp.agentops.ai/v1/traces`.
+
+## Good to know
+
+AgentOps mints its auth token on the first span export rather than at startup, so the very first export can look briefly delayed. This happens once per process and is expected; the token is then cached for the process lifetime.
+
+Set `AGENTOPS_SERVICE_NAME` and `AGENTOPS_ENVIRONMENT` if you want to separate environments in the AgentOps UI.
+
+## Full OpenTelemetry reference
+
+This page covers the AgentOps-specific setup. For span attributes, prompt and response capture, metrics, distributed tracing, and which routes are traced, see the [OpenTelemetry v2 guide](./opentelemetry_v2).
+
+## Support & Talk to Founders
+
+- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
+- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai

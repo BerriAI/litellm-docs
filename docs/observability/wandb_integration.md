@@ -1,6 +1,6 @@
 import Image from '@theme/IdealImage';
 
-# Weights & Biases - Logging LLM Input/Output
+# Weights & Biases
 
 
 :::tip
@@ -46,7 +46,7 @@ litellm.success_callback = ["wandb"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
     {"role": "user", "content": "Hi 👋 - i'm openai"}
   ]
