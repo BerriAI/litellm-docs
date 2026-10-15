@@ -153,7 +153,7 @@ model_list:
 
 **Option 1: Environment variable**
 
-Older LiteLLM versions send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1`. If yours does, set `CRUSOE_API_BASE` to the current endpoint.
+Older LiteLLM versions send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1`. If yours does, set `CRUSOE_API_BASE` to the current endpoint. Newer versions call `https://api.inference.crusoecloud.com/v1` by default, so allow that host if your deployment restricts outbound traffic.
 
 ```python showLineNumbers title="Custom API Base via env var"
 import os
