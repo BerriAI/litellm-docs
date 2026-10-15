@@ -212,11 +212,16 @@ model_list:
     litellm_params:
       model: neosantara/gemini-3.5-flash
       api_key: os.environ/NEOSANTARA_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 Start your LiteLLM Proxy server:
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+export NEOSANTARA_API_KEY="your-neosantara-api-key"
+export LITELLM_MASTER_KEY="sk-local-neosantara"
 litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -230,7 +235,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="your-proxy-api-key",
+    api_key="sk-local-neosantara",
 )
 
 response = client.chat.completions.create(
@@ -252,7 +257,7 @@ response = litellm.completion(
     model="litellm_proxy/neosantara-gemini-flash",
     messages=[{"role": "user", "content": "Say hello from the proxy"}],
     api_base="http://localhost:4000",
-    api_key="your-proxy-api-key",
+    api_key="sk-local-neosantara",
 )
 
 print(response.choices[0].message.content)
@@ -265,7 +270,7 @@ print(response.choices[0].message.content)
 ```bash showLineNumbers title="Neosantara via Proxy - cURL"
 curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-proxy-api-key" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
     "model": "neosantara-gemini-flash",
     "messages": [{"role": "user", "content": "Say hello from the proxy"}]
@@ -275,7 +280,7 @@ curl http://localhost:4000/v1/chat/completions \
 ```bash showLineNumbers title="Neosantara via Proxy - Responses API"
 curl http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-proxy-api-key" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -d '{
     "model": "neosantara-gemini-flash",
     "input": "Reply with exactly: pong"
