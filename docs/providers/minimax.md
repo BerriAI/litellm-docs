@@ -662,13 +662,14 @@ while video.status not in ("completed", "failed", "cancelled"):
     time.sleep(20)
     video = video_status(video_id=video.id)
 
-with open("video.mp4", "wb") as f:
-    f.write(video_content(video_id=video.id))
+if video.status == "completed":
+    with open("video.mp4", "wb") as f:
+        f.write(video_content(video_id=video.id))
 ```
 
 `seconds` sets the duration and `size` sets the aspect ratio, so `1280x720` is sent as `16:9`. You can also pass `ratio` directly. `resolution` picks the output tier: `768P` (the default) or `2K` on MiniMax-H3, and `480P` or `768P` on MiniMax-H3-Max. Without `seconds` the job runs for 5 seconds, and a text-only request without `size` or `ratio` runs at 16:9. MiniMax accepts the ratios 16:9, 4:3, 1:1, 3:4, 9:16, 21:9 and `adaptive`, so a `size` such as `1792x1024` (7:4) gets MiniMax's 400. MiniMax-H3 runs 4 to 15 seconds and MiniMax-H3-Max 5 to 15.
 
-For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). For reference-to-video, pass MiniMax `image_url` and `audio_url` items in `content` instead, each with a `role` of `reference_image` or `reference_audio`. MiniMax does not take references together with a first frame, and an audio reference needs at least one image reference beside it.
+For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). For reference-to-video, pass MiniMax `image_url` and `audio_url` items in `content` instead, each with a `role` of `reference_image` or `reference_audio`. MiniMax does not take references together with a first frame.
 
 The text of the request always comes from `prompt`, so text items in `content` are rejected. Guardrails that implement `apply_guardrail`, such as `litellm_content_filter`, scan that `prompt`, while other guardrail hooks may not scan `/v1/videos` requests, and no guardrail scans the image and audio references.
 
@@ -678,14 +679,14 @@ These requests return a 400 instead of reaching MiniMax:
 
 - reference video input (a `video_url` item in `content`), since MiniMax bills its duration only after the task is created
 - remix, since MiniMax regeneration only upscales a finished 768P task to 2K and ignores the prompt
-- `video_list` with `after` or `order="asc"`, since MiniMax pages by number and returns newest first. Pass `extra_query={"page_num": 2}` for a later page
+- `video_list` in the Python SDK with `after` or `order="asc"`, since MiniMax pages by number and returns newest first. Pass `extra_query={"page_num": 2}` for a later page
 - `video_content` in the Python SDK with a `variant` other than `video`, since MiniMax only serves the mp4
 - a `resolution` the model has no price for, such as `480P` on MiniMax-H3, unless `drop_params` is on, which sends the 768P default instead
 - any other parameter MiniMax cannot honor, such as `seed`, `n`, `quality` or `negative_prompt`, unless `drop_params` is on
 
 Spend is logged at create time from the model's per-second rate at the resolution sent to MiniMax, plus each input image beyond MiniMax's free allowance (5 on MiniMax-H3, 2 on MiniMax-H3-Max).
 
-To serve these models on the proxy, set `mode: video_generation` on the deployment and call `/v1/videos`:
+To serve these models on the proxy, add a deployment and call `/v1/videos`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
@@ -693,8 +694,6 @@ model_list:
     litellm_params:
       model: minimax/MiniMax-H3
       api_key: os.environ/MINIMAX_API_KEY
-    model_info:
-      mode: video_generation
 ```
 
 ```bash showLineNumbers title="Video generation via Proxy - cURL"
@@ -716,6 +715,6 @@ curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
   -o video.mp4
 ```
 
-The proxy's `/content` route always returns the mp4, since it does not read `variant`. A proxy health check on a `video_generation` deployment creates a real 5 second video, which MiniMax bills, so with `background_health_checks` on, set `disable_background_health_check: true` in the deployment's `model_info`.
+The proxy's `/content` route always returns the mp4, since it does not read `variant`. The cost map marks both models as `video_generation`, so a proxy health check on these deployments creates a real 5 second video, which MiniMax bills. With `background_health_checks` on, set `disable_background_health_check: true` in the deployment's `model_info`.
 
-To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK, or `GET /v1/videos?custom_llm_provider=minimax` on the proxy. MiniMax returns no cursor, so `has_more` is always `false` and later pages come from `extra_query={"page_num": N}`.
+To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK. MiniMax returns no cursor, so `has_more` is always `false` and later pages come from `extra_query={"page_num": N}`. On the proxy, `GET /v1/videos?custom_llm_provider=minimax` returns only the first page, newest first, and ignores `after`, `order`, `limit` and `page_num`.
