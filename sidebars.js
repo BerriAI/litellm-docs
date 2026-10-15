@@ -1553,6 +1553,7 @@ const sidebars = {
             "providers/watsonx/index",
             "providers/watsonx/audio_transcription",
           ] },
+          "providers/webwright",
           "providers/xiaomi_mimo",
           "providers/zai",
         ] },
