@@ -101,4 +101,4 @@ The right side shows a **Question breakdown** of the state and each question's c
 
 ## Cost Tracking
 
-Spend uses `usage.input_tokens` and `usage.output_tokens` from the response and the `typesafe/<model>` entry in LiteLLM's model registry (`jev-1.13.0`, `jev-latest`, `jev-preview`). The request is logged under the versioned model TypeSafe reports, for example `typesafe/jev-1.13.0`, even when the request used an alias.
+Spend uses `usage.input_tokens` and `usage.output_tokens` from the response and the `typesafe/<model>` entry in LiteLLM's model registry (`jev-1.13.0`, `jev-1.14.0`, `jev-latest`, `jev-preview`). The request is logged under the versioned model TypeSafe reports, for example `typesafe/jev-1.13.0`, even when the request used an alias.
