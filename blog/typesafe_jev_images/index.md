@@ -1,6 +1,6 @@
 ---
 slug: typesafe_jev_images
-title: "Day 0 Support: TypeSafe Jev 1.14 images, box questions and long context"
+title: "Day 0 Support: TypeSafe Jev 1.14: Adds images, box questions, and long context"
 date: 2026-10-15T10:00:00
 authors:
   - kerry
