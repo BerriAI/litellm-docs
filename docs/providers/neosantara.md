@@ -75,7 +75,7 @@ for chunk in response:
 
 ### Chat Completions
 
-Function calling works on Neosantara through `completion()`, but LiteLLM currently requires explicitly allowing the OpenAI params on this provider route.
+Function calling works on Neosantara through `completion()`. Depending on the model, LiteLLM may require explicitly allowing the OpenAI params on this provider route.
 
 ```python showLineNumbers title="Neosantara Function Calling via completion()"
 import os
@@ -310,7 +310,7 @@ model_list:
 
 ### Spend Tracking on the Proxy
 
-Neosantara models are not in LiteLLM's model cost map, so the proxy records $0 spend for them and key or team budgets never move. To track spend, set `input_cost_per_token` and `output_cost_per_token` in `litellm_params` to the model's Neosantara price, as shown in [Custom Pricing](../proxy/custom_pricing).
+Neosantara models are not in LiteLLM's model cost map, so the proxy records $0 spend for them and key or team budgets never move. To track spend, set `input_cost_per_token` and `output_cost_per_token` in `litellm_params`, as shown in [Custom Pricing](../proxy/custom_pricing). Both are in USD per token, so divide a Neosantara price per million tokens by 1,000,000.
 
 ## Notes
 
