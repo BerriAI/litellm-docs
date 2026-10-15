@@ -222,10 +222,13 @@ Start your LiteLLM Proxy server:
 ```bash showLineNumbers title="Start LiteLLM Proxy"
 export NEOSANTARA_API_KEY="your-neosantara-api-key"
 export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 16)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
 ```
+
+In another terminal, set `LITELLM_MASTER_KEY` to the key printed above and call the proxy:
 
 <Tabs>
 <TabItem value="openai-sdk" label="OpenAI SDK">
@@ -294,7 +297,7 @@ curl http://localhost:4000/v1/responses \
 
 ### Tools and reasoning_effort on the Proxy
 
-LiteLLM has no capability data for most Neosantara models, so for those models the proxy answers 400 `UnsupportedParamsError` to `tools`, `tool_choice`, or `reasoning_effort`. Allow the params on the deployment, the same way `allowed_openai_params` works on `completion()`:
+LiteLLM has no capability data for Neosantara models, so the proxy can answer 400 `UnsupportedParamsError` to `tools`, `tool_choice`, or `reasoning_effort`, as it does for `glm-4.7-flash`. Allow the params on the deployment, the same way `allowed_openai_params` works on `completion()`:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
