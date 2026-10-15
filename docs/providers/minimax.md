@@ -640,7 +640,7 @@ Pass these via `extra_body`:
 
 ## MiniMax - Video Generation
 
-MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`.
+MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`. Calling `video_content` before then returns a 400 that says the video is still processing.
 
 ```python showLineNumbers title="MiniMax Video Generation"
 import os
@@ -673,7 +673,7 @@ These requests return a 400 instead of reaching MiniMax:
 - reference video input (a `video_url` item in `content`), since MiniMax bills its duration only after the task is created
 - remix, since MiniMax regeneration only upscales a finished 768P task to 2K and ignores the prompt
 - `video_list` with `after` or `order="asc"`, since MiniMax pages by number and returns newest first. Pass `extra_query={"page_num": 2}` for a later page
-- `characters` or `image`, unless `drop_params` is on
+- any other parameter MiniMax cannot honor, such as `seed`, `n`, `quality` or `negative_prompt`, unless `drop_params` is on
 
 Spend is logged at create time from the model's per-second rate at the requested resolution, plus each input image beyond MiniMax's free allowance (5 on MiniMax-H3, 2 on MiniMax-H3-Max).
 
@@ -708,4 +708,4 @@ curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
   -o video.mp4
 ```
 
-To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK.
+To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK. MiniMax returns no cursor, so `has_more` is always `false` and later pages come from `extra_query={"page_num": N}`.
