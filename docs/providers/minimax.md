@@ -670,9 +670,9 @@ with open("video.mp4", "wb") as f:
 
 For image-to-video, pass the first frame as `input_reference`, either as a URL or as a file (an open file, bytes, or a `(filename, file, content_type)` tuple). For reference-to-video, pass MiniMax `image_url` and `audio_url` items in `content` instead, each with a `role` of `reference_image` or `reference_audio`. MiniMax does not take references together with a first frame, and an audio reference needs at least one image reference beside it.
 
-The text of the request always comes from `prompt`, so text items in `content` are rejected. Guardrails that implement `apply_guardrail` (the [unified guardrail path](../proxy/guardrails/quick_start#where-the-skip-flags-apply)) scan that `prompt`, while other guardrail hooks may not scan `/v1/videos` requests, and no guardrail scans the image and audio references.
+The text of the request always comes from `prompt`, so text items in `content` are rejected. Guardrails that implement `apply_guardrail`, such as `litellm_content_filter`, scan that `prompt`, while other guardrail hooks may not scan `/v1/videos` requests, and no guardrail scans the image and audio references.
 
-Video calls read `MINIMAX_API_BASE` too. If you exported the `/anthropic/v1/messages` URL from the `/v1/messages` section, video calls return a 404, so set it to `https://api.minimax.io/v1` or pass `api_base="https://api.minimax.io/v1"` on video calls.
+Video calls read `MINIMAX_API_BASE` too. If you exported the `/anthropic/v1/messages` URL from the `/v1/messages` section, video calls return a 404, so set it to `https://api.minimax.io/anthropic`, which works for both, or pass `api_base="https://api.minimax.io/v1"` on video calls only.
 
 These requests return a 400 instead of reaching MiniMax:
 
@@ -716,6 +716,6 @@ curl http://localhost:4000/v1/videos/$VIDEO_ID/content \
   -o video.mp4
 ```
 
-The proxy's `/content` route always returns the mp4, since it does not read `variant`. A proxy health check on a `video_generation` deployment creates a real 5 second video, which MiniMax bills.
+The proxy's `/content` route always returns the mp4, since it does not read `variant`. A proxy health check on a `video_generation` deployment creates a real 5 second video, which MiniMax bills, so with `background_health_checks` on, set `disable_background_health_check: true` in the deployment's `model_info`.
 
-To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK. MiniMax returns no cursor, so `has_more` is always `false` and later pages come from `extra_query={"page_num": N}`.
+To list your MiniMax tasks, call `litellm.video_list(custom_llm_provider="minimax")` from the Python SDK, or `GET /v1/videos?custom_llm_provider=minimax` on the proxy. MiniMax returns no cursor, so `has_more` is always `false` and later pages come from `extra_query={"page_num": N}`.
