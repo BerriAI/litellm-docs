@@ -674,6 +674,7 @@ These requests return a 400 instead of reaching MiniMax:
 - remix, since MiniMax regeneration only upscales a finished 768P task to 2K and ignores the prompt
 - `video_list` with `after` or `order="asc"`, since MiniMax pages by number and returns newest first. Pass `extra_query={"page_num": 2}` for a later page
 - `video_content` in the Python SDK with a `variant` other than `video`, since MiniMax only serves the mp4
+- a `resolution` the model has no price for, such as `480P` on MiniMax-H3, unless `drop_params` is on, which sends the 768P default instead
 - any other parameter MiniMax cannot honor, such as `seed`, `n`, `quality` or `negative_prompt`, unless `drop_params` is on
 
 Spend is logged at create time from the model's per-second rate at the requested resolution, plus each input image beyond MiniMax's free allowance (5 on MiniMax-H3, 2 on MiniMax-H3-Max).
