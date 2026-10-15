@@ -4,6 +4,7 @@ title: "Day 0 Support: TypeSafe Jev 1.14 images, box questions and long context"
 date: 2026-10-15T10:00:00
 authors:
   - kerry
+  - mateo
 description: "TypeSafe Jev 1.14 reads images, answers box questions with coordinates and takes long-context requests. LiteLLM serves all three on /v1/systemone and /v1/decisions behind TypeSafe's opt-in headers."
 card_title: "Jev 1.14 images and box questions"
 card_summary: "Jev 1.14 reads PNG and JPEG images, answers box questions with coordinates, and takes long-context requests on LiteLLM."
