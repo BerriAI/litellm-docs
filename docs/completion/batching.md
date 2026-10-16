@@ -75,7 +75,7 @@ response = batch_completion_models(
     models=["{{openai_small}}", "{{anthropic}}", "command-nightly"], 
     messages=[{"role": "user", "content": "Hey, how's it going"}]
 )
-print(result)
+print(response)
 ```
 
 
@@ -91,12 +91,12 @@ Just pass a comma-separated string of model names and the flag `fastest_response
 <TabItem value="curl" label="curl">
 
 ```bash
-
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \ 
--D '{
-    "model": "{{openai_large}}, groq-llama", # 👈 Comma-separated models
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+--data-binary @- <<'JSON'
+{
+    "model": "{{openai_large}}, groq-llama",
     "messages": [
       {
         "role": "user",
@@ -104,10 +104,9 @@ curl -X POST 'http://localhost:4000/chat/completions' \
       }
     ],
     "stream": true,
-    "fastest_response": true # 👈 FLAG
+    "fastest_response": true
 }
-
-'
+JSON
 ```
 
 </TabItem>
@@ -129,7 +128,7 @@ response = client.chat.completions.create(
             "content": "this is a test request, write a short poem"
         }
     ],
-    extra_body={"fastest_response": true} # 👈 FLAG
+    extra_body={"fastest_response": True} # 👈 FLAG
 )
 
 print(response)
