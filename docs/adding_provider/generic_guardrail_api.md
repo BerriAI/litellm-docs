@@ -259,11 +259,14 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        forward_messages_as_sent: false  # default: false. Set to true to receive structured_messages as the client sent it. See below.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
           language: "en"
 ```
+
+With `forward_messages_as_sent: true`, `structured_messages` arrives as the client sent it, keeping keys and content blocks the OpenAI chat format does not declare, so rows may not be OpenAI-shaped.
 
 ### Error handling: `unreachable_fallback` and `fail_on_error`
 
