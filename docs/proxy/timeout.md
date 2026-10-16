@@ -49,6 +49,9 @@ For each model, you can set `timeout` and `stream_timeout` under `litellm_params
 
 - **`stream_timeout`** → maximum time to wait for the *first chunk* (i.e., first token) in a streaming response.  
   Use this to abort “hanging” providers (e.g., Bedrock slow start) and retry another model.
+
+Some requests can't be streamed by the provider, for example a `json_schema` response format on a Bedrock model without native structured output. LiteLLM then makes one non-streaming call and sends the answer back as chunks once it is complete, so no chunk arrives until the whole answer is written. These requests use the longer of `timeout` and `stream_timeout`, so a short `stream_timeout` meant for stalled streams does not cut off a slow structured answer.
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
