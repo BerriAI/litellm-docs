@@ -152,6 +152,8 @@ curl --location 'http://localhost:4000/embeddings' \
 
 ## Video Generation
 
+Available from v1.107.0.
+
 Doubao-Seedance models run as async tasks on Ark's content generation API. `video_generation` returns a queued video id right away, `video_status` reports `queued`, `in_progress`, `completed`, `failed` or `cancelled`, and `video_content` downloads the mp4 from the signed URL Ark returns once the task succeeds. Downloading before then answers 400.
 
 ```python showLineNumbers title="Volcengine Video Generation"
@@ -199,7 +201,7 @@ These requests answer 400 instead of reaching Ark:
 - `frames`, since Ark counts frames off the length
 - `characters`, `image`, or any other field LiteLLM does not send to Ark, unless `drop_params` is on
 
-`user` is sent as Ark's `safety_identifier`. Video calls read `VOLCENGINE_API_BASE` or `ARK_API_BASE` and strip the other surfaces' paths off them, so one base serves chat, embedding and video. Point `api_base` at `https://ark.ap-southeast.bytepluses.com/api/v3` to run the `dreamina-*` ids on BytePlus ModelArk.
+`user` is sent as Ark's `safety_identifier`. Video calls read `VOLCENGINE_API_BASE` or `ARK_API_BASE` and strip the other surfaces' paths off them, so one base serves chat, embedding and video. Point `api_base` at `https://ark.ap-southeast.bytepluses.com/api/v3` to run the `dreamina-*` ids on BytePlus ModelArk. Those ids have no price in the cost map, so they bill $0 and skip budgets until the deployment sets its own price or a `base_model` in `model_info`.
 
 To serve these models on the proxy, add a deployment and call `/v1/videos`:
 
