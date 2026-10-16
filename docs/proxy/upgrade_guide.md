@@ -11,6 +11,8 @@ Upgrading LiteLLM Proxy means rolling out a new image and letting it bring the d
 
 Read the [release notes](/release_notes) for every version between the one you run and the one you are moving to, and look for anything marked as a breaking change or a database change. Pin the exact image tag you are moving to rather than a floating tag such as `main-latest`, so every pod in the rollout runs the same code.
 
+How you pick the new version depends on how you deploy. With Docker or Helm, set the image tag to the release you want. With the [Terraform modules](./deploy.md#deploy-with-terraform-aws-and-gcp), bump the module `version` instead; each module version defaults all four component images to the same LiteLLM release, so leave the image inputs alone unless you deliberately pin something else.
+
 Take a backup or snapshot of the database first. Migrations only move forward, so restoring that backup is how you go back if an upgrade has to be reversed. If your spend log table is large, run the upgrade once against a restored copy of production before doing it for real; it is the only way to get a firm duration for your hardware and data, and it shows you exactly which migrations will apply.
 
 ## How migrations run
