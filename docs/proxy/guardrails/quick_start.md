@@ -8,6 +8,8 @@ Setup Prompt Injection Detection, PII Masking on LiteLLM Proxy (AI Gateway)
 
 To see where guardrails and the rest of the gateway stand against the OWASP Top 10 for LLM Applications 2026, read the [OWASP LLM Top 10 mapping](../security_owasp_llm_top10).
 
+If you want to classify traffic (for example how much of it is work related) rather than block it, the [usage classification recipe](./llm_as_a_judge#usage-classification-recipe) shows a low-cost `llm_as_a_judge` setup that samples a fraction of calls and writes verdicts into spend logs.
+
 ## 1. Define guardrails on your LiteLLM config.yaml
 
 Set your guardrails under the `guardrails` section

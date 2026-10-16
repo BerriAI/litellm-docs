@@ -19,7 +19,9 @@ import TabItem from '@theme/TabItem';
 
 In `post_call` mode the guardrail sends the conversation and the LLM response to the judge model with your criteria. In `pre_call` and `during_call` mode it judges the latest request turn instead, with the earlier role-labelled messages passed along only as context, so an on-topic history does not hide an off-topic new turn and an earlier rejected turn does not sink later valid ones. The judged turn is the trailing run of `user` messages in the request, all of their text parts joined, taken from the messages the guardrail scope keeps (`skip_system_message_in_guardrail`, `skip_tool_message_in_guardrail` and `scan_only_tool_results` apply as usual); when the request does not end with a user turn (for example a tool-result round trip), or the endpoint hands the guardrail no per-message structure, the judge evaluates all of the kept request text. This runs before any response exists, so the judge can reject an off-topic or disallowed request without spending tokens on the main model (`during_call` still runs the main call in parallel and discards its result when the judge rejects). The judge returns a verdict per criterion (score 0-100, reasoning, pass/fail) plus a weighted overall score. If the overall score is below `overall_threshold` and `on_failure` is `block`, the request fails with HTTP 422 carrying the full verdicts; with `on_failure: log` the call proceeds and the verdict is recorded in the request's logging metadata (`eval_information`), visible in spend logs and logging integrations.
 
-Every judged request or response costs one extra LLM call to the judge model.
+Every judged request or response costs one extra LLM call to the judge model. You can cap that cost with `sample_rate` (judge only a stable fraction of requests) and `max_input_chars` (cap the context sent to the judge); see [Sampling and judged-context caps](#sampling-and-judged-context-caps).
+
+The verdicts are recorded in `eval_information` on the request's logging metadata. This lands in `LiteLLM_SpendLogs.metadata.eval_information` (a JSON object, or a list when more than one judge ran on the call) and shows up in the Admin UI under Logs, in the log detail's "LLM Judge Results" panel, so verdicts are queryable in spend logs and visible per request without enabling a logging integration.
 
 ## Quick Start
 
@@ -144,4 +146,54 @@ guardrails:
       overall_threshold: number     # optional, 0-100, default 80
       on_failure: block | log       # optional, default block
       default_on: boolean           # optional, run on every request without being requested per-call
+      sample_rate: number           # optional, 0-1, default 1, fraction of calls the judge evaluates
+      max_input_chars: integer      # optional, positive, caps the request/response text sent to the judge
 ```
+
+## Sampling and judged-context caps
+
+`sample_rate` judges only a fraction of requests. The draw is deterministic per `litellm_call_id` (a hash of the call id compared against the rate), so the decision is stable across `pre_call`, `during_call` and `post_call`: a call that is sampled out is skipped by every judge hook, not just the first one. It is also stable across proxy workers, since nothing random is drawn per worker.
+
+A skipped request still records a `guardrail_information` entry with `guardrail_status: "not_run"` and `{"sampled": false, "sample_rate": <rate>}`, and carries no `eval_information`. `sample_rate: 0` judges nothing, `sample_rate: 1` (the default) judges everything.
+
+`max_input_chars` caps the judged context sent to the judge model. The budget covers only user-derived text, meaning the rendered conversation plus the text under review; criteria, weights and the fixed prompt labels never count against it. Within the budget the latest judged text keeps its head and the conversation history keeps its tail, so the most recent turn is preserved intact and earlier context is truncated from the front.
+
+Invalid values are rejected up front: `POST /guardrails` returns HTTP 422 for a `sample_rate` outside 0-1, a non-numeric `sample_rate`, or a boolean `max_input_chars`, and a config file with invalid values fails validation at boot and the guardrail is not loaded.
+
+## Usage classification recipe
+
+A common deployment is classifying traffic at low cost: judge a small sample of requests with `on_failure: log` so nothing is ever blocked, then aggregate the verdicts from spend logs.
+
+```yaml showLineNumbers title="config.yaml"
+guardrails:
+  - guardrail_name: "usage-classifier"
+    litellm_params:
+      guardrail: llm_as_a_judge
+      mode: pre_call
+      judge_model: my-judge-model
+      overall_threshold: 80
+      on_failure: log
+      default_on: true
+      sample_rate: 0.05
+      max_input_chars: 5000
+      criteria:
+        - name: work_related
+          weight: 100
+          description: Is this request work related? Score 100 if work related, 0 if personal
+```
+
+Each judged call's spend row carries `metadata.eval_information` with `passed`, `overall_score`, `threshold`, and the per-criterion `verdicts`. An example aggregation over the spend logs table:
+
+```sql
+SELECT "user",
+       metadata->'eval_information'->>'eval_name' AS eval_name,
+       metadata->'eval_information'->>'passed' AS passed,
+       avg((metadata->'eval_information'->>'overall_score')::float) AS avg_score,
+       count(*) AS judged_calls
+FROM "LiteLLM_SpendLogs"
+WHERE metadata->'eval_information'->>'eval_name' = 'usage-classifier'
+GROUP BY "user", eval_name, passed
+ORDER BY "user", passed;
+```
+
+Sampled-out calls have `eval_information` absent and a `not_run` guardrail entry, so they naturally drop out of this query and of guardrail-usage aggregations that count verdicts.
