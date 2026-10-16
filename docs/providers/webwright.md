@@ -120,4 +120,4 @@ WebWright supports the following OpenAI-compatible parameters:
 
 ## Additional Resources
 
-- [WebWright](https://webwright.ai)
+[WebWright](https://webwright.ai) serves the Wren R1 model through an OpenAI-compatible API. A runnable quickstart for pointing an OpenAI-compatible client at `wren-r1` is at https://webwright.ai/blog/wren-quickstart.
