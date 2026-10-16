@@ -14,6 +14,8 @@ Use ID-JAG when:
 
 ID-JAG differs from [OBO token exchange](./mcp_obo_auth): OBO is a single RFC 8693 exchange against one authorization server, while ID-JAG is two legs across two authorization servers.
 
+This page covers LiteLLM obtaining an access token from a resource authorization server with an ID-JAG. For the other direction, where an agent redeems an ID-JAG at LiteLLM's own token endpoint for a proxy credential, see [LiteLLM as resource app](./proxy/id_jag/resource_app.md) and the [grant rules](./proxy/cli_sso#redeem-an-identity-assertion-rfc-7523).
+
 ## How It Works
 
 ```mermaid
