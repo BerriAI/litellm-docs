@@ -148,7 +148,11 @@ Go to **Single sign-on > SAML** and configure:
 
 Under **Attributes & Claims**, verify that the default claims include the user's email. The default Entra ID claims (`emailaddress`, `givenname`, `surname`) are auto-detected by LiteLLM.
 
-To map LiteLLM roles, add a custom claim named `role` with a value sourced from an App Role or directory attribute.
+To map LiteLLM roles, create an app role on the application's registration whose **Value** is a LiteLLM role such as `proxy_admin`, then add a claim named `role` (namespace blank) with source attribute `user.assignedroles`. Assign users or groups to that app role in Step 5.
+
+To send team IDs, add a group claim with **Group ID** as the source and customize its name to `groups` with a blank namespace. Otherwise, set `SAML_ATTRIBUTE_TEAM_IDS` to Entra's full group claim name.
+
+For screenshots, testing and troubleshooting, see the [Microsoft Entra ID guide](./entra_id_sso.md#admin-ui-sso-with-saml).
 
 #### Step 3: Copy the metadata URL
 
@@ -163,7 +167,7 @@ PROXY_BASE_URL="https://litellm.yourcompany.com"
 
 #### Step 5: Assign users
 
-In **Users and groups**, assign the users or groups that should have access.
+In **Users and groups**, assign the users or groups that should have access, choosing the app role that sets their LiteLLM role.
 
 </TabItem>
 <TabItem value="generic" label="Other SAML IdPs">

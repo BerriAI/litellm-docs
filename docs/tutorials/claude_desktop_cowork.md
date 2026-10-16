@@ -44,7 +44,7 @@ Claude Desktop is a native app, so it registers as a public client (PKCE, no cli
 
 In the Entra admin center create an app registration for accounts in your directory only, then under **Authentication** add a **Mobile and desktop applications** platform with the custom redirect URI `http://127.0.0.1/callback`. Use `127.0.0.1` rather than `localhost`, keep the `/callback` path, and add it under that platform specifically: it is the only one Entra lets use any local port, which the app needs because it picks a free port at sign-in time. No client secret or API permissions are needed. Copy the **Application (client) ID** and **Directory (tenant) ID**.
 
-The issuer is `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` and the signing keys are at `https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys`. The stable user id claim is `oid`. To map users to LiteLLM teams by group, add a **groups** claim to the ID token under **Token configuration**; it carries group object ids.
+The issuer is `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` and the signing keys are at `https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys`. The stable user id claim is `oid`. To map users to LiteLLM teams by group, add a **groups** claim to the ID token under **Token configuration**; it carries group object ids. [Microsoft Entra ID](../proxy/entra_id_sso.md#claude-desktop-sso-with-oidc) walks through the whole Entra setup with screenshots, from app assignment to checking user and team attribution in the logs.
 
 </TabItem>
 <TabItem value="okta" label="Okta">
@@ -175,7 +175,7 @@ Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `aud
 
 ### 3. Configure Claude Desktop
 
-Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply Changes** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
+Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Identity provider sign-in (OIDC)** (**Interactive sign-in** in older versions), which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply Changes** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
 
 The exported keys, in a macOS `.mobileconfig` payload:
 
@@ -194,7 +194,7 @@ For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLI
 
 The same JSON also takes `redirectHost: "localhost"`, which moves the callback to `http://localhost:PORT/callback` for an identity provider whose registered redirect URI uses `localhost`. On Entra, `inferenceGatewayOidcAuthFlow: broker` signs in through the OS identity broker (Web Account Manager on Windows, Company Portal on macOS) instead of the browser, which satisfies Conditional Access policies that require a managed device; the app registration then also needs the broker redirect URIs `ms-appx-web://Microsoft.AAD.BrokerPlugin/YOUR_CLIENT_ID` and `msauth.com.anthropic.claudefordesktop://auth` under the same platform, and Linux has no broker.
 
-Claude Desktop 2.7032.0 renamed these keys: `inferenceCredentialKind: external-idp` with the JSON in `inferenceIdpOidc`, and `inferenceIdpAuthFlow` in place of `inferenceGatewayOidcAuthFlow`. The keys above keep working with no end date set and newer releases read them as `external-idp`, so keep them until every device in the fleet runs 2.7032.0 or later; the in-app window still labels the choice **Interactive sign-in**. A profile left over from an older setup that sets `inferenceGatewayAuthScheme: sso` has to replace it with `inferenceCredentialKind` before October 7, 2026, after which the app reports that value as invalid and, with no other credential key present, starts the gateway connection with no credential.
+Claude Desktop 2.7032.0 renamed these keys: `inferenceCredentialKind: external-idp` with the JSON in `inferenceIdpOidc`, and `inferenceIdpAuthFlow` in place of `inferenceGatewayOidcAuthFlow`. The keys above keep working with no end date set and newer releases read them as `external-idp`, so keep them until every device in the fleet runs 2.7032.0 or later; the configuration window labels the choice **Identity provider sign-in (OIDC)** in current versions. A profile left over from an older setup that sets `inferenceGatewayAuthScheme: sso` has to replace it with `inferenceCredentialKind` before October 7, 2026, after which the app reports that value as invalid and, with no other credential key present, starts the gateway connection with no credential.
 
 ### 4. Verify
 
@@ -357,6 +357,7 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 ## Related
 
+- [Microsoft Entra ID](../proxy/entra_id_sso.md) for a step-by-step Entra setup, including group-to-team mapping
 - [JWT auth](../proxy/token_auth.md) for every `litellm_jwtauth` option, including role mappings and JWT-to-virtual-key mapping
 - [Virtual keys](../proxy/virtual_keys.md)
 - [MCP gateway](../mcp.md), [MCP access control](../mcp_control.md), and [MCP OAuth passthrough](../mcp_oauth_passthrough.md)

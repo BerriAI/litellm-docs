@@ -19,7 +19,7 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 
 <Tiles size="lg" columns={3} items={[
   {icon: 'compliance', title: 'Audited security you can hand to your review team', text: 'SOC 2 Type II audited, self-hosted so no data leaves your environment, and signed Docker images you can verify.', to: 'https://trust.litellm.ai/', more: 'Verify the signed images', moreTo: '/docs/proxy/docker_image_security'},
-  {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
+  {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Microsoft Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
   {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
   {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
@@ -30,7 +30,13 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 
 ## Who is Enterprise for?
 
-For teams running LiteLLM at scale (100+ users or 10+ production AI use cases) that need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users; beyond that, an Enterprise license is required. Engineers evaluating a trial can follow the [Production rollout](/docs/learn/enterprise_quickstart) guide, and teams already on open source can start with [Moving from OSS](/docs/enterprise/moving_from_oss).
+Enterprise is for teams that run LiteLLM at scale: 100+ users or 10+ production AI use cases. These teams need SSO, audit logs, fine-grained access control, and professional support on top of open source. SSO is free for up to 5 users. For more users, you need an Enterprise license. Teams already on open source can start with [Moving from OSS](/docs/enterprise/moving_from_oss).
+
+### Start a 30-day trial
+
+1. Request a [30-day trial](https://www.litellm.ai/enterprise#trial). The trial gives you a full license key.
+2. Add the key to your Gateway, as shown in [Activate your license](/docs/enterprise/activate).
+3. Follow the [Production rollout](/docs/learn/enterprise_quickstart) guide to test the Enterprise features.
 
 ## Full feature list
 
@@ -38,7 +44,9 @@ Everything below is enabled by the license key. Each item links to its setup gui
 
 ### Security and access
 
-- **[SSO for the Admin UI](./proxy/admin_ui_sso.md)**. Okta, Azure AD, Google Workspace, and any OIDC/SAML provider
+- **[SSO for the Admin UI](./proxy/admin_ui_sso.md)**. Okta, Microsoft Entra ID, Google Workspace, and any OIDC/SAML provider
+- **[Microsoft Entra ID sign-in](./proxy/entra_id_sso.md)**. Admin UI sign-in with SAML app roles, and Claude Desktop sign-in with Entra ID groups mapped to LiteLLM teams
+- **[Microsoft Entra ID group sync](./tutorials/msft_sso.md)**. Sync Entra ID groups and members to LiteLLM teams at sign-in
 - **[JWT-based Authentication](./proxy/token_auth.md)**. Authenticate requests with your identity provider's tokens
 - **[Audit Logs with retention policies](./proxy/multiple_admins.md)**. Track every admin action and key-level change
 - **[Role-Based Access Control](./proxy/access_control.md)**. Organizations, teams, and user roles
@@ -65,22 +73,22 @@ Everything below is enabled by the license key. Each item links to its setup gui
 - **[Disable logging per team](./proxy/team_logging.md#disable-logging-for-a-team)**. GDPR-friendly opt-out at the team level
 - **[Log export to GCS / Azure Blob](./observability/gcs_bucket_integration.md)**. Durable storage for compliance
 - **[Guardrails per key/team](#guardrails-oss-vs-enterprise)**. Secret redaction, content moderation, banned keywords
-- **Enforced required params**. Reject requests missing required metadata
+- **[Enforced required params](./proxy/config_settings.md#general_settings---reference)**. Reject requests that do not include the params you list in `enforced_params`
 
 ### Operations and branding {#operations--branding}
 
-- **Custom Swagger branding**. Set your own title, description, and filtered routes on the API docs page
+- **[Custom Swagger branding](./proxy/config_settings.md#environment-variables---reference)**. Set your own title, description, and filtered routes on the API docs page with `DOCS_TITLE`, `DOCS_DESCRIPTION`, and `DOCS_FILTERED`
 - **[Custom email branding](./proxy/email.md#email-customization)**. Your logo and colors on system emails
-- **Max request/response size limits**. Protect the proxy from runaway payloads
+- **[Max request/response size limits](./proxy/config_settings.md#general_settings---reference)**. Set `max_request_size_mb` and `max_response_size_mb` to stop very large payloads
 - **[Team-managed models](./proxy/team_model_add.md)**. Let teams bring their own keys and fine-tunes
 
 ### Which guardrails need a license? {#guardrails-oss-vs-enterprise}
 
-The OSS guardrail framework includes custom guardrails and Presidio for PII masking. These built-in callback integrations require a LiteLLM Enterprise license: `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection`.
+The OSS guardrail framework includes custom guardrails and Presidio for PII masking. These built-in callback integrations need a LiteLLM Enterprise license: `llmguard_moderations`, `llamaguard_moderations`, `hide_secrets`, `openai_moderations`, `google_text_moderation`, `lakera_prompt_injection`, and `aporia_prompt_injection`.
 
 ## Run it
 
-Deploy the Docker image, or build from the pip package, on your own infrastructure. A license key enables the features above and includes a dedicated support channel.
+Deploy the Docker image, or build from the pip package, on your own infrastructure. A license key turns on the features above and includes a dedicated support channel.
 
 ```env
 LITELLM_LICENSE="eyJ..."
@@ -157,7 +165,7 @@ See [Data Security, Legal, and Compliance FAQs](./data_security.md).
 
 </summary>
 
-Pricing is based on usage. [Contact us](https://enterprise.litellm.ai/demo) for a quote tailored to your team.
+Pricing depends on your deployment size. [Contact us](https://enterprise.litellm.ai/demo) for a quote.
 
 </details>
 

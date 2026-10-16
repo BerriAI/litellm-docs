@@ -152,6 +152,8 @@ Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`
 
 Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
 
+For the full Microsoft Entra ID setup, including mapping Entra groups to LiteLLM teams, see [Entra sign-in for Claude Code and Codex](../entra_id_cli_sso.md)
+
 ## Model metadata for custom aliases
 
 Codex looks up the selected model name in its bundled catalog to set the context window, reasoning levels, and tool support. A LiteLLM `model_name` Codex does not know, such as a custom alias, still works, but Codex logs `Unknown model <name> is used. This will use fallback model metadata.` and runs with generic defaults

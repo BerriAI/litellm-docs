@@ -103,7 +103,7 @@ Once the developer has approved the code in the browser (the next section shows 
   "expires_in": 86400,
   "refresh_token": "llm_srefresh_e<redacted>",
   "user_id": "<the signed-in user id>",
-  "team_id": "<the first team on the user record, or null when it has none>"
+  "team_id": "<one of the user's teams, or null when they have none>"
 }
 ```
 
@@ -256,7 +256,7 @@ A replayed refresh token is refused on its own and ends nothing else, so a copy 
 
 The refresh token is signed with the MCP gateway's session signing keys, derived from `master_key` unless `general_settings.mcp_session_token_signing` is set. On a proxy where that block cannot be loaded, sign-in still succeeds but returns no refresh token and the proxy logs the fault, so the developer is back to signing in at every expiry until it is fixed
 
-The token is scoped to the first team on the developer's user record. A developer who belongs to several teams has no team picker in this flow and gets the first team's models and budget; `lite login` offers the picker if a developer needs a token for another team
+The token is scoped to one team. A developer who belongs to several teams has no team picker in this flow, and the proxy picks one of their teams with no defined order, so two sign-ins by the same developer can land on different teams with different models and budgets. Keep each Claude Code developer in a single team; `lite login` offers the picker if a developer needs a token for another team
 
 Two endpoints of the protocol are not served: `GET /claude_code_gateway/v1/models` and `HEAD /claude_code_gateway/api/hello` answer `404`. Sign-in, managed settings, and inference do not depend on them. Model discovery through `/v1/models` is off in Claude Code unless `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` is set, and with the endpoint unserved the `/model` picker shows Claude Code's built-in list, which is why the proxy config keeps the `anthropic/*` wildcard. The team's model list still decides which of those models a developer may use
 
@@ -268,5 +268,6 @@ Claude Code disables server-side WebSearch on gateway sessions and uses the 5-mi
 
 - [CLI SSO Authentication](../proxy/cli_sso): the device flow the gateway reuses, token lifetime, the PKCE sign-in whose refresh token family and revocation this gateway reuses, and the native client contract
 - [SSO for Admin UI](../proxy/admin_ui_sso): configuring Google, Microsoft, Okta, or generic OIDC on the proxy
+- [Entra sign-in for Claude Code and Codex](../proxy/entra_id_cli_sso): the end-to-end Microsoft Entra ID setup for this gateway and for Codex, with group-to-team mapping
 - [Claude Code with Okta SSO (JWT Auth)](./claude_code_okta_sso): the `apiKeyHelper` alternative, where Claude Code sends the IdP token itself
 - [Claude Code Quickstart](./claude_responses_api): basic Claude Code with LiteLLM setup using an API key
