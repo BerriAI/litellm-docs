@@ -504,6 +504,15 @@ const sidebars = {
             "proxy/jwt_auth_arch",
             "oidc",
             {
+              type: "category",
+              label: "ID-JAG",
+              items: [
+                { type: "doc", id: "proxy/id_jag/overview", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/id_jag/resource_app", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/id_jag/requesting_app", className: "sidebar-enterprise" },
+              ],
+            },
+            {
               type: "doc",
               id: "proxy/identity_provisioning",
               label: "Provisioning & Keys",
