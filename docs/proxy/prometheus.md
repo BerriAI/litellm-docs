@@ -396,6 +396,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
+| `litellm_provider_max_budget_metric`       | Maximum budget set for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
 
 ### Spend Capture Rate
 
