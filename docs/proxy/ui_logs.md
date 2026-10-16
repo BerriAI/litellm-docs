@@ -121,6 +121,7 @@ Some keys are read back from stored rows. Leaving them out turns off the feature
 | `model_map_information` | Nothing reads it from stored rows |
 | `usage_object`, `cost_breakdown` | Cost details in the log drawer and the prompt caching page |
 | `error_information` | Error code and error message filters on `/spend/logs`, and error details in the log drawer |
+| `error_information.error_cooldown_deployments` | Set only when the router returned 429 because no deployment was available. Lists the model group's deployments that were cooling down at that moment, each as `{model_id, api_base}`, with credentials in `api_base` masked. Empty when none were cooling down. |
 | `user_api_key_alias` | The key alias filter on the Logs page and `/spend/logs/ui` |
 | `user_api_key_team_id`, `user_api_key_user_id` | Recovering the team and user of a deleted key from its spend logs |
 | `guardrail_information` | The guardrail panel in the log drawer and compression savings |

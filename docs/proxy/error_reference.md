@@ -206,6 +206,8 @@ except litellm.RateLimitError as e:
 
 `category` is one of `litellm_rate_limit`, `vendor_rate_limit`, `litellm_batch_rate_limit`, or `vendor_batch_rate_limit`. `rate_limit_type` is one of `requests`, `tokens`, `concurrent_requests`, `budget`, or `max_iterations`. Both are also written to `StandardLoggingPayload.error_information`, so custom callbacks and metrics pipelines can split 429s by cause without parsing free text
 
+`error_information.error_cooldown_deployments` is set only when the router returned 429 because no deployment was available. It lists the model group's deployments that were cooling down at that moment, each as `{model_id, api_base}`, with credentials in `api_base` masked. Empty when none were cooling down.
+
 ## Retries and fallbacks
 
 Before the gateway returns an error it works through the retry and fallback policy configured for the model group. Retries re-attempt the same model group; fallbacks move to a different one. See [Fallbacks (Provider Failover)](/docs/proxy/reliability) for configuration

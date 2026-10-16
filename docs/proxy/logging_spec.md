@@ -171,6 +171,7 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `error_code` | `Optional[str]` | Optional error code (eg. "429") |
 | `error_class` | `Optional[str]` | Optional error class (eg. "RateLimitError") |
 | `llm_provider` | `Optional[str]` | LLM provider that returned the error (eg. "openai")` |
+| `error_cooldown_deployments` | `Optional[list[CooldownDeployment]]` | Set only when the router returned 429 because no deployment was available. Lists the model group's deployments that were cooling down at that moment, each as `{model_id, api_base}`, with credentials in `api_base` masked. Empty when none were cooling down. |
 
 ## StandardLoggingPayloadStatus
 
