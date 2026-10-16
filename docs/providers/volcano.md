@@ -190,7 +190,7 @@ Ark renders a fixed frame per resolution tier and ratio rather than the pixels y
 
 Ark bills a task when it finishes while LiteLLM bills the video when the task is created, so every create carries a length and a tier whose cost is known up front. `seconds` sets the length, an omitted `seconds` is sent as OpenAI's default of 4 seconds rather than Ark's own default of picking the length for you, and `seconds="-1"`, that Ark-picked length, answers 400. Spend is logged at create time from the model's per-second rate at the tier sent.
 
-`input_reference` takes the first frame as a URL, an open file, bytes, a `(filename, file, content_type)` tuple, or OpenAI's `{"image_url": "..."}` object. References Ark keeps for the whole clip go in `content` instead, one item per asset with the Ark role it plays, and a caller-supplied `content` array wins over `input_reference`. An `ep-` endpoint id has no price of its own, so it keeps whichever `resolution` you send, and takes a model's tiers when the deployment sets `model_info.base_model`.
+`input_reference` takes the first frame as a URL, or as a `Path`, an open file, bytes or a `(filename, file, content_type)` tuple, which LiteLLM reads and inlines as a base64 data URL, and OpenAI's `{"image_url": "..."}` object. A plain string is always sent to Ark as a URL it fetches itself, even when it looks like a local path. References Ark keeps for the whole clip go in `content` instead, one item per asset with the Ark role it plays, and a caller-supplied `content` array wins over `input_reference`. An `ep-` endpoint id has no price of its own, so it keeps whichever `resolution` you send, and takes a model's tiers when the deployment sets `model_info.base_model`.
 
 These requests answer 400 instead of reaching Ark:
 
