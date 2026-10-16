@@ -380,6 +380,46 @@ response = client.chat.completions.create(
 </TabItem>
 </Tabs>
 
+### Forward key, team, and org identity from the proxy
+
+The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default and available in `v1.99.0` and later. List the fields to forward under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  bedrock_request_metadata_fields:
+    - user_api_key_org_alias
+    - user_api_key_team_alias
+    - user_api_key_alias
+    - user_api_key_user_id
+    - spend_logs_metadata
+```
+
+With that config a request made with a key on team `growth` in org `platform` reaches Bedrock with `{"user_api_key_org_alias": "platform", "user_api_key_team_alias": "growth", "user_api_key_alias": "...", "user_api_key_user_id": "...", ...}` plus every pair in the request's `spend_logs_metadata`.
+
+| Field | Value forwarded |
+|-------|-----------------|
+| `user_api_key_alias` | Alias of the virtual key |
+| `user_api_key_hash` | Hashed virtual key, the same value spend logs show |
+| `user_api_key_user_id` | Internal user that owns the key |
+| `user_api_key_user_email` | Email of the internal user that owns the key |
+| `user_api_key_end_user_id` | End user (customer) id for the request, when the caller sends one |
+| `user_api_key_team_id`, `user_api_key_team_alias` | Team the key belongs to |
+| `user_api_key_org_id`, `user_api_key_org_alias` | Organization the key belongs to |
+| `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
+| `user_api_key_request_route` | Route the client called, for example `/v1/chat/completions` |
+| `user_api_key_budget_reset_at` | ISO 8601 time the key's budget next resets |
+| `spend_logs_metadata` | Every key/value pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
+
+Only text fields are forwarded, because Bedrock accepts string values only. The numeric spend and budget fields (`user_api_key_spend`, `user_api_key_max_budget`, and the user and team variants) and `user_api_key_auth_metadata` are skipped even when listed. A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out.
+
+`spend_logs_metadata` is the way to forward your own dimensions like agent or cost center without touching agent code. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults. The same pairs then land in LiteLLM spend logs and in Bedrock.
+
+Bedrock allows at most 16 pairs per request, keys and values of up to 256 characters, and only the characters `a-z A-Z 0-9`, whitespace, and `:_@$#=/+,.-`. Identity fields are placed first, in the order you list them, so they always get a slot. On Converse, any `requestMetadata` the caller sends comes next and `spend_logs_metadata` fills whatever is left, with the earlier value winning when both use the same key. A pair that breaks Bedrock's rules is dropped and the request still succeeds, so a team alias with an apostrophe in it never turns into a failed call. Keys starting with `user_api_key_` are reserved for the proxy, so a caller cannot forge identity through `requestMetadata` or `spend_logs_metadata`, and any `X-Amzn-Bedrock-Request-Metadata` header the caller sends is replaced.
+
+LiteLLM writes the metadata to the `requestMetadata` body field on Converse and to the signed `X-Amzn-Bedrock-Request-Metadata` header on Invoke, which covers `/chat/completions` and `/v1/messages`. While the setting is on, models that default to the [Native Chat Completions route](#native-chat-completions-route) use Converse instead, since that endpoint has no request metadata. The `/bedrock` [pass-through routes](../pass_through/bedrock.md) forward your request as sent and do not add it, and AWS does not support request metadata on `bedrock-mantle` models.
+
+AWS records request metadata only when model invocation logging is enabled in the call's region, and it does not appear in Cost Explorer or CUR. `user_api_key_user_email` and `user_api_key_hash` end up in your AWS logs where LiteLLM cannot delete them, so leave them out unless you need them.
+
 ## Usage - Function Calling / Tool calling
 
 LiteLLM supports tool calling via Bedrock's Converse and Invoke API's.
