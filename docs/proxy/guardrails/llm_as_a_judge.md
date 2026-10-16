@@ -146,8 +146,8 @@ guardrails:
       overall_threshold: number     # optional, 0-100, default 80
       on_failure: block | log       # optional, default block
       default_on: boolean           # optional, run on every request without being requested per-call
-      sample_rate: number           # optional, 0-1, default 1, fraction of calls the judge evaluates
-      max_input_chars: integer      # optional, positive, caps the request/response text sent to the judge
+      sample_rate: number           # optional, 0-1, default 1, fraction of calls the judge evaluates; below 1 requires on_failure: log or mode: logging_only
+      max_input_chars: integer      # optional, positive, caps the request/response text sent to the judge; requires on_failure: log or mode: logging_only
 ```
 
 ## Sampling and judged-context caps
@@ -158,7 +158,7 @@ A skipped request still records a `guardrail_information` entry with `guardrail_
 
 `max_input_chars` caps the judged context sent to the judge model. The budget covers only user-derived text, meaning the rendered conversation plus the text under review; criteria, weights and the fixed prompt labels never count against it. Within the budget the latest judged text keeps its head and the conversation history keeps its tail, so the most recent turn is preserved intact and earlier context is truncated from the front.
 
-Invalid values are rejected up front: `POST /guardrails` returns HTTP 422 for a `sample_rate` outside 0-1, a non-numeric `sample_rate`, or a boolean `max_input_chars`, and a config file with invalid values fails validation at boot and the guardrail is not loaded.
+Invalid values are rejected up front: `POST /guardrails` returns HTTP 422 for a `sample_rate` outside 0-1, a non-numeric `sample_rate`, or a boolean `max_input_chars`, and a config file with invalid values fails validation at boot and the guardrail is not loaded. `sample_rate` below 1 and `max_input_chars` are only accepted when the judge cannot block (`on_failure: log`, or `mode` set to `logging_only` only): a blocking judge must see every request and the full input, otherwise a caller can retry until it is sampled out or put flagged content past the cap.
 
 ## Usage classification recipe
 
