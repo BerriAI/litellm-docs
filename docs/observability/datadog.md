@@ -182,14 +182,14 @@ Publishes the following metrics to Datadog:
 | Metric | Type | Description |
 |--------|------|-------------|
 | `litellm.request.total_latency` | Gauge | End-to-end request latency (seconds) |
-| `litellm.request.total_latency.distribution` | Distribution | Same value as above, as a distribution |
+| `litellm_proxy.request.total_latency` | Distribution | Same value as `litellm.request.total_latency`, one sample per request |
 | `litellm.llm_api.latency` | Gauge | Time spent waiting for the LLM provider response (seconds) |
-| `litellm.llm_api.latency.distribution` | Distribution | Same value as above, as a distribution |
+| `litellm_proxy.llm_api.latency` | Distribution | Same value as `litellm.llm_api.latency`, one sample per request |
 | `litellm.overhead.latency` | Gauge | Time spent inside LiteLLM, excluding the provider call (seconds) |
-| `litellm.overhead.latency.distribution` | Distribution | Same value as above, as a distribution |
+| `litellm_proxy.overhead.latency` | Distribution | Same value as `litellm.overhead.latency`, one sample per request |
 | `litellm.llm_api.request_count` | Count | Request count, tagged with status code |
 
-Gauges and counts go to `/api/v2/series`, distributions go to `/api/v1/distribution_points`. Datadog stores one gauge value per second per tag set, so under concurrent traffic to the same model the gauges only keep the last sample in each second. Use the `.distribution` metrics for `avg`, `min`, `max`, `sum` and `count` over every request. Percentile queries (`p50` to `p99`) on them return no data: Datadog only computes percentiles for a distribution after you turn them on for that metric, and it refuses to for `litellm.*` metrics because that namespace belongs to its LiteLLM integration. Datadog counts each distribution as several custom metrics per unique tag set, so check your custom metrics quota.
+Gauges and counts go to `/api/v2/series`, distributions go to `/api/v1/distribution_points`. Datadog stores one gauge value per second per tag set, so under concurrent traffic to the same model the gauges only keep the last sample in each second. Use the `litellm_proxy.*` distributions for `avg`, `min`, `max`, `sum`, `count` and percentiles over every request. They are named `litellm_proxy.*` rather than `litellm.*` because Datadog reserves the `litellm.*` namespace for its LiteLLM integration and won't turn on percentiles for metrics in it. Datadog counts each distribution as custom metrics per unique tag set, and more again once percentiles are on, so check your custom metrics quota.
 
 Using `total_latency` and `llm_api.latency`, you can derive **internal latency** = `total_latency - llm_api.latency`.
 
@@ -232,7 +232,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 **Step 4**: View metrics in Datadog Metrics Explorer
 
-Navigate to **Metrics > Explorer** in Datadog and search for `litellm.request.total_latency`, `litellm.llm_api.latency`, or `litellm.llm_api.request_count`. Tags on a new custom metric can take a few minutes to become filterable after the first data point arrives.
+Navigate to **Metrics > Explorer** in Datadog and search for `litellm.request.total_latency`, `litellm_proxy.request.total_latency`, `litellm.llm_api.latency`, or `litellm.llm_api.request_count`. Tags on a new custom metric can take a few minutes to become filterable after the first data point arrives.
+
+**Step 5**: Turn on percentiles
+
+`p50` to `p99` queries on the `litellm_proxy.*` distributions return no data until you turn on percentiles for each of them on Datadog's **Metrics > Summary** page. A metric shows up there only after its first data point, so send a request first. Datadog computes percentiles only for data that arrives after you turn them on, and the first values can take about 10 minutes to appear. Then query, for example, `p95:litellm_proxy.request.total_latency{*} by {model_group}`.
 
 ## Datadog Cloud Cost Management
 
