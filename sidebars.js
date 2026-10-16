@@ -1496,6 +1496,7 @@ const sidebars = {
           "providers/hyperbolic",
           "providers/inception",
           "providers/inferenceapis",
+          "providers/iteracompute",
           "providers/jina_ai",
           "providers/lambda_ai",
           "providers/llamagate",
