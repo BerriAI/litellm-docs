@@ -9,6 +9,10 @@ function allowAI(config) {
 }
 function send(res, status, body, extra = {}) {
   if (res.destroyed) return;
+  if (res.headersSent) {
+    res.end(`event: error\ndata: ${JSON.stringify({error: body.error || 'The answer was interrupted. Please retry.'})}\n\n`);
+    return;
+  }
   res.writeHead(status, {'Content-Type': 'application/json', 'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff', ...extra});
   res.end(JSON.stringify(body));
@@ -72,9 +76,27 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now})
       if (parsed.error) return send(res, parsed.status, {error: parsed.error});
       if (!validBody(parsed.body)) return send(res, 400, {error: 'Send a question of 1 to 500 characters and up to four previous questions.'});
       const {question, history = [], traceContext} = parsed.body;
+      const requestSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(50000)]);
+      const streaming = (req.headers.accept || '').includes('text/event-stream');
+      const onEvent = streaming ? async (event, data) => {
+        requestSignal.throwIfAborted();
+        if (!res.headersSent) {
+          res.writeHead(200, {'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-store, no-transform',
+            'X-Content-Type-Options': 'nosniff', 'X-Accel-Buffering': 'no'});
+          res.flushHeaders?.();
+        }
+        if (!res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)) {
+          const {once} = require('node:events');
+          await once(res, 'drain', {signal: requestSignal});
+        }
+      } : undefined;
       const result = await answerQuestion({question: question.trim(), history, index, documents, config,
         traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50000)]), fetchImpl});
+        signal: requestSignal, fetchImpl, onEvent});
+      if (streaming && result.status === 200) {
+        await onEvent('done', result.body);
+        return res.end();
+      }
       return send(res, result.status, result.body);
     } catch {
       return send(res, 502, {error: 'Ask AI is temporarily unavailable. Please try again or use document search.'});

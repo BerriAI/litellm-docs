@@ -3,9 +3,11 @@ import {createPortal} from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
 import {Search, Sparkles, BookOpen, FileText, History, CornerDownLeft, X, Send, Square, User, Copy} from 'lucide-react';
 import styles from './styles.module.css';
 import {mapCitations} from '../../../search/citations.mjs';
+import {readAnswer} from '../../../search/stream.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
 
 // One owner renders the modal even when the navbar and docs sidebar both mount a trigger.
@@ -63,6 +65,9 @@ export default function SearchBar() {
   const [pendingQuestion, setPendingQuestion] = useState('');
   const [failedQuestion, setFailedQuestion] = useState('');
   const [asking, setAsking] = useState(false);
+  const [streamedAnswer, setStreamedAnswer] = useState('');
+  const [streamedSources, setStreamedSources] = useState([]);
+  const [progress, setProgress] = useState('Searching documentation…');
   const [retry, setRetry] = useState(0);
   const input = useRef(null), composer = useRef(null), dialog = useRef(null), worker = useRef(null), latestTurn = useRef(null);
   const requestId = useRef(0), controller = useRef(null), previousFocus = useRef(null);
@@ -70,7 +75,10 @@ export default function SearchBar() {
   const traceContext = useRef(undefined);
   const indexUrl = useBaseUrl('/search-index.json');
   const askUrl = useBaseUrl('/api/docs/ask');
-  const avatar = useBaseUrl('/img/favicon.ico');
+  const avatar = {
+    light: useBaseUrl('/img/brand/litellm-monogram-blue.svg'),
+    dark: useBaseUrl('/img/brand/litellm-monogram-white.svg'),
+  };
 
   useEffect(() => {
     setShortcut(/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K');
@@ -150,6 +158,7 @@ export default function SearchBar() {
     controller.current?.abort(); setAsking(false);
     if (pendingQuestion) setDraft(pendingQuestion);
     setPendingQuestion('');
+    setStreamedAnswer(''); setStreamedSources([]);
   }
   function close() {
     stopAnswer(); requestId.current += 1; setOpen(false);
@@ -165,21 +174,26 @@ export default function SearchBar() {
     controller.current?.abort(); setAsking(false); setPendingQuestion('');
     traceContext.current = undefined;
     setTurns([]); setDraft(''); setAiError(''); setFailedQuestion(''); composer.current?.focus();
+    setStreamedAnswer(''); setStreamedSources([]);
   }
   async function ask(question = draft) {
     if (!question.trim() || asking) return;
     const pending = new AbortController();
     controller.current?.abort(); controller.current = pending;
     setAsking(true); setPendingQuestion(question); setDraft(''); setAiError(''); setFailedQuestion('');
+    setStreamedAnswer(''); setStreamedSources([]); setProgress('Searching documentation…');
     const history = turns.slice(-4).map(turn => ({question: turn.question}));
     try {
-      const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json'},
+      const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
         body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});
       const context = response.headers.get('X-Docs-Trace-Context');
       if (!pending.signal.aborted && context) traceContext.current = context;
-      const data = await response.json().catch(() => ({error: 'Ask AI is temporarily unavailable. Please try again or use document search.'}));
-      if (!response.ok) throw new Error(data.error || 'Ask AI is unavailable.');
-      if (typeof data.answer !== 'string' || !Array.isArray(data.sources)) throw new Error('Ask AI is temporarily unavailable.');
+      const data = await readAnswer(response, (event, data) => {
+        if (pending.signal.aborted) return;
+        if (event === 'status') setProgress(data.message);
+        if (event === 'answer-delta') setStreamedAnswer(previous => previous + data.text);
+        if (event === 'sources') setStreamedSources(data.sources);
+      }, pending.signal);
       if (!pending.signal.aborted) setTurns(previous => [...previous, {question, ...data}]);
     } catch (error) {
       if (!pending.signal.aborted) {
@@ -225,7 +239,7 @@ export default function SearchBar() {
     <button type="button" aria-pressed={mode === 'search'} onClick={() => setMode('search')}><Search size={12}/>Search</button>
     <button type="button" aria-pressed={mode === 'ai'} onClick={() => openAI()}><Sparkles size={12}/>Ask AI</button>
   </div>;
-  const assistantAvatar = <img className={styles.avatar} src={avatar} alt="AI assistant avatar"/>;
+  const assistantAvatar = <ThemedImage className={styles.avatar} sources={avatar} alt="AI assistant avatar"/>;
   return <>
     <button className={styles.trigger} onClick={() => window.dispatchEvent(new Event(openEvent))} aria-label="Search for anything..." title={`Search (${shortcut})`} aria-keyshortcuts="Meta+k Control+k">
       <Search size={18}/><span>Search for anything...</span><kbd>{shortcut}</kbd>
@@ -244,7 +258,7 @@ export default function SearchBar() {
         </header>
         {mode === 'search' && <>
           <button className={styles.askCard} onClick={() => openAI(query.trim() || undefined)}>
-            <img src={avatar} alt=""/><span>Ask AI</span><strong>{query}</strong><small>Start conversation</small>
+            <ThemedImage sources={avatar} alt=""/><span>Ask AI</span><strong>{query}</strong><small>Start conversation</small>
           </button>
           <div className={`${styles.searchContent} ${query.trim() ? styles.hasQuery : ''}`}>
             {searchError && <p role="alert" className={styles.error}>{searchError} <button onClick={() => setRetry(value => value + 1)}>Try again</button></p>}
@@ -277,13 +291,16 @@ export default function SearchBar() {
                 {turn.sources.length > 0 && <div className={styles.sources}><p>Sources</p>{turn.sources.map(source => <a key={source.id} href={source.url}><small><SourceMeta source={source}/></small><span><SourceIcon source={source} size={15}/>{source.title}{source.heading && ` · ${source.heading}`}</span></a>)}</div>}
               </div></div>
             </article>)}
-            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div><div className={styles.assistantRow}>{assistantAvatar}<p role="status" className={styles.thinking}>Searching LiteLLM content...</p></div></article>}
+            {asking && <article className={styles.turn} ref={latestTurn}><div className={styles.userRow}><span className={styles.userAvatar}><User size={19}/></span><p>{pendingQuestion}</p></div>
+              <div className={styles.assistantRow}>{assistantAvatar}{streamedAnswer
+                ? <div className={styles.answer} aria-busy="true"><Answer answer={streamedAnswer} sources={streamedSources}/><span role="status" className={styles.thinking}>Writing answer…</span></div>
+                : <p role="status" className={styles.thinking}>{progress}</p>}</div></article>}
             {aiError && <div role="alert" className={styles.error}>{aiError}<button onClick={() => ask(failedQuestion)}>Retry question</button></div>}
           </div>
           <form className={styles.composer} onSubmit={event => {event.preventDefault(); ask();}}>
             <textarea ref={composer} aria-label="Ask anything about LiteLLM..." placeholder="Ask anything about LiteLLM..." value={draft} maxLength={500} rows={1} disabled={asking}
               onChange={event => setDraft(event.target.value)} onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); ask();}}}/>
-            {asking ? <button type="button" onClick={stopAnswer} aria-label="Stop answer"><Square size={16} fill="currentColor"/></button> : <button type="submit" disabled={!draft.trim()} aria-label="Send message"><Send size={18}/></button>}
+            {asking ? <button type="button" onClick={event => {event.preventDefault(); stopAnswer();}} aria-label="Stop answer"><Square size={16} fill="currentColor"/></button> : <button type="submit" disabled={!draft.trim()} aria-label="Send message"><Send size={18}/></button>}
           </form>
           <footer className={styles.footer}><span>AI can make mistakes. Check the sources.</span>{turns.length > 0 && <div><button onClick={copyConversation}><Copy size={12}/>{copied ? 'Copied' : 'Copy'}</button><button onClick={newChat}>Clear</button></div>}</footer>
         </>}

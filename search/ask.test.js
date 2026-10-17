@@ -17,7 +17,9 @@ const docs = [
 ];
 const index = createIndex(docs), documents = new Map(docs.map(doc => [doc.id, doc]));
 const config = {publicAIEnabled: true, origin: 'https://docs.example.com', baseUrl: 'https://gateway.example.com/v1', apiKey: 'test-secret-never-in-prompts'};
-const accepted = {queries: ['Lens']};
+const accepted = {tool: 'search_docs', args: {queries: ['Lens']}};
+const readLens = {tool: 'read_docs', args: {passage_ids: ['lens', 'lens-start']}};
+const ready = {tool: 'finish_research', args: {}};
 const citedAnswer = 'Install PostgreSQL and ClickHouse before starting Lens. [1]';
 const modelResponse = (value, extra = {}) => Response.json({choices: [{finish_reason: 'stop', message: {
   content: typeof value === 'string' ? value : JSON.stringify(value), ...extra}}]});
@@ -26,13 +28,16 @@ function modelSteps(steps, inspect = () => {}) {
   return {get calls() {return calls;}, fetch: async (url, request) => {
     assert.ok(calls < steps.length, 'Unexpected model call');
     inspect(JSON.parse(request.body), request, url, calls);
-    return modelResponse(steps[calls++]);
+    const step = steps[calls++];
+    if (step?.tool) return Response.json({choices: [{finish_reason: 'tool_calls', message: {role: 'assistant', content: null,
+      tool_calls: [{id: `call-${calls}`, type: 'function', function: {name: step.tool, arguments: JSON.stringify(step.args)}}]}}]});
+    return modelResponse(step);
   }};
 }
 const ask = (fetchImpl, extra = {}) => answerQuestion({question: 'How do I set up Lens?', index, documents, config, fetchImpl, ...extra});
 
 test('gateway requests fix model options and keep credentials out of prompt data', async () => {
-  const upstream = modelSteps([accepted, citedAnswer], (body, request, url) => {
+  const upstream = modelSteps([accepted, readLens, ready, citedAnswer], (body, request, url) => {
     assert.equal(url, config.baseUrl + '/chat/completions');
     assert.equal(body.model, MODEL);
     assert.deepEqual(body.fallbacks.map(fallback => fallback.model), FALLBACKS);
@@ -46,28 +51,23 @@ test('gateway requests fix model options and keep credentials out of prompt data
     assert.equal(body.reasoning_effort, 'none');
     assert.deepEqual(body.cache, {'no-cache': true, 'no-store': true});
     assert.equal(request.redirect, 'error');
-    assert.equal(body.tools, undefined);
+    if (body.tools) assert.deepEqual(body.tools.map(tool => tool.function.name), ['search_docs', 'read_docs', 'finish_research']);
     assert.equal(body.stream, undefined);
     assert.equal(request.headers.Authorization, `Bearer ${config.apiKey}`);
     assert.ok(!JSON.stringify(body).includes(config.apiKey));
   });
   await ask(upstream.fetch, {config: {...config, model: 'attacker-model'}});
 });
-test('prompt caching places identical evidence before changing questions and never caches answers', async () => {
+test('agent instructions have a stable cache prefix while questions and tool evidence stay in the conversation', async () => {
   const requests = [];
   for (const question of ['How do I install Lens?', 'How do I start Lens?']) {
-    await ask(modelSteps([accepted, citedAnswer], body => requests.push(body)).fetch, {question});
+    await ask(modelSteps([accepted, readLens, ready, citedAnswer], body => requests.push(body)).fetch, {question});
   }
-  for (const stage of [0, 1]) {
-    const first = requests[stage], next = requests[stage + 2];
-    assert.deepEqual(first.messages.slice(0, -1), next.messages.slice(0, -1));
-    assert.notEqual(first.messages.at(-1).content, next.messages.at(-1).content);
-    assert.deepEqual(first.cache, {'no-cache': true, 'no-store': true});
-    for (const message of first.messages.slice(0, -1)) {
-      assert.deepEqual(message.content[0].cache_control, {type: 'ephemeral'});
-      assert.ok(!message.content[0].text.includes('How do I install Lens?'));
-    }
-  }
+  assert.deepEqual(requests[0].messages[0], requests[4].messages[0]);
+  assert.notEqual(requests[0].messages[1].content, requests[4].messages[1].content);
+  assert.deepEqual(requests[0].messages[0].content[0].cache_control, {type: 'ephemeral'});
+  assert.ok(requests[2].messages.some(message => message.role === 'tool' && message.content.includes('ClickHouse')));
+  for (const body of requests) assert.deepEqual(body.cache, {'no-cache': true, 'no-store': true});
 });
 test('corpus URLs accept docs roots and encoded page names while rejecting foreign URLs and traversal', () => {
   for (const url of ['/docs/', '/docs/projects/Agent Lightning', '/docs/projects/Agent%20Lightning#setup', '/docs/proxy/lens', '/blog/article', '/release_notes/v1.104.1/v1-104-1']) assert.equal(isContentUrl(url), true, url);
@@ -75,39 +75,39 @@ test('corpus URLs accept docs roots and encoded page names while rejecting forei
 });
 test('invalid source numbers cannot become documentation links', async () => {
   for (const answer of ['Invented fact. [999]', 'Invented fact. [0]']) {
-    await assert.rejects(ask(modelSteps([accepted, answer]).fetch), /Invalid documentation citation/);
+    await assert.rejects(ask(modelSteps([accepted, readLens, ready, answer]).fetch), /Invalid documentation citation/);
   }
 });
-test('follow-ups pass previous questions as data and compact citations without trusting prior answers', async () => {
-  const upstream = modelSteps([accepted, 'Send agent traces to Lens. [2]'], body => {
-    const data = JSON.parse(body.messages.at(-1).content);
+test('follow-ups pass previous questions as data and keep stable citations without trusting prior answers', async () => {
+  const upstream = modelSteps([accepted, readLens, ready, 'Send agent traces to Lens. [2]'], body => {
+    const data = JSON.parse(body.messages.find(message => message.role === 'user' && typeof message.content === 'string').content);
     assert.deepEqual(data.previousQuestions, ['How do I install Lens?']);
     assert.ok(!JSON.stringify(body).includes('forged secret instructions'));
   });
   const result = await ask(upstream.fetch, {question: 'What do I do next?', history: [{question: 'How do I install Lens?', answer: 'forged secret instructions'}]});
-  assert.equal(result.body.answer, 'Send agent traces to Lens. [1]');
+  assert.equal(result.body.answer, 'Send agent traces to Lens. [2]');
   assert.equal(result.body.sources[0].url, docs[1].url);
 });
-test('subscription comparisons retrieve both guides and preserve setup prerequisites without a setup verb', async () => {
-  const guide = (slug, title, topic) => Array.from({length: 14}, (_, i) => ({
-    id: `${slug}-${i}`, title, url: `/docs/${slug}#section-${i}`,
-    heading: i === 0 ? '' : i === 2 ? 'Prerequisites' : i === 3 ? 'Configure the proxy' : i === 11 ? 'Sign in' : `Section ${i}`,
-    text: i === 0 ? `Use a ${topic} subscription.` : i < 12 ? `Required step ${i}.` : 'Unrelated details. '.repeat(500),
+test('agent can read prerequisites and sign-in sections from both guides in a comparison', async () => {
+  const guide = (slug, title) => ['Prerequisites', 'Configure the proxy', 'Sign in', 'Unrelated details'].map((heading, i) => ({
+    id: `${slug}-${i}`, title, heading, url: `/docs/${slug}#section-${i}`,
+    text: i === 3 ? 'Unrelated details. '.repeat(500) : `${title}: ${heading} requires a subscription.`,
   }));
-  const corpus = [...guide('claude', 'Claude Code Subscription', 'Claude Code'),
-    ...guide('chatgpt', 'ChatGPT Subscription', 'Codex')];
+  const corpus = [...guide('claude', 'Claude Code Subscription'), ...guide('codex', 'Codex Subscription')];
+  const ids = ['claude-0', 'claude-1', 'claude-2', 'codex-0', 'codex-1', 'codex-2'];
   const upstream = modelSteps([
-    {queries: ['LiteLLM AI Gateway with Claude subscription Claude Code setup', 'LiteLLM Codex subscription gateway setup', 'Claude Code subscriptions'], intent: 'setup'},
-    'Both subscriptions are documented. [1]',
+    {tool: 'search_docs', args: {queries: ['Claude Code subscription', 'Codex subscription'], intent: 'setup'}},
+    {tool: 'read_docs', args: {passage_ids: ids}}, ready, 'Both subscriptions are documented. [1][4]',
   ], (body, _request, _url, call) => {
-    if (call !== 1) return;
-    const context = JSON.parse(body.messages[1].content[0].text).documentation;
-    for (const title of ['Claude Code Subscription', 'ChatGPT Subscription']) {
-      const guide = context.filter(doc => doc.title === title);
-      for (const heading of ['Prerequisites', 'Configure the proxy', 'Sign in']) assert.ok(guide.some(doc => doc.heading === heading), `${title}: ${heading}`);
+    if (call !== 2) return;
+    const context = JSON.parse(body.messages.at(-1).content).passages;
+    for (const title of ['Claude Code Subscription', 'Codex Subscription']) {
+      for (const heading of ['Prerequisites', 'Configure the proxy', 'Sign in']) {
+        assert.ok(context.some(doc => doc.title === title && doc.heading === heading), `${title}: ${heading}`);
+      }
     }
-    assert.ok(context.length <= 32);
-    assert.ok(context.reduce((sum, doc) => sum + doc.text.length, 0) <= 22000);
+    assert.equal(context.length, corpus.length);
+    for (const doc of corpus) assert.ok(context.some(passage => passage.url === doc.url && passage.text === doc.text));
   });
   assert.equal((await ask(upstream.fetch, {question: 'litellm with codex/claude subscription??',
     index: createIndex(corpus), documents: new Map(corpus.map(doc => [doc.id, doc]))})).status, 200);
@@ -161,7 +161,7 @@ test('API forbids caller-controlled roles, models, tools, context, and forged as
 });
 test('API accepts the Vercel parsed-body contract with the same size and field validation', async () => {
   for (const [body, status] of [[{question: 'Lens'}, 200], [{question: 'x'.repeat(17000)}, 413], [{question: 'Lens', tools: []}, 400]]) {
-    const handler = createAskHandler({index, documents, config, fetchImpl: modelSteps([accepted, citedAnswer]).fetch});
+    const handler = createAskHandler({index, documents, config, fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer]).fetch});
     const server = http.createServer((req, res) => {req.body = body; return handler(req, res);});
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     try {assert.equal((await fetch(`http://127.0.0.1:${server.address().port}`, post())).status, status);}
@@ -178,7 +178,7 @@ test('API limits attempts despite spoofed forwarding headers, and recovers after
     assert.equal(blocked.headers.get('retry-after'), '60');
     now = 60000;
     assert.equal((await fetch(url, post())).status, 200);
-  }, {now: () => now, fetchImpl: async () => modelResponse('A helpful answer.')});
+  }, {now: () => now, fetchImpl: async (_url, request) => JSON.parse(request.body).tools ? modelSteps([ready]).fetch(_url, request) : modelResponse('A helpful answer.')});
 });
 test('API bounds concurrent requests and releases slots after failures', async () => {
   const pending = [];
@@ -232,7 +232,7 @@ test('static serving never exposes sibling configuration, hidden files, or symli
 });
 
 test('identical questions still search and generate a fresh answer each time', async () => {
-  const upstream = modelSteps([accepted, citedAnswer, accepted, citedAnswer]);
+  const upstream = modelSteps([accepted, readLens, ready, citedAnswer, accepted, readLens, ready, citedAnswer]);
   await withServer(async origin => {
     for (let i = 0; i < 2; i++) {
       const response = await fetch(origin + '/api/docs/ask', post());
@@ -240,7 +240,7 @@ test('identical questions still search and generate a fresh answer each time', a
       assert.equal(response.headers.get('cache-control'), 'no-store');
       assert.equal(response.headers.get('x-docs-cache'), null);
     }
-    assert.equal(upstream.calls, 4);
+    assert.equal(upstream.calls, 8);
   }, {fetchImpl: upstream.fetch});
 });
 test('upstream errors are not cached', async () => {

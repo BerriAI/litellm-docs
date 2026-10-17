@@ -19,7 +19,7 @@ function extractSections(html, url, metadata = {}) {
   const keywords = [metadata.keywords, $('meta[name="keywords"]').attr('content')].filter(Boolean).join(' ');
   const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
   const sections = [];
-  let heading = '', anchor = '', parts = [];
+  let heading = '', anchor = '', parts = [], links = new Map();
   function flush() {
     const text = parts.join('\n\n').trim();
     if (text) {
@@ -29,11 +29,12 @@ function extractSections(html, url, metadata = {}) {
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
           type, date: metadata.date || '', version: metadata.version || '', category: metadata.category,
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
-          text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240)});
+          text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
+          ...(links.size ? {links: [...links.values()]} : {})});
         if (offset + 3000 >= text.length) break;
       }
     }
-    parts = [];
+    parts = []; links = new Map();
   }
   article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li').each((_, element) => {
     const node = $(element);
@@ -48,6 +49,16 @@ function extractSections(html, url, metadata = {}) {
         : node.text().trim();
       if (text) parts.push(text);
     }
+    // Navigation questions need the destination, not just the anchor's visible text.
+    node.find('a[href]').each((_, element) => {
+      try {
+        const target = new URL($(element).attr('href'), `https://docs.litellm.ai${url}`);
+        const destination = target.pathname + target.hash, title = $(element).text().trim();
+        if (target.origin === 'https://docs.litellm.ai' && !target.username && !target.password && isContentUrl(destination) && title) {
+          links.set(destination, {url: destination, title});
+        }
+      } catch { /* Ignore malformed links rather than exposing unvalidated destinations. */ }
+    });
   });
   flush();
   return sections;
