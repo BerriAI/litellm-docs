@@ -56,7 +56,9 @@ async function readBody(req, signal, maxBytes = Infinity) {
 }
 function createAskHandler({index, documents, config, fetchImpl, now = Date.now, service = false}) {
   // The bot shares the answer engine and corpus, but never the website's model key.
-  if (service) config = {...config, apiKey: config.botApiKey};
+  if (service) config = {...config, apiKey: config.botApiKey, tracing: {
+    ...config.tracing, key: config.botTracingKey || config.tracing?.key, surface: 'slack',
+  }};
   const clients = new Map();
   let windowStart = now(), globalCount = 0, active = 0;
   return async (req, res) => {

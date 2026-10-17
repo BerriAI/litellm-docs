@@ -11,6 +11,7 @@ function readConfig(env, defaults = {}) {
     apiKey: env.DOCS_AI_API_KEY,
     botApiKey: env.DOCS_BOT_AI_API_KEY,
     botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
+    botTracingKey: env.DOCS_BOT_TRACING_KEY,
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
     publicRerankEnabled: env.DOCS_SEARCH_RERANK_ENABLED === 'true',
     origin: env.DOCS_ORIGIN || defaults.origin || 'https://docs.litellm.ai',
