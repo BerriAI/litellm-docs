@@ -144,3 +144,9 @@ alexey-reznichenko:
   name: Alexey Reznichenko
   title: Pfizer AI Platform Engineering
   url: https://www.linkedin.com/in/raaar/
+
+nate:
+  name: Nate Armstrong
+  title: Lead Rust Engineer, LiteLLM
+  url: https://www.linkedin.com/in/naterarmstrong/
+  image_url: /img/authors/nate.jpeg
