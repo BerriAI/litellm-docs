@@ -313,7 +313,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
     if (browse) {
       if (sourceType !== browseType || sourceType === 'docs') continue;
       candidates.push(...collection.pages.search(MiniSearch.wildcard).map(hit => ({...hit, type: sourceType,
-        heading: '', snippet: hit.description, highlights: [], score: 0})));
+        heading: '', snippet: hit.description, highlights: [], score: 0, matchType: 'browse'})));
     } else {
       const hits = searchCollection(collection, scopedQuery, {limit: Math.max(limit, 30), groupPages, category});
       candidates.push(...hits.map(hit => ({...hit, type: sourceType})));

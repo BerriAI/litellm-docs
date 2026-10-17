@@ -103,4 +103,4 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now})
     } finally { active -= 1; res.off('close', disconnected); }
   };
 }
-module.exports = {createAskHandler, allowAI, send, validBody};
+module.exports = {createAskHandler, allowAI, send, validBody, readBody, loopback, MAX_BODY_BYTES};

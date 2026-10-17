@@ -1,6 +1,6 @@
 # Documentation search and Ask AI
 
-Search runs locally in the browser over current docs, integration guides, individual blog posts, and release notes from the site build. Ask AI retrieves from the same content and links to its sources. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate.
+Search retrieves matches locally in the browser over current docs, integration guides, individual blog posts, and release notes from the site build. When enabled, Jev reranks up to 100 candidates through the same-origin `/api/docs/search` endpoint. Local matches appear first and remain available if reranking fails. Ask AI retrieves from the same content and links to its sources. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate.
 
 ## Try Jev reranking locally
 
@@ -16,7 +16,7 @@ node search/page-structure.js
 npm run search:lab
 ```
 
-Alternatively, set `DOCS_SEARCH_CORPUS` to an existing build directory containing both JSON files. Search waits for a 250 ms typing pause, and Jev starts after 450 ms. Enter searches immediately. Typing or changing filters cancels outdated requests. Successful rankings are cached in memory for 15 minutes, so repeat searches make no model calls. The server binds only to `127.0.0.1` and rejects other origins.
+Alternatively, run `DOCS_SEARCH_CORPUS=build npm run search:lab` after building the site. The build generates all three corpus files, including `search-structure.json`, directly from rendered pages. Search waits for a 250 ms typing pause, and Jev starts after 450 ms. Enter searches immediately. Typing or changing filters cancels outdated requests. Successful rankings are cached in memory for 15 minutes, so repeat searches make no model calls. The server binds only to `127.0.0.1` and rejects other origins.
 
 The structure precomputation fetches public pages once; no individual page fetches happen during a search. Jev receives the title, description, keywords, breadcrumbs, heading hierarchy, tab labels, link text and destinations, table headers, image descriptions and filenames, code example labels, callout titles, and table of contents. It also receives the full indexed page when its text is at most 12,000 characters. For longer pages, it receives the introduction, the original matched passage, and up to four query-relevant indexed passages, without further truncating those passages. A conservative UTF-8 byte budget keeps individual questions within the provider context window, preserving structural fields before body passages and recording any omissions. Independent questions run in parallel batches of ten; a context-limit rejection splits the batch without discarding candidates. The gateway currently routes `typesafe/jev-latest` to Jev 1.13; it has no healthy `typesafe/jev-1.14.0` deployment. The UI reports the actual model returned. A failed or incomplete ranking leaves the original search results available. Candidate retrieval is still lexical: Jev cannot promote a page that was never retrieved. The prompt and evidence selection live in `search/rerank.js`; restart the server and refresh the page after changing them to clear both caches.
 
@@ -39,6 +39,7 @@ Set `DOCS_AI_API_KEY` in `.env.local` to a LiteLLM virtual key that can call the
 anthropic/claude-haiku-5-5
 openai/gpt-6-luna
 openai/gpt-6.1-sol
+typesafe/jev-latest
 ```
 
 The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
@@ -47,21 +48,27 @@ The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_U
 npm run search:serve
 ```
 
-Open [localhost:3333/docs](http://localhost:3333/docs), select the navbar search icon or press **Cmd+K** on Mac or **Ctrl+K** on Windows/Linux, then select **Ask AI**. Search is available on docs, blogs, release notes, and other pages using the site navbar. Docs also keep the sidebar search button; mobile keeps it in the expanded navigation menu. Plain **K** does not open search. Ask “How do I enable Redis caching in LiteLLM?” and check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link.
+Open [localhost:3333/docs](http://localhost:3333/docs), select the navbar search icon or press **Cmd+K** on Mac or **Ctrl+K** on Windows/Linux. Search for “entra” and “end user” to try the reranking, then add a qualifier such as “entra group sync”. The dialog shows 25 matches initially; **Show 25 more** reveals the rest. Once you navigate or interact with the results, late reranking does not move them underneath you. Closing the dialog or switching to Ask AI cancels pending searches.
+
+Search is available on docs, blogs, release notes, and other pages using the site navbar. Docs also keep the sidebar search button; mobile keeps it in the expanded navigation menu. Plain **K** does not open search. Select **Ask AI** and ask “How do I enable Redis caching in LiteLLM?” to check that the answer cites documentation. Ask “codex subscription” and check that it explains the ChatGPT subscription integration with a source link.
 
 The server reads `.env.local`; the build and browser do not read the AI credential. Keep it out of `docusaurus.config.js`, public environment variables, and committed files. Plain `npm start` does not build the search index or run the API; use the built preview above
 
 ## Deploy on Vercel
 
-The PR includes the same-origin function `/api/docs/ask` and bundles `build/search-index.json` and `build/search-documents.json` with it. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed
+The same-origin functions `/api/docs/ask` and `/api/docs/search` bundle `build/search-*.json`, including the page structure generated during the build. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
 In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
 
-Before enabling public access, use a dedicated virtual key restricted to the three aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
+To enable public Jev reranking, also set `DOCS_SEARCH_RERANK_ENABLED=true` and allow `typesafe/jev-latest` on that virtual key. This flag is independent of Ask AI. Without it, search keeps its local ranking. Apply gateway spending and RPM/TPM limits for Jev and a shared ingress limit on `/api/docs/search` in the Vercel Firewall before enabling it. Each uncached search can issue ten parallel model requests, with further splitting if the provider rejects a batch's context size. The endpoint allows 30 attempts per socket IP per minute, 120 total per minute, and four concurrent searches per instance. These process-local limits and 15-minute caches are not shared across serverless instances. Queries and selected public page evidence are sent to the configured model gateway; keys stay on the server.
+
+Verify `/api/docs/search` returns 200 in the browser's Network panel and that the search order updates. A 503 means reranking is disabled, lacks credentials, or cannot load the built corpus; 502 means a provider or response-validation failure; 429 means a rate or concurrency limit. Local search stays usable in each case. Remove the reranking flag and redeploy to revert to local ranking; browser caches expire after 15 minutes or clear on reload.
+
+Before enabling public access, use a dedicated virtual key restricted to the needed aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
 
 After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
 
-For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets behind HTTPS. Route `/api/docs/ask` to it on the docs origin, and deploy the site and index together
+For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets and enable flags behind HTTPS. Route `/api/docs/ask` and `/api/docs/search` to it on the docs origin, and deploy the site and index together.
 
 ## Record Ask AI traces in Lens
 
@@ -106,7 +113,9 @@ Search defaults to **All**, with **Docs**, **Blog**, and **Releases** filters. E
 
 Ordinary feature and setup searches favor current docs. When a query names a specific topic, generic “gateway” and “AI Gateway” wording does not become a required match. Visual Studio Code, VS Code, and vscode resolve to the same editor name. Generic docs/page wording does not hide a named topic. Partial matches are discounted, and fuzzy title corrections cannot replace a query that already matches a passage. Benchmark and comparison queries can surface relevant articles, explicit blog queries search articles, and exact release versions match without fuzzy version substitution. “Latest stable release” lists the newest indexed stable notes; “latest blog posts” lists articles by publication date. This reflects the current site build, not an independent check of published packages. Separate search collections keep archive growth from changing the docs' term statistics. Titles, section headings, keywords, and paths all contribute to ranking.
 
-Search waits for a 250ms pause in typing and keeps the previous matches visible until new ones arrive. Stale worker results are ignored. Enter opens the selected result, initially the first one, and does not navigate an outdated match while a new query or filter is pending. Select **Ask AI** to start a conversation.
+Search waits for a 250ms pause in typing and keeps the previous matches visible until new ones arrive. Reranking starts after 450ms and updates results without a model-status message. Stale replies are ignored and upstream requests are cancelled on query/filter changes, closing the dialog, or switching modes. Successful rankings are cached in the browser and server for 15 minutes, up to 256 queries each. Enter opens the selected result, initially the first one, and does not navigate an outdated match while a new query or filter is pending. Arrow keys, pointer interaction, scrolling, or showing more results keep the displayed order stable for that query. Select **Ask AI** to start a conversation.
+
+Jev estimates which page best serves the likely task. Bare product concepts favor their canonical documentation; broad external integrations favor direct setup guides; specific qualifiers take precedence. There are no query-specific boosts. Scores are model judgments, not click analytics or measured user percentages. The candidate pool still comes from lexical search, so reranking cannot recover a missing candidate. Explicit chronological browsing, such as “latest blog posts”, keeps its existing date/version ordering without a model call.
 
 Ask AI receives source types, dates, and versions. It is instructed to use current docs for setup, attribute blog benchmarks to their measured conditions, and use release notes for version-specific changes. It must distinguish stable releases from prereleases and cannot infer first availability from a feature's mention in a release note.
 

@@ -9,6 +9,7 @@ import styles from './styles.module.css';
 import {mapCitations} from '../../../search/citations.mjs';
 import {readAnswer} from '../../../search/stream.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
+import {SearchSession} from '../../../search/search-client.mjs';
 
 // One owner renders the modal even when the navbar and docs sidebar both mount a trigger.
 const openEvent = 'litellm:open-docs-search';
@@ -56,6 +57,7 @@ export default function SearchBar() {
   const [contentType, setContentType] = useState('all');
   const [resolvedType, setResolvedType] = useState('all');
   const [results, setResults] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(25);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -71,10 +73,12 @@ export default function SearchBar() {
   const [retry, setRetry] = useState(0);
   const input = useRef(null), composer = useRef(null), dialog = useRef(null), worker = useRef(null), latestTurn = useRef(null);
   const requestId = useRef(0), controller = useRef(null), previousFocus = useRef(null);
+  const searchSession = useRef(null), rankingLocked = useRef(false);
   const identity = useRef({});
   const traceContext = useRef(undefined);
   const indexUrl = useBaseUrl('/search-index.json');
   const askUrl = useBaseUrl('/api/docs/ask');
+  const rerankUrl = useBaseUrl('/api/docs/search');
   const avatar = {
     light: useBaseUrl('/img/brand/litellm-monogram-blue.svg'),
     dark: useBaseUrl('/img/brand/litellm-monogram-white.svg'),
@@ -99,7 +103,7 @@ export default function SearchBar() {
     return () => {
       window.removeEventListener(openEvent, show);
       window.removeEventListener('keydown', key);
-      worker.current?.terminate(); controller.current?.abort();
+      searchSession.current?.cancel(); worker.current?.terminate(); controller.current?.abort();
       if (owner === identity.current) owner = null;
     };
   }, []);
@@ -127,32 +131,52 @@ export default function SearchBar() {
   }, [pendingQuestion, turns.length, open, mode]);
 
   useEffect(() => {
+    const baseline = (query, type, signal) => new Promise((resolve, reject) => {
+      const id = ++requestId.current;
+      const abort = () => reject(signal.reason);
+      signal.addEventListener('abort', abort, {once: true});
+      if (!worker.current) worker.current = new Worker(new URL('./search.worker.js', import.meta.url));
+      worker.current.onmessage = ({data}) => {
+        if (data.id !== id || signal.aborted) return;
+        signal.removeEventListener('abort', abort);
+        if (data.error) reject(new Error(data.error)); else resolve(data);
+      };
+      worker.current.onerror = () => {
+        signal.removeEventListener('abort', abort);
+        worker.current?.terminate(); worker.current = null;
+        reject(new Error('Search could not load. Please try again.'));
+      };
+      worker.current.postMessage({id, query, indexUrl, type});
+    });
+    searchSession.current = new SearchSession({
+      onBaseline(data) {
+        setLoading(false); setSearchError(''); setResults(data.results);
+        setResolvedQuery(data.query); setSelected(0);
+      },
+      onRanking() {},
+      onRanked(data) {
+        if (rankingLocked.current) return;
+        setLoading(false); setSearchError(''); setResults(data.results);
+        setResolvedQuery(data.query); setSelected(0);
+      },
+      // Local matches remain usable when reranking is disabled, slow, or unavailable.
+      onRankError() {},
+      onError(message) {setLoading(false); setSearchError(message);},
+    }, {searchBaseline: baseline, rerankUrl});
+    return () => searchSession.current.cancel();
+  }, [indexUrl, rerankUrl]);
+
+  useEffect(() => {
     if (!open || mode !== 'search') return;
-    const id = ++requestId.current;
-    setSearchError('');
+    setSearchError(''); setVisibleCount(25); rankingLocked.current = false;
+    setLoading(Boolean(query.trim()));
+    setResolvedType(contentType);
+    searchSession.current.search(query, contentType);
     if (!query.trim()) {
       setLoading(false); setResults([]); setResolvedQuery(''); setSelected(0);
-      return;
     }
-    // Keep the previous matches visible while typing and ignore stale worker replies.
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      if (!worker.current) {
-        worker.current = new Worker(new URL('./search.worker.js', import.meta.url));
-        worker.current.onmessage = ({data}) => {
-          if (data.id !== requestId.current) return;
-          setLoading(false); setSearchError(data.error || ''); setResults(data.results || []);
-          setResolvedQuery(data.query); setResolvedType(data.type); setSelected(0);
-        };
-        worker.current.onerror = () => {
-          setLoading(false); setSearchError('Search could not load. Please try again.');
-          worker.current?.terminate(); worker.current = null;
-        };
-      }
-      worker.current.postMessage({id, query, indexUrl, type: contentType});
-    }, 250);
-    return () => {clearTimeout(timeout); requestId.current += 1;};
-  }, [query, contentType, open, indexUrl, retry, mode]);
+    return () => searchSession.current.cancel();
+  }, [query, contentType, open, indexUrl, rerankUrl, retry, mode]);
 
   function stopAnswer() {
     controller.current?.abort(); setAsking(false);
@@ -161,7 +185,7 @@ export default function SearchBar() {
     setStreamedAnswer(''); setStreamedSources([]);
   }
   function close() {
-    stopAnswer(); requestId.current += 1; setOpen(false);
+    stopAnswer(); searchSession.current?.cancel(); setOpen(false);
     if (owner === identity.current) owner = null;
   }
   function changeQuery(value) {setQuery(value);}
@@ -209,11 +233,13 @@ export default function SearchBar() {
     if (mode === 'search' && event.target === input.current) {
       if (results.length && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
         event.preventDefault();
-        setSelected(current => (current + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length);
+        rankingLocked.current = true;
+        const count = Math.min(visibleCount, results.length);
+        setSelected(current => (current + (event.key === 'ArrowDown' ? 1 : -1) + count) % count);
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (loading || resolvedQuery !== query || resolvedType !== contentType) return;
+        if (loading || resolvedQuery !== query.trim().replace(/\s+/g, ' ').toLowerCase() || resolvedType !== contentType) return;
         if (results.length) window.location.assign(results[selected].url);
         else openAI(query.trim() || undefined);
       }
@@ -266,15 +292,18 @@ export default function SearchBar() {
               <div className={styles.filters} role="group" aria-label="Content type">
                 {Object.entries({all: 'All', docs: 'Docs', blog: 'Blog', release: 'Releases'}).map(([type, label]) =>
                   <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
-                <small role="status">{loading && !results.length ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : ''}</small>
+                <small role="status">{loading && !results.length ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
               </div>
-              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{results.map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
+              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}
+                onPointerMove={() => {rankingLocked.current = true;}} onPointerDown={() => {rankingLocked.current = true;}} onWheel={() => {rankingLocked.current = true;}}
+              >{results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
                 className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
                 <span className={styles.path}><SourceMeta source={result}/></span>
                 <span className={styles.resultTitle}><SourceIcon source={result}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>
                 {selected === i && <CornerDownLeft className={styles.enterIcon} size={16}/>}
               </a>)}</div>
+              {visibleCount < results.length && <button type="button" className={styles.more} onClick={() => {rankingLocked.current = true; setVisibleCount(count => count + 25);}}>Show 25 more</button>}
               {!loading && !searchError && !results.length && <p className={styles.noResults}>No {contentType === 'all' ? 'results' : contentType === 'release' ? 'release notes' : contentType === 'blog' ? 'blog posts' : 'docs'} found for “{query}”. {contentType !== 'all' ? <button onClick={() => setContentType('all')}>Search all content</button> : 'Try fewer words or a feature name.'}</p>}
             </>}
           </div>

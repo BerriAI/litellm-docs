@@ -1,6 +1,7 @@
 export class SearchSession {
-  constructor(callbacks, {fetchImpl = fetch, timers = globalThis} = {}) {
+  constructor(callbacks, {fetchImpl = fetch, timers = globalThis, searchBaseline, rerankUrl = '/api/rerank'} = {}) {
     this.callbacks = callbacks; this.fetch = (...args) => fetchImpl(...args); this.timers = timers;
+    this.searchBaseline = searchBaseline; this.rerankUrl = rerankUrl;
     this.version = 0; this.cache = new Map();
   }
   search(query, type = 'all', immediate = false) {
@@ -27,14 +28,15 @@ export class SearchSession {
     };
     let baselineDone;
     this.localTimer = this.timers.setTimeout(() => {
-      baselineDone = post('/api/search').then(data => {if (current()) {baseline = data;this.callbacks.onBaseline(data);}})
+      baselineDone = (async () => this.searchBaseline ? this.searchBaseline(query, type, signal) : post('/api/search'))()
+        .then(data => {if (current()) {baseline = data;this.callbacks.onBaseline(data);}})
         .catch(error => {if (current() && !signal.aborted) this.callbacks.onError(error.message);});
     }, immediate ? 0 : 250);
     this.rankTimer = this.timers.setTimeout(async () => {
       if (!current()) return;
       this.callbacks.onRanking();
       try {
-        const ranked = await post('/api/rerank');
+        const ranked = await post(this.rerankUrl);
         await baselineDone;
         if (!current()) return;
         if (baseline) {
@@ -42,7 +44,7 @@ export class SearchSession {
           this.cache.set(key, {baseline, ranked, at: Date.now()});
         }
         this.callbacks.onRanked(ranked);
-      } catch (error) {if (current() && !signal.aborted) this.callbacks.onError(error.message);}
+      } catch (error) {if (current() && !signal.aborted) (this.callbacks.onRankError || this.callbacks.onError)(error.message);}
     }, immediate ? 0 : 450);
   }
   cancel() {

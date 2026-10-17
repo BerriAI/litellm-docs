@@ -10,6 +10,7 @@ function readConfig(env, defaults = {}) {
     baseUrl: env.DOCS_AI_BASE_URL || BASE_URL,
     apiKey: env.DOCS_AI_API_KEY,
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
+    publicRerankEnabled: env.DOCS_SEARCH_RERANK_ENABLED === 'true',
     origin: env.DOCS_ORIGIN || defaults.origin || 'https://docs.litellm.ai',
     tracing: {
       endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
@@ -21,6 +22,16 @@ function readConfig(env, defaults = {}) {
 async function loadCorpus(buildDir) {
   return loadCorpusFiles(path.join(buildDir, 'search-index.json'), path.join(buildDir, 'search-documents.json'));
 }
+async function loadRerankCorpus(buildDir) {
+  const [corpus, structure] = await Promise.all([
+    loadCorpus(buildDir), fs.readFile(path.join(buildDir, 'search-structure.json'), 'utf8'),
+  ]);
+  const {pages} = JSON.parse(structure);
+  if (!pages || typeof pages !== 'object' || Array.isArray(pages) || Object.keys(pages).some(url => !isContentUrl(url))) {
+    throw new Error('Invalid search structure');
+  }
+  return {...corpus, pageStructure: pages};
+}
 async function loadCorpusFiles(indexFile, documentsFile) {
   const [index, documents] = await Promise.all([
     fs.readFile(indexFile, 'utf8'),
@@ -30,4 +41,4 @@ async function loadCorpusFiles(indexFile, documentsFile) {
   if (!Array.isArray(docs) || !docs.length || docs.some(doc => !isContentUrl(doc.url))) throw new Error('Invalid search corpus');
   return {index: loadIndex(index), documents: new Map(docs.map(doc => [doc.id, doc]))};
 }
-module.exports = {readConfig, loadCorpus, loadCorpusFiles, isContentUrl};
+module.exports = {readConfig, loadCorpus, loadCorpusFiles, loadRerankCorpus, isContentUrl};

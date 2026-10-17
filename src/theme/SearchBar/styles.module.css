@@ -31,6 +31,7 @@
 .filters>button:hover {background:var(--search-hover)}
 .filters small {color:var(--search-muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .results {padding:0 20px 8px;overflow:auto;overscroll-behavior:contain;scroll-padding:8px}
+.more {align-self:center;flex-shrink:0;padding:5px 12px;border:1px solid var(--search-border);border-radius:6px;background:none;color:var(--search-accent);font-size:13px}
 .result {position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 38px 8px 16px;margin-bottom:10px;border:1px solid var(--search-border);border-radius:8px;color:var(--search-text);text-decoration:none;scroll-margin:8px}
 .result:hover {color:var(--search-text);text-decoration:none}
 .selected {background:var(--search-selected);border-color:var(--search-accent)}

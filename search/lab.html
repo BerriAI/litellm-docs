@@ -22,15 +22,15 @@ const el=(tag,className,text)=>{const node=document.createElement(tag);if(classN
 function render(){
  const data=mode==='jev'&&ranked?ranked:baseline,showingJev=mode==='jev'&&!!ranked;
  $('jev').setAttribute('aria-pressed',mode==='jev');$('current').setAttribute('aria-pressed',mode==='current');
- $('status').className='status'+(error?' error':pending?' working':'');
- $('status').textContent=error?error+' Showing current ranking.':pending?'Jev is ranking the candidates…':data?`Results for “${resolved}”`:'Enter a query or choose an example.';
- $('stats').textContent=data?`${data.candidateCount} candidates · ${Math.min(visible,data.results.length)} shown${showingJev?` · ${ranked.cached?'cached · ':''}${Math.round(ranked.elapsedMs)} ms · ${ranked.model || 'Jev'} · ${ranked.costUsd===null||ranked.costUsd===undefined?'cost unavailable':'$'+ranked.costUsd.toFixed(5)}`:''}`:'Up to 100 candidates · 25 shown';
+ $('status').className='status'+(error?' error':'');
+ $('status').textContent=error?error+' Showing current ranking.':data?`Results for “${resolved}”`:pending?'Searching…':'Enter a query or choose an example.';
+ $('stats').textContent=data?`${data.candidateCount} candidates · ${Math.min(visible,data.results.length)} shown${showingJev?` · ${ranked.cached?'cached · ':''}${Math.round(ranked.elapsedMs)} ms · ${ranked.model || 'date order'} · ${ranked.costUsd===null||ranked.costUsd===undefined?'cost unavailable':'$'+ranked.costUsd.toFixed(5)}`:''}`:'Up to 100 candidates · 25 shown';
  const list=$('results');list.replaceChildren();
  if(!data?.results.length){list.append(el('div','empty',data?'No matching pages. Try a different search term.':'Enter a search term to compare rankings.'));$('more').hidden=true;return;}
  for(const [i,result] of data.results.slice(0,visible).entries()){
   const row=el('article','result');row.append(el('div','rank',i+1));const body=el('div');const link=el('a','title',result.title);link.href=new URL(result.url,'https://docs.litellm.ai').href;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
   body.append(el('div','meta',`${result.type==='release'?'Release notes':result.type==='blog'?'Blog':'Docs'}${result.heading?' · '+result.heading:''}`));body.append(el('p','snippet',result.snippet));row.append(body);
-  const right=el('div');if(showingJev){const score=el('div','score',`${Math.round(result.relevance*100)}%`);score.append(el('small','','first-page fit'));right.append(score);const movement=result.originalRank-(i+1);right.append(el('div','change'+(movement>0?' up':movement<0?' down':''),`Was #${result.originalRank}${movement>0?' ↑'+movement:movement<0?' ↓'+(-movement):''}`));}else{const score=el('div','score',String(Math.round(result.score)));score.append(el('small','','search score'));right.append(score);}row.append(right);list.append(row);
+  const right=el('div');if(showingJev&&Number.isFinite(result.relevance)){const score=el('div','score',`${Math.round(result.relevance*100)}%`);score.append(el('small','','first-page fit'));right.append(score);const movement=result.originalRank-(i+1);right.append(el('div','change'+(movement>0?' up':movement<0?' down':''),`Was #${result.originalRank}${movement>0?' ↑'+movement:movement<0?' ↓'+(-movement):''}`));}else{const score=el('div','score',String(Math.round(result.score)));score.append(el('small','','search score'));right.append(score);}row.append(right);list.append(row);
  }
  $('more').hidden=visible>=data.results.length;
 }

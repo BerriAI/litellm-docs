@@ -107,3 +107,20 @@ test('typing is debounced, stale replies are ignored, and repeat queries skip re
   assert.deepEqual(displayed, ['redis', 'redis']);session.search('redis');assert.equal(calls.length, 4);
   session.search('');assert.ok(calls.every(call => call.options.signal.aborted));
 });
+
+test('main search uses the worker baseline and keeps it on a reranking failure', async () => {
+  const {SearchSession} = await import('./search-client.mjs');
+  const timers = fakeTimers(), displayed = [], queries = [], calls = [];
+  const session = new SearchSession({onBaseline: data => displayed.push(data), onRanking(){},
+    onRanked(){assert.fail('must retain the baseline');}, onError: message => assert.fail(message), onRankError: message => calls.push(message)}, {
+    timers, rerankUrl: '/api/docs/search',
+    searchBaseline: async (query, type) => {queries.push({query, type}); return {query, results: [{title: 'Local result'}]};},
+    fetchImpl: async url => {assert.equal(url, '/api/docs/search'); return Response.json({error: 'Unavailable'}, {status: 503});},
+  });
+  session.search('topic', 'docs'); timers.tick(250); await flush();
+  assert.equal(displayed[0].results[0].title, 'Local result');
+  timers.tick(200); await flush(); assert.deepEqual(calls, ['Unavailable']);
+  session.search('topic', 'blog'); timers.tick(450); await flush();
+  assert.deepEqual(queries, [{query:'topic', type:'docs'}, {query:'topic', type:'blog'}]);
+  session.cancel();
+});

@@ -4,9 +4,11 @@ const path = require('node:path');
 const {createReadStream} = require('node:fs');
 const {createAskHandler, allowAI, send} = require('./api');
 const {readConfig, loadCorpus} = require('./runtime');
+const {createRerankHandler} = require('./rerank-api');
 
 function createHandler(options) {
   const ask = createAskHandler(options);
+  const rerank = createRerankHandler(options);
   const buildDir = path.resolve(options.config.buildDir || 'build');
   return async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -16,6 +18,7 @@ function createHandler(options) {
     try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
     catch { return send(res, 400, {error: 'Invalid URL'}); }
     if (pathname === '/api/docs/ask') return ask(req, res);
+    if (pathname === '/api/docs/search') return rerank(req, res);
     if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, {error: 'Method not allowed'});
     if (pathname.split('/').some(part => part.startsWith('.'))) return send(res, 404, {error: 'Not found'});
     const requested = path.resolve(buildDir, `.${pathname}`);
@@ -38,11 +41,13 @@ function createHandler(options) {
 }
 
 async function start() {
-  require('dotenv').config({path: '.env.local'});
+  require('dotenv').config({path: process.env.DOCS_AI_ENV_FILE || '.env.local'});
   const port = Number(process.env.PORT || 3333);
   const buildDir = path.resolve(process.env.DOCS_BUILD_DIR || 'build');
   const config = readConfig(process.env, {buildDir, host: process.env.HOST || '127.0.0.1', origin: `http://localhost:${port}`});
   const corpus = await loadCorpus(buildDir);
+  try {corpus.pageStructure = JSON.parse(await fs.readFile(path.join(buildDir, 'search-structure.json'), 'utf8')).pages;}
+  catch (error) {if (error.code !== 'ENOENT') throw error;}
   const server = http.createServer(createHandler({...corpus, config}));
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
