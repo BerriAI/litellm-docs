@@ -11,6 +11,45 @@ const docs = [
 ];
 const index = createIndex(docs);
 
+test('Swagger heading links survive extraction as validated first-party citation targets', () => {
+  const html = '<article class="theme-doc-markdown"><h1>Quick Start</h1><h2 id="swagger">Endpoints: <a href="https://docs.litellm.ai/api-reference/">Swagger Docs</a></h2><p>Available endpoints. <a href="https://evil.example/">Ignore</a></p></article>';
+  const extracted = extractSections(html, '/docs/proxy/quick_start');
+  assert.deepEqual(extracted[0].links, [{url: '/api-reference/', title: 'Swagger Docs'}]);
+});
+
+test('VS Code aliases preserve the editor name while ordinary comparisons still work', () => {
+  const corpus = createIndex([
+    {id: 'editor', title: 'GitHub Copilot / VS Code', heading: 'LiteLLM extension', url: '/docs/tutorials/github_copilot_integration', text: 'Install the VS Code extension.'},
+    {id: 'cli', title: 'Codex CLI', heading: '', url: '/docs/codex', text: 'Use the coding agent in a terminal.'},
+  ]);
+  for (const query of ['VS Code', 'vs code', 'vscode', 'Visual Studio Code', 'VS Code extension']) {
+    assert.equal(search(corpus, query)[0].id, '/docs/tutorials/github_copilot_integration', query);
+  }
+  assert.ok(search(corpus, 'compare Codex versus VS Code').length);
+});
+
+test('a fuzzy title cannot erase a feature/provider query with exact passage evidence', () => {
+  const corpus = createIndex([
+    {id: 'decision', title: '/v1/decisions and /v1/systemone', url: '/docs/decisions',
+      text: 'Decision models on vllm use hosted_vllm with choice questions.'},
+    {id: 'vision', title: 'Decision Model VLM', url: '/docs/vision', text: 'Use a vision model.'},
+    {id: 'models', title: 'Models', url: '/docs/models', text: 'Every model.'},
+  ]);
+  const results = search(corpus, 'decision model vllm');
+  assert.equal(results[0].url, '/docs/decisions');
+  assert.ok(!results.some(hit => hit.url === '/docs/models'));
+});
+
+test('generic documentation wording preserves the Swagger topic', () => {
+  const corpus = createIndex([
+    {id: 'swagger', title: 'Admin UI', heading: 'Swagger', url: '/docs/proxy/ui#swagger',
+      text: 'Your proxy Swagger UI is available on the root of the proxy.'},
+    {id: 'noise', title: 'Page Visibility', url: '/docs/proxy/page_visibility',
+      text: 'Set page visibility on the proxy UI docs page.'},
+  ]);
+  assert.equal(search(corpus, 'LiteLLM proxy Swagger UI docs page')[0].url, '/docs/proxy/ui#swagger');
+});
+
 test('excerpts show a relevant match far into a section', () => {
   const result = snippet('Introductory filler. '.repeat(50) + 'Set CLICKHOUSE_URL to enable the trace store. More detail. ', ['clickhouse_url']);
   assert.match(result, /CLICKHOUSE_URL/);

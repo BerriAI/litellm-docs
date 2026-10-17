@@ -773,7 +773,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 response = embedding(
     model="embed-english-v3.0", 
     input=["good morning from litellm", "this is another item"], 
-    input_type="search_document" # 👈 PROVIDER-SPECIFIC PARAM
+    input_type="search_document" # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -786,7 +786,7 @@ model_list:
   - model_name: "cohere-embed"
     litellm_params:
       model: embed-english-v3.0
-      input_type: search_document # 👈 PROVIDER-SPECIFIC PARAM
+      input_type: search_document # PROVIDER-SPECIFIC PARAM
 ```
 
 **via request**
@@ -798,7 +798,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/embeddings' \
 -d '{
   "model": "cohere-embed",
   "input": ["Are you authorized to work in United States of America?"],
-  "input_type": "search_document" # 👈 PROVIDER-SPECIFIC PARAM
+  "input_type": "search_document" # PROVIDER-SPECIFIC PARAM
 }'
 ```
 </TabItem>

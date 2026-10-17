@@ -1,6 +1,6 @@
 # Be an Integration Partner
 
-Welcome, integration partners! 👋
+Welcome, integration partners!
 
 We're excited to have you contribute to LiteLLM. To get started and connect with the LiteLLM community:
 

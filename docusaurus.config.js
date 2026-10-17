@@ -245,19 +245,6 @@ const config = {
       },
     ],
 
-    () => ({
-      name: 'cripchat',
-      injectHtmlTags() {
-        return {
-          headTags: [
-            {
-              tagName: 'script',
-              innerHTML: `window.$crisp=[];window.CRISP_WEBSITE_ID="be07a4d6-dba0-4df7-961d-9302c86b7ebc";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`,
-            },
-          ],
-        };
-      },
-    }),
     // PostHog product analytics. Same project as the Webflow marketing site
     // (www.litellm.ai), so a visitor moving between the two domains is one
     // person and one journey: persistence keeps a first-party cookie on
@@ -448,21 +435,10 @@ const config = {
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
-            href: 'https://trust.litellm.ai/',
-            label: 'Trust Center',
-            position: 'right',
-          },
-          {
             href: 'https://github.com/BerriAI/litellm',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
-          },
-          {
-            href: 'https://www.litellm.ai/support',
-            position: 'right',
-            className: 'header-discord-link',
-            'aria-label': 'Discord / Slack community',
           },
         ],
       },

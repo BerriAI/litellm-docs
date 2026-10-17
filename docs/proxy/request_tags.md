@@ -22,14 +22,14 @@ model_list:
       model: azure/gpt-4-prod
       api_key: os.environ/AZURE_PROD_API_KEY
       api_base: https://prod.openai.azure.com/
-      tags: ["AWS_IAM_PROD"]  # 👈 Tag for production
+      tags: ["AWS_IAM_PROD"]  # Tag for production
 
   - model_name: gpt-4-dev
     litellm_params:
       model: azure/gpt-4-dev
       api_key: os.environ/AZURE_DEV_API_KEY
       api_base: https://dev.openai.azure.com/
-      tags: ["AWS_IAM_DEV"]  # 👈 Tag for development
+      tags: ["AWS_IAM_DEV"]  # Tag for development
 ```
 
 ## Make Request

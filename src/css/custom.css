@@ -132,7 +132,8 @@ body,
   }
 }
 
-/* Three-column navbar: logo | center nav | right icons */
+/* Navbar: logo, product switcher and nav links on the left, the actions
+   (search, Ask AI, GitHub, More) pushed to the far right */
 @media (min-width: 997px) {
   .navbar__inner {
     display: flex !important;
@@ -156,19 +157,39 @@ body,
     width: auto;
   }
 
+  /* The links keep their natural width; the search box gives way instead */
   .navbar__center-col {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex: 1;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+
+  /* The product switcher, with a little more room before the links */
+  .navbar__center-col > :first-child:not(.navbar__link) {
+    margin-right: 8px;
   }
 
   .navbar__right-col {
     display: flex;
     align-items: center;
-    flex: 0 0 auto;
-    gap: 0.25rem;
-    margin-right: 2rem;
+    justify-content: flex-end;
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 0.5rem;
+    margin-left: 16px;
+    margin-right: 1rem;
+  }
+
+  /* Only the search box shrinks; Ask AI, GitHub and More keep their size */
+  .navbar__right-col > :not([class*='navbarSearchContainer']) {
+    flex-shrink: 0;
+  }
+
+  /* Desktop changes the color mode from the More menu */
+  .navbar__colormode-mobile {
+    display: none;
   }
 }
 
@@ -801,22 +822,19 @@ video {
 }
 
 /* =========================================
-   NAVBAR ICON LINKS (GitHub, Discord)
+   NAVBAR ICON LINKS (GitHub)
    ========================================= */
-.header-github-link,
-.header-discord-link {
+.header-github-link {
   display: flex;
   align-items: center;
 }
 
-.header-github-link:hover,
-.header-discord-link:hover {
+.header-github-link:hover {
   opacity: 0.65;
 }
 
 /* Hide text label, show only the icon */
-.header-github-link::before,
-.header-discord-link::before {
+.header-github-link::before {
   content: '';
   width: 22px;
   height: 22px;
@@ -833,16 +851,6 @@ video {
     no-repeat center / contain;
 }
 
-/* Discord icon */
-.header-discord-link::before {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23111' d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E")
-    no-repeat center / contain;
-}
-
-[data-theme='dark'] .header-discord-link::before {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z'/%3E%3C/svg%3E")
-    no-repeat center / contain;
-}
 
 /* =========================================
    NAVBAR — mobile fixes
@@ -852,9 +860,9 @@ video {
    from the right section. Keep only the color mode toggle.
    All nav items remain accessible inside the hamburger drawer. */
 @media (max-width: 996px) {
-  /* Hide GitHub and Discord icon links */
+  /* Hide the GitHub icon link and the More menu */
   .header-github-link,
-  .header-discord-link {
+  .navbar__more-menu {
     display: none !important;
   }
 
@@ -1425,14 +1433,12 @@ body {
   box-shadow: 0 0 0 3px rgba(126, 226, 168, 0.16);
 }
 
-.header-github-link,
-.header-discord-link {
+.header-github-link {
   opacity: 0.7;
   transition: opacity 0.15s ease;
 }
 
-.header-github-link:hover,
-.header-discord-link:hover {
+.header-github-link:hover {
   opacity: 1;
 }
 
@@ -1952,17 +1958,6 @@ article a.card:hover {
   background: var(--aurora-scroll);
 }
 
-/* ---------- Sidebar search slot ---------- */
-/* No divider under the search box; the box separates itself from the tree. */
-[class*='searchBarSection'] {
-  border-bottom: 0 !important;
-}
-
-/* Collapse an empty search slot instead of leaving a gap under the header. */
-[class*='searchBarSection']:has([class*='searchBarInner']:empty) [class*='searchBarInner'] {
-  display: none;
-}
-
 /* ---------- Tables: rounded frame, mono header, clean rows ----------
    Selectors also cover standalone Markdown pages (src/pages), which render
    in an mdxPageWrapper without the .markdown class. */
@@ -2164,9 +2159,14 @@ section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
 /* =========================================================================
    NEW LOGO (preview): official files, never recolored or distorted
    ========================================================================= */
+/* Flex, so the image is not an inline box on the text baseline, which put
+   it 6px below the centre of the row. (ThemedImage sets display: initial on
+   the image itself, so it cannot be made a block directly.) */
 .navbar__brand-col .navbar__logo,
 .navbar__logo {
-  height: 25px;
+  display: flex;
+  align-items: center;
+  height: 18px;
   margin-right: 0;
 }
 
@@ -2183,7 +2183,7 @@ img[src*='/img/brand/'] {
 
 /* Clear space around the logo: at least half its height (guidelines) */
 .navbar__brand {
-  padding-right: 13px;
+  padding-right: 9px;
 }
 
 .footer__brand-logo {
@@ -2430,7 +2430,8 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   border-top-left-radius: 16px;
 }
 
-/* Every page gets the same icon-only navbar trigger, including blog pages. */
+/* Every page gets the same navbar search trigger, including blog pages: a
+   visible box on desktop, an icon on phones. */
 .navbar__right-col {
   display: flex;
   align-items: center;
@@ -2439,7 +2440,6 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 .navbar [class*='navbarSearchContainer'] {
   position: static;
   padding: 0;
-  order: -1;
 }
 
 .navbar [class*='navbarSearchContainer'] > button {
@@ -2455,6 +2455,78 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 .navbar [class*='navbarSearchContainer'] > button > span,
 .navbar [class*='navbarSearchContainer'] > button > kbd {
   display: none;
+}
+
+@media (min-width: 997px) {
+  /* Up to 220px wide, shrinking into whatever room the links leave */
+  .navbar [class*='navbarSearchContainer'] {
+    flex: 0 1 220px;
+    min-width: 34px;
+    container-type: inline-size;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button {
+    width: 100%;
+    height: 34px;
+    padding: 0 9px;
+    justify-content: flex-start;
+    gap: 8px;
+    border: 1px solid var(--aurora-line-strong);
+    border-radius: var(--lite-radius-sm, 6px);
+    background: var(--aurora-surface);
+    color: var(--aurora-muted);
+    font-size: 13.5px;
+    transition: border-color 0.15s ease;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button:hover {
+    border-color: var(--aurora-accent-line);
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button > span {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button > kbd {
+    margin-left: auto;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button > kbd {
+    display: inline-block;
+    border-color: var(--aurora-line-strong);
+    border-radius: var(--lite-radius-xs, 4px);
+    color: var(--aurora-muted);
+    font-size: 11px;
+    line-height: 18px;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button > svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* As the box narrows it drops the placeholder, then the shortcut hint,
+   leaving a square search icon. */
+@container (max-width: 179px) {
+  .navbar [class*='navbarSearchContainer'] > button > span {
+    display: none;
+  }
+}
+
+@container (max-width: 89px) {
+  .navbar [class*='navbarSearchContainer'] > button > kbd {
+    display: none;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button {
+    justify-content: center;
+    padding: 0;
+  }
 }
 
 @media (max-width: 480px) {

@@ -168,7 +168,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 - `router.image_generation()` - completion calls in OpenAI `/v1/images/generations` endpoint format
 - `router.aimage_generation()` - async image generation calls
 
-## Advanced - Routing Strategies ⭐️
+## Advanced - Routing Strategies
 #### Routing Strategies - Weighted Pick, Rate Limit Aware, Least Busy, Latency Based, Cost Based
 
 Router provides multiple strategies for routing your calls across multiple deployments. **We recommend using `simple-shuffle` (default) for best performance in production.**
@@ -321,7 +321,7 @@ asyncio.run(router_acompletion())
 :::
 
 
-**🎉 NEW** This is an async implementation of usage-based-routing.
+** NEW** This is an async implementation of usage-based-routing.
 
 **Filters out deployment if tpm/rpm limit exceeded** - If you pass in the deployment's tpm/rpm limits.
 
@@ -371,7 +371,7 @@ router = Router(model_list=model_list,
                 redis_host=os.environ["REDIS_HOST"], 
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
-                routing_strategy="simple-shuffle", # 👈 RECOMMENDED - best performance
+                routing_strategy="simple-shuffle", # RECOMMENDED - best performance
 				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
@@ -403,7 +403,7 @@ model_list:
       rpm: 1000
 
 router_settings:
-  routing_strategy: simple-shuffle # 👈 RECOMMENDED - best performance
+  routing_strategy: simple-shuffle # RECOMMENDED - best performance
   redis_host: <your-redis-host>
   redis_password: <your-redis-password>
   redis_port: <your-redis-port>
@@ -453,7 +453,7 @@ model_list = [{ ... }]
 
 # init router
 router = Router(model_list=model_list,
-				routing_strategy="latency-based-routing",# 👈 set routing strategy
+				routing_strategy="latency-based-routing",# set routing strategy
 				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
 				)
 
@@ -735,7 +735,7 @@ router = Router(
     timeout=1,
 )  # type: ignore
 
-router.set_custom_routing_strategy(CustomRoutingStrategy()) # 👈 Set your routing strategy here
+router.set_custom_routing_strategy(CustomRoutingStrategy()) # Set your routing strategy here
 ```
 
 Step 3. Test your routing strategy. Expect your custom routing strategy to be called when running `router.acompletion` requests
@@ -1088,7 +1088,7 @@ model_list = [
         "litellm_params": {
             "model": "azure/gpt-4-primary",
             "api_key": os.getenv("AZURE_API_KEY"),
-            "order": 1,  # 👈 Highest priority
+            "order": 1,  # Highest priority
         },
     },
     {
@@ -1096,7 +1096,7 @@ model_list = [
         "litellm_params": {
             "model": "azure/gpt-4-fallback",
             "api_key": os.getenv("AZURE_API_KEY_2"),
-            "order": 2,  # 👈 Tried when order=1 fails
+            "order": 2,  # Tried when order=1 fails
         },
     },
 ]
@@ -1113,13 +1113,13 @@ model_list:
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
-      order: 1  # 👈 Highest priority
+      order: 1  # Highest priority
 
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
-      order: 2  # 👈 Tried when order=1 fails
+      order: 2  # Tried when order=1 fails
 ```
 
 </TabItem>
@@ -1151,7 +1151,7 @@ model_list = [
 		"litellm_params": {
 			"model": "{{openai_small}}", 
 			"api_key": os.getenv("OPENAI_API_KEY"), 
-			"weight": 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
+			"weight": 2 # PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 		},
 	},
 ]
@@ -1178,7 +1178,7 @@ model_list:
     litellm_params:
       model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
-      weight: 2 # 👈 PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
+      weight: 2 # PICK THIS DEPLOYMENT 2x MORE OFTEN THAN THE ONE ABOVE
 ```
 
 </TabItem>
@@ -1236,7 +1236,7 @@ model_list = [
 router = Router(
     model_list=model_list,
     routing_strategy="simple-shuffle",
-    enable_weighted_failover=True,  # 👈 retry within the same model group on failure
+    enable_weighted_failover=True,  # retry within the same model group on failure
 )
 
 response = await router.acompletion(
@@ -1265,7 +1265,7 @@ model_list:
 
 router_settings:
   routing_strategy: simple-shuffle
-  enable_weighted_failover: true  # 👈 retry within the same model group on failure
+  enable_weighted_failover: true  # retry within the same model group on failure
 ```
 
 </TabItem>
@@ -1301,13 +1301,13 @@ model_list = [{
 	"litellm_params": {
 		"model": "azure/{{openai_large}}",
 		# ...
-		"max_parallel_requests": 10 # 👈 SET PER DEPLOYMENT
+		"max_parallel_requests": 10 # SET PER DEPLOYMENT
 	}
 }]
 
 ### OR ### 
 
-router = Router(model_list=model_list, default_max_parallel_requests=20) # 👈 SET DEFAULT MAX PARALLEL REQUESTS 
+router = Router(model_list=model_list, default_max_parallel_requests=20) # SET DEFAULT MAX PARALLEL REQUESTS
 
 
 # deployment max parallel requests > default max parallel requests
@@ -1759,7 +1759,7 @@ Enable pre-call checks to filter out:
 ```python 
 from litellm import Router 
 # ...
-router = Router(model_list=model_list, enable_pre_call_checks=True) # 👈 Set to True
+router = Router(model_list=model_list, enable_pre_call_checks=True) # Set to True
 ```
 
 
@@ -1783,8 +1783,8 @@ model_list = [
                     "api_key": os.getenv("AZURE_API_KEY"),
                     "api_version": os.getenv("AZURE_API_VERSION"),
                     "api_base": os.getenv("AZURE_API_BASE"),
-					"region_name": "eu", # 👈 SET 'EU' REGION NAME
-					"base_model": "azure/{{openai_small}}", # 👈 (Azure-only) SET BASE MODEL
+					"region_name": "eu", # SET 'EU' REGION NAME
+					"base_model": "azure/{{openai_small}}", # (Azure-only) SET BASE MODEL
                 },
             },
             {
@@ -1799,7 +1799,7 @@ model_list = [
 				"litellm_params": {
 					"model": "vertex_ai/{{gemini_pro}}", 
 					"vertex_project": "adroit-crow-1234",
-					"vertex_location": "us-east1" # 👈 AUTOMATICALLY INFERS 'region_name'
+					"vertex_location": "us-east1" # AUTOMATICALLY INFERS 'region_name'
 				}
 			}
         ]
@@ -1981,7 +1981,7 @@ async def test_acompletion_caching_on_router_caching_groups():
 asyncio.run(test_acompletion_caching_on_router_caching_groups())
 ```
 
-## Alerting 🚨
+## Alerting {#alerting-}
 
 Send alerts to slack / your webhook url for the following events
 - LLM API Exceptions

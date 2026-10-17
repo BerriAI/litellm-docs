@@ -50,10 +50,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -77,7 +77,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```
 
@@ -101,7 +101,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ 
-        "priority": 0 # 👈 SET VALUE HERE
+        "priority": 0 # SET VALUE HERE
     }
 )
 
@@ -137,10 +137,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -157,7 +157,7 @@ model_list:
         api_key: my-good-key
 
 litellm_settings:
-    request_timeout: 600 # 👈 Will keep retrying until timeout occurs
+    request_timeout: 600 # Will keep retrying until timeout occurs
 
 router_settings:
     redis_host: os.environ/REDIS_HOST
@@ -182,6 +182,6 @@ curl -X POST 'http://localhost:4000/queue/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```

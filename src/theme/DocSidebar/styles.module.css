@@ -27,54 +27,32 @@
   height: 100%;
   max-height: 100vh;
   width: 100%;
-}
-
-/* Fixed header zone: clears the navbar, then holds the search input. */
-.searchBarSection {
-  flex-shrink: 0;
+  /* Clears the navbar. Search lives in the navbar, so the sidebar starts with the menu. */
   padding-top: var(--ifm-navbar-height);
-  border-bottom: 1px solid var(--ifm-toc-border-color);
 }
 
-/* Inset wrapper — keeps the DocSearch button off sidebar edges. */
-.searchBarInner {
-  box-sizing: border-box;
-  margin: 0.75rem;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.searchBarInner :global(.DocSearch-Button) {
-  width: 100%;
-  max-width: 100%;
-  /* height: 40px; */
-  padding: 0 0.625rem;
-  box-sizing: border-box;
-}
-
-/* Sidebar nav scrolls independently below the search block. */
+/* Sidebar nav scrolls independently below the navbar offset. */
 .sidebarScroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-/* Navbar offset lives on .searchBarSection. DocSidebar/Desktop uses a
+/* Navbar offset lives on .sidebarContainer. DocSidebar/Desktop uses a
    CSS-module hashed class (not literal "sidebar"), so :global(.sidebar)
    never matched and padding-top: var(--ifm-navbar-height) stayed — causing
-   the dead space below the search bar. */
+   dead space at the top of the sidebar. */
 .sidebarScroll > div {
   padding-top: 0 !important;
   height: auto;
 }
 
 .sidebarScroll :global(.menu) {
-  /* The search wrapper supplies the gap above the first navigation row. */
-  padding-top: 0 !important;
+  padding-top: 0.75rem !important;
 }
 
 
-/* Collapsed: the expand strip replaces the search box and the menu. */
+/* Collapsed: the expand strip replaces the menu. */
 .sidebarContainerHidden {
   visibility: hidden;
   opacity: 0;

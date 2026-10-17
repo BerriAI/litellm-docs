@@ -1,6 +1,6 @@
 const MiniSearch = require('minisearch');
 const pluralize = require('pluralize');
-const {contentTypes, contentType, versionsIn, normalizeVersion} = require('./content');
+const {contentTypes, contentType, contentPage, versionsIn, normalizeVersion} = require('./content');
 
 const stopWords = new Set('a an and are as at be by can do does for from how i in is it me my of on or our per please the this to use using what when where which with you your was did'.split(' '));
 const forms = {
@@ -62,7 +62,7 @@ function categoryFor(url) {
 function createCollection(documents) {
   const grouped = new Map();
   for (const doc of documents) {
-    const url = doc.url.split('#')[0];
+    const url = contentPage(doc.url);
     if (!grouped.has(url)) grouped.set(url, []);
     grouped.get(url).push(doc);
   }
@@ -182,7 +182,7 @@ function expandTitleTerms(title, terms, queryTerms = terms) {
 function searchCollection(index, query, {limit = 10, groupPages = true, category = 'All docs', correctTypo = true} = {}) {
   const rawTerms = termsOf(query.slice(0, 500));
   // Setup verbs and the product name add noise when someone names a specific feature.
-  const optional = new Set(['litellm', 'setup', 'configure', 'enable', 'set', 'up']);
+  const optional = new Set(['litellm', 'setup', 'configure', 'enable', 'set', 'up', 'docs', 'documentation', 'page']);
   // The planner often adds the product name to an otherwise specific topic.
   // Requiring those words can hide guides whose title uses the provider's name.
   if (rawTerms.filter(term => !optional.has(term) && !['ai', 'gateway'].includes(term)).length >= 2) {
@@ -203,8 +203,8 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
     }
     return groups.get(url);
   };
-  for (const hit of pageHits) {const group = getGroup(hit.url); if (group) {group.pageScore = hit.score; group.pageTerms = hit.terms; group.matchType = hit.matchType;}}
-  for (const hit of passageHits) {const group = getGroup(hit.url.split('#')[0]); if (group) group.passages.push(hit);}
+  for (const hit of pageHits) {const group = getGroup(hit.url); if (group) {group.pageScore = hit.score; group.pageTerms = hit.terms; group.queryTerms = hit.queryTerms; group.matchType = hit.matchType;}}
+  for (const hit of passageHits) {const group = getGroup(contentPage(hit.url)); if (group) group.passages.push(hit);}
   const ranked = [...groups.values()].map(group => {
     if (!group.passages.length) {
       const intro = index.passages.getStoredFields(group.firstId);
@@ -227,6 +227,9 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
     const topicRoot = pathParts.length === 2 || group.category === 'Providers' && pathParts.length === 3;
     if (group.type === 'docs' && topicRoot && effective.length === slugTerms.length && effective.every(term => slugTerms.includes(term))) score += 30;
     if (group.type === 'docs') score -= Math.max(0, pathParts.length - 2);
+    // Discount partial OR matches whose title repeats generic query words.
+    const coverage = Math.max(group.queryTerms?.length || 0, ...group.passages.map(hit => hit.queryTerms?.length || 0)) / terms.length;
+    score *= coverage ** 2;
     if (/\b(old|removed|deprecated|legacy)\b/i.test(group.title) || /(?:^|[/_-])(old|removed|deprecated|legacy)(?:$|[/_-])/i.test(group.url)) score *= 0.1;
     const titleTerms = termsOf(group.title);
     const queryTitleTerms = expandTitleTerms(group.title, terms);
@@ -252,7 +255,9 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
   }).sort((a, b) => b.score - a.score || a.url.localeCompare(b.url));
   // Once a page title gives a confident correction, use that spelling consistently.
   // Otherwise "lnes" also finds incidental mentions of "lines" all over the corpus.
-  if (correctTypo && ranked[0]?.correction) {
+  // A fuzzy title must not rewrite a query already matched by a passage.
+  const hasFullMatch = [...pageHits, ...passageHits].some(hit => hit.matchType !== 'typo' && hit.queryTerms?.length === terms.length);
+  if (correctTypo && ranked[0]?.correction && !hasFullMatch) {
     return searchCollection(index, ranked[0].correction, {limit, groupPages, category, correctTypo: false})
       .map(hit => ({...hit, matchType: 'typo', highlights: [...new Set([...(hit.highlights || []), ...words(query)])]}));
   }
@@ -286,6 +291,8 @@ function newestFirst(a, b) {
 
 function search(index, query, {limit = 10, groupPages = true, type = 'all', category = 'All docs', intent} = {}) {
   if (typeof query !== 'string' || !query.trim() || !['all', ...contentTypes].includes(type)) return [];
+  // Protect the product name before treating "vs" as a comparison operator.
+  query = query.replace(/\b(?:visual studio code|vs\s+code|vscode)\b/gi, 'vscode');
   intent ||= queryIntent(query);
   const versions = versionsIn(query);
   const wantsBlog = /\b(blogs?|articles?|blog posts?)\b/i.test(query);
@@ -306,7 +313,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
     if (browse) {
       if (sourceType !== browseType || sourceType === 'docs') continue;
       candidates.push(...collection.pages.search(MiniSearch.wildcard).map(hit => ({...hit, type: sourceType,
-        heading: '', snippet: hit.description, highlights: [], score: 0})));
+        heading: '', snippet: hit.description, highlights: [], score: 0, matchType: 'browse'})));
     } else {
       const hits = searchCollection(collection, scopedQuery, {limit: Math.max(limit, 30), groupPages, category});
       candidates.push(...hits.map(hit => ({...hit, type: sourceType})));
@@ -329,7 +336,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
     }).sort((a, b) => browse ? newestFirst(a, b) : b.score - a.score || newestFirst(a, b));
   if (browse && !groupPages) {
     return ranked.flatMap(page => index.collections[page.type].passages.search(MiniSearch.wildcard, {
-      filter: hit => hit.url.split('#')[0] === page.url,
+      filter: hit => contentPage(hit.url) === page.url,
     }).map(hit => ({...hit, score: page.score}))).slice(0, limit);
   }
   return ranked.slice(0, limit);

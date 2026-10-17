@@ -22,6 +22,7 @@
     "test:search": "node --no-experimental-require-module --test search/*.test.js",
     "test:workshop": "node --test workshop/signup.test.mjs blog/cloud-agent-workshop/signup-payload.test.mjs blog/cloud-agent-workshop/signup-client.test.mjs",
     "search:serve": "node search/server.js",
+    "search:lab": "node search/lab-server.js",
     "search:verify-trace": "node search/verify-trace.js",
     "generate:social-card": "node scripts/social-card/index.cjs",
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",

@@ -48,14 +48,14 @@ LiteLLM has two types of roles:
 | `proxy_admin` | Admin over the entire platform. Full control over all organizations, teams, and users |
 | `proxy_admin_viewer` | Can login, view all keys, view all spend across the platform. **Cannot** create keys/delete keys/add new users |
 | `internal_user` | Can login, view/create (when allowed by team-specific permissions)/delete their own keys, view their spend. **Cannot** add new users |
-| `internal_user_viewer` | ⚠️ **DEPRECATED** - Use team/org specific roles instead. Can login, view their own keys, view their own spend. **Cannot** create/delete keys, add new users |
+| `internal_user_viewer` | **DEPRECATED** - Use team/org specific roles instead. Can login, view their own keys, view their own spend. **Cannot** create/delete keys, add new users |
 
 ### Organization/Team Specific Roles
 
 | Role Name | Permissions |
 |-----------|-------------|
-| `org_admin` | Admin over a specific organization. Can create teams and users within their organization ✨ **Premium Feature** |
-| `team_admin` | Admin over a specific team. Can manage team members, update team member permissions, and create keys for their team. ✨ **Premium Feature** |
+| `org_admin` | Admin over a specific organization. Can create teams and users within their organization **Premium Feature** |
+| `team_admin` | Admin over a specific team. Can manage team members, update team member permissions, and create keys for their team. **Premium Feature** |
 
 ## Usage dashboard visibility
 
@@ -182,7 +182,7 @@ An org admin manages one or more organizations. They can create teams within the
 
 ### Team Admin - Team Level Access
 
-✨ **This is a Premium Feature**
+**This is a Premium Feature**
 
 A team admin manages a specific team. They're like a team lead who can add people, update settings, but only for their team.
 
@@ -250,7 +250,7 @@ A team admin can check what they may edit on `/team/info`: `team_info.caller_edi
 
 ## Team Member Permissions
 
-✨ **This is a Premium Feature**
+**This is a Premium Feature**
 
 Team member permissions allow you to control what regular team members (with role=`user`) can do with API keys in their team. By default, team members can only view key information, but you can grant them additional permissions to create, update, or delete keys.
 
@@ -351,7 +351,7 @@ Here's the quick version:
 
 ### Global Proxy Roles
 
-| Action | Proxy Admin | Proxy Admin Viewer | Internal User | Internal User Viewer ⚠️ (Deprecated) |
+| Action | Proxy Admin | Proxy Admin Viewer | Internal User | Internal User Viewer (Deprecated) |
 |--------|-------------|-------------------|---------------|-------------------------------------|
 | Create organizations | ✅ | ❌ | ❌ | ❌ |
 | Create teams | ✅ | ❌ | ❌ | ❌ |
@@ -385,7 +385,7 @@ Here's the quick version:
 
 ## Onboarding Organizations 
 
-✨ **This is a Premium Feature**
+**This is a Premium Feature**
 
 ### 1. Creating a new Organization
 
@@ -493,7 +493,7 @@ Expected Response
 
 ### 4. `Organization Admin` - Add a Team Admin
 
-✨ **This is a Premium Feature**
+**This is a Premium Feature**
 
 The organization admin can now add a team admin who will manage the `engineering_team`. 
 

@@ -16,7 +16,7 @@ In this request the following will occur:
 2. litellm proxy will loop through all the model_groups specified in `fallbacks=["{{openai_small}}"]`
 3. The request to `model="{{openai_small}}"` will succeed and the client making the request will get a response from gpt-5.6-luna 
 
-👉 Key Change: `"fallbacks": ["{{openai_small}}"]`
+Key Change: `"fallbacks": ["{{openai_small}}"]`
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -29,7 +29,7 @@ router = Router(model_list=[...]) # defined in Step 1.
 resp = router.completion(
     model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
+    mock_testing_fallbacks=True, # trigger fallbacks
     fallbacks=[
         {
             "model": "{{anthropic}}",
@@ -157,7 +157,7 @@ router = Router(model_list=[...]) # defined in Step 1.
 resp = router.completion(
     model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
+    mock_testing_fallbacks=True, # trigger fallbacks
     fallbacks=[
         {
             "model": "{{anthropic}}",

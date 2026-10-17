@@ -47,7 +47,7 @@ model_list:
       vertex_project: adroit-crow-413218
       vertex_location: us-central1
       vertex_credentials: /path/to/credentials.json
-      use_in_pass_through: true # 👈 KEY CHANGE
+      use_in_pass_through: true # KEY CHANGE
 ```
 
 </TabItem>

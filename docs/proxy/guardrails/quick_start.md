@@ -561,7 +561,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-### 4. ✨ Pass Dynamic Parameters to Guardrail
+### 4. Pass Dynamic Parameters to Guardrail
 
 <EnterpriseFeature />
 
@@ -656,7 +656,7 @@ Monitor which guardrails were executed and whether they passed or failed. e.g. g
 
 <Image img={require('../../../img/gd_fail.png')} />
 
-### ✨ Control Guardrails per API Key
+### Control Guardrails per API Key {#-control-guardrails-per-api-key}
 
 <EnterpriseFeature />
 
@@ -708,7 +708,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-### ✨ Tag-based Guardrail Modes
+### Tag-based Guardrail Modes {#-tag-based-guardrail-modes}
 
 <EnterpriseFeature />
 
@@ -729,12 +729,12 @@ guardrails:
   - guardrail_name: "guardrails_ai-guard"
     litellm_params:
       guardrail: guardrails_ai
-      guard_name: "pii_detect" # 👈 Guardrail AI guard name
+      guard_name: "pii_detect" # Guardrail AI guard name
       mode:
         tags:
             "User-Agent: claude-cli": "logging_only"                 # Claude CLI - only mask in logs
         default: "pre_call"               # Default mode when no tags match
-      api_base: os.environ/GUARDRAILS_AI_API_BASE # 👈 Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
+      api_base: os.environ/GUARDRAILS_AI_API_BASE # Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
       default_on: true # run on every request
 ```
 
@@ -784,7 +784,7 @@ guardrails:
 
 
 
-### ✨ Model-level Guardrails
+### Model-level Guardrails {#-model-level-guardrails}
 
 <EnterpriseFeature />
 
@@ -818,7 +818,7 @@ guardrails:
       api_base: os.environ/AZURE_GUARDRAIL_API_BASE 
 ```
 
-### ✨ Disable team from turning on/off guardrails
+### Disable team from turning on/off guardrails
 
 <EnterpriseFeature />
 

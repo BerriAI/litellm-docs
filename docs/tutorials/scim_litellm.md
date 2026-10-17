@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # SCIM with LiteLLM
 
-✨ **Enterprise**: SCIM support requires a premium license.
+**Enterprise**: SCIM support requires a premium license.
 
 Enables identity providers (Okta, Azure AD, OneLogin, etc.) to automate user and team (group) provisioning, updates, and deprovisioning on LiteLLM.
 

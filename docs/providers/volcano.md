@@ -98,7 +98,7 @@ response = embedding(
 )
 ```
 
-## Supported Models - 💥 ALL Volcengine Models Supported!
+## Supported Models - ALL Volcengine Models Supported!
 We support ALL `volcengine` models for both chat completions and embeddings:
 - **Chat Models**: Set `volcengine/<OUR_ENDPOINT_ID>` as a prefix when sending completion requests
 - **Embedding Models**: Use the specific model names listed above (e.g., `volcengine/doubao-embedding-text-240715`)

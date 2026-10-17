@@ -2,7 +2,9 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const cheerio = require('cheerio');
 const {createIndex} = require('../search/engine');
-const {contentType, versionsIn, isContentUrl} = require('../search/content');
+const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
+const {extractStructure} = require('../search/page-structure');
+const {extractOpenAPI} = require('../search/openapi');
 
 function extractSections(html, url, metadata = {}) {
   url = new URL(url, 'https://docs.litellm.ai').pathname;
@@ -19,7 +21,7 @@ function extractSections(html, url, metadata = {}) {
   const keywords = [metadata.keywords, $('meta[name="keywords"]').attr('content')].filter(Boolean).join(' ');
   const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
   const sections = [];
-  let heading = '', anchor = '', parts = [];
+  let heading = '', anchor = '', parts = [], links = new Map();
   function flush() {
     const text = parts.join('\n\n').trim();
     if (text) {
@@ -29,11 +31,12 @@ function extractSections(html, url, metadata = {}) {
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
           type, date: metadata.date || '', version: metadata.version || '', category: metadata.category,
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
-          text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240)});
+          text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
+          ...(links.size ? {links: [...links.values()]} : {})});
         if (offset + 3000 >= text.length) break;
       }
     }
-    parts = [];
+    parts = []; links = new Map();
   }
   article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li').each((_, element) => {
     const node = $(element);
@@ -48,6 +51,16 @@ function extractSections(html, url, metadata = {}) {
         : node.text().trim();
       if (text) parts.push(text);
     }
+    // Navigation questions need the destination, not just the anchor's visible text.
+    node.find('a[href]').each((_, element) => {
+      try {
+        const target = new URL($(element).attr('href'), `https://docs.litellm.ai${url}`);
+        const destination = target.pathname + target.hash, title = $(element).text().trim();
+        if (target.origin === 'https://docs.litellm.ai' && !target.username && !target.password && isContentUrl(destination) && title) {
+          links.set(destination, {url: destination, title});
+        }
+      } catch { /* Ignore malformed links rather than exposing unvalidated destinations. */ }
+    });
   });
   flush();
   return sections;
@@ -79,6 +92,7 @@ function collectPages(allContent) {
 
 async function buildSearchIndex({outDir, outputDir = outDir, pages, routesBuildMetadata = {}, baseUrl = '/'}) {
   const documents = [];
+  const structure = {};
   for (const [route, metadata] of [...pages].sort(([a], [b]) => a.localeCompare(b))) {
     if (routesBuildMetadata[route]?.noIndex) continue;
     const relative = decodeURIComponent(route.slice(baseUrl.length)).replace(/\/$/, '');
@@ -89,12 +103,18 @@ async function buildSearchIndex({outDir, outputDir = outDir, pages, routesBuildM
       catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
     if (!html) throw new Error(`Search could not read built route: ${route}`);
-    documents.push(...extractSections(html, route, metadata));
+    const sections = extractSections(html, route, metadata);
+    documents.push(...sections);
+    if (sections.length) structure[contentPage(sections[0].url)] = extractStructure(html, route);
   }
+  const api = extractOpenAPI(JSON.parse(await fs.readFile(path.join(outDir, 'openapi.json'), 'utf8')));
+  documents.push(...api.documents);
+  Object.assign(structure, api.structure);
   if (!documents.length) throw new Error('Docs search index is empty');
   await fs.writeFile(path.join(outputDir, 'search-index.json'), JSON.stringify(createIndex(documents)));
   await fs.writeFile(path.join(outputDir, 'search-documents.json'), JSON.stringify(documents));
-  console.log(`[docs-search] Indexed ${documents.length} passages from ${new Set(documents.map(d => d.url.split('#')[0])).size} public pages.`);
+  await fs.writeFile(path.join(outputDir, 'search-structure.json'), JSON.stringify({pages: structure}));
+  console.log(`[docs-search] Indexed ${documents.length} passages from ${new Set(documents.map(d => contentPage(d.url))).size} public pages.`);
   return documents;
 }
 

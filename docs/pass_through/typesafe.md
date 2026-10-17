@@ -11,7 +11,7 @@ Pass-through endpoint for the [TypeSafe AI](https://docs.typesafe.ai/api) System
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Not offered by the TypeSafe API |
 
-Just replace `https://api.typesafe.ai` with `LITELLM_PROXY_BASE_URL/typesafe` 🚀
+Just replace `https://api.typesafe.ai` with `LITELLM_PROXY_BASE_URL/typesafe`
 
 LiteLLM adds the TypeSafe API key from the proxy environment, so clients only need a LiteLLM virtual key.
 
