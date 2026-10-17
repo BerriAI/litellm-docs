@@ -159,6 +159,35 @@ LiteLLM decides whether `headroom-compression` runs on a given request before th
 
 Concretely: with `default_on: false` and no `headroom-compression` attached to the caller's key, sending `x-headroom-bypass: false` does not turn compression on for that request, and there is no per-request header that does. Skipping compression per request works (`x-headroom-bypass: true`, as in the Claude Code section above); enabling it per request without admin involvement requires the `guardrails` / `litellm_metadata.guardrails` field, not a header.
 
+## Inspecting the compressed prompt
+
+To return the compressed prompt for one request, send `x-litellm-return-compressed-prompt: true`. This does not enable the Headroom guardrail. Compression must already be enabled through the configuration, key, team, or per-request guardrail selection above.
+
+After successful compression, `x-litellm-compressed-prompt` contains base64-encoded UTF-8 JSON of the restored message list, including the protected messages. The list uses the guardrail's normalized message representation; the provider adapter may translate roles and content blocks for its API. This works with `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`, including streaming responses.
+
+```bash
+curl -sS -D response-headers.txt http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-return-compressed-prompt: true" \
+  --data-binary @request.json
+```
+
+Decode the header value with standard base64 and JSON libraries:
+
+```python
+import base64
+import json
+
+messages = json.loads(base64.b64decode(response.headers["x-litellm-compressed-prompt"]))
+```
+
+The encoded value is limited to 16,384 bytes. Larger values are omitted entirely and replaced with `x-litellm-compressed-prompt-omitted: too_large`. The prompt is never truncated. Without opt-in, or when compression is skipped, bypassed with `x-headroom-bypass: true`, or fails open, neither header is returned.
+
+These headers contain prompt content. Treat them as sensitive when recording HTTP headers or forwarding responses. There is no global setting for returning prompts.
+
+For an oversized prompt, `x-litellm-call-id` can identify the request in a configured logging integration. In verified `generic_api` logging, Chat Completions and Messages include compressed messages, but Responses includes the original input. Guardrail statistics alone do not contain the prompt. Do not assume an oversized compressed prompt is retrievable from every logging destination or from database spend logs.
+
 ## Compression behind an auto router
 
 A request an [auto router](./auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails above for them, whether they were attached to a key, a team, or the request body. See [Compression](./auto_routing.md#compression).
