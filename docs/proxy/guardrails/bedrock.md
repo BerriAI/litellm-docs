@@ -202,7 +202,7 @@ Chunks now stream to the client as they arrive, and one OUTPUT scan runs over th
 
 With `streaming_buffer_until_moderated: false` alone, the guardrail scans the accumulated response every `streaming_sampling_rate` chunks while streaming. Each sampled scan is a separate ApplyGuardrail call over all text so far, so it adds mid-stream latency and repeated Bedrock text-unit charges. Pair it with `streaming_end_of_stream_only: true` unless you need mid-stream blocking.
 
-These settings apply to both `/v1/chat/completions` and native `/v1/messages` streams.
+These settings apply to `/v1/chat/completions`, native `/v1/messages` streams, and the Bedrock `/bedrock/model/<model>/converse-stream` pass-through, where a mid-stream block ends the stream with an AWS `validationException` event that the AWS SDK raises with the guardrail's message.
 
 ## Contextual Grounding
 
