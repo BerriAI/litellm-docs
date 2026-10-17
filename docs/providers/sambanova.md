@@ -23,7 +23,7 @@ import os
 
 os.environ['SAMBANOVA_API_KEY'] = ""
 response = completion(
-    model="sambanova/Llama-4-Maverick-17B-128E-Instruct",
+    model="sambanova/Meta-Llama-3.3-70B-Instruct",
     messages=[
         {
             "role": "user",
@@ -46,7 +46,7 @@ import os
 
 os.environ['SAMBANOVA_API_KEY'] = ""
 response = completion(
-    model="sambanova/Llama-4-Maverick-17B-128E-Instruct",
+    model="sambanova/Meta-Llama-3.3-70B-Instruct",
     messages=[
         {
             "role": "user",
@@ -68,6 +68,38 @@ for chunk in response:
     print(chunk)
 ```
 
+
+## Supported Parameters
+
+Besides the standard `max_tokens`, `temperature`, `top_p`, `stop`, `stream`, `stream_options` and `response_format`, SambaNova chat requests accept `top_k`, `presence_penalty`, `frequency_penalty`, `logprobs`, `top_logprobs`, `n`, `logit_bias` and `seed`. Models that support function calling also accept `tools`, `tool_choice` and `parallel_tool_calls`, and models that support reasoning accept `reasoning_effort`. Parameters SambaNova does not list for a model are dropped when `litellm.drop_params` is enabled and raise an error otherwise.
+
+## SambaNova - Reasoning
+
+```python
+import litellm
+
+response = litellm.completion(
+    model="sambanova/gpt-oss-120b",
+    messages=[{"role": "user", "content": "How many r's are in strawberry?"}],
+    reasoning_effort="low",
+)
+
+print(response.choices[0].message.content)
+```
+
+## Integration Source
+
+LiteLLM sends an `X-Integration-Source` header with every SambaNova request so SambaNova can see which framework the traffic came from. The default is `litellm`. Frameworks built on top of LiteLLM can replace it, either with the `SAMBANOVA_INTEGRATION_SOURCE` environment variable or per request. A header passed in `extra_headers` takes priority, then `extra_body={"integration_source": "..."}`, then the environment variable, then the default.
+
+```python
+import litellm
+
+response = litellm.completion(
+    model="sambanova/Meta-Llama-3.3-70B-Instruct",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={"integration_source": "my-framework"},
+)
+```
 
 ## Usage with LiteLLM Proxy Server
 
@@ -237,7 +269,7 @@ def data_url_from_image(file_path):
     return data_url
 
 response = litellm.completion(
-    model = "sambanova/Llama-4-Maverick-17B-128E-Instruct", 
+    model = "sambanova/gemma-4-31B-it",
     messages=[
         {
             "role": "user",
