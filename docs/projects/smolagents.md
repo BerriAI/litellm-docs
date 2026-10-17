@@ -1,5 +1,5 @@
 
-# 🤗 Smolagents
+# Smolagents
 
 `smolagents` is a barebones library for agents. Agents write python code to call tools and orchestrate other agents.
 

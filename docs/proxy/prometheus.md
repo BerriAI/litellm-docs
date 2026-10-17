@@ -2,7 +2,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# 📈 Prometheus metrics
+# Prometheus metrics
 
 
 LiteLLM Exposes a `/metrics` endpoint for Prometheus to Poll
@@ -949,7 +949,7 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 
 
-## 🔥 LiteLLM Maintained Grafana Dashboards 
+## LiteLLM Maintained Grafana Dashboards
 
 LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 

@@ -662,32 +662,32 @@ import random
 import time
 
 # ----------------------------
-# 🔐 CONFIGURATION
+# CONFIGURATION
 # ----------------------------
 uri = "http://0.0.0.0:4000/milvus"  # IMPORTANT: Use the '/milvus' endpoint
 token = "sk-my-virtual-key"
 collection_name = "dall-e-6"  # Your virtual index name
 
 # ----------------------------
-# 📋 STEP 1 — Initialize Client
+# STEP 1 — Initialize Client
 # ----------------------------
 milvus_client = MilvusRESTClient(uri=uri, token=token)
 print(f"✅ Connected to DB: {uri} successfully")
 
 # ----------------------------
-# 🗑️  STEP 2 — Drop Existing Collection (if needed)
+# STEP 2 — Drop Existing Collection (if needed)
 # ----------------------------
 check_collection = milvus_client.has_collection(collection_name)
 if check_collection:
     milvus_client.drop_collection(collection_name)
-    print(f"🗑️  Dropped the existing collection {collection_name} successfully")
+    print(f"Dropped the existing collection {collection_name} successfully")
 
 # ----------------------------
-# 📐 STEP 3 — Create Collection Schema
+# STEP 3 — Create Collection Schema
 # ----------------------------
 dim = 64  # Vector dimension
 
-print("📐 Creating the collection schema")
+print("Creating the collection schema")
 schema = milvus_client.create_schema()
 schema.add_field(
     "book_id", DataType.INT64, is_primary=True, description="customized primary id"
@@ -698,16 +698,16 @@ schema.add_field(
 )
 
 # ----------------------------
-# 🔍 STEP 4 — Create Index
+# STEP 4 — Create Index
 # ----------------------------
-print("🔍 Preparing index parameters with default AUTOINDEX")
+print("Preparing index parameters with default AUTOINDEX")
 index_params = milvus_client.prepare_index_params()
 index_params.add_index("book_intro", metric_type="L2")
 
 # ----------------------------
-# 🏗️  STEP 5 — Create Collection
+# STEP 5 — Create Collection
 # ----------------------------
-print(f"🏗️  Creating collection: {collection_name}")
+print(f"Creating collection: {collection_name}")
 milvus_client.create_collection(
     collection_name, schema=schema, index_params=index_params
 )
@@ -715,14 +715,14 @@ collection_property = milvus_client.describe_collection(collection_name)
 print(f"✅ Collection created: {collection_property}")
 
 # ----------------------------
-# 📤 STEP 6 — Insert Data
+# STEP 6 — Insert Data
 # ----------------------------
 nb = 1000
 insert_rounds = 2
 start = 0
 total_rt = 0
 
-print(f"📤 Inserting {nb*insert_rounds} entities into collection")
+print(f"Inserting {nb*insert_rounds} entities into collection")
 for i in range(insert_rounds):
     vector = [random.random() for _ in range(dim)]
     rows = [
@@ -737,22 +737,22 @@ for i in range(insert_rounds):
 print(f"✅ Insert completed in {round(total_rt, 4)} seconds")
 
 # ----------------------------
-# 💾 STEP 7 — Flush Collection
+# STEP 7 — Flush Collection
 # ----------------------------
-print("💾 Flushing collection")
+print("Flushing collection")
 start_flush = time.time()
 milvus_client.flush(collection_name)
 end_flush = time.time()
 print(f"✅ Flush completed in {round(end_flush - start_flush, 4)} seconds")
 
 # ----------------------------
-# 🔍 STEP 8 — Search
+# STEP 8 — Search
 # ----------------------------
 nq = 3
 search_params = {"metric_type": "L2", "params": {"level": 2}}
 limit = 2
 
-print(f"🔍 Performing {5} search operations")
+print(f"Performing {5} search operations")
 for i in range(5):
     search_vectors = [[random.random() for _ in range(dim)] for _ in range(nq)]
     t0 = time.time()

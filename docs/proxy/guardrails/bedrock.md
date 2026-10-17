@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Bedrock Guardrails
 
-:::tip[⚡️]
+:::tip[]
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
@@ -353,7 +353,7 @@ guardrails:
       experimental_use_latest_role_message_only: true  # NEW
 ```
 
-> ⚠️ This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
+> This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
 
 ## Disabling Exceptions on Bedrock BLOCK
 

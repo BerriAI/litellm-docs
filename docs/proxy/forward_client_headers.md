@@ -72,7 +72,7 @@ Add `forward_llm_provider_auth_headers: true` to your `general_settings`:
 ```yaml
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Enable BYOK
+  forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
 ### Which Headers Are Forwarded
@@ -218,7 +218,7 @@ general_settings:
 # BYOK enabled - auth headers ARE forwarded
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Opt-in required
+  forward_llm_provider_auth_headers: true  # Opt-in required
 ```
 
 ## Enable for a Model Group
@@ -285,7 +285,7 @@ When `add_user_information_to_llm_headers` is enabled, LiteLLM adds:
 
 ## Security Considerations
 
-⚠️ **Important Security Notes:**
+**Important Security Notes:**
 
 1. **Sensitive Data**: Only enable header forwarding for trusted model groups, as headers may contain sensitive information
 2. **API Keys**: Never include API keys or secrets in forwarded headers

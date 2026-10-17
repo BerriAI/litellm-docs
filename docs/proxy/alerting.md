@@ -170,7 +170,7 @@ response = client.chat.completions.create(
 
 Set `alert_types` if you want to Opt into only specific alert types. When alert_types is not set, all Default Alert Types are enabled.
 
-👉 [**See all alert types here**](#all-possible-alert-types)
+[**See all alert types here**](#all-possible-alert-types)
 
 ```shell
 general_settings:
@@ -307,7 +307,7 @@ model_list:
     model_name: "azure-model"
     litellm_params:
         model: "azure/{{openai_small}}"
-        api_key: "my-bad-key" # 👈 bad key
+        api_key: "my-bad-key" # bad key
 
 general_settings: 
     alerting: ["ms_teams"]
@@ -358,7 +358,7 @@ model_list:
     model_name: "azure-model"
     litellm_params:
         model: "azure/{{openai_small}}"
-        api_key: "my-bad-key" # 👈 bad key
+        api_key: "my-bad-key" # bad key
 
 general_settings: 
     alerting: ["slack"]
@@ -386,7 +386,7 @@ export WEBHOOK_URL="https://webhook.site/6ab090e8-c55f-4a23-b075-3209f5c57906"
 Add 'webhook' to config.yaml
 ```yaml
 general_settings: 
-  alerting: ["webhook"] # 👈 KEY CHANGE
+  alerting: ["webhook"] # KEY CHANGE
 ```
 
 2. Start proxy
@@ -506,7 +506,7 @@ API Base: `None`
 - **Per-instance**: Digest state is held in memory per proxy instance. If you run multiple instances (e.g., Cloud Run with autoscaling), each instance maintains its own digest and emits its own summary.
 - **Not durable**: If an instance is terminated before the digest interval expires, the aggregated alerts for that instance are lost.
 
-## Region-outage alerting (✨ Enterprise feature)
+## Region-outage alerting (Enterprise feature) {#region-outage-alerting--enterprise-feature}
 
 :::info
 [Get a free 2-week license](https://forms.gle/P518LXsAZ7PhXpDn8)
@@ -536,7 +536,7 @@ general_settings:
 
 ## **All Possible Alert Types**
 
-👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
+[**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
 
 LLM-related Alerts
 

@@ -275,7 +275,7 @@ os.environ["AWS_REGION_NAME"] = ""
 response = completion(
   model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -288,7 +288,7 @@ model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -310,7 +310,7 @@ response = client.chat.completions.create(model="bedrock-claude-v1", messages = 
 ],
 temperature=0.7,
 extra_body={
-    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -624,7 +624,7 @@ model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      reasoning_effort: "low" # 👈 EITHER HERE OR ON REQUEST
+      reasoning_effort: "low" # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -642,7 +642,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "reasoning_effort": "low" # 👈 EITHER HERE OR ON CONFIG.YAML
+    "reasoning_effort": "low" # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -820,7 +820,7 @@ response = completion(
     messages=[{"role": "user", "content": "Hello! Testing 1M context window."}],
     max_tokens=100,
     extra_headers={
-        "anthropic-beta": "context-1m-2025-08-07"  # 👈 Enable 1M context
+        "anthropic-beta": "context-1m-2025-08-07"  # Enable 1M context
     }
 )
 ```
@@ -874,7 +874,7 @@ model_list:
     litellm_params:
       model: bedrock/anthropic.claude-sonnet-4-20250514-v1:0
       extra_headers:
-        anthropic-beta: "context-1m-2025-08-07"  # 👈 Enable 1M context
+        anthropic-beta: "context-1m-2025-08-07"  # Enable 1M context
 
   - model_name: claude-computer-use
     litellm_params:
@@ -883,7 +883,7 @@ model_list:
         anthropic-beta: "computer-use-2024-10-22,context-1m-2025-08-07"
 
 general_settings:
-  forward_client_headers_to_llm_api: true  # 👈 Required for client-side header forwarding
+  forward_client_headers_to_llm_api: true  # Required for client-side header forwarding
 ```
 
 **Set on Request**
@@ -1172,7 +1172,7 @@ model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      performanceConfig: {"latency": "optimized"} # 👈 EITHER HERE OR ON REQUEST
+      performanceConfig: {"latency": "optimized"} # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -1190,7 +1190,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "performanceConfig": {"latency": "optimized"} # 👈 EITHER HERE OR ON CONFIG.YAML
+    "performanceConfig": {"latency": "optimized"} # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -1560,7 +1560,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 
-litellm.set_verbose = True #  👈 SEE RAW REQUEST 
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
     model="bedrock/us.anthropic.{{anthropic}}",
@@ -1878,7 +1878,7 @@ image_content = [
     {
         "type": "file",
         "file": {
-            "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+            "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
         }
     },
 ]
@@ -1927,7 +1927,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         {
             "type": "file",
             "file": {
-                "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
             }
         }
     ]
@@ -2527,7 +2527,7 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
             model="bedrock/us.anthropic.{{anthropic}}",
@@ -2828,7 +2828,7 @@ model_list:
 
 ### Passing an external BedrockRuntime.Client as a parameter - Completion()
   
-This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above 👆. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
+This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
 
 :::warning
 

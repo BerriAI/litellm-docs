@@ -1618,7 +1618,7 @@ const sidebars = {
         "load_test_rpm",
         {
           type: "category",
-          label: "❤️ 🚅 Projects built on LiteLLM",
+          label: "Projects built on LiteLLM",
           link: {
             type: "generated-index",
             title: "Projects built on LiteLLM",

@@ -121,7 +121,7 @@ curl http://0.0.0.0:4000/rerank \
 
 ## **Supported Providers**
 
-#### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
+#### See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
 
 | Provider                 | Link to Usage                                        |
 |--------------------------|------------------------------------------------------|

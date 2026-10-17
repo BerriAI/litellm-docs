@@ -237,7 +237,7 @@ file = client.files.create(
     purpose="user_data",
     extra_body={
         "target_model_names": "{{gemini_flash}}",
-        "target_storage": "azure_storage"  # 👈 Use Azure Blob Storage
+        "target_storage": "azure_storage"  # Use Azure Blob Storage
     }
 )
 

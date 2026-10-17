@@ -7,7 +7,7 @@ Track Spend, and control model access via virtual keys for the proxy
 
 :::info
 
-- 🔑 [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
+- [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
 - [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy#provision-the-data-stores)
 - [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
 
@@ -20,7 +20,7 @@ Requirements:
 
 - Need a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc)
 - Set `DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname>` in your env 
-- Set a `master key`, this is your Proxy Admin key - you can use this to create other keys (🚨 must start with `sk-`).
+- Set a `master key`, this is your Proxy Admin key - you can use this to create other keys (must start with `sk-`).
   - ** Set on config.yaml** set your master key under `general_settings:master_key`, example below
   - ** Set env variable** set `LITELLM_MASTER_KEY`
 
@@ -49,7 +49,7 @@ model_list:
 
 general_settings: 
   master_key: os.environ/LITELLM_MASTER_KEY 
-  database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # 👈 KEY CHANGE
+  database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # KEY CHANGE
 ```
 
 **Step 2: Start litellm**
@@ -86,7 +86,7 @@ Get spend per:
 - key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
 - user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
 - team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
-- ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
+- end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
 
@@ -116,7 +116,7 @@ This is automatically updated (in USD) when calls are made to /completions, /cha
     "key": "sk-tXL0wt5-lOOVK9sfY2UacA",
     "info": {
         "token": "sk-tXL0wt5-lOOVK9sfY2UacA",
-        "spend": 0.0001065, # 👈 SPEND
+        "spend": 0.0001065, # SPEND
         "expires": "2023-11-24T23:19:11.131000Z",
         "models": [
             "{{openai_small}}",
@@ -149,7 +149,7 @@ curl --location 'http://localhost:4000/user/new' \
 {
     ...
     "expires": "2023-12-22T09:53:13.861000Z",
-    "user_id": "my-unique-id", # 👈 unique id
+    "user_id": "my-unique-id", # unique id
     "max_budget": 0.0
 }
 ```
@@ -178,7 +178,7 @@ Expected Response
 ```bash
 {
   ...
-  "spend": 0 # 👈 SPEND
+  "spend": 0 # SPEND
 }
 ```
 
@@ -202,7 +202,7 @@ curl --location 'http://localhost:4000/team/new' \
 {
     ...
     "expires": "2023-12-22T09:53:13.861000Z",
-    "team_id": "my-unique-id", # 👈 unique id
+    "team_id": "my-unique-id", # unique id
     "max_budget": 0.0
 }
 ```
@@ -231,7 +231,7 @@ Expected Response
 ```bash
 {
   ...
-  "spend": 0 # 👈 SPEND
+  "spend": 0 # SPEND
 }
 ```
 
@@ -278,7 +278,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 -H "Content-Type: application/json" \
 -d '{
 	"models": ["my-free-tier"], 
-	"aliases": {"{{openai_small}}": "my-free-tier"}, # 👈 KEY CHANGE
+	"aliases": {"{{openai_small}}": "my-free-tier"}, # KEY CHANGE
 	"duration": "30min"
 }'
 ```
@@ -321,7 +321,7 @@ model_list:
 
 general_settings: 
   master_key: os.environ/LITELLM_MASTER_KEY 
-  litellm_key_header_name: "X-Litellm-Key" # 👈 Key Change
+  litellm_key_header_name: "X-Litellm-Key" # Key Change
 
 ```
 
@@ -691,7 +691,7 @@ litellm_settings:
     team_id: "core-infra"
 ```
 
-### ✨ Key Rotations 
+### Key Rotations {#-key-rotations}
 
 <EnterpriseFeature />
 
@@ -723,7 +723,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -919,16 +919,16 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 
 

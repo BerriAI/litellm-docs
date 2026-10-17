@@ -1440,7 +1440,7 @@ litellm --config config.yaml
 |---------------|----------|-------|--------------|
 | **`encrypted_content_affinity`** | **[Recommended]** Multi-region Responses API with different API keys | Only requests with tracked encrypted items | ✅ None (surgical pinning) |
 | `responses_api_deployment_check` | When `previous_response_id` is available | Requests with `previous_response_id` | ✅ None |
-| `session_affinity` | Session-based applications | All requests with same `session_id` | ⚠️ Reduces quota by # of sessions |
+| `session_affinity` | Session-based applications | All requests with same `session_id` | Reduces quota by # of sessions |
 | `deployment_affinity` | Simple sticky sessions | All requests from same API key | ❌ Reduces quota by # of users |
 
 

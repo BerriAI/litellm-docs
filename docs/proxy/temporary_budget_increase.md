@@ -1,4 +1,4 @@
-# ✨ Temporary Budget Increase
+# Temporary Budget Increase
 
 Set a temporary budget increase for a LiteLLM Virtual Key or a team member. Use this if you get asked to increase the budget for a key or a team member temporarily.
 

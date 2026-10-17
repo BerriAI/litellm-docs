@@ -18,12 +18,12 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["free"] # 👈 Key Change
+      tags: ["free"] # Key Change
   - model_name: {{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-      tags: ["paid"] # 👈 Key Change
+      tags: ["paid"] # Key Change
   - model_name: {{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
@@ -32,7 +32,7 @@ model_list:
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
 
 router_settings:
-  enable_tag_filtering: True # 👈 Key Change
+  enable_tag_filtering: True # Key Change
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -139,7 +139,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["default"] # 👈 Key Change - All untagged requests will get routed to this
+      tags: ["default"] # Key Change - All untagged requests will get routed to this
     model_info:
       id: "default-model"
 ```
@@ -742,7 +742,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["teamA"] # 👈 Key Change
+      tags: ["teamA"] # Key Change
     model_info:
       id: "team-a-model"
   - model_name: fake-openai-endpoint
@@ -750,7 +750,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["teamB"] # 👈 Key Change
+      tags: ["teamB"] # Key Change
     model_info:
       id: "team-b-model"
   - model_name: fake-openai-endpoint
@@ -761,7 +761,7 @@ model_list:
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
 
 router_settings:
-  enable_tag_filtering: True # 👈 Key Change
+  enable_tag_filtering: True # Key Change
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
