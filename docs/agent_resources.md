@@ -30,6 +30,12 @@ Sets up the auto router end to end, from picking models to verifying routing dec
 
 <Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it to your agent's skills folder or paste it into the chat." />
 
+### Migrate from Portkey
+
+Converts Portkey configs (exported JSON, the Portkey Admin API, or `x-portkey-config` usage in your code) into a LiteLLM `config.yaml`, plus the team and key commands for your workspaces. See [Migrate from Portkey](./migrate/portkey.md).
+
+<Command code="curl -fsSL https://docs.litellm.ai/skills/portkey-migration" id="skill-portkey-migration" note="Prints the skill. Save it to your agent's skills folder or paste it into the chat." />
+
 ## Docs for agents
 
 | Resource | URL | Use it for |
