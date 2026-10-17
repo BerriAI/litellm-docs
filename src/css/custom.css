@@ -1950,17 +1950,6 @@ article a.card:hover {
   background: var(--aurora-scroll);
 }
 
-/* ---------- Sidebar search slot ---------- */
-/* No divider under the search box; the box separates itself from the tree. */
-[class*='searchBarSection'] {
-  border-bottom: 0 !important;
-}
-
-/* Collapse an empty search slot instead of leaving a gap under the header. */
-[class*='searchBarSection']:has([class*='searchBarInner']:empty) [class*='searchBarInner'] {
-  display: none;
-}
-
 /* ---------- Tables: rounded frame, mono header, clean rows ----------
    Selectors also cover standalone Markdown pages (src/pages), which render
    in an mdxPageWrapper without the .markdown class. */
