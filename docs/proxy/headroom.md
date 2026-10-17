@@ -184,6 +184,8 @@ messages = json.loads(base64.b64decode(response.headers["x-litellm-compressed-pr
 
 The encoded value is limited to 16,384 bytes. Larger values are omitted entirely and replaced with `x-litellm-compressed-prompt-omitted: too_large`. The prompt is never truncated. Without opt-in, or when compression is skipped, bypassed with `x-headroom-bypass: true`, or fails open, neither header is returned.
 
+The snapshot reflects Headroom's output. If another guardrail rewrites messages afterward, those later changes are not included in this header.
+
 These headers contain prompt content. Treat them as sensitive when recording HTTP headers or forwarding responses. There is no global setting for returning prompts.
 
 For an oversized prompt, `x-litellm-call-id` can identify the request in a configured logging integration. In verified `generic_api` logging, Chat Completions and Messages include compressed messages, but Responses includes the original input. Guardrail statistics alone do not contain the prompt. Do not assume an oversized compressed prompt is retrievable from every logging destination or from database spend logs.
