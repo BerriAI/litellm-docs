@@ -300,7 +300,7 @@ litellm_params:
   num_retries: 1
 ```
 
-- `num_retries` is the number of extra attempts after the first one. Unset or `0` sends each check once, which is the default.
+- `num_retries` is the number of extra attempts after the first one. Unset or `0` sends each check once, which is the default. The most allowed is `5`.
 - Each retry opens a fresh connection to the guardrail and gets the full `timeout` again, so the worst-case latency of a check is `timeout x (num_retries + 1)`.
 - Only failures that happen after the connection was established are retried: a read or write timeout, a connection reset, or the server disconnecting without a response.
 - Connect timeouts and refused connections are not retried by `num_retries`, since an endpoint that does not accept connections rarely recovers within the same request. HTTP error statuses (for example 500 or 503) and `BLOCKED` verdicts are never retried.
