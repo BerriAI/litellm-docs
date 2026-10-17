@@ -227,6 +227,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | service_callback | array of strings | `[]` | System health monitoring - Logs redis, postgres failures on specified services (e.g. datadog, prometheus) [Doc Metrics](prometheus) |
 | turn_off_message_logging | boolean | `false` | If true, prevents messages and responses from being logged to callbacks, but request metadata will still be logged. Useful for privacy/compliance when handling sensitive data [Proxy Logging](logging) |
 | modify_params | boolean | `false` | If true, allows modifying the parameters of the request before it is sent to the LLM provider |
+| reasoning_effort_rounding | string | `up` | How a request's `reasoning_effort` maps onto the levels a deployment declares in `model_info.reasoning_effort_levels`. `up` sends the weakest declared level at least as strong as the request, `down` the strongest declared level at most as strong. A deployment's own `model_info.reasoning_effort_rounding` wins over this. Available from v1.107.0. [Further docs](../reasoning_content#reasoning-effort-levels) |
 | enable_preview_features | boolean | `false` | If true, enables preview features - e.g. Azure O1 Models with streaming support.|
 | disable_stop_sequence_limit | boolean | `false` | If true, disables truncation of the `stop` parameter to the 4 sequences allowed by the OpenAI spec. |
 | redact_user_api_key_info | boolean | `false` | If true, redacts information about the user api key from logs [Proxy Logging](logging#redacting-userapikeyinfo) |
