@@ -221,9 +221,9 @@ details > summary > :last-child {
 /* "DOCS" beside the logo, as Stripe does. The logo file is untouched and
    keeps its clear space: half its 25px height before the label. */
 .navbar__brand .navbar__title {
-  margin-left: 13px;
+  margin-left: 11px;
   font-family: var(--ifm-font-family-base);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -495,8 +495,7 @@ html[data-theme='dark'] .pagination-nav__link:hover {
 /* ---------- Navbar stays on one row ----------
    Infima lets .navbar__inner wrap, and between 997px and about 1065px the
    logo with its DOCS label, the links, and the right icons no longer fit, so
-   the icons dropped to a second line. The row never wraps now, and in that
-   range the Trust Center text link steps aside (the footer links it too). */
+   the icons dropped to a second line. The row never wraps now. */
 @media (min-width: 997px) {
   .navbar__inner {
     flex-wrap: nowrap !important;
@@ -505,8 +504,4 @@ html[data-theme='dark'] .pagination-nav__link:hover {
     min-width: 0;
   }
 }
-@media (min-width: 997px) and (max-width: 1100px) {
-  .navbar__right-col a[href^='https://trust.litellm.ai'] {
-    display: none;
-  }
-}
+
