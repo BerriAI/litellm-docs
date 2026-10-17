@@ -1,3 +1,7 @@
+---
+sidebar_label: "Docker Image Security"
+---
+
 # Docker Image Security Guide
 
 LiteLLM signs every Docker image published to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/) starting from **v1.83.0**. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
