@@ -3269,9 +3269,11 @@ model_list:
     litellm_params:
       model: vertex_ai/semantic-ranker-default@latest
       vertex_ai_project: "your-project-id"
-      vertex_ai_location: "us-central1"
+      vertex_ai_location: "eu"
       vertex_ai_credentials: "path/to/service-account.json" 
 ```
+
+`vertex_ai_location` is optional for rerank. It accepts `global` (the default), `eu` and `us`, and `eu` or `us` sends the request to that multi-region's Discovery Engine endpoint. Any other value, including a single region such as `us-central1`, uses `global`.
 
 Start the proxy:
 
