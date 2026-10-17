@@ -42,6 +42,8 @@ export class SearchAnalytics {
     const cache = data.clientMetrics?.cache_source || 'none';
     c.metrics = {ranking: data.ranking || source, ranking_version: data.rankingVersion || (source === 'local' ? 'lexical-v4' : null),
       model: data.model || null, candidate_count: data.candidateCount ?? data.results.length,
+      context_limited: data.contextLimited ?? false, omitted_candidate_count: data.omittedCandidateCount ?? 0,
+      context_limit_errors: cache === 'none' ? data.contextLimitErrors ?? 0 : 0,
       result_count: data.results.length, server_ms: data.elapsedMs ?? null,
       cost_usd: data.costUsd ?? null, ...data.clientMetrics,
       retrieval_ms: cache === 'browser' ? 0 : data.timingsMs?.retrieval ?? null,

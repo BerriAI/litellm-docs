@@ -70,6 +70,19 @@ test('browser cache hits do not attribute previous model timing or cost to the n
   assert.equal(props.gateway_ms, 0); assert.equal(props.cost_usd, 0); assert.equal(props.cache_source, 'browser');
 });
 
+test('context cutoffs distinguish omitted results from errors on a new request or cache hit', async () => {
+  const {analytics: a, find} = await fixture();
+  a.open();
+  for (const cache_source of ['none', 'server', 'browser']) {
+    a.start('entra', 'all');
+    a.shown(a.ready({results: [result], candidateCount: 100, contextLimited: true, omittedCandidateCount: 99,
+      contextLimitErrors: 3, clientMetrics: {cache_source}}, 'jev'), 25);
+  }
+  const events = find('results_shown').map(e => e.props);
+  assert.ok(events.every(e => e.context_limited && e.omitted_candidate_count === 99 && e.candidate_count === 100 && e.result_count === 1));
+  assert.deepEqual(events.map(e => e.context_limit_errors), [3, 0, 0]);
+});
+
 test('analytics redact common credentials and email addresses without recording error text', async () => {
   const {analytics: a, events} = await fixture();
   a.open(); a.start('owner@example.com sk-abcdefghijklm Bearer private-secret', 'all'); a.requested();

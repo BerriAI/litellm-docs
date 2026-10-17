@@ -82,7 +82,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     signal?.throwIfAborted();
     const previous = cache.get(key);
     if (previous && now() - previous.at < 15 * 60 * 1000) {
-      return {...previous.value, cached: true, costUsd: 0, timingsMs: {retrieval: 0, evidence: 0, gateway: 0, ordering: 0}, elapsedMs: now() - started};
+      return {...previous.value, cached: true, costUsd: 0, contextLimitErrors: 0, timingsMs: {retrieval: 0, evidence: 0, gateway: 0, ordering: 0}, elapsedMs: now() - started};
     }
     const hits = candidates(query, type);
     const retrievedAt = now();
@@ -97,38 +97,48 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     const questions = hits.map((hit, i) => [`page_${i}`, {
       type: 'noul', instructions: prompt + JSON.stringify(evidence(hit, query)),
     }]);
-    // Jev has a per-request context limit. Preserve each page's evidence and
-    // evaluate independent questions in parallel batches, rather than dropping pages.
+    // Keep the normal path parallel. If a batch exceeds context, trim its tail
+    // and stop the result list there, preserving the earlier candidates' evidence.
     const batches = [];
     for (let i = 0; i < questions.length; i += 10) batches.push(questions.slice(i, i + 10));
     const preparedAt = now();
     const controller = new AbortController();
     const requestSignal = AbortSignal.any([controller.signal, ...(signal ? [signal] : []), AbortSignal.timeout(12000)]);
+    let retainedCount = hits.length, contextLimitErrors = 0;
     let responses;
     try {
-      const sendBatch = async batch => {
-        const response = await fetchImpl(endpoint.href, {
-          method: 'POST', redirect: 'error', signal: requestSignal,
-          headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
-          body: JSON.stringify({model: MODEL, state: {product: 'LiteLLM: LLM gateway, SDK, teams, access controls, and integrations', query}, questions: Object.fromEntries(batch)}),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          if (response.status === 400 && batch.length > 1 && JSON.stringify(data).includes('max_tokens_exceeded')) {
-            const middle = Math.ceil(batch.length / 2);
-            return (await Promise.all([sendBatch(batch.slice(0, middle)), sendBatch(batch.slice(middle))])).flat();
+      const sendBatch = async (batch, start) => {
+        while (batch.length && start < retainedCount) {
+          requestSignal.throwIfAborted();
+          const response = await fetchImpl(endpoint.href, {
+            method: 'POST', redirect: 'error', signal: requestSignal,
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
+            body: JSON.stringify({model: MODEL, state: {product: 'LiteLLM: LLM gateway, SDK, teams, access controls, and integrations', query}, questions: Object.fromEntries(batch)}),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            if (response.status === 400 && JSON.stringify(data).includes('max_tokens_exceeded')) {
+              contextLimitErrors++;
+              batch = batch.slice(0, -1);
+              retainedCount = Math.min(retainedCount, start + batch.length);
+              continue;
+            }
+            throw new Error(`Jev returned HTTP ${response.status}.`);
           }
-          throw new Error(`Jev returned HTTP ${response.status}.`);
+          const rawCost = response.headers.get('x-litellm-response-cost');
+          const cost = rawCost === null ? null : Number(rawCost);
+          // Later batches may already be in flight when a cutoff is found.
+          // Count their successful request costs even though their results are omitted.
+          return [{data, cost: cost !== null && Number.isFinite(cost) && cost >= 0 ? cost : null}];
         }
-        const rawCost = response.headers.get('x-litellm-response-cost');
-        const cost = rawCost === null ? null : Number(rawCost);
-        return [{data, cost: cost !== null && Number.isFinite(cost) && cost >= 0 ? cost : null}];
+        return [];
       };
-      responses = (await Promise.all(batches.map(sendBatch))).flat();
+      responses = (await Promise.all(batches.map((batch, i) => sendBatch(batch, i * 10)))).flat();
     } catch (error) {controller.abort(); throw error;}
     const answeredAt = now();
+    if (!retainedCount) throw new Error('Jev context limit excludes the first candidate.');
     const answers = Object.assign({}, ...responses.map(({data}) => data.answers));
-    const results = hits.map((hit, i) => {
+    const results = hits.slice(0, retainedCount).map((hit, i) => {
       const probability = answers[`page_${i}`]?.noul;
       if (typeof probability !== 'number' || !Number.isFinite(probability) || probability < 0 || probability > 1) {
         throw new Error('Jev returned an incomplete ranking.');
@@ -138,6 +148,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     signal?.throwIfAborted();
     const costUsd = responses.every(response => response.cost !== null) ? responses.reduce((sum, response) => sum + response.cost, 0) : null;
     const value = {query, model: responses[0].data.model || MODEL, candidateCount: hits.length, results,
+      contextLimited: retainedCount < hits.length, omittedCandidateCount: hits.length - retainedCount, contextLimitErrors,
       rankingVersion: prompt === PROMPT ? 'intent-v2' : prompt === ORIGINAL_PROMPT ? 'original' : 'custom',
       timingsMs: {retrieval: retrievedAt - started, evidence: preparedAt - retrievedAt, gateway: answeredAt - preparedAt, ordering: now() - answeredAt},
       costUsd, cached: false, elapsedMs: now() - started};

@@ -26,6 +26,7 @@ test('reranks 100 candidates in parallel batches, preserves evidence, sums cost,
   }});
   const first = await ranker.rerank('topic');
   assert.equal(first.results.length, 100); assert.equal(requests.length, 10);
+  assert.equal(first.contextLimited, false); assert.equal(first.omittedCandidateCount, 0); assert.equal(first.contextLimitErrors, 0);
   assert.ok(Math.abs(first.costUsd - .001) < 1e-10);
   assert.equal(first.rankingVersion, 'intent-v2');
   assert.ok(Object.values(first.timingsMs).every(ms => ms >= 0));
@@ -62,18 +63,85 @@ test('extracts article structure including unselected tabs without global naviga
   assert.ok(!JSON.stringify(result).includes('Body text'));assert.ok(!JSON.stringify(result).includes('Global navigation'));
 });
 
-test('metadata survives context fitting and oversized provider batches split without losing pages', async () => {
+test('metadata survives context fitting and only the earliest oversized batch retries a shorter prefix', async () => {
   const structure = Object.fromEntries(docs.map(doc => [doc.url, {tabs: ['Provider setup'], links: Array.from({length: 400}, (_, i) => ({label: `Topic ${i}`, url: '/docs/' + 'x'.repeat(100)}))}]));
-  let splits = 0;
+  const requests = [];
   const ranker = createReranker({...corpus, config, pageStructure: structure, fetchImpl: async (_, options) => {
     const body = JSON.parse(options.body);
+    requests.push(Object.keys(body.questions));
     const question = Object.values(body.questions)[0].instructions;
     assert.ok(Buffer.byteLength(question) < 31000);assert.match(question, /Provider setup/);assert.match(question, /omittedForContext/);
-    if (Object.keys(body.questions).length > 5) {splits++;return new Response('{"error":"max_tokens_exceeded"}', {status: 400});}
+    if (Object.keys(body.questions).length > 5) return new Response('{"error":"max_tokens_exceeded"}', {status: 400});
     return answer(body);
   }});
   const result = await ranker.rerank('topic');
-  assert.equal(result.results.length, 100);assert.equal(splits, 10);
+  assert.deepEqual(result.results.map(hit => hit.originalRank), [1, 2, 3, 4, 5]);
+  assert.equal(result.contextLimited, true); assert.equal(result.omittedCandidateCount, 95);
+  assert.ok(requests.filter(keys => keys.length < 10).every(keys => keys[0] === 'page_0'));
+});
+
+test('context overflow keeps the largest fitting prefix, excludes later batches, and counts their in-flight costs', async () => {
+  const requests = [];
+  const ranker = createReranker({...corpus, config, fetchImpl: async (_, options) => {
+    const body = JSON.parse(options.body), keys = Object.keys(body.questions);
+    requests.push(keys);
+    if (keys[0] === 'page_20' && keys.length > 7) return Response.json({detail: {error_type: 'max_tokens_exceeded'}}, {status: 400});
+    return answer(body, Number(keys[0].slice(5)) >= 30 ? 1 : .6);
+  }});
+  const result = await ranker.rerank('topic');
+  assert.equal(result.candidateCount, 100); assert.equal(result.results.length, 27);
+  assert.equal(result.omittedCandidateCount, 73); assert.equal(result.contextLimitErrors, 3);
+  assert.deepEqual(result.results.map(hit => hit.originalRank), Array.from({length: 27}, (_, i) => i + 1));
+  assert.deepEqual(requests.filter(keys => keys[0] === 'page_20').map(keys => keys.length), [10, 9, 8, 7]);
+  assert.ok(Math.abs(result.costUsd - .001) < 1e-10, 'include successful batches beyond the cutoff');
+  const cached = await ranker.rerank('topic');
+  assert.equal(requests.length, 13); assert.equal(cached.cached, true); assert.equal(cached.costUsd, 0);
+  assert.equal(cached.contextLimitErrors, 0);
+  assert.equal(cached.omittedCandidateCount, 73); assert.deepEqual(cached.results, result.results);
+});
+
+test('concurrent context limits use the earliest candidate cutoff regardless of response order', async () => {
+  const pending = new Map();
+  const ranker = createReranker({...corpus, config, fetchImpl: async (_, options) => {
+    const body = JSON.parse(options.body), keys = Object.keys(body.questions);
+    if (['page_10', 'page_40'].includes(keys[0]) && keys.length === 10) return new Promise(resolve => pending.set(keys[0], resolve));
+    if (keys[0] === 'page_10' && keys.length > 6) return Response.json({error: 'max_tokens_exceeded'}, {status: 400});
+    return answer(body);
+  }});
+  const finished = ranker.rerank('topic');
+  await flush();
+  pending.get('page_40')(Response.json({error: 'max_tokens_exceeded'}, {status: 400}));
+  await flush();
+  pending.get('page_10')(Response.json({error: 'max_tokens_exceeded'}, {status: 400}));
+  const result = await finished;
+  assert.deepEqual(result.results.map(hit => hit.originalRank), Array.from({length: 16}, (_, i) => i + 1));
+  assert.equal(result.omittedCandidateCount, 84);
+});
+
+test('an oversized first candidate falls back instead of caching an empty or gapped ranking', async () => {
+  let calls = 0;
+  const ranker = createReranker({...corpus, config, fetchImpl: async (_, options) => {
+    calls++;
+    const body = JSON.parse(options.body);
+    if ('page_0' in body.questions) return Response.json({error: 'max_tokens_exceeded'}, {status: 400});
+    return answer(body);
+  }});
+  await assert.rejects(ranker.rerank('topic'), /context limit excludes the first candidate/);
+  const firstCalls = calls;
+  await assert.rejects(ranker.rerank('topic'), /context limit excludes the first candidate/);
+  assert.equal(calls, firstCalls * 2);
+});
+
+test('other provider errors and cancellation do not become a truncated ranking', async () => {
+  const bad = createReranker({...corpus, config, fetchImpl: async () => Response.json({error: 'invalid_request'}, {status: 400})});
+  await assert.rejects(bad.rerank('topic'), /HTTP 400/);
+  const controller = new AbortController(); let calls = 0;
+  const cancelled = createReranker({...corpus, config, fetchImpl: async () => {
+    calls++; controller.abort();
+    return Response.json({error: 'max_tokens_exceeded'}, {status: 400});
+  }});
+  await assert.rejects(cancelled.rerank('topic', 'all', controller.signal), {name: 'AbortError'});
+  assert.equal(calls, 1, 'do not start later batches or context retries after cancellation');
 });
 
 test('local server blocks cross-origin calls and extra model or credential fields', async t => {
