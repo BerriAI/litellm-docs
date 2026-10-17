@@ -574,6 +574,18 @@ model_list:
 
 Provider-specific keys in `litellm_params` are sent in the request body as-is, so keep only the ones your container accepts.
 
+### Reject chat calls on embedding endpoints
+
+An embedding container answers a chat request with its own error after the round trip to SageMaker. To have the proxy reject chat calls before they leave it, list the endpoints the deployment serves next to its `mode`:
+
+```yaml
+    model_info:
+      mode: embedding
+      supported_endpoints: ["/v1/embeddings"]
+```
+
+Chat-style requests to that model then get a 400 that names the endpoint and the supported list, and `/v1/embeddings` keeps working. See [Reject chat calls on non-chat models](../proxy/model_management.md#reject-chat-calls-on-non-chat-models) for the routes covered and how fallbacks are handled.
+
 
 
 ## Nova Models on SageMaker

@@ -90,3 +90,45 @@ The rest of the operations:
 | Delete a model | `POST /model/delete` | Body `{"id": "<model_id>"}`, admin only. This is a POST; there is no DELETE-verb route |
 
 You can attach arbitrary `model_info` fields when you create or update a model, and they pass straight through to `GET /model/info` alongside the mapped cost and context data. That is the mechanism for annotating models with your own metadata, such as an owning team, a description, or a version, and reading it back programmatically.
+
+## Reject chat calls on non-chat models
+
+`model_info.mode` and `model_info.supported_endpoints` are informational by default. When every deployment behind a model name sets `mode` to something other than `chat`, `completion`, or `responses`, and lists `supported_endpoints` with no chat endpoint, the proxy answers chat-style requests to that model with a 400 before calling the provider. The routes the model does serve, such as `/v1/embeddings`, work as before.
+
+```yaml
+model_list:
+  - model_name: my-embeddings
+    litellm_params:
+      model: sagemaker/openai/<your-endpoint-name>
+      aws_region_name: us-east-1
+    model_info:
+      mode: embedding
+      supported_endpoints: ["/v1/embeddings"]
+```
+
+A chat call to `my-embeddings` then returns:
+
+```json
+{
+  "error": {
+    "message": "/v1/chat/completions is not supported by model=my-embeddings. Supported endpoints: /v1/embeddings",
+    "type": "invalid_request_error",
+    "param": "model",
+    "code": "400"
+  }
+}
+```
+
+The check covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses` (including its WebSocket mode and `/v1/responses/compact`), their unprefixed aliases, `/v1/messages` (answered in the Anthropic error shape), the Gemini `generateContent` and `streamGenerateContent` routes, and `/v1beta/interactions`. A `supported_endpoints` list that contains any of those endpoints counts as chat-capable and is never rejected. It applies the same way when the request's `model` is a deployment's `model_info.id` or its `litellm_params.model`, since the proxy routes those names to that deployment. A `litellm_params.model` name is checked this way only when no model name, wildcard route, or team model serves it, and never when `pass_through_all_models` is on.
+
+Both fields are needed. A `supported_endpoints` list with no `mode`, or with a chat `mode`, keeps today's behavior, and so does a model name where any deployment declares nothing.
+
+When a fallback could answer the request, the request takes the normal path, so the provider is still called first and the fallback answers after that call fails. This covers router `fallbacks`, `default_fallbacks`, key or team fallbacks, and `fallbacks` in the request body. Since `default_fallbacks` applies to every model, a proxy that sets it to a chat model never returns this 400. A fallback counts when its model has at least one deployment not declared non-chat this way, or when its own fallbacks lead to one. A fallback name the proxy cannot map to deployments, such as a typo or a name only a wildcard route serves, also counts, so those requests reach the provider as before. A fallback to another embedding-only model with no further chat fallback, or to the same model, keeps the 400, and so does `disable_fallbacks: true` or `fallbacks: []` in the request.
+
+`GET /model/info` returns each model's cost map entry under `key`, and rows saved from it through the Admin UI can carry a copy of the cost map's `supported_endpoints`. A row with `key` does not count as a declaration when its `supported_endpoints` still equals the cost map's list, or when the cost map entry it names serves chat. Set the list yourself, on a row without a chat model's `key`, to opt in.
+
+:::warning Check existing declarations before upgrading
+
+The check turns on for every deployment that already sets both fields, with no other switch. A deployment that lists only non-chat endpoints but still takes chat calls today, for example a text-to-speech model with `mode: audio_speech` and `supported_endpoints: ["/v1/audio/speech"]`, starts answering chat calls with the 400 after the upgrade. Add the chat endpoint to its `supported_endpoints`, or remove the list, to keep chat working.
+
+:::
