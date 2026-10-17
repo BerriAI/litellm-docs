@@ -222,6 +222,19 @@ For this flow, the `redirect_uri` supplied to `/authorize` must exactly match a 
 
 Per-server static registration returns placeholder credentials and does not store a client-specific callback allowlist. Its authorization endpoint applies the per-server validation rules described above.
 
+#### Scope OAuth clients to specific servers
+
+For OAuth clients, use `https://<proxy>/mcp/<server_name>` as the connection URL. The consent page and session token are scoped to that server.
+
+If a client connects to aggregate `/mcp` with `x-mcp-servers: <server_name>`, the gateway challenge carries `scope="litellm:mcp_server:<server_name>"` and scopes the consent page and session token to that server. A header listing multiple servers scopes consent and the token to that set. Access groups and unknown names remain unscoped. Claude Code sends no custom headers during OAuth discovery, so it must use `/mcp/<server_name>` (one connection per server).
+
+To reject unscoped aggregate requests, set [`mcp_require_explicit_server_scope`](./proxy/config_settings#general_settings---reference). It defaults to `false`; when enabled, a toolset or gateway OAuth session can still provide the scope:
+
+```yaml title="config.yaml"
+general_settings:
+  mcp_require_explicit_server_scope: true
+```
+
 #### Verify the configuration
 
 Use the following requests to verify discovery, static registration, and the authorization redirect. The examples use a proxy listening on `http://localhost:4000` with `PROXY_BASE_URL=https://llm.example.com` and the `jira_mcp` configuration above.
