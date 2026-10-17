@@ -118,9 +118,25 @@ test('main search uses the worker baseline and keeps it on a reranking failure',
     fetchImpl: async url => {assert.equal(url, '/api/docs/search'); return Response.json({error: 'Unavailable'}, {status: 503});},
   });
   session.search('topic', 'docs'); timers.tick(250); await flush();
-  assert.equal(displayed[0].results[0].title, 'Local result');
+  assert.equal(displayed.length, 0, 'do not show a temporary ordering');
   timers.tick(200); await flush(); assert.deepEqual(calls, ['Unavailable']);
+  assert.equal(displayed[0].results[0].title, 'Local result');
   session.search('topic', 'blog'); timers.tick(450); await flush();
   assert.deepEqual(queries, [{query:'topic', type:'docs'}, {query:'topic', type:'blog'}]);
+  session.cancel();
+});
+
+test('successful reranking publishes its baseline and final order together after the model completes', async () => {
+  const {SearchSession} = await import('./search-client.mjs');
+  const timers = fakeTimers(), events = [];
+  let finish;
+  const session = new SearchSession({onBaseline: () => events.push('baseline'), onRanking(){},
+    onRanked: () => events.push('ranked'), onError: message => assert.fail(message)}, {
+    timers, searchBaseline: async query => ({query, results: [{title: 'Temporary result'}]}),
+    fetchImpl: () => new Promise(resolve => {finish = () => resolve(Response.json({results: [{title: 'Final result'}]}));}),
+  });
+  session.search('topic'); timers.tick(250); await flush(); assert.deepEqual(events, []);
+  timers.tick(200); await flush(); assert.deepEqual(events, []);
+  finish(); await flush(); assert.deepEqual(events, ['baseline', 'ranked']);
   session.cancel();
 });

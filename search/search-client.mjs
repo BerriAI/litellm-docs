@@ -13,13 +13,13 @@ export class SearchSession {
     const key = JSON.stringify([query, type]);
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.at < 15 * 60 * 1000) {
-      this.callbacks.onBaseline(cached.baseline);
+      this.callbacks.onBaseline(cached.baseline, {final: false});
       this.callbacks.onRanked({...cached.ranked, cached: true, elapsedMs: 0, costUsd: 0});
       return;
     }
     this.controller = new AbortController();
     const signal = this.controller.signal;
-    let baseline;
+    let baseline, baselineError;
     const post = async endpoint => {
       const response = await this.fetch(endpoint, {method: 'POST', signal, headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query, type})});
       const result = await response.json();
@@ -29,8 +29,8 @@ export class SearchSession {
     let baselineDone;
     this.localTimer = this.timers.setTimeout(() => {
       baselineDone = (async () => this.searchBaseline ? this.searchBaseline(query, type, signal) : post('/api/search'))()
-        .then(data => {if (current()) {baseline = data;this.callbacks.onBaseline(data);}})
-        .catch(error => {if (current() && !signal.aborted) this.callbacks.onError(error.message);});
+        .then(data => {baseline = data;})
+        .catch(error => {baselineError = error;});
     }, immediate ? 0 : 250);
     this.rankTimer = this.timers.setTimeout(async () => {
       if (!current()) return;
@@ -42,9 +42,17 @@ export class SearchSession {
         if (baseline) {
           if (this.cache.size >= 256) this.cache.delete(this.cache.keys().next().value);
           this.cache.set(key, {baseline, ranked, at: Date.now()});
+          this.callbacks.onBaseline(baseline, {final: false});
         }
         this.callbacks.onRanked(ranked);
-      } catch (error) {if (current() && !signal.aborted) (this.callbacks.onRankError || this.callbacks.onError)(error.message);}
+      } catch (error) {
+        await baselineDone;
+        if (!current() || signal.aborted) return;
+        if (baseline) {
+          this.callbacks.onBaseline(baseline);
+          (this.callbacks.onRankError || this.callbacks.onError)(error.message);
+        } else this.callbacks.onError(baselineError?.message || error.message);
+      }
     }, immediate ? 0 : 450);
   }
   cancel() {

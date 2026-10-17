@@ -73,7 +73,7 @@ export default function SearchBar() {
   const [retry, setRetry] = useState(0);
   const input = useRef(null), composer = useRef(null), dialog = useRef(null), worker = useRef(null), latestTurn = useRef(null);
   const requestId = useRef(0), controller = useRef(null), previousFocus = useRef(null);
-  const searchSession = useRef(null), rankingLocked = useRef(false);
+  const searchSession = useRef(null);
   const identity = useRef({});
   const traceContext = useRef(undefined);
   const indexUrl = useBaseUrl('/search-index.json');
@@ -149,17 +149,17 @@ export default function SearchBar() {
       worker.current.postMessage({id, query, indexUrl, type});
     });
     searchSession.current = new SearchSession({
-      onBaseline(data) {
+      onBaseline(data, {final = true} = {}) {
+        if (!final) return;
         setLoading(false); setSearchError(''); setResults(data.results);
         setResolvedQuery(data.query); setSelected(0);
       },
       onRanking() {},
       onRanked(data) {
-        if (rankingLocked.current) return;
         setLoading(false); setSearchError(''); setResults(data.results);
         setResolvedQuery(data.query); setSelected(0);
       },
-      // Local matches remain usable when reranking is disabled, slow, or unavailable.
+      // The session publishes one final order, using local matches on failure.
       onRankError() {},
       onError(message) {setLoading(false); setSearchError(message);},
     }, {searchBaseline: baseline, rerankUrl});
@@ -168,7 +168,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     if (!open || mode !== 'search') return;
-    setSearchError(''); setVisibleCount(25); rankingLocked.current = false;
+    setSearchError(''); setVisibleCount(25);
     setLoading(Boolean(query.trim()));
     setResolvedType(contentType);
     searchSession.current.search(query, contentType);
@@ -231,9 +231,8 @@ export default function SearchBar() {
   function onKeyDown(event) {
     if (event.key === 'Escape') {event.preventDefault(); close();}
     if (mode === 'search' && event.target === input.current) {
-      if (results.length && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+      if (!loading && results.length && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
         event.preventDefault();
-        rankingLocked.current = true;
         const count = Math.min(visibleCount, results.length);
         setSelected(current => (current + (event.key === 'ArrowDown' ? 1 : -1) + count) % count);
       }
@@ -292,18 +291,16 @@ export default function SearchBar() {
               <div className={styles.filters} role="group" aria-label="Content type">
                 {Object.entries({all: 'All', docs: 'Docs', blog: 'Blog', release: 'Releases'}).map(([type, label]) =>
                   <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
-                <small role="status">{loading && !results.length ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
+                <small role="status">{loading ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
               </div>
-              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}
-                onPointerMove={() => {rankingLocked.current = true;}} onPointerDown={() => {rankingLocked.current = true;}} onWheel={() => {rankingLocked.current = true;}}
-              >{results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
+              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
                 className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
                 <span className={styles.path}><SourceMeta source={result}/></span>
                 <span className={styles.resultTitle}><SourceIcon source={result}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>
                 {selected === i && <CornerDownLeft className={styles.enterIcon} size={16}/>}
               </a>)}</div>
-              {visibleCount < results.length && <button type="button" className={styles.more} onClick={() => {rankingLocked.current = true; setVisibleCount(count => count + 25);}}>Show 25 more</button>}
+              {visibleCount < results.length && <button type="button" className={styles.more} onClick={() => setVisibleCount(count => count + 25)}>Show 25 more</button>}
               {!loading && !searchError && !results.length && <p className={styles.noResults}>No {contentType === 'all' ? 'results' : contentType === 'release' ? 'release notes' : contentType === 'blog' ? 'blog posts' : 'docs'} found for “{query}”. {contentType !== 'all' ? <button onClick={() => setContentType('all')}>Search all content</button> : 'Try fewer words or a feature name.'}</p>}
             </>}
           </div>
