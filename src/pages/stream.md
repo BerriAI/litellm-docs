@@ -49,7 +49,8 @@ os.environ["OPENAI_API_KEY"] = ""
 
 response = completion(model="gpt-3.5-turbo", messages=messages, stream=True, stream_options={"include_usage": True})
 for chunk in response:
-    print(chunk['choices'][0]['delta'])
+    if chunk['choices']:
+        print(chunk['choices'][0]['delta'])
 ```
 
 ### PROXY
