@@ -25,7 +25,7 @@ function Sources({sources}) {
       const detail = sourceDetail(source);
       const title = source.heading ? `${source.title} · ${source.heading}` : source.title;
       return <a key={source.id} href={source.url} title={`${sourceLabel(source)}${detail ? ` · ${detail}` : ''}: ${title}`}>
-        <b>{source.id}</b><span>{source.title}</span>
+        <b>{source.id}</b><span>{source.title}{source.heading && <i> · {source.heading}</i>}</span>
       </a>;
     })}
   </div>;

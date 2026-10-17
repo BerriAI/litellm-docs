@@ -36,6 +36,7 @@
 .sources a:hover {border-color:var(--aurora-accent-line,var(--ai-border));background:var(--ai-tint);color:var(--ai-accent-ink);text-decoration:none}
 .sources b {display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:16px;height:16px;border-radius:2px;background:var(--ai-tint);color:var(--ai-accent-ink);font-size:10px;font-weight:600}
 .sources span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sources i {font-style:normal;opacity:.75}
 .thinking {display:block;margin:4px 0 0;color:var(--ai-muted);font-size:13px}
 .error {margin-top:16px;padding:10px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);color:var(--ai-text)}
 .error p {margin:0}
