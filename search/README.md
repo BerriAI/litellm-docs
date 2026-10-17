@@ -180,7 +180,9 @@ The model has no privileged actions or access to secrets, but its answers can st
 
 The browser requests `Accept: text/event-stream`. The API sends brief progress statuses during research, source metadata before the answer, and `answer-delta` events only for the final generation. It never sends raw tool results to the browser. A terminal `done` event contains the same answer text and its cited sources. An `error` event or a connection ending without `done` offers Retry. There is no automatic answer rewrite or stream reset.
 
-Stop, closing the dialog, or clearing the conversation cancels upstream work. Clients without the streaming Accept header retain the JSON response contract. After streaming headers are sent, failures are SSE error events with HTTP 200; consumers must check the terminal event. Proxies must allow streaming and respect `Cache-Control: no-transform`.
+Stop or New chat cancels upstream work. Closing the Ask AI panel lets the current answer finish. The panel saves all completed turns in IndexedDB and restores them after a reload, with no turn-count cap. Session storage holds only the tab's conversation ID. Existing session-storage conversations migrate automatically; browsers without IndexedDB fall back to session storage.
+
+Clients without the streaming Accept header retain the JSON response contract. After streaming headers are sent, failures are SSE error events with HTTP 200; consumers must check the terminal event. Proxies must allow streaming and respect `Cache-Control: no-transform`.
 
 ## Validation
 
@@ -191,7 +193,7 @@ Stop, closing the dialog, or clearing the conversation cancels upstream work. Cl
 
 `POST /api/docs/bot-ask` runs the same Ask AI engine, corpus, full-page research tools, models, fallbacks, answer generation, citations, streaming protocol and trace propagation as `/api/docs/ask`. It is intended for the [LiteLLM Docs Slack worker](https://github.com/BerriAI/litellm-docs-bot).
 
-Slack final answers use a say-it style: one short, plain-English explanation, the smallest useful code example when relevant, and supporting documentation citations. They expand when the user asks or essential permissions, prerequisites, or caveats require it. This is a writing instruction, not an output-token limit. Research and evidence remain complete, and the website's answer style is unchanged. The authenticated service route selects the style; callers cannot supply a prompt or style override.
+Website Ask AI and Slack final answers use a say-it style: one short, plain-English explanation, the smallest useful code example when relevant, and supporting documentation citations. They expand when the user asks or essential permissions, prerequisites, or caveats require it. This is a writing instruction, not an output-token limit. Research and evidence remain complete. Callers cannot supply a prompt or style override.
 
 Configure `DOCS_BOT_SERVICE_TOKEN` with a random service secret and `DOCS_BOT_AI_API_KEY` with a dedicated LiteLLM virtual key, then redeploy the docs service. The virtual key uses the existing `DOCS_AI_BASE_URL`; permit the same fixed model aliases and set the team's spending budget and capacity allocation on that key. The worker sends `Authorization: Bearer <DOCS_BOT_SERVICE_TOKEN>` and the existing `{question, history?, traceContext?}` request body. Keep both secrets server-side. The model key is never sent to the worker and never falls back to `DOCS_AI_API_KEY`.
 

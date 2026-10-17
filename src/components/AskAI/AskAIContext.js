@@ -1,13 +1,11 @@
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {readAnswer} from '../../../search/stream.mjs';
-import {isContentUrl} from '../../../search/content';
+import {readConversation, saveConversation} from '../../../search/conversation-storage.mjs';
 
 // One chat for the whole site. The provider lives in the root layout, so the docked panel and
 // the search modal share the same conversation and it survives client-side navigation.
-// The panel state and turns also live in sessionStorage, so a reload in the same tab keeps them.
-const storageKey = 'litellm-docs-ask-ai';
-const maxStoredTurns = 20;
+// IndexedDB holds the conversation; sessionStorage only identifies this tab's chat.
 
 export const commonQuestions = [
   'How do I set up the LiteLLM proxy?',
@@ -28,21 +26,6 @@ export function useAskAI() {
   return useContext(AskAIContext);
 }
 
-function readStored() {
-  try {
-    const stored = JSON.parse(window.sessionStorage.getItem(storageKey) || 'null');
-    if (!stored || typeof stored !== 'object') return null;
-    const turns = (Array.isArray(stored.turns) ? stored.turns : []).filter(turn =>
-      turn && typeof turn.question === 'string' && typeof turn.answer === 'string' && Array.isArray(turn.sources) &&
-      turn.sources.every(source => source && isContentUrl(source.url)));
-    return {
-      open: stored.open === true,
-      turns: turns.slice(-maxStoredTurns),
-      traceContext: typeof stored.traceContext === 'string' ? stored.traceContext : undefined,
-    };
-  } catch { return null; }
-}
-
 export function AskAIProvider({children}) {
   const [open, setOpenState] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -58,6 +41,7 @@ export function AskAIProvider({children}) {
   const [progress, setProgress] = useState('Searching documentation…');
   const [copied, setCopied] = useState(false);
   const controller = useRef(null), traceContext = useRef(undefined), turnsRef = useRef([]), askingRef = useRef(false);
+  const restoration = useRef(null), panelTouched = useRef(false);
   const pendingRef = useRef(''), copiedTimer = useRef(null);
   const askUrl = useBaseUrl('/api/docs/ask');
   turnsRef.current = turns;
@@ -65,29 +49,32 @@ export function AskAIProvider({children}) {
 
   // Restore after hydration so the server and first client render match.
   useEffect(() => {
-    const stored = readStored();
-    if (stored) {
-      setOpenState(stored.open); setTurns(stored.turns); traceContext.current = stored.traceContext;
-    }
-    setHydrated(true);
-    return () => {controller.current?.abort(); clearTimeout(copiedTimer.current);};
+    let cancelled = false;
+    restoration.current = readConversation().then(stored => {
+      if (cancelled) return;
+      if (stored) {
+        if (!panelTouched.current) setOpenState(stored.open);
+        turnsRef.current = stored.turns;
+        setTurns(stored.turns); traceContext.current = stored.traceContext;
+      }
+      setHydrated(true);
+    });
+    return () => {cancelled = true; controller.current?.abort(); clearTimeout(copiedTimer.current);};
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      window.sessionStorage.setItem(storageKey, JSON.stringify({
-        open, turns: turns.slice(-maxStoredTurns), traceContext: traceContext.current,
-      }));
-    } catch { /* storage can be blocked; the chat still works for this page view */ }
+    void saveConversation({open, turns, traceContext: traceContext.current});
   }, [hydrated, open, turns]);
 
   const setOpen = useCallback(value => {
+    panelTouched.current = true;
     setOpenState(value);
     if (value) setFocusRequest(count => count + 1);
   }, []);
-  const closePanel = useCallback(() => setOpenState(false), []);
+  const closePanel = useCallback(() => {panelTouched.current = true; setOpenState(false);}, []);
   const toggle = useCallback(() => {
+    panelTouched.current = true;
     setOpenState(current => !current);
     setFocusRequest(count => count + 1);
   }, []);
@@ -98,15 +85,18 @@ export function AskAIProvider({children}) {
     setPendingQuestion(''); setStreamedAnswer(''); setStreamedSources([]);
   }, []);
 
-  const newChat = useCallback(() => {
+  const newChat = useCallback(async () => {
+    await restoration.current;
     controller.current?.abort(); askingRef.current = false; setAsking(false); setPendingQuestion('');
     traceContext.current = undefined;
+    turnsRef.current = [];
     setTurns([]); setDraft(''); setError(''); setFailedQuestion('');
     setStreamedAnswer(''); setStreamedSources([]);
     setFocusRequest(count => count + 1);
   }, []);
 
   const ask = useCallback(async question => {
+    await restoration.current;
     if (typeof question !== 'string' || !question.trim() || askingRef.current) return;
     const pending = new AbortController();
     controller.current?.abort(); controller.current = pending;

@@ -106,7 +106,6 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
         }
       } : undefined;
       const result = await answerQuestion({question: question.trim(), history, index, documents, config,
-        answerStyle: service ? 'say-it' : undefined,
         traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
         signal: requestSignal, fetchImpl, onEvent});
       if (streaming && result.status === 200) {
