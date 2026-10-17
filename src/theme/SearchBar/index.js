@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
-import {Search, Sparkles, BookOpen, FileText, History, CornerDownLeft, X} from 'lucide-react';
+import {Search, BookOpen, FileText, History, CornerDownLeft, X} from 'lucide-react';
 import styles from './styles.module.css';
 import {sourceLabel, sourceDetail} from '../../../search/content';
 import {useAskAI} from '@site/src/components/AskAI/AskAIContext';
@@ -156,10 +156,6 @@ export default function SearchBar() {
     if (open) dialog.current?.querySelector(`[data-result="${selected}"]`)?.scrollIntoView({block: 'nearest'});
   }, [selected, open]);
 
-  const toggle = <div className={styles.tabs} role="group" aria-label="Search mode">
-    <button type="button" aria-pressed="true"><Search size={12}/>Search</button>
-    <button type="button" aria-pressed="false" onClick={() => openAI(query.trim() || undefined)}><Sparkles size={12}/>Ask AI</button>
-  </div>;
   return <>
     <button className={styles.trigger} onClick={() => window.dispatchEvent(new Event(openEvent))} aria-label="Search for anything..." title={`Search (${shortcut})`} aria-keyshortcuts="Meta+k Control+k">
       <Search size={18}/><span>Search for anything...</span><kbd>{shortcut}</kbd>
@@ -172,7 +168,6 @@ export default function SearchBar() {
             placeholder="Search for anything..." aria-label="Search documentation" aria-controls="docs-search-results"
             aria-activedescendant={results.length ? `docs-result-${selected}` : undefined}
             role="combobox" aria-expanded={!!results.length} aria-autocomplete="list"/>
-          {toggle}
           <button type="button" className={styles.close} onClick={close} aria-label="Close search"><X size={18}/></button>
         </header>
         <button className={styles.askCard} onClick={() => openAI(query.trim() || undefined)}>

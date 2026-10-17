@@ -11,11 +11,6 @@
 .searchIcon {color:var(--search-muted);flex-shrink:0}
 .header input {width:100%;flex:1;min-width:0;min-height:38px;padding:6px 0;border:0;outline:0;background:none;color:var(--search-text);font:inherit;box-shadow:none}
 .header input::placeholder {color:var(--search-muted)}
-.tabs {display:flex;flex-shrink:0;padding:2px;margin-left:auto;border:1px solid transparent;border-radius:6px;background:var(--search-hover)}
-.tabs button {display:flex;align-items:center;justify-content:center;gap:4px;height:24px;padding:0 8px;border:0;border-radius:4px;background:none;color:var(--search-muted);font-size:12px;line-height:18px;font-weight:600;white-space:nowrap}
-.tabs button[aria-pressed='true'] {background:var(--search-bg);color:var(--search-text);box-shadow:0 1px 3px #0002}
-:global([data-theme='dark']) .tabs {border-color:#313131;background:none}
-:global([data-theme='dark']) .tabs button[aria-pressed='true'] {background:#313131;box-shadow:none}
 .close {display:none;align-items:center;justify-content:center;flex-shrink:0;padding:0;border:0;background:none;color:var(--search-muted)}
 .askCard {display:flex;align-items:center;gap:8px;min-height:44px;flex-shrink:0;margin:0 20px 16px;padding:8px 16px;border:1px solid var(--search-border);border-radius:8px;background:none;color:var(--search-text);text-align:left;font-size:16px;line-height:24px}
 .askCard img {width:20px;height:20px;object-fit:contain}

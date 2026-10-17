@@ -1,8 +1,9 @@
 import React, {useEffect, useRef} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {Sparkles, SquarePen, Copy, Check, X, Send, Square, MessageCircle} from 'lucide-react';
+import {Sparkles, SquarePen, Copy, Check, X, Send, Square} from 'lucide-react';
 import {useAskAI, commonQuestions} from './AskAIContext';
+import {useSalesForm} from '@site/src/components/SalesForm';
 import {mapCitations} from '../../../search/citations.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
 import styles from './styles.module.css';
@@ -29,11 +30,6 @@ function Sources({sources}) {
       </a>;
     })}
   </div>;
-}
-
-function openCrispChat() {
-  window.$crisp && window.$crisp.push(['do', 'chat:show']);
-  window.$crisp && window.$crisp.push(['do', 'chat:open']);
 }
 
 // Keeps the panel's top edge under the sticky navbar, including while an announcement bar
@@ -68,6 +64,7 @@ function useNavbarOffset(active) {
 export default function AskAIPanel() {
   const {open, closePanel, ask, stop, newChat, retry, copyConversation, turns, asking, pendingQuestion, streamedAnswer,
     streamedSources, progress, error, draft, setDraft, copied, focusRequest} = useAskAI();
+  const salesForm = useSalesForm();
   const composer = useRef(null), body = useRef(null), latestTurn = useRef(null), handledFocus = useRef(0), wasAsking = useRef(false);
 
   useNavbarOffset(open);
@@ -145,7 +142,9 @@ export default function AskAIPanel() {
       {error && <div role="alert" className={styles.error}><p>{error}</p><button type="button" onClick={retry}>Retry question</button></div>}
     </div>
     <footer className={styles.footer}>
-      <p className={styles.human}>Need a person? <button type="button" onClick={openCrispChat}><MessageCircle size={13} aria-hidden="true"/>Chat with the team</button></p>
+      <p className={styles.human}>Need a person? <button type="button" onClick={() => salesForm.open({source: 'ask-ai-panel'})}>Talk to sales</button>
+        {' '}or ask the community on <a href="https://litellmossslack.slack.com/" target="_blank" rel="noopener noreferrer">Slack</a>
+        {' '}or <a href="https://discord.com/invite/wuPM9dRgDw" target="_blank" rel="noopener noreferrer">Discord</a>.</p>
       <form className={styles.composer} onSubmit={event => {event.preventDefault(); submit();}}>
         <textarea ref={composer} aria-label="Ask anything about LiteLLM" placeholder={turns.length ? 'Ask a follow-up…' : 'Ask anything about LiteLLM…'} value={draft} maxLength={500} rows={1} disabled={asking}
           onChange={event => setDraft(event.target.value)}

@@ -44,9 +44,9 @@
 .error button:hover {text-decoration:underline}
 
 .footer {flex-shrink:0;padding:10px 16px 14px;border-top:1px solid var(--ai-border)}
-.human {display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 8px;color:var(--ai-muted);font-size:12px}
-.human button {display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:none;color:var(--ai-accent-ink);font-size:12px;font-weight:600}
-.human button:hover {text-decoration:underline}
+.human {margin:0 0 8px;color:var(--ai-muted);font-size:12px;line-height:1.5}
+.human button,.human a {padding:0;border:0;background:none;color:var(--ai-accent-ink);font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.human button:hover,.human a:hover {text-decoration:underline}
 .composer {display:flex;align-items:flex-end;gap:4px;padding:4px 4px 4px 4px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);background:var(--ai-bg)}
 .composer:focus-within {border-color:var(--ai-accent)}
 .composer textarea {flex:1;min-width:0;height:36px;max-height:120px;padding:6px 8px;border:0;outline:0;resize:none;background:none;color:var(--ai-text);font-family:inherit;font-size:14px;line-height:24px;box-shadow:none}
