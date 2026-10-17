@@ -145,6 +145,8 @@ The variables are chosen per agent. Claude Code gets `ANTHROPIC_BASE_URL` (the p
 lite claude --skip-verify --resume
 ```
 
+`lite claude --sync-models` (or `LITELLM_CLAUDE_SYNC_MODELS=1`) fills Claude Code's `/model` picker with the chat models your key can call, each under its own proxy id, by writing the proxy's model list to `~/.litellm/claude_model_picker.json` as a `modelPicker` setting and passing that file as `--settings`. `--no-sync-models` turns an exported variable off for one launch, and `--skip-verify` skips the sync along with the key check. See [Fill the Picker from the `lite` CLI](../tutorials/claude_non_anthropic_models.md#7-fill-the-picker-from-the-lite-cli-with---sync-models) for how it relates to Claude Code's own gateway model discovery.
+
 To pin the model, pass the agent's own model flag (`lite claude --model my-proxy-model` or `lite codex -m my-proxy-model`) or export the variable the agent reads (`ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` for Claude Code); the wrapper preserves anything you already set. Whatever model the agent requests must exist on the proxy, since requests land on the proxy's `/v1/messages` (Anthropic) or `/v1/chat/completions` and `/v1/responses` (OpenAI) endpoints.
 
 ### The `lite login` credential
