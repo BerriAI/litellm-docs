@@ -145,6 +145,7 @@ const sidebars = {
             "observability/opentelemetry_v2_migration",
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
+            "observability/nops",
             "observability/signoz",
           ],
         },
