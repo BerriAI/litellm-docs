@@ -1,5 +1,6 @@
 const {createReranker} = require('./rerank');
-const {allowAI, send, readBody, loopback, MAX_BODY_BYTES} = require('./api');
+const {allowAI, send, readBody, loopback} = require('./api');
+const MAX_BODY_BYTES = 16384;
 
 function validSearchBody(body) {
   return body && typeof body === 'object' && !Array.isArray(body) &&
@@ -37,7 +38,7 @@ function createRerankHandler(options) {
     const disconnected = () => {if (!res.writableEnded) controller.abort();};
     res.on('close', disconnected);
     try {
-      const parsed = await readBody(req, AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]));
+      const parsed = await readBody(req, AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]), MAX_BODY_BYTES);
       if (parsed.error) return send(res, parsed.status, {error: parsed.error});
       if (!validSearchBody(parsed.body)) return send(res, 400, {error: 'Send a query of 1 to 500 characters and a valid content type.'});
       const {query, type = 'all'} = parsed.body;

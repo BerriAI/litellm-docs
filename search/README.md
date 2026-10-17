@@ -97,6 +97,26 @@ This uses the existing model credentials and makes the normal research and answe
 
 For Vercel, add the same tracing environment variables as server secrets and redeploy. OpenTelemetry runs only in the API function. Each question flushes its spans before the function returns, with a bounded export timeout
 
+## Ask AI conversation API
+
+`POST /api/docs/ask` accepts a non-empty `question` and an optional `history` array in chronological order. Each history entry contains a non-empty `question` and an optional non-empty `answer`. Question-only callers remain supported. The browser sends every completed question and answer, and the trace verification command uses the same history format.
+
+```json
+{
+  "question": "Can I reset just that team member's spend?",
+  "history": [
+    {
+      "question": "Why was a team member blocked after I added a budget?",
+      "answer": "Existing cycle spend counts against a budget added later."
+    }
+  ]
+}
+```
+
+Ask AI adds no question-length, history-length, or request-body byte cap and does not silently shorten the conversation. Prior answers are untrusted context for understanding follow-ups; the agent reads documentation again to verify product facts and produce fresh citations. Callers cannot supply system roles, tools, model settings, or documentation evidence.
+
+The hosting platform's request-size limit and the model's context window still apply. A recognized provider context-window rejection returns HTTP 422 with a request to start a new conversation or send less context; after streaming starts, it sends the same explanation as an `error` event. The browser keeps the failed question for editing or retry, and **Clear** starts a new conversation. Request rate and concurrency controls, the five-second body-read timeout, and the 50-second answer deadline remain in place; the deployed Vercel function allows 60 seconds overall. These operational controls do not trim questions or history. The separate keyword-search endpoint retains its existing query validation.
+
 ## Model routing and caching
 
 Every model call requests Haiku 5.5 with LiteLLM's native ordered fallbacks to GPT-6 Luna and GPT-6.1 Sol. The backend fixes the aliases and fallback parameters. Luna uses `reasoning_effort=none`; Sol uses `low`. Per-provider timeouts leave room for the two fallbacks within the request deadline. The agent chooses when to search, read, or finish research. `search_docs` accepts one to three queries and returns results grouped by query, with each page title first. `read_docs` returns every indexed passage and first-party link from the selected pages without truncation, with requested passages first. This retains prerequisites and request examples that may appear under other headings. Tool results stay private; the final answer receives all the evidence read, then streams once.

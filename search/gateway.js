@@ -44,7 +44,14 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
         }),
       });
       span.setAttribute('http.response.status_code', response.status);
-      if (!response.ok) throw gatewayError('GatewayHTTPError', 'Gateway request failed');
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        const codes = [body?.error?.code, body?.error?.type];
+        if (codes.some(code => typeof code === 'string' && /context[_ -]?(?:length|window)[_ -]?exceeded/i.test(code))) {
+          throw gatewayError('GatewayContextWindowExceeded', 'Conversation exceeds the model context window');
+        }
+        throw gatewayError('GatewayHTTPError', 'Gateway request failed');
+      }
       let result, message, finish, pending = '';
       const capture = () => {
         record(span, result, message, finish);

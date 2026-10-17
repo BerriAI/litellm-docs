@@ -231,7 +231,7 @@ export default function SearchBar() {
     controller.current?.abort(); controller.current = pending;
     setAsking(true); setPendingQuestion(question); setDraft(''); setAiError(''); setFailedQuestion('');
     setStreamedAnswer(''); setStreamedSources([]); setProgress('Searching documentation…');
-    const history = turns.slice(-4).map(turn => ({question: turn.question}));
+    const history = turns.map(({question, answer}) => ({question, answer}));
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
         body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});
@@ -298,7 +298,7 @@ export default function SearchBar() {
       <section ref={dialog} className={`${styles.dialog} ${mode === 'ai' ? styles.chatDialog : ''} ${mode === 'ai' && (turns.length || asking || aiError) ? styles.chatActive : ''}`} role="dialog" aria-modal="true" aria-label="Search LiteLLM documentation" onKeyDown={onKeyDown}>
         <header className={styles.header}>
           {mode === 'search' ? <><Search className={styles.searchIcon} size={20}/>
-            <input ref={input} value={query} maxLength={500} onChange={event => changeQuery(event.target.value)}
+            <input ref={input} value={query} onChange={event => changeQuery(event.target.value)}
               placeholder="Search for anything..." aria-label="Search documentation" aria-controls="docs-search-results"
               aria-activedescendant={!loading && results.length ? `docs-result-${selected}` : undefined}
               role="combobox" aria-expanded={!!query.trim()} aria-autocomplete="list"/>
@@ -357,7 +357,7 @@ export default function SearchBar() {
             {aiError && <div role="alert" className={styles.error}>{aiError}<button onClick={() => ask(failedQuestion)}>Retry question</button></div>}
           </div>
           <form className={styles.composer} onSubmit={event => {event.preventDefault(); ask();}}>
-            <textarea ref={composer} aria-label="Ask anything about LiteLLM..." placeholder="Ask anything about LiteLLM..." value={draft} maxLength={500} rows={1} disabled={asking}
+            <textarea ref={composer} aria-label="Ask anything about LiteLLM..." placeholder="Ask anything about LiteLLM..." value={draft} rows={1} disabled={asking}
               onChange={event => setDraft(event.target.value)} onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); ask();}}}/>
             {asking ? <button type="button" onClick={event => {event.preventDefault(); stopAnswer();}} aria-label="Stop answer"><Square size={16} fill="currentColor"/></button> : <button type="submit" disabled={!draft.trim()} aria-label="Send message"><Send size={18}/></button>}
           </form>
