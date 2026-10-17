@@ -14,7 +14,7 @@ Open **MCP Servers**, click **Add New MCP Server**, and search for the service n
 | GPT Image | `https://openai.mcp.acedata.cloud/mcp` | Image generation and editing through the OpenAI MCP server, which also exposes chat, embedding, and audio tools | [OpenAIMCP](https://github.com/AceDataCloud/OpenAIMCP) |
 | Nano Banana or NanoBanana | `https://nanobanana.mcp.acedata.cloud/mcp` | Image generation, editing, and task retrieval | [NanoBananaMCP](https://github.com/AceDataCloud/NanoBananaMCP) |
 
-The discovery entries require a LiteLLM version containing the media catalog change. If your installation has no matching entry, use **Custom Server** with the endpoint above, **Streamable HTTP**, and **Bearer Token**. This manual route does not mean the entry is already included in your installed release.
+The discovery entries require a LiteLLM version containing [the media catalog integration](https://github.com/BerriAI/litellm/pull/47149). If your installation has no matching entry, use **Custom Server** with the endpoint above, **Streamable HTTP**, and **Bearer Token**. This manual route does not mean the entry is already included in your installed release.
 
 The following image is LiteLLM's existing server-registration form. It is an official product reference, not an Ace connection result or a screenshot of the new discovery entries.
 

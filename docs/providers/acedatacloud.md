@@ -111,6 +111,10 @@ curl http://localhost:4000/v1/responses \
 
 In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, select `acedatacloud/gpt-6-luna`, and enter your Ace Data Cloud API key.
 
+![Ace provider and model selection in a candidate LiteLLM Admin UI](https://raw.githubusercontent.com/acedatacloud-dev/litellm/ad0434f8accd07e5f9e609885df8b5dce1a58d7e/ui-selected-after-light.png)
+
+This is a real isolated candidate screenshot from October 11, 2026, with a `vunknown` source-build header and an empty API-key field. It shows the selection controls before official release. It does not prove credential storage, model output, or current release availability.
+
 ## Models and cost tracking
 
 The initial priced model is `acedatacloud/gpt-6-luna`, using the standard service tier. You can use other model IDs documented for Ace Data Cloud's OpenAI-compatible endpoints with the same prefix, but configure custom pricing for models or service tiers without an Ace Data Cloud catalog entry. Check endpoint eligibility and model-specific capabilities in the current catalog. Models served only by the separate Claude Messages API are outside this integration.
