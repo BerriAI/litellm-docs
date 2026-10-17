@@ -50,6 +50,7 @@ test('gateway requests fix model options and keep credentials out of prompt data
     assert.equal(body.max_fallbacks, 2);
     assert.equal(body.num_retries, 0);
     assert.equal(body.reasoning_effort, 'low');
+    assert.equal(body.timeout, 24);
     assert.deepEqual(body.cache, {'no-cache': true, 'no-store': true});
     assert.equal(request.redirect, 'error');
     if (body.tools) assert.deepEqual(body.tools.map(tool => tool.function.name), ['search_docs', 'read_docs', 'finish_research']);

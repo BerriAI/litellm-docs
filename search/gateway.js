@@ -37,7 +37,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
           {model: FALLBACKS[0], reasoning_effort: 'none'},
           {model: FALLBACKS[1], reasoning_effort: 'none'},
         ], num_retries: 0, max_fallbacks: 2,
-          timeout: Math.max(1, Math.floor((timeout / 1000 - 1) / 3)), reasoning_effort: 'low',
+          timeout: Math.max(1, Math.floor(timeout / 1000 - 1)), reasoning_effort: 'low',
           cache: {'no-cache': true, 'no-store': true}, messages,
           ...(toolDefinitions ? {tools: toolDefinitions, tool_choice: toolChoice} : {}),
           ...(onDelta ? {stream: true, stream_options: {include_usage: true}} : {}),
