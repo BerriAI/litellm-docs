@@ -30,6 +30,16 @@ Sets up the auto router end to end, from picking models to verifying routing dec
 
 <Command code="curl -fsSL https://docs.litellm.ai/skills/auto-router" id="skill-auto-router" note="Prints the skill. Save it to your agent's skills folder or paste it into the chat." />
 
+### Migrate from another gateway
+
+Each skill reads your existing gateway's config or code, writes a LiteLLM `config.yaml` that keeps the model names your apps already send, and gives you the commands that recreate keys and teams.
+
+<Command code="curl -fsSL https://docs.litellm.ai/skills/bifrost-migration" id="skill-bifrost-migration" note="Converts a Bifrost config.json and keeps your sk-bf- key values. See the Bifrost migration guide." />
+
+<Command code="curl -fsSL https://docs.litellm.ai/skills/openrouter-migration" id="skill-openrouter-migration" note="Puts LiteLLM in front of OpenRouter, then moves chosen models to direct providers. See the OpenRouter migration guide." />
+
+Step-by-step versions of the same migrations: [from Bifrost](./migrate/bifrost.md) and [from OpenRouter](./migrate/openrouter.md).
+
 ## Docs for agents
 
 | Resource | URL | Use it for |
