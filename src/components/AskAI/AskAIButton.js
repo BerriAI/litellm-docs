@@ -3,7 +3,7 @@ import {Sparkles} from 'lucide-react';
 import {useAskAI} from './AskAIContext';
 import styles from './button.module.css';
 
-// Navbar toggle for the docked Ask AI panel. Below 997px only the icon shows.
+// Navbar toggle for the docked Ask AI panel. Below 1100px only the icon shows.
 export default function AskAIButton({className}) {
   const {open, toggle} = useAskAI();
   return <button type="button" data-ask-ai-trigger className={[styles.button, open ? styles.active : '', className].filter(Boolean).join(' ')}

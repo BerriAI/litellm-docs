@@ -87,7 +87,8 @@
 .marks {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 16px;
   flex: none;
 }
 

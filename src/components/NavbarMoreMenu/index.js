@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {useColorMode} from '@docusaurus/theme-common';
-import {ExternalLink, Monitor, MoreHorizontal, Moon, Sun} from 'lucide-react';
+import {ExternalLink, Monitor, MoreHorizontal, Moon, ShieldCheck, Sun} from 'lucide-react';
 import styles from './styles.module.css';
 
 // The Discord mark, same path as the old navbar icon link; it takes the text
@@ -95,15 +95,27 @@ export default function NavbarMoreMenu() {
           <a
             className={styles.item}
             role="menuitem"
-            href="https://www.litellm.ai/support"
+            href="https://discord.com/invite/wuPM9dRgDw"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => close(false)}>
             <span className={styles.marks}>
               <DiscordMark />
+            </span>
+            <span className={styles.label}>Discord</span>
+            <ExternalLink className={styles.external} size={14} aria-hidden="true" />
+          </a>
+          <a
+            className={styles.item}
+            role="menuitem"
+            href="https://litellmossslack.slack.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => close(false)}>
+            <span className={styles.marks}>
               <img src={slackSrc} width="16" height="16" alt="" />
             </span>
-            <span className={styles.label}>Discord and Slack</span>
+            <span className={styles.label}>Slack</span>
             <ExternalLink className={styles.external} size={14} aria-hidden="true" />
           </a>
           <a
@@ -113,6 +125,9 @@ export default function NavbarMoreMenu() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => close(false)}>
+            <span className={styles.marks}>
+              <ShieldCheck size={16} aria-hidden="true" />
+            </span>
             <span className={styles.label}>Trust Center</span>
             <ExternalLink className={styles.external} size={14} aria-hidden="true" />
           </a>

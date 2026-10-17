@@ -58,15 +58,19 @@
 .note {margin:6px 0 0;color:var(--ai-muted);font-size:11px}
 
 /* Drawer: overlays the right edge, no page reflow */
-@media(min-width:997px) and (max-width:1199px) {
+/* Tablets and narrow desktops: a drawer over the page */
+@media(min-width:641px) and (max-width:1199px) {
   .panel {box-shadow:-12px 0 32px -16px rgba(8,11,38,.25)}
 }
-/* Phones and small tablets: full-screen sheet */
+/* Touch screens: 16px input text so iOS does not zoom in on focus */
 @media(max-width:996px) {
+  .composer textarea {font-size:16px}
+}
+/* Phones: full-screen sheet */
+@media(max-width:640px) {
   .panel {top:0;width:100%;height:100dvh;border-left:0;z-index:1000;animation-name:rise}
   .header {padding-top:max(10px,env(safe-area-inset-top,0px))}
   .footer {padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
-  .composer textarea {font-size:16px}
 }
 @keyframes rise {from {opacity:0;transform:translateY(12px)} to {opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce) {.panel {animation:none}}

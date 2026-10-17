@@ -3,7 +3,7 @@
 .button:hover {background:var(--aurora-tint,var(--ifm-color-emphasis-100))}
 .button:focus-visible {outline:2px solid var(--ifm-color-primary);outline-offset:2px}
 .button[aria-pressed='true'],.active {border-color:var(--aurora-accent-line,var(--ifm-color-primary));background:var(--aurora-tint,var(--ifm-color-emphasis-100));color:var(--aurora-accent-ink,var(--ifm-color-primary))}
-@media(max-width:996px) {
+@media(max-width:1099px) {
   .button {width:36px;padding:0}
   .label {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }

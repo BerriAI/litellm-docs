@@ -157,11 +157,12 @@ body,
     width: auto;
   }
 
+  /* The links keep their natural width; the search box gives way instead */
   .navbar__center-col {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    flex: 1;
+    flex: 0 0 auto;
     gap: 2px;
   }
 
@@ -173,10 +174,17 @@ body,
   .navbar__right-col {
     display: flex;
     align-items: center;
-    flex: 0 0 auto;
+    justify-content: flex-end;
+    flex: 1 1 0;
+    min-width: 0;
     gap: 0.5rem;
-    margin-left: auto;
+    margin-left: 16px;
     margin-right: 1rem;
+  }
+
+  /* Only the search box shrinks; Ask AI, GitHub and More keep their size */
+  .navbar__right-col > :not([class*='navbarSearchContainer']) {
+    flex-shrink: 0;
   }
 
   /* Desktop changes the color mode from the More menu */
@@ -2445,8 +2453,11 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 }
 
 @media (min-width: 997px) {
+  /* Up to 220px wide, shrinking into whatever room the links leave */
   .navbar [class*='navbarSearchContainer'] {
-    width: 220px;
+    flex: 0 1 220px;
+    min-width: 34px;
+    container-type: inline-size;
   }
 
   .navbar [class*='navbarSearchContainer'] > button {
@@ -2469,6 +2480,14 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 
   .navbar [class*='navbarSearchContainer'] > button > span {
     display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button > kbd {
+    margin-left: auto;
   }
 
   .navbar [class*='navbarSearchContainer'] > button > kbd {
@@ -2486,25 +2505,20 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   }
 }
 
-/* Tight range: the box drops its text and keeps the search icon and the
-   shortcut hint; under 1101px only the icon stays. */
-@media (min-width: 997px) and (max-width: 1199px) {
-  .navbar [class*='navbarSearchContainer'] {
-    width: auto;
-  }
-
+/* As the box narrows it drops the placeholder, then the shortcut hint,
+   leaving a square search icon. */
+@container (max-width: 179px) {
   .navbar [class*='navbarSearchContainer'] > button > span {
     display: none;
   }
 }
 
-@media (min-width: 997px) and (max-width: 1100px) {
+@container (max-width: 89px) {
   .navbar [class*='navbarSearchContainer'] > button > kbd {
     display: none;
   }
 
   .navbar [class*='navbarSearchContainer'] > button {
-    width: 34px;
     justify-content: center;
     padding: 0;
   }

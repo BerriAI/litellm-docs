@@ -1,5 +1,5 @@
 /* Page layout while the Ask AI panel is open (set on <html> by AskAIPanel).
-   Wide screens reserve room for the docked panel; narrower screens let it overlay the page. */
+   Wide screens reserve room for the docked panel; tablets let it overlay the page; phones get a full-screen sheet. */
 @media (min-width: 1200px) {
   html[data-ask-ai='open'] .theme-layout-main,
   html[data-ask-ai='open'] .theme-layout-footer {
@@ -22,7 +22,7 @@
 }
 
 /* !important: Docusaurus leaves an inline overflow: visible on body after the mobile sidebar closes */
-@media (max-width: 996px) {
+@media (max-width: 640px) {
   html[data-ask-ai='open'] body {
     overflow: hidden !important;
   }
