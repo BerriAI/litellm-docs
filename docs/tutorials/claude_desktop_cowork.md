@@ -44,7 +44,7 @@ Claude Desktop is a native app, so it registers as a public client (PKCE, no cli
 
 In the Entra admin center create an app registration for accounts in your directory only, then under **Authentication** add a **Mobile and desktop applications** platform with the custom redirect URI `http://127.0.0.1/callback`. Use `127.0.0.1` rather than `localhost`, keep the `/callback` path, and add it under that platform specifically: it is the only one Entra lets use any local port, which the app needs because it picks a free port at sign-in time. No client secret or API permissions are needed. Copy the **Application (client) ID** and **Directory (tenant) ID**.
 
-The issuer is `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` and the signing keys are at `https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys`. The stable user id claim is `oid`. To map users to LiteLLM teams by group, add a **groups** claim to the ID token under **Token configuration**; it carries group object ids. [Microsoft Entra ID](../proxy/entra_id_sso.md#claude-desktop-sso-with-oidc) walks through the whole Entra setup with screenshots, from app assignment to checking user and team attribution in the logs.
+The issuer is `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` and the signing keys are at `https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys`. The stable user id claim is `oid`. To map users to LiteLLM teams by group, add a **groups** claim to the ID token under **Token configuration**; it carries group object ids. [Entra for Claude Desktop](../proxy/entra_id_claude_desktop.md) walks through the whole Entra setup with screenshots, from app assignment to checking user and team attribution in the logs.
 
 </TabItem>
 <TabItem value="okta" label="Okta">
@@ -357,7 +357,7 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 
 ## Related
 
-- [Microsoft Entra ID](../proxy/entra_id_sso.md) for a step-by-step Entra setup, including group-to-team mapping
+- [Entra for Claude Desktop](../proxy/entra_id_claude_desktop.md) for a step-by-step Entra setup, including group-to-team mapping
 - [JWT auth](../proxy/token_auth.md) for every `litellm_jwtauth` option, including role mappings and JWT-to-virtual-key mapping
 - [Virtual keys](../proxy/virtual_keys.md)
 - [MCP gateway](../mcp.md), [MCP access control](../mcp_control.md), and [MCP OAuth passthrough](../mcp_oauth_passthrough.md)

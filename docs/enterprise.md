@@ -45,7 +45,7 @@ Everything below is enabled by the license key. Each item links to its setup gui
 ### Security and access
 
 - **[SSO for the Admin UI](./proxy/admin_ui_sso.md)**. Okta, Microsoft Entra ID, Google Workspace, and any OIDC/SAML provider
-- **[Microsoft Entra ID sign-in](./proxy/entra_id_sso.md)**. Admin UI sign-in with SAML app roles, and Claude Desktop sign-in with Entra ID groups mapped to LiteLLM teams
+- **[Microsoft Entra ID sign-in](./proxy/entra_id_sso.md)**. Admin UI sign-in with SAML or OIDC and Entra app roles. For Claude Desktop sign-in with Entra ID groups mapped to LiteLLM teams, see [Entra for Claude Desktop](./proxy/entra_id_claude_desktop.md)
 - **[Microsoft Entra ID group sync](./tutorials/msft_sso.md)**. Sync Entra ID groups and members to LiteLLM teams at sign-in
 - **[JWT-based Authentication](./proxy/token_auth.md)**. Authenticate requests with your identity provider's tokens
 - **[Audit Logs with retention policies](./proxy/multiple_admins.md)**. Track every admin action and key-level change

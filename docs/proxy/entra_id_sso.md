@@ -1,29 +1,28 @@
 ---
 title: Microsoft Entra ID
 sidebar_label: Microsoft Entra ID
-description: Set up Microsoft Entra ID sign-in for the LiteLLM Admin UI with SAML, and for Claude Desktop with OIDC and JWT auth. Map Entra app roles to LiteLLM roles and Entra groups to LiteLLM teams, then check that requests are attributed to the right user and team.
+description: Set up Microsoft Entra ID sign-in for the LiteLLM Admin UI with SAML or OIDC. Map Entra app roles to LiteLLM roles and Entra groups to LiteLLM teams.
 ---
 
 import Image from '@theme/IdealImage';
 
 # Microsoft Entra ID
 
-This guide connects Microsoft Entra ID to LiteLLM in two places:
+This guide connects Microsoft Entra ID to the LiteLLM Admin UI. Users click **Login with SSO** and sign in with their Microsoft work account. An Entra app role sets the LiteLLM role of each user.
 
-- **Admin UI sign-in with SAML.** Members of your administrator group click **Login with SSO** and land in the dashboard as LiteLLM admins. An Entra app role sets each user's LiteLLM role.
-- **Claude Desktop sign-in with OIDC.** Users sign in to Claude Desktop with their Microsoft work account. LiteLLM checks the Entra ID token on every request, maps the user's Entra groups to LiteLLM teams, and applies those teams' models, budgets and rate limits.
+You can connect Entra in two ways. Pick one:
 
-The two parts are independent, so you can set up either one on its own. Each uses its own Entra application.
+| Method | Use it when | Section |
+|---|---|---|
+| SAML enterprise application | You want app roles and group claims in a SAML assertion | [Admin UI SSO with SAML](#admin-ui-sso-with-saml) |
+| OIDC app registration | You want Microsoft Graph group sync, or you already use OIDC | [Admin UI SSO with OIDC](#admin-ui-sso-with-oidc) |
+
+Entra can also sign in users to clients that call the gateway. These guides are separate:
+
+- [Entra sign-in for Claude Desktop](./entra_id_claude_desktop.md)
+- [Entra sign-in for Claude Code and Codex](./entra_id_cli_sso.md)
 
 For a comparison of SSO, SCIM, group-to-team mapping and JWT auth, see [Identity overview](./identity_overview.md).
-
-| You want to | Use | Section |
-|---|---|---|
-| Let admins sign in to the LiteLLM dashboard with Entra | SAML enterprise application | [Admin UI SSO with SAML](#admin-ui-sso-with-saml) |
-| Let users sign in to Claude Desktop and send requests through LiteLLM | OIDC app registration plus LiteLLM JWT auth | [Claude Desktop SSO with OIDC](#claude-desktop-sso-with-oidc) |
-| Let developers sign in to Claude Code and Codex CLI with Entra | Microsoft SSO on the proxy, the Claude Code gateway and `lite login --pkce` | [Entra sign-in for Claude Code and Codex](./entra_id_cli_sso.md) |
-| Admin UI sign-in with OIDC and Microsoft Graph group sync instead of SAML | `MICROSOFT_CLIENT_ID` and related settings | [Microsoft Entra ID group sync](../tutorials/msft_sso.md) |
-| Provision and deprovision users and teams from Entra | SCIM | [SCIM with LiteLLM](../tutorials/scim_litellm.md) |
 
 Wherever this page shows `https://litellm.example.com`, use your gateway's public URL.
 
@@ -134,7 +133,7 @@ A regular security group is enough. The group does not need **Microsoft Entra ro
 
 The proxy must be able to reach Entra's metadata URL. The **Login with SSO** button uses SAML only when SAML is the only SSO provider configured, so if you also have an OIDC provider set up, check which one is active before testing.
 
-You can also set the same values with `SAML_IDP_METADATA_URL`, `SAML_SP_ENTITY_ID` and `PROXY_BASE_URL` instead of the UI. See [SAML 2.0 SSO](./saml_sso.md) for every option.
+You can also set the same values with `SAML_IDP_METADATA_URL`, `SAML_SP_ENTITY_ID` and `PROXY_BASE_URL` instead of the UI. See [Other OIDC and SAML providers](./saml_sso.md) for every option.
 
 ### 6. Test sign-in
 
@@ -168,7 +167,7 @@ The `role` claim sets the user's global LiteLLM role. To also send team membersh
 2. Set **Source attribute** to **Group ID**.
 3. Under **Advanced options**, turn on **Customize the name of the group claim**. Set **Name** to `groups` and leave **Namespace** blank.
 4. Leave **Emit groups as role claims** unchecked, and save.
-5. For each group, create a LiteLLM team whose **Team ID** is the Entra group's Object ID (see [create the team](#4-create-the-litellm-team) below).
+5. For each group, create a LiteLLM team. In LiteLLM, open **Teams > Create Team**, expand **Additional Settings**, and paste the Entra group's Object ID into **Team ID**.
 
 LiteLLM looks for a team attribute named exactly `teams`, `team_ids` or `groups`. If you keep Entra's default group claim name (`http://schemas.microsoft.com/ws/2008/06/identity/claims/groups`), set `SAML_ATTRIBUTE_TEAM_IDS` to that full name instead. See [SAML attribute mapping](./saml_sso.md#attribute-mapping).
 
@@ -186,167 +185,98 @@ LiteLLM looks for a team attribute named exactly `teams`, `team_ids` or `groups`
 
 **LiteLLM reports a missing `python3-saml` dependency.** Install `litellm[saml]` in your custom build, or use an official LiteLLM Docker image.
 
-## Claude Desktop SSO with OIDC
+## Admin UI SSO with OIDC
 
-Users sign in to Claude Desktop with their Microsoft work account, and Claude Desktop sends the Entra ID token to LiteLLM with every request. LiteLLM checks the token, creates the user on first use, maps the token's groups to LiteLLM teams, and applies those teams' models, budgets and rate limits.
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
-<EnterpriseFeature feature="JWT authentication" />
+Use this method if you want LiteLLM to sync Entra groups to LiteLLM teams through Microsoft Graph. With OIDC, LiteLLM reads app roles from the ID token.
 
-### Before you start
+### 1. Register the application
 
-- A LiteLLM deployment with a database, an HTTPS gateway URL, a working Claude model, and a license that includes JWT authentication.
-- Admin access to LiteLLM, and permission in Entra to manage app registrations, enterprise applications and groups.
-- An Entra group with a test user as a direct member. Assigning groups to applications requires Entra ID P1 or P2.
-- A supported Claude Desktop version. See [Claude Desktop (Cowork)](../tutorials/claude_desktop_cowork.md) for version notes.
+1. In the Entra admin center, open **Entra ID > App registrations > New registration**.
+2. Name the application `LiteLLM Admin UI`.
+3. Under **Redirect URI**, select **Web** and enter `https://litellm.example.com/sso/callback`. Then select **Register**.
+4. Open **Certificates & secrets > New client secret**. Copy the secret **Value**.
+5. On **Overview**, copy the **Application (client) ID** and the **Directory (tenant) ID**.
 
-### 1. Register Claude Desktop in Entra
+### 2. Set the environment variables
 
-1. In **Entra ID > App registrations**, select **New registration**. Name the application `Claude Desktop`, select **Accounts in this organizational directory only**, and click **Register**.
-2. On **Overview**, copy the **Application (client) ID** and **Directory (tenant) ID**. This guide calls them `YOUR_CLIENT_ID` and `YOUR_TENANT_ID`.
-3. Open **Authentication > Add a platform > Mobile and desktop applications**. Add `http://127.0.0.1/callback` as the redirect URI and click **Configure**. Keep the `/callback` path. Claude Desktop is a public client using PKCE, so it does not need a client secret.
-4. Open **Enterprise applications > Claude Desktop > Users and groups**. Select **Add user/group**, choose the group that should use Claude Desktop, and click **Assign**.
-5. To let only assigned users and groups sign in, open **Properties**, set **Assignment required?** to **Yes**, and click **Save**. With assignment required, a tenant admin must grant consent for the app's requested permissions.
+Set these variables on the proxy, then restart it:
 
-### 2. Add the ID token claims
-
-1. Go back to **App registrations > Claude Desktop > Token configuration**.
-2. Select **Add optional claim**, choose the **ID** token type, select `email`, and click **Add**.
-3. Select **Add groups claim**, apply these settings, and click **Save**:
-
-   | Setting | Value |
-   |---|---|
-   | Groups to include | Groups assigned to the application |
-   | ID token group value | Group ID |
-   | Emit groups as role claims | Off |
-
-Claude Desktop sends the ID token to LiteLLM, so the `groups` claim must be on the ID token. With **Groups assigned to the application**, the user must be a direct member of an assigned group; nested membership does not count.
-
-After a fresh sign-in, the ID token contains claims like these (example values):
-
-```json
-{
-  "iss": "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0",
-  "aud": "YOUR_CLIENT_ID",
-  "oid": "USER_OBJECT_ID",
-  "email": "user@example.com",
-  "groups": ["ENTRA_GROUP_OBJECT_ID"]
-}
+```bash
+MICROSOFT_CLIENT_ID="<application-client-id>"
+MICROSOFT_CLIENT_SECRET="<client-secret-value>"
+MICROSOFT_TENANT="<directory-tenant-id>"
+PROXY_BASE_URL="https://litellm.example.com"
 ```
 
-`oid` identifies the user. `groups` holds the group Object IDs that LiteLLM maps to teams.
+LiteLLM uses the global Microsoft endpoints for your tenant. For a sovereign cloud or a custom identity proxy, set the endpoints yourself:
 
-### 3. Turn on JWT auth in LiteLLM
-
-Add these settings to your proxy config, keeping your existing model and database settings. Replace `YOUR_TENANT_ID` and `YOUR_CLIENT_ID` with the values from the Claude Desktop app registration.
-
-```yaml title="config.yaml"
-general_settings:
-  enable_jwt_auth: true
-  litellm_jwtauth:
-    user_id_upsert: true
-    enforce_team_based_model_access: true
-    issuers:
-      - issuer: https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0
-        jwks_url: https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys
-        audience: YOUR_CLIENT_ID
-        user_id_jwt_field: oid
-        user_email_jwt_field: email
-        team_ids_jwt_field: groups
+```bash
+MICROSOFT_AUTHORIZATION_ENDPOINT="https://login.example.com/<tenant>/oauth2/v2.0/authorize"
+MICROSOFT_TOKEN_ENDPOINT="https://login.example.com/<tenant>/oauth2/v2.0/token"
+MICROSOFT_USERINFO_ENDPOINT="https://graph.example.com/v1.0/me"
 ```
 
-Redeploy the proxy with the new config, then check that it starts and can reach Entra's signing keys URL over HTTPS.
+### 3. Map app roles to LiteLLM roles
 
-LiteLLM checks the token's issuer, audience and signature on every request. With `user_id_upsert`, it creates the user from `oid` on their first request. It reads team IDs from `groups`, and with `enforce_team_based_model_access` a request succeeds only if one of the user's teams has access to the requested model.
+LiteLLM reads the app roles from the Entra ID token. It gives the user the LiteLLM role that matches the app role value. The Entra role replaces the role that LiteLLM has in its database for that user.
 
-Keep `audience` and `jwks_url` inside the `issuers` entry. To accept tokens only from this issuer, leave the global `JWT_PUBLIC_KEY_URL`, `JWT_AUDIENCE` and `JWT_ISSUER` environment variables unset. See [JWT auth](./token_auth.md) for every option.
+1. In the app registration, open **App roles > Create app role**.
+2. Set **Allowed member types** to **Users/Groups**. Set **Value** to one of the [LiteLLM roles](./access_control.md#global-proxy-roles):
 
-### 4. Create the LiteLLM team
-
-1. In Entra, open **Groups**, select your group, and copy its **Object ID** from **Overview**.
-2. In LiteLLM, open **Teams > Create Team**. Enter a name such as `Claude Users`, and select an organization if your deployment uses them.
-3. Expand **Additional Settings**, paste the Entra group's Object ID into **Team ID**, and click **Create Team**.
-
-   <Image img={require('../../img/entra_team_id.png')} dark={require('../../img/entra_team_id_dark.png')} alt="LiteLLM Admin UI, Teams page, with the Create Team dialog open; the Team ID field under Additional Settings is outlined and holds an Entra group Object ID" style={{width: '75%', display: 'block', margin: '0'}} />
-
-4. Open the team's **Settings > Edit Settings**. Under **Models**, select **All Anthropic models** or the specific models this group should use.
-5. Set the team's budget and rate limits, then click **Save Changes**.
-
-The LiteLLM **Team ID** must exactly match the Entra group's Object ID. The team name does not matter for the mapping, and if you leave **Team ID** blank, LiteLLM generates an unrelated ID.
-
-| Where | Value |
-|---|---|
-| Entra group Object ID | `ENTRA_GROUP_OBJECT_ID` |
-| ID token `groups` claim | `["ENTRA_GROUP_OBJECT_ID"]` |
-| LiteLLM Team ID | `ENTRA_GROUP_OBJECT_ID` |
-
-Repeat for each Entra group that needs its own models or budget. Create the teams before you test, so LiteLLM can match the group IDs in the token.
-
-### 5. Configure Claude Desktop
-
-1. In Claude Desktop, turn on **Help > Troubleshooting > Enable Developer Mode**.
-2. Open **Developer > Configure Third-Party Inference** and enter:
-
-   | Field | Value |
+   | App role value | LiteLLM role |
    |---|---|
-   | Inference provider | Gateway |
-   | Gateway base URL | `https://litellm.example.com`, without `/v1` |
-   | Credential kind | Identity provider sign-in (OIDC). Older versions show **Interactive sign-in**. |
-   | Identity provider sign-in flow | browser |
-   | OIDC Client ID | `YOUR_CLIENT_ID` |
-   | Issuer URL | `https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0` |
-   | Bearer token | ID token |
-   | Scopes | `openid profile email offline_access` |
-   | Redirect host | `127.0.0.1` |
-   | Redirect port | Leave empty |
+   | `proxy_admin` | Admin |
+   | `proxy_admin_viewer` | Admin Viewer |
+   | `internal_user` | Internal User |
+   | `internal_user_viewer` | Internal Viewer |
 
-   <Image img={require('../../img/claude_desktop_credential_kind.png')} alt="Claude Desktop Credential kind menu with Identity provider sign-in (OIDC) highlighted" style={{width: '60%', display: 'block', margin: '0'}} />
+   <Image img={require('../../img/app_roles.png')} alt="Entra App roles page with a LiteLLM role value" style={{width: '900px', height: 'auto'}} />
 
-3. Click **Apply Changes**, then **Save & Restart** when prompted.
+3. Select **Apply**. Do these steps again for each role that you need.
+4. Open **Enterprise applications**, select `LiteLLM Admin UI`, and open **Users and groups > Add user/group**.
+5. Select a user or group. Under **Select a role**, select the app role, then select **Assign**.
 
-### 6. Test sign-in and attribution
+   <Image img={require('../../img/app_role2.png')} alt="Entra Add Assignment page with a user and an app role selected" style={{width: '900px', height: 'auto'}} />
 
-1. In Claude Desktop, choose **Sign in with your organization** and sign in as the test user. Go back to the app when the browser says you are connected.
-2. Open the model picker, choose a model the team has access to, and send a short prompt. Check that Claude replies.
-3. In LiteLLM, open **Internal Users** and find the user whose ID matches the token's `oid`. Under **Teams**, open your team's **Members** and check that the same user is listed.
-4. Open **Logs** and find the request. Check that **Internal User** is the signed-in user and **Team Name** is the team whose ID matches the Entra group.
+### 4. Test sign-in
 
-   <Image img={require('../../img/entra_logs_team_user.png')} dark={require('../../img/entra_logs_team_user_dark.png')} alt="LiteLLM Admin UI, Logs page; the Team Name and Internal User columns are outlined and show the Entra team and signed-in user for each Claude Desktop request" style={{width: '100%', display: 'block', margin: '0'}} />
+1. Open a private browser window at `https://litellm.example.com/ui`.
+2. Select **Login with SSO** and sign in as a test user.
+3. Open the account menu. Make sure that it shows the role from the app role.
 
-5. Open the request and look at **Tags**. The `User-Agent` tag shows which client made the call, here `claude-cli`. The user and team come from the token and the team mapping, not from the tags.
+<Image img={require('../../img/app_role3.png')} alt="LiteLLM account menu that shows the role from Entra" style={{width: '900px', height: 'auto'}} />
 
-   <Image img={require('../../img/entra_logs_tags.png')} dark={require('../../img/entra_logs_tags_dark.png')} alt="LiteLLM Admin UI, Logs page with a request open; the Tags card showing the claude-cli User-Agent and the User field in Request Details are outlined" style={{width: '100%', display: 'block', margin: '0'}} />
+### Optional: sync Entra groups to teams
 
-6. Sign in as a user whose teams do not have access to the requested model, and check that the request is denied.
+With OIDC, LiteLLM can read the Entra groups of each user from Microsoft Graph. It creates a LiteLLM team for each group and adds the user. See [Microsoft Entra ID group sync](../tutorials/msft_sso.md).
 
-A successful Microsoft sign-in shows that Entra authentication works. A model reply, plus the right user and team in the LiteLLM logs, shows that gateway access and attribution work too.
+### Optional: change the user attribute mapping
 
-### Optional: roll out to a fleet
+LiteLLM reads these fields from the Microsoft Graph user profile. If your tenant uses different fields, set the variables:
 
-In Claude Desktop's third-party inference settings, click **Export** to get the managed configuration for your MDM. Current versions use `inferenceCredentialKind: external-idp`, `inferenceIdpOidc` and `inferenceIdpAuthFlow`. [Rolling out to a fleet](../tutorials/claude_desktop_cowork.md#rolling-out-to-a-fleet) covers the file formats, and [Configure Claude Desktop](../tutorials/claude_desktop_cowork.md#3-configure-claude-desktop) covers the older keys that earlier versions still read.
+| Environment variable | Field | Default |
+|---|---|---|
+| `MICROSOFT_USER_EMAIL_ATTRIBUTE` | User email | `userPrincipalName` |
+| `MICROSOFT_USER_DISPLAY_NAME_ATTRIBUTE` | Display name | `displayName` |
+| `MICROSOFT_USER_ID_ATTRIBUTE` | User ID | `id` |
+| `MICROSOFT_USER_FIRST_NAME_ATTRIBUTE` | First name | `givenName` |
+| `MICROSOFT_USER_LAST_NAME_ATTRIBUTE` | Last name | `surname` |
 
-### Optional: test model discovery and inference with curl
+To see the fields that Entra sends, use the [SSO debug routes](./admin_ui_sso.md#debugging-sso-jwt-fields). Add `https://litellm.example.com/sso/debug/callback` as a second redirect URI in the app registration.
 
-Use an ID token for the same authorized user to call `GET /v1/models` and `POST /v1/messages`, with the exact model name your gateway returns. [Verify](../tutorials/claude_desktop_cowork.md#4-verify) has both requests.
+### Troubleshooting the OIDC sign-in
 
-### Troubleshooting Claude Desktop sign-in
+**Entra shows a redirect URI error.** The redirect URI in the app registration must be `PROXY_BASE_URL` followed by `/sso/callback`. `PROXY_BASE_URL` must start with `https://`.
 
-**Microsoft reports a redirect URI mismatch, or asks for admin approval.** For a mismatch, check that the app registration has a **Mobile and desktop applications** platform with the URI `http://127.0.0.1/callback`, including the path. If Microsoft shows **Need admin approval**, a tenant admin must grant consent for the app, then the user signs in again.
-
-**Sign-in works, but LiteLLM returns 401.** Check that JWT auth is on, that the token's `iss` matches the configured `issuer` (Entra v2 issuers end in `/v2.0`), and that `aud` matches the Claude Desktop client ID. Check that the proxy can reach the `jwks_url`, and that Claude Desktop's **Bearer token** is set to **ID token**.
-
-**The user has no team access, or requests are denied.** Get a fresh ID token and check that it has a `groups` claim. The user must be a direct member of a group assigned to the application, and the LiteLLM **Team ID** must match that group's Object ID. Then check that the team has access to the exact model requested and has budget left. After changing claims or group membership, sign out and sign in again.
-
-If the token has a group overage indicator instead of `groups`, the user is in too many groups for Entra to include them all. Set **Groups to include** to **Groups assigned to the application**.
-
-**The Claude Desktop model picker is empty.** Check the team's model access and what `GET /v1/models` returns for the user. See [Models in the picker](../tutorials/claude_desktop_cowork.md#models-in-the-picker).
+**The user does not get the Entra role.** Make sure that the user or group has the app role in **Enterprise applications > Users and groups**, not **Default Access**. Then sign out and sign in again.
 
 ## Related
 
-- [SAML 2.0 SSO](./saml_sso.md): all SAML settings, environment variables and attribute mapping
-- [Admin UI SSO](./admin_ui_sso.md): OIDC sign-in for the Admin UI, including Microsoft
+- [Single Sign-On](./admin_ui_sso.md): settings for all providers, such as email domains, the proxy admin and fallback login
+- [Other OIDC and SAML providers](./saml_sso.md): all SAML settings, environment variables and attribute mapping
 - [Microsoft Entra ID group sync](../tutorials/msft_sso.md): sync Entra groups and members to LiteLLM teams through Microsoft Graph
 - [SCIM with LiteLLM](../tutorials/scim_litellm.md): provision users and teams from Entra
-- [JWT auth](./token_auth.md): every `litellm_jwtauth` option
-- [Claude Desktop (Cowork)](../tutorials/claude_desktop_cowork.md): Claude Desktop with other identity providers, MCP servers and fleet rollout
-- [Entra sign-in for Claude Code and Codex](./entra_id_cli_sso.md): Entra sign-in for Claude Code and Codex CLI, with the same group-to-team mapping
-- [Claude Code with Okta SSO](../tutorials/claude_code_okta_sso.md): JWT sign-in for Claude Code
+- [Entra sign-in for Claude Desktop](./entra_id_claude_desktop.md): Claude Desktop sign-in with OIDC and JWT auth
+- [Entra sign-in for Claude Code and Codex](./entra_id_cli_sso.md): Entra sign-in for Claude Code and Codex CLI

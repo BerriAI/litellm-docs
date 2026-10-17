@@ -17,7 +17,7 @@ You can set up one place or both. Most teams start with the Admin UI and then co
 
 | You want to | Use |
 |---|---|
-| Let admins and users sign in to the dashboard with the IdP | [Admin UI SSO](./admin_ui_sso.md) (OIDC) or [SAML SSO](./saml_sso.md) |
+| Let admins and users sign in to the dashboard with the IdP | [Single Sign-On](./admin_ui_sso.md) |
 | Give users the models, budgets and limits of their IdP groups | [Map groups to teams](#map-groups-to-teams) |
 | Add and remove users and teams when the IdP changes | [SCIM provisioning](../tutorials/scim_litellm.md) |
 | Let developers get a LiteLLM key from the terminal with SSO | [CLI sign-in](./cli_sso.md) |
@@ -26,7 +26,7 @@ You can set up one place or both. Most teams start with the Admin UI and then co
 
 ## Admin UI SSO
 
-Admin UI SSO controls sign-in to the LiteLLM dashboard. LiteLLM supports OIDC providers (Google, Microsoft, Okta and generic OIDC) and SAML 2.0.
+Admin UI SSO controls sign-in to the LiteLLM dashboard. LiteLLM supports OIDC and SAML 2.0 providers. To set it up, see [Single Sign-On](./admin_ui_sso.md).
 
 After sign-in, users can see their teams, create virtual keys and look at their spend. The IdP can also set each user's LiteLLM role, for example with Entra app roles or the SAML role attribute.
 
@@ -80,5 +80,9 @@ For a full example that combines SCIM, JWT auth and CLI sign-in, see [Provisioni
 ## Provider guides
 
 - [Microsoft Entra ID](./entra_id_sso.md)
+- [Okta](./okta_sso.md)
+- [Google Workspace](./google_sso.md)
+- [Other OIDC and SAML providers](./saml_sso.md)
+- [Entra for Claude Desktop](./entra_id_claude_desktop.md)
+- [Entra for Claude Code and Codex](./entra_id_cli_sso.md)
 - [Okta for Claude Code](../tutorials/claude_code_okta_sso.md)
-- [SAML 2.0 setup for Okta and Entra ID](./saml_sso.md#idp-setup-guides)

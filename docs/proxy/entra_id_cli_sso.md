@@ -21,7 +21,7 @@ Both clients use the proxy's Microsoft SSO login in the browser:
 
 In both cases, LiteLLM creates the user from their Entra Object ID on first sign-in. It also reads the user's Entra groups from Microsoft Graph and adds them to the LiteLLM teams whose Team ID matches a group's Object ID. Each team's models, budget and rate limits then apply.
 
-This page is about the two command-line clients. To sign in to the Admin UI with SAML, or to Claude Desktop with Entra, see [Microsoft Entra ID](./entra_id_sso.md). Wherever this page shows `https://litellm.example.com`, use your gateway's URL.
+This page is about the two command-line clients. For Admin UI sign-in with Entra, see [Microsoft Entra ID](./entra_id_sso.md). For Claude Desktop, see [Entra for Claude Desktop](./entra_id_claude_desktop.md). Wherever this page shows `https://litellm.example.com`, use your gateway's URL.
 
 ## Before you start
 
@@ -97,7 +97,7 @@ If you run more than one worker or replica, configure Redis (`REDIS_HOST`, `REDI
 Create a LiteLLM team for each Entra group that needs its own models or budget. The team's ID must be the group's Object ID:
 
 1. In Entra, open **Groups**, select the group, and copy its **Object ID**.
-2. In LiteLLM, open **Teams > Create Team**, enter a name, expand **Additional Settings**, and paste the Object ID into **Team ID**. [Create the LiteLLM team](./entra_id_sso.md#4-create-the-litellm-team) shows this dialog.
+2. In LiteLLM, open **Teams > Create Team**, enter a name, expand **Additional Settings**, and paste the Object ID into **Team ID**. [Create the LiteLLM team](./entra_id_claude_desktop.md#4-create-the-litellm-team) shows this dialog.
 3. Under **Models**, give the team the models its developers use: your Anthropic alias and `anthropic/*` for Claude Code, and the OpenAI model for Codex.
 4. Set the team's budget and rate limits.
 
@@ -257,6 +257,7 @@ Without that, a running session can keep renewing for up to 14 days after the la
 - [Claude Code Gateway](../tutorials/claude_code_gateway.md): every gateway setting, session lifetime, managed settings and telemetry
 - [CLI SSO](./cli_sso.md): `lite login`, PKCE sign-in, credential storage and sign-out
 - [Codex CLI](./client_setup/codex_cli.md): all Codex settings, including model metadata for custom aliases
-- [Microsoft Entra ID](./entra_id_sso.md): Admin UI sign-in with SAML and Claude Desktop sign-in with Entra
+- [Microsoft Entra ID](./entra_id_sso.md): Admin UI sign-in with SAML or OIDC
+- [Entra for Claude Desktop](./entra_id_claude_desktop.md): Claude Desktop sign-in with Entra
 - [Microsoft Entra ID group sync](../tutorials/msft_sso.md): group sync, team auto-creation and app roles
 - [SCIM with LiteLLM](../tutorials/scim_litellm.md): provision and deprovision users and teams from Entra

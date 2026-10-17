@@ -11,7 +11,7 @@ import Image from '@theme/IdealImage';
 Use this page to sync Microsoft Entra ID groups and members to LiteLLM teams. LiteLLM reads the groups from Microsoft Graph each time a user signs in to the Admin UI.
 
 :::tip
-This page covers Admin UI sign-in over OIDC with Microsoft Graph group sync. For Admin UI sign-in over SAML with Entra app roles, or for Claude Desktop sign-in with Entra, see [Microsoft Entra ID](../proxy/entra_id_sso.md). To use the group sync on this page for Claude Code and Codex CLI sign-in, see [Entra sign-in for Claude Code and Codex](../proxy/entra_id_cli_sso.md).
+This page covers Admin UI sign-in over OIDC with Microsoft Graph group sync. To set up Admin UI sign-in with Entra first, see [Microsoft Entra ID](../proxy/entra_id_sso.md). For Claude Desktop sign-in with Entra, see [Entra for Claude Desktop](../proxy/entra_id_claude_desktop.md). To use the group sync on this page for Claude Code and Codex CLI sign-in, see [Entra sign-in for Claude Code and Codex](../proxy/entra_id_cli_sso.md).
 :::
 
 <Image img={require('../../img/litellm_entra_id.png')}  style={{ width: '800px', height: 'auto' }} />

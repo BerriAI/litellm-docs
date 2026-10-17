@@ -92,4 +92,4 @@ Claude Desktop's built-in connectors (`github`, `microsoft365`, `websearch`) run
 
 ## Next steps
 
-[Claude Desktop (Cowork)](../../tutorials/claude_desktop_cowork.md) for SSO, model picker rules, fleet rollout, and troubleshooting; [Microsoft Entra ID](../entra_id_sso.md) for Entra sign-in with groups mapped to LiteLLM teams; [Auto Router with Claude Code and Claude Desktop](../../tutorials/claude_code_autorouter.md); [MCP gateway reference](../../mcp.md).
+[Claude Desktop (Cowork)](../../tutorials/claude_desktop_cowork.md) for SSO, model picker rules, fleet rollout, and troubleshooting; [Entra for Claude Desktop](../entra_id_claude_desktop.md) for Entra sign-in with groups mapped to LiteLLM teams; [Auto Router with Claude Code and Claude Desktop](../../tutorials/claude_code_autorouter.md); [MCP gateway reference](../../mcp.md).
