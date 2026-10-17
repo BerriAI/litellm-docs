@@ -112,7 +112,7 @@ The accepted template format is: [Reference](https://huggingface.co/OpenAssistan
 """
 ```
 
-Let's register our custom prompt template: [Implementation Code](https://github.com/BerriAI/litellm/blob/64f3d3c56ef02ac5544983efc78293de31c1c201/litellm/llms/prompt_templates/factory.py#L77)
+Let's register our custom prompt template: [Implementation Code](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 ```python
 import litellm 
 

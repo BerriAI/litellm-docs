@@ -129,7 +129,7 @@ https://api.replicate.com/v1/models/meta/meta-llama-3-8b-instruct \
 
 ## Advanced Usage - Prompt Formatting 
 
-LiteLLM has prompt template mappings for all `meta-llama` llama3 instruct models. [**See Code**](https://github.com/BerriAI/litellm/blob/4f46b4c3975cd0f72b8c5acb2cb429d23580c18a/litellm/llms/prompt_templates/factory.py#L1360)
+LiteLLM has prompt template mappings for all `meta-llama` llama3 instruct models. [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 
 To apply a custom prompt template: 
 
