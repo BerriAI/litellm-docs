@@ -23,7 +23,15 @@ Versions without the Credit-cost fix can fail strict response serialization when
 
 ## Get an API key
 
-Sign in to the [Ace Data Cloud console](https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_api_key) and create an API credential for the OpenAI service, then set it in your environment. Use a business API credential; Account Tokens are for the separate platform management API.
+Register or sign in at [Ace Data Cloud Applications](https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_api_key). If no General application exists, choose **Initialize General Application**. Open **General application** and confirm OpenAI service access, the selected model, current balance, and [pricing](https://platform.acedata.cloud/models?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_pricing).
+
+Copy its API key or choose **Manage Keys** and **Create** to make a separate `LiteLLM models` key. A service-specific application key is limited to its service. Use a business API credential; Account Tokens are for the separate platform management API. Paste only the token string, without `Bearer ` or quotes.
+
+![Copy an Ace API key or open Manage Keys](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/get-api-key-en.png)
+
+![Create an optional separate Ace key](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/create-api-key-en.png)
+
+These redacted Ace console images are reused from the Suno Dify onboarding guide. They illustrate the shared key workflow, not a successful LiteLLM connection. Set your own token in the environment.
 
 ```bash
 export ACEDATACLOUD_API_KEY="your-api-token"
@@ -112,3 +120,7 @@ Ace Data Cloud bills in Credits. Convert consumption to USD using `Credits × pa
 The priced model includes uncached input, cached input, cache creation, output, and the higher rates for prompts over 272,000 tokens. The source is the catalog's full `cost` rules, not its rounded display prices. The `usage.cost` returned by Ace Data Cloud is denominated in Credits. LiteLLM omits this structured field from its numeric cost field and estimates USD spend using the model catalog.
 
 To track a different recharge tier, configure [custom pricing](https://docs.litellm.ai/docs/proxy/custom_pricing) using that package's current conversion rate and the model's public cost rules. Check [the live catalog](https://platform.acedata.cloud/api/v1/models/catalog/) before changing rates.
+
+## Music, video, and image tools
+
+Suno, Seedance, HappyHorse, GPT Image, and Nano Banana use separate [Ace Data Cloud media MCP connections](../mcp_servers/acedatacloud.md). Their discovery entries are independent of this text-model provider. Do not send a media task payload to the Chat Completions endpoint or apply text-token prices to a media service.

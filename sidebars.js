@@ -782,6 +782,7 @@ const sidebars = {
           label: "MCP Servers",
           items: [
             "mcp_servers/index",
+            "mcp_servers/acedatacloud",
             "mcp_servers/slack",
             "mcp_servers/atlassian",
             "mcp_servers/linear",
