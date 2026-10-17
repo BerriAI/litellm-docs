@@ -23,8 +23,11 @@ async function loadCorpus(buildDir) {
   return loadCorpusFiles(path.join(buildDir, 'search-index.json'), path.join(buildDir, 'search-documents.json'));
 }
 async function loadRerankCorpus(buildDir) {
+  return loadRerankCorpusFiles(path.join(buildDir, 'search-index.json'), path.join(buildDir, 'search-documents.json'), path.join(buildDir, 'search-structure.json'));
+}
+async function loadRerankCorpusFiles(indexFile, documentsFile, structureFile) {
   const [corpus, structure] = await Promise.all([
-    loadCorpus(buildDir), fs.readFile(path.join(buildDir, 'search-structure.json'), 'utf8'),
+    loadCorpusFiles(indexFile, documentsFile), fs.readFile(structureFile, 'utf8'),
   ]);
   const {pages} = JSON.parse(structure);
   if (!pages || typeof pages !== 'object' || Array.isArray(pages) || Object.keys(pages).some(url => !isContentUrl(url))) {
@@ -41,4 +44,4 @@ async function loadCorpusFiles(indexFile, documentsFile) {
   if (!Array.isArray(docs) || !docs.length || docs.some(doc => !isContentUrl(doc.url))) throw new Error('Invalid search corpus');
   return {index: loadIndex(index), documents: new Map(docs.map(doc => [doc.id, doc]))};
 }
-module.exports = {readConfig, loadCorpus, loadCorpusFiles, loadRerankCorpus, isContentUrl};
+module.exports = {readConfig, loadCorpus, loadCorpusFiles, loadRerankCorpus, loadRerankCorpusFiles, isContentUrl};

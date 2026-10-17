@@ -9,7 +9,7 @@ const {createIndex} = require('./engine');
 const {createReranker} = require('./rerank');
 const {createRerankHandler} = require('./rerank-api');
 const {createHandler} = require('./server');
-const {loadRerankCorpus, readConfig} = require('./runtime');
+const {loadRerankCorpus, loadRerankCorpusFiles, readConfig} = require('./runtime');
 const {buildSearchIndex} = require('../plugins/docs-search');
 
 const docs = [{id: 'setup', title: 'Topic setup', url: '/docs/setup', text: 'Configure your topic.', type: 'docs'}];
@@ -106,9 +106,12 @@ test('built search structure matches indexed pages and excludes private/noindex 
   await fs.writeFile(path.join(directory, 'docs/private.html'), '<meta name="robots" content="noindex">' + article);
   await buildSearchIndex({outDir: directory, pages: new Map([['/docs/setup', {}], ['/docs/private', {}]])});
   const loaded = await loadRerankCorpus(directory);
+  const explicit = await loadRerankCorpusFiles(...['search-index.json', 'search-documents.json', 'search-structure.json'].map(file => path.join(directory, file)));
+  assert.deepEqual(explicit.documents, loaded.documents);
+  assert.deepEqual(explicit.pageStructure, loaded.pageStructure);
   assert.deepEqual(Object.keys(loaded.pageStructure), ['/docs/setup']);
   assert.ok(loaded.pageStructure['/docs/setup'].outline.some(item => item.title === 'Hidden setup'));
-  const ranker = createReranker({...loaded, config, fetchImpl: (url, options) => {
+  const ranker = createReranker({...explicit, config, fetchImpl: (url, options) => {
     assert.match(options.body, /Hidden setup/); assert.match(options.body, /Provider/);
     return success(url, options);
   }});
