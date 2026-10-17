@@ -45,7 +45,7 @@ model_list:
       # Optional: AWS account id that owns the S3 buckets, when they live in another account
       # s3_bucket_owner: "123456789012"
     model_info: 
-      mode: batch # 👈 SPECIFY MODE AS BATCH, to tell user this is a batch model
+      mode: batch # SPECIFY MODE AS BATCH, to tell user this is a batch model
 ```
 
 **Required Parameters:**

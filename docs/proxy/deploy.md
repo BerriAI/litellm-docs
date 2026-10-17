@@ -415,6 +415,8 @@ The official modules deploy the full microservices stack (network, database, Red
 - [`BerriAI/litellm/aws`](https://registry.terraform.io/modules/BerriAI/litellm/aws/latest)
 - [`BerriAI/litellm/google`](https://registry.terraform.io/modules/BerriAI/litellm/google/latest)
 
+Each module version defaults the four component images (gateway, backend, UI, migrations) to the matching LiteLLM release, so upgrading LiteLLM is a bump of the module `version`. Set `image_tag` only to pin a different release, or `image_registry` to pull the same images from a mirror.
+
 ### 1-click deploy from Cloud Shell
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>

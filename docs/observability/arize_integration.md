@@ -43,7 +43,7 @@ litellm.callbacks = ["arize"]
 response = litellm.completion(
   model="{{openai_large}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -144,6 +144,6 @@ This page covers the Arize-specific setup. For span attributes, prompt and respo
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

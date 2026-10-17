@@ -267,9 +267,9 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 ```
 
 **Important Notes:**
-- ⚠️ **Must be set before adding any models**
-- ⚠️ **Never change this key** - encrypted data becomes unrecoverable
-- ⚠️ Use a strong random key (recommended: https://1password.com/password-generator/)
+- **Must be set before adding any models**
+- **Never change this key** - encrypted data becomes unrecoverable
+- Use a strong random key (recommended: https://1password.com/password-generator/)
 - If not set, falls back to `LITELLM_MASTER_KEY`
 
 **Documentation:** `docs/my-website/docs/proxy/prod.md` (section 8, lines 184-196)
@@ -298,7 +298,7 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 4. **Support for TLS 1.2 and TLS 1.3**
 5. **Connection pooling** to reduce TLS handshake overhead
 
-### ⚠️ Important Limitations
+### Important Limitations
 
 1. **Cached data is NOT encrypted** (Redis, S3, disk cache)
 2. **Log data is NOT encrypted** (spend logs, audit logs)
@@ -306,7 +306,7 @@ export LITELLM_SALT_KEY="your-strong-random-key-here"
 4. **Uses NaCl SecretBox, NOT AES-256** (equivalent security)
 5. **TLS version not explicitly configured** - uses Python/system defaults
 
-### 🔧 Configuration Requirements
+### Configuration Requirements
 
 **For Production Deployments:**
 

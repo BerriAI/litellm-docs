@@ -1,5 +1,5 @@
-const MODEL = 'anthropic/claude-haiku-5-5';
-const FALLBACKS = ['openai/gpt-6-luna', 'openai/gpt-6.1-sol'];
+const MODEL = 'openai/gpt-6.1-sol';
+const FALLBACKS = ['anthropic/claude-haiku-5-5', 'openai/gpt-6-luna'];
 const BASE_URL = 'https://gateway.litellm-sandbox.ai';
 const {getTracing} = require('./tracing');
 
@@ -35,16 +35,23 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
         headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
         body: JSON.stringify({model: MODEL, fallbacks: [
           {model: FALLBACKS[0], reasoning_effort: 'none'},
-          {model: FALLBACKS[1], reasoning_effort: 'low'},
+          {model: FALLBACKS[1], reasoning_effort: 'none'},
         ], num_retries: 0, max_fallbacks: 2,
-          timeout: Math.max(1, Math.floor((timeout / 1000 - 1) / 3)), reasoning_effort: 'none',
+          timeout: Math.max(1, Math.floor(timeout / 1000 - 1)), reasoning_effort: 'low',
           cache: {'no-cache': true, 'no-store': true}, messages,
           ...(toolDefinitions ? {tools: toolDefinitions, tool_choice: toolChoice} : {}),
           ...(onDelta ? {stream: true, stream_options: {include_usage: true}} : {}),
         }),
       });
       span.setAttribute('http.response.status_code', response.status);
-      if (!response.ok) throw gatewayError('GatewayHTTPError', 'Gateway request failed');
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        const codes = [body?.error?.code, body?.error?.type];
+        if (codes.some(code => typeof code === 'string' && /context[_ -]?(?:length|window)[_ -]?exceeded/i.test(code))) {
+          throw gatewayError('GatewayContextWindowExceeded', 'Conversation exceeds the model context window');
+        }
+        throw gatewayError('GatewayHTTPError', 'Gateway request failed');
+      }
       let result, message, finish, pending = '';
       const capture = () => {
         record(span, result, message, finish);

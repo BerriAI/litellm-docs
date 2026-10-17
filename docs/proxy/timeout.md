@@ -266,7 +266,7 @@ response = client.chat.completions.create(
         {"role": "user", "content": "what color is red"}
     ],
     logit_bias={12481: 100},
-    extra_body={"timeout": 1} # 👈 KEY CHANGE
+    extra_body={"timeout": 1} # KEY CHANGE
 )
 
 print(response)
@@ -293,6 +293,6 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         "messages": [
         {"role": "user", "content": "hi my email is ishaan@berri.ai"}
         ],
-        "mock_timeout": true # 👈 KEY CHANGE
+        "mock_timeout": true # KEY CHANGE
     }'
 ```

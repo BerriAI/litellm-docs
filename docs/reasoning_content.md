@@ -445,7 +445,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 Set `drop_params=True` to drop the 'thinking' blocks when swapping from Anthropic to Deepseek models. Suggest improvements to this approach [here](https://github.com/BerriAI/litellm/discussions/8927).
 
 ```python showLineNumbers
-litellm.drop_params = True # 👈 EITHER GLOBALLY or per request
+litellm.drop_params = True # EITHER GLOBALLY or per request
 
 # or per request
 ## Anthropic

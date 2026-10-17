@@ -219,13 +219,13 @@ details > summary > :last-child {
 }
 
 /* "DOCS" beside the logo, as Stripe does. The logo file is untouched and
-   keeps its clear space: half its 25px height before the label. */
+   keeps its clear space: half its 18px height before the label. */
 .navbar__brand .navbar__title {
-  margin-left: 11px;
+  margin-left: 9px;
   font-family: var(--ifm-font-family-base);
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
   color: var(--ifm-color-primary-lightest);
@@ -471,20 +471,11 @@ html[data-theme='dark'] .pagination-nav__link:hover {
   transform: none !important;
 }
 
-/* Phones: a smaller logo and DOCS label, so the product switcher fits
-   beside them. Clear space stays half the logo's height. */
+/* Phones: the DOCS label does not shrink, so the product switcher keeps
+   its place beside it. Clear space stays half the logo's height. */
 @media (max-width: 576px) {
-  .navbar__brand-col .navbar__logo,
-  .navbar__logo {
-    height: 20px;
-  }
-  .navbar__brand {
-    padding-right: 10px;
-  }
   .navbar__brand .navbar__title {
     flex: none;
-    margin-left: 9px;
-    font-size: 0.78rem;
   }
   .navbar__brand,
   .navbar__brand-col {

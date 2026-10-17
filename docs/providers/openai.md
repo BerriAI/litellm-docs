@@ -1288,7 +1288,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-    forward_openai_org_id: true # 👈 KEY CHANGE
+    forward_openai_org_id: true # KEY CHANGE
 ```
 
 2. Start Proxy

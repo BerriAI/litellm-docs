@@ -113,7 +113,7 @@ export function AskAIProvider({children}) {
     askingRef.current = true;
     setAsking(true); setPendingQuestion(question); setDraft(''); setError(''); setFailedQuestion('');
     setStreamedAnswer(''); setStreamedSources([]); setProgress('Searching documentation…');
-    const history = turnsRef.current.slice(-4).map(turn => ({question: turn.question}));
+    const history = turnsRef.current.map(({question, answer}) => ({question, answer}));
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
         body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});

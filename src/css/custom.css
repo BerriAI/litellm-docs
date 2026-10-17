@@ -2161,7 +2161,7 @@ section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
    ========================================================================= */
 .navbar__brand-col .navbar__logo,
 .navbar__logo {
-  height: 22px;
+  height: 18px;
   margin-right: 0;
 }
 
@@ -2178,7 +2178,7 @@ img[src*='/img/brand/'] {
 
 /* Clear space around the logo: at least half its height (guidelines) */
 .navbar__brand {
-  padding-right: 11px;
+  padding-right: 9px;
 }
 
 .footer__brand-logo {

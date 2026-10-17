@@ -452,7 +452,7 @@ from litellm import completion
 import litellm 
 import os 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 
 response = completion(
@@ -885,7 +885,7 @@ import os
 
 os.environ["DEEPSEEK_API_KEY"] = "" 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 model_name = "deepseek/deepseek-chat"
 messages_1 = [
@@ -963,7 +963,7 @@ from litellm import completion, completion_cost
 import litellm 
 import os 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 model = "anthropic/{{anthropic}}"
 response = completion(
@@ -1081,7 +1081,7 @@ curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
             "model_info": {
                 "key": "{{anthropic}}",
                 ...
-                "supports_prompt_caching": true # 👈 LOOK FOR THIS!
+                "supports_prompt_caching": true # LOOK FOR THIS!
             }
         }
     ]

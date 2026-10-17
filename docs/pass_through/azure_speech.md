@@ -9,7 +9,7 @@ Pass-through endpoints for [Azure AI Speech](https://learn.microsoft.com/azure/a
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Realtime recognition uses the Speech SDK WebSocket protocol, which is not covered by this pass-through |
 
-Just replace `https://{region}.stt.speech.microsoft.com` or `https://{region}.api.cognitive.microsoft.com` with `LITELLM_PROXY_BASE_URL/azure_speech` 🚀
+Just replace `https://{region}.stt.speech.microsoft.com` or `https://{region}.api.cognitive.microsoft.com` with `LITELLM_PROXY_BASE_URL/azure_speech`
 
 LiteLLM injects the `Ocp-Apim-Subscription-Key` header from the proxy's Azure Speech credential, so clients only need a LiteLLM virtual key. A subscription key sent by the client is dropped and never reaches Azure.
 
