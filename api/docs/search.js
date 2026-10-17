@@ -5,6 +5,7 @@ const {readConfig, loadRerankCorpusFiles} = require('../../search/runtime');
 
 let handler;
 module.exports = async (req, res) => {
+  const started = performance.now();
   try {
     if (!handler) {
       const config = readConfig(process.env, {host: '0.0.0.0'});
@@ -16,7 +17,9 @@ module.exports = async (req, res) => {
       )
         .then(corpus => createRerankHandler({...corpus, config}));
     }
-    return await (await handler)(req, res);
+    const ready = await handler;
+    res.setHeader('Server-Timing', `corpus;dur=${(performance.now() - started).toFixed(1)}`);
+    return await ready(req, res);
   } catch {
     handler = undefined;
     return send(res, 503, {error: 'Search reranking is unavailable. Local search is still available.'});

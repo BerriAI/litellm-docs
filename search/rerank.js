@@ -82,10 +82,11 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     signal?.throwIfAborted();
     const previous = cache.get(key);
     if (previous && now() - previous.at < 15 * 60 * 1000) {
-      return {...previous.value, cached: true, costUsd: 0, elapsedMs: now() - started};
+      return {...previous.value, cached: true, costUsd: 0, timingsMs: {retrieval: 0, evidence: 0, gateway: 0, ordering: 0}, elapsedMs: now() - started};
     }
     const hits = candidates(query, type);
-    if (!hits.length) return {query, candidateCount: 0, results: [], cached: false, costUsd: 0, elapsedMs: now() - started};
+    const retrievedAt = now();
+    if (!hits.length) return {query, candidateCount: 0, results: [], ranking: 'no_candidates', cached: false, costUsd: 0, elapsedMs: now() - started};
     // Explicit chronological browsing already has an exact ordering.
     if (hits.every(hit => hit.matchType === 'browse')) return {query, candidateCount: hits.length,
       results: hits, ranking: 'chronological', cached: false, costUsd: 0, elapsedMs: now() - started};
@@ -100,6 +101,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     // evaluate independent questions in parallel batches, rather than dropping pages.
     const batches = [];
     for (let i = 0; i < questions.length; i += 10) batches.push(questions.slice(i, i + 10));
+    const preparedAt = now();
     const controller = new AbortController();
     const requestSignal = AbortSignal.any([controller.signal, ...(signal ? [signal] : []), AbortSignal.timeout(12000)]);
     let responses;
@@ -124,6 +126,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
       };
       responses = (await Promise.all(batches.map(sendBatch))).flat();
     } catch (error) {controller.abort(); throw error;}
+    const answeredAt = now();
     const answers = Object.assign({}, ...responses.map(({data}) => data.answers));
     const results = hits.map((hit, i) => {
       const probability = answers[`page_${i}`]?.noul;
@@ -135,6 +138,8 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     signal?.throwIfAborted();
     const costUsd = responses.every(response => response.cost !== null) ? responses.reduce((sum, response) => sum + response.cost, 0) : null;
     const value = {query, model: responses[0].data.model || MODEL, candidateCount: hits.length, results,
+      rankingVersion: prompt === PROMPT ? 'intent-v2' : prompt === ORIGINAL_PROMPT ? 'original' : 'custom',
+      timingsMs: {retrieval: retrievedAt - started, evidence: preparedAt - retrievedAt, gateway: answeredAt - preparedAt, ordering: now() - answeredAt},
       costUsd, cached: false, elapsedMs: now() - started};
     cache.delete(key);
     if (cache.size >= 256) cache.delete(cache.keys().next().value);

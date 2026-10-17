@@ -27,9 +27,12 @@ test('reranks 100 candidates in parallel batches, preserves evidence, sums cost,
   const first = await ranker.rerank('topic');
   assert.equal(first.results.length, 100); assert.equal(requests.length, 10);
   assert.ok(Math.abs(first.costUsd - .001) < 1e-10);
+  assert.equal(first.rankingVersion, 'intent-v2');
+  assert.ok(Object.values(first.timingsMs).every(ms => ms >= 0));
   assert.deepEqual(first.results.map(r => r.originalRank), Array.from({length: 100}, (_, i) => i + 1));
   const repeat = await ranker.rerank(' TOPIC  ');
   assert.equal(requests.length, 10); assert.equal(repeat.cached, true); assert.equal(repeat.costUsd, 0);
+  assert.deepEqual(repeat.timingsMs, {retrieval: 0, evidence: 0, gateway: 0, ordering: 0});
 });
 
 test('incomplete probabilities fail without caching a misleading ranking', async () => {
@@ -138,5 +141,21 @@ test('successful reranking publishes its baseline and final order together after
   session.search('topic'); timers.tick(250); await flush(); assert.deepEqual(events, []);
   timers.tick(200); await flush(); assert.deepEqual(events, []);
   finish(); await flush(); assert.deepEqual(events, ['baseline', 'ranked']);
+  session.cancel();
+});
+
+test('final rankings and browser cache hits do not wait for the local index', async () => {
+  const {SearchSession} = await import('./search-client.mjs');
+  const timers = fakeTimers(), events = [];
+  let finishLocal, calls = 0;
+  const session = new SearchSession({onBaseline: (_, meta) => events.push(meta.final ? 'local' : 'comparison'), onRanking(){},
+    onRanked: data => events.push(data.clientMetrics.cache_source), onError: message => assert.fail(message)}, {
+    timers, searchBaseline: query => new Promise(resolve => {finishLocal = () => resolve({query, results: []});}),
+    fetchImpl: async () => {calls++; return Response.json({query: 'entra', results: [{title: 'Final result'}]});},
+  });
+  session.search('entra'); timers.tick(450); await flush();
+  assert.deepEqual(events, ['none'], 'publish the final order while the local index is still loading');
+  session.search('entra'); assert.deepEqual(events, ['none', 'browser']); assert.equal(calls, 1);
+  finishLocal(); await flush(); assert.deepEqual(events, ['none', 'browser'], 'stale local completion cannot replace the final order');
   session.cancel();
 });

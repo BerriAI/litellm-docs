@@ -10,6 +10,8 @@ import {mapCitations} from '../../../search/citations.mjs';
 import {readAnswer} from '../../../search/stream.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
 import {SearchSession} from '../../../search/search-client.mjs';
+import {SearchAnalytics} from '../../../search/search-analytics.mjs';
+import {track} from '../../components/Conversion/shared';
 
 // One owner renders the modal even when the navbar and docs sidebar both mount a trigger.
 const openEvent = 'litellm:open-docs-search';
@@ -57,6 +59,7 @@ export default function SearchBar() {
   const [contentType, setContentType] = useState('all');
   const [resolvedType, setResolvedType] = useState('all');
   const [results, setResults] = useState([]);
+  const [resultSearchId, setResultSearchId] = useState(null);
   const [visibleCount, setVisibleCount] = useState(25);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -74,6 +77,11 @@ export default function SearchBar() {
   const input = useRef(null), composer = useRef(null), dialog = useRef(null), worker = useRef(null), latestTurn = useRef(null);
   const requestId = useRef(0), controller = useRef(null), previousFocus = useRef(null);
   const searchSession = useRef(null);
+  const analytics = useRef(null);
+  if (!analytics.current) analytics.current = new SearchAnalytics({capture: (event, props) => track(event, {
+    ...props, surface: 'dialog', environment: window.location.hostname === 'docs.litellm.ai' ? 'production'
+      : /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname) ? 'local' : 'preview',
+  })});
   const identity = useRef({});
   const traceContext = useRef(undefined);
   const indexUrl = useBaseUrl('/search-index.json');
@@ -86,23 +94,28 @@ export default function SearchBar() {
 
   useEffect(() => {
     setShortcut(/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K');
-    const show = event => {
+    const show = (event, source = 'button') => {
       if (owner) return;
       owner = identity.current;
       previousFocus.current = document.activeElement;
       setMode(event?.detail?.mode || 'search');
+      analytics.current.open(event?.detail?.mode || 'search', event?.detail?.source || source);
       setOpen(true);
     };
     const key = event => {
       if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.isComposing) {
-        event.preventDefault(); show();
+        event.preventDefault(); show(undefined, 'keyboard');
       }
     };
     window.addEventListener(openEvent, show);
     window.addEventListener('keydown', key);
+    const pageExit = () => analytics.current.close('page_exit');
+    window.addEventListener('pagehide', pageExit);
     return () => {
       window.removeEventListener(openEvent, show);
       window.removeEventListener('keydown', key);
+      window.removeEventListener('pagehide', pageExit);
+      analytics.current.close('unmounted');
       searchSession.current?.cancel(); worker.current?.terminate(); controller.current?.abort();
       if (owner === identity.current) owner = null;
     };
@@ -151,17 +164,19 @@ export default function SearchBar() {
     searchSession.current = new SearchSession({
       onBaseline(data, {final = true} = {}) {
         if (!final) return;
+        setResultSearchId(analytics.current.ready(data, 'local'));
         setLoading(false); setSearchError(''); setResults(data.results);
         setResolvedQuery(data.query); setSelected(0);
       },
-      onRanking() {},
+      onRanking() {analytics.current.requested();},
       onRanked(data) {
+        setResultSearchId(analytics.current.ready(data, 'jev'));
         setLoading(false); setSearchError(''); setResults(data.results);
         setResolvedQuery(data.query); setSelected(0);
       },
       // The session publishes one final order, using local matches on failure.
       onRankError() {},
-      onError(message) {setLoading(false); setSearchError(message);},
+      onError(message, metrics) {analytics.current.failed(metrics); setLoading(false); setSearchError(message);},
     }, {searchBaseline: baseline, rerankUrl});
     return () => searchSession.current.cancel();
   }, [indexUrl, rerankUrl]);
@@ -171,12 +186,19 @@ export default function SearchBar() {
     setSearchError(''); setVisibleCount(25);
     setLoading(Boolean(query.trim()));
     setResolvedType(contentType);
+    analytics.current.start(query, contentType);
     searchSession.current.search(query, contentType);
     if (!query.trim()) {
       setLoading(false); setResults([]); setResolvedQuery(''); setSelected(0);
     }
     return () => searchSession.current.cancel();
   }, [query, contentType, open, indexUrl, rerankUrl, retry, mode]);
+
+  useEffect(() => {
+    if (!open || mode !== 'search' || loading || !resultSearchId) return;
+    const frame = requestAnimationFrame(() => analytics.current.shown(resultSearchId, visibleCount));
+    return () => cancelAnimationFrame(frame);
+  }, [open, mode, loading, resultSearchId, visibleCount]);
 
   function stopAnswer() {
     controller.current?.abort(); setAsking(false);
@@ -185,11 +207,14 @@ export default function SearchBar() {
     setStreamedAnswer(''); setStreamedSources([]);
   }
   function close() {
+    analytics.current.close();
     stopAnswer(); searchSession.current?.cancel(); setOpen(false);
     if (owner === identity.current) owner = null;
   }
   function changeQuery(value) {setQuery(value);}
   function openAI(question) {
+    analytics.current.emit('mode_changed', {...analytics.current.props(), mode: 'ai'});
+    analytics.current.finish('ask_ai');
     setMode('ai');
     if (typeof question === 'string') ask(question);
 
@@ -239,7 +264,7 @@ export default function SearchBar() {
       if (event.key === 'Enter') {
         event.preventDefault();
         if (loading || resolvedQuery !== query.trim().replace(/\s+/g, ' ').toLowerCase() || resolvedType !== contentType) return;
-        if (results.length) window.location.assign(results[selected].url);
+        if (results.length) {analytics.current.select(selected, 'keyboard'); window.location.assign(results[selected].url);}
         else openAI(query.trim() || undefined);
       }
     }
@@ -261,7 +286,7 @@ export default function SearchBar() {
     } catch { setCopied(false); }
   }
   const toggle = <div className={styles.tabs} role="group" aria-label="Search mode">
-    <button type="button" aria-pressed={mode === 'search'} onClick={() => setMode('search')}><Search size={12}/>Search</button>
+    <button type="button" aria-pressed={mode === 'search'} onClick={() => {analytics.current.emit('mode_changed', {mode: 'search'}); setMode('search');}}><Search size={12}/>Search</button>
     <button type="button" aria-pressed={mode === 'ai'} onClick={() => openAI()}><Sparkles size={12}/>Ask AI</button>
   </div>;
   const assistantAvatar = <ThemedImage className={styles.avatar} sources={avatar} alt="AI assistant avatar"/>;
@@ -300,7 +325,9 @@ export default function SearchBar() {
                   <span className={styles.skeletonSnippet}/>
                 </div>)
                 : results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
-                className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
+                className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}
+                onClick={event => analytics.current.select(i, event.detail === 0 ? 'keyboard' : 'mouse')}
+                onAuxClick={event => {if (event.button === 1) analytics.current.select(i, 'middle_click');}}>
                 <span className={styles.path}><SourceMeta source={result}/></span>
                 <span className={styles.resultTitle}><SourceIcon source={result}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>

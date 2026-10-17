@@ -115,7 +115,30 @@ Ordinary feature and setup searches favor current docs. When a query names a spe
 
 Search shows translucent placeholder cards while a query is pending, with a reduced-motion alternative. Local retrieval starts after a 250ms pause in typing; reranking starts after 450ms. The dialog waits for the final ranking, then publishes the new results once without a model-status message; a failed rerank publishes the local results instead. Stale replies are ignored and upstream requests are cancelled on query/filter changes, closing the dialog, or switching modes. Successful rankings are cached in the browser and server for 15 minutes, up to 256 queries each. Enter opens the selected result, initially the first one, and does not navigate an outdated match while a new query or filter is pending. Select **Ask AI** to start a conversation.
 
+Successful reranking does not wait for the browser's local index to download or finish searching. Local retrieval continues for fallback and playground comparison, without changing the displayed final order.
+
 Jev estimates which page best serves the likely task. Bare product concepts favor their canonical documentation; broad external integrations favor direct setup guides; specific qualifiers take precedence. There are no query-specific boosts. Scores are model judgments, not click analytics or measured user percentages. The candidate pool still comes from lexical search, so reranking cannot recover a missing candidate. Explicit chronological browsing, such as “latest blog posts”, keeps its existing date/version ordering without a model call.
+
+## Search analytics in PostHog
+
+The search dialog sends events to the existing docs PostHog project when its SDK is available. No additional key is needed. Events include `schema_version`, `environment` (`production`, `preview`, or `local`), `surface: dialog`, the current page path, and a `search_session_id` for each dialog opening. Query events also share a `search_id`, normalized query, and content filter. Brief typing that never reaches the request debounce produces no query events. Common email, API-token, and Bearer-token patterns are redacted from query text. These events do not include Ask AI questions or answers.
+
+| Event | What it records |
+| --- | --- |
+| `docs_search_opened`, `docs_search_closed` | Opening method, initial mode, closing reason, and dialog duration |
+| `docs_search_requested` | A debounced search sent to the reranking endpoint; browser-cache hits skip this event |
+| `docs_search_results_shown` | The final result set, candidate/result counts, the first visible batch's URLs, displayed and original ranks, and model suitability scores |
+| `docs_search_results_expanded` | Each additional batch of visible results after selecting Show 25 more |
+| `docs_search_result_selected` | Selected URL, displayed/original rank, rank change, mouse/keyboard/middle-click method, and time to selection |
+| `docs_search_finished` | Whether a result was selected or shown before a query/filter change, dialog close, page exit, or switch to Ask AI |
+| `docs_search_failed` | Failure status and timing when neither reranking nor local fallback produces a result set |
+| `docs_search_mode_changed` | Switching between Search and Ask AI |
+
+Result events distinguish `ranking: jev`, `local`, `chronological`, and `no_candidates`; record the model and ranking version; and report `cache_source: browser`, `server`, or `none`. A local fallback records the reranking failure status. Timing fields separate debounce, browser request time, corpus initialization, retrieval, evidence preparation, gateway round trip, ordering, and rendering. `time_to_results_ms` runs from the latest query/filter change to the next animation frame after the final results are committed. `gateway_ms` includes the network round trip and response parsing, not just model inference. These measurements overlap, so do not sum all timing fields. `cost_usd` is the successful request's gateway-reported model cost, excludes hosting, and is zero on cache hits. Failed or interrupted requests may incur costs not present in these client events.
+
+When opening PostHog, filter these events to `environment = production` and `surface = dialog`. Use unique `search_id` counts to compare results shown with result selections, and break selections down by displayed rank, original rank, rank change, query, model, and ranking version. Plot p50/p95 `time_to_results_ms`, `request_ms`, and `gateway_ms`; track zero-result, fallback, cache-hit, and failure rates separately. Sum `cost_usd` on `docs_search_results_shown` only, since selections and pagination repeat the search properties. For query refinement and searches closed without a selection, use `docs_search_finished`, its `reason`, and `results_shown` flag to distinguish pending requests from searches people actually saw.
+
+Events are best effort and may be missing when analytics are blocked or the page exits abruptly. A click is an engagement signal, not proof that the page solved the task. The current instrumentation does not assign randomized control groups, so rank changes and click rates alone cannot establish that Jev improves outcomes over the original ranking.
 
 Ask AI receives source types, dates, and versions. It is instructed to use current docs for setup, attribute blog benchmarks to their measured conditions, and use release notes for version-specific changes. It must distinguish stable releases from prereleases and cannot infer first availability from a feature's mention in a release note.
 
