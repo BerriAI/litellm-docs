@@ -2166,6 +2166,7 @@ section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
 }
 
 .navbar__logo img {
+  display: block; /* inline images sit on the text baseline and drop below the box */
   height: 100%;
   width: auto;
 }
