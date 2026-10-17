@@ -1,16 +1,16 @@
 const {search} = require('./engine');
-const {isContentUrl, contentType} = require('./content');
+const {isContentUrl, contentType, contentPage} = require('./content');
 
 const intents = ['general', 'setup', 'benchmark', 'history', 'latest', 'blog'];
 const tools = [
   {type: 'function', function: {name: 'search_docs',
-    description: 'Search LiteLLM docs, blogs, and release notes with one or more keyword queries. Preserve the user\'s feature terms, even unfamiliar ones, together with the provider or integration; generic provider setup does not establish support for a named capability. Results are grouped by query, with each page title followed by matching passages. Short, distinctive topic names work best. Read passages for full evidence.',
+    description: 'Search LiteLLM docs, API reference, blogs, and release notes with one or more keyword queries. Preserve the user\'s feature terms, even unfamiliar ones, together with the provider or integration; generic provider setup does not establish support for a named capability. Results are grouped by query, with each page title followed by matching passages. Short, distinctive topic names work best. Read passages for full evidence.',
     parameters: {type: 'object', additionalProperties: false, required: ['queries'], properties: {
       queries: {type: 'array', minItems: 1, maxItems: 3, items: {type: 'string', minLength: 1, maxLength: 160}},
       intent: {type: 'string', enum: intents},
     }}}},
   {type: 'function', function: {name: 'read_docs',
-    description: 'View the full documentation pages containing passages discovered by search_docs, without truncation. Requested passages come first, followed by the rest of each page. Returned source numbers are used for citations.',
+    description: 'View the full documentation pages containing passages discovered by search_docs, without truncation. Requested passages come first, followed by the rest of each page. An API reference page contains one operation and all its referenced schemas. Returned source numbers are used for citations.',
     parameters: {type: 'object', additionalProperties: false, required: ['passage_ids'], properties: {
       passage_ids: {type: 'array', minItems: 1, maxItems: 32, items: {type: 'string'}},
     }}}},
@@ -23,7 +23,7 @@ function createDocumentationTools({index, documents, tracing, signal, onEvent = 
   const discovered = new Set(), sources = new Map(), pages = new Map(), passages = new Map();
   let passageCount = 0, linkCount = 0;
   for (const doc of documents.values()) {
-    const path = doc.url.split('#')[0];
+    const path = contentPage(doc.url);
     if (!pages.has(path)) pages.set(path, []);
     pages.get(path).push(doc);
   }
@@ -51,9 +51,9 @@ function createDocumentationTools({index, documents, tracing, signal, onEvent = 
             const hits = search(index, query, {limit: 4, intent: args.intent});
             const passageHits = search(index, query, {limit: 100, groupPages: false, intent: args.intent});
             return {query, matches: hits.map(hit => {
-              const guide = pages.get(hit.url.split('#')[0]) || [];
+              const guide = pages.get(contentPage(hit.url)) || [];
               const matching = passageHits
-                .filter(match => match.url.split('#')[0] === hit.url.split('#')[0]).slice(0, 3);
+                .filter(match => contentPage(match.url) === contentPage(hit.url)).slice(0, 3);
               const wanted = new Set(matching.map(match => match.id));
               guide.slice(0, 1).forEach(doc => wanted.add(doc.id));
               guide.filter(doc => /prerequisite|quick.?start|requirement/i.test(doc.heading)).slice(0, 2).forEach(doc => wanted.add(doc.id));
@@ -78,7 +78,7 @@ function createDocumentationTools({index, documents, tracing, signal, onEvent = 
           // Read every passage on each selected page, including prerequisites and examples.
           const selected = new Set([...args.passage_ids, ...args.passage_ids.flatMap(id => {
             const doc = documents.get(id);
-            return doc ? (pages.get(doc.url.split('#')[0]) || []).map(part => part.id) : [id];
+            return doc ? (pages.get(contentPage(doc.url)) || []).map(part => part.id) : [id];
           })]);
           for (const id of selected) {
             const doc = documents.get(id);

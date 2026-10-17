@@ -1,6 +1,6 @@
 const MiniSearch = require('minisearch');
 const pluralize = require('pluralize');
-const {contentTypes, contentType, versionsIn, normalizeVersion} = require('./content');
+const {contentTypes, contentType, contentPage, versionsIn, normalizeVersion} = require('./content');
 
 const stopWords = new Set('a an and are as at be by can do does for from how i in is it me my of on or our per please the this to use using what when where which with you your was did'.split(' '));
 const forms = {
@@ -62,7 +62,7 @@ function categoryFor(url) {
 function createCollection(documents) {
   const grouped = new Map();
   for (const doc of documents) {
-    const url = doc.url.split('#')[0];
+    const url = contentPage(doc.url);
     if (!grouped.has(url)) grouped.set(url, []);
     grouped.get(url).push(doc);
   }
@@ -204,7 +204,7 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
     return groups.get(url);
   };
   for (const hit of pageHits) {const group = getGroup(hit.url); if (group) {group.pageScore = hit.score; group.pageTerms = hit.terms; group.queryTerms = hit.queryTerms; group.matchType = hit.matchType;}}
-  for (const hit of passageHits) {const group = getGroup(hit.url.split('#')[0]); if (group) group.passages.push(hit);}
+  for (const hit of passageHits) {const group = getGroup(contentPage(hit.url)); if (group) group.passages.push(hit);}
   const ranked = [...groups.values()].map(group => {
     if (!group.passages.length) {
       const intro = index.passages.getStoredFields(group.firstId);
@@ -336,7 +336,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
     }).sort((a, b) => browse ? newestFirst(a, b) : b.score - a.score || newestFirst(a, b));
   if (browse && !groupPages) {
     return ranked.flatMap(page => index.collections[page.type].passages.search(MiniSearch.wildcard, {
-      filter: hit => hit.url.split('#')[0] === page.url,
+      filter: hit => contentPage(hit.url) === page.url,
     }).map(hit => ({...hit, score: page.score}))).slice(0, limit);
   }
   return ranked.slice(0, limit);

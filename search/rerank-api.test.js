@@ -104,6 +104,7 @@ test('built search structure matches indexed pages and excludes private/noindex 
   const article = '<article class="theme-doc-markdown"><h1>Topic setup</h1><p>Configure your topic.</p><li role="tab">Provider</li><div hidden><h2 id="hidden">Hidden setup</h2><p>Hidden instructions.</p></div></article>';
   await fs.writeFile(path.join(directory, 'docs/setup.html'), article);
   await fs.writeFile(path.join(directory, 'docs/private.html'), '<meta name="robots" content="noindex">' + article);
+  await fs.writeFile(path.join(directory, 'openapi.json'), JSON.stringify({openapi: '3.1.0', paths: {}}));
   await buildSearchIndex({outDir: directory, pages: new Map([['/docs/setup', {}], ['/docs/private', {}]])});
   const loaded = await loadRerankCorpus(directory);
   const explicit = await loadRerankCorpusFiles(...['search-index.json', 'search-documents.json', 'search-structure.json'].map(file => path.join(directory, file)));

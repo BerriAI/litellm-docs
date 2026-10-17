@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
-const {isContentUrl} = require('./content');
+const {isContentUrl, contentPage} = require('./content');
+const {operationStructure} = require('./openapi');
 const clean = value => String(value || '').replace(/\s+/g, ' ').trim();
 const unique = values => [...new Map(values.filter(Boolean).map(value => [JSON.stringify(value), value])).values()];
 
@@ -35,11 +36,18 @@ function extractStructure(html, url) {
 async function buildStructure(directory) {
   const fs = require('node:fs/promises'), path = require('node:path');
   const docs = JSON.parse(await fs.readFile(path.join(directory, 'search-documents.json'), 'utf8'));
-  const urls = [...new Set(docs.map(doc => doc.url.split('#')[0]))].filter(isContentUrl);
+  const grouped = new Map();
+  for (const doc of docs) {
+    const url = contentPage(doc.url);
+    if (!grouped.has(url)) grouped.set(url, []);
+    grouped.get(url).push(doc);
+  }
+  const urls = [...grouped.keys()].filter(isContentUrl);
   const pages = {}, failures = []; let next = 0;
   await Promise.all(Array.from({length: 8}, async () => {
     while (next < urls.length) {
       const url = urls[next++];
+      if (url.startsWith('/api-reference/#/')) {pages[url] = operationStructure(grouped.get(url)); continue;}
       try {
         const response = await fetch(`https://docs.litellm.ai${url}`, {signal: AbortSignal.timeout(15000)});
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

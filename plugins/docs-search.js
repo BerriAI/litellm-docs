@@ -2,8 +2,9 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const cheerio = require('cheerio');
 const {createIndex} = require('../search/engine');
-const {contentType, versionsIn, isContentUrl} = require('../search/content');
+const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
 const {extractStructure} = require('../search/page-structure');
+const {extractOpenAPI} = require('../search/openapi');
 
 function extractSections(html, url, metadata = {}) {
   url = new URL(url, 'https://docs.litellm.ai').pathname;
@@ -104,13 +105,16 @@ async function buildSearchIndex({outDir, outputDir = outDir, pages, routesBuildM
     if (!html) throw new Error(`Search could not read built route: ${route}`);
     const sections = extractSections(html, route, metadata);
     documents.push(...sections);
-    if (sections.length) structure[sections[0].url.split('#')[0]] = extractStructure(html, route);
+    if (sections.length) structure[contentPage(sections[0].url)] = extractStructure(html, route);
   }
+  const api = extractOpenAPI(JSON.parse(await fs.readFile(path.join(outDir, 'openapi.json'), 'utf8')));
+  documents.push(...api.documents);
+  Object.assign(structure, api.structure);
   if (!documents.length) throw new Error('Docs search index is empty');
   await fs.writeFile(path.join(outputDir, 'search-index.json'), JSON.stringify(createIndex(documents)));
   await fs.writeFile(path.join(outputDir, 'search-documents.json'), JSON.stringify(documents));
   await fs.writeFile(path.join(outputDir, 'search-structure.json'), JSON.stringify({pages: structure}));
-  console.log(`[docs-search] Indexed ${documents.length} passages from ${new Set(documents.map(d => d.url.split('#')[0])).size} public pages.`);
+  console.log(`[docs-search] Indexed ${documents.length} passages from ${new Set(documents.map(d => contentPage(d.url))).size} public pages.`);
   return documents;
 }
 

@@ -5,6 +5,10 @@ const normalizeVersion = value => value.toLowerCase().replace(/^v/, '').replace(
 const versionsIn = text => [...String(text || '').matchAll(versionPattern)].map(match => normalizeVersion(match[1]));
 const contentPath = value => value === '/docs' || value === '/api-reference/' || /^\/(?:docs|blog|release_notes)\//.test(value);
 
+// Swagger operations share a pathname; their fragments identify separate pages.
+// Ordinary documentation fragments still identify sections within one page.
+const contentPage = url => url.startsWith('/api-reference/#/') ? url : url.split('#')[0];
+
 function isContentUrl(value) {
   if (typeof value !== 'string' || !contentPath(value.split(/[?#]/)[0]) || /[\\\u0000-\u001f]/.test(value)) return false;
   try {
@@ -32,4 +36,4 @@ function sourceDetail(source) {
   return parts.join(' · ');
 }
 
-module.exports = {contentTypes, contentType, versionsIn, normalizeVersion, isContentUrl, sourceLabel, sourceDetail};
+module.exports = {contentTypes, contentType, contentPage, versionsIn, normalizeVersion, isContentUrl, sourceLabel, sourceDetail};

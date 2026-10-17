@@ -1,3 +1,4 @@
+const {contentPage} = require('./content');
 const {search} = require('./engine');
 
 const CANDIDATE_LIMIT = 100;
@@ -24,7 +25,7 @@ Page evidence:
 function createReranker({index, documents, pageStructure = {}, config, prompt = PROMPT, fetchImpl = fetch, now = Date.now}) {
   const pages = new Map();
   for (const doc of documents.values()) {
-    const url = doc.url.split('#')[0];
+    const url = contentPage(doc.url);
     if (!pages.has(url)) pages.set(url, []);
     pages.get(url).push(doc);
   }
@@ -35,7 +36,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
       .map((hit, i) => ({...hit, originalRank: i + 1}));
   }
   function evidence(hit, query) {
-    const sections = pages.get(hit.url.split('#')[0]) || [];
+    const sections = pages.get(contentPage(hit.url)) || [];
     const first = sections[0];
     const match = sections.find(doc => doc.url === hit.url) || first;
     const terms = [...new Set(hit.highlights?.length ? hit.highlights : query.match(/[\p{L}\p{N}_]+/gu) || [])];
@@ -43,7 +44,7 @@ function createReranker({index, documents, pageStructure = {}, config, prompt = 
     const selected = sections.reduce((length, doc) => length + doc.text.length, 0) <= 12000 ? sections
       : [...new Set([first, match, ...sections.filter(doc => relevance(doc) > 0)
         .sort((a, b) => relevance(b) - relevance(a)).slice(0, 4)])].filter(Boolean);
-    const structure = pageStructure[hit.url.split('#')[0]];
+    const structure = pageStructure[contentPage(hit.url)];
     const data = {
       title: hit.title, url: hit.url, type: hit.type,
       date: hit.date, version: hit.version, breadcrumb: first?.breadcrumb || hit.breadcrumb,
