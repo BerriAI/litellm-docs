@@ -16,9 +16,6 @@ LiteLLM supports all anthropic models.
 - `claude-3.7` (`claude-3-7-sonnet-20250219`)
 - `claude-3.5` (`claude-3-5-sonnet-20240620`)
 - `claude-3` (`claude-3-haiku-20240307`, `claude-3-opus-20240229`, `claude-3-sonnet-20240229`)
-- `claude-2`
-- `claude-2.1`
-- `claude-instant-1.2`
 
 
 | Property | Details |
@@ -598,10 +595,6 @@ print(response)
 | claude-3-opus  | `completion('claude-3-opus-20240229', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-3-5-sonnet-20240620  | `completion('claude-3-5-sonnet-20240620', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-3-sonnet  | `completion('claude-3-sonnet-20240229', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
-| claude-2.1  | `completion('claude-2.1', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
-| claude-2  | `completion('claude-2', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
-| claude-instant-1.2  | `completion('claude-instant-1.2', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
-| claude-instant-1  | `completion('claude-instant-1', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 
 ## **Prompt Caching**
 
@@ -1918,7 +1911,7 @@ messages = [
     {"role": "user", "content": "How do you say 'Hello' in German? Return your answer as a JSON object, like this:\n\n{ \"Hello\": \"Hallo\" }"},
     {"role": "assistant", "content": "{"},
 ]
-response = completion(model="claude-2.1", messages=messages)
+response = completion(model="claude-sonnet-4-5", messages=messages)
 print(response)
 ```
 
@@ -1934,7 +1927,7 @@ Assistant: {
 ```
 
 ## Usage - "System" messages
-If you're using Anthropic's Claude 2.1, `system` role messages are properly formatted for you.
+If you're using Anthropic Claude models, `system` role messages are properly formatted for you.
 
 ```python keep-model-ids
 import os
@@ -1947,7 +1940,7 @@ messages = [
     {"role": "system", "content": "You are a snarky assistant."},
     {"role": "user", "content": "How do I boil water?"},
 ]
-response = completion(model="claude-2.1", messages=messages)
+response = completion(model="claude-sonnet-4-5", messages=messages)
 ```
 
 #### Example prompt sent to Claude
