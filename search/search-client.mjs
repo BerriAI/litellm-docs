@@ -1,0 +1,53 @@
+export class SearchSession {
+  constructor(callbacks, {fetchImpl = fetch, timers = globalThis} = {}) {
+    this.callbacks = callbacks; this.fetch = (...args) => fetchImpl(...args); this.timers = timers;
+    this.version = 0; this.cache = new Map();
+  }
+  search(query, type = 'all', immediate = false) {
+    this.cancel();
+    query = query.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (!query) return;
+    const version = this.version;
+    const current = () => version === this.version;
+    const key = JSON.stringify([query, type]);
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.at < 15 * 60 * 1000) {
+      this.callbacks.onBaseline(cached.baseline);
+      this.callbacks.onRanked({...cached.ranked, cached: true, elapsedMs: 0, costUsd: 0});
+      return;
+    }
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
+    let baseline;
+    const post = async endpoint => {
+      const response = await this.fetch(endpoint, {method: 'POST', signal, headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query, type})});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Search failed.');
+      return result;
+    };
+    let baselineDone;
+    this.localTimer = this.timers.setTimeout(() => {
+      baselineDone = post('/api/search').then(data => {if (current()) {baseline = data;this.callbacks.onBaseline(data);}})
+        .catch(error => {if (current() && !signal.aborted) this.callbacks.onError(error.message);});
+    }, immediate ? 0 : 250);
+    this.rankTimer = this.timers.setTimeout(async () => {
+      if (!current()) return;
+      this.callbacks.onRanking();
+      try {
+        const ranked = await post('/api/rerank');
+        await baselineDone;
+        if (!current()) return;
+        if (baseline) {
+          if (this.cache.size >= 256) this.cache.delete(this.cache.keys().next().value);
+          this.cache.set(key, {baseline, ranked, at: Date.now()});
+        }
+        this.callbacks.onRanked(ranked);
+      } catch (error) {if (current() && !signal.aborted) this.callbacks.onError(error.message);}
+    }, immediate ? 0 : 450);
+  }
+  cancel() {
+    this.version++;
+    this.timers.clearTimeout(this.localTimer); this.timers.clearTimeout(this.rankTimer);
+    this.controller?.abort();
+  }
+}

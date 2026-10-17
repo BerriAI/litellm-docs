@@ -2,6 +2,27 @@
 
 Search runs locally in the browser over current docs, integration guides, individual blog posts, and release notes from the site build. Ask AI retrieves from the same content and links to its sources. Short topics such as “codex subscription” work without adding “LiteLLM” to the question. The assistant can also help with general questions; there is no topic-rejection gate.
 
+## Try Jev reranking locally
+
+Run `npm run search:lab` and open [localhost:3347](http://localhost:3347/?q=entra) to compare **Jev ranking** and **Current ranking**. This experiment is local only and does not change the production search box. It reuses the search engine to retrieve up to 100 candidates, shows 25 initially, and offers **Show 25 more**. Each Jev result shows its previous rank and estimated first-result suitability. The toolbar shows server latency and gateway-reported model cost; these scores are not measured percentages of users.
+
+Use Node 24 or later and the existing dependencies. Put `DOCS_AI_API_KEY` in `.env.local`, with access to `typesafe/jev-latest` on the existing `DOCS_AI_BASE_URL` gateway. To reuse an existing environment file, set `DOCS_AI_ENV_FILE` to its path when launching. Credentials stay on the server. Download a matching snapshot of the public search corpus once:
+
+```bash
+mkdir -p .cache-loader/jev-search
+curl -fsSL https://docs.litellm.ai/search-index.json -o .cache-loader/jev-search/search-index.json
+curl -fsSL https://docs.litellm.ai/search-documents.json -o .cache-loader/jev-search/search-documents.json
+node search/page-structure.js
+npm run search:lab
+```
+
+Alternatively, set `DOCS_SEARCH_CORPUS` to an existing build directory containing both JSON files. Search waits for a 250 ms typing pause, and Jev starts after 450 ms. Enter searches immediately. Typing or changing filters cancels outdated requests. Successful rankings are cached in memory for 15 minutes, so repeat searches make no model calls. The server binds only to `127.0.0.1` and rejects other origins.
+
+The structure precomputation fetches public pages once; no individual page fetches happen during a search. Jev receives the title, description, keywords, breadcrumbs, heading hierarchy, tab labels, link text and destinations, table headers, image descriptions and filenames, code example labels, callout titles, and table of contents. It also receives the full indexed page when its text is at most 12,000 characters. For longer pages, it receives the introduction, the original matched passage, and up to four query-relevant indexed passages, without further truncating those passages. A conservative UTF-8 byte budget keeps individual questions within the provider context window, preserving structural fields before body passages and recording any omissions. Independent questions run in parallel batches of ten; a context-limit rejection splits the batch without discarding candidates. The gateway currently routes `typesafe/jev-latest` to Jev 1.13; it has no healthy `typesafe/jev-1.14.0` deployment. The UI reports the actual model returned. A failed or incomplete ranking leaves the original search results available. Candidate retrieval is still lexical: Jev cannot promote a page that was never retrieved. The prompt and evidence selection live in `search/rerank.js`; restart the server and refresh the page after changing them to clear both caches.
+
+Verify with `node --no-experimental-require-module --test search/rerank.test.js`, then try a broad term and a qualified term, switch rankings, and repeat a query to check the cached cost of $0. Latency shown in the toolbar includes server retrieval and Jev requests but excludes the typing pause and browser network/rendering time. Model cost is summed from the gateway's response headers and excludes hosting.
+
+
 ## Try locally
 
 Use Node 24 or later. From the repository root, install dependencies and build the site:
