@@ -325,7 +325,7 @@ test('bot route requires its service credential and dedicated model key, indepen
   }
 });
 
-test('bot and website use identical prompts, full-page evidence, model options, answers and citations', async () => {
+test('bot changes only final response style while sharing research, full evidence, models and citations', async () => {
   const requests = [], results = [];
   const body = {question: 'Lens? ' + 'Full question. '.repeat(2000),
     history: Array.from({length: 8}, (_, i) => ({question: `Earlier ${i}`, answer: 'Complete answer. '.repeat(100)}))};
@@ -345,7 +345,13 @@ test('bot and website use identical prompts, full-page evidence, model options, 
       }).fetch});
     requests.push(calls);
   }
-  assert.deepEqual(requests[0], requests[1]);
+  assert.deepEqual(requests[0].slice(0, -1), requests[1].slice(0, -1));
+  const web = requests[0].at(-1), bot = requests[1].at(-1);
+  assert.match(JSON.stringify(bot.messages[0]), /Slack response style \(say-it\)/);
+  assert.doesNotMatch(JSON.stringify(web.messages[0]), /Slack response style/);
+  assert.match(JSON.stringify(bot.messages[0]), /smallest useful working code example/);
+  assert.match(JSON.stringify(bot.messages[0]), /Preserve essential permissions/);
+  assert.deepEqual({...bot, messages: [web.messages[0], ...bot.messages.slice(1)]}, web);
   assert.deepEqual(results[0], results[1]);
   assert.ok(requests[0][2].messages.some(message => message.role === 'tool' && docs.every(doc => message.content.includes(doc.text))));
 });
