@@ -300,3 +300,76 @@ test('upstream errors are not cached', async () => {
     assert.equal(calls, 2);
   }, {fetchImpl: async () => {calls++; throw new Error('unavailable');}});
 });
+
+test('bot route requires its service credential and dedicated model key, independently of public opt-in', async () => {
+  const botConfig = {...config, publicAIEnabled: false, host: '0.0.0.0',
+    botServiceToken: 'service-test-secret', botApiKey: 'dedicated-bot-key'};
+  const request = token => post('Lens', {headers: {'Content-Type': 'application/json',
+    ...(token ? {Authorization: `Bearer ${token}`} : {})}});
+  await withServer(async origin => {
+    const url = origin + '/api/docs/bot-ask';
+    for (const token of [undefined, '', 'wrong', config.apiKey, botConfig.botApiKey]) {
+      assert.equal((await fetch(url, request(token))).status, 401);
+    }
+    assert.equal((await fetch(url, request(botConfig.botServiceToken))).status, 200);
+    assert.equal((await fetch(origin + '/api/docs/ask', request(botConfig.botServiceToken))).status, 503);
+  }, {config: botConfig, fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer], (_body, req) => {
+    assert.equal(req.headers.Authorization, 'Bearer dedicated-bot-key');
+  }).fetch});
+  for (const missing of ['botServiceToken', 'botApiKey']) {
+    await withServer(async origin => {
+      assert.equal((await fetch(origin + '/api/docs/bot-ask', request(botConfig.botServiceToken))).status, 503);
+    }, {config: {...botConfig, [missing]: undefined}, fetchImpl: neverFetch});
+  }
+});
+
+test('bot and website use identical prompts, full-page evidence, model options, answers and citations', async () => {
+  const requests = [], results = [];
+  const body = {question: 'Lens? ' + 'Full question. '.repeat(2000),
+    history: Array.from({length: 8}, (_, i) => ({question: `Earlier ${i}`, answer: 'Complete answer. '.repeat(100)}))};
+  for (const service of [false, true]) {
+    const calls = [];
+    await withServer(async origin => {
+      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), {
+        method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer service-test-secret'},
+        body: JSON.stringify(body),
+      });
+      assert.equal(response.status, 200);
+      results.push(await response.json());
+    }, {config: {...config, botServiceToken: 'service-test-secret', botApiKey: 'dedicated-bot-key'},
+      fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer], (body, request) => {
+        calls.push(body);
+        assert.equal(request.headers.Authorization, `Bearer ${service ? 'dedicated-bot-key' : config.apiKey}`);
+      }).fetch});
+    requests.push(calls);
+  }
+  assert.deepEqual(requests[0], requests[1]);
+  assert.deepEqual(results[0], results[1]);
+  assert.ok(requests[0][2].messages.some(message => message.role === 'tool' && docs.every(doc => message.content.includes(doc.text))));
+});
+
+test('100 authenticated bot questions from one worker bypass website quotas without leaking research state', async () => {
+  let active = 0, peak = 0;
+  const fetchImpl = async (_url, request) => {
+    active++; peak = Math.max(peak, active);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    active--;
+    const body = JSON.parse(request.body);
+    assert.equal(request.headers.Authorization, 'Bearer bot-key');
+    const step = !body.tools ? citedAnswer : [accepted, readLens, ready][body.messages.filter(m => m.role === 'tool').length];
+    assert.ok(step);
+    return modelSteps([step]).fetch(_url, request);
+  };
+  await withServer(async origin => {
+    const results = await Promise.all(Array.from({length: 100}, (_, i) => fetch(origin + '/api/docs/bot-ask', {
+      method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer service-token'},
+      body: JSON.stringify({question: `Lens setup conversation ${i}`}),
+    }).then(async response => ({status: response.status, body: await response.json()}))));
+    assert.ok(peak >= 20, `Only ${peak} requests overlapped`);
+    for (const result of results) {
+      assert.equal(result.status, 200);
+      assert.equal(result.body.answer, citedAnswer);
+      assert.equal(result.body.sources[0].id, 1);
+    }
+  }, {config: {...config, botServiceToken: 'service-token', botApiKey: 'bot-key'}, fetchImpl});
+});

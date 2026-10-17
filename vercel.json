@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/docs/bot-ask",
+      "destination": "/api/docs/bot-ask"
+    },
+    {
       "source": "/api/docs/search",
       "destination": "/api/docs/search"
     },
@@ -83,6 +87,11 @@
       "memory": 256
     },
     "api/docs/ask.js": {
+      "includeFiles": "build/search-*.json",
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/docs/bot-ask.js": {
       "includeFiles": "build/search-*.json",
       "maxDuration": 60,
       "memory": 1024

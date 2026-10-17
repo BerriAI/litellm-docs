@@ -9,6 +9,8 @@ function readConfig(env, defaults = {}) {
     ...defaults,
     baseUrl: env.DOCS_AI_BASE_URL || BASE_URL,
     apiKey: env.DOCS_AI_API_KEY,
+    botApiKey: env.DOCS_BOT_AI_API_KEY,
+    botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
     publicRerankEnabled: env.DOCS_SEARCH_RERANK_ENABLED === 'true',
     origin: env.DOCS_ORIGIN || defaults.origin || 'https://docs.litellm.ai',

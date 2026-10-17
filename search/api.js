@@ -1,4 +1,11 @@
 const {answerQuestion} = require('./answer');
+const {createHash, timingSafeEqual} = require('node:crypto');
+
+function authorizedService(req, secret) {
+  if (!secret || typeof req.headers.authorization !== 'string') return false;
+  const digest = value => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(req.headers.authorization), digest(`Bearer ${secret}`));
+}
 
 const loopback = host => ['localhost', '127.0.0.1', '::1', '[::1]', '::ffff:127.0.0.1'].includes(host);
 function allowAI(config) {
@@ -47,13 +54,19 @@ async function readBody(req, signal, maxBytes = Infinity) {
     catch { return {status: 400, error: 'Invalid JSON'}; }
   } finally { signal.removeEventListener('abort', stop); }
 }
-function createAskHandler({index, documents, config, fetchImpl, now = Date.now}) {
+function createAskHandler({index, documents, config, fetchImpl, now = Date.now, service = false}) {
+  // The bot shares the answer engine and corpus, but never the website's model key.
+  if (service) config = {...config, apiKey: config.botApiKey};
   const clients = new Map();
   let windowStart = now(), globalCount = 0, active = 0;
   return async (req, res) => {
     if (req.method !== 'POST') return send(res, 405, {error: 'Use POST'}, {Allow: 'POST'});
-    if (!allowAI(config)) return send(res, 503, {error: 'Ask AI is not enabled. Document search is still available.'});
-    if (!config.publicAIEnabled && (!loopback(req.socket.remoteAddress) || req.headers.host !== new URL(config.origin).host)) {
+    if (service) {
+      if (!config.botServiceToken || !config.apiKey) return send(res, 503, {error: 'Docs bot is not configured.'});
+      if (!authorizedService(req, config.botServiceToken)) return send(res, 401, {error: 'Unauthorized'}, {'WWW-Authenticate': 'Bearer'});
+    }
+    if (!service && !allowAI(config)) return send(res, 503, {error: 'Ask AI is not enabled. Document search is still available.'});
+    if (!service && !config.publicAIEnabled && (!loopback(req.socket.remoteAddress) || req.headers.host !== new URL(config.origin).host)) {
       return send(res, 403, {error: 'Ask AI is available only on this computer.'});
     }
     if ((req.headers.origin && req.headers.origin !== config.origin) || req.headers['sec-fetch-site'] === 'cross-site') {
@@ -63,10 +76,11 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now})
     if (now() - windowStart >= 60000) {clients.clear(); globalCount = 0; windowStart = now();}
     const client = req.socket.remoteAddress || 'unknown';
     const count = clients.get(client) || 0;
-    if (count >= 10 || globalCount >= 60 || active >= 4) {
+    if (!service && (count >= 10 || globalCount >= 60 || active >= 4)) {
       return send(res, 429, {error: 'Too many questions. Please try again in a minute.'}, {'Retry-After': '60'});
     }
-    clients.set(client, count + 1); globalCount += 1; active += 1;
+    if (!service) {clients.set(client, count + 1); globalCount += 1;}
+    active += 1;
     const controller = new AbortController();
     const disconnected = () => {if (!res.writableEnded) controller.abort();};
     res.on('close', disconnected);

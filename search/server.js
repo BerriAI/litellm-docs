@@ -8,6 +8,7 @@ const {createRerankHandler} = require('./rerank-api');
 
 function createHandler(options) {
   const ask = createAskHandler(options);
+  const botAsk = createAskHandler({...options, service: true});
   const rerank = createRerankHandler(options);
   const buildDir = path.resolve(options.config.buildDir || 'build');
   return async (req, res) => {
@@ -17,6 +18,7 @@ function createHandler(options) {
     let pathname;
     try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
     catch { return send(res, 400, {error: 'Invalid URL'}); }
+    if (pathname === '/api/docs/bot-ask') return botAsk(req, res);
     if (pathname === '/api/docs/ask') return ask(req, res);
     if (pathname === '/api/docs/search') return rerank(req, res);
     if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, {error: 'Method not allowed'});
