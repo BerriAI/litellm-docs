@@ -972,6 +972,7 @@ router_settings:
 | MCP_NPM_CACHE_DIR | Directory for npm cache used by STDIO MCP servers. In containers the default (~/.npm) may not exist or be read-only. Default is `/tmp/.npm_mcp_cache`
 | LITELLM_MCP_CLIENT_TIMEOUT | MCP client connection timeout in seconds (stdio and HTTP/SSE transports). Default is 60
 | LITELLM_MCP_TOOL_LISTING_TIMEOUT | Timeout in seconds for listing tools from an MCP server. Default is 30
+| LITELLM_MCP_MAX_SSE_EVENT_SIZE_BYTES | Largest single server-sent event, in bytes, that LiteLLM accepts from a Streamable HTTP MCP server. Raise it if large `tools/call` results fail with `Server-sent event exceeded the ... byte limit`. Default is 67108864 (64 MiB)
 | LITELLM_MCP_METADATA_TIMEOUT | HTTP client timeout in seconds for OAuth metadata fetching. Default is 10
 | LITELLM_MCP_OAUTH_DISCOVERY_ON_STARTUP | Set to `1`, `true`, `yes`, or `on` to fetch remote MCP OAuth metadata eagerly while servers are registered at startup, which lets an unreachable OAuth server delay proxy readiness. Default is unset: metadata is fetched in a background task that the first request needing it joins, and a failed fetch is retried after a cooldown
 | LITELLM_MCP_HEALTH_CHECK_TIMEOUT | Health check timeout in seconds for MCP servers. Default is 10
