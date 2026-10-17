@@ -275,8 +275,8 @@ export default function SearchBar() {
           {mode === 'search' ? <><Search className={styles.searchIcon} size={20}/>
             <input ref={input} value={query} maxLength={500} onChange={event => changeQuery(event.target.value)}
               placeholder="Search for anything..." aria-label="Search documentation" aria-controls="docs-search-results"
-              aria-activedescendant={results.length ? `docs-result-${selected}` : undefined}
-              role="combobox" aria-expanded={!!results.length} aria-autocomplete="list"/>
+              aria-activedescendant={!loading && results.length ? `docs-result-${selected}` : undefined}
+              role="combobox" aria-expanded={!!query.trim()} aria-autocomplete="list"/>
           </> : <span className={styles.chatTitle}>Ask LiteLLM AI</span>}
           {toggle}
           <button type="button" className={styles.close} onClick={close} aria-label="Close search"><X size={18}/></button>
@@ -293,14 +293,20 @@ export default function SearchBar() {
                   <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
                 <small role="status">{loading ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
               </div>
-              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
+              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{loading
+                ? Array.from({length: 5}, (_, i) => <div key={i} className={`${styles.result} ${styles.skeleton}`} aria-hidden="true">
+                  <span className={styles.skeletonMeta}/>
+                  <span className={styles.skeletonTitle} style={{width: `${[58, 72, 48, 64, 54][i]}%`}}/>
+                  <span className={styles.skeletonSnippet}/>
+                </div>)
+                : results.slice(0, visibleCount).map((result, i) => <a key={result.id} id={`docs-result-${i}`} data-result={i} role="option" aria-selected={selected === i}
                 className={`${styles.result} ${selected === i ? styles.selected : ''}`} href={result.url} onMouseEnter={() => setSelected(i)}>
                 <span className={styles.path}><SourceMeta source={result}/></span>
                 <span className={styles.resultTitle}><SourceIcon source={result}/><span><Highlighted text={result.title} terms={result.highlights}/></span></span>
                 <span className={styles.snippet}><Highlighted text={result.snippet} terms={result.highlights}/></span>
                 {selected === i && <CornerDownLeft className={styles.enterIcon} size={16}/>}
               </a>)}</div>
-              {visibleCount < results.length && <button type="button" className={styles.more} onClick={() => setVisibleCount(count => count + 25)}>Show 25 more</button>}
+              {!loading && visibleCount < results.length && <button type="button" className={styles.more} onClick={() => setVisibleCount(count => count + 25)}>Show 25 more</button>}
               {!loading && !searchError && !results.length && <p className={styles.noResults}>No {contentType === 'all' ? 'results' : contentType === 'release' ? 'release notes' : contentType === 'blog' ? 'blog posts' : 'docs'} found for “{query}”. {contentType !== 'all' ? <button onClick={() => setContentType('all')}>Search all content</button> : 'Try fewer words or a feature name.'}</p>}
             </>}
           </div>

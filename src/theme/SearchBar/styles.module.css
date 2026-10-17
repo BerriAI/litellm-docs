@@ -34,6 +34,13 @@
 .more {align-self:center;flex-shrink:0;padding:5px 12px;border:1px solid var(--search-border);border-radius:6px;background:none;color:var(--search-accent);font-size:13px}
 .result {position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 38px 8px 16px;margin-bottom:10px;border:1px solid var(--search-border);border-radius:8px;color:var(--search-text);text-decoration:none;scroll-margin:8px}
 .result:hover {color:var(--search-text);text-decoration:none}
+.skeleton {gap:11px;padding:13px 16px;pointer-events:none}
+.skeletonMeta,.skeletonTitle,.skeletonSnippet {display:block;border-radius:4px;background:var(--search-muted);animation:searchSkeletonPulse 1.5s ease-in-out infinite alternate}
+.skeletonMeta {width:22%;height:8px}
+.skeletonTitle {height:15px}
+.skeletonSnippet {width:92%;height:10px}
+@keyframes searchSkeletonPulse {from {opacity:.1} to {opacity:.22}}
+@media (prefers-reduced-motion:reduce) {.skeletonMeta,.skeletonTitle,.skeletonSnippet {animation:none;opacity:.16}}
 .selected {background:var(--search-selected);border-color:var(--search-accent)}
 .path {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--search-muted);font-size:12px;line-height:18px}
 .path>span {padding:0 5px}
