@@ -60,7 +60,7 @@ os.environ["AZURE_API_KEY"] = ""
 os.environ["AZURE_API_BASE"] = ""
 os.environ["AZURE_API_VERSION"] = ""
 
-context_window_fallback_list = [{"model":"gpt-3.5-turbo-16k", "max_input_tokens": 16385}, {"model":"gpt-4-32k", "max_input_tokens": 32768}, {"model": "claude-instant-1", "max_input_tokens":100000}]
+context_window_fallback_list = [{"model":"gpt-3.5-turbo-16k", "max_input_tokens": 16385}, {"model":"gpt-4.1", "max_input_tokens": 1047576}, {"model": "claude-sonnet-4-5", "max_input_tokens":200000}]
 
 user_message = "Hello, how are you?"
 messages = [{ "content": user_message,"role": "user"}]
