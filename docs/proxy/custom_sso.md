@@ -1,10 +1,10 @@
-# ✨ Event Hooks for SSO Login
+# Event Hooks for SSO Login
 
 <EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 ## Overview
 
-LiteLLM provides two different SSO hooks depending on your authentication setup:
+LiteLLM has two SSO hooks. Pick the hook for your authentication setup:
 
 | Hook Type | When to Use | What It Does |
 |-----------|-------------|--------------|
@@ -12,18 +12,18 @@ LiteLLM provides two different SSO hooks depending on your authentication setup:
 | **Custom SSO Handler** | You use direct SSO providers (Google, Microsoft, SAML) and want custom post-auth logic | Runs custom code after standard OAuth flow to set user permissions/teams |
 
 **Quick Decision Guide:**
-- ✅ **Use Custom UI SSO Sign-in Handler** if user authentication happens outside LiteLLM (via headers)
+- ✅ **Use Custom UI SSO Sign-in Handler** if user authentication happens outside LiteLLM (with headers)
 - ✅ **Use Custom SSO Handler** if you want LiteLLM to handle OAuth flow + run custom logic afterward
 
 ---
 
 ## Option 1: Custom UI SSO Sign-in Handler
 
-Use this when you have an **OAuth proxy in front of LiteLLM** that has already authenticated the user and passes user information via request headers.
+Use this when you have an **OAuth proxy in front of LiteLLM** that has already authenticated the user and sends user information in request headers.
 
 ### How it works
 - User lands on Admin UI  
-- 👉 **Your custom SSO sign-in handler is called to parse request headers and return user info**
+- 👉 **LiteLLM calls your custom SSO sign-in handler. The handler reads the request headers and returns the user info.**
 - LiteLLM has retrieved user information from your custom handler
 - User signed in to UI
 
@@ -96,20 +96,20 @@ $ litellm --config /path/to/config.yaml
 
 #### 4. Navigate to the Admin UI
 
-When a user attempts navigating to the LiteLLM Admin UI, the request will be routed to your custom UI SSO sign-in handler. 
+When a user opens the LiteLLM Admin UI, LiteLLM sends the request to your custom UI SSO sign-in handler. 
 
 ---
 
 ## Option 2: Custom SSO Handler (Post-Authentication)
 
-Use this if you want to run your own code **after** a user signs on to the LiteLLM UI using standard SSO providers (Google, Microsoft, etc.)
+Use this hook to run your own code **after** a user signs in to the LiteLLM UI. It works with the standard SSO providers, for example Google and Microsoft.
 
 ### How it works
 - User lands on Admin UI
 - LiteLLM redirects user to your SSO provider (Google, Microsoft, etc.)
 - Your SSO provider redirects user back to LiteLLM  
 - LiteLLM has retrieved user information from your IDP
-- 👉 **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
+- 👉 **LiteLLM calls your custom SSO handler. The handler returns an object of type SSOUserDefinedValues.**
 - User signed in to UI
 
 ### Usage
@@ -171,6 +171,10 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
     except Exception as e:
         raise Exception("Failed custom auth")
 ```
+
+:::note Set roles with role mappings
+LiteLLM saves the `user_role` from your handler only when it creates the user at the first sign-in. For a user that already exists, LiteLLM does not update the saved role from the handler. To set LiteLLM roles from IdP groups, use [role mappings](./saml_sso.md#map-idp-groups-to-litellm-roles). Role mappings need no code, and LiteLLM updates the saved role at each sign-in.
+:::
 
 #### 2. Configure in config.yaml
 

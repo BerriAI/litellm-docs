@@ -1,3 +1,7 @@
+---
+sidebar_label: "OWASP LLM Top 10"
+---
+
 # OWASP LLM Top 10 (2026) mapping
 
 This page maps every item of the [OWASP Top 10 for LLM Applications 2026](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/) to the LiteLLM gateway controls that address it, says how each control is turned on, and states where each one stops. It is written for a security reviewer filling in a questionnaire and for the platform team deciding which controls to enable. Every claim on it was checked against the LiteLLM `main` branch at version `1.104.0` (September 2026); the last section says how to re-check it against the version you run
