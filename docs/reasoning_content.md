@@ -738,7 +738,7 @@ To round down on every deployment, set `reasoning_effort_rounding: down` under `
 
 A non-empty `reasoning_effort_levels` also lets a provider that does not otherwise accept `reasoning_effort` take it, which today means `azure_ai`. An empty list does not.
 
-On `/v1/messages`, which Claude Code and other Anthropic-format clients call, the effort derived from `thinking` or `output_config.effort` is rounded onto the declared levels the same way, so `xhigh` goes to `max` when `max` is declared. A `/v1/chat/completions` request that sends an Anthropic-style `thinking` budget is rounded too, on every provider. On adaptive Claude models the budget first becomes an effort through Claude's own mapping, and the caller's `thinking.display` is kept. A `budget_tokens` that is not a number answers 400, or is dropped with `drop_params: true`.
+On `/v1/messages`, which Claude Code and other Anthropic-format clients call, the effort derived from `thinking` or `output_config.effort` is rounded onto the declared levels the same way, so `xhigh` goes to `max` when `max` is declared. A `/v1/chat/completions` request that sends an Anthropic-style `thinking` budget is rounded too, on every provider. On adaptive Claude models the budget first becomes an effort through Claude's own mapping, and the caller's `thinking.display` is kept. A `budget_tokens` that is not a number answers 400, or is dropped with `drop_params: true`. When the request also sends `reasoning_effort` or `output_config.effort`, that level wins over the budget, `default` included, unless `drop_params: true` drops it, and then the budget sets the effort.
 
 Each change logs one INFO line in this shape.
 
