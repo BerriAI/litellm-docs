@@ -52,6 +52,8 @@ For each model, you can set `timeout` and `stream_timeout` under `litellm_params
 
 Some requests can't be streamed by the provider, for example a `json_schema` response format on a Bedrock model without native structured output. LiteLLM then makes one non-streaming call and sends the answer back as chunks once it is complete, so no chunk arrives until the whole answer is written. These requests use the longer of `timeout` and `stream_timeout`, so a short `stream_timeout` meant for stalled streams does not cut off a slow structured answer.
 
+The same rules apply when you call `litellm.completion()`, `litellm.acompletion()`, or `litellm.aresponses()` directly without a Router. Pass `stream_timeout` next to `timeout`, and a live stream is bounded by `stream_timeout`, a call that is not streamed by `timeout`, and a faked stream by the longer of the two. Earlier versions ignored `stream_timeout` on direct SDK calls, so a short value you set there now cuts off a live stream that takes longer than it to send a chunk.
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
