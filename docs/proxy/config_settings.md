@@ -1264,6 +1264,7 @@ router_settings:
 | LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
 | LITELLM_EMAIL | Email associated with LiteLLM account
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
+| LITELLM_GC_FREEZE_AFTER_STARTUP | When "true", the proxy runs `gc.collect()` and `gc.freeze()` once startup finishes, before it serves requests, so full garbage collections skip the startup heap and pause for less time. Cycles among startup objects are then never collected, and frozen objects no longer appear in `gc.get_objects()` or the `/debug/memory` endpoints. **Default is true**. Set `LITELLM_GC_FREEZE_AFTER_STARTUP=false` to disable startup freezing.
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRIES | Maximum retries for parallel requests in LiteLLM
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of URL paths to exclude from uvicorn access logs (e.g., `/health,/metrics`). Useful for suppressing noisy health-check log entries. |
