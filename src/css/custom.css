@@ -2159,14 +2159,18 @@ section.row:has(> article > a.card)::after { left: -3px; bottom: -3px; }
 /* =========================================================================
    NEW LOGO (preview): official files, never recolored or distorted
    ========================================================================= */
+/* Flex, so the image is not an inline box on the text baseline, which put
+   it 6px below the centre of the row. (ThemedImage sets display: initial on
+   the image itself, so it cannot be made a block directly.) */
 .navbar__brand-col .navbar__logo,
 .navbar__logo {
+  display: flex;
+  align-items: center;
   height: 18px;
   margin-right: 0;
 }
 
 .navbar__logo img {
-  display: block; /* inline images sit on the text baseline and drop below the box */
   height: 100%;
   width: auto;
 }
