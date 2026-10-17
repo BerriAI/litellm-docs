@@ -41,14 +41,15 @@ test('gateway requests fix model options and keep credentials out of prompt data
     assert.equal(url, config.baseUrl + '/chat/completions');
     assert.equal(body.model, MODEL);
     assert.deepEqual(body.fallbacks.map(fallback => fallback.model), FALLBACKS);
-    assert.equal(body.fallbacks[1].reasoning_effort, 'low');
+    assert.equal(body.model, 'openai/gpt-6.1-sol');
+    assert.deepEqual(body.fallbacks.map(fallback => fallback.reasoning_effort), ['none', 'none']);
     for (const options of [body, ...body.fallbacks]) {
       assert.equal(options.max_tokens, undefined);
       assert.equal(options.max_completion_tokens, undefined);
     }
     assert.equal(body.max_fallbacks, 2);
     assert.equal(body.num_retries, 0);
-    assert.equal(body.reasoning_effort, 'none');
+    assert.equal(body.reasoning_effort, 'low');
     assert.deepEqual(body.cache, {'no-cache': true, 'no-store': true});
     assert.equal(request.redirect, 'error');
     if (body.tools) assert.deepEqual(body.tools.map(tool => tool.function.name), ['search_docs', 'read_docs', 'finish_research']);
