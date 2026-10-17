@@ -1545,6 +1545,7 @@ const sidebars = {
           "providers/sambanova",
           "providers/sap",
           "providers/sarvam",
+          "providers/saygm",
           "providers/scaledown",
           "providers/scaleway",
           "providers/scx_ai",
