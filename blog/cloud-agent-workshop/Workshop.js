@@ -56,6 +56,9 @@ export function WorkshopHero() {
         <WorkshopImage file="slack.svg" className={styles.blueprintSlack} alt="" width="51" height="51" />
       </div>
     </figure>
+    <div className={styles.heroActions}>
+      <SignupButton className={styles.signup} />
+    </div>
   </section>;
 }
 
