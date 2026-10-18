@@ -31,10 +31,34 @@
       "sha256": "9888fc92f2f1dec929b2a6620f8a6d5f87785f0c89cd75d7b2e243212ad1a6da",
       "source_type": "real local candidate UI capture by coordinator, normal product login",
       "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-suno-empty-token-candidate.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "c2971654fb8bcf703d4c6a9b18afb01ef2015699",
+      "sha256": "2f7b04272b7a6108af6f1c9d11de6de0793c405b797ef4c3373a41c8aee3d417",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-empty-token-add-blocked.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "166f54e33cbb9bcdd977fb889c782f20cafef6b9",
+      "sha256": "c132b4b4f78834bca11b1516219434eeb4e777cfc022dbc313d9e7aa3b33d533",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-ace-provider-search-candidate.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "e6e760b86178432b22898378080932c01b3d14d5",
+      "sha256": "998a5343f3a77d0cb3f81368ef85a830da8fc4143aa2743d283f59e8b8a05713",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
     }
   ],
   "latest_media_head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
   "latest_delta": "only equivalent early-return split for lint; exact-tip recapture not yet received",
   "button_semantics": "Add MCP Server is clickable; empty form submit is validation-blocked, not disabled",
-  "public_asset_note": "Exact redacted candidate captures previously referenced through private Index raw URLs; bytes unchanged."
+  "public_asset_note": "Exact existing redacted candidate captures; pages use four current illustrations and companion product PR bodies reference the additional before/search/submit proof. Rehosted to repair private Index raw image links; bytes unchanged."
 }
