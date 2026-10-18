@@ -1,5 +1,7 @@
 # Ace Data Cloud
 
+[简体中文](./acedatacloud_zh.md)
+
 [Ace Data Cloud](https://platform.acedata.cloud?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs) provides model APIs with one API key and a shared Credit balance.
 
 ## Overview
@@ -20,6 +22,14 @@ The `acedatacloud/` prefix requires a LiteLLM version containing [the provider i
 Versions without the Credit-cost fix can fail strict response serialization when `usage.cost` contains a structured Credit value. Verify serialization and custom prices before using the generic configuration in a proxy.
 
 :::
+
+## Install LiteLLM
+
+Install the SDK and proxy package, then follow the [Proxy quick start](https://docs.litellm.ai/docs/proxy/quick_start) to start and sign in to your own deployment. The provider selection below requires a release containing the integration linked above. Installing an older stable package does not add the candidate provider.
+
+```bash
+python -m pip install 'litellm[proxy]'
+```
 
 ## Get an API key
 
@@ -111,9 +121,9 @@ curl http://localhost:4000/v1/responses \
 
 In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, select `acedatacloud/gpt-6-luna`, and enter your Ace Data Cloud API key.
 
-![Actual candidate Ace provider selection](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-ace-provider-selected.jpg)
+![Actual candidate Ace provider selection](/img/acedatacloud/litellm-ace-provider-selected.jpg)
 
-![Actual candidate model mapping and empty API key](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-ace-provider-model-empty-key.jpg)
+![Actual candidate model mapping and empty API key](/img/acedatacloud/litellm-ace-provider-model-empty-key.jpg)
 
 These are real isolated candidate captures from October 18, 2026, running exact provider commit `e6e760b8` through normal local product login. The visible `v1.105.1` header comes from dependency wheel metadata; the source checkout supplied the implementation. It is not evidence that release 1.105.1 includes this provider. No Ace key, Test Connect, or Add Model action was used, so the images do not prove credential storage, model output, or billing.
 
