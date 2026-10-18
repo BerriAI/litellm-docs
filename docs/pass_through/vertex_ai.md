@@ -509,7 +509,7 @@ The `x-pass-` prefix works for all LLM pass-through endpoints, not just Vertex A
 
 ### Removing Anthropic Beta Values Vertex AI Rejects
 
-Available in the next release (after `v1.106.0`).
+Available from v1.108.0.
 
 Some `anthropic-beta` values that the Anthropic API accepts get a 400 from Claude on Vertex AI, such as ``Unexpected value(s) `files-api-2025-04-14` for the `anthropic-beta` header``. When a client you do not control sends one, list it in `general_settings.vertex_ai_pass_through_drop_anthropic_betas`, and the `/vertex_ai/*` and `/vertex-ai/*` routes remove it before calling Vertex AI.
 
