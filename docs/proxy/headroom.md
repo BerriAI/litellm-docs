@@ -180,7 +180,7 @@ curl -sS --get http://localhost:4000/spend/logs/v2 \
 
 The snapshot contains the restored, normalized message list immediately after Headroom compression, including protected messages. Provider adapters may translate roles and content blocks afterward, and later guardrail changes are not included. The same snapshot is recorded for Chat Completions, Messages, and Responses, including streaming requests. Logs are written asynchronously, so the record may not be available immediately after the response.
 
-Prompt capture respects message-redaction settings and existing storage limits. Oversized strings carry the existing truncation marker. When prompt storage is disabled or message redaction is enabled, compression statistics remain available without the snapshot. Skipped, bypassed, or failed-open compression does not produce a compressed snapshot.
+Prompt capture respects message-redaction settings and existing storage limits. Oversized strings carry the existing truncation marker. When prompt storage is disabled or message redaction is enabled, compression statistics remain available without the snapshot. Skipped, bypassed, or failed-open compression does not produce a compressed snapshot. Internal routing-only compression without trusted request context records statistics without a prompt snapshot.
 
 For requests that expand managed prompt templates, the snapshot is recorded only for proxy admins and admin viewers. Other callers can still run inference with the template, but its compressed snapshot is omitted. Existing spend-log access permissions continue to apply. The snapshot is part of standard guardrail logging, so configured logging integrations can also receive it when capture is enabled.
 
