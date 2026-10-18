@@ -161,36 +161,28 @@ Concretely: with `default_on: false` and no `headroom-compression` attached to t
 
 ## Inspecting the compressed prompt
 
-To return the compressed prompt for one request, send `x-litellm-return-compressed-prompt: true`. This does not enable the Headroom guardrail. Compression must already be enabled through the configuration, key, team, or per-request guardrail selection above.
+Enable prompt storage in your proxy configuration to include Headroom's compressed messages in spend logs:
 
-After successful compression, `x-litellm-compressed-prompt` contains base64-encoded UTF-8 JSON of the restored message list, including the protected messages. The list uses the guardrail's normalized message representation; the provider adapter may translate roles and content blocks for its API. This works with `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`, including streaming responses.
+```yaml
+general_settings:
+  store_prompts_in_spend_logs: true
+```
+
+This requires configured database spend logging. Compression must already be enabled through the configuration, key, team, or per-request guardrail selection above. No prompt content is returned in response headers.
+
+After a successful request, use the response's `x-litellm-call-id` to find its spend log. Open the Logs page at `/ui/?page=logs`, find the request, and inspect its Headroom guardrail details. The guardrail response contains `compressed_messages` alongside compression statistics. You can also use the existing spend-log API with a key authorized to view that request:
 
 ```bash
-curl -sS -D response-headers.txt http://localhost:4000/v1/chat/completions \
+curl -sS --get http://localhost:4000/spend/logs/v2 \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "x-litellm-return-compressed-prompt: true" \
-  --data-binary @request.json
+  --data-urlencode "request_id=$LITELLM_CALL_ID"
 ```
 
-Decode the header value with standard base64 and JSON libraries:
+The snapshot contains the restored, normalized message list immediately after Headroom compression, including protected messages. Provider adapters may translate roles and content blocks afterward, and later guardrail changes are not included. The same snapshot is recorded for Chat Completions, Messages, and Responses, including streaming requests. Logs are written asynchronously, so the record may not be available immediately after the response.
 
-```python
-import base64
-import json
+Prompt capture respects message-redaction settings and existing storage limits. Oversized strings carry the existing truncation marker. When prompt storage is disabled or message redaction is enabled, compression statistics remain available without the snapshot. Skipped, bypassed, or failed-open compression does not produce a compressed snapshot.
 
-messages = json.loads(base64.b64decode(response.headers["x-litellm-compressed-prompt"]))
-```
-
-The encoded value is limited to 16,384 bytes. Larger values are omitted entirely and replaced with `x-litellm-compressed-prompt-omitted: too_large`. The prompt is never truncated. Without opt-in, or when compression is skipped, bypassed with `x-headroom-bypass: true`, or fails open, neither header is returned.
-
-The snapshot reflects Headroom's output. If another guardrail rewrites messages afterward, those later changes are not included in this header.
-
-These headers contain prompt content. Treat them as sensitive when recording HTTP headers or forwarding responses. There is no global setting for returning prompts.
-
-When the proxy applies a managed prompt template, only proxy admins and admin viewers can receive the compressed-prompt header. Other callers can still use the template for inference, but the header is omitted to protect its contents. Requests using only caller-supplied messages retain the normal opt-in behavior.
-
-For an oversized prompt, `x-litellm-call-id` can identify the request in a configured logging integration. In verified `generic_api` logging, Chat Completions and Messages include compressed messages, but Responses includes the original input. Guardrail statistics alone do not contain the prompt. Do not assume an oversized compressed prompt is retrievable from every logging destination or from database spend logs.
+For requests that expand managed prompt templates, the snapshot is recorded only for proxy admins and admin viewers. Other callers can still run inference with the template, but its compressed snapshot is omitted. Existing spend-log access permissions continue to apply. The snapshot is part of standard guardrail logging, so configured logging integrations can also receive it when capture is enabled.
 
 ## Compression behind an auto router
 
