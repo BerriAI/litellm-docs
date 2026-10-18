@@ -111,9 +111,11 @@ curl http://localhost:4000/v1/responses \
 
 In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, select `acedatacloud/gpt-6-luna`, and enter your Ace Data Cloud API key.
 
-![Ace provider and model selection in a candidate LiteLLM Admin UI](https://raw.githubusercontent.com/acedatacloud-dev/litellm/ad0434f8accd07e5f9e609885df8b5dce1a58d7e/ui-selected-after-light.png)
+![Actual candidate Ace provider selection](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-ace-provider-selected.jpg)
 
-This is a real isolated candidate screenshot from October 11, 2026, with a `vunknown` source-build header and an empty API-key field. It shows the selection controls before official release. It does not prove credential storage, model output, or current release availability.
+![Actual candidate model mapping and empty API key](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-ace-provider-model-empty-key.jpg)
+
+These are real isolated candidate captures from October 18, 2026, running exact provider commit `e6e760b8` through normal local product login. The visible `v1.105.1` header comes from dependency wheel metadata; the source checkout supplied the implementation. It is not evidence that release 1.105.1 includes this provider. No Ace key, Test Connect, or Add Model action was used, so the images do not prove credential storage, model output, or billing.
 
 ## Models and cost tracking
 

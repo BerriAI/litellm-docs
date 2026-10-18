@@ -16,9 +16,9 @@ Open **MCP Servers**, click **Add New MCP Server**, and search for the service n
 
 The discovery entries require a LiteLLM version containing [the media catalog integration](https://github.com/BerriAI/litellm/pull/47149). If your installation has no matching entry, use **Custom Server** with the endpoint above, **Streamable HTTP**, and **Bearer Token**. This manual route does not mean the entry is already included in your installed release.
 
-The following image is LiteLLM's existing server-registration form. It is an official product reference, not an Ace connection result or a screenshot of the new discovery entries.
+![Five separate media service entries in the actual LiteLLM candidate UI](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-five-media-cards-candidate.jpg)
 
-![LiteLLM server-registration form](../../img/add_mcp.png)
+This is a real local candidate capture from October 18, 2026, at media-discovery commit `c2971654`. It shows the five separate service entries before official release, not proof that an installed stable version contains them.
 
 ## Get an API token
 
@@ -35,6 +35,13 @@ These are redacted Ace console screenshots from the Suno Dify onboarding guide a
 ## Connect in LiteLLM
 
 In a release containing the media catalog change, the selected discovery card fills the server name, endpoint, Streamable HTTP transport, and Bearer Token authentication. Paste only the Ace token into **Authentication Value**, without `Bearer ` or quotes. Leave OAuth and custom Authorization headers unset when using this token route.
+
+The authenticated discovery preset waits for a nonblank token before testing the connection. Follow **Get your API token** to Applications if needed. Clicking **Add MCP Server** with an empty token displays a required-field error and does not submit; the button itself remains clickable.
+
+![Real candidate shows the empty password field and token-acquisition link](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-suno-required-token-fixed.jpg)
+
+The token-first form was captured with normal local product login on October 18 at commit `166f54e3`, without an Ace key or server creation. The subsequent `6ed14e00` change only splits an equivalent condition for lint and does not change the form markup. These images are candidate interaction evidence, not remote authentication, final media output, billing, or official release proof.
+
 
 Check the connection and credential scope, then choose **Add MCP Server**. Open the server's **MCP Tools** tab. Do not grant tools to all teams or keys by default. Use [MCP Permission Management](../mcp_control.md) to give the intended users access. Storing connections through the UI needs `store_model_in_db: true`, as described in [MCP prerequisites](../mcp.md#prerequisites).
 
