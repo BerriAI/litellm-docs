@@ -459,6 +459,7 @@ LiteLLM supports the following provider-native batch APIs:
 | Mistral AI | [Mistral AI Batch API](./providers/mistral_batches) |
 | vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
 | xAI | [xAI Batch API](./providers/xai_batches) |
+| Batchrate | [Batchrate batches](./providers/batchrate), through the `openai` provider with `api_base` |
 
 Amazon Bedrock is the supported AWS integration for batch inference.
 
