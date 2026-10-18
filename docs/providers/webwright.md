@@ -18,7 +18,8 @@ Set `webwright/` as the prefix when sending completion requests to route them to
 
 | Model | Description |
 |-------|-------------|
-| `webwright/wren-r1` | Wren R1, WebWright's chat completion model. |
+| `webwright/wren-r1` | Wren R1, WebWright's Standard plan chat completion model. |
+| `webwright/wren-r1-fast` | Wren R1 Priority, the Premium plan id for the same upstream model with priority capacity. |
 
 ## Required Variables
 
@@ -103,20 +104,16 @@ WebWright supports the following OpenAI-compatible parameters:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `messages` | array | **Required**. Array of message objects with 'role' and 'content' |
-| `model` | string | **Required**. Model ID (`wren-r1`) |
+| `model` | string | **Required**. Model ID (`wren-r1` or `wren-r1-fast`) |
 | `stream` | boolean | Optional. Enable streaming responses |
 | `temperature` | float | Optional. Sampling temperature |
 | `top_p` | float | Optional. Nucleus sampling parameter |
 | `max_tokens` | integer | Optional. Maximum tokens to generate |
-| `frequency_penalty` | float | Optional. Penalize frequent tokens |
-| `presence_penalty` | float | Optional. Penalize tokens based on presence |
 | `stop` | string/array | Optional. Stop sequences |
-| `n` | integer | Optional. Number of completions to generate |
 | `tools` | array | Optional. List of available tools/functions |
 | `tool_choice` | string/object | Optional. Control tool/function calling |
-| `response_format` | object | Optional. Response format specification |
-| `seed` | integer | Optional. Random seed for reproducibility |
-| `user` | string | Optional. User identifier |
+| `response_format` | object | Optional. Structured output response format |
+| `reasoning_effort` | string | Optional. Reasoning effort mode |
 
 ## Additional Resources
 
