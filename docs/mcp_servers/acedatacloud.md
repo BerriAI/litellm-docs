@@ -1,6 +1,16 @@
 # Ace Data Cloud media MCP servers
 
+[简体中文](./acedatacloud_zh.md)
+
 Connect Suno, Seedance, HappyHorse, GPT Image, or Nano Banana to the LiteLLM MCP Gateway. Each service has its own connection and tools. These integrations are maintained by Ace Data Cloud and require your own Ace API token. They are not official integrations from the model brands.
+
+## Install and open the MCP Gateway
+
+Install `litellm[proxy]` and follow the [Proxy quick start](https://docs.litellm.ai/docs/proxy/quick_start) for your deployment. Use a database-backed deployment with `store_model_in_db: true` when saving connections through the UI; see [MCP prerequisites](../mcp.md#prerequisites). Sign in with your LiteLLM administrator account, then open **MCP Servers**. The five discovery entries require the catalog integration described below; an older stable installation can use the manual connection route.
+
+```bash
+python -m pip install 'litellm[proxy]'
+```
 
 ## Choose a service
 
@@ -16,7 +26,7 @@ Open **MCP Servers**, click **Add New MCP Server**, and search for the service n
 
 The discovery entries require a LiteLLM version containing [the media catalog integration](https://github.com/BerriAI/litellm/pull/47149). If your installation has no matching entry, use **Custom Server** with the endpoint above, **Streamable HTTP**, and **Bearer Token**. This manual route does not mean the entry is already included in your installed release.
 
-![Five separate media service entries in the actual LiteLLM candidate UI](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-five-media-cards-candidate.jpg)
+![Five separate media service entries in the actual LiteLLM candidate UI](/img/acedatacloud/litellm-five-media-cards-candidate.jpg)
 
 This is a real local candidate capture from October 18, 2026, at media-discovery commit `c2971654`. It shows the five separate service entries before official release, not proof that an installed stable version contains them.
 
@@ -38,7 +48,7 @@ In a release containing the media catalog change, the selected discovery card fi
 
 The authenticated discovery preset waits for a nonblank token before testing the connection. Follow **Get your API token** to Applications if needed. Clicking **Add MCP Server** with an empty token displays a required-field error and does not submit; the button itself remains clickable.
 
-![Real candidate shows the empty password field and token-acquisition link](https://raw.githubusercontent.com/AceDataCloud/Index/17fcf4ef7fe490fe111773b617f6b0c613ff8994/plans/ecosystem-growth/tracking-20261012/validation/litellm-ui-20261018/images/litellm-suno-required-token-fixed.jpg)
+![Real candidate shows the empty password field and token-acquisition link](/img/acedatacloud/litellm-suno-required-token-fixed.jpg)
 
 The token-first form was captured with normal local product login on October 18 at commit `166f54e3`, without an Ace key or server creation. The subsequent `6ed14e00` change only splits an equivalent condition for lint and does not change the form markup. These images are candidate interaction evidence, not remote authentication, final media output, billing, or official release proof.
 

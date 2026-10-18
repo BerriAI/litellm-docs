@@ -1,0 +1,40 @@
+{
+  "images": [
+    {
+      "file": "litellm-five-media-cards-candidate.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "c2971654fb8bcf703d4c6a9b18afb01ef2015699",
+      "sha256": "006560ce084b097a1f8fe9a66e6ce03c307114fe191cdb09b02b1b2591723f09",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-suno-required-token-fixed.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "166f54e33cbb9bcdd977fb889c782f20cafef6b9",
+      "sha256": "e6fc2c49b9c6b0dbc24d332687637f98b5dd6a359f3ae2781917b41f37ff0001",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-ace-provider-selected.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "e6e760b86178432b22898378080932c01b3d14d5",
+      "sha256": "fbb94be8227d1c9421926f85dfb36aac710b5b9b243b8fe8201472b8eef450f7",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-ace-provider-model-empty-key.jpg",
+      "capture_date": "2026-10-18 Asia/Shanghai",
+      "source_head": "e6e760b86178432b22898378080932c01b3d14d5",
+      "sha256": "9888fc92f2f1dec929b2a6620f8a6d5f87785f0c89cd75d7b2e243212ad1a6da",
+      "source_type": "real local candidate UI capture by coordinator, normal product login",
+      "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    }
+  ],
+  "latest_media_head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
+  "latest_delta": "only equivalent early-return split for lint; exact-tip recapture not yet received",
+  "button_semantics": "Add MCP Server is clickable; empty form submit is validation-blocked, not disabled",
+  "public_asset_note": "Exact redacted candidate captures previously referenced through private Index raw URLs; bytes unchanged."
+}
