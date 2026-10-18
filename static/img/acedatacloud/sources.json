@@ -55,10 +55,46 @@
       "sha256": "998a5343f3a77d0cb3f81368ef85a830da8fc4143aa2743d283f59e8b8a05713",
       "source_type": "real local candidate UI capture by coordinator, normal product login",
       "limits": "No Ace Key, no model/media generation or saved server/model. Source checkout head is authoritative; displayed wheel version is not proof of official release."
+    },
+    {
+      "file": "litellm-final-tip-five-media-cards.jpg",
+      "capture_date": "2026-10-18T19:27:52.843121+08:00",
+      "source_head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
+      "sha256": "4ce530cc31dde7c1a0e46f28d914a21dfc517f537b0ceffef91a892bad88fcb5",
+      "source_type": "real local candidate UI capture by coordinator using normal existing product session",
+      "limits": "No Ace token; no Add/Test/Authorize click or save/generation. Native HTML required attribute is false; this run does not test submission validation."
+    },
+    {
+      "file": "litellm-final-tip-suno-empty-token.jpg",
+      "capture_date": "2026-10-18T19:27:52.843121+08:00",
+      "source_head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
+      "sha256": "d90aec0164208e7d77a01e88c5bf5f07b6c1b919e49bf1851cf2473d14609985",
+      "source_type": "real local candidate UI capture by coordinator using normal existing product session",
+      "limits": "No Ace token; no Add/Test/Authorize click or save/generation. Native HTML required attribute is false; this run does not test submission validation."
     }
   ],
   "latest_media_head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
-  "latest_delta": "only equivalent early-return split for lint; exact-tip recapture not yet received",
-  "button_semantics": "Add MCP Server is clickable; empty form submit is validation-blocked, not disabled",
-  "public_asset_note": "Exact existing redacted candidate captures; pages use four current illustrations and companion product PR bodies reference the additional before/search/submit proof. Rehosted to repair private Index raw image links; bytes unchanged."
+  "latest_delta": "Exact 6ed14e00 final-tip visual confirmation completed on October 18; original image heads are retained.",
+  "button_semantics": "166f54e3 earlier empty-submit acceptance was application form validation; 6ed14e00 capture did not click Add. Native HTML required attribute is false.",
+  "public_asset_note": "Exact existing redacted candidate captures; pages use four current illustrations and companion product PR bodies reference the additional before/search/submit proof. Rehosted to repair private Index raw image links; bytes unchanged.",
+  "final_tip_acceptance": {
+    "at": "2026-10-18T19:27:52.843121+08:00",
+    "head": "6ed14e006a030cdff76c84564ff4fd4d83d40a01",
+    "normal_existing_login": true,
+    "five_media_cards_visible": true,
+    "suno_empty_password": true,
+    "html_required_attribute": false,
+    "no_automatic_preview": "connection/tool sections remain Complete required fields",
+    "token_cta": "https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_suno_discovery_api_key",
+    "final_saved_servers": 0,
+    "ace_keys_entered": 0,
+    "connections_saved": 0,
+    "generation_calls": 0,
+    "actions": [
+      "category filter",
+      "select Suno",
+      "focus empty token",
+      "Cancel"
+    ]
+  }
 }

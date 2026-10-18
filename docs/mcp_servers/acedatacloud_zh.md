@@ -26,9 +26,9 @@ python -m pip install 'litellm[proxy]'
 | GPT Image | `https://openai.mcp.acedata.cloud/mcp` | 图片生成、编辑和任务查询，复用的服务还暴露 chat、embedding、audio 工具；[OpenAIMCP](https://github.com/AceDataCloud/OpenAIMCP) |
 | Nano Banana / NanoBanana | `https://nanobanana.mcp.acedata.cloud/mcp` | 图片生成、编辑和任务查询；[NanoBananaMCP](https://github.com/AceDataCloud/NanoBananaMCP) |
 
-![真实候选界面：五个独立媒体服务入口](/img/acedatacloud/litellm-five-media-cards-candidate.jpg)
+![真实候选界面：五个独立媒体服务入口](/img/acedatacloud/litellm-final-tip-five-media-cards.jpg)
 
-这张图于 2026-10-18 在源码 `c2971654` 上经正常本地登录拍摄，展示候选目录，不能证明旧版稳定包已包含五个入口。
+这张图于 2026-10-18 在精确媒体源码 `6ed14e00` 上，使用既有正常本地产品会话拍摄，五个品牌卡片可见。它展示候选目录，不能证明正式安装已包含五个入口。
 
 ## 注册并创建专用 Token
 
@@ -46,9 +46,9 @@ python -m pip install 'litellm[proxy]'
 
 发现卡片预填服务名称、**MCP Server URL**、**Streamable HTTP** 和 **Bearer Token**。把原始业务 Token 填入 **Authentication Value**，不带 `Bearer ` 或引号。使用此路径时，OAuth 和额外 Authorization header 保持未设置。找不到卡片时，用 **Custom Server** 手工填写同样字段。
 
-![真实候选界面：Token 输入位置与获取链接](/img/acedatacloud/litellm-suno-required-token-fixed.jpg)
+![真实候选界面：Token 输入位置与获取链接](/img/acedatacloud/litellm-final-tip-suno-empty-token.jpg)
 
-带鉴权的发现卡片在 Token 非空前不会自动测试连接；可点击 **Get your API token** 获取业务 Key。空 Token 时 **Add MCP Server** 按钮仍可点击，但提交会被必填校验拦截。此图拍于 2026-10-18 的 `166f54e3`，未输入 Ace Key 或保存连接；后续 `6ed14e00` 仅等价拆分 lint 条件，未改表单 markup。图不证明远程鉴权成功、生成结果、账单或正式版本可用。
+带鉴权的发现卡片在 Token 非空前不会自动测试连接；可点击 **Get your API token** 获取业务 Key。空 Token 时 **Add MCP Server** 按钮仍可点击，但提交会被必填校验拦截。此图拍于 2026-10-18 的精确源码 `6ed14e00`：Token 为空且 type=password，获取链接带四项 UTM，Connection/Tools 保持 Complete required fields，没有自动预览；Cancel 后仍为 0 个服务器。本次未点击 Add、Test 或 Authorize，未保存、鉴权或生成。DOM 的原生 HTML required 属性为 false；应用表单的空提交校验由先前 `166f54e3` 交互和集成测试单独验证，不能把本图当作新提交测试。图不证明正式发布、真实 Token 鉴权、媒体终态或账单。
 
 核实凭据范围后测试连接并添加，打开服务的 **MCP Tools**。按 [MCP 权限管理](../mcp_control.md) 只授予目标用户/团队所需访问。管理员保存的 Token 会代表其所有者为获授权调用者执行请求，需据此分配权限。
 
