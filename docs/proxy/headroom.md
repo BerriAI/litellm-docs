@@ -188,6 +188,8 @@ The snapshot reflects Headroom's output. If another guardrail rewrites messages 
 
 These headers contain prompt content. Treat them as sensitive when recording HTTP headers or forwarding responses. There is no global setting for returning prompts.
 
+When the proxy applies a managed prompt template, only proxy admins and admin viewers can receive the compressed-prompt header. Other callers can still use the template for inference, but the header is omitted to protect its contents. Requests using only caller-supplied messages retain the normal opt-in behavior.
+
 For an oversized prompt, `x-litellm-call-id` can identify the request in a configured logging integration. In verified `generic_api` logging, Chat Completions and Messages include compressed messages, but Responses includes the original input. Guardrail statistics alone do not contain the prompt. Do not assume an oversized compressed prompt is retrievable from every logging destination or from database spend logs.
 
 ## Compression behind an auto router
