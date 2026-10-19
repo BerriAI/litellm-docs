@@ -1038,11 +1038,11 @@ print("list_batches_response=", list_batches_response)
 ### [BETA] Loadbalance Multiple Azure Deployments 
 In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: "batch-gpt-4o-mini"
     litellm_params:
-      model: "azure/{{openai_small}}"
+      model: "azure/gpt-5.6-luna"
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:

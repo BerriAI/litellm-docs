@@ -208,7 +208,7 @@ Route batch operations to different provider accounts using model-specific crede
 
 ### Configuration
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-4o-account-1
     litellm_params:
@@ -224,7 +224,7 @@ model_list:
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/{{openai_large}}
+      model: azure/gpt-5.6-terra
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"
