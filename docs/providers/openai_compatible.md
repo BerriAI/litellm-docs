@@ -59,6 +59,28 @@ response = litellm.embedding(
 print(response)
 ```
 
+## Usage - Fikra API
+
+Fikra API is an OpenAI-compatible gateway at https://fikraapi.co.ke, billed per token in USD.
+
+```python
+import litellm
+import os
+
+response = litellm.completion(
+    model="openai/deepseek-v4.1-flash",   # add `openai/` prefix to model so litellm knows to route to OpenAI
+    api_key="fk-<your-fikra-api-key>",    # api key to your Fikra API account
+    api_base="https://fikraapi.co.ke/v1", # set API Base of your Custom OpenAI Endpoint
+    messages=[
+                {
+                    "role": "user",
+                    "content": "Hey, how's it going?",
+                }
+    ],
+)
+print(response)
+```
+
 
 
 ## Usage with LiteLLM Proxy Server
