@@ -317,7 +317,7 @@ model_list:
 | `/converse-stream` | `guardrailConfig` in the request body, including `streamProcessingMode` if you set it |
 | `/invoke`, `/invoke-with-response-stream` | `X-Amzn-Bedrock-GuardrailIdentifier`, `X-Amzn-Bedrock-GuardrailVersion` and `X-Amzn-Bedrock-Trace` headers |
 
-The model's guardrail replaces any guardrail the caller sends in the body or headers, so callers cannot turn it off or pick a different one. With load balancing or fallbacks, each request gets the guardrail of the deployment that serves it.
+The model's guardrail replaces any guardrail the caller sends in the body or headers, so callers cannot turn it off or pick a different one. With load balancing, each request gets the guardrail of the deployment that serves it.
 
 When Bedrock blocks a request, `/converse` returns `stopReason: guardrail_intervened` and `/invoke` returns `amazon-bedrock-guardrailAction: INTERVENED`, each with your blocked message and a guardrail trace when `trace` is enabled.
 
