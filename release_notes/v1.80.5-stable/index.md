@@ -49,7 +49,7 @@ pip install litellm==1.80.5
 - **Prompt Management** - [Full prompt versioning support with UI for editing, testing, and version history](../../docs/proxy/litellm_prompt_management)
 - **MCP Hub** - [Publish and discover MCP servers within your organization](../../docs/proxy/ai_hub#mcp-servers)
 - **Model Compare UI** - [Side-by-side model comparison interface for testing](../../docs/proxy/model_compare_ui)
-- **Batch API Spend Tracking** - [Granular spend tracking with custom metadata for batch and file creation requests](../../docs/proxy/cost_tracking#-custom-spend-log-metadata)
+- **Batch API Spend Tracking** - [Granular spend tracking with custom metadata for batch and file creation requests](../../docs/proxy/cost_tracking#custom-spend-log-metadata)
 - **AWS IAM Secret Manager** - [IAM role authentication support for AWS Secret Manager](../../docs/secret_managers/aws_secret_manager#iam-role-assumption)
 - **Logging Callback Controls** - [Admin-level controls to prevent callers from disabling logging callbacks in compliance environments](../../docs/proxy/dynamic_logging#disabling-dynamic-callback-management-enterprise)
 - **Proxy CLI JWT Authentication** - [Enable developers to authenticate to LiteLLM AI Gateway using the Proxy CLI](../../docs/proxy/cli_sso)

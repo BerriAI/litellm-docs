@@ -1,6 +1,6 @@
 # Code Quality
 
-🚅 LiteLLM follows the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+LiteLLM follows the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
 
 We run: 
 - Ruff for formatting and linting (`make format`, `make lint-ruff`)

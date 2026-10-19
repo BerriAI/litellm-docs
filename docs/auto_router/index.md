@@ -1,13 +1,14 @@
 ---
 title: Auto Router [Add-on]
 sidebar_label: Overview
+keywords: [autorouter, auto router]
 description: Route every request to the cheapest model that can answer it well. Benchmarks, setup, recommended configurations, prompt caching, and how to evaluate the router on your own traffic.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
 import AutoRouterDiagram from '@site/src/components/AutoRouterDiagram';
 
-:::info[🚀 Help shape the Auto-Router]
+:::info[Help shape the Auto-Router]
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
@@ -82,7 +83,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ## Explore
 
-Use the **OSS Classifier** with hosted Jev or self-hosted Nimble and Laya. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
+Use the **OSS Classifier** with hosted Jev, self-hosted Nimble and Laya, or the Databricks `ai_decide` AI Function. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
 
 <NavigationCards
 columns={3}
@@ -116,6 +117,11 @@ items={[
     title: "Evaluate on Your Traffic",
     description: "Shadow evaluations before you switch, savings accounting after.",
     to: "/docs/auto_router/evaluate",
+  },
+  {
+    title: "OTEL Telemetry",
+    description: "Trace the selected configuration, routing reason, classifier failures, and retries in Lens or an OTLP backend.",
+    to: "/docs/auto_router/telemetry",
   },
   {
     title: "Feature History",

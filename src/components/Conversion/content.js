@@ -48,9 +48,9 @@ const PROMPTS = {
   'lens-claude-code': {
     title: 'Set up Claude Code tracing in Lens',
     text: `Set up this machine to send my Claude Code sessions to LiteLLM Lens. First read ${DOCS}/docs/proxy/lens/coding-agents.md and ${DOCS}/docs/proxy/lens/deployment.md.
-1. Ask me for my LiteLLM gateway URL and an agent name, defaulting to claude-code. Read my virtual key from an existing environment variable or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it.
-2. Check that tracing is enabled and the gateway accepts Claude conversation logs at /v1/logs. If it needs an upgrade, explain that before changing my local settings.
-3. Explain which session content will be sent to my gateway. Configure Claude's built-in OTLP trace and log exporters and the content flags in the guide. Merge them into the env object in my user-level ~/.claude/settings.json, preserving other settings and resource attributes. Keep credentials in private user configuration. Use lens.session.capture=true and my chosen gen_ai.agent.name. Do not install a plugin or helper, change my Claude subscription/API login or model endpoint, or enable optional raw API-body export.
+1. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name, defaulting to claude-code. Preserve any /lens-ingest prefix and include /v1/traces once. Derive the logs endpoint by replacing the final /v1/traces with /v1/logs. Read my dedicated tracing key from an existing environment variable or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it.
+2. Check that tracing is enabled and the Lens service accepts Claude conversation logs at /v1/logs. If it needs an upgrade, explain that before changing my local settings.
+3. Explain which session content will be sent to my Lens service. Configure Claude's built-in OTLP trace and log exporters and the content flags in the guide. Merge them into the env object in my user-level ~/.claude/settings.json, preserving other settings and resource attributes. Keep credentials in private user configuration. Use lens.session.capture=true and my chosen gen_ai.agent.name. Do not install a plugin or helper, change my Claude subscription/API login or model endpoint, or enable optional raw API-body export.
 4. Tell me to restart Claude Code, then complete a small prompt that uses a tool. Verify the new trace under my chosen agent name in Lens > Traces > Conversation contains the prompt, tool activity, and assistant reply. These events belong in Lens, not the normal request Logs screen. Report any missing content or export error instead of claiming setup succeeded.
 5. Show me the configuration changes with credentials hidden, explain how to pause telemetry, and point out the capture limits described in the guide.`,
   },
@@ -58,7 +58,7 @@ const PROMPTS = {
     title: 'Set up Codex tracing in Lens',
     text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-codex-integration/blob/main/README.md.
 1. Check this machine's operating system and Python version against the integration's current prerequisites. If automatic setup is unsupported, explain the limitation rather than inventing installation steps.
-2. Ask me for my LiteLLM gateway URL and an agent name. Use the documented Terminal setup so I can enter my virtual key at its hidden prompt and confirm recording. Never ask me to paste the key into chat, print it, or commit it.
+2. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name. The installer accepts that endpoint at its Lens ingestion URL prompt and preserves /lens-ingest when present. Use the documented Terminal setup so I can enter my dedicated tracing key at its hidden prompt and confirm recording. Never ask me to paste the key into chat, print it, or commit it.
 3. Install or update the official BerriAI integration using the README's From Terminal instructions. Reuse an existing installation where possible, and preserve my Codex authentication, model configuration, and unrelated hooks. Explain what will be recorded; only newly captured activity should be exported.
 4. Tell me to start a new Codex chat and complete a small prompt that uses a tool. Verify its trace appears under my chosen agent name in Lens > Traces > Conversation, with the prompt, tool outcome, and assistant reply. Check the integration's status and pending uploads if it does not appear; installation alone is not proof that capture works.
 5. Show me what changed with credentials hidden, explain how to pause recording with lens-setup, and summarize the integration's capture limits.`,
@@ -144,6 +144,8 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
   ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm', 'https://render.com/images/deploy-to-render-button.svg'],
+  ['AWS', 'https://console.aws.amazon.com/cloudshell/home', '/img/deploy-on-aws.png'],
+  ['GCP', 'https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true', '/img/deploy-on-gcp.png'],
 ];
 
 const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;

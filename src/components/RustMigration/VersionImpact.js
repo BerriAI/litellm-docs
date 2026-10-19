@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import Link from '@docusaurus/Link';
 import {Combobox} from '@base-ui/react/combobox';
+import {useBoolean} from 'usehooks-ts';
 import * as semver from 'semver';
 import {
   FEATURES,
@@ -9,8 +10,8 @@ import {
   RC_RELEASES,
   ROLLOUT_VERSIONS,
   STABLE_RELEASES,
-  STAGES,
   changesIn,
+  labelOf,
 } from '@site/src/data/rustMigration';
 import {StageIcon, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
 import picker from './Picker.module.css';
@@ -56,7 +57,7 @@ const PROVIDER_PREVIEW = 3;
 // API's providers says so instead of listing them; a long list shows the first
 // few and expands on request.
 function Providers({change}) {
-  const [expanded, setExpanded] = useState(false);
+  const {value: expanded, setTrue: expand} = useBoolean(false);
   const names = change.features.map(feature => feature.path.slice(1).join(' / '));
   const rest = change.area.features.filter(feature => !change.features.includes(feature));
   if (rest.length === 0 && names.length > 1) {
@@ -74,7 +75,7 @@ function Providers({change}) {
     <p className={styles.impactProviders}>
       {shown.join(', ')}
       {names.length > shown.length && (
-        <button className={styles.impactMore} type="button" onClick={() => setExpanded(true)}>
+        <button className={styles.impactMore} type="button" onClick={expand}>
           +{names.length - shown.length} more
         </button>
       )}
@@ -172,10 +173,10 @@ export default function VersionTimeline({version}) {
               <ul className={styles.impactChanges}>
                 {row.changes.map(change => (
                   <li key={change.key}>
-                    <StageIcon kind={STAGES[change.stage].id} className={styles.impactIcon} />
+                    <StageIcon kind={change.kind} className={styles.impactIcon} />
                     <strong>{change.area.text}</strong> →{' '}
-                    <Link to={`/rust-migration#${stageAnchor(STAGES[change.stage].id)}`}>
-                      {STAGES[change.stage].label}
+                    <Link to={`/rust-migration#${stageAnchor(change.kind)}`}>
+                      {labelOf(change.kind)}
                     </Link>
                     <Providers change={change} />
                   </li>

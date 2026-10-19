@@ -89,12 +89,19 @@ module.exports = function webpackCachePlugin(context) {
     postBuild() {
       logCacheSizes('after build', context.siteDir);
     },
-    configureWebpack(config) {
-      if (!config.cache || typeof config.cache !== 'object' || config.cache.type !== 'filesystem') return;
+    configureWebpack(config, isServer) {
+      // Docusaurus names its production compilers "client" and "server".
+      // Avoid overlapping their peak allocations on the 8 GB build machine.
+      const production = config.mode === 'production';
+      const buildOptions = production
+        ? {parallelism: 16, ...(isServer ? {dependencies: ['client']} : {})}
+        : {};
+      if (!config.cache || typeof config.cache !== 'object' || config.cache.type !== 'filesystem') return buildOptions;
 
       // Webpack's default maxAge retains unused entries for 60 days, letting the cache exceed Vercel's 1.50 GB build-cache limit; Vercel then discards the whole cache.
-      const cache = {...config.cache, maxAge: 60 * 60 * 1000};
-      return {cache, mergeStrategy: {cache: 'replace'}};
+      const cache = {...config.cache, maxAge: 60 * 60 * 1000,
+        ...(production ? {compression: 'gzip', maxMemoryGenerations: 0, allowCollectingMemory: true} : {})};
+      return {...buildOptions, cache, mergeStrategy: {cache: 'replace'}};
     },
   };
 };

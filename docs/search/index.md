@@ -187,6 +187,73 @@ curl http://0.0.0.0:4000/v1/search/my-search \
   }'
 ```
 
+### Custom Per-Query Pricing
+
+Set `input_cost_per_query` under a search tool's `litellm_params` to charge your own price per search query. LiteLLM uses it instead of the cost map price for that tool, so `x-litellm-response-cost` and the spend logs match the rate you pay. It works for every search provider, and a tool without it keeps the provider's cost map price.
+
+```yaml showLineNumbers title="config.yaml with a custom price"
+search_tools:
+  - search_tool_name: exa-search
+    litellm_params:
+      search_provider: exa_ai
+      api_key: os.environ/EXA_API_KEY
+      input_cost_per_query: 0.05
+```
+
+A request with a list of queries is billed once per query. A price of `0` is kept as a free tool, not treated as unset.
+
+In the Admin UI, open **Search Tools** and set **Cost per Query (USD)** when you add or edit a search tool. The tool's detail page shows the configured price, or `Provider default` when none is set. Clearing the field on an edit removes the custom price and the tool falls back to the cost map.
+
+### Restrict Search Tool Access
+
+Set `search_tools` under `object_permission` on a key or team to limit which search tools it can call. The allowlist applies to `/search`, `/v1/search`, `/search/{search_tool_name}`, web search interception, router fallbacks between search tools, and `/search_tools/list`
+
+```bash showLineNumbers title="Grant a team one search tool"
+curl http://0.0.0.0:4000/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "team_alias": "research",
+    "object_permission": {"search_tools": ["tavily-search"]}
+  }'
+```
+
+By default an empty or missing `search_tools` list allows every search tool. To make every search tool opt-in, turn on `search_tool_deny_by_default`:
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  search_tool_deny_by_default: true
+```
+
+The setting defaults to `false`. With it on, the requested search tool must be listed in `object_permission.search_tools` of each identity the request resolves to
+
+| Caller | Grants required |
+|---|---|
+| Virtual key without a team | The key |
+| Virtual key with a team | The key and its team |
+| Team member without a virtual key (JWT or `lite login` session) | The team the request resolved to |
+| User without a virtual key or team | The user |
+
+A missing permission record, a `null` list, and an empty list all grant nothing. A user's personal grants only count when the request has no virtual key and no team, so they never widen or narrow a key or team request. If a key names a team that cannot be loaded, the request is denied rather than treated as a key without a team. Denied requests return `403` before any search provider is called, with `key_search_tool_access_denied`, `team_search_tool_access_denied`, or `user_search_tool_access_denied`, and `/search_tools/list` only returns the tools the caller may call
+
+For a team key, grant the tool on both objects:
+
+```bash showLineNumbers title="Team and key both grant the search tool"
+curl -X POST 'http://localhost:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_alias": "research", "object_permission": {"search_tools": ["tavily-search"]}}'
+
+curl -X POST 'http://localhost:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"team_id": "<team_id from above>", "object_permission": {"search_tools": ["tavily-search"]}}'
+```
+
+The master key and dashboard login sessions are not restricted. A proxy admin calling with its own virtual key is restricted like any other key. Web search interception with no registered search tool stops falling back to the default provider for every restricted caller, since there is no tool name a grant could list. Existing keys and teams with empty lists lose search access as soon as the setting is on
+
+Setting the flag back to `false` restores the earlier behavior, where an empty or unset list means unrestricted. A nonempty `search_tools` list that leaves out the requested tool is still rejected
+
 ## **Request/Response Format**
 
 :::info
@@ -290,4 +357,3 @@ The response follows Perplexity's search format with the following structure:
 | Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.
-

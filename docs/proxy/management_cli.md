@@ -189,14 +189,17 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Credentials Management
 
-- List, create, get, and delete credentials for LLM providers.
+- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name
 - Example:
 
   ```bash
   lite credentials list
   lite credentials create azure-prod \
     --info='{"custom_llm_provider": "azure"}' \
-    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}'
+    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}' \
+    --display-name="Azure (prod)"
+  lite credentials update azure-prod --display-name="Azure EU (prod)"
+  lite credentials update azure-prod --clear-display-name
   lite credentials get azure-cred
   lite credentials delete azure-cred
   ```

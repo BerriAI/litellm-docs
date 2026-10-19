@@ -275,6 +275,7 @@ This differs from the Gemini API path (`gemini/gemini-embedding-2-preview`), whi
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
 - **GCS URLs:** `gs://bucket/path/to/file.png` (MIME type inferred from extension)
+- **File content blocks:** `{"type": "file", "file": {...}}`, the same block chat completions take, when a media part needs an explicit MIME type or a video clip (see [below](#video-clips-and-explicit-mime-types))
 
 **Supported MIME types:** `image/png`, `image/jpeg`, `audio/mpeg`, `audio/wav`, `video/mp4`, `video/quicktime`, `application/pdf`
 
@@ -331,6 +332,28 @@ curl -X POST http://localhost:4000/embeddings \
 
 </TabItem>
 </Tabs>
+
+#### Video Clips and Explicit MIME Types
+
+To embed one window of a video, or to name a MIME type LiteLLM cannot infer from a GCS extension or a data URI, pass the element as the OpenAI file content block that [chat completions](./vertex#video-metadata-control) already take: `file.file_id` (`gs://...`) or `file.file_data` (a data URI), an optional `file.format` MIME type, and an optional `file.video_metadata` with `fps`, `start_offset`, and `end_offset`, which LiteLLM forwards as the part's `videoMetadata`. On Vertex the block is combined with the other elements into the single vector like any other part; nested lists stay unsupported on this path.
+
+```python
+response = embedding(
+    model="vertex_ai/gemini-embedding-2-preview",
+    input=[
+        {
+            "type": "file",
+            "file": {
+                "file_id": "gs://my-bucket/clip.mp4",
+                "video_metadata": {"start_offset": "3s", "end_offset": "6s"},
+            },
+        },
+        "a solid blue clip",
+    ],
+)
+```
+
+The Gemini embeddings API always runs OCR on PDF inputs and has no parameter for it, so there is nothing to pass.
 
 ### multimodalembedding@001 (Legacy)
 

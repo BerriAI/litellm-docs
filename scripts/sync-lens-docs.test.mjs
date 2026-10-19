@@ -109,12 +109,19 @@ test('old section and framework links stay within the Proxy Lens category', () =
     {pathname: '/docs/proxy/lens', search: '?framework=claude', hash: '#connect-the-analyzer'},
     {pathname: '/docs/proxy/lens', search: '?framework=claude', hash: '#send-your-first-trace'},
     {pathname: '/docs/proxy/lens', search: '?framework=constructor', hash: ''},
+    {pathname: '/docs/proxy/lens/deployment', search: '', hash: '#existing-storage-and-secrets'},
+    {pathname: '/docs/proxy/lens/deployment/', search: '', hash: '#using-helm'},
+    {pathname: '/docs/proxy/lens/deployment', search: '', hash: '#constructor'},
+    {pathname: '/docs/proxy/lens/deployment', search: '', hash: '#check-the-installation'},
+    {pathname: '/docs/proxy/lens/deployment/storage', search: '', hash: '#gitops'},
   ];
   vm.runInNewContext(source + '\n' + locations.map((location) => 'onRouteDidUpdate(' + JSON.stringify({location}) + ');').join('\n'), context);
   assert.deepEqual(redirects, [
-    '/docs/proxy/lens/deployment#quick-start',
+    '/docs/proxy/lens/deployment/local',
     '/docs/proxy/lens/integrations/claude-agent-sdk',
     '/docs/proxy/lens/investigations#connect-the-analyzer',
     '/docs/proxy/lens/integrations/claude-agent-sdk',
+    '/docs/proxy/lens/deployment/storage',
+    '/docs/proxy/lens/deployment/kubernetes#existing-deployment',
   ]);
 });

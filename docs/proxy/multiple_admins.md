@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 
-# ✨ Audit Logs
+# Audit Logs
 
 <Image 
   img={require('../../img/release_notes/ui_audit_log.png')}
@@ -170,7 +170,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
 {
    "id": "bd136c28-edd0-4cb6-b963-f35464cf6f5a",
    "updated_at": "2024-06-08 23:41:14.793",
-   "changed_by": "krrish@berri.ai", # 👈 CHANGED BY
+   "changed_by": "krrish@berri.ai", # CHANGED BY
    "changed_by_api_key": "example-api-key-123",
    "action": "updated",
    "table_name": "LiteLLM_TeamTable",
@@ -181,7 +181,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
    },
    "updated_values": {
      "team_id": "8bf18b11-7f52-4717-8e1f-7c65f9d01e52",
-     "max_budget": 2000 # 👈 CHANGED TO
+     "max_budget": 2000 # CHANGED TO
    },
  }
 ```

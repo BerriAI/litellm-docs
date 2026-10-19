@@ -192,7 +192,7 @@ response_schema = {
 completion(
     model="vertex_ai/{{gemini_pro}}", 
     messages=messages, 
-    response_format={"type": "json_object", "response_schema": response_schema} # 👈 KEY CHANGE
+    response_format={"type": "json_object", "response_schema": response_schema} # KEY CHANGE
     )
 
 print(json.loads(completion.choices[0].message.content))
@@ -277,7 +277,7 @@ try:
     response_format={
         "type": "json_object", 
         "response_schema": response_schema,
-        "enforce_validation": true # 👈 KEY CHANGE
+        "enforce_validation": true # KEY CHANGE
     }
 	)
 except JSONSchemaValidationError as e: 
@@ -394,7 +394,7 @@ from litellm import completion
 ## SETUP ENVIRONMENT
 # !gcloud auth application-default login - run this to add vertex credentials to your env
 
-tools = [{"googleSearch": {}}] # 👈 ADD GOOGLE SEARCH
+tools = [{"googleSearch": {}}] # ADD GOOGLE SEARCH
 
 resp = litellm.completion(
                     model="vertex_ai/{{gemini_pro}}",
@@ -468,7 +468,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = ".."
 
-# 👇 ADD URL CONTEXT
+# ADD URL CONTEXT
 tools = [{"urlContext": {}}]
 
 response = completion(
@@ -530,7 +530,7 @@ from litellm import completion
 ## SETUP ENVIRONMENT
 # !gcloud auth application-default login - run this to add vertex credentials to your env
 
-tools = [{"enterpriseWebSearch": {}}] # 👈 ADD GOOGLE ENTERPRISE SEARCH
+tools = [{"enterpriseWebSearch": {}}] # ADD GOOGLE ENTERPRISE SEARCH
 
 resp = litellm.completion(
                     model="vertex_ai/{{gemini_pro}}",
@@ -603,7 +603,7 @@ import os
 # !gcloud auth application-default login - run this to add vertex credentials to your env
 
 
-tools = [{"codeExecution": {}}] # 👈 ADD CODE EXECUTION
+tools = [{"codeExecution": {}}] # ADD CODE EXECUTION
 
 response = completion(
     model="vertex_ai/{{gemini_flash}}",
@@ -653,7 +653,7 @@ from litellm import completion
 ## SETUP ENVIRONMENT
 # !gcloud auth application-default login - run this to add vertex credentials to your env
 
-tools = [{"googleMaps": {"enableWidget": "ENABLE_WIDGET"}}] # 👈 ADD GOOGLE MAPS
+tools = [{"googleMaps": {"enableWidget": "ENABLE_WIDGET"}}] # ADD GOOGLE MAPS
 
 resp = litellm.completion(
     model="vertex_ai/{{gemini_flash}}",
@@ -681,7 +681,7 @@ tools = [{
         "longitude": -122.4194,     # San Francisco longitude
         "languageCode": "en_US"     # Optional: language for results
     }
-}] # 👈 ADD GOOGLE MAPS WITH LOCATION
+}] # ADD GOOGLE MAPS WITH LOCATION
 
 resp = litellm.completion(
     model="vertex_ai/{{gemini_flash}}",
@@ -830,7 +830,7 @@ from litellm import completion
 
 # !gcloud auth application-default login - run this to add vertex credentials to your env
 
-tools = [{"googleSearch": {"disable_attributon": False}}] # 👈 ADD GOOGLE SEARCH
+tools = [{"googleSearch": {"disable_attributon": False}}] # ADD GOOGLE SEARCH
 
 resp = litellm.completion(
                     model="vertex_ai/{{gemini_pro}}",
@@ -1020,7 +1020,7 @@ for _ in range(2):
                     {
                         "type": "text",
                         "text": "Here is the full text of a complex legal agreement" * 4000,
-                        "cache_control": {"type": "ephemeral"}, # 👈 KEY CHANGE
+                        "cache_control": {"type": "ephemeral"}, # KEY CHANGE
                     }
                 ],
             },
@@ -1037,7 +1037,7 @@ for _ in range(2):
             }]
     )
 
-    print(resp.usage) # 👈 2nd usage block will be less, since cached tokens used
+    print(resp.usage) # 2nd usage block will be less, since cached tokens used
 ```
 
 </TabItem>
@@ -1058,7 +1058,7 @@ resp = completion(
                     "text": "Here is the full text of a complex legal agreement" * 4000,
                     "cache_control": {
                         "type": "ephemeral", 
-                        "ttl": "7200s"  # 👈 Cache for 2 hours
+                        "ttl": "7200s"  # Cache for 2 hours
                     },
                 }
             ],
@@ -1071,7 +1071,7 @@ resp = completion(
                     "text": "What are the key terms and conditions in this agreement?",
                     "cache_control": {
                         "type": "ephemeral",
-                        "ttl": "3600s"  # 👈 This TTL will be ignored (first one is used)
+                        "ttl": "3600s"  # This TTL will be ignored (first one is used)
                     },
                 }
             ],
@@ -1420,7 +1420,7 @@ from litellm import completion
 response = completion(
     model="vertex_ai/{{gemini_pro}}",
     messages=[{"role": "user", "content": "Hello!"}],
-    vertex_credentials="/path/to/wif-credentials.json",  # 👈 WIF credentials file
+    vertex_credentials="/path/to/wif-credentials.json",  # WIF credentials file
     vertex_project="your-gcp-project-id",
     vertex_location="us-central1"
 )
@@ -1436,7 +1436,7 @@ model_list:
       model: vertex_ai/{{gemini_pro}}
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
-      vertex_credentials: /path/to/wif-credentials.json  # 👈 WIF credentials file
+      vertex_credentials: /path/to/wif-credentials.json  # WIF credentials file
 ```
 
 Alternatively, you can create credentials in **LLM Credentials** in the LiteLLM UI and use those to authenticate your models:
@@ -1448,7 +1448,7 @@ model_list:
       model: vertex_ai/{{gemini_pro}}
       vertex_project: your-gcp-project-id
       vertex_location: us-central1
-      litellm_credential_name: my-vertex-wif-credential  # 👈 Reference credential stored in UI
+      litellm_credential_name: my-vertex-wif-credential  # Reference credential stored in UI
 ```
 
 </TabItem>
@@ -1682,7 +1682,7 @@ response = client.chat.completions.create(
 ```python
 import litellm 
 
-litellm.set_verbose = True # 👈 See RAW REQUEST/RESPONSE 
+litellm.set_verbose = True # See RAW REQUEST/RESPONSE
 
 litellm.vertex_ai_safety_settings = [
         {
@@ -2366,13 +2366,13 @@ response = completion(
                 {
                     "type": "file",
                     "file": {
-                        "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                        "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                     }  
                 },
                 {
                     "type": "audio_input",
                     "audio_input": {
-                        "audio_input": f"data:audio/mp3;base64,{encoded_file}", # 👈 AUDIO File ('file' message works as too)
+                        "audio_input": f"data:audio/mp3;base64,{encoded_file}", # AUDIO File ('file' message works as too)
                     }  
                 },
             ],
@@ -2452,13 +2452,13 @@ curl http://0.0.0.0:4000/v1/chat/completions \
           {
                 "type": "file",
                 "file": {
-                    "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                    "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                 },
             },
             {
                 "type": "audio_input",
                 "audio_input {
-                    "audio_input": f"data:audio/mp3;base64,{encoded_file}", # 👈 AUDIO File ('file' message works as too)
+                    "audio_input": f"data:audio/mp3;base64,{encoded_file}", # AUDIO File ('file' message works as too)
                 }  
             },
     ]
@@ -3004,7 +3004,7 @@ model_list:
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
-# 👇 Key change: For /fine_tuning/jobs endpoints
+# Key change: For /fine_tuning/jobs endpoints
 finetune_settings:
   - custom_llm_provider: "vertex_ai"
     vertex_project: "adroit-crow-413218"

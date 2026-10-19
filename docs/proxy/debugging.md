@@ -192,7 +192,7 @@ How to control this?
 
 ```yaml showLineNumbers
 router_settings:
-    cooldown_time: 0 # 👈 KEY CHANGE
+    cooldown_time: 0 # KEY CHANGE
 ```
 
 - Disable Cooldowns [NOT RECOMMENDED]

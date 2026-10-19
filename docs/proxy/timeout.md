@@ -49,6 +49,11 @@ For each model, you can set `timeout` and `stream_timeout` under `litellm_params
 
 - **`stream_timeout`** → maximum time to wait for the *first chunk* (i.e., first token) in a streaming response.  
   Use this to abort “hanging” providers (e.g., Bedrock slow start) and retry another model.
+
+Some requests can't be streamed by the provider, for example a `json_schema` response format on a Bedrock model without native structured output. LiteLLM then makes one non-streaming call and sends the answer back as chunks once it is complete, so no chunk arrives until the whole answer is written. These requests use the longer of `timeout` and `stream_timeout`, so a short `stream_timeout` meant for stalled streams does not cut off a slow structured answer.
+
+The same rules apply when you call `litellm.completion()`, `litellm.acompletion()`, or `litellm.aresponses()` directly without a Router. Pass `stream_timeout` next to `timeout`, and a live stream is bounded by `stream_timeout`, a call that is not streamed by `timeout`, and a faked stream by the longer of the two. Earlier versions ignored `stream_timeout` on direct SDK calls, so a short value you set there now cuts off a live stream that takes longer than it to send a chunk.
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
@@ -266,7 +271,7 @@ response = client.chat.completions.create(
         {"role": "user", "content": "what color is red"}
     ],
     logit_bias={12481: 100},
-    extra_body={"timeout": 1} # 👈 KEY CHANGE
+    extra_body={"timeout": 1} # KEY CHANGE
 )
 
 print(response)
@@ -293,6 +298,6 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         "messages": [
         {"role": "user", "content": "hi my email is ishaan@berri.ai"}
         ],
-        "mock_timeout": true # 👈 KEY CHANGE
+        "mock_timeout": true # KEY CHANGE
     }'
 ```

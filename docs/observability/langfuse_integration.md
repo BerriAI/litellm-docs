@@ -24,7 +24,7 @@ Self-hosted Langfuse must be on server 3.63.0 or newer for SDK v4, per the [Lang
 
 ## Usage with LiteLLM Proxy (LLM Gateway)
 
-👉 [**Follow this link to start sending logs to langfuse with LiteLLM Proxy server**](../proxy/logging)
+[**Follow this link to start sending logs to langfuse with LiteLLM Proxy server**](../proxy/logging)
 
 To route different teams or virtual keys to different Langfuse projects, see [Team/Key Based Logging](../proxy/team_logging). Team defaults live in trusted `config.yaml` (where `os.environ/...` references are resolved by the gateway), while per-key callbacks are provisioned via `/key/generate` or `/key/update` with resolved credential values; these are stored settings on the key, not per-request credentials.
 
@@ -76,7 +76,7 @@ litellm.success_callback = ["langfuse"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -107,7 +107,7 @@ litellm.success_callback = ["langfuse"]
 response = completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ],
   metadata = {
     "generation_name": "litellm-ishaan-gen", # set langfuse generation name
@@ -143,7 +143,7 @@ litellm.success_callback = ["langfuse"]
 response = completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ],
   metadata={
       "generation_name": "ishaan-test-generation",  # set langfuse Generation Name
@@ -357,6 +357,6 @@ Be aware that if you are continuing an existing trace, and you set `update_trace
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

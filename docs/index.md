@@ -32,6 +32,14 @@ import QuickStartBox from '@site/src/components/QuickStartBox';
 uv add litellm
 ```
 
+### A leaner SDK installation
+
+For applications that use the Python SDK directly, `litellm-core` provides the shared SDK with fewer mandatory dependencies and without the bundled dashboard or gateway CLI entry points. Python imports remain unchanged: continue using `litellm`
+
+Install `litellm-core` in a fresh environment instead of installing `litellm`. Add AWS and Python Hugging Face tokenizer packages when your application needs them. The two distributions cannot be installed together because they share the same Python files
+
+See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, package selection, and optional dependencies. Existing `litellm` installations retain their current dependency defaults
+
 To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
 
 ---
@@ -194,7 +202,7 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 }
 ```
 
-📖 [Full output format reference →](/docs/completion/output)
+[Full output format reference →](/docs/completion/output)
 
 :::tip[Open in Colab]
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_Getting_Started.ipynb">
@@ -218,7 +226,6 @@ Streaming responses (`stream=True`) yield `ModelResponseStream` chunks:
 columns={2}
 items={[
 {
-icon: "🐍",
 title: "Python SDK",
 description: "Integrate LiteLLM directly into your Python application. Drop-in replacement for the OpenAI client.",
 listDescription: [
@@ -230,7 +237,6 @@ listDescription: [
 to: "#litellm-python-sdk",
 },
 {
-icon: "🖥️",
 title: "Proxy Server (LLM Gateway)",
 description: "Self-hosted gateway for platform teams managing LLM access across an organization.",
 listDescription: [
@@ -301,7 +307,7 @@ response = litellm.completion(
 )
 ```
 
-📖 [See all observability integrations →](/docs/observability/opentelemetry_v2)
+[See all observability integrations →](/docs/observability/opentelemetry_v2)
 
 ### Track Costs & Usage
 
@@ -322,7 +328,7 @@ litellm.completion(
 )
 ```
 
-📖 [Custom callback docs →](/docs/observability/custom_callback)
+[Custom callback docs →](/docs/observability/custom_callback)
 
 ---
 
@@ -382,13 +388,13 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-👉 [Full proxy quickstart →](/docs/proxy/docker_quick_start)
+[Full proxy quickstart →](/docs/proxy/docker_quick_start)
 
 :::tip[Debugging tool]
 Use **`/utils/transform_request`** to inspect exactly what LiteLLM sends to any provider. It helps when debugging prompt formatting, header issues, and provider-specific parameters.
 :::
 
-🔗 [Interactive API explorer (Swagger) →](https://docs.litellm.ai/api-reference/)
+[Interactive API explorer (Swagger) →](https://docs.litellm.ai/api-reference/)
 
 ---
 
@@ -400,20 +406,17 @@ LiteLLM is a unified gateway for **LLMs, agents, and MCP**, so you don't need a 
 columns={3}
 items={[
 {
-icon: "🔗",
 title: "A2A Agents",
 description: "Add and invoke A2A agents via the LiteLLM gateway.",
 to: "/docs/a2a",
 },
 {
-icon: "🛠️",
 title: "MCP Gateway",
 description: "Central MCP endpoint with per-key access control.",
 to: "/docs/mcp",
 },
 {
-icon: "✨",
-title: "✨ Enterprise Quickstart",
+title: "Enterprise Quickstart",
       description: "Quickstart guide for trial customers: LLM, MCP, and Agent gateway.",
 to: "/docs/learn/enterprise_quickstart",
 },
@@ -428,37 +431,31 @@ to: "/docs/learn/enterprise_quickstart",
 columns={3}
 items={[
 {
-icon: "🔀",
 title: "Routing & Load Balancing",
 description: "Load balance across deployments and set automatic fallbacks.",
-to: "/docs/routing-load-balancing",
+to: "/docs/proxy/load_balancing",
 },
 {
-icon: "🔑",
 title: "Virtual Keys",
 description: "Manage access, budgets, and rate limits per team or user.",
 to: "/docs/proxy/virtual_keys",
 },
 {
-icon: "📊",
 title: "Spend Tracking",
 description: "Track costs per key, team, and user across all providers.",
 to: "/docs/proxy/cost_tracking",
 },
 {
-icon: "🛡️",
 title: "Guardrails",
 description: "Add content filtering, PII masking, and safety checks.",
 to: "/docs/proxy/guardrails/quick_start",
 },
 {
-icon: "📡",
 title: "Observability",
 description: "Integrate with Langfuse, MLflow, Helicone, and more.",
 to: "/docs/observability/opentelemetry_v2",
 },
 {
-icon: "🏭",
 title: "Enterprise",
 description: "SSO/SAML, audit logs, and advanced security for production.",
 to: "/docs/enterprise",

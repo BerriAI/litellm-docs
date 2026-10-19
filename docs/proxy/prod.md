@@ -168,11 +168,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
 
-If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
-
-```shell
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
-```
+Do not combine `--num_workers 1` with `--max_requests_before_restart`. With a single worker the flag does not recycle anything; once the limit is hit the whole pod stops serving. Under Uvicorn the process exits with code 0 and Kubernetes restarts the container, and under Gunicorn nothing accepts connections until the old worker has drained and a replacement has booted, which is long enough for liveness probes to fail. Health probes count toward the limit too, so two probes every 15 seconds use up 11,520 requests a day before any real traffic. If you see gradual memory growth under sustained load, rely on Kubernetes replacing pods, or run two or more workers with jitter as described in [Recycle workers](./server_tuning.md#recycle-workers).
 
 For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
@@ -477,6 +473,8 @@ How LiteLLM ships migrations:
 
 3. When you upgrade to a new version of LiteLLM, the migration file is applied to the database. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/litellm-proxy-extras/litellm_proxy_extras/utils.py#L42)
 
+For how long migrations take at production scale and how to plan an upgrade around them, see the [Upgrade Guide](./upgrade_guide.md#database-migrations).
+
 ### Read-only file system
 
 Running LiteLLM with `readOnlyRootFilesystem: true` is a Kubernetes security best practice that prevents container processes from writing to the root filesystem. LiteLLM fully supports this configuration.
@@ -605,7 +603,7 @@ Notes: always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path, and set `
 
 ### Expected performance
 
-See benchmarks [here](../benchmarks#performance-metrics).
+See the [gateway load-test results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
 ### Confirm debug logging is off
 

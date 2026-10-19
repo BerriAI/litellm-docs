@@ -1,38 +1,56 @@
 import type {AreaId} from './areas';
+import type {IsoDay} from './days';
 
-// Goals are milestones over the areas in areas.ts. `scope` lists the areas a goal
-// covers, and may name an earlier goal to include all of its scope. The optional
-// `summary` describes the scope in the goal picker instead of listing it.
+// Goals are milestones over the areas in areas.ts. `areas` is the goal's
+// weighted scale: each area it covers and the points that area is worth, in
+// the order the page lists them. A goal is done at 100% of those points. The
+// optional `summary` describes the scope in the goal picker instead of listing it.
 interface GoalDeclaration {
   id: string;
   text: string;
-  endsOn: string;
-  scope: readonly string[];
+  endsOn: IsoDay;
+  areas: Partial<Record<AreaId, number>>;
   summary?: string;
 }
 
-export const GOAL_DECLARATIONS = [
+// The rust-core-team's scale of 100, plus 2 points each for making Rust fast
+// and proving it correct, which the board left out.
+const MAJOR_API_POINTS = {
+  'scaffold': 4,
+  'ocr': 2,
+  'messages': 5,
+  'responses': 4,
+  'chat-completions': 10,
+  'adapters': 4,
+  'router': 6,
+  'gateway': 8,
+  'callbacks': 7,
+  'caching': 5,
+  'auth': 6,
+  'endpoints': 6,
+  'extensions': 8,
+  'database': 15,
+  'observability': 6,
+  'performance': 2,
+  'testing': 2,
+  'long-tail': 4,
+} as const satisfies Partial<Record<AreaId, number>>;
+
+export const GOAL_DECLARATIONS: readonly GoalDeclaration[] = [
   {
     id: 'major-apis',
     text: 'Major APIs',
     endsOn: '2026-12-31',
-    scope: ['foundation', 'messages', 'responses', 'chat-completions'],
-    summary: 'Messages, Responses, Chat completions',
+    areas: MAJOR_API_POINTS,
+    summary: 'Messages, Responses, Chat completions, and the gateway around them',
   },
   {
     id: 'all-apis',
     text: 'All APIs',
     endsOn: '2027-04-30',
-    scope: ['major-apis', 'embeddings', 'transcription', 'ocr', 'token-counter', 'mcp'],
-    summary: 'Major APIs, Embeddings, OCR, MCP, and many more',
+    // The same scale with the long tail at its full size, the sum of the
+    // weights of the APIs inside it.
+    areas: {...MAJOR_API_POINTS, 'long-tail': 23},
+    summary: 'Major APIs, plus Embeddings, Audio, Images, Batches, and more at full weight',
   },
-] as const satisfies readonly GoalDeclaration[];
-
-export type GoalId = (typeof GOAL_DECLARATIONS)[number]['id'];
-
-// `scope` is loosely typed above because a goal may name another goal, and a
-// goal's id comes from the very list being checked. This pins every name in it
-// to a real area or goal, so a typo fails the type check.
-type ScopeName = (typeof GOAL_DECLARATIONS)[number]['scope'][number];
-type Assert<Condition extends true> = Condition;
-export type ScopeNamesAreKnown = Assert<ScopeName extends AreaId | GoalId ? true : false>;
+];

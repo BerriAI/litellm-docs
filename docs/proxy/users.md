@@ -479,7 +479,7 @@ Each window shows the reset schedule below the input so it's always clear when s
 <Image img={require('../../img/key_budget_window_4.png')} dark={require('../../img/key_budget_window_4_dark.png')} alt="Reset schedule shown below each budget window" />
 
 
-### ✨ Virtual Key (Model Specific)
+### Virtual Key (Model Specific) {#-virtual-key-model-specific}
 
 Set a separate budget for each model available to a virtual key. For example, one key can have:
 
@@ -606,7 +606,7 @@ Expected response:
 
 By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is exceeded. To route the request to another model instead, see [Budget Fallbacks](./budget_fallbacks).
 
-### ✨ Internal User (Model Specific)
+### Internal User (Model Specific)
 
 Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
 
@@ -835,7 +835,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -847,7 +847,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 
@@ -860,7 +860,7 @@ curl 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -1115,6 +1115,19 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
 
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
+
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
 [**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
@@ -1162,7 +1175,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 {
     "key": "sk-ulGNRXWtv7M0lFnnsQk0wQ",
     "expires": "2024-01-18T20:48:44.297973",
-    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // 👈 auto-generated
+    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // auto-generated
 }
 ```
 
@@ -1422,7 +1435,7 @@ model_list:
       api_key: "os.environ/AZURE_API_KEY"
       api_version: "2023-07-01-preview"
     model_info:
-      access_groups: ["beta-models"] # 👈 Model Access Group
+      access_groups: ["beta-models"] # Model Access Group
 ```
 
 **Step 2. Create key with access group**
@@ -1431,7 +1444,7 @@ model_list:
 curl --location 'http://localhost:4000/user/new' \
 -H 'Authorization: Bearer <your-master-key>' \
 -H 'Content-Type: application/json' \
--d '{"models": ["beta-models"], # 👈 Model Access Group
+-d '{"models": ["beta-models"], # Model Access Group
 			"max_budget": 0}'
 ```
 

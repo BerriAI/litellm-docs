@@ -33,7 +33,6 @@ export default function ZerobusArchitecture() {
         <div className={`${styles.arrow} ${styles.applicationArrow}`} aria-hidden="true" />
 
         <div className={`${styles.node} ${styles.gateway}`}>
-          <span className={styles.train} aria-hidden="true">🚅</span>
           <span className={styles.label}>LiteLLM Gateway</span>
         </div>
 

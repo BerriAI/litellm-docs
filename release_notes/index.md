@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.104.0: Claude Opus 5.5, GPT-6, Master Key Enforcement & Team Routing Controls](/release_notes/v1.104.0/v1-104-0)
+### [v1.105.0: Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens](/release_notes/v1.105.0/v1-105-0)
 
-_October 3, 2026_
+_October 11, 2026_
 
-Claude Opus 5.5 and GPT-6 on day one, Eden AI and Nadir providers, master key enforcement, team routing controls, and the LiteAdmin assistant. stdio MCP servers are now off by default. Review the Breaking Changes before upgrading
+Claude Sonnet 5.5 and GPT-6.1 Sol on day one, the Decisions API on `/v1/decisions` and `/v1/systemone` across eight providers with a decision model guardrail, Prism, Sail and Cortecs providers, `litellm.agent()` for coding agents through the gateway, and Lens with Agent Traces. Review the Breaking Changes before upgrading
 
 ---
 
@@ -22,6 +22,7 @@ Claude Opus 5.5 and GPT-6 on day one, Eden AI and Nadir providers, master key en
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.105.0](/release_notes/v1.105.0/v1-105-0) | Oct 11, 2026 | Claude Sonnet 5.5 and GPT-6.1 Sol, Decisions API, `litellm.agent()`, Lens |
 | [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
 | [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
 | [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |

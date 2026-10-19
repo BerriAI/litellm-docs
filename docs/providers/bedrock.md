@@ -275,7 +275,7 @@ os.environ["AWS_REGION_NAME"] = ""
 response = completion(
   model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -288,7 +288,7 @@ model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -310,7 +310,7 @@ response = client.chat.completions.create(model="bedrock-claude-v1", messages = 
 ],
 temperature=0.7,
 extra_body={
-    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -379,6 +379,46 @@ response = client.chat.completions.create(
 
 </TabItem>
 </Tabs>
+
+### Forward key, team, and org identity from the proxy
+
+The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default and available in `v1.99.0` and later. List the fields to forward under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  bedrock_request_metadata_fields:
+    - user_api_key_org_alias
+    - user_api_key_team_alias
+    - user_api_key_alias
+    - user_api_key_user_id
+    - spend_logs_metadata
+```
+
+With that config a request made with a key on team `growth` in org `platform` reaches Bedrock with `{"user_api_key_org_alias": "platform", "user_api_key_team_alias": "growth", "user_api_key_alias": "...", "user_api_key_user_id": "...", ...}` plus every pair in the request's `spend_logs_metadata`.
+
+| Field | Value forwarded |
+|-------|-----------------|
+| `user_api_key_alias` | Alias of the virtual key |
+| `user_api_key_hash` | Hashed virtual key, the same value spend logs show |
+| `user_api_key_user_id` | Internal user that owns the key |
+| `user_api_key_user_email` | Email of the internal user that owns the key |
+| `user_api_key_end_user_id` | End user (customer) id for the request, when the caller sends one |
+| `user_api_key_team_id`, `user_api_key_team_alias` | Team the key belongs to |
+| `user_api_key_org_id`, `user_api_key_org_alias` | Organization the key belongs to |
+| `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
+| `user_api_key_request_route` | Route the client called, for example `/v1/chat/completions` |
+| `user_api_key_budget_reset_at` | ISO 8601 time the key's budget next resets |
+| `spend_logs_metadata` | Every key/value pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
+
+Only text fields are forwarded, because Bedrock accepts string values only. The numeric spend and budget fields (`user_api_key_spend`, `user_api_key_max_budget`, and the user and team variants) and `user_api_key_auth_metadata` are skipped even when listed. A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out.
+
+`spend_logs_metadata` is the way to forward your own dimensions like agent or cost center without touching agent code. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults. The same pairs then land in LiteLLM spend logs and in Bedrock.
+
+Bedrock allows at most 16 pairs per request, keys and values of up to 256 characters, and only the characters `a-z A-Z 0-9`, whitespace, and `:_@$#=/+,.-`. Identity fields are placed first, in the order you list them, so they always get a slot. On Converse, any `requestMetadata` the caller sends comes next and `spend_logs_metadata` fills whatever is left, with the earlier value winning when both use the same key. An identity or `spend_logs_metadata` pair that breaks Bedrock's rules is dropped and the request still succeeds, so a team alias with an apostrophe in it never turns into a failed call. A malformed `requestMetadata` the caller sends gets a 400, like Bedrock would return, unless `drop_params` is on, in which case only its bad pairs are dropped. With this setting off, the `/bedrock` pass-through routes send the body exactly as you wrote it and Bedrock answers a malformed one itself, while chat completions still drops the bad pairs under `drop_params`. Keys starting with `user_api_key_` are reserved for the proxy, so a caller cannot forge identity through `requestMetadata` or `spend_logs_metadata`, and any `X-Amzn-Bedrock-Request-Metadata` header the caller sends is replaced.
+
+LiteLLM writes the metadata to the `requestMetadata` body field on Converse and to the signed `X-Amzn-Bedrock-Request-Metadata` header on Invoke, which covers `/chat/completions`, `/v1/messages`, and, from `v1.108.0`, the `converse`, `converse-stream`, `invoke`, and `invoke-with-response-stream` actions of the `/bedrock` [pass-through routes](../pass_through/bedrock.md). On a pass-through Invoke call LiteLLM uses the body field instead when the caller's body already has `requestMetadata`. On every Invoke route, the pairs that would push the header past Bedrock's 8,500-character limit are dropped from the end, so the identity fields are always sent. While the setting is on, models that default to the [Native Chat Completions route](#native-chat-completions-route) use Converse instead, since that endpoint has no request metadata. AWS does not support request metadata on `bedrock-mantle` models.
+
+AWS records request metadata only when model invocation logging is enabled in the call's region, and it does not appear in Cost Explorer or CUR. `user_api_key_user_email` and `user_api_key_hash` end up in your AWS logs where LiteLLM cannot delete them, so leave them out unless you need them.
 
 ## Usage - Function Calling / Tool calling
 
@@ -584,7 +624,7 @@ model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      reasoning_effort: "low" # 👈 EITHER HERE OR ON REQUEST
+      reasoning_effort: "low" # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -602,7 +642,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "reasoning_effort": "low" # 👈 EITHER HERE OR ON CONFIG.YAML
+    "reasoning_effort": "low" # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -780,7 +820,7 @@ response = completion(
     messages=[{"role": "user", "content": "Hello! Testing 1M context window."}],
     max_tokens=100,
     extra_headers={
-        "anthropic-beta": "context-1m-2025-08-07"  # 👈 Enable 1M context
+        "anthropic-beta": "context-1m-2025-08-07"  # Enable 1M context
     }
 )
 ```
@@ -834,7 +874,7 @@ model_list:
     litellm_params:
       model: bedrock/anthropic.claude-sonnet-4-20250514-v1:0
       extra_headers:
-        anthropic-beta: "context-1m-2025-08-07"  # 👈 Enable 1M context
+        anthropic-beta: "context-1m-2025-08-07"  # Enable 1M context
 
   - model_name: claude-computer-use
     litellm_params:
@@ -843,7 +883,7 @@ model_list:
         anthropic-beta: "computer-use-2024-10-22,context-1m-2025-08-07"
 
 general_settings:
-  forward_client_headers_to_llm_api: true  # 👈 Required for client-side header forwarding
+  forward_client_headers_to_llm_api: true  # Required for client-side header forwarding
 ```
 
 **Set on Request**
@@ -1132,7 +1172,7 @@ model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
       model: bedrock/us.anthropic.{{anthropic}}
-      performanceConfig: {"latency": "optimized"} # 👈 EITHER HERE OR ON REQUEST
+      performanceConfig: {"latency": "optimized"} # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -1150,7 +1190,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "performanceConfig": {"latency": "optimized"} # 👈 EITHER HERE OR ON CONFIG.YAML
+    "performanceConfig": {"latency": "optimized"} # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -1520,7 +1560,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 
-litellm.set_verbose = True #  👈 SEE RAW REQUEST 
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
     model="bedrock/us.anthropic.{{anthropic}}",
@@ -1838,7 +1878,7 @@ image_content = [
     {
         "type": "file",
         "file": {
-            "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+            "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
         }
     },
 ]
@@ -1887,7 +1927,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         {
             "type": "file",
             "file": {
-                "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
             }
         }
     ]
@@ -2487,7 +2527,7 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
             model="bedrock/us.anthropic.{{anthropic}}",
@@ -2788,7 +2828,7 @@ model_list:
 
 ### Passing an external BedrockRuntime.Client as a parameter - Completion()
   
-This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above 👆. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
+This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
 
 :::warning
 

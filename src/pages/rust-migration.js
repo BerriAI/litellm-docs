@@ -1,100 +1,82 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Layout from '@theme/Layout';
+import {useEventListener, useResizeObserver} from 'usehooks-ts';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import Link from '@docusaurus/Link';
 import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import {Select} from '@base-ui/react/select';
 import {
+  CURRENT_VERSION,
   GOALS,
-  MAIN_VERSION,
-  RELEASES,
+  PLANS,
   STAGES,
-  changesIn,
+  changesBetween,
+  labelOf,
   progressAt,
-  stageAt,
+  timelineFor,
 } from '@site/src/data/rustMigration';
 import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
+import {createTimeScale, labelWidth, layoutTimelineLabels, layoutTimelineValues, monthTicks, LABEL_ROW_HEIGHT} from '@site/src/components/RustMigration/timeline';
 import picker from '@site/src/components/RustMigration/Picker.module.css';
 import styles from './rust-migration.module.css';
 
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
+const MONTH = new Intl.DateTimeFormat('en-US', {month: 'short', timeZone: 'UTC'});
 const FULL_DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
 
 const formatDate = (formatter, date) => formatter.format(new Date(date));
 
-// Each goal's progress at every release on the timeline.
-const GOAL_TIMELINES = new Map(GOALS.map(goal => [
-  goal.id,
-  RELEASES.map(release => ({...release, percent: progressAt(goal, release.version)})),
-]));
+const GOAL_TIMELINES = new Map(GOALS.map(goal => [goal.id, timelineFor(goal)]));
 
-function useElementWidth(fallback) {
-  const ref = useRef(null);
-  const [width, setWidth] = useState(fallback);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return undefined;
-    }
-    const observer = new ResizeObserver(([entry]) => {
-      const nextWidth = Math.round(entry.contentRect.width);
-      if (nextWidth > 0) {
-        setWidth(nextWidth);
-      }
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, width];
-}
+// Every percent on the page is a whole number, like 13.5% as 14%.
+const wholePercent = percent => Math.round(percent);
 
-const LABEL_SPACING = 100;
+// Points keep one decimal, since a single provider can be worth a fraction of one.
+const formatPoints = value => (Math.round(value * 10) / 10).toString();
 
-// Label as many releases as fit without overlapping. The first release, main,
-// and releases where progress moved claim their spots before the rest.
-function pickLabeledPoints(points, x, goalX) {
-  const priority = index => {
-    if (index === 0 || points[index].isMain) {
-      return 2;
-    }
-    return points[index - 1].percent !== points[index].percent ? 1 : 0;
-  };
-  const byPriority = points
-    .map((point, index) => index)
-    .sort((a, b) => priority(b) - priority(a) || a - b);
-  const labeled = new Set();
-  for (const index of byPriority) {
-    const fits = [...labeled].every(other => Math.abs(x(index) - x(other)) >= LABEL_SPACING)
-      && (points[index].isMain || goalX - x(index) >= LABEL_SPACING);
-    if (priority(index) === 2 || fits) {
-      labeled.add(index);
-    }
-  }
-  return labeled;
-}
+// A goal's progress in points of its weight, like 11.8 of 100.
+const pointsAt = (goal, version, projected = false) => (progressAt(goal, version, projected) * goal.points) / 100;
 
 function MigrationTimeline({goal}) {
   const points = GOAL_TIMELINES.get(goal.id);
-  const [chartRef, width] = useElementWidth(920);
+  const chartRef = useRef(null);
+  // Nothing is measured on the server or before the first resize, so start at a desktop width.
+  const width = Math.round(useResizeObserver({ref: chartRef}).width || 920);
   const [hovered, setHovered] = useState(null);
   const compact = width < 560;
-  const height = compact ? 240 : 336;
+  const baseHeight = compact ? 240 : 336;
   const plot = compact
     ? {left: 40, right: 20, top: 36, bottom: 56}
     : {left: 48, right: 40, top: 40, bottom: 64};
   const plotWidth = width - plot.left - plot.right;
-  const plotHeight = height - plot.top - plot.bottom;
-  const goalGap = compact ? 72 : 120;
-  const x = index => plot.left + (index / (points.length - 1)) * (plotWidth - goalGap);
+  const plotHeight = baseHeight - plot.top - plot.bottom;
+  const goalX = plot.left + plotWidth;
+  const dateX = createTimeScale(points[0].date, goal.endsOn, plot.left, goalX);
+  const x = index => dateX(points[index].date);
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
-  const goalX = plot.left + plotWidth;
-  const latest = points.at(-1);
+  const axisLabel = point => ({
+    name: point.kind === 'plan' ? point.label : compactVersion(point.version),
+    date: point.kind === 'latest' && !compact ? `${formatDate(SHORT_DATE, point.date)} · latest` : formatDate(SHORT_DATE, point.date),
+  });
+  const {labels, rowCount} = layoutTimelineLabels(points.map((point, index) => {
+    const {name, date} = axisLabel(point);
+    const moved = index > 0 && points[index - 1].percent !== point.percent;
+    return {key: index, anchor: x(index), width: labelWidth(name, date), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
+  }), goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)), width);
+  const values = layoutTimelineValues(points, x, y);
+  const height = baseHeight + (rowCount - 1) * LABEL_ROW_HEIGHT;
+  const current = points.findIndex(point => point.kind === 'latest');
   const linePath = points
+    .slice(0, current + 1)
     .map((point, index) => (index === 0 ? `M${x(0)},${y(point.percent)}` : `H${x(index)}V${y(point.percent)}`))
     .join('');
   const areaPath = `${linePath}V${baseline}H${x(0)}Z`;
-  const labeled = pickLabeledPoints(points, x, goalX);
+  // From today through each plan to the goal, as one dashed projection.
+  const projectionPath = points
+    .slice(current)
+    .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
+    .join('') + `L${goalX},${y(100)}`;
 
   return (
     <div className={styles.chartBody} ref={chartRef}>
@@ -104,12 +86,15 @@ function MigrationTimeline({goal}) {
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-labelledby="timeline-title timeline-description"
+        // A label rather than <title>, which browsers show as a tooltip over the whole chart.
+        aria-label="Rust migration progress over time"
+        aria-describedby="timeline-description"
       >
-        <title id="timeline-title">Rust migration progress over time</title>
         <desc id="timeline-description">
-          {latest.percent} percent of the work for {goal.text} is done in {MAIN_VERSION}.
-          The goal targets 100 percent by {goal.endsOn}.
+          {wholePercent(points[current].percent)} percent of {goal.text} is migrated in {CURRENT_VERSION}.
+          {points.filter(point => point.kind === 'plan').map(point => ` ${point.label} is planned to reach ${wholePercent(point.percent)} percent.`)}
+          {' '}The goal targets 100 percent by {goal.endsOn}.
+          {' '}Horizontal distance represents elapsed time on the same scale for releases, plans, and the goal.
         </desc>
         <defs>
           <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
@@ -117,6 +102,16 @@ function MigrationTimeline({goal}) {
             <stop offset="100%" className={styles.areaEnd} />
           </linearGradient>
         </defs>
+        {monthTicks(points[0].date, goal.endsOn).map(month => (
+          <g key={month}>
+            <line className={styles.monthLine} x1={dateX(month)} x2={dateX(month)} y1={plot.top - 18} y2={baseline} />
+            {goalX - dateX(month) >= 96 && (
+              <text className={styles.monthLabel} x={dateX(month) + 4} y={plot.top - 8}>
+                {formatDate(MONTH, month)}
+              </text>
+            )}
+          </g>
+        ))}
         {[0, 50, 100].map(tick => (
           <g key={tick}>
             <line
@@ -130,18 +125,24 @@ function MigrationTimeline({goal}) {
           </g>
         ))}
         <path d={areaPath} fill="url(#progress-area)" />
-        <line
-          className={styles.goalLine}
-          x1={x(points.length - 1)}
-          x2={goalX}
-          y1={y(latest.percent)}
-          y2={y(100)}
-        />
+        <path className={styles.goalLine} d={projectionPath} fill="none" />
         <path className={styles.progressLine} d={linePath} />
+        {[...labels].map(([index, label]) => (
+          <path
+            key={index}
+            className={styles.labelGuide}
+            // Straight down when the date still falls under its label.
+            d={`M${x(index)},${baseline + 4}L${Math.min(Math.max(x(index), label.x - label.width / 2), label.x + label.width / 2)},${baseline + 12 + label.row * LABEL_ROW_HEIGHT}`}
+          />
+        ))}
         {points.map((point, index) => {
           const cx = x(index);
           const cy = y(point.percent);
-          const date = formatDate(SHORT_DATE, point.date);
+          const pinned = point.kind !== 'release';
+          const pointClass = {release: styles.progressPoint, latest: styles.mainPoint, plan: styles.planPoint}[point.kind];
+          const label = labels.get(index);
+          const labelY = label && baseline + 26 + label.row * LABEL_ROW_HEIGHT;
+          const value = values.get(index);
           return (
             <g
               key={point.version}
@@ -153,29 +154,34 @@ function MigrationTimeline({goal}) {
               onClick={() => setHovered(index)}
             >
               <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
-              <circle
-                className={point.isMain ? styles.mainPoint : styles.progressPoint}
-                cx={cx}
-                cy={cy}
-                r={point.isMain ? 5 : 3.5}
-              />
-              {point.isMain && (
-                <text className={styles.pointValue} x={cx} y={cy - 12} textAnchor="middle">
-                  {point.percent}%
+              <circle className={pointClass} cx={cx} cy={cy} r={pinned ? 5 : 3.5} />
+              {point.kind === 'latest' && (
+                // Up and to the left, clear of the projection rising to the right.
+                <text className={styles.pointValue} x={cx - 6} y={cy - 9} textAnchor="end">
+                  {wholePercent(point.percent)}%
                 </text>
               )}
-              {labeled.has(index) && (
-                <text
-                  className={`${styles.versionLabel} ${point.isMain ? styles.mainVersionLabel : ''}`}
-                  x={cx}
-                  y={baseline + 26}
-                  textAnchor={compact && index === 0 ? 'start' : 'middle'}
-                >
-                  <tspan x={cx}>{compactVersion(point.version)}</tspan>
-                  <tspan className={styles.versionDate} x={cx} dy="16">
-                    {point.isMain && !compact ? `${date} · main` : date}
-                  </tspan>
-                </text>
+              {value && (
+                <>
+                  {value.y < cy - 12 && <line className={styles.labelGuide} x1={cx} x2={cx} y1={cy - 7} y2={value.y + 3} />}
+                  <text className={`${styles.pointValue} ${styles.planValue}`} x={cx} y={value.y} textAnchor="middle">
+                    {wholePercent(point.percent)}%
+                  </text>
+                </>
+              )}
+              {label && (
+                <>
+                  <rect className={styles.labelBackground} x={label.x - label.width / 2 - 4} y={labelY - 12} width={label.width + 8} height={34} />
+                  <text
+                    className={`${styles.versionLabel} ${{release: '', latest: styles.mainVersionLabel, plan: styles.planVersionLabel}[point.kind]}`}
+                    x={label.x}
+                    y={labelY}
+                    textAnchor="middle"
+                  >
+                    <tspan x={label.x}>{axisLabel(point).name}</tspan>
+                    <tspan className={styles.versionDate} x={label.x} dy="16">{axisLabel(point).date}</tspan>
+                  </text>
+                </>
               )}
             </g>
           );
@@ -195,68 +201,115 @@ function MigrationTimeline({goal}) {
         </g>
       </svg>
       {hovered !== null && (
-        <PointTooltip goal={goal} point={points[hovered]} previous={points[Math.max(hovered - 1, 0)]} left={x(hovered)} top={y(points[hovered].percent)} width={width} />
+        <PointTooltip goal={goal} point={points[hovered]} previous={points[hovered - 1] ?? null} anchor={{x: x(hovered), y: y(points[hovered].percent)}} />
       )}
     </div>
   );
 }
 
-const TOOLTIP_LINES = 3;
-const TOOLTIP_PROVIDERS = 4;
+const TOOLTIP_LINES = 4;
+const TOOLTIP_UNITS = 3;
 
-// One line per area and stage, so six providers moving together read as one
-// change. Foundation work is left out, since it isn't an API and provider pair.
-// `from` is where the providers stood before, when they all stood in one place.
-function summarizeChanges(goal, point, previous) {
-  const apiFeatures = goal.features.filter(feature => !feature.area.groundwork);
-  return changesIn(point.version, apiFeatures).map(({key, area, stage, features}) => {
-    const before = new Set(features.map(feature => stageAt(feature, previous.version)));
-    const names = features.map(feature => feature.path.slice(1).join(' / '));
-    return {
-      key,
-      area: area.text,
-      providers: features.length === area.features.length && names.length > 1
-        ? 'All providers'
-        : names.length > TOOLTIP_PROVIDERS
-          ? `${names.slice(0, TOOLTIP_PROVIDERS).join(', ')} +${names.length - TOOLTIP_PROVIDERS} more`
-          : names.join(', '),
-      from: before.size === 1 ? STAGES[[...before][0]].label : null,
-      to: STAGES[stage].label,
-    };
-  });
+// Units under one group share its name once, like `Cloud auth: Azure, Google
+// Cloud`, and a long list ends in a count.
+function unitList(features) {
+  const groups = new Set(features.map(feature => feature.path.length > 2 ? feature.path[1] : null));
+  const group = groups.size === 1 ? [...groups][0] : null;
+  const names = features.map(feature => feature.path.slice(group ? 2 : 1).join(' / '));
+  const list = names.length > TOOLTIP_UNITS
+    ? `${names.slice(0, TOOLTIP_UNITS).join(', ')} +${names.length - TOOLTIP_UNITS} more`
+    : names.join(', ');
+  return group ? `${group}: ${list}` : list;
 }
 
-function PointTooltip({goal, point, previous, left, top, width}) {
+// One line per area and stage, so six providers moving together read as one
+// change. A plan's lines come from what it expects to move. A whole area needs
+// no unit list; anything less names its units, since that is what moved.
+function summarizeChanges(goal, point, previous) {
+  return changesBetween(goal, point.version, previous?.version ?? null, point.kind === 'plan').map(change => ({
+    key: change.key,
+    area: change.area.text,
+    units: change.wholeArea ? null : unitList(change.features),
+    from: change.from && labelOf(change.from),
+    to: labelOf(change.kind),
+  }));
+}
+
+const TOOLTIP_GAP = 14;
+const TOOLTIP_MARGIN = 8;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+
+// Where a tooltip of `size` goes inside `bounds` next to `anchor`: beside the
+// point on whichever side has room, or centered over it and kept inside the
+// card when neither side does, as on a phone. Points sit low on the chart, so
+// the tooltip rises from the point into the empty space above the line rather
+// than covering the axis labels. `bounds.top` is negative, since a tall tooltip
+// may rise over the sentence above the chart.
+function placeTooltip(anchor, size, bounds) {
+  const right = anchor.x + TOOLTIP_GAP;
+  const left = anchor.x - TOOLTIP_GAP - size.width;
+  const fitsRight = right + size.width <= bounds.width - TOOLTIP_MARGIN;
+  const fitsLeft = left >= TOOLTIP_MARGIN;
+  const preferLeft = anchor.x > bounds.width / 2;
+  const beside = fitsLeft && (preferLeft || !fitsRight) ? left : fitsRight ? right : null;
+  const x = beside ?? clamp(anchor.x - size.width / 2, TOOLTIP_MARGIN, bounds.width - size.width - TOOLTIP_MARGIN);
+  const bottom = beside === null ? anchor.y - TOOLTIP_GAP : anchor.y + TOOLTIP_GAP;
+  const y = clamp(bottom - size.height, bounds.top + TOOLTIP_MARGIN, bounds.bottom - size.height - TOOLTIP_MARGIN);
+  return {left: x, top: y};
+}
+
+function PointTooltip({goal, point, previous, anchor}) {
   const lines = summarizeChanges(goal, point, previous);
   const shown = lines.slice(0, TOOLTIP_LINES);
-  const flipped = left > width / 2;
+  const gain = previous ? wholePercent(point.percent) - wholePercent(previous.percent) : 0;
+  const ref = useRef(null);
+  // Hidden until measured, since where it fits depends on its own size.
+  const [position, setPosition] = useState(null);
+  useLayoutEffect(() => {
+    const tooltip = ref.current;
+    const chart = tooltip.offsetParent;
+    // The anchor is in SVG coordinates, and the SVG sits inside the chart's
+    // padding. SVG elements have no offsetLeft, so measure the gap directly.
+    const svgBox = chart.querySelector('svg').getBoundingClientRect();
+    const chartBox = chart.getBoundingClientRect();
+    setPosition(placeTooltip(
+      {x: anchor.x + svgBox.left - chartBox.left, y: anchor.y + svgBox.top - chartBox.top},
+      {width: tooltip.offsetWidth, height: tooltip.offsetHeight},
+      {width: chart.clientWidth, top: -chart.offsetTop, bottom: chart.clientHeight},
+    ));
+  }, [anchor.x, anchor.y, point.version, goal.id]);
   return (
     <div
-      className={`${styles.tooltip} ${flipped ? styles.tooltipLeft : styles.tooltipRight}`}
-      style={{left, top}}
+      ref={ref}
+      className={styles.tooltip}
+      style={position ?? {left: 0, top: 0, visibility: 'hidden'}}
       role="tooltip"
     >
       <div className={styles.tooltipHead}>
-        <strong>{compactVersion(point.version)}</strong>
-        <span>{point.percent}%</span>
+        <strong>{point.kind === 'plan' ? point.label : compactVersion(point.version)}</strong>
+        <span>
+          {wholePercent(point.percent)}%
+          {gain > 0 && <em className={styles.tooltipGain}> +{gain}</em>}
+        </span>
       </div>
       <div className={styles.tooltipDate}>
-        {point.isMain ? 'Planned for' : 'Released'} {formatDate(FULL_DATE, point.date)}
+        {point.kind === 'plan'
+          ? `${compactVersion(point.version)} · planned for ${formatDate(SHORT_DATE, point.date)}`
+          : `Released ${formatDate(SHORT_DATE, point.date)}`}
       </div>
       {lines.length === 0 ? (
-        <div className={styles.tooltipEmpty}>Nothing moved for {goal.text} in this release.</div>
+        <div className={styles.tooltipEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</div>
       ) : (
         <ul className={styles.tooltipList}>
           {shown.map(line => (
             <li key={line.key}>
-              <span className={styles.tooltipArea}>
-                {line.area}
-                <em> · {line.providers}</em>
-              </span>
+              <span className={styles.tooltipArea}>{line.area}</span>
               <span className={styles.tooltipStage}>
                 {line.from && <em>{line.from} → </em>}
                 {line.to}
               </span>
+              {line.units && <span className={styles.tooltipUnits}>{line.units}</span>}
             </li>
           ))}
           {lines.length > shown.length && (
@@ -272,7 +325,7 @@ function PointTooltip({goal, point, previous, left, top, width}) {
 // draws its chevron inside, and once a node is complete the ring fills solid
 // with the glyph cut out of it: the chevron for a group, a check otherwise.
 function ProgressMarker({percent, expandable}) {
-  const complete = percent === 100;
+  const complete = Math.round(percent) === 100;
   return (
     <svg className={`${styles.marker} ${complete ? styles.markerComplete : ''}`} viewBox="0 0 16 16" aria-hidden="true">
       <circle className={styles.markerTrack} cx="8" cy="8" r="6.5" />
@@ -292,7 +345,7 @@ function GraphNode({node}) {
   return (
     <li>
       <div className={styles.node}>
-        <ProgressMarker percent={progressAt(node, MAIN_VERSION)} />
+        <ProgressMarker percent={progressAt(node, CURRENT_VERSION)} />
         <span className={styles.nodeText}>{node.text}</span>
         <span className={styles.nodeMeta}><StageBadge feature={node} /></span>
       </div>
@@ -300,16 +353,20 @@ function GraphNode({node}) {
   );
 }
 
-// Groups start collapsed so the list stays scannable; opening one shows what it holds.
-function GroupNode({group}) {
-  const percent = progressAt(group, MAIN_VERSION);
+// Groups start collapsed so the list stays scannable; opening one shows what it
+// holds. A goal's areas also show how many points of the goal they carry.
+function GroupNode({group, points}) {
+  const percent = progressAt(group, CURRENT_VERSION);
   return (
     <li>
       <details className={styles.group}>
         <summary className={styles.node}>
           <ProgressMarker percent={percent} expandable />
           <span className={styles.nodeText}>{group.text}</span>
-          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>{percent}%</span>
+          <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>
+            {wholePercent(percent)}%
+            {points !== undefined && <span className={styles.nodePoints}>of {points} pts</span>}
+          </span>
         </summary>
         <ul>
           {group.children.map(child => <GraphNode node={child} key={child.id} />)}
@@ -379,8 +436,11 @@ function MigrationTracker() {
       <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
       <div className={styles.chartCard}>
         <p className={styles.goalSentence}>
-          <strong className={styles.progressSummary} title={`Across ${goal.features.length} features`}>
-            {progressAt(goal, MAIN_VERSION)}%
+          <strong
+            className={styles.progressSummary}
+            title={`${formatPoints(pointsAt(goal, CURRENT_VERSION))} of ${goal.points} points as of ${CURRENT_VERSION}`}
+          >
+            {wholePercent(progressAt(goal, CURRENT_VERSION))}%
           </strong>
           {' of '}
           <GoalSelect goal={goal} onChange={setGoal} />
@@ -408,7 +468,7 @@ function MigrationTracker() {
         </div>
         {/* The sentence above already names the goal, so the tree starts at its children. */}
         <ul className={styles.tree} hidden={view !== 'breakdown'}>
-          {goal.children.map(area => <GroupNode group={area} key={area.id} />)}
+          {goal.children.map(area => <GroupNode group={area} points={area.weight} key={area.id} />)}
         </ul>
       </div>
     </section>
@@ -456,7 +516,72 @@ function RolloutStages() {
   );
 }
 
+// How `other` weighs areas differently from `goal`, like `Long tail from 4 to 23 points`.
+function reweighed(goal, other) {
+  return other.children
+    .map(area => [area, goal.children.find(candidate => candidate.id === area.id)])
+    .filter(([area, base]) => base && base.weight !== area.weight)
+    .map(([area, base]) => `${area.text} from ${base.weight} to ${area.weight} points`)
+    .join(' and ');
+}
+
+// The goal's areas with their weights, what they hold today, and what the plans
+// should add, straight from the data the chart uses.
+function Scoring() {
+  const [goal] = GOALS;
+  const lastPlan = PLANS.at(-1);
+  const rows = goal.children.map(area => {
+    const points = area.weight;
+    return {
+      area,
+      points,
+      today: (progressAt(area, CURRENT_VERSION) * points) / 100,
+      planned: lastPlan && (progressAt(area, lastPlan.version, true) * points) / 100,
+    };
+  });
+  return (
+    <>
+      <p className={styles.sectionLead}>
+        Each area of work carries a share of {goal.points} points for {goal.text}, and within an area its providers or
+        pieces split those points evenly. A piece earns 80% of its share once anyone can turn it on, even as an opt-in,
+        and the last 20% once it runs on Rust by default or the Python path is gone. Shared groundwork, like cloud auth,
+        counts in full once it is done.
+        {GOALS.slice(1).map(other => ` ${other.text} reweighs ${reweighed(goal, other)}, for ${other.points} in all.`)}
+      </p>
+      <table className={styles.scoring}>
+        <thead>
+          <tr>
+            <th scope="col">{goal.text}</th>
+            <th scope="col">Points</th>
+            <th scope="col">Today</th>
+            {lastPlan && <th scope="col">By {formatDate(SHORT_DATE, lastPlan.date)}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => (
+            <tr key={row.area.id}>
+              <th scope="row">{row.area.text}</th>
+              <td>{row.points}</td>
+              <td>{formatPoints(row.today)}</td>
+              {lastPlan && <td>{formatPoints(row.planned)}</td>}
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Total</th>
+            <td>{goal.points}</td>
+            <td>{formatPoints(pointsAt(goal, CURRENT_VERSION))}</td>
+            {lastPlan && <td>{formatPoints(pointsAt(goal, lastPlan.version, true))}</td>}
+          </tr>
+        </tfoot>
+      </table>
+    </>
+  );
+}
+
 const FAQ = [
+  {id: 'faq-scoring', question: 'How is the percentage calculated?', answer: <Scoring />},
   {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
 ];
 
@@ -489,20 +614,18 @@ function syncHash(details) {
 // opens it first so the target is visible.
 function Faq() {
   const listRef = useRef(null);
-  useEffect(() => {
-    const openHashTarget = () => {
-      const id = hashId();
-      const target = id && document.getElementById(id);
-      const details = target && listRef.current?.contains(target) && target.closest('details');
-      if (details && !details.open) {
-        details.open = true;
-        target.scrollIntoView();
-      }
-    };
-    openHashTarget();
-    window.addEventListener('hashchange', openHashTarget);
-    return () => window.removeEventListener('hashchange', openHashTarget);
-  }, []);
+  const openHashTarget = () => {
+    const id = hashId();
+    // Only targets inside the list, which may sit deep inside an answer.
+    const target = id ? listRef.current?.querySelector(`#${CSS.escape(id)}`) : null;
+    const details = target?.closest('details');
+    if (details && !details.open) {
+      details.open = true;
+      target.scrollIntoView();
+    }
+  };
+  useEffect(openHashTarget, []);
+  useEventListener('hashchange', openHashTarget);
 
   return (
     <section className={styles.section} id="faq" aria-labelledby="faq-title">
@@ -530,6 +653,104 @@ function SectionHeading({id, kicker, title}) {
       <p className={styles.kicker}>{kicker}</p>
       <h2 id={id}>{title}</h2>
     </header>
+  );
+}
+
+// AIGatewayBench results for the finished Rust gateway. Every figure is from
+// blog/rust_ai_gateway_benchmarks; do not edit one here without editing it
+// there. Rows are ascending in both panels, so the order is the same in each.
+const BENCHMARK = [
+  {
+    id: 'overhead',
+    label: 'Added latency at p99',
+    unit: 'ms',
+    // 0.7ms against 257.7ms is a 368x spread, so a linear bar would render the
+    // Rust result as a hairline. Widths are log scaled and the axis says so.
+    log: true,
+    rows: [
+      {name: 'LiteLLM Rust', value: 0.7, lead: true},
+      {name: 'Portkey', value: 2.3},
+      {name: 'Bifrost', value: 4.5},
+      {name: 'LiteLLM Python v1', value: 257.7},
+    ],
+  },
+  {
+    id: 'memory',
+    label: 'Maximum memory use',
+    unit: 'MB',
+    rows: [
+      {name: 'LiteLLM Rust', value: 21.8, lead: true},
+      {name: 'Portkey', value: 90.4},
+      {name: 'Bifrost', value: 199.1},
+      {name: 'LiteLLM Python v1', value: 329.5},
+    ],
+  },
+];
+
+// Log widths run from a tenth of a millisecond so the smallest bar still reads
+// as a bar rather than a sliver.
+const LOG_FLOOR = 0.1;
+
+function barWidth(panel, value) {
+  const max = Math.max(...panel.rows.map(row => row.value));
+  if (!panel.log) {
+    return (value / max) * 100;
+  }
+  const floor = Math.log10(LOG_FLOOR);
+  return ((Math.log10(value) - floor) / (Math.log10(max) - floor)) * 100;
+}
+
+function GatewayBenchmark() {
+  return (
+    <section className={styles.section} aria-labelledby="benchmark-title">
+      <SectionHeading id="benchmark-title" kicker="Result" title="The result of the move to Rust" />
+      <p className={styles.sectionLead}>
+        This is where the migration takes us. AIGatewayBench measured four gateways against the
+        same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
+        delay and the memory that each gateway adds.
+      </p>
+      {/* One card per panel. The two use different scales, so they are two
+          measurements rather than one chart cut in half. */}
+      <div className={styles.benchPanels}>
+        {BENCHMARK.map(panel => (
+          <div className={`${styles.chartCard} ${styles.benchPanel}`} key={panel.id}>
+            <p className={styles.benchPanelLabel}>{panel.label}</p>
+            <ul className={styles.benchRows}>
+              {panel.rows.map(row => {
+                // The column height and the label sitting on top of it are the
+                // same percentage, so the reading always rides its own bar.
+                const height = `${barWidth(panel, row.value)}%`;
+                return (
+                  <li className={styles.benchRow} key={row.name}>
+                    <span className={styles.benchTrack}>
+                      <span
+                        className={`${styles.benchValue} ${row.lead ? styles.benchValueLead : ''}`}
+                        style={{bottom: height}}>
+                        {row.value} {panel.unit}
+                      </span>
+                      <span
+                        className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''}`}
+                        style={{height}}
+                      />
+                    </span>
+                    <span className={styles.benchName}>{row.name}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className={styles.benchAxis}>
+              {panel.log ? 'Logarithmic scale. A low value is better.' : 'A low value is better.'}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className={styles.benchNote}>
+        These numbers are the delay the gateway itself adds. Each gateway handled 5000 requests for each endpoint,
+        and p99 is the slowest request in every 100. The{' '}
+        <Link to="/blog/rust-ai-gateway-benchmarks">AIGatewayBench report</Link> gives the full method, the raw data,
+        and the limits of the test.
+      </p>
+    </section>
   );
 }
 
@@ -569,6 +790,7 @@ export default function RustMigrationPage() {
           <p className={styles.description}>See what already runs on Rust and what is next.</p>
         </header>
         <MigrationTracker />
+        <GatewayBenchmark />
         <MigrationUpdates />
         <Faq />
       </main>
