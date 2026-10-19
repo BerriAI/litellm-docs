@@ -32,11 +32,12 @@ Model ids in examples are `{{role}}` placeholders filled from docs-models.json
 at build time (src/remark/docs-models.js). This script applies the same
 substitution before parsing a block, and the model-literal rule fails a block
 that writes a current or recorded historical id itself, because that block
-would not follow the next bump. Any literal chatgpt/ model is also caught,
+would not follow the next bump. Any literal chatgpt/ model is also caught, in prose as well as code,
 even if it has never been a default. Retain earlier defaults in
 docs-models-history.json when updating docs-models.json.
-Add `keep-model-ids` to the fence line when the exact id is the
-point of the block (a price map key, a cache key, a printed log).
+Add `keep-model-ids` to the fence line, or a `{/* keep-model-ids */}` comment on
+the prose line, when the exact id is the point (a price map key, a cache key,
+a printed log).
 
 The Python version examples use ({{python_version}}, the interpreter in the
 official Docker image) and the lowest version LiteLLM supports
@@ -344,10 +345,7 @@ def check_page(page, site, page_cache):
                     if m.group(0) in seen_ids:
                         continue
                     seen_ids.add(m.group(0))
-                    model_id = m.group(0)
-                    role = "chatgpt" if model_id.startswith("chatgpt/") else MODEL_ROLES[model_id]
-                    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if model_id.startswith("chatgpt/") else "{{" + role + "}}"
-                    err("model-literal", start + offset + 1, f"hardcoded model id `{model_id}`; use a shared default such as `{example}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
+                    err("model-literal", start + offset + 1, model_literal_message(m.group(0)))
         if "keep-python-version" not in meta_tokens:
             for offset, l in enumerate(buf):
                 m = PYTHON_LITERAL_RE.search(l)
@@ -393,6 +391,9 @@ def check_page(page, site, page_cache):
             m = PYTHON_LITERAL_RE.search(raw)
             if m:
                 err("python-literal", line_no, python_literal_message(m.group(0)))
+        if "keep-model-ids" not in raw:
+            for m in CHATGPT_LITERAL_RE.finditer(raw):
+                err("model-literal", line_no, model_literal_message(m.group(0)))
         text = strip_inline_code(raw)
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
@@ -479,12 +480,24 @@ MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
 # alias such as bedrock-claude-sonnet-5 or a header name is left alone.
+LITERAL_START = r"(?<![A-Za-z0-9:@-])"
+LITERAL_END = r"(?![A-Za-z0-9@-]|[.:][0-9])"
+CHATGPT_LITERAL = r"(?<!/)chatgpt/(?![A-Za-z0-9._-]*\.json\b)[A-Za-z0-9][A-Za-z0-9._-]*"
+CHATGPT_LITERAL_RE = re.compile(LITERAL_START + CHATGPT_LITERAL + LITERAL_END)
 MODEL_LITERAL_RE = re.compile(
-    r"(?<![A-Za-z0-9:@-])(?:(?<!/)chatgpt/(?![A-Za-z0-9._-]*\.json\b)[A-Za-z0-9][A-Za-z0-9._-]*|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
+    LITERAL_START + "(?:" + CHATGPT_LITERAL + "|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + ")" + LITERAL_END
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
 # python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
 # `python3 -m venv` and wheel tags such as cp312 are not versions.
 PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:=@_ ]?3\.\d{1,2}(?![0-9])")
+
+
+def model_literal_message(model_id):
+    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if model_id.startswith("chatgpt/") else "{{" + MODEL_ROLES[model_id] + "}}"
+    return (
+        f"hardcoded model id `{model_id}`; use a shared default such as `{example}` so docs-models.json controls it, "
+        "or add keep-model-ids if the exact id is the point"
+    )
 
 
 def python_literal_message(literal):

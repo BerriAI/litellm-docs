@@ -13,7 +13,7 @@ ChatGPT subscription access is native to the Responses API. Chat Completions req
 
 Use a model that your ChatGPT plan and workspace can call. [OpenAI's Codex models page](https://learn.chatgpt.com/docs/models) lists the current and retired models. That list differs from the models the OpenAI API serves.
 
-The examples use `{{chatgpt}}`. OpenAI rolls it out to Plus, Pro, Business, Enterprise, and Edu plans, and on Enterprise and Edu an admin has to turn it on first. Free and Go plans do not get it at launch, and OpenAI points them to `{{chatgpt_small}}` when available. A model your plan cannot call fails with `The '<model>' model is not supported when using Codex with a ChatGPT account.`
+The examples use `{{chatgpt}}` and `{{chatgpt_small}}`. Check the models page for which plans can call them. As of October 2026, OpenAI rolls out GPT-6.1 Sol (`gpt-6.1-sol`) to Plus, Pro, Business, Enterprise, and Edu plans, and on Enterprise and Edu an admin has to enable GPT-6.1 Sol and GPT-6 Luna (`gpt-6-luna`) first. Free and Go plans do not get GPT-6.1 Sol at launch, and OpenAI points them to GPT-6 Luna when available. A model the backend does not serve to your account, such as a retired one, fails with `The '<model>' model is not supported when using Codex with a ChatGPT account.`
 
 Notes:
 - The ChatGPT subscription backend rejects token limit fields (`max_tokens`, `max_output_tokens`, `max_completion_tokens`) and `metadata`. LiteLLM strips these fields for this provider.
@@ -28,7 +28,7 @@ Device code login has to be allowed for the account first: in ChatGPT's security
 
 ## Usage - LiteLLM Python SDK
 
-The `chatgpt/` provider needs the `mcp` package, which a plain `pip install litellm` does not include. Install LiteLLM with the `mcp` extra:
+On LiteLLM 1.106.0, the `chatgpt/` provider needs the `mcp` package, which a plain `pip install litellm` does not include. Install LiteLLM with the `mcp` extra:
 
 ```bash showLineNumbers title="Install"
 pip install 'litellm[mcp]'
@@ -125,6 +125,12 @@ spec:
 ```
 
 ### Configure and start the proxy
+
+Install LiteLLM with the `proxy` extra, which also includes the `mcp` package:
+
+```bash showLineNumbers title="Install the proxy"
+pip install 'litellm[proxy]'
+```
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:

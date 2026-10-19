@@ -31,6 +31,13 @@ class ModelDefaultsTests(unittest.TestCase):
                 self.assertEqual([e[0] for e in errors], ["model-literal"])
                 self.assertIn(f"chatgpt/{model}", errors[0][3])
 
+    def test_chatgpt_literal_in_prose_is_rejected(self):
+        errors = self.errors('Call `chatgpt/gpt-5.4` for this.\n')
+        self.assertEqual([e[0] for e in errors], ["model-literal"])
+        self.assertIn("chatgpt/gpt-5.4", errors[0][3])
+        self.assertEqual(self.errors('Call `chatgpt/{{chatgpt}}` for this.\n'), [])
+        self.assertEqual(self.errors('Call `chatgpt/gpt-5.4` for this. {/* keep-model-ids */}\n'), [])
+
     def test_unknown_chatgpt_literal_is_rejected_without_history(self):
         errors = self.errors('```yaml\nmodel: chatgpt/future-model\n```\n')
         self.assertEqual([e[0] for e in errors], ["model-literal"])
