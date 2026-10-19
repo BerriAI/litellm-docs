@@ -833,6 +833,34 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 
 [API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
+### Let key owners edit their own key budgets
+
+By default any change to `max_budget` or `budget_limits` on `/key/update` needs a proxy admin, team admin, or org admin, and anyone else gets a 403. Set `general_settings.self_serve_budget_policy` to let the person who created a key, and still owns it, change its budget themselves. It applies to `/key/update` from the API and from the Admin UI key edit form, which calls the same route. There is no Admin UI toggle for the setting itself, so set it in `config.yaml` or through `/config/update`.
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  self_serve_budget_policy: lower_only
+```
+
+| Value | What the key's owner can change without an admin |
+|-------|---------------------------------------------------|
+| `disabled` (default) | Nothing. Every `max_budget` or `budget_limits` change needs an admin. |
+| `lower_only` | Add budget windows or lower caps. Raising a cap, removing `max_budget`, and dropping or renaming a window still need an admin. |
+| `ceiling` | Everything in `lower_only`, plus raising or removing `max_budget` or `budget_limits`, as long as the owner could have created the key with that budget through `/key/generate`. The `key_generation_settings` role gates apply, a non-admin team member needs the `/key/generate` team member permission, the new budget cannot exceed the caller's own `max_budget` (or `user_max_budget` for a UI session), and the key cannot be left uncapped while `upperbound_key_generate_params.max_budget` is set. |
+
+The owner is the caller whose `user_id` matches both the key's `user_id` and its `created_by`. A team member still needs the `/key/update` team member permission to edit a team key at all. Whatever the policy, `spend`, `soft_budget`, `max_budget` on a key with a linked `budget_id`, and any key the caller did not create stay admin-only. A value other than the three above logs a warning and behaves as `disabled`.
+
+With `lower_only` on, a key owner can add a tighter 24h window under their existing 7d one:
+
+```bash
+curl http://localhost:4000/key/update \
+  -H "Authorization: Bearer $OWNER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "'$OWNER_KEY'", "budget_limits": [{"budget_duration": "7d", "max_budget": 50}, {"budget_duration": "24h", "max_budget": 5}]}'
+```
+
+See [Set multiple budget windows on a key](./users#set-multiple-budget-windows-on-a-key) for how `budget_limits` works.
 
 ### Restricting Key Generation
 
