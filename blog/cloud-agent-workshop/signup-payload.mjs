@@ -1,6 +1,8 @@
 export const WORKSHOP_TITLE = 'Workshop: Build a self-hosted cloud agent.';
 export const WORKSHOP_DATES = 'October 19–30, 2026';
 
+export const DEPLOYMENT_TIMELINES = ['ASAP', '1 month', '3 months', '6 months'];
+
 export const FIELD_LIMITS = {
   name: 120,
   email: 254,
@@ -8,6 +10,7 @@ export const FIELD_LIMITS = {
   linkedin: 1000,
   workflow: 3000,
   onsiteInterest: 100,
+  deploymentTimeline: 100,
 };
 
 const LABELS = {
@@ -17,6 +20,7 @@ const LABELS = {
   linkedin: 'LinkedIn profile',
   workflow: 'What are you hoping to achieve?',
   onsiteInterest: 'Would you like the LiteLLM team to work with you on-site?',
+  deploymentTimeline: 'Deployment timeline',
 };
 
 const REQUIRED_FIELDS = ['name', 'email', 'company', 'linkedin', 'workflow'];
@@ -68,6 +72,9 @@ export function validateWorkshopValues(values) {
   }
   if (values.onsiteInterest && !errors.onsiteInterest && !['Yes', 'Maybe', 'No'].includes(values.onsiteInterest)) {
     errors.onsiteInterest = 'Choose an on-site preference from the list.';
+  }
+  if (values.deploymentTimeline && !errors.deploymentTimeline && !DEPLOYMENT_TIMELINES.includes(values.deploymentTimeline)) {
+    errors.deploymentTimeline = 'Choose a deployment timeline from the list.';
   }
   return errors;
 }
