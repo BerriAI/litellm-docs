@@ -121,6 +121,28 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+### Per Service Tier Timeouts
+
+A deployment can give requests that ask for a specific `service_tier` their own timeout. OpenAI's `flex` tier, for example, is slower than the default tier, so a `timeout` sized for standard traffic cuts flex requests off too early. Set `timeout_by_service_tier` and `stream_timeout_by_service_tier` under `litellm_params`, keyed by tier name:
+
+```yaml
+model_list:
+  - model_name: {{openai_small}}
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+      timeout: 610
+      stream_timeout: 610
+      timeout_by_service_tier:
+        flex: 900
+      stream_timeout_by_service_tier:
+        flex: 900
+```
+
+A request with `"service_tier": "flex"` in its body now waits up to 900 seconds on `/v1/chat/completions`, `/v1/responses` and every other route that accepts `service_tier`. A request without `service_tier`, or with a tier that has no entry in the map, keeps the deployment's `timeout` and `stream_timeout`, so adding the maps changes nothing for existing traffic.
+
+Per attempt, LiteLLM picks the first value that is set: a timeout sent with the request (the `timeout` parameter or the `x-litellm-timeout` header), then `timeout_by_service_tier` for the request's tier, then the deployment's `timeout`, then the router and global defaults described above. Streaming requests go through the same order with `stream_timeout_by_service_tier` and `stream_timeout`; a tier that is only listed in `timeout_by_service_tier` keeps the deployment's `stream_timeout` for its streams. Values must be numbers of seconds; the proxy refuses to start on anything else. Tier names are not checked against the provider, so a misspelled key is simply never matched.
+
 ### Keepalive Pings for Idle Streaming Connections
 
 `timeout` and `stream_timeout` cap how long a request is allowed to run. A separate problem is that load balancers and reverse proxies in front of the proxy often close connections that look idle, even when the client is legitimately waiting on a response. Streaming requests to models with long silent gaps before the first token, such as extended or adaptive thinking models, or otherwise slow providers, can trip these idle-connection timeouts before any content arrives.
