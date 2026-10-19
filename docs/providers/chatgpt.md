@@ -132,7 +132,18 @@ model_list:
 ```
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config config.yaml
+```
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then call the proxy:
+
+```bash showLineNumbers title="Call the proxy"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chatgpt/{{chatgpt}}", "input": [{"role": "user", "content": "Write a Python hello world"}]}'
 ```
 
 ## Credential Scope and Attribution
