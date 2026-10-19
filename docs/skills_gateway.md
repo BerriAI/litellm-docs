@@ -128,7 +128,8 @@ When both the key and its team list skills, the key gets the intersection of the
 | `category` | Category shown in the marketplace |
 | `keywords` | Tags for search and filtering |
 | `version` | Semver string; defaults to `1.0.0` on create |
-| `installation_preference` | From v1.107.0. Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop). Needs an `archive` source, and `auto_install` and `required` also need its `sha256`. Claude Desktop treats a per-plugin `required` like `auto_install`, so users can still remove it |
+| `serve_archive` | From v1.107.0. Optional boolean. When true, LiteLLM stores the skill as a zip and serves it from the proxy as a same-origin `archive` source with a SHA-256 digest, which is what Claude Desktop installs from a marketplace URL. Defaults to `true` for `archive` sources and `false` for git sources. See [Host plugins for Claude Desktop](./tutorials/claude_code_plugin_marketplace.md#host-plugins-for-claude-desktop) |
+| `installation_preference` | From v1.107.0. Optional `available`, `auto_install`, or `required`, served as `installationPreference` for [Claude Desktop auto-install](./tutorials/claude_code_plugin_marketplace.md#auto-install-plugins-in-claude-desktop). Needs an `archive` source or `serve_archive: true`, and `auto_install` and `required` also need the archive's `sha256`, which LiteLLM supplies when it hosts the zip. Claude Desktop treats a per-plugin `required` like `auto_install`, so users can still remove it |
 | `author` | `{"name": "...", "email": "..."}` |
 | `homepage` | Homepage URL |
 
@@ -141,7 +142,7 @@ When both the key and its team list skills, the key gets the intersection of the
 | `git-subdir` | `url`, `path` | `{"source": "git-subdir", "url": "https://github.com/org/repo.git", "path": "skills/my-skill"}` |
 | `archive` | `url` (HTTPS), optional `sha256` | `{"source": "archive", "url": "https://bucket.s3.amazonaws.com/my-skill.zip", "sha256": "<64 hex chars>"}` |
 
-`git-subdir` paths must be relative slash-separated segments of letters, digits, dots, hyphens, and underscores. `archive` URLs must use HTTPS, and `sha256`, when present, must be a 64-character hex digest. Claude Code downloads from these sources on the developer's machine, so private repositories and archives need credentials there.
+`git-subdir` paths must be relative slash-separated segments of letters, digits, dots, hyphens, and underscores. `archive` URLs must use HTTPS, and `sha256`, when present, must be a 64-character hex digest. Claude Code downloads from these sources on the developer's machine, so private repositories and archives need credentials there. With `serve_archive` on, LiteLLM downloads the source itself instead, and only GitHub-hosted git sources are supported. See [Host plugins for Claude Desktop](./tutorials/claude_code_plugin_marketplace.md#host-plugins-for-claude-desktop).
 
 ## API reference
 
@@ -156,6 +157,7 @@ When both the key and its team list skills, the key gets the intersection of the
 | `DELETE /claude-code/plugins/{name}` | Proxy admin | Delete a skill |
 | `GET /public/skill_hub` | None | List public skills |
 | `GET /claude-code/marketplace.json` | None, or `?key=` | Claude Code marketplace manifest. `?key=` adds the disabled skills granted to that key |
+| `GET /claude-code/plugins/{name}/archive.zip` | None, or `?key=` | The zip of a skill LiteLLM hosts for Claude Desktop (`404` if it is not hosted, or is disabled and not granted) |
 
 ## Agent Skills discovery index
 
