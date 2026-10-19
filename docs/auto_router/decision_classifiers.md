@@ -1,14 +1,14 @@
 ---
 title: Connect self-hosted classifiers
 sidebar_label: Self-hosted classifiers
-description: Connect a self-hosted Laya or Bespoke Nimble endpoint, or the Databricks `ai_decide` AI Function, to LiteLLM Auto Router. Set the endpoint, credentials, classifier model, and routing tiers.
+description: Use any deployed decision model, such as Strands Decider or Cloudflare Clef, or connect a self-hosted Laya or Bespoke Nimble endpoint or the Databricks `ai_decide` AI Function to LiteLLM Auto Router. Set the classifier, its connection, and routing tiers.
 ---
 
-Connect an existing Laya or Bespoke Nimble endpoint, or the Databricks `ai_decide` AI Function, to LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
+Use a decision model to classify requests for LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Laya and Bespoke Nimble are the supported self-hosted classifier options.** Jev uses TypeSafe's hosted API, and Databricks serves OpenJev from your workspace as the `ai_decide` AI Function; both share the same configuration flow. Select **OSS Classifier** in the dashboard, or use `classifier_type: oss_classifier` with a provider inside `opensource_classifier_config`.
+**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) and [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
 
 ## What you host
 
@@ -27,6 +27,68 @@ Use a base URL reachable from the gateway. For a classifier in your private netw
 The classifier receives the current user request, selected system text, and any configured prior-turn context, along with the tier criteria. Set `classifier_context_window_size: 0` to omit prior turns; the current request and selected system text still reach the classifier. The YAML example below uses this setting.
 
 The completion model still receives the request needed to generate the answer. Hosting the classifier yourself does not change where that completion runs. See the [classifier context reference](/docs/proxy/auto_routing) for history-window and character-budget settings.
+
+## Use a deployed decision model {#use-a-deployed-decision-model}
+
+Any `model_list` entry that serves [`/v1/decisions`](/docs/decisions) can classify requests for the router. Set `deployment_name` inside `opensource_classifier_config` to that entry's `model_name`. LiteLLM then sends the classifier call through that deployment, so the call uses the deployment's endpoint, credentials and price, and you configure the connection once for both the router and the decision routes. Every provider in the [decision provider list](/docs/decisions#supported-providers) works this way, including Strands Decider and Cloudflare Clef.
+
+Available from v1.107.0. It first shipped in v1.107.0-rc.1 with [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913).
+
+For Strands Decider, run the model on a server you operate and set `STRANDS_DECIDER_API_BASE` on the gateway to that server's base URL without `/v1/systemone`. Set `STRANDS_DECIDER_API_KEY` only when the server requires a bearer token. For Cloudflare Clef, set `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`. Use `cloudflare/clef-flash` instead of `cloudflare/clef` for the lower-cost Clef Flash model.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: small-solver
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: large-solver
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: strands-decider
+    litellm_params:
+      model: strands_decider/strands-decider-2B-hobson-v19
+      api_base: os.environ/STRANDS_DECIDER_API_BASE
+  - model_name: clef
+    litellm_params:
+      model: cloudflare/clef
+      api_key: os.environ/CLOUDFLARE_API_KEY
+  - model_name: strands-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_default_model: large-solver
+      complexity_router_config:
+        classifier_type: oss_classifier
+        opensource_classifier_config:
+          deployment_name: strands-decider
+          timeout_ms: 15000
+        tiers:
+          SIMPLE: small-solver
+          MEDIUM: small-solver
+          COMPLEX: large-solver
+          REASONING: large-solver
+        classifier_fallback: default_model
+  - model_name: clef-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_default_model: large-solver
+      complexity_router_config:
+        classifier_type: oss_classifier
+        opensource_classifier_config:
+          deployment_name: clef
+          timeout_ms: 15000
+        tiers:
+          SIMPLE: small-solver
+          MEDIUM: small-solver
+          COMPLEX: large-solver
+          REASONING: large-solver
+        classifier_fallback: default_model
+```
+
+The deployment owns the connection, so `opensource_classifier_config` rejects `api_base` and `api_key` next to `deployment_name`, and `provider` and `model` have no effect there. Set `timeout_ms` to the time your decision model needs after warm-up. A self-hosted model on a CPU can need much longer than the 3000 ms default.
+
+The response headers show which classifier ran. A routed request returns `x-litellm-complexity-router-cause: jev_classifier` for every decision model and `x-litellm-classifier-cost` with the classifier call's cost. The spend log records the classifier call under the deployment's model, for example `strands_decider/strands-decider-2B-hobson-v19` or `cloudflare/clef`, and prices it from that model's cost map entry. Strands Decider is self-hosted, so its token rates are zero.
 
 ## Choose a classifier
 
@@ -141,13 +203,15 @@ LiteLLM posts the System One request without a `model` field to `POST /api/2.0/a
 
 ## Configure from the dashboard
 
-First set the [connection variables above](#connect-the-classifier-to-the-gateway) on your gateway. The dashboard uses that connection when you select a provider.
+From v1.107.0 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
 
 1. Open **Models + Endpoints → Auto Router** and create or edit a router.
-2. Under **What classifies your requests?**, select **OSS Classifier**. Under **OSS provider**, choose **Laya** or **Bespoke Nimble**.
-3. Set **Classifier Model** to a name your server supports and **Classifier Timeout (ms)** to a value appropriate for that server. Start with `15000` for Laya or `30000` for Nimble, then tune after warming the model.
+2. Under **Choose your classifier**, select **Decisions Model**. Under **Decision model**, pick the deployment, for example `strands-decider` or `clef`. The list shows only deployments of decision models.
+3. Under **Advanced classifier settings**, set **Classifier Timeout (ms)** to a value appropriate for that model, then tune it after warming the model.
 4. Assign existing completion deployments to the `SIMPLE`, `MEDIUM`, `COMPLEX` and `REASONING` tiers, and choose a default model.
 5. Use **Test Routing** with representative prompts, inspect the classifier result, then save the router. Send client requests to the router's model name as shown [below](#test-routing-and-send-a-request).
+
+Dashboards before v1.107.0 show **OSS Classifier** with an **OSS provider** list instead. There, set the [connection variables above](#connect-the-classifier-to-the-gateway) on the gateway, choose **Laya** or **Bespoke Nimble**, and set **Classifier Model** to a name your server supports. Start the timeout at `15000` for Laya or `30000` for Nimble.
 
 Built-in OSS classification uses the shipped tier criteria and is available without a LiteLLM license. Custom instructions and custom tiers follow the dashboard's displayed allowance.
 
@@ -196,7 +260,7 @@ Start LiteLLM after setting the classifier connection variables and your complet
 litellm --config config.yaml
 ```
 
-In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for all four providers. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/ai_decide`.
+In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for every decision model. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/ai_decide`.
 
 Use a LiteLLM virtual key with access to `decision-router` to make a completion:
 
@@ -210,7 +274,7 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-If the provider is missing from the dashboard, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
+If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway runs v1.107.0 or later. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
 
 ## Call a native decision API
 
