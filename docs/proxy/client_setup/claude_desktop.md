@@ -94,7 +94,7 @@ Click **Sign in & test** (called **Test this connection** in some versions). Cla
 
 <Image img={require('../../../img/client_setup/claude_desktop_02_mcp_connector_connected_tools.png')} alt="Claude connector settings showing the LiteLLM MCP URL, a demonstration key, and three discovered tools" />
 
-Use your own virtual key in this field. Claude may flag a static authentication header as credential-like. For managed deployments, the [advanced guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers a credential helper instead.
+Use your own virtual key in this field. Claude may flag a static authentication header as credential-like. For rotating credentials, see Claude's [MCP headers helper guide](https://claude.com/docs/third-party/claude-desktop/extensions#short-lived-credentials-with-a-headers-helper).
 
 ### 3. Verify in Cowork
 
@@ -104,8 +104,8 @@ Apply the configuration and restart Claude Desktop. Start a Cowork task that use
 
 To select one server, use `/<server_name>/mcp` instead. The [MCP configuration reference](../../mcp_config_reference.md) covers endpoint selection, server filtering, and authentication.
 
-Claude Desktop's built-in connectors (`github`, `microsoft365`, `websearch`) run inside the app against those vendors' APIs and never pass through LiteLLM; only `url` entries do. For servers that need the user's own upstream login, set `"oauth": true` on the per-server URL and let LiteLLM run the flow; see [MCP OAuth passthrough](../../mcp_oauth_passthrough.md). The [full guide](../../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway) covers `headersHelper` for single sign-on fleets and per-tool policies.
+Claude Desktop's built-in connectors (`github`, `microsoft365`, `websearch`) run inside the app against those vendors' APIs and never pass through LiteLLM; only `url` entries do. For servers that need the user's own upstream login, set `"oauth": true` on the per-server URL and let LiteLLM run the flow; see [MCP OAuth passthrough](../../mcp_oauth_passthrough.md). Claude's [MCP configuration guide](https://claude.com/docs/third-party/claude-desktop/extensions) covers `headersHelper`, OAuth, and per-tool policies.
 
 ## Next steps
 
-[Desktop & Cowork SSO](../../tutorials/claude_desktop_cowork.md) for SSO, model picker rules, fleet rollout, and troubleshooting; [Auto Router with Claude Code and Claude Desktop](../../tutorials/claude_code_autorouter.md); [MCP gateway reference](../../mcp.md).
+[Desktop & Cowork SSO](../../tutorials/claude_desktop_cowork.md) for identity-provider sign-in; [Auto Router with Claude Code and Claude Desktop](../../tutorials/claude_code_autorouter.md); [MCP gateway reference](../../mcp.md).
