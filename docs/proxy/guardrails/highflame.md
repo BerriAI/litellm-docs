@@ -114,7 +114,7 @@ To let Shield track risk across the turns of one conversation, send `litellm_ses
 | Shield decision | Result |
 |---|---|
 | `allow` | The content passes unchanged. |
-| `modify` | Shield's redacted copy replaces the text. If the guardrail cannot apply the redaction, for example to tool-call arguments or to a streamed response, it blocks instead. The original content never passes. |
+| `modify` | Shield's redacted copy replaces the text. If the guardrail cannot apply the redaction, for example to tool-call arguments, to a streamed response, or on a pass-through endpoint, it blocks instead. The original content never passes. |
 | `deny` | The request is blocked with HTTP 400. |
 | `step_up`, `defer` | The request is blocked. The proxy cannot wait for a human approval or a later decision. |
 
