@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | CoralBricks serves open-weight GLM and DeepSeek models in FP4 over an OpenAI-compatible API |
+| Description | CoralBricks serves open-weight DeepSeek models in FP4 over an OpenAI-compatible API |
 | Provider Route on LiteLLM | `coralbricks/` |
 | Link to Provider Doc | [CoralBricks](https://www.coralbricks.ai) |
 | Default Base URL | `https://inference.coralbricks.ai/v1` |
@@ -28,12 +28,11 @@ os.environ["CORALBRICKS_API_BASE"] = "https://inference.coralbricks.ai/v1"  # op
 
 | Model | Input / 1M tokens | Output / 1M tokens | Cache write / 1M tokens | Cache read / 1M tokens |
 |-------|-------------------|--------------------|-------------------------|------------------------|
-| `coralbricks/glm-5.3-fast` | $1.12 | $4.40 | $1.68 | $0 |
 | `coralbricks/deepseek-v4.1-flash-fast` | $0.01 | $1.20 | $0.09 | $0 |
 
 Every model takes up to 1,048,576 input tokens and supports tool calling, reasoning, and prompt caching. Pricing follows the [CoralBricks pricing page](https://www.coralbricks.ai/pricing): cache writes are billed at the cache write rate and cached reads are free. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
 
-CoralBricks still accepts the older `glm-5.3-fp4` and `deepseek-v4.1-flash-fast-fp4` names as deprecated aliases, but LiteLLM prices only the current names above, so use those in new deployments
+CoralBricks still accepts the older `deepseek-v4.1-flash-fast-fp4` name as a deprecated alias, but LiteLLM prices only the current names above, so use those in new deployments
 
 ## Usage - LiteLLM Python SDK
 
