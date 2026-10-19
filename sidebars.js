@@ -523,7 +523,7 @@ const sidebars = {
             { type: "doc", id: "proxy/ip_address", className: "sidebar-enterprise" },
             { type: "doc", id: "proxy/public_routes", className: "sidebar-enterprise" },
             "proxy/master_key_rotations",
-            { type: "ref", id: "proxy/multiple_admins", label: "Audit Logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
           ],
         },
         {
@@ -1705,7 +1705,7 @@ const enterpriseSidebar = {
     { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
     { type: "html", value: "Features", className: "sidebar-group-label", defaultStyle: true },
     { type: "link", label: "All Enterprise features", href: "/docs/enterprise#full-feature-list" },
-    { type: "doc", id: "proxy/multiple_admins", label: "Audit logs" },
+    { type: "doc", id: "proxy/audit_logs", label: "Audit logs" },
     { type: "html", value: "Security review", className: "sidebar-group-label", defaultStyle: true },
     { type: "doc", id: "enterprise/compliance", label: "Compliance and SOC 2 Type II" },
     { type: "doc", id: "data_security", label: "Data privacy and security" },

@@ -64,6 +64,7 @@ const config = {
           {from: '/docs/guides/security_network', to: '/docs/guides/security_settings'},
           {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
+          {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',

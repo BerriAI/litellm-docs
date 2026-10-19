@@ -87,7 +87,7 @@ The [full feature list](../enterprise.md#full-feature-list) on the Overview page
 Some features have special conditions:
 
 - SSO for the Admin UI is free for up to 5 users. For more users, you must have a license. Refer to [SSO for the Admin UI](../proxy/admin_ui_sso.md).
-- Audit logs are on by default when the gateway has a license. Refer to [Audit logs](../proxy/multiple_admins.md).
+- Audit logs are on by default when the gateway has a license. Refer to [Audit logs](../proxy/audit_logs.md).
 - Some guardrail integrations need a license. Refer to [Which guardrails need a license?](../enterprise.md#guardrails-oss-vs-enterprise).
 - Pages with a **Free Enterprise feature** note do not need a license. Examples are [managed files](../proxy/litellm_managed_files.md) and [managed batches](../proxy/managed_batches.md).
 - [Billable request metering](../proxy/billing_metrics.md) needs the license key and the metering credentials from your LiteLLM onboarding.
