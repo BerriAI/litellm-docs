@@ -1,6 +1,5 @@
 ---
 title: Codex (CLI)
-sidebar_label: Codex (CLI)
 ---
 
 import Image from '@theme/IdealImage';
@@ -15,7 +14,7 @@ import Image from '@theme/IdealImage';
 |---|---|
 | Config file | `~/.codex/config.toml` |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](#sign-in-with-litellm-sso) |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](./codex_cli_sso.md) |
 | `model_catalog_url` | `<LITELLM_PROXY_BASE_URL>/v1/models`, plus `api_key_model_discovery = true` under `[features]` |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
@@ -129,28 +128,7 @@ When several deployments share one `model_name`, a request can route to any of t
 Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway keeps only the entries that fit: models that list a service tier are kept first, then the rest in `model_list` order, an entry too large for the bytes left is passed over while smaller ones after it are still kept, and the models left out are logged. Each entry is 20 to 65 KB, so roughly 20 to 45 models fit, and a model without a tier that was left out still works by name with Codex's fallback metadata. Put the models your Codex users need first in `model_list`
 ## Sign in with LiteLLM SSO
 
-In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
-
-Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
-
-```toml title="~/.codex/config.toml"
-model_provider = "litellm"
-
-[model_providers.litellm]
-name = "LiteLLM"
-base_url = "https://litellm.example.com/v1"
-wire_api = "responses"
-
-[model_providers.litellm.auth]
-command = "/absolute/path/to/lite"
-args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
-timeout_ms = 30000
-refresh_interval_ms = 300000
-```
-
-Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
-
-Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
+Use the [Codex CLI SSO guide](./codex_cli_sso.md) to authenticate with `lite auth print-token` in place of a long-lived virtual key.
 
 ## Model metadata for custom aliases
 

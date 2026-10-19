@@ -1,6 +1,5 @@
 ---
 title: Claude Desktop (GUI)
-sidebar_label: Claude Desktop (GUI)
 ---
 
 import Image from '@theme/IdealImage';

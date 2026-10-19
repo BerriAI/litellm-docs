@@ -1,6 +1,5 @@
 ---
 title: Claude Code (CLI)
-sidebar_label: Claude Code (CLI)
 ---
 
 import Image from '@theme/IdealImage';

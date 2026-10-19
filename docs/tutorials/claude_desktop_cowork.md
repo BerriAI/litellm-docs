@@ -1,6 +1,5 @@
 ---
 title: Claude Desktop (Cowork)
-sidebar_label: Claude Desktop (Cowork)
 description: Point Claude Desktop (Cowork, Chat, and Code sessions) at LiteLLM as its inference gateway, with single sign-on through LiteLLM JWT auth or a static virtual key, MCP servers through the LiteLLM MCP gateway under the same identity, fleet rollout, and the failures people actually hit.
 ---
 
