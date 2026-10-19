@@ -42,16 +42,34 @@ class ModelDefaultsTests(unittest.TestCase):
         errors = self.errors('```yaml\nmodel: chatgpt/future-model\n```\n')
         self.assertEqual([e[0] for e in errors], ["model-literal"])
 
-    def test_openai_api_examples_of_a_chatgpt_default_pass(self):
+    def test_openai_api_examples_of_a_chatgpt_default_follow_the_openai_roles(self):
         for role in ("chatgpt", "chatgpt_small"):
             with self.subTest(role=role):
                 model = checks.ROLE_TO_ID[role]
-                self.assertEqual(self.errors(f'```yaml\nmodel: openai/{model}\n```\n'), [])
+                errors = self.errors(f'```yaml\nmodel: openai/{model}\n```\n')
+                expected = ["model-literal"] if model in checks.MODEL_ROLES else []
+                self.assertEqual([e[0] for e in errors], expected)
+                self.assertFalse(any("{{chatgpt" in e[3] for e in errors))
+
+    def test_prefixed_chatgpt_literals_are_rejected(self):
+        for prefix in ("litellm_proxy/", "litellm/", "openai/"):
+            with self.subTest(prefix=prefix):
+                errors = self.errors(f'```python\nmodel = "{prefix}chatgpt/gpt-5.4"\n```\n')
+                self.assertEqual([e[0] for e in errors], ["model-literal"])
+                self.assertIn(f"{prefix}chatgpt/gpt-5.4", errors[0][3])
+                self.assertIn("chatgpt/{{chatgpt}}", errors[0][3])
+                self.assertEqual(self.errors(f'```python\nmodel = "{prefix}chatgpt/{{{{chatgpt}}}}"\n```\n'), [])
 
     def test_token_file_paths_are_not_models(self):
         for path in ("/tokens/chatgpt/auth.json", "$HOME/.config/litellm/chatgpt/auth.json", "chatgpt/auth.json"):
             with self.subTest(path=path):
                 self.assertEqual(self.errors(f'```bash\ncp {path} /destination/auth.json\n```\n'), [])
+
+    def test_source_paths_are_not_models(self):
+        for path in ("litellm/llms/chatgpt/responses/transformation.py", "chatgpt/responses/transformation.py",
+                     "chatgpt/common_utils.py"):
+            with self.subTest(path=path):
+                self.assertEqual(self.errors(f'See `{path}` for the request shape.\n'), [])
 
     def test_historical_default_is_rejected(self):
         self.assertNotIn("gpt-5.4-mini", checks.ROLE_TO_ID.values())

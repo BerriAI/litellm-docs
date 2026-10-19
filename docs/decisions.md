@@ -71,7 +71,7 @@ Laya, Nimble and Jev can also pick the model tier for Auto Router. For request e
 
 1. Add decision models to `config.yaml`
 
-```yaml showLineNumbers
+```yaml showLineNumbers keep-model-ids
 model_list:
   - model_name: luna
     litellm_params:
@@ -130,7 +130,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
 
 Response
 
-```json
+```json keep-model-ids
 {
   "model": "gpt-6-luna",
   "answers": [
@@ -219,7 +219,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
 
 Response for a solid red square
 
-```json
+```json keep-model-ids
 {
   "model": "gpt-6-luna",
   "answers": [
@@ -430,7 +430,7 @@ print(response.answers["red_square"].box)
 
 The SDK has one function per request format. `litellm.decisions` takes the OpenAI Decisions shape (`input`, a `questions` list and an optional `safety_identifier`) and returns the OpenAI response, with `answers` as a list. `litellm.systemone` takes the System One shape (`state` and a `questions` mapping keyed by question name) and returns the System One response, with `answers` keyed by question name. Both work with every supported provider, so you pick the function by the request shape you write, not by the provider you call.
 
-```python showLineNumbers title="OpenAI Decisions format"
+```python showLineNumbers title="OpenAI Decisions format" keep-model-ids
 import os
 import litellm
 

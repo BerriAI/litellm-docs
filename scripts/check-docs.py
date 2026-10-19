@@ -482,7 +482,7 @@ MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # alias such as bedrock-claude-sonnet-5 or a header name is left alone.
 LITERAL_START = r"(?<![A-Za-z0-9:@-])"
 LITERAL_END = r"(?![A-Za-z0-9@-]|[.:][0-9])"
-CHATGPT_LITERAL = r"(?<!/)chatgpt/(?![A-Za-z0-9._-]*\.json\b)[A-Za-z0-9][A-Za-z0-9._-]*"
+CHATGPT_LITERAL = r"(?<!/)(?:(?:litellm_proxy|litellm|openai)/)?chatgpt/(?![A-Za-z0-9._-]*\.(?:json|py)\b)[A-Za-z0-9][A-Za-z0-9._-]*(?!/)"
 CHATGPT_LITERAL_RE = re.compile(LITERAL_START + CHATGPT_LITERAL + LITERAL_END)
 MODEL_LITERAL_RE = re.compile(
     LITERAL_START + "(?:" + CHATGPT_LITERAL + "|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + ")" + LITERAL_END
@@ -493,7 +493,7 @@ PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:=@_ ]?3\.\d{1,2}(?
 
 
 def model_literal_message(model_id):
-    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if model_id.startswith("chatgpt/") else "{{" + MODEL_ROLES[model_id] + "}}"
+    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if "chatgpt/" in model_id else "{{" + MODEL_ROLES[model_id] + "}}"
     return (
         f"hardcoded model id `{model_id}`; use a shared default such as `{example}` so docs-models.json controls it, "
         "or add keep-model-ids if the exact id is the point"
