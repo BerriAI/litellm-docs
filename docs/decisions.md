@@ -56,7 +56,7 @@ model_list:
 
 ## Benchmark: flagging problems in agent traces
 
-This benchmark uses decision models as the judge for [LiteLLM Lens](./proxy/lens/index.md) signals. Each of 207 synthetic agent traces was checked for 3 signals, so every model answered the same 621 yes/no questions through LiteLLM, and for each yes it also picked the trace passage that shows the problem. An independent judge checked the labels, and cost per 1k calls comes from the `x-litellm-response-cost` header
+This benchmark uses decision models to find [LiteLLM Lens](./proxy/lens/index.md) signals in agent traces. Each model received the same 621 yes/no questions for 207 test traces. For each yes answer, the model also found the part of the trace that shows the problem
 
 <Image
   img={require('../img/decisions_lens_signals_benchmark.png')}
@@ -64,9 +64,7 @@ This benchmark uses decision models as the judge for [LiteLLM Lens](./proxy/lens
   alt="Lens Signals benchmark, share of 621 calls that agree with the label: GPT-6 Luna 99.4%, pplx-decider 99.2%, Rune 98.7%, Clef 97.9%, Jev 1.13 and Jev 1.14 97.1%, Clef Flash 93.7%, Decision-1 93.2%, Clef Omni 92.8%, OpenJev Qwen3.5 4B 90.2%. Self-hosted on CPU: Bespoke Nimble 9B 94.4%, Strands Decider 2B 84.1%, Laya Typed Decisions 74.6%, Laya English 57.0%, Laya Multilingual 42.7%"
 />
 
-GPT-6 Luna, Perplexity's decider, Fireworks Rune and Cloudflare Clef agree with the labels on 97.9% to 99.4% of calls, which is within noise, so price and latency decide between them: Perplexity costs $0.021 per 1k calls and GPT-6 Luna $0.151. Agreement alone does not tell you whether the model cites the right evidence. Decision-1 agrees on 93.2% of calls but picks the right passage for only 44% of its yes answers, while TypeSafe Jev 1.14 picks it for all of them. Bespoke Nimble 9B is the strongest self-hosted model at 94.4%, ahead of four hosted models, though it took a median 30 seconds per call on an 8-core CPU with no GPU
-
-Strands Decider 2B rejects `choice` options that have no description with a 422, so the benchmark filled in a description for every evidence option. It still could not answer 9 of the 207 traces, 6 that were longer than its context window and 3 that returned a server error, and those 27 calls count as no answer. Databricks does not report cost for OpenJev yet
+GPT-6 Luna, Perplexity, Fireworks Rune and Cloudflare Clef agree with the labels on 97.9% to 99.4% of the questions. Decision-1 agrees on 93.2%, but it finds the correct part for only 44% of its yes answers. Bespoke Nimble 9B gives the best self-hosted result, 94.4%
 
 ## Self-hosted Laya and Nimble
 
