@@ -32,7 +32,7 @@ The completion model still receives the request needed to generate the answer. H
 
 Any `model_list` entry that serves [`/v1/decisions`](/docs/decisions) can classify requests for the router. Set `deployment_name` inside `opensource_classifier_config` to that entry's `model_name`. LiteLLM then sends the classifier call through that deployment, so the call uses the deployment's endpoint, credentials and price, and you configure the connection once for both the router and the decision routes. Every provider in the [decision provider list](/docs/decisions#supported-providers) works this way, including Strands Decider and Cloudflare Clef.
 
-Available from v1.107.0. It first shipped in v1.107.0-rc.1 with [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913).
+Available from v1.104.3. [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913) added it, and backports shipped it in v1.104.3, v1.105.0 and v1.106.0.
 
 For Strands Decider, run the model on a server you operate and set `STRANDS_DECIDER_API_BASE` on the gateway to that server's base URL without `/v1/systemone`. Set `STRANDS_DECIDER_API_KEY` only when the server requires a bearer token. For Cloudflare Clef, set `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`. Use `cloudflare/clef-flash` instead of `cloudflare/clef` for the lower-cost Clef Flash model.
 
@@ -203,7 +203,7 @@ LiteLLM posts the System One request without a `model` field to `POST /api/2.0/a
 
 ## Configure from the dashboard
 
-From v1.107.0 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
+From v1.104.3 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
 
 1. Open **Models + Endpoints → Auto Router** and create or edit a router.
 2. Under **Choose your classifier**, select **Decisions Model**. Under **Decision model**, pick the deployment, for example `strands-decider` or `clef`. The list shows only deployments of decision models.
@@ -211,7 +211,7 @@ From v1.107.0 the dashboard picks the classifier from your deployed decision mod
 4. Assign existing completion deployments to the `SIMPLE`, `MEDIUM`, `COMPLEX` and `REASONING` tiers, and choose a default model.
 5. Use **Test Routing** with representative prompts, inspect the classifier result, then save the router. Send client requests to the router's model name as shown [below](#test-routing-and-send-a-request).
 
-Dashboards before v1.107.0 show **OSS Classifier** with an **OSS provider** list instead. There, set the [connection variables above](#connect-the-classifier-to-the-gateway) on the gateway, choose **Laya** or **Bespoke Nimble**, and set **Classifier Model** to a name your server supports. Start the timeout at `15000` for Laya or `30000` for Nimble.
+Dashboards before v1.104.3 show **OSS Classifier** with an **OSS provider** list instead. There, set the [connection variables above](#connect-the-classifier-to-the-gateway) on the gateway, choose **Laya** or **Bespoke Nimble**, and set **Classifier Model** to a name your server supports. Start the timeout at `15000` for Laya or `30000` for Nimble.
 
 Built-in OSS classification uses the shipped tier criteria and is available without a LiteLLM license. Custom instructions and custom tiers follow the dashboard's displayed allowance.
 
@@ -274,7 +274,7 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway runs v1.107.0 or later. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
+If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway runs v1.104.3 or later. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
 
 ## Call a native decision API
 
