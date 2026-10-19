@@ -434,6 +434,9 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | health_check_skip_disabled_background_models | boolean | `false` | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs (not only the background loop). [Doc on health checks](health) |
 | health_check_staleness_threshold | integer | `600` (seconds) | Maximum age in seconds for health check results before marking deployments as stale |
 | maximum_spend_logs_cleanup_batch_size | integer | `1000` | Rows deleted per `DELETE` statement during spend log cleanup. Default is 1000. Overrides the `SPEND_LOG_CLEANUP_BATCH_SIZE` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
+| maximum_spend_logs_size | string | unset | Size rule: when `LiteLLM_SpendLogs` plus `LiteLLM_SpendLogToolIndex` take more than this on disk (e.g. `"180GB"`), the next size check deletes the oldest spend logs. Unset means no size rule. See [spend log deletion](spend_logs_deletion) |
+| maximum_spend_logs_cleanup_target_size | string | unset | How far a size-triggered run cleans (e.g. `"20GB"`), must be below `maximum_spend_logs_size`; unset means down to the size itself. See [spend log deletion](spend_logs_deletion) |
+| maximum_spend_logs_size_check_interval | string | `1d` | How often the size rule is checked when `maximum_spend_logs_size` is set. Ignored when `maximum_spend_logs_cleanup_cron` is set, that cron then runs both the retention and the size pass. See [spend log deletion](spend_logs_deletion) |
 | maximum_spend_logs_cleanup_max_batches | integer | `500` | `DELETE` statements issued per table per spend log cleanup run, exactly that many and no more. Default is 500, so a run deletes at most 500,000 rows per table at the default batch size. Overrides the `SPEND_LOG_RUN_LOOPS` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
 | maximum_spend_logs_cleanup_run_budget | string | `5m` | Wall-clock budget for an entire spend log cleanup run, shared across every table it cleans, as a duration string such as `5m`. Default is `5m`. When it is spent the run stops and resumes from the same cutoff on the next tick, though it can overrun by at most one batch timeout since the budget is checked between statements. Overrides the `SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
 | maximum_spend_logs_cleanup_batch_timeout | string | `30s` | Postgres `statement_timeout` and `lock_timeout` applied to every statement a spend log cleanup run issues, as a duration string such as `30s`. Default is `30s`, so no single statement can pin a lock while user traffic queues behind it. Cancelled statements count as batch failures, so do not set this below the time one batch legitimately needs. Overrides the `SPEND_LOG_CLEANUP_BATCH_TIMEOUT_SECONDS` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
@@ -1553,6 +1556,8 @@ router_settings:
 | SENDGRID_SENDER_EMAIL | Email address used as the sender in SendGrid email transactions 
 | SPEND_LOGS_URL | URL for retrieving spend logs
 | SPEND_LOG_CLEANUP_BATCH_SIZE | Number of logs deleted per batch during cleanup. Default is 1000
+| SPEND_LOG_SIZE_CHECK_INTERVAL | Default for `maximum_spend_logs_size_check_interval`, how often the spend-log size rule runs when `maximum_spend_logs_size` is set. Default is `1d`. See [spend log deletion](spend_logs_deletion)
+| SPEND_LOG_SIZE_CLEANUP_RECHECK_BATCHES | Batches a size-triggered run deletes between two progress checks. Default is 10
 | STALE_OBJECT_CLEANUP_BATCH_SIZE | Max number of stale managed objects updated per cleanup cycle. Default is 1000
 | SSL_CERTIFICATE | Path to the SSL certificate file
 | SSL_ECDH_CURVE | ECDH curve for SSL/TLS key exchange (e.g., 'X25519' to disable PQC).
@@ -1604,6 +1609,8 @@ router_settings:
 | WEBHOOK_URL | URL for receiving webhooks from external services
 | SPEND_LOG_RUN_LOOPS | Constant for setting how many runs of 1000 batch deletes should spend_log_cleanup task run
 | SPEND_LOG_CLEANUP_BATCH_SIZE | Number of logs deleted per batch during cleanup. Default is 1000
+| SPEND_LOG_SIZE_CHECK_INTERVAL | Default for `maximum_spend_logs_size_check_interval`, how often the spend-log size rule runs when `maximum_spend_logs_size` is set. Default is `1d`. See [spend log deletion](spend_logs_deletion)
+| SPEND_LOG_SIZE_CLEANUP_RECHECK_BATCHES | Batches a size-triggered run deletes between two progress checks. Default is 10
 | SPEND_LOG_PARTITION_INTERVAL | Granularity of LiteLLM_SpendLogs partitions when the table is partitioned: day, week, or month. Default is day
 | SPEND_LOG_PARTITION_PRECREATE_AHEAD | Number of future spend-log partitions to pre-create on each cleanup run. Default is 7
 | SPEND_LOG_QUEUE_POLL_INTERVAL | Polling interval in seconds for spend log queue. Default is 2.0
