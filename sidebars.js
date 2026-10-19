@@ -1649,6 +1649,7 @@ const sidebars = {
           "providers/scx_ai",
           "providers/snowflake",
           "providers/stability",
+          "providers/strands_decider",
           "providers/synthetic",
           "providers/tencent",
           "providers/tensormesh",
