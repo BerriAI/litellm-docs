@@ -69,7 +69,9 @@ To use a different gateway model, update `model` in `config.toml` and start a ne
 
 ## MCP setup
 
-### 1. Configure the gateway server
+**Prerequisites:** An [MCP server registered on LiteLLM](../../mcp.md#adding-your-mcp) and a virtual key with [access to that server](../../mcp_control.md).
+
+### 1. Add the MCP connection {#1-configure-the-gateway-server}
 
 MCP is configured in the same `~/.codex/config.toml`, so the [CLI's MCP setup](./codex_cli.md#mcp-setup) applies unchanged. Add:
 

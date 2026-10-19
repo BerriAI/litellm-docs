@@ -12,28 +12,13 @@ Choose [Claude apps gateway setup](#gateway-setup), [Lite CLI SSO](#lite-cli-sso
 
 Use the [Claude apps gateway](https://code.claude.com/docs/en/claude-apps-gateway) sign-in flow with LiteLLM implementing its gateway protocol. Requests go directly from Claude Code to LiteLLM, which handles provider credentials and usage tracking by user and team.
 
-### 1. Configure LiteLLM {#1-turn-the-gateway-on}
+<span id="1-turn-the-gateway-on" />
 
-Configure [SSO for your LiteLLM gateway](../proxy/admin_ui_sso.md), then add this to its configuration:
+**Prerequisites:** Claude Code **v2.1.195 or later** and a LiteLLM gateway with [Claude apps gateway SSO configured](./claude_code_gateway_reference.md#1-turn-the-gateway-on). Ask your administrator for the gateway URL.
 
-```yaml title="config.yaml"
-model_list:
-  - model_name: "anthropic/*"
-    litellm_params:
-      model: "anthropic/*"
-      api_key: os.environ/ANTHROPIC_API_KEY
+### 1. Configure Claude Code {#3-point-claude-code-at-the-proxy}
 
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: os.environ/DATABASE_URL
-  enable_claude_code_gateway: true
-```
-
-Set `PROXY_BASE_URL` to the gateway's internal HTTPS URL and restart the proxy. Grant users or teams access to the Claude models they need. Use Redis if the gateway runs multiple workers or replicas.
-
-### 2. Configure Claude Code {#3-point-claude-code-at-the-proxy}
-
-Use Claude Code **v2.1.195 or later**. Add the following to its managed settings file:
+Add the following to Claude Code's managed settings file:
 
 ```json title="managed-settings.json"
 {
@@ -52,7 +37,7 @@ Replace the hostname with your gateway's internal hostname. Keep `/claude_code_g
 
 These settings must be in the managed file. Claude Code ignores them in `~/.claude/settings.json`.
 
-### 3. Sign in
+### 2. Sign in {#3-sign-in}
 
 Run `claude`, or enter `/login` in an existing session. Trust your gateway, complete SSO in the browser, and confirm the code shown in the terminal. Claude Code then shows **Cloud gateway**. Send a prompt and check LiteLLM **Logs**.
 
@@ -71,7 +56,7 @@ For network requirements and deployment options, see [Claude's official gateway 
 
 Sign in to LiteLLM with your organization's SSO. Inference uses the gateway's provider credentials and is billed to your organization. A Claude subscription is not required.
 
-Use a [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385), and ask your administrator to enable [CLI SSO](../proxy/cli_sso.md) on the gateway.
+**Prerequisites:** A [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385) and a gateway with [CLI SSO enabled](../proxy/cli_sso.md#prerequisites---start-litellm-proxy-with-beta-flag).
 
 ### Configure once
 
@@ -96,7 +81,7 @@ Complete your organization's SSO in the browser. `lite claude` launches Claude C
 
 Use your own Claude subscription for inference while routing requests through LiteLLM. Your claude.ai login stays active.
 
-Use a [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385). Your gateway must support [CLI SSO](../proxy/cli_sso.md) and [Claude subscription routing](./claude_code_max_subscription.md#step-1-configure-litellm-proxy).
+**Prerequisites:** A [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385) and a gateway configured for [CLI SSO](../proxy/cli_sso.md#prerequisites---start-litellm-proxy-with-beta-flag) and [Claude subscription routing](./claude_code_max_subscription.md#step-1-configure-litellm-proxy).
 
 ### Configure once
 

@@ -7,7 +7,7 @@ import Image from '@theme/IdealImage';
 
 # Connect a client to LiteLLM
 
-Once your LiteLLM gateway is running, a coding tool or chat app can route model traffic through it. Each client authenticates with a virtual key or a sign-in token, depending on the client, and each page in this section walks through its setup.
+These guides assume a running [LiteLLM gateway](../docker_quick_start.md). Each client authenticates with a virtual key or a sign-in token, depending on the client, and each page in this section walks through its setup.
 
 **LLM routing** points the client's model traffic at LiteLLM. The client keeps its normal interface, but every request flows through the gateway, so you get one API surface for 100+ models plus spend tracking, budgets, and guardrails. Set the gateway base URL and a `model_name` from your config, then use the credential supported by that client
 
@@ -85,10 +85,8 @@ Create a virtual key from the Admin UI under **Virtual Keys -> + Create New Key*
 
 LiteLLM accepts the virtual key on the MCP endpoint in either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`. When configuring a bearer token setting, use your virtual key; the client sends it in `Authorization`. When configuring custom headers, prefer `x-litellm-api-key`, which leaves `Authorization` free for an upstream server's own OAuth token. See the [MCP configuration reference](../../mcp_config_reference.md) for endpoint and header selection.
 
-:::info Grant the key access to the MCP server
+:::info MCP prerequisites
 
-A virtual key only sees the MCP servers it has been granted. Without a grant the gateway answers `The key is not allowed to access the requested MCP servers: my_mcp_server`. Grant access on the key with `"object_permission": {"mcp_servers": ["my_mcp_server"]}` in `POST /key/generate`, on its team, or mark the server public with `allow_all_keys: true`. Details in [MCP access control](../../mcp_control.md).
+Your gateway administrator must [register the MCP server](../../mcp.md#adding-your-mcp) and [grant your key or team access](../../mcp_control.md) before you connect a client.
 
 :::
-
-If you do not have a gateway running yet, start with [Deploy the Gateway -> Quickstart](../docker_quick_start.md), then come back here to connect your client.
