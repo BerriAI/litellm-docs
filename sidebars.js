@@ -470,7 +470,7 @@ const sidebars = {
               items: [
                 {
                   type: "category",
-                  label: "Cowork",
+                  label: "Desktop & Cowork",
                   items: [
                     { type: "doc", id: "tutorials/claude_desktop_cowork", label: "SSO" },
                     { type: "doc", id: "proxy/client_setup/claude_desktop", label: "Virtual keys" },

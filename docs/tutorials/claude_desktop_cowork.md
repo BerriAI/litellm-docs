@@ -1,36 +1,34 @@
 ---
-title: Claude Desktop (Cowork)
-description: Point Claude Desktop (Cowork, Chat, and Code sessions) at LiteLLM as its inference gateway, with single sign-on through LiteLLM JWT auth or a static virtual key, MCP servers through the LiteLLM MCP gateway under the same identity, fleet rollout, and the failures people actually hit.
+title: Claude Desktop & Cowork with SSO
+description: Connect Claude Desktop and Cowork to LiteLLM with identity-provider SSO, JWT validation, per-user attribution, and managed deployment.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Claude Desktop (Cowork) Integration
+# Connect Claude Desktop & Cowork to LiteLLM with SSO
 
-Claude Desktop on third-party inference sends every model call from Cowork, Chat, and Code sessions to a gateway you name, and LiteLLM is that gateway: unified logging, per-user and per-team budgets, model access control, and any Claude deployment behind it (Anthropic, Bedrock, Vertex AI, Foundry) without touching the client again. This page covers the two ways a device authenticates to LiteLLM, single sign-on through your identity provider (nothing to hand out or rotate, spend attributed to the person) and a static virtual key (the quickest way to try it), then what shows up in the model picker, how the same identity reaches MCP servers through the LiteLLM MCP gateway, how to ship the configuration to a fleet, and what to check when something does not work.
+Claude Desktop and Cowork share the same third-party inference configuration. This guide connects them to LiteLLM using your organization's identity provider, so requests carry the signed-in user's token and usage is attributed to that user and team. The same connection also applies to Code sessions and to Chat when enabled, as described in [Claude's third-party deployment overview](https://claude.com/docs/third-party/claude-desktop/overview).
 
-<iframe
-  src="https://www.loom.com/embed/adb864c1f7c74de3bfc9584ca6d32080"
-  frameBorder="0"
-  allowFullScreen
-  style={{ width: '100%', aspectRatio: '16/9', maxWidth: '900px', marginBottom: '20px' }}
-></iframe>
+Follow [Claude's official gateway SSO guide](https://claude.com/docs/third-party/claude-desktop/gateway#single-sign-on-with-your-identity-provider) for the client-side authentication flow and its [configuration reference](https://claude.com/docs/third-party/claude-desktop/configuration) for supported settings. The steps below configure LiteLLM to validate those tokens.
+
+<span id="option-b-static-virtual-key" />
+
+For API-key authentication, use the separate [Desktop & Cowork virtual-key guide](../proxy/client_setup/claude_desktop.md).
 
 ## How it fits together
 
-Claude Desktop treats LiteLLM the way it treats Anthropic's own API: it discovers models with `GET /v1/models` at launch and sends chat traffic to `POST /v1/messages` with streaming and tool use, carrying `Authorization: Bearer <credential>` on every request. The credential is either a LiteLLM virtual key or, with single sign-on, the ID token your identity provider issued to the signed-in user, which LiteLLM validates with [JWT auth](../proxy/token_auth.md) on every request and maps to a LiteLLM user and teams.
+Claude Desktop treats LiteLLM the way it treats Anthropic's own API: it discovers models with `GET /v1/models` at launch and sends chat traffic to `POST /v1/messages` with streaming and tool use, carrying `Authorization: Bearer <credential>` on every request. For this SSO setup, the credential is the ID token your identity provider issued to the signed-in user. LiteLLM validates it with [JWT auth](../proxy/token_auth.md) on every request and maps it to a LiteLLM user and teams.
 
 | Setting | Value |
 |---|---|
 | Gateway base URL | `https://your-litellm-proxy.com`, no `/v1` suffix |
-| Credential, single sign-on | the user's ID token, validated by LiteLLM JWT auth |
-| Credential, static key | a LiteLLM virtual key |
+| Credential | the user's ID token, validated by LiteLLM JWT auth |
 | Endpoints used | `GET /v1/models`, `POST /v1/messages`, and `POST /mcp` for MCP servers |
 | LiteLLM version | v1.98.0 or later for model discovery, v1.89.0 or later for the `issuers` JWT config |
 | Claude Desktop version | 1.6889.0 or later for single sign-on (2.7032.0 or later for the `external-idp` key names), 1.10628.0 or later for the claude.ai import |
 
-## Option A: Single sign-on with your identity provider
+## Sign in with your identity provider {#option-a-single-sign-on-with-your-identity-provider}
 
 With single sign-on (`inferenceCredentialKind: interactive`, which Claude Desktop 2.7032.0 and later also accept as `external-idp`), Claude Desktop runs an OpenID Connect sign-in (authorization code with PKCE) in the system browser against your identity provider, keeps the refresh token in OS secure storage, and sends the ID token to LiteLLM as the bearer credential. LiteLLM checks the signature against the provider's signing keys, the issuer, and the audience, then maps the token's claims to a LiteLLM user and, through a groups claim, to LiteLLM teams. Nobody provisions or rotates keys, a user removed from the identity provider loses access when the token expires, MFA and conditional access apply, and the only thing the user sees is a **Sign in to your organization** button. This path needs a database behind LiteLLM, because users and spend are written to it.
 
@@ -174,7 +172,7 @@ Anthropic's gateway guide shows `litellm_jwtauth` with `public_key_url` and `aud
 
 ### 3. Configure Claude Desktop
 
-Open the configuration window: **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply Changes** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
+Open the [in-app configuration window](https://claude.com/docs/third-party/claude-desktop/in-app-configuration): **Help > Troubleshooting > Enable Developer Mode**, then **Developer > Configure Third-Party Inference…**. In the **Connection** section set **Inference provider** to **Gateway**, **Gateway base URL** to your proxy URL, and **Credential kind** to **Interactive sign-in**, which hides the API key field and reveals **Gateway SSO IdP (OIDC)**: enter the **Client ID** and **Issuer URL** from step 1, leave **Scopes** empty for the default `openid profile email offline_access` (except with Cognito: set it to `openid profile email` explicitly, since Cognito has no `offline_access` scope and fails the sign-in with `invalid_scope` when one is requested; Cognito issues refresh tokens regardless), and fill **Redirect port** for Okta and Cognito (`53180`). **Apply Changes** writes the configuration for this device, which is enough to try it out; **Export** produces the managed configuration for a fleet (see [Rolling out to a fleet](#rolling-out-to-a-fleet)).
 
 The exported keys, in a macOS `.mobileconfig` payload:
 
@@ -193,7 +191,7 @@ For Okta the JSON is `{"issuer":"https://YOUR_ORG.okta.com","clientId":"YOUR_CLI
 
 The same JSON also takes `redirectHost: "localhost"`, which moves the callback to `http://localhost:PORT/callback` for an identity provider whose registered redirect URI uses `localhost`. On Entra, `inferenceGatewayOidcAuthFlow: broker` signs in through the OS identity broker (Web Account Manager on Windows, Company Portal on macOS) instead of the browser, which satisfies Conditional Access policies that require a managed device; the app registration then also needs the broker redirect URIs `ms-appx-web://Microsoft.AAD.BrokerPlugin/YOUR_CLIENT_ID` and `msauth.com.anthropic.claudefordesktop://auth` under the same platform, and Linux has no broker.
 
-Claude Desktop 2.7032.0 renamed these keys: `inferenceCredentialKind: external-idp` with the JSON in `inferenceIdpOidc`, and `inferenceIdpAuthFlow` in place of `inferenceGatewayOidcAuthFlow`. The keys above keep working with no end date set and newer releases read them as `external-idp`, so keep them until every device in the fleet runs 2.7032.0 or later; the in-app window still labels the choice **Interactive sign-in**. A profile left over from an older setup that sets `inferenceGatewayAuthScheme: sso` has to replace it with `inferenceCredentialKind` before October 7, 2026, after which the app reports that value as invalid and, with no other credential key present, starts the gateway connection with no credential.
+Claude Desktop 2.7032.0 renamed these keys: `inferenceCredentialKind: external-idp` with the JSON in `inferenceIdpOidc`, and `inferenceIdpAuthFlow` in place of `inferenceGatewayOidcAuthFlow`. The keys above keep working with no end date set and newer releases read them as `external-idp`, so keep them until every device in the fleet runs 2.7032.0 or later; the in-app window still labels the choice **Interactive sign-in**. The [official gateway configuration reference](https://claude.com/docs/third-party/claude-desktop/gateway#configuration-keys) also marks `inferenceGatewayAuthScheme: sso` as deprecated, with no removal date set. Use `inferenceCredentialKind` and the OIDC settings for new deployments.
 
 ### 4. Verify
 
@@ -209,24 +207,6 @@ curl -N https://your-litellm-proxy.com/v1/messages \
 ```
 
 The first returns the Anthropic-shaped model list the picker is built from; the second streams a reply. A `401` with `Audience doesn't match` means the token was issued to a different client id than the one in `audience`; `Missing JWT Public Key URL from environment.` means the token's `iss` matched no `issuers` entry; `Token Expired` is the state the app resolves on its own by refreshing the token, or by prompting **Sign in again** when the refresh fails.
-
-## Option B: Static virtual key
-
-A [virtual key](../proxy/virtual_keys.md) is the right credential for a proof of concept, a shared workstation, or a gateway that already hands out per-team keys. Everyone on the same managed profile shares that key and its budget, and rotating it means pushing a new profile, which is why fleets end up on single sign-on.
-
-Create the key in the LiteLLM UI under **Virtual Keys > + Create New Key**, scoped to the Claude models with a `max_budget`, and copy it. In Claude Desktop, enable Developer Mode under **Help > Troubleshooting**, open **Developer > Configure Third-Party Inference…**, set **Inference provider** to **Gateway**, enter the **Gateway base URL** and the key as the **Gateway API key**, keep **Credential kind** at **Static API key** and **Gateway auth scheme** at **Bearer** (LiteLLM also accepts `x-api-key`), and click **Apply Changes**.
-
-<img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/64274593-33e6-4a7b-a7f3-a08f8aea8209/ascreenshot_8a9c909a978544888dafb6e0c7e3f468_text_export.jpeg" alt="Enable Developer Mode under Help > Troubleshooting" style={{ maxWidth: '700px', marginBottom: '20px' }} />
-
-<img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/dbb36dff-bbbe-4ddd-b30e-25b2c41bff47/ascreenshot_a7516b203052432f9a1d08cbe92cd214_text_export.jpeg" alt="Developer > Configure Third-Party Inference" style={{ maxWidth: '700px', marginBottom: '20px' }} />
-
-<img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/2d0daa12-d874-42ca-bc3e-f38c27c701e4/ascreenshot_8c8be28828974c10ab53124fa13e67c3_text_export.jpeg" alt="Gateway URL and API key fields" style={{ maxWidth: '700px', marginBottom: '20px' }} />
-
-<img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/6a5b1233-de81-48be-8a17-e026d3dd9b49/ascreenshot_23dbd432db6d4f90ab5b0d598edd5a40_text_export.jpeg" alt="Create a virtual key in the LiteLLM UI" style={{ maxWidth: '700px', marginBottom: '20px' }} />
-
-<img src="https://colony-recorder.s3.amazonaws.com/files/2026-04-22/9e72faf1-0b5e-49d5-8ac4-b64dcd2b2f94/ascreenshot_813a1b584a1f4523ab7f7702f5985be0_text_export.jpeg" alt="Claude Desktop connected through LiteLLM" style={{ maxWidth: '700px', marginBottom: '20px' }} />
-
-The exported form is `inferenceProvider: gateway`, `inferenceGatewayBaseUrl`, and `inferenceGatewayApiKey`, with `inferenceGatewayAuthScheme: x-api-key` only if you chose that scheme. Requests then show up under that key in **Logs** and **Usage**.
 
 ## Models in the picker
 
@@ -268,20 +248,7 @@ curl -X POST https://your-litellm-proxy.com/team/new \
        "object_permission": {"mcp_servers": ["deepwiki", "github"]}}'
 ```
 
-A low-risk server can instead be opened to everyone with `allow_all_keys: true` ([Public MCP servers](../mcp_control.md#public-mcp-servers-allow_all_keys)), and [MCP access control](../mcp_control.md) covers access groups and per-tool permissions. On the Claude Desktop side, a static virtual key goes in the entry's headers:
-
-```json
-[
-  {
-    "name": "litellm",
-    "transport": "http",
-    "url": "https://your-litellm-proxy.com/mcp",
-    "headers": {"Authorization": "Bearer sk-...", "x-mcp-servers": "deepwiki,github"}
-  }
-]
-```
-
-Static headers cannot carry a signed-in user's own token, so single sign-on fleets use `headersHelper` instead: an executable Claude Desktop runs that prints the headers as a flat JSON object, re-run on the `headersHelperTtlSec` schedule and again when the server answers 401 or 403 (Claude Desktop 1.46388.1 or later). A helper that obtains an ID token for the same app registration keeps chat and MCP spend on the same LiteLLM user. `toolPolicy`, a map of tool name to `allow`, `ask`, or `blocked`, sets the confirmation policy per tool. Servers that need the user's own upstream login (GitHub, Atlassian, and the like) take `"oauth": true` against the per-server URL `https://your-litellm-proxy.com/mcp/<server_name>` with LiteLLM's [MCP OAuth passthrough](../mcp_oauth_passthrough.md) or the [gateway-hosted DCR bridge](../mcp_oauth_passthrough.md#gateway-hosted-sign-in-dcr-bridge); Claude Desktop starts that sign-in only when the server answers an unauthenticated request with HTTP 401, on the loopback callback `http://127.0.0.1:53280/callback`. A server marked `available_on_public_internet: false` is hidden from callers outside the private ranges (or the `mcp_internal_ip_ranges` you set), so a laptop on the public internet sees only the rest ([MCP servers on the public internet](../mcp_public_internet.md)).
+A low-risk server can instead be opened to everyone with `allow_all_keys: true` ([Public MCP servers](../mcp_control.md#public-mcp-servers-allow_all_keys)), and [MCP access control](../mcp_control.md) covers access groups and per-tool permissions. For signed-in users, configure [`headersHelper`](https://claude.com/docs/third-party/claude-desktop/extensions) on the managed MCP entry: an executable Claude Desktop runs that prints the headers as a flat JSON object, re-run on the `headersHelperTtlSec` schedule and again when the server answers 401 or 403 (Claude Desktop 1.46388.1 or later). A helper that obtains an ID token for the same app registration keeps chat and MCP spend on the same LiteLLM user. `toolPolicy`, a map of tool name to `allow`, `ask`, or `blocked`, sets the confirmation policy per tool. Servers that need the user's own upstream login (GitHub, Atlassian, and the like) take `"oauth": true` against the per-server URL `https://your-litellm-proxy.com/mcp/<server_name>` with LiteLLM's [MCP OAuth passthrough](../mcp_oauth_passthrough.md) or the [gateway-hosted DCR bridge](../mcp_oauth_passthrough.md#gateway-hosted-sign-in-dcr-bridge); Claude Desktop starts that sign-in only when the server answers an unauthenticated request with HTTP 401, on the loopback callback `http://127.0.0.1:53280/callback`. A server marked `available_on_public_internet: false` is hidden from callers outside the private ranges (or the `mcp_internal_ip_ranges` you set), so a laptop on the public internet sees only the rest ([MCP servers on the public internet](../mcp_public_internet.md)).
 
 Claude Desktop's built-in connectors (`"server": "microsoft365"`, `"github"`, `"websearch"`) run inside the app against those vendors' own APIs and never pass through LiteLLM; only `url` entries do. To keep GitHub or Microsoft 365 traffic under LiteLLM, configure the vendor's MCP server as an `mcp_servers` entry on the proxy and point a `url` entry at it.
 
@@ -316,7 +283,7 @@ Cowork and Code sessions send `cache_control` breakpoints on every turn so the p
 
 ## Usage attribution
 
-Under single sign-on every request is attributed to the LiteLLM user upserted from the token, and to the team when a groups claim maps to one, so **Usage** breaks spend down by person and by team and budgets apply at both levels. Under a static key the key is the unit, and one key per team or per purpose with its own `max_budget` is the practical granularity. Either way, `x-litellm-tags` from `inferenceCustomHeaders` adds a third axis, such as a department or cost center, without changing who authenticates.
+Every request is attributed to the LiteLLM user upserted from the token, and to the team when a groups claim maps to one, so **Usage** breaks spend down by person and by team and budgets apply at both levels. `x-litellm-tags` from `inferenceCustomHeaders` adds another dimension, such as a department or cost center, without changing who authenticates.
 
 ## Troubleshooting
 
@@ -357,7 +324,7 @@ Under single sign-on every request is attributed to the LiteLLM user upserted fr
 ## Related
 
 - [JWT auth](../proxy/token_auth.md) for every `litellm_jwtauth` option, including role mappings and JWT-to-virtual-key mapping
-- [Virtual keys](../proxy/virtual_keys.md)
+- [Desktop & Cowork with virtual keys](../proxy/client_setup/claude_desktop.md)
 - [MCP gateway](../mcp.md), [MCP access control](../mcp_control.md), and [MCP OAuth passthrough](../mcp_oauth_passthrough.md)
 - [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md)
 - [Claude Code with LiteLLM](./claude_responses_api.md)
