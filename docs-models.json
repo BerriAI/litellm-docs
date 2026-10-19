@@ -1,6 +1,6 @@
 {
   "openai_small": "gpt-6-luna",
-  "openai_large": "gpt-5.6-terra",
+  "openai_large": "gpt-6.1-sol",
   "chatgpt": "gpt-6.1-sol",
   "chatgpt_small": "gpt-6-luna",
   "anthropic": "claude-sonnet-5",

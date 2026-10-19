@@ -23,7 +23,7 @@ To convert a vendor's "$X per 1M tokens" price into a cost map value, divide by 
 model_list:
   - model_name: my-model
     litellm_params:
-      model: openai/gpt-6.1-sol
+      model: openai/{{openai_large}}
     model_info:
       input_cost_per_token: 2.5e-06   # $2.50 per 1M input tokens
       output_cost_per_token: 1.5e-05  # $15 per 1M output tokens
