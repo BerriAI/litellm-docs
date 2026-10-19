@@ -293,6 +293,38 @@ print(response_body['content'][0]['text'])
 
 The proxy will automatically load balance your boto3 requests across all configured deployments.
 
+### Bedrock Guardrails on config.yaml models
+
+Available from v1.108.0.
+
+A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
+
+```yaml showLineNumbers
+model_list:
+  - model_name: my-claude-model
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+      aws_region_name: us-west-2
+      guardrailConfig:
+        guardrailIdentifier: ff6ujrregl1q
+        guardrailVersion: DRAFT
+        trace: enabled
+```
+
+| Route | How the proxy sends the guardrail |
+|-------|-----------------------------------|
+| `/converse` | `guardrailConfig` in the request body |
+| `/converse-stream` | `guardrailConfig` in the request body, including `streamProcessingMode` if you set it |
+| `/invoke`, `/invoke-with-response-stream` | `X-Amzn-Bedrock-GuardrailIdentifier`, `X-Amzn-Bedrock-GuardrailVersion` and `X-Amzn-Bedrock-Trace` headers |
+
+The model's guardrail replaces any guardrail the caller sends in the body or headers, so callers cannot turn it off or pick a different one. With load balancing or fallbacks, each request gets the guardrail of the deployment that serves it.
+
+When Bedrock blocks a request, `/converse` returns `stopReason: guardrail_intervened` and `/invoke` returns `amazon-bedrock-guardrailAction: INTERVENED`, each with your blocked message and a guardrail trace when `trace` is enabled.
+
+The `/invoke` routes take only `guardrailIdentifier`, `guardrailVersion` and `trace`. A model whose `guardrailConfig` is missing `guardrailVersion`, or names a guardrail that does not exist, gets a 400 from these routes, the same as from `/v1/chat/completions`.
+
+Pass-through sends the request body to Bedrock as is, so Bedrock checks every message in it. To have Bedrock check only part of a Converse request, wrap that part in a `guardContent` block, see [Selectively evaluate content](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
+
 
 ## Examples
 
