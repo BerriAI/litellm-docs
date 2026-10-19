@@ -532,6 +532,7 @@ const sidebars = {
           items: [
             { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
             "proxy/cost_tracking",
+            "proxy/model_cost_map",
             "proxy/request_tags",
             "proxy/billing",
             "proxy/custom_pricing",

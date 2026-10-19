@@ -6,7 +6,7 @@ import Image from '@theme/IdealImage';
 
 Track spend for keys, users, and teams across 100+ LLMs.
 
-LiteLLM automatically tracks spend for all known models. See our [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
+LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
