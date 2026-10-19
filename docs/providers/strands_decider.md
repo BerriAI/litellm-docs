@@ -26,7 +26,7 @@ Without `--device`, the server picks CUDA, then MPS, then CPU. Pass `--device cu
 
 The `strands-decider-2B-hobson-v21` checkpoint works the same way. Serve it instead and set `model` to `strands_decider/strands-decider-2B-hobson-v21` in the examples below.
 
-The server binds to `127.0.0.1` and has no authentication, and its model card says to use it for local experiments. Run LiteLLM on the same machine, or put the server behind a reverse proxy that checks a bearer token and set `STRANDS_DECIDER_API_KEY` to that token. To run the model as a managed AWS service with IAM authentication instead, see [AgentCore Runtime](#agentcore-runtime).
+The server binds to `127.0.0.1` and has no authentication, and its model card says to use it for local experiments. Run LiteLLM on the same machine when you can. When LiteLLM runs in a container or on another machine, pass `--host` with an address only LiteLLM can reach, such as a private network address, or keep the server on `127.0.0.1` behind a reverse proxy that checks a bearer token and set `STRANDS_DECIDER_API_KEY` to that token.
 
 Check that the server answers.
 
@@ -50,14 +50,14 @@ curl -s localhost:8000/v1/systemone -H 'content-type: application/json' -d '{
 
 | Variable | Required | Value |
 |----------|----------|-------|
-| `STRANDS_DECIDER_API_BASE` | Yes, or set `api_base` | Server base URL or AgentCore runtime ARN |
+| `STRANDS_DECIDER_API_BASE` | Yes, or set `api_base` | Server base URL |
 | `STRANDS_DECIDER_API_KEY` | No | Bearer token |
 
 Set `STRANDS_DECIDER_API_BASE` to the server's base URL without `/v1/systemone`, for example `http://127.0.0.1:8000`. LiteLLM removes a trailing `/` or `/v1` and adds `/v1/systemone`, so `http://127.0.0.1:8000/v1` reaches the same route.
 
 Strands Decider has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. Without either, LiteLLM answers `400` with `api_base is required for Decisions provider 'strands_decider'` and does not call the server.
 
-For a base URL, LiteLLM sends `Authorization: Bearer <key>` only when `STRANDS_DECIDER_API_KEY` or `api_key` is set, and sends no `Authorization` header otherwise. `strands-decider serve` has no authentication, so set the key only when something in front of the server checks it. An AgentCore runtime ARN works differently, as described in [AgentCore Runtime](#agentcore-runtime).
+LiteLLM sends `Authorization: Bearer <key>` only when `STRANDS_DECIDER_API_KEY` or `api_key` is set, and sends no `Authorization` header otherwise. `strands-decider serve` has no authentication, so set the key only when something in front of the server checks it.
 
 ## Proxy setup
 
@@ -248,25 +248,10 @@ print(response.answers["is_urgent"].noul)
 
 Both print `0.8287` for this input.
 
-## AgentCore Runtime
-
-`api_base` can also be the ARN of an [Amazon Bedrock AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) that serves the model. LiteLLM then calls `InvokeAgentRuntime` on that runtime instead of `/v1/systemone` and signs the request with AWS SigV4, so the runtime needs no public URL. Credentials come from the `aws_*` params, such as `aws_profile_name` or `aws_role_name`, or from the default AWS credential chain, and the region comes from the ARN. For a runtime that uses JWT inbound authentication, set `api_key` to the token, and LiteLLM sends it as a bearer token instead of signing.
-
-```yaml showLineNumbers
-model_list:
-  - model_name: strands-decider
-    litellm_params:
-      model: strands_decider/strands-decider-2B-hobson-v19
-      api_base: arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_decider-AbCdEf1234
-      aws_profile_name: my-profile
-```
-
-Available in `v1.104.3` and later on the `1.104.x` line and in `v1.105.0` and later.
-
 ## Cost tracking
 
-The LiteLLM cost map prices `strands_decider/strands-decider-2B-hobson-v19` at $0 per input and output token, since you pay for the server yourself. It is the only Strands Decider model in the cost map, and LiteLLM also tracks other checkpoints at $0. To track what the server costs you, set `input_cost_per_token` and `output_cost_per_token` under `model_info` on the deployment, as shown in [Custom pricing](../proxy/custom_pricing.md#cost-per-token-eg-azure).
+The LiteLLM cost map prices `strands_decider/strands-decider-2B-hobson-v19` at $0 per input and output token, since you pay for the server yourself. It is the only Strands Decider model in the cost map, and the proxy records calls to other checkpoints at $0. To track what the server costs you, set `input_cost_per_token` and `output_cost_per_token` under `model_info` on the deployment, as shown in [Custom pricing](../proxy/custom_pricing.md#cost-per-token-eg-azure).
 
 ## Use it as the Auto Router classifier
 
-Strands Decider can pick the model tier for each request in LiteLLM Auto Router. Add the deployment above to `model_list` and set `deployment_name` in the router's `opensource_classifier_config` to its `model_name`, as shown in [Use a deployed decision model](../auto_router/decision_classifiers.md#use-a-deployed-decision-model). Available in `v1.104.3` and later on the `1.104.x` line and in `v1.105.0` and later. A server on CPU can need more than the classifier's 3000 ms default timeout, so set `timeout_ms` to match your server.
+Strands Decider can pick the model tier for each request in LiteLLM Auto Router. Add the deployment above to `model_list` and set `deployment_name` in the router's `opensource_classifier_config` to its `model_name`, as shown in [Use a deployed decision model](../auto_router/decision_classifiers.md#use-a-deployed-decision-model). Available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. A server on CPU can need far more than the classifier's 3000 ms default timeout. On an 8-vCPU machine with no GPU, requests through the router took 10 to 18 seconds, so with `timeout_ms: 15000` the router fell back to its default model, and with `timeout_ms: 120000` it routed every request. The `x-litellm-complexity-router-cause` response header is `jev_classifier` when the classifier answered and `default_model_fallback` when it did not.
