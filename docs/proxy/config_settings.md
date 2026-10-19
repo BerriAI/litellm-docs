@@ -890,6 +890,8 @@ router_settings:
 | SONIOX_API_KEY | API key for Soniox
 | SPACE_ID | Last of the four accepted names for the watsonx deployment space ID, after `WATSONX_DEPLOYMENT_SPACE_ID`, `WATSONX_SPACE_ID` and `WX_SPACE_ID`
 | STABILITY_API_BASE | Base URL for Stability AI image generation and editing
+| STRANDS_DECIDER_API_BASE | Base URL of a Strands Decider server, without `/v1/systemone`, for `strands_decider/*` [decision models](/docs/providers/strands_decider). There is no default host, so a deployment needs this or its own `api_base`
+| STRANDS_DECIDER_API_KEY | Optional bearer token sent to the Strands Decider server for a `strands_decider/*` deployment that sets no `api_key`. `strands-decider serve` has no authentication, so set it only when something in front of the server checks it
 | TAVILY_API_BASE | Base URL for the Tavily search provider
 | TINYFISH_AGENT_API_BASE | Base URL for the TinyFish Agent pass-through. Default is https://agent.tinyfish.ai
 | TINYFISH_ALLOW_AUTHENTICATED_RUNS | Set to `true` to let TinyFish Agent pass-through requests use vault and browser-profile fields

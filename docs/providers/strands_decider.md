@@ -11,7 +11,7 @@
 | Image input | No |
 | Price in LiteLLM | $0 per token |
 
-Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build use the [/v1/systemone](#v1systemone) request.
+Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` has no `/v1/systemone` route and takes the System One format at `/v1/decisions`, so on that build send the [/v1/systemone](#v1systemone) request body to `/v1/decisions`, and call `litellm.decisions` with `state` instead of `input`.
 
 ## Serve the model
 

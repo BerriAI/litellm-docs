@@ -9,7 +9,7 @@ Decision models answer typed questions about an input and return probabilities i
 | `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice`, `score` and `box` questions | You write against OpenAI's format |
 | `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice`, `score` and `box` questions | You already have TypeSafe Jev request bodies |
 
-Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions`, so on that build send those bodies to `/v1/systemone`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build. Image input on Cloudflare Clef ships in `v1.107.0-rc.1` and later. TypeSafe images, `box` questions and the `TypeSafe-Danger-Zone-*` headers ship in the next build.
+Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions` and had no `/v1/systemone` route, so on that build send those bodies to `/v1/decisions`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build. Image input on Cloudflare Clef ships in `v1.107.0-rc.1` and later. TypeSafe images, `box` questions and the `TypeSafe-Danger-Zone-*` headers ship in the next build.
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
