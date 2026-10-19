@@ -1,89 +1,91 @@
 ---
-slug: rust-migration-status-october-2026
-title: "Our Rust benchmark said 150x. OCR on Rust got 1.6x. Here's why, and what's next"
+slug: rust-express
+title: "When will LiteLLM get fast? When the stations are Rust, not just the track"
 date: 2026-10-20T09:00:00
 authors:
   - nate
-description: "LiteLLM's June Rust benchmark measured only the forwarding path. A real proxy request also runs auth, routing, caching, secrets, logging and spend tracking, mostly still in Python. Here is what runs in Rust today, why partial migration gives modest gains, and the order and dates for the rest."
-keywords: [litellm, rust, rust migration, ai gateway performance, amdahl's law, litellm roadmap]
+description: "A request in LiteLLM is a round trip with stops at auth, routing, caching, secrets, logging and spend tracking. Rust is only as fast as the slowest stop, so the speedup arrives when the stations move, not just the main line."
+keywords: [litellm, rust, rust migration, ai gateway performance, litellm roadmap]
 tags: [litellm, rust, rust-migration, roadmap]
 ---
 
-In June we published a benchmark showing that a Rust gateway adds about `0.05 ms` per request, compared with about `7.5 ms` for the Python path, which is roughly 150x less. In September, OCR became the first API to run on Rust by default, and its proxy throughput on one CPU went up by `1.48x` to `1.69x`.
-
-Both numbers are correct. This post explains why they differ by two orders of magnitude, what runs in Rust as of October 2026, which dates from June we missed, and the order the rest of the migration will follow.
+The question we hear most about the Rust migration is "when will LiteLLM get fast?" The honest answer is that it gets fast when a request can make its whole trip on Rust, stops included. Rust track on the main line alone isn't enough, and that is the part that took us longer than we said.
 
 {/* truncate */}
 
-## What the June benchmark measured
+## Every request is a round trip
 
-The [June harness](https://github.com/BerriAI/litellm-docs/tree/main/blog/litellm_rust_launch/benchmark) compares two things against the same mock upstream:
+The easiest way to see why is to follow one request. Think of LiteLLM as a little railway map.
 
-- **Rust side:** a thin axum server ([`main.rs`](https://github.com/BerriAI/litellm-docs/blob/main/blog/litellm_rust_launch/benchmark/main.rs)) that parses the JSON body, adds one field and forwards it with `reqwest`.
-- **Python side:** a FastAPI app ([`llm_app.py`](https://github.com/BerriAI/litellm-docs/blob/main/blog/litellm_rust_launch/benchmark/llm_app.py)) that calls `litellm.acompletion` directly.
+![Every request is a round trip](./img/panel-1.svg)
 
-Neither side checks a virtual key, picks a deployment, reads a cache, fetches a secret, runs a callback or writes spend. The [July AIGatewayBench run](/blog/rust-ai-gateway-benchmarks) was closer to a real proxy, but it also ran with no logging callbacks, spend tracking or persistence, and said so.
+The trip is a loop. On the way out, your request passes through the **gate**, where we check your key, budget and rate limits, and the **router**, which decides which deployment it's headed for and tags the wagon with its API (OCR, Messages, Responses or Chat). Then it stops at the **cache** ("have we answered this before?"), the **vault** (to fetch the provider's API key from your secret manager) and **customs** (to sign the request with AWS, Azure or Google Cloud credentials). Only after those stations does the line split by API and run through the **HTTP tunnel** to the model provider.
 
-These benchmarks measure the forwarding path in isolation, and they measure it well. The forwarding path is a small part of what a production proxy does per request.
+The answer comes back around the bottom of the loop. It stops at the **post office**, where logs and your callbacks (Langfuse, Datadog, and so on) go out, and the **ledger**, where we record what it cost, then passes back through the router and the gate to your app. Every request makes every stop, whatever API it's for, so a fast line to the provider doesn't help much if the stations are slow.
 
-## What a proxy request actually runs
+Today almost all of that trip is a Python wagon on a dirt road.
 
-![Figure 1: stages of one proxy request, by implementation](./img/fig-1-request-path.svg)
+## The test track
 
-A request to the LiteLLM proxy passes through the same shared stages whatever API it is for:
+In June we published a benchmark showing a Rust gateway adding about **0.05 ms** per request, against about **7.5 ms** for the Python path. That number is real, and you can reproduce it.
 
-1. **On the way out:** auth (virtual key, budget, rate limits), the router (deployment selection), the cache lookup, the secret manager, and cloud credentials (SigV4, Azure AD, GCP).
-2. **The per-API work:** transforming the request for the provider, and making the HTTP call.
-3. **On the way back:** response transformation, logging and callbacks, spend tracking, and router and rate-limit bookkeeping.
+![The test track](./img/panel-2.svg)
 
-The June benchmark covered step 2 and the response transform. Today, most of steps 1 and 3 run in Python.
+But that benchmark ran on a test track: a basic gate and router, then a clear run to a mock provider, with every station closed. Our July benchmark said so plainly: no logging callbacks, no spend tracking, no persistence. That is the right way to measure the cost of the train itself. It is not the trip your production requests take.
 
-## Why one Rust stage gives 1.6x, not 150x
+## Two kinds of station
 
-Speeding up part of a request is capped by the part you didn't speed up. This is Amdahl's law. If a share `p` of per-request proxy CPU time moves to code that is 150x faster, the speedup is `1 / ((1 - p) + p / 150)`.
+Laying Rust track isn't enough on its own, because of what happens when a Rust train reaches a Python station.
 
-![Figure 2: Amdahl's law for a partly migrated proxy](./img/fig-2-amdahl.svg)
+![Two kinds of station](./img/panel-3.svg)
 
-The measured OCR gains of `1.48x` and `1.69x` fit a proxy where about a third of the CPU time per request had moved to Rust. The rest, including auth, routing, logging and spend tracking, still ran in Python on every request. The curve stays below `2x` until about half the work is in Rust, and the large gains come only near the end: `9.4x` at 90% and the full 150x only at 100%.
+Python stations sit off the line, at the end of a little road. At a Python station the train has to stop. Every crate comes off the train and gets repacked into a box Python can handle, and a wagon hauls it up the dirt road to the station. Then it waits, comes back, gets repacked into crates and goes back on the train. That isn't just a cartoon: it's roughly what happens to your request's data each time Rust hands it to a Python service and takes it back.
 
-The model is generous to us, because it ignores the cost of crossing between the two languages. Each time a Rust stage hands a request to a Python stage, the data has to be converted into Python objects and back. A follow-up post measures that cost.
+A Rust station sits right on the track. The train rolls through it and the work happens on the cargo where it is, with no unloading.
+
+## Where the track is today
+
+Here is the map as of October 2026.
+
+![Where the track is today](./img/panel-4.svg)
+
+- **OCR** runs on Rust track, and it is Rust only since `v1.104.0-rc.1`. You don't have to do anything.
+- **Messages** has Rust track for Anthropic that you can switch on with `LITELLM_RUST=1`.
+- **Responses** and **Chat completions** are still Python roads.
+- **Customs** (cloud credentials for AWS, Azure and Google Cloud) and the **HTTP tunnel** are finished Rust.
+- **Cache**, **vault** and the **post office** (logging and callbacks) have Rust versions being built. There is an opt-in Rust logger, but it only covers part of what logging does today, so we count the post office as Python. Until they open, a Rust train that needs them stops and unloads onto a wagon.
+- The **gate**, **router** and **ledger** are Python.
+
+OCR shows what this means in practice. On one CPU, the Rust path handled **1.5x to 1.7x** more OCR requests per second than Python. That is a solid gain, but it is not the 150x from the test track, because the express still stops at Python stations along the way. Fast on the track, slow at the stops.
 
 ## What we got wrong in June
 
-In June we said Messages and Chat completions would run on Rust by September 1, and the router by September 15. We missed both dates.
+In June we said Messages and Chat completions would be on Rust by September 1, and the router by September 15. We missed those dates.
 
-The June plan was to move the per-API transforms first and leave every shared stage in Python. Once we started, we found that even one provider on one API depends on the shared stages: the cache, the secret managers, cloud credentials, logging and callbacks. A Rust transform that calls back into Python for each of those sits on the left side of Figure 2. So we started building the shared stages in Rust first. Cloud credentials and the HTTP client are done. Cache, secret managers, the router and auth exist as Rust crates in [`litellm-rust/crates`](https://github.com/BerriAI/litellm/tree/main/litellm-rust/crates), but they are not yet on the default request path.
+The plan then was to lay Rust track only on the API lines after the split: Rust would translate requests and responses, and Python would keep running every station. Once we started, we found that even the smallest stretch of track needs the stations. One provider's translation for one route still needs the cache, the secret manager, logging and callbacks. So we went back and started rebuilding the stations first: cloud credentials and the HTTP client are done, and cache, secrets and logging are underway. That is slower to show up in a benchmark, but it is the work that makes real requests fast.
 
-## Where things stand, October 2026
+## Next: finish the lines, then the gate and router
 
-| Stage | Status | How to use it |
-|---|---|---|
-| OCR (all providers) | Rust only since `v1.104.0-rc.1` (Rust by default since `v1.102.0-rc.1`) | Nothing to change |
-| Anthropic Messages | Rust, opt-in since `v1.104.0-rc.1` | `LITELLM_RUST=1` |
-| Other Messages providers, Responses, Chat completions | Python | |
-| Cloud credentials (AWS, Azure, GCP) | Rust | Nothing to change |
-| HTTP client | Rust since `v1.103.0-rc.1` | Nothing to change |
-| Logging | An opt-in Rust path that covers part of logging; counted as in progress | |
-| Cache, secret managers, callbacks, spend tracking | Python, Rust in progress | |
-| Auth and router | Python | |
+![Next: finish the lines, then the gate and router](./img/panel-5.svg)
 
-The [migration tracker](/rust-migration) breaks this down per provider and per release, and updates with each release.
+Our target for the **end of 2026** is Rust track on the three big lines: **Messages, Responses and Chat completions**. Our target for **every other API** (embeddings, audio transcription, MCP and the rest) is **April 30, 2027**.
 
-## The order from here
+The gate and the router come next, so a request can stay on Rust from the moment it reaches LiteLLM. We haven't set a new date for them yet, and we would rather say that than give you another date we can't stand behind.
 
-![Figure 3: Rust migration timeline](./img/fig-3-timeline.svg)
+The stations move over gradually, and not all at once. Each callback or service gets a Rust version depending on how performance critical it is, so the busiest stops go first. Until a station has its Rust version, the train still stops and unloads there.
 
-1. **Messages, Responses and Chat completions by December 31, 2026.** These three APIs carry most LiteLLM traffic.
-2. **Auth and the router next.** Every request passes through both, on the way in and on the way out. We haven't set a date for them yet, and we would rather say that than give you another date we can't stand behind.
-3. **Cache, secret managers, callbacks and spend tracking, gradually.** Each callback or backend gets a Rust version based on how much it costs per request, so the most performance-critical ones go first. Until a stage has its Rust version, requests cross into Python for it.
-4. **Every other API (embeddings, audio, MCP and the rest) by April 30, 2027.**
+You can follow every line and station on the [migration tracker](/rust-migration), which updates with each release.
 
-If you wrote a custom callback in Python, it stays in Python. Your code runs as it does today, and the request crosses into Python to run it.
+## The Rust Express
+
+![The Rust Express](./img/panel-6.svg)
+
+When every station is Rust, the whole trip runs at test-track speed, and that is the gateway the June benchmark was measuring. One thing stays Python on purpose: if you wrote your own callback in Python, the express still stops and unloads at your station, because it is your code.
 
 ## What you can do today
 
-- **OCR** already runs on Rust, with nothing to change.
-- **Anthropic Messages** runs on Rust with `LITELLM_RUST=1`, or `litellm.rust(True)` for one SDK process. Python stays as the fallback.
-- **Check our numbers.** The [June harness](https://github.com/BerriAI/litellm-docs/tree/main/blog/litellm_rust_launch/benchmark), [AIGatewayBench](https://github.com/BerriAI/ai-gateway-bench) and the [OCR benchmark setup](/blog/litellm-rust-ocr) are all public. If your workload looks different from ours, we want to hear about it.
+- **Use OCR.** It is already on Rust, with nothing to change.
+- **Try Anthropic Messages on Rust** with `LITELLM_RUST=1`. Python stays as the fallback, and `LITELLM_RUST=0` turns it off.
+- **Watch the [tracker](/rust-migration)** to see each line and station move from Python to Rust.
 
-Your config doesn't change at any point. Each route moves from Python, to opt-in, to Rust by default, to Rust only, and the tracker shows where each one is.
+Nothing in your config changes along the way. We lay the track under you, and each route moves from Python, to opt-in, to Rust by default, to Rust only.
