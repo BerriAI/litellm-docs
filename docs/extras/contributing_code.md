@@ -31,7 +31,7 @@ Before contributing code to LiteLLM, you must sign our [Contributor License Agre
 
 ## Commit and Branch Conventions
 
-Commit subjects follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). They are enforced by the opt-in local `commit-msg` hook and the required CI check on PR titles, since squash-merge uses the PR title as the commit subject
+Commit subjects follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). They are enforced by the opt-in local `commit-msg` hook and the required CI check on PR titles, since squash-merge uses the PR title as the commit subject.
 
 ### Commit message format
 
@@ -61,7 +61,7 @@ PR titles must follow the same format, because squash-merge uses the PR title as
 
 ### Branch naming
 
-Internal contributors branch off `main` with a `litellm_` prefix and no `/`, for example `litellm_weighted_round_robin`. Fork branches can be named anything
+Internal contributors branch off `main` with a `litellm_` prefix and no `/`, for example `litellm_weighted_round_robin`. Fork branches can be named anything.
 
 ### Installing the hooks
 
@@ -71,7 +71,7 @@ The hooks live in `.githooks/` and are opt-in. Run once per clone:
 make install-hooks
 ```
 
-This sets `core.hooksPath=.githooks` for the local repository. After that, `git commit` runs `commit-msg`, which validates the subject line
+This sets `core.hooksPath=.githooks` for the local repository. After that, `git commit` runs `commit-msg`, which validates the subject line.
 
 In a rare emergency you can bypass the commit hook for a single command:
 
