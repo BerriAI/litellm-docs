@@ -36,6 +36,7 @@ jobs:
       - run: npm run test:social-cards
       - run: npm run test:optimize-images
       - run: npm run test:lens
+      - run: node --test scripts/docs-models.test.cjs
   writing-style:
     runs-on: ubuntu-latest
     steps:
@@ -63,5 +64,6 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install pyyaml
+      - run: python3 scripts/test_docs_models.py
       - run: python3 scripts/check-docs.py docs
       - run: python3 scripts/check-docs.py blog --only=card-missing,card-too-long

@@ -55,7 +55,7 @@ from liteagents import ProfileOptions, run
 
 profile = ProfileOptions(
     harness="pydantic-ai",
-    model="openai/gpt-5.4-mini",
+    model="openai/{{openai_small}}",
 )
 prompt = "Explain what an agent harness does in one sentence."
 

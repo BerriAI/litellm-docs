@@ -35,6 +35,12 @@ class ModelDefaultsTests(unittest.TestCase):
         errors = self.errors('```yaml\nmodel: chatgpt/future-model\n```\n')
         self.assertEqual([e[0] for e in errors], ["model-literal"])
 
+    def test_openai_api_examples_of_a_chatgpt_default_pass(self):
+        for role in ("chatgpt", "chatgpt_small"):
+            with self.subTest(role=role):
+                model = checks.ROLE_TO_ID[role]
+                self.assertEqual(self.errors(f'```yaml\nmodel: openai/{model}\n```\n'), [])
+
     def test_token_file_paths_are_not_models(self):
         for path in ("/tokens/chatgpt/auth.json", "$HOME/.config/litellm/chatgpt/auth.json"):
             with self.subTest(path=path):

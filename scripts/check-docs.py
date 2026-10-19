@@ -460,18 +460,21 @@ def load_roles():
 
 ROLE_TO_ID = load_roles()
 PYTHON_ROLES = {"python_version", "python_min_version"}
-# {model id: role}. The Python roles hold bare version numbers, which get their own rule below.
-MODEL_ROLES = {model_id: role for role, model_id in ROLE_TO_ID.items() if role not in PYTHON_ROLES}
+CHATGPT_ROLES = {"chatgpt", "chatgpt_small"}
+BARE_ID_ROLES = tuple(role for role in ROLE_TO_ID if role not in PYTHON_ROLES and role not in CHATGPT_ROLES)
+# {model id: role}. The Python roles hold bare version numbers, which get their own rule below. The ChatGPT
+# roles reuse OpenAI API ids (gpt-6.1-sol is both), so only their chatgpt/ form is matched, by its own pattern.
+MODEL_ROLES = {ROLE_TO_ID[role]: role for role in BARE_ID_ROLES}
 with open(os.path.join(REPO_ROOT, "docs-models-history.json"), encoding="utf-8") as f:
     MODEL_HISTORY = json.load(f)
 for role, model_ids in MODEL_HISTORY.items():
-    if role not in ROLE_TO_ID or role in PYTHON_ROLES:
+    if role not in BARE_ID_ROLES:
         raise ValueError(f"Invalid model history role: {role}")
     for model_id in model_ids:
         MODEL_ROLES.setdefault(model_id, role)
-for role, model_id in ROLE_TO_ID.items():
-    if role not in PYTHON_ROLES and model_id not in MODEL_HISTORY.get(role, []):
-        raise ValueError(f"Record {model_id} under {role} in docs-models-history.json; retain older entries")
+for role in BARE_ID_ROLES:
+    if ROLE_TO_ID[role] not in MODEL_HISTORY.get(role, []):
+        raise ValueError(f"Record {ROLE_TO_ID[role]} under {role} in docs-models-history.json; retain older entries")
 MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
