@@ -13,9 +13,12 @@ ChatGPT subscription access is native to the Responses API. Chat Completions req
 
 Use a model that your ChatGPT plan and workspace can call. [OpenAI's Codex models page](https://learn.chatgpt.com/docs/models) lists the current and retired models. That list differs from the models the OpenAI API serves.
 
+The examples use `{{chatgpt}}`. OpenAI rolls it out to Plus, Pro, Business, Enterprise, and Edu plans, and on Enterprise and Edu an admin has to turn it on first. Free and Go plans do not get it at launch, and OpenAI points them to `{{chatgpt_small}}` when available. A model your plan cannot call fails with `The '<model>' model is not supported when using Codex with a ChatGPT account.`
+
 Notes:
 - The ChatGPT subscription backend rejects token limit fields (`max_tokens`, `max_output_tokens`, `max_completion_tokens`) and `metadata`. LiteLLM strips these fields for this provider.
 - `/v1/chat/completions` honors `stream`. When `stream` is false (default), LiteLLM aggregates the Responses stream into a single JSON response.
+- Send Responses `input` as a list of messages, as the examples below do. On LiteLLM 1.106.0, a plain string `input` fails with `{"detail":"Input must be a list"}` from both the SDK and the proxy.
 
 ## Authentication
 
@@ -24,6 +27,12 @@ ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python S
 Device code login has to be allowed for the account first: in ChatGPT's security settings for a personal plan, or by a workspace admin in the workspace permissions for Business and Enterprise ([OpenAI docs](https://learn.chatgpt.com/docs/auth)).
 
 ## Usage - LiteLLM Python SDK
+
+The `chatgpt/` provider needs the `mcp` package, which a plain `pip install litellm` does not include. Install LiteLLM with the `mcp` extra:
+
+```bash showLineNumbers title="Install"
+pip install 'litellm[mcp]'
+```
 
 ### Responses (recommended for Codex models)
 

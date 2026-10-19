@@ -469,18 +469,18 @@ with open(os.path.join(REPO_ROOT, "docs-models-history.json"), encoding="utf-8")
     MODEL_HISTORY = json.load(f)
 for role, model_ids in MODEL_HISTORY.items():
     if role not in BARE_ID_ROLES:
-        raise ValueError(f"Invalid model history role: {role}")
+        sys.exit(f"Invalid model history role: {role}")
     for model_id in model_ids:
         MODEL_ROLES.setdefault(model_id, role)
 for role in BARE_ID_ROLES:
     if ROLE_TO_ID[role] not in MODEL_HISTORY.get(role, []):
-        raise ValueError(f"Record {ROLE_TO_ID[role]} under {role} in docs-models-history.json; retain older entries")
+        sys.exit(f"Record {ROLE_TO_ID[role]} under {role} in docs-models-history.json; retain older entries")
 MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
 # alias such as bedrock-claude-sonnet-5 or a header name is left alone.
 MODEL_LITERAL_RE = re.compile(
-    r"(?<![A-Za-z0-9:@-])(?:(?<!/)chatgpt/[A-Za-z0-9][A-Za-z0-9._-]*|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
+    r"(?<![A-Za-z0-9:@-])(?:(?<!/)chatgpt/(?![A-Za-z0-9._-]*\.json\b)[A-Za-z0-9][A-Za-z0-9._-]*|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
 # python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
 # `python3 -m venv` and wheel tags such as cp312 are not versions.

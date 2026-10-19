@@ -42,7 +42,7 @@ class ModelDefaultsTests(unittest.TestCase):
                 self.assertEqual(self.errors(f'```yaml\nmodel: openai/{model}\n```\n'), [])
 
     def test_token_file_paths_are_not_models(self):
-        for path in ("/tokens/chatgpt/auth.json", "$HOME/.config/litellm/chatgpt/auth.json"):
+        for path in ("/tokens/chatgpt/auth.json", "$HOME/.config/litellm/chatgpt/auth.json", "chatgpt/auth.json"):
             with self.subTest(path=path):
                 self.assertEqual(self.errors(f'```bash\ncp {path} /destination/auth.json\n```\n'), [])
 
@@ -91,7 +91,7 @@ class ModelDefaultsTests(unittest.TestCase):
             return real_open(path, *args, **kwargs)
 
         with patch("builtins.open", side_effect=read_bumped):
-            with self.assertRaisesRegex(ValueError, "Record future-default"):
+            with self.assertRaisesRegex(SystemExit, "Record future-default"):
                 spec.loader.exec_module(importlib.util.module_from_spec(spec))
 
 
