@@ -206,7 +206,7 @@ Response
 }
 ```
 
-The server adds `latency_ms`, and LiteLLM passes it through on `/v1/systemone`. On an 8-vCPU machine with no GPU, each of these three-question requests took 5 to 7 seconds through the proxy.
+The server adds `latency_ms`, and LiteLLM passes it through on `/v1/systemone`. On an 8-vCPU machine with no GPU, each of these three-question requests took 5 to 9 seconds through the proxy.
 
 ## Cost tracking
 
