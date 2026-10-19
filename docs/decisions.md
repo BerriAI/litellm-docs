@@ -54,6 +54,20 @@ model_list:
 
 [Strands Decider](./providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
 
+## Benchmark: flagging problems in agent traces
+
+This benchmark uses decision models as the judge for [LiteLLM Lens](./proxy/lens/index.md) signals. Each of 207 synthetic agent traces was checked for 3 signals, so every model answered the same 621 yes/no questions through LiteLLM, and for each yes it also picked the trace passage that shows the problem. An independent judge checked the labels, and cost per 1k calls comes from the `x-litellm-response-cost` header
+
+<Image
+  img={require('../img/decisions_lens_signals_benchmark.png')}
+  dark={require('../img/decisions_lens_signals_benchmark_dark.png')}
+  alt="Lens Signals benchmark, share of 621 calls that agree with the label: GPT-6 Luna 99.4%, pplx-decider 99.2%, Rune 98.7%, Clef 97.9%, Jev 1.13 and Jev 1.14 97.1%, Clef Flash 93.7%, Decision-1 93.2%, Clef Omni 92.8%, OpenJev Qwen3.5 4B 90.2%. Self-hosted on CPU: Bespoke Nimble 9B 94.4%, Strands Decider 2B 84.1%, Laya Typed Decisions 74.6%, Laya English 57.0%, Laya Multilingual 42.7%"
+/>
+
+GPT-6 Luna, Perplexity's decider, Fireworks Rune and Cloudflare Clef agree with the labels on 97.9% to 99.4% of calls, which is within noise, so price and latency decide between them: Perplexity costs $0.021 per 1k calls and GPT-6 Luna $0.151. Agreement alone does not tell you whether the model cites the right evidence. Decision-1 agrees on 93.2% of calls but picks the right passage for only 44% of its yes answers, while TypeSafe Jev 1.14 picks it for all of them. Bespoke Nimble 9B is the strongest self-hosted model at 94.4%, ahead of four hosted models, though it took a median 30 seconds per call on an 8-core CPU with no GPU
+
+Strands Decider 2B rejects `choice` options that have no description with a 422, so the benchmark filled in a description for every evidence option. It still could not answer 9 of the 207 traces, 6 that were longer than its context window and 3 that returned a server error, and those 27 calls count as no answer. Databricks does not report cost for OpenJev yet
+
 ## Self-hosted Laya and Nimble
 
 [Laya](https://github.com/NandhaKishorM/laya) and [Bespoke Nimble](https://github.com/bespokelabsai/nimble) are decision models that you host yourself. From a build containing [LiteLLM #45260](https://github.com/BerriAI/litellm/pull/45260) they are providers for `/v1/decisions` and `/v1/systemone`, and you can add them from the Admin UI under Models + Endpoints, Add Model, with Mode set to `Decisions - /v1/decisions`. Earlier builds serve them only on their own gateway routes
