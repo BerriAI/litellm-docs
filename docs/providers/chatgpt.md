@@ -11,7 +11,7 @@ Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](htt
 
 ChatGPT subscription access is native to the Responses API. Chat Completions requests are bridged to Responses for supported models (for example `chatgpt/{{chatgpt}}`).
 
-The examples use the shared ChatGPT model defaults. Choose a model available to your subscription, client, and workspace; see [OpenAI's current Codex models](https://learn.chatgpt.com/docs/models) for availability and retirements. ChatGPT subscription availability differs from OpenAI API availability, so these defaults are maintained separately from the API examples.
+Use a model that your ChatGPT plan and workspace can call. [OpenAI's Codex models page](https://learn.chatgpt.com/docs/models) lists the current and retired models. That list differs from the models the OpenAI API serves.
 
 Notes:
 - The ChatGPT subscription backend rejects token limit fields (`max_tokens`, `max_output_tokens`, `max_completion_tokens`) and `metadata`. LiteLLM strips these fields for this provider.
@@ -32,7 +32,7 @@ import litellm
 
 response = litellm.responses(
     model="chatgpt/{{chatgpt}}",
-    input="Write a Python hello world"
+    input=[{"role": "user", "content": "Write a Python hello world"}]
 )
 
 print(response)
