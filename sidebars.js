@@ -472,7 +472,7 @@ const sidebars = {
                   type: "category",
                   label: "Desktop & Cowork",
                   items: [
-                    { type: "doc", id: "tutorials/claude_desktop_cowork", label: "SSO" },
+                    { type: "doc", id: "tutorials/claude_desktop_cowork", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/claude_desktop", label: "Virtual keys" },
                   ],
                 },
@@ -480,7 +480,7 @@ const sidebars = {
                   type: "category",
                   label: "Code",
                   items: [
-                    { type: "doc", id: "tutorials/claude_code_gateway", label: "SSO" },
+                    { type: "doc", id: "tutorials/claude_code_gateway", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/claude_code", label: "Virtual keys" },
                   ],
                 },
@@ -494,7 +494,7 @@ const sidebars = {
                   type: "category",
                   label: "Desktop",
                   items: [
-                    { type: "doc", id: "proxy/client_setup/codex_chatgpt_desktop_sso", label: "SSO" },
+                    { type: "doc", id: "proxy/client_setup/codex_chatgpt_desktop_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/codex_chatgpt_desktop", label: "Virtual keys" },
                   ],
                 },
@@ -502,7 +502,7 @@ const sidebars = {
                   type: "category",
                   label: "CLI",
                   items: [
-                    { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO" },
+                    { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/codex_cli", label: "Virtual keys" },
                   ],
                 },
@@ -516,7 +516,7 @@ const sidebars = {
                   type: "category",
                   label: "CLI",
                   items: [
-                    { type: "doc", id: "proxy/client_setup/hermes_sso", label: "SSO" },
+                    { type: "doc", id: "proxy/client_setup/hermes_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/hermes", label: "Virtual keys" },
                   ],
                 },
