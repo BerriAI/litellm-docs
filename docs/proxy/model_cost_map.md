@@ -1,6 +1,6 @@
 # Model Cost Map
 
-LiteLLM prices every request from its model cost map, [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Each entry maps a model to its rates, context limits, and capabilities. The proxy fetches the latest map from GitHub at startup, so new models and price changes arrive without upgrading LiteLLM. To change a price for your own deployment, see [Custom LLM Pricing](./custom_pricing) and [Custom Model Cost Map](./custom_model_cost_map).
+LiteLLM prices every request from its model cost map, [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Each entry maps a model to its rates, context limits, and capabilities. The raw JSON is large enough that GitHub will not render it, so browse the same data at [models.litellm.ai](https://models.litellm.ai/), which lists every model with its prices, context window, and supported features and lets you search by model name or provider. The proxy fetches the latest map from GitHub at startup, so new models and price changes arrive without upgrading LiteLLM. To change a price for your own deployment, see [Custom LLM Pricing](./custom_pricing) and [Custom Model Cost Map](./custom_model_cost_map).
 
 ## Every price is USD per billable unit
 
