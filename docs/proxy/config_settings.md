@@ -599,6 +599,8 @@ router_settings:
 | AIOHTTP_TCP_KEEPINTVL | Seconds between successive aiohttp TCP keepalive probes (applies when `AIOHTTP_SO_KEEPALIVE=True`). **Default is 30**
 | AIOHTTP_TRUST_ENV | Flag to pass `trust_env=True` to the underlying aiohttp `ClientSession`, so aiohttp itself also reads `~/.netrc` and the `SSL_CERT_FILE` / `SSL_CERT_DIR` env vars. Not required for proxies: LiteLLM already resolves `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` for every request unless `DISABLE_AIOHTTP_TRUST_ENV` is set. **Default is False**
 | AIOHTTP_TTL_DNS_CACHE | DNS cache time-to-live for aiohttp in seconds. **Default is 300**
+| AISTUPIDLEVEL_API_BASE | Base URL for AI Stupid Level. Default is https://aistupidlevel.info/v1
+| AISTUPIDLEVEL_API_KEY | Router key (aism_...) for AI Stupid Level
 | AKTO_GUARDRAIL_API_BASE | Base URL for the Akto Guardrail API (e.g. `http://localhost:9090`). Used by the Akto guardrail integration.
 | AKTO_API_KEY | API key for authenticating with the Akto Guardrail service.
 | ALEPH_ALPHA_API_BASE | Base URL for Aleph Alpha. Default is https://api.aleph-alpha.com/complete

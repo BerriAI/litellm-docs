@@ -1461,6 +1461,7 @@ const sidebars = {
           "providers/abliteration",
           "providers/ai21",
           "providers/aiml",
+          "providers/aistupidlevel",
           "providers/aleph_alpha",
           "providers/amazon_nova",
           "providers/anyscale",
