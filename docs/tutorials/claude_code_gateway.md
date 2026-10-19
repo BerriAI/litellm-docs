@@ -1,18 +1,18 @@
 ---
 title: Claude Code SSO
 toc_max_heading_level: 2
-description: Set up Claude Code with gateway sign-in, Lite CLI SSO, or a Claude subscription through LiteLLM.
+description: Set up Claude Code with Claude apps gateway sign-in, Lite CLI SSO, or a Claude subscription through LiteLLM.
 ---
 
 # Claude Code SSO
 
-Choose [Gateway setup](#gateway-setup), [Lite CLI SSO](#lite-cli-sso), or [Claude subscription through gateway](#claude-subscription).
+Choose [Claude apps gateway setup](#gateway-setup), [Lite CLI SSO](#lite-cli-sso), or [Claude subscription through gateway](#claude-subscription).
 
-## Gateway setup
+## Claude apps gateway setup {#gateway-setup}
 
-Sign in directly from Claude Code. LiteLLM uses your organization's provider credentials and tracks usage by user and team.
+Use the [Claude apps gateway](https://code.claude.com/docs/en/claude-apps-gateway) sign-in flow with LiteLLM implementing its gateway protocol. Requests go directly from Claude Code to LiteLLM, which handles provider credentials and usage tracking by user and team.
 
-### 1. Configure the gateway {#1-turn-the-gateway-on}
+### 1. Configure LiteLLM {#1-turn-the-gateway-on}
 
 Configure [SSO for your LiteLLM gateway](../proxy/admin_ui_sso.md), then add this to its configuration:
 

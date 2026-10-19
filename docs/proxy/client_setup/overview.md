@@ -48,7 +48,7 @@ Billing a user's own subscription is a separate, opt-in setup: [Claude Code Max]
 
 | Client | Static key | Sign-in, no manually issued long-lived key | License | One-command setup |
 |---|---|---|---|---|
-| Claude Code | Virtual key in `ANTHROPIC_AUTH_TOKEN` | [Gateway setup, Lite CLI SSO, or Claude subscription](../../tutorials/claude_code_gateway.md) | SSO through an IdP: free up to 5 users, Enterprise beyond | `lite configure claude` |
+| Claude Code | Virtual key in `ANTHROPIC_AUTH_TOKEN` | [Claude apps gateway SSO, Lite CLI SSO, or Claude subscription](../../tutorials/claude_code_gateway.md) | SSO through an IdP: free up to 5 users, Enterprise beyond | `lite configure claude` |
 | Claude Desktop & Cowork | Gateway API key | [Interactive OIDC](../../tutorials/claude_desktop_cowork.md) | Enterprise (JWT auth) | None |
 | Codex CLI | Virtual key via `env_key` | [`lite auth print-token` as the provider `auth` command](./codex_cli_sso.md) | `lite login` through an IdP: free up to 5 SSO users, Enterprise beyond | `lite configure codex` |
 | Codex in ChatGPT Desktop | Virtual key via `env_key` and `~/.codex/.env` | [Same `auth` command](./codex_chatgpt_desktop_sso.md), since the app reads the same `config.toml` | `lite login` through an IdP: free up to 5 SSO users, Enterprise beyond | Same as Codex CLI |

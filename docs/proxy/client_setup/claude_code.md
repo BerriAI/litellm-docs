@@ -51,7 +51,7 @@ Then confirm the traffic in the Admin UI under **Logs** or **Usage**, attributed
 
 ## Sign in without a static key
 
-See [Claude Code SSO](../../tutorials/claude_code_gateway.md) for gateway setup, Lite CLI SSO, and using a Claude subscription through LiteLLM.
+See [Claude Code SSO](../../tutorials/claude_code_gateway.md) for Claude apps gateway setup, Lite CLI SSO, and using a Claude subscription through LiteLLM.
 
 ## MCP setup
 
