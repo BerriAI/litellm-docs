@@ -15,7 +15,7 @@ Once your LiteLLM gateway is running, a coding tool or chat app can route model 
 
 ## Choose a harness
 
-Expand your harness under **Client** in the sidebar, choose the client, then select **SSO** or **Virtual keys**.
+Expand your harness under **Client Setup** in the sidebar, choose the client, then select **SSO** or **Virtual keys**.
 
 | Harness | Client | SSO | Virtual keys |
 |---|---|---|---|

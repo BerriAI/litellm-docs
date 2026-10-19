@@ -375,7 +375,7 @@ const sidebars = {
     // ════════════════════════════════════════════════════════════
     // AI GATEWAY
     // Set-up groups follow the order a new deployment goes through:
-    // Deploy → Configuration → Models & Providers → Client → Authentication → Spend & Budgets.
+    // Deploy → Configuration → Models & Providers → Client Setup → Authentication → Spend & Budgets.
     // Add new pages inside one of these groups, or in the groups after them.
     // ════════════════════════════════════════════════════════════
     { type: "html", value: "Products", className: "sidebar-caption", defaultStyle: true },
@@ -461,7 +461,7 @@ const sidebars = {
         },
         {
           type: "category",
-          label: "Client",
+          label: "Client Setup",
           items: [
             "proxy/client_setup/overview",
             {
