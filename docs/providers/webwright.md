@@ -113,7 +113,8 @@ WebWright supports the following OpenAI-compatible parameters:
 | `tools` | array | Optional. List of available tools/functions |
 | `tool_choice` | string/object | Optional. Control tool/function calling |
 | `response_format` | object | Optional. Structured output response format |
-| `reasoning_effort` | string | Optional. Reasoning effort mode |
+
+WebWright's abilities reference also declares a reasoning mode. The public request reference does not document a caller-facing reasoning field or allowed values.
 
 ## Additional Resources
 
