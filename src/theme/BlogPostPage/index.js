@@ -97,7 +97,7 @@ export function PostByline({horizontal = false}) {
 }
 
 const EMBED_CSS = `
-.navbar, footer, .theme-announcement-bar, .crisp-client { display: none !important; }
+.navbar, footer, .theme-announcement-bar { display: none !important; }
 :root { --ifm-navbar-height: 0px; }
 `;
 

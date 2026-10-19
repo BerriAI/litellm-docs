@@ -7,7 +7,7 @@ import Image from '@theme/IdealImage';
 
 # Chat UI
 
-The Chat UI is a chat page in the LiteLLM Admin UI, at `/ui/chat`. A proxy admin enables it for the gateway. Then each user who can log in to the Admin UI can use it. Users can send messages to the models that they have access to and use the tools of MCP servers.
+The Chat UI is a chat page in the LiteLLM Admin UI, at `/ui/chat`. When it is on, each user who can log in to the Admin UI can use it. Users can send messages to the models that they have access to and use the tools of MCP servers.
 
 Each request from the Chat UI goes through the gateway. LiteLLM applies the same model access, budgets, and logs to these requests as to API requests.
 
@@ -17,14 +17,14 @@ The Chat UI is a beta feature. Its pages and controls can change in new releases
 
 :::
 
-## Enable the Chat UI
+## Turn the Chat UI on or off
 
-The Chat UI is off by default. A proxy admin must enable it.
+The Chat UI is on by default in releases that include [PR #46918](https://github.com/BerriAI/litellm/pull/46918). In older releases it is off by default, and a proxy admin must turn it on. A proxy admin can turn it off at any time with the same switch.
 
 1. Log in to the Admin UI as a proxy admin.
 2. Go to **Settings** > **Admin Settings**.
 3. Click the **UI Settings** tab.
-4. Set **[BETA] Enable Chat page** to on. The page refreshes.
+4. Set **[BETA] Enable Chat page** to on or off. The page refreshes.
 
 <Image
   img={require('../../../img/chat_ui_enable.png')}
@@ -54,6 +54,19 @@ curl -X PATCH "$PROXY_BASE_URL/update/ui_settings" \
 ```
 
 LiteLLM keeps this value in the database. The gateway must have a `DATABASE_URL`.
+
+### Enable through configuration
+
+In v1.104.0 and newer, set the flag in `config.yaml` and restart the gateway:
+
+```yaml
+general_settings:
+  enable_chat_ui: true
+```
+
+The configuration value takes precedence over the value saved through the Admin UI or API. Remove it from `config.yaml` to manage the flag through the Admin UI again
+
+The gateway still needs a `DATABASE_URL` for UI settings. Enabling Chat does not require `store_model_in_db: true`; your models can stay in `config.yaml`
 
 ## Send a message
 
@@ -97,6 +110,8 @@ The Chat UI shows the response as the model sends it. Below each response, the C
 The Chat UI keeps your chats in the local storage of your browser. The gateway does not keep the chats. The **Recents** list shows your chats. The title of each chat is the start of its first message.
 
 Your browser keeps a maximum of 100 chats. When you start one more chat, the Chat UI deletes the chat with the oldest change. Chats from one browser do not show in a different browser or on a different computer. If you clear the data of your browser, the browser deletes your chats.
+
+To delete a conversation, hover over it in **Recents**, click the trash icon, then confirm **Delete**. This removes the conversation from this browser, not the gateway's request logs
 
 The gateway records each request in the logs. Refer to [See your logs](#see-your-logs).
 

@@ -1,4 +1,4 @@
-# 💸 GET Daily Spend, Usage Metrics
+# GET Daily Spend, Usage Metrics
 
 The `GET /daily_metrics` endpoint that this page used to describe has been removed from the proxy. Daily spend and usage is now served by `GET /user/daily/activity`, which returns per-day spend, token counts and request counts with a breakdown by model, model group, provider, endpoint, API key and MCP server. See the [Daily Spend Breakdown API](./cost_tracking#daily-spend-breakdown-api) section for the full response shape and the [Swagger reference](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for all parameters.
 

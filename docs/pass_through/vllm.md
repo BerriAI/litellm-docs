@@ -9,7 +9,7 @@ Pass-through endpoints for VLLM - call provider-specific endpoint, in native for
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://my-vllm-server.com` with `LITELLM_PROXY_BASE_URL/vllm` 🚀
+Just replace `https://my-vllm-server.com` with `LITELLM_PROXY_BASE_URL/vllm`
 
 #### **Example Usage**
 

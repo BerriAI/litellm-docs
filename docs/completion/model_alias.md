@@ -1,3 +1,7 @@
+---
+sidebar_label: "Model Aliases"
+---
+
 # Model Alias
 
 The model name you show an end-user might be different from the one you pass to LiteLLM - e.g. Displaying `GPT-5.6` while calling `{{openai_small}}` on the backend. 

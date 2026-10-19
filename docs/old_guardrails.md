@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# 🛡️ [Beta] Guardrails
+# [Beta] Guardrails
 
 Setup Prompt Injection Detection, Secret Detection on LiteLLM Proxy
 
@@ -188,13 +188,13 @@ print(response)
 
 ## Switch Guardrails On/Off Per API Key
 
-❓ Use this when you need to switch guardrails on/off per API Key
+Use this when you need to switch guardrails on/off per API Key
 
 **Step 1** Create Key with `pii_masking` On 
 
 **NOTE:** We defined `pii_masking` [on step 1](#1-setup-guardrails-on-litellm-proxy-configyaml)
 
-👉 Set `"permissions": {"pii_masking": true}` with either `/key/generate` or `/key/update`
+Set `"permissions": {"pii_masking": true}` with either `/key/generate` or `/key/update`
 
 This means the `pii_masking` guardrail is on for all requests from this API Key
 

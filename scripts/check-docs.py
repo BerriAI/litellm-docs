@@ -15,12 +15,15 @@ Every check here is deterministic and fails the build:
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
   multiple-h1         more than one H1 in a page
-  model-literal       a fenced block hardcodes a model id from docs-models.json instead of its {{role}} placeholder
+  model-literal       a fenced block hardcodes a current/historical default or a chatgpt/ model instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
+  card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
+  card-too-long       card_title over 40 characters or card_summary over 120, which the Home card cannot show in full
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
+  python3 scripts/check-docs.py blog --only=card-missing,card-too-long   run only the named rules
 
 Add `nolint` to a fence's info string (```yaml nolint) to skip parsing a
 block that is intentionally a fragment.
@@ -28,9 +31,13 @@ block that is intentionally a fragment.
 Model ids in examples are `{{role}}` placeholders filled from docs-models.json
 at build time (src/remark/docs-models.js). This script applies the same
 substitution before parsing a block, and the model-literal rule fails a block
-that writes the current id itself, because that block would not follow the
-next bump. Add `keep-model-ids` to the fence line when the exact id is the
-point of the block (a price map key, a cache key, a printed log).
+that writes a current or recorded historical id itself, because that block
+would not follow the next bump. Any literal chatgpt/ model is also caught, in prose as well as code,
+even if it has never been a default. Retain earlier defaults in
+docs-models-history.json when updating docs-models.json.
+Add `keep-model-ids` to the fence line, or a `{/* keep-model-ids */}` comment on
+the prose line, when the exact id is the point (a price map key, a cache key,
+a printed log).
 
 The Python version examples use ({{python_version}}, the interpreter in the
 official Docker image) and the lowest version LiteLLM supports
@@ -292,6 +299,22 @@ def strip_inline_code(text):
     return INLINE_CODE_RE.sub("", text)
 
 
+DAY_ZERO_TAG = "day 0 support"
+CARD_FIELD_MAX = {"card_title": 40, "card_summary": 120}
+
+
+def check_launch_card(page, err):
+    tags = page.frontmatter.get("tags", "")
+    if DAY_ZERO_TAG not in tags.lower():
+        return
+    for field, limit in CARD_FIELD_MAX.items():
+        value = page.frontmatter.get(field, "").strip()
+        if not value:
+            err("card-missing", 1, f"`{DAY_ZERO_TAG}` post has no `{field}`; the Admin UI Home card needs it")
+        elif len(value) > limit:
+            err("card-too-long", 1, f"`{field}` is {len(value)} characters, max {limit}")
+
+
 def check_page(page, site, page_cache):
     errors = []
     rel = os.path.relpath(page.path, REPO_ROOT)
@@ -301,6 +324,8 @@ def check_page(page, site, page_cache):
 
     if page.unclosed_fence_line:
         err("fence-unclosed", page.unclosed_fence_line, "code fence is never closed")
+
+    check_launch_card(page, err)
 
     for line_no, raw in enumerate(page.lines, 1):
         for name in unknown_model_roles(raw):
@@ -320,7 +345,7 @@ def check_page(page, site, page_cache):
                     if m.group(0) in seen_ids:
                         continue
                     seen_ids.add(m.group(0))
-                    err("model-literal", start + offset + 1, f"hardcoded model id `{m.group(0)}`; write `{{{{{MODEL_ROLES[m.group(0)]}}}}}` so docs-models.json controls it, or add keep-model-ids if the exact id is the point")
+                    err("model-literal", start + offset + 1, model_literal_message(m.group(0)))
         if "keep-python-version" not in meta_tokens:
             for offset, l in enumerate(buf):
                 m = PYTHON_LITERAL_RE.search(l)
@@ -366,6 +391,9 @@ def check_page(page, site, page_cache):
             m = PYTHON_LITERAL_RE.search(raw)
             if m:
                 err("python-literal", line_no, python_literal_message(m.group(0)))
+        if "keep-model-ids" not in raw:
+            for m in CHATGPT_LITERAL_RE.finditer(raw):
+                err("model-literal", line_no, model_literal_message(m.group(0)))
         text = strip_inline_code(raw)
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
@@ -433,18 +461,43 @@ def load_roles():
 
 ROLE_TO_ID = load_roles()
 PYTHON_ROLES = {"python_version", "python_min_version"}
-# {model id: role}. The Python roles hold bare version numbers, which get their own rule below.
-MODEL_ROLES = {model_id: role for role, model_id in ROLE_TO_ID.items() if role not in PYTHON_ROLES}
+CHATGPT_ROLES = {"chatgpt", "chatgpt_small"}
+BARE_ID_ROLES = tuple(role for role in ROLE_TO_ID if role not in PYTHON_ROLES and role not in CHATGPT_ROLES)
+# {model id: role}. The Python roles hold bare version numbers, which get their own rule below. The ChatGPT
+# roles reuse OpenAI API ids (gpt-6.1-sol is both), so only their chatgpt/ form is matched, by its own pattern.
+MODEL_ROLES = {ROLE_TO_ID[role]: role for role in BARE_ID_ROLES}
+with open(os.path.join(REPO_ROOT, "docs-models-history.json"), encoding="utf-8") as f:
+    MODEL_HISTORY = json.load(f)
+for role, model_ids in MODEL_HISTORY.items():
+    if role not in BARE_ID_ROLES:
+        sys.exit(f"Invalid model history role: {role}")
+    for model_id in model_ids:
+        MODEL_ROLES.setdefault(model_id, role)
+for role in BARE_ID_ROLES:
+    if ROLE_TO_ID[role] not in MODEL_HISTORY.get(role, []):
+        sys.exit(f"Record {ROLE_TO_ID[role]} under {role} in docs-models-history.json; retain older entries")
 MODEL_TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 # A hardcoded id counts only as a whole token: `.` and `/` before it are boundaries
 # (azure/gpt-5.6-luna, us.anthropic.claude-sonnet-5) but `-` and `:` are not, so an
 # alias such as bedrock-claude-sonnet-5 or a header name is left alone.
+LITERAL_START = r"(?<![A-Za-z0-9:@-])"
+LITERAL_END = r"(?![A-Za-z0-9@-]|[.:][0-9])"
+CHATGPT_LITERAL = r"(?<!/)(?:(?:litellm_proxy|litellm|openai)/)?chatgpt/(?![A-Za-z0-9._-]*\.(?:json|py)\b)[A-Za-z0-9][A-Za-z0-9._-]*(?!/)"
+CHATGPT_LITERAL_RE = re.compile(LITERAL_START + CHATGPT_LITERAL + LITERAL_END)
 MODEL_LITERAL_RE = re.compile(
-    r"(?<![A-Za-z0-9:@-])(?:" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + r")(?![A-Za-z0-9@-]|[.:][0-9])"
+    LITERAL_START + "(?:" + CHATGPT_LITERAL + "|" + "|".join(re.escape(i) for i in sorted(MODEL_ROLES, key=len, reverse=True)) + ")" + LITERAL_END
 ) if MODEL_ROLES else re.compile(r"(?!x)x")
 # python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
 # `python3 -m venv` and wheel tags such as cp312 are not versions.
 PYTHON_LITERAL_RE = re.compile(r"(?<![A-Za-z0-9.])[Pp]ython[-:=@_ ]?3\.\d{1,2}(?![0-9])")
+
+
+def model_literal_message(model_id):
+    example = "chatgpt/{{chatgpt}} or chatgpt/{{chatgpt_small}}" if "chatgpt/" in model_id else "{{" + MODEL_ROLES[model_id] + "}}"
+    return (
+        f"hardcoded model id `{model_id}`; use a shared default such as `{example}` so docs-models.json controls it, "
+        "or add keep-model-ids if the exact id is the point"
+    )
 
 
 def python_literal_message(literal):
@@ -567,6 +620,7 @@ def summarize_yaml_error(e):
 
 def main(argv):
     roots = [a for a in argv if not a.startswith("--")] or ["docs"]
+    only = {rule for a in argv if a.startswith("--only=") for rule in a[len("--only="):].split(",") if rule}
     files = []
     for root in roots:
         files.extend(collect_files(os.path.join(REPO_ROOT, root) if not os.path.isabs(root) else root))
@@ -576,7 +630,7 @@ def main(argv):
     for path in files:
         page = page_cache.get(path) or Page(path)
         page_cache[path] = page
-        all_errors.extend(check_page(page, site, page_cache))
+        all_errors.extend(e for e in check_page(page, site, page_cache) if not only or e[0] in only)
 
     by_rule = {}
     for rule, rel, line_no, message in all_errors:

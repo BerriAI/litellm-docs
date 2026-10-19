@@ -1,4 +1,4 @@
-# ✨ [Beta] Project Management
+# [Beta] Project Management
 
 <EnterpriseFeature />
 

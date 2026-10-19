@@ -74,8 +74,8 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
       api_version: os.environ/AZURE_API_VERSION
     model_info:
-      input_cost_per_token: 0.000421 # 👈 ONLY to track cost per token
-      output_cost_per_token: 0.000520 # 👈 ONLY to track cost per token
+      input_cost_per_token: 0.000421 # ONLY to track cost per token
+      output_cost_per_token: 0.000520 # ONLY to track cost per token
 ```
 
 ## Override Model Cost Map
@@ -152,8 +152,8 @@ model_list:
       model: ollama/llama3
       api_base: http://localhost:11434
     model_info:
-      input_cost_per_token: 0   # 👈 Explicitly set to 0
-      output_cost_per_token: 0  # 👈 Explicitly set to 0
+      input_cost_per_token: 0   # Explicitly set to 0
+      output_cost_per_token: 0  # Explicitly set to 0
   
   # Paid cloud model - budget checks apply
   - model_name: {{openai_large}}
@@ -209,7 +209,7 @@ model_list:
       model: openai/gpt-4o-mini-audio-preview
       api_key: os.environ/OPENAI_API_KEY
     model_info:
-      base_model: gpt-4o-mini-audio-preview  # 👈 Used for pricing lookup
+      base_model: gpt-4o-mini-audio-preview  # Used for pricing lookup
       input_cost_per_token: 0.0000006
       output_cost_per_token: 0.0000024
       input_cost_per_audio_token: 0.00001

@@ -1,25 +1,38 @@
 # ChatGPT Subscription
 
-Use ChatGPT Pro/Max subscription models through LiteLLM with OAuth device flow authentication.
+Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](https://developers.openai.com/codex/pricing) for the plans, from Plus and Pro to Business and Enterprise) through LiteLLM with OAuth device flow authentication.
 
 | Property | Details |
 |-------|-------|
-| Description | ChatGPT subscription access (Codex + GPT-5.3/5.4 family) via ChatGPT backend API |
+| Description | ChatGPT subscription access via the ChatGPT backend API |
 | Provider Route on LiteLLM | `chatgpt/` |
 | Supported Endpoints | `/responses`, `/chat/completions` (bridged to Responses for supported models) |
 | API Reference | https://chatgpt.com |
 
-ChatGPT subscription access is native to the Responses API. Chat Completions requests are bridged to Responses for supported models (for example `chatgpt/gpt-5.4`).
+ChatGPT subscription access is native to the Responses API. Chat Completions requests are bridged to Responses for supported models (for example `chatgpt/{{chatgpt}}`).
+
+Use a model that your ChatGPT plan and workspace can call. [OpenAI's Codex models page](https://learn.chatgpt.com/docs/models) lists the current and retired models. That list differs from the models the OpenAI API serves.
+
+The examples use `{{chatgpt}}` and `{{chatgpt_small}}`. Check the models page for which plans can call them. As of October 2026, OpenAI rolls out GPT-6.1 Sol (`gpt-6.1-sol`) to Plus, Pro, Business, Enterprise, and Edu plans, and on Enterprise and Edu an admin has to enable GPT-6.1 Sol and GPT-6 Luna (`gpt-6-luna`) first. Free and Go plans do not get GPT-6.1 Sol at launch, and OpenAI tells them to choose GPT-6 Luna in the ChatGPT desktop app when available, so LiteLLM may not be able to call either model on those plans. A model the backend does not serve to your account, such as a retired one, fails with `The '<model>' model is not supported when using Codex with a ChatGPT account.`
 
 Notes:
 - The ChatGPT subscription backend rejects token limit fields (`max_tokens`, `max_output_tokens`, `max_completion_tokens`) and `metadata`. LiteLLM strips these fields for this provider.
 - `/v1/chat/completions` honors `stream`. When `stream` is false (default), LiteLLM aggregates the Responses stream into a single JSON response.
+- Send Responses `input` as a list of messages, as the examples below do. On LiteLLM 1.106.0, a plain string `input` fails with `{"detail":"Input must be a list"}` from both the SDK and the proxy.
 
 ## Authentication
 
 ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python SDK runs it the first time it needs a token, provided it is called from a synchronous script on the main thread: it prints a verification URL and a device code, you open the URL, sign in, and enter the code, and the tokens are stored in `~/.config/litellm/chatgpt/auth.json` for reuse. Async code, notebooks, worker threads, and the LiteLLM proxy cannot answer that prompt (older releases block on it, newer ones fail with `ChatGPT device-code login needs a human`), so for the proxy you sign in first and mount the resulting file, as described in [Sign in before starting the proxy](#sign-in-before-starting-the-proxy).
 
+Device code login has to be allowed for the account first: in ChatGPT's security settings for a personal plan, or by a workspace admin in the workspace permissions for Business and Enterprise ([OpenAI docs](https://learn.chatgpt.com/docs/auth)).
+
 ## Usage - LiteLLM Python SDK
+
+On LiteLLM 1.106.0, the `chatgpt/` provider needs the `mcp` package, which a plain `pip install litellm` does not include. Install LiteLLM with the `mcp` extra:
+
+```bash showLineNumbers title="Install"
+pip install 'litellm[mcp]'
+```
 
 ### Responses (recommended for Codex models)
 
@@ -27,8 +40,8 @@ ChatGPT subscription access uses an OAuth device code flow. The LiteLLM Python S
 import litellm
 
 response = litellm.responses(
-    model="chatgpt/gpt-5.3-codex",
-    input="Write a Python hello world"
+    model="chatgpt/{{chatgpt}}",
+    input=[{"role": "user", "content": "Write a Python hello world"}]
 )
 
 print(response)
@@ -40,7 +53,7 @@ print(response)
 import litellm
 
 response = litellm.completion(
-    model="chatgpt/gpt-5.4",
+    model="chatgpt/{{chatgpt}}",
     messages=[{"role": "user", "content": "Write a Python hello world"}]
 )
 
@@ -48,6 +61,12 @@ print(response)
 ```
 
 ## Usage - LiteLLM Proxy
+
+Install LiteLLM with the `proxy` extra, which also includes the `mcp` package:
+
+```bash showLineNumbers title="Install the proxy"
+pip install 'litellm[proxy]'
+```
 
 ### Sign in before starting the proxy
 
@@ -115,41 +134,44 @@ spec:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: chatgpt/gpt-5.4
+  - model_name: chatgpt/{{chatgpt}}
     model_info:
       mode: responses
     litellm_params:
-      model: chatgpt/gpt-5.4
-  - model_name: chatgpt/gpt-5.4-pro
+      model: chatgpt/{{chatgpt}}
+  - model_name: chatgpt/{{chatgpt_small}}
     model_info:
       mode: responses
     litellm_params:
-      model: chatgpt/gpt-5.4-pro
-  - model_name: chatgpt/gpt-5.3-codex
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-codex
-  - model_name: chatgpt/gpt-5.3-codex-spark
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-codex-spark
-  - model_name: chatgpt/gpt-5.3-instant
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-instant
-  - model_name: chatgpt/gpt-5.3-chat-latest
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-chat-latest
+      model: chatgpt/{{chatgpt_small}}
 ```
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config config.yaml
 ```
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then call the proxy:
+
+```bash showLineNumbers title="Call the proxy"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chatgpt/{{chatgpt}}", "input": [{"role": "user", "content": "Write a Python hello world"}]}'
+```
+
+## Credential Scope and Attribution
+
+A proxy uses exactly one ChatGPT login: the `auth.json` in `CHATGPT_TOKEN_DIR`, which is set once for the whole process. Every request to a `chatgpt/` model goes upstream with that file's access token and the `ChatGPT-Account-Id` taken from it, whatever virtual key made the call, and LiteLLM ignores any ChatGPT token a client sends. Every key, user, and team that can call a `chatgpt/` model therefore uses the same ChatGPT account and workspace, and users cannot bring their own ChatGPT subscription through this provider. Serving several ChatGPT accounts takes one proxy deployment per account.
+
+LiteLLM attributes `chatgpt/` requests to the calling virtual key, user, and team like any other model and records their token counts. The models have no price in the cost map, so recorded spend is $0 and `max_budget` limits never trigger; cap usage with `rpm_limit` or `tpm_limit` on keys and teams instead. On the OpenAI side, all of the usage shows up under the account that signed in.
+
+## Refresh Failures and Revocation
+
+LiteLLM refreshes only when the stored access token is expired. A 401 from the ChatGPT backend for a token that has not expired yet, for example after the session was signed out on OpenAI's side, is returned to the caller and does not trigger a refresh. When the refresh token is rejected, the proxy logs `ChatGPT refresh token failed, re-login required` and requests fail with HTTP 400 `ChatGPT device-code login needs a human`; sign in again outside the proxy and replace `auth.json`.
+
+LiteLLM has no logout or revoke call for this provider. To stop the proxy using the account, delete `auth.json` (and the Secret it was seeded from on Kubernetes) and restart the proxy. To invalidate the tokens themselves, sign the session out from the ChatGPT account's security settings.
 
 ## Configuration
 

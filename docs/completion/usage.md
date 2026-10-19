@@ -47,7 +47,10 @@ completion = completion(
 )
 
 for chunk in completion:
-  print(chunk.choices[0].delta)
+  if chunk.choices:
+    print(chunk.choices[0].delta)
+  else:
+    print(chunk.usage)
 
 ```
 
