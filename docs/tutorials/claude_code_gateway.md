@@ -1,18 +1,14 @@
 ---
 title: Claude Code SSO
-hide_table_of_contents: true
+toc_max_heading_level: 2
 description: Set up Claude Code with gateway sign-in, Lite CLI SSO, or a Claude subscription through LiteLLM.
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Claude Code SSO
 
-Choose how to sign in and which credentials to use for inference.
+Choose [Gateway setup](#gateway-setup), [Lite CLI SSO](#lite-cli-sso), or [Claude subscription through gateway](#claude-subscription).
 
-<Tabs queryString="flow">
-<TabItem value="gateway" label="Gateway setup" default>
+## Gateway setup
 
 Sign in directly from Claude Code. LiteLLM uses your organization's provider credentials and tracks usage by user and team.
 
@@ -71,8 +67,7 @@ Run `claude`, or enter `/login` in an existing session. Trust your gateway, comp
 
 For network requirements and deployment options, see [Claude's official gateway guide](https://code.claude.com/docs/en/claude-apps-gateway). The [LiteLLM gateway reference](./claude_code_gateway_reference.md) covers managed policies, session lifetime, and known limits.
 
-</TabItem>
-<TabItem value="lite-cli" label="Lite CLI SSO">
+## Lite CLI SSO
 
 Sign in to LiteLLM with your organization's SSO. Inference uses the gateway's provider credentials and is billed to your organization. A Claude subscription is not required.
 
@@ -97,8 +92,7 @@ lite claude
 
 Complete your organization's SSO in the browser. `lite claude` launches Claude Code with your LiteLLM credential. Send a prompt and check LiteLLM **Logs**.
 
-</TabItem>
-<TabItem value="subscription" label="Claude subscription">
+## Claude subscription through gateway {#claude-subscription}
 
 Use your own Claude subscription for inference while routing requests through LiteLLM. Your claude.ai login stays active.
 
@@ -124,6 +118,3 @@ lite claude     # keeps your claude.ai login; no flags needed
 Remove any `apiKeyHelper` or static API credential from your Claude Code settings before using subscription mode.
 
 `lite login` signs you in to LiteLLM. Claude Code keeps its own subscription login; if needed, sign in to your Claude account when prompted. Send a prompt and check LiteLLM **Logs**.
-
-</TabItem>
-</Tabs>
