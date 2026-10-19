@@ -8,7 +8,7 @@ Use a decision model to classify requests for LiteLLM Auto Router. Your classifi
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) and [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
+**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
 
 ## What you host
 
