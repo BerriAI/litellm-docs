@@ -191,7 +191,7 @@ router_settings:
   disable_cooldowns: True                  # bool - Disable cooldowns for all models 
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
-  tag_routing_prefix: "route:"              # string - Opt-in marker prefix (default ""). A request tag starting with this exact string is stripped and matched as an explicit routing directive, skipping the known-tag-vocabulary heuristic. Unprefixed tags keep matching as today.
+  tag_routing_prefix: "route:"              # string - Opt-in marker prefix (default ""). A request tag starting with this exact string is stripped and matched as an explicit routing directive, skipping the known-tag-vocabulary heuristic. Once set, unprefixed request tags are ignored by routing, except key/team/project tags, which keep applying.
   retry_policy: {                          # Dict[str, int]: retry policy for different types of exceptions
     "AuthenticationErrorRetries": 3,
     "TimeoutErrorRetries": 3,
@@ -486,7 +486,7 @@ router_settings:
   disable_cooldowns: True                  # bool - Disable cooldowns for all models
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
-  tag_routing_prefix: "route:"              # string - Opt-in marker prefix (default ""). A request tag starting with this exact string is stripped and matched as an explicit routing directive, skipping the known-tag-vocabulary heuristic. Unprefixed tags keep matching as today.
+  tag_routing_prefix: "route:"              # string - Opt-in marker prefix (default ""). A request tag starting with this exact string is stripped and matched as an explicit routing directive, skipping the known-tag-vocabulary heuristic. Once set, unprefixed request tags are ignored by routing, except key/team/project tags, which keep applying.
   retry_policy: {                          # Dict[str, int]: retry policy for different types of exceptions
     "AuthenticationErrorRetries": 3,
     "TimeoutErrorRetries": 3,
@@ -525,7 +525,7 @@ router_settings:
 | fallback_budget_check | Optional[FallbackBudgetCheck] | `null` | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects as over budget are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_budget`. [More information here](reliability#enforce-budget-on-fallbacks) |
 | fallback_on_unsupported_params | bool | `true` | When `false`, a 400 for the model the caller named is raised to the caller instead of trying fallbacks, both a param LiteLLM rejects before sending (`UnsupportedParamsError`, for example a `stop` list longer than the model allows) and a 400 the provider answers (for example `reasoning_effort="none"` on a model that does not accept it). The Router's own 400s (a deployment reserved for another team, no healthy deployments), context window errors and content policy errors keep falling back |
 | tag_filtering_match_any | boolean | `true` | Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags |
-| tag_routing_prefix | string | `""` (off) | Default `""` (no-op). A request tag starting with this exact string is stripped and matched as an explicit, trusted routing directive, exempt from the heuristic that otherwise infers routing intent from deployment tag vocabulary. Unprefixed tags keep matching as today. [Tag Based Routing](tag_routing) |
+| tag_routing_prefix | string | `""` (off) | Default `""` (no-op). A request tag starting with this exact string is stripped and matched as an explicit, trusted routing directive, exempt from the heuristic that otherwise infers routing intent from deployment tag vocabulary. Once set, unprefixed request tags are ignored by routing, except key/team/project tags, which keep applying. [Tag Based Routing](tag_routing) |
 | cooldown_time | integer | `5` (seconds) | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
 | disable_cooldowns | boolean | `false` | If true, disables cooldowns for all models. [More information here](reliability) |
 | retry_policy | object | `null` | Specifies the number of retries for different types of exceptions. [More information here](reliability) |
