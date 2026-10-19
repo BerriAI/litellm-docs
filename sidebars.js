@@ -1524,6 +1524,7 @@ const sidebars = {
           "providers/novita",
           { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
           "providers/nvidia_riva",
+          "providers/oceantoken",
           "providers/oci",
           "providers/openinfer",
           "providers/ovhcloud",
