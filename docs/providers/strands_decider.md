@@ -26,7 +26,7 @@ Without `--device`, the server picks CUDA, then MPS, then CPU. Pass `--device cu
 
 The `strands-decider-2B-hobson-v21` checkpoint works the same way. Serve it instead and set `model` to `strands_decider/strands-decider-2B-hobson-v21` in the examples below.
 
-The server binds to `127.0.0.1` and has no authentication, and its model card says to use it for local experiments. Run LiteLLM on the same machine when you can. When LiteLLM runs in a container or on another machine, pass `--host` with an address only LiteLLM can reach, such as a private network address, or keep the server on `127.0.0.1` behind a reverse proxy that checks a bearer token and set `STRANDS_DECIDER_API_KEY` to that token.
+The server binds to `127.0.0.1` and has no authentication, and its model card says to use it for local experiments. Run LiteLLM on the same machine when you can. When LiteLLM runs in a container or on another machine, keep the server on `127.0.0.1` behind a reverse proxy that checks a bearer token, and set `STRANDS_DECIDER_API_KEY` to that token. `--host` changes the address the server binds to, but anything that can reach that address can call the server without a token.
 
 Check that the server answers.
 
@@ -208,11 +208,11 @@ Response
 }
 ```
 
-The server adds `latency_ms`, and LiteLLM passes it through on `/v1/systemone`. On an 8-vCPU machine with no GPU, each of these three-question requests took 5 to 9 seconds through the proxy.
+The server adds `latency_ms`, and LiteLLM passes it through on `/v1/systemone`.
 
 ## SDK
 
-Call the server from Python with `litellm.decisions` for the OpenAI Decisions format or `litellm.systemone` for the System One format. [SDK usage](../decisions.md#sdk-usage) covers the async versions and the other arguments.
+Call the server from Python with `litellm.decisions` for the OpenAI Decisions format or `litellm.systemone` for the System One format. `litellm.systemone` is available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. [SDK usage](../decisions.md#sdk-usage) covers the async versions and the other arguments.
 
 ```python showLineNumbers title="OpenAI Decisions format"
 import os
@@ -254,4 +254,4 @@ The LiteLLM cost map prices `strands_decider/strands-decider-2B-hobson-v19` at $
 
 ## Use it as the Auto Router classifier
 
-Strands Decider can pick the model tier for each request in LiteLLM Auto Router. Add the deployment above to `model_list` and set `deployment_name` in the router's `opensource_classifier_config` to its `model_name`, as shown in [Use a deployed decision model](../auto_router/decision_classifiers.md#use-a-deployed-decision-model). Available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. A server on CPU can need far more than the classifier's 3000 ms default timeout. On an 8-vCPU machine with no GPU, requests through the router took 10 to 18 seconds, so with `timeout_ms: 15000` the router fell back to its default model, and with `timeout_ms: 120000` it routed every request. The `x-litellm-complexity-router-cause` response header is `jev_classifier` when the classifier answered and `default_model_fallback` when it did not.
+Strands Decider can pick the model tier for each request in LiteLLM Auto Router. Add the deployment above to `model_list` and set `deployment_name` in the router's `opensource_classifier_config` to its `model_name`, as shown in [Use a deployed decision model](../auto_router/decision_classifiers.md#use-a-deployed-decision-model). Available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. A server on CPU can need far more than the classifier's 3000 ms default timeout, so time a few requests to your server after warm-up and set `timeout_ms` above that. With `classifier_fallback: default_model`, as in that example, the `x-litellm-complexity-router-cause` response header is `jev_classifier` when the classifier answered and `default_model_fallback` when it did not.
