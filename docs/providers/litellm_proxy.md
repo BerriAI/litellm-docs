@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 ## Required Variables
 
 ```python
-os.environ["LITELLM_PROXY_API_KEY"] = "" # "sk-1234" your litellm proxy api key 
+os.environ["LITELLM_PROXY_API_KEY"] = "" # "sk-<your-litellm-api-key>" your litellm proxy api key 
 os.environ["LITELLM_PROXY_API_BASE"] = "" # "http://localhost:4000" your litellm proxy api base
 ```
 
@@ -264,7 +264,7 @@ response = litellm.completion(
     model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     extra_body={"tags": ["user:ishaan", "department:engineering", "priority:high"]}
 )
 ```
@@ -278,7 +278,7 @@ response = await litellm.acompletion(
     model="{{openai_large}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     api_base="http://localhost:4000", 
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     extra_body={"tags": ["user:ishaan", "department:engineering"]}
 )
 ```

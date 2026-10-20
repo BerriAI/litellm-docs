@@ -9,7 +9,7 @@ Tool search enables Claude to dynamically discover and load tools on-demand from
 | **Anthropic API** | ✅ | ✅ |
 | **Azure Anthropic** (Microsoft Foundry) | ✅ | ✅ |
 | **Google Cloud Vertex AI** | ✅ | ✅ |
-| **Amazon Bedrock** | ✅ (Invoke API only, Opus 4.5 only) | ✅ (Invoke API only, Opus 4.5 only) |
+| **Amazon Bedrock** | ✅ (Invoke API only, Claude 4.5 and newer) | ✅ (Invoke API only, Claude 4.5 and newer) |
 
 
 ## Benefits

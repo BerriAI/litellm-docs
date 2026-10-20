@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Swap the full MCP catalog for a fixed set of virtual tools (`mcp_tool_search`, `mcp_tool_call`, `agent_search`, `skill_search`) so a key with hundreds of tools available only ever exposes four on `tools/list`. The LLM searches by keyword, gets back the ranked matches, then calls the discovered tool by name. `agent_search` does the same for the [A2A agent registry](./a2a.md#search-the-registry) and `skill_search` for the [LiteLLM-hosted skill registry](./skills.md#semantic-search-over-litellm-hosted-skills), both ranked by embeddings instead of keywords.
 
-:::info Related Documentation
+:::info[Related Documentation]
 - [MCP Overview](./mcp.md)
 - [MCP Permission Management](./mcp_control.md) for the underlying `object_permission` model
 - [MCP Semantic Filter](./mcp_semantic_filter.md) for the embeddings-based alternative applied at the `/v1/responses` layer

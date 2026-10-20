@@ -1,4 +1,4 @@
-# ✨ Budget / Rate Limit Tiers
+# Budget / Rate Limit Tiers
 
 Define tiers with rate limits. Assign them to keys. 
 
@@ -10,7 +10,7 @@ Use this to control access and budgets across a lot of keys.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier",
@@ -22,7 +22,7 @@ curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "my-test-tier"
@@ -45,7 +45,7 @@ Expected Response:
 ## 3. Check if budget is enforced on key 
 
 ```bash
-# Authorization: 👈 KEY from step 2.
+# Authorization: KEY from step 2.
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-...' \
@@ -58,5 +58,5 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 ```
 
 
-## [API Reference](https://litellm-api.up.railway.app/#/budget%20management)
+## [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management)
 

@@ -10,8 +10,8 @@ LiteLLM supports all models from [DataRobot](https://datarobot.com). Select `dat
 ```python
 import os
 from litellm import completion
-os.environ["DATAROBOT_API_KEY"] = ""
-os.environ["DATAROBOT_API_BASE"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
+os.environ["DATAROBOT_API_TOKEN"] = ""
+os.environ["DATAROBOT_ENDPOINT"] = "" # [OPTIONAL] defaults to https://app.datarobot.com
 
 response = completion(
             model="datarobot/openai/{{openai_small}}",
@@ -39,6 +39,6 @@ print(response)
 
 ## DataRobot completion models
 
-🚨 LiteLLM supports _all_ DataRobot LLM gateway models. To get a list for your installation and user account, send the following CURL command:
+LiteLLM supports _all_ DataRobot LLM gateway models. To get a list for your installation and user account, send the following CURL command:
 `curl -X GET -H "Authorization: Bearer $DATAROBOT_API_TOKEN" "$DATAROBOT_ENDPOINT/genai/llmgw/catalog/" | jq | grep 'model":'DATAROBOT_ENDPOINT/genai/llmgw/catalog/`
 

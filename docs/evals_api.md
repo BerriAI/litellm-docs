@@ -28,7 +28,7 @@ from openai import OpenAI
 
 # Point to your LiteLLM Proxy
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy API key
     base_url="http://localhost:4000"  # Your proxy URL
 )
 ```
@@ -40,7 +40,7 @@ For async operations:
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 ```
@@ -59,7 +59,7 @@ Create an evaluation with testing criteria and data source configuration.
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -105,7 +105,7 @@ This example shows how to monitor prompt changes for regressions in a push notif
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -244,7 +244,7 @@ from openai import AsyncOpenAI
 import asyncio
 
 client = AsyncOpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 

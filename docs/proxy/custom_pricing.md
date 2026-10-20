@@ -24,6 +24,16 @@ LiteLLM already has pricing for 100+ models in our [model cost map](https://gith
 
 ## Cost Per Second (e.g. Sagemaker)
 
+For chat, completion, embedding and responses models, set `cost_per_second`. LiteLLM multiplies it by the full request
+duration, including streaming until the last chunk, and ignores it when per-token pricing is configured
+
+For chat, completion, embedding and responses, `input_cost_per_second` and `output_cost_per_second` remain accepted as
+legacy aliases. `cost_per_second` takes precedence, followed by `input_cost_per_second` and then
+`output_cost_per_second`; the resolved rate is charged once, not added. Transcription, speech and video continue to use
+`input_cost_per_second` and `output_cost_per_second`
+
+`cost_per_second` needs v1.105.0 or later. On earlier versions, use `input_cost_per_second`
+
 #### Usage with LiteLLM Proxy Server
 
 **Step 1: Add pricing to config.yaml**
@@ -33,18 +43,18 @@ model_list:
     litellm_params:
       model: sagemaker/berri-benchmarking-Llama-2-70b-chat-hf-4
     model_info:
-      input_cost_per_second: 0.000420
+      cost_per_second: 0.000420
   - model_name: sagemaker-embedding-model
     litellm_params:
       model: sagemaker/berri-benchmarking-gpt-j-6b-fp16
     model_info:
-      input_cost_per_second: 0.000420 
+      cost_per_second: 0.000420
 ```
 
 **Step 2: Start proxy**
 
 ```bash
-litellm /path/to/config.yaml
+litellm --config /path/to/config.yaml
 ```
 
 **Step 3: View Spend Logs**
@@ -64,8 +74,8 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
       api_version: os.environ/AZURE_API_VERSION
     model_info:
-      input_cost_per_token: 0.000421 # 👈 ONLY to track cost per token
-      output_cost_per_token: 0.000520 # 👈 ONLY to track cost per token
+      input_cost_per_token: 0.000421 # ONLY to track cost per token
+      output_cost_per_token: 0.000520 # ONLY to track cost per token
 ```
 
 ## Override Model Cost Map
@@ -96,7 +106,7 @@ There are other keys you can use to specify costs for different scenarios and mo
 - `input_cost_per_token_above_200k_tokens` - Cost for input tokens when context exceeds 200k tokens
 - `output_cost_per_token_above_200k_tokens` - Cost for output tokens when context exceeds 200k tokens  
 - `cache_creation_input_token_cost_above_200k_tokens` - Cache creation cost for large contexts
-- `cache_read_input_token_cost_above_200k_token` - Cache read cost for large contexts
+- `cache_read_input_token_cost_above_200k_tokens` - Cache read cost for large contexts
 - `input_cost_per_image` - Cost per image in multimodal requests
 - `output_cost_per_reasoning_token` - Cost for reasoning tokens (e.g., OpenAI o1 models)
 - `input_cost_per_audio_token` - Cost for audio input tokens
@@ -106,6 +116,8 @@ There are other keys you can use to specify costs for different scenarios and mo
 - `input_cost_per_character` - Character-based pricing for some providers
 - `input_cost_per_token_priority` / `output_cost_per_token_priority` - Priority/PayGo pricing (Vertex AI Gemini, Bedrock)
 - `input_cost_per_token_flex` / `output_cost_per_token_flex` - Batch/flex pricing
+- `ocr_cost_per_page` / `annotation_cost_per_page` - Per-page pricing for `/v1/ocr` calls (Mistral OCR)
+- `ocr_cost_per_page_batches` / `annotation_cost_per_page_batches` - Per-page pricing for OCR pages processed through `/v1/batches`, falling back to the synchronous per-page keys when unset. See [Batch OCR cost tracking](../providers/mistral_batches#batch-ocr-cost-tracking)
 
 These keys evolve based on how new models handle multimodality. The latest version can be found at [https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 
@@ -140,8 +152,8 @@ model_list:
       model: ollama/llama3
       api_base: http://localhost:11434
     model_info:
-      input_cost_per_token: 0   # 👈 Explicitly set to 0
-      output_cost_per_token: 0  # 👈 Explicitly set to 0
+      input_cost_per_token: 0   # Explicitly set to 0
+      output_cost_per_token: 0  # Explicitly set to 0
   
   # Paid cloud model - budget checks apply
   - model_name: {{openai_large}}
@@ -197,7 +209,7 @@ model_list:
       model: openai/gpt-4o-mini-audio-preview
       api_key: os.environ/OPENAI_API_KEY
     model_info:
-      base_model: gpt-4o-mini-audio-preview  # 👈 Used for pricing lookup
+      base_model: gpt-4o-mini-audio-preview  # Used for pricing lookup
       input_cost_per_token: 0.0000006
       output_cost_per_token: 0.0000024
       input_cost_per_audio_token: 0.00001

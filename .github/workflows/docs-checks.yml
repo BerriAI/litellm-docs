@@ -5,21 +5,65 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  docs-search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:search
+      - run: npm run test:workshop
+      - run: npm run typecheck
+      - run: npm run test:rust-migration
+      # The required Vercel check runs npm run build, including search indexing.
+  social-cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:social-cards
+      - run: npm run test:optimize-images
+      - run: npm run test:lens
+      - run: node --test scripts/docs-models.test.cjs
   writing-style:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: node scripts/check-writing-style.js docs blog release_notes
   structure:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check for retired master-key prefix
+        run: |
+          status=0
+          git grep -nI -F -- "sk-12""34" || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "Retired master-key prefix found"
+            exit 1
+          fi
+          if [ "$status" -ne 1 ]; then
+            exit "$status"
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - run: pip install pyyaml
+      - run: python3 scripts/test_docs_models.py
       - run: python3 scripts/check-docs.py docs
+      - run: python3 scripts/check-docs.py blog --only=card-missing,card-too-long

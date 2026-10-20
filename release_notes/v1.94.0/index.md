@@ -1,5 +1,6 @@
 ---
-title: "v1.94.0 - Router Plugins, MCP Client-Held Credentials & Shared DataTable UI"
+title: "LiteLLM v1.94.0 - Router Plugins, MCP Client-Held Credentials & Shared DataTable UI"
+description: "Adds a router plugin pipeline, a beta Cost Optimization page and Python 3.14 support. Known issue: user budgets applied to team keys."
 slug: "v1-94-0"
 date: 2026-07-28T00:00:00
 authors:
@@ -43,7 +44,7 @@ pip install litellm==1.94.0
 </TabItem>
 </Tabs>
 
-:::danger Known issue - fixed in v1.94.1
+:::danger[Known issue - fixed in v1.94.1]
 
 **A user's personal `max_budget` was enforced on their team keys, which could lock them out of the Admin UI.** Upgrade to [`v1.94.1`](/release_notes/v1.94.1/v1-94-1).
 
@@ -53,7 +54,7 @@ Once a user's personal spend crossed their own budget, their team keys returned 
 
 :::
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **`timeout`, `stream_timeout`, and `request_timeout` in `litellm_params` are now enforced on `/v1/messages` traffic.** Earlier versions silently ignored these values for Anthropic Messages API calls, which always ran with the 600s client default. They now apply, and for streaming requests `stream_timeout` caps the wait between any two chunks of the stream, not only the first token. A low value that previously had no effect, such as `stream_timeout: 30`, will now fail long-running Claude streams mid-response with `ReadTimeout: Timeout on reading data from socket`. Review these values on your Anthropic and Bedrock Claude deployments before upgrading. See [PR #33418](https://github.com/BerriAI/litellm/pull/33418).
 

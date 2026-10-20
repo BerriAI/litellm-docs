@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # OpenAI - Response API
 
+To use Fast mode on supported OpenAI models or Ultrafast on GPT-6 Astra, see [Fast & Ultrafast mode](./ultrafast.md) for Admin UI setup, configuration, and request examples.
+
 ## Usage
 
 ### LiteLLM Python SDK
@@ -197,7 +199,7 @@ from openai import OpenAI
 import base64
 
 # Initialize client with your proxy URL
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000")
+client = OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://localhost:4000")
 
 stream = client.responses.create(
     model="{{openai_large}}",

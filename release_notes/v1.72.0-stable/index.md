@@ -1,5 +1,6 @@
 ---
-title: "v1.72.0-stable"
+title: "LiteLLM v1.72.0-stable"
+description: "Adds vector store permissions per key, team and organization, sliding window rate limits, aiohttp transport by default and Bedrock Agents."
 slug: "v1-72-0-stable"
 date: 2025-05-31T10:00:00
 authors:
@@ -229,6 +230,6 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 ## [Git Diff](https://github.com/BerriAI/litellm/releases)

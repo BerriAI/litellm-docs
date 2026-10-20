@@ -71,7 +71,7 @@ litellm --config config.yaml
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: "sk-1234",  // LiteLLM virtual key (not a Google key)
+  apiKey: "sk-<your-api-key>",  // LiteLLM virtual key (not a Google key)
   httpOptions: {
     baseUrl: "http://localhost:4000/gemini",  // LiteLLM proxy URL
   },
@@ -95,7 +95,7 @@ main();
 from google import genai
 
 client = genai.Client(
-    api_key="sk-1234",  # LiteLLM virtual key (not a Google key)
+    api_key="sk-<your-litellm-api-key>",  # LiteLLM virtual key (not a Google key)
     http_options={"base_url": "http://localhost:4000/gemini"},  # LiteLLM proxy URL
 )
 
@@ -110,7 +110,7 @@ print(response.text)
 <TabItem value="curl" label="curl">
 
 ```bash
-curl "http://localhost:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=sk-1234" \
+curl "http://localhost:4000/gemini/v1beta/models/{{gemini_flash}}:generateContent?key=sk-<your-litellm-api-key>" \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
@@ -132,7 +132,7 @@ curl "http://localhost:4000/gemini/v1beta/models/{{gemini_flash}}:generateConten
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   httpOptions: {
     baseUrl: "http://localhost:4000/gemini",
   },
@@ -159,7 +159,7 @@ main();
 from google import genai
 
 client = genai.Client(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     http_options={"base_url": "http://localhost:4000/gemini"},
 )
 
@@ -184,7 +184,7 @@ for chunk in response:
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   httpOptions: {
     baseUrl: "http://localhost:4000/gemini",
   },
@@ -212,7 +212,7 @@ main();
 from google import genai
 
 client = genai.Client(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     http_options={"base_url": "http://localhost:4000/gemini"},
 )
 
@@ -323,7 +323,7 @@ Then use the SDK with `baseUrl` pointing to LiteLLM (without `/gemini`):
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: "sk-1234",
+  apiKey: "sk-<your-api-key>",
   httpOptions: {
     baseUrl: "http://localhost:4000",  // No /gemini — goes through the router
   },
@@ -348,7 +348,7 @@ main();
 from google import genai
 
 client = genai.Client(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     http_options={"base_url": "http://localhost:4000"},  # No /gemini
 )
 
@@ -386,12 +386,12 @@ You can also configure the SDK via environment variables instead of code:
 ```bash
 # For JavaScript SDK (@google/genai)
 export GOOGLE_GEMINI_BASE_URL="http://localhost:4000/gemini"
-export GEMINI_API_KEY="sk-1234"
+export GEMINI_API_KEY="sk-<your-litellm-api-key>"
 
 # For Python SDK (google-genai)
 # Note: The Python SDK does not support a base URL env var.
 # Configure it in code with http_options={"base_url": "..."} instead.
-export GEMINI_API_KEY="sk-1234"
+export GEMINI_API_KEY="sk-<your-litellm-api-key>"
 ```
 
 This is especially useful for tools built on top of the GenAI SDK (like [Gemini CLI](./litellm_gemini_cli.md)).

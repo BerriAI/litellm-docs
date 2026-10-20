@@ -1,5 +1,6 @@
 ---
-title: "v1.80.8-stable - Introducing A2A Agent Gateway"
+title: "LiteLLM v1.80.8-stable - Introducing A2A Agent Gateway"
+description: "Adds the A2A Agent Gateway, Guardrails API v2 and an end-user usage UI. Adds vLLM batch and files API support and Google Chirp3 HD voices."
 slug: "v1-80-8"
 date: 2025-12-06T10:00:00
 authors:
@@ -78,7 +79,7 @@ from a2a.client import A2AClient
 
 client = A2AClient(
     base_url="http://localhost:4000",  # Your LiteLLM proxy
-    api_key="sk-1234"                   # LiteLLM API key
+    api_key="sk-<your-litellm-api-key>"                   # LiteLLM API key
 )
 
 response = client.send_message(

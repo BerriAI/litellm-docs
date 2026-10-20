@@ -1,3 +1,7 @@
+---
+sidebar_label: "Traffic Mirroring"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -26,7 +30,7 @@ model_list = [
         "litellm_params": {
             "model": "azure/chatgpt-v-2",
             "api_key": "...",
-            "silent_model": "{{openai_large}}" # 👈 Mirror traffic to {{openai_large}}
+            "silent_model": "{{openai_large}}" # Mirror traffic to {{openai_large}}
         },
     },
     {
@@ -58,7 +62,7 @@ model_list:
     litellm_params:
       model: azure/{{openai_small}}
       api_key: os.environ/AZURE_API_KEY
-      silent_model: evaluation-model # 👈 Mirror traffic here
+      silent_model: evaluation-model # Mirror traffic here
   - model_name: evaluation-model
     litellm_params:
       model: openai/{{openai_large}}

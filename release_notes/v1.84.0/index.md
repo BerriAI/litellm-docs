@@ -1,5 +1,6 @@
 ---
-title: "v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+title: "LiteLLM v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+description: "Makes pass-through endpoints require auth by default and adds Routing Groups for per-model strategies. Also improves multi-pod budget accuracy."
 slug: "v1-84-0"
 date: 2026-05-14T00:00:00
 authors:
@@ -178,6 +179,17 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
       key_alias="ci-mock-key",
       metadata={"allow_client_mock_response": True},
   )
+  ```
+
+#### `LiteLLM-Changed-By` audit attribution requires opt-in
+- **What changed:** Audit logs only honor the `LiteLLM-Changed-By` header when the calling key (or its team) carries `allow_litellm_changed_by_header: true` in its metadata. Without the opt-in, `changed_by` falls back to the calling key's `user_id`. Previously the header was honored unconditionally, which let any caller rewrite audit attribution.
+- **Who is affected:** Platforms that call management endpoints on behalf of users and rely on the header for the audit trail's Changed By value. The master key cannot opt in (it has no stored metadata); send the header with an admin virtual key instead.
+- **Restore prior behavior:** Set the opt-in on the key that sends the header (or on its team):
+  ```shell
+  curl -X POST 'http://0.0.0.0:4000/key/update' \
+      -H "Authorization: Bearer $LITELLM_API_KEY" \
+      -H 'Content-Type: application/json' \
+      -d '{"key": "<admin key that sends the header>", "metadata": {"allow_litellm_changed_by_header": true}}'
   ```
 
 #### Error responses no longer leak re-raised local parameters

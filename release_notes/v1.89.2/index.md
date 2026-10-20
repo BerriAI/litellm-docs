@@ -1,5 +1,6 @@
 ---
-title: "v1.89.2 - Cost Tracking & Model-List Fixes"
+title: "LiteLLM v1.89.2 - Cost Tracking & Model-List Fixes"
+description: "Fixes cost tracking for non-string service_tier values and /v1/models listing for team and BYOK setups. Adds an opt-in healthy_only filter."
 slug: "v1-89-2"
 date: 2026-06-17T19:22:38
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info Update: no performance regression found
+:::info[Update: no performance regression found]
 
 An earlier version of this note flagged a potential throughput regression. We investigated and could not confirm or reproduce any regression in the released version. The one report we received came from a deployment running custom code on top of what we shipped, and our testing points to those changes, not LiteLLM, as the likely cause.
 

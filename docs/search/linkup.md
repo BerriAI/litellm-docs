@@ -47,7 +47,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Test Request"
 curl http://0.0.0.0:4000/v1/search/linkup-search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "latest AI developments",
@@ -127,6 +127,12 @@ response = search(
     structuredOutputSchema='{"type": "object", "properties": {"revenue": {"type": "string"}, "year": {"type": "string"}}}'
 )
 ```
+
+## Cost
+
+LiteLLM prices each Linkup search from the [model cost map](/docs/proxy/model_cost_map). A search sent with `depth: "deep"` is billed at the `linkup/search-deep` entry, and a `standard` search, or one without `depth`, is billed at `linkup/search`. This applies to the SDK, every `/search` route on the proxy, and web searches the proxy runs for [web search interception](/docs/integrations/websearch_interception).
+
+To bill your own rate for both depths, set `input_cost_per_query` on the search tool, as described in [Custom Per-Query Pricing](/docs/search#custom-per-query-pricing). A price you register for `linkup/search` with `litellm.register_model` keeps applying to deep searches until you also register `linkup/search-deep`.
 
 ## Response Format
 

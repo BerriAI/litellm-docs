@@ -1,5 +1,6 @@
 ---
-title: "v1.80.0-stable - Introducing Agent Hub: Register, Publish, and Share Agents"
+title: "LiteLLM v1.80.0-stable - Introducing Agent Hub: Register, Publish, and Share Agents"
+description: "Adds Agent Hub, RunwayML video and image generation, and GPT-5.1 support. Adds Prometheus metrics to the open-source version."
 slug: "v1-80-0"
 date: 2025-11-15T10:00:00
 authors:
@@ -108,7 +109,7 @@ Complete integration for RunwayML's Gen-4 family of models, supporting video gen
 ```bash showLineNumbers title="Generate Video with RunwayML"
 curl --location 'http://localhost:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "runwayml/gen4_turbo",
     "prompt": "A high quality demo video of litellm ai gateway",
@@ -155,7 +156,7 @@ Complete OpenAI-compatible Vector Store Files API now stable, enabling full file
 ```bash showLineNumbers title="Create Vector Store File"
 curl --location 'http://localhost:4000/v1/vector_stores/vs_123/files' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "file_id": "file_abc"
 }'

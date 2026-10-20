@@ -16,7 +16,7 @@ The load testing was conducted using the following parameters:
 - **Machine Specs:** 2 vCPUs, 4GB RAM
 - **LiteLLM Settings:**
     - Tested against a [fake openai endpoint](https://exampleopenaiendpoint-production.up.railway.app/)
-    - Set `USE_AIOHTTP_TRANSPORT="True"` in the environment variables. This feature flag enables the aiohttp transport.
+    - aiohttp was opt-in at v1.71.1, so the aiohttp run set `USE_AIOHTTP_TRANSPORT="True"`. That flag no longer exists and has no effect: aiohttp is now the default transport and needs no setting. To get the httpx transport instead (for example to reproduce the httpx baseline), set `DISABLE_AIOHTTP_TRANSPORT="True"` or `litellm.disable_aiohttp_transport = True`. Enabling HTTP/2 (`LITELLM_HTTP2="True"`) also forces httpx
 
 
 ## Benchmark Results

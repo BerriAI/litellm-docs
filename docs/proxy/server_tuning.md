@@ -20,7 +20,7 @@ LiteLLM Proxy runs on [Uvicorn](https://uvicorn.dev/) by default. Passing `--run
 | **Worker recycling** | Uvicorn's [`limit_max_requests`](https://uvicorn.dev/settings/#resource-limits). | Gunicorn's [`max_requests`](https://gunicorn.org/reference/settings/#max_requests), the battle-tested mechanism Gunicorn has shipped for years. |
 | **Process supervision** | Uvicorn's built-in multiprocess manager. | Gunicorn's [arbiter](https://gunicorn.org/design/#arbiter), which restarts workers one at a time as they exit. |
 
-:::tip Recommendation
+:::tip[Recommendation]
 
 On Kubernetes, run **one Uvicorn worker per pod** and scale **horizontally** (more pods) rather than vertically (more workers per pod). One process per pod keeps latency predictable under load, lets the Horizontal Pod Autoscaler use the [thresholds in the production checklist](./prod.md#autoscaling) accurately, and makes rolling restarts hitless because Kubernetes drains one pod at a time. Reach for Gunicorn only when you must pack multiple workers into one container.
 
@@ -32,11 +32,17 @@ If you observe gradual memory growth under sustained load, recycle each worker a
 
 ```shell
 # CLI
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "2", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
 
 # or ENV (for deployment manifests / containers)
 export MAX_REQUESTS_BEFORE_RESTART=10000
 ```
+
+:::warning
+
+Only use `--max_requests_before_restart` with two or more workers. With `--num_workers 1` there is no other worker to keep serving, so hitting the limit takes the whole pod out of service: Uvicorn exits the process with code 0 and the container restarts, and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup when the flag is set with a single worker. Every HTTP request counts toward the limit, health probes included, so two probes every 15 seconds use up 11,520 requests a day on their own. With one worker per pod, rely on Kubernetes replacing pods instead.
+
+:::
 
 :::tip
 
@@ -60,7 +66,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
 
-**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). With one worker per pod, recycling briefly reduces that pod's capacity, which is why we recommend scaling horizontally so the load balancer can route around it.
+**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). This only holds with two or more workers, where the other workers keep serving while one is replaced. With one worker per pod, recycling takes the pod out of service instead of reducing its capacity, so do not use `--max_requests_before_restart` there (see [Recycle workers](#recycle-workers)).
 
 **Rolling deploys and pod restarts (Kubernetes).** Make restarts hitless at the orchestration layer rather than relying on the server alone:
 
@@ -120,15 +126,28 @@ docker run \
     -v $(pwd)/proxy_config.yaml:/app/config.yaml \
     -p 4000:4000 \
     -e DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname> \
-    -e LITELLM_MASTER_KEY="sk-1234" \
+    -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
     your_custom_docker_image \
     --config /app/config.yaml \
     --run_hypercorn
 ```
 
+## Outbound HTTP/2 to providers
+
+Available from v1.103.0.
+
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+
+```yaml
+litellm_settings:
+  http2: true
+```
+
+Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2. Deployments on the `aiohttp_openai/` provider always use aiohttp and stay on HTTP/1.1; LiteLLM logs a warning if the flag is on for such a request.
+
 ## Granian ASGI server [Beta]
 
-:::info Beta feature
+:::info[Beta feature]
 `--run_granian` is in **beta**. Uvicorn is still the default server. Try Granian when you need more gateway throughput or see instability under load with uvicorn; report issues on [GitHub](https://github.com/BerriAI/litellm/issues).
 :::
 
