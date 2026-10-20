@@ -88,6 +88,8 @@ You can also enable **Kubernetes pod discovery** in **Add Model > Advanced Setti
 
 Coding-agent harnesses can supply this automatically. LiteLLM recognizes session headers from Claude Code, Codex, and OpenCode. When those stable session IDs reach the proxy, you do not need to add `litellm_session_id` manually.
 
+**Example: Set a session ID manually.** Reuse `conversation-123` for subsequent requests in this conversation.
+
 ```bash
 curl http://localhost:4000/v1/chat/completions \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
@@ -101,6 +103,8 @@ curl http://localhost:4000/v1/chat/completions \
     ]
   }'
 ```
+
+**Recognized session ID sources.** LiteLLM reads session IDs from these request-body fields and HTTP headers.
 
 | Recognized source | Location and behavior |
 | --- | --- |
