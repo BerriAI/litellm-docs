@@ -42,7 +42,7 @@ The [Decision Model guardrail](/docs/proxy/guardrails/decision_model) turns yes/
 
 <img src={require('./guardrail.gif').default} width="800" alt="Create guardrail in the Admin UI: Decision Model provider picked, jev-latest chosen, a prompt_injection question set to Block at a 0.70 threshold, then two test runs: an injection attempt scores 0.99 and blocks, a refund policy question scores 0.06 and passes" />
 
-Setup, the request and response formats, the provider table and SDK usage are in the [decisions docs](/docs/decisions).
+Setup is in the [decisions docs](/docs/decisions), the request formats are on the [/v1/decisions](/docs/decisions/openai_format) and [/v1/systemone](/docs/decisions/systemone_format) pages, and the provider table and SDK usage are on the [Supported providers](/docs/decisions/providers) and [SDK usage](/docs/decisions/sdk) pages.
 
 ## Feedback
 

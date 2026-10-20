@@ -9,8 +9,8 @@ Decision models answer typed questions about an input and return probabilities i
 
 | Route | Alias | Request format | Use it when |
 |-------|-------|----------------|-------------|
-| `POST /v1/decisions` | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice`, `score` and `box` questions | You write against OpenAI's format |
-| `POST /v1/systemone` | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice`, `score` and `box` questions | You already have TypeSafe Jev request bodies |
+| [`POST /v1/decisions`](./openai_format.md) | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice`, `score` and `box` questions | You write against OpenAI's format |
+| [`POST /v1/systemone`](./systemone_format.md) | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice`, `score` and `box` questions | You already have TypeSafe Jev request bodies |
 
 ## Use decision models with the LiteLLM proxy {#proxy-setup}
 
@@ -42,14 +42,13 @@ Decision routes are available in LiteLLM `v1.104.2` and later. Some providers an
 
 | Provider or feature | Release |
 |---------------------|---------|
-| vLLM | `v1.104.3` |
-| Microsoft Foundry | `v1.105.0` |
+| vLLM, Microsoft Foundry | `v1.104.3` |
 | Databricks, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
 | Fireworks AI, Laya and Bespoke Nimble, including the Add Model form | `v1.107.0-rc.1` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
-| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs |
+| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs. Self-hosted vLLM models have no price, so vLLM calls return no cost header |
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |

@@ -34,7 +34,7 @@ The same headers work on the [`/typesafe` pass-through](/docs/pass_through/types
 
 The failure modes stay predictable. A `box` question to a model that cannot answer it, `jev-1.13.0` and `jev-latest` included, or an image sent without the header, gets a 400 before any provider is called. With `drop_params` on, LiteLLM drops the question or the image instead and the rest of the request goes through, with a dropped question returned as `{"type": "refusal"}` on `/v1/decisions` and left out of `answers` on `/v1/systemone`. Spend for `jev-1.14.0` lands in the spend logs at TypeSafe's $0.042 per 1M input tokens, with no output charge.
 
-The headers, the `assets` shape, a worked box example and SDK usage are in the [decisions docs](/docs/decisions). Images and `box` questions ship in the next LiteLLM release, and cost tracking for `jev-1.14.0` works on the version you already run after you reload the model cost map.
+The headers, the `assets` shape and a worked box example are in [TypeSafe images, box questions and long context](/docs/decisions/typesafe_images), and SDK usage is in [SDK usage](/docs/decisions/sdk). Images and `box` questions ship in the next LiteLLM release, and cost tracking for `jev-1.14.0` works on the version you already run after you reload the model cost map.
 
 ## Feedback
 
