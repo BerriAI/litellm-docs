@@ -1369,13 +1369,15 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  allowed_fails: 3 # cool a deployment down once it fails more than 3 calls
   cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
-- allowed_fails: 3
+- allowed_fails: not set
 - cooldown_time: 5s (`DEFAULT_COOLDOWN_TIME_SECONDS` in constants.py)
+
+With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once.
 
 **Set Per Model**
 
@@ -1463,7 +1465,7 @@ Each deployment gets a unique `model_id` (e.g., `1234567890`, `9129922`, `498292
 
 #### When are deployments cooled down?
 
-The router automatically cools down deployments based on the following conditions:
+When `allowed_fails` and `allowed_fails_policy` are not set, the router cools down deployments based on the following conditions:
 
 | Condition | Trigger | Cooldown Duration |
 |-----------|---------|-------------------|
