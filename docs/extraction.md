@@ -219,7 +219,7 @@ Any other key goes to Cloudflare as you sent it, with only `model` set to `clair
 }
 ```
 
-Clairic does not stream and takes no OpenAI generation params, so `stream: true` or a param such as `temperature`, `seed` or `response_format` answers 400 with the names it refused. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops them and the call is logged and billed like any other. A proxy started with `--temperature` or `--max_tokens` adds that param to every request, so on such a proxy every extraction call answers 400 until `drop_params` is on.
+Clairic does not stream and takes no OpenAI generation params, so `stream: true` or a param such as `temperature`, `seed` or `response_format` answers 400 with the names it refused. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops them and the call is logged and billed like any other. A proxy started with `--temperature` adds it to every request, so on such a proxy every extraction call answers 400 until `drop_params` is on.
 
 ## Guardrails
 
