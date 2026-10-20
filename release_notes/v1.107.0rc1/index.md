@@ -55,78 +55,23 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 These callouts cover user-facing behavior that differs from `v1.106.0`, the latest stable release
 
-**`enforce_fallback_model_access` is now on by default.** Fallbacks, configured or sent in the request, to models the caller is not allowed to use are skipped, so a request that used to succeed on such a fallback now returns the primary model's error. Grant access to the fallback models, or set `general_settings.enforce_fallback_model_access: false`. See [PR #46127](https://github.com/BerriAI/litellm/pull/46127)
+**Fallbacks to models the caller cannot use are now skipped.** `enforce_fallback_model_access` defaults to `true`. Set `general_settings.enforce_fallback_model_access: false` to restore the old behavior. See [PR #46127](https://github.com/BerriAI/litellm/pull/46127)
 
-**The proxy refuses to start when a configured logging callback cannot be loaded.** A missing or unsupported SDK, such as an unsupported `langfuse` release, used to log an error at boot and then fail the first request on every worker. Install a supported SDK version or remove the callback. See [PR #46378](https://github.com/BerriAI/litellm/pull/46378)
+**The proxy no longer starts when a configured logging callback cannot load**, for example with an unsupported `langfuse` SDK. Install a supported version or remove the callback. See [PR #46378](https://github.com/BerriAI/litellm/pull/46378)
 
-**The bundled cost map no longer has `openrouter` rows.** OpenRouter spend is billed from the cost OpenRouter reports in `usage.cost`, so it is unchanged, but `litellm.get_model_info("openrouter/...")` and `get_max_tokens` raise `ModelNotMappedError` and bare model names no longer resolve to OpenRouter. Use the `openrouter/` prefix and set any context window or pricing you rely on in `model_info`. Proxies that load the cost map from GitHub at startup, the default, already see this. See [PR #45665](https://github.com/BerriAI/litellm/pull/45665), [PR #45666](https://github.com/BerriAI/litellm/pull/45666), [PR #45667](https://github.com/BerriAI/litellm/pull/45667), [PR #45668](https://github.com/BerriAI/litellm/pull/45668), [PR #45669](https://github.com/BerriAI/litellm/pull/45669)
+**OpenRouter models are no longer in the built-in cost map.** Spend still comes from OpenRouter's `usage.cost`, but `litellm.get_model_info("openrouter/...")` now raises, so set any context window or price you rely on in `model_info`. See [PR #45665](https://github.com/BerriAI/litellm/pull/45665), [PR #45666](https://github.com/BerriAI/litellm/pull/45666), [PR #45667](https://github.com/BerriAI/litellm/pull/45667), [PR #45668](https://github.com/BerriAI/litellm/pull/45668), [PR #45669](https://github.com/BerriAI/litellm/pull/45669)
 
-**The `LITELLM_FIPS_MODE` startup gate added in `v1.106.0` is removed.** The setting is ignored and the proxy no longer refuses to boot when OpenSSL does not enforce FIPS. Check FIPS enforcement outside the proxy. See [PR #46740](https://github.com/BerriAI/litellm/pull/46740)
+**`refusal` moved from `provider_specific_fields` to `message.refusal`** on chat completion responses. See [PR #44788](https://github.com/BerriAI/litellm/pull/44788)
 
-**Router streams now open on the first chunk.** `completion(stream=True)` and `acompletion(stream=True)` through a `Router` return once the first chunk arrives, and a stream that fails before any token retries and falls back like a non-streaming request, raising from the call itself if every attempt fails. SDK code that only catches errors while iterating the stream should also wrap the call. See [PR #46493](https://github.com/BerriAI/litellm/pull/46493), [PR #46578](https://github.com/BerriAI/litellm/pull/46578)
+**Token counting returns an error instead of a local estimate** when the provider's counting call fails or the deployment has no provider key, on `/v1/messages/count_tokens`, `/v1/responses/input_tokens` and Gemini `countTokens`. See [PR #46121](https://github.com/BerriAI/litellm/pull/46121), [PR #46815](https://github.com/BerriAI/litellm/pull/46815)
 
-**`refusal` is now on the chat completion message instead of in `provider_specific_fields`.** Read `message.refusal` instead of `message.provider_specific_fields.refusal`. An explicit null `logprobs` or `system_fingerprint` from the provider is now returned as null instead of being left out. See [PR #44788](https://github.com/BerriAI/litellm/pull/44788)
+**The Bedrock guardrail returns 400 for attachments it cannot scan**, such as PDFs, audio or images sent by URL. Set `skip_unscannable_attachments: true` to let them through. See [PR #43383](https://github.com/BerriAI/litellm/pull/43383)
 
-**Token counting returns errors instead of local estimates.** `/v1/messages/count_tokens`, `/v1/responses/input_tokens` and the Gemini `countTokens` route return the provider's error when its counting API fails, 401 when the deployment has no provider key, and 400 for blocks or `tools` they cannot convert, where they used to return 200 with a local count. `/utils/token_counter` returns 400 when `prompt` is sent next to `messages` or `contents`. See [PR #46121](https://github.com/BerriAI/litellm/pull/46121), [PR #46815](https://github.com/BerriAI/litellm/pull/46815), [PR #46772](https://github.com/BerriAI/litellm/pull/46772), [PR #47209](https://github.com/BerriAI/litellm/pull/47209)
+**Lens runs as a separate service.** Deploy the Lens service and move existing Lens data to it before upgrading. See [PR #45529](https://github.com/BerriAI/litellm/pull/45529)
 
-**The Bedrock guardrail blocks attachments it cannot scan.** Requests in `pre_call` or `during_call` that carry PDFs, audio, video, images by URL or file id, GIF or WebP images, or oversized images now get a 400. Set `skip_unscannable_attachments: true` to let them through unscanned. See [PR #43383](https://github.com/BerriAI/litellm/pull/43383)
+**DCR bridge MCP servers with `PROXY_BASE_URL` set now use one gateway OAuth client.** Allow `{PROXY_BASE_URL}/callback` as a redirect URI on the upstream authorization server, and expect users to sign in once more. See [PR #47153](https://github.com/BerriAI/litellm/pull/47153)
 
-**Lens runs as its own service.** The dashboard embeds the Lens UI and forwards `/lens/*` to the standalone Lens service, and exporters send traces to Lens directly. Move existing Lens data to the new service before you cut over. See [PR #45529](https://github.com/BerriAI/litellm/pull/45529)
-
-**Configured pass-through endpoints now win over built-in provider routes with the same prefix.** A configured endpoint such as `/typesafe` is answered by its own target, and deleting it removes its route. Set `LITELLM_BUILTIN_PASS_THROUGH_ROUTES_FIRST=true` to restore the previous order. See [PR #44133](https://github.com/BerriAI/litellm/pull/44133)
-
-<details>
-<summary>33 more behavior changes</summary>
-
-**Keys and teams**
-
-- Keys can no longer be bound to another team's project, and regenerating into a team's project needs team membership - [PR #44165](https://github.com/BerriAI/litellm/pull/44165)
-- Keys with their own `models` list no longer see their team's access group models on `/v1/models`, `/v1/model/info` and `POST /auto_router/test_routing` - [PR #32599](https://github.com/BerriAI/litellm/pull/32599)
-- Proxy admin JWTs are held to the user's own `max_budget` on LLM routes - [PR #43070](https://github.com/BerriAI/litellm/pull/43070)
-- SSO sign-ins that resolve a blank user id, including a failed Microsoft Graph profile lookup, return 401 - [PR #44098](https://github.com/BerriAI/litellm/pull/44098)
-- On a mapped JWT, the end user comes from the `end_user_id_jwt_field` claim when it is present, ahead of a body `user` or `x-litellm-end-user-id` - [PR #46637](https://github.com/BerriAI/litellm/pull/46637)
-- `/spend/tags` and `/global/activity/cache_hits` return only the caller's own and permitted-team data for non-admin keys - [PR #46194](https://github.com/BerriAI/litellm/pull/46194), [PR #46210](https://github.com/BerriAI/litellm/pull/46210)
-- Creating a batch or fine-tuning job from a managed file another team owns returns 403 - [PR #45855](https://github.com/BerriAI/litellm/pull/45855)
-- `POST /credentials` returns 409 for a name defined in `config.yaml` - [PR #45835](https://github.com/BerriAI/litellm/pull/45835)
-- `/fallback` writes return 400 for fallbacks defined in `config.yaml` - [PR #45860](https://github.com/BerriAI/litellm/pull/45860)
-- `metadata.logging[].callback_vars.capture_message_content` on keys and teams is validated, and an unknown value returns 400 - [PR #44264](https://github.com/BerriAI/litellm/pull/44264)
-
-**Requests and responses**
-
-- `/v1/responses` forwards `cache_control` marks, so marks that `/v1/chat/completions` already refuses now return the provider error, and `drop_params` drops them - [PR #32511](https://github.com/BerriAI/litellm/pull/32511)
-- Reversed daily activity date ranges, `max_output_tokens` below the provider minimum on `/v1/responses` and more than 16 vector store file attributes return 400 - [PR #45537](https://github.com/BerriAI/litellm/pull/45537)
-- With `enable_pre_call_checks`, region, RPM and param checks also run on requests the router cannot token-count - [PR #44544](https://github.com/BerriAI/litellm/pull/44544)
-- With `drop_params` on, a top-level `speed` is dropped for every provider except direct Anthropic fast mode and `litellm_proxy`, so send it in `extra_body` instead - [PR #46337](https://github.com/BerriAI/litellm/pull/46337)
-- A deployment with its own `input_cost_per_token` and `output_cost_per_token` is billed at those rates even when its upstream returns `x-litellm-response-cost` - [PR #46120](https://github.com/BerriAI/litellm/pull/46120)
-- A rate-limited model group answers 429 with the `rate_limit_error` type, and Sentry events leave out stack frame locals unless `SENTRY_SEND_DEFAULT_PII=true` - [PR #46344](https://github.com/BerriAI/litellm/pull/46344)
-- Requests still running when `GRACEFUL_SHUTDOWN_TIMEOUT` expires after SIGTERM are cancelled - [PR #46186](https://github.com/BerriAI/litellm/pull/46186)
-- Gzip is applied only to the dashboard analytics routes - [PR #46712](https://github.com/BerriAI/litellm/pull/46712)
-
-**Providers**
-
-- Unprefixed Bedrock Grok 4.6 and 4.7 deployments use native Chat Completions instead of Converse, so use `bedrock/converse/<model>` to keep Converse - [PR #45473](https://github.com/BerriAI/litellm/pull/45473)
-- On Bedrock Converse, a `tool_search` request returns 400 unless `drop_params` is on - [PR #46389](https://github.com/BerriAI/litellm/pull/46389)
-- Converse `redacted_thinking` `data` holds Claude's own string instead of Bedrock's base64 wrapper - [PR #46532](https://github.com/BerriAI/litellm/pull/46532)
-- Bedrock pass-through errors follow the AWS error format, so AWS SDKs in standard or legacy retry mode now retry throttling through the proxy - [PR #46522](https://github.com/BerriAI/litellm/pull/46522)
-- Bedrock pass-through streams are scanned by `post_call` guardrails while they stream, and Claude `invoke-with-response-stream` output is now scanned too - [PR #47157](https://github.com/BerriAI/litellm/pull/47157)
-- Bedrock Converse guardrails receive structured messages and tools, and a guardrail rewrite that cannot be written back returns 500 - [PR #47234](https://github.com/BerriAI/litellm/pull/47234)
-- Bedrock Nova Sonic realtime rejects a malformed `session.update` setting unless `drop_params` is on - [PR #47090](https://github.com/BerriAI/litellm/pull/47090)
-- A plain SageMaker embedding deployment that sets `model_id` sends it as the inference component name, so remove `model_id` if the endpoint has no inference components - [PR #44985](https://github.com/BerriAI/litellm/pull/44985)
-- Reading a completed xAI batch id as a file returns a file object instead of a 404 - [PR #45559](https://github.com/BerriAI/litellm/pull/45559)
-
-**MCP**
-
-- DCR bridge MCP servers with `PROXY_BASE_URL` set register one shared gateway client, so the upstream must allow `{PROXY_BASE_URL}/callback` and clients sign in once more - [PR #47153](https://github.com/BerriAI/litellm/pull/47153)
-- Per-user OAuth MCP servers answer an upstream insufficient-scope denial with 403 and `WWW-Authenticate` instead of a 200 tool error - [PR #45886](https://github.com/BerriAI/litellm/pull/45886)
-
-**Runtime and Terraform**
-
-- Idle pooled upstream connections close after 15 seconds instead of 120, set `AIOHTTP_KEEPALIVE_TIMEOUT=120` to keep the old value - [PR #46355](https://github.com/BerriAI/litellm/pull/46355)
-- Redis clients built without a `socket_timeout` give up after 5 seconds, where plain clients waited forever and Sentinel clients after 100 ms - [PR #46501](https://github.com/BerriAI/litellm/pull/46501)
-- The Redis circuit breaker metrics are emitted only when `prometheus_system` is enabled - [PR #46484](https://github.com/BerriAI/litellm/pull/46484)
-- `additional_drop_params` on the Terraform `litellm_model` resource is sent as the deployment's drop list instead of deleting those keys from the deployment - [PR #46782](https://github.com/BerriAI/litellm/pull/46782)
-
-</details>
+**`LITELLM_FIPS_MODE` is removed**, so the proxy no longer refuses to boot without a FIPS-enforcing OpenSSL. See [PR #46740](https://github.com/BerriAI/litellm/pull/46740)
 
 :::
 
