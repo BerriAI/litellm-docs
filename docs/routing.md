@@ -168,6 +168,43 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 - `router.image_generation()` - completion calls in OpenAI `/v1/images/generations` endpoint format
 - `router.aimage_generation()` - async image generation calls
 
+### Requests for a raw `litellm_params.model`
+
+When a request's `model` matches no `model_name` but equals the `litellm_params.model` of some deployments, the router load balances it across every one of those deployments, whatever `model_name` group they belong to. If several unrelated model groups point at the same `litellm_params.model` (for example many groups that each use `openai/gpt-oss-120b` against a different backend), a client sending that raw string reaches all of them.
+
+Set `enable_cross_model_group_collision_check` to refuse those requests with a `400` when the matching deployments the caller can use belong to more than one model group. On the proxy, a team-only model counts as one group, and another team's model on the same `litellm_params.model` is not counted. A raw string used by a single model group, and every request for a `model_name`, keep routing as before. The setting is off by default.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {"model_name": "chain-a", "litellm_params": {"model": "openai/gpt-oss-120b", "api_base": "https://a.example.com/v1"}},
+        {"model_name": "chain-b", "litellm_params": {"model": "openai/gpt-oss-120b", "api_base": "https://b.example.com/v1"}},
+    ],
+    enable_cross_model_group_collision_check=True,
+)
+
+router.completion(model="chain-a", messages=[{"role": "user", "content": "hi"}])  # routes inside chain-a
+router.completion(model="openai/gpt-oss-120b", messages=[{"role": "user", "content": "hi"}])  # raises BadRequestError
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+router_settings:
+  enable_cross_model_group_collision_check: true
+```
+
+The setting can also be changed from the Admin UI under **Router Settings**, without a restart.
+
+</TabItem>
+</Tabs>
+
 ## Advanced - Routing Strategies
 #### Routing Strategies - Weighted Pick, Rate Limit Aware, Least Busy, Latency Based, Cost Based
 
