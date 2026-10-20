@@ -138,12 +138,12 @@ A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a lett
 | `text` | `unit` | `value`, `guess`, `p_null`, `confidence`, `span` |
 | `date` | None | `value` and `guess` as ISO dates, `p_null`, `confidence` |
 | `number` | `decimals` from 0 to 6, `unit`, `integer` | `value`, `guess`, `p_null`, `confidence` |
-| `list` | `items` set to `text`, `number` or `date`, required | `value` as a list, `confidence`, `spans` |
+| `list` | `items` set to `text`, `number` or `date`, required | `value` as a list, `confidence`, and `spans` for text items or `confidences` for date items |
 | `estimate` | `min` and `max`, required, plus optional `step` and `scale` (`linear` or `log`) | `value`, `mean`, `median`, `p10`, `p90`, `p_below`, `p_above`, and `quantiles` with `include_quantiles` |
 
 An estimate of a date takes ISO dates for `min` and `max`, and its `step` is a number of days, `"month"` or `"year"`.
 
-`span` is the start and end character offset of the answer in `state`, and `spans` holds one per list item. When `p_null` is above `null_threshold`, which defaults to 0.5, `value` is null and `guess` still holds the model's answer. LiteLLM also accepts the `time`, `datetime`, `duration` and `forecast` types and sends them to Cloudflare unchanged. See the [Clairic reference](https://developers.cloudflare.com/workers-ai/models/clairic/) for their settings and answer fields, such as the `steps` that forecast answers carry.
+`span` is the start and end character offset of the answer in `state`, and `spans` holds one per text list item. When `p_null` is above `null_threshold`, which defaults to 0.5, `value` is null and `guess` still holds the model's answer. LiteLLM also accepts the `time`, `datetime`, `duration` and `forecast` types and sends them to Cloudflare unchanged. See the [Clairic reference](https://developers.cloudflare.com/workers-ai/models/clairic/) for their settings and answer fields, such as the `steps` that forecast answers carry.
 
 ## Response
 
