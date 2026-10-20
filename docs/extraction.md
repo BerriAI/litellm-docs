@@ -1,8 +1,8 @@
 # /v1/extraction
 
-Extraction models read a text, and optionally images, and fill in the typed fields you name: a piece of text, a date, a number with a unit, a list, or an estimate with percentiles. Answers come with confidence scores or percentiles, and an answer's `value` is null when the input does not determine it. LiteLLM serves them on `POST /v1/extraction`, with `/extraction` as an alias
+Extraction models read a text, and optionally images, and fill in the typed fields you name: a piece of text, a date, a number with a unit, a list, or an estimate with percentiles. Answers come with confidence scores or percentiles, and an answer's `value` is null when the input does not determine it. LiteLLM serves them on `POST /v1/extraction`, with `/extraction` as an alias.
 
-Ships in the next build after [BerriAI/litellm#47473](https://github.com/BerriAI/litellm/pull/47473) merges
+Ships in the next build after [BerriAI/litellm#47473](https://github.com/BerriAI/litellm/pull/47473) merges.
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -10,7 +10,7 @@ Ships in the next build after [BerriAI/litellm#47473](https://github.com/BerriAI
 | Logging | Yes | The proxy logs the call with call type `aextraction` |
 | Virtual keys | Yes | Normal proxy key auth, model access and key spend |
 | Load balancing, fallbacks | Yes | Goes through the router like `/v1/decisions` |
-| Guardrails | Yes | See [Guardrails](#guardrails) |
+| Guardrails | Yes | Unified `apply_guardrail` guardrails, see [Guardrails](#guardrails) |
 | Image input | Yes | Up to 4 images, see [Images](#images) |
 | Streaming | No | `stream: true` answers 400, or is dropped under `drop_params` |
 
@@ -20,11 +20,11 @@ Ships in the next build after [BerriAI/litellm#47473](https://github.com/BerriAI
 |----------|-------|-------------|--------|
 | [Cloudflare Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) | `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | Yes |
 
-Both model names call the `@cf/cloudflare/clairic` run URL on Cloudflare. The key comes from `api_key` or `CLOUDFLARE_API_KEY`. The API base comes from `api_base`, then `CLOUDFLARE_API_BASE`, then `https://api.cloudflare.com/client/v4/accounts/<CLOUDFLARE_ACCOUNT_ID>/ai/run`. An `api_base` can be the account URL `https://api.cloudflare.com/client/v4/accounts/<account_id>`, with or without `/ai/run` or `/ai/v1` on the end. Without a key, or without an account ID or `api_base`, LiteLLM answers 400 before calling Cloudflare
+Both model names call the `@cf/cloudflare/clairic` run URL on Cloudflare. The key comes from `api_key` or `CLOUDFLARE_API_KEY`. The API base comes from `api_base`, then `CLOUDFLARE_API_BASE`, then `https://api.cloudflare.com/client/v4/accounts/<CLOUDFLARE_ACCOUNT_ID>/ai/run`. An `api_base` can be the account URL `https://api.cloudflare.com/client/v4/accounts/<account_id>`, with or without `/ai/run` or `/ai/v1` on the end. Without a key, or without an account ID or `api_base`, LiteLLM answers 400 before calling Cloudflare.
 
 ## Proxy setup
 
-1. Add Clairic to `config.yaml`
+1. Add Clairic to `config.yaml`.
 
 ```yaml showLineNumbers
 model_list:
@@ -34,9 +34,9 @@ model_list:
       api_key: os.environ/CLOUDFLARE_API_KEY
 ```
 
-Set `CLOUDFLARE_ACCOUNT_ID` in the proxy environment, or add `api_base` to `litellm_params`. `model: cloudflare/clairic` is the short form and calls the same model
+Set `CLOUDFLARE_ACCOUNT_ID` in the proxy environment, or add `api_base` to `litellm_params`. `model: cloudflare/clairic` is the short form and calls the same model.
 
-2. Start the proxy
+2. Start the proxy.
 
 ```bash showLineNumbers
 litellm --config config.yaml
@@ -46,7 +46,7 @@ litellm --config config.yaml
 
 ## Request
 
-Pull five typed fields out of an invoice
+Pull five typed fields out of an invoice.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/extraction' \
@@ -131,7 +131,7 @@ Response, with `x-litellm-response-cost: 4.34e-05`
 | `reference_date` | string, optional | An ISO date that anchors dates written without a year |
 | `options` | object, optional | `include_quantiles: true` adds 99 percentiles to estimates. `return_state_text: true` returns the text that spans index into |
 
-A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a letter or `_`. Every field has a `type` and takes an optional `instructions` saying what it should contain, and `null_threshold` sets the probability of null above which `value` is null
+A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a letter or `_`. Every field has a `type` and takes an optional `instructions` saying what it should contain, and `null_threshold` sets the probability of null above which `value` is null.
 
 | `type` | Settings | Answer fields |
 |--------|----------|---------------|
@@ -139,9 +139,9 @@ A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a lett
 | `date` | None | `value` and `guess` as ISO dates, `p_null`, `confidence` |
 | `number` | `decimals` from 0 to 6, `unit`, `integer` | `value`, `guess`, `p_null`, `confidence` |
 | `list` | `items` set to `text`, `number` or `date`, required | `value` as a list, `confidence`, `spans` |
-| `estimate` | `min` and `max`, optional `step` and `scale` (`linear` or `log`) | `value`, `mean`, `median`, `p10`, `p90`, `p_below`, `p_above`, and `quantiles` with `include_quantiles` |
+| `estimate` | `min` and `max`, required, plus optional `step` and `scale` (`linear` or `log`) | `value`, `mean`, `median`, `p10`, `p90`, `p_below`, `p_above`, and `quantiles` with `include_quantiles` |
 
-`span` is the start and end character offset of the answer in `state`, and `spans` holds one per list item. When `p_null` is above `null_threshold`, which defaults to 0.5, `value` is null and `guess` still holds the model's answer. LiteLLM also accepts the `time`, `datetime`, `duration` and `forecast` types and sends them to Cloudflare unchanged, see the [Clairic reference](https://developers.cloudflare.com/workers-ai/models/clairic/) for their settings
+`span` is the start and end character offset of the answer in `state`, and `spans` holds one per list item. When `p_null` is above `null_threshold`, which defaults to 0.5, `value` is null and `guess` still holds the model's answer. LiteLLM also accepts the `time`, `datetime`, `duration` and `forecast` types and sends them to Cloudflare unchanged. See the [Clairic reference](https://developers.cloudflare.com/workers-ai/models/clairic/) for their settings and answer fields, such as the `steps` that forecast answers carry.
 
 ## Response
 
@@ -155,7 +155,7 @@ A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a lett
 
 ## Images
 
-`images` takes up to 4 images, each a data URL or a `{"content_type": "image/png", "base64": "<BASE64_PNG>"}` object. Clairic does not take remote URLs, so LiteLLM answers 400 for an image URL that is not a data URL. Clairic reads PNG, JPEG and WebP images of up to 4 MiB each and 8 MiB in total, and Cloudflare checks those limits itself
+`images` takes up to 4 images, each a data URL or a `{"content_type": "image/png", "base64": "<BASE64_PNG>"}` object. Clairic does not take remote URLs, so LiteLLM answers 400 for an image URL that is not a data URL. Clairic reads PNG, JPEG and WebP images of up to 4 MiB each and 8 MiB in total, and Cloudflare checks those limits itself.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/extraction' \
@@ -172,11 +172,11 @@ curl -X POST 'http://0.0.0.0:4000/v1/extraction' \
 }'
 ```
 
-An answer read from an image has `source` set to `"image"` and no `span`, and a text answer read from an image also has `spell_confidence`. `usage.image_tokens` counts the image tokens
+An answer read from an image has `source` set to `"image"` and no `span`, and a text answer read from an image also has `spell_confidence`. `usage.image_tokens` counts the image tokens.
 
 ## Errors
 
-LiteLLM checks the parts of the body it knows before calling Cloudflare
+LiteLLM checks the parts of the body it knows before calling Cloudflare.
 
 | Request | Status | From |
 |---------|--------|------|
@@ -192,12 +192,12 @@ LiteLLM checks the parts of the body it knows before calling Cloudflare
 | Estimate with `min` above `max` | Cloudflare's status | Cloudflare |
 | Empty `state` and no images | Cloudflare's status | Cloudflare |
 
-A `list` field without `items` gets
+A `list` field named `line_items` with no `items` setting gets
 
 ```json
 {
   "error": {
-    "message": "litellm.BadRequestError: Invalid Extraction request: 1 validation error for ExtractionRequestBody\nfields.items\n  Value error, list fields need items set to text, number or date [type=value_error, input_value={'type': 'list'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+    "message": "litellm.BadRequestError: Invalid Extraction request: 1 validation error for ExtractionRequestBody\nfields.line_items\n  Value error, list fields need items set to text, number or date [type=value_error, input_value={'type': 'list'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/value_error",
     "type": "invalid_request_error",
     "param": null,
     "code": "400"
@@ -205,7 +205,7 @@ A `list` field without `items` gets
 }
 ```
 
-Everything else goes to Cloudflare as you sent it, with only `model` set to `clairic`. So a new Clairic option works without a LiteLLM release, and a rule only Cloudflare knows comes back with Cloudflare's status and message. An estimate with `min` 90 and `max` 0 gets
+Any other key goes to Cloudflare as you sent it, with only `model` set to `clairic`, so a rule only Cloudflare knows comes back with Cloudflare's status and message. The exceptions are LiteLLM's own params and OpenAI chat params such as `temperature` and `user`, which LiteLLM drops without an error. An estimate with `min` 90 and `max` 0 gets
 
 ```json
 {
@@ -218,15 +218,15 @@ Everything else goes to Cloudflare as you sent it, with only `model` set to `cla
 }
 ```
 
-Clairic does not stream, so `stream: true` answers 400. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops `stream` and the call is logged and billed like any other
+Clairic does not stream, so `stream: true` answers 400. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops `stream` and the call is logged and billed like any other.
 
 ## Guardrails
 
-[Guardrails](./proxy/guardrails/quick_start.md) work on `/v1/extraction` and are set up the same way as on `/chat/completions`. On the way in they see `state` and each field's `instructions`. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone
+[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state` and each field's `instructions`. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. Guardrails that run their own hooks instead, such as Lakera, do not scan extraction requests and let them through.
 
 ## Pricing
 
-Clairic costs $0.10 per 1M input tokens, with no charge for output. LiteLLM bills `usage.input_tokens`, so the invoice request above read 434 input tokens and cost $0.0000434. Spend logs record `prompt_tokens` as the input tokens and `completion_tokens` as `output_tokens`, which Clairic reports as 0
+Clairic costs $0.10 per 1M input tokens, with no charge for output. LiteLLM bills `usage.input_tokens`, so the invoice request above read 434 input tokens and cost $0.0000434. Spend logs record `prompt_tokens` as the input tokens and `completion_tokens` as `output_tokens`, which Clairic reports as 0.
 
 ## SDK usage
 
@@ -257,7 +257,7 @@ input_tokens: 300
 response_cost: 2.9999999999999997e-05
 ```
 
-The async version is `litellm.aextraction` and takes the same arguments
+The async version is `litellm.aextraction` and takes the same arguments.
 
 ```python showLineNumbers
 import asyncio
@@ -278,4 +278,4 @@ async def main():
 asyncio.run(main())
 ```
 
-Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument LiteLLM does not know to Cloudflare as it is. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`
+Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument to Cloudflare as it is, except LiteLLM's own params and OpenAI chat params such as `temperature` and `user`, which they drop. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`.

@@ -115,7 +115,7 @@ Response
 
 ```json
 {
-  "model": "strands-decider-2B-hobson-v19",
+  "model": "strands-decider",
   "answers": [
     {"type": "predicate", "name": "is_urgent", "probability": 0.8287},
     {
@@ -150,6 +150,8 @@ Response
   }
 }
 ```
+
+Builds without [BerriAI/litellm#47473](https://github.com/BerriAI/litellm/pull/47473) return `strands-decider-2B-hobson-v19` as the response `model`.
 
 ## /v1/systemone
 
@@ -186,7 +188,7 @@ Response
 
 ```json
 {
-  "model": "strands-decider-2B-hobson-v19",
+  "model": "strands-decider",
   "answers": {
     "is_urgent": {"type": "noul", "noul": 0.8287},
     "team": {
