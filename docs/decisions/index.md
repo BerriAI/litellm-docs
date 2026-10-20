@@ -42,7 +42,8 @@ Decision routes are available in LiteLLM `v1.104.2` and later. Some providers an
 
 | Provider or feature | Release |
 |---------------------|---------|
-| Microsoft Foundry, vLLM | `v1.105.0` |
+| vLLM | `v1.104.3` |
+| Microsoft Foundry | `v1.105.0` |
 | Databricks, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
 | Fireworks AI, Laya and Bespoke Nimble, including the Add Model form | `v1.107.0-rc.1` |
 
