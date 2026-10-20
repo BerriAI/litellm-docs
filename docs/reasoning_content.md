@@ -697,7 +697,7 @@ model_list:
 
 ## Round `reasoning_effort` to the levels a deployment accepts {#reasoning-effort-levels}
 
-Available from v1.107.0.
+Available from v1.108.0.
 
 Some deployments accept only a few reasoning effort levels and answer 400 for the rest. List the levels a deployment accepts in `reasoning_effort_levels` under its `model_info`, and the proxy sends a declared level in place of any level the deployment does not accept. This applies on `/v1/chat/completions` (streaming included), `/v1/responses`, and `/v1/messages`, for every provider. Only the deployment's own declaration turns this on. Mistral and Together AI keep mapping levels from the model cost map on their own, as they did before.
 
