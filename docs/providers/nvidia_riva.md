@@ -91,7 +91,9 @@ model_list:
 
 ### Offline-only models (Parakeet TDT, Whisper)
 
-Some Riva NIMs only load an offline ASR engine, so a streaming request fails with `INVALID_ARGUMENT: Unavailable model requested ... type=online`. Set `riva_offline: true` on the deployment and LiteLLM sends the whole resampled buffer through the unary `Recognize` RPC instead of `StreamingRecognize`. Word timestamps and `verbose_json` work the same way.
+Some Riva NIMs only load an offline ASR engine, so a streaming request fails with `INVALID_ARGUMENT: Unavailable model requested ... type=online`. Set `riva_offline: true` on the deployment and LiteLLM sends the whole resampled buffer through the unary `Recognize` RPC instead of `StreamingRecognize`. Available from v1.108.0.
+
+Word timestamps work the same way as in streaming mode: send `response_format=verbose_json` together with `timestamp_granularities[]=word`, since `verbose_json` alone returns no `words`. Some offline NIMs, such as Whisper Large v3, return the transcript without word timings.
 
 ```yaml
 model_list:
@@ -172,7 +174,7 @@ OpenAI parameters that map cleanly to Riva:
 |---|---|
 | `language` | Mapped to Riva `language_code`. Bare codes like `en` are normalized to `en-US`. BCP-47 codes like `de-DE` pass through. |
 | `response_format` | `json` (default) returns `{ "text": "..." }`. `verbose_json` adds `duration` and `words` (timestamps in seconds). |
-| `timestamp_granularities` | Pass `["word"]` to enable word-level timestamps. |
+| `timestamp_granularities` | Pass `["word"]` to enable word-level timestamps (`timestamp_granularities[]=word` in a multipart form request). Without it, `verbose_json` returns no `words`. |
 
 Riva-specific parameters you can set in `litellm_params` (or pass directly to `transcription(...)`):
 
@@ -210,6 +212,6 @@ ffmpeg -i input.mp3 -ac 1 -ar 16000 -sample_fmt s16 output.wav
 
 ## Notes & limitations
 
-- Transport is gRPC streaming by default. NVCF only supports streaming ASR today, so even short files are sent as a stream. Set `riva_offline: true` for self-hosted NIMs that only expose the offline engine.
+- Transport is gRPC streaming by default, so even short files are sent as a stream. Set `riva_offline: true` for NIMs that only expose the offline engine, self-hosted or NVCF-hosted. In offline mode the whole file goes in one gRPC message, so very long files can hit the server's maximum message size.
 - Diarization (`diarization_config`) and `srt` / `vtt` response formats aren't wired up yet. Open an issue if you need them.
 - Cost calc: Riva doesn't return token usage. LiteLLM stores the audio duration on `_hidden_params["audio_transcription_duration"]` so cost can be derived externally.
