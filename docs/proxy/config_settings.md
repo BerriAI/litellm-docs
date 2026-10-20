@@ -1275,6 +1275,7 @@ router_settings:
 | LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
 | LITELLM_EMAIL | Email associated with LiteLLM account
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
+| LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS | Available from v1.108.0. Output token budget for a Gemini request, on Google AI Studio or Vertex AI, that sends no output limit, so [long outputs](/blog/gemini-4-argon#long-outputs) keep going past Google's per-request cap until it is spent. Capped at the model's `max_output_tokens` in the cost map, and not applied to a model missing from the cost map or to a request for image or audio output. A request's own `max_tokens`, `max_completion_tokens` or `max_output_tokens` wins. Zero, a negative number or a value that is not an integer counts as unset. Default is unset
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRIES | Maximum retries for parallel requests in LiteLLM
 | LITELLM_GLOBAL_MAX_PARALLEL_REQUEST_RETRY_TIMEOUT | Timeout for retries of parallel requests in LiteLLM
 | LITELLM_DISABLE_ACCESS_LOG_PATHS | Comma-separated list of URL paths to exclude from uvicorn access logs (e.g., `/health,/metrics`). Useful for suppressing noisy health-check log entries. |

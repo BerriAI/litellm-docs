@@ -123,8 +123,9 @@ LiteLLM sends `reasoning_effort` to Argon as its `thinking_level`.
 
 ## Long outputs
 
-From `v1.107.0-dev.3`, set `max_tokens` above Google's per-request cap and LiteLLM keeps going. When Google ends a request with a `continuationToken`, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent. This works for unary and streaming calls on `/chat/completions`, `/v1/messages` and `/v1/responses`, on Google AI Studio and Gemini Enterprise Agent Platform. A request with no integer `max_tokens`, or with `n` above 1, is sent once.
+From `v1.107.0-dev.3`, set `max_tokens` above Google's per-request cap and LiteLLM keeps going. When Google ends a request with a `continuationToken`, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent. This works for unary and streaming calls on `/chat/completions`, `/v1/messages` and `/v1/responses`, on Google AI Studio and Gemini Enterprise Agent Platform. A request with `n` above 1 is sent once, and so is a request with no integer `max_tokens` unless `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` is set.
 
+- **Requests with no `max_tokens`:** from `v1.108.0`, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer, such as `1048576`, and a Gemini request that sends no output limit gets that budget. LiteLLM caps it at the model's `max_output_tokens` in the cost map, since Google answers 400 above a model's range, and gives no default to a model missing from the cost map or to a request for image or audio output. A request's own `max_tokens`, `max_completion_tokens` or `max_output_tokens` always wins. Zero, a negative number or a value that is not an integer counts as unset. The budget also caps short answers, so a value below 32,768 cuts them off sooner, and each request can spend up to that many output tokens.
 - **Usage** is summed across the requests, so cost and spend match Google's bill. The first request's prompt count is kept as `usage.prompt_tokens_details.initial_prompt_tokens` on an answer that took more than one request.
 - **A cut-off answer** on `/chat/completions` ends with `finish_reason: "length"` and returns `provider_specific_fields.continuation_token`. Send the request again with that `"continuation_token"` and a higher `max_tokens` to continue it, since Google counts `max_tokens` across the whole answer.
 - **A dropped stream** ends with the error. LiteLLM does not yet pick it back up from Google's mid-stream resume tokens.
@@ -152,4 +153,5 @@ Questions and feedback go in [GitHub discussion #46238](https://github.com/Berri
 
 - LiteLLM pricing for `gemini/gemini-4-argon`: [PR #46227](https://github.com/BerriAI/litellm/pull/46227)
 - LiteLLM long outputs for Gemini 4: [PR #46240](https://github.com/BerriAI/litellm/pull/46240)
+- LiteLLM default output budget for Gemini: [PR #47542](https://github.com/BerriAI/litellm/pull/47542)
 - Google: [Gemini 4 Argon announcement](https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-argon/), [model page](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon) and [pricing](https://ai.google.dev/gemini-api/docs/pricing)
