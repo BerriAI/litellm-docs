@@ -56,6 +56,12 @@ const ICONS = {
     <path d="M3 3v18h18" />
     <path d="M7 15l4-5 3 3 5-7" />
   </>),
+  models: icon(<>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </>),
   terminal: icon(<>
     <rect x="3" y="4" width="18" height="16" rx="2" />
     <path d="M7 9l3 3-3 3M13 15h4" />
@@ -75,6 +81,7 @@ const COLUMNS = [
         {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
         {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
         {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
+        {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows for every model', to: 'https://models.litellm.ai'},
       ],
     },
   ],
