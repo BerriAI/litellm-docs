@@ -2,7 +2,6 @@
 const ANCHORS = {
   'supported-providers': '/docs/decisions/providers',
   'self-hosted-laya-and-nimble': '/docs/decisions/providers#self-hosted-laya-and-nimble',
-  'benchmark-flagging-problems-in-agent-traces': '/docs/decisions/benchmark',
   v1decisions: '/docs/decisions/openai_format',
   'image-input': '/docs/decisions/openai_format#image-input',
   v1systemone: '/docs/decisions/systemone_format',

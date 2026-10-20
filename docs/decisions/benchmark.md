@@ -17,3 +17,7 @@ This benchmark uses decision models to find [LiteLLM Lens](../proxy/lens/index.m
 GPT-6 Luna, Perplexity, Fireworks Rune and Cloudflare Clef agree with the labels on 97.9% to 99.4% of the questions. Decision-1 agrees on 93.2%, but it finds the correct part for only 44% of its yes answers. Bespoke Nimble 9B gives the best self-hosted result, 94.4%
 
 The traces are short and synthetic, about six steps each, so real traffic is harder and the top scores sit close together. An OpenAI model wrote the traces, which can give OpenAI models a small advantage. A Claude model checked every label before the runs, and the 13 traces where it disagreed were left out
+
+pplx-decider v1 and v1.1 gave the same scores on every trace, as did Databricks `ai_decide` and OpenJev, so the chart shows one bar for each pair. Strands Decider 2B could not fit 6 traces in its context window and returned a 500 on 3 more, so those 27 questions count as no answer. Cost is the `x-litellm-response-cost` header, and the self-hosted models ran on an 8-core CPU, so their latency does not compare with the hosted models
+
+[Download the traces, labels, raw responses and scripts](/benchmarks/litebench-lens-signals-20261016.tar.gz) to check these numbers or to run the same questions against other models. The archive has a README with the rerun commands and a `SHA256SUMS` file for the frozen inputs

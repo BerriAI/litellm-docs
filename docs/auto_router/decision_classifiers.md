@@ -32,7 +32,7 @@ The completion model still receives the request needed to generate the answer. H
 
 Any `model_list` entry that serves [`/v1/decisions`](/docs/decisions) can classify requests for the router. Set `deployment_name` inside `opensource_classifier_config` to that entry's `model_name`. LiteLLM then sends the classifier call through that deployment, so the call uses the deployment's endpoint, credentials and price, and you configure the connection once for both the router and the decision routes. Every provider in the [decision provider list](/docs/decisions/providers) works this way, including Strands Decider and Cloudflare Clef.
 
-Available from v1.104.3. [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913) added it, and backports shipped it in v1.104.3, v1.105.0 and v1.106.0. The examples on this page use the names from v1.106.0. On v1.104.3 and v1.105.0, write `classifier_type: jev` and `jev_classifier_config` in place of `classifier_type: oss_classifier` and `opensource_classifier_config`, and give a decision model `mode: evaluation` in place of `mode: decisions`.
+Available from v1.104.3. [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913) added it, and backports shipped it in v1.104.3, v1.105.0 and v1.106.0. The examples on this page use the names from v1.106.0. On v1.104.x and v1.105.x releases, write `classifier_type: jev` and `jev_classifier_config` in place of `classifier_type: oss_classifier` and `opensource_classifier_config`, and give a decision model `mode: evaluation` in place of `mode: decisions`.
 
 For Strands Decider, run the model on a server you operate and set `STRANDS_DECIDER_API_BASE` on the gateway to that server's base URL without `/v1/systemone`. Set `STRANDS_DECIDER_API_KEY` only when the server requires a bearer token. For Cloudflare Clef, set `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`. Use `cloudflare/clef-flash` instead of `cloudflare/clef` for the lower-cost Clef Flash model.
 
@@ -92,7 +92,7 @@ The response headers show which classifier ran. A routed request returns `x-lite
 
 ### vLLM {#vllm}
 
-vLLM serves `/v1/systemone` from [v0.32.0](https://github.com/vllm-project/vllm/releases/tag/v0.32.0), added in [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). It serves Qwen3 and Qwen3.5 models and answers only `choice` questions, which is all the router needs because it asks for the tier as a `choice` question. `provider` does not take `hosted_vllm`, so connect vLLM through `deployment_name`. This config needs LiteLLM v1.106.0 or later:
+vLLM serves `/v1/systemone` from [v0.32.0](https://github.com/vllm-project/vllm/releases/tag/v0.32.0), added in [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). It answers `choice`, `noul` and `score` questions on the generation models it supports, Qwen3 and Qwen3.5 among them, and returns 501 for other models, as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. The router asks for the tier as a `choice` question. `provider` does not take `hosted_vllm`, so connect vLLM through `deployment_name`. This config needs LiteLLM v1.106.0 or later:
 
 ```yaml title="config.yaml"
 model_list:
@@ -119,7 +119,7 @@ model_list:
         classifier_fallback: default_model
 ```
 
-`small-solver` and `large-solver` are the completion deployments from the example above. LiteLLM drops a trailing `/v1` from `api_base` before it adds `/v1/systemone`, so the base URL you use for vLLM chat completions works here too. `mode: decisions` lists the deployment under **Decisions Model** in the dashboard, where you can pick `qwen-decider`. Qwen3-0.6B keeps the example small enough for a CPU, but in testing it rated hard prompts `SIMPLE` and sent them to the small solver, so pick a larger Qwen3 or Qwen3.5 model for real traffic.
+`small-solver` and `large-solver` are the completion deployments from the example above. LiteLLM drops a trailing `/v1` from `api_base` before it adds `/v1/systemone`, so the base URL you use for vLLM chat completions works here too. `mode: decisions` lists the deployment under **Decisions Model** in the dashboard, where you can pick `qwen-decider`. Qwen3-0.6B keeps the example small enough for a CPU, but in testing it rated hard prompts `SIMPLE` and sent them to the small solver. Check the tiers your model picks on your own prompts, as described in [Evaluate quality and cost](#evaluate-quality-and-cost), before you route real traffic through it. On a CPU without bf16 support, the default bf16 weights hung the first `/v1/systemone` call in testing, and `vllm serve Qwen/Qwen3-0.6B --dtype float32 --enforce-eager` worked.
 
 On Ollama, Bespoke Nimble connects through [`provider: bespoke`](#nimble-self-hosted-system-one-server). A model that serves only chat completions, on Ollama or any OpenAI-compatible server, can still classify requests as an LLM judge with `classifier_type: llm`, as described in [A self-hosted OpenAI-compatible judge](./optimize_classifier.md#a-self-hosted-openai-compatible-judge).
 

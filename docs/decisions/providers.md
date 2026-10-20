@@ -34,7 +34,7 @@ model_list:
       base_model: azure_ai/Microsoft-Decision-1
 ```
 
-[Strands Decider](../providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs vLLM v0.32.0 or later, which includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). To use vLLM as the Auto Router classifier, see [vLLM](../auto_router/decision_classifiers.md#vllm)
+[Strands Decider](../providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM needs v0.32.0 or later, which includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), and answers `choice`, `noul` and `score` questions on the generation models it supports, Qwen3 and Qwen3.5 among them, as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. To use vLLM as the Auto Router classifier, see [vLLM](../auto_router/decision_classifiers.md#vllm)
 
 ## Self-hosted Laya and Nimble
 

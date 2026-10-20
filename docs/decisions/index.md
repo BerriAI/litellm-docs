@@ -12,6 +12,8 @@ Decision models answer typed questions about an input and return probabilities i
 | [`POST /v1/decisions`](./openai_format.md) | `/decisions` | OpenAI Decisions: `input` plus a list of `predicate`, `choice`, `score` and `box` questions | You write against OpenAI's format |
 | [`POST /v1/systemone`](./systemone_format.md) | `/systemone` | [System One](https://docs.typesafe.ai/api): `state` plus a map of `noul`, `choice`, `score` and `box` questions | You already have TypeSafe Jev request bodies |
 
+The [Python SDK](./sdk.md) calls the same models without the proxy, [TypeSafe images and box questions](./typesafe_images.md) covers TypeSafe's opt-in headers, [the Admin UI](./admin_ui.md) adds decision models and tests them in a playground, and [the benchmark](./benchmark.md) compares decision models on agent traces
+
 ## Use decision models with the LiteLLM proxy {#proxy-setup}
 
 1. Add decision models to `config.yaml`
@@ -48,7 +50,7 @@ Decision routes are available in LiteLLM `v1.104.2` and later. Some providers an
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
-| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs. Self-hosted vLLM models have no price, so vLLM calls return no cost header |
+| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs. Self-hosted vLLM models have no price, so vLLM calls return no cost header. Databricks OpenJev has a zero price in the cost map, so its calls record $0 |
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
