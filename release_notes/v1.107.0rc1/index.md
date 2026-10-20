@@ -67,12 +67,6 @@ These callouts cover user-facing behavior that differs from `v1.106.0`, the late
 
 **The Bedrock guardrail returns 400 for attachments it cannot scan**, such as PDFs, audio or images sent by URL. Set `skip_unscannable_attachments: true` to let them through. See [PR #43383](https://github.com/BerriAI/litellm/pull/43383)
 
-**Lens runs as a separate service.** Deploy the Lens service and move existing Lens data to it before upgrading. See [PR #45529](https://github.com/BerriAI/litellm/pull/45529)
-
-**DCR bridge MCP servers with `PROXY_BASE_URL` set now use one gateway OAuth client.** Allow `{PROXY_BASE_URL}/callback` as a redirect URI on the upstream authorization server, and expect users to sign in once more. See [PR #47153](https://github.com/BerriAI/litellm/pull/47153)
-
-**`LITELLM_FIPS_MODE` is removed**, so the proxy no longer refuses to boot without a FIPS-enforcing OpenSSL. See [PR #46740](https://github.com/BerriAI/litellm/pull/46740)
-
 :::
 
 ## Key Highlights
