@@ -10,7 +10,7 @@ Every check here is deterministic and fails the build:
   json-invalid        a ```json block that is not valid JSON or JSON Lines (comments, `...`, and object fragments are tolerated)
   python-invalid      a ```python block that does not compile with ast.parse
   bash-comment        a comment after, or on a line between, backslash line continuations in a shell block
-  link-missing        a relative or /docs/ link whose target page does not exist
+  link-missing        a relative, /docs/ or pathname:// link whose target does not exist
   anchor-missing      a link to a page whose heading anchor does not exist
   image-missing       a require(), ![]() or src= image path that does not exist
   github-alert        a GitHub-style "> [!NOTE]" alert, which Docusaurus renders as a plain quote
@@ -398,6 +398,10 @@ def check_page(page, site, page_cache):
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
             if is_external(target):
+                continue
+            if target.startswith("pathname://"):
+                if not os.path.isfile(os.path.join(STATIC_ROOT, target[len("pathname://"):].lstrip("/"))):
+                    err("link-missing", line_no, f"{target} is not a file under static/")
                 continue
             path_part, _, anchor = target.partition("#")
             target_file = None

@@ -40,7 +40,7 @@ litellm --config config.yaml
 
 ## Availability and supported features
 
-Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release
+Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release, listed below. A dev build or release candidate can still miss a provider that its release has, such as vLLM and Microsoft Foundry in `v1.105.0-rc.3` and the `v1.106.0` dev builds
 
 | Provider or feature | Release |
 |---------------------|---------|
@@ -50,7 +50,7 @@ Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.10
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
-| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs. Self-hosted vLLM models have no price, so vLLM calls return no cost header. Databricks OpenJev has a zero price in the cost map, so its calls record $0 |
+| Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs. Self-hosted vLLM models have no price, so vLLM calls return no cost header. Databricks OpenJev and `ai_decide` have a zero price in the cost map, so their calls record $0 even though Databricks still bills your workspace for them |
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
@@ -62,6 +62,8 @@ Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.10
 OpenAI requires `instructions` on every question and at least 2 choices or score levels. When a System One question without `instructions` goes to an OpenAI model, LiteLLM fills in a generic one such as "Which choice best fits the input?", and a noul question's `criteria` are folded into the instructions OpenAI sees. A choice with one label or a score with one level has no OpenAI equivalent, so LiteLLM rejects it with a 400 before OpenAI is called
 
 A choice question cannot have both a boolean value and a string with the same text, such as `true` and `"true"`, because System One providers key choices by their text. LiteLLM rejects that request with a 400
+
+vLLM takes at most 64 questions per request, 26 options per `choice` and 10 levels per `score`, as listed in the Limits section of its [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md#limits) docs
 
 ## Use a decision model as a guardrail
 
