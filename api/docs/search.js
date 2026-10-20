@@ -1,7 +1,9 @@
 const path = require('node:path');
-const {createRerankHandler} = require('../../search/rerank-api');
+const fs = require('node:fs/promises');
+const {createKeywordSearchHandler} = require('../../search/keyword-api');
+const {loadIndex} = require('../../search/engine');
 const {send} = require('../../search/api');
-const {readConfig, loadRerankCorpusFiles} = require('../../search/runtime');
+const {readConfig} = require('../../search/runtime');
 
 let handler;
 module.exports = async (req, res) => {
@@ -9,19 +11,16 @@ module.exports = async (req, res) => {
   try {
     if (!handler) {
       const config = readConfig(process.env, {host: '0.0.0.0'});
-      // Explicit files keep Vercel's tracer from bundling the entire built site.
-      handler = loadRerankCorpusFiles(
-        path.join(process.cwd(), 'build/search-index.json'),
-        path.join(process.cwd(), 'build/search-documents.json'),
-        path.join(process.cwd(), 'build/search-structure.json'),
-      )
-        .then(corpus => createRerankHandler({...corpus, config}));
+      // Keyword search needs only the index, loaded once per function instance.
+      handler = fs.readFile(path.join(process.cwd(), 'build/search-index.json'), 'utf8')
+        .then(loadIndex)
+        .then(index => createKeywordSearchHandler({index, config}));
     }
     const ready = await handler;
     res.setHeader('Server-Timing', `corpus;dur=${(performance.now() - started).toFixed(1)}`);
     return await ready(req, res);
   } catch {
     handler = undefined;
-    return send(res, 503, {error: 'Search reranking is unavailable. Local search is still available.'});
+    return send(res, 503, {error: 'Search is unavailable. Please try again.'});
   }
 };

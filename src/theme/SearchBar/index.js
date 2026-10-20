@@ -5,7 +5,7 @@ import ThemedImage from '@theme/ThemedImage';
 import {Search, BookOpen, FileText, History, CornerDownLeft, X} from 'lucide-react';
 import styles from './styles.module.css';
 import {sourceLabel, sourceDetail} from '../../../search/content';
-import {SearchSession} from '../../../search/search-client.mjs';
+import {KeywordSearchSession} from '../../../search/keyword-client.mjs';
 import {SearchAnalytics} from '../../../search/search-analytics.mjs';
 import {track} from '../../components/Conversion/shared';
 import {useAskAI} from '@site/src/components/AskAI/AskAIContext';
@@ -44,8 +44,7 @@ export default function SearchBar() {
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [retry, setRetry] = useState(0);
-  const input = useRef(null), dialog = useRef(null), worker = useRef(null);
-  const requestId = useRef(0), previousFocus = useRef(null);
+  const input = useRef(null), dialog = useRef(null), previousFocus = useRef(null);
   const askRef = useRef(askAI);
   askRef.current = askAI;
   const searchSession = useRef(null);
@@ -55,8 +54,7 @@ export default function SearchBar() {
       : /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname) ? 'local' : 'preview',
   })});
   const identity = useRef({});
-  const indexUrl = useBaseUrl('/search-index.json');
-  const rerankUrl = useBaseUrl('/api/docs/search');
+  const searchUrl = useBaseUrl('/api/docs/search');
   const avatar = {
     light: useBaseUrl('/img/brand/litellm-monogram-blue.svg'),
     dark: useBaseUrl('/img/brand/litellm-monogram-white.svg'),
@@ -90,7 +88,7 @@ export default function SearchBar() {
       window.removeEventListener('keydown', key);
       window.removeEventListener('pagehide', pageExit);
       analytics.current.close('unmounted');
-      searchSession.current?.cancel(); worker.current?.terminate();
+      searchSession.current?.cancel();
       if (owner === identity.current) owner = null;
     };
   }, []);
@@ -111,42 +109,17 @@ export default function SearchBar() {
   }, [open]);
 
   useEffect(() => {
-    const baseline = (query, type, signal) => new Promise((resolve, reject) => {
-      const id = ++requestId.current;
-      const abort = () => reject(signal.reason);
-      signal.addEventListener('abort', abort, {once: true});
-      if (!worker.current) worker.current = new Worker(new URL('./search.worker.js', import.meta.url));
-      worker.current.onmessage = ({data}) => {
-        if (data.id !== id || signal.aborted) return;
-        signal.removeEventListener('abort', abort);
-        if (data.error) reject(new Error(data.error)); else resolve(data);
-      };
-      worker.current.onerror = () => {
-        signal.removeEventListener('abort', abort);
-        worker.current?.terminate(); worker.current = null;
-        reject(new Error('Search could not load. Please try again.'));
-      };
-      worker.current.postMessage({id, query, indexUrl, type});
-    });
-    searchSession.current = new SearchSession({
-      onBaseline(data, {final = true} = {}) {
-        if (!final) return;
-        setResultSearchId(analytics.current.ready(data, 'local'));
+    searchSession.current = new KeywordSearchSession({
+      onResults(data) {
+        setResultSearchId(analytics.current.ready(data, 'lexical'));
         setLoading(false); setSearchError(''); setResults(data.results);
         setResolvedQuery(data.query); setSelected(0);
       },
-      onRanking() {analytics.current.requested();},
-      onRanked(data) {
-        setResultSearchId(analytics.current.ready(data, 'jev'));
-        setLoading(false); setSearchError(''); setResults(data.results);
-        setResolvedQuery(data.query); setSelected(0);
-      },
-      // The session publishes one final order, using local matches on failure.
-      onRankError() {},
+      onRequest() {analytics.current.requested();},
       onError(message, metrics) {analytics.current.failed(metrics); setLoading(false); setSearchError(message);},
-    }, {searchBaseline: baseline, rerankUrl});
+    }, {searchUrl});
     return () => searchSession.current.cancel();
-  }, [indexUrl, rerankUrl]);
+  }, [searchUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -159,7 +132,7 @@ export default function SearchBar() {
       setLoading(false); setResults([]); setResolvedQuery(''); setSelected(0);
     }
     return () => searchSession.current.cancel();
-  }, [query, contentType, open, indexUrl, rerankUrl, retry]);
+  }, [query, contentType, open, searchUrl, retry]);
 
   useEffect(() => {
     if (!open || loading || !resultSearchId) return;
@@ -231,7 +204,7 @@ export default function SearchBar() {
                   <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
                 <small role="status">{loading ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
               </div>
-              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading}>{loading
+              <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading} data-query={resolvedQuery}>{loading
                 ? Array.from({length: 5}, (_, i) => <div key={i} className={`${styles.result} ${styles.skeleton}`} aria-hidden="true">
                   <span className={styles.skeletonMeta}/>
                   <span className={styles.skeletonTitle} style={{width: `${[58, 72, 48, 64, 54][i]}%`}}/>

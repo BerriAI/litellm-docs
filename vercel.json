@@ -78,7 +78,7 @@
   ],
   "functions": {
     "api/docs/search.js": {
-      "includeFiles": "build/search-*.json",
+      "includeFiles": "build/search-index.json",
       "maxDuration": 20,
       "memory": 1024
     },

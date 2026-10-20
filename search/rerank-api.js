@@ -1,13 +1,7 @@
 const {createReranker} = require('./rerank');
 const {allowAI, send, readBody, loopback} = require('./api');
+const {validSearchBody} = require('./keyword-api');
 const MAX_BODY_BYTES = 16384;
-
-function validSearchBody(body) {
-  return body && typeof body === 'object' && !Array.isArray(body) &&
-    Object.keys(body).every(key => ['query', 'type'].includes(key)) &&
-    typeof body.query === 'string' && body.query.trim().length > 0 && body.query.length <= 500 &&
-    (body.type === undefined || ['all', 'docs', 'blog', 'release'].includes(body.type));
-}
 
 function createRerankHandler(options) {
   const {config, now = Date.now} = options;
