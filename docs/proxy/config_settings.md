@@ -1148,13 +1148,20 @@ router_settings:
 | GALILEO_PROJECT_ID | Project ID for Galileo usage
 | GALILEO_USERNAME | Username for Galileo enterprise Observe authentication
 | GITHUB_COPILOT_TOKEN_DIR | Directory to store GitHub Copilot token for `github_copilot` llm provider
-| GITHUB_COPILOT_API_KEY_FILE | File to store GitHub Copilot API key for `github_copilot` llm provider
 | GITHUB_COPILOT_ACCESS_TOKEN_FILE | File to store GitHub Copilot access token for `github_copilot` llm provider
-| GITHUB_COPILOT_API_BASE | Base URL for GitHub Copilot API. For GitHub Enterprise subscriptions with custom host, it is similar to https://copilot-api.my-company.ghe.com. Default is https://api.githubcopilot.com
+| GITHUB_COPILOT_API_BASE | Base URL for GitHub Copilot API. For GitHub Enterprise subscriptions with custom host, it is similar to https://copilot-api.my-company.ghe.com. Default is the Copilot host GitHub reports for the token's plan, else https://api.githubcopilot.com
 | GITHUB_COPILOT_DEVICE_CODE_URL | URL for GitHub Copilot device code authentication. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/login/device/code. Default is https://github.com/login/device/code
 | GITHUB_COPILOT_ACCESS_TOKEN_URL | URL for GitHub Copilot access token retrieval. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/login/oauth/access_token. Default is https://github.com/login/oauth/access_token
-| GITHUB_COPILOT_API_KEY_URL | URL for GitHub Copilot API key retrieval. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/api/v3/copilot_internal/v2/token. Default is https://api.github.com/copilot_internal/v2/token
 | GITHUB_COPILOT_CLIENT_ID | Client ID for GitHub Copilot device flow authentication. This is used by the `github_copilot` provider for device code authentication. Default is "Iv1.b507a08c87ecfe98"
+| GITHUB_COPILOT_ACCEPT | `accept` header sent to GitHub Copilot. Default is application/json. Set to an empty string to omit it
+| GITHUB_COPILOT_API_VERSION | `x-github-api-version` header on GitHub Copilot model requests. Default is 2025-04-01. Set to an empty string to omit it
+| GITHUB_COPILOT_CONTENT_TYPE | `content-type` header sent to GitHub Copilot. Default is application/json. Set to an empty string to omit it
+| GITHUB_COPILOT_EDITOR_PLUGIN_VERSION | `editor-plugin-version` header sent to GitHub Copilot. Default is copilot-chat/0.26.7. Set to an empty string to omit it
+| GITHUB_COPILOT_EDITOR_VERSION | `editor-version` header sent to GitHub Copilot. Default is vscode/1.115.0. Set to an empty string to omit it
+| GITHUB_COPILOT_INTEGRATION_ID | `copilot-integration-id` header sent to GitHub Copilot. Default is vscode-chat. Set to an empty string to omit it
+| GITHUB_COPILOT_OPENAI_INTENT | `openai-intent` header on GitHub Copilot model requests. Default is conversation-panel. Set to an empty string to omit it
+| GITHUB_COPILOT_USER_AGENT | `user-agent` header sent to GitHub Copilot. Default is GitHubCopilotChat/0.26.7. Set to an empty string to omit it
+| GITHUB_COPILOT_USER_AGENT_LIBRARY_VERSION | `x-vscode-user-agent-library-version` header on GitHub Copilot model requests. Default is electron-fetch. Set to an empty string to omit it
 | GREENSCALE_API_KEY | API key for Greenscale service
 | GREENSCALE_ENDPOINT | Endpoint URL for Greenscale service
 | GRAYSWAN_API_BASE | Base URL for GraySwan API. Default is https://api.grayswan.ai

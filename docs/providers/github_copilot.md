@@ -204,18 +204,52 @@ print(response)
 
 ## Environment variables
 
-The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`
+The token-file settings apply only to direct Python SDK calls. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`.
 
 | Variable | Default | Purpose |
 |-------|-------|-------|
-| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token and Copilot API token cache |
+| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token |
 | `GITHUB_COPILOT_ACCESS_TOKEN_FILE` | `access-token` | SDK only. Access-token file name in the token directory |
-| `GITHUB_COPILOT_API_KEY_FILE` | `api-key.json` | SDK only. Copilot API token cache file name in the token directory |
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in |
 | `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
 | `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
-| `GITHUB_COPILOT_API_KEY_URL` | `https://api.github.com/copilot_internal/v2/token` | Endpoint that exchanges a GitHub token for a Copilot API token |
-| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | SDK only. Fallback API base for Chat Completions, Responses, and Embeddings |
+| `GITHUB_COPILOT_API_BASE` | Your plan's Copilot host | Copilot API base for the gateway and the SDK. A model's `api_base` takes precedence |
+| `GITHUB_COPILOT_INTEGRATION_ID` | `vscode-chat` | `copilot-integration-id` header |
+| `GITHUB_COPILOT_EDITOR_VERSION` | `vscode/1.115.0` | `editor-version` header |
+| `GITHUB_COPILOT_EDITOR_PLUGIN_VERSION` | `copilot-chat/0.26.7` | `editor-plugin-version` header |
+| `GITHUB_COPILOT_USER_AGENT` | `GitHubCopilotChat/0.26.7` | `user-agent` header |
+| `GITHUB_COPILOT_ACCEPT` | `application/json` | `accept` header |
+| `GITHUB_COPILOT_CONTENT_TYPE` | `application/json` | `content-type` header |
+| `GITHUB_COPILOT_API_VERSION` | `2025-04-01` | `x-github-api-version` header on model requests |
+| `GITHUB_COPILOT_OPENAI_INTENT` | `conversation-panel` | `openai-intent` header on model requests |
+| `GITHUB_COPILOT_USER_AGENT_LIBRARY_VERSION` | `electron-fetch` | `x-vscode-user-agent-library-version` header on model requests |
+
+Set a header variable to an empty string to omit that header. Sign-in requests use the accept, content type, integration, editor, plugin, and user-agent values. On the gateway, put these variables in the `environment_variables` block of `config.yaml`.
+
+`GITHUB_COPILOT_API_KEY_URL` and `GITHUB_COPILOT_API_KEY_FILE` were removed. LiteLLM no longer exchanges the GitHub token for a Copilot API token, so GitHub Enterprise users set `GITHUB_COPILOT_API_BASE` to their Copilot API host, along with the device-code and access-token URLs. If `GITHUB_COPILOT_API_KEY_URL` still points to a host other than `api.github.com` and `GITHUB_COPILOT_API_BASE` is not set, LiteLLM sends nothing to GitHub and returns an error that names `GITHUB_COPILOT_API_BASE`, so your token and prompts never go to a host outside your GitHub Enterprise tenant. On the gateway, the model is skipped at startup and the startup log shows that error.
+
+```bash showLineNumbers title="GitHub Enterprise"
+export GITHUB_COPILOT_API_BASE="https://copilot-api.company.ghe.com"
+export GITHUB_COPILOT_DEVICE_CODE_URL="https://company.ghe.com/login/device/code"
+export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://company.ghe.com/login/oauth/access_token"
+```
+
+Per-user **Connect** on the gateway reads the GitHub username from `https://api.github.com`, so it works only with github.com accounts. Accounts on GitHub Enterprise Cloud with data residency (`ghe.com`) can sign in through the [Python SDK](#usage-with-the-litellm-python-sdk) instead.
+
+### Use your own OAuth app
+
+Any GitHub OAuth app can sign users in, and it can send its own client identity. For example, these values match OpenCode's OAuth behavior.
+
+```yaml showLineNumbers title="config.yaml"
+environment_variables:
+  GITHUB_COPILOT_CLIENT_ID: "Ov23li8tweQw6odWQebz"
+  GITHUB_COPILOT_USER_AGENT: "opencode/<installed-version>"
+  GITHUB_COPILOT_INTEGRATION_ID: ""
+  GITHUB_COPILOT_EDITOR_VERSION: ""
+  GITHUB_COPILOT_EDITOR_PLUGIN_VERSION: ""
+  GITHUB_COPILOT_API_VERSION: "2026-06-01"
+  GITHUB_COPILOT_OPENAI_INTENT: "conversation-edits"
+```
 
 ## Authentication details
 
@@ -226,20 +260,22 @@ On the gateway, LiteLLM encrypts each user's GitHub access token and stores it i
 
 With Redis, LiteLLM caches the encrypted credential or a record of no connection for 60 seconds. Without Redis, requests read the database.
 
-Each worker caches the short-lived Copilot token in memory until 60 seconds before its expiry. If GitHub returns 401, 403, or 404 during token exchange, LiteLLM clears the cached session and asks the user to reconnect.
+LiteLLM sends the GitHub access token to the Copilot API directly. If a user revokes the token on GitHub, their requests fail with a 401 that asks them to reconnect from the dashboard.
 
-Direct SDK calls read the GitHub access token from disk and exchange it for a Copilot API token, cached in `api-key.json` until it expires
+Direct SDK calls read the GitHub access token from disk. Existing `access-token` files keep working without a new sign-in, and `api-key.json` is no longer read or written.
 
 </details>
 
 <details>
 <summary>API base URL</summary>
 
-On the gateway, LiteLLM uses the API host from GitHub's token response if it uses HTTPS and the host is `githubcopilot.com` or a subdomain. Otherwise, it uses `https://api.githubcopilot.com`. The gateway does not use `GITHUB_COPILOT_API_BASE`
+LiteLLM sends requests to the model's `api_base`, then `GITHUB_COPILOT_API_BASE`, then the Copilot API host that GitHub reports for your plan, then `https://api.githubcopilot.com`. This order is the same for Chat Completions, Responses, Embeddings, and Anthropic Messages.
 
-For direct SDK Chat Completions, Responses, and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` in the token response, `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`.
+The base must be an `http` or `https` URL with no credentials, query, or fragment. Use `https` unless the base is a relay on a network you trust, because every request carries the GitHub token. When the configured base is invalid, LiteLLM does not fall back to another one. The gateway skips the model at startup and logs the reason, and the Python SDK raises an error.
 
-Anthropic Messages uses the authenticated Copilot endpoint. It ignores a caller-supplied `api_base` and `GITHUB_COPILOT_API_BASE`.
+A request that sends its own `api_base` or `base_url` to a GitHub Copilot model gets a 400 error, even when `configurable_clientside_auth_params` allows those fields, so requests go only to the base that the admin configured. When `drop_params` is enabled, LiteLLM drops those fields instead and sends the request to the configured base.
+
+When no base is configured, LiteLLM asks `https://api.github.com/copilot_internal/user` which Copilot API host serves the GitHub token, such as `https://api.business.githubcopilot.com` for Copilot Business, and caches the answer for an hour. LiteLLM uses the answer only when it is an `https` host under `githubcopilot.com`. If the lookup fails, requests go to `https://api.githubcopilot.com` and LiteLLM asks again after a minute.
 
 </details>
 
@@ -250,10 +286,11 @@ LiteLLM adds these headers for Chat Completions, Responses, and Embeddings:
 
 | Header | Default |
 |-------|-------|
-| `Authorization` | Bearer token from the authenticated Copilot session |
+| `Authorization` | Bearer GitHub access token |
+| `accept` | `application/json` |
 | `content-type` | `application/json` |
 | `copilot-integration-id` | `vscode-chat` |
-| `editor-version` | `vscode/1.95.0` |
+| `editor-version` | `vscode/1.115.0` |
 | `editor-plugin-version` | `copilot-chat/0.26.7` |
 | `user-agent` | `GitHubCopilotChat/0.26.7` |
 | `openai-intent` | `conversation-panel` |
@@ -261,7 +298,7 @@ LiteLLM adds these headers for Chat Completions, Responses, and Embeddings:
 | `x-request-id` | A new UUID for each request |
 | `x-vscode-user-agent-library-version` | `electron-fetch` |
 
-You can pass `extra_headers` to merge headers with these defaults. On the gateway, `Authorization` always uses the connected user's Copilot token
+The [environment variables](#environment-variables) change these defaults. You can pass `extra_headers` to merge headers with them for one request. On the gateway, `Authorization` always uses the connected user's GitHub token.
 
 Chat Completions and Responses set `X-Initiator` to `user` or `agent` based on message roles. They also add a vision-request header with value `true` when the request includes images.
 
