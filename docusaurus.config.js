@@ -38,6 +38,7 @@ const config = {
   clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
+    require('./plugins/release-feed'),
     require('./plugins/llms'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
