@@ -10,7 +10,7 @@ Try superbot in your browser first: [superbot.gg/chat](https://superbot.gg/chat?
 | Property | Details |
 |-------|-------|
 | Description | superbot serves its own models and the models on your superbot account over one OpenAI-compatible and Anthropic-compatible API, with one caller key. |
-| Provider Route on LiteLLM | `superbot/` |
+| Provider Route on LiteLLM | `superbot-gg/` |
 | Link to Provider Doc | [superbot API ↗](https://superbot.gg/api?utm_source=litellm&utm_medium=registry&utm_campaign=default-slots) |
 | Base URL | `https://api.superbot.gg/v1` |
 | Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#usage---litellm-proxy-server) |
@@ -18,14 +18,14 @@ Try superbot in your browser first: [superbot.gg/chat](https://superbot.gg/chat?
 <br />
 <br />
 
-**We support the models `GET /v1/models` lists for your key. Set `superbot/` as a prefix when sending requests.**
+**We support the models `GET /v1/models` lists for your key. Set `superbot-gg/` as a prefix when sending requests.**
 
 ## Available Models
 
 | Model | Context | Max output | Reasoning effort |
 |-------|---------|------------|------------------|
-| `superbot/superbot` | 1M | 65,536 | `none`, `low`, `high`, `xhigh`, `max` (default `high`) |
-| `superbot/superbot-fast` | 500k | 65,536 | `none`, `low` (default `low`) |
+| `superbot-gg/superbot` | 1M | 65,536 | `none`, `low`, `high`, `xhigh`, `max` (default `high`) |
+| `superbot-gg/superbot-fast` | 500k | 65,536 | `none`, `low` (default `low`) |
 
 Both models are in LiteLLM's model cost map at superbot's list prices. `GET /v1/models` with your key lists everything else the key can call.
 
@@ -49,7 +49,7 @@ from litellm import completion
 os.environ["SUPERBOT_API_KEY"] = ""  # your superbot caller key
 
 response = completion(
-    model="superbot/superbot",
+    model="superbot-gg/superbot",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 
@@ -65,7 +65,7 @@ from litellm import completion
 os.environ["SUPERBOT_API_KEY"] = ""  # your superbot caller key
 
 response = completion(
-    model="superbot/superbot-fast",
+    model="superbot-gg/superbot-fast",
     messages=[{"role": "user", "content": "Write a short story about AI"}],
     stream=True,
 )
@@ -85,7 +85,7 @@ from litellm import completion
 os.environ["SUPERBOT_API_KEY"] = ""  # your superbot caller key
 
 response = completion(
-    model="superbot/superbot",
+    model="superbot-gg/superbot",
     messages=[{"role": "user", "content": "Plan a three step migration"}],
     reasoning_effort="low",
 )
@@ -104,7 +104,7 @@ import litellm
 os.environ["SUPERBOT_API_KEY"] = ""  # your superbot caller key
 
 response = litellm.responses(
-    model="superbot/superbot",
+    model="superbot-gg/superbot",
     input="Say hello",
 )
 
@@ -117,11 +117,11 @@ print(response.output_text)
 model_list:
   - model_name: superbot
     litellm_params:
-      model: superbot/superbot
+      model: superbot-gg/superbot
       api_key: os.environ/SUPERBOT_API_KEY
   - model_name: superbot-fast
     litellm_params:
-      model: superbot/superbot-fast
+      model: superbot-gg/superbot-fast
       api_key: os.environ/SUPERBOT_API_KEY
 
 general_settings:
@@ -190,11 +190,11 @@ curl http://localhost:4000/v1/messages \
 </TabItem>
 </Tabs>
 
-You can also add superbot from the Admin UI. Go to Models, then Add Model, pick superbot as the provider, enter a `superbot/` model id, and paste your key.
+You can also add superbot from the Admin UI. Go to Models, then Add Model, pick `superbot` as the provider, enter a `superbot-gg/superbot` or `superbot-gg/superbot-fast` model id, and paste your key.
 
 ## Cost Tracking
 
-`superbot/superbot` and `superbot/superbot-fast` are in the model cost map, so LiteLLM computes spend and returns it in the `x-litellm-response-cost` response header. The rates are the API and MCP lane list prices on [superbot.gg/pricing](https://superbot.gg/pricing?utm_source=litellm&utm_medium=registry&utm_campaign=default-slots), in US dollars per 1M tokens: input 1.00, output 5.00, cache read 0.05, cache write 1.25. Reasoning tokens bill as output. Fast mode bills 2x every rate. Ask for it with `service_tier="priority"`.
+`superbot-gg/superbot` and `superbot-gg/superbot-fast` are in the model cost map, so LiteLLM computes spend and returns it in the `x-litellm-response-cost` response header. The rates are the API and MCP lane list prices on [superbot.gg/pricing](https://superbot.gg/pricing?utm_source=litellm&utm_medium=registry&utm_campaign=default-slots), in US dollars per 1M tokens: input 1.00, output 5.00, cache read 0.05, cache write 1.25. Reasoning tokens bill as output. Fast mode bills 2x every rate. Ask for it with `service_tier="priority"`.
 
 ## Custom API Base
 
@@ -208,7 +208,7 @@ os.environ["SUPERBOT_API_BASE"] = "https://custom.superbot.example/v1"
 os.environ["SUPERBOT_API_KEY"] = ""  # your API key
 
 response = completion(
-    model="superbot/superbot",
+    model="superbot-gg/superbot",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
@@ -219,11 +219,11 @@ response = completion(
 from litellm import completion
 
 response = completion(
-    model="superbot/superbot",
+    model="superbot-gg/superbot",
     messages=[{"role": "user", "content": "Hello!"}],
     api_base="https://custom.superbot.example/v1",
     api_key="your-api-key",
 )
 ```
 
-Passing `api_base="https://api.superbot.gg/v1"` without the `superbot/` prefix also resolves to the superbot provider, so `model="superbot"` with that base URL is routed as `superbot` and picks up `SUPERBOT_API_KEY`.
+Passing `api_base="https://api.superbot.gg/v1"` without the `superbot-gg/` prefix also resolves to the superbot provider, so `model="superbot"` with that base URL is routed to the superbot provider and picks up `SUPERBOT_API_KEY`.
