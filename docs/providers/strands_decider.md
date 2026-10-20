@@ -1,6 +1,6 @@
 # Strands Decider
 
-[Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) is a small decision model that you run on your own server. It does not generate text. It answers typed questions about an input, such as a yes or no question, a pick from a fixed list of options, or a level on a scale, and gives every answer a calibrated probability. LiteLLM serves it on the [decision routes](../decisions.md), `/v1/decisions` for the OpenAI Decisions format and `/v1/systemone` for the System One format.
+[Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) is a small decision model that you run on your own server. It does not generate text. It answers typed questions about an input, such as a yes or no question, a pick from a fixed list of options, or a level on a scale, and gives every answer a calibrated probability. LiteLLM serves it on the [decision routes](../decisions/index.md), `/v1/decisions` for the OpenAI Decisions format and `/v1/systemone` for the System One format.
 
 | Property | Details |
 |----------|---------|
@@ -212,7 +212,7 @@ The server adds `latency_ms`, and LiteLLM passes it through on `/v1/systemone`.
 
 ## SDK
 
-Call the server from Python with `litellm.decisions` for the OpenAI Decisions format or `litellm.systemone` for the System One format. `litellm.systemone` is available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. [SDK usage](../decisions.md#sdk-usage) covers the async versions and the other arguments.
+Call the server from Python with `litellm.decisions` for the OpenAI Decisions format or `litellm.systemone` for the System One format. `litellm.systemone` is available in `v1.104.3` and later on the `1.104.x` line, `v1.105.0` and later on the `1.105.x` line, and `v1.106.0-rc.1` and later. [SDK usage](../decisions/sdk.md) covers the async versions and the other arguments.
 
 ```python showLineNumbers title="OpenAI Decisions format"
 import os

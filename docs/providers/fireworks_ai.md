@@ -303,7 +303,7 @@ print(response)
 
 ## Decisions (System One)
 
-Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
+Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions/index.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
 
 <Tabs>
 <TabItem value="sdk" label="SDK">

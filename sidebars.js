@@ -1202,6 +1202,16 @@ const sidebars = {
     },
     {
       type: "category",
+      label: "Decision Models",
+      link: { type: "doc", id: "decisions/index" },
+      items: [
+        "decisions/providers",
+        "decisions/benchmark",
+        "decisions/admin_ui",
+      ],
+    },
+    {
+      type: "category",
       label: "Compatibility",
       link: {
         type: "generated-index",
@@ -1344,7 +1354,17 @@ const sidebars = {
         },
         "count_tokens",
         "anthropic_count_tokens",
-        "decisions",
+        {
+          type: "category",
+          label: "/v1/decisions, /v1/systemone",
+          items: [
+            { type: "link", label: "Decision Models overview", href: "/docs/decisions" },
+            "decisions/openai_format",
+            "decisions/systemone_format",
+            "decisions/typesafe_images",
+            "decisions/sdk",
+          ]
+        },
         "extraction",
         "moderation",
         "ocr",
