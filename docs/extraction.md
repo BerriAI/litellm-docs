@@ -172,7 +172,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/extraction' \
 }'
 ```
 
-The answers come back in the same shape as for text, and `usage.image_tokens` counts the image
+An answer read from an image has `source` set to `"image"` and no `span`, and a text answer read from an image also has `spell_confidence`. `usage.image_tokens` counts the image tokens
 
 ## Errors
 
