@@ -226,7 +226,7 @@ The token-file settings apply only to direct Python SDK calls. Use an absolute p
 
 Set a header variable to an empty string to omit that header. Sign-in requests use the accept, content type, integration, editor, plugin, and user-agent values. On the gateway, put these variables in the `environment_variables` block of `config.yaml`.
 
-`GITHUB_COPILOT_API_KEY_URL` and `GITHUB_COPILOT_API_KEY_FILE` were removed. LiteLLM no longer exchanges the GitHub token for a Copilot API token, so GitHub Enterprise users set `GITHUB_COPILOT_API_BASE` to their Copilot API host, along with the device-code and access-token URLs. If `GITHUB_COPILOT_API_KEY_URL` still points to a host other than `api.github.com` and `GITHUB_COPILOT_API_BASE` is not set, LiteLLM logs a warning, because requests then go to `https://api.githubcopilot.com`.
+`GITHUB_COPILOT_API_KEY_URL` and `GITHUB_COPILOT_API_KEY_FILE` were removed. LiteLLM no longer exchanges the GitHub token for a Copilot API token, so GitHub Enterprise users set `GITHUB_COPILOT_API_BASE` to their Copilot API host, along with the device-code and access-token URLs. If `GITHUB_COPILOT_API_KEY_URL` still points to a host other than `api.github.com` and `GITHUB_COPILOT_API_BASE` is not set, LiteLLM sends nothing to GitHub and returns an error that names `GITHUB_COPILOT_API_BASE`, so your token and prompts never go to a host outside your GitHub Enterprise tenant. On the gateway, the model is skipped at startup and the startup log shows that error.
 
 ```bash showLineNumbers title="GitHub Enterprise"
 export GITHUB_COPILOT_API_BASE="https://copilot-api.company.ghe.com"
@@ -271,9 +271,9 @@ Direct SDK calls read the GitHub access token from disk. Existing `access-token`
 
 LiteLLM sends requests to the model's `api_base`, then `GITHUB_COPILOT_API_BASE`, then the Copilot API host that GitHub reports for your plan, then `https://api.githubcopilot.com`. This order is the same for Chat Completions, Responses, Embeddings, and Anthropic Messages.
 
-The base must be an `https` URL with no credentials, query, or fragment. An `http` base works only for a loopback host such as `localhost`, for local testing. LiteLLM returns an error for an invalid base and does not fall back to another one.
+The base must be an `http` or `https` URL with no credentials, query, or fragment. Use `https` unless the base is a relay on a network you trust, because every request carries the GitHub token. When the configured base is invalid, LiteLLM does not fall back to another one. The gateway skips the model at startup and logs the reason, and the Python SDK raises an error.
 
-On the gateway, LiteLLM ignores an `api_base` or `base_url` sent in a request to a GitHub Copilot model, so requests go only to the base that the admin configured.
+A request that sends its own `api_base` or `base_url` to a GitHub Copilot model gets a 400 error, even when `configurable_clientside_auth_params` allows those fields, so requests go only to the base that the admin configured. When `drop_params` is enabled, LiteLLM drops those fields instead and sends the request to the configured base.
 
 When no base is configured, LiteLLM asks `https://api.github.com/copilot_internal/user` which Copilot API host serves the GitHub token, such as `https://api.business.githubcopilot.com` for Copilot Business, and caches the answer for an hour. LiteLLM uses the answer only when it is an `https` host under `githubcopilot.com`. If the lookup fails, requests go to `https://api.githubcopilot.com` and LiteLLM asks again after a minute.
 
