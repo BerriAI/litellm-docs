@@ -52,7 +52,7 @@ model_list:
       base_model: azure_ai/Microsoft-Decision-1
 ```
 
-[Strands Decider](./providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs a vLLM build that includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), which landed after v0.31.0
+[Strands Decider](./providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM answers only `choice` questions, serves Qwen3 and Qwen3.5 models, and needs vLLM v0.32.0 or later, which includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). To use vLLM as the Auto Router classifier, see [vLLM](./auto_router/decision_classifiers.md#vllm)
 
 ## Benchmark: flagging problems in agent traces
 

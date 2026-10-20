@@ -1,14 +1,14 @@
 ---
 title: Connect self-hosted classifiers
 sidebar_label: Self-hosted classifiers
-description: Use any deployed decision model, such as Strands Decider or Cloudflare Clef, or connect a self-hosted Laya or Bespoke Nimble endpoint or the Databricks `ai_decide` AI Function to LiteLLM Auto Router. Set the classifier, its connection, and routing tiers.
+description: Use any deployed decision model, such as Strands Decider, vLLM or Cloudflare Clef, or connect a self-hosted Laya or Bespoke Nimble endpoint or the Databricks `ai_decide` AI Function to LiteLLM Auto Router. Set the classifier, its connection, and routing tiers.
 ---
 
 Use a decision model to classify requests for LiteLLM Auto Router. Your classifier chooses a complexity tier for each request, then LiteLLM calls a completion model assigned to that tier. Your application uses one router model name through the chat completions API.
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
+**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [vLLM](#vllm), and hosted [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
 
 ## What you host
 
@@ -89,6 +89,39 @@ model_list:
 The deployment owns the connection, so `opensource_classifier_config` rejects `api_base` and `api_key` next to `deployment_name`, and `provider` and `model` have no effect there. Set `timeout_ms` to the time your decision model needs after warm-up. A self-hosted model on a CPU can need much longer than the 3000 ms default.
 
 The response headers show which classifier ran. A routed request returns `x-litellm-complexity-router-cause: jev_classifier` for every decision model and `x-litellm-classifier-cost` with the classifier call's cost. The spend log records the classifier call under the deployment's model, for example `strands_decider/strands-decider-2B-hobson-v19` or `cloudflare/clef`, and prices it from that model's cost map entry. Strands Decider is self-hosted, so its token rates are zero.
+
+### vLLM {#vllm}
+
+vLLM serves `/v1/systemone` from [v0.32.0](https://github.com/vllm-project/vllm/releases/tag/v0.32.0), added in [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). It serves Qwen3 and Qwen3.5 models and answers only `choice` questions, which is all the router needs because it asks for the tier as a `choice` question. `provider` does not take `hosted_vllm`, so connect vLLM through `deployment_name`:
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: qwen-decider
+    litellm_params:
+      model: hosted_vllm/Qwen/Qwen3-0.6B
+      api_base: http://vllm-server:8000/v1
+    model_info:
+      mode: decisions
+  - model_name: vllm-router
+    litellm_params:
+      model: auto_router/complexity_router
+      complexity_router_default_model: large-solver
+      complexity_router_config:
+        classifier_type: oss_classifier
+        opensource_classifier_config:
+          deployment_name: qwen-decider
+          timeout_ms: 15000
+        tiers:
+          SIMPLE: small-solver
+          MEDIUM: small-solver
+          COMPLEX: large-solver
+          REASONING: large-solver
+        classifier_fallback: default_model
+```
+
+`small-solver` and `large-solver` are the completion deployments from the example above. LiteLLM drops a trailing `/v1` from `api_base` before it adds `/v1/systemone`, so the base URL you use for vLLM chat completions works here too. `mode: decisions` lists the deployment under **Decisions Model** in the dashboard, where you can pick `qwen-decider`.
+
+Ollama has no `/v1/systemone` route, so the only model it can serve as a decision classifier is Bespoke Nimble, through [`provider: bespoke`](#nimble-self-hosted-system-one-server). To use another Ollama or OpenAI-compatible model, run it as an LLM judge with `classifier_type: llm`, as described in [A self-hosted OpenAI-compatible judge](./optimize_classifier.md#a-self-hosted-openai-compatible-judge).
 
 ## Choose a classifier
 

@@ -436,7 +436,7 @@ The canonical keys are `oss_classifier` and `opensource_classifier_config`. Exis
 
 ### A self-hosted OpenAI-compatible judge
 
-A generic vLLM or other OpenAI-compatible chat endpoint is a different integration: register it as a regular model and select **LLM**, not an OSS System One provider. Add this deployment alongside your existing solvers, then use its alias in `classifier_llm_config.model`:
+A generic OpenAI-compatible chat endpoint, such as an Ollama model, is a different integration: register it as a regular model and select **LLM**, not an OSS System One provider. vLLM v0.32.0 and later can also serve Qwen models as a System One classifier; see [vLLM](./decision_classifiers.md#vllm). Add this deployment alongside your existing solvers, then use its alias in `classifier_llm_config.model`:
 
 ```yaml title="Additional model_list entry"
 - model_name: local-routing-judge
