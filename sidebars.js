@@ -1345,6 +1345,7 @@ const sidebars = {
         "count_tokens",
         "anthropic_count_tokens",
         "decisions",
+        "extraction",
         "moderation",
         "ocr",
         {

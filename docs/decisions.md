@@ -11,6 +11,8 @@ Decision models answer typed questions about an input and return probabilities i
 
 Available in `v1.104.2` and later on the `1.104.x` line and in `v1.105.0-rc.3` and later. `v1.106.0-dev.1` served the System One format at `/v1/decisions` and had no `/v1/systemone` route, so on that build send those bodies to `/v1/decisions`. Databricks and Microsoft Foundry landed on `main` after `v1.106.0-dev.3` and ship in the next build. Image input on Cloudflare Clef ships in `v1.107.0-rc.1` and later. TypeSafe images, `box` questions and the `TypeSafe-Danger-Zone-*` headers ship in the next build.
 
+Extraction models such as Cloudflare Clairic, which fill in typed fields like dates, numbers and lists instead of answering questions, are served on [/v1/extraction](./extraction.md)
+
 | Feature | Supported | Notes |
 |---------|-----------|-------|
 | Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs |
