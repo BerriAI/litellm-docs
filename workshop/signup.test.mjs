@@ -291,3 +291,68 @@ test('HANDOFF upstream errors remain readable without exposing upstream details'
   assert.equal(result.headers['Access-Control-Allow-Origin'], origin);
   assert.doesNotMatch(JSON.stringify(result), /private hook|zapier|test-owner/);
 });
+
+test('HANDOFF rejects personal email providers before contacting Zapier', async () => {
+  const domains = [
+    'gmail.com', 'googlemail.com',
+    'hotmail.com', 'hotmail.co.uk', 'hotmail.fr', 'hotmail.de', 'hotmail.it', 'hotmail.es', 'hotmail.ca', 'hotmail.com.au', 'hotmail.co.jp',
+    'outlook.com', 'outlook.co.uk', 'outlook.fr', 'outlook.de', 'outlook.it', 'outlook.es', 'outlook.com.au', 'outlook.jp',
+    'live.com', 'live.co.uk', 'live.fr', 'live.de', 'live.it', 'live.nl', 'live.ca', 'live.com.au', 'msn.com',
+    'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'yahoo.in', 'yahoo.co.jp', 'yahoo.fr', 'yahoo.de', 'yahoo.it', 'yahoo.es', 'yahoo.ca',
+    'yahoo.com.au', 'yahoo.com.br', 'yahoo.com.mx', 'yahoo.com.sg', 'yahoo.com.hk', 'yahoo.co.id', 'yahoo.com.tw', 'yahoo.co.kr', 'ymail.com', 'rocketmail.com',
+    'icloud.com', 'me.com', 'mac.com', 'aol.com', 'aim.com',
+    'proton.me', 'protonmail.com', 'protonmail.ch', 'pm.me', 'fastmail.com', 'fastmail.fm', 'hey.com', 'mail.com', 'email.com',
+    'gmx.com', 'gmx.de', 'gmx.net', 'gmx.at', 'gmx.ch',
+  ];
+  for (const origin of handoffOrigins) {
+    for (const domain of domains) {
+      const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+      const result = await invoke(handler, {
+        headers: {origin}, body: {...body, source: `${origin}/`, email: `  Alex+work@${domain.toUpperCase()}  `},
+      });
+      assert.equal(result.status, 400, `${origin}: ${domain}`);
+      assert.deepEqual(result.body, {
+        code: 'WORK_EMAIL_REQUIRED',
+        error: 'Enter your work email address. Personal email addresses are not accepted.',
+      });
+      assert.equal(result.headers['Access-Control-Allow-Origin'], origin);
+    }
+  }
+});
+
+test('HANDOFF rejects personal-provider subdomains and streamed signup bodies', async () => {
+  const origin = handoffOrigins[0];
+  const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+  for (const email of ['alex@mail.gmail.com', 'alex@a.b.hotmail.co.uk', 'alex@sub.outlook.com', 'alex@sub.yahoo.co.jp', 'alex@gmail.com.', 'alex@HOTMAIL.COM..']) {
+    const result = await invoke(handler, {
+      headers: {origin}, stream: JSON.stringify({...body, source: `${origin}/`, email}),
+    });
+    assert.equal(result.status, 400, email);
+    assert.equal(result.body.code, 'WORK_EMAIL_REQUIRED');
+  }
+});
+
+test('HANDOFF accepts company email domains without matching personal-provider substrings', async () => {
+  const origin = handoffOrigins[0];
+  for (const email of ['alex@company.example', 'alex@gmail.company.example', 'alex@notgmail.com', 'alex@company-gmail.com', 'alex@outlook.company.example', 'alex@fastmail.company.example']) {
+    let calls = 0;
+    const handler = createWorkshopSignupHandler({env, fetchImpl: async (_url, options) => {
+      calls += 1;
+      assert.equal(JSON.parse(options.body).email, email);
+      return Response.json({status: 'success'});
+    }});
+    const result = await invoke(handler, {headers: {origin}, body: {...body, source: `${origin}/`, email: ` ${email} `}});
+    assert.equal(result.status, 200, email);
+    assert.equal(calls, 1);
+  }
+});
+
+test('HANDOFF email restriction does not change the original docs signup policy', async () => {
+  let calls = 0;
+  const handler = createWorkshopSignupHandler({env, fetchImpl: async () => {
+    calls += 1;
+    return Response.json({status: 'success'});
+  }});
+  assert.equal((await invoke(handler, {body: {...body, email: 'alex@gmail.com'}})).status, 200);
+  assert.equal(calls, 1);
+});

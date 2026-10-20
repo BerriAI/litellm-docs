@@ -4,8 +4,24 @@ import {FIELD_LIMITS, WORKSHOP_DATES, buildWorkshopSubmission} from '../blog/clo
 const MAX_BODY_BYTES = 16384;
 const HANDOFF_ORIGINS = new Set(['https://handoff.litellm.ai', 'https://litellm-handoff.onrender.com', 'https://litellm-workshop-directions.ishaan196385.chatgpt.site']);
 const HANDOFF_DATES = 'October 26–November 9, 2026';
+const PERSONAL_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com',
+  'hotmail.com', 'hotmail.co.uk', 'hotmail.fr', 'hotmail.de', 'hotmail.it', 'hotmail.es', 'hotmail.ca', 'hotmail.com.au', 'hotmail.co.jp',
+  'outlook.com', 'outlook.co.uk', 'outlook.fr', 'outlook.de', 'outlook.it', 'outlook.es', 'outlook.com.au', 'outlook.jp',
+  'live.com', 'live.co.uk', 'live.fr', 'live.de', 'live.it', 'live.nl', 'live.ca', 'live.com.au', 'msn.com',
+  'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'yahoo.in', 'yahoo.co.jp', 'yahoo.fr', 'yahoo.de', 'yahoo.it', 'yahoo.es', 'yahoo.ca',
+  'yahoo.com.au', 'yahoo.com.br', 'yahoo.com.mx', 'yahoo.com.sg', 'yahoo.com.hk', 'yahoo.co.id', 'yahoo.com.tw', 'yahoo.co.kr', 'ymail.com', 'rocketmail.com',
+  'icloud.com', 'me.com', 'mac.com', 'aol.com', 'aim.com',
+  'proton.me', 'protonmail.com', 'protonmail.ch', 'pm.me', 'fastmail.com', 'fastmail.fm', 'hey.com', 'mail.com', 'email.com',
+  'gmx.com', 'gmx.de', 'gmx.net', 'gmx.at', 'gmx.ch',
+];
 const ALLOWED_FIELDS = [...Object.keys(FIELD_LIMITS), 'submissionId', 'source'];
 const loopback = host => ['localhost', '127.0.0.1', '::1', '[::1]', '::ffff:127.0.0.1'].includes(host);
+
+function isPersonalEmail(email) {
+  const domain = email.trim().toLowerCase().split('@').pop().replace(/\.+$/, '');
+  return PERSONAL_EMAIL_DOMAINS.some(personal => domain === personal || domain.endsWith(`.${personal}`));
+}
 
 function send(res, status, body, headers = {}) {
   res.writeHead(status, {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers});
@@ -133,6 +149,9 @@ export function createWorkshopSignupHandler({env = process.env, fetchImpl = fetc
       let payload;
       try { payload = payloadFor(parsed.body, origin); } catch { /* Validation errors never reach Zapier. */ }
       if (!payload) return reply(400, {error: 'Please check your workshop signup details.'});
+      if (HANDOFF_ORIGINS.has(origin) && isPersonalEmail(payload.email)) {
+        return reply(400, {code: 'WORK_EMAIL_REQUIRED', error: 'Enter your work email address. Personal email addresses are not accepted.'});
+      }
       const key = createHash('sha256').update(payload.email.toLowerCase()).digest('hex');
       const emailAttempts = attempts.get(key) || 0;
       if (emailAttempts >= 5) return reply(429, {error: 'Please try again in a minute.'}, {'Retry-After': '60'});
