@@ -6,9 +6,14 @@
     padding-right: 380px;
   }
 
+  /* Expanded panel grows only into space the page does not need: the docs sidebar plus a 640px content column stay visible */
+  html[data-ask-ai='expanded'] {
+    --ask-ai-width: clamp(380px, calc(100vw - var(--doc-sidebar-width, 300px) - 640px), 760px);
+  }
+
   html[data-ask-ai='expanded'] .theme-layout-main,
   html[data-ask-ai='expanded'] .theme-layout-footer {
-    padding-right: min(760px, 50vw);
+    padding-right: var(--ask-ai-width);
   }
 
   /* The panel takes the place of the "On this page" column */
