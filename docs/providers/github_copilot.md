@@ -17,6 +17,8 @@ An admin adds the model and a **Per-user GitHub OAuth** credential once. Each us
 
 Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, which is the only auth type the gateway supports for GitHub Copilot. Click **Add Credential**
 
+Leave **GitHub host** empty if your users sign in on github.com. If your enterprise uses GitHub Enterprise Cloud with data residency, enter your `SUBDOMAIN.ghe.com` host, for example `octocorp.ghe.com`. LiteLLM then sends sign-in to `https://SUBDOMAIN.ghe.com`, the token exchange and user lookup to `https://api.SUBDOMAIN.ghe.com`, and model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. Each credential keeps its own host, so one gateway can serve a github.com credential and a GHE.com credential side by side. GitHub Enterprise Server hosts are rejected because GitHub does not offer Copilot on GitHub Enterprise Server. Changing the host of a credential removes every user connection on it, so users connect again on the new host.
+
 <div className="docs-screenshot">
   <Image img={require('../../img/github_copilot_credential.png')} dark={require('../../img/github_copilot_credential_dark.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={656} height={585} />
 </div>
@@ -58,7 +60,7 @@ Sign in to the LiteLLM dashboard and open **Models + Endpoints** > **LLM Credent
   <Image img={require('../../img/github_copilot_llm_credentials.png')} dark={require('../../img/github_copilot_llm_credentials_dark.png')} alt="Connect a GitHub account from Your connections in LiteLLM" width={1096} height={418} />
 </div>
 
-LiteLLM shows a GitHub verification code. Open https://github.com/login/device, enter the code, and approve the request with the GitHub account that has your Copilot plan
+LiteLLM shows a GitHub verification code. Open the link LiteLLM shows, which is https://github.com/login/device for github.com or https://SUBDOMAIN.ghe.com/login/device for a GHE.com credential, enter the code, and approve the request with the GitHub account that has your Copilot plan
 
 <div className="docs-screenshot">
   <Image img={require('../../img/github_copilot_connect.png')} dark={require('../../img/github_copilot_connect_dark.png')} alt="GitHub verification code and sign-in link in LiteLLM" width={504} height={338} />
@@ -204,7 +206,7 @@ print(response)
 
 ## Environment variables
 
-The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`
+The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`. On the gateway, `GITHUB_COPILOT_DEVICE_CODE_URL`, `GITHUB_COPILOT_ACCESS_TOKEN_URL`, and `GITHUB_COPILOT_API_KEY_URL` apply only to credentials without a **GitHub host** or with `github.com`. A credential with a GHE.com host always uses the URLs derived from that host
 
 | Variable | Default | Purpose |
 |-------|-------|-------|

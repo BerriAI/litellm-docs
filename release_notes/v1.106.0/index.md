@@ -1,5 +1,6 @@
 ---
-title: "v1.106.0 - Claude Haiku 5.5, Lens Rust Service, Admin Home Page & MCP Rate Limits"
+title: "LiteLLM v1.106.0 adds Claude Haiku 5.5, a Rust Lens service and MCP rate limits"
+description: "Adds Claude Haiku 5.5 on day one, a standalone Rust Lens service and MCP rate limits on every operation. MCP servers no longer get the caller's key."
 slug: "v1-106-0"
 date: 2026-10-18T05:53:32
 authors:

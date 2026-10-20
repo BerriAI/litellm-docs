@@ -1,5 +1,6 @@
 ---
-title: "v1.103.5 - Responses API Tool Call Fixes"
+title: "LiteLLM v1.103.5 fixes tool calls in chat completions on GPT-5.4 and newer"
+description: "Fixes tool calls in chat completions on GPT-5.4 and newer. Tool calls stay on choices[0], and each call in a reply gets its own index."
 slug: "v1-103-5"
 date: 2026-10-17T17:02:19
 authors:

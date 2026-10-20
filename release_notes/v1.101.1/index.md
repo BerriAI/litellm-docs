@@ -1,5 +1,6 @@
 ---
-title: "v1.101.1 - Claude Code Auto Mode, Wildcard License Auto-Router & TypeSafe Jev"
+title: "LiteLLM v1.101.1 - Claude Code Auto Mode, Wildcard License Auto-Router & TypeSafe Jev"
+description: "Lets Claude Code auto mode work through the gateway and fixes Bedrock GPT and Grok switches. Also grants the auto-router feature to wildcard licenses."
 slug: "v1-101-1"
 date: 2026-09-23T06:12:25
 authors:

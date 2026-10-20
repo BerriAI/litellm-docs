@@ -217,6 +217,29 @@ model_list:
 ```
 
 
+## Set 'pricing_provider' when the routing provider and the pricing provider differ
+
+**Problem**: You route to a third-party host through an OpenAI-compatible endpoint (`custom_llm_provider: openai` with a custom `api_base`), but the model is priced in LiteLLM's cost map under that host's own provider. The cost lookup runs under the routing provider, finds no row there, and bills the request at $0. A deployment whose `model_info.id` equals one of that provider's cost-map keys hits the same $0.
+
+**Solution** ✅: Set `pricing_provider` under `model_info` to the provider whose cost-map rows should price the deployment. When it is unset, the routing provider (`custom_llm_provider`) is used, which is the previous behavior.
+
+```yaml
+model_list:
+  - model_name: glm-5.2
+    litellm_params:
+      model: zai-org/GLM-5.2
+      api_base: https://inference.baseten.co/v1
+      api_key: os.environ/BASETEN_API_KEY
+      custom_llm_provider: openai
+    model_info:
+      pricing_provider: baseten            # price from the baseten/zai-org/GLM-5.2 cost-map row
+      input_cost_per_token: 0.00000096     # optional, overrides that row's rate
+      output_cost_per_token: 0.00000302
+```
+
+Rates you set on the deployment win. Rates you leave out, such as `cache_read_input_token_cost`, are taken from the pricing provider's row for the model instead of defaulting to 0. With no rates set at all, the request is billed at that row's rates.
+
+
 ## Debugging 
 
 If you're custom pricing is not being used or you're seeing errors, please check the following:
