@@ -1,28 +1,42 @@
 # Developer Role
 
-OpenAI's `developer` role carries instructions with higher priority than the user's messages. Most providers have no such role, so LiteLLM translates it per backend before the request leaves the gateway. This page describes what each backend receives when a request carries `developer` messages, on `/v1/chat/completions` and on `/v1/responses` requests served through the chat completions bridge (`use_chat_completions_api: true`)
+OpenAI's `developer` role carries instructions with higher priority than the user's messages. Most providers have no such role, so LiteLLM translates it per backend before the request leaves the gateway. This page describes what each backend receives when a request carries `developer` messages, on `/v1/chat/completions` and on `/v1/responses`.
 
 ## What each backend receives
 
 | Backend | What happens to `developer` messages |
 |---|---|
-| OpenAI (`api.openai.com`), o-series models (o1, o3, o4-mini) | Passed through unchanged |
-| OpenAI (`api.openai.com`), every other model, GPT-5 included | Each one becomes a `system` message in the same position |
+| OpenAI o-series models (o1, o3, o4-mini) | Passed through unchanged |
+| OpenAI, every other model | Each one becomes a `system` message in the same position |
 | Azure OpenAI | Each one becomes a `system` message in the same position |
-| OpenAI-compatible backends (`openai/` with a custom `api_base`, `custom_openai/`, `hosted_vllm/`, `fireworks_ai/`, `deepseek/`, `together_ai/`, `groq/`, `xai/`, `openrouter/`, `mistral/`, `databricks/`, `azure_ai/`, `litellm_proxy/`, and every other provider built on the OpenAI chat format) | Hoisted to the top and folded into one leading `system` message |
-| Providers with their own message format (Anthropic, Bedrock Converse, Gemini, Vertex AI, Ollama) | Untouched. Their own transformations handle `developer` the way they always have |
+| OpenAI-compatible backends | Each one becomes a `system` message in the same position, unless the model declares `supports_mid_conversation_system: false` |
+| Providers with their own message format (Anthropic, Bedrock Converse, Gemini, Vertex AI, Ollama) | Untouched. Their own transformations handle `developer` |
 
-## Hoisting on OpenAI-compatible backends
+OpenAI-compatible backends are `openai/` with a custom `api_base`, `custom_openai/`, `hosted_vllm/`, `fireworks_ai/`, `deepseek/`, `together_ai/`, `groq/`, `xai/`, `openrouter/`, `mistral/`, `databricks/`, `azure_ai/`, `litellm_proxy/` and every other provider built on the OpenAI chat format.
 
-Many open-weight chat templates (Qwen3, DeepSeek, and others served by vLLM, Fireworks, or Together) only accept a `system` message at the very beginning of the conversation. A `developer` message that arrives later, for example a per-turn permissions item from Codex CLI or an instruction re-injected after context compaction, used to be translated to a `system` message in place, and those templates answered `400 System message must be at the beginning`
+## Models whose chat template needs the system message first
 
-On OpenAI-compatible backends LiteLLM now moves every `developer` message that appears after the first non-instruction message up to the top of the conversation and merges it, together with any leading `system` or `developer` messages, into a single leading `system` message. The request below
+Many open-weight chat templates (Qwen3.5 and Qwen3.8 among them) accept a `system` message only at the very beginning of the conversation. Codex CLI and other agents send `developer` messages later in the conversation, for example a permissions update or an instruction added after context compaction. Translated in place, those messages reach the model as a mid-conversation `system` message, and the backend answers `400 System message must be at the beginning`.
+
+Declare such a model with `supports_mid_conversation_system: false` in the deployment's `model_info`:
+
+```yaml
+model_list:
+  - model_name: qwen3.5
+    litellm_params:
+      model: custom_openai/Qwen/Qwen3.5-27B
+      api_base: http://my-vllm-server:8000/v1
+    model_info:
+      supports_mid_conversation_system: false
+```
+
+LiteLLM then moves every `developer` message that comes after the first conversation message to the top, and merges it with the leading `system` and `developer` messages into one leading `system` message. The request below
 
 ```json
 {
   "messages": [
     {"role": "system", "content": "You are a terse assistant."},
-    {"role": "user", "content": "Remember the word Paris."},
+    {"role": "user", "content": "Hi there"},
     {"role": "developer", "content": "Answer with exactly one word."},
     {"role": "user", "content": "What is the capital of France?"}
   ]
@@ -35,23 +49,24 @@ reaches the backend as
 {
   "messages": [
     {"role": "system", "content": "You are a terse assistant.\n\nAnswer with exactly one word."},
-    {"role": "user", "content": "Remember the word Paris."},
+    {"role": "user", "content": "Hi there"},
     {"role": "user", "content": "What is the capital of France?"}
   ]
 }
 ```
 
-The rules behind that:
+Plain string contents are joined with a blank line. When a merged message carries list content, for example a block with `cache_control` or Anthropic billing metadata, each block stays its own text block so every cache breakpoint keeps its position, and the first text block of each later message starts with a blank line, except an Anthropic billing header. When several merged messages carry a `name`, the merged message keeps the last one.
 
-- Plain string contents are joined with a blank line between them
-- A member carrying `cache_control` or Anthropic billing metadata is kept as its own text block instead of being joined, so each cache breakpoint stays on its own block. Whenever any member has list content, the merged message uses list content
-- A `developer` message that closes the conversation right after an `assistant` turn (a follow-up instruction with no user message after it) stays where it is, since moving it would change what the model is asked to answer
-- Client-authored `system` messages are never moved. A `system` message placed mid-conversation is forwarded as sent, and a backend with a system-first template rejects it exactly as it would when called directly
-- Consecutive `system` messages anywhere in the conversation are merged into one, in place
-- The hoisted instruction applies from the start of the conversation rather than from the position the client placed it. Send `system` instead of `developer` when a mid-conversation position matters and the backend accepts it
+A `developer` message that closes the conversation right after an `assistant` turn is sent as a `user` message instead. Moving it to the top would end the request on the assistant's turn, and a `system` message there fails on the same templates.
 
-There is no setting to turn the hoist off. It applies to every provider whose chat format is OpenAI's, which is the same set that already had `developer` rewritten to `system` before; only the position changes
+Client-authored `system` messages are never moved. A `system` message placed mid-conversation is forwarded as sent, and a backend with a system-first template rejects it exactly as it does when called directly.
+
+The model cost map declares the flag for some hosted models, such as `fireworks_ai/qwen3p8-max`, so those need no configuration. A value in the deployment's `model_info` overrides the cost map in both directions. Models without a declaration keep the in-place translation, so a prompt prefix that a provider caches does not change for them.
 
 ## Native Responses API routes
 
-Backends that implement the Responses API themselves receive the client's `input` items with their own translation. Fireworks folds `instructions`, the leading `system` and `developer` items, and every later `developer` item into the top-level `instructions` field, see [Fireworks AI](../providers/fireworks_ai.md). Other native Responses routes forward `developer` items as they arrive; route a system-first model through the chat completions bridge when its Responses API rejects a later `developer` item
+Some backends implement the Responses API themselves and receive the client's `input` items. Fireworks (`fireworks_ai/`) folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, unless the model declares `supports_mid_conversation_system: true`, in which case each `developer` item is sent as a `system` item in place. A `developer` item that is not folded, such as one that closes the input after an assistant turn, is sent as a `user` item on a model that declares the flag `false`, and as a `system` item otherwise.
+
+`hosted_vllm/` deployments that serve `/v1/responses` natively forward `developer` items as they arrive, unless the model declares `supports_mid_conversation_system: false`. With that declaration they fold the items into `instructions` the same way Fireworks does.
+
+Requests that go through the chat completions bridge (`use_chat_completions_api: true`) follow the chat rules above.
