@@ -1,5 +1,6 @@
 ---
-title: "v1.104.0 - Claude Opus 5.5, GPT-6, Master Key Enforcement & Team Routing Controls"
+title: "LiteLLM v1.104.0 adds Claude Opus 5.5, GPT-6 and master key enforcement"
+description: "Adds Claude Opus 5.5 and GPT-6. The proxy now refuses a weak master key, returns 422 for an exhausted budget and turns stdio MCP servers off by default."
 slug: "v1-104-0"
 date: 2026-10-03T00:00:00
 authors:

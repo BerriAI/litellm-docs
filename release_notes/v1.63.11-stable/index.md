@@ -1,5 +1,6 @@
 ---
-title: v1.63.11-stable
+title: "LiteLLM v1.63.11-stable"
+description: "Adds Responses API beta, Snowflake Cortex and Nova Canvas image generation. Also adds credential reuse in the UI. Not advised for Azure OpenAI."
 slug: v1.63.11-stable
 date: 2025-03-15T10:00:00
 authors:

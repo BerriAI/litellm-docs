@@ -1,5 +1,6 @@
 ---
-title: "v1.101.6 - Codex Tools on the Responses to Chat Bridge"
+title: "LiteLLM v1.101.6 fixes Codex CLI tool calls on the Responses to Chat bridge"
+description: "Fixes Codex CLI tool calls on the Responses to Chat Completions bridge, so tools reach Bedrock Converse and other bridged models."
 slug: "v1-101-6"
 date: 2026-10-08T07:46:30
 authors:

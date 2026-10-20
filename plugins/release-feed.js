@@ -22,6 +22,13 @@ function readNote(folder) {
   return data.date ? {data, content, date: new Date(data.date).toISOString()} : null;
 }
 
+// The page URL Docusaurus gives a release note: its folder plus a relative slug.
+function permalinkOf(folder, data) {
+  const slug = data.slug ? String(data.slug) : '';
+  if (slug.startsWith('/')) return `/release_notes${slug}`;
+  return `/release_notes/${folder}/${slug}`;
+}
+
 const versionOf = (folder) => folder.replace(/^v?/, 'v').replace(/-stable$/, '');
 
 // "**Label**: text" -> "Label: text", cut to its first sentence.
@@ -51,7 +58,7 @@ function loadFeed() {
       date: notes.map((n) => n.note.date).sort().pop(),
       title: s.title,
       points: s.points,
-      versions: s.folders.map((f) => ({version: versionOf(f), id: `${f}/index`})),
+      versions: notes.map(({folder: f, note}) => ({version: versionOf(f), id: `${f}/index`, permalink: permalinkOf(f, note.data)})),
     });
   }
 
@@ -61,12 +68,12 @@ function loadFeed() {
     if (known.has(folder) || /rc\d*$|dev/i.test(folder)) continue;
     const note = readNote(folder);
     if (!note || note.date <= newest) continue;
-    const headline = String(note.data.title || '').replace(/^v?\d+\.\d+\.\d+\S*\s+[-–—]\s+/, '');
+    const headline = String(note.data.title || '').replace(/^(LiteLLM\s+)?v?\d+\.\d+\.\d+\S*\s+[-–—:]?\s*/, '');
     entries.push({
       date: note.date,
       title: `LiteLLM ${versionOf(folder)}${headline ? ` ${headline}` : ''}`,
       points: highlightSentences(note.content),
-      versions: [{version: versionOf(folder), id: `${folder}/index`}],
+      versions: [{version: versionOf(folder), id: `${folder}/index`, permalink: permalinkOf(folder, note.data)}],
     });
   }
   return entries.sort((a, b) => b.date.localeCompare(a.date));
@@ -81,6 +88,41 @@ module.exports = function releaseFeedPlugin() {
     async contentLoaded({content, actions}) {
       actions.setGlobalData({entries: content});
     },
+    // An RSS feed of the same entries, for feed readers, release trackers and agents.
+    async postBuild({content, outDir, siteConfig}) {
+      const site = siteConfig.url.replace(/\/$/, '');
+      const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const plain = (t) => t.replace(/`/g, '');
+      const items = content.map((e) => {
+        const link = site + e.versions[0].permalink;
+        return [
+          '    <item>',
+          `      <title>${esc(plain(e.title))}</title>`,
+          `      <link>${esc(link)}</link>`,
+          `      <guid isPermaLink="true">${esc(link)}</guid>`,
+          `      <pubDate>${new Date(e.date).toUTCString()}</pubDate>`,
+          `      <description>${esc(e.points.map(plain).join(' '))}</description>`,
+          '    </item>',
+        ].join('\n');
+      });
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+        '  <channel>',
+        '    <title>LiteLLM Changelog</title>',
+        `    <link>${site}/release_notes/</link>`,
+        `    <atom:link href="${site}/release_notes/rss.xml" rel="self" type="application/rss+xml"/>`,
+        '    <description>The main changes in each LiteLLM release.</description>',
+        '    <language>en</language>',
+        content[0] ? `    <lastBuildDate>${new Date(content[0].date).toUTCString()}</lastBuildDate>` : '',
+        ...items,
+        '  </channel>',
+        '</rss>',
+        '',
+      ].filter(Boolean).join('\n');
+      fs.mkdirSync(path.join(outDir, 'release_notes'), {recursive: true});
+      fs.writeFileSync(path.join(outDir, 'release_notes', 'rss.xml'), xml);
+    },
     getPathsToWatch() {
       return [SUMMARIES, path.join(DIR, '*/index.md')];
     },
@@ -89,3 +131,4 @@ module.exports = function releaseFeedPlugin() {
 
 module.exports.loadFeed = loadFeed;
 module.exports.highlightSentences = highlightSentences;
+module.exports.permalinkOf = permalinkOf;

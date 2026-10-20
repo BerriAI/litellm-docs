@@ -1,5 +1,6 @@
 ---
-title: "v1.79.1-stable - Guardrail Playground"
+title: "LiteLLM v1.79.1-stable - Guardrail Playground"
+description: "Adds OpenAI Container API support, FAL AI image generation and a Guardrail Playground in the UI. Fixes most memory leaks in the SDK and AI Gateway."
 slug: "v1-79-1"
 date: 2025-11-01T10:00:00
 authors:

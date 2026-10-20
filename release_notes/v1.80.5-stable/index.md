@@ -1,5 +1,6 @@
 ---
-title: "v1.80.5-stable - Gemini 3.0 Support"
+title: "LiteLLM v1.80.5-stable - Gemini 3.0 Support"
+description: "Adds Gemini 3 support, prompt versioning with a Prompt Studio and an MCP Hub. Lowers /realtime p99 latency 182x."
 slug: "v1-80-5"
 date: 2025-11-22T10:00:00
 authors:
