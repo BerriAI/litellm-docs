@@ -1116,6 +1116,7 @@ const sidebars = {
       items: [
         { type: "html", value: "Load balancing", className: "sidebar-group-label", defaultStyle: true },
         "routing",
+        "proxy/cache_aware_routing",
         "wildcard_routing",
         "proxy/health_check_routing",
         "scheduler",
