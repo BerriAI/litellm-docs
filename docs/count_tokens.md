@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-LiteLLM provides exact token counting by calling provider-specific token counting APIs. This gives you accurate token counts before sending requests, helping with cost estimation and context window management.
+LiteLLM calls provider-specific token counting APIs to estimate prompt size before inference. Whether a count matches the input tokens reported after inference depends on the provider and request content. See [Gemini count accuracy](#gemini-count-accuracy) for Google AI Studio and Vertex AI Gemini.
 
 | Feature | Details |
 |---------|---------|
@@ -24,6 +24,20 @@ LiteLLM provides exact token counting by calling provider-specific token countin
 | Gemini | Google AI Studio countTokens API | Anthropic Messages |
 | Vertex AI (Gemini) | Vertex AI countTokens API | Anthropic Messages |
 | Other providers | Local tiktoken fallback | N/A |
+
+## Gemini count accuracy
+
+:::warning Counts can differ from billed input
+
+Google AI Studio and Vertex AI Gemini counts can differ from the input usage reported after inference, including for images, PDFs and tools. Sending the same content to counting and inference does not guarantee matching token totals.
+
+:::
+
+[Google documents multimodal counts as estimates](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/get-token-count), affected by media resolution. The final billing usage is available after inference in `usageMetadata`. Treat the preflight count as an estimate and leave room for a larger prompt when checking context limits. A fixed multiplier or percentage cannot guarantee a match for every model and request.
+
+For actual input usage, read `usageMetadata.promptTokenCount` from Google's generation response or `usage.prompt_tokens` from LiteLLM's chat completions response. For `/v1/messages`, add `usage.input_tokens`, `usage.cache_read_input_tokens` and `usage.cache_creation_input_tokens`, treating omitted cache fields as zero, to compare total input tokens.
+
+LiteLLM uses Google's counting API without an extra generation request. A separate generation request to measure usage incurs inference charges when billing applies and reports usage for that request, without guaranteeing the usage of a later request.
 
 ## SDK Usage
 
