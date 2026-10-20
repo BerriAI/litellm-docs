@@ -184,9 +184,10 @@ LiteLLM checks the parts of the body it knows before calling Cloudflare.
 | Field name that breaks the naming rule | 400 | LiteLLM |
 | `list` field without `items` | 400 | LiteLLM |
 | No `fields`, or an empty `fields` | 400 | LiteLLM |
+| Field setting of the wrong JSON type, such as `"decimals": "2"` | 400 | LiteLLM |
 | Remote image URL | 400 | LiteLLM |
 | More than 4 images | 400 | LiteLLM |
-| `stream: true` without `drop_params` | 400 | LiteLLM |
+| `stream: true` or an OpenAI param such as `temperature`, without `drop_params` | 400 | LiteLLM |
 | Missing key or account ID | 400 | LiteLLM |
 | Key Clairic does not define | Cloudflare's status | Cloudflare |
 | Estimate with `min` above `max` | Cloudflare's status | Cloudflare |
@@ -205,7 +206,7 @@ A `list` field named `line_items` with no `items` setting gets
 }
 ```
 
-Any other key goes to Cloudflare as you sent it, with only `model` set to `clairic`, so a rule only Cloudflare knows comes back with Cloudflare's status and message. The exceptions are LiteLLM's own params and OpenAI chat params such as `temperature` and `user`, which LiteLLM drops without an error. An estimate with `min` 90 and `max` 0 gets
+Any other key goes to Cloudflare as you sent it, with only `model` set to `clairic`, so a rule only Cloudflare knows comes back with Cloudflare's status and message. The exceptions are LiteLLM's own params and `user`, which LiteLLM drops, and OpenAI chat params such as `temperature`, which the next paragraph covers. An estimate with `min` 90 and `max` 0 gets
 
 ```json
 {
@@ -218,11 +219,11 @@ Any other key goes to Cloudflare as you sent it, with only `model` set to `clair
 }
 ```
 
-Clairic does not stream, so `stream: true` answers 400. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops `stream` and the call is logged and billed like any other.
+Clairic does not stream and takes no OpenAI generation params, so `stream: true` or a param such as `temperature`, `seed` or `response_format` answers 400 with the names it refused. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops them and the call is logged and billed like any other.
 
 ## Guardrails
 
-[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state` and each field's `instructions`. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. Guardrails that run their own hooks instead, such as Lakera, do not scan extraction requests and let them through.
+[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state`, each field's `instructions` and any `images`, which they get as data URLs. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. When a guardrail changes `state_text`, every answer comes back without `span` and `spans`, since the offsets no longer match the text. Guardrails that run their own hooks instead, such as Lakera, do not scan extraction requests and let them through.
 
 ## Pricing
 
@@ -278,4 +279,4 @@ async def main():
 asyncio.run(main())
 ```
 
-Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument to Cloudflare as it is, except LiteLLM's own params and OpenAI chat params such as `temperature` and `user`, which they drop. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`.
+Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument to Cloudflare as it is, except LiteLLM's own params and `user`, which they drop. OpenAI chat params such as `temperature` raise `litellm.UnsupportedParamsError` unless you pass `drop_params=True`. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`.
