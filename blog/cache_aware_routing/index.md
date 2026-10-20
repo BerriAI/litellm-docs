@@ -20,7 +20,7 @@ Agent requests often share system instructions, tool definitions, and conversati
 
 ## Keep a session on one GPU pod
 
-LiteLLM discovers pod IPs through a Kubernetes headless Service. It uses the session ID to choose a pod using rendezvous hashing, then sends the request directly to that pod. Proxy workers with the same pod list choose the same pod. They do not need a shared session-to-pod mapping.
+LiteLLM discovers pod IPs through a Kubernetes headless Service. It uses the session ID to choose a pod using rendezvous hashing, then sends the request directly to that pod.
 
 ## Get started
 
