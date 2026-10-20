@@ -354,6 +354,12 @@ LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extract
 On the response, LiteLLM maps `"standard"` back to `"default"` for the Gemini API.
 
 
+## Long outputs
+
+On a model that ends a request with a `continuationToken`, such as Gemini 4 Argon, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent, so `max_tokens` can go above Google's per-request cap. [Long outputs](/blog/gemini-4-argon#long-outputs) covers how it works, the usage it reports and the timeouts it needs.
+
+A request that sends no output limit is sent once and stops at Google's own per-request limit. From v1.108.0, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer, such as `1048576`, to give those requests a budget. It applies to chat completion, text completion and Responses API requests through the proxy or the Python SDK, and never to `/v1/messages`, which requires `max_tokens`. LiteLLM caps the budget at the model's `max_output_tokens` in the cost map, and any output limit the request already carries wins. It is not applied to a model the cost map does not list as a chat model, such as an image model, to a request whose `modalities` asks for anything besides text, or to the native `:generateContent` route. The [env var reference](/docs/proxy/config_settings#environment-variables---reference) lists every case.
+
 ## Text-to-Speech (TTS) Audio Output
 
 :::info
