@@ -135,7 +135,7 @@ This release includes significant performance optimizations:
 - **[Responses API](../../docs/response_api)**
     - Fixed `/responses` endpoint ignoring extra_headers in GitHub Copilot - [PR #13775](https://github.com/BerriAI/litellm/pull/13775)
     - Added support for new web_search tool - [PR #14083](https://github.com/BerriAI/litellm/pull/14083)
-- **[Azure Passthrough](../../docs/providers/azure/azure)**
+- **[Azure Passthrough](/docs/providers/azure)**
     - Fixed Azure Passthrough request with streaming - [PR #13831](https://github.com/BerriAI/litellm/pull/13831)
 
 #### Bugs
@@ -181,7 +181,7 @@ This release includes significant performance optimizations:
 
 - **[Langfuse OTEL](../../docs/proxy/logging#langfuse)**
     - Allow using LANGFUSE_OTEL_HOST for configuring host - [PR #14013](https://github.com/BerriAI/litellm/pull/14013)
-- **[Braintrust](../../docs/proxy/logging#braintrust)**
+- **[Braintrust](/docs/observability/braintrust)**
     - Added span name metadata feature - [PR #13573](https://github.com/BerriAI/litellm/pull/13573)
     - Fixed tests to reference moved attributes in `braintrust_logging` module - [PR #13978](https://github.com/BerriAI/litellm/pull/13978)
 - **[OpenMeter](../../docs/proxy/logging#openmeter)**
@@ -189,9 +189,9 @@ This release includes significant performance optimizations:
 
 #### New Guardrail Support
 
-- **[Noma Security](../../docs/proxy/guardrails)**
+- **[Noma Security](/docs/proxy/guardrails/quick_start)**
     - Added Noma Security guardrail support - [PR #13572](https://github.com/BerriAI/litellm/pull/13572)
-- **[Pangea](../../docs/proxy/guardrails)**
+- **[Pangea](/docs/proxy/guardrails/quick_start)**
     - Updated Pangea Guardrail to support new AIDR endpoint - [PR #13160](https://github.com/BerriAI/litellm/pull/13160)
 
 ---

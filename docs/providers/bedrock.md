@@ -7,7 +7,7 @@ ALL Bedrock models (Anthropic, Meta, Deepseek, Mistral, Amazon, etc.) are Suppor
 | Property | Details |
 |-------|-------|
 | Description | Amazon Bedrock is a fully managed service that offers a choice of high-performing foundation models (FMs). |
-| Provider Route on LiteLLM | `bedrock/`, [`bedrock/converse/`](#set-converse--invoke-route), [`bedrock/invoke/`](#set-invoke-route), [`bedrock/converse_like/`](#calling-via-internal-proxy), [`bedrock/llama/`](#deepseek-not-r1), [`bedrock/deepseek_r1/`](#deepseek-r1), [`bedrock/qwen3/`](#qwen3-imported-models), [`bedrock/qwen2/`](./bedrock_imported.md#qwen2-imported-models), [`bedrock/openai/`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc), [`bedrock/moonshot`](./bedrock_imported.md#moonshot-kimi-k2-thinking) |
+| Provider Route on LiteLLM | `bedrock/` ([native Chat Completions](#native-chat-completions-route) for GPT-5.6 and newer), [`bedrock/chat_completions/`](#native-chat-completions-route), [`bedrock/converse/`](#set-converse--invoke-route), [`bedrock/invoke/`](/docs/providers/bedrock#set-converse--invoke-route), [`bedrock/converse_like/`](/docs/providers/bedrock#calling-via-internal-proxy-not-bedrock-url-compatible), `bedrock/llama/`, `bedrock/deepseek_r1/`, `bedrock/qwen3/`, [`bedrock/qwen2/`](./bedrock_imported.md#qwen2-imported-models), [`bedrock/openai/`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc), [`bedrock/moonshot`](./bedrock_imported.md#moonshot-kimi-k2-thinking) |
 | Provider Doc | [Amazon Bedrock ↗](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) |
 | Supported OpenAI Endpoints | `/chat/completions`, `/completions`, `/embeddings`, `/images/generations`, `/v1/realtime`|
 | Rerank Endpoint | `/rerank` |
@@ -47,7 +47,7 @@ Option 2: use the api_key parameter to pass in API key for completion, embedding
 <TabItem value="sdk" label="SDK">
 ```python
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   api_key="your-api-key"
 )
@@ -56,9 +56,9 @@ response = completion(
 <TabItem value="proxy" label="PROXY">
 ```yaml
 model_list:
-  - model_name: bedrock-claude-3-sonnet
+  - model_name: bedrock-claude-sonnet-4-5
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
 ```
 </TabItem>
@@ -80,7 +80,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -93,9 +93,9 @@ Here's how to call Bedrock with the LiteLLM Proxy Server
 
 ```yaml
 model_list:
-  - model_name: bedrock-claude-3-5-sonnet
+  - model_name: bedrock-claude-sonnet-4-5
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -209,7 +209,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   temperature=0.7,
   top_p=1
@@ -224,7 +224,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.{{anthropic}}
       temperature: <your-temp>
       top_p: <your-top-p>
 ```
@@ -259,7 +259,7 @@ print(response)
 
 ## Pass provider-specific params 
 
-If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#provider-specific-params)
+If you pass a non-openai param to litellm, we'll assume it's provider-specific and send it as a kwarg in the request body. [See more](../completion/input.md#litellm-specific-params)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -273,9 +273,9 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -287,8 +287,8 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      model: bedrock/us.anthropic.{{anthropic}}
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -310,7 +310,7 @@ response = client.chat.completions.create(model="bedrock-claude-v1", messages = 
 ],
 temperature=0.7,
 extra_body={
-    top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -337,7 +337,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-    model="bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
     requestMetadata={
         "cost_center": "engineering",
@@ -354,7 +354,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       requestMetadata:
         cost_center: "engineering"
 ```
@@ -379,6 +379,46 @@ response = client.chat.completions.create(
 
 </TabItem>
 </Tabs>
+
+### Forward key, team, and org identity from the proxy
+
+The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default and available in `v1.99.0` and later. List the fields to forward under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  bedrock_request_metadata_fields:
+    - user_api_key_org_alias
+    - user_api_key_team_alias
+    - user_api_key_alias
+    - user_api_key_user_id
+    - spend_logs_metadata
+```
+
+With that config a request made with a key on team `growth` in org `platform` reaches Bedrock with `{"user_api_key_org_alias": "platform", "user_api_key_team_alias": "growth", "user_api_key_alias": "...", "user_api_key_user_id": "...", ...}` plus every pair in the request's `spend_logs_metadata`.
+
+| Field | Value forwarded |
+|-------|-----------------|
+| `user_api_key_alias` | Alias of the virtual key |
+| `user_api_key_hash` | Hashed virtual key, the same value spend logs show |
+| `user_api_key_user_id` | Internal user that owns the key |
+| `user_api_key_user_email` | Email of the internal user that owns the key |
+| `user_api_key_end_user_id` | End user (customer) id for the request, when the caller sends one |
+| `user_api_key_team_id`, `user_api_key_team_alias` | Team the key belongs to |
+| `user_api_key_org_id`, `user_api_key_org_alias` | Organization the key belongs to |
+| `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
+| `user_api_key_request_route` | Route the client called, for example `/v1/chat/completions` |
+| `user_api_key_budget_reset_at` | ISO 8601 time the key's budget next resets |
+| `spend_logs_metadata` | Every key/value pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
+
+Only text fields are forwarded, because Bedrock accepts string values only. The numeric spend and budget fields (`user_api_key_spend`, `user_api_key_max_budget`, and the user and team variants) and `user_api_key_auth_metadata` are skipped even when listed. A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out.
+
+`spend_logs_metadata` is the way to forward your own dimensions like agent or cost center without touching agent code. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults. The same pairs then land in LiteLLM spend logs and in Bedrock.
+
+Bedrock allows at most 16 pairs per request, keys and values of up to 256 characters, and only the characters `a-z A-Z 0-9`, whitespace, and `:_@$#=/+,.-`. Identity fields are placed first, in the order you list them, so they always get a slot. On Converse, any `requestMetadata` the caller sends comes next and `spend_logs_metadata` fills whatever is left, with the earlier value winning when both use the same key. An identity or `spend_logs_metadata` pair that breaks Bedrock's rules is dropped and the request still succeeds, so a team alias with an apostrophe in it never turns into a failed call. A malformed `requestMetadata` the caller sends gets a 400, like Bedrock would return, unless `drop_params` is on, in which case only its bad pairs are dropped. With this setting off, the `/bedrock` pass-through routes send the body exactly as you wrote it and Bedrock answers a malformed one itself, while chat completions still drops the bad pairs under `drop_params`. Keys starting with `user_api_key_` are reserved for the proxy, so a caller cannot forge identity through `requestMetadata` or `spend_logs_metadata`, and any `X-Amzn-Bedrock-Request-Metadata` header the caller sends is replaced.
+
+LiteLLM writes the metadata to the `requestMetadata` body field on Converse and to the signed `X-Amzn-Bedrock-Request-Metadata` header on Invoke, which covers `/chat/completions`, `/v1/messages`, and, from `v1.108.0`, the `converse`, `converse-stream`, `invoke`, and `invoke-with-response-stream` actions of the `/bedrock` [pass-through routes](../pass_through/bedrock.md). On a pass-through Invoke call LiteLLM uses the body field instead when the caller's body already has `requestMetadata`. On every Invoke route, the pairs that would push the header past Bedrock's 8,500-character limit are dropped from the end, so the identity fields are always sent. While the setting is on, models that default to the [Native Chat Completions route](#native-chat-completions-route) use Converse instead, since that endpoint has no request metadata. AWS does not support request metadata on `bedrock-mantle` models.
+
+AWS records request metadata only when model invocation logging is enabled in the call's region, and it does not appear in Cost Explorer or CUR. `user_api_key_user_email` and `user_api_key_hash` end up in your AWS logs where LiteLLM cannot delete them, so leave them out unless you need them.
 
 ## Usage - Function Calling / Tool calling
 
@@ -418,7 +458,7 @@ tools = [
 messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
 
 response = completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=messages,
     tools=tools,
     tool_choice="auto",
@@ -439,7 +479,7 @@ assert isinstance(
 model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0 # for bedrock invoke, specify `bedrock/invoke/<model>`
+      model: bedrock/us.anthropic.{{anthropic}} # for bedrock invoke, specify `bedrock/invoke/<model>`
 ```
 
 2. Start proxy 
@@ -517,7 +557,7 @@ image_path = "../proxy/cached_logo.jpg"
 # Getting the base64 string
 base64_image = encode_image(image_path)
 resp = litellm.completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -567,7 +607,7 @@ os.environ["AWS_REGION_NAME"] = ""
 
 
 resp = completion(
-    model="bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -583,8 +623,8 @@ print(resp)
 model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0
-      reasoning_effort: "low" # 👈 EITHER HERE OR ON REQUEST
+      model: bedrock/us.anthropic.{{anthropic}}
+      reasoning_effort: "low" # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -602,7 +642,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "reasoning_effort": "low" # 👈 EITHER HERE OR ON CONFIG.YAML
+    "reasoning_effort": "low" # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -618,7 +658,7 @@ Same as [Anthropic API response](../providers/anthropic#usage---thinking--reason
 {
     "id": "chatcmpl-c661dfd7-7530-49c9-b0cc-d5018ba4727d",
     "created": 1740640366,
-    "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "model": "us.anthropic.{{anthropic}}",
     "object": "chat.completion",
     "system_fingerprint": null,
     "choices": [
@@ -765,7 +805,7 @@ LiteLLM supports Anthropic's beta features on AWS Bedrock through the `anthropic
 
 **Single Beta Feature**
 
-```python
+```python keep-model-ids
 from litellm import completion
 import os
 
@@ -776,18 +816,18 @@ os.environ["AWS_REGION_NAME"] = ""
 
 # Use 1M context window with Claude Sonnet 4
 response = completion(
-    model="bedrock/anthropic.claude-sonnet-4-20250115-v1:0",
+    model="bedrock/anthropic.claude-sonnet-4-20250514-v1:0",
     messages=[{"role": "user", "content": "Hello! Testing 1M context window."}],
     max_tokens=100,
     extra_headers={
-        "anthropic-beta": "context-1m-2025-08-07"  # 👈 Enable 1M context
+        "anthropic-beta": "context-1m-2025-08-07"  # Enable 1M context
     }
 )
 ```
 
 **Multiple Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Combine multiple beta features (comma-separated)
@@ -803,7 +843,7 @@ response = completion(
 
 **Computer Use Tools with Beta Features**
 
-```python
+```python keep-model-ids
 from litellm import completion
 
 # Computer use tools automatically add computer-use-2024-10-22
@@ -828,13 +868,13 @@ response = completion(
 
 **Set on YAML Config**
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: claude-sonnet-4-1m
     litellm_params:
-      model: bedrock/anthropic.claude-sonnet-4-20250115-v1:0
+      model: bedrock/anthropic.claude-sonnet-4-20250514-v1:0
       extra_headers:
-        anthropic-beta: "context-1m-2025-08-07"  # 👈 Enable 1M context
+        anthropic-beta: "context-1m-2025-08-07"  # Enable 1M context
 
   - model_name: claude-computer-use
     litellm_params:
@@ -843,7 +883,7 @@ model_list:
         anthropic-beta: "computer-use-2024-10-22,context-1m-2025-08-07"
 
 general_settings:
-  forward_client_headers_to_llm_api: true  # 👈 Required for client-side header forwarding
+  forward_client_headers_to_llm_api: true  # Required for client-side header forwarding
 ```
 
 **Set on Request**
@@ -881,6 +921,124 @@ Beta features may require special access or permissions in your AWS account. Som
 
 :::
 
+### Eager Input Streaming for Tool Calls
+
+By default Claude buffers a tool call's whole input JSON before streaming it, so a large tool call (a big file write, say) can leave the stream silent long enough to trip a client read timeout. Set `eager_input_streaming: true` on a tool and its input streams as it is generated. LiteLLM turns the flag into the `fine-grained-tool-streaming-2025-05-14` beta on every Bedrock route (Converse and Invoke, `/v1/chat/completions`, `/v1/messages`, and `/v1/responses`), so it works on every Claude model on Bedrock, including older ones that reject the per-tool field. The beta is request-wide: once one tool sets it, every tool's input streams eagerly, and the streamed deltas can be partial JSON until the block ends.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python keep-model-ids
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    messages=[{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "write_file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                "required": ["path", "content"],
+            },
+        },
+        "eager_input_streaming": True,
+    }],
+    stream=True,
+)
+for chunk in response:
+    print(chunk.choices[0].delta.tool_calls)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+**Set on YAML Config**
+
+```yaml keep-model-ids
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0  # bedrock/converse/ and bedrock/invoke/ work too
+```
+
+**OpenAI format, `/v1/chat/completions`**
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "parameters": {
+          "type": "object",
+          "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+          "required": ["path", "content"]
+        }
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**Anthropic format, `/v1/messages`**
+
+```bash
+curl http://0.0.0.0:4000/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LITELLM_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "bedrock-claude",
+    "max_tokens": 4096,
+    "messages": [{"role": "user", "content": "Write a 2000 word README to docs/README.md"}],
+    "tools": [{
+      "name": "write_file",
+      "input_schema": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+**OpenAI Responses format, `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-claude",
+    "input": "Write a 2000 word README to docs/README.md",
+    "tools": [{
+      "type": "function",
+      "name": "write_file",
+      "parameters": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        "required": ["path", "content"]
+      },
+      "eager_input_streaming": true
+    }],
+    "stream": true
+  }'
+```
+
+</TabItem>
+</Tabs>
+
 
 ## Usage - Structured Output / JSON mode 
 
@@ -906,7 +1064,7 @@ class EventsList(BaseModel):
     events: list[CalendarEvent]
 
 response = completion(
-  model="bedrock/anthropic.claude-3-7-sonnet-20250219-v1:0", # specify invoke via `bedrock/invoke/anthropic.claude-3-7-sonnet-20250219-v1:0`
+  model="bedrock/anthropic.{{anthropic}}", # specify invoke via `bedrock/invoke/anthropic.{{anthropic}}`
   response_format=EventsList,
   messages=[
     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -924,7 +1082,7 @@ print(response.choices[0].message.content)
 model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0 # specify invoke via `bedrock/invoke/<model_name>` 
+      model: bedrock/us.anthropic.{{anthropic}} # specify invoke via `bedrock/invoke/<model_name>` 
       aws_access_key_id: os.environ/CUSTOM_AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/CUSTOM_AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/CUSTOM_AWS_REGION_NAME
@@ -998,7 +1156,7 @@ Valid from v1.65.1+
 from litellm import completion
 
 response = completion(
-    model="bedrock/anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model="bedrock/anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     performanceConfig={"latency": "optimized"},
 )
@@ -1013,8 +1171,8 @@ response = completion(
 model_list:
   - model_name: bedrock-claude-3-7
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0
-      performanceConfig: {"latency": "optimized"} # 👈 EITHER HERE OR ON REQUEST
+      model: bedrock/us.anthropic.{{anthropic}}
+      performanceConfig: {"latency": "optimized"} # EITHER HERE OR ON REQUEST
 ```
 
 2. Start proxy 
@@ -1032,7 +1190,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{
     "model": "bedrock-claude-3-7",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "performanceConfig": {"latency": "optimized"} # 👈 EITHER HERE OR ON CONFIG.YAML
+    "performanceConfig": {"latency": "optimized"} # EITHER HERE OR ON CONFIG.YAML
   }'
 ```
 
@@ -1065,7 +1223,7 @@ from litellm import completion
 
 # Using OpenAI-style service_tier parameter
 response = completion(
-    model="bedrock/converse/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/converse/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello!"}],
     service_tier="priority"  # Automatically translated to serviceTier={"type": "priority"}
 )
@@ -1151,7 +1309,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-    model="anthropic.claude-v2",
+    model="us.anthropic.{{anthropic}}",
     messages=[
         {
             "content": "where do i buy coffee from? ",
@@ -1168,7 +1326,7 @@ response = completion(
 
 # Selective guardrail usage with guarded_text - only specific content is evaluated
 response_guard = completion(
-    model="anthropic.claude-v2",
+    model="us.anthropic.{{anthropic}}",
     messages=[
         {
             "role": "user",
@@ -1196,7 +1354,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="anthropic.claude-v2", messages = [
+response = client.chat.completions.create(model="us.anthropic.{{anthropic}}", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -1223,7 +1381,7 @@ print(response)
 model_list:
   - model_name: bedrock-claude-v1
     litellm_params:
-      model: bedrock/anthropic.claude-instant-v1
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/CUSTOM_AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/CUSTOM_AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/CUSTOM_AWS_REGION_NAME
@@ -1283,10 +1441,13 @@ print(response_guard)
 
 If you're using Anthropic's Claude with Bedrock, you can "put words in Claude's mouth" by including an `assistant` role message as the last item in the `messages` array.
 
-> [!IMPORTANT]
-> The returned completion will _**not**_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+:::info
 
-```python
+The returned completion will _**not**_ include your "pre-fill" text, since it is part of the prompt itself. Make sure to prefix Claude's completion with your pre-fill.
+
+:::
+
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1315,7 +1476,7 @@ Assistant: {
 ## Usage - "System" messages
 If you're using Anthropic's Claude 2.1 with Bedrock, `system` role messages are properly formatted for you.
 
-```python
+```python keep-model-ids
 import os
 from litellm import completion
 
@@ -1352,7 +1513,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-  model="bedrock/anthropic.claude-instant-v1",
+  model="bedrock/us.anthropic.{{anthropic}}",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
   stream=True
 )
@@ -1373,7 +1534,7 @@ for chunk in response:
     }
   ],
   "created": null,
-  "model": "anthropic.claude-instant-v1",
+  "model": "us.anthropic.{{anthropic}}",
   "usage": {
     "prompt_tokens": null,
     "completion_tokens": null,
@@ -1399,10 +1560,10 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 
-litellm.set_verbose = True #  👈 SEE RAW REQUEST 
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
-    model="bedrock/us.anthropic.claude-3-haiku-20240307-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=messages,
     max_tokens=10,
     temperature=0.1,
@@ -1418,9 +1579,9 @@ print("Final Response: {}".format(response))
 
 ```yaml
 model_list:
-  - model_name: bedrock-claude-haiku
+  - model_name: bedrock-claude-sonnet
     litellm_params:
-      model: bedrock/us.anthropic.claude-3-haiku-20240307-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -1443,7 +1604,7 @@ litellm --config /path/to/config.yaml
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "bedrock-claude-haiku",
+      "model": "bedrock-claude-sonnet",
       "messages": [
         {
           "role": "user",
@@ -1464,7 +1625,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="bedrock-claude-haiku", messages = [
+response = client.chat.completions.create(model="bedrock-claude-sonnet", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -1488,7 +1649,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "bedrock-claude-haiku",
+    model = "bedrock-claude-sonnet",
     temperature=0.1
 )
 
@@ -1523,6 +1684,8 @@ LiteLLM defaults to the `invoke` route. LiteLLM uses the `converse` route for Be
 
 To explicitly set the route, do `bedrock/converse/<model>` or `bedrock/invoke/<model>`.
 
+GPT-5.6 and newer are the exception: they default to AWS's OpenAI-compatible endpoint, and `bedrock/chat_completions/<model>` opts any other model AWS serves there in. See [Native Chat Completions route](#native-chat-completions-route).
+
 
 E.g. 
 
@@ -1548,6 +1711,89 @@ model_list:
 </TabItem>
 </Tabs>
 
+## Native Chat Completions route
+
+AWS serves some Bedrock models on an OpenAI-compatible endpoint, `https://bedrock-runtime.{region}.amazonaws.com/openai/v1/chat/completions`. For those models LiteLLM can send your `/chat/completions` request to that endpoint in the shape it arrived in, instead of translating it to Converse and back. Fewer translations means less latency and fewer places for a parameter to get lost.
+
+| Model | LiteLLM model name | Default route |
+|-------|--------------------|---------------|
+| GPT-5.6 Sol, Terra, Luna | `bedrock/us.openai.gpt-5.6-sol`, `bedrock/global.openai.gpt-5.6-sol`, and the `terra` / `luna` variants | Native Chat Completions |
+| GPT-6 Sol, Astra, Luna | `bedrock/us.openai.gpt-6-sol`, `bedrock/global.openai.gpt-6-sol`, and the `astra` / `luna` variants | Native Chat Completions |
+| GPT-6.1 Sol | `bedrock/us.openai.gpt-6.1-sol`, `bedrock/global.openai.gpt-6.1-sol` | Native Chat Completions |
+| GPT-OSS 20B, 120B | `bedrock/openai.gpt-oss-20b-1:0`, `bedrock/openai.gpt-oss-120b-1:0`, and the `us-gov.` profile ids | Converse; `bedrock/chat_completions/openai.gpt-oss-20b-1:0` for native Chat Completions |
+| Grok 4.6 | `bedrock/us.xai.grok-4.6`, `bedrock/global.xai.grok-4.6`, `bedrock/us-gov.xai.grok-4.6` | Converse; `bedrock/chat_completions/us.xai.grok-4.6` for native Chat Completions |
+| Everything else (Claude, Nova, Llama, Mistral, ...) | `bedrock/<model-id>` | Converse or Invoke, as before |
+
+GPT-5.6 and newer (`openai.gpt-5.6-*`, `openai.gpt-6-*`, `openai.gpt-6.1-*`, and later versions) take the native route by default when their entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) lists `/v1/chat/completions` under `supported_endpoints`, the same key that opts a model into the native `/v1/responses` route. Older GPT ids, GPT-OSS, and Grok keep the Converse route they had before unless you prefix the model with `bedrock/chat_completions/`, and `bedrock/converse/` pins any model to Converse. Authentication, regions, `aws_bedrock_runtime_endpoint`, and cost tracking work the same on both routes. A region path in the model name (`bedrock/chat_completions/us-gov-west-1/openai.gpt-oss-20b-1:0`) works the same too: the region picks the endpoint and the id after it is what AWS receives, and an explicit `aws_region_name` still wins over the path. [`bedrock/openai/<imported-model-arn>`](./bedrock_imported.md#openai-compatible-imported-models-qwen-25-vl-etc) is a separate route for imported models and is unchanged.
+
+The trade-off is that the OpenAI-compatible endpoint has no equivalent for a few Converse features, so LiteLLM falls back to Converse per request when you use one of them:
+
+| Request | Route used | Why |
+|---------|------------|-----|
+| `guardrailConfig` in the request body | Converse | AWS takes guardrails on the OpenAI-compatible endpoint as `X-Amzn-Bedrock-Guardrail*` headers and rejects a `guardrailConfig` body field, so LiteLLM keeps those requests on Converse and your guardrail behavior does not change |
+| `requestMetadata`, `performanceConfig`, `serviceTier`, or `outputConfig` in the request body | Converse | These Converse body fields are rejected as malformed input on the OpenAI-compatible endpoint |
+| `bedrock_request_metadata_fields` set in `litellm_settings` | Converse, for every request | LiteLLM only writes the operator's request metadata onto the Converse body |
+| Application inference profile ARN as the model | Converse | LiteLLM cannot tell from the ARN which model it fronts |
+| Function `tools` with `reasoning_effort` other than `"none"` (or unset), on a model without `"supports_bedrock_runtime_chat_completions_tools_with_reasoning": true` in the cost map (the GPT-5.6, GPT-6, and GPT-6.1 families today) | Converse | AWS only accepts function tools on Chat Completions for these models when `reasoning_effort` is `"none"`, and GPT-6.1 does not accept `"none"` at all, so its tool calls always go through Converse; GPT-OSS and Grok carry the flag and take tools with any effort |
+| `response_format` with `"type": "json_object"`, with or without LiteLLM's `response_schema` key, on any model | Converse | AWS's OpenAI-compatible endpoint answers 400 for `json_object` unless a message contains the word "json", so LiteLLM keeps Converse's handling: a `response_schema` becomes a forced `json_tool_call` tool that returns the JSON you asked for, and a schema-less `json_object` behaves as it did on Converse before |
+| A JSON schema `response_format` (`{"type": "json_schema", ...}` or a Pydantic model), on a model without `"supports_bedrock_runtime_chat_completions_response_format": true` in the cost map (GPT-OSS today) | Converse | AWS accepts `response_format` for GPT-OSS on Chat Completions but answers with free text anyway, so LiteLLM keeps the Converse emulation (a forced `json_tool_call` tool) that returns the JSON you asked for; GPT-5.6 and newer and Grok carry the flag and enforce the schema natively |
+| `stop` sequences | Converse | Converse forwards `stop` as `stopSequences`, which AWS answers with a 400 for these models, the same as before this route existed; sent natively, GPT-OSS and Grok apply `stop` to their hidden reasoning too and answer with empty content, which is worse than the error |
+| `top_k` or `additionalModelRequestFields` | Converse | Only Converse forwards these model-specific fields |
+| A `thinking` block on `/chat/completions` | Converse | The OpenAI-compatible endpoint has no `thinking` field; on `/v1/messages` LiteLLM maps `thinking` to `reasoning_effort` and the request stays native |
+| `bedrock/converse/<model>` | Converse | You asked for it explicitly |
+
+What you will notice on the native route: the response carries AWS's own `id` and `service_tier` fields, tool call ids are AWS's own (`call_0` for the GPT-5.6 and newer families and Grok, `chatcmpl-tool-...` for GPT-OSS) instead of `tooluse_...`, `max_tokens` is sent as `max_completion_tokens`, a JSON schema `response_format` and `service_tier` are sent through as you wrote them, `n` greater than 1 is unsupported (as on Converse), GPT-OSS reasoning comes back in `reasoning_content` (LiteLLM splits it out of the inline `<reasoning>...</reasoning>` prefix AWS returns) without the Converse-only `thinking_blocks` field, an `http(s)://` image URL in a message is downloaded by LiteLLM and sent inline as a `data:` URL because the endpoint does not fetch remote images itself, and Grok drops `reasoning_effort: "none"` (it always reasons) while `low`, `medium`, `high`, and `xhigh` are sent through.
+
+On the GPT-5.6 and newer families, AWS ties `temperature`, `top_p`, `frequency_penalty`, `presence_penalty`, `logprobs`, and `top_logprobs` to reasoning being off: with `reasoning_effort: "none"` LiteLLM sends them through as you wrote them, and with any other effort, or none set, AWS would answer 400, so LiteLLM answers 400 up front naming the parameters, or drops them when `drop_params` is on. GPT-6.1 does not take `"none"` at all, so it never samples on Bedrock. Converse rejects `temperature` and `top_p` for these models at every effort, so `reasoning_effort: "none"` on the native route is the one way to sample them. GPT-OSS always refuses `logit_bias` and Grok always refuses the penalties, at any effort, with the same 400-or-drop handling.
+
+To send GPT-OSS or Grok to the native endpoint, prefix the model with `bedrock/chat_completions/`:
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+completion(model="bedrock/chat_completions/openai.gpt-oss-20b-1:0", messages=[{"role": "user", "content": "Hello"}])
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: gpt-oss-20b-native
+    litellm_params:
+      model: bedrock/chat_completions/openai.gpt-oss-20b-1:0
+```
+
+</TabItem>
+</Tabs>
+
+To keep a GPT-5.6 or newer model on Converse for every request, set the route explicitly:
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+completion(model="bedrock/converse/us.openai.gpt-5.6-sol", messages=[{"role": "user", "content": "Hello"}])
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: gpt-5.6-sol-converse
+    litellm_params:
+      model: bedrock/converse/us.openai.gpt-5.6-sol
+```
+
+</TabItem>
+</Tabs>
+
 ## Alternate user/assistant messages
 
 Use `user_continue_message` to add a default user message, for cases (e.g. Autogen) where the client might not follow alternating user/assistant messages starting and ending with a user message. 
@@ -1557,7 +1803,7 @@ Use `user_continue_message` to add a default user message, for cases (e.g. Autog
 model_list:
   - model_name: "bedrock-claude"
     litellm_params:
-      model: "bedrock/anthropic.claude-instant-v1"
+      model: "bedrock/us.anthropic.{{anthropic}}"
       user_continue_message: {"role": "user", "content": "Please continue"}
 ```
 
@@ -1569,7 +1815,7 @@ just set `litellm.modify_params=True` and LiteLLM will automatically handle this
 model_list:
   - model_name: "bedrock-claude"
     litellm_params:
-      model: "bedrock/anthropic.claude-instant-v1"
+      model: "bedrock/us.anthropic.{{anthropic}}"
 
 litellm_settings:
    modify_params: true
@@ -1580,7 +1826,7 @@ Test it!
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-claude",
     "messages": [{"role": "assistant", "content": "Hey, how's it going?"}]
@@ -1625,14 +1871,14 @@ file_data = response.content
 encoded_file = base64.b64encode(file_data).decode("utf-8")
 
 # model
-model = "bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+model = "bedrock/us.anthropic.{{anthropic}}"
 
 image_content = [
     {"type": "text", "text": "What's this file about?"},
     {
         "type": "file",
         "file": {
-            "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+            "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
         }
     },
 ]
@@ -1656,7 +1902,7 @@ assert response is not None
 model_list:
   - model_name: bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -1673,7 +1919,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1681,7 +1927,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
         {
             "type": "file",
             "file": {
-                "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
             }
         }
     ]
@@ -1713,7 +1959,7 @@ encoded_file = base64.b64encode(file_data).decode("utf-8")
 base64_url = f"data:application/pdf;base64,{encoded_file}"
 
 # model
-model = "bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+model = "bedrock/us.anthropic.{{anthropic}}"
 
 image_content = [
     {"type": "text", "text": "What's this file about?"},
@@ -1742,7 +1988,7 @@ assert response is not None
 model_list:
   - model_name: bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: os.environ/AWS_REGION_NAME
@@ -1759,7 +2005,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -1779,7 +2025,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 | Property | Details |
 |----------|---------|
-| Provider Route | `bedrock/converse/openai.gpt-oss-20b-1:0`, `bedrock/converse/openai.gpt-oss-120b-1:0` |
+| Provider Route | `bedrock/converse/openai.gpt-oss-20b-1:0`, `bedrock/converse/openai.gpt-oss-120b-1:0`; `bedrock/chat_completions/openai.gpt-oss-20b-1:0` for the [native Chat Completions route](#native-chat-completions-route) |
 | Provider Documentation | [Amazon Bedrock ↗](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) |
 
 <Tabs>
@@ -1844,7 +2090,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test GPT OSS via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "gpt-oss-20b",
@@ -1854,6 +2100,71 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "What are the key benefits of open source AI?"
       }
     ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+## OpenAI models on the native Responses API
+
+AWS serves its OpenAI models on bedrock-runtime's own Responses endpoint, `https://bedrock-runtime.{region}.amazonaws.com/openai/v1/responses`. For the models that opt in, LiteLLM sends your `/v1/responses` request there in the shape it arrived in, instead of translating it into Converse through the Chat Completions bridge. That is what makes Responses-only parameters work: `prompt_cache_key` reaches Bedrock and the repeat call reports cached tokens in `usage.input_tokens_details`, where the bridge answered 400 with `bedrock does not support parameters: ['prompt_cache_key']`.
+
+A model opts in through `"supported_endpoints": ["/v1/responses"]` on its entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Today that is the `us.` and `global.` inference profiles of GPT-5.4, GPT-5.5, GPT-5.6 (Sol, Terra, Luna), and GPT-6 (Astra, Sol, Luna), so `bedrock/us.openai.gpt-6-astra` and `bedrock/global.openai.gpt-5.6-sol` take the native route while `bedrock/openai.gpt-oss-120b-1:0` keeps the bridge. The flag can be overridden per deployment through `model_info` on the proxy or `litellm.register_model` in the SDK, so onboarding a model is a JSON change.
+
+Authentication, regions, and cost tracking work the same as on Converse: SigV4 credentials or a Bedrock API key as `api_key`, with the host picked from the region's partition. An `aws_bedrock_runtime_endpoint` that already ends in `/openai/v1/responses`, `/v1/responses`, or `/responses` is used as is.
+
+What is different on the native route: `background` is dropped with a proxy-log warning, since bedrock-runtime rejects it and the bridge never forwarded it either. A `web_search` tool is dropped with a warning, since bedrock-runtime answers that web search is not supported. `file_search` keeps LiteLLM's emulation. Remote `http(s)` image URLs, in `input_image` blocks, in `function_call_output` lists, and in `computer_call_output` screenshots, are downloaded and inlined as data URIs, because bedrock-runtime accepts only `data:` and `s3://` images. Streaming works as on OpenAI.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python title="Native Responses API SDK Usage" showLineNumbers
+import os
+from litellm import responses
+
+os.environ["AWS_ACCESS_KEY_ID"] = "your-aws-access-key"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "your-aws-secret-key"
+os.environ["AWS_REGION_NAME"] = "us-east-1"
+
+response = responses(
+    model="bedrock/us.openai.gpt-6-astra",
+    input="Reply with the single word pong.",
+    prompt_cache_key="my-session",
+)
+print(response.output_text)
+```
+
+</TabItem>
+
+<TabItem value="proxy" label="Proxy">
+
+**1. Add to config**
+
+```yaml title="config.yaml" showLineNumbers
+model_list:
+  - model_name: bedrock-gpt-6-astra
+    litellm_params:
+      model: bedrock/us.openai.gpt-6-astra
+      aws_region_name: us-east-1
+```
+
+**2. Start the proxy**
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+**3. Call `/v1/responses`**
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -d '{
+    "model": "bedrock-gpt-6-astra",
+    "input": "Reply with the single word pong.",
+    "prompt_cache_key": "my-session"
   }'
 ```
 
@@ -1934,7 +2245,7 @@ litellm --config /path/to/config.yaml
 
 ```bash title="Test Pegasus via Proxy" showLineNumbers
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-  --header 'Authorization: Bearer sk-1234' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
     "model": "pegasus-video",
@@ -1987,14 +2298,14 @@ print(response.choices[0].message.content)
 
 ## Provisioned throughput models
 To use provisioned throughput Bedrock models pass 
-- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.claude-v2`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models)
+- `model=bedrock/<base-model>`, example `model=bedrock/anthropic.{{anthropic}}`. Set `model` to any of the [Supported AWS models](#supported-aws-bedrock-models)
 - `model_id=provisioned-model-arn` 
 
 Completion
 ```python
 import litellm
 response = litellm.completion(
-    model="bedrock/anthropic.claude-instant-v1",
+    model="bedrock/anthropic.{{anthropic}}",
     model_id="provisioned-model-arn",
     messages=[{"content": "Hello, how are you?", "role": "user"}]
 )
@@ -2048,6 +2359,7 @@ Here's an example of using a bedrock model with LiteLLM. For a complete list, re
 | TwelveLabs Pegasus 1.2 (US) | `completion(model='bedrock/us.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | TwelveLabs Pegasus 1.2 (EU) | `completion(model='bedrock/eu.twelvelabs.pegasus-1-2-v1:0', messages=messages, mediaSource={...})`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Moonshot Kimi K2 Thinking | `completion(model='bedrock/moonshot.kimi-k2-thinking', messages=messages)` or `completion(model='bedrock/invoke/moonshot.kimi-k2-thinking', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
+| Moonshot Kimi K3 | `completion(model='bedrock/global.moonshotai.kimi-k3', messages=messages)` or `completion(model='bedrock/us.moonshotai.kimi-k3', messages=messages)`. The bare `moonshotai.kimi-k3` ID is an inference-profile-only entry and is not callable on demand | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 
 
 ## Bedrock Embedding
@@ -2133,7 +2445,7 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = ""
 os.environ["AWS_REGION_NAME"] = ""
 
 response = completion(
-    model="bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
     model_id="arn:aws:bedrock:eu-central-1:000000000000:application-inference-profile/a0a0a0a0a0a0",
 )
@@ -2148,9 +2460,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: anthropic-claude-3-5-sonnet
+  - model_name: anthropic-claude-sonnet-4-5
     litellm_params:
-      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       # You have to set the ARN application inference profile in the model_id parameter
       model_id: arn:aws:bedrock:eu-central-1:000000000000:application-inference-profile/a0a0a0a0a0a0
 ```
@@ -2166,9 +2478,9 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "anthropic-claude-3-5-sonnet",
+  "model": "anthropic-claude-sonnet-4-5",
   "messages": [
     {
       "role": "user",
@@ -2195,7 +2507,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_access_key_id="",
             aws_secret_access_key="",
@@ -2215,10 +2527,10 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_access_key_id="",
             aws_secret_access_key="",
@@ -2237,11 +2549,11 @@ response = completion(
 model_list:
     - model_name: bedrock-model
       litellm_params:
-        model: bedrock/anthropic.claude-instant-v1
-        aws_access_key_id: "",
-        aws_secret_access_key: "",
-        aws_region_name: "",
-        aws_bedrock_runtime_endpoint: "https://my-fake-endpoint.com",
+        model: bedrock/us.anthropic.{{anthropic}}
+        aws_access_key_id: ""
+        aws_secret_access_key: ""
+        aws_region_name: ""
+        aws_bedrock_runtime_endpoint: "https://my-fake-endpoint.com"
         extra_headers: {"key": "value"}
 ```
 
@@ -2256,7 +2568,7 @@ litellm --config /path/to/config.yaml --detailed_debug
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "bedrock-model",
     "messages": [
@@ -2285,7 +2597,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -2297,7 +2609,7 @@ import os
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_profile_name="dev-profile",
 )
@@ -2314,6 +2626,50 @@ response = completion(
 | `aws_secret_access_key` | `aws_secret_access_key` | AWS secret key associated with the access key | [Credentials](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) |
 | `aws_role_name` | `RoleArn` | The Amazon Resource Name (ARN) of the role to assume | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
 | `aws_session_name` | `RoleSessionName` | An identifier for the assumed role session | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+| `aws_session_tags` | `Tags` | Optional. A list of `{"Key": <str>, "Value": <str>}` pairs sent as session tags on the AssumeRole call, for example `[{"Key": "team", "Value": "genai"}]` | [AssumeRole API](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts.html#STS.Client.assume_role) |
+
+#### Session tags
+
+`aws_session_tags` attaches [STS session tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html) to the AssumeRole call. Each tag lands on the assumed session as `aws:PrincipalTag/<Key>`, so the role's trust policy and downstream resource policies can key on it. The AssumeRole event in CloudTrail lists the tags under `requestParameters.tags`, so role sessions can be attributed by tag
+
+Tags are set per deployment, so every request routed to that model entry carries the same tags. Tag order does not matter, and deployments with the same tags on the same role share one cached STS session. This applies to Bedrock chat and invoke, embeddings, batches and SageMaker deployments, anywhere LiteLLM performs the AssumeRole itself. The target role's trust policy must allow `sts:TagSession` next to `sts:AssumeRole`; see [Trust policy for session tags](#trust-policy-for-session-tags)
+
+Like `aws_role_name`, `aws_session_name` and `aws_external_id`, this is an operator-side setting. The proxy rejects `aws_session_tags` in client request bodies with HTTP 401 unless the admin opts in with `general_settings.allow_client_side_credentials: true` or lists it under `configurable_clientside_auth_params` on the deployment. See [Clientside LLM Credentials](../proxy/clientside_auth.md). On the proxy's model management endpoints (`/model/new`, `/model/update` and `PATCH /model/{model_id}/update`), only a proxy admin can set or change `aws_session_tags`. A team admin editing a team model gets HTTP 403 unless the tags stay the same
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+response = completion(
+    model="bedrock/us.anthropic.{{anthropic_large}}",
+    messages=[{"role": "user", "content": "Hello!"}],
+    aws_region_name="us-east-1",
+    aws_role_name="arn:aws:iam::123456789012:role/litellm-bedrock",
+    aws_session_name="litellm-proxy",
+    aws_session_tags=[{"Key": "team", "Value": "genai"}],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic_large}}
+      aws_region_name: us-east-1
+      aws_role_name: arn:aws:iam::123456789012:role/litellm-bedrock
+      aws_session_name: litellm-proxy
+      aws_session_tags:
+        - Key: team
+          Value: genai
+```
+
+</TabItem>
+</Tabs>
 
 ### IAM Roles Anywhere (On-Premise / External Workloads)
 
@@ -2340,7 +2696,7 @@ credential_process = aws_signing_helper credential-process \
 from litellm import completion
 
 response = completion(
-    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello!"}],
     aws_profile_name="litellm-roles-anywhere",
 )
@@ -2353,7 +2709,7 @@ response = completion(
 model_list:
   - model_name: bedrock-claude
     litellm_params:
-      model: bedrock/anthropic.claude-3-sonnet-20240229-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       aws_profile_name: "litellm-roles-anywhere"
 ```
 
@@ -2397,6 +2753,24 @@ Replace `<TARGET_ROLE_ARN>` with the ARN of the role you want to assume (e.g., `
 
 **Note:** The target role itself must also trust the calling IAM identity (via its trust policy) for AssumeRole to succeed. See [AWS AssumeRole docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-api.html) for more details.
 
+#### Trust policy for session tags
+
+When a deployment sets `aws_session_tags`, the target role's trust policy must also allow `sts:TagSession`. Without it, AssumeRole fails with `AccessDenied ... is not authorized to perform: sts:TagSession`. Replace `<LITELLM_IDENTITY_ARN>` with the IAM identity running LiteLLM. The `Condition` is optional and makes the role admit only sessions that carry the expected tag:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "<LITELLM_IDENTITY_ARN>"},
+      "Action": ["sts:AssumeRole", "sts:TagSession"],
+      "Condition": {"StringEquals": {"aws:RequestTag/team": "genai"}}
+    }
+  ]
+}
+```
+
 ---
 
 <Tabs>
@@ -2406,7 +2780,7 @@ Replace `<TARGET_ROLE_ARN>` with the ARN of the role you want to assume (e.g., `
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=messages,
             max_tokens=10,
             temperature=0.1,
@@ -2421,7 +2795,7 @@ If you also need to dynamically set the aws user accessing the role, add the add
 from litellm import completion
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=messages,
             max_tokens=10,
             temperature=0.1,
@@ -2454,7 +2828,7 @@ model_list:
 
 ### Passing an external BedrockRuntime.Client as a parameter - Completion()
   
-This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above 👆. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
+This is a deprecated flow. Boto3 is not async. And boto3.client does not let us make the http call through httpx. Pass in your aws params through the method above. [See Auth Code](https://github.com/BerriAI/litellm/blob/55a20c7cce99a93d36a82bf3ae90ba3baf9a7f89/litellm/llms/bedrock_httpx.py#L284) [Add new auth flow](https://github.com/BerriAI/litellm/issues)
 
 :::warning
 
@@ -2483,7 +2857,7 @@ bedrock = boto3.client(
 )
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_bedrock_client=bedrock,
 )
@@ -2501,7 +2875,7 @@ bedrock = dev_session.client(
 )
 
 response = completion(
-            model="bedrock/anthropic.claude-instant-v1",
+            model="bedrock/us.anthropic.{{anthropic}}",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             aws_bedrock_client=bedrock,
 )
@@ -2519,7 +2893,7 @@ from litellm import completion
 response = completion(
     model="bedrock/converse_like/some-model",
     messages=[{"role": "user", "content": "What's AWS?"}],
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     api_base="https://some-api-url/models",
     extra_headers={"test": "hello world"},
 )
@@ -2551,7 +2925,7 @@ litellm --config config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "anthropic-claude",
     "messages": [

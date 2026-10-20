@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# 🆕 OVHCloud AI Endpoints
+# OVHCloud AI Endpoints
 Leading French Cloud provider in Europe with data sovereignty and privacy.
 
 You can explore the last models we made available in our [catalog](https://endpoints.ai.cloud.ovh.net/catalog).
@@ -64,7 +64,7 @@ response = completion(
     temperature = 0.2,
     top_p = 0.9,
     user = "user",
-    api_key = "your-api-key" # Optional if set through the enviromnent variable,
+    api_key = "your-api-key", # Optional if set through the enviromnent variable
     stream = True
 )
 
@@ -86,14 +86,14 @@ def get_current_weather(location, unit="celsius"):
 
 def print_message(role, content, is_tool_call=False, function_name=None):
     if role == "user":
-        print(f"🧑 User: {content}")
+        print(f"User: {content}")
     elif role == "assistant":
         if is_tool_call:
-            print(f"🤖 Assistant: I will call the function '{function_name}' to get some informations.")
+            print(f"Assistant: I will call the function '{function_name}' to get some informations.")
         else:
-            print(f"🤖 Assistant: {content}")
+            print(f"Assistant: {content}")
     elif role == "tool":
-        print(f"🔧 Tool ({function_name}): {content}")
+        print(f"Tool ({function_name}): {content}")
     print()
 
 messages = [{"role": "user", "content": "What's the weather like in Paris?"}]
@@ -120,13 +120,13 @@ tools = [
     }
 ]
 
-print("🌟 Beginning of the conversation")
+print("Beginning of the conversation")
 
 # Initial user message
 print_message("user", messages[0]["content"])
 
 # First request to the model
-print("📡 Sending first request to the model...")
+print("Sending first request to the model...")
 response = completion(
     model=model,
     messages=messages,
@@ -145,7 +145,7 @@ if tool_calls:
     # Display the tool calls suggested by the model
     for tool_call in tool_calls:
         print_message("assistant", "", is_tool_call=True, function_name=tool_call.function.name)
-        print(f"   📋 Arguments: {tool_call.function.arguments}")
+        print(f"   Arguments: {tool_call.function.arguments}")
         print()
     
     # Add assistant message with tool calls to the conversation history
@@ -172,7 +172,7 @@ if tool_calls:
         function_to_call = available_functions[function_name]
         function_args = json.loads(tool_call.function.arguments)
         
-        print(f"🔧 Executing function '{function_name}'...")
+        print(f"Executing function '{function_name}'...")
         function_response = function_to_call(
             location=function_args.get("location"),
             unit=function_args.get("unit"),
@@ -188,7 +188,7 @@ if tool_calls:
             "content": json.dumps(function_response),
         })
     
-    print("📡 Sending second request to the model with results...")
+    print("Sending second request to the model with results...")
     
     # Second request with function results
     second_response = completion(
@@ -356,7 +356,7 @@ Here's how to call a OVHCloud AI Endpoints model with the LiteLLM Proxy Server
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -378,7 +378,7 @@ Here's how to call a OVHCloud AI Endpoints model with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",

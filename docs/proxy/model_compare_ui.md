@@ -89,7 +89,7 @@ Apply tags to organize and filter your comparisons:
 Configure vector store retrieval for RAG (Retrieval Augmented Generation) comparisons:
 
 1. Select vector stores from the dropdown
-2. Compare how different models utilize retrieved context
+2. Compare how different models use retrieved context
 3. Evaluate RAG performance across models
 
 <Image img={require('../../img/ui_model_compare_vector_stores_config.png')} />
@@ -188,6 +188,7 @@ Use tags and multiple comparisons to run structured A/B tests:
 ## Related Features
 
 - [Playground Chat UI](./ui.md) - Single model testing interface
+- [Chat UI](./ui/chat_ui.md) - Chat page with chat history, MCP tools, and your own keys, logs, and usage
 - [Model Management](./model_management.md) - Configure and manage models
 - [Guardrails](./guardrails/quick_start.md) - Set up safety filters
 - [AI Hub](./ai_hub.md) - Share models and agents with your organization

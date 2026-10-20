@@ -6,7 +6,7 @@ This page documents which A2A agent card fields LiteLLM supports today, how invo
 
 For provider-specific setup, see:
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 
 ## Agent card support
 
@@ -47,6 +47,8 @@ The fields below mirror the A2A v1.0 specification ([§4.4 Agent Discovery Objec
 | `pushNotifications` | ❌ |
 | `extensions` | ❌ |
 | `extendedAgentCard` | ❌ |
+
+A `capabilities` block with no truthy `streaming` marks an agent that cannot stream: a streaming chat completion to it runs as one blocking `message/send` and is replayed as a single chunk. A card with no `capabilities` block keeps `message/stream`
 
 ### AgentExtension (§4.4.4)
 
@@ -92,7 +94,7 @@ The fields below mirror the A2A v1.0 specification ([§4.4 Agent Discovery Objec
 When you register an A2A agent in LiteLLM:
 
 1. You provide a base URL (and, for some providers, an assistant identifier).
-2. LiteLLM fetches the upstream agent card from the agent's `/.well-known/agent-card.json` (or the provider-specific equivalent).
+2. LiteLLM fetches the upstream agent card from the agent's `/.well-known/agent-card.json`, then `/.well-known/agent.json`, then `/agentCard/v1.0`, stopping at the first path that answers. Set `agent_card_path` in the agent's `litellm_params` (for example `agentCard/v1.0`, the path Microsoft Foundry serves) to fetch that path directly.
 3. You review the parsed card in the LiteLLM UI, choose which skills and fields to expose, and pick a **Protocol Version** (`1.0` or `0.3`) for clients.
 4. LiteLLM saves the curated card and serves it at:
 
@@ -120,7 +122,7 @@ LiteLLM converts upstream agent responses to the `protocolVersion` pinned on eac
 
 Set this in the agent card UI or in `agent_card_params` at registration. Unsupported values are rejected with HTTP 400.
 
-Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config — pin `protocolVersion` only if your client expects a specific wire format.
+Completion-bridge agents (LangGraph, Bedrock AgentCore, etc.) do not need extra provider config. Pin `protocolVersion` only if your client expects a specific wire format.
 
 See [Protocol versioning](./a2a#protocol-versioning) for client negotiation when `protocolVersion` is not pinned.
 
@@ -168,7 +170,7 @@ All methods below are accepted on `POST /a2a/{agent_id}` (and `POST /a2a/{agent_
 
 ```bash title="1. Send a message (0.3 wire format — pin protocolVersion: 0.3)"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -189,7 +191,7 @@ Use `result.id` from the response as the task id:
 
 ```bash title="2. Poll task status"
 curl -X POST "http://localhost:4000/a2a/my-agent" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -229,5 +231,5 @@ You can edit supported fields from the agent detail page in the LiteLLM UI. Use 
 
 ## Related documentation
 
-- [Register a LangGraph Platform agent](./providers/langgraph#register-a-langgraph-platform-agent)
+- [Register a LangGraph Platform agent](/docs/providers/langgraph)
 - [A2A Protocol Specification (v1.0)](https://a2a-protocol.org/latest/specification/)

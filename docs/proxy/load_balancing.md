@@ -1,5 +1,10 @@
+---
+sidebar_label: "Load Balancing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 # Proxy - Load Balancing
 Load balance multiple instances of the same model
@@ -29,7 +34,7 @@ LiteLLM automatically distributes requests across multiple deployments of the sa
 | **latency-based-routing** | Routes to fastest responding deployment | Latency-critical applications |
 | **cost-based-routing** | Routes to deployment with lowest cost | Cost-sensitive applications |
 
-:::tip Deployment Priority
+:::tip[Deployment Priority]
 Use the `order` parameter to prioritize specific deployments. [See Deployment Ordering](#deployment-ordering-priority) for details.
 :::
 
@@ -37,22 +42,22 @@ Use the `order` parameter to prioritize specific deployments. [See Deployment Or
 ## Quick Start - Load Balancing
 #### Step 1 - Set deployments on config
 
-**Example config below**. Here requests with `model=gpt-3.5-turbo` will be routed across multiple instances of `azure/gpt-3.5-turbo`
+**Example config below**. Here requests with `model={{openai_small}}` will be routed across multiple instances of `azure/{{openai_small}}`
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
       rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: <your-azure-api-key>
       rpm: 6
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-large
       api_base: https://openai-france-1234.openai.azure.com/
@@ -61,7 +66,7 @@ model_list:
 
 router_settings:
   routing_strategy: simple-shuffle # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
-  model_group_alias: {"gpt-4": "gpt-3.5-turbo"} # all requests with `gpt-4` will be routed to models with `gpt-3.5-turbo`
+  model_group_alias: {"{{openai_large}}": "{{openai_small}}"} # all requests with `{{openai_large}}` will be routed to models with `{{openai_small}}`
   num_retries: 2
   timeout: 30                                  # 30 seconds
   redis_host: <your redis host>                # set this when using multiple litellm proxy deployments, load balancing state stored in redis
@@ -69,11 +74,37 @@ router_settings:
   redis_port: 1992
 ```
 
+## Kubernetes pod discovery
+
+Set `kubernetes_pod_discovery: true` in a deployment's `litellm_params` when its `api_base` is a Kubernetes headless service; the router resolves the service hostname to ready pod IPs and round-robins requests across them, refreshing every `KUBERNETES_POD_DISCOVERY_REFRESH_INTERVAL_SECONDS`
+
+```yaml
+model_list:
+  - model_name: gpu-llama
+    litellm_params:
+      model: openai/fake-llama
+      api_base: http://my-vllm-headless.gpu.svc.cluster.local:8000/v1
+      api_key: os.environ/VLLM_API_KEY
+      kubernetes_pod_discovery: true
+```
+
+The Admin UI also exposes this setting at Add Model > Advanced Settings > "Kubernetes pod discovery"
+
+A request that carries an explicit session ID (`litellm_session_id`, or `session_id` in `metadata`) stays on one pod, so the inference server can reuse its prompt cache for that session. When both are set, `litellm_session_id` wins. A retry for that session moves to the next pod in a stable order, and requests without a session ID keep round-robining. Pod IPs that go unused for `KUBERNETES_POD_DISCOVERY_IDLE_EVICTION_SECONDS` are dropped from the cache
+
+Proxy admins can see the pods a model currently resolves to on the model's page in the Admin UI (Models + Endpoints, then select the model). The "Kubernetes pods" card lists the service host and port and each ready pod IP. Other roles do not see the card, and `GET /model/{model_id}/kubernetes_pods` rejects their requests
+
+To see which pod served a request, open Logs in the Admin UI and select the request. API Base shows the pod IP the request was sent to
+
+<Image img={require('../../img/kubernetes_pod_discovery_logs.png')} style={{ width: '100%', maxWidth: '1200px' }} />
+
+LiteLLM must run in the same cluster. Only `http://` bases are rewritten; `https://` bases are left unchanged because connecting to an IP breaks TLS hostname checks. If `HTTP_PROXY` is set and `NO_PROXY` exempts the service host but not each pod IP, LiteLLM keeps the service hostname and logs a warning, because HTTP clients do not match pod IPs against CIDR entries in `NO_PROXY`
+
 ## Enforce Model Rate Limits
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
 
-:::tip Separate input/output limits
+:::tip[Separate input/output limits]
 Set `itpm` and `otpm` instead of `tpm`/`rpm` when a provider publishes distinct input and output throughput limits. See [Separate ITPM / OTPM Rate Limits](./io_token_rate_limits).
 :::
 
@@ -85,16 +116,16 @@ By default, `rpm` and `tpm` values are only used for **routing decisions** (pick
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     rpm: 60     # 60 requests per minute
     tpm: 90000  # 90k tokens per minute
 
 router_settings:
   optional_pre_call_checks:
-    - enforce_model_rate_limits  # 👈 Enables strict enforcement
+    - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
 ### How It Works
@@ -146,9 +177,9 @@ $ litellm --config /path/to/config.yaml
 
 ### Test - Simple Call
 
-Here requests with model=gpt-3.5-turbo will be routed across multiple instances of azure/gpt-3.5-turbo
+Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
-👉 Key Change: `model="gpt-3.5-turbo"`
+Key Change: `model="{{openai_small}}"`
 
 **Check the `model_id` in Response Headers to make sure the requests are being load balanced**
 
@@ -164,7 +195,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",
@@ -183,7 +214,7 @@ print(response)
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -204,9 +235,9 @@ In this request, the following will occur:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
         {"role": "user", "content": "Hi there!"}
     ],
@@ -225,13 +256,13 @@ Example config
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
       rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/gpt-turbo-small-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
@@ -252,7 +283,7 @@ Expose an 'alias' for a 'model_name' on the proxy server.
 
 ```
 model_group_alias: {
-  "gpt-4": "gpt-3.5-turbo"
+  "{{openai_large}}": "{{openai_small}}"
 }
 ```
 
@@ -268,14 +299,14 @@ Example config with `router_settings`
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
       api_key: <your-azure-api-key>
 
 router_settings:
-  model_group_alias: {"gpt-4": "gpt-3.5-turbo"} # all requests with `gpt-4` will be routed to models 
+  model_group_alias: {"{{openai_large}}": "{{openai_small}}"} # all requests with `{{openai_large}}` will be routed to models 
 ```
 
 ### Hide Alias Models 
@@ -288,7 +319,7 @@ Use this if you want to set-up aliases for:
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
       model: azure/<your-deployment-name>
       api_base: <your-azure-endpoint>
@@ -296,10 +327,12 @@ model_list:
 
 router_settings:
   model_group_alias:
-    "GPT-3.5-turbo": # alias
-      model: "gpt-3.5-turbo"  # Actual model name in 'model_list'
+    "GPT-5.6-luna": # alias
+      model: "{{openai_small}}"  # Actual model name in 'model_list'
       hidden: true             # Exclude from `/v1/models`, `/v1/model/info`, `/v1/model_group/info`
 ```
+
+To hide a `model_list` entry itself rather than an alias, set `model_info.discoverable: false` on it ([Hide a model from `/v1/models`](./model_discovery#hide-a-model-from-v1models))
 
 ### Complete Spec 
 
@@ -318,34 +351,36 @@ Set `order` in `litellm_params` to prioritize deployments. Lower values = higher
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
-      order: 1  # 👈 Highest priority - always tried first
+      order: 1  # Highest priority - always tried first
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
-      order: 2  # 👈 Used when order=1 fails
+      order: 2  # Used when order=1 fails
 ```
 
 ### How order-based fallback works
 
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next.
 
-If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](#fallbacks).
+If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](./reliability.md).
+
+A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./reliability.md#explanation)
 
 ```yaml
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
       order: 1
 
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-secondary
       api_key: os.environ/AZURE_API_KEY_2
@@ -353,12 +388,12 @@ model_list:
 
   - model_name: gpt-4-fallback
     litellm_params:
-      model: openai/gpt-4
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
   fallbacks:
-    - gpt-4:
+    - {{openai_large}}:
         - gpt-4-fallback  # tried after all order levels fail
 ```
 
@@ -401,17 +436,17 @@ When load balancing OpenAI's Responses API across deployments with **different A
 
 ```yaml
 model_list:
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://eastus.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_EASTUS
     model_info:
       id: "deployment-eastus"
   
-  - model_name: gpt-5.1-codex
+  - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-5.1-codex
+      model: azure/{{openai_large}}
       api_base: https://westeurope.openai.azure.com/
       api_key: os.environ/AZURE_API_KEY_WESTEUROPE
     model_info:
@@ -419,9 +454,13 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - encrypted_content_affinity  # 👈 Prevents invalid_encrypted_content errors
+    - encrypted_content_affinity  # Prevents invalid_encrypted_content errors
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
+
+When that deployment is not in the healthy pool for a follow-up (it is cooled down, it was removed, or the turn was routed to another model group) and no deployment has the same `api_base` and `api_key`, LiteLLM drops the encrypted reasoning from the request, keeps the rest of the conversation, forwards it to a healthy deployment, and logs a router warning, so the turn succeeds with fresh reasoning instead of failing
+
+A fallback hop does the same whether or not the check is on. An order-based hop to the next `order`, a configured `fallbacks` hop to another model group, and the retry of a Responses stream that broke mid-stream each drop the encrypted reasoning the hop target cannot decrypt and keep the summaries, with no per-deployment switch. Keep the check on for an ordered group of two providers all the same: it marks each reasoning item with the deployment that produced it, so a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops the reasoning too, and the turn after a hop keeps the reasoning of the deployment that answers it instead of paying one failed call first
 
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**

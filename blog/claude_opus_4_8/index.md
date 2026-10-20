@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Opus 4.8 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
+card_title: "Claude Opus 4.8"
+card_summary: "4x less likely to let its own code flaws pass, effort ladder low to max, mid-task system messages, same price as 4.7."
 tags: [anthropic, claude, opus 4.8, day 0 support]
 hide_table_of_contents: false
 ---
@@ -268,7 +270,7 @@ Use the `thinking` parameter with `type: "adaptive"` to enable adaptive thinking
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-8",
@@ -351,7 +353,7 @@ You can combine `reasoning_effort` with `output_config` for even more fine-grain
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-opus-4-8",

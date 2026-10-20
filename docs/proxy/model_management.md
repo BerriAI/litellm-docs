@@ -30,7 +30,11 @@ Most deployments have several models behind the same provider account. Rather th
 
 Open the **LLM Credentials** tab and click **Add Credential**. Pick your provider, enter the API key, and give the credential a name. The fields adapt to the provider you choose, so selecting Vertex AI, for example, gives you `Vertex Project`, `Vertex Location`, and `Vertex Credentials` instead of a single key field.
 
-<Image img={require('../../img/ui_add_credential.png')} alt="Add New Credential modal" />
+<Image
+  img={require('../../img/ui_add_credential.png')}
+  dark={require('../../img/ui_add_credential_dark.png')}
+  alt="Add New Credential modal with OpenAI selected as the provider"
+/>
 
 Once saved, the credential is available wherever you add or edit a model. In the Add Model form, choose it from the **Existing Credentials** dropdown instead of typing a key. From a model's detail page you can also go the other way with the **Re-use Credentials** button, which turns the credentials of a model you already configured into a named credential for future models. Models attached to a named credential are tagged `Credential: <name>` in the Usage page, so you can filter spend by credential without any extra setup; see [Credential Usage Tracking](./credential_usage_tracking.md).
 
@@ -41,6 +45,21 @@ Storing models in the database is what makes UI-driven management possible. Turn
 With it enabled, every model you add through the UI or the API persists in the database and survives restarts and additional proxy instances. Provider credentials for those models are encrypted at rest using `LITELLM_SALT_KEY` (falling back to `LITELLM_MASTER_KEY` if the salt key is not set); keep that value secret and never change it once models exist, since credentials encrypted with the old value cannot be decrypted with a new one.
 
 Database storage does not replace your `config.yaml`. Any models defined there keep working and show up alongside your database models. The one difference is that config models are owned by the file, so they cannot be edited or deleted from the UI; change them in the config and reload. For the config format itself, see [Config.yaml](./configs.md).
+
+Settings behave differently from models here. Anything the UI writes into `general_settings`, `router_settings`, `litellm_settings`, or `environment_variables` is stored in `LiteLLM_Config` and overlaid on top of your `config.yaml` at startup, so the database value wins and editing the same key in the YAML then restarting will not take effect. See [config.yaml vs database settings](./configs.md#configyaml-vs-database-settings).
+
+### Choose one source of truth for models
+
+For production deployments, use one primary source of truth for model definitions:
+
+| Approach | Storage | Restart required for model changes? | Best for |
+| --- | --- | --- | --- |
+| `config.yaml` | Configuration file | Yes. Reload or restart the proxy tasks after changing the file. | GitOps workflows where every model change is deployed with the application. |
+| Admin UI, management API, or Terraform | LiteLLM database | No. Changes apply to new requests after the write succeeds. | Day-2 operations, frequent model changes, and centralized automation. |
+
+LiteLLM can load file-based and database-backed models at the same time, but using both as model-management systems creates two sources of truth. A model loaded from `config.yaml` remains owned by that file and cannot be edited or deleted through the UI. Keep model definitions in one system, and continue using `config.yaml` or environment variables for infrastructure settings that are not exposed through the management API.
+
+The [LiteLLM Terraform provider](https://github.com/BerriAI/terraform-provider-litellm) calls the same management API used by the Admin UI. It persists resources in the LiteLLM database, so you do not need to build a separate REST client or restart the proxy for model changes.
 
 ## Automation (API)
 
@@ -55,7 +74,7 @@ curl -X POST "http://0.0.0.0:4000/model/new" \
     -d '{
       "model_name": "azure-gpt-4o",
       "litellm_params": {
-        "model": "azure/gpt-4o",
+        "model": "azure/{{openai_large}}",
         "api_key": "os.environ/AZURE_API_KEY",
         "api_base": "https://my-endpoint.openai.azure.com/"
       }

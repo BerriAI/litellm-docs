@@ -122,7 +122,7 @@ For LiteLLM Cloud Users, please reach out to us if you want this enabled for you
 ## LLM API Endpoints
 - **[Messages API](../../docs/anthropic_unified)**: 
     - 🆕 Added support for using Bedrock Anthropic models with /v1/messages format - [PR](https://github.com/BerriAI/litellm/pull/10681) and streaming support - [PR](https://github.com/BerriAI/litellm/pull/10710)
-- **[Moderations API](../../docs/moderations)**: 
+- **[Moderations API](/docs/moderation)**:
     - Fixed bug to allow using LiteLLM UI credentials for /moderations API - [PR](https://github.com/BerriAI/litellm/pull/10723)  
 - **[Realtime API](../../docs/realtime)**: 
     - Fixed setting 'headers' in scope for websocket auth requests and infinite loop issues - [PR](https://github.com/BerriAI/litellm/pull/10679)

@@ -36,7 +36,7 @@ Templates are fetched from [GitHub](https://raw.githubusercontent.com/BerriAI/li
 
 #### 1. Advanced PII Protection (Australia)
 - **Complexity:** High
-- **Use Case:** Comprehensive PII detection for Australian organizations
+- **Use Case:** Full PII detection for Australian organizations
 - **Guardrails:**
   - Australian tax identifiers (TFN, ABN, Medicare)
   - Australian passports
@@ -217,7 +217,7 @@ To contribute a policy template for everyone to use:
 
 **DO:**
 - ✅ Use clear, descriptive names
-- ✅ Include comprehensive descriptions
+- ✅ Include detailed descriptions
 - ✅ Test all guardrails thoroughly
 - ✅ Document pattern sources (e.g., "Based on NIST guidelines")
 - ✅ Group related guardrails logically
@@ -292,5 +292,5 @@ See the [full patterns list](https://github.com/BerriAI/litellm/blob/main/litell
 
 - [Guardrail Policies](./guardrail_policies)
 - [Policy Tags](./policy_tags)
-- [Content Filter Patterns](../hooks/content_filter)
-- [Custom Code Guardrails](../hooks/custom_code)
+- [Content Filter Patterns](/docs/proxy/guardrails/litellm_content_filter)
+- [Custom Code Guardrails](/docs/proxy/guardrails/custom_code_guardrail)

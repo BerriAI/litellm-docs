@@ -8,7 +8,7 @@ This is good for getting print statements for everything litellm is doing.
 import litellm
 from litellm import completion
 
-litellm._turn_on_debug() # 👈 this is the 1-line change you need to make
+litellm._turn_on_debug() # this is the 1-line change you need to make
 
 ## set ENV variables
 os.environ["OPENAI_API_KEY"] = "openai key"
@@ -17,7 +17,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages)
+response = completion(model="{{openai_small}}", messages=messages)
 
 # cohere call
 response = completion("command-nightly", messages)
@@ -59,7 +59,7 @@ os.environ["COHERE_API_KEY"] = "cohere key"
 messages = [{ "content": "Hello, how are you?","role": "user"}]
 
 # openai call
-response = completion(model="gpt-3.5-turbo", messages=messages, logger_fn=my_custom_logging_fn)
+response = completion(model="{{openai_small}}", messages=messages, logger_fn=my_custom_logging_fn)
 
 # cohere call
 response = completion("command-nightly", messages, logger_fn=my_custom_logging_fn)
@@ -69,4 +69,4 @@ response = completion("command-nightly", messages, logger_fn=my_custom_logging_f
 
 Join the [Discord](https://discord.com/invite/wuPM9dRgDw). 
 
-We promise to help you in `lite`ning speed ❤️
+We promise to help you in `lite`ning speed

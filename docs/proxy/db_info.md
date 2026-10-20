@@ -48,6 +48,7 @@ You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/ma
 |------------|-------------|---------------------|
 | LiteLLM_SpendLogs | Detailed logs of all API requests. Records token usage, spend, and timing information. Tracks which models and keys were used. | **Medium - this is a batch process that runs on an interval.** |
 | LiteLLM_DailyUserSpend and siblings (DailyTeamSpend, DailyOrgSpend, DailyTagSpend, DailyEndUserSpend, DailyAgentSpend) | Pre-aggregated daily spend rollups per user, team, org, tag, end user, and agent; the Admin UI Usage views read these aggregates rather than scanning SpendLogs. | Low - one row per entity per day, updated in batches |
+| LiteLLM_DailyGatewayRequests | Successful and failed request counts recorded at the ASGI edge by the request-metrics middleware, keyed by date, category and route. Backs the Successful Requests and Failed Requests tiles and the Gateway Requests by Endpoint chart on the Usage page; see [gateway request counts](./endpoint_activity.md#gateway-request-counts). | Low - one row per route per day, updated in batches |
 | LiteLLM_AuditLog | Tracks changes to system configuration. Records who made changes and what was modified. Maintains history of updates to teams, users, and models. | **Off by default**, **High - Runs on every change to an entity** |
 
 ## Disable `LiteLLM_SpendLogs`
@@ -74,3 +75,24 @@ If you need to migrate Databases the following Tables should be copied to ensure
 | LiteLLM_ErrorLogs | **Optional** Only migrate if you want historical data on LiteLLM UI |
 
 
+
+## Replicating the database with logical replication
+
+Postgres logical replication only carries the columns of the replica identity when a row is updated or deleted. Prisma creates every LiteLLM table at the Postgres default, which is the primary key, so a downstream consumer sees the new row but not the previous one. Sinks such as Neon's lakehouse sync require `REPLICA IDENTITY FULL` and reject tables that do not have it.
+
+Set `LITELLM_SET_REPLICA_IDENTITY_FULL=True` to have LiteLLM run
+
+```sql
+ALTER TABLE "LiteLLM_..." REPLICA IDENTITY FULL;
+```
+
+on every LiteLLM table at the end of each migration run, including tables that a future upgrade adds, so the setting survives upgrades instead of having to be re-applied by hand. Tables that are already `FULL` are skipped, and tables in the same schema that LiteLLM does not own are left alone.
+
+```bash
+export LITELLM_SET_REPLICA_IDENTITY_FULL=True
+litellm --config /path/to/config.yaml
+```
+
+The database user running the migrations has to own the tables. If it does not, the `ALTER` is rejected, LiteLLM logs the Postgres error and starts anyway, since replication metadata is not needed to serve requests.
+
+`REPLICA IDENTITY FULL` makes Postgres write the entire old row into the WAL for every `UPDATE` and `DELETE`, so leave it off unless a replication consumer needs it.

@@ -50,7 +50,7 @@ This release improves team and tag based usage tracking at 1m+ spend logs, makin
 
 ## Unified Responses API
 
-This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/tutorials/openai_codex) with your own models. 
+This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/proxy/client_setup/codex_cli) with your own models.
 
 <Image img={require('../../img/release_notes/unified_responses_api_rn.png')}/>
 
@@ -65,7 +65,7 @@ This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google
     2. o4 - correctly map o4 to openai o_series model
 - **Azure AI**
     1. Phi-4 output cost per token fix - [PR](https://github.com/BerriAI/litellm/pull/9880)
-    2. Responses API support [Get Started](../../docs/providers/azure#azure-responses-api),[PR](https://github.com/BerriAI/litellm/pull/10116)
+    2. Responses API support [Get Started](/docs/providers/azure/azure_responses),[PR](https://github.com/BerriAI/litellm/pull/10116)
 - **Anthropic**
     1. redacted message thinking support - [Get Started](../../docs/providers/anthropic#usage---thinking--reasoning_content),[PR](https://github.com/BerriAI/litellm/pull/10129)
 - **Cohere**
@@ -91,7 +91,7 @@ This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google
 - **Triton**
     1. Remove fixed remove bad_words / stop words from `/generate` call - [Get Started](../../docs/providers/triton-inference-server#triton-generate---chat-completion), [PR](https://github.com/BerriAI/litellm/pull/10163)
 - **Other**
-    1. Support for all litellm providers on Responses API (works with Codex) - [Get Started](../../docs/tutorials/openai_codex), [PR](https://github.com/BerriAI/litellm/pull/10132)
+    1. Support for all litellm providers on Responses API (works with Codex) - [Get Started](../../docs/proxy/client_setup/codex_cli), [PR](https://github.com/BerriAI/litellm/pull/10132)
     2. Fix combining multiple tool calls in streaming response - [Get Started](../../docs/completion/stream#helper-function), [PR](https://github.com/BerriAI/litellm/pull/10040)
 
 

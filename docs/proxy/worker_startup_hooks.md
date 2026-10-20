@@ -25,7 +25,7 @@ Set the `LITELLM_WORKER_STARTUP_HOOKS` environment variable to a comma-separated
 export LITELLM_WORKER_STARTUP_HOOKS="my_module:my_init_function"
 ```
 
-Each hook is called **early** in the worker startup lifecycle — before config loading, database setup, or any request handling. Both sync and async functions are supported.
+Each hook is called **early** in the worker startup lifecycle, before config loading, database setup, or any request handling. Both sync and async functions are supported.
 
 ## Example: gflags Initialization
 
@@ -120,7 +120,7 @@ Master Process                          Worker Process (×N)
 
 - Hooks run at the **very beginning** of `proxy_startup_event` (the FastAPI lifespan), before config loading, database connections, or any other initialization.
 - Environment variables set in the master process are **inherited** by worker processes (standard Unix fork/spawn behavior).
-- If a hook **raises an exception**, the worker fails to start — this is intentional, since missing initialization (e.g., uninitialized gflags) would cause downstream errors.
+- If a hook **raises an exception**, the worker fails to start. This is intentional, since missing initialization (e.g., uninitialized gflags) would cause downstream errors.
 
 ## Multiple Hooks
 
@@ -134,7 +134,7 @@ Hooks are executed **in order**, left to right.
 
 ## Async Hooks
 
-Async functions are also supported — they are automatically awaited:
+Async functions are also supported and are automatically awaited:
 
 ```python
 async def init_async_connections():

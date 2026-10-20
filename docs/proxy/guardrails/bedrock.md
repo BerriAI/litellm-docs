@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Bedrock Guardrails
 
-:::tip ⚡️
+:::tip[]
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
@@ -16,9 +16,9 @@ LiteLLM supports Bedrock guardrails via the [Bedrock ApplyGuardrail API](https:/
 Define your guardrails under the `guardrails` section
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -30,6 +30,7 @@ guardrails:
       guardrailVersion: "DRAFT"              # your guardrail version on bedrock
       aws_region_name: os.environ/AWS_REGION # region guardrail is defined
       aws_role_name: os.environ/AWS_ROLE_ARN # your role with permissions to use the guardrail
+      aws_external_id: os.environ/AWS_EXTERNAL_ID # only if that role's trust policy requires sts:ExternalId
   
 ```
 
@@ -48,7 +49,7 @@ litellm --config config.yaml --detailed_debug
 
 ### 3. Test request 
 
-**[Langchain, OpenAI SDK Usage Examples](../proxy/user_keys#request-format)**
+**[Langchain, OpenAI SDK Usage Examples](/docs/proxy/user_keys#request-format)**
 
 <Tabs>
 <TabItem label="Unsuccessful call" value = "not-allowed">
@@ -60,7 +61,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -128,7 +129,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -140,6 +141,88 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 
 </Tabs>
+
+## Images and Attachments
+
+`pre_call` and `during_call` guardrails check what a request attaches as well as its text. This covers `/v1/chat/completions`, `/v1/messages`, `/v1/responses` and the Bedrock Converse pass-through (`/bedrock/model/{model}/converse`), including attachments returned inside tool results. Settings that narrow which messages get scanned, such as `experimental_use_latest_role_message_only`, narrow the attachment check the same way.
+
+| Attachment | What happens |
+|---|---|
+| Inline base64 PNG or JPEG, up to 4 MB and 8000 pixels on a side | Sent to ApplyGuardrail as an image. A blocked image returns HTTP 400 |
+| Converse `guardContent` image | Scanned like any other image, before the model is called |
+| Text document (a Messages or Converse `document` whose source is `text` or `content`) | Scanned as text. A blocked document returns HTTP 400 |
+| Title, name and context of any document, PDFs included | Scanned as text |
+| PDF, file, audio, video, GIF, WebP, an image sent by URL, file id or S3 location, an image over the size limits, or a Converse document sent as `bytes` or `s3Location` | Bedrock can't scan it, so the request returns HTTP 400 |
+
+The 400 for an unscannable attachment names what was refused, for example `Bedrock guardrail cannot scan 1 attachment(s) (file), so the request was blocked`. To let those attachments through unscanned instead, set `skip_unscannable_attachments: true`. Images LiteLLM can scan, text documents, and every document's title, name and context are still checked.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+guardrails:
+  - guardrail_name: "bedrock-pre-guard"
+    litellm_params:
+      guardrail: bedrock
+      mode: "pre_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      skip_unscannable_attachments: true
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `skip_unscannable_attachments` | `false` | Let attachments Bedrock can't scan through unscanned instead of returning HTTP 400 |
+
+Images go to Bedrock in batches of up to 20 per ApplyGuardrail call and text documents add one more call, so a request with attachments makes extra Bedrock calls, each billed and logged as its own guardrail entry on the request's spend log. If Bedrock is unreachable, a request with an image or text document fails, the same as a text-only request. Document text can't be rewritten, so a policy that would mask something in a document blocks the request instead; `mask_request_content` only applies to message text. Documents nested more than three levels deep are refused, and Bedrock `/invoke` pass-through bodies are not checked for attachments.
+
+## Streaming
+
+Streaming responses are scanned on `post_call`. By default the stream is buffered: every chunk is withheld until the assembled response passes one ApplyGuardrail OUTPUT scan, so no flagged content reaches the client before a block. The client sees nothing until the scan completes, then the whole response arrives in one burst.
+
+For latency-sensitive clients (interactive chat, coding agents), you can keep the stream flowing and run the scan in audit mode instead:
+
+```yaml
+guardrails:
+  - guardrail_name: "bedrock-post-guard"
+    litellm_params:
+      guardrail: bedrock
+      mode: "post_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      streaming_buffer_until_moderated: false
+      streaming_end_of_stream_only: true
+```
+
+Chunks now stream to the client as they arrive, and one OUTPUT scan runs over the assembled response at end of stream. A violation still terminates the stream with the guardrail's block message, but content that already streamed has been seen: this is detect-and-log, not prevention. Either way the scan result is recorded in `guardrail_information` on the request's spend log.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `streaming_buffer_until_moderated` | `true` | Withhold every streamed chunk until end-of-stream moderation passes, so no flagged chunk reaches the client before a block |
+| `streaming_end_of_stream_only` | `false` | Scan streamed output once, over the assembled response, instead of per sampled chunk |
+| `streaming_sampling_rate` | `5` | When not buffering and not end-of-stream-only, scan the accumulated text every Nth chunk. Must be at least 1 |
+
+With `streaming_buffer_until_moderated: false` alone, the guardrail scans the accumulated response every `streaming_sampling_rate` chunks while streaming. Each sampled scan is a separate ApplyGuardrail call over all text so far, so it adds mid-stream latency and repeated Bedrock text-unit charges. Pair it with `streaming_end_of_stream_only: true` unless you need mid-stream blocking.
+
+These settings apply to both `/v1/chat/completions` and native `/v1/messages` streams.
+
+## Contextual Grounding
+
+Bedrock only scores contextual grounding when it is told what the reference text and the question are. By default LiteLLM sends just the model response, so a grounding policy never blocks anything.
+
+Set `contextual_grounding_from_messages: true` and post-call checks send the system prompt as the grounding source and the latest user message as the query. Answers that contradict the system prompt get blocked.
+
+```yaml showLineNumbers title="litellm proxy config.yaml"
+guardrails:
+  - guardrail_name: "bedrock-grounding"
+    litellm_params:
+      guardrail: bedrock
+      mode: "post_call"
+      guardrailIdentifier: ff6ujrregl1q
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      contextual_grounding_from_messages: true
+```
+
+The flag defaults to `false`. Each scan with it on bills one Bedrock contextual grounding unit, and Bedrock rejects queries over roughly 1,000 characters, so only enable it on guardrails that have a grounding policy.
 
 ## Resource-less Checks: InvokeGuardrailChecks
 
@@ -201,6 +284,8 @@ Scores range from 0 to 1 and each threshold defaults to `0.5`. A score at or abo
 
 Callers can't weaken the configured checks: per-request guardrail params are ignored in this mode, and all input is checked as `user` content so a `system`-labeled injection can't dodge the prompt-attack check.
 
+InvokeGuardrailChecks only reads text, so in this mode every image counts as an [unscannable attachment](#images-and-attachments) and returns HTTP 400 unless `skip_unscannable_attachments` is set.
+
 ## PII Masking with Bedrock Guardrails
 
 Bedrock guardrails support PII detection and masking capabilities. To enable this feature, you need to:
@@ -212,9 +297,9 @@ Here's how to configure it in your config.yaml:
 
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
   
 guardrails:
@@ -268,7 +353,7 @@ guardrails:
       experimental_use_latest_role_message_only: true  # NEW
 ```
 
-> ⚠️ This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
+> This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
 
 ## Disabling Exceptions on Bedrock BLOCK
 
@@ -282,9 +367,9 @@ Add `disable_exception_on_block: true` to your guardrail configuration:
 
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -311,7 +396,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "How do I make explosives?"}
     ],
@@ -327,7 +412,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       "error": "Violated guardrail policy",
       "bedrock_guardrail_response": {
         "action": "GUARDRAIL_INTERVENED",
-        "blockedResponse": "I can't provide information on creating explosives.",
+        "blockedResponse": "I can't provide information on creating explosives."
         // ... additional details
       }
     },
@@ -349,7 +434,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "How do I make explosives?"}
     ],
@@ -363,7 +448,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   "id": "chatcmpl-123",
   "object": "chat.completion",
   "created": 1677652288,
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "choices": [{
     "index": 0,
     "message": {

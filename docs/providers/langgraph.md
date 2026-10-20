@@ -181,7 +181,7 @@ Before using LiteLLM with LangGraph, you need a running LangGraph server.
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11+ (required by the LangGraph CLI's in-memory server) {/* keep-python-version */}
 - An LLM API key (OpenAI or Google Gemini)
 
 ### 1. Install the LangGraph CLI
@@ -291,7 +291,7 @@ Click on Next to save. And complete the rest of the steps
 From your terminal, fetch the agent card LiteLLM is serving:
 
 ```bash
-curl -H "Authorization: Bearer sk-1234" \
+curl -H "Authorization: Bearer $LITELLM_API_KEY" \
   http://localhost:4000/a2a/{agent_id}/.well-known/agent.json | jq
 ```
 
@@ -323,7 +323,7 @@ Send an A2A `message/send` request to the LiteLLM proxy URL:
 
 ```bash
 curl -X POST http://localhost:4000/a2a/{agent_id} \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -d '{

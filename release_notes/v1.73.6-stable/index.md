@@ -161,7 +161,7 @@ There is no new flag / change needed on your end. Over the next few weeks we hop
 ## Spend Tracking / Budget Improvements
 
 #### Features
-    - [**Passthrough**](../../docs/pass_through)
+    - [**Passthrough**](/docs/pass_through/intro)
         - [Bedrock](../../docs/pass_through/bedrock) - cost tracking (`/invoke` + `/converse` routes) on streaming + non-streaming - [PR](https://github.com/BerriAI/litellm/pull/12123)
         - [VertexAI](../../docs/pass_through/vertex_ai) - anthropic cost calculation support - [PR](https://github.com/BerriAI/litellm/pull/11992)
     - [**Batches**](../../docs/batches)

@@ -6,9 +6,9 @@ Send LiteLLM logs to any HTTP endpoint.
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -19,7 +19,7 @@ callback_settings:
     callback_type: generic_api
     endpoint: https://your-endpoint.com/logs
     headers:
-      Authorization: Bearer sk-1234
+      Authorization: Bearer $LITELLM_API_KEY
 ```
 
 ## Configuration
@@ -74,7 +74,7 @@ Logs are sent as `StandardLoggingPayload` [objects](https://docs.litellm.ai/docs
   {
     "id": "chatcmpl-123",
     "call_type": "litellm.completion",
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [...],
     "response": {...},
     "usage": {...},
@@ -97,16 +97,14 @@ export GENERIC_LOGGER_HEADERS="Authorization=Bearer token,Custom-Header=value"
 
 ## Batch Settings
 
-Control batching behavior (inherits from `CustomBatchLogger`):
+Logs are queued in memory and sent when the queue reaches the batch size or when the flush interval elapses, whichever comes first. `batch_size` and `flush_interval` are not read from `callback_settings`, so set them with environment variables on the proxy instead:
 
-```yaml
-callback_settings:
-  my_api:
-    callback_type: generic_api
-    endpoint: https://your-endpoint.com
-    batch_size: 100        # default: 100
-    flush_interval: 60     # seconds, default: 60
+```bash
+export DEFAULT_BATCH_SIZE=512                # default: 512
+export DEFAULT_FLUSH_INTERVAL_SECONDS=5      # default: 5
 ```
+
+These variables are global and apply to every batching logger on the proxy, not only `generic_api` callbacks
 
 ## Log Format Options
 

@@ -1,0 +1,56 @@
+.card {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0 1.5rem;
+  background: var(--ifm-background-surface-color);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.agents {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.copy {
+  min-width: 7.5rem;
+}
+
+.hint {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.prompt {
+  margin: 0;
+  max-height: 14rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+}
+
+.details summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.details[open] summary {
+  margin-bottom: 0.5rem;
+}

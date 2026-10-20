@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.93.0 — GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API](/release_notes/v1.93.0/v1-93-0)
+### [v1.105.0: Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens](/release_notes/v1.105.0/v1-105-0)
 
-_July 18, 2026_
+_October 11, 2026_
 
-Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on OpenAI and Azure plus xAI Grok-4.5, OpenAI Realtime 2.1, and Google Cloud Chirp 3 speech-to-text; a new OpenAI-compatible Meta Model API provider serving `muse-spark-1.1` across Chat Completions, `/v1/messages`, and Responses; client-forwarded MCP credentials via `true_passthrough`, `oauth_delegate`, and a `dcr_bridge` sealed-envelope path with PKCE S256 enforced on both authorize arms; the shadcn / Base UI dashboard migration covering the shared DataTable, charts, and the full-height sidebar shell; and a smarter complexity auto router with keyword tier overrides, semantic keyword matching, and an optional LLM-based classifier.
+Claude Sonnet 5.5 and GPT-6.1 Sol on day one, the Decisions API on `/v1/decisions` and `/v1/systemone` across eight providers with a decision model guardrail, Prism, Sail and Cortecs providers, `litellm.agent()` for coding agents through the gateway, and Lens with Agent Traces. Review the Breaking Changes before upgrading
 
 ---
 
@@ -22,6 +22,18 @@ Day-0 pricing and metadata for OpenAI GPT-5.6 (`sol` / `terra` / `luna`) on Open
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.105.0](/release_notes/v1.105.0/v1-105-0) | Oct 11, 2026 | Claude Sonnet 5.5 and GPT-6.1 Sol, Decisions API, `litellm.agent()`, Lens |
+| [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
+| [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
+| [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
+| [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |
+| [v1.100.0](/release_notes/v1.100.0/v1-100-0) | Sep 6, 2026  | Access group budgets, Together AI overhaul, custom auto-router tiers |
+| [v1.99.0](/release_notes/v1.99.0/v1-99-0)   | Sep 1, 2026  | Dark mode, CLI OAuth login, end-to-end batch billing       |
+| [v1.98.0](/release_notes/v1.98.0/v1-98-0)   | Aug 22, 2026 | Provisioned throughput billing, auto-router shadow evals, callable routing groups |
+| [v1.97.0](/release_notes/v1.97.0/v1-97-0)   | Aug 15, 2026 | Tool-result guardrails, auto-router deployment affinity, admin viewer parity |
+| [v1.96.0](/release_notes/v1.96.0/v1-96-0)   | Aug 9, 2026  | MCP entitlements, Redis config sync, auto-router context, GPT-5.6 price cut |
+| [v1.95.0](/release_notes/v1.95.0/v1-95-0)   | Aug 1, 2026  | Claude Opus 5, MCP gateway DCR, Rust `/v1/messages`, SAML 2.0 SSO |
+| [v1.94.0](/release_notes/v1.94.0/v1-94-0)   | Jul 28, 2026 | Router plugins & Auto-Router v2, MCP client-held credentials, shared DataTable UI |
 | [v1.93.0](/release_notes/v1.93.0/v1-93-0)   | Jul 18, 2026 | GPT-5.6, client-forwarded MCP credentials, Meta Model API provider |
 | [v1.92.0](/release_notes/v1.92.0/v1-92-0)   | Jul 11, 2026 | Claude Sonnet 5, production MCP OAuth (On-Behalf-Of) v2, Tencent & GDC providers |
 | [v1.91.0](/release_notes/v1.91.0/v1-91-0)   | Jul 4, 2026  | MCP OAuth 2.0 v2 resolver, Rust OCR gateway, realtime performance |

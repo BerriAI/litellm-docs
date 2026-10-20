@@ -70,7 +70,7 @@ These changes help you spend less time on user setup and management on LiteLLM.
 
 This release introduces load balancing for the Responses API, allowing you to route requests across provider regions and ensure session continuity. It works as follows:
 
-- If a `previous_response_id` is provided, LiteLLM will route the request to the original deployment that generated the prior response — ensuring session continuity.
+- If a `previous_response_id` is provided, LiteLLM will route the request to the original deployment that generated the prior response, keeping session continuity.
 - If no `previous_response_id` is provided, LiteLLM will load-balance requests across your available deployments.
 
 [Read more](https://docs.litellm.ai/docs/response_api#load-balancing-with-session-continuity)

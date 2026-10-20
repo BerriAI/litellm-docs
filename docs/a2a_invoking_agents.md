@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 Learn how to invoke A2A agents through LiteLLM using different methods.
 
-:::tip Deploy Your Own A2A Agent
+:::tip[Deploy Your Own A2A Agent]
 
 Want to test with your own agent? Deploy this template A2A agent powered by Google Gemini:
 
@@ -21,9 +21,9 @@ Use the [A2A Python SDK](https://pypi.org/project/a2a-sdk) (**>= 1.1.0**) to inv
 pip install "a2a-sdk>=1.1.0,<2.0" httpx
 ```
 
-Pin `protocolVersion: "1.0"` on the agent (recommended) so responses match the 1.x SDK. For legacy `0.3` wire format, pin `"0.3"` instead — see [Protocol versioning](./a2a#protocol-versioning).
+Pin `protocolVersion: "1.0"` on the agent (recommended) so responses match the 1.x SDK. For legacy `0.3` wire format, pin `"0.3"` instead. See [Protocol versioning](./a2a#protocol-versioning).
 
-:::info Migration from a2a-sdk 0.3.x
+:::info[Migration from a2a-sdk 0.3.x]
 
 a2a-sdk 1.x replaces `A2AClient` + dict `MessageSendParams` with `ClientFactory`, protobuf `Message` / `Part` types, and `send_message` as an async generator of stream events. See the examples below.
 
@@ -47,7 +47,7 @@ from a2a.utils.constants import TransportProtocol
 
 # === CONFIGURE THESE ===
 LITELLM_BASE_URL = "http://localhost:4000"  # Your LiteLLM proxy URL
-LITELLM_VIRTUAL_KEY = "sk-1234"             # Your LiteLLM Virtual Key
+LITELLM_VIRTUAL_KEY = "sk-<your-litellm-api-key>"             # Your LiteLLM Virtual Key
 # =======================
 
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
 ### Streaming
 
-In a2a-sdk 1.x, set `streaming=True` on `ClientConfig` and iterate `send_message` — the same API handles streaming and non-streaming:
+In a2a-sdk 1.x, set `streaming=True` on `ClientConfig` and iterate `send_message`. The same API handles streaming and non-streaming:
 
 ```python showLineNumbers title="invoke_a2a_agent_streaming.py"
 import asyncio
@@ -132,7 +132,7 @@ from a2a.utils.constants import TransportProtocol
 
 # === CONFIGURE THESE ===
 LITELLM_BASE_URL = "http://localhost:4000"  # Your LiteLLM proxy URL
-LITELLM_VIRTUAL_KEY = "sk-1234"             # Your LiteLLM Virtual Key
+LITELLM_VIRTUAL_KEY = "sk-<your-litellm-api-key>"             # Your LiteLLM Virtual Key
 LITELLM_AGENT_NAME = "ij-local"             # Agent name registered in LiteLLM
 # =======================
 
@@ -189,7 +189,7 @@ You can also invoke A2A agents using the familiar OpenAI SDK by using the `a2a/`
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM Virtual Key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM Virtual Key
     base_url="http://localhost:4000"  # Your LiteLLM proxy URL
 )
 
@@ -210,7 +210,7 @@ print(response.choices[0].message.content)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'sk-1234',  // Your LiteLLM Virtual Key
+  apiKey: 'sk-<your-api-key>',  // Your LiteLLM Virtual Key
   baseURL: 'http://localhost:4000'  // Your LiteLLM proxy URL
 });
 
@@ -229,7 +229,7 @@ console.log(response.choices[0].message.content);
 
 ```bash showLineNumbers title="curl_non_streaming.sh"
 curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "a2a/my-agent",
@@ -251,7 +251,7 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM Virtual Key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM Virtual Key
     base_url="http://localhost:4000"  # Your LiteLLM proxy URL
 )
 
@@ -275,7 +275,7 @@ for chunk in stream:
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'sk-1234',  // Your LiteLLM Virtual Key
+  apiKey: 'sk-<your-api-key>',  // Your LiteLLM Virtual Key
   baseURL: 'http://localhost:4000'  // Your LiteLLM proxy URL
 });
 
@@ -300,7 +300,7 @@ for await (const chunk of stream) {
 
 ```bash showLineNumbers title="curl_streaming.sh"
 curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "a2a/my-agent",
@@ -320,7 +320,7 @@ Agents that return a `submitted` task from `message/send` expect clients to poll
 
 ```bash showLineNumbers title="tasks_get.sh"
 curl -X POST "http://localhost:4000/a2a/${AGENT_ID}" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -339,7 +339,7 @@ LiteLLM forwards `tasks/get`, `tasks/list`, `tasks/cancel`, push-notification me
 | **A2A SDK** | Native A2A protocol integration | • Full A2A protocol support<br/>• Access to task states and artifacts<br/>• Context management |
 | **OpenAI SDK** | Familiar OpenAI-style interface | • Drop-in replacement for OpenAI calls<br/>• Easier migration from LLM to agent workflows<br/>• Works with existing OpenAI tooling |
 
-:::tip Model Prefix
+:::tip[Model Prefix]
 
 When using the OpenAI SDK, always prefix your agent name with `a2a/` (e.g., `a2a/my-agent`) to route requests to the A2A agent instead of an LLM provider.
 

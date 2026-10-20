@@ -4,12 +4,7 @@ import Image from '@theme/IdealImage';
 
 Log LLM Logs to [Google Cloud Storage Buckets](https://cloud.google.com/storage?hl=en)
 
-:::info
-
-✨ This is an Enterprise only feature [Get Started with Enterprise here](https://enterprise.litellm.ai/demo)
-
-:::
-
+<EnterpriseFeature />
 
 ### Usage
 
@@ -23,7 +18,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_bucket"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_bucket"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -77,6 +72,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

@@ -1,23 +1,25 @@
-# Hosted Cache - api.litellm.ai
+# Hosted Cache - api.litellm.ai (removed)
 
-Use api.litellm.ai for caching `completion()` and `embedding()` responses
+The hosted cache backed by api.litellm.ai has been removed from LiteLLM. `"hosted"` is not a valid `Cache(type=...)` value, and passing it leaves the cache without a backend, so the next `completion()` call raises `AttributeError: 'Cache' object has no attribute 'cache'`
+
+Use one of the supported backends instead: `local` (the default, in memory), `redis`, `redis-semantic`, `valkey-semantic`, `qdrant-semantic`, `s3`, `gcs`, `azure-blob` or `disk`. See [Caching - In-Memory, Redis, s3, gcs, Redis Semantic Cache, Disk](./all_caches.md) for setup of each one. The examples below use the default in-memory cache
 
 ## Quick Start Usage - Completion
 ```python
 import litellm
 from litellm import completion
 from litellm.caching.caching import Cache
-litellm.cache = Cache(type="hosted") # init cache to use api.litellm.ai
+litellm.cache = Cache() # in-memory cache
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": "Tell me a joke."}]
+    model="{{openai_small}}", 
+    messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
 
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}],
     caching=True
 )
@@ -32,7 +34,7 @@ import time
 import litellm
 from litellm import completion, embedding
 from litellm.caching.caching import Cache
-litellm.cache = Cache(type="hosted")
+litellm.cache = Cache()
 
 start_time = time.time()
 embedding1 = embedding(model="text-embedding-ada-002", input=["hello from litellm"*5], caching=True)
@@ -55,11 +57,11 @@ import time
 from litellm import completion
 from litellm.caching.caching import Cache
 
-litellm.cache = Cache(type="hosted")
+litellm.cache = Cache()
 
 # Make completion calls
 response1 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}], 
     stream=True,
     caching=True)
@@ -69,7 +71,7 @@ for chunk in response1:
 time.sleep(1) # cache is updated asynchronously
 
 response2 = completion(
-    model="gpt-3.5-turbo", 
+    model="{{openai_small}}", 
     messages=[{"role": "user", "content": "Tell me a joke."}], 
     stream=True,
     caching=True)

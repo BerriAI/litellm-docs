@@ -26,8 +26,8 @@ os.environ["NSCALE_API_KEY"] = ""  # your Nscale API key
 
 ## Explore Available Models  
 
-Explore our full list of text and multimodal AI models — all available at highly competitive pricing:
-📚 [Full List of Models](https://docs.nscale.com/docs/inference/serverless-models/current)  
+Explore our full list of text and multimodal AI models, all available at highly competitive pricing:
+[Full List of Models](https://docs.nscale.com/docs/inference/serverless-models/current)  
 
 
 ## Key Features

@@ -29,7 +29,7 @@ In v1 a guardrail span is a child of the `litellm_request` span. In v2 it is a s
 
 ### The inference span name and kind
 
-v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat gpt-4o`, with span kind `CLIENT`.
+v1 names the inference span `litellm_request` by default, and `{operation} {model}` only when you opt into the experimental semantic conventions. v2 always names it `{operation} {model}`, for example `chat {{openai_large}}`, with span kind `CLIENT`.
 
 ### Vendor selection
 
@@ -37,11 +37,15 @@ v1 picks a vendor attribute flavor from the callback name through a branch in it
 
 ### Identity stamping
 
-v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](./opentelemetry_v2#identity-baggage).
+v1 stamps team and key identity onto each span with explicit per-span code. v2 promotes a small allowlist of identity values into OpenTelemetry Baggage once, and a span processor copies them onto every span. This is usually invisible to dashboards, since the resulting keys (`litellm.team.id`, `litellm.api_key.hash`, and so on) are the same idea; the difference is that the set is now an explicit, configurable allowlist. See [Identity baggage](/docs/observability/opentelemetry_v2).
 
 ### Success status
 
 v1 sets a successful span's status to `OK`. v2 leaves it `UNSET`, the semantic-convention default that matches the FastAPI server span, and sets `ERROR` only on a genuine error. An alert keyed on status `OK` should switch to counting non-error spans.
+
+### More than one collector
+
+v1 has no list of collectors. Exporting to a second one from LiteLLM itself takes a Python handler per collector with `skip_set_global=True` on the extra ones, and only the first handler receives the proxy's root, auth and database spans, so the other collectors get LLM spans whose parent never arrives. v2 reads the collectors from `callback_settings.otel.exporters` in config.yaml and sends each one the complete trace; see [Send to more than one collector](./opentelemetry_v2#send-to-more-than-one-collector). When you switch, put every collector in that list, the first handler's included even if it came from `OTEL_ENDPOINT`, because the list replaces `OTEL_ENDPOINT` for traces. Then add `otel` to `litellm_settings.callbacks`, which the list needs before it is read, and drop the Python handlers. v1 ignores the list, so it does nothing until `LITELLM_OTEL_V2` is on.
 
 ## Keep the old attribute names during the cutover
 

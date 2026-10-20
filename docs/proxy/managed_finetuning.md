@@ -1,14 +1,6 @@
-# ✨ [BETA] LiteLLM Managed Files with Finetuning
+# [BETA] LiteLLM Managed Files with Finetuning
 
-
-:::info
-
-This is a free LiteLLM Enterprise feature.
-
-Available via the `litellm[proxy]` package or any `litellm` docker image.
-
-:::
-
+<EnterpriseFeature free />
 
 | Property | Value | Comments |
 | --- | --- | --- |
@@ -78,7 +70,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
 )
 
 # Upload file
@@ -124,7 +116,7 @@ print(response)
 ```python showLineNumbers title="create_finetuning_job.py"
 ...
 
-client.fine_tuning.jobs.list(extra_body={"target_model_names": "gpt-4.1-openai"})
+client.fine_tuning.jobs.list(extra_query={"target_model_names": "gpt-4.1-openai"})
 ```
 
 ### 6. Cancel a Finetuning Job
@@ -155,7 +147,7 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./fine_tuning.jsonl", "rb"), # {"model": "azure-gpt-4o"} <-> {"model": "gpt-4o-my-special-deployment"}
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"} # 👈 Tells litellm which regions/projects to write the file in. 
+    extra_body={"target_model_names": "gpt-4.1-openai"} # Tells litellm which regions/projects to write the file in.
 )
 print(finetuning_input_file) # file.id = "litellm_proxy/..." = {"model_name": {"deployment_id": "deployment_file_id"}}
 

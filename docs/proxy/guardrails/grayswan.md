@@ -29,13 +29,13 @@ Cygnal returns a `violation` score between `0` and `1` (higher means more likely
 
 ### 2. Configure `config.yaml`
 
-Add a guardrail entry that references the Gray Swan integration. Below is our recommmended settings.
+Add a guardrail entry that references the Gray Swan integration. Below is our recommended settings.
 
 ```yaml
 model_list:                                 # this part is a standard litellm configuration for reference
-  - model_name: openai/gpt-4.1-mini
+  - model_name: openai/{{openai_small}}
     litellm_params:
-      model: openai/gpt-4.1-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -78,7 +78,7 @@ Gray Swan can run during `pre_call`, `during_call`, and `post_call` stages. Comb
 |--------------|-------------------|-----------------------|------------------|
 | `pre_call`   | Before LLM call   | User input only       | Block prompt injection before it reaches the model |
 | `during_call`| Parallel to call  | User input only       | Low-latency monitoring without blocking |
-| `post_call`  | After response    | Model Outputs         | Scan output for policy violations, leaked secrets, or IPI |
+| `post_call`  | After response    | Model outputs, judged with the request context | Scan answers and tool calls for policy violations, leaked secrets, or IPI |
 
 
 When using `during_call` with `on_flagged_action: block` or `on_flagged_action: passthrough`:
@@ -90,6 +90,15 @@ When using `during_call` with `on_flagged_action: block` or `on_flagged_action: 
 
 **Recommendation:** Use `pre_call` and `post_call` instead of `during_call` for `passthrough` (or `block`) `on_flagged_action` (see our recommended configuration above). Reserve `during_call` for `monitor` mode ONLY when you want low-latency logging without impacting the user experience.
 
+### What Cygnal receives on `post_call`
+
+On `post_call`, LiteLLM sends Cygnal the request conversation followed by the model's answer, so Cygnal can tell whether the answer, and any tool call in it, is justified by what came before. The answer includes its tool calls, and the request's `tools` definitions are sent alongside the messages. This means a `post_call`-only setup also sends the user's prompts and tool results for that request to Gray Swan
+
+Answers that contain only tool calls are scanned too. With `on_flagged_action: block` a flagged tool call returns 400 instead of reaching the client, and with `fail_open: false` a Cygnal error fails the request the same way it does for a text answer
+
+The [skip flags](./quick_start#skip-system-messages-in-guardrail-evaluation) limit what is sent. `skip_system_message_in_guardrail` and `skip_tool_message_in_guardrail` drop those messages from the conversation, and `scan_only_tool_results` keeps only tool results and leaves out the request `tools`. The model's answer is always sent. If LiteLLM cannot read the conversation for an endpoint, Cygnal receives the answer alone
+
+With streaming and no `streaming_end_of_stream_only`, each sampled chunk check carries the same conversation, so set `streaming_end_of_stream_only: true` to send it once per response
 
 ---
 
@@ -114,7 +123,7 @@ curl -X POST "http://0.0.0.0:4000/v1/messages?beta=true" \
   -H "Authorization: Bearer token" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "openrouter/anthropic/claude-sonnet-4.5",
+    "model": "openrouter/anthropic/{{anthropic}}",
     "messages": [{"role": "user", "content": "hello"}],
     "litellm_metadata": {
       "guardrails": [
@@ -141,7 +150,7 @@ from openai import OpenAI
 client = OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
 
 resp = client.responses.create(
-    model="openrouter/anthropic/claude-sonnet-4.5",
+    model="openrouter/anthropic/{{anthropic}}",
     input="hello",
     extra_body={
         "litellm_metadata": {
@@ -168,7 +177,7 @@ from anthropic import Anthropic
 client = Anthropic(api_key="anything", base_url="http://0.0.0.0:4000")
 
 resp = client.messages.create(
-    model="openrouter/anthropic/claude-sonnet-4.5",
+    model="openrouter/anthropic/{{anthropic}}",
     max_tokens=256,
     messages=[{"role": "user", "content": "hello"}],
     extra_body={
@@ -208,6 +217,6 @@ Notes:
 | `optional_params.categories`          | object          | Map of custom category names to descriptions. |
 | `optional_params.policy_id`           | string          | Gray Swan policy identifier. |
 | `guardrail_timeout`                   | number          | Timeout in seconds for the Cygnal request. Defaults to 30. |
-| `fail_open`                           | boolean         | If true, errors contacting Cygnal are logged and the request proceeds; if false, errors propagate. Defaults to treu. |
+| `fail_open`                           | boolean         | If true, errors contacting Cygnal are logged and the request proceeds; if false, errors propagate. Defaults to true. |
 | `streaming_end_of_stream_only`        | boolean         | For streaming `post_call`, only send the final assembled response to Cygnal. Defaults to false. |
 | `default_on`                          | boolean         | Run the guardrail on every request by default. |

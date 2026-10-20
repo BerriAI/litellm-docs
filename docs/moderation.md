@@ -62,7 +62,7 @@ print(response)
 ```shell
 curl --location 'http://0.0.0.0:4000/moderations' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{"input": "Sample text goes here", "model": "text-moderation-stable"}'
 ```
 </TabItem>
@@ -139,7 +139,7 @@ Here's the exact json output and type you can expect from all moderation calls:
 
 ## **Supported Providers**
 
-#### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
+#### See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
 
 | Provider    |
 |-------------|

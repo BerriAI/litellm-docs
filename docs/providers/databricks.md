@@ -164,7 +164,7 @@ response = completion(
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -191,7 +191,7 @@ response = completion(
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "dbrx-instruct",
@@ -276,7 +276,7 @@ os.environ["DATABRICKS_API_KEY"] = "databricks key"
 os.environ["DATABRICKS_API_BASE"] = "databricks base url"
 
 resp = completion(
-    model="databricks/databricks-claude-3-7-sonnet",
+    model="databricks/databricks-claude-sonnet-5",
     messages=[{"role": "user", "content": "What is the capital of France?"}],
     reasoning_effort="low",
 )
@@ -290,9 +290,9 @@ resp = completion(
 1. Setup config.yaml
 
 ```yaml
-- model_name: claude-3-7-sonnet
+- model_name: {{anthropic}}
   litellm_params:
-    model: databricks/databricks-claude-3-7-sonnet
+    model: databricks/databricks-claude-sonnet-5
     api_key: os.environ/DATABRICKS_API_KEY
     api_base: os.environ/DATABRICKS_API_BASE
 ```
@@ -310,7 +310,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <YOUR-LITELLM-KEY>" \
   -d '{
-    "model": "claude-3-7-sonnet",
+    "model": "{{anthropic}}",
     "messages": [{"role": "user", "content": "What is the capital of France?"}],
     "reasoning_effort": "low"
   }'
@@ -326,7 +326,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ModelResponse(
     id='chatcmpl-c542d76d-f675-4e87-8e5f-05855f5d0f5e',
     created=1740470510,
-    model='claude-3-7-sonnet-20250219',
+    model='{{anthropic}}',
     object='chat.completion',
     system_fingerprint=None,
     choices=[
@@ -448,6 +448,44 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 | databricks-mpt-30b-instruct    | `completion(model='databricks/databricks-mpt-30b-instruct', messages=messages)`   | 
 | databricks-mpt-7b-instruct    | `completion(model='databricks/databricks-mpt-7b-instruct', messages=messages)`   | 
 
+
+## Decisions (ai_decide)
+
+Databricks serves OpenJev as the [`ai_decide` AI Function](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide), which answers decision questions at `POST /api/2.0/ai-functions/ai-decide` on your workspace. The function is in Beta, so a workspace admin must turn on the `ai_decide` preview first. LiteLLM exposes it on the [unified decision routes](/docs/decisions), `/v1/systemone` for System One bodies and `/v1/decisions` for the OpenAI Decisions format, and as an Auto Router classifier. Add it to `model_list`:
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: databricks-decider
+    litellm_params:
+      model: databricks/ai_decide
+      api_base: os.environ/DATABRICKS_API_BASE
+      api_key: os.environ/DATABRICKS_API_KEY
+```
+
+`DATABRICKS_API_BASE` is `https://<workspace-host>`. The `/serving-endpoints` URL the chat deployments above use also works, since LiteLLM removes that suffix before it adds the AI Function path. LiteLLM sends no `model` field to the AI Function, since it picks the model itself. Any other `databricks/<endpoint>` name on the decision routes still goes to that serving endpoint's `/invocations` route.
+
+```bash
+curl http://localhost:4000/v1/systemone \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "databricks-decider",
+    "state": "My invoice has two identical charges for the same month",
+    "questions": {
+      "is_billing": {"type": "noul", "instructions": "Is this a billing problem?"},
+      "intent": {
+        "type": "choice",
+        "instructions": "What does the customer want?",
+        "criteria": {"refund": "Money back", "explanation": "Understand the charge", "cancel": "Close the account"}
+      },
+      "urgency": {"type": "score", "instructions": "How urgent is this?", "criteria": ["low", "medium", "high"]}
+    }
+  }'
+```
+
+LiteLLM unwraps the `response` envelope Databricks returns, so the answers come back in the same shape as the other decision providers, and `metadata` is kept. A `noul` answer's `probability` is returned as `noul`, the System One field name. The AI Function reports no token usage and no model name, so `usage` is zero, spend logs record the call as `databricks/ai_decide` at zero cost, and `/v1/systemone` returns `model: null`. Databricks bills AI Functions on your workspace and publishes no per-token price. `/health` probes the deployment with a System One request, so no `model_info.mode` is needed. An OpenAI-format body sent to `/v1/decisions` reaches Databricks as the same System One request, and the answers come back in the OpenAI format.
+
+To route Auto Router traffic with the same AI Function, set `opensource_classifier_config.provider: databricks` and `model: ai_decide` as described in the [OSS classifier guide](/docs/auto_router/decision_classifiers#databricks-ai-decide).
 
 ## Embedding Models
 

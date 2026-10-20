@@ -43,7 +43,7 @@ pip install litellm==1.84.10
 </TabItem>
 </Tabs>
 
-`v1.84.10` is a patch release on top of [`v1.84.9`](/release_notes/v1.84.9/v1-84-9). It backports cost-tracking recovery for interrupted Anthropic streams — recovering output tokens, recording partial spend on the failure row, and costing interrupted and agentic streams — alongside OpenSSL and OSV-flagged dependency bumps for CVE coverage.
+`v1.84.10` is a patch release on top of [`v1.84.9`](/release_notes/v1.84.9/v1-84-9). It backports cost-tracking recovery for interrupted Anthropic streams, recovering output tokens, recording partial spend on the failure row, and costing interrupted and agentic streams, alongside OpenSSL and OSV-flagged dependency bumps for CVE coverage.
 
 ### What's Changed
 

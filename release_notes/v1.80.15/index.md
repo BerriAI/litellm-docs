@@ -52,7 +52,7 @@ pip install litellm==1.80.15
 - **Cost Estimator** - New UI tool for estimating costs across multiple models and requests
 - **MCP Global Mode** - [Configure MCP servers globally with visibility controls](../../docs/mcp)
 - **Interactions API Bridge** - [Use all LiteLLM providers with the Interactions API](../../docs/interactions)
-- **RAG Query Endpoint** - [New RAG Search/Query endpoint for retrieval-augmented generation](../../docs/search/index)
+- **RAG Query Endpoint** - [New RAG Search/Query endpoint for retrieval-augmented generation](/docs/search)
 - **UI Usage - Endpoint Activity** - [Users can now see Endpoint Activity Metrics in the UI](../../docs/proxy/endpoint_activity)
 - **50% Overhead Reduction** - LiteLLM now sends 2.5× more requests to LLM providers
 
@@ -65,7 +65,7 @@ LiteLLM now sends 2.5× more requests to LLM providers by replacing sequential i
 
 ### Before
 
-> **Note:** Worse-looking provider metrics are a good sign here—they indicate requests spend less time inside LiteLLM.
+> **Note:** Worse-looking provider metrics are a good sign here; they indicate requests spend less time inside LiteLLM.
 
 ```
 ============================================================
@@ -147,7 +147,7 @@ Users can now see Endpoint Activity Metrics in the UI.
 | Endpoint | Method | Description | Documentation |
 | -------- | ------ | ----------- | ------------- |
 | `/responses/compact` | POST | Compact responses API endpoint | [Docs](../../docs/response_api) |
-| `/rag/query` | POST | RAG Search/Query endpoint | [Docs](../../docs/search/index) |
+| `/rag/query` | POST | RAG Search/Query endpoint | [Docs](/docs/search) |
 | `/containers/{id}/files` | POST | Upload files to containers | [Docs](../../docs/container_files) |
 
 ---
@@ -202,7 +202,7 @@ Users can now see Endpoint Activity Metrics in the UI.
     - Add thought_signatures to VertexGeminiConfig - [PR #18853](https://github.com/BerriAI/litellm/pull/18853)
     - Add support for Vertex AI API keys - [PR #18806](https://github.com/BerriAI/litellm/pull/18806)
     - Add zai glm-4.7 model support - [PR #18782](https://github.com/BerriAI/litellm/pull/18782)
-- **[Azure](../../docs/providers/azure/azure)**
+- **[Azure](/docs/providers/azure)**
     - Add Azure gpt-image-1.5 pricing to cost map - [PR #18347](https://github.com/BerriAI/litellm/pull/18347)
     - Add azure/gpt-5.2-chat model - [PR #18361](https://github.com/BerriAI/litellm/pull/18361)
     - Add support for image generation via Azure AD token - [PR #18413](https://github.com/BerriAI/litellm/pull/18413)
@@ -230,7 +230,7 @@ Users can now see Endpoint Activity Metrics in the UI.
 - **[Ollama](../../docs/providers/ollama)**
     - Add dimensions for ollama embedding - [PR #18536](https://github.com/BerriAI/litellm/pull/18536)
     - Extract pure base64 data from data URLs for Ollama - [PR #18465](https://github.com/BerriAI/litellm/pull/18465)
-- **[Watsonx](../../docs/providers/watsonx/index)**
+- **[Watsonx](/docs/providers/watsonx)**
     - Add Watsonx fields support - [PR #18569](https://github.com/BerriAI/litellm/pull/18569)
     - Fix Watsonx Audio Transcription - filter model field - [PR #18810](https://github.com/BerriAI/litellm/pull/18810)
 - **[SAP](../../docs/providers/sap)**
@@ -288,7 +288,7 @@ Users can now see Endpoint Activity Metrics in the UI.
     - Add annotations to completions responses API bridge - [PR #18754](https://github.com/BerriAI/litellm/pull/18754)
 - **[Interactions API](../../docs/interactions)**
     - Allow using all LiteLLM providers (interactions -> responses API bridge) - [PR #18373](https://github.com/BerriAI/litellm/pull/18373)
-- **[RAG Search API](../../docs/search/index)**
+- **[RAG Search API](/docs/search)**
     - Add RAG Search/Query endpoint - [PR #18376](https://github.com/BerriAI/litellm/pull/18376)
 - **[CountTokens API](../../docs/anthropic_count_tokens)**
     - Add Bedrock as a new provider for `/v1/messages/count_tokens` - [PR #18858](https://github.com/BerriAI/litellm/pull/18858)
@@ -408,14 +408,14 @@ Users can now see Endpoint Activity Metrics in the UI.
     - Fix span kind fallback when parent_id missing - [PR #18418](https://github.com/BerriAI/litellm/pull/18418)
 - **[Langfuse](../../docs/proxy/logging#langfuse)**
     - Map Gemini cached_tokens to Langfuse cache_read_input_tokens - [PR #18614](https://github.com/BerriAI/litellm/pull/18614)
-- **[Prometheus](../../docs/proxy/logging#prometheus)**
+- **[Prometheus](/docs/proxy/prometheus)**
     - Align prometheus metric names with DEFINED_PROMETHEUS_METRICS - [PR #18463](https://github.com/BerriAI/litellm/pull/18463)
     - Add Prometheus metrics for request queue time and guardrails - [PR #17973](https://github.com/BerriAI/litellm/pull/17973)
     - Add caching metrics for cache hits, misses, and tokens - [PR #18755](https://github.com/BerriAI/litellm/pull/18755)
     - Skip metrics for invalid API key requests - [PR #18788](https://github.com/BerriAI/litellm/pull/18788)
-- **[Braintrust](../../docs/proxy/logging#braintrust)**
+- **[Braintrust](/docs/observability/braintrust)**
     - Pass span_attributes in async logging and skip tags on non-root spans - [PR #18409](https://github.com/BerriAI/litellm/pull/18409)
-- **[CloudZero](../../docs/proxy/logging#cloudzero)**
+- **[CloudZero](/docs/observability/cloudzero)**
     - Add user email to CloudZero - [PR #18584](https://github.com/BerriAI/litellm/pull/18584)
 - **[OpenTelemetry](../../docs/proxy/logging#opentelemetry)**
     - Use already configured opentelemetry providers - [PR #18279](https://github.com/BerriAI/litellm/pull/18279)
@@ -423,7 +423,7 @@ Users can now see Endpoint Activity Metrics in the UI.
     - Allow configuring arize project name for OpenTelemetry service name - [PR #18738](https://github.com/BerriAI/litellm/pull/18738)
 - **[LangSmith](../../docs/proxy/logging#langsmith)**
     - Add support for LangSmith organization-scoped API keys with tenant ID - [PR #18623](https://github.com/BerriAI/litellm/pull/18623)
-- **[Generic API Logger](../../docs/proxy/logging#generic-api-logger)**
+- **[Generic API Logger](/docs/observability/generic_api)**
     - Add log_format option to GenericAPILogger - [PR #18587](https://github.com/BerriAI/litellm/pull/18587)
 
 ### Guardrails
