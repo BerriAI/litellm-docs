@@ -82,7 +82,9 @@ export function layoutTimelineLabels(items: LabelItem[], goalLeft: number, width
       const max = row === 0 ? goalLeft - LABEL_GAP : width - 8;
       const placed = spread([...(rows[row] ?? []), item], 8, max);
       const before = new Map((rows[row] ?? []).map(label => [label.key, label.x]));
+      // A run wider than the row overflows its right end, which on the first row is the goal's.
       const fits = placed.every(label => Math.abs(label.x - label.anchor) <= (label.priority === 2 ? MAX_SHIFT : 0.5)
+        && label.x + label.width / 2 <= max + 0.5
         && (required || label.key === item.key || Math.abs(label.x - before.get(label.key)!) < 0.5));
       if (fits || row === rows.length) {
         rows[row] = placed.map(label => ({...label, row}));

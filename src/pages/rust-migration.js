@@ -8,14 +8,17 @@ import {Select} from '@base-ui/react/select';
 import {
   CURRENT_VERSION,
   GOALS,
+  LEVELS,
   PLANS,
-  STAGES,
+  ROUTES,
+  TERMS,
   changesBetween,
-  labelOf,
+  levelLabel,
+  pointsAt,
   progressAt,
   timelineFor,
 } from '@site/src/data/rustMigration';
-import StageBadge, {StageIcon, compactVersion, stageAnchor} from '@site/src/components/RustMigration/StageBadge';
+import LevelBadge, {LevelIcon, compactVersion, levelAnchor} from '@site/src/components/RustMigration/LevelBadge';
 import {createTimeScale, labelWidth, layoutTimelineLabels, layoutTimelineValues, monthTicks, LABEL_ROW_HEIGHT} from '@site/src/components/RustMigration/timeline';
 import picker from '@site/src/components/RustMigration/Picker.module.css';
 import styles from './rust-migration.module.css';
@@ -34,15 +37,25 @@ const wholePercent = percent => Math.round(percent);
 // Points keep one decimal, since a single provider can be worth a fraction of one.
 const formatPoints = value => (Math.round(value * 10) / 10).toString();
 
-// A goal's progress in points of its weight, like 11.8 of 100.
-const pointsAt = (goal, version, projected = false) => (progressAt(goal, version, projected) * goal.points) / 100;
+// The extra height a route plan's label takes for its route line.
+const ROUTE_LINE = 16;
 
-function MigrationTimeline({goal}) {
+// `selectedKey` is the point whose details replace the chart, or null.
+function MigrationTimeline({goal, selectedKey, onSelect}) {
   const points = GOAL_TIMELINES.get(goal.id);
   const chartRef = useRef(null);
   // Nothing is measured on the server or before the first resize, so start at a desktop width.
   const width = Math.round(useResizeObserver({ref: chartRef}).width || 920);
   const [hovered, setHovered] = useState(null);
+  // A term in a plan's axis label, explained on its own while hovered.
+  const [term, setTerm] = useState(null);
+  const showTerm = (id, event) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    const chartBox = chartRef.current.getBoundingClientRect();
+    setTerm({id, anchor: {x: box.left + box.width / 2 - chartBox.left, y: box.top - chartBox.top}});
+  };
+  const selected = points.findIndex(point => point.key === selectedKey);
+  const select = index => onSelect(points[index].key);
   const compact = width < 560;
   const baseHeight = compact ? 240 : 336;
   const plot = compact
@@ -56,16 +69,21 @@ function MigrationTimeline({goal}) {
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
   const axisLabel = point => ({
-    name: point.kind === 'plan' ? point.label : compactVersion(point.version),
+    name: pointName(point),
     date: point.kind === 'latest' && !compact ? `${formatDate(SHORT_DATE, point.date)} · latest` : formatDate(SHORT_DATE, point.date),
   });
   const {labels, rowCount} = layoutTimelineLabels(points.map((point, index) => {
     const {name, date} = axisLabel(point);
+    // A route plan's widest line may be the route itself, which is monospace.
+    const route = point.route ? ROUTES[point.route] : '';
     const moved = index > 0 && points[index - 1].percent !== point.percent;
-    return {key: index, anchor: x(index), width: labelWidth(name, date), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
+    return {key: index, anchor: x(index), width: Math.max(labelWidth(point.route ? point.label : name, date), route.length * 7), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
   }), goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)), width);
   const values = layoutTimelineValues(points, x, y);
-  const height = baseHeight + (rowCount - 1) * LABEL_ROW_HEIGHT;
+  // A route plan's label takes three lines, so its rows grow by one line.
+  const routeLines = points.some(point => point.route) ? 1 : 0;
+  const rowHeight = LABEL_ROW_HEIGHT + routeLines * ROUTE_LINE;
+  const height = baseHeight + routeLines * ROUTE_LINE + (rowCount - 1) * rowHeight;
   const current = points.findIndex(point => point.kind === 'latest');
   const linePath = points
     .slice(0, current + 1)
@@ -78,6 +96,21 @@ function MigrationTimeline({goal}) {
     .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
     .join('') + `L${goalX},${y(100)}`;
 
+  // A clicked point takes the chart's place at the chart's size, like a page in the card.
+  if (selected >= 0) {
+    return (
+      <div className={styles.chartBody} ref={chartRef}>
+        <PointDetails
+          goal={goal}
+          point={points[selected]}
+          previous={points[selected - 1] ?? null}
+          width={width}
+          height={height}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.chartBody} ref={chartRef}>
       <svg
@@ -87,12 +120,12 @@ function MigrationTimeline({goal}) {
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         // A label rather than <title>, which browsers show as a tooltip over the whole chart.
-        aria-label="Rust migration progress over time"
+        aria-label="Rust gateway progress over time"
         aria-describedby="timeline-description"
       >
         <desc id="timeline-description">
-          {wholePercent(points[current].percent)} percent of {goal.text} is migrated in {CURRENT_VERSION}.
-          {points.filter(point => point.kind === 'plan').map(point => ` ${point.label} is planned to reach ${wholePercent(point.percent)} percent.`)}
+          {wholePercent(points[current].percent)} percent of {goal.text} is built in {CURRENT_VERSION}.
+          {points.filter(point => point.kind === 'plan').map(point => ` ${pointName(point)} is planned to reach ${wholePercent(point.percent)} percent.`)}
           {' '}The goal targets 100 percent by {goal.endsOn}.
           {' '}Horizontal distance represents elapsed time on the same scale for releases, plans, and the goal.
         </desc>
@@ -132,7 +165,7 @@ function MigrationTimeline({goal}) {
             key={index}
             className={styles.labelGuide}
             // Straight down when the date still falls under its label.
-            d={`M${x(index)},${baseline + 4}L${Math.min(Math.max(x(index), label.x - label.width / 2), label.x + label.width / 2)},${baseline + 12 + label.row * LABEL_ROW_HEIGHT}`}
+            d={`M${x(index)},${baseline + 4}L${Math.min(Math.max(x(index), label.x - label.width / 2), label.x + label.width / 2)},${baseline + 12 + label.row * rowHeight}`}
           />
         ))}
         {points.map((point, index) => {
@@ -141,19 +174,30 @@ function MigrationTimeline({goal}) {
           const pinned = point.kind !== 'release';
           const pointClass = {release: styles.progressPoint, latest: styles.mainPoint, plan: styles.planPoint}[point.kind];
           const label = labels.get(index);
-          const labelY = label && baseline + 26 + label.row * LABEL_ROW_HEIGHT;
+          const labelY = label && baseline + 26 + label.row * rowHeight;
           const value = values.get(index);
           return (
             <g
-              key={point.version}
+              key={point.key}
+              className={styles.pointButton}
               tabIndex={0}
+              role="button"
+              aria-label={`${axisLabel(point).name}, ${wholePercent(point.percent)}%`}
               onMouseEnter={() => setHovered(index)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => setHovered(index)}
               onBlur={() => setHovered(null)}
-              onClick={() => setHovered(index)}
+              onClick={() => select(index)}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  select(index);
+                }
+              }}
             >
               <circle className={styles.pointHit} cx={cx} cy={cy} r={compact ? 12 : 14} />
+              {/* Grows on hover and focus, so the dot itself reads as the thing to click. */}
+              <circle className={styles.pointHalo} cx={cx} cy={cy} r={pinned ? 10 : 8.5} />
               <circle className={pointClass} cx={cx} cy={cy} r={pinned ? 5 : 3.5} />
               {point.kind === 'latest' && (
                 // Up and to the left, clear of the projection rising to the right.
@@ -171,14 +215,36 @@ function MigrationTimeline({goal}) {
               )}
               {label && (
                 <>
-                  <rect className={styles.labelBackground} x={label.x - label.width / 2 - 4} y={labelY - 12} width={label.width + 8} height={34} />
+                  <rect
+                    className={styles.labelBackground}
+                    x={label.x - label.width / 2 - 4}
+                    y={labelY - 12}
+                    width={label.width + 8}
+                    height={34 + (point.route ? ROUTE_LINE : 0)}
+                  />
                   <text
                     className={`${styles.versionLabel} ${{release: '', latest: styles.mainVersionLabel, plan: styles.planVersionLabel}[point.kind]}`}
                     x={label.x}
                     y={labelY}
                     textAnchor="middle"
                   >
-                    <tspan x={label.x}>{axisLabel(point).name}</tspan>
+                    {point.route ? (
+                      <>
+                        <tspan className={styles.routeName} x={label.x}>{ROUTES[point.route]}</tspan>
+                        <tspan x={label.x} dy={ROUTE_LINE}>
+                          {point.terms.map((id, termIndex) => (
+                            <React.Fragment key={id}>
+                              {termIndex > 0 && ', '}
+                              <tspan className={styles.term} onMouseEnter={event => showTerm(id, event)} onMouseLeave={() => setTerm(null)}>
+                                {id}
+                              </tspan>
+                            </React.Fragment>
+                          ))}
+                        </tspan>
+                      </>
+                    ) : (
+                      <tspan x={label.x}>{axisLabel(point).name}</tspan>
+                    )}
                     <tspan className={styles.versionDate} x={label.x} dy="16">{axisLabel(point).date}</tspan>
                   </text>
                 </>
@@ -200,39 +266,54 @@ function MigrationTimeline({goal}) {
           </text>
         </g>
       </svg>
-      {hovered !== null && (
+      {term && <TermTooltip id={term.id} anchor={term.anchor} />}
+      {hovered !== null && !term && (
         <PointTooltip goal={goal} point={points[hovered]} previous={points[hovered - 1] ?? null} anchor={{x: x(hovered), y: y(points[hovered].percent)}} />
       )}
     </div>
   );
 }
 
-const TOOLTIP_LINES = 4;
-const TOOLTIP_UNITS = 3;
-
-// Units under one group share its name once, like `Cloud auth: Azure, Google
-// Cloud`, and a long list ends in a count.
-function unitList(features) {
-  const groups = new Set(features.map(feature => feature.path.length > 2 ? feature.path[1] : null));
-  const group = groups.size === 1 ? [...groups][0] : null;
-  const names = features.map(feature => feature.path.slice(group ? 2 : 1).join(' / '));
-  const list = names.length > TOOLTIP_UNITS
-    ? `${names.slice(0, TOOLTIP_UNITS).join(', ')} +${names.length - TOOLTIP_UNITS} more`
-    : names.join(', ');
-  return group ? `${group}: ${list}` : list;
+// A plan about one route reads as the route then the label, like `/messages End to end`.
+function pointName(point) {
+  if (point.kind !== 'plan') {
+    return compactVersion(point.version);
+  }
+  return point.route ? `${ROUTES[point.route]} ${point.label}` : point.label;
 }
 
-// One line per area and stage, so six providers moving together read as one
-// change. A plan's lines come from what it expects to move. A whole area needs
-// no unit list; anything less names its units, since that is what moved.
-function summarizeChanges(goal, point, previous) {
-  return changesBetween(goal, point.version, previous?.version ?? null, point.kind === 'plan').map(change => ({
-    key: change.key,
-    area: change.area.text,
-    units: change.wholeArea ? null : unitList(change.features),
-    from: change.from && labelOf(change.from),
-    to: labelOf(change.kind),
-  }));
+// The same name in HTML, with the route as a tag on its own line.
+function PointName({point}) {
+  if (point.kind !== 'plan' || !point.route) {
+    return pointName(point);
+  }
+  return (
+    <>
+      <code className={styles.routeTag}>{ROUTES[point.route]}</code>
+      <span className={styles.routeLabel}>{point.label}</span>
+    </>
+  );
+}
+
+const pointDate = point => `${point.kind === 'plan' ? 'Target' : 'Released'} ${formatDate(SHORT_DATE, point.date)}`;
+
+const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+// What a point moved, in one line: `14 items in 5 components`.
+function changeCount(changes) {
+  const items = changes.reduce((sum, change) => sum + change.work.length, 0);
+  const components = new Set(changes.map(change => change.component.id)).size;
+  return `${plural(items, 'item')} in ${plural(components, 'component')}`;
+}
+
+function PercentGain({point, previous}) {
+  const gain = previous ? wholePercent(point.percent) - wholePercent(previous.percent) : 0;
+  return (
+    <span>
+      {wholePercent(point.percent)}%
+      {gain > 0 && <em className={styles.tooltipGain}> +{gain}</em>}
+    </span>
+  );
 }
 
 const TOOLTIP_GAP = 14;
@@ -259,10 +340,31 @@ function placeTooltip(anchor, size, bounds) {
   return {left: x, top: y};
 }
 
+// What one term in a plan's label means, like `e2e`.
+function TermTooltip({id, anchor}) {
+  const ref = useRef(null);
+  const [position, setPosition] = useState(null);
+  useLayoutEffect(() => {
+    // Centered over the term and kept inside the card, so the label it explains stays visible.
+    const tooltip = ref.current;
+    const width = tooltip.offsetParent.clientWidth;
+    setPosition({
+      left: clamp(anchor.x - tooltip.offsetWidth / 2, TOOLTIP_MARGIN, width - tooltip.offsetWidth - TOOLTIP_MARGIN),
+      top: anchor.y - TOOLTIP_GAP / 2 - tooltip.offsetHeight,
+    });
+  }, [anchor.x, anchor.y, id]);
+  return (
+    <div ref={ref} className={`${styles.tooltip} ${styles.termTooltip}`} style={position ?? {left: 0, top: 0, visibility: 'hidden'}} role="tooltip">
+      <strong>{TERMS[id].name}</strong>
+      <div className={styles.tooltipDate}>{TERMS[id].description}</div>
+    </div>
+  );
+}
+
+// A glance at a point while hovering: its name, progress, and how much it
+// moved. The full list opens below the chart on click.
 function PointTooltip({goal, point, previous, anchor}) {
-  const lines = summarizeChanges(goal, point, previous);
-  const shown = lines.slice(0, TOOLTIP_LINES);
-  const gain = previous ? wholePercent(point.percent) - wholePercent(previous.percent) : 0;
+  const changes = changesBetween(goal, point, previous);
   const ref = useRef(null);
   // Hidden until measured, since where it fits depends on its own size.
   const [position, setPosition] = useState(null);
@@ -278,7 +380,7 @@ function PointTooltip({goal, point, previous, anchor}) {
       {width: tooltip.offsetWidth, height: tooltip.offsetHeight},
       {width: chart.clientWidth, top: -chart.offsetTop, bottom: chart.clientHeight},
     ));
-  }, [anchor.x, anchor.y, point.version, goal.id]);
+  }, [anchor.x, anchor.y, point.key, goal.id]);
   return (
     <div
       ref={ref}
@@ -287,37 +389,82 @@ function PointTooltip({goal, point, previous, anchor}) {
       role="tooltip"
     >
       <div className={styles.tooltipHead}>
-        <strong>{point.kind === 'plan' ? point.label : compactVersion(point.version)}</strong>
-        <span>
-          {wholePercent(point.percent)}%
-          {gain > 0 && <em className={styles.tooltipGain}> +{gain}</em>}
-        </span>
+        <strong><PointName point={point} /></strong>
+        <PercentGain point={point} previous={previous} />
       </div>
       <div className={styles.tooltipDate}>
-        {point.kind === 'plan'
-          ? `${compactVersion(point.version)} · planned for ${formatDate(SHORT_DATE, point.date)}`
-          : `Released ${formatDate(SHORT_DATE, point.date)}`}
+        {pointDate(point)} · {changes.length === 0 ? 'no change' : changeCount(changes)}
       </div>
-      {lines.length === 0 ? (
-        <div className={styles.tooltipEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</div>
+      {changes.length > 0 && <div className={styles.tooltipHint}>Click the point to see what it moves</div>}
+    </div>
+  );
+}
+
+// The details grid is sized to the chart's box and never scrolls: cards have
+// a fixed height, and what does not fit folds into a last `+N more` card.
+const DETAILS_PADDING = 16;
+const CARD_GAP = 8;
+
+// One card per component, so work landing at two levels at once, like auth
+// partly done, reads as one component. A mixed card marks its partial work.
+function componentCards(changes) {
+  const cards = new Map();
+  for (const change of changes) {
+    const card = cards.get(change.component.id) ?? {key: change.component.id, component: change.component, changes: []};
+    card.changes.push(change);
+    cards.set(card.key, card);
+  }
+  return [...cards.values()].map(card => {
+    const levels = new Set(card.changes.map(change => change.level));
+    const level = levels.size === 1 ? [...levels][0] : null;
+    const work = card.changes.flatMap(change => change.work.map(item => (level || change.level === 'done' ? item.text : `${item.text} (partial)`)));
+    const whole = card.changes.length === 1 && card.changes[0].whole;
+    return {...card, level, summary: whole ? `All ${work.length} items` : work.join(', ')};
+  });
+}
+
+// Everything a point moved, one card per component, listing its work.
+function PointDetails({goal, point, previous, width, height}) {
+  const changes = componentCards(changesBetween(goal, point, previous));
+  const compact = width < 560;
+  const columns = compact ? 1 : width < 860 ? 2 : 3;
+  const cardHeight = compact ? 48 : 64;
+  const rows = Math.max(1, Math.floor((height - DETAILS_PADDING + CARD_GAP) / (cardHeight + CARD_GAP)));
+  const capacity = rows * columns;
+  const shown = changes.length > capacity ? changes.slice(0, capacity - 1) : changes;
+  const hidden = changes.slice(shown.length);
+  return (
+    <section className={styles.details} style={{height}} aria-label={`What ${pointName(point)} moves`}>
+      {changes.length === 0 ? (
+        <p className={styles.detailsEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</p>
       ) : (
-        <ul className={styles.tooltipList}>
-          {shown.map(line => (
-            <li key={line.key}>
-              <span className={styles.tooltipArea}>{line.area}</span>
-              <span className={styles.tooltipStage}>
-                {line.from && <em>{line.from} → </em>}
-                {line.to}
-              </span>
-              {line.units && <span className={styles.tooltipUnits}>{line.units}</span>}
+        <ul
+          className={`${styles.detailsList} ${compact ? styles.detailsCompact : ''}`}
+          style={{gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gridAutoRows: cardHeight}}
+        >
+          {shown.map(card => (
+            <li className={styles.detailsCard} key={card.key}>
+              <p className={styles.detailsComponent}>
+                <span>{card.component.text}</span>
+                {card.level && (
+                  <span className={styles.detailsLevel}>
+                    <LevelIcon id={card.level} />
+                    {levelLabel(card.level)}
+                  </span>
+                )}
+              </p>
+              <p className={styles.detailsWork}>{card.summary}</p>
             </li>
           ))}
-          {lines.length > shown.length && (
-            <li className={styles.tooltipMore}>+{lines.length - shown.length} more</li>
+          {hidden.length > 0 && (
+            <li className={styles.detailsCard}>
+              <p className={styles.detailsComponent}>+{hidden.length} more</p>
+              <p className={styles.detailsWork}>{hidden.map(card => card.component.text).join(', ')}</p>
+            </li>
           )}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -338,38 +485,35 @@ function ProgressMarker({percent, expandable}) {
   );
 }
 
-function GraphNode({node}) {
-  if (!node.rollout) {
-    return <GroupNode group={node} />;
-  }
+function WorkNode({work}) {
   return (
     <li>
       <div className={styles.node}>
-        <ProgressMarker percent={progressAt(node, CURRENT_VERSION)} />
-        <span className={styles.nodeText}>{node.text}</span>
-        <span className={styles.nodeMeta}><StageBadge feature={node} /></span>
+        <ProgressMarker percent={progressAt(work, CURRENT_VERSION)} />
+        <span className={styles.nodeText}>{work.text}</span>
+        <span className={styles.nodeMeta}><LevelBadge work={work} /></span>
       </div>
     </li>
   );
 }
 
-// Groups start collapsed so the list stays scannable; opening one shows what it
-// holds. A goal's areas also show how many points of the goal they carry.
-function GroupNode({group, points}) {
-  const percent = progressAt(group, CURRENT_VERSION);
+// Components start collapsed so the list stays scannable; opening one shows
+// its work. Each also shows how many points of the goal it carries.
+function ComponentNode({component}) {
+  const percent = progressAt(component, CURRENT_VERSION);
   return (
     <li>
       <details className={styles.group}>
         <summary className={styles.node}>
           <ProgressMarker percent={percent} expandable />
-          <span className={styles.nodeText}>{group.text}</span>
+          <span className={styles.nodeText}>{component.text}</span>
           <span className={`${styles.nodeMeta} ${percent > 0 ? styles.onRust : ''}`}>
             {wholePercent(percent)}%
-            {points !== undefined && <span className={styles.nodePoints}>of {points} pts</span>}
+            <span className={styles.nodePoints}>of {component.size} pts</span>
           </span>
         </summary>
         <ul>
-          {group.children.map(child => <GraphNode node={child} key={child.id} />)}
+          {component.work.map(work => <WorkNode work={work} key={work.id} />)}
         </ul>
       </details>
     </li>
@@ -396,12 +540,12 @@ function GoalSelect({goal, onChange}) {
           <Select.Popup className={picker.selectPopup}>
             <Select.List>
               {GOALS.map(item => (
-                <Select.Item className={picker.selectItem} value={item.id} key={item.id}>
+                <Select.Item className={picker.selectItem} value={item.id} key={item.id} disabled={item.disabled}>
                   <Select.ItemText className={picker.selectLabel}>{item.text}</Select.ItemText>
-                  <span className={picker.selectMeta}>by {formatDate(FULL_DATE, item.endsOn)}</span>
+                  <span className={picker.selectMeta}>{item.disabled ? 'Not tracked yet' : `by ${formatDate(FULL_DATE, item.endsOn)}`}</span>
                   {/* Answers "what is in this goal" right where it is picked. */}
                   <span className={picker.selectScope}>
-                    {item.summary ?? item.children.map(child => child.text).join(', ')}
+                    {item.summary ?? item.components.map(component => component.text).join(', ')}
                   </span>
                 </Select.Item>
               ))}
@@ -429,22 +573,36 @@ const VIEW_ICONS = {
 function MigrationTracker() {
   const [goal, setGoal] = useState(GOALS[0]);
   const [view, setView] = useState('timeline');
+  // Kept by key, so a point stays open across goals that share it.
+  const [selectedKey, setSelectedKey] = useState(null);
   const otherView = view === 'timeline' ? 'breakdown' : 'timeline';
+  const detailsOpen = view === 'timeline' && GOAL_TIMELINES.get(goal.id).some(point => point.key === selectedKey);
+  useEventListener('keydown', event => {
+    if (event.key === 'Escape') setSelectedKey(null);
+  });
 
   return (
     <section className={styles.section} aria-labelledby="migration-tracker-title">
       <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
       <div className={styles.chartCard}>
-        <p className={styles.goalSentence}>
+        {/* Open details swap the sentence for a back button, which holds its
+            place so the card keeps its size. */}
+        {detailsOpen && (
+          <button className={styles.detailsBack} type="button" onClick={() => setSelectedKey(null)} autoFocus>
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5" /></svg>
+            Back
+          </button>
+        )}
+        <p className={`${styles.goalSentence} ${detailsOpen ? styles.goalSentenceHidden : ''}`} aria-hidden={detailsOpen}>
           <strong
             className={styles.progressSummary}
-            title={`${formatPoints(pointsAt(goal, CURRENT_VERSION))} of ${goal.points} points as of ${CURRENT_VERSION}`}
+            title={`${formatPoints(pointsAt(goal, CURRENT_VERSION))} of ${goal.size} points as of ${CURRENT_VERSION}`}
           >
             {wholePercent(progressAt(goal, CURRENT_VERSION))}%
           </strong>
           {' of '}
           <GoalSelect goal={goal} onChange={setGoal} />
-          {' migrated to Rust, '}
+          {' built, '}
           <span className={styles.keepTogether}>
             {'shown as a '}
             <button
@@ -464,51 +622,38 @@ function MigrationTracker() {
         </p>
         {/* The chart stays mounted so it keeps its measured width. */}
         <div hidden={view !== 'timeline'}>
-          <MigrationTimeline goal={goal} />
+          <MigrationTimeline goal={goal} selectedKey={selectedKey} onSelect={setSelectedKey} />
         </div>
         {/* The sentence above already names the goal, so the tree starts at its children. */}
         <ul className={styles.tree} hidden={view !== 'breakdown'}>
-          {goal.children.map(area => <GroupNode group={area} points={area.weight} key={area.id} />)}
+          {goal.components.map(component => <ComponentNode component={component} key={component.id} />)}
         </ul>
       </div>
     </section>
   );
 }
 
-// Explains each rollout stage once, so the tracker's badges can stay terse and
-// link here instead.
-function RolloutStages() {
-  const stages = [
-    ...STAGES.slice(1).map(stage => ({kind: stage.id, ...stage})),
-    {
-      kind: 'done',
-      label: 'Done',
-      description: 'Shared work like cloud auth has no rollout of its own. It is done once every Rust path can use it.',
-    },
-  ];
-  // Other pages link to these cards, so the build's anchor check must know them.
+// Explains each level once, so the tracker's badges can stay terse and link
+// here instead.
+function Levels() {
+  const levels = LEVELS.slice(1);
+  // Badges link to these cards, so the build's anchor check must know them.
   const brokenLinks = useBrokenLinks();
-  stages.forEach(stage => brokenLinks.collectAnchor(stageAnchor(stage.kind)));
+  levels.forEach(level => brokenLinks.collectAnchor(levelAnchor(level.id)));
   return (
     <>
       <p className={styles.sectionLead}>
-        Each feature starts on Python and moves through these stages one release at a time. For the two middle stages,
-        the <code>LITELLM_RUST</code> environment variable flips the default for the whole process.
+        A level says how confident we are in the work itself, not whether anything uses it yet. Groundwork that is
+        finished and trusted but waits for the gateway to deploy is already done.
       </p>
-      <ul className={styles.stages}>
-        {stages.map(stage => (
-          <li className={styles.stage} id={stageAnchor(stage.kind)} key={stage.kind}>
-            <p className={styles.stageName}>
-              <StageIcon kind={stage.kind} className={styles.stageIcon} />
-              {stage.label}
+      <ul className={styles.levels}>
+        {levels.map(level => (
+          <li className={styles.level} id={levelAnchor(level.id)} key={level.id}>
+            <p className={styles.levelName}>
+              <LevelIcon id={level.id} className={styles.levelIcon} />
+              {level.label}
             </p>
-            <p className={styles.stageDescription}>{stage.description}</p>
-            {stage.switch && (
-              <p className={styles.stageSwitch}>
-                <code>LITELLM_RUST={stage.switch.value}</code>
-                <span>{stage.switch.effect}</span>
-              </p>
-            )}
+            <p className={styles.levelDescription}>{level.description}</p>
           </li>
         ))}
       </ul>
@@ -516,37 +661,17 @@ function RolloutStages() {
   );
 }
 
-// How `other` weighs areas differently from `goal`, like `Long tail from 4 to 23 points`.
-function reweighed(goal, other) {
-  return other.children
-    .map(area => [area, goal.children.find(candidate => candidate.id === area.id)])
-    .filter(([area, base]) => base && base.weight !== area.weight)
-    .map(([area, base]) => `${area.text} from ${base.weight} to ${area.weight} points`)
-    .join(' and ');
-}
-
-// The goal's areas with their weights, what they hold today, and what the plans
-// should add, straight from the data the chart uses.
+// The goal's components with their sizes, what they hold today, and what the
+// plans should add, straight from the data the chart uses.
 function Scoring() {
   const [goal] = GOALS;
   const lastPlan = PLANS.at(-1);
-  const rows = goal.children.map(area => {
-    const points = area.weight;
-    return {
-      area,
-      points,
-      today: (progressAt(area, CURRENT_VERSION) * points) / 100,
-      planned: lastPlan && (progressAt(area, lastPlan.version, true) * points) / 100,
-    };
-  });
   return (
     <>
       <p className={styles.sectionLead}>
-        Each area of work carries a share of {goal.points} points for {goal.text}, and within an area its providers or
-        pieces split those points evenly. A piece earns 80% of its share once anyone can turn it on, even as an opt-in,
-        and the last 20% once it runs on Rust by default or the Python path is gone. Shared groundwork, like cloud auth,
-        counts in full once it is done.
-        {GOALS.slice(1).map(other => ` ${other.text} reweighs ${reweighed(goal, other)}, for ${other.points} in all.`)}
+        Every piece of work has a size in rough engineer-weeks, and a component's points are the sizes of its work.
+        A piece earns 80% of its size once it is in a release but incomplete or not yet trusted, and all of it once it
+        is done. {goal.text} is {goal.size} points in all.
       </p>
       <table className={styles.scoring}>
         <thead>
@@ -558,21 +683,21 @@ function Scoring() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => (
-            <tr key={row.area.id}>
-              <th scope="row">{row.area.text}</th>
-              <td>{row.points}</td>
-              <td>{formatPoints(row.today)}</td>
-              {lastPlan && <td>{formatPoints(row.planned)}</td>}
+          {goal.components.map(component => (
+            <tr key={component.id}>
+              <th scope="row">{component.text}</th>
+              <td>{component.size}</td>
+              <td>{formatPoints(pointsAt(component, CURRENT_VERSION))}</td>
+              {lastPlan && <td>{formatPoints(pointsAt(component, lastPlan))}</td>}
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
             <th scope="row">Total</th>
-            <td>{goal.points}</td>
+            <td>{goal.size}</td>
             <td>{formatPoints(pointsAt(goal, CURRENT_VERSION))}</td>
-            {lastPlan && <td>{formatPoints(pointsAt(goal, lastPlan.version, true))}</td>}
+            {lastPlan && <td>{formatPoints(pointsAt(goal, lastPlan))}</td>}
           </tr>
         </tfoot>
       </table>
@@ -582,7 +707,7 @@ function Scoring() {
 
 const FAQ = [
   {id: 'faq-scoring', question: 'How is the percentage calculated?', answer: <Scoring />},
-  {id: 'faq-rollout-stages', question: 'How does a feature move to Rust?', answer: <RolloutStages />},
+  {id: 'faq-levels', question: 'What do Partial and Done mean?', answer: <Levels />},
 ];
 
 // A malformed escape like `#%` reads as no hash rather than breaking the FAQ.
@@ -595,7 +720,7 @@ function hashId() {
 }
 
 // Point the URL at an open answer so it can be shared, without adding a history
-// entry per toggle. A deeper link already inside the answer, like a stage, is
+// entry per toggle. A deeper link already inside the answer, like a level, is
 // kept while it is open and cleared when it closes, so following the same link
 // again fires `hashchange` and reopens it.
 function syncHash(details) {
@@ -610,7 +735,7 @@ function syncHash(details) {
 }
 
 // Answers start collapsed, and each one is addressable as `#<id>`. A link to an
-// answer, or to something inside one like a stage badge's "What this means",
+// answer, or to something inside one like a level badge's "What Done means",
 // opens it first so the target is visible.
 function Faq() {
   const listRef = useRef(null);
@@ -787,7 +912,7 @@ export default function RustMigrationPage() {
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Rust Migration</p>
           <h1 className={styles.title}>LiteLLM is moving to Rust</h1>
-          <p className={styles.description}>See what already runs on Rust and what is next.</p>
+          <p className={styles.description}>See how much of the move to Rust is built and what is next.</p>
         </header>
         <MigrationTracker />
         <GatewayBenchmark />

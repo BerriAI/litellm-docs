@@ -1,8 +1,9 @@
-import {fail} from './fail';
+import type {IsoDay} from './shared';
 
-// A calendar day in UTC, like `2026-10-13`. Every date on the page is drawn
-// and read at this precision, so a release and a plan on the same day line up.
-export type IsoDay = `${number}-${number}-${number}`;
+// The data fails the build when it drifts out of shape.
+export function fail(message: string): never {
+  throw new Error(`Rust migration: ${message}`);
+}
 
 // The UTC day of a timestamp or day string, failing the build on anything else.
 export function isoDay(value: string, where: string): IsoDay {
