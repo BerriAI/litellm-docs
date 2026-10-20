@@ -57,11 +57,12 @@
 .composer button:disabled {opacity:.35;color:var(--ai-muted)}
 .note {margin:6px 0 0;color:var(--ai-muted);font-size:11px}
 
-/* Expanded: only on screens wide enough to widen the panel without covering the page (see layout.css) */
-.panel.expanded {width:var(--ask-ai-width,380px)}
-@media(max-width:1399px) {
-  .expandButton {display:none}
-  .panel.expanded {width:min(380px,100vw)}
+/* Resize handle on the left edge, only where the panel is docked beside the page (see layout.css) */
+.resizeHandle {display:none}
+@media(min-width:1200px) {
+  .panel {width:var(--ask-ai-panel-width,380px)}
+  .resizeHandle {display:block;position:absolute;top:0;bottom:0;left:0;z-index:1;width:6px;cursor:col-resize;touch-action:none}
+  .resizeHandle:hover,.resizeHandle:focus-visible,:global(html[data-ask-ai-resizing]) .resizeHandle {background:var(--ai-accent);opacity:.4;outline:0}
 }
 
 /* Drawer: overlays the right edge, no page reflow */
