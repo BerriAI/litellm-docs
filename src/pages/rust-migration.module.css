@@ -187,6 +187,7 @@
 .routeName {
   font-family: var(--ifm-font-family-monospace);
   fill: var(--ifm-color-primary);
+  font-weight: 600;
 }
 
 .tooltipDate {
@@ -458,9 +459,9 @@
   fill: var(--ifm-color-emphasis-700);
 }
 
+/* The route leads in its own weight; the terms under it stay regular, like other axis labels. */
 .planVersionLabel {
   fill: var(--ifm-color-emphasis-700);
-  font-weight: 600;
 }
 
 .goal circle {
