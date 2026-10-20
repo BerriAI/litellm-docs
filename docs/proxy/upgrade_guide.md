@@ -9,11 +9,10 @@ Helm charts and the official Terraform modules provide a **separate migration jo
 
 ```mermaid
 flowchart LR
-    subgraph Job["Migration job · target LiteLLM version"]
-        Schema["Apply schema migrations"] --> Indexes["Build request-log indexes"]
+    subgraph Job["Migration job"]
+        Schema["Schema migrations"] --> Indexes["Request-log indexes"]
     end
-    Indexes --> Complete["Job succeeds"]
-    Complete --> Gateway["Roll out gateway pods"]
+    Indexes -->|Success| Gateway["Roll out gateway pods"]
 ```
 
 ## Before you upgrade
@@ -25,7 +24,7 @@ Read the [release notes](/release_notes) for the versions you will cross. Check 
 | Deployment | Select the release | Run migrations before rollout |
 |---|---|---|
 | [Helm](./deploy.md#deploy-with-helm) | Pin the chart and image versions. Keep the migration job and application images on the same LiteLLM release. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
-| [Terraform](./deploy.md#deploy-with-terraform-aws-and-gcp) | Bump the module `version`. Component images default to that release; review any image overrides. | Review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
+| [Terraform](./deploy.md#deploy-with-terraform-aws-and-gcp) | Bump the module `version`. Component images default to that release; review any image overrides. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
 
 <details>
 <summary>Helm and Argo CD hook settings</summary>
