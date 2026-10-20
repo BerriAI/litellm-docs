@@ -1,7 +1,7 @@
 ---
-title: "1.106.0rc1 - Claude Haiku 5.5, Lens Rust Service, Admin Home Page & MCP Rate Limits"
-slug: "v1-106-0-rc-1"
-date: 2026-10-11T09:40:31
+title: "v1.106.0 - Claude Haiku 5.5, Lens Rust Service, Admin Home Page & MCP Rate Limits"
+slug: "v1-106-0"
+date: 2026-10-18T05:53:32
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -32,28 +32,28 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.106.0-rc.1
+docker.litellm.ai/berriai/litellm:1.106.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.106.0rc1
+pip install litellm==1.106.0
 ```
 
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.106.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.106.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases)
+This release is published as [`ghcr.io/berriai/litellm:v1.106.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.106.0) and the full [releases page](https://github.com/BerriAI/litellm/releases)
 
-The published GitHub tag is `v1.106.0-rc.1`. These notes compare it with `v1.105.0-rc.1`, the previous release candidate cut from `main`. Changes backported onto `rc/1.105.0` and already shipped in `v1.105.0` are omitted
+These notes cover everything since `v1.105.0`. Changes added to the release line after rc.1, through rc.4 and the fixes backported before the stable tag, are under [Included after the v1.106.0-rc.1 cut](#included-after-the-v11060-rc1-cut)
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom
 
 :::danger Breaking Changes
 
-These callouts cover user-facing behavior that differs from `v1.105.0`, the latest stable release
+These callouts cover user-facing behavior that differs from `v1.105.0`, the previous stable release
 
 **The response cache skips requests with more than 4 messages by default.** The new `cache_params.max_messages` defaults to 4, so longer conversations and Responses inputs are neither looked up nor stored, exact or semantic. Raise it, or set it to `null` to remove the limit. See [PR #43878](https://github.com/BerriAI/litellm/pull/43878)
 
@@ -63,6 +63,10 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the late
 
 **`PATCH /credentials/{name}` no longer renames a credential.** A different `credential_name` returns 400. Use the new `display_name` to relabel a credential, or create a new one to change its name. See [PR #43148](https://github.com/BerriAI/litellm/pull/43148)
 
+**Decisions requests that send media a model cannot read now return 400.** `images` on `/v1/systemone`, `audio` and `videos` on either route, and TypeSafe `assets` used to be dropped with a 200. They now return 400 naming the field unless `drop_params` is set, and OpenAI decision models now receive System One `images`, which are billed. See [PR #46628](https://github.com/BerriAI/litellm/pull/46628)
+
+**`/v1/responses/compact` now checks `previous_response_id` the same way `/v1/responses` does.** Another user's or team's id returns 403, and so does an id the proxy never issued unless `general_settings.allow_unmanaged_response_ids` is `true`. Ids handed out by the websocket `/v1/responses` route are refused for every key. See [PR #46827](https://github.com/BerriAI/litellm/pull/46827)
+
 :::
 
 ## Key Highlights
@@ -70,9 +74,20 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the late
 - **New models on day one**: Claude Haiku 5.5 across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI and Perplexity, Kimi K3 and GLM 5.3 on Bedrock, Mistral Large 4, and Gemini Nano Banana 2.1, among 59 new catalog entries
 - **Lens as a standalone Rust service**: trace ingestion and investigations move out of the gateway, with always-on investigations, a Findings inbox, signals, end-user feedback and datasets built from real traces
 - **Admin UI Home page**: the dashboard opens on a Home page with a usage summary, recent launches, blog updates and a model leaderboard, alongside a Decisions tab in the Playground, a redesigned Usage page and a Cmd+K command palette
-- **More Decisions providers**: Laya, Bespoke Nimble and Databricks serve Decisions and act as Auto Router classifiers, and Reka joins as an OpenAI-compatible provider
+- **More Decisions providers and media**: Laya, Bespoke Nimble and Databricks serve Decisions and act as Auto Router classifiers, Cloudflare Clef reads images, Clef-omni reads audio and video, and TypeSafe Jev 1.14 takes images. Reka joins as an OpenAI-compatible provider
 - **MCP Gateway controls**: rate limits cover every MCP operation with a new server-level rpm, OAuth adds Client ID Metadata Document support, and the caller's LiteLLM key is never forwarded upstream
 - **Observability**: Arize on OTel v2 works per team, Prometheus can cap series per metric, and `litellm.agent()` gains an in-process tool-calling loop
+
+## Included after the v1.106.0-rc.1 cut
+
+- Cloudflare Clef reads images on both Decisions routes, the new `cloudflare/clef-omni` reads audio and video, and TypeSafe Jev 1.14 (`typesafe/jev-1.14.0`) takes images through `assets`, `box` questions and the opt-in `TypeSafe-Danger-Zone-*` headers (rc.4) - [PR #46628](https://github.com/BerriAI/litellm/pull/46628)
+- Deployments can set `model_info.mode: decisions`, which behaves the same as `mode: evaluation` for health checks and the Admin UI (rc.4) - [PR #46628](https://github.com/BerriAI/litellm/pull/46628)
+- Home page What's new cards show the newest LiteLLM blog posts tagged `day 0 support`, so new launches appear without a proxy upgrade (rc.2) - [PR #46309](https://github.com/BerriAI/litellm/pull/46309)
+- The yes / no Decisions answer type is labelled "Yes / No" instead of `noul` (rc.2) - [PR #45933](https://github.com/BerriAI/litellm/pull/45933)
+- Setting `custom_prometheus_metadata_labels: ["project_alias"]` no longer breaks the project per-model rate limit gauges or skips the other metrics for project keys (rc.3) - [PR #46491](https://github.com/BerriAI/litellm/pull/46491)
+- `streaming_buffer_until_moderated: true` on the Decision Model guardrail holds a streamed answer until the decision model passes it (rc.3) - [PR #46383](https://github.com/BerriAI/litellm/pull/46383)
+- `/v1/responses/compact` works with the caller's own `previous_response_id`, which used to fail with a 400 from OpenAI - [PR #46827](https://github.com/BerriAI/litellm/pull/46827)
+- Redis Cluster with `max_connections` set waits for a free connection under load instead of switching Redis off for 60 seconds - [PR #47006](https://github.com/BerriAI/litellm/pull/47006)
 
 ## New Providers and Endpoints
 
@@ -348,14 +363,14 @@ Counts represent new catalog identifiers compared with `v1.105.0`, including ali
 #### Home page
 
 - New Home page at `/ui/home` is the dashboard root, with a 7-day usage strip, What's new launch cards, blog updates and a model leaderboard; logging in or opening `/ui` now lands on Home, and Virtual Keys keeps its sidebar entry and `/ui/api-keys` - [PR #45858](https://github.com/BerriAI/litellm/pull/45858)
-- Home What's new cards load from the new `GET /public/whats_new` endpoint, which serves the launch list bundled with the release; set `LITELLM_WHATS_NEW_URL` to fetch a remote list instead, or `LITELLM_LOCAL_WHATS_NEW=True` to force the bundled copy - [PR #45912](https://github.com/BerriAI/litellm/pull/45912), [PR #45922](https://github.com/BerriAI/litellm/pull/45922)
+- Home What's new cards show the three newest LiteLLM blog posts tagged `day 0 support`, and `/public/litellm_blog_posts` returns each post's tags and up to 50 posts - [PR #46309](https://github.com/BerriAI/litellm/pull/46309)
 
 #### Playground and Decisions
 
-- New Decisions tab in the Playground (`?tab=system-one`) for trying decision models on `/v1/decisions` or `/v1/systemone` with the session key or a virtual key, keeping a separate draft per endpoint and showing each choice, noul and score answer with its confidence plus usage and latency - [PR #44043](https://github.com/BerriAI/litellm/pull/44043), [PR #44664](https://github.com/BerriAI/litellm/pull/44664), [PR #45729](https://github.com/BerriAI/litellm/pull/45729), [PR #45817](https://github.com/BerriAI/litellm/pull/45817)
+- New Decisions tab in the Playground (`?tab=system-one`) for trying decision models on `/v1/decisions` or `/v1/systemone` with the session key or a virtual key, keeping a separate draft per endpoint and showing each choice, yes / no and score answer with its confidence plus usage and latency - [PR #44043](https://github.com/BerriAI/litellm/pull/44043), [PR #44664](https://github.com/BerriAI/litellm/pull/44664), [PR #45729](https://github.com/BerriAI/litellm/pull/45729), [PR #45817](https://github.com/BerriAI/litellm/pull/45817)
 - Build decision requests in a Form tab, with an Input box and one card per question, instead of hand-writing the JSON body - [PR #45739](https://github.com/BerriAI/litellm/pull/45739)
 - Pick one of four example presets (bug triage, support ticket routing, comment moderation, lead scoring) or Clear the request to start from empty; the picker reads Custom once the request is edited - [PR #45848](https://github.com/BerriAI/litellm/pull/45848)
-- Label the yes / no question type `noul` in the request form and explain it on hover - [PR #45841](https://github.com/BerriAI/litellm/pull/45841)
+- Label the yes / no question type "Yes / No" in the request form and the Add Model form, and explain it on hover - [PR #45841](https://github.com/BerriAI/litellm/pull/45841), [PR #45933](https://github.com/BerriAI/litellm/pull/45933)
 - Decisions playground lays out the form first with a large Send button under it, shows results only once a request runs, and replaces the editable JSON tab with a read-only cURL tab showing the exact request - [PR #45903](https://github.com/BerriAI/litellm/pull/45903)
 - Models + Endpoints shows a decision models banner in place of the cost optimization feedback banner, provider search finds decision model providers, and the playground model picker lists decision models - [PR #45735](https://github.com/BerriAI/litellm/pull/45735)
 
@@ -958,6 +973,7 @@ These 166 PRs change tests, CI, contributor tooling, release packaging, or Rust 
 - Add and then revert cost-map candidate reordering for rule-only model names (no net change) - [PR #44144](https://github.com/BerriAI/litellm/pull/44144), [PR #44335](https://github.com/BerriAI/litellm/pull/44335)
 - Fix MCP tool listing return types and remove a redundant wrapper - [PR #44556](https://github.com/BerriAI/litellm/pull/44556)
 - Type Moyai connect helpers and read MCP server `rpm` directly - [PR #45315](https://github.com/BerriAI/litellm/pull/45315)
+- Backport three stale e2e test fixes from `main` - [PR #47229](https://github.com/BerriAI/litellm/pull/47229)
 
 </details>
 
@@ -986,6 +1002,7 @@ Customer-facing PRs: **397**. Tests, CI and internal PRs: **166**. Total: **563*
 - [@Bernedotcom2312](https://github.com/Bernedotcom2312) made their first contribution in [PR #42141](https://github.com/BerriAI/litellm/pull/42141)
 - [@D41910](https://github.com/D41910) made their first contribution in [PR #44800](https://github.com/BerriAI/litellm/pull/44800)
 - [@hektorjg](https://github.com/hektorjg) made their first contribution in [PR #44508](https://github.com/BerriAI/litellm/pull/44508)
+- [@hyamie](https://github.com/hyamie) made their first contribution in [PR #46594](https://github.com/BerriAI/litellm/pull/46594)
 - [@jimaldon](https://github.com/jimaldon) made their first contribution in [PR #40924](https://github.com/BerriAI/litellm/pull/40924)
 - [@joeym82956](https://github.com/joeym82956) made their first contribution in [PR #44318](https://github.com/BerriAI/litellm/pull/44318)
 - [@kohjunhao](https://github.com/kohjunhao) made their first contribution in [PR #44173](https://github.com/BerriAI/litellm/pull/44173)
@@ -1004,4 +1021,4 @@ Customer-facing PRs: **397**. Tests, CI and internal PRs: **166**. Total: **563*
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.105.0-rc.1...v1.106.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.105.0...v1.106.0

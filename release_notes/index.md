@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.105.0: Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens](/release_notes/v1.105.0/v1-105-0)
+### [v1.106.0: Claude Haiku 5.5, Lens Rust Service, Admin Home Page & MCP Rate Limits](/release_notes/v1.106.0/v1-106-0)
 
-_October 11, 2026_
+_October 18, 2026_
 
-Claude Sonnet 5.5 and GPT-6.1 Sol on day one, the Decisions API on `/v1/decisions` and `/v1/systemone` across eight providers with a decision model guardrail, Prism, Sail and Cortecs providers, `litellm.agent()` for coding agents through the gateway, and Lens with Agent Traces. Review the Breaking Changes before upgrading
+Claude Haiku 5.5 on day one across six providers, Lens as a standalone Rust service with always-on investigations, a new Admin UI Home page, MCP rate limits on every operation, and Decisions that read images, audio and video. Review the Breaking Changes before upgrading
 
 ---
 
@@ -22,6 +22,7 @@ Claude Sonnet 5.5 and GPT-6.1 Sol on day one, the Decisions API on `/v1/decision
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.106.0](/release_notes/v1.106.0/v1-106-0) | Oct 18, 2026 | Claude Haiku 5.5, Lens Rust service, Admin Home page, MCP rate limits |
 | [v1.105.0](/release_notes/v1.105.0/v1-105-0) | Oct 11, 2026 | Claude Sonnet 5.5 and GPT-6.1 Sol, Decisions API, `litellm.agent()`, Lens |
 | [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
 | [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
