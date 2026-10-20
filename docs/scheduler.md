@@ -113,7 +113,9 @@ print(response)
 
 ### Priority header
 
-Set `x-litellm-priority` to an integer to set the scheduler's request queue priority. Lower values have higher priority. The header overrides a body `priority` value. It queues requests only on `/v1/chat/completions` and `/v1/completions`. This scheduler queue priority is separate from the dynamic rate limiter's key-metadata `priority`.
+Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. Available from v1.108.0.
+
+The proxy reads the header on the chat completions and text completions routes, such as `/v1/chat/completions`, `/v1/completions` and the Azure-style `/openai/deployments/{model}/chat/completions`, when the router serves the request. It also reads it on `/queue/chat/completions`. Other routes, such as `/v1/responses`, `/v1/messages`, `/v1/embeddings` and `/cursor/chat/completions`, ignore the header, and so does a proxy started with `litellm --model` and no config.
 
 <Tabs>
 <TabItem value="curl" label="curl">
@@ -156,6 +158,8 @@ print(response)
 
 </TabItem>
 </Tabs>
+
+Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. When the dynamic rate limiter rejects a request with a 429, it holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority`, which is separate from this scheduler queue priority.
 
 ## Advanced - Redis Caching 
 
