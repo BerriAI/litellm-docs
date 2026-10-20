@@ -77,7 +77,7 @@ router_settings:
 
 Use [Cache-Aware Routing](./cache_aware_routing.md) to discover inference pods behind a Kubernetes headless service and keep requests from the same session on one pod for prompt cache reuse. Requests without an explicit session ID use round robin.
 
-The guide covers `kubernetes_pod_discovery` configuration, session IDs, retry behavior, discovery settings, and how to inspect pods in the Admin UI.
+The guide covers `kubernetes_pod_discovery` configuration, session IDs, retry behavior, discovery settings, and multi-cluster routing.
 
 ## Enforce Model Rate Limits
 
