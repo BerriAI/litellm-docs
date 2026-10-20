@@ -366,7 +366,7 @@ general_settings:
 
 ```bash
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
