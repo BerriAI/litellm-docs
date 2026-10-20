@@ -5,7 +5,7 @@ import {createWorkshopSignupHandler} from './signup.mjs';
 
 const env = {VERCEL: '1', WORKSHOP_ZAPIER_WEBHOOK_URL: 'https://hooks.zapier.com/hooks/catch/test-owner/test-hook/'};
 const body = {
-  name: ' Alex Chen ', email: 'alex@example.com', company: 'Example',
+  name: ' Alex Chen ', email: 'alex@litellm.ai', company: 'Example',
   linkedin: 'linkedin.com/in/alex-chen', workflow: 'Turn Slack bugs into tested pull requests.',
   onsiteInterest: '', submissionId: 'stable-id-123',
   source: 'https://docs.litellm.ai/blog/cloud-agent-workshop?campaign=social#signup',
@@ -47,7 +47,7 @@ test('relay normalizes answers and sends the exact workshop hook contract', asyn
     assert.equal(slackMessage, [
       '*New cloud agent workshop signup*',
       'Build a self-hosted cloud agent · October 19–30, 2026 · Remote · 2 weeks',
-      '', '*Name:* Alex Chen', '*Work email:* alex@example.com', '*Company:* Example',
+      '', '*Name:* Alex Chen', '*Work email:* alex@litellm.ai', '*Company:* Example',
       '*LinkedIn:* https://linkedin.com/in/alex-chen', '*Goals:* Turn Slack bugs into tested pull requests.',
       '*On-site interest:* Not specified', '*Source:* https://docs.litellm.ai/blog/cloud-agent-workshop',
       '*Submission ID:* stable-id-123',
@@ -172,15 +172,15 @@ test('timeout is unconfirmed and no automatic retry is sent', async () => {
   } finally { clearTimeout(keepAlive); }
 });
 
-test('per-email attempts are limited and the window resets', async () => {
+test('per-email attempts are limited across request IDs and the ten-minute window resets', async () => {
   let now = 0, calls = 0;
   const handler = createWorkshopSignupHandler({env, now: () => now, fetchImpl: async () => { calls += 1; return Response.json({status: 'success'}); }});
-  for (let i = 0; i < 5; i += 1) assert.equal((await invoke(handler)).status, 200);
-  const limited = await invoke(handler);
+  for (let i = 0; i < 2; i += 1) assert.equal((await invoke(handler, {body: {...body, submissionId: `attempt-${i}`}})).status, 200);
+  const limited = await invoke(handler, {body: {...body, email: body.email.toUpperCase(), submissionId: 'attempt-three'}});
   assert.equal(limited.status, 429);
-  assert.equal(limited.headers['Retry-After'], '60');
-  assert.equal(calls, 5);
-  now = 60000;
+  assert.equal(limited.headers['Retry-After'], '600');
+  assert.equal(calls, 2);
+  now = 600000;
   assert.equal((await invoke(handler)).status, 200);
 });
 
@@ -343,7 +343,7 @@ test('HANDOFF returns the work-email error for partial intake without contacting
 
 test('HANDOFF accepts company email domains without matching personal-provider substrings', async () => {
   const origin = handoffOrigins[0];
-  for (const email of ['alex@company.example', 'alex@gmail.company.example', 'alex@notgmail.com', 'alex@company-gmail.com', 'alex@outlook.company.example', 'alex@fastmail.company.example']) {
+  for (const email of ['alex@company.com', 'alex@gmail.company.com', 'alex@notgmail.com', 'alex@company-gmail.com', 'alex@outlook.company.com', 'alex@fastmail.company.com']) {
     let calls = 0;
     const handler = createWorkshopSignupHandler({env, fetchImpl: async (_url, options) => {
       calls += 1;
@@ -364,4 +364,190 @@ test('HANDOFF email restriction does not change the original docs signup policy'
   }});
   assert.equal((await invoke(handler, {body: {...body, email: 'alex@gmail.com'}})).status, 200);
   assert.equal(calls, 1);
+});
+
+test('reserved domains are rejected on every workshop origin, including partial and streamed requests', async () => {
+  const emails = [
+    'qa@example.com', 'qa@EXAMPLE.NET', 'qa@team.example.org',
+    'qa@example.com.', 'qa@example.org..', 'qa@company.example',
+    'qa@company.test', 'qa@company.invalid', 'qa@company.localhost',
+    'qa@localhost', 'qa@a.b.example.com',
+  ];
+  for (const origin of ['https://docs.litellm.ai', ...handoffOrigins]) {
+    for (const email of emails) {
+      const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+      const result = await invoke(handler, {headers: {origin}, stream: JSON.stringify({email})});
+      assert.equal(result.status, 400, `${origin} ${email}`);
+      assert.equal(result.body.code, 'INVALID_EMAIL_DOMAIN');
+    }
+  }
+});
+
+test('shell probes in name and company never reach the webhook on any workshop origin', async () => {
+  const probes = [
+    '$(sleep 5)', '`sleep 5`', ';sleep 5;', 'Example && curl https://probe.invalid',
+    'Example | bash', 'Example || whoami', '${IFS}sleep${IFS}5', 'Example\nsleep 5',
+  ];
+  for (const origin of ['https://docs.litellm.ai', ...handoffOrigins]) {
+    for (const field of ['name', 'company']) {
+      for (const probe of probes) {
+        const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+        const result = await invoke(handler, {headers: {origin}, body: {...body, source: `${origin}/`, [field]: probe}});
+        assert.equal(result.status, 400, `${origin} ${field} ${probe}`);
+      }
+    }
+  }
+});
+
+test('international names and ordinary company punctuation remain valid; workflows can discuss code', async () => {
+  for (const [name, company] of [
+    ['Ananya Rao', 'Cloud Research Pty. Ltd.'],
+    ["María-José O’Neill", 'AT&T (Australia) Pty. Ltd.'],
+    ['李小龍', '研究開発株式会社'],
+    ['محمد أحمد', 'Smith & Sons / R&D'],
+    ['Zoë D’Arcy', 'C++ Labs'],
+  ]) {
+    const workflow = 'Run `sleep 5`; use $(date) in shell scripts.\nThen open a pull request.';
+    const handler = createWorkshopSignupHandler({env, fetchImpl: async (_url, options) => {
+      const payload = JSON.parse(options.body);
+      assert.equal(payload.name, name);
+      assert.equal(payload.company, company);
+      assert.equal(payload.workflow, workflow);
+      return Response.json({status: 'success'});
+    }});
+    assert.equal((await invoke(handler, {body: {...body, name, company, workflow}})).status, 200);
+  }
+});
+
+test('source paths cannot carry attacker-controlled text into notifications through any workshop origin', async () => {
+  for (const origin of ['https://docs.litellm.ai', ...handoffOrigins]) {
+    const canonicalPath = handoffOrigins.includes(origin) ? '/' : '/blog/cloud-agent-workshop';
+    for (const suffix of ['/$(sleep%206)', '/;sleep%206;', '/nested/path?campaign=social#signup']) {
+      const handler = createWorkshopSignupHandler({env, fetchImpl: async (_url, options) => {
+        const payload = JSON.parse(options.body);
+        assert.equal(payload.source, `${origin}${canonicalPath}`);
+        assert.doesNotMatch(payload.slackMessage, /sleep|nested/);
+        return Response.json({status: 'success'});
+      }});
+      assert.equal((await invoke(handler, {headers: {origin}, body: {...body, source: `${origin}${suffix}`}})).status, 200);
+    }
+  }
+});
+
+test('per-client limits ignore spoofed forwarding headers and trust Vercel ingress only on Vercel', async () => {
+  for (const platform of [undefined, '1']) {
+    let now = 0;
+    const handler = createWorkshopSignupHandler({env: {...env, VERCEL: platform}, now: () => now, fetchImpl: neverFetch});
+    for (let i = 0; i < 20; i += 1) {
+      const result = await invoke(handler, {body: {email: 'qa@example.com'}, headers: {
+        'x-forwarded-for': `198.51.100.${i}`,
+        ...(platform === '1' ? {'x-vercel-forwarded-for': '203.0.113.50'} : {'x-vercel-forwarded-for': `198.51.100.${i}`}),
+      }});
+      assert.equal(result.status, 400);
+    }
+    const blocked = await invoke(handler, {body: {email: 'qa@example.com'}, headers: {
+      'x-forwarded-for': '192.0.2.55',
+      'x-vercel-forwarded-for': platform === '1' ? '203.0.113.50' : '192.0.2.55',
+    }});
+    assert.equal(blocked.status, 429);
+    assert.equal(blocked.headers['Retry-After'], '60');
+    now = 60000;
+    assert.equal((await invoke(handler, {body: {email: 'qa@example.com'}})).status, 400);
+  }
+});
+
+test('invalid Vercel forwarding values fall back to the socket; different real clients have separate limits', async () => {
+  const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+  for (let i = 0; i < 20; i += 1) {
+    assert.equal((await invoke(handler, {body: {email: 'qa@example.com'}, headers: {
+      'x-vercel-forwarded-for': `198.51.100.${i}, 203.0.113.4`,
+    }})).status, 400);
+  }
+  assert.equal((await invoke(handler, {body: {email: 'qa@example.com'}, headers: {'x-vercel-forwarded-for': 'invalid'}})).status, 429);
+  assert.equal((await invoke(handler, {body: {email: 'qa@example.com'}, headers: {'x-vercel-forwarded-for': '198.51.100.5'}})).status, 400);
+});
+
+test('successful retries with the same submission ID forward only once and altered payloads conflict', async () => {
+  let calls = 0;
+  const handler = createWorkshopSignupHandler({env, fetchImpl: async () => { calls += 1; return Response.json({status: 'success'}); }});
+  for (let i = 0; i < 5; i += 1) {
+    const result = await invoke(handler);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.submissionId, body.submissionId);
+  }
+  assert.equal((await invoke(handler, {body: {...body, company: 'Different company'}})).status, 409);
+  assert.equal(calls, 1);
+});
+
+test('concurrent retries share one upstream request and receive the same confirmation', async () => {
+  let calls = 0, release, signalStarted;
+  const started = new Promise(resolve => { signalStarted = resolve; });
+  const handler = createWorkshopSignupHandler({env, fetchImpl: async () => {
+    calls += 1;
+    signalStarted();
+    await new Promise(resolve => { release = resolve; });
+    return Response.json({status: 'success'});
+  }});
+  const first = invoke(handler);
+  await started;
+  const second = invoke(handler);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1);
+  release();
+  const results = await Promise.all([first, second]);
+  assert.deepEqual(results.map(result => result.status), [200, 200]);
+  assert.deepEqual(results[0].body, results[1].body);
+});
+
+test('failed concurrent requests are not cached as successes and a later retry can recover', async () => {
+  let calls = 0, release, signalStarted;
+  const started = new Promise(resolve => { signalStarted = resolve; });
+  const handler = createWorkshopSignupHandler({env, fetchImpl: async () => {
+    calls += 1;
+    if (calls === 1) {
+      signalStarted();
+      await new Promise(resolve => { release = resolve; });
+      throw new Error('Upstream unavailable');
+    }
+    return Response.json({status: 'success'});
+  }});
+  const first = invoke(handler);
+  await started;
+  const second = invoke(handler);
+  await new Promise(resolve => setImmediate(resolve));
+  release();
+  assert.deepEqual((await Promise.all([first, second])).map(result => result.status), [502, 502]);
+  assert.equal((await invoke(handler)).status, 200);
+  assert.equal((await invoke(handler)).status, 200);
+  assert.equal(calls, 2);
+});
+
+test('confirmed retry records expire after one hour', async () => {
+  let now = 0, calls = 0;
+  const handler = createWorkshopSignupHandler({env, now: () => now, fetchImpl: async () => { calls += 1; return Response.json({status: 'success'}); }});
+  assert.equal((await invoke(handler)).status, 200);
+  now = 3599999;
+  assert.equal((await invoke(handler)).status, 200);
+  assert.equal(calls, 1);
+  now = 3600000;
+  assert.equal((await invoke(handler)).status, 200);
+  assert.equal(calls, 2);
+});
+
+test('retry cache stays bounded by evicting old confirmed entries while recent retries remain deduplicated', async () => {
+  let now = 0, calls = 0;
+  const handler = createWorkshopSignupHandler({env, now: () => now, fetchImpl: async () => { calls += 1; return Response.json({status: 'success'}); }});
+  const options = i => ({
+    body: {...body, email: `attendee-${i}@litellm.ai`, submissionId: `bounded-cache-${i}`},
+    headers: {'x-vercel-forwarded-for': `198.51.100.${i % 200 + 1}`},
+  });
+  for (let i = 0; i <= 1000; i += 1) {
+    now = i * 1000;
+    assert.equal((await invoke(handler, options(i))).status, 200, `entry ${i}`);
+  }
+  assert.equal(calls, 1001);
+  assert.equal((await invoke(handler, options(1000))).status, 200);
+  assert.equal(calls, 1001);
+  assert.equal((await invoke(handler, options(0))).status, 200);
+  assert.equal(calls, 1002);
 });
