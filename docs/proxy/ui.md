@@ -82,6 +82,32 @@ ROOT_REDIRECT_URL="/ui"       # Redirect root path (/) to /ui
 
 By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've changed `DOCS_URL` to a different path.
 
+## Keep a break-glass admin account for SSO outages
+
+If your admins normally sign in with SSO and `disable_env_credential_login` is on, keep one shared `proxy_admin` database user with a password for the times your SSO provider is down, and store its email and password in your password vault. It signs in at `/fallback/login`. `disable_env_credential_login` does not block it, because that setting turns off only the `UI_USERNAME`/`UI_PASSWORD` and master key login, while database users with a password keep signing in.
+
+The simplest way to create it is from the dashboard while signed in as an admin. Go to `Internal Users` -> `+ Invite User`, enter an email such as `breakglass-admin@example.com`, set the role to `proxy_admin`, and open the invitation link it generates to set the password. A password set through the invitation link is ready to use as is.
+
+You can also create it over the API with the master key. `/user/new` does not accept a password, so set it with `/user/update`:
+
+```bash
+curl -X POST "$PROXY_BASE_URL/user/new" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "breakglass-admin", "user_email": "breakglass-admin@example.com", "user_role": "proxy_admin"}'
+
+curl -X POST "$PROXY_BASE_URL/user/update" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "breakglass-admin", "password": "<a long random password>"}'
+```
+
+From v1.104.0, a password an admin sets with `/user/update` must be changed at first sign-in. The dashboard opens the Change Password page, and until the password is changed the session can only change it or sign out. So sign in once at `/fallback/login` right after creating the account, choose the final password there, and save that one in the vault.
+
+Test the account before you need it. Sign out, open `/fallback/login`, and sign in with the vault credentials. You should land in the dashboard as an admin. To rotate the password later, sign in as the account and use `Change Password` in the account menu, then update the vault.
+
+This account cannot sign in when `disable_password_login_when_sso_enabled` is on, since that setting rejects every username/password login once SSO is configured, so leave it off if you rely on a break-glass account. Failed sign-ins on it count toward the [sign-in limit](#limit-failed-sign-in-attempts) below.
+
 ## Limit failed sign-in attempts
 
 Failed username and password sign-ins to the Admin UI are counted per source address. More than 10 wrong passwords from one address within 60 seconds, across all usernames, blocks that address for 5 minutes. Accounts are never locked: the same username can still sign in from any other address. Half the address limit (5 by default) is the allowance for a single username from that address. Going over it blocks only that address and username pair, and its further failures no longer count toward the address, so one script stuck on one account does not lock out everyone else behind a shared office address.
