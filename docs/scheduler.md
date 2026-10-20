@@ -113,7 +113,7 @@ print(response)
 
 ### Priority header
 
-Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. Available from v1.108.0.
+Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. With `drop_params` on, a header value that is not an integer is ignored instead, so the body `priority` or `default_priority` applies. Available from v1.108.0.
 
 The proxy reads the header on the chat completions and text completions routes, such as `/v1/chat/completions`, `/v1/completions` and the Azure-style `/openai/deployments/{model}/chat/completions`, when the router serves the request. It also reads it on `/queue/chat/completions`. Other routes, such as `/v1/responses`, `/v1/messages`, `/v1/embeddings` and `/cursor/chat/completions`, ignore the header, and so does a proxy started with `litellm --model` and no config.
 
@@ -159,7 +159,7 @@ print(response)
 </TabItem>
 </Tabs>
 
-Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. With the dynamic rate limiter on, every response, 429s included, holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority` and is separate from this scheduler queue priority, so don't send it back as the request header, since a value that is not an integer gets a 400.
+Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. With the dynamic rate limiter on, every response, 429s included, holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority` and is separate from this scheduler queue priority, so don't send it back as the request header.
 
 ## Advanced - Redis Caching 
 
