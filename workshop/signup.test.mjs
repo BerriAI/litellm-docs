@@ -332,6 +332,15 @@ test('HANDOFF rejects personal-provider subdomains and streamed signup bodies', 
   }
 });
 
+test('HANDOFF returns the work-email error for partial intake without contacting Zapier', async () => {
+  const origin = handoffOrigins[0];
+  const handler = createWorkshopSignupHandler({env, fetchImpl: neverFetch});
+  const result = await invoke(handler, {headers: {origin}, body: {email: 'handoff-validation-check@validation.invalid.gmail.com'}});
+  assert.equal(result.status, 400);
+  assert.equal(result.body.code, 'WORK_EMAIL_REQUIRED');
+  assert.equal(result.headers['Access-Control-Allow-Origin'], origin);
+});
+
 test('HANDOFF accepts company email domains without matching personal-provider substrings', async () => {
   const origin = handoffOrigins[0];
   for (const email of ['alex@company.example', 'alex@gmail.company.example', 'alex@notgmail.com', 'alex@company-gmail.com', 'alex@outlook.company.example', 'alex@fastmail.company.example']) {

@@ -146,12 +146,12 @@ export function createWorkshopSignupHandler({env = process.env, fetchImpl = fetc
     try {
       const parsed = await readBody(req);
       if (parsed.status) return reply(parsed.status, {error: 'Invalid signup request.'});
+      if (HANDOFF_ORIGINS.has(origin) && typeof parsed.body?.email === 'string' && isPersonalEmail(parsed.body.email)) {
+        return reply(400, {code: 'WORK_EMAIL_REQUIRED', error: 'Enter your work email address. Personal email addresses are not accepted.'});
+      }
       let payload;
       try { payload = payloadFor(parsed.body, origin); } catch { /* Validation errors never reach Zapier. */ }
       if (!payload) return reply(400, {error: 'Please check your workshop signup details.'});
-      if (HANDOFF_ORIGINS.has(origin) && isPersonalEmail(payload.email)) {
-        return reply(400, {code: 'WORK_EMAIL_REQUIRED', error: 'Enter your work email address. Personal email addresses are not accepted.'});
-      }
       const key = createHash('sha256').update(payload.email.toLowerCase()).digest('hex');
       const emailAttempts = attempts.get(key) || 0;
       if (emailAttempts >= 5) return reply(429, {error: 'Please try again in a minute.'}, {'Retry-After': '60'});
