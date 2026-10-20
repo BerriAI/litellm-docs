@@ -24,8 +24,8 @@ Try superbot in your browser first: [superbot.gg/chat](https://superbot.gg/chat?
 
 | Model | Context | Max output | Reasoning effort |
 |-------|---------|------------|------------------|
-| `superbot-gg/superbot` | 1M | 65,536 | `none`, `low`, `high`, `xhigh`, `max` (default `high`) |
-| `superbot-gg/superbot-fast` | 500k | 65,536 | `none`, `low` (default `low`) |
+| `superbot-gg/superbot` | 1M | 131,072 | `none`, `low`, `high`, `xhigh`, `max` (default `high`) |
+| `superbot-gg/superbot-fast` | 500k | 131,072 | `none`, `low` (default `low`) |
 
 Both models are in LiteLLM's model cost map at superbot's list prices. `GET /v1/models` with your key lists everything else the key can call.
 
