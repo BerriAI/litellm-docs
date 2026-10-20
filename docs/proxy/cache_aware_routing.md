@@ -17,7 +17,7 @@ The inference server must support and enable prompt or prefix caching for cache 
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TB
     A[Request] --> B[LiteLLM selects a deployment]
     B --> C[Discover pods from headless service DNS]
     C --> D{Explicit session ID?}
