@@ -86,7 +86,7 @@ By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've chan
 
 If your admins normally sign in with SSO and `disable_env_credential_login` is on, keep one shared `proxy_admin` database user with a password for the times your SSO provider is down, and store its email and password in your password vault. It signs in at `/fallback/login`. `disable_env_credential_login` does not block it, because that setting turns off only the `UI_USERNAME`/`UI_PASSWORD` and master key login, while database users with a password keep signing in.
 
-The simplest way to create it is from the dashboard while signed in as an admin. Go to `Internal Users` -> `+ Invite User`, enter an email such as `breakglass-admin@example.com`, set the role to `proxy_admin`, and open the invitation link it generates to set the password. A password set through the invitation link is ready to use as is.
+The simplest way to create it is from the dashboard while signed in as an admin. Go to `Internal Users` -> `+ Invite User`, enter an email such as `breakglass-admin@example.com`, and set `Global Proxy Role` to `Admin (All Permissions)`. Without SSO, open the invitation link it shows to set the password. With SSO configured, that link only signs the user in through SSO, so open the actions menu on the new user's row in `Internal Users`, choose `Reset password`, and open that link to set the password instead. A password set through either link is ready to use, with no forced change at first sign-in.
 
 You can also create it over the API with the master key. `/user/new` does not accept a password, so set it with `/user/update`:
 
