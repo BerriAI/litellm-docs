@@ -627,7 +627,7 @@ curl -X POST http://0.0.0.0:4000/chat/completions \
 
 ## Decisions
 
-vLLM v0.32.0 and later serve [`/v1/systemone`](https://github.com/vllm-project/vllm/pull/59299) for Qwen3 and Qwen3.5 models and answer `choice` questions. Use a `hosted_vllm/` model on LiteLLM's [`/v1/decisions` and `/v1/systemone` routes](../decisions.md), or as the [Auto Router classifier](../auto_router/decision_classifiers.md#vllm).
+vLLM v0.32.0 and later serve [`/v1/systemone`](https://github.com/vllm-project/vllm/pull/59299) for Qwen3 and Qwen3.5 models and answer `choice` questions. Use a `hosted_vllm/` model on LiteLLM's [`/v1/decisions` and `/v1/systemone` routes](../decisions/index.md), or as the [Auto Router classifier](../auto_router/decision_classifiers.md#vllm).
 
 ## (Deprecated) for packaged `vllm` installs
 ### Using - `litellm.completion`

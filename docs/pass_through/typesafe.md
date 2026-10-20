@@ -17,7 +17,7 @@ LiteLLM adds the TypeSafe API key from the proxy environment, so clients only ne
 
 Client headers that start with `TypeSafe-Danger-Zone-`, such as `TypeSafe-Danger-Zone-Images: true` for images and `box` questions on Jev 1.14, are forwarded to TypeSafe. Other client headers are not.
 
-To call Jev through your `model_list` with load balancing, fallbacks and per-deployment keys, or to send the same request to OpenAI, Perplexity, Cloudflare or Strands Decider, use the unified [`/v1/systemone` endpoint](../decisions.md#v1systemone) instead. It takes the same System One body, and [`/v1/decisions`](../decisions.md#v1decisions) takes the OpenAI Decisions format
+To call Jev through your `model_list` with load balancing, fallbacks and per-deployment keys, or to send the same request to OpenAI, Perplexity, Cloudflare or Strands Decider, use the unified [`/v1/systemone` endpoint](../decisions/systemone_format.md) instead. It takes the same System One body, and [`/v1/decisions`](../decisions/openai_format.md) takes the OpenAI Decisions format
 
 To let JEV pick the model for a completion, configure the [JEV Auto Router](/docs/auto_router/setup#jev-classifier-typesafe-ai) with `classifier_type: jev` and `jev_classifier_config`. It uses one System One Choice question for the configured tiers, then dispatches to the selected completion model. See [routing context, fallback and accounting](/docs/proxy/auto_routing#jev-classifier) and the [measured classifier comparison](/blog/jev-auto-router-benchmark)
 
@@ -85,7 +85,7 @@ Any path under `/typesafe/` is forwarded, so `GET /typesafe/v1/models` lists the
 
 ## Try it in the Admin UI
 
-The Playground **Decisions** tab (Beta) sends Jev requests without curl. It calls the proxy's `/v1/systemone` route rather than this pass-through, so add a `typesafe/` model to your `model_list` first, for example `jev` from the [proxy setup](../decisions.md#proxy-setup) on the Decisions page, and set `TYPESAFE_API_KEY`; without the key the upstream error shows inline. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **Decisions**. In releases before the rename the tab is labelled **System One**.
+The Playground **Decisions** tab (Beta) sends Jev requests without curl. It calls the proxy's `/v1/systemone` route rather than this pass-through, so add a `typesafe/` model to your `model_list` first, for example `jev` from the [proxy setup](../decisions/index.md#proxy-setup) on the Decisions page, and set `TYPESAFE_API_KEY`; without the key the upstream error shows inline. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **Decisions**. In releases before the rename the tab is labelled **System One**.
 
 Pick `/v1/systemone` under **Endpoint** and your Jev model under **Model**. The left side holds a request preloaded with an issue triage example that asks one question of each type: `area` (choice), `has_repro_steps` (noul) and `severity` (score), and **Reset example** restores it.
 
