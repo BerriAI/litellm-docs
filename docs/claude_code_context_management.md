@@ -314,7 +314,7 @@ The polyfill handles these fields the way Anthropic's API does:
 - **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
 - **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
 - **Small results.** A tool use whose result is 1 to 46 bytes of text is skipped, unless `clear_tool_inputs` covers that tool.
-- **Malformed values.** A malformed field, such as `exclude_tools: "memory"`, gets an HTTP 400 that names the edit and the field. With `drop_params: true`, LiteLLM drops that one edit instead and still applies the other edits.
+- **Malformed values.** A malformed field, such as `exclude_tools: "memory"`, gets an HTTP 400 that names the edit and the field. With `drop_params: true`, LiteLLM drops only that field instead and still applies the edit and the other edits.
 
 ## Responses
 
