@@ -8,7 +8,7 @@ Ships in the next build after [BerriAI/litellm#47473](https://github.com/BerriAI
 |---------|-----------|-------|
 | Cost tracking | Yes | Returned in the `x-litellm-response-cost` header and written to spend logs |
 | Logging | Yes | The proxy logs the call with call type `aextraction` |
-| Virtual keys | Yes | Normal proxy key auth, model access and key spend |
+| Virtual keys | Yes | Normal proxy key auth, model access, key spend and RPM limits. TPM limits do not count extraction tokens |
 | Load balancing, fallbacks | Yes | Goes through the router like `/v1/decisions` |
 | Guardrails | Yes | Unified `apply_guardrail` guardrails, see [Guardrails](#guardrails) |
 | Image input | Yes | Up to 4 images, see [Images](#images) |
@@ -141,13 +141,15 @@ A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a lett
 | `list` | `items` set to `text`, `number` or `date`, required | `value` as a list, `confidence`, `spans` |
 | `estimate` | `min` and `max`, required, plus optional `step` and `scale` (`linear` or `log`) | `value`, `mean`, `median`, `p10`, `p90`, `p_below`, `p_above`, and `quantiles` with `include_quantiles` |
 
+An estimate of a date takes ISO dates for `min` and `max`, and its `step` is a number of days, `"month"` or `"year"`.
+
 `span` is the start and end character offset of the answer in `state`, and `spans` holds one per list item. When `p_null` is above `null_threshold`, which defaults to 0.5, `value` is null and `guess` still holds the model's answer. LiteLLM also accepts the `time`, `datetime`, `duration` and `forecast` types and sends them to Cloudflare unchanged. See the [Clairic reference](https://developers.cloudflare.com/workers-ai/models/clairic/) for their settings and answer fields, such as the `steps` that forecast answers carry.
 
 ## Response
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `model` | string | The model name you called. After a fallback it is the model string of the deployment that answered, such as `cloudflare/@cf/cloudflare/clairic` |
+| `model` | string | The model name you called. After a fallback, and on every call through the SDK's `Router`, it is the model string of the deployment that answered, such as `cloudflare/@cf/cloudflare/clairic` |
 | `answers` | object | One answer per field, keyed by field name, with the answer fields above |
 | `truncated` | boolean | Clairic's truncation flag |
 | `state_text` | string, optional | The text that spans index into, returned with `return_state_text` |
@@ -190,6 +192,7 @@ LiteLLM checks the parts of the body it knows before calling Cloudflare.
 | `stream: true` or an OpenAI param such as `temperature`, without `drop_params` | 400 | LiteLLM |
 | Missing key or account ID | 400 | LiteLLM |
 | Key Clairic does not define | Cloudflare's status | Cloudflare |
+| Estimate without `min` or `max` | Cloudflare's status | Cloudflare |
 | Estimate with `min` above `max` | Cloudflare's status | Cloudflare |
 | Empty `state` and no images | Cloudflare's status | Cloudflare |
 
@@ -223,9 +226,9 @@ Clairic does not stream and takes no OpenAI generation params, so `stream: true`
 
 ## Guardrails
 
-[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state`, each field's `instructions` and any `images`, which they get as data URLs. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. When a guardrail masks `state` on the way in, Clairic reads the masked text, so `span` and `spans` are offsets into that text and not into the `state` you sent. Set `return_state_text: true` to get the text they index into. When a guardrail changes `state_text` on the way out, every answer comes back without `span` and `spans`, since the offsets no longer match the text.
+[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails in `pre_call` or `post_call` mode, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state`, each field's `instructions` and any `images`, which they get as data URLs. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. When a guardrail masks `state` on the way in, Clairic reads the masked text, so `span` and `spans` are offsets into that text and not into the `state` you sent. Set `return_state_text: true` to get the text they index into. When a guardrail changes `state_text` on the way out, every answer comes back without `span` and `spans`, since the offsets no longer match the text.
 
-Guardrails that run their own hooks do not scan extraction requests. LiteLLM sends the request to Cloudflare without them and returns no error, even though the guardrail is on. These include Lakera, Aporia, Model Armor, Azure Prompt Shield, Azure Text Moderation, LLM Shield Proxy and the secret detection guardrail `hide-secrets`, so try a guardrail on this route before you rely on it to keep PII or secrets away from Cloudflare.
+Guardrails that are not built on `apply_guardrail`, or that run their own hooks, do not scan extraction requests. These include Lakera, Aporia, Aim, Lasso, Pangea, Pillar, Cato Networks, Cisco AI Defense, Microsoft Purview DLP, Guardrails AI, Model Armor, Azure Prompt Shield, Azure Text Moderation, LLM Shield Proxy and the secret detection guardrail `hide-secrets`. LiteLLM sends the request to Cloudflare without them and returns no error, and for some of them, such as `hide-secrets`, the `x-litellm-applied-guardrails` header still names the guardrail. Bedrock Guardrails in `during_call` mode skip extraction requests the same way. Presidio in `logging_only` mode masks only chat completion logs, so extraction requests and answers reach your logs unmasked. Before you rely on a guardrail to keep PII or secrets away from Cloudflare, send this route a request it should block and check that the call fails.
 
 ## Pricing
 
@@ -281,4 +284,4 @@ async def main():
 asyncio.run(main())
 ```
 
-Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument to Cloudflare as it is, except LiteLLM's own params and `user`, which they drop. OpenAI chat params such as `temperature` raise `litellm.UnsupportedParamsError` unless you pass `drop_params=True`. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`.
+Both functions take `model`, `fields`, `state`, `images`, `reference_date`, `options`, `api_key`, `api_base`, `timeout`, `custom_llm_provider` and `extra_headers`, and send any other keyword argument to Cloudflare as it is, except LiteLLM's own params, `user`, `base_url`, `default_headers` and `deployment_id`, which they drop. Set the endpoint with `api_base`, since `base_url` does not change where the call goes. OpenAI chat params such as `temperature` raise `litellm.UnsupportedParamsError` unless you pass `drop_params=True`. A model whose provider has no extraction support raises a `BadRequestError` that lists the supported providers. Through the Router, use `router.extraction` and `router.aextraction`.
