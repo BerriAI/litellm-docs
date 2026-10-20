@@ -134,7 +134,7 @@ Response
 
 ```json keep-model-ids
 {
-  "model": "gpt-6-luna",
+  "model": "luna",
   "answers": [
     {"type": "predicate", "name": "is_refund_request", "probability": 1.0},
     {
@@ -223,7 +223,7 @@ Response for a solid red square
 
 ```json keep-model-ids
 {
-  "model": "gpt-6-luna",
+  "model": "luna",
   "answers": [
     {"type": "predicate", "name": "is_red", "probability": 1.0},
     {
@@ -325,7 +325,7 @@ Response
 
 ```json
 {
-  "model": "jev-1.13.0",
+  "model": "jev",
   "answers": {
     "is_refund_request": {"type": "noul", "noul": 0.99},
     "urgency": {
