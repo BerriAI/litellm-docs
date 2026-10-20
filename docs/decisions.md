@@ -531,7 +531,7 @@ Problems the form can catch, such as an empty **Input**, are listed above **Send
 
 <Image img={require('../img/decisions_playground_openai.png')} alt="Decisions playground with /v1/decisions and the luna model picked, the bug report triage example with choice, predicate and score questions and its answers" />
 
-The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` picks examples from a dropdown instead of **Load example**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
+The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
 
 ## Use a decision model as a guardrail
 

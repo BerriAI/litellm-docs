@@ -147,7 +147,7 @@ A field name is 1 to 64 letters, digits, `_`, `.` or `-`, and starts with a lett
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `model` | string | The model name you called |
+| `model` | string | The model name you called. After a fallback it is the model string of the deployment that answered, such as `cloudflare/@cf/cloudflare/clairic` |
 | `answers` | object | One answer per field, keyed by field name, with the answer fields above |
 | `truncated` | boolean | Clairic's truncation flag |
 | `state_text` | string, optional | The text that spans index into, returned with `return_state_text` |
@@ -184,7 +184,7 @@ LiteLLM checks the parts of the body it knows before calling Cloudflare.
 | Field name that breaks the naming rule | 400 | LiteLLM |
 | `list` field without `items` | 400 | LiteLLM |
 | No `fields`, or an empty `fields` | 400 | LiteLLM |
-| Field setting of the wrong JSON type, such as `"decimals": "2"` | 400 | LiteLLM |
+| Field setting of the wrong JSON type or an unknown value, such as `"decimals": "2"` or `"scale": "cubic"` | 400 | LiteLLM |
 | Remote image URL | 400 | LiteLLM |
 | More than 4 images | 400 | LiteLLM |
 | `stream: true` or an OpenAI param such as `temperature`, without `drop_params` | 400 | LiteLLM |
@@ -219,11 +219,13 @@ Any other key goes to Cloudflare as you sent it, with only `model` set to `clair
 }
 ```
 
-Clairic does not stream and takes no OpenAI generation params, so `stream: true` or a param such as `temperature`, `seed` or `response_format` answers 400 with the names it refused. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops them and the call is logged and billed like any other.
+Clairic does not stream and takes no OpenAI generation params, so `stream: true` or a param such as `temperature`, `seed` or `response_format` answers 400 with the names it refused. With `drop_params: true` in the request, on the deployment or in `litellm_settings`, LiteLLM drops them and the call is logged and billed like any other. A proxy started with `--temperature` or `--max_tokens` adds that param to every request, so on such a proxy every extraction call answers 400 until `drop_params` is on.
 
 ## Guardrails
 
-[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state`, each field's `instructions` and any `images`, which they get as data URLs. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. When a guardrail changes `state_text`, every answer comes back without `span` and `spans`, since the offsets no longer match the text. Guardrails that run their own hooks instead, such as Lakera, do not scan extraction requests and let them through.
+[Guardrails](./proxy/guardrails/quick_start.md) that run through LiteLLM's unified `apply_guardrail` interface work on `/v1/extraction` and are set up the same way as on `/chat/completions`. These include Presidio, Bedrock Guardrails, `litellm_content_filter`, OpenAI Moderation, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`. On the way in they see `state`, each field's `instructions` and any `images`, which they get as data URLs. On the way out they see every answer `value` and `guess` that is a string or a list of strings, which covers text and date answers and text and date list items, plus `state_text`. Numeric answers are left alone. When a guardrail masks `state` on the way in, Clairic reads the masked text, so `span` and `spans` are offsets into that text and not into the `state` you sent. Set `return_state_text: true` to get the text they index into. When a guardrail changes `state_text` on the way out, every answer comes back without `span` and `spans`, since the offsets no longer match the text.
+
+Guardrails that run their own hooks do not scan extraction requests. LiteLLM sends the request to Cloudflare without them and returns no error, even though the guardrail is on. These include Lakera, Aporia, Model Armor, Azure Prompt Shield, Azure Text Moderation, LLM Shield Proxy and the secret detection guardrail `hide-secrets`, so try a guardrail on this route before you rely on it to keep PII or secrets away from Cloudflare.
 
 ## Pricing
 

@@ -93,7 +93,7 @@ Pick `/v1/systemone` under **Endpoint** and your Jev model under **Model**. **Lo
 
 The editor opens on the **Form** tab, so you can build a request without writing JSON. Type the text the model should read into **Input**, then fill in each question card: its **Name**, its **Answer type** (**Choice**, **Yes / no** or **Score**), its **Instructions** and its criteria. A choice takes **Options** with descriptions, a yes / no question takes **Yes means** and **No means**, and a score takes **Levels, lowest first**, numbered from 0. **Add question**, **Add option** and **Add level** add rows, and the trash buttons remove them.
 
-The **cURL** tab shows the request as a read-only curl command for the proxy's `/v1/systemone`, and it follows your edits. Once the form has no issues, **Copy cURL** copies it, and you replace `$LITELLM_API_KEY` with a virtual key. To send a field the form has no input for, such as `metadata`, copy the curl and add the field to its `-d` body.
+The **cURL** tab shows the request as a read-only curl command for the proxy's `/v1/systemone`, and it follows your edits. Once the form has no issues, **Copy cURL** copies it, and you replace `$LITELLM_API_KEY` with a virtual key. To tag the call in LiteLLM's spend logs, which the form has no input for, copy the curl and add `"metadata": {"tags": ["triage"]}` to its `-d` body.
 
 The form checks the request as you type. Problems are listed above **Send**, such as `Add the text the model should decide about.` for an empty **Input** and `Give every question a name.` for an unnamed question, and **Send** stays disabled until they are fixed. TypeSafe checks the rest when you send, so a yes / no question with no instructions and no **Yes means** or **No means** comes back as a 400.
 
