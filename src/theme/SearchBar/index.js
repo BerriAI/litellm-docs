@@ -113,7 +113,7 @@ export default function SearchBar() {
       onResults(data) {
         setResultSearchId(analytics.current.ready(data, 'lexical'));
         setLoading(false); setSearchError(''); setResults(data.results);
-        setResolvedQuery(data.query); setSelected(0);
+        setResolvedQuery(data.query); setResolvedType(data.type); setSelected(0);
       },
       onRequest() {analytics.current.requested();},
       onError(message, metrics) {analytics.current.failed(metrics); setLoading(false); setSearchError(message);},
@@ -124,12 +124,12 @@ export default function SearchBar() {
   useEffect(() => {
     if (!open) return;
     setSearchError(''); setVisibleCount(25);
+    setResults([]); setResolvedQuery(''); setResultSearchId(null); setSelected(0);
     setLoading(Boolean(query.trim()));
-    setResolvedType(contentType);
     analytics.current.start(query, contentType);
     searchSession.current.search(query, contentType);
     if (!query.trim()) {
-      setLoading(false); setResults([]); setResolvedQuery(''); setSelected(0);
+      setResolvedType(contentType);
     }
     return () => searchSession.current.cancel();
   }, [query, contentType, open, searchUrl, retry]);
@@ -163,7 +163,7 @@ export default function SearchBar() {
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (loading || resolvedQuery !== query.trim().replace(/\s+/g, ' ').toLowerCase() || resolvedType !== contentType) return;
+        if (loading || searchError || resolvedQuery !== query.trim().replace(/\s+/g, ' ').toLowerCase() || resolvedType !== contentType) return;
         if (results.length) {analytics.current.select(selected, 'keyboard'); window.location.assign(results[selected].url);}
         else openAI(query.trim() || undefined);
       }

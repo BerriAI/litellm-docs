@@ -7,18 +7,20 @@ const {readConfig} = require('../../search/runtime');
 
 let handler;
 module.exports = async (req, res) => {
-  const started = performance.now();
   try {
     if (!handler) {
       const config = readConfig(process.env, {host: '0.0.0.0'});
-      // Keyword search needs only the index, loaded once per function instance.
-      handler = fs.readFile(path.join(process.cwd(), 'build/search-index.json'), 'utf8')
-        .then(loadIndex)
-        .then(index => createKeywordSearchHandler({index, config}));
+      let index;
+      handler = createKeywordSearchHandler({config, getIndex() {
+        // Start after request validation and body reading so cold starts do not
+        // queue cancelled keystrokes in front of the body-read limit.
+        if (!index) index = fs.readFile(path.join(process.cwd(), 'build/search-index.json'), 'utf8')
+          .then(loadIndex)
+          .catch(error => {index = undefined; throw error;});
+        return index;
+      }});
     }
-    const ready = await handler;
-    res.setHeader('Server-Timing', `corpus;dur=${(performance.now() - started).toFixed(1)}`);
-    return await ready(req, res);
+    return await handler(req, res);
   } catch {
     handler = undefined;
     return send(res, 503, {error: 'Search is unavailable. Please try again.'});
