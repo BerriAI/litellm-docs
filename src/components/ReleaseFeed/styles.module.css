@@ -94,58 +94,21 @@
   font-size: 0.85em;
 }
 
-.meta {
+.versions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1.5rem;
-  font-size: 0.85rem;
-  color: var(--ifm-color-emphasis-700);
-}
-
-.authors {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.avatars {
-  display: flex;
-}
-
-.avatars img {
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 50%;
-  border: 2px solid var(--ifm-background-color);
-  object-fit: cover;
-}
-
-.avatars img + img {
-  margin-left: -0.45rem;
+  gap: 0.35rem;
 }
 
 .more {
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
 .older {
-  display: block;
-  margin: 0 auto 2rem;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  background: transparent;
-  color: var(--ifm-color-emphasis-900);
-  font: inherit;
+  margin: 0 0 2rem;
   font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.older:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
+  color: var(--ifm-color-emphasis-700);
 }
 
 @media (max-width: 640px) {
