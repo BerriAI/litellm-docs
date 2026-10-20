@@ -111,6 +111,52 @@ print(response)
 </TabItem>
 </Tabs>
 
+### Priority header
+
+Set `x-litellm-priority` to an integer to set the scheduler's request queue priority. Lower values have higher priority. The header overrides a body `priority` value. It queues requests only on `/v1/chat/completions` and `/v1/completions`. This scheduler queue priority is separate from the dynamic rate limiter's key-metadata `priority`.
+
+<Tabs>
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST 'http://localhost:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'x-litellm-priority: 0' \
+-d '{
+    "model": "{{openai_small}}",
+    "messages": [
+        {
+        "role": "user",
+        "content": "what is the meaning of the universe?"
+        }],
+    "priority": 5
+}'
+```
+
+</TabItem>
+<TabItem value="openai-sdk" label="OpenAI SDK">
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="anything",
+    base_url="http://localhost:4000/v1"
+)
+
+response = client.chat.completions.create(
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "Write a short poem"}],
+    extra_headers={"x-litellm-priority": "0"},
+)
+
+print(response)
+```
+
+</TabItem>
+</Tabs>
+
 ## Advanced - Redis Caching 
 
 Use redis caching to do request prioritization across multiple instances of LiteLLM. 
