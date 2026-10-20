@@ -170,7 +170,7 @@ response = client.chat.completions.create(
 
 Set `alert_types` if you want to Opt into only specific alert types. When alert_types is not set, all Default Alert Types are enabled.
 
-👉 [**See all alert types here**](#all-possible-alert-types)
+[**See all alert types here**](#all-possible-alert-types)
 
 ```shell
 general_settings:
@@ -288,45 +288,54 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### MS Teams Webhooks
 
-MS Teams provides a slack compatible webhook url that you can use for alerting
+LiteLLM sends alerts to Microsoft Teams natively through the `ms_teams` alerting destination, available from v1.100.0. Each alert is posted as an Adaptive Card, which both Teams Workflows webhooks and legacy incoming webhook connectors accept
 
 ##### Quick Start
 
-1. [Get a webhook url](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook) for your Microsoft Teams channel 
+1. [Create an incoming webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook) for your Microsoft Teams channel
 
 2. Add it to your .env
 
 ```bash
-SLACK_WEBHOOK_URL="https://berriai.webhook.office.com/webhookb2/...6901/IncomingWebhook/b55fa0c2a48647be8e6effedcd540266/e04b1092-4a3e-44a2-ab6b-29a0a4854d1d"
+MS_TEAMS_WEBHOOK_URL="https://<your-tenant>.webhook.office.com/webhookb2/<...>/IncomingWebhook/<...>"
 ```
 
-3. Add it to your litellm config 
+3. Add `ms_teams` to `alerting` in your litellm config. It can sit alongside other destinations such as `slack` or `email`
 
 ```yaml
 model_list: 
     model_name: "azure-model"
     litellm_params:
         model: "azure/{{openai_small}}"
-        api_key: "my-bad-key" # 👈 bad key
+        api_key: "my-bad-key" # bad key
 
 general_settings: 
-    alerting: ["slack"]
+    alerting: ["ms_teams"]
     alerting_threshold: 300 # sends alerts if requests hang for 5min+ and responses take 5min+ 
 ```
 
 4. Run health check!
 
-Call the proxy `/health/services` endpoint to test if your alerting connection is correctly setup.
+Call the proxy `/health/services` endpoint with `service=ms_teams` to send a test alert to your channel
 
 ```bash
-curl --location 'http://0.0.0.0:4000/health/services?service=slack' \
+curl --location 'http://0.0.0.0:4000/health/services?service=ms_teams' \
 --header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
-
 **Expected Response**
 
-<Image img={require('../../img/ms_teams_alerting.png')}/>
+```json
+{
+  "status": "success",
+  "message": "Mock MS Teams Alert sent, verify MS Teams Alert Received in your channel"
+}
+```
+
+You can also set the webhook URL from the Admin UI on the **Logging & Alerts** page under the **MS Teams Alerts** tab, which saves `MS_TEAMS_WEBHOOK_URL` and adds `ms_teams` to `alerting` for you
+
+`alert_types` applies to Teams the same way it applies to Slack. `alert_to_webhook_url` and digest mode only route Slack alerts; Teams alerts always go to `MS_TEAMS_WEBHOOK_URL` and are sent individually rather than digested
+
 
 ### Discord Webhooks
 
@@ -349,7 +358,7 @@ model_list:
     model_name: "azure-model"
     litellm_params:
         model: "azure/{{openai_small}}"
-        api_key: "my-bad-key" # 👈 bad key
+        api_key: "my-bad-key" # bad key
 
 general_settings: 
     alerting: ["slack"]
@@ -377,7 +386,7 @@ export WEBHOOK_URL="https://webhook.site/6ab090e8-c55f-4a23-b075-3209f5c57906"
 Add 'webhook' to config.yaml
 ```yaml
 general_settings: 
-  alerting: ["webhook"] # 👈 KEY CHANGE
+  alerting: ["webhook"] # KEY CHANGE
 ```
 
 2. Start proxy
@@ -497,7 +506,7 @@ API Base: `None`
 - **Per-instance**: Digest state is held in memory per proxy instance. If you run multiple instances (e.g., Cloud Run with autoscaling), each instance maintains its own digest and emits its own summary.
 - **Not durable**: If an instance is terminated before the digest interval expires, the aggregated alerts for that instance are lost.
 
-## Region-outage alerting (✨ Enterprise feature)
+## Region-outage alerting (Enterprise feature) {#region-outage-alerting--enterprise-feature}
 
 :::info
 [Get a free 2-week license](https://forms.gle/P518LXsAZ7PhXpDn8)
@@ -527,7 +536,7 @@ general_settings:
 
 ## **All Possible Alert Types**
 
-👉 [**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
+[**Here is how you can set specific alert types**](/docs/proxy/alerting#select-specific-alert-types)
 
 LLM-related Alerts
 

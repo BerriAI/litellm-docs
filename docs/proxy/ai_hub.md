@@ -12,7 +12,11 @@ This feature is **available in v1.74.3-stable and above**.
 
 Admin can select models/agents to expose on public AI hub → Users go to the public url and see what's available. 
 
-<Image img={require('../../img/final_public_model_hub_view.png')} />  
+<Image
+  img={require('../../img/final_public_model_hub_view.png')}
+  dark={require('../../img/final_public_model_hub_view_dark.png')}
+  alt="Public AI Hub listing the models an admin has made public"
+/>
 
 ## Models
 
@@ -20,25 +24,43 @@ Admin can select models/agents to expose on public AI hub → Users go to the pu
 
 #### 1. Go to the Admin UI
 
-Navigate to the Model Hub page in the Admin UI (`PROXY_BASE_URL/ui/?login=success&page=model-hub-table`)
+Navigate to the AI Hub page in the Admin UI (`PROXY_BASE_URL/ui/?login=success&page=model-hub-table`). The **Model Hub** tab lists your models and the **Public** column shows whether each one is public.
 
-<Image img={require('../../img/model_hub_admin_view.png')} />  
+<Image
+  img={require('../../img/model_hub_admin_view.png')}
+  dark={require('../../img/model_hub_admin_view_dark.png')}
+  alt="AI Hub page in the Admin UI with the Select Models to Make Public button"
+/>
 
 #### 2. Select the models you want to expose
 
-Click on `Select Models to Make Public` and select the models you want to expose.
+Click on `Select Models to Make Public` and select the models you want to expose, then click `Next`.
 
-<Image img={require('../../img/make_public_modal.png')} />  
+<Image
+  img={require('../../img/make_public_modal.png')}
+  dark={require('../../img/make_public_modal_dark.png')}
+  alt="Make Models Public dialog with models selected"
+/>
 
 #### 3. Confirm the changes
 
-<Image img={require('../../img/make_public_modal_confirmation.png')} />  
+Review the list and click `Make Public`.
+
+<Image
+  img={require('../../img/make_public_modal_confirmation.png')}
+  dark={require('../../img/make_public_modal_confirmation_dark.png')}
+  alt="Confirmation step listing the models that will be made public"
+/>
 
 #### 4. Success! 
 
 Go to the public url (`PROXY_BASE_URL/ui/model_hub_table`) and see available models. 
 
-<Image img={require('../../img/final_public_model_hub_view.png')} />  
+<Image
+  img={require('../../img/final_public_model_hub_view.png')}
+  dark={require('../../img/final_public_model_hub_view_dark.png')}
+  alt="Public AI Hub listing the models an admin has made public"
+/>
 
 ### API Endpoints
 
@@ -57,12 +79,16 @@ Share pre-built agents (A2A spec) across your organization. Users can discover a
 
 ### 1. Create an agent
 
-Create an agent that follows the [A2A spec](https://a2a.dev/).
+Create an agent that follows the [A2A spec](https://a2a.dev/). In the Admin UI, go to **Agentic** > **Agents** and click `Add New Agent`.
 
 <Tabs>
 <TabItem value="ui" label="UI">
 
-<Image img={require('../../img/add_agent.png')} />  
+<Image
+  img={require('../../img/add_agent.png')}
+  dark={require('../../img/add_agent_dark.png')}
+  alt="Add New Agent dialog in the Admin UI"
+/>
 
 </TabItem>
 <TabItem value="api" label="API">
@@ -138,13 +164,21 @@ Make the agent discoverable on the AI Hub.
 <Tabs>
 <TabItem value="ui" label="UI">
 
-Navigate to the Agents Tab on the AI Hub page 
+Navigate to the AI Hub page and select the **Agent Hub** tab.
 
-<Image img={require('../../img/ai_hub_with_agents.png')} />  
+<Image
+  img={require('../../img/ai_hub_with_agents.png')}
+  dark={require('../../img/ai_hub_with_agents_dark.png')}
+  alt="Agent Hub tab on the AI Hub page listing agents"
+/>
 
-Select the agents you want to make public and click on `Make Public` button.
+Click on `Select Agents to Make Public`, select the agents you want to expose, and click `Next`, then `Make Public`.
 
-<Image img={require('../../img/make_agents_public.png')} />  
+<Image
+  img={require('../../img/make_agents_public.png')}
+  dark={require('../../img/make_agents_public_dark.png')}
+  alt="Make Agents Public dialog with agents selected"
+/>
 
 </TabItem>
 <TabItem value="api" label="API">
@@ -197,7 +231,11 @@ Users can now discover the agent via the public endpoint.
 <Tabs>
 <TabItem value="ui" label="UI">
 
-<Image img={require('../../img/public_agent_hub.png')} />  
+<Image
+  img={require('../../img/public_agent_hub.png')}
+  dark={require('../../img/public_agent_hub_dark.png')}
+  alt="Public AI Hub showing the Agent Hub tab"
+/>
 
 </TabItem>
 <TabItem value="api" label="API">
@@ -253,9 +291,13 @@ Go here for instructions: [MCP Overview](../mcp#adding-your-mcp)
 <Tabs>
 <TabItem value="ui" label="UI">
 
-Navigate to AI Hub page, and select the MCP tab (`PROXY_BASE_URL/ui/?login=success&page=mcp-server-table`)
+Navigate to the AI Hub page (`PROXY_BASE_URL/ui/?login=success&page=model-hub-table`) and select the **MCP Hub** tab. Click on `Manage MCP Hub Visibility`, select the servers you want to expose, click `Next`, then `Save Publication List`.
 
-<Image img={require('../../img/mcp_server_on_ai_hub.png')} />  
+<Image
+  img={require('../../img/mcp_server_on_ai_hub.png')}
+  dark={require('../../img/mcp_server_on_ai_hub_dark.png')}
+  alt="MCP Hub tab on the AI Hub page listing MCP servers"
+/>
 
 </TabItem>
 <TabItem value="api" label="API">
@@ -278,7 +320,11 @@ Users can now discover the MCP server via the public endpoint (`PROXY_BASE_URL/u
 <Tabs>
 <TabItem value="ui" label="UI">
 
-<Image img={require('../../img/mcp_on_public_ai_hub.png')} />  
+<Image
+  img={require('../../img/mcp_on_public_ai_hub.png')}
+  dark={require('../../img/mcp_on_public_ai_hub_dark.png')}
+  alt="Public AI Hub showing the MCP Hub tab"
+/>
 
 </TabItem>
 <TabItem value="api" label="API">

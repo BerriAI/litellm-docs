@@ -10,11 +10,11 @@ LiteLLM ships new releases regularly with new provider support, performance impr
 
 ## Latest Release
 
-### [v1.103.0: Config File Ownership, Fuse Routing & Gateway Hardening](/release_notes/v1.103.0/v1-103-0)
+### [v1.106.0: Claude Haiku 5.5, Lens Rust Service, Admin Home Page & MCP Rate Limits](/release_notes/v1.106.0/v1-106-0)
 
-_September 27, 2026_
+_October 18, 2026_
 
-The config file now owns every setting it declares, with one precedence rule across the settings APIs, `source` and `editable` flags on both read endpoints, read-only fields in the Admin UI, and a startup warning for each stored value the file is ignoring. Auto Router adds a capability classifier, Fuse v2 forecasting, per-model Fast mode, maintained Fuse presets and TypeSafe JEV. Gateway hardening covers MCP client allowlisting, live session visibility, delegated OAuth admission, RFC 8693 token exchange and per-issuer JWT key scoping, and spend controls add per-member organization spend, additive project budgets, team-level `model_max_budget`, temporary budget increases and budgets re-checked on fallback targets, alongside 408 new model catalog entries. This stable also folds in prompt caching, streaming, JWT and proxy reliability fixes backported after the rc.1 cut, and reverts the rc.1 top-N key cap on the Usage pages. Review the release's Breaking Changes section before upgrading
+Claude Haiku 5.5 on day one across six providers, Lens as a standalone Rust service with always-on investigations, a new Admin UI Home page, MCP rate limits on every operation, and Decisions that read images, audio and video. Review the Breaking Changes before upgrading
 
 ---
 
@@ -22,6 +22,9 @@ The config file now owns every setting it declares, with one precedence rule acr
 
 | Version                             | Date         | Highlights                                                 |
 | ----------------------------------- | ------------ | ---------------------------------------------------------- |
+| [v1.106.0](/release_notes/v1.106.0/v1-106-0) | Oct 18, 2026 | Claude Haiku 5.5, Lens Rust service, Admin Home page, MCP rate limits |
+| [v1.105.0](/release_notes/v1.105.0/v1-105-0) | Oct 11, 2026 | Claude Sonnet 5.5 and GPT-6.1 Sol, Decisions API, `litellm.agent()`, Lens |
+| [v1.104.0](/release_notes/v1.104.0/v1-104-0) | Oct 3, 2026  | Claude Opus 5.5 and GPT-6, master key enforcement, stdio MCP off by default |
 | [v1.103.0](/release_notes/v1.103.0/v1-103-0) | Sep 27, 2026 | Config file ownership, Fuse and Capability routing, gateway hardening |
 | [v1.102.0](/release_notes/v1.102.0/v1-102-0) | Sep 19, 2026 | Auto router controls, native OCR, gateway reliability |
 | [v1.101.0](/release_notes/v1.101.0/v1-101-0) | Sep 14, 2026 | Heuristic auto router, semantic MCP tool search, off-peak pricing |

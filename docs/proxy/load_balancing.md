@@ -1,5 +1,10 @@
+---
+sidebar_label: "Load Balancing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 # Proxy - Load Balancing
 Load balance multiple instances of the same model
@@ -69,6 +74,32 @@ router_settings:
   redis_port: 1992
 ```
 
+## Kubernetes pod discovery
+
+Set `kubernetes_pod_discovery: true` in a deployment's `litellm_params` when its `api_base` is a Kubernetes headless service; the router resolves the service hostname to ready pod IPs and round-robins requests across them, refreshing every `KUBERNETES_POD_DISCOVERY_REFRESH_INTERVAL_SECONDS`
+
+```yaml
+model_list:
+  - model_name: gpu-llama
+    litellm_params:
+      model: openai/fake-llama
+      api_base: http://my-vllm-headless.gpu.svc.cluster.local:8000/v1
+      api_key: os.environ/VLLM_API_KEY
+      kubernetes_pod_discovery: true
+```
+
+The Admin UI also exposes this setting at Add Model > Advanced Settings > "Kubernetes pod discovery"
+
+A request that carries an explicit session ID (`litellm_session_id`, or `session_id` in `metadata`) stays on one pod, so the inference server can reuse its prompt cache for that session. When both are set, `litellm_session_id` wins. A retry for that session moves to the next pod in a stable order, and requests without a session ID keep round-robining. Pod IPs that go unused for `KUBERNETES_POD_DISCOVERY_IDLE_EVICTION_SECONDS` are dropped from the cache
+
+Proxy admins can see the pods a model currently resolves to on the model's page in the Admin UI (Models + Endpoints, then select the model). The "Kubernetes pods" card lists the service host and port and each ready pod IP. Other roles do not see the card, and `GET /model/{model_id}/kubernetes_pods` rejects their requests
+
+To see which pod served a request, open Logs in the Admin UI and select the request. API Base shows the pod IP the request was sent to
+
+<Image img={require('../../img/kubernetes_pod_discovery_logs.png')} style={{ width: '100%', maxWidth: '1200px' }} />
+
+LiteLLM must run in the same cluster. Only `http://` bases are rewritten; `https://` bases are left unchanged because connecting to an IP breaks TLS hostname checks. If `HTTP_PROXY` is set and `NO_PROXY` exempts the service host but not each pod IP, LiteLLM keeps the service hostname and logs a warning, because HTTP clients do not match pod IPs against CIDR entries in `NO_PROXY`
+
 ## Enforce Model Rate Limits
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
@@ -94,7 +125,7 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - enforce_model_rate_limits  # 👈 Enables strict enforcement
+    - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
 ### How It Works
@@ -148,7 +179,7 @@ $ litellm --config /path/to/config.yaml
 
 Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
-👉 Key Change: `model="{{openai_small}}"`
+Key Change: `model="{{openai_small}}"`
 
 **Check the `model_id` in Response Headers to make sure the requests are being load balanced**
 
@@ -324,13 +355,13 @@ model_list:
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
-      order: 1  # 👈 Highest priority - always tried first
+      order: 1  # Highest priority - always tried first
 
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
-      order: 2  # 👈 Used when order=1 fails
+      order: 2  # Used when order=1 fails
 ```
 
 ### How order-based fallback works
@@ -338,6 +369,8 @@ model_list:
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next.
 
 If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](./reliability.md).
+
+A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./reliability.md#explanation)
 
 ```yaml
 model_list:
@@ -421,11 +454,13 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - encrypted_content_affinity  # 👈 Prevents invalid_encrypted_content errors
+    - encrypted_content_affinity  # Prevents invalid_encrypted_content errors
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
 
 When that deployment is not in the healthy pool for a follow-up (it is cooled down, it was removed, or the turn was routed to another model group) and no deployment has the same `api_base` and `api_key`, LiteLLM drops the encrypted reasoning from the request, keeps the rest of the conversation, forwards it to a healthy deployment, and logs a router warning, so the turn succeeds with fresh reasoning instead of failing
+
+A fallback hop does the same whether or not the check is on. An order-based hop to the next `order`, a configured `fallbacks` hop to another model group, and the retry of a Responses stream that broke mid-stream each drop the encrypted reasoning the hop target cannot decrypt and keep the summaries, with no per-deployment switch. Keep the check on for an ordered group of two providers all the same: it marks each reasoning item with the deployment that produced it, so a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops the reasoning too, and the turn after a hop keeps the reasoning of the deployment that answers it instead of paying one failed call first
 
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**

@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Guide to using Gemini 3 Flash on LiteLLM Proxy and SDK with day 0 support."
+card_title: "Gemini 3 Flash"
+card_summary: "Gemini 3 Flash preview with thinking levels, on /chat/completions, /responses and /messages."
 tags: [gemini, day 0 support, llms]
 hide_table_of_contents: false
 ---

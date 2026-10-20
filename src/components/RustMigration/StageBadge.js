@@ -1,7 +1,7 @@
 import React from 'react';
 import * as semver from 'semver';
 import {Popover} from '@base-ui/react/popover';
-import {MAIN_VERSION, RELEASES, STAGES, stageAt} from '@site/src/data/rustMigration';
+import {MAIN_VERSION, RELEASES, kindOf, labelOf, stageAt} from '@site/src/data/rustMigration';
 import styles from './StageBadge.module.css';
 
 const DATE = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
@@ -53,9 +53,6 @@ export function StageIcon({kind, className = ''}) {
   );
 }
 
-const kindOf = (feature, stage) => (feature.task ? 'done' : STAGES[stage].id);
-const labelOf = (feature, stage) => (feature.task ? 'Done' : STAGES[stage].label);
-
 function releaseDate(version) {
   const date = RELEASE_DATES.get(version);
   const formatted = date && DATE.format(new Date(date));
@@ -81,7 +78,7 @@ export default function StageBadge({feature}) {
         openOnHover
         delay={150}
         closeDelay={150}
-        aria-label={`${labelOf(feature, stage)} since ${version}`}
+        aria-label={`${labelOf(kindOf(feature, stage))} since ${version}`}
       >
         <StageIcon kind={kindOf(feature, stage)} />
         {compactVersion(version)}
@@ -95,14 +92,14 @@ export default function StageBadge({feature}) {
               {[...feature.rollout].reverse().map(step => (
                 <li key={step.version}>
                   <StageIcon kind={kindOf(feature, step.stage)} />
-                  <span className={styles.stage}>{labelOf(feature, step.stage)}</span>
+                  <span className={styles.stage}>{labelOf(kindOf(feature, step.stage))}</span>
                   <span className={styles.version} title={step.version}>{compactVersion(step.version)}</span>
                   {releaseDate(step.version) && <span className={styles.date}>{releaseDate(step.version)}</span>}
                 </li>
               ))}
             </ol>
             <a className={styles.explain} href={`#${stageAnchor(kindOf(feature, stage))}`}>
-              What {labelOf(feature, stage)} means →
+              What {labelOf(kindOf(feature, stage))} means →
             </a>
           </Popover.Popup>
         </Popover.Positioner>

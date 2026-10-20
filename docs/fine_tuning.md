@@ -9,8 +9,8 @@ import TabItem from '@theme/TabItem';
 |-------|-------|-------|
 | Supported Providers | OpenAI, Azure OpenAI, Vertex AI | - |
 
-#### ⚡️See an exhaustive list of supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
-| Cost Tracking | 🟡 | [Let us know if you need this](https://github.com/BerriAI/litellm/issues) |
+#### See an exhaustive list of supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
+| Cost Tracking | Not yet | [Let us know if you need this](https://github.com/BerriAI/litellm/issues) |
 | Logging | ✅ | Works across all logging integrations |
 
 
@@ -258,4 +258,4 @@ curl -X GET 'http://localhost:4000/v1/fine_tuning/jobs' \
 
 
 
-## [👉 Proxy API Reference](https://docs.litellm.ai/api-reference/#/fine-tuning)
+## [Proxy API Reference](https://docs.litellm.ai/api-reference/#/fine-tuning)

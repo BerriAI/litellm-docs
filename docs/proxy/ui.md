@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Create keys, track spend, add models without worrying about the config / CRUD endpoints.
 
-<Image img={require('../../img/litellm_ui_create_key.png')} />
+<Image img={require('../../img/litellm_ui_create_key.png')} dark={require('../../img/litellm_ui_create_key_dark.png')} alt="The Virtual Keys page with the Create New Key button" />
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ http://0.0.0.0:4000/ui # <proxy_base_url>/ui
 
 Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhost:4000/`
 
-<Image img={require('../../img/ui_link.png')} />
+<Image img={require('../../img/ui_link.png')} alt="Swagger page with the Admin UI link" />
 
 ### 4. Sign in for the first time
 
@@ -81,6 +81,32 @@ ROOT_REDIRECT_URL="/ui"       # Redirect root path (/) to /ui
 ```
 
 By default, `DOCS_URL` is `"/"`, so this setting is only needed when you've changed `DOCS_URL` to a different path.
+
+## Keep a break-glass admin account for SSO outages
+
+If your admins normally sign in with SSO and `disable_env_credential_login` is on, keep one shared `proxy_admin` database user with a password for the times your SSO provider is down, and store its email and password in your password vault. It signs in at `/fallback/login` with its email as the username. `disable_env_credential_login` does not block it, because that setting turns off only the `UI_USERNAME`/`UI_PASSWORD` and master key login, while database users with a password keep signing in. Give it an email that no account in your SSO provider uses, since an SSO sign-in with the same email is matched to this user and can change its role.
+
+The simplest way to create it is from the dashboard while signed in as an admin. Go to `Internal Users` -> `+ Invite User`, enter an email such as `breakglass-admin@example.com`, and set `Global Proxy Role` to `Admin (All Permissions)`. Without SSO, open the invitation link it shows to set the password. With SSO configured, that link only signs the user in through SSO, so open the actions menu on the new user's row in `Internal Users`, choose `Reset password`, and open that link to set the password instead. Open the link in a private window, since setting the password signs that browser in as the new account. A password set through either link is ready to use, with no forced change at first sign-in.
+
+You can also create it over the API with the master key. `/user/new` does not accept a password, so set it with `/user/update`, and pass `"auto_create_key": false` so `/user/new` does not also create an admin API key for this user:
+
+```bash
+curl -X POST "$PROXY_BASE_URL/user/new" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "breakglass-admin", "user_email": "breakglass-admin@example.com", "user_role": "proxy_admin", "auto_create_key": false}'
+
+curl -X POST "$PROXY_BASE_URL/user/update" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "breakglass-admin", "password": "<password>"}'
+```
+
+The password must pass the proxy's password policy, by default at least 12 characters with an uppercase letter, a lowercase letter, a digit, and a special character, or `/user/update` answers 400. From v1.104.0, a password an admin sets with `/user/update` must be changed at first sign-in. The dashboard opens the Change Password page, and until the password is changed the session can only change it or sign out. So sign in once at `/fallback/login` right after creating the account, choose the final password there, and save that one in the vault.
+
+Test the account before you need it. Sign out, open `/fallback/login`, and sign in with the vault credentials. You should land in the dashboard as an admin. To rotate the password later, sign in as the account and use `Change Password` in the account menu (from v1.104.0), or have another admin open `Reset password` on its row in `Internal Users`, then update the vault.
+
+This account cannot sign in when `disable_password_login_when_sso_enabled` is on, since that setting rejects every username/password login once SSO is fully configured, so leave it off if you rely on a break-glass account. Failed sign-ins on it count toward the [sign-in limit](#limit-failed-sign-in-attempts) below.
 
 ## Limit failed sign-in attempts
 
@@ -136,4 +162,4 @@ Useful, if your security team has additional restrictions on UI usage.
 
 **Expected Response**
 
-<Image img={require('../../img/admin_ui_disabled.png')}/>
+<Image img={require('../../img/admin_ui_disabled.png')} dark={require('../../img/admin_ui_disabled_dark.png')} alt="Admin UI Disabled message" />

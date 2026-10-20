@@ -6,9 +6,9 @@ description: Which Auto Router features shipped in which LiteLLM release, so you
 
 Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
-## Coming Next
+## v1.104.0
 
-Merged into `main` after `v1.103.0-rc.1` was cut; these changes are not included in `v1.103.0`. Use a build containing the linked PRs until they appear under a tagged release below.
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.104.0), [Release notes](/release_notes/v1.104.0/v1-104-0)
 
 :::danger Breaking Changes
 

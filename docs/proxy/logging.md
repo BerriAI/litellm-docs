@@ -75,7 +75,7 @@ model_list:
       model: {{openai_small}}
 litellm_settings:
   success_callback: ["langfuse"]
-  turn_off_message_logging: True # 👈 Key Change
+  turn_off_message_logging: True # Key Change
 ```
 
 **2. Send request**
@@ -174,7 +174,7 @@ The proxy only honors this header on keys or teams whose metadata has `allow_cli
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_MASTER_KEY" \
     --header 'Content-Type: application/json' \
     --data '{"metadata": {"allow_client_message_redaction_opt_out": true}}'
 ```
@@ -233,7 +233,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
       }
     ],
     "max_tokens": 300,
-    "no-log": true # 👈 Key Change
+    "no-log": true # Key Change
 }'
 ```
 
@@ -257,7 +257,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-      "no-log": True # 👈 Key Change
+      "no-log": True # Key Change
     }
 )
 
@@ -273,7 +273,7 @@ print(response)
 LiteLLM.Info: "no-log request, skipping logging"
 ```
 
-### ✨ Dynamically Disable specific callbacks
+### Dynamically Disable specific callbacks
 
 <EnterpriseFeature />
 
@@ -331,13 +331,13 @@ print(response)
 </Tabs>
 
 
-### ✨ Conditional Logging by Virtual Keys, Teams
+### Conditional Logging by Virtual Keys, Teams
 
 Use this to:
 1. Conditionally enable logging for some virtual keys/teams
 2. Set different logging providers for different virtual keys/teams
 
-[👉 **Get Started** - Team/Key Based Logging](team_logging)
+[**Get Started** - Team/Key Based Logging](team_logging)
 
 
 
@@ -347,7 +347,7 @@ Use this to:
 
 Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Intermediate streaming events and callbacks where payload construction fails can omit it.
 
-[👉 **Standard Logging Payload Specification**](./logging_spec)
+[**Standard Logging Payload Specification**](./logging_spec)
 
 ## Langfuse
 
@@ -639,7 +639,7 @@ model_list:
 litellm_settings:
   success_callback: ["langfuse"]
 
-  # 👇 Key Change
+  # Key Change
   langfuse_default_tags: ["cache_hit", "cache_key", "proxy_base_url", "user_api_key_alias", "user_api_key_user_id", "user_api_key_user_email", "user_api_key_team_alias", "semantic-similarity", "proxy_base_url"]
 ```
 
@@ -949,7 +949,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 </Tabs>
 
-** 🎉 Expect to see this trace logged in your OTEL collector**
+** Expect to see this trace logged in your OTEL collector**
 
 ### Redacting Messages, Response Content
 
@@ -959,7 +959,7 @@ Set `message_logging=False` for `otel`, no messages / response will be logged
 litellm_settings:
   callbacks: ["otel"]
 
-## 👇 Key Change
+## Key Change
 callback_settings:
   otel:
     message_logging: False
@@ -968,7 +968,7 @@ callback_settings:
 ### Traceparent Header
 ##### Context propagation across Services `Traceparent HTTP Header`
 
-❓ Use this when you want to **pass information about the incoming request in a distributed tracing system**
+Use this when you want to **pass information about the incoming request in a distributed tracing system**
 
 ✅ Key change: Pass the **`traceparent` header** in your requests. [Read more about traceparent headers here](https://uptrace.dev/opentelemetry/opentelemetry-traceparent.html#what-is-traceparent-header)
 
@@ -1059,7 +1059,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_bucket"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_bucket"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1111,6 +1111,10 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 5. Click on 'Keys' -> Add Key -> Create New Key -> JSON
 6. Save the JSON file and add the path to `GCS_PATH_SERVICE_ACCOUNT`
 
+#### Batch line items
+
+To also keep every request and response of your managed batches, as part objects per batch under `batch_line_items/`, add `gcs_bucket` to `litellm_settings.batch_line_item_callbacks`. See [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response)
+
 
 
 ## Google Cloud Storage - PubSub Topic
@@ -1140,7 +1144,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_pubsub"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_pubsub"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1269,6 +1273,7 @@ litellm_settings:
     s3_drop_on_terminal_error: true # [OPTIONAL] drop an object after a terminal, object-specific S3 rejection (400/403 with a code like EntityTooLarge or InvalidArgument) once a sibling delivered, instead of retrying it every flush; set false to keep retrying
     s3_max_queue_size: 50000 # [OPTIONAL] cap on queued log events applied after a failed flush; the oldest events are dropped once the queue exceeds this size
     s3_batch_file_upload: false # [OPTIONAL] write each flush as one NDJSON .jsonl file per object key prefix instead of one object per request
+    s3_partition_granularity: day # [OPTIONAL] date folder layout for log objects: day (default) or hour, see Hourly Folders below
 ```
 
 The default of 16 for `s3_max_concurrent_uploads` comes from the flush budget rather than from an S3 limit: a full queue of `DEFAULT_S3_BATCH_SIZE` (512) entries has to drain inside `DEFAULT_S3_FLUSH_INTERVAL_SECONDS` (10s), and at a pessimistic 300ms per PUT that needs `512 * 0.3 / 10 = 15.4` uploads in flight, so 16 is the smallest round number that fits. It is also an order of magnitude under the [3,500 PUT/s per prefix](https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html) S3 supports, and in the same range as boto3's `max_concurrency` of 10 or Fluentd's suggested 8 flush threads. The limit is per uvicorn worker, so process wide concurrency is `workers * 16`
@@ -1306,6 +1311,24 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 Your logs should be available on the specified s3 Bucket
+
+### Hourly Folders
+
+By default `s3_v2` writes every log for a day into one date folder, `my-test-path/2026-10-01/time-14-05-09-123456_chatcmpl-abc.json`. Set `s3_partition_granularity: hour` to add an hour folder under the date, so the same object lands at `my-test-path/2026-10-01/14/time-14-05-09-123456_chatcmpl-abc.json` and a query over a time range only has to list the hours it needs
+
+```yaml
+litellm_settings:
+  callbacks: ["s3_v2"]
+  s3_callback_params:
+    s3_bucket_name: logs-bucket-litellm
+    s3_region_name: us-west-2
+    s3_path: my-test-path
+    s3_partition_granularity: hour
+```
+
+You can also set it with the `S3_PARTITION_GRANULARITY` environment variable, and a value in `s3_callback_params` wins over it. The date and hour both come from the request start time, the same clock the daily layout already uses, and team or key alias prefixes stay in front of the date folder. Leaving the setting out, or setting it to `day` or an empty value, keeps the daily layout unchanged, and any other value logs a warning and falls back to `day`
+
+The same setting applies to audit log objects, `s3_batch_file_upload` files and the cold storage object key, so `cold_storage_custom_logger: s3_v2` keeps finding the objects it wrote. When audit logs go to a separate bucket through `s3_audit_callback_params`, their layout comes from `s3_partition_granularity` in that block instead, falling back to the environment variable, so request logs and audit logs can use different layouts. With batch uploads on, a flush that spans an hour boundary writes one `.jsonl` file per hour folder. In the Admin UI the option shows up as Folder Partitioning on the `s3_v2` callback form. Only `s3_v2` supports it. The legacy `s3` callback and the `gcs_bucket` logger always write daily folders
 
 ### Team Alias Prefix in Object Key
 
@@ -1349,6 +1372,10 @@ On s3 bucket, you will see the object key as `my-test-path/my-key-alias/...`
 if both team alias and key alias are enabled then the path becomes
 `my-test-path/my-team-alias/my-key-alias/...`
 
+#### Batch line items
+
+To also keep every request and response of your managed batches, as part objects per batch under `<s3_path>/batch_line_items/`, add `s3_v2` to `litellm_settings.batch_line_item_callbacks`. It writes with the same `s3_callback_params`. See [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response)
+
 ## AWS SQS
 
 
@@ -1387,7 +1414,7 @@ litellm_settings:
   callbacks: ["aws_sqs"]
 
   aws_sqs_callback_params:
-    # --- 🧱 Required Parameters ---
+    # --- Required Parameters ---
     sqs_queue_url: https://sqs.us-west-2.amazonaws.com/123456789012/my-queue
     # The AWS SQS Queue URL to which LiteLLM will send log events.
 
@@ -1451,7 +1478,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 litellm_settings:
-  callbacks: ["azure_storage"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["azure_storage"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1523,11 +1550,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## [Datadog](../observability/datadog)
 
-👉 Go here for using [Datadog LLM Observability](../observability/datadog) with LiteLLM Proxy
+Go here for using [Datadog LLM Observability](../observability/datadog) with LiteLLM Proxy
 
 ## [Azure Sentinel](../observability/azure_sentinel)
 
-👉 Go here for using [Azure Sentinel](../observability/azure_sentinel) with LiteLLM Proxy
+Go here for using [Azure Sentinel](../observability/azure_sentinel) with LiteLLM Proxy
 
 
 ## Lunary
@@ -1581,7 +1608,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## MLflow
 
-👉 Follow the tutorial [here](../observability/mlflow) to get started with mlflow on LiteLLM Proxy Server
+Follow the tutorial [here](../observability/mlflow) to get started with mlflow on LiteLLM Proxy Server
 
 
 
@@ -2264,7 +2291,7 @@ environment_variables:
   GALILEO_LOG_STREAM_ID: "your-log-stream-id"  # optional
 
 litellm_settings:
-  success_callback: ["galileo"] # 👈 KEY CHANGE
+  success_callback: ["galileo"] # KEY CHANGE
 ```
 
 2. Start Proxy
@@ -2290,7 +2317,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-🎉 That's it - Expect to see your Logs on your Galileo Dashboard
+That's it - Expect to see your Logs on your Galileo Dashboard
 
 ## OpenMeter
 
@@ -2317,7 +2344,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  success_callback: ["openmeter"] # 👈 KEY CHANGE
+  success_callback: ["openmeter"] # KEY CHANGE
 ```
 
 2. Start Proxy

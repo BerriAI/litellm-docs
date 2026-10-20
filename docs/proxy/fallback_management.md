@@ -1,3 +1,7 @@
+---
+sidebar_label: "Fallback Management API"
+---
+
 # [New] Fallback Management Endpoints
 
 Dedicated endpoints for managing model fallbacks separately from the general configuration.

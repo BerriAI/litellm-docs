@@ -1,6 +1,5 @@
 ---
 title: Claude Code (CLI)
-sidebar_label: Claude Code (CLI)
 ---
 
 import Image from '@theme/IdealImage';
@@ -26,8 +25,9 @@ import Image from '@theme/IdealImage';
 Export the base URL, your virtual key, and the model, then launch Claude Code:
 
 ```bash
+export LITELLM_API_KEY="sk-<your-virtual-key>"
 export ANTHROPIC_BASE_URL="http://localhost:4000"
-export ANTHROPIC_AUTH_TOKEN="sk-1234"
+export ANTHROPIC_AUTH_TOKEN="$LITELLM_API_KEY"
 export ANTHROPIC_MODEL="{{anthropic}}"
 
 claude
@@ -39,6 +39,8 @@ Claude Code sends every request to LiteLLM's `/v1/messages` endpoint with your v
 
 Claude Code sends whatever model id is selected, so that id has to exist as a `model_name` on your gateway. `ANTHROPIC_MODEL` pins the default to one of your names. The `/model` picker inside a session still lists Anthropic's own ids (for example `claude-haiku-4-5-20251001`), so choosing one there fails with `Invalid model name passed in` unless your config also defines that exact name; either add those names to `model_list` or keep switching models through `ANTHROPIC_MODEL`. [Route Claude Code to non-Anthropic models](../../tutorials/claude_non_anthropic_models.md) covers mapping the Sonnet, Opus, and Haiku tiers to any provider.
 
+Your team or key must allow the selected model. If access is restricted, set `ANTHROPIC_MODEL` to an allowed alias.
+
 ### 3. Verify
 
 Send a prompt. Here Claude Code 2.1 is answering through a local gateway with `ANTHROPIC_MODEL` set to a model from `model_list`:
@@ -47,6 +49,10 @@ Send a prompt. Here Claude Code 2.1 is answering through a local gateway with `A
 
 Then confirm the traffic in the Admin UI under **Logs** or **Usage**, attributed to your virtual key and the model you chose.
 
+## Sign in without a static key
+
+See [Claude Code SSO](../../tutorials/claude_code_gateway.md) for Claude apps gateway setup, Lite CLI SSO, and using a Claude subscription through LiteLLM.
+
 ## MCP setup
 
 Expose your LiteLLM [MCP gateway](../../mcp.md) tools inside Claude Code with `claude mcp add`. The URL is `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp`, where `<server_name>` matches a key under `mcp_servers:` in your gateway config, and the virtual key goes in the `x-litellm-api-key` header:
@@ -54,14 +60,14 @@ Expose your LiteLLM [MCP gateway](../../mcp.md) tools inside Claude Code with `c
 ```bash
 claude mcp add --transport http litellm-tools \
   http://localhost:4000/my_mcp_server/mcp \
-  --header "x-litellm-api-key: Bearer sk-1234"
+  --header "x-litellm-api-key: Bearer $LITELLM_API_KEY"
 ```
 
 | Part | Meaning |
 |---|---|
 | `litellm-tools` | The name for this server inside Claude Code; choose anything |
 | `http://localhost:4000/my_mcp_server/mcp` | `<PROXY_URL>/<server_name>/mcp`; `my_mcp_server` must match the key under `mcp_servers:` on the gateway |
-| `--header "x-litellm-api-key: Bearer sk-1234"` | Your virtual key, authenticating you to the gateway |
+| `--header "x-litellm-api-key: Bearer $LITELLM_API_KEY"` | Your virtual key, authenticating you to the gateway |
 
 The key needs access to `my_mcp_server` (see [the overview](./overview.md#the-values-you-will-reuse-everywhere)); otherwise the gateway rejects the connection with `The key is not allowed to access the requested MCP servers`. Start Claude Code and run `/mcp`: the server shows as connected with its tools listed, prefixed with the server name (`my_mcp_server-read_wiki_structure`).
 

@@ -625,6 +625,10 @@ curl -X POST http://0.0.0.0:4000/chat/completions \
 </Tabs>
 
 
+## Decisions
+
+vLLM v0.32.0 and later serve [`/v1/systemone`](https://github.com/vllm-project/vllm/pull/59299) and answer `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. They serve the model architectures listed in vLLM's [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them. Use a `hosted_vllm/` model on LiteLLM's [`/v1/decisions` and `/v1/systemone` routes](../decisions/index.md), or as the [Auto Router classifier](../auto_router/decision_classifiers.md#vllm).
+
 ## (Deprecated) for packaged `vllm` installs
 ### Using - `litellm.completion`
 

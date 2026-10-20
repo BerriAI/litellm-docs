@@ -45,7 +45,7 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 
 
@@ -140,7 +140,7 @@ Before adding a model you can test the connection to the LLM provider to verify 
 
 1. Support for Rotating Master Keys [Getting Started](https://docs.litellm.ai/docs/proxy/master_key_rotations)
 2. Fix: Internal User Viewer Permissions, don't allow `internal_user_viewer` role to see `Test Key Page` or `Create Key Button` [More information on role based access controls](https://docs.litellm.ai/docs/proxy/access_control)
-3. Emit audit logs on All user + model Create/Update/Delete endpoints [Getting Started](https://docs.litellm.ai/docs/proxy/multiple_admins)
+3. Emit audit logs on All user + model Create/Update/Delete endpoints [Getting Started](https://docs.litellm.ai/docs/proxy/audit_logs)
 4. JWT
     - Support multiple JWT OIDC providers [Getting Started](https://docs.litellm.ai/docs/proxy/token_auth)
     - Fix JWT access with Groups not working when team is assigned All Proxy Models access

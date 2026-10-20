@@ -70,7 +70,7 @@ litellm --config /path/to/config.yaml
 Specify `target_model_names` to use the same file id across different providers. This is the list of model_names set via config.yaml (or 'public_model_names' on UI). 
 
 ```python
-target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # 👈 Specify model_names
+target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # Specify model_names
 ```
 
 Check `/v1/models` to see the list of available model names for a key.
@@ -97,7 +97,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # 👈 Specify model_names
+    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # Specify model_names
 )
 
 print(f"file id={file.id}")
@@ -188,7 +188,7 @@ file = client.files.create(
     extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
 )
 
-print(f"file.id: {file.id}") # 👈 Unified file id
+print(f"file.id: {file.id}") # Unified file id
 
 ## GEMINI CALL ### 
 completion = client.chat.completions.create(
@@ -294,7 +294,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-...", # 👈 Use the key you generated in step 3
+    api_key="sk-...", # Use the key you generated in step 3
     max_retries=0
 )
 
@@ -302,7 +302,7 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./fine_tuning.jsonl", "rb"), # {"model": "azure-gpt-4o"} <-> {"model": "gpt-4o-my-special-deployment"}
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"} # 👈 Tells litellm which regions/projects to write the file in. 
+    extra_body={"target_model_names": "gpt-4.1-openai"} # Tells litellm which regions/projects to write the file in.
 )
 print(finetuning_input_file) # file.id = "litellm_proxy/..." = {"model_name": {"deployment_id": "deployment_file_id"}}
 ```

@@ -159,7 +159,7 @@ Send one `session.update` (or `transcription_session.update`). LiteLLM answers w
 | `format` | `type` must be `audio/pcm` (or `pcm16`), `rate` any integer from `8000` to `48000`, `channels` must be `1` if present. Omitted means mono 24 kHz. |
 | `transcription.model` | Optional. With `intent=transcription` the proxy replaces it with the model you were authorized for; without it, only `chirp_3` or `vertex_ai/chirp_3` is accepted. |
 | `transcription.language` | Optional BCP-47 tag. A bare two-letter code for a common language is expanded to its default region (`en` becomes `en-US`, `pt` becomes `pt-BR`, `zh` becomes `zh-CN`); other values are sent as given. Omitted means Google detects the language. |
-| `turn_detection` | Selects the mode (table below). Any `type` other than `server_vad` is rejected; an object without `type` means server VAD. |
+| `turn_detection` | Selects the mode (table below). Any `type` other than `server_vad` is rejected, or falls back to server VAD when [`drop_params`](/docs/completion/drop_params) is set; an object without `type` means server VAD. |
 | Other `transcription` keys | Ignored, with a debug log line. |
 | Beta layout | `input_audio_format: "pcm16"` plus top-level `input_audio_transcription` and `turn_detection` is accepted, at 24 kHz. Do not mix the two layouts in one update. |
 
@@ -215,9 +215,11 @@ import asyncio
 import base64
 import wave
 
+import os
+
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(base_url="http://localhost:4000/v1", api_key="sk-1234")
+client = AsyncOpenAI(base_url="http://localhost:4000/v1", api_key=os.environ["LITELLM_API_KEY"])
 
 
 def pcm_chunks(path, chunk_ms=100):

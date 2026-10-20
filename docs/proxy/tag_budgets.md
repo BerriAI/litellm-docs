@@ -20,7 +20,7 @@ Tags are labels you can attach to your LLM requests to track and limit spending 
 - **Customer Attribution**: Track spend per customer or client (e.g., "customer-acme", "customer-techcorp")
 - **Feature Monitoring**: Monitor costs for specific features (e.g., "feature-chat", "feature-summarization")
 
-Tags can be set on each request (in `metadata` or via `x-litellm-tags`), or attached to a virtual key so every request using that key inherits the tag and its budget limits automatically.
+Tags can be set on each request (in `metadata` or via `x-litellm-tags`), attached to a virtual key so every request using that key inherits the tag and its budget limits automatically, or [mapped from the request's `baggage` header](#map-baggage-values-to-tags).
 
 ## Setting Tag Budgets
 
@@ -225,6 +225,89 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   }
 }
 ```
+
+## Map Baggage Values to Tags
+
+Available from v1.108.0.
+
+A request can get its tag from the W3C `baggage` header, which OpenTelemetry uses to pass context between services. Each rule in `general_settings.request_tag_mappings` reads one baggage key and adds a tag to the request, so a service that already sends a value like `baggage: entrypoint=<value>` gets its own tag without setting `metadata.tags` on every call. Spend is tracked against the mapped tag whether or not the tag has a budget, and a spent tag budget rejects the request with HTTP 422 before the provider call, the same as any other tag.
+
+```yaml title="config.yaml"
+general_settings:
+  request_tag_mappings:
+    - key: entrypoint
+      value: support_bot
+      tag: support
+    - key: entrypoint
+      tag_prefix: "usecase:"
+      required: true
+      require_budgeted_tag: true
+```
+
+With this config, `entrypoint=support_bot` adds the tag `support`, and any other value such as `entrypoint=checkout` adds `usecase:checkout`. An exact `value` rule always wins over the `tag_prefix` rule for the same key. The second rule sets `require_budgeted_tag`, so create `usecase:checkout` with a `max_budget` first, as in [step 1](#1-create-a-tag-with-budget). Then send the baggage header with the request:
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/chat/completions' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
+     -H 'Content-Type: application/json' \
+     -H 'baggage: entrypoint=checkout' \
+     -d '{
+           "model": "{{openai_large}}",
+           "messages": [{"role": "user", "content": "Hello"}]
+         }'
+```
+
+The request is charged to `usecase:checkout`, and the spend log lists the mapped tag in `request_tags` after the key, team, deployment and client tags.
+
+**Rule fields:**
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `key` | Yes | Baggage key to read, e.g. `entrypoint` |
+| `value` | With `tag` | Exact baggage value to match |
+| `tag` | With `value` | Tag added when `value` matches |
+| `tag_prefix` | Without `value` | Matches any value and adds `<tag_prefix><value>` |
+| `required` | No | Rejects requests without a mapped value. Default `false` |
+| `require_budgeted_tag` | No | Rejects mapped tags without a `max_budget`. Default `false` |
+
+A rule sets either `value` and `tag`, or `tag_prefix` alone. Each key can have one rule per exact value plus one `tag_prefix` rule, and the proxy refuses a config that repeats one. `header` defaults to `baggage`, which is its only allowed value. Without `required`, a request whose baggage maps nothing gets no mapped tag and goes through as before.
+
+### Required mappings
+
+When any rule for a key sets `required: true`, a request gets HTTP 400 before the provider call if its baggage does not carry that key, carries it more than once, or carries a value that no rule for the key maps:
+
+```json
+{
+  "error": {
+    "message": "Missing, invalid or unmapped baggage value for entrypoint",
+    "type": "bad_request_error",
+    "param": null,
+    "code": "400"
+  }
+}
+```
+
+This applies to every mapped request, including file uploads and the Admin UI playground, so those callers need the baggage value too. A required rule also turns off WebSocket inference. Realtime, Responses WebSocket, Live and pass-through WebSocket connections get HTTP 403 for every key, because those connections cannot carry the tag to their spend logs. Serve WebSocket traffic from a proxy without a required rule if you need both.
+
+### Require a budget on the mapped tag
+
+With `require_budgeted_tag: true`, the mapped tag must already exist with a `max_budget`. Otherwise the request gets HTTP 400 with the message `Mapped tag usecase:checkout requires an existing tag budget`, and nothing is sent to the provider. When the proxy cannot read tag budgets from the database, the request gets HTTP 503 instead. With `allow_requests_on_db_unavailable` turned on, it goes through with the mapped tag unchecked, the same as other tag budget checks during a database outage.
+
+### Budgets created after traffic starts
+
+The proxy counts spend for a mapped tag from the first request that carries it, even before the tag exists. Creating the tag with `/tag/new` resets its spend counter, so a budget you add later counts only the spend written after the budget exists, not the spend from before. Spend still waiting in the proxy's database write batch when you create the tag can reach the new budget, and without Redis only the worker that handled `/tag/new` resets its counter.
+
+### What mappings apply to
+
+Mappings apply to POST requests on LLM API routes such as `/chat/completions`, `/v1/responses` and `/v1/messages`, A2A agent routes, and registered pass-through endpoints. Token counting, model listing, request previews and MCP routes are skipped.
+
+Mapped tags only drive spend tracking and budgets. They never select a deployment under `enable_tag_filtering`, attach a tag-scoped policy, or pick a tag-mode guardrail, unless the caller, key, team or project already carries the same tag. `reject_clientside_metadata_tags` does not block mapped tags, since an admin configured them. The client still chooses the baggage value, though, so any key can send another service's value and spend that tag's budget, and a `tag_prefix` rule lets the caller pick any tag under the prefix. Use exact `value` rules or `require_budgeted_tag` to limit callers to tags you created.
+
+Baggage is decoded the way OpenTelemetry decodes it. Percent-encoded values are decoded, a bare `+` reads as a space, and properties after `;` are ignored. A value with a control character such as `%00` maps no tag.
+
+You can also edit the rules in the Admin UI. Open **Router Settings** in the Settings section, then the **General** tab, and use the `request_tag_mappings` row. Rules from `config.yaml` show there read-only.
+
+This setting needs the `opentelemetry-api` package. The Docker image includes it, and a pip install of `litellm[proxy]` needs `pip install opentelemetry-api` as well.
 
 ## Setting Tag Rate Limits
 

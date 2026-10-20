@@ -49,6 +49,21 @@ pip install litellm==1.103.0
 
 These callouts cover changes to behavior available in `v1.102.0`, the previous stable release
 
+**This release adds an index on `LiteLLM_SpendLogs`, which blocks spend log writes while it builds at startup.** On a large table that can take a long time. To avoid this, build the index yourself before upgrading with `CONCURRENTLY`, which does not block writes. The migration then finds it and skips the build. See [PR #37983](https://github.com/BerriAI/litellm/pull/37983)
+
+```sql
+SET statement_timeout = 0;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx" ON "LiteLLM_SpendLogs"("api_key", "startTime");
+```
+
+Run it outside a transaction, from a session that stays connected until it finishes. A failed concurrent build leaves an invalid index behind, and the migration would skip that too, so check it before upgrading. This must return `true`, otherwise run `DROP INDEX CONCURRENTLY "LiteLLM_SpendLogs_api_key_startTime_idx";` and build it again:
+
+```sql
+SELECT indisvalid FROM pg_index WHERE indexrelid = '"LiteLLM_SpendLogs_api_key_startTime_idx"'::regclass;
+```
+
+If your spend logs table is partitioned, Postgres cannot build its index concurrently. Build a matching index concurrently on each partition first, then run the same `CREATE INDEX` without `CONCURRENTLY` on the parent, which only attaches them
+
 **The config file now owns every setting it declares, and the database no longer overrides it.** One rule replaces the per-key mix of DB-wins, config-wins and merged precedence: if `config.yaml` declares a key, the file owns it and a runtime write to that key is refused with a 400 naming the file to edit, instead of being stored and silently ignored. This covers `POST /config/field/update`, `POST /config/field/delete`, `POST /config/update`, and the `allowed_ips` routes. Keys the file leaves out still come from the database and stay editable. `GET /config/field/info` and `GET /config/list` now resolve through the same store and report `source` and `editable`, and a config-owned field reports the value the file declares, so an `os.environ/...` reference is returned as written rather than resolved. In the Admin UI a config-owned field renders read-only. Startup warns once per key whose stored database value is being ignored, and the refusal carries the same sentence plus `stored_database_value_ignored: true`. Move any setting you edit at runtime out of the config file, or edit the file and restart. See [PR #41779](https://github.com/BerriAI/litellm/pull/41779), [PR #41862](https://github.com/BerriAI/litellm/pull/41862), [PR #41868](https://github.com/BerriAI/litellm/pull/41868), [PR #41931](https://github.com/BerriAI/litellm/pull/41931), [PR #41985](https://github.com/BerriAI/litellm/pull/41985), [PR #42009](https://github.com/BerriAI/litellm/pull/42009)
 
 **Budgets are re-checked on every router fallback target.** A request that starts on a free model and falls back to a paid one is now gated at the fallback, and targets the caller cannot pay for are skipped rather than served. The primary attempt is unchanged. Workflows that relied on a free primary carrying an over-budget key onto a paid fallback will now receive the next affordable target or a budget error. See [PR #41379](https://github.com/BerriAI/litellm/pull/41379)
@@ -57,7 +72,7 @@ These callouts cover changes to behavior available in `v1.102.0`, the previous s
 
 **A key's own per-model rpm/tpm override now beats the team's per-model limit.** Documented precedence (key metadata over team metadata) is now what the code does, on chat, batches and `/cost/predict-cache`. A key that overrides only RPM still has the team TPM pool enforced, and vice versa. Review teams that relied on the per-model team cap clamping keys that declare their own. See [PR #41302](https://github.com/BerriAI/litellm/pull/41302)
 
-**Delegated MCP OAuth requires admission.** Legacy delegated MCP integrations that were not admitted to LiteLLM now receive 401 until they admit or migrate to `oauth_delegate`. See [PR #40923](https://github.com/BerriAI/litellm/pull/40923)
+**MCP servers with `delegate_auth_to_upstream: true` now require a LiteLLM credential.** Previously a request carrying only the upstream token in `Authorization` was let through with no LiteLLM identity, so anyone who could reach the gateway could use the server and its tool calls were missing from spend logs. Now a request without a LiteLLM credential has its upstream token validated as a LiteLLM key or JWT, which fails with a 401 such as `No matching public key found` (token signed by another issuer) or `Audience doesn't match` (token issued for the MCP server, not LiteLLM). To fix it, send the LiteLLM key or JWT in `x-litellm-api-key` and keep the upstream token in `Authorization`, which is forwarded to the MCP server, or migrate the server to `oauth_delegate`. A server that should stay reachable without LiteLLM auth can use `true_passthrough`, which deliberately keeps anonymous access. See [PR #40923](https://github.com/BerriAI/litellm/pull/40923)
 
 **A `CustomLogger` moderation callback now rejects the request.** `llm_api_check` moderation is dispatched through `during_call_hook`, so a flagged request returns 400 where it previously returned 200. See [PR #41685](https://github.com/BerriAI/litellm/pull/41685)
 
