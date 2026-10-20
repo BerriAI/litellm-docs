@@ -213,7 +213,7 @@ The token-file settings apply only to direct Python SDK calls. Use an absolute p
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in |
 | `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
 | `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
-| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | Copilot API base for the gateway and the SDK |
+| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | Copilot API base for the gateway and the SDK. A model's `api_base` takes precedence |
 | `GITHUB_COPILOT_INTEGRATION_ID` | `vscode-chat` | `copilot-integration-id` header |
 | `GITHUB_COPILOT_EDITOR_VERSION` | `vscode/1.115.0` | `editor-version` header |
 | `GITHUB_COPILOT_EDITOR_PLUGIN_VERSION` | `copilot-chat/0.26.7` | `editor-plugin-version` header |
@@ -226,13 +226,15 @@ The token-file settings apply only to direct Python SDK calls. Use an absolute p
 
 Set a header variable to an empty string to omit that header. Sign-in requests use the accept, content type, integration, editor, plugin, and user-agent values. On the gateway, put these variables in the `environment_variables` block of `config.yaml`.
 
-`GITHUB_COPILOT_API_KEY_URL` and `GITHUB_COPILOT_API_KEY_FILE` were removed. LiteLLM no longer exchanges the GitHub token for a Copilot API token, so GitHub Enterprise users set `GITHUB_COPILOT_API_BASE` to their Copilot API host, along with the device-code and access-token URLs.
+`GITHUB_COPILOT_API_KEY_URL` and `GITHUB_COPILOT_API_KEY_FILE` were removed. LiteLLM no longer exchanges the GitHub token for a Copilot API token, so GitHub Enterprise users set `GITHUB_COPILOT_API_BASE` to their Copilot API host, along with the device-code and access-token URLs. If `GITHUB_COPILOT_API_KEY_URL` still points to a host other than `api.github.com` and `GITHUB_COPILOT_API_BASE` is not set, LiteLLM logs a warning, because requests then go to `https://api.githubcopilot.com`.
 
 ```bash showLineNumbers title="GitHub Enterprise"
 export GITHUB_COPILOT_API_BASE="https://copilot-api.company.ghe.com"
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://company.ghe.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://company.ghe.com/login/oauth/access_token"
 ```
+
+Per-user **Connect** on the gateway reads the GitHub username from `https://api.github.com`, so it works only with github.com accounts. Accounts on GitHub Enterprise Cloud with data residency (`ghe.com`) can sign in through the [Python SDK](#usage-with-the-litellm-python-sdk) instead.
 
 ### Use your own OAuth app
 
@@ -258,7 +260,7 @@ On the gateway, LiteLLM encrypts each user's GitHub access token and stores it i
 
 With Redis, LiteLLM caches the encrypted credential or a record of no connection for 60 seconds. Without Redis, requests read the database.
 
-LiteLLM sends the GitHub access token to the Copilot API directly. If a user revokes the token on GitHub, their requests fail with Copilot's 401 until they reconnect from the dashboard.
+LiteLLM sends the GitHub access token to the Copilot API directly. If a user revokes the token on GitHub, their requests fail with a 401 that asks them to reconnect from the dashboard.
 
 Direct SDK calls read the GitHub access token from disk. Existing `access-token` files keep working without a new sign-in, and `api-key.json` is no longer read or written.
 
@@ -267,11 +269,13 @@ Direct SDK calls read the GitHub access token from disk. Existing `access-token`
 <details>
 <summary>API base URL</summary>
 
-LiteLLM sends requests to `GITHUB_COPILOT_API_BASE`, or `https://api.githubcopilot.com` when it is not set. The base must be an `http` or `https` URL with no credentials, query, or fragment, and LiteLLM ignores an invalid one. An `http` base sends the GitHub token unencrypted, so use it only for local testing.
+LiteLLM sends requests to the model's `api_base`, then `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`. This order is the same for Chat Completions, Responses, Embeddings, and Anthropic Messages.
 
-On the gateway, per-user requests use only `GITHUB_COPILOT_API_BASE` and never an `api_base` from the request. Direct SDK Chat Completions, Responses, and Embeddings check the credential or deployment's `api_base` first.
+The base must be an `https` URL with no credentials, query, or fragment. An `http` base works only for a loopback host such as `localhost`, for local testing. LiteLLM returns an error for an invalid base and does not fall back to another one.
 
-Anthropic Messages ignores a caller-supplied `api_base` and uses `GITHUB_COPILOT_API_BASE`.
+On the gateway, LiteLLM ignores an `api_base` or `base_url` sent in a request to a GitHub Copilot model, so requests go only to the base that the admin configured.
+
+LiteLLM does not look up a plan-specific Copilot API host. If your Copilot Business or Enterprise plan uses its own host, such as `https://api.business.githubcopilot.com` or `https://api.enterprise.githubcopilot.com`, set it as `GITHUB_COPILOT_API_BASE` or as the model's `api_base`.
 
 </details>
 
