@@ -1,6 +1,39 @@
 [
   {
     "folders": [
+      "v1.106.1"
+    ],
+    "title": "LiteLLM v1.106.1 fixes count_tokens, MCP tool calls and thinking blocks",
+    "points": [
+      "Bare MCP tool names on a single-server scope now go to that server, so a cold replica no longer returns `Tool not found`.",
+      "Vector stores created through the proxy send only the caller's `metadata` to the provider, so later metadata updates no longer fail with 400.",
+      "Token count responses carry `litellm_count_source`, and Anthropic-format count requests for OpenAI and Gemini models match how `/v1/messages` converts them."
+    ]
+  },
+  {
+    "folders": [
+      "v1.105.2"
+    ],
+    "title": "LiteLLM v1.105.2 fixes count_tokens, bridged tool calls and thinking blocks",
+    "points": [
+      "Chat completions bridged to `/responses` return text and tool calls in one `choices[0]`, so agents that read only `choices[0]` run the tool.",
+      "Signed thinking blocks with empty text stay on `/v1/messages` and chat completion requests, so replayed turns keep their reasoning.",
+      "The `v1.104.4` token count fixes are included, and count responses carry `litellm_count_source`."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.6"
+    ],
+    "title": "LiteLLM v1.103.6 fixes realtime handshake errors and double spend logs",
+    "points": [
+      "A refused upstream realtime handshake now sends the client an `error` event and closes with 1008, 1013 or 1011.",
+      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
+      "This patch has no new database migrations."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.0"
     ],
     "title": "LiteLLM v1.106.0 adds Claude Haiku 5.5, a Rust Lens service and MCP rate limits",
@@ -191,38 +224,6 @@
     "points": [
       "GPT-6 names such as `gpt-6-astra` now get the GPT-5 request rules, so chat completions accept `reasoning_effort`, `max_tokens` and function tools.",
       "The end-user budget reset now zeroes the cached spend counter in memory and Redis, so customers no longer get 429 errors.",
-      "Shared end-user budgets with more than about 32,700 customers now reset, because the job resets end users by budget link."
-    ]
-  },
-  {
-    "folders": [
-      "v1.98.1"
-    ],
-    "title": "LiteLLM v1.98.1 fixes Claude Code on Bedrock GPT and Grok models",
-    "points": [
-      "Claude Code can now switch to Bedrock `openai.gpt-*` and `xai.grok-*` models, because the Converse route raises `maxTokens` to 16.",
-      "Bedrock GPT-6 models such as `us.openai.gpt-6-astra` no longer receive the `thinking` block, which caused an `Unknown parameter` error.",
-      "Shared end-user budgets with more than about 32,700 end users now reset, and a reset zeroes the cached spend counter on every replica."
-    ]
-  },
-  {
-    "folders": [
-      "v1.99.4"
-    ],
-    "title": "LiteLLM v1.99.4 fixes end-user budget resets and GPT-6 model names",
-    "points": [
-      "Shared budgets with more than about 32,700 end users now reset, because the job resets end users by budget link.",
-      "A reset now zeroes the cached end-user spend counter in memory and Redis, so requests on every replica no longer receive 429 errors.",
-      "OpenAI and Azure configs now treat `gpt-6` model names like `gpt-5`, so GPT-6 models get the same rules for request parameters."
-    ]
-  },
-  {
-    "folders": [
-      "v1.101.2"
-    ],
-    "title": "LiteLLM v1.101.2 fixes Bedrock Invoke streams and end-user budget resets",
-    "points": [
-      "Bedrock Invoke `/v1/messages` streams now pass upstream bytes straight through, so Claude Code no longer shows a silent stream.",
       "Shared end-user budgets with more than about 32,700 customers now reset, because the job resets end users by budget link."
     ]
   }
