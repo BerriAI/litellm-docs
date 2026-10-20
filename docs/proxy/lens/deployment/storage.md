@@ -36,7 +36,7 @@ clickhouseDatabase: lens
 retentionDays: 14
 ```
 
-The reference suppresses bundled ClickHouse resources. Supply your actual secret and database names. When the gateway chart owns Lens, the corresponding values live under `lensWorker`. Keep ClickHouse payloads and Keeper metadata together in backups and restores
+The reference suppresses bundled ClickHouse resources. Supply your actual secret and database names. When the litellm-helm chart owns Lens, the corresponding values live under `lensWorker`; the componentized litellm chart does not deploy Lens or its storage. Keep ClickHouse payloads and Keeper metadata together in backups and restores
 
 ## Service and administrator credentials {#service-token}
 

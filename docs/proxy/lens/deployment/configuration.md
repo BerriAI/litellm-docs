@@ -35,7 +35,7 @@ The gateway separately uses `LITELLM_LENS_URL` for its private connection and `L
 
 The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
 
-When a gateway chart owns the Lens deployment, the adapter settings live under `lensWorker`. An external Lens deployment can preserve the gateway's `/lens-ingest` route through `lensWorker.externalServiceName`. Use the values for the chart and version you actually deploy
+In the litellm-helm chart the adapter settings live under `lensWorker`, and an external Lens deployment can preserve the gateway's `/lens-ingest` route through `lensWorker.externalServiceName`. The componentized litellm chart only connects to a Lens deployed from its own chart: its settings live under `lens`, and `lens.service.name` preserves the `/lens-ingest` route for a Lens in the same namespace. Use the values for the chart and version you actually deploy
 
 ## Connect Docker networks {#docker-network}
 
