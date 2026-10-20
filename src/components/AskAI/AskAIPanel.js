@@ -1,7 +1,7 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {Sparkles, SquarePen, Copy, Check, X, Send, Square} from 'lucide-react';
+import {Sparkles, SquarePen, Copy, Check, X, Send, Square, Maximize2, Minimize2} from 'lucide-react';
 import {useAskAI, commonQuestions} from './AskAIContext';
 import {useSalesForm} from '@site/src/components/SalesForm';
 import {mapCitations} from '../../../search/citations.mjs';
@@ -67,15 +67,28 @@ export default function AskAIPanel() {
   const salesForm = useSalesForm();
   const composer = useRef(null), body = useRef(null), latestTurn = useRef(null), handledFocus = useRef(0), wasAsking = useRef(false);
 
+  const [expanded, setExpanded] = useState(false);
+
   useNavbarOffset(open);
+
+  useEffect(() => {
+    try {setExpanded(localStorage.getItem('ask-ai-expanded') === '1');} catch {}
+  }, []);
+
+  function toggleExpanded() {
+    setExpanded(current => {
+      try {localStorage.setItem('ask-ai-expanded', current ? '0' : '1');} catch {}
+      return !current;
+    });
+  }
 
   // Page layout reads this attribute. It is an attribute, not a class, because the head manager
   // rewrites the html class list on every navigation.
   useEffect(() => {
     if (!open) return undefined;
-    document.documentElement.setAttribute('data-ask-ai', 'open');
+    document.documentElement.setAttribute('data-ask-ai', expanded ? 'expanded' : 'open');
     return () => document.documentElement.removeAttribute('data-ask-ai');
-  }, [open]);
+  }, [open, expanded]);
 
   useEffect(() => {
     if (open && focusRequest !== handledFocus.current) {
@@ -111,13 +124,17 @@ export default function AskAIPanel() {
   }
 
   const empty = !turns.length && !asking && !error;
-  return <aside className={styles.panel} aria-label="Ask LiteLLM AI" onKeyDown={onKeyDown}>
+  return <aside className={`${styles.panel} ${expanded ? styles.expanded : ''}`} aria-label="Ask LiteLLM AI" onKeyDown={onKeyDown}>
     <header className={styles.header}>
       <h2><Sparkles size={15} aria-hidden="true"/>Ask LiteLLM AI</h2>
       {turns.length > 0 && <button type="button" className={styles.iconButton} onClick={copyConversation} aria-label={copied ? 'Conversation copied' : 'Copy conversation'} title="Copy conversation">
         {copied ? <Check size={16}/> : <Copy size={16}/>}
       </button>}
       <button type="button" className={styles.iconButton} onClick={newChat} aria-label="New chat" title="New chat"><SquarePen size={16}/></button>
+      <button type="button" className={`${styles.iconButton} ${styles.expandButton}`} onClick={toggleExpanded} aria-pressed={expanded}
+        aria-label={expanded ? 'Collapse Ask AI' : 'Expand Ask AI'} title={expanded ? 'Collapse' : 'Expand'}>
+        {expanded ? <Minimize2 size={16}/> : <Maximize2 size={16}/>}
+      </button>
       <button type="button" className={styles.iconButton} onClick={closePanel} aria-label="Close Ask AI" title="Close"><X size={18}/></button>
     </header>
     <div className={styles.body} ref={body} role="log" aria-label="Conversation">
