@@ -15,3 +15,5 @@ This benchmark uses decision models to find [LiteLLM Lens](../proxy/lens/index.m
 />
 
 GPT-6 Luna, Perplexity, Fireworks Rune and Cloudflare Clef agree with the labels on 97.9% to 99.4% of the questions. Decision-1 agrees on 93.2%, but it finds the correct part for only 44% of its yes answers. Bespoke Nimble 9B gives the best self-hosted result, 94.4%
+
+The traces are short and synthetic, about six steps each, so real traffic is harder and the top scores sit close together. An OpenAI model wrote the traces, which can give OpenAI models a small advantage. A Claude model checked every label before the runs, and the 13 traces where it disagreed were left out
