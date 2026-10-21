@@ -46,6 +46,8 @@ test('search endpoint restricts transport, origins, configuration and caller-con
 });
 
 test('public reranking has a separate opt-in and localhost rejects foreign Host headers', async t => {
+  const missingGateway = await serve(t, {config: {...config, baseUrl: undefined}, fetchImpl: neverFetch});
+  assert.equal((await fetch(missingGateway, post())).status, 503);
   assert.equal(readConfig({DOCS_AI_PUBLIC_ENABLED: 'true'}).publicRerankEnabled, false);
   const disabled = await serve(t, {config: {...config, publicRerankEnabled: false, publicAIEnabled: true}, fetchImpl: neverFetch});
   assert.equal((await fetch(disabled, post())).status, 503);

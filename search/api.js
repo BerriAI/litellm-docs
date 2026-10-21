@@ -64,7 +64,7 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
   return async (req, res) => {
     if (req.method !== 'POST') return send(res, 405, {error: 'Use POST'}, {Allow: 'POST'});
     if (service) {
-      if (!config.botServiceToken || !config.apiKey) return send(res, 503, {error: 'Docs bot is not configured.'});
+      if (!config.botServiceToken || !config.apiKey || !config.baseUrl) return send(res, 503, {error: 'Docs bot is not configured.'});
       if (!authorizedService(req, config.botServiceToken)) return send(res, 401, {error: 'Unauthorized'}, {'WWW-Authenticate': 'Bearer'});
     }
     if (!service && !allowAI(config)) return send(res, 503, {error: 'Ask AI is not enabled. Document search is still available.'});

@@ -7,7 +7,7 @@
       "case": "sdk_sync",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "query": "What is LiteLLM used for?",
         "documents": [
           "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
@@ -27,7 +27,7 @@
       "case": "sdk_async",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "query": "What is LiteLLM used for?",
         "documents": [
           "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
@@ -47,7 +47,7 @@
       "case": "router_alias",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "query": "What is LiteLLM used for?",
         "documents": [
           "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",

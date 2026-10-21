@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const {createReranker} = require('./rerank');
-const {loadCorpus} = require('./runtime');
+const {loadCorpus, readConfig} = require('./runtime');
 
 function json(res, status, body) {
   if (res.destroyed) return;
@@ -71,8 +71,8 @@ async function start() {
   const corpus = await loadCorpus(corpusDir);
   let pageStructure = {};
   try {pageStructure = JSON.parse(await fs.readFile(path.join(corpusDir, 'search-structure.json'), 'utf8')).pages;} catch (error) {if (error.code !== 'ENOENT') throw error;}
-  const config = {apiKey: process.env.DOCS_AI_API_KEY, baseUrl: process.env.DOCS_AI_BASE_URL || 'https://gateway.litellm-sandbox.ai'};
-  if (!config.apiKey) throw new Error('Set DOCS_AI_API_KEY in .env.local or specify DOCS_AI_ENV_FILE.');
+  const config = readConfig(process.env);
+  if (!config.apiKey || !config.baseUrl) throw new Error('Set DOCS_AI_API_KEY and DOCS_AI_BASE_URL in .env.local or specify DOCS_AI_ENV_FILE.');
   const ranker = createReranker({...corpus, pageStructure, config});
   const html = await fs.readFile(path.join(__dirname, 'lab.html'), 'utf8');
   const clientScript = await fs.readFile(path.join(__dirname, 'search-client.mjs'), 'utf8');

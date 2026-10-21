@@ -251,6 +251,18 @@ test('gateway failures and missing credentials return generic errors without sec
   }, {fetchImpl: async () => {throw new Error(config.apiKey);}});
   assert.equal((await ask(neverFetch, {config: {}})).status, 503);
 });
+test('an unconfigured gateway disables Ask AI while keyword search remains available', async () => {
+  assert.equal(readConfig({}).baseUrl, undefined);
+  assert.equal(readConfig({DOCS_AI_BASE_URL: config.baseUrl}).baseUrl, config.baseUrl);
+  await withServer(async origin => {
+    const response = await fetch(origin + '/api/docs/ask', post());
+    assert.equal(response.status, 503);
+    assert.match((await response.json()).error, /not configured/);
+    const search = await fetch(origin + '/api/docs/search', post('', {body: JSON.stringify({query: 'Lens'})}));
+    assert.equal(search.status, 200);
+    assert.ok((await search.json()).results.length > 0);
+  }, {config: {...config, baseUrl: undefined}, fetchImpl: neverFetch});
+});
 test('public access defaults to disabled, and local access rejects DNS rebinding hostnames', async () => {
   assert.equal(allowAI({host: '127.0.0.1', origin: 'http://localhost:3333'}), true);
   assert.equal(allowAI({host: '0.0.0.0', origin: 'http://localhost:3333'}), false);
@@ -318,7 +330,7 @@ test('bot route requires its service credential and dedicated model key, indepen
   }, {config: botConfig, fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer], (_body, req) => {
     assert.equal(req.headers.Authorization, 'Bearer dedicated-bot-key');
   }).fetch});
-  for (const missing of ['botServiceToken', 'botApiKey']) {
+  for (const missing of ['botServiceToken', 'botApiKey', 'baseUrl']) {
     await withServer(async origin => {
       assert.equal((await fetch(origin + '/api/docs/bot-ask', request(botConfig.botServiceToken))).status, 503);
     }, {config: {...botConfig, [missing]: undefined}, fetchImpl: neverFetch});

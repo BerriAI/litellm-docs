@@ -1,13 +1,12 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const {loadIndex} = require('./engine');
-const {BASE_URL} = require('./gateway');
 const {isContentUrl} = require('./content');
 
 function readConfig(env, defaults = {}) {
   return {
     ...defaults,
-    baseUrl: env.DOCS_AI_BASE_URL || BASE_URL,
+    baseUrl: env.DOCS_AI_BASE_URL,
     apiKey: env.DOCS_AI_API_KEY,
     botApiKey: env.DOCS_BOT_AI_API_KEY,
     botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
