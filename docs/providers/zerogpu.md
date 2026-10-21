@@ -31,9 +31,9 @@ os.environ["ZEROGPU_API_BASE"] = "https://api.zerogpu.ai/v1"  # optional overrid
 | `zerogpu/deepseek-v4.1-flash` | 1,048,576 | $0.30 | $1.20 | $0.003 |
 | `zerogpu/glm-5.3-flash` | 1,048,576 | $0.10 | $0.35 | $0.015 |
 | `zerogpu/gpt-4.1-mini` | 1,047,576 | $0.40 | $1.60 | $0.10 |
-| `zerogpu/gpt-5.4-nano` | 400,000 | $0.20 | $1.25 | $0.02 |
+| `zerogpu/gpt-5.4-nano` | 272,000 | $0.20 | $1.25 | $0.02 |
 | `zerogpu/gpt-5.6-luna` | 272,000 | $0.20 | $1.20 | $0.20 |
-| `zerogpu/gpt-oss-120b` | 131,072 | $0.15 | $0.60 | $0.03 |
+| `zerogpu/gpt-oss-120b` | 128,000 | $0.15 | $0.60 | $0.03 |
 | `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | $0.02 | $0.05 | n/a |
 | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | $0.025 |
 | `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | n/a |
