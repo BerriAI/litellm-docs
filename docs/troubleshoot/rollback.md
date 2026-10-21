@@ -88,6 +88,68 @@ DATABASE_URL="<your_database_url>" prisma migrate resolve --rolled-back "<migrat
 ### Auto-Recovery Logic
 LiteLLM's internal `ProxyExtrasDBManager` automatically attempts to handle idempotent migrations. In many cases, simply rolling back the version and restarting the proxy will be enough if the database changes are additive (e.g., new columns or tables).
 
+### Rolling back past team-attributed tag spend
+
+The release that added `team_id` to `LiteLLM_DailyTagSpend` replaced its unique index with one that includes `team_id`. Rolling back keeps the new column and indexes, but older versions write tag spend against the old unique index. Until you recreate it, every tag spend write fails with `there is no unique or exclusion constraint matching the ON CONFLICT specification`, and that spend is lost. Request logs and the other daily spend tables still write.
+
+Recreating the old index fails if the same tag, date, key, model, provider, MCP tool and endpoint now have rows for more than one team. This happens whenever a key moves between teams, or JWT callers on different teams share the empty key. Merge those rows first. Stop every LiteLLM instance and take a database snapshot before you run these statements.
+
+If an earlier attempt to create the old index failed, drop the invalid index it left behind.
+
+```sql
+DROP INDEX CONCURRENTLY IF EXISTS "LiteLLM_DailyTagSpend_tag_date_api_key_model_custom_llm_pro_key";
+```
+
+Then merge the rows that share the old key into one row. This deletes the extra rows first, then writes the summed values onto the row it keeps.
+
+```sql
+BEGIN;
+LOCK TABLE "LiteLLM_DailyTagSpend" IN SHARE ROW EXCLUSIVE MODE;
+CREATE TEMP TABLE tag_merge ON COMMIT DROP AS
+SELECT (array_agg(id ORDER BY updated_at DESC))[1] AS keep_id,
+       tag, date, api_key, model, custom_llm_provider, mcp_namespaced_tool_name, endpoint,
+       SUM(prompt_tokens) AS prompt_tokens, SUM(completion_tokens) AS completion_tokens,
+       SUM(cache_read_input_tokens) AS cache_read_input_tokens,
+       SUM(cache_creation_input_tokens) AS cache_creation_input_tokens,
+       SUM(compression_saved_tokens) AS compression_saved_tokens,
+       SUM(compression_savings_spend) AS compression_savings_spend,
+       SUM(prompt_caching_savings_spend) AS prompt_caching_savings_spend,
+       SUM(gateway_injected_caching_savings_spend) AS gateway_injected_caching_savings_spend,
+       SUM(autorouter_savings_spend) AS autorouter_savings_spend,
+       SUM(spend) AS spend, SUM(api_requests) AS api_requests,
+       SUM(successful_requests) AS successful_requests, SUM(failed_requests) AS failed_requests,
+       SUM(total_response_time_ms) AS total_response_time_ms, SUM(timed_requests) AS timed_requests
+FROM "LiteLLM_DailyTagSpend"
+GROUP BY tag, date, api_key, model, custom_llm_provider, mcp_namespaced_tool_name, endpoint
+HAVING count(*) > 1;
+DELETE FROM "LiteLLM_DailyTagSpend" t USING tag_merge m
+WHERE t.tag IS NOT DISTINCT FROM m.tag AND t.date = m.date AND t.api_key = m.api_key
+  AND t.model IS NOT DISTINCT FROM m.model AND t.custom_llm_provider IS NOT DISTINCT FROM m.custom_llm_provider
+  AND t.mcp_namespaced_tool_name IS NOT DISTINCT FROM m.mcp_namespaced_tool_name
+  AND t.endpoint IS NOT DISTINCT FROM m.endpoint AND t.id <> m.keep_id;
+UPDATE "LiteLLM_DailyTagSpend" t SET
+  prompt_tokens = m.prompt_tokens, completion_tokens = m.completion_tokens,
+  cache_read_input_tokens = m.cache_read_input_tokens, cache_creation_input_tokens = m.cache_creation_input_tokens,
+  compression_saved_tokens = m.compression_saved_tokens, compression_savings_spend = m.compression_savings_spend,
+  prompt_caching_savings_spend = m.prompt_caching_savings_spend,
+  gateway_injected_caching_savings_spend = m.gateway_injected_caching_savings_spend,
+  autorouter_savings_spend = m.autorouter_savings_spend, spend = m.spend, api_requests = m.api_requests,
+  successful_requests = m.successful_requests, failed_requests = m.failed_requests,
+  total_response_time_ms = m.total_response_time_ms, timed_requests = m.timed_requests,
+  team_id = '', updated_at = now()
+FROM tag_merge m WHERE t.id = m.keep_id;
+COMMIT;
+```
+
+Then recreate the old unique index, outside a transaction.
+
+```sql
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_DailyTagSpend_tag_date_api_key_model_custom_llm_pro_key"
+ON "LiteLLM_DailyTagSpend" ("tag", "date", "api_key", "model", "custom_llm_provider", "mcp_namespaced_tool_name", "endpoint");
+```
+
+Start the older version after the index is valid. Totals per tag stay the same, and the merged rows lose their team attribution. In our test the merge folded 54 rows into 25 and left spend, request and token totals unchanged.
+
 ## 6. Verification Checklist
 
 After rolling back, verify the health of the system:
