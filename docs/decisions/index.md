@@ -42,11 +42,11 @@ litellm --config config.yaml
 
 ## Availability and supported features
 
-Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release, listed below. A dev build or release candidate can still miss a provider that its release has, such as vLLM and Microsoft Foundry in `v1.105.0-rc.3` and the `v1.106.0` dev builds
+Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release, listed below. A dev build or release candidate can still miss a provider or feature that its release has, such as vLLM, Microsoft Foundry and OpenRouter spend from `usage.cost` in `v1.105.0-rc.3` and the `v1.106.0` dev builds
 
 | Provider or feature | Release |
 |---------------------|---------|
-| vLLM, Microsoft Foundry | `v1.104.3` |
+| vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form | `v1.107.0-rc.1` |
 
@@ -71,6 +71,6 @@ vLLM takes at most 64 questions per request, 26 options per `choice` and 10 leve
 
 The [Decision Model guardrail](../proxy/guardrails/decision_model.md) asks any [supported decision model](./providers.md) yes/no questions you write about each request or response, and blocks or logs the call when a probability reaches its threshold
 
-## Decision routes vs TypeSafe pass-through
+## Decision routes vs pass-through routes
 
-The [TypeSafe pass-through](../pass_through/typesafe.md) at `/typesafe/v1/systemone` forwards raw requests to TypeSafe only and reads the key from the proxy environment. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
+The [TypeSafe pass-through](../pass_through/typesafe.md) at `/typesafe/v1/systemone` forwards raw requests to TypeSafe only and reads the key from the proxy environment. The [OpenRouter pass-through](../providers/openrouter.md#through-the-openrouter-pass-through) at `/openrouter/alpha/decisions` forwards raw requests to OpenRouter only. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
