@@ -36,7 +36,7 @@ os.environ["ZEROGPU_API_BASE"] = "https://api.zerogpu.ai/v1"  # optional overrid
 | `zerogpu/gpt-oss-120b` | 128,000 | $0.15 | $0.60 | $0.03 |
 | `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | $0.02 | $0.05 | n/a |
 | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | $0.025 |
-| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | n/a |
+| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | $0.05 |
 
 Pricing follows the [ZeroGPU model catalog](https://docs.zerogpu.ai/docs/model-catalog). Every model above supports a `json_schema` `response_format`, and every model except `LFM2.5-1.2B-Instruct` supports `tools` and `tool_choice`. `gpt-5.6-luna` is the only reasoning model.
 
