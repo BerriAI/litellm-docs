@@ -159,7 +159,7 @@ print(response)
 </TabItem>
 </Tabs>
 
-Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. With the dynamic rate limiter on, every response, 429s included, holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority` and is separate from this scheduler queue priority, so don't send it back as the request header.
+Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. With the dynamic rate limiter on, every non-streaming response, 429s included, holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority` and is separate from this scheduler queue priority, so don't send it back as the request header.
 
 ## Advanced - Redis Caching 
 
