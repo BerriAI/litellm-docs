@@ -66,7 +66,40 @@ LiteLLM shows a GitHub verification code. Open the link LiteLLM shows, which is 
   <Image img={require('../../img/github_copilot_connect.png')} dark={require('../../img/github_copilot_connect_dark.png')} alt="GitHub verification code and sign-in link in LiteLLM" width={504} height={338} />
 </div>
 
-When GitHub approves the request, the status changes to **Connected** with your GitHub username. Every request you send to a model on this credential now uses your own Copilot access. If you have not connected, or GitHub later rejects your saved connection, requests return a 401 that asks you to connect again from this page
+When GitHub approves the request, the status changes to **Connected** with your GitHub username. Every request you send to a model on this credential now uses your own Copilot access. If you have not connected, or GitHub later rejects your saved connection, requests return a 401 that asks you to connect again from this page or with `lite credentials connect github-copilot`
+
+#### Connect from the CLI
+
+If your gateway does not expose the dashboard to users, connect with the [`lite` CLI](../proxy/management_cli.md) instead. Sign in with `lite login`, or pass your key with `--api-key`, then run `lite credentials connect` with the credential name. The CLI prints the verification link and code, opens the link in your browser, and waits until GitHub answers. Add `--no-browser` when you are on a machine without a browser, such as an SSH session, and open the link on any device.
+
+```shell title="Connect GitHub Copilot from the CLI"
+$ lite credentials connect github-copilot
+To connect GitHub Copilot for credential 'github-copilot', open https://github.com/login/device and enter code ABCD-1234
+Waiting for approval. The code expires in 15 minutes
+Connected GitHub Copilot for credential 'github-copilot' as octocat
+```
+
+The command exits with status 0 once the connection is saved. It exits with status 1 and says why when the code expires before you approve it, when you deny the request on GitHub, or when the GitHub account has no Copilot access, in which case nothing is saved. Run it again to get a new code.
+
+`lite credentials connections` lists every per-user credential with whether you are connected and as which GitHub user, and `lite credentials disconnect github-copilot` removes your saved connection.
+
+#### Connect with the API
+
+The dashboard and the CLI use the same gateway endpoints, so any client can run the flow with the user's LiteLLM key. Start the flow, show the user `user_code` and `verification_uri`, then poll with the returned `flow_handle` every `interval` seconds.
+
+```shell title="Start and poll the connection"
+curl -X POST https://litellm.example.com/credentials/github-copilot/user_connection/start \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+# {"user_code": "ABCD-1234", "verification_uri": "https://github.com/login/device", "expires_in": 899, "interval": 5, "flow_handle": "..."}
+
+curl -X POST https://litellm.example.com/credentials/github-copilot/user_connection/poll \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"flow_handle": "..."}'
+# {"status": "pending", "interval": null, "github_login": null}
+```
+
+The poll `status` is `pending` while GitHub waits for approval and `slow_down` when GitHub asks you to poll less often, in which case use the returned `interval`, or add 5 seconds when it is null. `connected` means the connection is saved and `github_login` names the GitHub user. `expired`, `denied` and `no_copilot_seat` end the flow, so start again for a new code. `GET /credentials/user_connections` lists your connections and `DELETE /credentials/github-copilot/user_connection` removes yours.
 
 This recording runs through steps 1 to 3 in the dashboard, from creating the credential to the GitHub verification code.
 
