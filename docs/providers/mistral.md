@@ -402,12 +402,12 @@ response = speech(
     voice="alloy",
 )
 
-response.stream_to_file("speech.mp3")
+response.write_to_file("speech.mp3")
 ```
 
 ### Voices
 
-`voice` takes either an OpenAI voice name or a native Mistral voice id. LiteLLM maps the six OpenAI names onto Mistral voices, so an integration written against OpenAI TTS keeps working without a change:
+`voice` takes either an OpenAI voice name or a native Mistral voice id. LiteLLM maps these six OpenAI names onto Mistral voices, so an integration that uses one of them keeps working without a change:
 
 | OpenAI voice | Mistral voice     |
 |--------------|-------------------|
@@ -418,11 +418,11 @@ response.stream_to_file("speech.mp3")
 | `nova`       | `gb_jane_sarcasm` |
 | `shimmer`    | `gb_jane_sarcasm` |
 
-Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use.
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use.
 
 ### Response Formats
 
-`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`.
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`. OpenAI's `aac` format is not supported, and Mistral rejects it with a 422.
 
 ### Voice Cloning
 
@@ -441,7 +441,7 @@ response = speech(
     ref_audio=ref_audio,
 )
 
-response.stream_to_file("cloned.mp3")
+response.write_to_file("cloned.mp3")
 ```
 
 ### Unsupported Parameters
@@ -476,7 +476,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 
 ### Cost Tracking
 
-Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is billed as 17 characters.
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so the spend LiteLLM tracks for a request can be lower than what Mistral meters for it.
 
 ## Files and Batches API
 
