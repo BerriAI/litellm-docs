@@ -59,7 +59,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/indexes' \
 }'
 ```
 
-This is a virtual index. Every call on `/azure_ai/indexes/dall-e-4/...` reaches the Azure index `real-index-name-2`, so developers use the virtual name and never see the real one.
+This is a virtual index. Every call on `/azure_ai/indexes/dall-e-4/...` reaches the Azure index `real-index-name-2`, so developers call the virtual name. Responses such as `@odata.context` still name `real-index-name-2`.
 
 ### 4. Create the index schema.
 
@@ -67,7 +67,7 @@ Run this with the master key. Only a proxy admin key can create, update, or dele
 
 :::warning
 
-`PUT` and `DELETE` on `/azure_ai/indexes/dall-e-4` create, rewrite, and delete `real-index-name-2` in Azure. Several virtual indexes can map to the same Azure index, so deleting the index through one of them removes the documents every one of them serves.
+`PUT` on `/azure_ai/indexes/dall-e-4` creates or rewrites `real-index-name-2` in Azure, and `DELETE` deletes it. Several virtual indexes can map to the same Azure index, so deleting the index through one of them removes the documents every one of them serves. The script below only creates or updates the index, so running it again keeps the documents.
 
 :::
 
@@ -80,7 +80,7 @@ import json
 # ----------------------------
 # Azure AI Search
 AZURE_AI_SEARCH_ENDPOINT = "http://0.0.0.0:4000/azure_ai" # IMPORTANT: Use the '/azure_ai' endpoint for the passthrough api to Azure 
-SEARCH_API_KEY = "sk-<your-litellm-master-key>"  # index create and delete need a proxy admin key
+SEARCH_API_KEY = "sk-<your-litellm-master-key>"  # index create and update need a proxy admin key
 INDEX_NAME = "dall-e-4"
 
 
@@ -92,25 +92,6 @@ VECTOR_DIMENSIONS = 3072
 # ----------------------------
 # Create the index schema
 # ----------------------------
-def delete_index_if_exists():
-    """Delete the index if it exists"""
-    index_url = f"{AZURE_AI_SEARCH_ENDPOINT}/indexes/{INDEX_NAME}?api-version=2024-07-01"
-    headers = {"api-key": SEARCH_API_KEY}
-
-    response = requests.delete(index_url, headers=headers)
-
-    if response.status_code == 204:
-        print(f"Deleted existing index '{INDEX_NAME}'")
-        return True
-    elif response.status_code == 404:
-        print(f"Index '{INDEX_NAME}' does not exist yet")
-        return False
-    else:
-        print(f"Delete response: {response.status_code}")
-        print(f"    Message: {response.text}")
-        return False
-
-
 def create_index():
     """Create the Azure AI Search index with proper schema"""
     index_url = f"{AZURE_AI_SEARCH_ENDPOINT}/indexes/{INDEX_NAME}?api-version=2024-07-01"
@@ -168,9 +149,8 @@ def create_index():
         return False
 
 
-# Delete and recreate the index with correct schema
+# Create the index, or update it when it already exists
 print("Setting up Azure AI Search index...")
-delete_index_if_exists()
 if not create_index():
     print("Could not create index. Exiting.")
     exit(1)
