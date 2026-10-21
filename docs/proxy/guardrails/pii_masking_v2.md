@@ -137,7 +137,7 @@ Expect this to mask `Jane Doe` since it's PII
 ```shell title="Masked PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -184,7 +184,7 @@ Expected response on failure
 ```shell title="No PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -283,6 +283,21 @@ guardrails:
 - `presidio_score_thresholds.<ENTITY>`: apply only to that entity
 - If both `ALL` and an entity override exist, `ALL` applies globally and the entity override takes precedence for that entity
 
+### Large content chunking
+
+Presidio analyzer deployments commonly cap the `/analyze` request body size (for example at 1 MB), and analyzer latency grows with payload size. LiteLLM automatically splits any single content block whose serialized `/analyze` body would exceed `presidio_analyze_chunk_size_bytes` (default: `500000` bytes, measured on the JSON-escaped form the analyzer receives) into overlapping chunks, analyzes the chunks with a bounded fan-out, and merges the detections back onto the original text, so large content blocks are masked correctly instead of failing with `HTTP 413`.
+
+```yaml
+guardrails:
+  - guardrail_name: "presidio-pii"
+    litellm_params:
+      guardrail: presidio
+      mode: "pre_call"
+      presidio_analyze_chunk_size_bytes: 500000 # optional, default 500000
+```
+
+Set it below your analyzer deployment's request body limit, leaving headroom for the rest of the analyze payload (entities list, ad-hoc recognizers).
+
 ### Supported Entity Types
 
 LiteLLM Supports all Presidio entity types. See the complete list of presidio entity types [here](https://microsoft.github.io/presidio/supported_entities/).
@@ -304,7 +319,7 @@ When using the masking configuration, entities will be replaced with placeholder
 ```shell title="Masking PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -342,7 +357,7 @@ When using the blocking configuration, requests containing the configured entity
 ```shell title="Blocking PII Request" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -405,7 +420,7 @@ Test the MCP guardrail with a request:
 ```shell title="Test MCP Guardrail" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -429,7 +444,7 @@ The Presidio API [supports passing the `language` param](https://microsoft.githu
 ```shell title="Language Parameter - curl" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -542,7 +557,7 @@ guardrails:
 ```shell title="Override with per-request language" showLineNumbers
 curl http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -691,7 +706,7 @@ litellm --config /path/to/config.yaml
 ```bash title="Test Logging Only" showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
   "model": "{{openai_small}}",
   "messages": [

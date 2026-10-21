@@ -1,4 +1,4 @@
-# ✨ Event Hooks for SSO Login
+# Event Hooks for SSO Login
 
 <EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
@@ -23,7 +23,7 @@ Use this when you have an **OAuth proxy in front of LiteLLM** that has already a
 
 ### How it works
 - User lands on Admin UI  
-- 👉 **Your custom SSO sign-in handler is called to parse request headers and return user info**
+- **Your custom SSO sign-in handler is called to parse request headers and return user info**
 - LiteLLM has retrieved user information from your custom handler
 - User signed in to UI
 
@@ -109,7 +109,7 @@ Use this if you want to run your own code **after** a user signs on to the LiteL
 - LiteLLM redirects user to your SSO provider (Google, Microsoft, etc.)
 - Your SSO provider redirects user back to LiteLLM  
 - LiteLLM has retrieved user information from your IDP
-- 👉 **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
+- **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
 - User signed in to UI
 
 ### Usage

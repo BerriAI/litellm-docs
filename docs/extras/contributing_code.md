@@ -31,12 +31,7 @@ Before contributing code to LiteLLM, you must sign our [Contributor License Agre
 
 ## Commit and Branch Conventions
 
-LiteLLM enforces two community specs:
-
-- **Commits** follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `<type>(<scope>)!: <description>`
-- **Branches** follow [Conventional Branches](https://conventional-branch.github.io/): `<type>/<description>`
-
-Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a required CI check on the PR title (since squash-merge uses the PR title as the commit subject).
+Commit subjects follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). They are enforced by the opt-in local `commit-msg` hook and the required CI check on PR titles, since squash-merge uses the PR title as the commit subject.
 
 ### Commit message format
 
@@ -58,7 +53,7 @@ Examples:
 ```text keep-python-version
 feat(router): add weighted round-robin strategy
 fix(bedrock): decouple STS region from aws_region_name
-chore(deps): bump black to 26.3.1
+chore(deps): bump ruff to 0.15.0
 refactor!: drop Python 3.8 support
 ```
 
@@ -66,24 +61,7 @@ PR titles must follow the same format, because squash-merge uses the PR title as
 
 ### Branch naming
 
-Format: `<type>/<short-description>` where `<type>` is one of `feature`, `bugfix`, `hotfix`, `release`, `chore`.
-
-```
-feature/weighted-round-robin
-bugfix/streaming-empty-chunks
-chore/bump-black
-hotfix/auth-bypass
-release/v1.45.0
-```
-
-Branches always allowed (the `pre-push` hook bypasses them):
-
-- `main`
-- `litellm_internal_staging`
-- `dependabot/*`
-- `gh-readonly-queue/*`
-
-Tag pushes and branch deletions are also skipped.
+Internal contributors branch off `main` with a `litellm_` prefix and no `/`, for example `litellm_weighted_round_robin`. Fork branches can be named anything.
 
 ### Installing the hooks
 
@@ -93,16 +71,12 @@ The hooks live in `.githooks/` and are opt-in. Run once per clone:
 make install-hooks
 ```
 
-This sets `core.hooksPath=.githooks` for the local repository. After that:
+This sets `core.hooksPath=.githooks` for the local repository. After that, `git commit` runs `commit-msg`, which validates the subject line.
 
-- `git commit` runs `commit-msg`, which validates the subject line.
-- `git push` runs `pre-push`, which validates branch names.
-
-In a rare emergency you can bypass either hook per command:
+In a rare emergency you can bypass the commit hook for a single command:
 
 ```shell
 git commit --no-verify -m "..."
-git push   --no-verify
 ```
 
 To uninstall: `git config --unset core.hooksPath`.
@@ -154,7 +128,7 @@ Run the following command from the root of the `litellm` directory:
 make lint
 ```
 
-LiteLLM uses `mypy` for type checking. CI/CD also runs `black` for formatting.
+LiteLLM uses `basedpyright` for type checking. CI also runs `ruff format --check` for formatting; run `make format` to fix formatting locally.
 
 ### 5. Submit a PR
 
@@ -244,7 +218,7 @@ Make sure `config.yaml` is present in the root directory. This is your LiteLLM p
 docker run \
     -v $(pwd)/proxy_config.yaml:/app/config.yaml \
     -e DATABASE_URL="postgresql://xxxxxxxx" \
-    -e LITELLM_MASTER_KEY="sk-1234" \
+    -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
     -p 4000:4000 \
     litellm_test_image \
     --config /app/config.yaml --detailed_debug

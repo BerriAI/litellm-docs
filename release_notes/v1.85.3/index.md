@@ -1,5 +1,6 @@
 ---
-title: "v1.85.3 - Observability, Budget & Rate-Limit Fixes"
+title: "LiteLLM v1.85.3 - Observability, Budget & Rate-Limit Fixes"
+description: "Fixes duplicate Claude Code traces, Bearer prefix handling and budget reset writes. Removes internal rate-limit data from provider request bodies."
 slug: "v1-85-3"
 date: 2026-06-01T19:02:53
 authors:

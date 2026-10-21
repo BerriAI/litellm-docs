@@ -123,7 +123,7 @@ litellm --config /path/to/config.yaml
 
 ```bash 
 curl -L -X POST 'http://0.0.0.0:4000/rerank' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "model": "Qwen/Qwen3-Reranker-0.6B",

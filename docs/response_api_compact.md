@@ -37,7 +37,7 @@ print(response.output)
 ```bash showLineNumbers title="Compact Request"
 curl http://localhost:4000/v1/responses/compact \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "openai/{{openai_large}}",
     "input": [{"role": "user", "content": "Hello"}],
@@ -53,7 +53,7 @@ import httpx
 
 response = httpx.post(
     "http://localhost:4000/v1/responses/compact",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     json={
         "model": "openai/{{openai_large}}",
         "input": [{"role": "user", "content": "Hello"}],

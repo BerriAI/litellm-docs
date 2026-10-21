@@ -9,7 +9,7 @@ Pass-through endpoints for Bedrock - call provider-specific endpoint, in native 
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://bedrock-runtime.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/bedrock` 🚀
+Just replace `https://bedrock-runtime.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/bedrock`
 
 ## Overview
 
@@ -32,7 +32,7 @@ model_list:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"messages": [{"role": "user", "content": [{"text": "Hello"}]}]}'
 ```
@@ -51,7 +51,7 @@ export AWS_REGION_NAME="us-west-2"
 
 ```bash showLineNumbers
 curl "http://0.0.0.0:4000/bedrock/guardrail/my-guardrail-id/version/1/apply" \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"contents": [{"text": {"text": "Hello"}}], "source": "INPUT"}'
 ```
@@ -96,7 +96,7 @@ Let's call the Bedrock converse endpoint using the model name from config:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-bedrock-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -146,7 +146,7 @@ Use the `model_name` from config in the URL path:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -168,7 +168,7 @@ For streaming responses, use the `/converse-stream` endpoint:
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse-stream' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -232,7 +232,7 @@ litellm --config config.yaml
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/invoke' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "max_tokens": 100,
@@ -260,7 +260,7 @@ import os
 # Set dummy AWS credentials (required by boto3, but not used by LiteLLM proxy)
 os.environ['AWS_ACCESS_KEY_ID'] = 'dummy'
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'dummy'
-os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-1234"  # your litellm proxy api key
+os.environ['AWS_BEARER_TOKEN_BEDROCK'] = "sk-<your-litellm-api-key>"  # your litellm proxy api key
 
 # Point boto3 to the LiteLLM proxy
 bedrock_runtime = boto3.client(
@@ -292,6 +292,38 @@ print(response_body['content'][0]['text'])
 ```
 
 The proxy will automatically load balance your boto3 requests across all configured deployments.
+
+### Bedrock Guardrails on config.yaml models
+
+<SinceVersion v="1.108.0" />
+
+A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
+
+```yaml showLineNumbers
+model_list:
+  - model_name: my-claude-model
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+      aws_region_name: us-west-2
+      guardrailConfig:
+        guardrailIdentifier: ff6ujrregl1q
+        guardrailVersion: DRAFT
+        trace: enabled
+```
+
+| Route | How the proxy sends the guardrail |
+|-------|-----------------------------------|
+| `/converse` | `guardrailConfig` in the request body |
+| `/converse-stream` | `guardrailConfig` in the request body, including `streamProcessingMode` if you set it |
+| `/invoke`, `/invoke-with-response-stream` | `X-Amzn-Bedrock-GuardrailIdentifier`, `X-Amzn-Bedrock-GuardrailVersion` and `X-Amzn-Bedrock-Trace` headers |
+
+The model's guardrail replaces any guardrail the caller sends in the body or headers, so callers cannot turn it off or pick a different one. With load balancing, each request gets the guardrail of the deployment that serves it.
+
+When Bedrock blocks a request, `/converse` returns `stopReason: guardrail_intervened` and `/invoke` returns `amazon-bedrock-guardrailAction: INTERVENED`, each with your blocked message and a guardrail trace when `trace` is enabled.
+
+The `/invoke` routes take only `guardrailIdentifier`, `guardrailVersion` and `trace`. A model whose `guardrailConfig` is missing `guardrailVersion`, or names a guardrail that does not exist, gets a 400 from these routes, the same as from `/v1/chat/completions`.
+
+Pass-through sends the request body to Bedrock as is, so Bedrock checks every message in it. To have Bedrock check only part of a Converse request, wrap that part in a `guardContent` block, see [Selectively evaluate content](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
 
 
 ## Examples
@@ -473,7 +505,7 @@ litellm
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -483,7 +515,7 @@ Expected Response
 ```bash showLineNumbers
 {
     ...
-    "key": "sk-1234ewknldferwedojwojw"
+    "key": "sk-<virtual-key>"
 }
 ```
 
@@ -492,7 +524,7 @@ Expected Response
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/bedrock/model/cohere.command-r-v1:0/converse' \
--H 'Authorization: Bearer sk-1234ewknldferwedojwojw' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "messages": [
@@ -532,7 +564,7 @@ import boto3
 # Set dummy AWS credentials (required by boto3, but not used by LiteLLM proxy)
 os.environ["AWS_ACCESS_KEY_ID"] = "dummy"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "dummy"
-os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "sk-1234"  # your litellm proxy api key
+os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "sk-<your-litellm-api-key>"  # your litellm proxy api key
 
 # Create the client
 runtime_client = boto3.client(
@@ -600,7 +632,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer sk-1234"
+API_KEY = "Bearer sk-<your-litellm-api-key>"
 
 # Initialize ChatBedrockConverse pointing to LiteLLM proxy
 llm = ChatBedrockConverse(
@@ -629,7 +661,7 @@ from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage
 
 # Your LiteLLM API key
-API_KEY = "Bearer sk-1234"
+API_KEY = "Bearer sk-<your-litellm-api-key>"
 
 def get_llm() -> ChatBedrockConverse:
     """Initialize LLM pointing to LiteLLM proxy"""
@@ -698,5 +730,5 @@ All LangChain AWS features work with LiteLLM:
 
 **Solution**: Ensure your API key is in the correct format:
 ```python
-aws_access_key_id="Bearer sk-1234"  # Include "Bearer " prefix
+aws_access_key_id="Bearer sk-<your-litellm-api-key>"  # Include "Bearer " prefix
 ```

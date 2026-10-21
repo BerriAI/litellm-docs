@@ -1,3 +1,7 @@
+---
+sidebar_label: "Reasoning"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -113,7 +117,7 @@ Here's how to use `thinking` blocks by Anthropic with tool calling.
 
 ### Important: OpenAI-Compatible API Limitations
 
-:::warning Compatibility Notice
+:::warning[Compatibility Notice]
 
 Anthropic extended thinking with tool calling is **not fully compatible** with OpenAI-compatible API clients. This is due to fundamental architectural differences between how OpenAI and Anthropic handle reasoning in multi-turn conversations.
 
@@ -134,7 +138,7 @@ When using Anthropic models with `thinking` enabled and tool calling, you **must
 3. When these clients reconstruct the assistant message for the next turn, the thinking blocks are lost
 4. Anthropic rejects the request because the assistant message doesn't start with a thinking block
 
-:::tip LiteLLM supports thinking_blocks
+:::tip[LiteLLM supports thinking_blocks]
 LiteLLM's `completion()` API **does support** sending `thinking_blocks` in assistant messages. If you're using LiteLLM directly (not through an OpenAI-compatible client), you can preserve and resend `thinking_blocks` and everything will work correctly.
 :::
 
@@ -437,7 +441,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 Set `drop_params=True` to drop the 'thinking' blocks when swapping from Anthropic to Deepseek models. Suggest improvements to this approach [here](https://github.com/BerriAI/litellm/discussions/8927).
 
 ```python showLineNumbers
-litellm.drop_params = True # 👈 EITHER GLOBALLY or per request
+litellm.drop_params = True # EITHER GLOBALLY or per request
 
 # or per request
 ## Anthropic
@@ -630,7 +634,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -662,7 +666,7 @@ Expected Response
 </TabItem>
 </Tabs>
 
-:::tip gpt-5.4: reasoning_effort + function tools
+:::tip[gpt-5.4: reasoning_effort + function tools]
 
 When `gpt-5.4+` requests to `litellm.completion()` include both `reasoning_effort` and `tools`, LiteLLM **automatically routes** the request through the Responses API bridge. This works for both **OpenAI** (`openai/gpt-5.4`) and **Azure** (`azure/gpt-5.4`) providers, with no extra configuration needed.
 
@@ -686,6 +690,59 @@ model_list:
 ```
 
 :::
+
+## Round `reasoning_effort` to the levels a deployment accepts {#reasoning-effort-levels}
+
+<SinceVersion v="1.108.0" />
+
+Some deployments accept only a few reasoning effort levels and answer 400 for the rest. List the levels a deployment accepts in `reasoning_effort_levels` under its `model_info`, and the proxy sends a declared level in place of any level the deployment does not accept. This applies on `/v1/chat/completions` (streaming included), `/v1/responses`, and `/v1/messages`, for every provider. Only the deployment's own declaration turns this on. Mistral and Together AI keep mapping levels from the model cost map on their own, as they did before.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: my-model-azure-ai
+    litellm_params:
+      model: azure_ai/my-model
+      api_base: https://my-endpoint.services.ai.azure.com
+      api_key: os.environ/AZURE_AI_API_KEY
+    model_info:
+      reasoning_effort_levels: ["low", "high", "max", "none"]
+  - model_name: my-model-vllm
+    litellm_params:
+      model: hosted_vllm/my-model
+      api_base: https://my-vllm-server.example.com/v1
+    model_info:
+      reasoning_effort_levels: ["low", "high", "max", "none"]
+      reasoning_effort_rounding: down
+```
+
+The strength order, from weakest to strongest, is `minimal`, `low`, `medium`, `high`, `xhigh`, `max`. Rounding up is the default, and it sends the weakest declared level at least as strong as the request, or the strongest declared level when the request is above all of them. Rounding down sends the strongest declared level at most as strong as the request, or the weakest declared level when the request is below all of them. With the config above, `my-model-azure-ai` rounds up and `my-model-vllm` rounds down.
+
+| Requested | Sent when rounding up | Sent when rounding down |
+|---|---|---|
+| `minimal` | `low` | `low` |
+| `low` | `low` | `low` |
+| `medium` | `high` | `low` |
+| `high` | `high` | `high` |
+| `xhigh` | `max` | `high` |
+| `max` | `max` | `max` |
+| `none` | `none` | `none` |
+| `default` | no reasoning effort | no reasoning effort |
+
+`none` and any level name outside the strength order are sent unchanged, so a caller who turned reasoning off is never rounded up. With `drop_params: true`, a level the deployment does not declare is dropped instead, the same way LiteLLM drops other values a provider does not support. `default` sends no reasoning effort at all.
+
+To round down on every deployment, set `reasoning_effort_rounding: down` under `litellm_settings`. A deployment's own `model_info.reasoning_effort_rounding` wins over the global setting. The value ignores case and surrounding spaces. A value other than `up` or `down` is ignored with a warning in the proxy logs, and the next setting applies, so the proxy checks the deployment first, then `litellm_settings`, then falls back to `up`.
+
+A non-empty `reasoning_effort_levels` also lets a provider that does not otherwise accept `reasoning_effort` take it, which today means `azure_ai`. An empty list does not. On OpenAI and Azure GPT-5 deployments, a declared level such as `xhigh` or `none` is sent even when the model map does not list it for that model.
+
+On `/v1/messages`, which Claude Code and other Anthropic-format clients call, the effort derived from `thinking` or `output_config.effort` is rounded onto the declared levels the same way, so `xhigh` goes to `max` when `max` is declared. A `/v1/chat/completions` request that sends an Anthropic-style `thinking` budget is rounded too, on every provider. On adaptive Claude models the budget first becomes an effort through Claude's own mapping, and the caller's `thinking.display` is kept. A `budget_tokens` that is not a number answers 400, or is dropped with `drop_params: true`. When the request also sends `reasoning_effort` or `output_config.effort`, that level wins over the budget, `default` included, unless `drop_params: true` drops it, and then the budget sets the effort.
+
+Each change logs one INFO line in this shape.
+
+```text
+reasoning_effort medium sent as high (rounding up) to deployment <deployment id>, model group my-model-azure-ai, model azure_ai/my-model
+```
+
+The proxy shows INFO lines only when `LITELLM_LOG=INFO` is set. With `json_logs: true` under `litellm_settings`, the line also carries `reasoning_effort_deployment_id`, `reasoning_effort_model_group`, `reasoning_effort_deployment_model`, `reasoning_effort_requested`, `reasoning_effort_sent`, and `reasoning_effort_rounding` as JSON keys, so you can filter or chart them.
 
 ## OpenAI Responses API - Auto-Summary Control
 

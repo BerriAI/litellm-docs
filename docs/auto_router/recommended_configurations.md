@@ -63,7 +63,7 @@ model_list:
       complexity_router_default_model: claude-sonnet-5
 ```
 
-Keep `claude` in the router name if Claude Code or Claude Desktop needs to discover it. See [Setup](/docs/auto_router/setup#claude-code-and-claude-desktop).
+Keep `claude` in the router name if Claude Code or Claude Desktop needs to discover it. See [Admin Setup](/docs/auto_router/setup#claude-code-and-claude-desktop).
 
 ## OpenAI Family
 

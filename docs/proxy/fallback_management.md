@@ -1,3 +1,7 @@
+---
+sidebar_label: "Fallback Management API"
+---
+
 # [New] Fallback Management Endpoints
 
 Dedicated endpoints for managing model fallbacks separately from the general configuration.
@@ -47,7 +51,7 @@ Create or update fallbacks for a specific model.
 **Example using cURL:**
 ```bash
 curl -X POST "http://localhost:4000/fallback" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "{{openai_small}}",
@@ -63,7 +67,7 @@ import requests
 response = requests.post(
     "http://localhost:4000/fallback",
     headers={
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
         "Content-Type": "application/json"
     },
     json={
@@ -96,7 +100,7 @@ Get fallback configuration for a specific model.
 **Example using cURL:**
 ```bash
 curl -X GET "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Example using Python:**
@@ -105,7 +109,7 @@ import requests
 
 response = requests.get(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     params={"fallback_type": "general"}
 )
 
@@ -132,7 +136,7 @@ Delete fallback configuration for a specific model.
 **Example using cURL:**
 ```bash
 curl -X DELETE "http://localhost:4000/fallback/{{openai_small}}?fallback_type=general" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Example using Python:**
@@ -141,7 +145,7 @@ import requests
 
 response = requests.delete(
     "http://localhost:4000/fallback/{{openai_small}}",
-    headers={"Authorization": "Bearer sk-1234"},
+    headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     params={"fallback_type": "general"}
 )
 
@@ -150,7 +154,7 @@ print(response.json())
 
 ### Test fallback
 
-:::warning Deprecated for Proxy requests
+:::warning[Deprecated for Proxy requests]
 Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
 :::
 
@@ -159,7 +163,7 @@ To validate the fallback through the Proxy, make the primary deployment unavaila
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "model": "{{openai_small}}",
   "messages": [

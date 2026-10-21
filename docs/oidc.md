@@ -214,7 +214,7 @@ For Azure OpenAI, you need to define `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and o
 ```bash
 export AZURE_CLIENT_ID="91a43c21-cf21-4f34-9085-331015ea4f91" # Azure AD Application (Client) ID
 export AZURE_TENANT_ID="f3b1cf79-eba8-40c3-8120-cb26aca169c2" # Will be the same across of all your Azure AD applications
-export AZURE_AUTHORITY_HOST="https://login.microsoftonline.com" # 👈 Optional, defaults to "https://login.microsoftonline.com"
+export AZURE_AUTHORITY_HOST="https://login.microsoftonline.com" # Optional, defaults to "https://login.microsoftonline.com"
 ```
 
 :::tip

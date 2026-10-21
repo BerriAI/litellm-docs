@@ -1,3 +1,7 @@
+---
+sidebar_label: "Key & Team Router Settings"
+---
+
 import Image from '@theme/IdealImage';
 
 # UI - Router Settings for Keys and Teams

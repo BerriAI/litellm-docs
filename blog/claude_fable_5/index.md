@@ -7,6 +7,9 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Fable 5 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
+card_title: "Claude Fable 5"
+card_summary: "Anthropic's new frontier model: 1M context, adaptive thinking only, $10 / $50 per 1M, Opus 4.8 fallback when flagged."
+image: /img/litellm_claude_fable_5_announcement.png
 tags: [anthropic, claude, fable 5, day 0 support]
 hide_table_of_contents: false
 ---
@@ -282,7 +285,7 @@ Use the `thinking` parameter with `type: "adaptive"` to enable adaptive thinking
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-fable-5",
@@ -365,7 +368,7 @@ You can combine `reasoning_effort` with `output_config` for even more fine-grain
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/messages' \
---header 'x-api-key: sk-12345' \
+--header "x-api-key: $LITELLM_API_KEY" \
 --header 'content-type: application/json' \
 --data '{
     "model": "claude-fable-5",

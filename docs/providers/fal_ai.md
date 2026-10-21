@@ -188,7 +188,7 @@ model_list:
       mode: image_generation
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### 2. Start LiteLLM Proxy Server
@@ -209,7 +209,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 response = client.images.generate(
@@ -233,7 +233,7 @@ response = litellm.image_generation(
     model="litellm_proxy/imagen4",
     prompt="A cozy coffee shop interior",
     api_base="http://localhost:4000",
-    api_key="sk-1234"
+    api_key="sk-<your-litellm-api-key>"
 )
 
 print(response.data[0].url)
@@ -246,7 +246,7 @@ print(response.data[0].url)
 ```bash showLineNumbers title="Generate via Proxy - cURL"
 curl --location 'http://localhost:4000/v1/images/generations' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "stable-diffusion",
     "prompt": "A serene Japanese garden with cherry blossoms",

@@ -1,5 +1,6 @@
 ---
-title: "v1.81.0-stable - Claude Code - Web Search Across All Providers"
+title: "LiteLLM v1.81.0-stable - Claude Code - Web Search Across All Providers"
+description: "Adds web search for Claude Code across Bedrock, Vertex AI and all providers. Limits image URL downloads to 50MB and cuts CPU usage by 25%."
 slug: "v1-81-0"
 date: 2026-01-18T10:00:00
 authors:
@@ -77,7 +78,7 @@ Requests with image URLs exceeding 50MB will receive a helpful error message:
 ```bash
 curl -X POST 'https://your-litellm-proxy.com/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gpt-4o",
     "messages": [
@@ -140,7 +141,7 @@ docker run \
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   
 # Set via environment variable
 environment_variables:

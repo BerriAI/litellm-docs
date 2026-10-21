@@ -1,3 +1,7 @@
+---
+sidebar_label: "Vision"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -76,7 +80,7 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
 )
 
 response = client.chat.completions.create(
@@ -158,7 +162,7 @@ litellm --config config.yaml
 curl -X 'GET' \
   'http://localhost:4000/model_group/info' \
   -H 'accept: application/json' \
-  -H 'x-api-key: sk-1234'
+  -H "x-api-key: $LITELLM_API_KEY"
 ```
 
 Expected Response 
@@ -172,7 +176,7 @@ Expected Response
       "max_input_tokens": 922000,
       "max_output_tokens": 128000,
       "mode": "chat",
-      "supports_vision": true, # 👈 supports_vision is true
+      "supports_vision": true, # supports_vision is true
       "supports_function_calling": true
     },
     {
@@ -181,7 +185,7 @@ Expected Response
       "max_input_tokens": null,
       "max_output_tokens": null,
       "mode": null,
-      "supports_vision": true, # 👈 supports_vision is true
+      "supports_vision": true, # supports_vision is true
       "supports_function_calling": false
     }
   ]
@@ -276,7 +280,7 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234", # your litellm proxy api key
+    api_key="sk-<your-litellm-api-key>", # your litellm proxy api key
 )
 
 response = client.chat.completions.create(

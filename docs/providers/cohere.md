@@ -211,6 +211,7 @@ print(response)
 ## Supported Models
 | Model Name | Function Call |
 |------------|----------------|
+| north-large-01-2026 | `litellm.completion('cohere_chat/north-large-01-2026', messages)` |
 | command-a-03-2025 | `litellm.completion('command-a-03-2025', messages)` |
 | command-r-plus-08-2024 | `litellm.completion('command-r-plus-08-2024', messages)` |  
 | command-r-08-2024 | `litellm.completion('command-r-08-2024', messages)` |
@@ -218,6 +219,22 @@ print(response)
 | command-r | `litellm.completion('command-r', messages)` |
 | command-light | `litellm.completion('command-light', messages)` |  
 | command-nightly | `litellm.completion('command-nightly', messages)` |
+
+### Cost tracking for north-large-01-2026
+
+Cohere does not publish a per-token price for `north-large-01-2026`, so LiteLLM has no default price for it and records its spend as $0 until you set one. Set your contract price on the deployment to track cost:
+
+```yaml
+model_list:
+  - model_name: north-large
+    litellm_params:
+      model: cohere_chat/north-large-01-2026
+      api_key: os.environ/COHERE_API_KEY
+      input_cost_per_token: 0.000001
+      output_cost_per_token: 0.000002
+```
+
+Replace the two example prices with your contract prices in USD per token. See [Custom Pricing](../proxy/custom_pricing) for the other pricing fields.
 
 
 ## Embedding
@@ -332,7 +349,7 @@ Test request
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "rerank-english-v3.0",
@@ -349,3 +366,80 @@ curl http://0.0.0.0:4000/rerank \
 
 </TabItem>
 </Tabs>
+
+## Parse (OCR)
+
+[Cohere Parse](https://docs.cohere.com/reference/parse) turns a document image into markdown. LiteLLM serves it through the [`/ocr` endpoint](../ocr), so requests and responses use the same shape as every other OCR provider and each call is cost tracked per billed page.
+
+Parse accepts `image_url` documents only: an image URL or a base64 `data:image/...` URI. PDFs and `document_url` inputs are rejected with a 400 before anything is sent to Cohere.
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM SDK Usage">
+
+```python showLineNumbers
+import os
+from litellm import ocr
+
+os.environ["COHERE_API_KEY"] = ""
+
+response = ocr(
+    model="cohere/parse-v5.0",
+    document={
+        "type": "image_url",
+        "image_url": "https://raw.githubusercontent.com/mistralai/cookbook/refs/heads/main/mistral/ocr/receipt.png",
+    },
+)
+
+for page in response.pages:
+    print(page.markdown)
+print(response.usage_info.pages_processed)
+```
+</TabItem>
+
+<TabItem value="proxy" label="LiteLLM Proxy Usage">
+
+**Setup**
+
+Add this to your litellm proxy config.yaml
+
+```yaml
+model_list:
+  - model_name: cohere-parse
+    litellm_params:
+      model: cohere/parse-v5.0
+      api_key: os.environ/COHERE_API_KEY
+```
+
+Start litellm
+
+```bash
+litellm --config /path/to/config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+Test request
+
+```bash
+curl http://0.0.0.0:4000/v1/ocr \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "cohere-parse",
+    "document": {
+      "type": "image_url",
+      "image_url": "https://raw.githubusercontent.com/mistralai/cookbook/refs/heads/main/mistral/ocr/receipt.png"
+    }
+  }'
+```
+</TabItem>
+</Tabs>
+
+### Supported Parameters
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `output_format` | `markdown` (default), `blocks` | Cohere's output layout. With `blocks`, each page carries Cohere's `blocks` array and `markdown` is empty |
+| `req_format` | `litellm` (default), `native` | `native` returns Cohere's own response body instead of the LiteLLM OCR shape |
+
+Cohere Parse deployed on Azure AI Foundry is covered in [Azure AI OCR](./azure_ocr#cohere-parse).

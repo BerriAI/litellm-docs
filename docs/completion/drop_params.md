@@ -22,7 +22,7 @@ import os
 # set keys 
 os.environ["COHERE_API_KEY"] = "co-.."
 
-litellm.drop_params = True # 👈 KEY CHANGE
+litellm.drop_params = True # KEY CHANGE
 
 response = litellm.completion(
                 model="command-r",
@@ -73,7 +73,7 @@ response = litellm.completion(
 - litellm_params:
     api_base: my-base
     model: openai/my-model
-    drop_params: true # 👈 KEY CHANGE
+    drop_params: true # KEY CHANGE
   model_name: my-model
 ```
 </TabItem>
@@ -109,7 +109,7 @@ response = litellm.completion(
 - litellm_params:
     api_base: my-base
     model: openai/my-model
-    additional_drop_params: ["response_format"] # 👈 KEY CHANGE
+    additional_drop_params: ["response_format"] # KEY CHANGE
   model_name: my-model
 ```
 </TabItem>

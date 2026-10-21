@@ -32,7 +32,7 @@ litellm_settings:
   drop_params: True
 
 general_settings:
-  master_key: sk-1234  # Change this to a secure key
+  master_key: os.environ/LITELLM_MASTER_KEY  # Change this to a secure key
 ```
 
 Start the proxy:
@@ -51,7 +51,7 @@ from livekit.plugins import xai
 # Configure xAI to use LiteLLM proxy
 model = xai.realtime.RealtimeModel(
     voice="ara",                      # Voice option
-    api_key="sk-1234",               # Your LiteLLM proxy master key
+    api_key="sk-<your-litellm-master-key>",               # Your LiteLLM proxy master key
     base_url="http://localhost:4000", # LiteLLM proxy URL
 )
 ```
@@ -73,7 +73,7 @@ import json
 import websockets
 
 PROXY_URL = "ws://localhost:4000/v1/realtime"
-API_KEY = "sk-1234"
+API_KEY = "sk-<your-litellm-api-key>"
 MODEL = "grok-voice-agent"
 
 async def run_voice_agent():
@@ -139,7 +139,7 @@ class VoiceAgent(Agent):
             instructions="You are a helpful voice assistant.",
             llm=xai.realtime.RealtimeModel(
                 voice="ara",
-                api_key="sk-1234",
+                api_key="sk-<your-litellm-api-key>",
                 base_url="http://localhost:4000",
             ),
         )

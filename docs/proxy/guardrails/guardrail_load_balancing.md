@@ -147,7 +147,7 @@ Requests using the guardrail will be automatically load balanced:
 ```bash showLineNumbers title="Test request"
 curl -X POST http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello, how are you?"}],
@@ -260,7 +260,7 @@ guardrails:
 for i in {1..10}; do
   curl -s -X POST http://localhost:4000/v1/chat/completions \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -d '{
       "model": "{{anthropic}}",
       "messages": [{"role": "user", "content": "Hello"}],

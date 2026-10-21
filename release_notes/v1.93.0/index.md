@@ -1,5 +1,6 @@
 ---
-title: "v1.93.0 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
+title: "LiteLLM v1.93.0 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
+description: "Adds GPT-5.6, Grok-4.5 and the Meta Model API. Keys now get throttled at their spend limit instead of being revoked."
 slug: "v1-93-0"
 date: 2026-07-18T00:00:00
 authors:
@@ -43,7 +44,7 @@ pip install litellm==1.93.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Keys are now throttled instead of revoked when they hit a spend limit.** A key that exceeds its budget is rate-limited rather than losing access outright, so workflows that depended on a hard block at the limit will see requests slowed instead of rejected. See [PR #31300](https://github.com/BerriAI/litellm/pull/31300).
 

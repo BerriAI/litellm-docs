@@ -31,7 +31,7 @@ This page documents all command-line interface (CLI) arguments available for the
     ```
 
 ### --num_workers
-   - **Default:** Number of logical CPUs in the system, or `4` if that cannot be determined
+   - **Default:** `1`, or the value of the `DEFAULT_NUM_WORKERS_LITELLM_PROXY` environment variable if set
    - The number of worker processes to spin up (uvicorn, gunicorn, or Granian `--workers`).
    - **Usage:** 
      ```shell
@@ -94,7 +94,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --max_requests_before_restart
    - **Default:** `None`
    - **Type:** `int`
-   - Restart worker after this many requests. This is useful for mitigating memory growth over time.
+   - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
+   - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
@@ -235,7 +236,7 @@ This page documents all command-line interface (CLI) arguments available for the
      ```
 
 ### --api_version
-   - **Default:** `2024-07-01-preview`
+   - **Default:** `litellm.AZURE_DEFAULT_API_VERSION` (currently `2025-02-01-preview`)
    - For Azure services, specify the API version.
    - **Usage:** 
      ```shell
@@ -526,15 +527,6 @@ A read replica takes the same key under `database.reader`, and it requires the w
    - **Usage:** 
      ```shell
      litellm --version
-     ```
-
-### --telemetry
-   - **Default:** `True`
-   - **Type:** `bool`
-   - Help track usage of this feature. Turn off for privacy.
-   - **Usage:** 
-     ```shell
-     litellm --telemetry False
      ```
 
 ### --use_queue

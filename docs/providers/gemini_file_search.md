@@ -62,7 +62,7 @@ print(f"File ID: {response['file_id']}")
 
 ```bash
 curl -X POST "http://localhost:4000/v1/rag/ingest" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "file": {
@@ -109,7 +109,7 @@ for result in response["data"]:
 
 ```bash
 curl -X POST "http://localhost:4000/v1/vector_stores/fileSearchStores/your-store-id/search" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is the main topic?",

@@ -7,7 +7,7 @@ This tutorial shows you how to integrate the Gemini CLI with LiteLLM Proxy, allo
 
 <br />
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/d5dadd811ae64c70b29a16ecd558d4ba" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/d5dadd811ae64c70b29a16ecd558d4ba" frameBorder="0" allowFullScreen></iframe>
 
 ## Benefits of using gemini-cli with LiteLLM
 
@@ -47,7 +47,7 @@ Configure the Gemini CLI to point to your LiteLLM Proxy instance by setting the 
 
 ```bash
 export GOOGLE_GEMINI_BASE_URL="http://localhost:4000"
-export GEMINI_API_KEY=sk-1234567890
+export GEMINI_API_KEY=sk-<your-litellm-api-key>
 ```
 
 **Note:** Replace the values with your actual LiteLLM Proxy configuration:

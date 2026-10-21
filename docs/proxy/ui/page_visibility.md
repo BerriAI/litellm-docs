@@ -87,14 +87,14 @@ You can also configure page visibility programmatically using the API:
 ### Get Current Settings
 
 ```bash
-curl -X GET 'http://localhost:4000/ui_settings/get' \
+curl -X GET 'http://localhost:4000/get/ui_settings' \
   -H 'Authorization: Bearer <your-admin-key>'
 ```
 
 ### Update Page Visibility
 
 ```bash
-curl -X PATCH 'http://localhost:4000/ui_settings/update' \
+curl -X PATCH 'http://localhost:4000/update/ui_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -111,7 +111,7 @@ curl -X PATCH 'http://localhost:4000/ui_settings/update' \
 ### Clear Page Visibility Restrictions
 
 ```bash
-curl -X PATCH 'http://localhost:4000/ui_settings/update' \
+curl -X PATCH 'http://localhost:4000/update/ui_settings' \
   -H 'Authorization: Bearer <your-admin-key>' \
   -H 'Content-Type: application/json' \
   -d '{
