@@ -386,7 +386,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 
 ## Text to Speech
 
-Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported. Available from v1.102.0.
+Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported <SinceVersion v="1.102.0" />.
 
 ### SDK Usage
 
