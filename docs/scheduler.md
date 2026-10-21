@@ -113,7 +113,7 @@ print(response)
 
 ### Priority header
 
-Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. With `drop_params` on, a header value that is not an integer is ignored instead, so the body `priority` or `default_priority` applies. Available from v1.108.0.
+Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. An empty header counts as unset. With `drop_params` on, a header value that is not an integer is ignored instead, so the body `priority` or `default_priority` applies. Available from v1.108.0.
 
 The proxy reads the header on the chat completions and text completions routes, such as `/v1/chat/completions`, `/v1/completions` and the Azure-style `/openai/deployments/{model}/chat/completions`, when the router serves the request. It also reads it on `/queue/chat/completions`. Other routes, such as `/v1/responses`, `/v1/messages`, `/v1/embeddings` and `/cursor/chat/completions`, ignore the header, and so does a proxy started with `litellm --model` and no config.
 
