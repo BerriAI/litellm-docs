@@ -418,7 +418,7 @@ response.write_to_file("speech.mp3")
 | `nova`       | `gb_jane_sarcasm` |
 | `shimmer`    | `gb_jane_sarcasm` |
 
-Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use.
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `GET https://api.mistral.ai/v1/audio/voices?limit=100` lists the voices your account can use. The endpoint is paginated and returns 10 voices when you leave `limit` out.
 
 ### Response Formats
 
@@ -443,6 +443,8 @@ response = speech(
 
 response.write_to_file("cloned.mp3")
 ```
+
+On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech` and leave `voice` out.
 
 ### Unsupported Parameters
 
