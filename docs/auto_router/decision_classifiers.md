@@ -8,7 +8,7 @@ Use a decision model to classify requests for LiteLLM Auto Router. Your classifi
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [vLLM](#vllm), and hosted [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
+**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [vLLM](#vllm), and hosted [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev, Databricks `ai_decide` and Nadir also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
 
 ## What you host
 
@@ -131,14 +131,15 @@ On Ollama, Bespoke Nimble connects through [`provider: bespoke`](#nimble-self-ho
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
 | [Databricks `ai_decide`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | An AI Function on your Databricks workspace (Beta) | `ai_decide` | `databricks` |
+| [Nadir](https://getnadir.com) | Nadir's hosted API, or your own Nadir at `NADIR_API_BASE` | `bucket` | `nadir` |
 
-All four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
+The first four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient. Nadir instead receives the conversation at `POST /v1/bucket` and returns a tier, as described in [Nadir](#nadir).
 
 :::info Availability
 
 The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
 
-Databricks serving endpoints require [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200), and the `ai_decide` AI Function requires [BerriAI/litellm#45722](https://github.com/BerriAI/litellm/pull/45722).
+Databricks serving endpoints require [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200), and the `ai_decide` AI Function requires [BerriAI/litellm#45722](https://github.com/BerriAI/litellm/pull/45722). Nadir, both as `provider: nadir` and as a `nadir/bucket` decision model, requires [BerriAI/litellm#41797](https://github.com/BerriAI/litellm/pull/41797).
 
 Existing Jev-compatible configurations can keep `classifier_type: jev` and `jev_classifier_config`. For new routers, use the canonical names below; see [migration](#migrate-an-existing-jev-or-nimble-router) when upgrading an existing router.
 
@@ -234,9 +235,25 @@ opensource_classifier_config:
 
 LiteLLM posts the System One request without a `model` field to `POST /api/2.0/ai-functions/ai-decide` and logs the classifier call as `databricks/ai_decide`. The AI Function reports no token usage, so the classifier call is logged at zero cost and no `x-litellm-classifier-cost` header is returned. A router-specific `api_base` requires its matching `api_key`, so a configuration override cannot send the workspace token to another host.
 
+### Nadir: hosted tier classifier {#nadir}
+
+[Nadir](https://getnadir.com) classifies a request as `simple`, `medium` or `complex` at its `POST /v1/bucket` endpoint, and LiteLLM routes on that tier. You can connect it in two ways. Add a `nadir/bucket` deployment, as on the [decision provider list](/docs/decisions/providers#nadir), and name it with `deployment_name` as in [Use a deployed decision model](#use-a-deployed-decision-model) or pick it under **Decision model** in the dashboard. Or set `provider: nadir` in the [complete router configuration](#configure-the-router):
+
+```yaml
+opensource_classifier_config:
+  provider: nadir
+  timeout_ms: 3000
+```
+
+`model` defaults to `bucket` and only names the classifier; it is not sent to Nadir. `instructions` is rejected for `provider: nadir`, because Nadir classifies with its own model rather than a question you write.
+
+Nadir does not receive the tier question the other classifiers get. On both paths LiteLLM sends it the conversation as role-tagged messages: the selected system text, the prior turns that the `classifier_context_*` settings keep, and the current request. Nadir answers one of three tiers, so it never picks `REASONING`. Assign models to `SIMPLE`, `MEDIUM` and `COMPLEX`; a tier Nadir picks that has no models routes on `classifier_fallback`.
+
+Set `NADIR_API_KEY` on the gateway to attribute calls to your Nadir account, and set `NADIR_API_BASE` only for a self-hosted Nadir. LiteLLM sends the key only to `NADIR_API_BASE`, or to `https://api.getnadir.com/v1` when that is unset. An explicit `api_base` that names another host gets no environment key, so set `api_key` beside it when that host needs one. Without a key the call is anonymous, and Nadir rate-limits anonymous calls per IP. The conversation leaves the gateway for Nadir's API, or for the host that `NADIR_API_BASE` names. A keyed call saves the user text of the request to that account's usage logs, or only a hash of it when the account has turned prompt storage off. The cost map prices `nadir/bucket` at $0, so the classifier call adds no spend in LiteLLM.
+
 ## Configure from the dashboard
 
-From v1.104.3 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions/admin_ui#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
+From v1.104.3 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions/admin_ui#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble, Databricks `ai_decide` and Nadir deployments work the same way as Strands Decider and Clef.
 
 1. Open **Models + Endpoints → Auto Router** and create or edit a router.
 2. Under **Choose your classifier**, select **Decisions Model**. Under **Decision model**, pick the deployment, for example `strands-decider` or `clef`. The list shows only deployments of decision models.
