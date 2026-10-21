@@ -173,6 +173,8 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
 
 ## Routing Responses API image requests
 
+These checks apply to HTTP `POST /v1/responses`, including streamed responses.
+
 Responses API image requests require a deployment with confirmed vision support. LiteLLM uses the deployment's
 `model_info.supports_vision` override when present, then the loaded model catalog. For named
 deployments, catalog lookup uses `model_info.base_model`, then `litellm_params.base_model`, before
