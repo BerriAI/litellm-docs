@@ -22,13 +22,11 @@ compiled malware which steals credentials and loads remote-code execution tools.
 All previous versions are safe, and the impacted releases have been pulled.
 **Customers running the private enterprise release of LiteLLM were not impacted.**
 
+**Update (20:30 UTC):** We believe we have identified the attack chain which facilitated this attack. The attacker had to compromise multiple independent security controls to be successful. See [How this happened](#how-this-happened) below.
+
 {/* truncate */}
 
 ---
-
-## Status Update: 20:30 UTC
-
-We believe we have identified the attack chain which facilitated this attack. The attacker had to compromise multiple independent security controls to be successful.
 
 ## TLDR;
 
