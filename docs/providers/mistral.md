@@ -422,7 +422,7 @@ Any other value passes through to Mistral untouched, so a native id such as `en_
 
 ### Response Formats
 
-`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`. OpenAI's `aac` format is not supported, and Mistral rejects it with a 422.
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`. OpenAI's `aac` format is not supported, and Mistral rejects it with a 422. Mistral's `pcm` is raw 32-bit float little-endian samples at 24 kHz mono, not the 16-bit signed samples OpenAI's `pcm` returns, so read it as float32 or ask for `wav` instead.
 
 ### Voice Cloning
 
