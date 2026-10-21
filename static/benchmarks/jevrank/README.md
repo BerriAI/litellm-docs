@@ -6,6 +6,8 @@ The estimated cost was $0.172618278 for 300 queries, or $0.57539426 per 1,000 qu
 
 `measured-run.json` records model identity, source revision, hashes, retrieval settings, runtime and cost provenance. `measured-per-query.csv` contains every query's metrics, usage and latency. `measured-responses.jsonl.gz` contains normalized provider responses and scores, without credentials or local paths. `before-results.json` records the baseline behavior before the adapter. The three JPG files and `final-results.json` show separate live sync, async and multiple-choice smoke tests; those examples use final preview commit `931b03c0bc12c8e82ce0e5dd27b510f2468c76ed` and are not the 300-query benchmark, which remains pinned to `5aa0a8304c`.
 
+`automatic-rerank/` contains the newer SDK and Router checks at commit `9b8e0715ea6ea9f34a0141e452ccdfc7645c02cb`. Those calls use model-catalog detection without strategy parameters. The earlier benchmark and smoke evidence keep their original revisions.
+
 ## Reproduce
 
 Download the runner, pinned requirements, configuration and tests from this directory. Prepare candidates in a Python 3.11 environment:
