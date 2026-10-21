@@ -236,6 +236,8 @@ Editing a guardrail (for example, a description-only PUT) no longer reorders gua
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
+On Anthropic `/v1/messages` the flag skips only the top-level `system` prompt. A `role: system` entry inside `messages` is client input, so guardrails scan it even with the flag set. Claude Code sends these entries mid-conversation, for example its environment details and corrections typed while a tool runs. To keep them out of a Bedrock guardrail's scan, set [`experimental_use_latest_role_message_only: true`](./bedrock#experimental-only-send-latest-user-message) on the guardrail.
+
 **Global**, in `litellm_settings`:
 
 ```yaml
