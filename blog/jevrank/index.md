@@ -9,7 +9,6 @@ tags: [engineering, reranking, decisions]
 hide_table_of_contents: true
 custom_hero: true
 image: /img/jevrank/launch-benchmark.png
-draft: true
 ---
 
 import JevRankLaunch from './JevRankLaunch';
@@ -17,5 +16,3 @@ import JevRankLaunch from './JevRankLaunch';
 <JevRankLaunch />
 
 {/* truncate */}
-
-{/* Preview only. Preserve measured/reference origins and link the first supported release before publication. */}
