@@ -111,7 +111,7 @@ print(response.choices[0].message.tool_calls)
 
 ### Reasoning Effort
 
-LiteLLM forwards `reasoning_effort` only to ZeroGPU models flagged `supports_reasoning` in the cost map, which today is `gpt-5.6-luna`. When the same call can reach other ZeroGPU models, pass `drop_params=True` so LiteLLM drops the parameter for them instead of rejecting the request.
+LiteLLM forwards `reasoning_effort` only to ZeroGPU models flagged `supports_reasoning` in the cost map, which are the six reasoning models listed above. The other three, `gpt-4.1-mini`, `llama-3.1-8b-instruct-fast` and `LFM2.5-1.2B-Instruct`, reject it, so when the same call can reach them, pass `drop_params=True` and LiteLLM drops the parameter for them instead of rejecting the request.
 
 ```python showLineNumbers title="ZeroGPU Reasoning Effort" keep-model-ids
 import os
