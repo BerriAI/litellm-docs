@@ -171,11 +171,12 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     # auto_router_model_compression: none
 ```
 
-## Routing image requests
+## Routing Responses API image requests
 
-Image requests require a deployment with confirmed vision support. LiteLLM uses the deployment's
-`model_info.supports_vision` override when present, then the loaded model catalog. It does not
-probe providers during routing. Deployments with false or unknown vision support can still serve
+Responses API image requests require a deployment with confirmed vision support. LiteLLM uses the deployment's
+`model_info.supports_vision` override when present, then the loaded model catalog. For named
+deployments, catalog lookup uses `model_info.base_model`, then `litellm_params.base_model`, before
+the deployment model name. It does not probe providers during routing. Deployments with false or unknown vision support can still serve
 text requests, but are excluded from image requests.
 
 A model group may contain both text-only and vision deployments. The group remains eligible for
@@ -188,8 +189,8 @@ provider. Existing tier floors and routing plugin restrictions still apply.
 
 :::danger Upgrade behavior
 
-Image capability checks apply by default. The legacy `modality_routing: false` setting no longer
-disables them. Custom deployments without catalog metadata need an explicit vision declaration
+Responses API image capability checks apply by default, including when `modality_routing: false`.
+Other endpoints retain their existing modality routing behavior. Custom deployments without catalog metadata need an explicit vision declaration
 before they can receive images. Only declare support when the underlying model accepts images.
 Existing mixed model groups do not need to be split.
 
