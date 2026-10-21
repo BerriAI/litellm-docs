@@ -418,7 +418,7 @@ response.write_to_file("speech.mp3")
 | `nova`       | `gb_jane_sarcasm` |
 | `shimmer`    | `gb_jane_sarcasm` |
 
-Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `GET https://api.mistral.ai/v1/audio/voices?limit=100` lists the voices your account can use. The endpoint is paginated and returns 10 voices when you leave `limit` out.
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `nova` and `shimmer` both map to a sarcastic voice, so pass `gb_jane_neutral` directly when you want a neutral female voice. `GET https://api.mistral.ai/v1/audio/voices?limit=100` lists the voices your account can use. The endpoint is paginated and returns 10 voices when you leave `limit` out.
 
 ### Response Formats
 
@@ -444,7 +444,7 @@ response = speech(
 response.write_to_file("cloned.mp3")
 ```
 
-On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech` and leave `voice` out.
+On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech` and leave `voice` out. Leave `voice` out of the deployment's `litellm_params` too, since LiteLLM sends a default voice set there along with `ref_audio`.
 
 ### Unsupported Parameters
 
