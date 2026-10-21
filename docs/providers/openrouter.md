@@ -325,13 +325,15 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 }'
 ```
 
-From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. Earlier releases have no price for `jev-1.14`. See [Decisions](../decisions/index.md) for the formats and the supported features.
+From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. Earlier releases have no price for `jev-1.14`, and `v1.105.0-rc.3` and the `v1.106.0` dev builds do not read `usage.cost` either. See [Decisions](../decisions/index.md) for the formats and the supported features.
 
 ### Through the `/openrouter` pass-through
 
-`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends is the `api_key` of the first `openrouter/` deployment in `model_list` that sets `use_in_pass_through: true` and has an `api_key`, or `OPENROUTER_API_KEY` when no deployment does. The request always goes to `OPENROUTER_API_BASE`, never to that deployment's `api_base`. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is in v1.104.0 and later, and in v1.101.1 and v1.102.1 and the later patches on those two lines, but in no v1.103 release.
+`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends comes from the first OpenRouter deployment in `model_list` (an `openrouter/` model or `custom_llm_provider: openrouter`) that sets `use_in_pass_through: true` and has a key, either its `api_key` or the one in its `litellm_credential_name`, or from `OPENROUTER_API_KEY` when no deployment does. The request always goes to `OPENROUTER_API_BASE`, never to that deployment's `api_base`. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is in v1.104.0 and later, and in v1.101.1 and v1.102.1 and the later patches on those two lines, but in no v1.103 release.
 
 The path is relative to `https://openrouter.ai/api`, which is `OPENROUTER_API_BASE` without its trailing `/v1`. So the Decisions API is `/openrouter/alpha/decisions`. Do not add `/api` to the path, since `/openrouter/api/alpha/decisions` goes to `https://openrouter.ai/api/api/alpha/decisions` and OpenRouter answers it with a 404.
+
+A virtual key with a `models` list needs `typesafe/jev-1.14`, the model name in the request body, in that list to call the pass-through. A `model_list` alias such as `jev` is not enough, and the call gets a 403.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/openrouter/alpha/decisions' \
