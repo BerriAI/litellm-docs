@@ -1,5 +1,7 @@
 # Native /v1/messages and /v1/responses Passthrough for OpenAI-Compatible Providers
 
+This page covers the `model_info.supported_endpoints` opt-in. It applies to any deployment whose provider LiteLLM would otherwise translate for that endpoint, whatever the model prefix: `openai/`, `custom_openai/`, `openai_like/`, `baseten/`, `hosted_vllm/` and the other OpenAI-compatible providers all read the same field
+
 When a deployment's provider has no native Anthropic Messages support, LiteLLM translates each `/v1/messages` request into the provider's own API: `openai/` deployments go through the OpenAI Responses API (see [the parameter mapping](./messages_to_responses_mapping.md)) and everything else goes through `/v1/chat/completions`. That translation only keeps what the target API can express: `cache_control` blocks are dropped, `thinking` is mapped to the provider's own reasoning parameter, and other Anthropic-only request details are approximated or lost
 
 Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. Available from v1.92.0
@@ -64,7 +66,7 @@ The opt-in only matters for providers LiteLLM would otherwise translate, such as
 
 ## Native `/v1/responses` passthrough
 
-A deployment whose `litellm_params.model` is prefixed `openai/` already sends `/v1/responses` natively to `{api_base}/responses`. A generic OpenAI-compatible deployment such as `custom_openai/` has no Responses API config of its own, so by default LiteLLM bridges `/v1/responses` through `/v1/chat/completions`: the input is converted to messages, the chat completion is converted back into a Responses object, and Responses-only request fields are approximated or dropped. When the server serves `/responses` itself, add `/v1/responses` to `model_info.supported_endpoints` to forward the request untranslated. Available from v1.102.0
+A deployment whose `litellm_params.model` is prefixed `openai/` already sends `/v1/responses` natively to `{api_base}/responses`. A deployment whose provider has no Responses API config of its own, which is the case for `custom_openai/`, `openai_like/`, `baseten/` and most other OpenAI-compatible providers, bridges `/v1/responses` through `/v1/chat/completions` by default: the input is converted to messages, the chat completion is converted back into a Responses object, and Responses-only request fields are approximated or dropped. When the server serves `/responses` itself, add `/v1/responses` to `model_info.supported_endpoints` to forward the request untranslated. The opt-in is read per deployment and does not depend on the provider prefix, so it works the same for a named provider such as `baseten/` as for `custom_openai/`. Available from v1.101.0
 
 ```yaml
 model_list:
@@ -73,6 +75,18 @@ model_list:
       model: custom_openai/some-open-model
       api_base: https://inference.example.com/v1
       api_key: os.environ/EXAMPLE_API_KEY
+    model_info:
+      supported_endpoints: ["/v1/chat/completions", "/v1/responses"]
+```
+
+The same line on a named OpenAI-compatible provider keeps that provider's API base, API key and cost map prices, so there is no need to switch the deployment to `custom_llm_provider: openai` to get native Responses:
+
+```yaml
+model_list:
+  - model_name: glm-5.2
+    litellm_params:
+      model: baseten/zai-org/GLM-5.2
+      api_key: os.environ/BASETEN_API_KEY
     model_info:
       supported_endpoints: ["/v1/chat/completions", "/v1/responses"]
 ```
@@ -94,5 +108,6 @@ The native path forwards `previous_response_id` to the backend as sent, so the b
 |---|---|---|---|---|
 | `openai/<model>` | Native passthrough | Translated via the Responses API | Native | Native |
 | `custom_openai/<model>` | Native passthrough | Translated via `/v1/chat/completions` | Native passthrough | Bridged via `/v1/chat/completions` |
+| `baseten/<model>` and other OpenAI-compatible providers without their own Responses API config | Native passthrough | Translated via `/v1/chat/completions` | Native passthrough | Bridged via `/v1/chat/completions` |
 
 Some named OpenAI-compatible providers (for example `hosted_vllm/`) ship their own Responses API support and also send `/v1/responses` natively without the opt-in. Check the provider's page for that

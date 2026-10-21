@@ -12,6 +12,7 @@ model_list:
       output_cost_per_token: 0
       max_tokens: 2048
       base_model: {{openai_large}}
+      supported_endpoints: ["/v1/chat/completions", "/v1/responses"]  # opt an OpenAI-compatible deployment into native /v1/responses or /v1/messages passthrough, see /docs/anthropic_unified/native_passthrough
       additionalProp1: {}
 
 litellm_settings:

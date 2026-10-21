@@ -104,3 +104,26 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
+
+## Responses API (`/v1/responses`)
+
+Baseten's Model API serves `/v1/responses` itself. The `baseten/` provider has no Responses API config of its own, so by default LiteLLM bridges a `/v1/responses` request through `/v1/chat/completions`. To forward it untranslated, add `/v1/responses` to `model_info.supported_endpoints` on the deployment. The deployment keeps the Baseten API base, `BASETEN_API_KEY` and the cost map prices for the model, so this is the way to get native Responses without switching the deployment to `custom_llm_provider: openai`. Available from v1.101.0
+
+```yaml
+model_list:
+  - model_name: glm-5.2
+    litellm_params:
+      model: baseten/zai-org/GLM-5.2
+      api_key: os.environ/BASETEN_API_KEY
+    model_info:
+      supported_endpoints: ["/v1/chat/completions", "/v1/responses"]
+```
+
+```bash
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{"model": "glm-5.2", "input": "Say hi in three words"}'
+```
+
+Model names on the Model API are case sensitive (`zai-org/GLM-5.2`, not `zai-org/glm-5.2`). See [Native /v1/messages and /v1/responses passthrough](../anthropic_unified/native_passthrough.md) for the `/v1/messages` opt-in and the full behavior table.
