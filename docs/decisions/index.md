@@ -42,7 +42,7 @@ litellm --config config.yaml
 
 ## Availability and supported features
 
-Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release, listed below. A dev build or release candidate can still miss a provider or feature that its release has, such as vLLM, Microsoft Foundry and OpenRouter spend from `usage.cost` in `v1.105.0-rc.3` and the `v1.106.0` dev builds
+Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0` dev builds, `v1.105.0-rc.1` and `v1.105.0-rc.2`. Some providers and features need a newer release, listed below. A dev build or release candidate can still miss a provider or feature that its release has, such as vLLM, Microsoft Foundry and OpenRouter spend from `usage.cost` in `v1.105.0-rc.3` and the `v1.106.0` dev builds
 
 | Provider or feature | Release |
 |---------------------|---------|

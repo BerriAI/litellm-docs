@@ -19,7 +19,7 @@ Headroom runs as a sidecar service alongside LiteLLM. Client traffic continues t
 
 ## Requirements
 
-LiteLLM v1.92.x or later, and a reachable Headroom proxy. See [Deploy Headroom](#deploy-headroom) below for a one-file Dockerfile.
+LiteLLM <SinceVersion v="1.92.0" /> and a reachable Headroom proxy. See [Deploy Headroom](#deploy-headroom) below for a one-file Dockerfile.
 
 For testing ahead of the stable cut, use the [v1.92.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.92.0-dev.1) dev release.
 

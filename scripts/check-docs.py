@@ -19,6 +19,7 @@ Every check here is deterministic and fails the build:
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
   version-note        a hand-written "available in v1.85.0" note instead of the <SinceVersion /> badge
+  version-missing     with --base, a docs/proxy/config_settings.md row added since that ref without the badge
   card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
   card-too-long       card_title over 40 characters or card_summary over 120, which the Home card cannot show in full
 
@@ -59,19 +60,29 @@ v1.76.1+", "This feature is available in v1.74.3-stable and above", a table
 cell holding "1.63.8+") and points at the badge. The version has to end its
 sentence, table cell, or parenthesis, so a sentence that happens to mention a
 release ("From v1.81.0 the request is set as attributes on the parent span") is
-left alone, and so is a removal note ("No longer supported since v1.110.0").
-Another project's version usually is too, since the words leading
-into it are not availability words, but a line like "requires the SDK 1.1.0"
-does fire. Add `{/* keep-version-note */}` to the line there, and wherever the
-release itself is the subject, as on the release-cycle page.
+left alone, and so is a removal or regression note ("No longer supported since
+v1.110.0", "Broken since v1.86.0"). "LiteLLM v1.97.0+ strips ..." fires wherever
+the sentence goes, since LiteLLM's name with a "+" or "and later" is a note on
+its own. Another project's version is usually left alone too, since the words
+leading into it are not availability words, but a line like "requires the SDK
+1.1.0" does fire. Add `{/* keep-version-note */}` to the line there, and wherever
+the release itself is the subject, as on the release-cycle page. Pages with
+`format: md` frontmatter render neither the badge nor the marker, so the rule
+skips them.
+
+With `--base=<git ref>`, the version-missing rule also fails a row added to
+docs/proxy/config_settings.md since that ref that carries no badge, so a new
+setting says which release it arrived in. CI passes the pull request's base.
 
 Requires PyYAML (pip install pyyaml).
 """
 
 import ast
+import itertools
 import json
 import os
 import re
+import subprocess
 import sys
 import textwrap
 
@@ -399,6 +410,7 @@ def check_page(page, site, page_cache):
         err("multiple-h1", h1_lines[1], f"page has {len(h1_lines)} H1 headings (first at line {h1_lines[0]})")
 
     own_anchors = None
+    plain_markdown = renders_as_plain_markdown(page)
     for line_no, raw in page.prose:
         if GITHUB_ALERT_RE.match(raw):
             err("github-alert", line_no, "GitHub-style alert does not render in Docusaurus; use :::note / :::warning")
@@ -409,10 +421,10 @@ def check_page(page, site, page_cache):
         if "keep-model-ids" not in raw:
             for m in CHATGPT_LITERAL_RE.finditer(raw):
                 err("model-literal", line_no, model_literal_message(m.group(0)))
-        for match in SINCE_VERSION_TAG_RE.finditer(raw):
+        for match in SINCE_VERSION_TAG_RE.finditer(strip_inline_code(raw)):
             if not SINCE_VERSION_PROP_RE.search(match.group(1)):
                 err("version-note", line_no, "<SinceVersion> without a `v` prop renders nothing; write `<SinceVersion v=\"1.85.0\" />`")
-        if "keep-version-note" not in raw:
+        if "keep-version-note" not in raw and not plain_markdown:
             literal = version_note_literal(SINCE_VERSION_TAG_RE.sub(" ", raw))
             if literal:
                 err("version-note", line_no, version_note_message(literal))
@@ -537,23 +549,28 @@ def python_literal_message(literal):
 VERSION_TOKEN_RE = re.compile(
     r"(?<![\w.])(?:v?[12]\.\d{1,3}\.(?:\d{1,2}|x)(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?|v[12]\.\d{1,3}(?!\w|\.\w))"
 )
-VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_>]")
-VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;!?](?=\s|$)|[|()]|,\s*which\b")
+VERSION_NOTE_STRIP_RE = re.compile(r"!\[[^\]]*\]|<br\s*/?>|[`*_>]")
+VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;:!?](?=\s|$)|[|()]|,\s*which\b")
 VERSION_NOTE_TAIL_RE = re.compile(
-    r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
+    r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?|up|is|are|required|needed)\b)*$",
     re.I,
 )
+VERSION_NOTE_TAIL_LEAD_RE = re.compile(r"\b(?:required|needed)\b", re.I)
+VERSION_NOTE_QUALIFIER_RE = re.compile(r"^\s*(?:\+|(?:or|and)\s+(?:later|higher|newer|above|up)\b)", re.I)
+LITELLM_RELEASE_RE = re.compile(r"^v?1\.\d{2,3}(?!\d)")
+LITELLM_NAME_WORDS = ("litellm", "gateway", "proxy", "sdk")
 VERSION_NOTE_WORD_RE = re.compile(r"[A-Za-z]+")
 VERSION_NOTE_LEAD_WORDS = frozenset(
     "available added introduced requires require required supported supports support "
-    "since starting works work live valid new version versions need needs ships shipped".split()
+    "since starting works work live valid new version versions need needs ships shipped bump upgrade".split()
 )
 VERSION_NOTE_FILLER_WORDS = VERSION_NOTE_LEAD_WORDS | frozenset(
     "a and as at be feature from gateway in integration is it note of on only "
     "litellm proxy python sdk server that the this to with".split()
 )
 VERSION_NOTE_NEGATION_WORDS = frozenset(
-    "before deprecated dropped longer never no not prior removed until up".split()
+    "before broke broken changed deprecated dropped failed failing fails longer never no not prior regressed "
+    "removed until up".split()
 )
 VERSION_NOTE_LOOKBACK = 5
 SINCE_VERSION_TAG_RE = re.compile(r"<SinceVersion\b([^>]*)>")
@@ -566,10 +583,20 @@ def version_note_literal(raw):
 
 
 def is_version_note(text, match):
-    clause_tail = VERSION_NOTE_CLAUSE_END_RE.split(text[match.end():], maxsplit=1)[0]
+    after = text[match.end():]
+    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(text[: match.start()])]
+    negated = not VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[-VERSION_NOTE_LOOKBACK:])
+    loose_shape = LITELLM_RELEASE_RE.match(match.group(0)) and VERSION_NOTE_QUALIFIER_RE.match(after)
+    if loose_shape and names_litellm(lead_in):
+        return not negated
+    clause_tail = VERSION_NOTE_CLAUSE_END_RE.split(after, maxsplit=1)[0]
     if not VERSION_NOTE_TAIL_RE.match(clause_tail):
         return False
-    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(text[: match.start()])]
+    if VERSION_NOTE_TAIL_LEAD_RE.search(clause_tail):
+        return not negated
+    cell_lead_in = VERSION_NOTE_WORD_RE.findall(text[text.rfind("|", 0, match.start()) + 1 : match.start()])
+    if loose_shape and all(word.lower() in VERSION_NOTE_FILLER_WORDS for word in cell_lead_in):
+        return not negated
     for distance, word in enumerate(reversed(lead_in[-VERSION_NOTE_LOOKBACK:]), start=1):
         if word in VERSION_NOTE_NEGATION_WORDS:
             return False
@@ -579,6 +606,60 @@ def is_version_note(text, match):
         if word not in VERSION_NOTE_FILLER_WORDS:
             return False
     return False
+
+
+def names_litellm(lead_in):
+    name = list(itertools.dropwhile(lambda word: word != "litellm", lead_in[-len(LITELLM_NAME_WORDS):]))
+    return bool(name) and all(word in LITELLM_NAME_WORDS for word in name)
+
+
+def renders_as_plain_markdown(page):
+    if not page.lines or page.lines[0].strip() != FRONTMATTER_DELIM:
+        return False
+    end = next((i for i, line in enumerate(page.lines[1:], 1) if line.strip() == FRONTMATTER_DELIM), 0)
+    return any(PLAIN_MARKDOWN_FORMAT_RE.match(line) for line in page.lines[1:end])
+
+
+CONFIG_SETTINGS_PATH = "docs/proxy/config_settings.md"
+CONFIG_ROW_RE = re.compile(r"^\|\s*`?([A-Za-z_][\w.-]*)`?\s*\|")
+PLAIN_MARKDOWN_FORMAT_RE = re.compile(r"^\s+format:\s*[\"']?md[\"']?\s*$")
+
+
+def config_row_keys(text):
+    return {m.group(1) for m in map(CONFIG_ROW_RE.match, text.split("\n")) if m}
+
+
+def new_config_rows_without_badge(base_text, head_text):
+    known = config_row_keys(base_text)
+    rows = [(line_no, line, CONFIG_ROW_RE.match(line)) for line_no, line in enumerate(head_text.split("\n"), 1)]
+    return [
+        (line_no, m.group(1))
+        for line_no, line, m in rows
+        if m and m.group(1) not in known and not SINCE_VERSION_TAG_RE.search(line) and "keep-version-note" not in line
+    ]
+
+
+def version_missing_errors(base_ref, repo_root=REPO_ROOT):
+    shown = subprocess.run(
+        ["git", "show", f"{base_ref}:{CONFIG_SETTINGS_PATH}"], cwd=repo_root, capture_output=True, text=True
+    )
+    head_path = os.path.join(repo_root, CONFIG_SETTINGS_PATH)
+    if not os.path.exists(head_path):
+        return []
+    if shown.returncode != 0:
+        return [("version-missing", CONFIG_SETTINGS_PATH, 0, f"cannot read it at `{base_ref}`: {shown.stderr.strip()}")]
+    with open(head_path, encoding="utf-8") as f:
+        head_text = f.read()
+    return [
+        (
+            "version-missing",
+            CONFIG_SETTINGS_PATH,
+            line_no,
+            f"new setting `{key}` has no <SinceVersion /> badge; add `<SinceVersion v=\"1.85.0\" />` naming the first "
+            "release that carries it (the next release while its code is unreleased)",
+        )
+        for line_no, key in new_config_rows_without_badge(shown.stdout, head_text)
+    ]
 
 
 def badge_version(literal):
@@ -706,6 +787,7 @@ def summarize_yaml_error(e):
 
 def main(argv):
     roots = [a for a in argv if not a.startswith("--")] or ["docs"]
+    base_ref = next((a[len("--base="):] for a in argv if a.startswith("--base=")), None)
     only = {rule for a in argv if a.startswith("--only=") for rule in a[len("--only="):].split(",") if rule}
     files = []
     for root in roots:
@@ -717,6 +799,8 @@ def main(argv):
         page = page_cache.get(path) or Page(path)
         page_cache[path] = page
         all_errors.extend(e for e in check_page(page, site, page_cache) if not only or e[0] in only)
+    if base_ref:
+        all_errors.extend(e for e in version_missing_errors(base_ref) if not only or e[0] in only)
 
     by_rule = {}
     for rule, rel, line_no, message in all_errors:

@@ -21,7 +21,7 @@ uv add boto3>=1.28.57
 
 :::info
 
-For **Amazon Nova Models**: Bump to v1.53.5+
+**Amazon Nova** models work <SinceVersion v="1.53.5" />.
 
 :::
 

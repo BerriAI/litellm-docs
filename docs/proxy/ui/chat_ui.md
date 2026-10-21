@@ -13,7 +13,9 @@ Each request from the Chat UI goes through the gateway. LiteLLM applies the same
 
 :::info Beta
 
-The Chat UI is a beta feature. Its pages and controls can change in new releases. <SinceVersion v="1.92.0" />
+<SinceVersion v="1.92.0" />
+
+The Chat UI is a beta feature. Its pages and controls can change in new releases.
 
 :::
 

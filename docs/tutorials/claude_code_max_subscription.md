@@ -30,7 +30,7 @@ Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
 - [Claude Code](https://code.claude.com/docs/en/overview) installed
 - A Claude Pro, Max, Team, or Enterprise subscription (Team and Enterprise members sign in with the Claude account their admin invited)
-- LiteLLM Gateway v1.81.14 or later
+- LiteLLM Gateway <SinceVersion v="1.81.14" />
 - A PostgreSQL database for the proxy, which the Dashboard needs for virtual keys and logs
 
 ## Step 1: Configure LiteLLM Proxy
@@ -321,7 +321,7 @@ curl -X POST "http://localhost:4000/key/generate" \
 
 ### Seeing Which Requests Were Billed to a Seat
 
-Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field is recorded <SinceVersion v="1.105.0" />, and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field is recorded <SinceVersion v="1.105.0" /> (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
 
 `spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
 
@@ -340,7 +340,7 @@ Pass `used_client_oauth_token=false` for the requests the configured key paid fo
 
 **Symptom**: Authentication errors from Anthropic API, or usage billed to the configured API key instead of the subscription
 
-**Solution**: Check that you are on LiteLLM v1.81.14 or later, that the model is an `anthropic/` deployment, and that Claude Code reaches the proxy root (`/v1/messages`) rather than `/anthropic`. In Claude Code, `/status` shows the active login; if `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper` is set, Claude Code sends that instead of the subscription token. A `401 OAuth access token is invalid.` means the login expired or was revoked; run `/login`.
+**Solution**: Check that your LiteLLM is new enough <SinceVersion v="1.81.14" />, that the model is an `anthropic/` deployment, and that Claude Code reaches the proxy root (`/v1/messages`) rather than `/anthropic`. In Claude Code, `/status` shows the active login; if `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or an `apiKeyHelper` is set, Claude Code sends that instead of the subscription token. A `401 OAuth access token is invalid.` means the login expired or was revoked; run `/login`.
 
 ### LiteLLM Authentication Failing
 
