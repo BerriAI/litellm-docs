@@ -107,7 +107,7 @@ These instructions are courtesy of [LidorMachluf](https://github.com/LidorMachlu
 
 ## How this happened?
 
-After the prior incident in March, we meaningfully hardened our CI release pipeline. We moved releases to a private repo, have a strict set of workflows used in order to create them via Trusted GitHub Publishers, made our docker release tags immutable, and are signing docker images.
+After the prior incident in March, we [meaningfully hardened our CI release pipeline](/blog/ci-cd-v2-improvements). We moved releases to a private repo, have a strict set of workflows used in order to create them via Trusted GitHub Publishers, made our docker release tags immutable, and are signing docker images.
 
 ### Normal release flow
 
