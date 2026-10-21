@@ -8,6 +8,8 @@ LiteLLM Follows the [cohere api request / response for the rerank api](https://c
 
 ## Overview
 
+To use Perplexity or TypeSafe Jev for reranking, see the [JevRank preview](./decisions/rerank.md). The guide covers multiple-choice and per-document scoring, configuration and failure handling.
+
 | Feature | Supported                                                                                           | Notes |
 |---------|-----------------------------------------------------------------------------------------------------|-------|
 | Cost Tracking | ✅                                                                                                   | Works with all supported models |
@@ -137,4 +139,4 @@ curl http://0.0.0.0:4000/rerank \
 | Vertex AI                | [Usage](../docs/providers/vertex#rerank-api)         |
 | Fireworks AI             | [Usage](/docs/providers/fireworks_ai#rerank) |
 | VoyageAI by MongoDB      | [Usage](../docs/providers/voyage#rerank)             |  
-| IBM watsonx.ai           | [Usage](../docs/providers/watsonx/rerank)            |  
+| IBM watsonx.ai           | [Usage](../docs/providers/watsonx/rerank)            |

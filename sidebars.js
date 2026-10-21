@@ -1208,6 +1208,7 @@ const sidebars = {
       items: [
         "decisions/providers",
         "decisions/benchmark",
+        "decisions/rerank",
         "decisions/admin_ui",
       ],
     },
