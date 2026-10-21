@@ -90,10 +90,10 @@ The pass-through runs the same model access check as `/chat/completions`. When a
 | Entry in `models` | Allows |
 |-------|-------|
 | `jev-latest` | `jev-latest` only |
-| `typesafe/*` | Every Jev model, such as `jev-latest`, `jev-preview` and `jev-1.14.0` |
+| `typesafe/*` | `jev-latest`, `jev-preview` and versioned names such as `jev-1.14.0` |
 | `typesafe/jev-latest` | Not a bare `jev-latest` call |
 
-A call whose model a list does not allow gets a 403, such as `team_model_access_denied` for a team list. For example, this team allows every Jev model:
+A call whose model a list does not allow gets a 403, such as `team_model_access_denied` for a team list. For example, this team allows the published Jev models:
 
 ```bash showLineNumbers
 curl -X POST "$LITELLM_PROXY_BASE_URL/team/new" \
@@ -104,7 +104,7 @@ curl -X POST "$LITELLM_PROXY_BASE_URL/team/new" \
 
 In the Admin UI, the team and organization **Models** dropdowns offer **All Typesafe models** (`typesafe/*`) and each Jev model when `TYPESAFE_API_KEY` is set in the proxy environment.
 
-Available from v1.108.0.
+The dropdown options are available from v1.108.0. `typesafe/*` matching comes from LiteLLM's model registry, so a proxy that loads the registry from GitHub, which is the default, gets it before upgrading.
 
 ## Try it in the Admin UI
 
