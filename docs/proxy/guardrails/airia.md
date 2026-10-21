@@ -140,10 +140,17 @@ Either the config value or the environment variable must be set for `api_base` a
 
 ## Modes
 
-| Mode | Checks |
-|---|---|
-| `pre_call` | The prompt, before the model is called |
-| `post_call` | The model's response, before it is returned |
+| Mode | Checks | Airia direction |
+|---|---|---|
+| `pre_call` | The prompt, before the model is called | Prompts |
+| `during_call` | The prompt, in parallel with the model call | Prompts |
+| `post_call` | The model's response, before it is returned | Responses |
+| `pre_mcp_call` | The arguments of an MCP tool call, before the tool runs | Prompts |
+| `post_mcp_call` | The result of an MCP tool call, before it is returned | Responses |
+
+`during_call` trades protection for latency. The prompt is sent to the model while Airia checks it, so a **Block** discards the model's response but cannot stop the prompt from reaching the provider. A **Redact** outcome is enforced as a **Block** in this mode, because the prompt has already been sent unredacted. Use `pre_call` when sensitive data must never reach the model.
+
+`pre_mcp_call` and `post_mcp_call` apply to tools called through the [LiteLLM MCP gateway](../../mcp_guardrail). A **Block** stops the tool call or withholds its result, and a **Redact** rewrites the flagged argument or result text in place. `pre_mcp_call` also checks tool descriptions when clients list the tools, as described in [scanning tool descriptions on discovery](../../mcp_guardrail#scanning-tool-descriptions-on-discovery). Tool calls that the model requests in a chat completion are part of the prompt and response, and are already covered by `pre_call` and `post_call`.
 
 
 To apply the guardrail to some callers only, leave `default_on` unset and enable it per virtual key with LiteLLM's standard [per-key guardrail controls](./quick_start#-control-guardrails-per-api-key).
