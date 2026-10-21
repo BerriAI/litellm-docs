@@ -224,11 +224,11 @@ The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Pytho
 <details>
 <summary>Token storage and caching</summary>
 
-On the gateway, LiteLLM encrypts each user's GitHub access token and stores it in the database. It does not store a refresh token. Disconnecting removes the stored connection.
+On the gateway, LiteLLM encrypts and stores each user's GitHub access token and any refresh token returned by GitHub. It refreshes expiring tokens before expiry or after the Copilot token exchange rejects the access token, so users can keep working without reconnecting. Users need to reconnect if GitHub's six-month refresh-token lifetime expires, GitHub rejects a refresh, or GitHub revokes an access token that has no refresh token. Disconnecting removes the stored connection.
 
 With Redis, LiteLLM caches the encrypted credential or a record of no connection for 60 seconds. Without Redis, requests read the database.
 
-Each worker caches the short-lived Copilot token in memory until 60 seconds before its expiry. If GitHub returns 401, 403, or 404 during token exchange, LiteLLM clears the cached session and asks the user to reconnect.
+Each worker caches the short-lived Copilot token in memory until 60 seconds before its expiry. If GitHub still returns 401, 403, or 404 during token exchange after any refresh attempt, LiteLLM clears the cached session and asks the user to reconnect.
 
 Direct SDK calls read the GitHub access token from disk and exchange it for a Copilot API token, cached in `api-key.json` until it expires
 
