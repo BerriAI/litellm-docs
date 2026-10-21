@@ -1414,6 +1414,7 @@ const sidebars = {
         { type: "ref", id: "response_api" },
         "prompt_management",
         "response_api_compact",
+        "response_api_native_passthrough",
         {
           type: "category",
           label: "/search",
