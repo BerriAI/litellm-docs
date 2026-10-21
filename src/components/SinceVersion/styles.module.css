@@ -12,7 +12,7 @@
   vertical-align: baseline;
 }
 
-:global(.markdown) > .badge {
+div > .badge {
   display: block;
   width: fit-content;
   margin-bottom: var(--ifm-paragraph-margin-bottom);

@@ -29,6 +29,10 @@ class VersionNoteTests(unittest.TestCase):
             ("| Supported LiteLLM Versions | 1.63.8+ |", "1.63.8"),
             ("Available from v1.108.0.", "1.108.0"),
             ("- `encrypted_content_affinity`: routing for encrypted items (**requires LiteLLM >= 1.82.3**)", "1.82.3"),
+            ("| http2 | boolean | Uses HTTP/2. Available from v1.103.0. [Further docs](./server_tuning) |", "1.103.0"),
+            ("| LIMIT_MB | Available from v1.108.0. Maximum size in MB of a request body. |", "1.108.0"),
+            ("Checks: `prompt_caching`, `encrypted_content_affinity` (requires LiteLLM >= 1.82.3), `session_affinity`", "1.82.3"),
+            ("From v1.81.0 the request is set as attributes on the parent span. Available from v1.108.0.", "1.108.0"),
         ):
             with self.subTest(line=line):
                 errors = self.version_notes(f"# Page\n\n{line}\n")
@@ -38,6 +42,7 @@ class VersionNoteTests(unittest.TestCase):
     def test_badges_pass(self):
         self.assertEqual(self.version_notes('# Page\n\n<SinceVersion v="1.85.0" />\n'), [])
         self.assertEqual(self.version_notes('| Versions | <SinceVersion v="1.63.8" /> |\n'), [])
+        self.assertEqual(self.version_notes("# Page\n\n<SinceVersion v={'1.85.0'} />\n"), [])
 
     def test_badge_without_a_version_is_rejected(self):
         errors = self.version_notes("# Page\n\n<SinceVersion />\n")
@@ -56,6 +61,18 @@ class VersionNoteTests(unittest.TestCase):
             "Supported on Claude Code 2.1.0 and later.",
             ":::info[Versioning changed with the 1.84.0 release]",
             "{/* keep-version-note */} This requires LiteLLM v1.85.0",
+            "Requires version 12.3.1 or later.",
+            "Uses HTTP/2. Available in v1.103.0 for every provider. [Further docs](./server_tuning)",
+        ):
+            with self.subTest(line=line):
+                self.assertEqual(self.version_notes(f"# Page\n\n{line}\n"), [])
+
+    def test_removal_notes_are_not_rejected_as_availability(self):
+        for line in (
+            "No longer supported since v1.110.0.",
+            "Not available in v1.110.0 and later.",
+            "Works only up to v1.110.0.",
+            "Deprecated since v1.110.0.",
         ):
             with self.subTest(line=line):
                 self.assertEqual(self.version_notes(f"# Page\n\n{line}\n"), [])

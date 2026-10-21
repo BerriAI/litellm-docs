@@ -975,7 +975,7 @@ The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm
 
 ## Authentication on `/metrics` endpoint
 
-**By default, `/metrics` requires LiteLLM API key authentication** <SinceVersion v="1.85.0" />
+**From v1.85.0, `/metrics` requires LiteLLM API key authentication by default.**
 
 For Prometheus, add `authorization` to your scrape config:
 

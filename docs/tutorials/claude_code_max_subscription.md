@@ -30,7 +30,7 @@ Watch the end-to-end walkthrough of setting up Claude Code with LiteLLM Gateway:
 
 - [Claude Code](https://code.claude.com/docs/en/overview) installed
 - A Claude Pro, Max, Team, or Enterprise subscription (Team and Enterprise members sign in with the Claude account their admin invited)
-- LiteLLM Gateway <SinceVersion v="1.81.14" />
+- LiteLLM Gateway v1.81.14 or later
 - A PostgreSQL database for the proxy, which the Dashboard needs for virtual keys and logs
 
 ## Step 1: Configure LiteLLM Proxy
@@ -257,7 +257,7 @@ Anthropic's [Legal and compliance](https://code.claude.com/docs/en/legal-and-com
 
 ### Which requests use the subscription token
 
-The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the model is an `anthropic/` deployment. It is never sent to other providers, including Claude on Bedrock or Vertex AI, which keep using their own credentials (since v1.99.0). `/v1/messages/count_tokens` uses the deployment's configured key, not the subscription token. The `/anthropic` pass-through route does not use the subscription token when the proxy has an Anthropic key configured, so point `ANTHROPIC_BASE_URL` at the proxy root as shown above rather than at `/anthropic`.
+The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the model is an `anthropic/` deployment. From v1.99.0 it is never sent to other providers, including Claude on Bedrock or Vertex AI, which keep using their own credentials. `/v1/messages/count_tokens` uses the deployment's configured key, not the subscription token. The `/anthropic` pass-through route does not use the subscription token when the proxy has an Anthropic key configured, so point `ANTHROPIC_BASE_URL` at the proxy root as shown above rather than at `/anthropic`.
 
 ### Credential storage, refresh, and revocation
 

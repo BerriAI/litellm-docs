@@ -36,7 +36,7 @@ If a Saturday `rc` fails QA it is not promoted; a fix lands, a follow-up `rc` ma
 
 ### Is there a release schedule for LiteLLM stable release?
 
-Stable releases come out every week (typically Sunday). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`.
+Stable releases come out every week (typically Sunday). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
 
 ### What is considered a 'minor' bump vs. 'patch' bump?
 

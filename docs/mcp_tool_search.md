@@ -178,7 +178,7 @@ async with streamablehttp_client(
 
 ## Prerequisites
 
-Requires LiteLLM v1.92.x or later. Semantic ranking, `similarity_threshold`, and `core_tools` require v1.102.0 or later plus an embedding model in `model_list`, and `/mcp/proxy` requires v1.102.0 or later. Neither needs an extra Python dependency.
+Requires LiteLLM v1.92.x or later. Semantic ranking, `similarity_threshold`, `core_tools`, and `/mcp/proxy` <SinceVersion v="1.102.0" /> came later. The first three also need an embedding model in `model_list`. Neither needs an extra Python dependency.
 
 ## Access control
 

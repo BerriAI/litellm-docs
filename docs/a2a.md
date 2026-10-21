@@ -75,7 +75,7 @@ If an agent created in the UI already uses a name you then declare in `config.ya
 
 Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
 
-The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+The `agents` key is read correctly from `v1.96.0`. On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
 
 :::
 

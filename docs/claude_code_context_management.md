@@ -309,7 +309,7 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 
 > **Hard floor:** regardless of `keep`, LiteLLM's polyfill never clears the most recently completed `tool_result` - the one the model is about to reply to.
 
-`clear_at_least`, `exclude_tools` and `clear_tool_inputs` are available from v1.108.0. Earlier versions accept them and ignore them.
+`clear_at_least`, `exclude_tools` and `clear_tool_inputs` <SinceVersion v="1.108.0" /> came later. Earlier versions accept them and ignore them.
 
 The polyfill handles these fields the way Anthropic's API does:
 

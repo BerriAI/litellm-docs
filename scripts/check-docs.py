@@ -54,12 +54,13 @@ as written.
 Feature availability is stated with the <SinceVersion /> badge
 (src/components/SinceVersion), so a reader can tell at a glance whether a
 feature exists in the version they run. The version-note rule fails a prose
-line that ends in a hand-written availability note ("Requires LiteLLM
+sentence that ends in a hand-written availability note ("Requires LiteLLM
 v1.76.1+", "This feature is available in v1.74.3-stable and above", a table
-cell holding "1.63.8+") and points at the badge. The note has to be the tail of
-the line and carry exactly one version, so a sentence that happens to mention a
+cell holding "1.63.8+") and points at the badge. The version has to end its
+sentence, table cell, or parenthesis, so a sentence that happens to mention a
 release ("From v1.81.0 the request is set as attributes on the parent span") is
-left alone. Another project's version usually is too, since the words leading
+left alone, and so is a removal note ("No longer supported since v1.110.0").
+Another project's version usually is too, since the words leading
 into it are not availability words, but a line like "requires the SDK 1.1.0"
 does fire. Add `{/* keep-version-note */}` to the line there, and wherever the
 release itself is the subject, as on the release-cycle page.
@@ -533,8 +534,9 @@ def python_literal_message(literal):
     )
 
 
-VERSION_TOKEN_RE = re.compile(r"v?[12]\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
-VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_|>]")
+VERSION_TOKEN_RE = re.compile(r"(?<![\w.])v?[12]\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
+VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_>]")
+VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;!?](?=\s|$)|[|)]")
 VERSION_NOTE_TAIL_RE = re.compile(
     r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
     re.I,
@@ -546,26 +548,35 @@ VERSION_NOTE_LEAD_WORDS = frozenset(
 )
 VERSION_NOTE_FILLER_WORDS = VERSION_NOTE_LEAD_WORDS | frozenset(
     "a and as at be feature from gateway in integration is it note of on only "
-    "litellm proxy python sdk server that the this to up with".split()
+    "litellm proxy python sdk server that the this to with".split()
+)
+VERSION_NOTE_NEGATION_WORDS = frozenset(
+    "before deprecated dropped longer never no not prior removed until up".split()
 )
 VERSION_NOTE_LOOKBACK = 5
 SINCE_VERSION_TAG_RE = re.compile(r"<SinceVersion\b([^>]*)>")
-SINCE_VERSION_PROP_RE = re.compile(r"\bv\s*=\s*[\"']([^\"']+)[\"']")
+SINCE_VERSION_PROP_RE = re.compile(r"\bv\s*=\s*(?:[\"'][^\"']+[\"']|\{\s*[\"'`][^\"'`]+[\"'`]\s*\})")
 
 
 def version_note_literal(raw):
     text = VERSION_NOTE_STRIP_RE.sub(" ", raw)
-    match = VERSION_TOKEN_RE.search(text)
-    if not match or not VERSION_NOTE_TAIL_RE.match(text[match.end():]):
-        return None
-    lead_in = VERSION_NOTE_WORD_RE.findall(text[: match.start()])
-    for word in reversed(lead_in[-VERSION_NOTE_LOOKBACK:]):
-        lowered = word.lower()
-        if lowered in VERSION_NOTE_LEAD_WORDS:
-            return match.group(0)
-        if lowered not in VERSION_NOTE_FILLER_WORDS:
-            return None
-    return None
+    return next((m.group(0) for m in VERSION_TOKEN_RE.finditer(text) if is_version_note(text, m)), None)
+
+
+def is_version_note(text, match):
+    clause_tail = VERSION_NOTE_CLAUSE_END_RE.split(text[match.end():], maxsplit=1)[0]
+    if not VERSION_NOTE_TAIL_RE.match(clause_tail):
+        return False
+    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(text[: match.start()])]
+    for distance, word in enumerate(reversed(lead_in[-VERSION_NOTE_LOOKBACK:]), start=1):
+        if word in VERSION_NOTE_NEGATION_WORDS:
+            return False
+        if word in VERSION_NOTE_LEAD_WORDS:
+            lead_at = len(lead_in) - distance
+            return VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[max(0, lead_at - 2):lead_at])
+        if word not in VERSION_NOTE_FILLER_WORDS:
+            return False
+    return False
 
 
 def version_note_message(literal):

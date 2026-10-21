@@ -38,13 +38,16 @@ function extractSections(html, url, metadata = {}) {
     }
     parts = []; links = new Map();
   }
-  article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li').each((_, element) => {
+  article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li,[data-since-version]').each((_, element) => {
     const node = $(element);
-    if (node.parents('pre,table,li').length) return;
+    const badge = node.is('[data-since-version]');
+    if (node.parents(badge ? 'p,pre,table,li,h1,h2,h3,h4,h5,h6' : 'pre,table,li').length) return;
     if (/^h[1-6]$/.test(element.tagName)) {
       flush();
       heading = element.tagName === 'h1' ? '' : node.text().trim();
       anchor = element.tagName === 'h1' ? '' : node.attr('id') || '';
+    } else if (badge) {
+      parts.push(node.attr('title'));
     } else {
       const text = element.tagName === 'table'
         ? node.find('tr').map((_, row) => $(row).find('th,td').map((_, cell) => $(cell).text().trim()).get().join(' | ')).get().join('\n')
