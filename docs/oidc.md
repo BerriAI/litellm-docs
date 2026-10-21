@@ -43,7 +43,7 @@ LiteLLM supports the following OIDC relying parties / clients:
 
 ### Configuring OIDC
 
-Wherever a secret key can be used, OIDC can be used in-place. The general format is:
+You can use an OIDC reference in place of a secret in the credential fields that support it, such as `aws_web_identity_token` for Amazon Bedrock and `azure_ad_token` for Azure OpenAI. A model's `api_key` takes only some kinds, as [Using OIDC as a model's `api_key`](#using-oidc-as-a-models-api_key) explains. The general format is:
 
 ```
 oidc/config_name_here/audience_here
@@ -99,6 +99,25 @@ oidc/env_path/SECRET_TOKEN
 If you are tempted to use oidc/env_path/AZURE_FEDERATED_TOKEN_FILE, don't do that. Instead, use `oidc/azure/`, as this will ensure continued support from LiteLLM if Azure changes their OIDC configuration and/or adds new features.
 
 :::
+
+### Using OIDC as a model's `api_key`
+
+Available from v1.108.0.
+
+A model's `api_key` can hold an OIDC reference. The proxy resolves it on each call and sends the result as the key, so a rotated token is used with no restart, and the config keeps the reference text. `api_key` accepts `oidc/file/<absolute path>`, `oidc/env/<VARIABLE_NAME>` and `oidc/google/<audience>`. Other kinds, such as `oidc/github/`, `oidc/azure/`, `oidc/circleci/` and `oidc/env_path/`, answer 401.
+
+```yaml
+model_list:
+  - model_name: vllm-model
+    litellm_params:
+      model: hosted_vllm/my-model
+      api_base: https://vllm.example.com/v1
+      api_key: oidc/google/https://vllm.example.com
+```
+
+With `oidc/google/<audience>`, the proxy gets a Google ID token for that audience from the Google Cloud metadata server and sends it as the bearer token. It caches the token until a minute before it expires, for at most 59 minutes, and then gets a new one. If the fetch fails, the call answers 401 with `api_key oidc/google secret reference could not be resolved: the metadata server did not return an ID token`, so the router can fail over to another deployment. The metadata server is `metadata.google.internal` by default. To use a different one, set `GCE_METADATA_HOST` to its host or host:port, with no scheme.
+
+Only an `api_key` that an admin sets is resolved, on a model in config.yaml or on a model an admin adds. The proxy refuses a reference sent in a client request or stored on a team, and it sends the token only to the `api_base` configured beside the reference.
 
 ## Examples
 
