@@ -329,11 +329,9 @@ From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM se
 
 ### Through the `/openrouter` pass-through
 
-`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends is the `api_key` of the first `openrouter/` deployment in `model_list` that sets `use_in_pass_through: true`, or `OPENROUTER_API_KEY` when no deployment does. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is available from v1.104.0.
+`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends is the `api_key` of the first `openrouter/` deployment in `model_list` that sets `use_in_pass_through: true` and has an `api_key`, or `OPENROUTER_API_KEY` when no deployment does. The request always goes to `OPENROUTER_API_BASE`, never to that deployment's `api_base`. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is in v1.104.0 and later, and in v1.101.1 and v1.102.1 and the later patches on those two lines, but in no v1.103 release.
 
 The path is relative to `https://openrouter.ai/api`, which is `OPENROUTER_API_BASE` without its trailing `/v1`. So the Decisions API is `/openrouter/alpha/decisions`. Do not add `/api` to the path, since `/openrouter/api/alpha/decisions` goes to `https://openrouter.ai/api/api/alpha/decisions` and OpenRouter answers it with a 404.
-
-A virtual key with a `models` list needs the model name from the request body, here `typesafe/jev-1.14`, in that list. The pass-through checks access against that name, not against a `model_list` alias such as `jev`, and answers 403 without it.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/openrouter/alpha/decisions' \
@@ -358,4 +356,4 @@ Response
 }
 ```
 
-LiteLLM logs each `/alpha/decisions` call under the versioned model that OpenRouter returns, for example `openrouter/typesafe/jev-1.14-20261014`. From v1.104.3, the spend is the `usage.cost` in the response, and earlier releases have no price for `jev-1.14`. Calls to other `/openrouter` paths, such as `/openrouter/v1/chat/completions`, are forwarded but record $0 spend, so budgets do not count them.
+LiteLLM logs each `/alpha/decisions` call under the versioned model that OpenRouter returns, for example `openrouter/typesafe/jev-1.14-20261014`. From v1.104.3, the spend is the `usage.cost` in the response, and earlier releases have no price for `jev-1.14`. The `v1.105.0` dev builds and release candidates and the `v1.106.0` dev builds do not read `usage.cost` either. Calls to other `/openrouter` paths, such as `/openrouter/v1/chat/completions`, are forwarded but record $0 spend, so budgets do not count them.
