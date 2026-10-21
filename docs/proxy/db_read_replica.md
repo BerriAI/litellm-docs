@@ -69,6 +69,48 @@ On AWS this pairs naturally with Aurora's reader endpoint, which resolves to
 the reader instances in the cluster. On Azure it pairs with the read replicas
 of an Azure Database for PostgreSQL Flexible Server.
 
+### RDS IAM auth across regions
+
+With `IAM_TOKEN_DB_AUTH=True`, LiteLLM signs the writer and reader tokens
+independently, so a writer and a cross-region read replica can each be signed
+in their own region. For each connection the signing region resolves in this
+order: the connection's override, then the region in its RDS hostname, then the
+process AWS region (`AWS_REGION_NAME`, falling back to `AWS_REGION`). The
+writer override is `AWS_RDS_REGION` and the reader override is
+`AWS_RDS_READ_REPLICA_REGION`. The reader never inherits `AWS_RDS_REGION`, so a
+writer-only override leaves the reader on its own resolution path. Values that
+are empty or only whitespace count as unset and the resolution moves on to the
+next source
+
+For canonical RDS endpoints no overrides are needed; the hostname already
+carries the region. Set them when the signing region must differ from what the
+hostname implies:
+
+```shell
+export IAM_TOKEN_DB_AUTH=true
+export DATABASE_HOST=writer.abc123.us-east-1.rds.amazonaws.com
+export DATABASE_PORT=5432
+export DATABASE_USER=iam_user
+export DATABASE_NAME=litellm
+export DATABASE_URL_READ_REPLICA=postgresql://iam_user@reader.abc123.ap-northeast-1.rds.amazonaws.com:5432/litellm?sslmode=require
+export AWS_RDS_REGION=us-east-1
+export AWS_RDS_READ_REPLICA_REGION=ap-northeast-1
+```
+
+An explicit override wins even when it disagrees with the hostname, so a wrong
+region fails authentication on that connection. A failed reader falls back to
+the writer for reads per the degradation behavior above; a failed writer fails
+the boot. The overrides apply to token mints at startup and to every renewal,
+including readers assembled through `DATABASE_HOST_READ_REPLICA` and writers
+behind the in-container PgBouncer. They do not affect Bedrock or other AWS
+service regions, password authentication, or Azure Entra authentication
+
+Region overrides only choose the signing region; they do not rewrite the
+hostname the token is signed for. AWS requires the actual RDS endpoint when
+generating an IAM token, so custom DNS names (for example a Route 53 record)
+still need the canonical RDS endpoint in the connection configuration. TLS
+hostname verification is independent of region selection
+
 ## Kubernetes / Helm
 
 The official Helm chart exposes two ways to wire the reader URL:
@@ -146,8 +188,10 @@ It is **not** useful when:
 The proxy does not implement read-after-write consistency for the reader
 endpoint. If your replication lag is meaningful (>100ms) and you have flows
 that write then immediately read the same row, those reads may see stale data.
-Code that needs strong consistency on a fresh write should use `query_raw`
-through the writer or rely on transaction-scoped reads.
+`query_raw` and `query_first` on the proxy's Prisma client route to the reader
+like every other read, so code that needs read-your-writes consistency should
+read through `WriterPinnedClient` (from `litellm.proxy.db.routing_prisma_wrapper`)
+or inside a transaction (`tx`), both of which run on the writer
 
 ## Related env vars
 

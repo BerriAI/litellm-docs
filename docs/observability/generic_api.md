@@ -97,16 +97,14 @@ export GENERIC_LOGGER_HEADERS="Authorization=Bearer token,Custom-Header=value"
 
 ## Batch Settings
 
-Control batching behavior (inherits from `CustomBatchLogger`):
+Logs are queued in memory and sent when the queue reaches the batch size or when the flush interval elapses, whichever comes first. `batch_size` and `flush_interval` are not read from `callback_settings`, so set them with environment variables on the proxy instead:
 
-```yaml
-callback_settings:
-  my_api:
-    callback_type: generic_api
-    endpoint: https://your-endpoint.com
-    batch_size: 100        # default: 100
-    flush_interval: 60     # seconds, default: 60
+```bash
+export DEFAULT_BATCH_SIZE=512                # default: 512
+export DEFAULT_FLUSH_INTERVAL_SECONDS=5      # default: 5
 ```
+
+These variables are global and apply to every batching logger on the proxy, not only `generic_api` callbacks
 
 ## Log Format Options
 

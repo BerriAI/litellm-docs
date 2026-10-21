@@ -186,7 +186,7 @@ Content policy fallbacks are models that can handle requests when the primary mo
 
 ### Example Response
 
-When `include_metadata=true` is specified, the response includes fallback information:
+When `include_metadata=true` is specified, each model carries a `metadata.fallbacks` list for a single fallback type, the one named by `fallback_type` (`general` when omitted). To see all three types, send one request per `fallback_type`:
 
 ```json
 {
@@ -196,10 +196,8 @@ When `include_metadata=true` is specified, the response includes fallback inform
       "object": "model",
       "created": 1677610602,
       "owned_by": "openai",
-      "fallbacks": {
-        "general": ["{{openai_small}}", "{{anthropic}}"],
-        "context_window": ["{{openai_small}}", "{{anthropic}}"],
-        "content_policy": ["{{anthropic}}"]
+      "metadata": {
+        "fallbacks": ["{{openai_small}}", "{{anthropic}}"]
       }
     }
   ]
@@ -219,7 +217,7 @@ When `include_metadata=true` is specified, the response includes fallback inform
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `include_metadata` | boolean | Include additional model metadata including fallbacks |
-| `fallback_type` | string | Filter fallbacks by type: `general`, `context_window`, or `content_policy` |
+| `fallback_type` | string | Which fallbacks to return in `metadata.fallbacks`: `general` (default), `context_window`, or `content_policy`. Any other value returns a 400 |
 
 ## **Reserve a deployment for a team during a time window**
 

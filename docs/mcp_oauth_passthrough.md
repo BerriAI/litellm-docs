@@ -370,11 +370,11 @@ OpenCode reads them from `opencode.json`:
 
 :::warning[Deprecated]
 
-`delegate_auth_to_upstream` is the original flag-based form of transparent passthrough and is planned for deprecation. It is the direct predecessor of `auth_type: true_passthrough` and behaves the same way (same how-it-works, same fail-closed behavior, same security trade-offs), so new servers should use `true_passthrough`. The section below is kept for existing configs.
+`delegate_auth_to_upstream` is the original flag-based form of client-forwarded OAuth and is deprecated. It no longer bypasses LiteLLM admission: on current versions LiteLLM still requires its own API key, SSO, or JWT on every request that carries a bearer, and the proxy logs a deprecation warning when a server is loaded with `auth_type: oauth2` and `delegate_auth_to_upstream: true`. New servers should use `auth_type: oauth_delegate` (admission required, upstream token forwarded) or `auth_type: true_passthrough` (no admission). Existing configs should migrate to one of those two. The section below describes what the legacy flag still does.
 
 :::
 
-For OAuth2 MCP servers where the client already authenticates directly against the upstream server's own OAuth issuer, you can opt the route into **upstream-delegated auth**: LiteLLM stops checking its own API key / SSO and lets the client's PKCE flow run end-to-end with the upstream MCP server.
+For OAuth2 MCP servers where the client authenticates directly against the upstream server's own OAuth issuer, the legacy flag lets a credential-free client reach the upstream's OAuth challenge through LiteLLM so it can start PKCE. Once the client holds an upstream token it must also present a LiteLLM credential, exactly as with `oauth_delegate`.
 
 ### Setup
 
@@ -389,21 +389,19 @@ mcp_servers:
 
 Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
 
-:::warning[Internal-only (`available_on_public_internet: false`) **and** upstream PKCE delegation]
+:::warning[Internal-only (`available_on_public_internet: false`) and the anonymous discovery step]
 
-Using **`available_on_public_internet: false`** together with **`delegate_auth_to_upstream: true`** on an **`auth_type: oauth2`** interactive server (not `oauth2_flow: client_credentials`) still allows **anonymous** callers to reach the upstream OAuth2 **`/authorize`** flow and complete PKCE for matching MCP routes **without a LiteLLM API key session**. The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)); it does **not** disable this delegate bypass.
-
-**What to do:** Enforce access at the upstream IdP and network edge. The LiteLLM UI surfaces a warning when both settings are enabled; the proxy logs a warning when the server is loaded from config or the database.
+`available_on_public_internet: false` does not make the credential-free cold start authenticated. An anonymous caller with no `Authorization` header can still reach the upstream OAuth2 `/authorize` challenge for a matching `auth_type: oauth2` server with `delegate_auth_to_upstream: true` (not `oauth2_flow: client_credentials`). The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)). Tool calls are not affected: any request carrying a bearer goes through LiteLLM admission.
 
 :::
 
 ### How It Works
 
-1. Client sends an MCP request to LiteLLM with no `x-litellm-api-key` (and optionally no `Authorization` header).
-2. LiteLLM detects that every target server in the request is `auth_type: oauth2` AND has `delegate_auth_to_upstream: true`, and skips its own API-key/SSO check.
-3. LiteLLM also skips its pre-emptive 401, so the upstream MCP server's own `401` + `WWW-Authenticate` flows back to the client.
-4. The client completes PKCE directly with the upstream OAuth issuer.
-5. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM forwards it untouched.
+1. The client sends an MCP request to LiteLLM with no `Authorization` header and no `x-litellm-api-key`.
+2. Because every target server is `auth_type: oauth2` with `delegate_auth_to_upstream: true`, LiteLLM admits this credential-free request anonymously so the upstream's own `401` + `WWW-Authenticate` flows back to the client.
+3. The client completes PKCE directly with the upstream OAuth issuer.
+4. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM runs its own admission on this request. With no LiteLLM credential the request fails with `401`; the client has to send a LiteLLM key in `x-litellm-api-key` alongside the upstream bearer, which is the `oauth_delegate` request shape.
+5. Once admitted, LiteLLM forwards the upstream bearer untouched and never forwards the LiteLLM credential.
 
 ```mermaid
 sequenceDiagram
@@ -412,7 +410,7 @@ sequenceDiagram
     participant MCP as Upstream MCP Server
     participant Auth as Upstream OAuth Server
 
-    Client->>LiteLLM: MCP request (no LiteLLM key)
+    Client->>LiteLLM: MCP request (no credentials at all)
     LiteLLM->>MCP: Forward request (no Authorization)
     MCP-->>LiteLLM: 401 + WWW-Authenticate
     LiteLLM-->>Client: 401 + WWW-Authenticate (passthrough)
@@ -421,7 +419,11 @@ sequenceDiagram
     Client->>Auth: Authorize + token exchange (PKCE)
     Auth-->>Client: access_token
 
-    Client->>LiteLLM: MCP request + Bearer access_token
+    Client->>LiteLLM: MCP request + Bearer access_token (no LiteLLM key)
+    LiteLLM-->>Client: 401 (LiteLLM admission required)
+
+    Client->>LiteLLM: MCP request + x-litellm-api-key + Bearer access_token
+    Note over LiteLLM: Admit caller, strip admission credential
     LiteLLM->>MCP: Forward request + Bearer access_token
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response
@@ -429,23 +431,25 @@ sequenceDiagram
 
 ### Fail-Closed Behavior
 
-The bypass fires only when **every** target opts in. It fails closed and runs normal LiteLLM auth when:
+The anonymous cold start fires only when the request carries no bearer and **every** target opts in. It runs normal LiteLLM auth when:
 
+- The request carries an `Authorization` header (any bearer, including an upstream token).
 - The server's `auth_type` is anything other than `oauth2`.
 - `delegate_auth_to_upstream` is not explicitly `true`.
+- The server's effective `oauth2_flow` is `client_credentials`.
 - The request targets multiple servers (`x-mcp-servers: a,b`) and any one is not delegated.
 - The target server cannot be resolved from the URL path or `x-mcp-servers` header.
 
 ### Security Trade-offs
 
-- The MCP route becomes an **unauthenticated** ingress at the LiteLLM layer. Spend tracking, per-key rate limits, and guardrails depending on `user_api_key_auth.user_id` do not run.
-- LiteLLM cannot tell who the caller is by design, so per-user auditing must come from the upstream MCP server's own logs.
-- Only enable this on servers whose upstream OAuth issuer you trust to enforce access control.
+- Only the credential-free discovery step is anonymous. Tool calls run under a LiteLLM identity, so spend tracking, per-key rate limits, and guardrails apply as they do for `oauth_delegate`.
+- LiteLLM forwards the upstream token without inspecting it, so the upstream still owns tool-level authorization and token validation.
+- Because the flag is deprecated and behaves like `oauth_delegate` once a bearer is present, migrate to `auth_type: oauth_delegate` rather than relying on it.
 
 ### Config Reference
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `auth_type` | Yes | Must be `oauth2`. The flag is ignored otherwise. |
-| `oauth2_flow` | Yes | Set to `authorization_code`; delegation passes the client's interactive PKCE flow through to the upstream server. |
-| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into PKCE passthrough. |
+| `oauth2_flow` | Yes | Set to `authorization_code`; delegation lets the client's interactive PKCE flow start against the upstream server. |
+| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into the legacy delegate behavior. Deprecated in favor of `auth_type: oauth_delegate`. |

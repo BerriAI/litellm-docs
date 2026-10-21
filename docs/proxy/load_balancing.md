@@ -1,3 +1,7 @@
+---
+sidebar_label: "Load Balancing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -69,6 +73,12 @@ router_settings:
   redis_port: 1992
 ```
 
+## Kubernetes pod discovery
+
+Use [Cache-Aware Routing](./cache_aware_routing.md) to discover inference pods behind a Kubernetes headless service and keep requests from the same session on one pod for prompt cache reuse. Requests without an explicit session ID use round robin.
+
+The guide covers `kubernetes_pod_discovery` configuration, session IDs, retry behavior, discovery settings, and multi-cluster routing.
+
 ## Enforce Model Rate Limits
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
@@ -94,7 +104,7 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - enforce_model_rate_limits  # 👈 Enables strict enforcement
+    - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
 ### How It Works
@@ -148,7 +158,7 @@ $ litellm --config /path/to/config.yaml
 
 Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
-👉 Key Change: `model="{{openai_small}}"`
+Key Change: `model="{{openai_small}}"`
 
 **Check the `model_id` in Response Headers to make sure the requests are being load balanced**
 
@@ -324,13 +334,13 @@ model_list:
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
-      order: 1  # 👈 Highest priority - always tried first
+      order: 1  # Highest priority - always tried first
 
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
-      order: 2  # 👈 Used when order=1 fails
+      order: 2  # Used when order=1 fails
 ```
 
 ### How order-based fallback works
@@ -338,6 +348,8 @@ model_list:
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next.
 
 If all order levels are exhausted, the router falls through to any configured [model-level fallbacks](./reliability.md).
+
+A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./reliability.md#explanation)
 
 ```yaml
 model_list:
@@ -421,9 +433,13 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - encrypted_content_affinity  # 👈 Prevents invalid_encrypted_content errors
+    - encrypted_content_affinity  # Prevents invalid_encrypted_content errors
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.
+
+When that deployment is not in the healthy pool for a follow-up (it is cooled down, it was removed, or the turn was routed to another model group) and no deployment has the same `api_base` and `api_key`, LiteLLM drops the encrypted reasoning from the request, keeps the rest of the conversation, forwards it to a healthy deployment, and logs a router warning, so the turn succeeds with fresh reasoning instead of failing
+
+A fallback hop does the same whether or not the check is on. An order-based hop to the next `order`, a configured `fallbacks` hop to another model group, and the retry of a Responses stream that broke mid-stream each drop the encrypted reasoning the hop target cannot decrypt and keep the summaries, with no per-deployment switch. Keep the check on for an ordered group of two providers all the same: it marks each reasoning item with the deployment that produced it, so a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops the reasoning too, and the turn after a hop keeps the reasoning of the deployment that answers it instead of paying one failed call first
 
 **[Learn more about Encrypted Content Affinity →](../response_api.md#encrypted-content-affinity-multi-region-load-balancing)**

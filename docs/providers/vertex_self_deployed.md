@@ -75,7 +75,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "llama3-1-8b-instruct", # 👈 the 'model_name' in config
+            "model": "llama3-1-8b-instruct", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

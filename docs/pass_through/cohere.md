@@ -9,7 +9,7 @@ Pass-through endpoints for Cohere - call provider-specific endpoint, in native f
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://api.cohere.com` with `LITELLM_PROXY_BASE_URL/cohere` 🚀
+Just replace `https://api.cohere.com` with `LITELLM_PROXY_BASE_URL/cohere`
 
 #### **Example Usage**
 ```bash
@@ -167,10 +167,11 @@ curl --request POST \
 
 ### **Example 3: Embedding**
 
+#### LiteLLM Proxy Call 
 
 ```bash
 curl --request POST \
-  --url https://api.cohere.com/v1/embed \
+  --url http://0.0.0.0:4000/cohere/v1/embed \
   --header 'accept: application/json' \
   --header 'content-type: application/json' \
   --header "Authorization: bearer sk-anything" \

@@ -17,7 +17,7 @@ import Image from '@theme/IdealImage';
 | Guardrail Name | `litellm_content_filter` |
 | Detection Methods | Prebuilt regex patterns, custom regex, keyword matching |
 | Actions | `BLOCK` (reject request), `MASK` (redact content) |
-| Supported Modes | `pre_call`, `post_call`, `during_call` (streaming) |
+| Supported Modes | `pre_call`, `post_call`, `during_call` (streaming), `logging_only` |
 | Performance | Fast - runs locally, no external API calls |
 
 ## Quick Start
@@ -237,6 +237,29 @@ Contact me at [EMAIL_REDACTED]
 - **`pre_call`** - Run before LLM call, filters input messages
 - **`post_call`** - Run after LLM call, filters output responses
 - **`during_call`** - Run during streaming, filters each chunk in real-time
+- **`logging_only`** - Scan the logged request and response after the call without changing what the client receives
+
+In `logging_only` mode the filter only observes. Every match is recorded in the request's guardrail information on the [Logs](/docs/proxy/ui_logs) page, whatever its action. A `BLOCK` match is recorded with status `guardrail_flagged` instead of rejecting the call, and the response is still scanned after a request match. A `MASK` match is recorded with its masked entity counts and the logged text is left as it was. Anything an enforcing mode would reject, such as a `MASK` match on a tool argument name that cannot be rewritten, is also recorded as `guardrail_flagged`.
+
+```yaml
+guardrails:
+  - guardrail_name: "secrets-audit"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: logging_only
+      default_on: true
+      patterns:
+        - pattern_type: regex
+          pattern: "AKIA[0-9A-Z]{16}"
+          name: aws_access_key
+          action: BLOCK
+        - pattern_type: regex
+          pattern: "ghp_[A-Za-z0-9]{36}"
+          name: github_pat
+          action: BLOCK
+```
+
+In the Admin UI, pick **Logging Only** as the mode when you add the guardrail.
 
 ### Actions
 

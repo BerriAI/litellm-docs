@@ -509,7 +509,7 @@ model_list:
       model: {{openai_large}}
 litellm_settings:
   callbacks: ["datadog"]
-  turn_off_message_logging: True # 👈 Globally logging prompt / response is disabled
+  turn_off_message_logging: True # Globally logging prompt / response is disabled
 ```
 
 **Enable prompt logging for key**
@@ -525,7 +525,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
         "logging": [{
             "callback_name": "datadog",
             "callback_vars": {
-                "turn_off_message_logging": false # 👈 Enable prompt logging
+                "turn_off_message_logging": false # Enable prompt logging
             }
         }]
     }

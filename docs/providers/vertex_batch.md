@@ -164,7 +164,7 @@ curl --request POST \
     "finalizing_at": null,
     "in_progress_at": null,
     "metadata": null,
-    "output_file_id": "gs://my-batch-bucket/litellm-vertex-files/publishers/google/models/{{gemini_flash}}",
+    "output_file_id": null,
     "request_counts": null,
     "usage": null
 }
@@ -172,7 +172,7 @@ curl --request POST \
 
 #### 4. Retrieve batch status
 
-Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`.
+Check the status of your batch job. The batch will progress through states: `validating` → `in_progress` → `completed`. The `output_file_id` is `null` until the batch reaches `completed`.
 
 <Tabs>
 <TabItem value="python" label="Python">
@@ -233,6 +233,10 @@ curl --request GET \
 Once the batch is completed, retrieve the results using the `output_file_id` from the batch response.
 
 **Important:** The `output_file_id` must be URL encoded when used in the request path.
+
+:::warning Proxy admin key required for raw `gs://` ids
+Starting in v1.108.0, `GET /files/{file_id}/content` only serves a raw `gs://` output id to a proxy admin key (the master key or a key with the `proxy_admin` role). Any other key gets a `403` telling it to use the LiteLLM managed file id. To read batch results with a non-admin key, upload the file with `target_model_names` set (see [managed batches](../proxy/managed_batches)) so the proxy hands back a managed `file-...` id, and pass that id to every later call instead of the `gs://` path
+:::
 
 <Tabs>
 <TabItem value="python" label="Python">

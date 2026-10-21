@@ -62,16 +62,18 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 mcp_servers:
-  - server_name: internal-db
+  internal_db:
     url: http://db-mcp.internal:8000/mcp
     transport: http
     available_on_public_internet: false  # internal callers only
 
-  - server_name: web-search
+  web_search:
     url: https://mcp.exa.ai/mcp
     transport: http
-    available_on_public_internet: true   # visible to ChatGPT / Claude Desktop
+    available_on_public_internet: true   # visible to ChatGPT / Claude Desktop (the default)
 ```
+
+Server names may not contain a hyphen; the proxy rejects `mcp_servers` keys like `internal-db` at startup. Use underscores instead.
 
 ---
 
@@ -107,7 +109,7 @@ LiteLLM exposes all resource types through standard endpoints:
 | `GET /v1/models` | All registered LLMs |
 | `GET /v1/mcp/server` | All MCP servers |
 | `GET /mcp` | All MCP tools (across all servers) |
-| `GET /.well-known/agent.json` | A2A agent card |
+| `GET /a2a/{agent_id}/.well-known/agent-card.json` | A2A agent card |
 
 **MCP registry** (opt-in): expose a discovery endpoint for Claude Desktop / Cursor:
 
@@ -144,7 +146,7 @@ If you expose LiteLLM's port to the internet (for Claude Desktop / ChatGPT), `/v
 
 When you register an external MCP URL (e.g. `https://mcp.exa.ai/mcp`), LiteLLM makes outbound requests to it on every tool call. Check that your network policy allows it and that your security team is comfortable with data leaving the perimeter.
 
-For air-gapped networks: only register MCP servers inside your perimeter and leave `available_on_public_internet: false` (the default).
+For air-gapped networks: only register MCP servers inside your perimeter and set `available_on_public_internet: false` on each of them. The default is `true`, so a server is visible to external callers unless you explicitly set it to `false`.
 
 ### Access controls
 
@@ -159,6 +161,15 @@ By default all authenticated callers can call all MCP tools. Use these to restri
 | Block sensitive data in responses | [MCP Guardrails](./mcp_guardrail.md) |
 
 ---
+
+### Disable prompts or resources
+
+By default the gateway advertises `prompts`, `resources` and `tools` to every MCP client, and a `prompts/list` or `resources/list` call asks every MCP server the caller can reach. When your MCP servers only expose tools, turn the unused capabilities off with `mcp_disabled_capabilities`. A disabled capability is left out of the `initialize` and `server/discover` responses, its list calls (`prompts/list`, `resources/list`, `resources/templates/list`) return an empty list without contacting any MCP server, and its get/read calls (`prompts/get`, `resources/read`) return the JSON-RPC `METHOD_NOT_FOUND` error. Tools are not affected. The setting is gateway-wide and can also be changed from the Admin UI under **MCP Servers > Network Settings > Served Capabilities**.
+
+```yaml title="config.yaml"
+general_settings:
+  mcp_disabled_capabilities: ["prompts", "resources"]  # either value alone is fine
+```
 
 ## Related
 

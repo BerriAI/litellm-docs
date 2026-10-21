@@ -55,7 +55,7 @@ flowchart TD
 - When the executor calls it, intercepts before the result reaches you, runs the advisor sub-call, and injects the advice
 - Strips any `advisor_tool_result` / `server_tool_use` blocks from message history on re-send so non-Anthropic providers never see Anthropic-specific types
 - Wraps the final response in an SSE stream if you requested `stream=True`
-- Enforces `max_uses` as a hard cap; `AdvisorMaxIterationsError` is raised if exceeded, and `max_uses=0` disables the advisor entirely
+- Enforces `max_uses` (default 5) as a hard cap: when the executor asks for more advisor calls than `max_uses` allows, the whole request fails with `AdvisorMaxIterationsError`, so `max_uses=0` fails on the first advisor call. To run without the advisor, omit the advisor tool from `tools`
 
 ## Model Compatibility
 
@@ -447,7 +447,7 @@ Top-level `usage` reflects executor tokens only. Advisor tokens appear in `itera
 
 **Tips:**
 - Enable `caching` on the tool definition only when you expect 3+ advisor calls per conversation; it costs more than it saves below that threshold.
-- Use `max_uses` to cap advisor calls per request. Once reached, the executor continues without further advice.
+- Use `max_uses` to cap advisor calls per request. On the Anthropic API it must be at least 1, and once it is reached the advisor returns a `max_uses_exceeded` error result and the executor continues without further advice. On the LiteLLM orchestration loop (non-Anthropic providers), exceeding it raises `AdvisorMaxIterationsError` and the request fails
 - For conversation-level caps, count advisor calls client-side. When you reach your limit, remove the advisor tool from `tools`.
 
 ---

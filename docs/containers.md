@@ -1,6 +1,6 @@
 # /containers
 
-Manage OpenAI code interpreter containers (sessions) for executing code in isolated environments.
+Manage OpenAI and Azure OpenAI code interpreter containers (sessions) for executing code in isolated environments.
 
 :::tip
 Looking for how to use Code Interpreter? See the [Code Interpreter Guide](/docs/guides/code_interpreter).
@@ -13,7 +13,7 @@ Looking for how to use Code Interpreter? See the [Code Interpreter Guide](/docs/
 | Load Balancing | ✅ |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
 | Spend Management | ✅ Budget tracking and rate limiting |
-| Supported Providers | `openai`|
+| Supported Providers | `openai`, `azure` |
 
 :::tip
 
@@ -509,12 +509,20 @@ print(f"Deleted: {result.deleted}")
 | Provider    | Support Status | Notes |
 |-------------|----------------|-------|
 | OpenAI      | ✅ Supported   | Full support for all container operations |
+| Azure OpenAI | ✅ Supported  | Set `custom_llm_provider="azure"`. Requests go to `{api_base}/openai/v1/containers` with the `api-key` header |
 
-:::info
+For Azure OpenAI, pass the resource endpoint as `api_base` and the key as `api_key`, or set `AZURE_API_BASE` and `AZURE_API_KEY`
 
-Currently, only OpenAI supports container management for code interpreter sessions. Support for additional providers may be added in the future.
+```python
+container = litellm.create_container(
+    name="My Code Interpreter Container",
+    custom_llm_provider="azure",
+    api_base="https://<your-resource>.openai.azure.com",
+    api_key=os.environ["AZURE_API_KEY"],
+)
+```
 
-:::
+On the proxy, send `-H "custom-llm-provider: azure"` to use the `AZURE_API_BASE` and `AZURE_API_KEY` environment variables, or pass the `model` of an `azure/` deployment in `model_list` to use that deployment's `api_base` and `api_key`
 
 ## Related
 

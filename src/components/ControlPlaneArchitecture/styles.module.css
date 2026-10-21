@@ -328,6 +328,7 @@
 }
 
 .infraBoxIcon {
+  display: inline-flex;
   font-size: 0.85rem;
   flex-shrink: 0;
 }

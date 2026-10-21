@@ -79,7 +79,7 @@ response = client.chat.completions.create(model="user-azure-instance", messages 
     extra_body={
       "user_config": user_config
     }
-) # 👈 User config
+) # User config
 
 print(response)
 ```
@@ -141,7 +141,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    user_config: userConfig // # 👈 User config
+    user_config: userConfig // # User config
   });
 }
 
@@ -166,14 +166,17 @@ model_list:
       model: "fireworks_ai/*"
       configurable_clientside_auth_params: ["api_base"]
       # OR 
-      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # 👈 regex
+      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # regex
 ```
 
-Specify any/all auth params you want the user to be able to configure:
+Specify the endpoint params you want the user to be able to configure:
 
-- api_base (✅ regex supported)
-- api_key
-- base_url 
+- api_base (regex supported)
+- base_url
+
+Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
+
+`api_key` does not need to be listed. A request-body `api_key` is accepted on any deployment, wildcard or not, and replaces the deployment's configured key for that request only. To send the user's key as a provider header instead, such as `x-api-key` for Anthropic, see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)
 
 (check [provider docs](../providers/) for provider-specific auth params - e.g. `vertex_project`)
 
@@ -194,7 +197,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
         "content": "this is a test request, write a short poem"
     }
 ], 
-    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # 👈 clientside credentials
+    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # clientside credentials
 
 print(response)
 ```
@@ -223,7 +226,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
       "api_key": "my-azure-key",
       "api_base": "my-azure-base",
       "api_version": "my-azure-version"
-    }) # 👈 User Key
+    }) # User Key
 
 print(response)
 ```
@@ -246,7 +249,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    api_key: "my-bad-key" // 👈 User Key
+    api_key: "my-bad-key" // User Key
   });
 }
 

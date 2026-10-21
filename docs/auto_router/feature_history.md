@@ -6,9 +6,9 @@ description: Which Auto Router features shipped in which LiteLLM release, so you
 
 Every release links to its GitHub release and full release notes. Newest first. A feature listed under a version is available from that version onward.
 
-## Coming Next
+## v1.104.0
 
-Merged into `main` after `v1.103.0-rc.1` was cut; these changes are not included in that release candidate. Use a build containing the linked PRs until they appear under a tagged release below.
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.104.0), [Release notes](/release_notes/v1.104.0/v1-104-0)
 
 :::danger Breaking Changes
 
@@ -25,11 +25,9 @@ Merged into `main` after `v1.103.0-rc.1` was cut; these changes are not included
 - **Internal-user savings and usage.** Admins can inspect an internal user's Savings and Auto-router usage tabs, including traffic attributed through JWTs. Other users can view their own Savings; router usage remains admin-only. [#42026](https://github.com/BerriAI/litellm/pull/42026)
 - **Prompt-cache affinity across moving breakpoints.** With the `prompt_caching` pre-call check enabled, deployment affinity survives Claude Code moving its cache breakpoint to a newer turn, helping preserve the provider's cached prefix. [#42080](https://github.com/BerriAI/litellm/pull/42080)
 
-## v1.103.0-rc.1 (release candidate)
+## v1.103.0
 
-[GitHub pre-release](https://github.com/BerriAI/litellm/releases/tag/v1.103.0-rc.1), [Release notes](/release_notes/v1.103.0rc1/v1-103-0-rc-1)
-
-Includes the Auto Router improvements from the 1.103.x development builds through this release candidate. Earlier development builds may not include every change below.
+[GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.103.0), [Release notes](/release_notes/v1.103.0/v1-103-0)
 
 - **Capability classification.** `classifier_type: capability` forecasts whether the efficient solver can finish the whole task and routes to the capable tier when the estimate falls below the configured threshold. [#41270](https://github.com/BerriAI/litellm/pull/41270)
 - **Fuse v2 classification (experimental).** `classifier_type: llm_v2` uses one judge call to forecast both solvers, then selects between them using a quality-gap policy. Invalid forecasts and provider errors fall back to the capable solver. [#41272](https://github.com/BerriAI/litellm/pull/41272)

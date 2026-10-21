@@ -14,6 +14,7 @@ keywords:
     backup model,
     cross-provider failover,
   ]
+sidebar_label: "Fallbacks"
 ---
 
 import Image from '@theme/IdealImage';
@@ -25,7 +26,7 @@ import TabItem from '@theme/TabItem';
 Fallbacks are how LiteLLM does automatic **failover**. If a call fails after num_retries, LiteLLM falls back to another model group, so a failing model or provider automatically fails over to a healthy backup. If you are looking for "provider failover" or "model failover", this is the page. 
 
 - Quick Start [load balancing](./load_balancing.md)
-- Quick Start [client side fallbacks](#client-side-fallbacks)
+- Quick Start [client side fallbacks](./client_side_fallbacks.md)
 
 
 Fallbacks are typically done from one `model_name` to another `model_name`. 
@@ -66,7 +67,7 @@ router = Router(
       }
     }
   ],
-  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # 👈 KEY CHANGE
+  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # KEY CHANGE
 )
 
 ```
@@ -154,273 +155,11 @@ There are 3 types of fallbacks:
 - `context_window_fallbacks`: For litellm.ContextWindowExceededErrors - LiteLLM maps context window error messages across providers [**See Code**](https://github.com/BerriAI/litellm/blob/89a43c872a1e3084519fb9de159bf52f5447c6c4/litellm/utils.py#L8469)
 - `fallbacks`: For all remaining errors - e.g. litellm.RateLimitError
 
+A fallback to a deployment on another provider, or on another API key, cannot decrypt the encrypted reasoning the failed deployment produced on earlier turns (the Responses API reasoning items a client replays with `include: ["reasoning.encrypted_content"]`, or the thinking blocks of a `/v1/messages` conversation). The fallback drops what the target cannot decrypt and keeps each Responses reasoning item's readable summary (a thinking block is dropped whole), so the fallback target reasons fresh on that turn and answers instead of failing with `invalid_encrypted_content`. This happens on every fallback: the three types above, an [order-based fallback](./load_balancing.md#how-order-based-fallback-works) between the deployments of one model group, and the fallback of a stream that broke mid-stream. There is no per-deployment switch for it. For an ordered group of two providers also turn on [`encrypted_content_affinity`](../response_api.md#when-the-originating-deployment-cannot-serve-the-turn): it marks each reasoning item with the deployment that produced it, so a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no fallback, so no strip) drops the reasoning too, and the turn after a fallback keeps the reasoning of the deployment that answers it instead of paying one failed call first
 
 ## Client Side Fallbacks
 
-Set fallbacks in the `.completion()` call for SDK and client-side for proxy. 
-
-In this request the following will occur:
-1. The request to `model="zephyr-beta"` will fail
-2. litellm proxy will loop through all the model_groups specified in `fallbacks=["{{openai_small}}"]`
-3. The request to `model="{{openai_small}}"` will succeed and the client making the request will get a response from gpt-5.6-luna 
-
-👉 Key Change: `"fallbacks": ["{{openai_small}}"]`
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "zephyr-beta"",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "fallbacks": ["{{openai_small}}"]
-}'
-```
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-</TabItem>
-
-</Tabs>
-
-### Control Fallback Prompts  
-
-Pass in messages/temperature/etc. per model in fallback (works for embedding/image generation/etc. as well).
-
-Key Change:
-
-```
-fallbacks = [
-  {
-    "model": <model_name>,
-    "messages": <model-specific-messages>
-    ... # any other model-specific parameters
-  }
-]
-```
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```bash
-curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "model": "{{openai_small}}",
-    "messages": [
-      {
-        "role": "user",
-        "content": [
-          {
-            "type": "text",
-            "text": "Hi, how are you ?"
-          }
-        ]
-      }
-    ],
-    "fallbacks": [{
-        "model": "{{anthropic}}",
-        "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-    }]
-}'
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-
-</TabItem>
-</Tabs>
+To set fallbacks per request from the client or the Python SDK, see [Client-Side Fallbacks](./client_side_fallbacks.md).
 
 ## Content Policy Violation Fallback
 
@@ -455,7 +194,7 @@ router = Router(
       },
     },
   ],
-  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # context_window_fallbacks=[..], # [OPTIONAL]
 )
@@ -468,7 +207,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -519,7 +258,7 @@ router = Router(
       },
     },
   ],
-  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # content_policy_fallbacks=[..], # [OPTIONAL]
 )
@@ -532,7 +271,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -607,7 +346,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_large}}
     model_info:
-      id: my-specific-model-id # 👈 KEY CHANGE
+      id: my-specific-model-id # KEY CHANGE
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/chatgpt-v-2
@@ -747,7 +486,7 @@ model_list:
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-4o-mini
     litellm_params:
@@ -806,7 +545,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
@@ -929,7 +668,7 @@ model_list:
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
-    region_name: "eu" # 👈 SET EU-REGION
+    region_name: "eu" # SET EU-REGION
 
 - model_name: {{openai_small}}
   litellm_params:
@@ -940,7 +679,7 @@ model_list:
   litellm_params:
     model: vertex_ai/{{gemini_flash}}
     vertex_project: adroit-crow-1234
-    vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
+    vertex_location: us-east1 # AUTOMATICALLY INFERS 'region_name'
 ```
 
 **2. Start proxy**
@@ -968,7 +707,7 @@ response = client.chat.completions.with_raw_response.create(
 
 print(response)
 
-print(f"response.headers.get('x-litellm-model-api-base')")
+print(response.headers.get('x-litellm-model-api-base'))
 ```
 
 ### Setting Fallbacks for Wildcard Models
@@ -1020,11 +759,36 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
+#### Provider-prefixed fallback keys for bare model names
+
+A request for a bare model name such as `{{anthropic}}`, the form Claude Code sends, is served by the `anthropic/*` deployment, and the fallback lookup matches it against a key written the way that wildcard is, `anthropic/{{anthropic}}`. LiteLLM infers the provider the same way routing does and only tries this when some fallback key ends in `/<model name>`, so an alias that resolves to no provider still falls through to `*`. Precedence is the exact key first, then the sibling key (the `<provider>/<model>` spelling of a bare name, or the bare spelling of a prefixed name), then `*`, and the same lookup serves `fallbacks`, `context_window_fallbacks`, and `content_policy_fallbacks`. A matched chain is terminal: once the `anthropic/{{anthropic}}` chain is chosen, `*` is not tried after its targets fail, so list the `*` targets at the end of that chain when they should run too. Added in [PR #43062](https://github.com/BerriAI/litellm/pull/43062), coming to the next release candidate
+
+```yaml
+model_list:
+  - model_name: "anthropic/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: "openai/{{openai_large}}"
+    litellm_params:
+      model: "openai/{{openai_large}}"
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: "{{openai_small}}"
+    litellm_params:
+      model: "openai/{{openai_small}}"
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  fallbacks:
+    - {"anthropic/{{anthropic}}": ["openai/{{openai_large}}", "{{openai_small}}"]}
+    - {"*": ["{{openai_small}}"]}
+```
+
+A request for `{{anthropic}}` that fails on `anthropic/*` is retried on `openai/{{openai_large}}` and then on `{{openai_small}}`, while a request for any other bare name without a key of its own goes straight to `*`
+
 ### Enforce Key Model Access on Fallbacks
 
-By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `{{anthropic}}` whenever `gpt-5.6` fails and `{{anthropic}}` is its fallback.
-
-Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+The proxy applies the calling key's, team's and project's model access checks to every fallback target before it is tried, so a fallback never serves a model the caller could not call directly. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
 ```yaml keep-model-ids
 model_list:
@@ -1045,12 +809,24 @@ router_settings:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  enforce_fallback_model_access: true
 ```
 
-A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. A failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
+
+Set `general_settings.enforce_fallback_model_access: false` to skip this check, so every configured fallback runs whatever the caller's model access. Fallbacks of a search request are still checked against the key's, team's and user's search tool grants.
+
+```yaml
+general_settings:
+  enforce_fallback_model_access: false
+```
+
+:::warning
+
+Earlier releases ran a fallback even when the caller could not call the fallback model. If your deployment relies on that, grant the callers access to the fallback models or set `enforce_fallback_model_access: false`. Otherwise those requests return the primary model's error after you upgrade.
+
+:::
 
 ### Enforce Budget on Fallbacks
 
@@ -1100,7 +876,7 @@ A team key does not inherit the key owner's personal `max_budget` unless `genera
 
 <TabItem value="request" label="Per Request">
 
-You can disable fallbacks per key by setting `disable_fallbacks: true` in your request body.
+You can disable fallbacks per request by setting `disable_fallbacks: true` in your request body.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
@@ -1114,7 +890,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         }
     ],
     "model": "{{openai_small}}",
-    "disable_fallbacks": true # 👈 DISABLE FALLBACKS
+    "disable_fallbacks": true
 }'
 ```
 
@@ -1137,3 +913,5 @@ curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
 
 </TabItem>
 </Tabs>
+
+Both forms cover every fallback the proxy would otherwise make for that request, the mid-stream one included: when the chosen deployment's stream fails before its first chunk on `/chat/completions`, `/v1/messages`, or `/v1/responses`, the request returns that deployment's own error instead of a fallback deployment's response

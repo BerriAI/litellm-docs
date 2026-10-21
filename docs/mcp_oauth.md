@@ -137,6 +137,8 @@ mcp_servers:
 
 Replace the example server URL, OAuth endpoints, and scopes with the values for your provider. `authorization_url` and `token_url` are optional when the upstream MCP server publishes OAuth metadata that LiteLLM can discover. Explicitly configured endpoints take precedence over conflicting discovered endpoints.
 
+When the upstream server publishes no OAuth metadata at all (Microsoft Graph behind [ms-365-mcp-server](./mcp_servers/microsoft_365.md), for example), add `per_server_oauth_discovery: true` so LiteLLM publishes the discovery documents for `/{mcp_server_name}/mcp` itself, with its own `/{mcp_server_name}/authorize` and `/{mcp_server_name}/token` endpoints fronting the provider URLs above. It is accepted only with `auth_type: oauth2`, `oauth2_flow: authorization_code`, and no `delegate_auth_to_upstream`.
+
 For static clients, LiteLLM handles `POST /{mcp_server_name}/register` locally. It returns the MCP server name as `client_id`, `dummy` as `client_secret`, and the client's submitted `redirect_uris`. LiteLLM uses the configured upstream credentials for authorization and token exchange.
 
 #### Identify the MCP client's callback URL

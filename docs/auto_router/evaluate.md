@@ -15,7 +15,7 @@ Public benchmarks measure someone else's prompts. Two features measure yours: a 
 - **Samples** a slice of one key's, team's, or user's live traffic.
 - **Duplicates** each sampled request through the router. The shadow response never reaches the client.
 - **Judges** blind: an LLM compares the router's answer with the one the current model served.
-- **Runs** up to 30 days (default 7) or up to the turn cap (default 200, max 2,000).
+- **Runs** up to 30 days (default 7) or until each target's own shadow and judge spend reaches `max_budget` (default $10, max $10,000). `max_turns` is no longer accepted.
 - **Compares** several router configs in one job on the same sampled traffic, so tier map and classifier choices are settled before anything changes.
 - On our own traffic: **88.1%** matched or beat the current model, 143 judged turns, $1.55 judge spend.
 

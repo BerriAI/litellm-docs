@@ -97,6 +97,7 @@ Filter by customer ID to see all requests for that customer.
 ## Related
 
 - [Claude Code Quickstart](./claude_responses_api.md)
+- [Codex CLI - Granular Cost Tracking](./codex_customer_tracking.md)
 - [Customer Budgets](../proxy/customers.md)
 - [Tag Budgets](../proxy/tag_budgets.md)
 - [Track Usage for Coding Tools](./cost_tracking_coding.md)

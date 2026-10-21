@@ -55,4 +55,6 @@ All models listed here https://developers.cloudflare.com/workers-ai/models/text-
 | @cf/mistral/mistral-7b-instruct-v0.1 | `completion(model="mistral/mistral-medium", messages)` |
 | @hf/thebloke/codellama-7b-instruct-awq | `completion(model="codellama/codellama-medium", messages)` |
 
+## Clairic extraction
 
+[Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) is Cloudflare's typed extraction model. Call it as `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` with the same `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, on the proxy's `/v1/extraction` route or with `litellm.extraction`. See [/v1/extraction](../extraction.md) for the request and response format, errors and pricing. Available from v1.108.0.

@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# ✨ SSO for Admin UI
+# SSO for Admin UI
 
 <EnterpriseFeature feature="SSO">From v1.76.0, SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
@@ -186,9 +186,10 @@ For certain Microsoft Entra ID configurations, you may need to override the defa
 
 First, inspect the JWT fields returned by your Microsoft SSO provider using the [SSO Debug Route](#debugging-sso-jwt-fields).
 
-1. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
-2. Navigate to `https://<proxy_base_url>/sso/debug/login`
-3. Complete the SSO flow to see the returned user attributes
+1. Set `ENABLE_SSO_DEBUG="true"` on the proxy and restart it (the debug routes return 404 otherwise)
+2. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
+3. Navigate to `https://<proxy_base_url>/sso/debug/login`
+4. Complete the SSO flow to see the returned user attributes
 
 **Step 2: Identify Field Attribute Names**
 
@@ -554,6 +555,8 @@ PROXY_BASE_URL=https://mydomain.com
 
 If you need to access the UI via username/password when SSO is on navigate to `/fallback/login`. This route will allow you to sign in with your username/password credentials.
 
+This also works when `disable_env_credential_login` is on, for any database user with a password. To keep a shared admin account for SSO outages, see [Keep a break-glass admin account for SSO outages](./ui.md#keep-a-break-glass-admin-account-for-sso-outages).
+
 <Image img={require('../../img/fallback_login.png')} />
 
 
@@ -565,7 +568,15 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
 <Image img={require('../../img/debug_sso.png')}  style={{ width: '500px', height: 'auto' }} />
 <br />
 
-1. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
+1. Enable the debug routes on the proxy
+
+  The debug routes are disabled by default and return 404. Set the following environment variable and restart the proxy (unset it again once you are done debugging):
+
+  ```bash showLineNumbers title="Environment variable"
+  ENABLE_SSO_DEBUG="true"
+  ```
+
+2. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
 
   In your SSO provider's settings, add the following URL as a new redirect (callback) URL:
 
@@ -574,7 +585,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
   ```
 
 
-2. Navigate to the debug login page on your browser 
+3. Navigate to the debug login page on your browser 
 
     Navigate to the following URL on your browser:
 
@@ -585,7 +596,7 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
     This will initiate the standard SSO flow. You will be redirected to your SSO provider's login screen, and after successful authentication, you will be redirected back to LiteLLM's debug callback route.
 
 
-3. View the JWT fields 
+4. View the JWT fields 
 
 Once redirected, you should see a page called "SSO Debug Information". This page displays the JWT fields received from your SSO provider (as shown in the image above)
 

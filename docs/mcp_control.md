@@ -181,6 +181,87 @@ mcp_servers:
 - If you specify both `allowed_tools` and `disallowed_tools`, the allowed list takes priority
 - Tool names are case-sensitive
 
+## Pin a Server's Tool List
+
+`allowed_tools` trusts whatever the upstream says each tool does. Pinning freezes the tool list, the descriptions, and the input schemas too: the gateway serves only the pinned tools with their pinned descriptions and schemas, refuses calls to any other name, and alerts when the upstream drifts from the pin. That closes tool poisoning (OWASP LLM01): a server that quietly rewrites a description to carry instructions for the model, or adds a tool your clients never approved, changes nothing your clients see
+
+<Tabs>
+<TabItem value="api" label="Pin from the API">
+
+Pin the catalog the gateway sees right now (admin only, needs a database). Find `server_id` with `GET /v1/mcp/server`. The response is the stored snapshot: each tool's name, description, and input schema:
+
+```bash title="Pin" showLineNumbers
+curl -s -X POST http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{
+  "get_note": {
+    "description": "Return the saved note with the given id",
+    "input_schema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}
+  }
+}
+```
+
+The snapshot is taken after the [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery), so a description a guardrail blocks never gets pinned and a description it masks is pinned in its masked form; a server with no tool left to pin returns `400`. A `tool_name_to_description` override in effect at pin time is what gets pinned
+
+Unpin to serve the live upstream catalog again:
+
+```bash title="Unpin" showLineNumbers
+curl -s -X DELETE http://localhost:4000/v1/mcp/server/$SERVER_ID/pin \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+```
+
+```json
+{"server_id": "<server_id>", "status": "unpinned"}
+```
+
+</TabItem>
+<TabItem value="config" label="Pin in config.yaml">
+
+`pinned_tools` maps each tool name to the description and input schema your clients should see. The pin response above is the same shape, so pin once on a deployment with a database and paste the response here:
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  notes:
+    url: http://notes.internal/mcp
+    transport: http
+    pinned_tools:
+      get_note:
+        description: "Return the saved note with the given id"
+        input_schema:
+          type: object
+          properties:
+            id: {type: string}
+          required: [id]
+```
+
+</TabItem>
+</Tabs>
+
+What clients see once a server is pinned:
+
+- `tools/list` (over `/mcp`, `/mcp-rest/tools/list`, and LLM-driven discovery) returns the pinned tools only, each with its pinned description and input schema
+- A tool the upstream added after the pin is not listed, and a call to it returns `403`
+- A tool the upstream removed after the pin is not listed either, since the gateway has nothing to call
+- A description or input schema the upstream changed after the pin is served as pinned
+
+Whenever a listing finds the upstream differs from the pin, the gateway logs a warning and sends an `mcp_pinned_tools_changed` [alert](./proxy/alerting#all-possible-alert-types) naming the added, removed, and changed tools, once per distinct diff per server; the same diff on the next listing stays quiet, a different one alerts again, and the alert clears on its own once the upstream matches the pin. Re-pin to accept a change you reviewed
+
+```text
+MCP server `notes`: upstream tool list drifted from the pinned catalog; serving the pinned tools and descriptions until an admin re-pins the server
+added: `delete_all_notes`
+changed: `get_note`
+```
+
+### Important Notes
+
+- A pin covers tool names, descriptions, and input schemas; anything else the upstream reports about a tool (annotations, output schema) is served live
+- `allowed_tools`, `disallowed_tools`, and per-key tool permissions still apply on top of the pin
+- The [discovery guardrail scan](./mcp_guardrail#scanning-tool-descriptions-on-discovery) still runs on a pinned server, on the pinned text the proxy is about to serve: a pinned tool keeps serving its pinned description while the upstream's text is poisoned (reported as changed), and a pinned description the guardrails themselves block is hidden and reported as blocked until the admin re-pins the server
+- A `tool_name_to_description` override edited after the pin reads as a changed tool: the pinned text is served until the server is re-pinned
+
 ## Public MCP Servers (allow_all_keys)
 
 Some MCP servers are meant to be shared broadly: internal knowledge bases, calendar integrations, or other low-risk utilities where every team should be able to connect without requesting access. Instead of adding those servers to every key, team, or organization, enable the new `allow_all_keys` toggle.
@@ -662,6 +743,8 @@ While adding `mcp_servers` using the config:
 - Pass in a list of strings inside `access_groups`
 - These groups can then be used for segregating access using keys, teams and MCP clients using headers
 
+To give an IdP group an access group, grant it to the team SCIM provisions for that group, see [Grant MCP access through SCIM-provisioned teams](./mcp_grant_access#grant-mcp-access-through-scim-provisioned-teams).
+
 ##### B. Creating Access Groups using UI
 
 To create an access group:
@@ -868,9 +951,9 @@ A caller with an admin role and no explicit key-level `mcp_servers` list normall
 
 ## Rate Limiting per MCP Server
 
-Cap how many tool calls a key or team can make to a specific MCP server per minute with `mcp_rpm_limit`. This is a `Dict[str, int]` keyed by MCP server name, where the name is the server's alias if one is set, otherwise the configured server name. Each entry sets the requests-per-minute limit for that one server, so a limit on `github` does not affect calls to `slack`. Servers without an entry are uncapped.
+Cap how many requests a key or team can make to a specific MCP server per minute with `mcp_rpm_limit`. This is a `Dict[str, int]` keyed by MCP server name, where the name is the server's alias if one is set, otherwise the configured server name. Each entry sets the requests-per-minute limit for that one server, so a limit on `github` does not affect calls to `slack`. Servers without an entry are uncapped.
 
-Once the limit is exceeded within the window, further tool calls to that server return `429 Too Many Requests` until the window rolls over. The cap only applies to actual MCP tool calls; it has no effect on regular LLM requests.
+Every MCP operation sent to that server counts: `tools/call`, `tools/list`, `prompts/list`, `prompts/get`, `resources/list`, `resources/templates/list` and `resources/read`, plus the REST tool listing at `/mcp-rest/tools/list`. Once the limit is exceeded within the window, further requests to that server are rejected until the window rolls over. On `/mcp` the rejection is an MCP error that names the exhausted limit, and REST routes return `429 Too Many Requests`. The cap has no effect on regular LLM requests.
 
 <Tabs>
 <TabItem value="key" label="On a Key">
@@ -903,6 +986,39 @@ curl -X POST "http://localhost:4000/team/new" \
 </Tabs>
 
 `mcp_rpm_limit` is also accepted on `/key/update`, `/team/update`, `/user/new`, and `/user/update`. A key-level limit takes precedence over a team-level limit for the same server; the team limit otherwise applies to every key on the team as a shared counter.
+
+### Global limit on an MCP server
+
+Set `rpm` on the MCP server itself to cap the total requests it receives from every caller, the same way `rpm` on a model deployment caps that deployment. The counter is keyed by the server's ID only, so all keys, teams and users share one bucket, and when the proxy uses Redis the bucket is shared across every proxy instance. It applies in addition to any key or team `mcp_rpm_limit`, and a request is rejected when the server limit or any applicable key or team limit is exhausted. Leave `rpm` unset for no server-wide limit; `rpm: 0` rejects every request to the server.
+
+<Tabs>
+<TabItem value="config" label="config.yaml">
+
+```yaml title="Cap all callers of github at 300 requests per minute" showLineNumbers
+mcp_servers:
+  github:
+    url: "https://api.githubcopilot.com/mcp"
+    rpm: 300
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+```bash title="Set a server-wide limit on an existing MCP server" showLineNumbers
+curl -X PUT "http://localhost:4000/v1/mcp/server" \
+  -H "Authorization: Bearer sk-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{"server_id": "<server_id>", "rpm": 300}'
+```
+
+</TabItem>
+</Tabs>
+
+In the Admin UI the same setting is the **RPM limit (all callers)** field on the MCP server form, next to Max Concurrent Requests.
+
+How requests are counted. Each page of a paginated listing is one request to every server it reads, so a client paging through a large catalog uses one unit per page per server. In a listing that spans several servers, a server that is over its limit on the first page is left out and reported with a `rate_limited` status while the other servers still return their items; if the limit is hit on a later page the whole request is rejected, since dropping a server mid-listing would make the pagination cursor inconsistent. A `server/discover` request charges each server once, even though it runs several listings. Calls rejected before reaching the limiter, for example a tool the key is not allowed to use or invalid arguments, are not counted. A request rejected by one of these limits does not count toward any of them, so a key retrying past its own `mcp_rpm_limit` does not use up the team or server budget. For `tools/call`, the key's ordinary `rpm_limit` and guardrails are checked first, and a call they reject is not counted against MCP limits either. Internal listings are not counted either: the catalog warmup the proxy runs before a first tool call, and the admin configuration view of a server's tools that includes disabled tools.
+
+The window defaults to 60 seconds and starts with the first counted request; set `LITELLM_RATE_LIMIT_WINDOW_SIZE` (in seconds) to change it. These MCP limits are enforced by the default rate limiter only. With `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true`, neither `mcp_rpm_limit` nor the server `rpm` is enforced.
 
 
 ## Dashboard View Modes

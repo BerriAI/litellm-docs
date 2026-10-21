@@ -32,19 +32,19 @@ DEFAULT_GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 Alternatively, configure in your `config.yaml`:
 
 ```yaml
-litellm_settings:
-  default_vertex_config:
-    vertex_project: "your-project-id"
-    vertex_location: "us-central1"
-    vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
+default_vertex_config:
+  vertex_project: "your-project-id"
+  vertex_location: "us-central1"
+  vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
 ```
+
+`default_vertex_config` is a top-level key, not a child of `litellm_settings`.
 
 ## Usage
 
-### WebSocket Endpoints
+### WebSocket Endpoint
 
-- `ws://your-proxy-host/v1/vertex-ai/live`
-- `ws://your-proxy-host/vertex-ai/live`
+- `ws://your-proxy-host/vertex_ai/live`
 
 ### Query Parameters
 
@@ -56,10 +56,10 @@ litellm_settings:
 
 ```javascript
 // If vertex_project and vertex_location are set in config, you can connect without query params
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live');
 
 // Or specify them explicitly
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id&vertex_location=us-central1');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id&vertex_location=us-central1');
 ```
 
 ## Cost Tracking
@@ -171,7 +171,7 @@ import json
 import websockets
 
 async def chat_with_gemini():
-    uri = "ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id"
+    uri = "ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id"
     
     async with websockets.connect(uri) as websocket:
         # Setup
@@ -210,7 +210,7 @@ asyncio.run(chat_with_gemini())
 ### JavaScript Client
 
 ```javascript
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id');
 
 ws.onopen = function() {
     // Send setup
@@ -243,11 +243,11 @@ ws.onmessage = function(event) {
 
 ## Error Handling
 
-The WebSocket connection may close with these codes:
+If the proxy cannot resolve Vertex AI credentials or a project ID (no `use_in_pass_through` Vertex model, no `default_vertex_config`, and no `DEFAULT_VERTEXAI_*` env vars), it accepts the connection and then closes it with code `1011` and the reason:
 
-- `4001`: Vertex AI credentials not configured
-- `4002`: Project ID not provided
-- `1011`: Internal server error
+```
+Vertex AI auth failed: set a use_in_pass_through vertex model, default_vertex_config, or DEFAULT_VERTEXAI_* env
+```
 
 ## Authentication
 

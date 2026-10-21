@@ -24,6 +24,16 @@ LiteLLM already has pricing for 100+ models in our [model cost map](https://gith
 
 ## Cost Per Second (e.g. Sagemaker)
 
+For chat, completion, embedding and responses models, set `cost_per_second`. LiteLLM multiplies it by the full request
+duration, including streaming until the last chunk, and ignores it when per-token pricing is configured
+
+For chat, completion, embedding and responses, `input_cost_per_second` and `output_cost_per_second` remain accepted as
+legacy aliases. `cost_per_second` takes precedence, followed by `input_cost_per_second` and then
+`output_cost_per_second`; the resolved rate is charged once, not added. Transcription, speech and video continue to use
+`input_cost_per_second` and `output_cost_per_second`
+
+`cost_per_second` needs v1.105.0 or later. On earlier versions, use `input_cost_per_second`
+
 #### Usage with LiteLLM Proxy Server
 
 **Step 1: Add pricing to config.yaml**
@@ -33,18 +43,18 @@ model_list:
     litellm_params:
       model: sagemaker/berri-benchmarking-Llama-2-70b-chat-hf-4
     model_info:
-      input_cost_per_second: 0.000420
+      cost_per_second: 0.000420
   - model_name: sagemaker-embedding-model
     litellm_params:
       model: sagemaker/berri-benchmarking-gpt-j-6b-fp16
     model_info:
-      input_cost_per_second: 0.000420 
+      cost_per_second: 0.000420
 ```
 
 **Step 2: Start proxy**
 
 ```bash
-litellm /path/to/config.yaml
+litellm --config /path/to/config.yaml
 ```
 
 **Step 3: View Spend Logs**
@@ -64,8 +74,8 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
       api_version: os.environ/AZURE_API_VERSION
     model_info:
-      input_cost_per_token: 0.000421 # 👈 ONLY to track cost per token
-      output_cost_per_token: 0.000520 # 👈 ONLY to track cost per token
+      input_cost_per_token: 0.000421 # ONLY to track cost per token
+      output_cost_per_token: 0.000520 # ONLY to track cost per token
 ```
 
 ## Override Model Cost Map
@@ -96,7 +106,7 @@ There are other keys you can use to specify costs for different scenarios and mo
 - `input_cost_per_token_above_200k_tokens` - Cost for input tokens when context exceeds 200k tokens
 - `output_cost_per_token_above_200k_tokens` - Cost for output tokens when context exceeds 200k tokens  
 - `cache_creation_input_token_cost_above_200k_tokens` - Cache creation cost for large contexts
-- `cache_read_input_token_cost_above_200k_token` - Cache read cost for large contexts
+- `cache_read_input_token_cost_above_200k_tokens` - Cache read cost for large contexts
 - `input_cost_per_image` - Cost per image in multimodal requests
 - `output_cost_per_reasoning_token` - Cost for reasoning tokens (e.g., OpenAI o1 models)
 - `input_cost_per_audio_token` - Cost for audio input tokens
@@ -142,8 +152,8 @@ model_list:
       model: ollama/llama3
       api_base: http://localhost:11434
     model_info:
-      input_cost_per_token: 0   # 👈 Explicitly set to 0
-      output_cost_per_token: 0  # 👈 Explicitly set to 0
+      input_cost_per_token: 0   # Explicitly set to 0
+      output_cost_per_token: 0  # Explicitly set to 0
   
   # Paid cloud model - budget checks apply
   - model_name: {{openai_large}}
@@ -199,12 +209,35 @@ model_list:
       model: openai/gpt-4o-mini-audio-preview
       api_key: os.environ/OPENAI_API_KEY
     model_info:
-      base_model: gpt-4o-mini-audio-preview  # 👈 Used for pricing lookup
+      base_model: gpt-4o-mini-audio-preview  # Used for pricing lookup
       input_cost_per_token: 0.0000006
       output_cost_per_token: 0.0000024
       input_cost_per_audio_token: 0.00001
       output_cost_per_audio_token: 0.00002
 ```
+
+
+## Set 'pricing_provider' when the routing provider and the pricing provider differ
+
+**Problem**: You route to a third-party host through an OpenAI-compatible endpoint (`custom_llm_provider: openai` with a custom `api_base`), but the model is priced in LiteLLM's cost map under that host's own provider. The cost lookup runs under the routing provider, finds no row there, and bills the request at $0. A deployment whose `model_info.id` equals one of that provider's cost-map keys hits the same $0.
+
+**Solution** ✅: Set `pricing_provider` under `model_info` to the provider whose cost-map rows should price the deployment. When it is unset, the routing provider (`custom_llm_provider`) is used, which is the previous behavior.
+
+```yaml
+model_list:
+  - model_name: glm-5.2
+    litellm_params:
+      model: zai-org/GLM-5.2
+      api_base: https://inference.baseten.co/v1
+      api_key: os.environ/BASETEN_API_KEY
+      custom_llm_provider: openai
+    model_info:
+      pricing_provider: baseten            # price from the baseten/zai-org/GLM-5.2 cost-map row
+      input_cost_per_token: 0.00000096     # optional, overrides that row's rate
+      output_cost_per_token: 0.00000302
+```
+
+Rates you set on the deployment win. Rates you leave out, such as `cache_read_input_token_cost`, are taken from the pricing provider's row for the model instead of defaulting to 0. With no rates set at all, the request is billed at that row's rates.
 
 
 ## Debugging 

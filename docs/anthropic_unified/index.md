@@ -16,7 +16,7 @@ Use LiteLLM to call all your LLM APIs in the Anthropic `v1/messages` format.
 | Streaming | ✅ | |
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
-| Guardrails | ✅ | Applies to input and output text (non-streaming only) |
+| Guardrails | ✅ | Applies to input and output text. On streamed output a guardrail can block the response, but text rewrites such as masking only apply to non-streaming responses |
 | Supported Providers | **All LiteLLM supported providers** | `openai`, `anthropic`, `bedrock`, `vertex_ai`, `gemini`, `azure`, `azure_ai`, etc. |
 
 ## Usage 
