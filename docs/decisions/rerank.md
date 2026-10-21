@@ -132,7 +132,7 @@ print(response.results)
 
 With `strategy: pointwise`, LiteLLM sends one decision request per document. The input contains the query and one document. The question asks whether the passage contains information that answers, supports or contradicts the query. LiteLLM uses the probability of “yes” as `relevance_score`.
 
-With `strategy: multiple_choice`, LiteLLM sends the query and all documents in one input and asks which passage is most relevant. The provider returns one probability per document label. LiteLLM requires the complete set of expected labels and uses their probabilities as relevance scores. A missing or unexpected label fails the request.
+With `strategy: multiple_choice`, LiteLLM sends the query and all documents in one input and asks which passage is most relevant. LiteLLM uses the normalized probabilities as relevance scores. It validates that the score vector contains one value per document, each value is finite and between zero and one, and the values sum to one within provider rounding precision.
 
 LiteLLM sorts scores from highest to lowest and preserves input order for ties. Result indexes refer to the original request. `top_n` limits the returned results; it does not reduce the number of documents that need scoring.
 
@@ -162,7 +162,7 @@ Provide documents as strings or objects with a single `text` field, such as `{"t
 
 The `timeout` covers the full set of document calls. If the operation exceeds that deadline, LiteLLM cancels queued work and returns a timeout. In synchronous calls, provider requests already in flight can finish after the caller receives that error and can still incur charges. Set the deadline with the candidate count and concurrency limit in mind.
 
-## Errors and incomplete judgments
+## Provider errors and refusals
 
 Keep `refusal_policy: error` to treat a refused judgment as an incomplete rerank request. A refusal does not mean that the document is irrelevant. The adapter also returns errors for authentication failures, rate limits, timeouts and malformed provider responses.
 
