@@ -6,7 +6,7 @@ At LiteLLM, **safeguarding your data privacy and security** is our top priority.
 
 ### Self-hosted Instances LiteLLM
 
-- **No data or telemetry is stored on LiteLLM Servers when you self-host**
+- **No data or telemetry is stored on LiteLLM Servers when you self-host**, unless you point usage telemetry's HTTP endpoint at them as described below
 - For installation and configuration, see: [Self-hosting guide](../docs/proxy/deploy.md)
 - **Telemetry**: Usage telemetry is off by default when you self-host LiteLLM. If you turn it on, it keeps aggregate counts in your own database or sends them to the HTTP endpoint you set. There is no default endpoint, so nothing reaches LiteLLM servers unless you set one that points there. See [Usage telemetry](./proxy/telemetry.md) for every field it can collect
 
