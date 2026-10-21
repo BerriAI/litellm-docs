@@ -8,7 +8,7 @@ description: "Preview JevRank for low-cost reranking with Perplexity and TypeSaf
 tags: [engineering, reranking, decisions]
 hide_table_of_contents: true
 custom_hero: true
-image: /benchmarks/jevrank/jevrank-quality-cost.png
+image: /img/jevrank/launch-benchmark.png
 draft: true
 ---
 

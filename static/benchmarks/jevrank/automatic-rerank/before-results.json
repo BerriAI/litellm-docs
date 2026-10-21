@@ -1,0 +1,67 @@
+{
+  "timestamp_utc": "2026-10-21T05:08:42.777486+00:00",
+  "head": "0e24bbb8a2c4e250cde60ca92df92ea2ffe3de60",
+  "source": "isolated git archive of feature merge base",
+  "records": [
+    {
+      "case": "sdk_sync",
+      "request": {
+        "model": "openai/typesafe/jev-latest",
+        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "query": "What is LiteLLM used for?",
+        "documents": [
+          "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+          "Bananas are yellow fruit commonly used in smoothies."
+        ],
+        "return_documents": true,
+        "timeout": 3,
+        "num_retries": 0
+      },
+      "exception_type": "APIConnectionError",
+      "error": "litellm.APIConnectionError: APIConnectionError: OpenAIException - Unsupported provider: openai",
+      "latency_seconds": 0.093,
+      "network_connection_attempts": 0,
+      "real_api_key_used": false
+    },
+    {
+      "case": "sdk_async",
+      "request": {
+        "model": "openai/typesafe/jev-latest",
+        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "query": "What is LiteLLM used for?",
+        "documents": [
+          "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+          "Bananas are yellow fruit commonly used in smoothies."
+        ],
+        "return_documents": true,
+        "timeout": 3,
+        "num_retries": 0
+      },
+      "exception_type": "APIConnectionError",
+      "error": "litellm.APIConnectionError: APIConnectionError: OpenAIException - Unsupported provider: openai",
+      "latency_seconds": 0.003,
+      "network_connection_attempts": 0,
+      "real_api_key_used": false
+    },
+    {
+      "case": "router_alias",
+      "request": {
+        "model": "openai/typesafe/jev-latest",
+        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "query": "What is LiteLLM used for?",
+        "documents": [
+          "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+          "Bananas are yellow fruit commonly used in smoothies."
+        ],
+        "return_documents": true,
+        "timeout": 3,
+        "num_retries": 0
+      },
+      "exception_type": "APIConnectionError",
+      "error": "litellm.APIConnectionError: APIConnectionError: OpenAIException - Unsupported provider: openai\n\nLiteLLM: model group 'jevrank' failed with the error above. No fallback was attempted.",
+      "latency_seconds": 0.474,
+      "network_connection_attempts": 0,
+      "real_api_key_used": false
+    }
+  ]
+}
