@@ -386,7 +386,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 
 ## Text to Speech
 
-Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported
+Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported. Available from v1.102.0.
 
 ### SDK Usage
 
@@ -418,11 +418,11 @@ response.stream_to_file("speech.mp3")
 | `nova`       | `gb_jane_sarcasm` |
 | `shimmer`    | `gb_jane_sarcasm` |
 
-Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. `GET https://api.mistral.ai/v1/audio/voices` lists every voice your account can use.
 
 ### Response Formats
 
-`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`.
 
 ### Voice Cloning
 
@@ -446,7 +446,7 @@ response.stream_to_file("cloned.mp3")
 
 ### Unsupported Parameters
 
-Mistral's speech API rejects `speed` and `instructions` with a 422, so LiteLLM drops both before sending the request instead of failing it. A call that passes either one still returns audio, generated from the parameters Mistral does accept
+Mistral's speech API rejects `speed` and `instructions` with a 422, so LiteLLM drops both before sending the request instead of failing it. A call that passes either one still returns audio, generated from the parameters Mistral does accept.
 
 ### Usage with LiteLLM Proxy
 
@@ -476,7 +476,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 
 ### Cost Tracking
 
-Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is billed as 17 characters
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is billed as 17 characters.
 
 ## Files and Batches API
 
