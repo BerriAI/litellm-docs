@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # superbot
 
+[superbot](https://superbot.gg/?utm_source=litellm&utm_medium=registry&utm_campaign=default-slots) is your own AI agent: anything you can do on your computer, it can do, fast, and it runs your recurring tasks on a schedule across all your devices. It also has an OpenAI-compatible API, which is what this page covers.
+
 Try superbot in your browser first: [superbot.gg/chat](https://superbot.gg/chat?utm_source=litellm&utm_medium=registry&utm_campaign=default-slots) is free and needs no account.
 
 ## Overview
