@@ -27,7 +27,7 @@ We tested Jev 1.13 on the full BEIR SciFact test split. For each query, we retri
 
 All 300 queries completed. With eight document calls in flight per query, we measured **0.50 s median latency** and **1.15 s at p95**. Jev placed a relevant document first for 68% of queries, compared with [55% for BM25](/benchmarks/jevrank/independent-audit.json).
 
-We saved the inputs and provider responses so you can [reproduce the evaluation](/benchmarks/jevrank/README.md), inspect individual queries or test a different model against the same candidates.
+We saved the inputs and provider responses so you can <a href="/benchmarks/jevrank/README.md">reproduce the evaluation</a>, inspect individual queries or test a different model against the same candidates.
 
 ## Turn a relevance question into a score
 
