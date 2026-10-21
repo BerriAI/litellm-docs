@@ -16,17 +16,27 @@ export LITELLM_TELEMETRY_DESTINATION=http   # or local_table
 export LITELLM_TELEMETRY_ENDPOINT=https://telemetry.example.com/v1/reports   # needed for http
 ```
 
-A proxy admin can see what is on from **Settings > Telemetry** in the Admin UI (`/ui/telemetry`). The page has a Proxy requests tab and an Admin UI tab, describes what each group sends, says where and how often reports go, and shows the last report this worker sent or, before the first one, a sample report built from made-up traffic. The page cannot turn telemetry on. Every control that would turn on a group or set a first destination saves nothing and opens a dialog instead, or is disabled while telemetry is off. On an enterprise license it asks you to contact your LiteLLM enterprise representative, and without one it says telemetry is an enterprise feature. So the page can only turn groups off or switch a destination that is already set. Those choices are stored in the `LiteLLM_Config` table, so they survive restarts and reach every worker at its next report window.
+A proxy admin can also save groups and a destination through the API. This needs a database, and it is refused while `LITELLM_TELEMETRY_GROUPS` or `LITELLM_TELEMETRY_DISABLED` is set:
 
-To guarantee telemetry stays off whatever is saved in the UI, set `LITELLM_TELEMETRY_DISABLED=true`. It wins over `LITELLM_TELEMETRY_GROUPS` and over the stored settings. Whenever valid `LITELLM_TELEMETRY_*` variables are set, the Admin UI shows a banner naming them (never their values).
+```bash
+curl -s -X PUT http://localhost:4000/telemetry/settings \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H 'content-type: application/json' \
+  -d '{"groups": ["heartbeat", "request_success"], "destination": "local_table"}'
+```
 
-An invalid value, such as an unknown group, a group without the one it needs, or `LITELLM_TELEMETRY_DESTINATION=http` without an endpoint, leaves telemetry off and the Telemetry page read-only, with no banner. The proxy still starts and logs a warning that names the variable.
+The saved choice is stored in the `LiteLLM_Config` table, so it survives restarts and reaches every worker at its next report window. Neither the environment variables nor the API check for an enterprise license.
+
+A proxy admin can see what is on from **Settings > Telemetry** in the Admin UI (`/ui/telemetry`). The page has a Proxy requests tab and an Admin UI tab, describes what each group sends, says where and how often reports go, and shows the last report this worker sent or, before the first one, a sample report built from made-up traffic. The page cannot turn telemetry on. Every control that would turn on a group or set a first destination saves nothing and opens a dialog instead, or is disabled while telemetry is off. On an enterprise license it asks you to contact your LiteLLM enterprise representative, and without one it says telemetry is an enterprise feature. So the page can only turn off groups saved through the API, or switch a destination that is already set.
+
+To guarantee telemetry stays off whatever is saved through the UI or the API, set `LITELLM_TELEMETRY_DISABLED=true`. It wins over `LITELLM_TELEMETRY_GROUPS` and over the stored settings. Whenever valid `LITELLM_TELEMETRY_*` variables are set, the Admin UI shows a banner naming them (never their values).
+
+An invalid value, such as an unknown group, a group without the one it needs, an endpoint that is not an HTTP or HTTPS URL, or `LITELLM_TELEMETRY_DESTINATION=http` without an endpoint, leaves telemetry off and the Telemetry page read-only, with no banner. The proxy still starts and logs a warning that names the variable.
 
 There are two destinations, and the proxy never picks one for you:
 
 | Destination | Where reports go | Needs |
 |---|---|---|
-| `http` | Each worker POSTs one JSON report per window to `LITELLM_TELEMETRY_ENDPOINT`, and once more on shutdown. After a network error, a 5xx, 408, 409 or 429, the next report starts at the failed window and adds its counts. Reports carry no id, so a receiver that stored the failed POST counts that window twice. Any other response or an invalid URL drops that report | `LITELLM_TELEMETRY_ENDPOINT`. Without it, `LITELLM_TELEMETRY_DESTINATION=http` leaves telemetry off, and the UI cannot save `http` |
+| `http` | Each worker POSTs one JSON report per window to `LITELLM_TELEMETRY_ENDPOINT`, and once more on shutdown. After a network error, a 5xx, 408, 409 or 429, the next report starts at the failed window and adds its counts, unless the groups or destination change first. Reports carry no id, so a receiver that stored the failed POST counts that window twice. Any other response drops that report, and the shutdown report is never retried | `LITELLM_TELEMETRY_ENDPOINT`. Without it, `LITELLM_TELEMETRY_DESTINATION=http` leaves telemetry off, and the UI cannot save `http` |
 | `local_table` | Each worker stores one report per window in the `LiteLLM_TelemetryReport` table, kept for `LITELLM_TELEMETRY_RETENTION_DAYS`. Nothing leaves the proxy, and an air-gapped install can export reports by hand (see [Export reports](#export-reports)) | A database |
 
 If groups are on but no destination is chosen, or the chosen one is not available, nothing is recorded and the proxy logs a warning. The Telemetry page only flags a missing destination, so a saved `http` destination whose `LITELLM_TELEMETRY_ENDPOINT` was later removed still shows there as the destination. A proxy with neither a database nor `LITELLM_TELEMETRY_ENDPOINT` records nothing and logs no warning. A destination switched from the UI takes effect at each worker's next report window, like the groups. `LITELLM_TELEMETRY_DESTINATION` wins over the saved destination.
@@ -63,7 +73,7 @@ Each worker folds what it sees into in-memory counters and emits one report per 
 
 Only POST requests to LLM and provider pass-through routes, MCP requests and A2A `message/send` requests are counted. Admin and management routes and websocket routes such as `/v1/realtime` are never counted, and pass-through endpoints you define in your config are only counted when their path ends like an LLM route, such as `/chat/completions`.
 
-Provider pass-through requests, such as `/anthropic/v1/messages`, are counted, but their rows have no provider, provider attempts or token counts yet, except Bedrock and GigaChat requests for a model on your model list.
+Provider pass-through requests are counted, but their rows have no provider, provider attempts or token counts yet, except Bedrock and GigaChat requests for a model on your model list. Most are recorded under their prefix, so `/anthropic/v1/messages` reads as `/anthropic`. A pass-through path that ends like an LLM route is recorded under that route instead, so `/openai/v1/chat/completions` reads as `/chat/completions` and looks like a native request that called no provider.
 
 **Request rows** hold one row per distinct combination of:
 
@@ -72,7 +82,7 @@ Provider pass-through requests, such as `/anthropic/v1/messages`, are counted, b
 | `endpoint` | The matched route, such as `/chat/completions`, `/v1/messages`, `:generateContent`, a pass-through prefix like `/anthropic`, `/mcp` or `/a2a`. Never the raw path |
 | `handled_by_rust` | Whether the response came from the Rust gateway, read from its `x-litellm-rust: true` response header |
 | `provider` | `request_taxonomy` only. Provider of the deployment that served the request, such as `anthropic`, or `null` when no provider was called |
-| `deployment_hash` | `request_taxonomy` only. First 16 hex characters of an HMAC-SHA256 of the deployment id, keyed by a random secret the proxy creates once and keeps in `LiteLLM_Config`, so it stays the same across workers and restarts and cannot be matched across installs. A proxy without a database keys it from `LITELLM_SALT_KEY` or the master key, and with neither each worker picks a random key on every boot. A worker that cannot read the stored secret at start uses the salt key until it restarts |
+| `deployment_hash` | `request_taxonomy` only. First 16 hex characters of an HMAC-SHA256 of the deployment id, keyed by a random secret the proxy creates once and keeps in `LiteLLM_Config`, so it stays the same across workers and restarts and cannot be matched across installs. A proxy without a database keys it from `LITELLM_SALT_KEY` or the master key instead, so proxies that share that key give the same hashes, and with neither each worker picks a random key on every boot. A worker that cannot read the stored secret at start uses the salt key until it restarts |
 | `litellm_status` | Status class the client got: `2xx`, `3xx`, `4xx`, `5xx` |
 | `provider_status` | Status class of the last provider call: `2xx` through `5xx`, `timeout` and `connection_error` when no provider response arrived, or `none` when no provider was called |
 | `litellm_cache_hit` | Whether the LiteLLM response cache answered |
@@ -82,6 +92,8 @@ Provider pass-through requests, such as `/anthropic/v1/messages`, are counted, b
 A LiteLLM cache hit is the exception to the `provider` and `provider_status` rules above. Its row carries the deployment's `provider` and a `2xx` `provider_status`, and with `token_info` the cached response's token counts, though `provider_attempts` is 0.
 
 Each request row carries `request_count`, histograms of `latency_to_headers_ms` and `latency_to_first_byte_ms` as seen by the client, measured from when the proxy receives the request to its response headers and to the first non-empty response body chunk. There is no total latency, since for a stream it mostly reflects how long the response is. Each row also carries `provider_attempts` (how many provider calls retries and fallbacks made). With `token_info` it also carries sums of `input_tokens`, `output_tokens` and `cache_read_tokens`. With `event_details` it also carries a `block_count` histogram, `block_types` counts (`text`, `image`, `audio`, `file`, `tool_use`, `tool_result`, `thinking`, `other`) and `header_keys` counts.
+
+Blocks are only counted from a request's `messages` list, so rows for requests without one, such as embeddings, have empty block counts.
 
 `header_keys` only names headers from a fixed allowlist: `anthropic-beta`, `anthropic-version`, `openai-beta`, `openai-organization`, `x-litellm-api-key`, `x-litellm-disable-callbacks`, `x-litellm-enable-message-redaction`, `x-litellm-num-retries`, `x-litellm-tags`, `x-litellm-timeout`, `x-stainless-lang` and `x-stainless-package-version`. Any other header is counted as `other`. Header values are never read.
 
@@ -109,7 +121,7 @@ The response holds `reports` plus `next_after` and `next_after_id`. Pass those b
 | `LITELLM_TELEMETRY_DISABLED` | `true` forces every group off, whatever is set elsewhere |
 | `LITELLM_TELEMETRY_GROUPS` | Comma-separated groups to turn on. When set, it overrides the Admin UI settings, and an empty value means off |
 | `LITELLM_TELEMETRY_DESTINATION` | `local_table` or `http`. When set, it overrides the destination saved in the Admin UI. With neither set, nothing is recorded |
-| `LITELLM_TELEMETRY_ENDPOINT` | HTTP or HTTPS URL that receives one JSON report per window when the destination is `http`. The proxy sends only a `content-type` header and no auth header, so a receiver that needs a token has to read it from the URL |
+| `LITELLM_TELEMETRY_ENDPOINT` | HTTP or HTTPS URL that receives one JSON report per window when the destination is `http`. The proxy sends only `content-type` and `user-agent` headers and no auth header, so a receiver that needs a token has to read it from the URL |
 | `LITELLM_TELEMETRY_SETTLE_TIMEOUT_SECONDS` | How long a finished request waits for its provider attempts to be logged before its row is written. Default is `2` |
 | `LITELLM_TELEMETRY_RETENTION_DAYS` | How long locally kept reports are retained. Default is `30` |
 
