@@ -307,6 +307,8 @@ litellm.enable_gemini_default_thinking_level_low = True
 
 ### Thinking without thought summaries
 
+<SinceVersion v="1.107.0" />
+
 Gemini returns a summary of its thinking in `reasoning_content` whenever thinking is on. To keep the thinking but drop the summary text on every Gemini request, turn the summaries off.
 
 <Tabs>
@@ -336,8 +338,6 @@ The model still thinks and `usage.completion_tokens_details.reasoning_tokens` is
 - `/v1/responses`: `reasoning={"effort": "medium", "summary": "auto"}`.
 
 `"display": "omitted"` is not an ask, so the setting decides. On `/v1/messages` this setting also wins over `reasoning_auto_summary`, since that summary is added by the gateway, not asked for by the request. A text value such as `"false"` is read as `false`, and a value that reads as neither keeps the summaries on.
-
-Available from v1.107.0.
 
 ## Usage - `service_tier`
 
@@ -387,7 +387,7 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 
 `audio.voice` takes any Gemini prebuilt voice name (`Kore`, `Puck`, `Zephyr`, ...) and sends it through unchanged. OpenAI voice names map to the nearest Gemini prebuilt voice, so OpenAI-shaped clients and the proxy's default `audio_speech` health check (`alloy`) work without a config change. The lookup is case-insensitive, and any other name is sent through as-is, so a typo still fails at Google with its `No matching speaker voice found` error.
 
-The mapping is available from v1.107.0 (first in `v1.107.0-rc.1`). Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
+The mapping works <SinceVersion v="1.107.0" />. Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
 
 | OpenAI voice | Gemini voice |
 |--------------|--------------|

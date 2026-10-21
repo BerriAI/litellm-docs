@@ -216,7 +216,7 @@ curl -X DELETE http://localhost:4000/claude-code/plugins/my-plugin \
 
 ## Auto-install plugins in Claude Desktop
 
-Available from v1.107.0.
+<SinceVersion v="1.107.0" />
 
 Claude Desktop on third-party can install a plugin for every user without each one opting in, when your LiteLLM proxy is also its inference gateway. Set `installation_preference` on the plugin and LiteLLM serves it as `installationPreference` on that plugin's `marketplace.json` entry. The field is API only, since the Admin UI has no control for it yet. `GET /claude-code/plugins`, `GET /claude-code/plugins/{name}`, and `GET /public/skill_hub` return it as `installation_preference`. The `sha256` must be the zip's 64-character hex SHA-256 digest. The digest below is only an example, so replace it with the output of `shasum -a 256 my-plugin-1.0.0.zip`. LiteLLM checks only that the digest is 64 hex characters, not that it matches the zip, and Anthropic's [Claude Desktop extensions docs](https://claude.com/docs/third-party/claude-desktop/extensions) say Desktop installs nothing from a sync when any archive in it fails to download or fails its digest check, so one wrong digest blocks every auto-install from this marketplace:
 

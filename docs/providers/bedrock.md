@@ -382,7 +382,9 @@ response = client.chat.completions.create(
 
 ### Forward key, team, and org identity from the proxy
 
-The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default and available in `v1.99.0` and later. List the fields to forward under `litellm_settings`:
+<SinceVersion v="1.99.0" />
+
+The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default. List the fields to forward under `litellm_settings`:
 
 ```yaml
 litellm_settings:
@@ -581,7 +583,7 @@ print(f"\nResponse: {resp}")
 
 This is currently only supported for Anthropic's Claude 3.7 Sonnet + Deepseek R1 + GPT-OSS models.
 
-Works on v1.61.20+.
+<SinceVersion v="1.61.20" />
 
 Returns 2 new fields in `message` and `delta` object:
 - `reasoning_content` - string - The reasoning content of the response
@@ -1147,7 +1149,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Usage - Latency Optimized Inference
 
-Valid from v1.65.1+
+<SinceVersion v="1.65.1" />
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1674,11 +1676,7 @@ print(response)
 
 ## Set 'converse' / 'invoke' route 
 
-:::info
-
-Supported from LiteLLM Version `v1.53.5`
-
-:::
+<SinceVersion v="1.53.5" />
 
 LiteLLM defaults to the `invoke` route. LiteLLM uses the `converse` route for Bedrock models that support it.
 

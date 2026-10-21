@@ -257,7 +257,7 @@ Anthropic's [Legal and compliance](https://code.claude.com/docs/en/legal-and-com
 
 ### Which requests use the subscription token
 
-The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the model is an `anthropic/` deployment. It is never sent to other providers, including Claude on Bedrock or Vertex AI, which keep using their own credentials (since v1.99.0). `/v1/messages/count_tokens` uses the deployment's configured key, not the subscription token. The `/anthropic` pass-through route does not use the subscription token when the proxy has an Anthropic key configured, so point `ANTHROPIC_BASE_URL` at the proxy root as shown above rather than at `/anthropic`.
+The token is forwarded on `/v1/messages` and on `/v1/chat/completions` when the model is an `anthropic/` deployment. From v1.99.0 it is never sent to other providers, including Claude on Bedrock or Vertex AI, which keep using their own credentials. `/v1/messages/count_tokens` uses the deployment's configured key, not the subscription token. The `/anthropic` pass-through route does not use the subscription token when the proxy has an Anthropic key configured, so point `ANTHROPIC_BASE_URL` at the proxy root as shown above rather than at `/anthropic`.
 
 ### Credential storage, refresh, and revocation
 
@@ -321,7 +321,7 @@ curl -X POST "http://localhost:4000/key/generate" \
 
 ### Seeing Which Requests Were Billed to a Seat
 
-Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field needs LiteLLM v1.105.0 or later (first in `v1.105.0-rc.1`), and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
+Every spend log row records which credential the upstream call used in `metadata.used_client_oauth_token`: `true` when the request went to Anthropic with the developer's forwarded OAuth token (the subscription seat paid for it), `false` when it went out with the deployment's configured `api_key`. The token itself is never written to the log. The field is recorded <SinceVersion v="1.105.0" />, and rows written by an earlier version have no value, so they match neither filter below. A request the router sends to a Bedrock or Vertex deployment reads `false` even when the client sent an OAuth token, since only the direct Anthropic route forwards it. Requests through the `/anthropic` pass-through route do not carry the field
 
 `spend` stays at the model's list price on both kinds of rows, so budgets and rate limits keep working across seat-billed and key-billed traffic. To get the real API bill, subtract the seat-billed rows
 

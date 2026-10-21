@@ -18,6 +18,7 @@ Every check here is deterministic and fails the build:
   model-literal       a fenced block hardcodes a current/historical default or a chatgpt/ model instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
+  version-note        a hand-written "available in v1.85.0" note instead of the <SinceVersion /> badge
   card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
   card-too-long       card_title over 40 characters or card_summary over 120, which the Home card cannot show in full
 
@@ -49,6 +50,20 @@ one interpreter, a third-party requirement, a historical commit message).
 A placeholder that looks like a role but is not one (a typo, or a role removed
 from docs-models.json) fails model-role-unknown, since the build would print it
 as written.
+
+Feature availability is stated with the <SinceVersion /> badge
+(src/components/SinceVersion), so a reader can tell at a glance whether a
+feature exists in the version they run. The version-note rule fails a prose
+sentence that ends in a hand-written availability note ("Requires LiteLLM
+v1.76.1+", "This feature is available in v1.74.3-stable and above", a table
+cell holding "1.63.8+") and points at the badge. The version has to end its
+sentence, table cell, or parenthesis, so a sentence that happens to mention a
+release ("From v1.81.0 the request is set as attributes on the parent span") is
+left alone, and so is a removal note ("No longer supported since v1.110.0").
+Another project's version usually is too, since the words leading
+into it are not availability words, but a line like "requires the SDK 1.1.0"
+does fire. Add `{/* keep-version-note */}` to the line there, and wherever the
+release itself is the subject, as on the release-cycle page.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -394,6 +409,13 @@ def check_page(page, site, page_cache):
         if "keep-model-ids" not in raw:
             for m in CHATGPT_LITERAL_RE.finditer(raw):
                 err("model-literal", line_no, model_literal_message(m.group(0)))
+        for match in SINCE_VERSION_TAG_RE.finditer(raw):
+            if not SINCE_VERSION_PROP_RE.search(match.group(1)):
+                err("version-note", line_no, "<SinceVersion> without a `v` prop renders nothing; write `<SinceVersion v=\"1.85.0\" />`")
+        if "keep-version-note" not in raw:
+            literal = version_note_literal(SINCE_VERSION_TAG_RE.sub(" ", raw))
+            if literal:
+                err("version-note", line_no, version_note_message(literal))
         text = strip_inline_code(raw)
         targets = [m.group(1) for m in MD_LINK_RE.finditer(text)] + [m.group(1) for m in HREF_RE.finditer(text)]
         for target in targets:
@@ -509,6 +531,66 @@ def python_literal_message(literal):
         f"hardcoded Python version `{literal}`; write `{{{{python_version}}}}` (the version examples use) or "
         f"`{{{{python_min_version}}}}` (the lowest version LiteLLM supports) so docs-models.json controls it, "
         "or add keep-python-version if this exact version is the point"
+    )
+
+
+VERSION_TOKEN_RE = re.compile(
+    r"(?<![\w.])(?:v?[12]\.\d{1,3}\.(?:\d{1,2}|x)(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?|v[12]\.\d{1,3}(?!\w|\.\w))"
+)
+VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_>]")
+VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;!?](?=\s|$)|[|()]|,\s*which\b")
+VERSION_NOTE_TAIL_RE = re.compile(
+    r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
+    re.I,
+)
+VERSION_NOTE_WORD_RE = re.compile(r"[A-Za-z]+")
+VERSION_NOTE_LEAD_WORDS = frozenset(
+    "available added introduced requires require required supported supports support "
+    "since starting works work live valid new version versions need needs ships shipped".split()
+)
+VERSION_NOTE_FILLER_WORDS = VERSION_NOTE_LEAD_WORDS | frozenset(
+    "a and as at be feature from gateway in integration is it note of on only "
+    "litellm proxy python sdk server that the this to with".split()
+)
+VERSION_NOTE_NEGATION_WORDS = frozenset(
+    "before deprecated dropped longer never no not prior removed until up".split()
+)
+VERSION_NOTE_LOOKBACK = 5
+SINCE_VERSION_TAG_RE = re.compile(r"<SinceVersion\b([^>]*)>")
+SINCE_VERSION_PROP_RE = re.compile(r"\bv\s*=\s*(?:[\"'][^\"']+[\"']|\{\s*[\"'`][^\"'`]+[\"'`]\s*\})")
+
+
+def version_note_literal(raw):
+    text = VERSION_NOTE_STRIP_RE.sub(" ", raw)
+    return next((m.group(0) for m in VERSION_TOKEN_RE.finditer(text) if is_version_note(text, m)), None)
+
+
+def is_version_note(text, match):
+    clause_tail = VERSION_NOTE_CLAUSE_END_RE.split(text[match.end():], maxsplit=1)[0]
+    if not VERSION_NOTE_TAIL_RE.match(clause_tail):
+        return False
+    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(text[: match.start()])]
+    for distance, word in enumerate(reversed(lead_in[-VERSION_NOTE_LOOKBACK:]), start=1):
+        if word in VERSION_NOTE_NEGATION_WORDS:
+            return False
+        if word in VERSION_NOTE_LEAD_WORDS:
+            lead_at = len(lead_in) - distance
+            return VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[max(0, lead_at - 2):lead_at])
+        if word not in VERSION_NOTE_FILLER_WORDS:
+            return False
+    return False
+
+
+def badge_version(literal):
+    version = re.sub(r"\.x$", ".0", literal.lstrip("vV"))
+    return version if version.count(".") >= 2 else f"{version}.0"
+
+
+def version_note_message(literal):
+    return (
+        f"hand-written version note `{literal}`; write `<SinceVersion v=\"{badge_version(literal)}\" />` so every "
+        "page states availability the same way, or add {/* keep-version-note */} when the version is not "
+        "LiteLLM's own or the release itself is the subject of the sentence"
     )
 
 
