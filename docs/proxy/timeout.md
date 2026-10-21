@@ -38,6 +38,8 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+`litellm_settings.request_timeout` (or the `REQUEST_TIMEOUT` env var) is the proxy-wide default when no router or deployment timeout is set. It applies to the native `/v1/responses` and `/v1/messages` streams as well, where it bounds each wait for the next chunk, so a stalled upstream ends the stream with an error instead of hanging. See [request timeouts on pass-through routes](./pass_through#request-timeouts) for the full precedence
+
 ### Custom Timeouts & Stream Timeouts (Per Model)
 
 For each model, you can set `timeout` and `stream_timeout` under `litellm_params`:
@@ -47,6 +49,11 @@ For each model, you can set `timeout` and `stream_timeout` under `litellm_params
 
 - **`stream_timeout`** → maximum time to wait for the *first chunk* (i.e., first token) in a streaming response.  
   Use this to abort “hanging” providers (e.g., Bedrock slow start) and retry another model.
+
+Some requests can't be streamed by the provider, for example a `json_schema` response format on a Bedrock model without native structured output. LiteLLM then makes one non-streaming call and sends the answer back as chunks once it is complete, so no chunk arrives until the whole answer is written. These requests use the longer of `timeout` and `stream_timeout`, so a short `stream_timeout` meant for stalled streams does not cut off a slow structured answer.
+
+The same rules apply when you call `litellm.completion()`, `litellm.acompletion()`, or `litellm.aresponses()` directly without a Router. Pass `stream_timeout` next to `timeout`, and a live stream is bounded by `stream_timeout`, a call that is not streamed by `timeout`, and a faked stream by the longer of the two. Earlier versions ignored `stream_timeout` on direct SDK calls, so a short value you set there now cuts off a live stream that takes longer than it to send a chunk.
+
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
@@ -114,6 +121,28 @@ $ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+### Per Service Tier Timeouts
+
+A deployment can give requests that ask for a specific `service_tier` their own timeout. OpenAI's `flex` tier, for example, is slower than the default tier, so a `timeout` sized for standard traffic cuts flex requests off too early. Set `timeout_by_service_tier` and `stream_timeout_by_service_tier` under `litellm_params`, keyed by tier name:
+
+```yaml
+model_list:
+  - model_name: {{openai_small}}
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+      timeout: 610
+      stream_timeout: 610
+      timeout_by_service_tier:
+        flex: 900
+      stream_timeout_by_service_tier:
+        flex: 900
+```
+
+A request with `"service_tier": "flex"` in its body now waits up to 900 seconds on `/v1/chat/completions`, `/v1/responses` and every other route that accepts `service_tier`. A request without `service_tier`, or with a tier that has no entry in the map, keeps the deployment's `timeout` and `stream_timeout`, so adding the maps changes nothing for existing traffic.
+
+Per attempt, LiteLLM picks the first value that is set: a timeout sent with the request (the `timeout` parameter or the `x-litellm-timeout` header), then `timeout_by_service_tier` for the request's tier, then the deployment's `timeout`, then the router and global defaults described above. Streaming requests go through the same order with `stream_timeout_by_service_tier` and `stream_timeout`; a tier that is only listed in `timeout_by_service_tier` keeps the deployment's `stream_timeout` for its streams. Values must be numbers of seconds; the proxy refuses to start on anything else. Tier names are not checked against the provider, so a misspelled key is simply never matched.
+
 ### Keepalive Pings for Idle Streaming Connections
 
 `timeout` and `stream_timeout` cap how long a request is allowed to run. A separate problem is that load balancers and reverse proxies in front of the proxy often close connections that look idle, even when the client is legitimately waiting on a response. Streaming requests to models with long silent gaps before the first token, such as extended or adaptive thinking models, or otherwise slow providers, can trip these idle-connection timeouts before any content arrives.
@@ -132,7 +161,7 @@ model_list:
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -157,7 +186,7 @@ With override allowed, a request can change the deployment's default, including 
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "claude-opus",
     "messages": [{"role": "user", "content": "Think step by step about..."}],
@@ -173,7 +202,7 @@ If `allow_client_keepalive_override` isn't set, that same request body is silent
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'x-litellm-keepalive-seconds: 1' \
   -d '{
     "model": "claude-opus",
@@ -264,7 +293,7 @@ response = client.chat.completions.create(
         {"role": "user", "content": "what color is red"}
     ],
     logit_bias={12481: 100},
-    extra_body={"timeout": 1} # 👈 KEY CHANGE
+    extra_body={"timeout": 1} # KEY CHANGE
 )
 
 print(response)
@@ -285,12 +314,12 @@ This is currently only supported on `/chat/completions` and `/completions` endpo
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
     -H 'Content-Type: application/json' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     --data-raw '{
         "model": "gemini/{{gemini_flash}}",
         "messages": [
         {"role": "user", "content": "hi my email is ishaan@berri.ai"}
         ],
-        "mock_timeout": true # 👈 KEY CHANGE
+        "mock_timeout": true # KEY CHANGE
     }'
 ```

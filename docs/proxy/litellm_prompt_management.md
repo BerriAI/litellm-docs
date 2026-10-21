@@ -84,7 +84,7 @@ Now that your prompt is published, you can use it in your application via the Li
 
 ### Basic Usage
 
-Call a prompt using just the prompt ID and model:
+Call a prompt using just the prompt ID and model. The OpenAI Python SDK rejects calls without `messages`, so the Python examples pass `messages=[]` and the proxy fills the conversation from the prompt template:
 
 <Tabs>
 <TabItem value="curl" label="cURL">
@@ -92,7 +92,7 @@ Call a prompt using just the prompt ID and model:
 ```bash showLineNumbers title="Basic Prompt Call"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id"
@@ -106,12 +106,13 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
     model="{{openai_large}}",
+    messages=[],
     extra_body={
         "prompt_id": "your-prompt-id"
     }
@@ -127,7 +128,7 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
@@ -156,7 +157,7 @@ Add custom messages to your prompt:
 ```bash showLineNumbers title="Prompt with Custom Messages"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
@@ -176,7 +177,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -200,7 +201,7 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
@@ -232,7 +233,7 @@ Pass variables to your prompt template using `prompt_variables`:
 ```bash showLineNumbers title="Prompt with Variables"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "your-prompt-id",
@@ -249,12 +250,13 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
     model="{{openai_large}}",
+    messages=[],
     extra_body={
         "prompt_id": "your-prompt-id",
         "prompt_variables": {
@@ -273,7 +275,7 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 
@@ -376,7 +378,7 @@ By default, API calls use the latest version of a prompt. To use a specific vers
 ```bash showLineNumbers title="Use Specific Prompt Version"
 curl -X POST 'http://localhost:4000/chat/completions' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "prompt_id": "jack-sparrow",
@@ -397,7 +399,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -422,7 +424,7 @@ print(response)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: "sk-1234",
+    apiKey: "sk-<your-api-key>",
     baseURL: "http://localhost:4000"
 });
 

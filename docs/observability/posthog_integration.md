@@ -61,7 +61,7 @@ Configure different PostHog credentials per team using the team callback setting
 
 ```bash
 curl -X POST 'http://localhost:4000/team/{team_id}/callback' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "callback_name": "posthog",
@@ -143,7 +143,7 @@ response = litellm.completion(
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",  # Your LiteLLM Proxy API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM Proxy API key
     base_url="http://0.0.0.0:4000"  # Your LiteLLM Proxy URL
 )
 

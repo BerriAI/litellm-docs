@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 *Last Updated: July 2026*
 
-:::warning `main-stable` is deprecated; migrate to `:latest`
+:::warning[`main-stable` is deprecated; migrate to `:latest`]
 The legacy `main-stable` Docker tag still advances each week so existing deployments keep working. We're targeting **September 1, 2026** to stop publishing it, though that date is still being finalized through an [open deprecation discussion](https://github.com/BerriAI/litellm/discussions/32090) and may change based on feedback. Going forward, **`:latest`** is the canonical rolling pointer to the newest stable image; it advances automatically when each stable ships and matches the standard Docker convention.
 
 `main-stable` carries over from the previous naming scheme and doesn't fit modern conventions: it mixes "main" (typically a development branch) with "stable" (a release channel), and has no PyPI counterpart.
@@ -35,7 +35,7 @@ Versions like `v1.83.3-stable` and `v1.83.0-nightly` don't match PEP 440 (PyPI) 
 
 Under the old model, each scheduled weekly release bumped the PATCH number: `1.83.0` -> `1.83.1` -> `1.83.2` -> `1.83.3`. When a real hotfix was needed for `1.83.3`, the next PATCH (`1.83.4`) was already reserved for the following week's release. The workaround on Docker was `v1.83.3-stable.patch.1` - but PyPI doesn't accept that syntax, so a hotfix that needed both a Docker image and a Python wheel had no clean way to ship.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## What's new
 

@@ -2,7 +2,7 @@
 
 Vertex AI supports two types of image generation:
 
-1. **Gemini Image Generation Models** (Nano Banana 🍌) - Conversational image generation using `generateContent` API
+1. **Gemini Image Generation Models** (Nano Banana) - Conversational image generation using `generateContent` API
 2. **Imagen Models** - Traditional image generation using `predict` API
 
 | Property | Details |
@@ -92,7 +92,7 @@ Via LiteLLM Proxy (`/v1/images/generations`):
 ```bash showLineNumbers title="Proxy request with web_search_options"
 curl -X POST 'http://localhost:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "gemini-3.1-flash-image-preview",
     "prompt": "Generate an image of the latest iPhone design",
@@ -134,7 +134,7 @@ response = await litellm.aimage_generation(
 ```bash showLineNumbers title="Passing imageConfig via Proxy"
 curl -X POST 'http://localhost:4000/v1/images/generations' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "gemini-3.1-flash-image",
     "prompt": "A nano banana on a desk",

@@ -44,7 +44,7 @@ litellm --config config.yaml
 | Environment Variable | Value | Description |
 |---------------------|-------|-------------|
 | `ANTHROPIC_BASE_URL` | `http://localhost:4000` | LiteLLM proxy URL |
-| `ANTHROPIC_API_KEY` | `sk-1234` | Your LiteLLM API key (not Anthropic key) |
+| `ANTHROPIC_API_KEY` | `sk-<your-api-key>` | Your LiteLLM API key (not Anthropic key) |
 
 ```python title="agent.py" showLineNumbers
 import os
@@ -52,7 +52,7 @@ from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 
 # Point to LiteLLM proxy (not Anthropic)
 os.environ["ANTHROPIC_BASE_URL"] = "http://localhost:4000"
-os.environ["ANTHROPIC_API_KEY"] = "sk-1234"  # Your LiteLLM key
+os.environ["ANTHROPIC_API_KEY"] = "sk-<your-api-key>"  # Your LiteLLM key
 
 # Configure agent with any model from your config
 options = ClaudeAgentOptions(

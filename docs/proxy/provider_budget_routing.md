@@ -1,3 +1,7 @@
+---
+sidebar_label: "Budget Routing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -46,7 +50,7 @@ router_settings:
   redis_password: os.environ/REDIS_PASSWORD
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 #### Make a test request
@@ -62,7 +66,7 @@ We expect the first request to succeed, and the second request to fail since we 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -79,7 +83,7 @@ Expect this to fail since since we cross the budget for provider `openai`
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -142,7 +146,7 @@ Example Request
 ```bash
 curl -X GET http://localhost:4000/provider/budgets \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Example Response
@@ -228,7 +232,7 @@ We expect the first request to succeed, and the second request to fail since we 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -245,7 +249,7 @@ Expect this to fail since since we cross the budget for `openai/{{openai_large}}
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -270,7 +274,7 @@ Expected response on failure
 
 </Tabs>
 
-## ✨ Tag Budgets
+## Tag Budgets
 
 <EnterpriseFeature />
 
@@ -310,7 +314,7 @@ We expect the first request to succeed, and the second request to fail since we 
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -328,7 +332,7 @@ Expect this to fail since since we cross the budget for tag=`product:chat-bot`
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -373,13 +377,13 @@ router_settings:
       budget_limit: 0.000000000001 # float of $ value budget for time period
       time_period: 1d # can be 1d, 2d, 30d, 1mo, 2mo
   
-  # 👇 Add this: Set Redis Host, Port, and Password if using multiple instance of LiteLLM
+  # Add this: Set Redis Host, Port, and Password if using multiple instance of LiteLLM
   redis_host: os.environ/REDIS_HOST
   redis_port: os.environ/REDIS_PORT
   redis_password: os.environ/REDIS_PASSWORD
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ## Spec for provider_budget_config

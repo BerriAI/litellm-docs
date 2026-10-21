@@ -18,7 +18,7 @@ model_list:
 2. Start LiteLLM Proxy 
 
 ```bash
-litellm-proxy start
+litellm --config config.yaml
 ```
 
 3. Run test script 
@@ -38,7 +38,7 @@ import numpy as np
 
 # Load environment variables
 
-OPENAI_API_KEY = "sk-1234"  # Replace with your LiteLLM API key
+OPENAI_API_KEY = "sk-<your-api-key>"  # Replace with your LiteLLM API key
 OPENAI_API_URL = 'ws://{PROXY_URL}/v1/realtime?model=gemini-flash-live' # REPLACE WITH `wss://{PROXY_URL}/v1/realtime?model=gemini-flash-live` for secure connection
 WAV_FILE_PATH = "/path/to/audio.wav"  # Replace with your .wav file path
 

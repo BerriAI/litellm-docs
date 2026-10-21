@@ -1,5 +1,6 @@
 ---
-title: v1.56.1
+title: "LiteLLM v1.56.1"
+description: "Adds budget and rate limit tiers for keys, fine-tuning endpoint logs and dynamic guardrail parameters. Also fixes a double-logged OTEL span."
 slug: v1.56.1
 date: 2024-12-27T10:00:00
 authors:
@@ -39,7 +40,7 @@ Use this to control access and budgets across a lot of keys.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/budget/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "budget_id": "high-usage-tier",

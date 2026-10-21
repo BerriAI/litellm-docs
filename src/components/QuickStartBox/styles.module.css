@@ -1,0 +1,232 @@
+/* The box borrows .theme-code-block (border, radius, background, shadow)
+   from the site's code blocks, so it reads as one of them. */
+
+.wrap {
+  margin: 0.5rem 0 1.75rem;
+}
+
+.box {
+  margin: 0;
+}
+
+.head {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 1.1rem;
+  padding: 0 0.9rem;
+  border-bottom: 1px solid var(--aurora-line, var(--ifm-color-emphasis-200));
+  container-type: inline-size;
+}
+
+.group {
+  display: flex;
+  align-items: stretch;
+  gap: 1.1rem;
+}
+.right {
+  margin-left: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  margin-bottom: -1px;
+  padding: 0.55rem 0 0.5rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ifm-color-emphasis-600);
+  font: 500 0.8rem var(--ifm-font-family-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab:hover {
+  color: var(--ifm-font-color-base);
+}
+.tabOn {
+  border-bottom-color: var(--ifm-color-primary);
+  color: var(--ifm-font-color-base);
+  font-weight: 650;
+}
+.tab:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+.short {
+  display: none;
+}
+
+/* Centered on the box, not between the tab groups */
+.title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font: 650 0.7rem var(--ifm-font-family-monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ifm-font-color-base);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.run {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 0.55rem;
+}
+
+.cmd {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 0;
+  background: transparent;
+}
+.cmd::-webkit-scrollbar {
+  display: none;
+}
+/* The site styles every code block's scrollbar; this one line fades instead. */
+.box .cmd {
+  scrollbar-width: none;
+}
+.box .cmd::-webkit-scrollbar {
+  display: none;
+  height: 0;
+}
+.cmd code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+  white-space: pre;
+}
+.clipped {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.copy {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 28px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-surface-color, var(--ifm-background-color));
+  color: var(--ifm-font-color-base);
+  font: 600 0.76rem var(--ifm-font-family-base);
+  cursor: pointer;
+}
+.copy:hover {
+  border-color: var(--ifm-color-emphasis-500);
+}
+.copyDone,
+.copyDone:hover {
+  border-color: var(--ifm-color-success);
+  color: var(--ifm-color-success-dark);
+}
+[data-theme='dark'] .copyDone {
+  color: var(--ifm-color-success);
+}
+
+.below {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+.prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--lite-radius-sm, 6px);
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  font: 500 0.8rem var(--ifm-font-family-base);
+  cursor: pointer;
+}
+.prompt:hover {
+  border-color: var(--ifm-color-emphasis-400);
+  color: var(--ifm-font-color-base);
+}
+
+/* Panel: a heading, the box, then the text with the prompt button beside it */
+.panel {
+  margin: 0.25rem 0 2rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ifm-color-primary) 4%, var(--ifm-background-color));
+  container-type: inline-size;
+}
+.heading {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ifm-font-color-base);
+}
+.footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-800);
+}
+.text p {
+  margin: 0 0 0.35rem;
+}
+.text p:last-child {
+  margin: 0;
+}
+.footerAction {
+  flex: none;
+}
+/* Narrow panels: the button moves below the text, on the right */
+@container (max-width: 640px) {
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+  .footerAction {
+    align-self: flex-end;
+  }
+}
+
+/* Narrow boxes: the title would collide with the tabs, so it steps out, and
+   the longer labels shorten. */
+@container (max-width: 520px) {
+  .title {
+    display: none;
+  }
+  .long {
+    display: none;
+  }
+  .short {
+    display: inline;
+  }
+}
+@media (max-width: 480px) {
+  .copy {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+  }
+  .copyLabel {
+    display: none;
+  }
+}

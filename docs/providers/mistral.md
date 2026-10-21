@@ -379,7 +379,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"audio.wav"' \
 --form 'model="voxtral"'
 ```
@@ -464,7 +464,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "model": "voxtral-tts",
@@ -477,6 +477,10 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 ### Cost Tracking
 
 Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is billed as 17 characters
+
+## Files and Batches API
+
+LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's Files and Batch APIs. See [Mistral AI Batch API](./mistral_batches) for the full flow and cost tracking.
 
 ## Sample Usage - Embedding
 ```python

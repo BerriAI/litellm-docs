@@ -33,7 +33,7 @@ model_list:
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
-  master_key: sk-1234  # alternatively use the env var - LITELLM_MASTER_KEY
+  master_key: os.environ/LITELLM_MASTER_KEY  # alternatively use the env var - LITELLM_MASTER_KEY
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # alternatively use the env var - DATABASE_URL
 
 litellm_settings:
@@ -70,7 +70,7 @@ litellm --config /path/to/config.yaml
 Specify `target_model_names` to use the same file id across different providers. This is the list of model_names set via config.yaml (or 'public_model_names' on UI). 
 
 ```python
-target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # 👈 Specify model_names
+target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # Specify model_names
 ```
 
 Check `/v1/models` to see the list of available model names for a key.
@@ -80,7 +80,7 @@ Check `/v1/models` to see the list of available model names for a key.
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 
 # Download and save the PDF locally 
@@ -97,7 +97,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # 👈 Specify model_names
+    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # Specify model_names
 )
 
 print(f"file id={file.id}")
@@ -167,7 +167,7 @@ import base64
 import requests
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 
 # Download and save the PDF locally
@@ -188,7 +188,7 @@ file = client.files.create(
     extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
 )
 
-print(f"file.id: {file.id}") # 👈 Unified file id
+print(f"file.id: {file.id}") # Unified file id
 
 ## GEMINI CALL ### 
 completion = client.chat.completions.create(
@@ -249,7 +249,7 @@ model_list:
         api_key: os.environ/OPENAI_API_KEY
 
 general_settings: 
-  master_key: sk-1234  # alternatively use the env var - LITELLM_MASTER_KEY
+  master_key: os.environ/LITELLM_MASTER_KEY  # alternatively use the env var - LITELLM_MASTER_KEY
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # alternatively use the env var - DATABASE_URL
 ```
 
@@ -265,7 +265,7 @@ Let's create a user with the id `user_123`.
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/user/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"models": ["gpt-4o-mini-openai"], "user_id": "user_123"}'
 ```
@@ -294,7 +294,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-...", # 👈 Use the key you generated in step 3
+    api_key="sk-...", # Use the key you generated in step 3
     max_retries=0
 )
 
@@ -302,7 +302,7 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./fine_tuning.jsonl", "rb"), # {"model": "azure-gpt-4o"} <-> {"model": "gpt-4o-my-special-deployment"}
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"} # 👈 Tells litellm which regions/projects to write the file in. 
+    extra_body={"target_model_names": "gpt-4.1-openai"} # Tells litellm which regions/projects to write the file in.
 )
 print(finetuning_input_file) # file.id = "litellm_proxy/..." = {"model_name": {"deployment_id": "deployment_file_id"}}
 ```
@@ -354,7 +354,7 @@ except Exception as e:
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 # Download and save the PDF locally
 url = (
@@ -378,7 +378,7 @@ file = client.files.create(
 #### Retrieve a file - `/files/{file_id}`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 file = client.files.retrieve(file_id=file.id)
 ```
@@ -386,7 +386,7 @@ file = client.files.retrieve(file_id=file.id)
 #### Delete a file - `/files/{file_id}/delete`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 file = client.files.delete(file_id=file.id)
 ```
@@ -394,7 +394,7 @@ file = client.files.delete(file_id=file.id)
 #### List files - `/files`
 
 ```python
-client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234", max_retries=0)
+client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
 files = client.files.list(extra_body={"target_model_names": "gpt-4o-mini-openai"})
 

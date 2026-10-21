@@ -25,10 +25,10 @@ guardrails:
   - guardrail_name: "guardrails_ai-guard"
     litellm_params:
       guardrail: guardrails_ai
-      guard_name: "detect-secrets-guard"            # 👈 Guardrail AI guard name
+      guard_name: "detect-secrets-guard"            # Guardrail AI guard name
       mode: "pre_call"
-      guardrails_ai_api_input_format: "llmOutput"   # 👈 This is the only option that currently works (and it is a default), use it for both pre_call and post_call hooks
-      api_base: os.environ/GUARDRAILS_AI_API_BASE   # 👈 Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
+      guardrails_ai_api_input_format: "llmOutput"   # This is the only option that currently works (and it is a default), use it for both pre_call and post_call hooks
+      api_base: os.environ/GUARDRAILS_AI_API_BASE   # Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
 ```
 
 2. Start LiteLLM Gateway 
@@ -55,7 +55,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```
 
 
-## ✨ Control Guardrails per Project (API Key)
+## Control Guardrails per Project (API Key)
 
 <EnterpriseFeature />
 
@@ -69,7 +69,7 @@ Use this to control what guardrails run per project. In this tutorial we only wa
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{
             "guardrails": ["guardrails_ai-guard"]
@@ -82,7 +82,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/update' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "key": "sk-jNm1Zar7XfNdZXp49Z1kSQ",

@@ -35,37 +35,37 @@ response = get_supported_openai_params(model="anthropic.{{anthropic}}", custom_l
 print(response) # ["max_tokens", "tools", "tool_choice", "stream"]
 ```
 
-This is a list of openai params we translate across providers.
+This table is the output of `litellm.get_supported_openai_params()` for the model shown in each row. Support is model dependent within a provider (for example Bedrock Llama models do not list `tools` or `tool_choice`), so call the function for the exact model you use
 
-Use `litellm.get_supported_openai_params()` for an updated list of params for each model + provider 
+`stream_options`, `extra_headers` and `max_retries` are not checked against this list and are accepted for every provider, and `stream_options={"include_usage": True}` returns usage on the final chunk for every provider
 
-| Provider | temperature | max_completion_tokens | max_tokens | top_p | stream | stream_options | stop | n | presence_penalty | frequency_penalty | functions | function_call | logit_bias | user | response_format | seed| tools | tool_choice | logprobs | top_logprobs | extra_headers |
-|--------------|-------------|------------------------|------------|-------|--------|----------------|------|-----|------------------|-------------------|-----------|----------------|-------------|------|------------------|-------------------|--------|--------------|----------|---------------|----------------------|
-| Anthropic| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || | ✅ | ✅ | | ✅ | ✅ || | ✅|
-| OpenAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅| ✅ | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅|
-| Azure OpenAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅| ✅ | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅|
-| xAI| ✅|| ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| || ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅||
-| Replicate| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Anyscale | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Cohere | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅|| | || ||| |||| ||
-| Huggingface| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| Openrouter | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅|| ||| ✅| ✅ ||| ||
-| AI21 | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅|| | || ||| |||| ||
-| VertexAI | ✅| ✅ | ✅ | | ✅ | ✅ || || | || || ✅ | ✅|||| ||
-| Bedrock| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || || ✅ (model dependent) | |||| ||
-| Sagemaker| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| TogetherAI | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | ✅|| || ✅ | | ✅ | ✅ || ||
-| Sambanova| ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || || ✅ | | ✅ | ✅ || ||
-| AlephAlpha | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | || | || ||| |||| ||
-| NLP Cloud| ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| Petals | ✅| ✅ || ✅| ✅ ||| || | || ||| |||| ||
-| Ollama | ✅| ✅ | ✅ | ✅| ✅ | ✅ || ✅|| | || ✅||| | ✅ ||| ||
-| Databricks | ✅| ✅ | ✅ | ✅| ✅ | ✅ || || | || ||| |||| ||
-| ClarifAI | ✅| ✅ | ✅ | | ✅ | ✅ || || | || ||| |||| ||
-| Github | ✅| ✅ | ✅ | ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| ✅|| || ✅ | ✅ (model dependent) | ✅ (model dependent) || ||
-| Novita AI| ✅| ✅ || ✅| ✅ | ✅ | ✅ | ✅| ✅ | ✅| || ✅||| |||| ||
-| Bytez | ✅| ✅ || ✅| ✅ | | | ✅|| || || || || || ||
-| OVHCloud AI Endpoints | ✅ | | ✅ | ✅ | ✅ | ✅ | ✅ | | | | | | | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | |
+| Provider | Model checked | temperature | max_completion_tokens | max_tokens | top_p | stream | stop | n | presence_penalty | frequency_penalty | functions | function_call | logit_bias | user | response_format | seed | tools | tool_choice | logprobs | top_logprobs |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Anthropic | `claude-sonnet-4-5-20250929` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ | ✅ |  | ✅ | ✅ |  |  |
+| OpenAI | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Azure OpenAI | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| xAI | `grok-3` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Replicate | `meta/llama-2-70b-chat` | ✅ |  | ✅ | ✅ | ✅ | ✅ |  |  |  | ✅ | ✅ |  |  |  | ✅ | ✅ | ✅ |  |  |
+| Anyscale | `meta-llama/Llama-2-70b-chat-hf` | ✅ |  | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| Cohere | `command-r` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  | ✅ | ✅ | ✅ |  |  |
+| Huggingface | `meta-llama/Llama-3.1-8B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Openrouter | `openai/gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AI21 | `jamba-1.5-large` | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ | ✅ | ✅ | ✅ |  |  |
+| VertexAI | `gemini-2.5-flash` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bedrock | `anthropic.claude-3-5-sonnet-20240620-v1:0` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| Sagemaker | `jumpstart-dft-meta-textgeneration-llama-2-7b` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |
+| TogetherAI | `meta-llama/Llama-3-70b-chat-hf` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sambanova | `Meta-Llama-3.1-8B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  | ✅ |  |  |  |  |  |
+| AlephAlpha | `luminous-base` | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| NLP Cloud | `dolphin` | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |
+| Petals | `petals-team/StableBeluga2` | ✅ |  | ✅ | ✅ | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Ollama | `llama3` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ |  |  |  |  | ✅ | ✅ |  |  |  |  |
+| Databricks | `databricks-dbrx-instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |  |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| ClarifAI | `openai.chat-completion.gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ |  |  | ✅ | ✅ |  |  |  |  | ✅ |  | ✅ | ✅ |  |  |
+| Github | `gpt-4o` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Novita AI | `meta-llama/llama-3-8b-instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bytez | `google/gemma-3-1b-it` | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ |  |  |  |  |  |  |  |  |  |  |  |  |
+| OVHCloud AI Endpoints | `Meta-Llama-3_3-70B-Instruct` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 :::note
 
@@ -84,43 +84,58 @@ LiteLLM assumes any non-openai param is provider specific and passes it in as a 
 ```python
 def completion(
     model: str,
-    messages: List = [],
-    # Optional OpenAI params
-    timeout: Optional[Union[float, int]] = None,
-    temperature: Optional[float] = None,
-    top_p: Optional[float] = None,
-    n: Optional[int] = None,
-    stream: Optional[bool] = None,
-    stream_options: Optional[dict] = None,
+    messages: list = [],
+    timeout: float | str | httpx.Timeout | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    n: int | None = None,
+    stream: bool | None = None,
+    stream_options: dict | None = None,
     stop=None,
-    max_completion_tokens: Optional[int] = None,
-    max_tokens: Optional[int] = None,
-    presence_penalty: Optional[float] = None,
-    frequency_penalty: Optional[float] = None,
-    logit_bias: Optional[dict] = None,
-    user: Optional[str] = None,
+    max_completion_tokens: int | None = None,
+    max_tokens: int | None = None,
+    modalities: list[ChatCompletionModality] | None = None,
+    prediction: ChatCompletionPredictionContentParam | None = None,
+    audio: ChatCompletionAudioParam | None = None,
+    presence_penalty: float | None = None,
+    frequency_penalty: float | None = None,
+    logit_bias: dict | None = None,
+    user: str | None = None,
     # openai v1.0+ new params
-    response_format: Optional[dict] = None,
-    seed: Optional[int] = None,
-    tools: Optional[List] = None,
-    tool_choice: Optional[str] = None,
-    parallel_tool_calls: Optional[bool] = None,
-    logprobs: Optional[bool] = None,
-    top_logprobs: Optional[int] = None,
-    safety_identifier: Optional[str] = None,
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "default"] | None = None,
+    verbosity: Literal["low", "medium", "high"] | None = None,
+    response_format: dict | type[BaseModel] | None = None,
+    seed: int | None = None,
+    tools: list | None = None,
+    tool_choice: str | dict | None = None,
+    logprobs: bool | None = None,
+    top_logprobs: int | None = None,
+    parallel_tool_calls: bool | None = None,
+    web_search_options: OpenAIWebSearchOptions | None = None,
+    include_server_side_tool_invocations: bool | None = None,
     deployment_id=None,
+    extra_headers: dict | None = None,
+    safety_identifier: str | None = None,
+    service_tier: str | None = None,
+    store: bool | None = None,
+    prompt_cache_key: str | None = None,
     # soon to be deprecated params by OpenAI
-    functions: Optional[List] = None,
-    function_call: Optional[str] = None,
+    functions: list | None = None,
+    function_call: str | None = None,
     # set api_base, api_version, api_key
-    base_url: Optional[str] = None,
-    api_version: Optional[str] = None,
-    api_key: Optional[str] = None,
-    model_list: Optional[list] = None,  # pass in a list of api_base,keys, etc.
+    base_url: str | None = None,
+    api_version: str | None = None,
+    api_key: str | None = None,
+    model_list: list | None = None,  # pass in a list of api_base,keys, etc.
     # Optional liteLLM function params
+    thinking: AnthropicThinkingParam | None = None,
+    # Session management
+    shared_session: Optional["ClientSession"] = None,
+    # Per-request JSON schema validation (overrides litellm.enable_json_schema_validation)
+    enable_json_schema_validation: bool | None = None,
     **kwargs,
-
-) -> ModelResponse: ...
+) -> ModelResponse | CustomStreamWrapper:
+    ...
 ```
 ### Required Fields
 
@@ -208,7 +223,7 @@ messages=[{"role": "user", "content": [
 
 - `presence_penalty`: *number or null (optional)* - It is used to penalize new tokens based on their existence in the text so far.
 
-- `response_format`: *object (optional)* - An object specifying the format that the model must output.
+- `response_format`: *dict or Pydantic model class (optional)* - Specifies the response format. Pass a Pydantic model class to request schema-based output; see [JSON mode and structured outputs](./json_mode.md).
 
     - Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
     
@@ -222,7 +237,7 @@ messages=[{"role": "user", "content": [
 
     - `function`: *object* - Required for function tools.
 
-- `tool_choice`: *string or object (optional)* - Controls which (if any) function is called by the model. none means the model will not call a function and instead generates a message. auto means the model can pick between generating a message or calling a function. Specifying a particular function via `{"type": "function", "function": {"name": "my_function"}}` forces the model to call that function.
+- `tool_choice`: *string or dict (optional)* - Controls which tool, if any, the model calls. Use `none` or `auto`, or provide a dict naming a specific tool.
 
     - `none` is the default when no functions are present. `auto` is the default if functions are present.
 
@@ -234,7 +249,7 @@ messages=[{"role": "user", "content": [
 
 - `user`: *string (optional)* - A unique identifier representing your end-user. This can help OpenAI to monitor and detect abuse.
 
-- `timeout`: *int (optional)* - Timeout in seconds for completion requests (Defaults to 600 seconds)
+- `timeout`: *float, string, `httpx.Timeout` or null (optional)* - Request timeout in seconds. A string can contain the numeric timeout value; use `httpx.Timeout` to configure timeout phases separately.
 
 - `logprobs`: * bool (optional)* - Whether to return log probabilities of the output tokens or not. If true returns the log probabilities of each output token returned in the content of message
         
@@ -245,6 +260,38 @@ messages=[{"role": "user", "content": [
 - `headers`: *dict (optional)* - A dictionary of headers to be sent with the request.
 
 - `extra_headers`: *dict (optional)* - Alternative to `headers`, used to send extra headers in LLM API request. 
+
+- `reasoning_effort`: *string or null (optional)* - Sets the reasoning effort for supported models. Values are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` and `default`. See [reasoning content](../reasoning_content.md).
+
+- `verbosity`: *string or null (optional)* - Sets the output verbosity to `low`, `medium` or `high` for supported OpenAI GPT-5 family models.
+
+- `thinking`: *object or null (optional)* - Anthropic-style thinking configuration. See [reasoning content](../reasoning_content.md).
+
+- `modalities`: *array or null (optional)* - Requested output modalities, such as text and audio. See [audio](./audio.md).
+
+- `audio`: *object or null (optional)* - Audio output settings, such as voice and format. See [audio](./audio.md).
+
+- `prediction`: *object or null (optional)* - Expected output content that can reduce latency when much of the response is known in advance. See [predicted outputs](./predict_outputs.md).
+
+- `web_search_options`: *object or null (optional)* - Options for supported built-in web search models and endpoints, such as search context size. See [web search](./web_search.md).
+
+- `include_server_side_tool_invocations`: *boolean or null (optional)* - For supported Gemini/Vertex requests, sets `toolConfig.includeServerSideToolInvocations`.
+
+- `service_tier`: *string or null (optional)* - Requests a processing service tier where the model supports it.
+
+- `store`: *boolean or null (optional)* - Controls whether the provider stores the response where supported.
+
+- `prompt_cache_key`: *string or null (optional)* - OpenAI prompt-cache routing hint for requests with shared prefixes. See [prompt caching](./prompt_caching.md).
+
+- `shared_session`: *aiohttp `ClientSession` or null (optional)* - Reuses a session across asynchronous API calls. See [shared sessions](./shared_session.md).
+
+- `enable_json_schema_validation`: *boolean or null (optional)* - Enables or disables per-request validation of generated JSON against the requested schema, overriding the global setting. See [JSON mode and structured outputs](./json_mode.md).
+
+- `api_key`: *string or null (optional)* - Provider API key to use for this request.
+
+- `base_url`: *string or null (optional)* - Provider API base URL. Alias for `api_base`.
+
+- `model_list`: *list or null (optional)* - Model deployment configurations used to select and call deployments matching `model`.
 
 #### Deprecated Params
 - `functions`: *array* - A list of functions that the model may use to generate JSON inputs. Each function should have the following properties:
@@ -272,10 +319,50 @@ messages=[{"role": "user", "content": [
 
 - `metadata`: *dict (optional)* - Any additional data you want to be logged when the call is made (sent to logging integrations, eg. promptlayer and accessible via custom callback function)
 
+- `custom_llm_provider`: *string (optional)* - Provider identifier to use when resolving the model and its API configuration
+
+- `drop_params`: *boolean (optional)* - Drops unsupported OpenAI parameters instead of raising an error. See [drop unsupported params](./drop_params.md).
+
+- `additional_drop_params`: *list of strings (optional)* - OpenAI parameters to drop from the request. See [drop unsupported params](./drop_params.md).
+
+- `allowed_openai_params`: *list of strings (optional)* - OpenAI parameters allowed through for this request. See [drop unsupported params](./drop_params.md).
+
+- `mock_response`: *string or response object (optional)* - Returns a mock completion response without calling the model. See [mock requests](./mock_requests.md).
+
+- `max_retries`: *integer (optional)* - Maximum number of retries for the API call
+
+- `ssl_verify`: *boolean or string (optional)* - Enables or disables SSL verification, or sets a custom CA bundle path. See [SSL security settings](../guides/security_settings.md).
+
+- `merge_reasoning_content_in_choices`: *boolean (optional)* - For streaming responses, adds `reasoning_content` to `content` inside `<think>` tags for clients that expect reasoning in content
+
+- `prompt_id`: *string (optional)* - Managed prompt ID passed to prompt-management hooks. See [prompt management](../prompt_management.md).
+
+- `prompt_variables`: *dict (optional)* - Values used to fill managed prompt variables when prompt-management hooks are configured. See [prompt management](../prompt_management.md).
+
+- `litellm_system_prompt`: *string (optional)* - Prepends this prompt to the first system message, or adds a system message at the start if none exists
+
+- `base_model`: *string (optional)* - Underlying model name used for provider-specific model and parameter configuration. See [fine-tuned models](../guides/finetuned_models.md).
+
+- `supports_system_message`: *boolean (optional)* - Set to false when the model does not accept system-role messages; LiteLLM then remaps those messages
+
+- `ensure_alternating_roles`: *boolean (optional)* - Adds user or assistant continuation messages where needed to alternate conversation roles. See [message sanitization](./message_sanitization.md).
+
+- `user_continue_message`: *message object (optional)* - Custom user message inserted when alternating roles require a user turn. See [message sanitization](./message_sanitization.md).
+
+- `assistant_continue_message`: *message object (optional)* - Custom assistant message inserted when alternating roles require an assistant turn. See [message sanitization](./message_sanitization.md).
+
+- `cooldown_time`: *float (optional)* - Cooldown duration in seconds before a failed routed deployment can be retried
+
 **CUSTOM MODEL COST** 
 - `input_cost_per_token`: *float (optional)* - The cost per input token for the completion call 
 
 - `output_cost_per_token`: *float (optional)* - The cost per output token for the completion call 
+
+- `cost_per_second`: *float (optional)* - Per-second rate used to calculate costs for models billed by duration
+
+- `input_cost_per_second`: *float (optional)* - Per-second input rate used to calculate costs for models billed by duration
+
+- `output_cost_per_second`: *float (optional)* - Per-second output rate used to calculate costs for models billed by duration
 
 **CUSTOM PROMPT TEMPLATE** (See [prompt formatting for more info](./prompt_formatting.md#format-prompt-yourself))
 - `initial_prompt_value`: *string (optional)* - Initial string applied at the start of the input messages

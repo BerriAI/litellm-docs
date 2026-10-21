@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 LiteLLM supports Priority PayGo.  
 Send a priority header, get priority queueing, and pay priority token rates.
 
-:::info Which models support Priority PayGo?
+:::info[Which models support Priority PayGo?]
 As of this writing: `gemini/gemini-2.5-pro`, `vertex_ai/gemini-3-pro-preview`, `vertex_ai/gemini-3.1-pro-preview`, `vertex_ai/gemini-3-flash-preview`, and their variants.
 Check `supports_service_tier: true` in LiteLLM's [model pricing JSON](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 :::

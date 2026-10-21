@@ -24,7 +24,7 @@ litellm_settings:
   callbacks: ["dynamic_rate_limiter_v3"]
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your .env
 ```
 
@@ -61,8 +61,8 @@ def create_key(api_key: str, base_url: str):
 
     return _response["key"]
 
-key_1 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
-key_2 = create_key(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+key_1 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
+key_2 = create_key(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # call proxy with key 1 - works
 openai_client_1 = OpenAI(api_key=key_1, base_url="http://0.0.0.0:4000")
@@ -154,7 +154,7 @@ litellm_settings:
     saturation_check_cache_ttl: 60 # How long (seconds) saturation values are cached locally
 
 general_settings:
-  master_key: sk-1234 # OR set `LITELLM_MASTER_KEY=".."` in your .env
+  master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
   database_url: postgres://.. # OR set `DATABASE_URL=".."` in your.env
 ```
 
@@ -190,7 +190,7 @@ All keys within a team will inherit the team's priority. This is useful when you
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_alias": "production-team",
@@ -201,7 +201,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 Create a key for this team:
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "team_id": "team-id-from-previous-response"
@@ -215,7 +215,7 @@ Set priority directly on the key. This is useful when you need fine-grained cont
 **Production Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "prod"}
@@ -225,7 +225,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Development Key:**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
   "metadata": {"priority": "dev"}
@@ -235,7 +235,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Key Without Priority (uses default_priority weight):**
 ```bash
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -343,3 +343,38 @@ This video walks through setting up dynamic rate limiting with priority reservat
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
+## PTU share ceilings on Azure provisioned deployments
+
+An Azure provisioned throughput (PTU) deployment split across teams with `model_info.ptu_shares` gets a per-team, per-minute ceiling without any `model_tpm_limit` worked out by hand. The proxy converts each team's share through the Azure sizing table it ships (input TPM per PTU and the output-to-input ratio for the model) and charges each request in Azure's normalized tokens, so the ceiling stays in step with the reservation when the shares change:
+
+```yaml
+model_list:
+  - model_name: gpt-4.1-ptu
+    litellm_params:
+      model: azure/<your-deployment-name>
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+    model_info:
+      id: gpt-4.1-ptu-shared
+      base_model: gpt-4.1
+      ptu_count: 50
+      cost_per_ptu_per_hour: 1.0
+      ptu_effective_from: "2026-01-01T00:00:00Z"
+      ptu_shares:
+        <team a id>: 30
+        <team b id>: 20
+```
+
+Team A's 30 PTUs of gpt-4.1 are 30 x 3,000 = 90,000 normalized tokens a minute (output counted at 4x), and the first request past that gets a 429 while team B keeps its own 20 PTUs:
+
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded for model_per_team_ptu: <team a id>:gpt-4.1-ptu. Limit type: tokens. Current limit: 90000, Remaining: 0. Limit resets at: ...",
+    "type": "throttling_error",
+    "code": "429"
+  }
+}
+```
+
+The ceiling shares the per-minute window of a team's `model_tpm_limit` and needs only `LITELLM_ENABLE_PTU_COST_ATTRIBUTION=True`; the share filter itself (which teams the deployment is served to) applies without the flag. Setup, the cost split by share, and PTU-hours on the usage routes are covered in [Azure PTU Flat Cost Attribution](./ptu_flat_cost.md#share-a-deployment-across-teams)

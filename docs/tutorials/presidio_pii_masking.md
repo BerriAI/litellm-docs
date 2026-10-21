@@ -168,7 +168,7 @@ Let's test the PII masking with various types of sensitive data.
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -219,7 +219,7 @@ My name is <PERSON>, my email is <EMAIL_ADDRESS>, and my credit card is <CREDIT_
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -239,7 +239,7 @@ The patient name and medical record number will be automatically masked.
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -279,7 +279,7 @@ Test the blocking behavior:
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -320,7 +320,7 @@ guardrails:
 1. **User Input**: "Hello, my name is Jane Doe. My number is 555-1234"
 2. **LLM Receives**: "Hello, my name is `<PERSON>`. My number is `<PHONE_NUMBER>`"
 3. **LLM Response**: "Nice to meet you, `<PERSON>`!"
-4. **User Receives**: "Nice to meet you, Jane Doe!" ✨
+4. **User Receives**: "Nice to meet you, Jane Doe!"
 
 ### Multi-language Support
 
@@ -352,7 +352,7 @@ You can also override language per request:
 ```bash
 curl -X POST http://localhost:4000/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_small}}",
     "messages": [
@@ -673,7 +673,7 @@ litellm_settings:
 
 ## Conclusion
 
-Congratulations! 🎉 You've successfully set up PII masking with Presidio and LiteLLM. You now have:
+Congratulations! You've successfully set up PII masking with Presidio and LiteLLM. You now have:
 
 ✅ A production-ready PII masking solution  
 ✅ Automatic detection of sensitive information  
