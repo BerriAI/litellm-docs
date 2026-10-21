@@ -7,7 +7,7 @@ https://github.com/microsoft/Foundry-Local
 
 :::tip
 
-Use `model="foundry_local/<model-id>"` for chat models served by Foundry Local's OpenAI-compatible HTTP service.
+Use `model="foundry_local/<model-id>"` for chat, embedding, and transcription models served by Foundry Local's HTTP service.
 
 :::
 
@@ -17,7 +17,7 @@ Use `model="foundry_local/<model-id>"` for chat models served by Foundry Local's
 | Description | Run AI models on-device with Microsoft Foundry Local. |
 | Provider Route on LiteLLM | `foundry_local/` |
 | Provider Doc | [Foundry Local ↗](https://learn.microsoft.com/en-us/azure/foundry-local/) |
-| Supported OpenAI Endpoints | `/chat/completions` |
+| Supported OpenAI Endpoints | `/chat/completions`, `/embeddings`, `/audio/transcriptions` |
 
 ## Quick Start
 
@@ -102,7 +102,7 @@ Call `download_and_register_eps()` before selecting and loading a model to make 
 
 The service uses a dynamically assigned local port by default. Read `manager.urls` after starting it instead of assuming port 5272. For a separate proxy process that needs a fixed address, initialize Python with `Configuration(app_name="litellm-foundry-local", web=Configuration.WebService(urls="http://127.0.0.1:5272"))` and keep that service process running.
 
-LiteLLM does not import or install the Foundry Local SDK. The SDK's Python requirement applies only to the process hosting Foundry Local, and existing OpenAI-compatible Foundry Local endpoints continue to work. This provider uses chat completions for both streaming and non-streaming requests.
+LiteLLM does not import or install the Foundry Local SDK. The SDK's Python requirement applies only to the process hosting Foundry Local, and existing OpenAI-compatible Foundry Local endpoints continue to work. Chat supports streaming and non-streaming requests. Embeddings and transcription support synchronous and asynchronous calls.
 
 ## Endpoint and API Key
 
@@ -154,6 +154,50 @@ response = completion(
 for chunk in response:
     print(chunk)
 ```
+
+## Embeddings
+
+Download and load an embedding model, such as `qwen3-embedding-0.6b`, in the Foundry Local service before calling it. Use its model ID in the request:
+
+```python
+from litellm import embedding
+
+response = embedding(
+    model="foundry_local/<embedding-model-id>",
+    input=["The quick brown fox", "The lazy dog"],
+)
+print(response.data[0]["embedding"])
+```
+
+Use `await litellm.aembedding(...)` for asynchronous requests. Both methods use the same `FOUNDRY_LOCAL_API_BASE` and optional `FOUNDRY_LOCAL_API_KEY` as chat.
+
+## Audio transcription
+
+Download and load a transcription model, such as `whisper-tiny`, in the Foundry Local service before calling it:
+
+```python
+from pathlib import Path
+from litellm import transcription
+
+response = transcription(
+    model="foundry_local/<transcription-model-id>",
+    file=Path("recording.wav"),
+    language="en",
+)
+print(response.text)
+```
+
+Use `await litellm.atranscription(...)` for asynchronous requests. Inputs can be bytes, an open binary file, a `pathlib.Path`, or an OpenAI-style `(filename, content)` tuple. Bare string paths are rejected; use `pathlib.Path` for local files.
+
+:::warning Shared filesystem required for transcription
+
+Foundry Local's transcription endpoint reads a JSON `filename`, not a multipart upload. LiteLLM writes the audio to a private temporary file, closes it before sending the request, and removes it after completion, error, or cancellation.
+
+Run LiteLLM and Foundry Local on the same machine with access to the same temporary directory. Separate containers or remote services without that shared path cannot transcribe these files. Chat and embeddings do not have this restriction.
+
+:::
+
+The transcription integration supports `language`, `prompt`, `temperature`, and `response_format`. Audio streaming and `timestamp_granularities` are not supported.
 
 ## Usage with DSPy
 
