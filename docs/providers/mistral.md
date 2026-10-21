@@ -426,7 +426,7 @@ Any other value passes through to Mistral untouched, so a native id such as `en_
 
 ### Voice Cloning
 
-Pass a base64 encoded audio sample as `ref_audio` and leave `voice` out, and Voxtral speaks the input in the sampled voice:
+Pass a base64 encoded audio sample as `ref_audio`, and Voxtral speaks the input in the sampled voice:
 
 ```python
 import base64
@@ -444,7 +444,7 @@ response = speech(
 response.write_to_file("cloned.mp3")
 ```
 
-On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech` and leave `voice` out. Leave `voice` out of the deployment's `litellm_params` too, since LiteLLM sends a default voice set there along with `ref_audio`.
+On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech`. When a request also carries a `voice`, including a default `voice` set on the deployment, Mistral uses `ref_audio`, so a client that requires `voice`, such as the OpenAI SDK, can pass any voice and send `ref_audio` through `extra_body`.
 
 ### Unsupported Parameters
 
@@ -478,7 +478,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 
 ### Cost Tracking
 
-Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so the spend LiteLLM tracks for a request can be lower than what Mistral meters for it.
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so whenever `input` contains whitespace, the spend LiteLLM tracks is lower than what Mistral meters.
 
 ## Files and Batches API
 
