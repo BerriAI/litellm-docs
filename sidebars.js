@@ -1116,6 +1116,7 @@ const sidebars = {
       items: [
         { type: "html", value: "Load balancing", className: "sidebar-group-label", defaultStyle: true },
         "routing",
+        "proxy/cache_aware_routing",
         "wildcard_routing",
         "proxy/health_check_routing",
         "scheduler",
@@ -1365,6 +1366,7 @@ const sidebars = {
             "decisions/sdk",
           ]
         },
+        "extraction",
         "moderation",
         "ocr",
         {
@@ -1411,6 +1413,7 @@ const sidebars = {
         { type: "ref", id: "response_api" },
         "prompt_management",
         "response_api_compact",
+        "response_api_native_passthrough",
         {
           type: "category",
           label: "/search",
@@ -1728,6 +1731,7 @@ const sidebars = {
         "sdk_custom_pricing",
         "migration",
         { type: "ref", id: "data_security" },
+        "proxy/telemetry",
         { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",
         "migration_policy",

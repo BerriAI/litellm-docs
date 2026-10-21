@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {Sparkles, SquarePen, Copy, Check, X, Send, Square} from 'lucide-react';
@@ -61,21 +61,79 @@ function useNavbarOffset(active) {
   }, [active]);
 }
 
+const MIN_WIDTH = 380, MIN_CONTENT_WIDTH = 640;
+
+// Same bound as layout.css: the docs sidebar and a readable content column always stay visible.
+function clampWidth(value) {
+  const sidebar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--doc-sidebar-width')) || 300;
+  const max = Math.max(MIN_WIDTH, window.innerWidth - sidebar - MIN_CONTENT_WIDTH);
+  return Math.round(Math.min(Math.max(value, MIN_WIDTH), max));
+}
+
 export default function AskAIPanel() {
   const {open, closePanel, ask, stop, newChat, retry, copyConversation, turns, asking, pendingQuestion, streamedAnswer,
     streamedSources, progress, error, draft, setDraft, copied, focusRequest} = useAskAI();
   const salesForm = useSalesForm();
   const composer = useRef(null), body = useRef(null), latestTurn = useRef(null), handledFocus = useRef(0), wasAsking = useRef(false);
 
+  const [width, setWidth] = useState(null);
+
   useNavbarOffset(open);
+
+  useEffect(() => {
+    try {
+      const saved = parseInt(localStorage.getItem('ask-ai-width'), 10);
+      if (saved) setWidth(clampWidth(saved));
+    } catch {}
+  }, []);
+
+  function saveWidth(next) {
+    setWidth(next);
+    try {localStorage.setItem('ask-ai-width', String(next));} catch {}
+  }
 
   // Page layout reads this attribute. It is an attribute, not a class, because the head manager
   // rewrites the html class list on every navigation.
   useEffect(() => {
     if (!open) return undefined;
-    document.documentElement.setAttribute('data-ask-ai', 'open');
-    return () => document.documentElement.removeAttribute('data-ask-ai');
-  }, [open]);
+    const root = document.documentElement;
+    root.setAttribute('data-ask-ai', 'open');
+    if (width) root.style.setProperty('--ask-ai-width', `${width}px`);
+    return () => {
+      root.removeAttribute('data-ask-ai');
+      root.style.removeProperty('--ask-ai-width');
+    };
+  }, [open, width]);
+
+  function startResize(event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const handle = event.currentTarget, root = document.documentElement;
+    handle.setPointerCapture(event.pointerId);
+    root.setAttribute('data-ask-ai-resizing', '');
+    let latest = null;
+    const move = moveEvent => {
+      latest = clampWidth(window.innerWidth - moveEvent.clientX);
+      root.style.setProperty('--ask-ai-width', `${latest}px`);
+    };
+    const end = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', end);
+      handle.removeEventListener('pointercancel', end);
+      root.removeAttribute('data-ask-ai-resizing');
+      if (latest) saveWidth(latest);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
+
+  function resizeWithKeys(event) {
+    const step = {ArrowLeft: 40, ArrowRight: -40}[event.key];
+    if (!step) return;
+    event.preventDefault();
+    saveWidth(clampWidth((width ?? MIN_WIDTH) + step));
+  }
 
   useEffect(() => {
     if (open && focusRequest !== handledFocus.current) {
@@ -112,6 +170,9 @@ export default function AskAIPanel() {
 
   const empty = !turns.length && !asking && !error;
   return <aside className={styles.panel} aria-label="Ask LiteLLM AI" onKeyDown={onKeyDown}>
+    <div className={styles.resizeHandle} role="separator" aria-orientation="vertical" aria-label="Resize Ask AI" tabIndex={0}
+      aria-valuenow={width ?? MIN_WIDTH} aria-valuemin={MIN_WIDTH} title="Drag to resize, double-click to reset"
+      onPointerDown={startResize} onKeyDown={resizeWithKeys} onDoubleClick={() => saveWidth(MIN_WIDTH)}/>
     <header className={styles.header}>
       <h2><Sparkles size={15} aria-hidden="true"/>Ask LiteLLM AI</h2>
       {turns.length > 0 && <button type="button" className={styles.iconButton} onClick={copyConversation} aria-label={copied ? 'Conversation copied' : 'Copy conversation'} title="Copy conversation">

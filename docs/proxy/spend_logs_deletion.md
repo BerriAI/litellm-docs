@@ -37,6 +37,11 @@ general_settings:
   maximum_spend_logs_cleanup_run_budget: "5m"   # Wall clock for the whole run
   maximum_spend_logs_cleanup_batch_timeout: "30s" # statement_timeout and lock_timeout per batch
 
+  # Optional: a second rule, by size. Independent of the retention period, a row goes when either rule says so
+  maximum_spend_logs_size: "180GB"                 # Start cleaning when the spend-log tables hold more live data than this
+  maximum_spend_logs_cleanup_target_size: "20GB"   # Delete the oldest rows until they hold less than this
+  maximum_spend_logs_size_check_interval: "1d"     # How often the size is checked (ignored when the cron above is set)
+
 litellm_settings:
   cache: true
   cache_params:
@@ -45,9 +50,19 @@ litellm_settings:
 
 ### When the job runs
 
-The cleanup job exists only if you ask for it. It is registered at proxy startup when any of `maximum_spend_logs_retention_period`, `maximum_autorouter_session_retention_period`, `maximum_health_check_retention_period` or `maximum_daily_tag_spend_retention_period` is set, and not otherwise. Setting one of them later through `/config/update` registers the job on the next config sync without a restart. With none set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
+The cleanup job exists only if you ask for it. It is registered at proxy startup when any of `maximum_spend_logs_retention_period`, `maximum_autorouter_session_retention_period`, `maximum_health_check_retention_period` or `maximum_daily_tag_spend_retention_period` is set, and not otherwise; `maximum_spend_logs_size` registers the separate size check job described below. Setting one of them later through `/config/update` registers the job on the next config sync without a restart. With none set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
 
 When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. The schedule lives in the process, so a proxy that restarts more often than the interval never reaches its first run. Set `maximum_spend_logs_cleanup_run_on_startup: true` to also run the cleanup shortly after every startup, or set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead.
+
+### The size rule
+
+A retention period alone cannot protect a disk: a traffic spike can fill it long before any row is 30 days old, and the retention job never looks at how much space the rows take. `maximum_spend_logs_size` adds a second, independent rule. On every check the job reads what `LiteLLM_SpendLogs` and `LiteLLM_SpendLogToolIndex` take on disk (heap, indexes and TOAST, partitions included) from the Postgres catalog, the same number `SELECT pg_size_pretty(pg_total_relation_size('"LiteLLM_SpendLogs"'))` prints, and if the live data is over the limit it deletes the oldest spend logs first, with their tool-index rows, until the tables are under `maximum_spend_logs_cleanup_target_size`. With the target unset, a run stops as soon as the tables are back under the limit, so the next check may trigger again as soon as traffic pushes them over; set the target below the limit if you want quiet between runs. The two tables are the whole measurement. The rest of the database is not counted, so compare the number against your spend-log storage, not your total database size.
+
+The size check has its own schedule. With `maximum_spend_logs_size` set and no cron, a `spend_log_size_check_job` runs every `maximum_spend_logs_size_check_interval` (default `1d`, plus the same random offset). A `1d` check only catches a spike a day late, so a deployment that fears spikes sets something like `"10m"`: a check is one catalog read and costs nothing when the tables are under the limit. With `maximum_spend_logs_cleanup_cron` set there is one schedule for both rules and the cron run does the size pass after the age pass.
+
+A size-triggered run is bounded exactly like a retention run, by the same `maximum_spend_logs_cleanup_batch_size`, `maximum_spend_logs_cleanup_max_batches`, `maximum_spend_logs_cleanup_run_budget` and `maximum_spend_logs_cleanup_batch_timeout`. At the defaults that is at most 500,000 rows per run, roughly 1 GB a day at 2 KB per row, which is not enough to take a table from 180 GB to 20 GB in a useful time. Raise `maximum_spend_logs_cleanup_max_batches` and shorten the check interval when the backlog is large; the run summary's `above_target` tells you how much is left. On a partitioned table (`use_spend_logs_partitioning: true`) the size pass drops the oldest fully elapsed day partitions first, re-measuring after each, because a `DROP` returns its disk at once, and only then deletes rows.
+
+Deleting rows does not shrink the table file. A deleted row becomes a dead tuple that still occupies its page until autovacuum turns it into free space for new rows, and even then the file keeps its size, so `pg_total_relation_size` does not move when rows are deleted and Postgres has no cheap number for how many bytes of a file are live. The job therefore keeps its own count. It stores one row in `LiteLLM_Config` (`param_name` `spend_logs_size_cleanup_state`) with the bytes it knows are reclaimable, the space inside the files that holds no live row, and rolls it forward on every check from the catalog's cumulative counters in `pg_stat_user_tables`: every row deleted since the last check (`n_tup_del`, whether by this job, the retention rule or anyone else) adds its average size, every row inserted beyond what the files grew by (`n_tup_ins`) takes it away again because it was written into free space, and a file that shrank (someone ran `VACUUM FULL`) gives the shrink back. Live bytes are the allocated bytes minus that count, which is what the limit and the target are compared against, and it does not change when autovacuum runs. On the very first check, or after the counters were reset (as after a crash), the count starts from the dead rows Postgres still knows about, so a table whose free space autovacuum reclaimed before the size rule was turned on looks fully live on that first check and may be cleaned once more than needed, within one run's `maximum_spend_logs_cleanup_max_batches`. When the row counters are entirely empty while the file holds data the job logs a warning and skips the pass; `ANALYZE "LiteLLM_SpendLogs"` repopulates them. The run summary prints `allocated_before`, `estimated_live_before`, `allocated_after`, `estimated_live_after`, `reclaimable_after`, `target`, `target_reached` and `above_target`, and when rows were deleted it reminds you that only `VACUUM FULL` or `pg_repack` on the two tables returns the allocated bytes to the filesystem. LiteLLM never runs either, because both rewrite the table under an exclusive lock.
 
 ### What gets deleted
 
@@ -100,6 +115,18 @@ Use day names (`sun`, `mon`, ...) instead of numbers in the weekday field. LiteL
 :::
 
 The four settings below bound how much work a single run may do. Each one also has an environment variable, which sets that setting's default. The two are not interchangeable: when both are present the `general_settings` key wins, per key. Anything the duration parser rejects, and anything non-positive, falls back to the default
+
+#### `maximum_spend_logs_size` (optional)
+
+The size rule. A storage size such as `"180GB"`, `"512MB"` or `"1.5TB"`, in powers of 1024 like `pg_size_pretty`. When `LiteLLM_SpendLogs` plus `LiteLLM_SpendLogToolIndex` hold more live data than this, the oldest spend logs are deleted first until the tables are under `maximum_spend_logs_cleanup_target_size`. Unset means no size rule. Independent of `maximum_spend_logs_retention_period`: a row is deleted when either rule says so.
+
+#### `maximum_spend_logs_cleanup_target_size` (optional)
+
+The level a size-triggered run deletes down to, for example `"20GB"`. Must be below `maximum_spend_logs_size`; a target at or above it is logged at `ERROR` and the run cleans down to `maximum_spend_logs_size` instead. Unset means the same thing: the run stops as soon as the tables are back under the limit.
+
+#### `maximum_spend_logs_size_check_interval` (optional)
+
+How often the size rule is checked. Defaults to `1d`. Ignored when `maximum_spend_logs_cleanup_cron` is set, which then drives both the age and the size cleanup.
 
 #### `maximum_spend_logs_cleanup_batch_size` (optional)
 
@@ -178,6 +205,7 @@ The job reports what it did through Prometheus, so you can tell a healthy steady
 | `litellm_spend_log_cleanup_rows_remaining` | Expired rows still waiting after the run |
 | `litellm_spend_log_cleanup_batch_failures_total` | Failed batches, including statements cancelled by the batch timeout |
 | `litellm_spend_log_cleanup_runs_total` | Runs by `outcome`: `completed`, `budget_exhausted`, `batch_cap_reached`, `skipped_locked`, `skipped_disabled`, or `aborted` |
+| `litellm_spend_log_storage_bytes` | The spend-log tables as last measured, by `measure`: `allocated` (what the files take on disk), `estimated_live` (allocated bytes minus the reclaimable count), `above_target` (estimated live bytes still above the size target, 0 once reached) |
 
 `rows_remaining` is the one to alert on. Flat or near zero means retention is keeping up, and a rising line means it is not. Read it together with `runs_total`: a healthy deployment sits at `completed`, while a steady stream of `budget_exhausted` or `batch_cap_reached` says the run is being cut short every tick and the knobs need raising
 

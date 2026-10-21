@@ -3,8 +3,11 @@ import test from 'node:test';
 import {GOALS, timelineFor} from '../../data/rustMigration/index.ts';
 import {createTimeScale, labelWidth, layoutTimelineLabels, layoutTimelineValues, monthTicks} from './timeline.ts';
 
+// Disabled goals are listed in the picker but never drawn.
+const DRAWN_GOALS = GOALS.filter(goal => !goal.disabled);
+
 test('every interval uses the same elapsed-time scale for each goal and viewport', () => {
-  for (const goal of GOALS) {
+  for (const goal of DRAWN_GOALS) {
     const points = timelineFor(goal);
     for (const width of [280, 368, 560, 920, 1200]) {
       const x = createTimeScale(points[0].date, goal.endsOn, 40, width - 20);
@@ -30,7 +33,7 @@ test('equal time intervals have equal widths regardless of release density', () 
 });
 
 test('crowded dates keep the first release, today, plans, and goal readable without shifting dots', () => {
-  for (const goal of GOALS) {
+  for (const goal of DRAWN_GOALS) {
     const points = timelineFor(goal);
     for (const width of [280, 368, 560, 920, 1200]) {
       const dateX = createTimeScale(points[0].date, goal.endsOn, 40, width - 20);

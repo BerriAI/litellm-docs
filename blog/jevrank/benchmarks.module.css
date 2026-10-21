@@ -1,0 +1,507 @@
+.figure {
+  --jrb-blue: #1b3ee9;
+  --jrb-ink: #13213c;
+  --jrb-muted: #63718a;
+  --jrb-line: #dce3ed;
+  --jrb-grid: #edf0f6;
+  --jrb-surface: #f0f4fc;
+  margin: 28px 0 38px;
+  font-family: 'Geist', var(--ifm-font-family-base), sans-serif;
+  color: var(--jrb-ink);
+  background: var(--jrb-surface);
+  font-variant-numeric: tabular-nums;
+}
+.figureHeading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--jrb-line);
+  color: var(--jrb-ink) !important;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.figureHeading a {
+  color: var(--jrb-blue);
+  font-size: 12px;
+  font-weight: 450;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.figure a:focus-visible {
+  outline: 2px solid var(--jrb-blue);
+  outline-offset: 4px;
+}
+/* Keep the editorial chart independent of the site's framed Markdown tables. */
+.figure table.comparison {
+  display: table !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0;
+  overflow: visible !important;
+  box-shadow: none !important;
+  margin: 0;
+  background: transparent !important;
+  color: var(--jrb-ink) !important;
+}
+.figure table.comparison thead,
+.figure table.comparison tbody,
+.figure table.comparison tfoot,
+.figure table.comparison tr,
+.figure table.comparison th,
+.figure table.comparison td {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.figure table.comparison tbody tr {
+  border-bottom: 1px solid var(--jrb-grid) !important;
+}
+.figure table.comparison th,
+.figure table.comparison td {
+  padding: 20px 14px;
+  vertical-align: middle;
+  text-align: left;
+}
+.figure table.comparison th:first-child,
+.figure table.comparison td:first-child {
+  padding-left: 0;
+  width: 37%;
+}
+.figure table.comparison th:last-child,
+.figure table.comparison td:last-child {
+  padding-right: 0;
+}
+.figure table.comparison tfoot td {
+  padding-top: 12px;
+  padding-bottom: 5px;
+}
+.figure table.comparison thead th {
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+  color: var(--jrb-ink);
+  font-weight: 600;
+  font-size: 13px;
+  padding-top: 20px;
+  padding-bottom: 12px;
+}
+.comparison thead th > span {
+  display: block;
+  color: var(--jrb-muted);
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 4px;
+}
+.comparison tbody th {
+  font-weight: 400;
+}
+.model {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.logo {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  border-radius: 0 !important;
+}
+.textMark {
+  flex: 0 0 26px;
+  width: 26px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--jrb-muted);
+  letter-spacing: -0.5px;
+}
+.modelName {
+  display: block;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.35;
+  color: var(--jrb-ink);
+}
+.modelMeta {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--jrb-muted);
+  font-weight: 400;
+}
+.reference {
+  color: var(--jrb-muted);
+}
+.modelMeta .measured {
+  color: var(--jrb-blue);
+  font-weight: 550;
+}
+.metricTop {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.value {
+  color: var(--jrb-ink);
+  font-size: 16px;
+  font-weight: 550;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.track {
+  position: relative;
+  height: 12px;
+  background-image: linear-gradient(
+    to right,
+    var(--jrb-grid) 1px,
+    transparent 1px
+  );
+  background-size: 25% 100%;
+  border-right: 1px solid var(--jrb-grid);
+}
+.costTrack {
+  background-size: 20% 100%;
+}
+.bar {
+  display: block;
+  height: 100%;
+  background: #5c80ee;
+}
+.emphasisBar {
+  background: var(--jrb-blue);
+}
+.valueRow .modelName,
+.valueRow .value {
+  color: var(--jrb-blue);
+}
+.valueTag {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--jrb-blue);
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+}
+.baselineBar {
+  background: #9aa7bb;
+}
+.scale {
+  position: relative;
+  height: 14px;
+  color: var(--jrb-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+.scale span {
+  position: absolute;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.scale span:first-child {
+  transform: none;
+}
+.scale span:last-child {
+  transform: translateX(-100%);
+}
+.mobileLabel,
+.mobileScale {
+  display: none;
+}
+.evidenceNote {
+  border-top: 1px solid var(--jrb-line);
+  margin-top: 20px;
+  padding-top: 13px;
+  color: var(--jrb-muted);
+}
+.evidenceNote p {
+  color: var(--jrb-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.65;
+  margin: 0 0 5px !important;
+}
+.evidenceNote strong {
+  font-weight: 500;
+  color: var(--jrb-ink);
+}
+.plotTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 20px 0 4px;
+  color: var(--jrb-muted);
+  font-size: 11px;
+}
+.widePlot {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.compactPlot {
+  display: none;
+}
+.gridLine {
+  stroke: var(--jrb-grid);
+  stroke-width: 1;
+}
+.axisLine {
+  stroke: var(--jrb-line);
+  stroke-width: 1;
+}
+.axisText,
+.axisTitle {
+  fill: var(--jrb-muted);
+  font-family: inherit;
+  font-size: 12px;
+}
+.axisTitle {
+  font-size: 13px;
+}
+.leader {
+  fill: none;
+  stroke: #a8b7d7;
+  stroke-width: 1;
+}
+.point {
+  stroke: var(--jrb-blue);
+  stroke-width: 1.5;
+  fill: var(--jrb-surface);
+}
+.measuredPoint {
+  fill: var(--jrb-blue);
+}
+.baselinePoint {
+  stroke: #8190a6;
+}
+.baselinePoint.measuredPoint {
+  fill: #8190a6;
+}
+.plotLabel text {
+  paint-order: stroke;
+  stroke: var(--jrb-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.plotModel {
+  fill: var(--jrb-ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 550;
+}
+.plotDetail {
+  fill: var(--jrb-muted);
+  font-family: inherit;
+  font-size: 11px;
+}
+.figure .plotData {
+  margin: 8px 0 0 !important;
+  padding: 0 14px !important;
+  background: #e4ecff !important;
+  color: var(--jrb-ink) !important;
+  border: 1px solid var(--jrb-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.figure .plotData summary {
+  padding: 13px 0;
+  color: var(--jrb-ink) !important;
+  font-size: 12px;
+  cursor: pointer;
+}
+.plotData summary:focus-visible {
+  outline: 2px solid var(--jrb-blue);
+  outline-offset: 4px;
+}
+.dataScroll {
+  overflow-x: auto;
+}
+.figure table.dataTable {
+  display: table;
+  width: 100%;
+  margin: 0 0 10px;
+  border-collapse: collapse;
+}
+.figure table.dataTable,
+.figure table.dataTable tr,
+.figure table.dataTable th,
+.figure table.dataTable td {
+  background: transparent !important;
+  color: var(--jrb-ink);
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.figure table.dataTable th,
+.figure table.dataTable td {
+  font-size: 11px;
+  padding: 12px 16px 12px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--jrb-grid) !important;
+}
+.figure table.dataTable th {
+  font-weight: 550;
+}
+.dataTable th span {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--jrb-muted);
+}
+.plotNote {
+  font-size: 11px !important;
+  color: var(--jrb-muted) !important;
+  line-height: 1.6;
+  margin: 14px 0 0 !important;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 720px) {
+  .figure {
+    margin: 24px 0 30px;
+  }
+  .figureHeading {
+    font-size: 16px;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .figureHeading a {
+    font-size: 10px;
+    padding-top: 3px;
+  }
+  .comparison tbody {
+    display: block;
+  }
+  .figure table.comparison {
+    display: block !important;
+  }
+  .figure table.comparison th,
+  .figure table.comparison td {
+    padding: 0;
+  }
+  .figure table.comparison tbody th:first-child {
+    width: auto;
+  }
+  .comparison thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .comparison tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 15px 22px;
+    padding: 18px 0 17px;
+  }
+  .comparison tbody th:first-child {
+    grid-column: 1 / -1;
+    width: auto;
+    padding: 0;
+  }
+  .comparison tfoot {
+    display: none;
+  }
+  .modelName {
+    font-size: 14px;
+  }
+  .modelMeta {
+    font-size: 10px;
+  }
+  .metricTop {
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 9px;
+    gap: 5px;
+  }
+  .mobileLabel {
+    display: inline;
+    color: var(--jrb-muted);
+    font-size: 11px;
+  }
+  .value {
+    font-size: 14px;
+  }
+  .mobileScale {
+    display: block;
+    margin-top: 7px;
+  }
+  .scale {
+    font-size: 8px;
+  }
+  .mobileScale .scale span:nth-child(2),
+  .mobileScale .scale span:nth-last-child(2) {
+    visibility: hidden;
+  }
+  .evidenceNote p {
+    color: var(--jrb-muted) !important;
+    font-size: 10px !important;
+  }
+  .widePlot {
+    display: none;
+  }
+  .compactPlot {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .compactPlot .axisText {
+    font-size: 10px;
+  }
+  .compactPlot .axisTitle {
+    font-size: 11px;
+  }
+  .compactPlot .plotModel {
+    font-size: 12px;
+  }
+  .compactPlot .plotDetail {
+    font-size: 10px;
+  }
+}
+@media (max-width: 450px) {
+  .figureHeading {
+    display: block;
+  }
+  .figureHeading a {
+    display: block;
+    margin-top: 7px;
+  }
+  .comparison tbody tr {
+    column-gap: 17px;
+  }
+  .metricTop {
+    display: block;
+  }
+  .mobileLabel {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .value {
+    font-size: 16px;
+  }
+  .plotTop {
+    font-size: 9px;
+  }
+}
