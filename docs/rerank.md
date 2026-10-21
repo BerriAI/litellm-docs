@@ -8,8 +8,6 @@ LiteLLM Follows the [cohere api request / response for the rerank api](https://c
 
 ## Overview
 
-To use Perplexity or TypeSafe Jev for reranking, see the [JevRank preview](./decisions/rerank.md). The guide covers multiple-choice and per-document scoring, configuration and failure handling.
-
 | Feature | Supported                                                                                           | Notes |
 |---------|-----------------------------------------------------------------------------------------------------|-------|
 | Cost Tracking | ✅                                                                                                   | Works with all supported models |

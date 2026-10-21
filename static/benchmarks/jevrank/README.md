@@ -19,6 +19,8 @@ uv pip sync --python .venv/bin/python requirements.lock.txt
 
 The runner downloads the official BEIR archive and verifies its published checksum. It uses BM25s 0.3.13, Lucene BM25 with k1=1.5 and b=0.75, English stop words and Snowball stemming, full title plus abstract, and stable corpus-ID order for ties. It saves exactly 20 candidates per query. It does not tune retrieval to match a reference score.
 
+This runner reproduces the historical benchmark and retains the adapter arguments from that revision. Current usage examples in the [JevRank article](https://docs.litellm.ai/blog/jevrank) use the normal rerank interface.
+
 Use the LiteLLM implementation at commit `5aa0a8304cd5bfa095bbd07e77f6f8c367084595` from PR #47782. From that checkout's installed environment:
 
 ```sh
@@ -36,3 +38,7 @@ The supplied configuration uses an existing gateway's `/v1/decisions` transport 
 SDK mode verifies that imports resolve to the requested checkout. It records the exact source hashes, disables local caching and automatic client retries, and requests no-cache behavior. Gateway-side routing and retry policies remain outside its control. To resume, use `--resume --execute` with the same source, configuration and candidates; completed errors are not silently retried.
 
 The external reference rows in the launch graphic come from a separate experiment and are not included in this measured dataset. The reference does not pin every retrieval detail, and its Jev model is version 1.14. Do not treat those rows as measurements from this run or infer a paired quality difference between experiments.
+
+## Chart data
+
+`figure-data.json` and `figure-data.csv` contain all six plotted rows, their methods, origins and cost provenance. `jevrank-quality-cost.svg` compares quality and cost with zero-baseline bars; `jevrank-cost-quality.svg` plots the same values on two linear axes. The SVGs include provider logos and can be viewed at full size. Matching PNG downloads are 2880 × 2000 pixels.
