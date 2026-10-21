@@ -172,10 +172,12 @@ The `zero` policy is available for pointwise scoring. Multiple-choice scoring pr
 
 Use the gateway's [fallback configuration](../proxy/reliability.md) for failures you want to route to another deployment. Validate the final ranking and cost in your environment before adding this deployment to an existing fallback group.
 
-## External reference benchmark
+## Benchmark results
 
-**LiteLLM reproduction is pending.** An external reference benchmark from October 2026 reports Jev 1.14 at 0.776 nDCG@10 and $0.58 per 1,000 queries, versus Cohere Rerank 4 Pro at 0.775 and $2.50. It used 300 SciFact queries, 20 BM25 candidates per query, and OpenRouter for the provider calls. These reference measurements do not establish a Jev quality advantage or a cost guarantee for another workload.
+Our local LiteLLM SDK run completed all 300 BEIR SciFact test queries with 20 fixed BM25 candidates per query. Every decision response identified the model as **jev-1.13.0**. Pointwise scoring reached **0.768 nDCG@10**, compared with **0.686** for the same BM25 candidates, at an estimated **$0.575 per 1,000 queries**. Median end-to-end latency was 0.50 s with eight concurrent document calls. The [run manifest](/benchmarks/jevrank/measured-run.json) and [per-query measurements](/benchmarks/jevrank/measured-per-query.csv) record the protocol, returned model version and cost source. The examples above use Jev 1.14, a different version that needs its own evaluation.
 
-In the same reference benchmark, Perplexity Decider Flash v1.2 using multiple choice scored 0.775. Its cost projections are $73 per million queries for that method versus $2,500 for Cohere Pro, about 34× lower cost on the reference workload. That comparison uses the multiple-choice strategy; the Jev result uses pointwise scoring. We will replace these figures with our own LiteLLM measurements before publishing performance claims.
+An external reference benchmark from October 2026 reports Jev 1.14 at 0.776 nDCG@10 and $0.58 per 1,000 queries, versus Cohere Rerank 4 Pro at 0.775 and $2.50. It used 300 SciFact queries, 20 BM25 candidates per query, and OpenRouter for the provider calls. Those reference measurements use a separate experiment; candidate identity, route and rates are not verified to match our run.
 
-<!-- Publication gate: link the first supported release, verify the documented limits against the merged implementation, and replace reference figures with verified LiteLLM measurements. -->
+In that reference benchmark, Perplexity Decider Flash v1.2 using multiple choice scored 0.775. Its cost projections are $73 per million queries for that method versus $2,500 for Cohere Pro, about 34× lower cost on the reference workload. Perplexity and Cohere were unavailable for our run, so these remain reference values. The [launch draft](https://github.com/BerriAI/litellm-docs/pull/2522) separates measured and reference rows and explains their limits. Neither comparison establishes a quality advantage or a cost guarantee for another workload.
+
+<!-- Publication gate: link the first supported release, verify the documented limits against the merged implementation, and preserve explicit measured/reference labels for benchmark claims. -->

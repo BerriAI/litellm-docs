@@ -109,5 +109,9 @@
     "measured-responses.jsonl.gz": "efef3d265469dd78d309f4dc2836182f6cf56a45d186d8c9b5e26284c97a7389"
   },
   "comparability": "Common saved candidates within this measured run. External reference runs do not have verified identical candidates or infrastructure.",
-  "cost_note": "Estimated from returned tokens at configured rates; not an invoice. No paid reference values are labeled as measured."
+  "cost_note": "Estimated from returned tokens at configured rates; not an invoice. No paid reference values are labeled as measured.",
+  "runtime": {
+    "python": "3.12.13",
+    "httpx": "0.28.1"
+  }
 }

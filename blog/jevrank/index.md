@@ -11,43 +11,58 @@ image: ./jevrank-comparison.png
 draft: true
 ---
 
-An external reference benchmark compared decision models with dedicated rerankers on 300 SciFact queries. Perplexity Decider Flash v1.2 and Cohere Rerank 4 Pro both scored **0.775 nDCG@10**. Its cost projections were **$73 versus $2,500 per million queries**, about **34× lower cost** for Flash on this workload. **LiteLLM reproduction is pending.**
+JevRank uses decision models to rerank documents through LiteLLM. In our 300-query SciFact run, **Jev 1.13 scored 0.768 nDCG@10**, up from **0.686 for BM25** on the same candidates. Reranking cost an estimated **$0.575 per 1,000 queries**, with **0.50 s median latency**.
 
-We are building **JevRank**, decision reranking in LiteLLM. It supports Perplexity and TypeSafe models with two scoring strategies: one multiple-choice question across the candidate set, or one yes/no question per document. Each provider supplies its model's scores; JevRank adapts them to LiteLLM's existing rerank API.
+The preview supports Perplexity and TypeSafe models with two scoring strategies: one multiple-choice question across the candidate set, or one yes/no question per document. Each provider supplies its model's scores; JevRank adapts them to LiteLLM's existing rerank API.
 
-For TypeSafe Jev's per-document method, the reference benchmark reports **0.776 nDCG@10 at $0.58 per 1,000 queries**, about **4.3× lower cost** than Cohere Pro. JevRank supports that method through LiteLLM's existing `/rerank` request format.
+An external reference benchmark points to a cheaper multiple-choice option: Perplexity Decider Flash v1.2 and Cohere Rerank 4 Pro both scored **0.775 nDCG@10**, with projected costs of **$73 versus $2,500 per million queries**, about **34× lower cost** for Flash. We could not access those models for our run, so that comparison remains labeled as reference.
 
 {/* truncate */}
 
-:::caution Preview: LiteLLM reproduction pending
+:::caution Preview
 
-This preview requires [the JevRank implementation](https://github.com/BerriAI/litellm/pull/47782). We have not assigned a release version. All numbers below are external reference results from October 2026, with provider calls through OpenRouter. We will replace them with results from our own LiteLLM runs before publishing performance claims.
+This preview requires [the JevRank implementation](https://github.com/BerriAI/litellm/pull/47782). We have not assigned a release version. The Jev 1.13 and BM25 results below come from our own run. Other rows are external reference results from October 2026, with provider calls through OpenRouter. Costs from our run are estimates from returned tokens at configured gateway rates.
 
 :::
 
-## External reference results
+## Measured and reference results
 
-![On 300 SciFact queries, Perplexity Decider Flash and Cohere Rerank 4 Pro both scored 0.775 nDCG at 10, with projected reranking costs of $73 and $2,500 per million queries. Jev scored 0.776 at about $580.](./jevrank-comparison.png)
+![SciFact ranking quality and cost, with LiteLLM's measured Jev 1.13 result separated from external reference results for other models.](./jevrank-comparison.png)
 
-The reference benchmark used BM25 to retrieve 20 candidates for each query, then gave those same candidates to each reranker. It used the full SciFact test split: 300 English queries over scientific abstracts. nDCG@10 measures the order of relevant documents in the first ten results; a higher score means a better ranking.
+Both experiments use the full BEIR SciFact test split: 300 English queries over scientific abstracts, with 20 BM25 candidates per query. Each experiment holds its candidates fixed. The reference does not specify every retrieval setting, so we have not verified that its candidates match ours. nDCG@10 measures the order of relevant documents in the first ten results; a higher score means a better ranking.
 
-| System and method | nDCG@10 | Cost per 1,000 queries | Median latency per query |
-| --- | ---: | ---: | ---: |
-| Perplexity Decider v1.2, multiple choice | 0.777 | $0.15 | 0.71 s |
-| Perplexity Decider Flash v1.2, multiple choice | 0.775 | $0.07 | 0.32 s |
-| TypeSafe Jev 1.14, per-document decisions | 0.776 | $0.58 | 0.50 s |
-| Cohere Rerank 4 Pro | 0.775 | $2.50 | 0.65 s |
-| BM25 without reranking | 0.686 | No rerank call | Not reported |
+| System and method | Origin | nDCG@10 | Cost per 1,000 queries | Median latency per query |
+| --- | --- | ---: | ---: | ---: |
+| TypeSafe Jev 1.13, per-document decisions | LiteLLM run | 0.768 | $0.575 estimated | 0.50 s |
+| BM25 without reranking | Local baseline | 0.686 | No rerank call | Not measured |
+| Perplexity Decider v1.2, multiple choice | Reference | 0.777 | $0.15 | 0.71 s |
+| Perplexity Decider Flash v1.2, multiple choice | Reference | 0.775 | $0.07 | 0.32 s |
+| TypeSafe Jev 1.14, per-document decisions | Reference | 0.776 | $0.58 | 0.50 s |
+| Cohere Rerank 4 Pro | Reference | 0.775 | $2.50 | 0.65 s |
 
-*External reference benchmark, October 2026, Table 2. Costs and latency describe OpenRouter runs; LiteLLM reproduction is pending. Jev latency is the slowest of 20 parallel document requests for a query. The table rounds costs; the 34× comparison uses Table 8's $73 and $2,500 projections per million queries.*
+*Reference rows use Table 2 of the external benchmark. Its Jev latency is the slowest of 20 parallel document requests; our run uses eight concurrent document calls. Routes, rates, versions and retrieval settings can differ. The 34× reference comparison uses Table 8's $73 and $2,500 projections per million queries.*
+
+## Our LiteLLM run
+
+We ran the local SDK from [commit 5aa0a8304c](https://github.com/BerriAI/litellm/commit/5aa0a8304c) through a gateway's Decisions transport. All **300 queries and 6,000 document judgments completed**, and every response identified the model as **jev-1.13.0**. The gateway alias was `typesafe/jev-latest`; the runner required that concrete returned version rather than assuming the alias meant 1.14.
+
+Our retrieval used BM25s 0.3.13, Lucene BM25 with k1=1.5 and b=0.75, English stop words and Snowball stemming. Documents contained the title and full abstract. The run used fixed top-20 candidates, pointwise scoring, a concurrency limit of eight and no automatic client retries. Jev reached 0.680 hit@1 and 0.803 hit@3; end-to-end p95 latency was 1.15 s.
+
+Returned token usage implies **$0.172618 for the full run**, or **$0.575394 per 1,000 queries**, at the configured rate of $0.042 per million input tokens and zero output-token charge. This is a rate-based estimate, not an invoice. Provider pricing, model version and document length affect production costs.
+
+Download the [run manifest](/benchmarks/jevrank/measured-run.json), [all 300 per-query measurements](/benchmarks/jevrank/measured-per-query.csv), and [normalized provider responses](/benchmarks/jevrank/measured-responses.jsonl.gz). The [runner](/benchmarks/jevrank/scifact_benchmark.py), [pinned preparation dependencies](/benchmarks/jevrank/requirements.lock.txt) and [reproduction instructions](/benchmarks/jevrank/README.md) let you reconstruct the candidate protocol and run another evaluation. A separate [audit](/benchmarks/jevrank/independent-audit.json) recomputed the scores and estimated cost from the saved responses and relevance labels.
+
+## What the reference adds
 
 These are close reference scores. The report's paired tests did not establish a quality difference between the Perplexity multiple-choice runs and Cohere Pro. It does not provide a paired confidence interval for Jev versus Cohere. The 0.001 gap does not establish a Jev quality advantage. Liquid D1 Ultra also scored 0.777, so Jev did not rank first overall.
 
-![Reported SciFact ranking quality against provider cost for decision models and dedicated rerankers, including models with lower cost or higher scores than Jev.](./decision-rerank-cost-quality.png)
+![SciFact quality against cost, with the measured Jev 1.13 point and BM25 baseline labeled separately from reference models.](./decision-rerank-cost-quality.png)
 
-Download the [reference values from Table 2](./benchmark-summary.csv) and the [million-query cost projections](./projected-costs.csv) as CSV. The projection file names the source for each cost. These files contain aggregate reference values; our own raw per-query results are pending.
+Download the values behind the [comparison chart](./jevrank-comparison.csv) and [cost-quality chart](./decision-rerank-cost-quality.csv), including each row's origin and cost source.
 
-At one million queries with the same workload, the displayed rates project to about $580 for Jev and $2,500 for Cohere Pro. Production costs depend on document length, candidate count and provider pricing. This comparison covers reranking; it does not include retrieval or answer generation.
+Download the [reference values from Table 2](./benchmark-summary.csv) and the [reference million-query cost projections](./projected-costs.csv) as CSV. Each file labels its measurement origin. The reference Jev 1.14 score of 0.776 is a different model version and experiment from our Jev 1.13 score of 0.768.
+
+At one million queries with the reference workload, its rates project to about $580 for Jev 1.14 and $2,500 for Cohere Pro, about 4.3× lower cost. This reference comparison covers reranking; it does not include retrieval or answer generation.
 
 ## Two methods, different request counts
 
@@ -65,7 +80,7 @@ You can use the same rerank request fields as before: `query`, `documents`, `top
 
 ## Configure JevRank
 
-This configuration requires the preview implementation. Add a Perplexity multiple-choice preset and a TypeSafe Jev per-document preset:
+This configuration requires the preview implementation. Add a Perplexity multiple-choice preset and a TypeSafe Jev per-document preset. The example pins Jev 1.14; our measured gateway run returned Jev 1.13, so evaluate the version you deploy:
 
 ```yaml keep-model-ids
 model_list:
@@ -130,4 +145,4 @@ Document length also needs a separate test. In the reference report's German lon
 
 Use the [preview guide](/docs/decisions/rerank) to try the adapter after the implementation lands. Compare it with your current reranker on the same candidate sets before changing production traffic.
 
-<!-- Publication gate: link the first supported release and replace all reference figures with verified LiteLLM measurements, run manifests and per-query results. Keep draft: true until the reproduction and implementation are ready. -->
+<!-- Publication gate: link the first supported release, verify implementation availability, and keep measured/reference origins explicit. Attach manifests and per-query results for measured claims. Keep draft: true until the launch is ready. -->
