@@ -1,6 +1,6 @@
 {
-  "timestamp_utc": "2026-10-21T03:42:38.345193+00:00",
-  "head": "5aa0a8304cd5bfa095bbd07e77f6f8c367084595",
+  "timestamp_utc": "2026-10-21T04:45:59.060461+00:00",
+  "head": "931b03c0bc12c8e82ce0e5dd27b510f2468c76ed",
   "gateway": "https://gateway.litellm-sandbox.ai",
   "requested_model": "typesafe/jev-latest",
   "pricing_source": "gateway /model/info",
@@ -10,7 +10,7 @@
     {
       "case": "pointwise_sync",
       "status": "passed",
-      "latency_seconds": 0.586,
+      "latency_seconds": 0.296,
       "query": "What is LiteLLM used for?",
       "documents": [
         "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
@@ -53,13 +53,13 @@
           "case": "pointwise_sync",
           "status_code": 200,
           "path": "/v1/decisions",
-          "x-litellm-response-cost": 1.3607999999999999e-05
+          "x-litellm-response-cost": 1.3355999999999999e-05
         },
         {
           "case": "pointwise_sync",
           "status_code": 200,
           "path": "/v1/decisions",
-          "x-litellm-response-cost": 1.3355999999999999e-05
+          "x-litellm-response-cost": 1.3607999999999999e-05
         }
       ],
       "provider_responses": [
@@ -112,7 +112,7 @@
     {
       "case": "pointwise_async",
       "status": "passed",
-      "latency_seconds": 0.453,
+      "latency_seconds": 0.188,
       "query": "What is LiteLLM used for?",
       "documents": [
         "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
@@ -214,7 +214,7 @@
     {
       "case": "multiple_choice",
       "status": "passed",
-      "latency_seconds": 0.402,
+      "latency_seconds": 0.121,
       "query": "What is LiteLLM used for?",
       "documents": [
         "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
