@@ -18,18 +18,18 @@ export LITELLM_TELEMETRY_DESTINATION=http   # or local_table
 export LITELLM_TELEMETRY_ENDPOINT=https://telemetry.example.com/v1/reports   # needed for http
 ```
 
-To guarantee telemetry stays off whatever is saved in the UI, set `LITELLM_TELEMETRY_DISABLED=true`. It wins over `LITELLM_TELEMETRY_GROUPS` and over the stored settings. Whenever any `LITELLM_TELEMETRY_*` variable is set, the Admin UI shows a banner naming the variables (never their values).
+To guarantee telemetry stays off whatever is saved in the UI, set `LITELLM_TELEMETRY_DISABLED=true`. It wins over `LITELLM_TELEMETRY_GROUPS` and over the stored settings. Whenever valid `LITELLM_TELEMETRY_*` variables are set, the Admin UI shows a banner naming them (never their values).
 
-An invalid value, such as an unknown group, a group without the one it needs, or `LITELLM_TELEMETRY_DESTINATION=http` without an endpoint, leaves telemetry off. The proxy still starts and logs a warning that names the variable.
+An invalid value, such as an unknown group, a group without the one it needs, or `LITELLM_TELEMETRY_DESTINATION=http` without an endpoint, leaves telemetry off and the Telemetry page read-only, with no banner. The proxy still starts and logs a warning that names the variable.
 
 There are two destinations, and the proxy never picks one for you:
 
 | Destination | Where reports go | Needs |
 |---|---|---|
-| `http` | Each worker POSTs one JSON report per window to `LITELLM_TELEMETRY_ENDPOINT`, and once more on shutdown. A network error, a 5xx, 408, 409 or 429 is retried next window, and any other 4xx drops that report | `LITELLM_TELEMETRY_ENDPOINT`. Without it, `LITELLM_TELEMETRY_DESTINATION=http` leaves telemetry off, and the UI cannot save `http` |
+| `http` | Each worker POSTs one JSON report per window to `LITELLM_TELEMETRY_ENDPOINT`, and once more on shutdown. A network error, a 5xx, 408, 409 or 429 is retried next window, and any other response or an invalid URL drops that report | `LITELLM_TELEMETRY_ENDPOINT`. Without it, `LITELLM_TELEMETRY_DESTINATION=http` leaves telemetry off, and the UI cannot save `http` |
 | `local_table` | Each worker stores one report per window in the `LiteLLM_TelemetryReport` table, kept for `LITELLM_TELEMETRY_RETENTION_DAYS`. Nothing leaves the proxy, and an air-gapped install can export reports by hand (see [Export reports](#export-reports)) | A database |
 
-If groups are on but no destination is chosen, or the chosen one is not available, nothing is recorded, the proxy logs a warning, and the Telemetry page asks you to pick one. A destination saved from the UI takes effect at each worker's next report window, like the groups. `LITELLM_TELEMETRY_DESTINATION` wins over the saved destination.
+If groups are on but no destination is chosen, or the chosen one is not available, nothing is recorded, the proxy logs a warning, and the Telemetry page asks you to pick one. A proxy with neither a database nor `LITELLM_TELEMETRY_ENDPOINT` records nothing and logs no warning. A destination saved from the UI takes effect at each worker's next report window, like the groups. `LITELLM_TELEMETRY_DESTINATION` wins over the saved destination.
 
 ## Groups
 
@@ -61,11 +61,15 @@ Each worker folds what it sees into in-memory counters and emits one report per 
 | `instance.config_keys` | `instance_configuration` only. Names of allowlisted config keys that are set, never their values. Empty for now |
 | `dropped_records` | Records that did not fit, since a window holds at most 2000 distinct rows |
 
-Only LLM, pass-through, MCP and A2A requests are counted, never admin or management routes. **Request rows** hold one row per distinct combination of:
+Only POST requests to LLM and provider pass-through routes, MCP requests and A2A `message/send` requests are counted. Admin and management routes and websocket routes such as `/v1/realtime` are never counted, and pass-through endpoints you define in your config are only counted when their path ends like an LLM route, such as `/chat/completions`.
+
+Provider pass-through requests, such as `/anthropic/v1/messages`, are counted, but their rows have no provider, provider attempts or token counts yet, except Bedrock and GigaChat requests for a model on your model list.
+
+**Request rows** hold one row per distinct combination of:
 
 | Field | Meaning |
 |---|---|
-| `endpoint` | Route template, such as `/chat/completions`, `/mcp` or `/a2a`. Never the raw path |
+| `endpoint` | The matched route, such as `/chat/completions`, `/v1/messages`, `:generateContent`, a pass-through prefix like `/anthropic`, `/mcp` or `/a2a`. Never the raw path |
 | `handled_by_rust` | Whether the response came from the Rust gateway, read from its `x-litellm-rust: true` response header |
 | `provider` | `request_taxonomy` only. Provider of the deployment that served the request, such as `anthropic`, or `null` when no provider was called |
 | `deployment_hash` | `request_taxonomy` only. First 16 hex characters of an HMAC-SHA256 of the deployment id, keyed by a random secret the proxy creates once and keeps in `LiteLLM_Config`, so it stays the same across workers and restarts and cannot be matched across installs. A proxy without a database keys it from `LITELLM_SALT_KEY` or the master key |
@@ -79,11 +83,11 @@ Each request row carries `request_count`, histograms of `latency_to_headers_ms` 
 
 `header_keys` only names headers from a fixed allowlist: `anthropic-beta`, `anthropic-version`, `openai-beta`, `openai-organization`, `x-litellm-api-key`, `x-litellm-disable-callbacks`, `x-litellm-enable-message-redaction`, `x-litellm-num-retries`, `x-litellm-tags`, `x-litellm-timeout`, `x-stainless-lang` and `x-stainless-package-version`. Any other header is counted as `other`. Header values are never read.
 
-**Provider attempt rows** (`request_taxonomy`) count every individual provider call, keyed on `provider`, `deployment_hash`, `provider_status` and `stream`, with an `attempt_count` and a `latency_to_first_token_ms` histogram that only streamed attempts fill. There is no total attempt latency, since for a stream it mostly reflects how long the response is. A request that was refused by the proxy before routing, for example a bad key or an exceeded budget, adds no attempt row.
+**Provider attempt rows** (`request_taxonomy`) count every individual provider call, keyed on `provider` (`unknown` when the call has none), `deployment_hash`, `provider_status` and `stream`, with an `attempt_count` and a `latency_to_first_token_ms` histogram that only streamed attempts fill. There is no total attempt latency, since for a stream it mostly reflects how long the response is. A request that was refused by the proxy before routing, for example a bad key or an exceeded budget, adds no attempt row.
 
 **Admin UI events** (`page_navigation`) count page views and tab clicks as `page`, `action` and `target`, for example `{"page": "playground", "action": "click", "target": "tab=compare", "count": 1}`. The page is the first segment of the dashboard route and never contains an id, and the proxy rejects any event that does not match a short lowercase pattern. The browser asks the proxy whether `page_navigation` is on and only then sends these to the proxy's own `POST /telemetry/ui_events` route, never to a third party.
 
-Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms, with a last bucket for anything slower. Each histogram in a report is an object with `counts`, one per bucket, and `invalid`, the number of negative, NaN or infinite values that were left out of the buckets. The bounds are not sent. They are fixed for a given `schema_version`, and changing them bumps it. For `schema_version` 1, `block_count` uses the bounds 1, 5, 20 and 100 and `provider_attempts` uses 0, 1, 2 and 3, each with a last bucket for anything above.
+Latency histograms use the bucket bounds 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000 and 120000 ms. Each bucket counts values up to and including its bound, and a last bucket counts anything slower. Each histogram in a report is an object with `counts`, one per bucket, and `invalid`, the number of negative, NaN or infinite values that were left out of the buckets. The bounds are not sent. They are fixed for a given `schema_version`, and changing them bumps it. For `schema_version` 1, `block_count` uses the bounds 1, 5, 20 and 100 and `provider_attempts` uses 0, 1, 2 and 3, each with a last bucket for anything above.
 
 ## Export reports
 
@@ -94,7 +98,7 @@ curl -s "http://localhost:4000/telemetry/reports?limit=500" \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
-The response holds `reports` plus `next_after` and `next_after_id`. Pass those back as `after` and `after_id` to get the next page, until `next_after` is `null`. `limit` defaults to 500 and goes up to 5000. Another worker can commit a report just after a newer one was exported, so when you resume a later export, start a few windows before your last cursor and skip report ids you already have. Reports older than `LITELLM_TELEMETRY_RETENTION_DAYS` (30 by default) are deleted, and windows with no traffic are not stored.
+The response holds `reports` plus `next_after` and `next_after_id`. Pass those back as `after` and `after_id` to get the next page, until `next_after` is `null`. `limit` defaults to 500 and goes up to 5000. Another worker can commit a report just after a newer one was exported, so when you resume a later export, start a few windows before your last cursor and skip report ids you already have. Windows with no rows are not stored, so with only `heartbeat` on the table stays empty. Each time a worker stores a report, it deletes reports older than `LITELLM_TELEMETRY_RETENTION_DAYS` (30 by default), so after traffic stops the old reports stay until the next report is stored.
 
 ## Settings
 
