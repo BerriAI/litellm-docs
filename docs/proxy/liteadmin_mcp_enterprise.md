@@ -16,7 +16,7 @@ Connect Claude Code or Codex to your gateway at `/admin/mcp` to manage keys, tea
 
 :::info Image availability
 
-**Available in LiteLLM 1.106.x and later.** Start with an HTTPS deployment and a database. Hosting is off by default; a base Enterprise license covers this feature
+<SinceVersion v="1.106.0" /> Start with an HTTPS deployment and a database. Hosting is off by default; a base Enterprise license covers this feature
 
 :::
 

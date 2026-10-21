@@ -1,8 +1,6 @@
 # Docker Image Security Guide
 
-<SinceVersion v="1.83.0" />
-
-LiteLLM signs every Docker image published to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/). This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
+LiteLLM signs every Docker image it publishes to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/) <SinceVersion v="1.83.0" />. Older images are not signed. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
 
 ## Signed images
 

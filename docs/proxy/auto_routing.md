@@ -13,7 +13,9 @@ One router for complexity, semantic, and adaptive routing. Classify each request
 
 :::info[Availability]
 
-Auto routing is in **beta**, so config keys and defaults can still change between releases. Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+<SinceVersion v="1.94.0" />
+
+Auto routing is in **beta**, so config keys and defaults can still change between releases. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -348,7 +350,7 @@ The deprecated [semantic auto router](./auto_routing_semantic.md) has a much thi
 
 :::info
 
-Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
+Context-window support works <SinceVersion v="1.96.0" /> ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
 
 :::
 

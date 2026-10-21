@@ -534,9 +534,11 @@ def python_literal_message(literal):
     )
 
 
-VERSION_TOKEN_RE = re.compile(r"(?<![\w.])v?[12]\.\d{1,3}\.\d{1,2}(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?")
+VERSION_TOKEN_RE = re.compile(
+    r"(?<![\w.])(?:v?[12]\.\d{1,3}\.(?:\d{1,2}|x)(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?|v[12]\.\d{1,3}(?!\w|\.\w))"
+)
 VERSION_NOTE_STRIP_RE = re.compile(r"<br\s*/?>|[`*_>]")
-VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;!?](?=\s|$)|[|)]")
+VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;!?](?=\s|$)|[|()]|,\s*which\b")
 VERSION_NOTE_TAIL_RE = re.compile(
     r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?)\b)*$",
     re.I,
@@ -544,7 +546,7 @@ VERSION_NOTE_TAIL_RE = re.compile(
 VERSION_NOTE_WORD_RE = re.compile(r"[A-Za-z]+")
 VERSION_NOTE_LEAD_WORDS = frozenset(
     "available added introduced requires require required supported supports support "
-    "since starting works work live valid new version versions".split()
+    "since starting works work live valid new version versions need needs ships shipped".split()
 )
 VERSION_NOTE_FILLER_WORDS = VERSION_NOTE_LEAD_WORDS | frozenset(
     "a and as at be feature from gateway in integration is it note of on only "
@@ -579,9 +581,14 @@ def is_version_note(text, match):
     return False
 
 
+def badge_version(literal):
+    version = re.sub(r"\.x$", ".0", literal.lstrip("vV"))
+    return version if version.count(".") >= 2 else f"{version}.0"
+
+
 def version_note_message(literal):
     return (
-        f"hand-written version note `{literal}`; write `<SinceVersion v=\"{literal.lstrip('vV')}\" />` so every "
+        f"hand-written version note `{literal}`; write `<SinceVersion v=\"{badge_version(literal)}\" />` so every "
         "page states availability the same way, or add {/* keep-version-note */} when the version is not "
         "LiteLLM's own or the release itself is the subject of the sentence"
     )

@@ -33,6 +33,12 @@ class VersionNoteTests(unittest.TestCase):
             ("| LIMIT_MB | Available from v1.108.0. Maximum size in MB of a request body. |", "1.108.0"),
             ("Checks: `prompt_caching`, `encrypted_content_affinity` (requires LiteLLM >= 1.82.3), `session_affinity`", "1.82.3"),
             ("From v1.81.0 the request is set as attributes on the parent span. Available from v1.108.0.", "1.108.0"),
+            ("Available on `v1.92.x` and later.", "1.92.0"),
+            ("Requires v1.82+", "1.82.0"),
+            ("`cost_per_second` needs v1.105.0 or later. On earlier versions, use `input_cost_per_second`", "1.105.0"),
+            ("Ships in `v1.106.0`. It landed on `main` after `v1.106.0-dev.3`.", "1.106.0"),
+            ("Agent mode requires LiteLLM v1.97.0+, which translates the request shapes.", "1.97.0"),
+            ("The mapping is available from v1.107.0 (first in `v1.107.0-rc.1`).", "1.107.0"),
         ):
             with self.subTest(line=line):
                 errors = self.version_notes(f"# Page\n\n{line}\n")
@@ -63,6 +69,7 @@ class VersionNoteTests(unittest.TestCase):
             "{/* keep-version-note */} This requires LiteLLM v1.85.0",
             "Requires version 12.3.1 or later.",
             "Uses HTTP/2. Available in v1.103.0 for every provider. [Further docs](./server_tuning)",
+            "Since v1.80.0, the proxy retries a 429 once.",
         ):
             with self.subTest(line=line):
                 self.assertEqual(self.version_notes(f"# Page\n\n{line}\n"), [])

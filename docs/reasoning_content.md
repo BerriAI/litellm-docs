@@ -575,7 +575,7 @@ curl http://0.0.0.0:4000/v1/responses \
 
 :::info
 
-Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI needs v1.89.0+ ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
+Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI works <SinceVersion v="1.89.0" /> ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
 
 :::
 

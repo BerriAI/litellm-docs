@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 This is a beta feature and the surface it covers is still growing. The Rust core is opt-in, off by default, and any Rust path that fails or is not yet supported falls back to the existing Python path automatically, so turning it on cannot break a request that Python already handles.
 
-The per-model `rust: true` flag for the Anthropic `/v1/messages` route <SinceVersion v="1.94.0" /> first shipped in a release candidate, `v1.94.0-rc.1`.
+The per-model `rust: true` flag for the Anthropic `/v1/messages` route is available <SinceVersion v="1.94.0" />, and first shipped in a release candidate, `v1.94.0-rc.1`.
 
 Coverage for `/chat/completions` on `anthropic` and `bedrock` is newer and ships in an upcoming release
 
