@@ -325,11 +325,11 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 }'
 ```
 
-The spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. See [Decisions](../decisions/index.md) for the formats and the supported features.
+From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. See [Decisions](../decisions/index.md) for the formats and the supported features.
 
 ### Through the `/openrouter` pass-through
 
-`/openrouter/{path}` sends the request body to OpenRouter as it is, with the proxy's `OPENROUTER_API_KEY`. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is available from v1.104.0.
+`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends is the `api_key` of the first `openrouter/` deployment in `model_list` that sets `use_in_pass_through: true`, or `OPENROUTER_API_KEY` when no deployment does. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is available from v1.104.0.
 
 The path is relative to `https://openrouter.ai/api`, which is `OPENROUTER_API_BASE` without its trailing `/v1`. So the Decisions API is `/openrouter/alpha/decisions`. Do not add `/api` to the path, since `/openrouter/api/alpha/decisions` goes to `https://openrouter.ai/api/api/alpha/decisions` and OpenRouter answers it with a 404.
 
@@ -356,4 +356,4 @@ Response
 }
 ```
 
-LiteLLM logs each `/alpha/decisions` call under the versioned model that OpenRouter returns, for example `openrouter/typesafe/jev-1.14-20261014`. From v1.105.0, the spend is the `usage.cost` in the response.
+LiteLLM logs each `/alpha/decisions` call under the versioned model that OpenRouter returns, for example `openrouter/typesafe/jev-1.14-20261014`. From v1.104.3, the spend is the `usage.cost` in the response.

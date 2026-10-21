@@ -110,7 +110,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_litellm_call_id_idx" 
 | --- | --- | --- |
 | [TinyFish](../../docs/pass_through/tinyfish) | `/tinyfish/*` | Run TinyFish Agent API automations through a pass-through route with per-step billing |
 | [fal.ai](../../docs/providers/fal_ai) | `/fal_ai/*` | Submit and poll fal queue jobs through a pass-through route with spend tracking |
-| [OpenRouter](../../docs/providers/openrouter) | `/openrouter/alpha/decisions` | Reach OpenRouter's decisions API through a pass-through route |
+| [OpenRouter](../../docs/providers/openrouter#decisions-jev) | `/openrouter/alpha/decisions` | Reach OpenRouter's decisions API through a pass-through route |
 | [Amazon Bedrock](../../docs/providers/bedrock) | `/v1/responses` | Serve OpenAI models on bedrock-runtime's native Responses API |
 | [Bedrock Mantle](../../docs/providers/bedrock_mantle) | `/v1/messages` | Serve Claude models on Mantle's native Anthropic Messages API |
 | [Vertex AI](../../docs/providers/vertex_batch) | `/v1/files`, `/v1/batches` | Submit native Vertex batch JSONL with cost tracking |
