@@ -1,59 +1,32 @@
 # Rotating the Master Key
 
-The master key is the proxy's admin credential; it authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database: the proxy signs stored data (model `litellm_params`, credentials, MCP server credentials, DB-stored environment variables) with `LITELLM_SALT_KEY` when it is set, and falls back to the master key only when no salt key is configured. How you rotate the master key depends on which of those roles it plays, and getting this wrong can leave your stored credentials unreadable, so read the case that matches your setup before running anything.
+The master key is the proxy's admin credential. It authenticates admin API calls and logs you into the Admin UI. In some deployments it is also the key used to encrypt credentials at rest in the database. The proxy encrypts stored data such as model `litellm_params`, credentials, MCP server credentials, and DB-stored environment variables with `LITELLM_SALT_KEY` when it is set. It falls back to the master key only when no salt key is configured. Read the case that matches your setup before rotating the master key.
 
 :::warning
 
-If you set a [salt key](./prod.md#set-the-salt-key), the proxy decrypts stored credentials with the salt key, not the master key. Do not rotate the master key with `POST /key/regenerate` and `new_master_key` in that setup. That flow re-encrypts everything under the new master key, but the running proxy keeps decrypting with the salt key, so every stored credential becomes unreadable and the deployment can be bricked. Follow the salt-key section below instead.
+`POST /key/regenerate` no longer rotates the master key. A request that uses the master key returns HTTP 400. Use the swap-and-restart procedure below instead.
 
 :::
 
-Back up your database before either flow. Model re-encryption deletes and recreates rows rather than updating them in place, and credential re-encryption skips any row that fails, so a partial failure can strand data. A backup lets you revert cleanly.
+Back up your database before changing the master key. A backup lets you recover if a configuration error makes stored credentials unreadable.
 
-Virtual keys are stored hashed, not encrypted, so they keep working after either rotation. Only models stored in the database (`store_model_in_db`) are re-encrypted by the regenerate flow; models defined in your config file are not affected. This is available on the open-source build; master-key rotation is not gated behind the enterprise tier. There is no Admin UI flow for this by design; you rotate through the API or at boot.
+Virtual keys are stored hashed, not encrypted, so they keep working after a master-key rotation. There is no Admin UI flow for this by design.
 
 ## If you use a salt key (recommended setup)
 
 When `LITELLM_SALT_KEY` is set, the salt key encrypts and decrypts your stored credentials, and the master key is only an auth credential. Rotating it does not touch anything encrypted at rest, so there is nothing to re-encrypt.
 
-Generate a new master key value, update wherever the secret lives (the `LITELLM_MASTER_KEY` environment variable, or `general_settings.master_key` in your config), and restart every proxy instance so they pick up the new value. Do not call `POST /key/regenerate` with `new_master_key` here; that would re-encrypt your credentials under a key the proxy never uses to decrypt.
+Generate a new master key value, update wherever the secret lives (the `LITELLM_MASTER_KEY` environment variable, or `general_settings.master_key` in your config), and restart every proxy instance so they pick up the new value.
 
 Do not rotate `LITELLM_SALT_KEY` itself. It must not change after you have added a model; there is no in-place migration for salt-key rotation, so every stored credential would need to be re-registered.
 
-## If the master key is your encryption key
+## If you do not use a salt key
 
-When no salt key is set, the master key doubles as the at-rest encryption key, so rotating it requires re-encrypting stored data.
+When no salt key is set, the master key also encrypts stored credentials. Set a permanent salt key before rotating the master key so the encryption key stays unchanged.
 
-:::tip[Prefer a dedicated salt key]
-Before you rotate, consider setting a permanent `LITELLM_SALT_KEY` so future master-key rotations become the no-migration flow above. Set the salt key to your current master key value first (so existing data still decrypts), then rotate the master key freely afterwards.
-:::
+First back up your database. Then set `LITELLM_SALT_KEY` to the current master key value and restart every proxy instance. The encryption key remains unchanged, so the restart does not re-encrypt stored data.
 
-You can do this against a running proxy with `POST /key/regenerate`, as described below, or at boot with `LITELLM_MIGRATE_FROM_MASTER_KEY`, which needs no running proxy and [covers more stored values](#boot-time-migration).
-
-Call `POST /key/regenerate` with the current master key as `key` and the new one as `new_master_key`. The proxy only rotates the master key when `key` is the current master key; with any other value it treats the call as a regular virtual key regeneration.
-
-```bash
-curl -L -X POST 'http://localhost:4000/key/regenerate' \
--H "Authorization: Bearer $LITELLM_MASTER_KEY" \
--H 'Content-Type: application/json' \
--d '{
-  "key": "sk-<current-master-key>",
-  "new_master_key": "sk-<your-master-key>"
-}'
-```
-
-This re-encrypts stored models, the `environment_variables` saved in the config table, the credentials table, and the MCP server, user, and per-user environment credential tables under the new master key. It returns the new key:
-
-```json
-{
-  "key": "sk-<your-master-key>",
-  "token": "sk-<your-master-key>",
-  "key_name": "sk-<your-master-key>",
-  "expires": null
-}
-```
-
-The running process does not adopt the new key on its own, so finish with the steps below before it can decrypt what it just re-encrypted.
+After the restart, rotate the master key with the same swap-and-restart procedure described in the salt-key section. Do not change `LITELLM_SALT_KEY`. A request to `POST /key/regenerate` that uses the master key returns HTTP 400.
 
 ## After rotating
 
@@ -100,7 +73,7 @@ When the variable is already set to a known unsafe value or is empty, the error 
 echo "sk-$(openssl rand -hex 32)"
 ```
 
-Then start the proxy again. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Do not call `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, that leaves your stored credentials unreadable.
+Then start the proxy again. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup).
 
 ### The database holds values encrypted with the old key
 
@@ -114,7 +87,7 @@ unreadable, so also tell the proxy which key to migrate from:
 
 If the database cannot be reached during the refusal, the first line is "Your database could not be checked for values encrypted with this master key," instead, and the same steps follow. Following them is safe either way, because the migration does nothing when there is nothing to migrate.
 
-You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_KEY`, and the next boot re-encrypts the stored values under the new master key. You do not need a running proxy, the local development override, or a call to `POST /key/regenerate`. Back up your database first, as with any rotation on this page. If the old key came from `general_settings.master_key`, the error's first step is to make your config read the key from the environment, as shown in [Where to set the new key](#where-to-set-the-new-key).
+You tell the proxy which key to migrate from with `LITELLM_MIGRATE_FROM_MASTER_KEY`, and the next boot re-encrypts the stored values under the new master key. You do not need a running proxy or the local development override. Back up your database first, as with any rotation on this page. If the old key came from `general_settings.master_key`, the error's first step is to make your config read the key from the environment, as shown in [Where to set the new key](#where-to-set-the-new-key).
 
 1. Set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old key in the same place as `LITELLM_MASTER_KEY`: a shell export, your container or deployment environment, or `.env`. Use an empty value, `LITELLM_MIGRATE_FROM_MASTER_KEY=`, when the old key was empty.
 
@@ -156,13 +129,13 @@ Could not migrate stored values from the LITELLM_MIGRATE_FROM_MASTER_KEY key (<E
 
 Fix the database problem and start the proxy again with the same two variables. The next boot picks up where the failed one stopped: if it had migrated 2 of 6 values, the next boot logs "Re-encrypting 4 stored value(s)" followed by the "Done" line. The one exception follows the rule the proxy already applies to its database connection at boot. When `general_settings.allow_requests_on_db_unavailable` is true and the error is a connection outage, the boot continues, and the values still encrypted with the previous key stay unreadable until a later boot completes the migration.
 
-Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy expects stored values to be encrypted with the salt key, so it skips the migration and logs that there is nothing to migrate, and the values still encrypted with the old key stay unreadable. Once the migration is done, consider moving to a dedicated salt key, as the tip in [If the master key is your encryption key](#if-the-master-key-is-your-encryption-key) describes, so that later rotations are a swap and restart.
+Do not add `LITELLM_SALT_KEY` during these steps. With a salt key set the proxy expects stored values to be encrypted with the salt key, so it skips the migration and logs that there is nothing to migrate, and the values still encrypted with the old key stay unreadable. Once the migration is done, set a dedicated salt key so later rotations use a swap and restart.
 
 ### What the boot-time migration covers {#boot-time-migration}
 
-The migration works for any previous master key, not only the unsafe ones, so it is also an offline alternative to `POST /key/regenerate` with `new_master_key`: set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. It reads and writes through the primary database even when a read replica is configured. Tables or columns that do not exist on an older schema are skipped, so it works both before and after a schema upgrade. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
+The migration works for any previous master key, not only the unsafe ones. Set the new `LITELLM_MASTER_KEY`, set `LITELLM_MIGRATE_FROM_MASTER_KEY` to the old one, and restart. It is idempotent, and it is safe when several workers or replicas boot at once, because each row is updated only if it still holds the value that was read. It reads and writes through the primary database even when a read replica is configured. Tables or columns that do not exist on an older schema are skipped, so it works both before and after a schema upgrade. Virtual keys keep working because they are stored hashed, not encrypted. With no database connected, the proxy logs that nothing was migrated.
 
-It re-encrypts more than the regenerate call does: models stored in the database (`litellm_params`), credentials, `LiteLLM_Config` values (environment variables, CloudZero and Vantage settings and so on), SSO settings, cache settings, config overrides, MCP server credentials, static headers and environment variables, MCP OAuth client credentials, per-user MCP credentials and environment variables, SSO identity assertions, and the encrypted callback variables in team, key, and user metadata, including the deleted-team and deleted-key tables.
+It re-encrypts models stored in the database (`litellm_params`), credentials, `LiteLLM_Config` values (environment variables, CloudZero and Vantage settings and so on), SSO settings, cache settings, config overrides, MCP server credentials, static headers and environment variables, MCP OAuth client credentials, per-user MCP credentials and environment variables, SSO identity assertions, and the encrypted callback variables in team, key, and user metadata, including the deleted-team and deleted-key tables.
 
 ### Where to set the new key
 
