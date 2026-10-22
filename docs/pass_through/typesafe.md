@@ -83,6 +83,29 @@ The response is TypeSafe's own, unchanged:
 
 Any path under `/typesafe/` is forwarded, so `GET /typesafe/v1/models` lists the available models. [See the TypeSafe API reference](https://docs.typesafe.ai/api)
 
+## Limit which keys can call Jev
+
+The pass-through runs the same model access check as `/chat/completions`. When a key, its team or its project has a `models` list, a `/typesafe/` call is allowed only if each list allows the `model` in the request body, which is the bare Jev name such as `jev-latest`.
+
+| Entry in `models` | Allows |
+|-------|-------|
+| `jev-latest` | `jev-latest` only |
+| `typesafe/*` | `jev-latest`, `jev-preview` and the versioned names LiteLLM prices, such as `jev-1.14.0` |
+| `typesafe/jev-latest` | Not a bare `jev-latest` call |
+
+A call whose model a list does not allow gets a 403, such as `team_model_access_denied` for a team list. For example, this team allows the published Jev models:
+
+```bash showLineNumbers
+curl -X POST "$LITELLM_PROXY_BASE_URL/team/new" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"team_alias": "jev-users", "models": ["typesafe/*"]}'
+```
+
+In the Admin UI, the team and organization **Models** dropdowns, and the key dropdown when no team is picked, offer **All Typesafe models** (`typesafe/*`) and each Jev model when `TYPESAFE_API_KEY` is set in the proxy environment.
+
+The dropdown options are available from v1.108.0. `typesafe/*` matching comes from LiteLLM's model registry, so a proxy that loads the registry from GitHub, which is the default, gets it before upgrading.
+
 ## Try it in the Admin UI
 
 The Playground **Decisions** tab (Beta) sends Jev requests without curl. It calls the proxy's `/v1/systemone` route rather than this pass-through, so add a `typesafe/` model to your `model_list` first, for example `jev` from the [proxy setup](../decisions/index.md#proxy-setup) on the Decisions page, and set `TYPESAFE_API_KEY`. Open `LITELLM_PROXY_BASE_URL/ui/?page=llm-playground&tab=system-one`, or go to **Playground** and pick **Decisions**.
