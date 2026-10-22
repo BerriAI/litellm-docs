@@ -30,6 +30,7 @@ items={[
   { icon: <Logo src="/img/integrations/posthog.png" />, title: "PostHog", description: "Product analytics.", to: "/docs/observability/posthog_integration" },
   { icon: <Logo src="/img/integrations/splunk.png" />, title: "Splunk Observability Cloud", description: "OTLP traces to Splunk.", to: "/docs/observability/splunk_observability_cloud" },
   { icon: <Logo src="/img/integrations/signoz.png" />, title: "SigNoz", description: "OTLP traces with per-team ingestion keys.", to: "/docs/observability/signoz" },
+  { icon: <Logo src="/img/integrations/nops.png" />, title: "nOps", description: "AI spend, tokens, and cost next to your cloud spend.", to: "/docs/observability/nops" },
 ]}
 />
 
