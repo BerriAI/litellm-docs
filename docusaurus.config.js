@@ -10,9 +10,9 @@ const darkCodeTheme = require('./src/utils/prismDark');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   // Temporary fallback while the internal gateway is unavailable.
-  // Set DOCS_SEARCH_PROVIDER=internal and rebuild to switch back.
+  // Set DOCS_CHAT_PROVIDER=internal and rebuild to switch back.
   customFields: {
-    inkeepApiKey: process.env.DOCS_SEARCH_PROVIDER === 'internal' ? null : process.env.INKEEP_API_KEY || null,
+    inkeepApiKey: process.env.DOCS_CHAT_PROVIDER === 'internal' ? null : process.env.INKEEP_API_KEY || null,
   },
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',

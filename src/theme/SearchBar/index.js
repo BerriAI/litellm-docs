@@ -1,4 +1,3 @@
-import {useInkeep, InkeepSearchButton} from '@site/src/components/Inkeep';
 import React, {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -31,11 +30,6 @@ function SourceMeta({source}) {
 }
 
 export default function SearchBar() {
-  const inkeep = useInkeep();
-  return inkeep ? <InkeepSearchButton /> : <InternalSearchBar />;
-}
-
-function InternalSearchBar() {
   const [shortcut, setShortcut] = useState('Ctrl K');
   const [open, setOpen] = useState(false);
   const askAI = useAskAI();
