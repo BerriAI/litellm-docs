@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # OpenTelemetry v1
 
-OpenTelemetry is a CNCF standard for observability. It connects to any observability tool, such as Jaeger, Zipkin, Datadog, New Relic, Traceloop, Levo AI and others.
+OpenTelemetry is a CNCF standard for observability. It connects to any observability tool, such as Jaeger, Zipkin, Datadog, New Relic, Traceloop, Levo AI, Oodle and others.
 
 <Image img={require('../../img/traceloop_dash.png')} />
 
@@ -87,6 +87,21 @@ OTEL_SERVICE_NAME="litellm-proxy"
 ```
 
 For **LiteLLM Proxy** setup, ingest token patterns, and trace verification, see **[Splunk Observability Cloud (OpenTelemetry)](/docs/observability/splunk_observability_cloud)**.
+
+</TabItem>
+
+<TabItem value="oodle" label="Log to Oodle">
+
+```shell
+OTEL_EXPORTER_OTLP_ENDPOINT="https://<OTLP_ENDPOINT>"
+OTEL_EXPORTER_OTLP_HEADERS="X-API-KEY=<OODLE_API_KEY>,X-OODLE-INSTANCE=<OODLE_INSTANCE>"
+OTEL_EXPORTER_OTLP_COMPRESSION=gzip
+OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_and_event
+OTEL_SERVICE_NAME="litellm-proxy"
+```
+
+Oodle is an OpenTelemetry-native observability platform. The endpoint, instance ID and API key are under **Settings → API Keys** in your Oodle account. `OTEL_SEMCONV_STABILITY_OPT_IN` is required: it makes LiteLLM emit `gen_ai.*` semantic-convention spans, which is what Oodle's Agent Observability lists. Traces show up under **Agent Observability → Traces** with the transcript, token counts and cost per model. See **[Oodle: LiteLLM](https://docs.oodle.ai/integrations/agent-observability/litellm)** for the SDK and Proxy setup.
 
 </TabItem>
 
