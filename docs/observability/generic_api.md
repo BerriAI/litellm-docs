@@ -31,7 +31,7 @@ callback_settings:
   <callback_name>:
     callback_type: generic_api
     endpoint: https://your-endpoint.com  # required
-    headers:                              # optional
+    headers:                              # required
       Authorization: Bearer <token>
       Custom-Header: value
     event_types:                          # optional, defaults to all events
@@ -45,7 +45,7 @@ callback_settings:
 |-----------|------|----------|-------------|
 | `callback_type` | string | Yes | Must be `generic_api` |
 | `endpoint` | string | Yes | HTTP endpoint to send logs to |
-| `headers` | dict | No | Custom headers for the request |
+| `headers` | dict | Yes | Custom headers for the request. The callback is skipped if `headers` is missing. |
 | `event_types` | list | No | Filter events: `llm_api_success`, `llm_api_failure`. Defaults to all events. |
 | `log_format` | string | No | Output format: `json_array` (default), `ndjson`, or `single`. Controls how logs are batched and sent. |
 
