@@ -254,6 +254,10 @@ When `vector_store.vector_store_id` names a store in the [vector store registry]
 | `custom_llm_provider` | string | - | `"openai"` |
 | `vector_store_id` | string | auto-create | Existing vector store ID |
 
+:::info[Team deployments]
+When the caller's team has its own OpenAI deployment (a model list entry with `model_info.team_id`, such as a team-only `openai/*`), `/v1/rag/ingest` and `/v1/rag/query` send the vector store, file and search calls with that deployment's `api_key` and `api_base`. A key restricted to a model that deployment covers uses it too. A store registered with its own `api_key` or `litellm_credential_name` keeps those. Callers without a team OpenAI deployment keep the proxy's `OPENAI_API_KEY`. Unlike `/v1/files` and `/v1/batches`, the RAG routes never pick another OpenAI deployment the caller can reach.
+:::
+
 ### vector_store (Bedrock)
 
 | Parameter | Type | Default | Description |
