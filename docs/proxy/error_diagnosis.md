@@ -62,7 +62,7 @@ This error is from **OpenAI** (notice `OpenAIException`). The OpenAI API key con
 }
 ```
 
-This error is from **Anthropic** (notice `AnthropicException`). The Anthropic API is overloaded - this is not a LiteLLM issue.
+This error is from **Anthropic** (notice `AnthropicException`). The Anthropic API is overloaded - this is not a LiteLLM issue. On `/v1/messages` the same overload is answered as Anthropic answers it, HTTP 529 with `overloaded_error`.
 
 ### Gateway Error (from LiteLLM)
 

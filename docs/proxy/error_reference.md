@@ -134,6 +134,7 @@ The gateway returns the status code of the underlying failure rather than collap
 | 499 | Client | The client disconnected and the upstream call was cancelled | N/A |
 | 500 | Either | Gateway: an unhandled internal error. Provider: a provider-side error, including a network failure reaching the provider, which surfaces as `InternalServerError ... Connection error.` | Yes, with backoff |
 | 503 | Provider | The provider reported itself unavailable or overloaded | Yes, with backoff |
+| 529 | Provider | Only on the Anthropic-shaped routes (`/v1/messages`, `/v1/messages/count_tokens`): the 503 above or an upstream Anthropic 529, answered as Anthropic's `overloaded_error` because that contract has no 503 | Yes, with backoff |
 
 A note on 500 versus 503. A connection that never reaches the provider (DNS failure, refused connection, wrong `api_base`) is reported as 500 with `Connection error.` in the message, not as 502 or 503. A 503 means the provider answered and told you it was unavailable
 
@@ -281,7 +282,7 @@ The Python SDK raises typed exceptions that inherit from the corresponding OpenA
 | 500 | `APIConnectionError` | The base case for any unmapped error |
 | 500 | `APIError` | |
 | 503 | `ServiceUnavailableError` | |
-| >=500 | `InternalServerError` | Any unmapped 500-class provider response |
+| >=500 | `InternalServerError` | Any unmapped 500-class provider response. An Anthropic 529 `overloaded_error` raises this with `status_code` 500 and `provider_status_code` 529 |
 
 Every LiteLLM exception carries `status_code`, `message`, and `llm_provider`, plus `provider_specific_fields` where the provider supplied structured detail
 
