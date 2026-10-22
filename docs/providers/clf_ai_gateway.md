@@ -6,9 +6,9 @@ https://clfaigateway.dev/docs
 
 CLF AI Gateway is an OpenAI-compatible gateway that serves open-weight models. It is an independent service and is not affiliated with Cloudflare; for Cloudflare's own inference product see [Cloudflare Workers AI](./cloudflare_workers)
 
-:::tip
+:::info
 
-Set `model=clf_ai_gateway/<model>` to route a request through CLF AI Gateway. The current model list is at https://clfaigateway.dev/models and from `GET /v1/models`
+LiteLLM does not ship a `clf_ai_gateway` provider yet, so `model=clf_ai_gateway/<model>` fails with `BadRequestError: LLM Provider NOT provided`. Call the gateway through LiteLLM's generic OpenAI-compatible route instead: `model=openai/<model>` with `api_base="https://api.clfaigateway.dev/v1"`. The current model list is at https://clfaigateway.dev/models and from `GET /v1/models`
 
 :::
 
@@ -18,10 +18,9 @@ Set `model=clf_ai_gateway/<model>` to route a request through CLF AI Gateway. Th
 import os
 
 os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
-os.environ["CLF_AI_GATEWAY_API_BASE"] = "https://api.clfaigateway.dev/v1"  # optional, this is the default
 ```
 
-`CLF_AI_GATEWAY_API_BASE` only needs to be set when you are pointing LiteLLM at a different endpoint. Leaving it unset uses `https://api.clfaigateway.dev/v1`
+LiteLLM does not read `CLF_AI_GATEWAY_API_KEY` or `CLF_AI_GATEWAY_API_BASE` on its own. Pass the key as `api_key` and the base URL as `api_base` on every call, as in the examples below, otherwise the `openai/` route falls back to `OPENAI_API_KEY` and `https://api.openai.com/v1`
 
 ## Sample Usage
 
@@ -32,7 +31,9 @@ import os
 os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key=os.environ["CLF_AI_GATEWAY_API_KEY"],
     messages=[{"role": "user", "content": "What character was Wall-e in love with?"}],
 )
 print(response)
@@ -47,7 +48,9 @@ import os
 os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key=os.environ["CLF_AI_GATEWAY_API_KEY"],
     messages=[{"role": "user", "content": "What character was Wall-e in love with?"}],
     stream=True,
 )
@@ -58,7 +61,7 @@ for chunk in response:
 
 ## Reasoning
 
-Every model on the gateway is a reasoning model, so `reasoning_effort` is accepted on all of them. The levels each model takes differ, and LiteLLM reads them from the model map rather than assuming a single set
+Every model on the gateway is a reasoning model. LiteLLM forwards `reasoning_effort` as is on the `openai/` route, so pass a level the model accepts
 
 ```python
 from litellm import completion
@@ -67,14 +70,16 @@ import os
 os.environ["CLF_AI_GATEWAY_API_KEY"] = "sk-gw-..."
 
 response = completion(
-    model="clf_ai_gateway/glm-5.3",
+    model="openai/glm-5.3",
+    api_base="https://api.clfaigateway.dev/v1",
+    api_key=os.environ["CLF_AI_GATEWAY_API_KEY"],
     messages=[{"role": "user", "content": "How many r's are in strawberry?"}],
     reasoning_effort="high",
 )
 print(response)
 ```
 
-Reasoning tokens are counted inside `completion_tokens`, so they are billed at the output price rather than separately
+Reasoning tokens are counted inside `completion_tokens`
 
 ## Usage with LiteLLM Proxy Server
 
@@ -84,7 +89,8 @@ Reasoning tokens are counted inside `completion_tokens`, so they are billed at t
   model_list:
     - model_name: my-model
       litellm_params:
-        model: clf_ai_gateway/glm-5.3
+        model: openai/glm-5.3
+        api_base: https://api.clfaigateway.dev/v1
         api_key: os.environ/CLF_AI_GATEWAY_API_KEY
   ```
 
@@ -143,15 +149,15 @@ All of these support tool calling, JSON mode, and reasoning
 
 | Model | Context window | Vision |
 | ----- | -------------- | ------ |
-| clf_ai_gateway/glm-5.3 | 1,048,576 | no |
-| clf_ai_gateway/glm-5.3-flash | 1,048,576 | yes |
-| clf_ai_gateway/glm-5.2 | 262,144 | no |
-| clf_ai_gateway/glm-4.7-flash | 131,072 | no |
-| clf_ai_gateway/kimi-k2.7-code | 262,144 | yes |
-| clf_ai_gateway/kimi-k2.6 | 262,144 | yes |
-| clf_ai_gateway/deepseek-v4-pro | 1,048,576 | no |
-| clf_ai_gateway/deepseek-v4-flash | 1,048,576 | no |
-| clf_ai_gateway/qwen3.8-27b | 262,144 | yes |
+| glm-5.3 | 1,048,576 | no |
+| glm-5.3-flash | 1,048,576 | yes |
+| glm-5.2 | 262,144 | no |
+| glm-4.7-flash | 131,072 | no |
+| kimi-k2.7-code | 262,144 | yes |
+| kimi-k2.6 | 262,144 | yes |
+| deepseek-v4-pro | 1,048,576 | no |
+| deepseek-v4-flash | 1,048,576 | no |
+| qwen3.8-27b | 262,144 | yes |
 
 ## Supported Parameters
 
@@ -177,4 +183,8 @@ All of these support tool calling, JSON mode, and reasoning
 
 ## Prompt Caching
 
-The gateway caches recognized prompt prefixes automatically. Cached input tokens come back in `prompt_tokens_details.cached_tokens` and are billed at the model's cached input price, which LiteLLM reads from the model map for cost tracking
+The gateway caches recognized prompt prefixes automatically. Cached input tokens come back in `prompt_tokens_details.cached_tokens`
+
+## Cost Tracking
+
+The LiteLLM model map has no entries for these models, so `completion_cost` raises `ModelNotMappedError` for `openai/glm-5.3` and spend is not tracked out of the box. To track spend, set [custom pricing](../proxy/custom_pricing) on the deployment with `input_cost_per_token` and `output_cost_per_token` in `litellm_params`
