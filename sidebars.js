@@ -1673,6 +1673,7 @@ const sidebars = {
           "providers/snowflake",
           "providers/stability",
           "providers/strands_decider",
+          "providers/superbot",
           "providers/synthetic",
           "providers/tencent",
           "providers/tensormesh",
