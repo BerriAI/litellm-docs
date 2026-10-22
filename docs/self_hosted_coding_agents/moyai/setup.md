@@ -166,18 +166,26 @@ An organization owner or someone with permission to register and install the org
 
 **Check:** open the PR, inspect the diff, and confirm the reported checks. Review and merge it yourself. Enabled connected-app writes execute under connection policies without a per-use approval prompt; pause a connection or use read-only access when appropriate.
 
-## 7. Check the spend {#track-spend}
+## 7. Check spend in Moyai {#track-spend}
 
-As a Moyai administrator, open **Settings > Administration > Spend & usage** to inspect costs by user, session, and model. Members can see their own costs under **Settings > Workspace > Spend**. In the LiteLLM Admin UI, open **Logs > Filters** and set **Key Alias** to `moyai`.
+Use Moyai's dashboard to check the total and see what each teammate spent.
 
-<Image
-  img={require('../../../img/moyai_gateway_logs.png')}
-  dark={require('../../../img/moyai_gateway_logs_dark.png')}
-  alt="LiteLLM request logs filtered to the moyai virtual key"
-  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
-/>
+1. As a Moyai administrator, open **Settings > Administration > Spend & usage** and choose a date range.
+2. Open **Overall** to see the team's **LLM costs** and recorded total. Infrastructure costs appear alongside model costs after you connect billing providers or add bills.
+3. Open **Users** to see each teammate's model cost, sessions, request count, and share of spend. With **All users** selected, the table footer shows the team's total model spend. Select a user to inspect their sessions.
 
-Moyai attaches its request ID in `x-litellm-call-id` and `spend_logs_metadata.moyai_request_id`. Use that ID to reconcile a request across the two systems. For streaming costs, keep `include_cost_in_streaming_usage: true` on the gateway and verify native endpoint support in your deployed version. [Cost accounting](./architecture.md#cost-accounting) explains missing receipts and recovery permissions. Include Modal hosting, sandbox, and storage charges in your trial total.
+Members can check their own model costs under **Settings > Workspace > Spend**.
+
+<figure>
+  <Image
+    img={require('../../../img/moyai_spend_users.jpg')}
+    alt="Moyai's Users tab with each teammate's model spend and an All users total at the bottom."
+    style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
+  />
+  <figcaption>Moyai's spend dashboard with sample data. The All users row sums the per-user model costs for the selected date range.</figcaption>
+</figure>
+
+**Check:** find your setup task in your user's sessions and confirm its recorded model cost. LiteLLM supplies the model charges shown in Moyai. Requests without a final price remain marked as pending or missing; the [cost accounting guide](./architecture.md#cost-accounting) explains receipt recovery. Per-user totals cover model usage; shared infrastructure appears in the workspace total.
 
 ## Troubleshooting
 

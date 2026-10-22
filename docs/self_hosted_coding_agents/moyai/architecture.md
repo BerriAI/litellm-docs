@@ -142,12 +142,14 @@ The default Modal sandbox uses container isolation; optional VM execution is a s
 
 ## Cost accounting {#cost-accounting}
 
-Moyai uses LiteLLM as the source of truth for model costs. It stores the gateway's final charge for each tracked request and sums those same charges by user, session, and model. It preserves decimal precision instead of estimating prices from token counts.
+Moyai uses LiteLLM as the source of truth for model costs. It stores the gateway's final charge for each tracked request and sums those same charges into the workspace model total and the breakdowns by user, session, and model. It preserves decimal precision instead of estimating prices from token counts. Administrators can see these totals in Moyai's **Spend & usage** dashboard under **Overall** and **Users**. Infrastructure costs use separate provider reports and bills; they contribute to the workspace total but not the per-user model totals.
 
 Moyai reserves a request identity before inference and attributes usage to the original user, message, session, and model. It captures final response costs for non-streaming requests and final usage costs for streams; an initial stream header is not a final bill.
 
 If a receipt is missing, background recovery can query LiteLLM's `/spend/logs/v2` using the same gateway key with the added permission. This recovers accounting without rerunning inference or changing an interrupted task's execution status. Unknown costs remain visible. Keep provider inference and hosting/storage charges distinct when evaluating the installation.
 
 The totals cover tracked Moyai requests with recorded costs. Calls outside Moyai, gateway-internal billed attempts absent from returned costs, and unresolved receipts can leave a difference from the gateway key's total. Use the dashboard's coverage and per-request amounts when reconciling spend.
+
+To compare an individual charge with LiteLLM, open **Logs > Filters** in the LiteLLM Admin UI and set **Key Alias** to `moyai`. Match Moyai's request ID using `x-litellm-call-id` or `spend_logs_metadata.moyai_request_id`. For streaming costs, keep `include_cost_in_streaming_usage: true` on the gateway and verify native endpoint support in your deployed version.
 
 See [costs and receipt recovery](https://github.com/BerriAI/moyai/blob/main/docs/costs.md) and [the setup spend check](./setup.md#track-spend).

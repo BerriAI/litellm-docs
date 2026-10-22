@@ -42,20 +42,20 @@ See a team ask Moyai to investigate a bug, run regression tests, and return a pu
 
 <BugWorkflowDemo />
 
-## See what each teammate spends {#see-agent-spend}
+## See total and per-user spend in Moyai {#see-agent-spend}
 
-Use Moyai's spend dashboard to find the users, sessions, and models behind your model bill. Moyai records LiteLLM's reported charge for each tracked request, so you can trace a total back to the same cost data.
+See your team's total model spend and each teammate's share in Moyai. Choose a date range, compare users, and inspect the sessions behind a charge. LiteLLM remains the source of truth for the model costs you see.
 
 <figure className={styles.spendFigure}>
   <Image
     img={require('../../img/moyai_spend_users.jpg')}
-    alt="Moyai's LLM spend by user table showing each teammate's recorded cost, session count, model requests, and share of team spend."
+    alt="Moyai's spend dashboard showing total model spend in the All users row and each teammate's cost, sessions, model requests, and share of spend."
     style={{width: '100%', display: 'block'}}
   />
   <figcaption>Moyai's spend dashboard with sample data. Names and figures illustrate the interface; they are not LiteLLM's production usage or evidence for the savings estimate above.</figcaption>
 </figure>
 
-[Check a request against LiteLLM](./moyai/setup.md#track-spend). The [cost accounting guide](./moyai/architecture.md#cost-accounting) explains coverage and missing receipts. Cloud hosting and storage costs remain separate from these model charges.
+[Check spend in Moyai](./moyai/setup.md#track-spend). Administrators can see the team total under **Overall** and the per-user breakdown under **Users**. Connect billing providers or add bills to include infrastructure in the recorded total; per-user costs cover model usage. The [cost accounting guide](./moyai/architecture.md#cost-accounting) explains coverage and missing receipts.
 
 ## Start with a bug your team already knows {#put-moyai-to-work}
 
