@@ -1751,6 +1751,7 @@ const sidebars = {
             slug: "/project",
           },
           items: [
+            "projects/Backstage LiteLLM Governance",
             "projects/smolagents",
             "projects/mini-swe-agent",
             "projects/openai-agents",
