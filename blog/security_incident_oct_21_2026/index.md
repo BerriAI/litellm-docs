@@ -20,7 +20,7 @@ In the early morning of October 21, LiteLLM's release pipeline was compromised
 and pushed v1.107.0 to the docker registry and PyPi. This version contained
 compiled malware which steals credentials and loads remote-code execution tools.
 All previous versions are safe, and the impacted releases have been pulled.
-**Customers running the private enterprise release of LiteLLM were not impacted.**
+**Enterprise Customers running the private enterprise release of LiteLLM were not impacted.**
 
 **Update (20:30 UTC):** We believe we have identified the attack chain which facilitated this attack. The attacker had to compromise multiple independent security controls to be successful. See **How this happened** below.
 
@@ -32,7 +32,7 @@ All previous versions are safe, and the impacted releases have been pulled.
 
 - A malicious `litellm==1.107.0` package was published to PyPI and was live for approximately 2 hours (11:39 UTC to 13:23 UTC). **It has since been pulled.**
 - Docker images `v1.107.0`, `latest`, `main-latest`, and `main-stable` were compromised from 11:46 UTC to 14:20 UTC. **The `v1.107.0` image was removed, and the others were pointed at secure sources.**
-- **Customers running the private enterprise release of LiteLLM were not impacted.**
+- **Enterprise Customers running the private enterprise release of LiteLLM were not impacted.**
 
 ## Overview
 
