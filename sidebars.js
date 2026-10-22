@@ -1626,6 +1626,7 @@ const sidebars = {
           ] },
           "providers/hyperbolic",
           "providers/inception",
+          "providers/inferall",
           "providers/inferenceapis",
           "providers/jina_ai",
           "providers/lambda_ai",
