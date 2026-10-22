@@ -1688,6 +1688,7 @@ const sidebars = {
           ] },
           "providers/xiaomi_mimo",
           "providers/zai",
+          "providers/zerogpu",
         ] },
         { type: "category", label: "Add a Provider", items: [
           { type: "doc", id: "provider_registration/index", label: "Integrate as a Model Provider" },
