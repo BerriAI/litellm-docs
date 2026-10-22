@@ -184,6 +184,15 @@ curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse-stream'
 }'
 ```
 
+#### post_call guardrails on `/converse-stream`
+
+A `post_call` guardrail on the caller's key scans `/converse-stream` output while it streams, the same way it scans `/v1/chat/completions` streams:
+
+- With `streaming_buffer_until_moderated: false` (the default for most guardrails) the proxy forwards frames as Bedrock sends them and scans the text every `streaming_sampling_rate` frames (default 5) and at the end. Text reaches the client before the guardrail's verdict, and masks are not applied. Each scan pauses the stream until the guardrail answers, so a slow guardrail stretches a long answer (a 700-word answer took about 50 s instead of 12 s with the Bedrock guardrail); add `streaming_end_of_stream_only: true` to scan once at the end instead.
+- With `streaming_buffer_until_moderated: true` (the default for the [Bedrock guardrail](../proxy/guardrails/bedrock#streaming)) the proxy holds the stream until it is scanned, then sends it with masks applied per content block.
+- A block after the first frame ends the stream with an AWS `validationException` event, which the AWS SDK raises as `EventStreamError` with the guardrail's message. A block before the first frame returns an HTTP error.
+- Guardrails that scan responses with their own hooks instead of `apply_guardrail` (for example the Noma guardrail without `use_v2: true`), guardrails with `mask_response_content: true`, a held guardrail with `streaming_buffer_release_on_scan: true`, post_call guardrails with `run_in_parallel: true`, and post_call policy pipelines still hold the whole stream and scan it once. For Noma, set `use_v2: true` to scan the stream as it arrives.
+
 ### Supported Bedrock Endpoints with config.yaml
 
 When using models from config.yaml, you can call any Bedrock endpoint:
