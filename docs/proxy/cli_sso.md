@@ -226,11 +226,11 @@ LITELLM_PROXY_KEY=$(lite auth print-token) opencode
         "apiKey": "{env:LITELLM_PROXY_KEY}"
       },
       "models": {
-        "gpt-5.4-mini": { "name": "gpt-5.4-mini" }
+        "{{openai_small}}": { "name": "{{openai_small}}" }
       }
     }
   },
-  "model": "litellm/gpt-5.4-mini"
+  "model": "litellm/{{openai_small}}"
 }
 ```
 
@@ -357,7 +357,7 @@ The URLs are built from the request's base URL. Behind a load balancer or revers
    curl https://litellm.example.com/v1/chat/completions \
      -H "Authorization: Bearer LneZuxEFqvemEwK6lRzgg6BN..." \
      -H 'content-type: application/json' \
-     -d '{"model": "gpt-5.4-mini", "messages": [{"role": "user", "content": "Say hi in three words."}]}'
+     -d '{"model": "{{openai_small}}", "messages": [{"role": "user", "content": "Say hi in three words."}]}'
    ```
 
 7. Renew the credential before `expires_in` runs out. The response has the same shape as in step 5 and carries a new refresh token. The old refresh token is refused with `400 invalid_grant` if it is used again, so store the new pair before you use the new access token
@@ -377,6 +377,20 @@ The URLs are built from the request's base URL. Behind a load balancer or revers
      -d token=llm_srefresh_eyJhbGciOiJ... \
      -d client_id=llm_dcrc_lq411b6QkPmfxjW...
    ```
+
+### Redeem an identity assertion (RFC 7523)
+
+An agent that already holds an ID-JAG (Identity Assertion Authorization Grant, the cross app access profile) from your identity provider can trade it for the same proxy credential without a browser by posting it to `PROXY_BASE_URL/token` with the `jwt-bearer` grant. Setup at the identity provider, the LiteLLM configuration, the request and response, and troubleshooting are on [LiteLLM as resource app](./id_jag/resource_app.md). The rules below are what the gateway enforces on top of that.
+
+**Metadata.** The gateway's own document at `PROXY_BASE_URL/.well-known/oauth-authorization-server` (issuer the bare origin, token endpoint `PROXY_BASE_URL/token`) lists the grant in `grant_types_supported` only when the prerequisites on that page are met; the aggregate document at `PROXY_BASE_URL/.well-known/oauth-authorization-server/mcp` lists it too. When exactly one OAuth2 MCP server is configured, the root document is that upstream's and does not list the grant, so use `/.well-known/oauth-authorization-server/mcp` then.
+
+**Audience.** The documented `aud` is the bare origin `PROXY_BASE_URL`, such as `https://litellm.example.com`; the gateway never takes it from the request's `Host`. `https://litellm.example.com/mcp`, the MCP resource identifier, is also accepted, and because it names the MCP resource the credential it mints is ceilinged to the MCP routes: no `scope` or `litellm:mcp` mints an MCP-only credential with `scope` `litellm:mcp` in the response, and `litellm:llm` under that audience is refused with `400 invalid_scope`. Use the bare origin as the audience for LLM routes.
+
+**Scope.** The assertion's `scope` claim narrows the credential, and the response's `scope` is exactly what is enforced. `litellm:mcp` opens the MCP gateway routes (`/mcp`, its tools and SSE paths, `/token`, `/introspect`) and nothing else, `litellm:llm` opens the LLM API routes (`/chat/completions`, `/v1/messages`, `/responses`, embeddings, the provider pass-through routes, endpoints added under `pass_through_endpoints` and `GET /auto_router/session`, but not `GET /v1/mcp/server`) and nothing else, and both together open both groups. The restriction is the credential's `allowed_routes`, enforced in the proxy's auth on every route the same way a virtual key's is, so a `litellm:mcp` credential gets `403` on `/chat/completions` and a `litellm:llm` one gets `403` on `/mcp`. An assertion without a `scope` claim mints the full credential exactly as `lite login` does. Any other scope value is refused with `400 invalid_scope` and a description naming the two supported values.
+
+**Client authentication.** HTTP Basic credentials are form-encoded before base64, as RFC 6749 section 2.3.1 requires, so a space in a `client_id` or secret travels as `+` or `%20`.
+
+**Refusals.** Each assertion is redeemed once: presenting the same `jti` again returns `400 invalid_grant` with the description `the assertion has already been redeemed`. A `client_id` that is not allowlisted or a wrong secret returns `401 invalid_client`. Anything wrong with the assertion itself (signature, `typ`, `iss`, `aud`, `exp`, a `client_id` claim that does not match the presenting app, a `cnf` claim since the gateway checks no proof of possession, or a `sub` the gateway does not know) returns `400 invalid_grant` with the generic description `assertion was rejected`; the reason is in the proxy log. There is no refresh token; redeem a fresh ID-JAG when the credential expires. An ID-JAG is never accepted as a bearer token on `/mcp`.
 
 ### Security rules
 

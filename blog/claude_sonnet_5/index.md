@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Sonnet 5 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
+card_title: "Claude Sonnet 5"
+card_summary: "Opus-class quality at Sonnet pricing, adaptive thinking only, $3 / $15 per 1M ($2 / $10 intro), 1M context."
 image: /img/litellm_claude_sonnet_5_announcement.png
 tags: [anthropic, claude, sonnet 5, day 0 support]
 hide_table_of_contents: false

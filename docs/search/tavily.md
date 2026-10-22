@@ -75,3 +75,8 @@ response = search(
 )
 ```
 
+## Cost
+
+LiteLLM prices each Tavily search from the [model cost map](/docs/proxy/model_cost_map). A search sent with `search_depth: "advanced"` is billed at the `tavily/search-advanced` entry, which matches the 2 credits Tavily charges for it, and a search with any other depth, or none, is billed at `tavily/search`. This applies to the SDK, every `/search` route on the proxy, and web searches the proxy runs for [web search interception](/docs/integrations/websearch_interception).
+
+To bill your own rate for every depth, set `input_cost_per_query` on the search tool, as described in [Custom Per-Query Pricing](/docs/search#custom-per-query-pricing). A price you register for `tavily/search` with `litellm.register_model` keeps applying to advanced searches until you also register `tavily/search-advanced`.

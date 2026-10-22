@@ -1,0 +1,49 @@
+{
+  "source": "BerriAI/litellm",
+  "published": [
+    {
+      "version": "v1.102.0-rc.1",
+      "releasedAt": "2026-09-13T04:56:38Z"
+    },
+    {
+      "version": "v1.102.0-rc.2",
+      "releasedAt": "2026-09-16T20:29:51Z"
+    },
+    {
+      "version": "v1.103.0-rc.1",
+      "releasedAt": "2026-09-20T07:10:47Z"
+    },
+    {
+      "version": "v1.104.0-rc.1",
+      "releasedAt": "2026-09-28T08:01:07Z"
+    },
+    {
+      "version": "v1.104.0-rc.2",
+      "releasedAt": "2026-09-30T00:59:57Z"
+    },
+    {
+      "version": "v1.105.0-rc.1",
+      "releasedAt": "2026-10-04T01:41:07Z"
+    },
+    {
+      "version": "v1.105.0-rc.2",
+      "releasedAt": "2026-10-07T21:28:51Z"
+    },
+    {
+      "version": "v1.105.0-rc.3",
+      "releasedAt": "2026-10-08T09:26:45Z"
+    },
+    {
+      "version": "v1.106.0-rc.1",
+      "releasedAt": "2026-10-11T09:40:31Z"
+    },
+    {
+      "version": "v1.106.0-rc.2",
+      "releasedAt": "2026-10-13T23:59:21Z"
+    }
+  ],
+  "main": {
+    "version": "v1.107.0-rc.1",
+    "plannedFor": "2026-10-17"
+  }
+}

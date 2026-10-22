@@ -209,6 +209,34 @@
   padding: 48px 40px 0;
 }
 
+/* Table of contents: a right-hand column like the docs pages, shown only
+   when there is room for it beside the 880px body. The TOC component
+   handles sticky positioning and the active-heading highlight. */
+.toc {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .withToc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 24px;
+    padding-right: 32px;
+  }
+
+  .withToc .body {
+    width: 100%;
+    margin: 0;
+    justify-self: center;
+  }
+
+  .withToc .toc {
+    display: block;
+    padding-top: 48px;
+    font-size: 14px;
+  }
+}
+
 /* The docs markdown styles still apply; these match the website's
    overrides. `.page .post` outranks the older .blog-wrapper rules in
    custom.css. */

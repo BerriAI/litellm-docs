@@ -1,5 +1,6 @@
 ---
-title: "v1.88.0 - Claude Opus 4.8, MCP Access-Group Authorization & Typed OpenTelemetry"
+title: "LiteLLM v1.88.0 - Claude Opus 4.8, MCP Access-Group Authorization & Typed OpenTelemetry"
+description: "Adds Claude Opus 4.8 at 1M context, MCP access-group authorization and typed OpenTelemetry spans. Also cuts streaming cost per chunk by about 30%."
 slug: "v1-88-0"
 date: 2026-06-04T18:45:10
 authors:

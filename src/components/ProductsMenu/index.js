@@ -56,41 +56,64 @@ const ICONS = {
     <path d="M3 3v18h18" />
     <path d="M7 15l4-5 3 3 5-7" />
   </>),
+  models: icon(<>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </>),
+  terminal: icon(<>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M7 9l3 3-3 3M13 15h4" />
+  </>),
 };
 
 const HOME = {id: 'home', icon: 'home', title: 'Home', desc: 'Get started with LiteLLM', to: '/docs/'};
 
+// Each column holds one or more groups, each with its own heading.
 const COLUMNS = [
-  {
-    heading: 'Build',
-    items: [
-      {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/proxy/docker_quick_start'},
-      {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
-      {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
-      {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
-      {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/#litellm-python-sdk'},
-    ],
-  },
-  {
-    heading: 'Monitor',
-    items: [
-      {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
-      {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
-    ],
-  },
+  [
+    {
+      heading: 'Build',
+      items: [
+        {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/simple_proxy'},
+        {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
+        {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
+        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
+        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
+        {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows for every model', to: 'https://models.litellm.ai'},
+      ],
+    },
+  ],
+  [
+    {
+      heading: 'Monitor',
+      items: [
+        {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
+        {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
+      ],
+    },
+    {
+      heading: 'Self-Hosted Coding Agents',
+      items: [
+        {id: 'moyai', icon: 'terminal', title: 'Moyai', desc: 'Open source coding agent for background work', to: '/docs/self_hosted_coding_agents/moyai'},
+      ],
+    },
+  ],
 ];
 
-const ALL_ITEMS = [HOME, ...COLUMNS.flatMap((c) => c.items)];
+const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => g.items)];
 
 // Ordered most-specific first: /docs/proxy/lens must win over the /docs/proxy prefix.
 const SECTION_MATCHERS = [
+  ['moyai', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents')],
   ['lens', ({pathname}) => pathname.startsWith('/docs/proxy/lens')],
   ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
   ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
-  ['sdk', ({hash}) => hash === '#litellm-python-sdk'],
+  ['sdk', ({pathname, hash}) => pathname.startsWith('/docs/python_sdk') || hash === '#litellm-python-sdk'],
   ['router', ({pathname}) => pathname.startsWith('/docs/auto_router')],
-  ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy')],
+  ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy') || pathname.startsWith('/docs/simple_proxy')],
 ];
 
 function currentItem(location) {
@@ -168,9 +191,20 @@ export default function ProductsMenu({mobile}) {
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={`Products: ${current.title}`}
+        title={current.title}
         onClick={() => setOpen((v) => !v)}>
         <span className={styles.triggerIcon}>{ICONS[current.icon]}</span>
-        <span className={styles.triggerLabel}>{current.title}</span>
+        {/* A long name gets a short form on narrower screens */}
+        <span className={styles.triggerLabel}>
+          {current.short ? (
+            <>
+              <span className={styles.labelFull}>{current.title}</span>
+              <span className={styles.labelShort}>{current.short}</span>
+            </>
+          ) : (
+            current.title
+          )}
+        </span>
         <svg className={styles.chevron} viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
           <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />
@@ -180,11 +214,15 @@ export default function ProductsMenu({mobile}) {
         <div className={styles.home}>
           <MenuLink item={HOME} active={current.id === HOME.id} onNavigate={close} />
         </div>
-        {COLUMNS.map((col) => (
-          <div key={col.heading} className={styles.column}>
-            <div className={styles.heading}>{col.heading}</div>
-            {col.items.map((item) => (
-              <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
+        {COLUMNS.map((groups) => (
+          <div key={groups[0].heading} className={styles.column}>
+            {groups.map((group) => (
+              <React.Fragment key={group.heading}>
+                <div className={styles.heading}>{group.heading}</div>
+                {group.items.map((item) => (
+                  <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
+                ))}
+              </React.Fragment>
             ))}
           </div>
         ))}

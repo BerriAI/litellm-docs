@@ -4,6 +4,7 @@ import TabItem from '@theme/TabItem';
 # Anthropic
 LiteLLM supports all anthropic models.
 
+- `claude-haiku-5-5`
 - `claude-sonnet-5`
 - `claude-opus-5`
 - `claude-opus-4-6` (`claude-opus-4-6-20260205`)
@@ -68,7 +69,7 @@ LiteLLM supports Anthropic's [structured outputs feature](https://platform.claud
 Native structured outputs are used when the model has `supports_native_structured_output` set in the model cost map:
 - Sonnet 4.5 and later (`claude-sonnet-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5`)
 - Opus 4.5 and later (`claude-opus-4-5`, `claude-opus-4-6`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5`, `claude-opus-5-5`)
-- Haiku 4.5 (`claude-haiku-4-5`)
+- Haiku 4.5 and 5.5 (`claude-haiku-4-5`, `claude-haiku-5-5`)
 
 Claude Opus 4.1 and older models do not have this flag, so LiteLLM never sends `output_format` for them. It instead adds a `json_tool_call` tool built from your schema and forces the model to call it
 
@@ -580,8 +581,8 @@ print(response)
 
 ## Supported Models
 
-`Model Name` 👉 Human-friendly name.  
-`Function Call` 👉 How to call the model in LiteLLM.
+`Model Name` Human-friendly name.  
+`Function Call` How to call the model in LiteLLM.
 
 | Model Name       | Function Call                              |
 |------------------|--------------------------------------------|
@@ -1996,7 +1997,7 @@ response = completion(
                 {
                     "type": "file",
                     "file": {
-                       "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                       "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                     }
                 },
             ],
@@ -2044,7 +2045,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
           {
                 "type": "file",
                 "file": {
-                    "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                    "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                 }
             }
           }

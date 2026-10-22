@@ -372,7 +372,7 @@ model_list:
         api_key: os.environ/PREDIBASE_API_KEY
         tenant_id: os.environ/PREDIBASE_TENANT_ID
         max_tokens: 256
-        adapter_base: <my-special_base> # 👈 PROVIDER-SPECIFIC PARAM
+        adapter_base: <my-special_base> # PROVIDER-SPECIFIC PARAM
 ```
 
 **via Request**

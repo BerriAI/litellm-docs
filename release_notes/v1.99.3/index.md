@@ -1,5 +1,6 @@
 ---
-title: "v1.99.3 - Claude Code Auto Mode and TypeSafe Jev Passthrough"
+title: "LiteLLM v1.99.3 - Claude Code Auto Mode and TypeSafe Jev Passthrough"
+description: "Adds Claude Code auto mode through the gateway and TypeSafe Jev passthrough with logging and cost tracking. Forwards safeguards and beta headers unchanged."
 slug: "v1-99-3"
 date: 2026-09-23T07:10:00
 authors:

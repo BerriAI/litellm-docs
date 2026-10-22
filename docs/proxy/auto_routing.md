@@ -1,6 +1,6 @@
 ---
 title: "[Beta] Auto Routing"
-sidebar_label: "[Beta] Auto Routing"
+sidebar_label: "Auto Routing (Beta)"
 ---
 
 import Image from '@theme/IdealImage';
@@ -131,9 +131,6 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       enable_context_window_escalation: false   # default; set true to opt in
       context_window_escalation_buffer: 0.95   # default; prompt must fit within this fraction of the window
 
-      # Send image-bearing requests to a tier that can see them
-      modality_routing: false   # default; set true to opt in
-
       # Classify new user asks only, carrying the decision through continuation turns
       classification_mode: every_request   # default; or user_turn
 
@@ -174,6 +171,50 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     # auto_router_model_compression: none
 ```
 
+## Routing Responses API image requests
+
+These checks apply to HTTP `POST /v1/responses`, including streamed responses.
+
+Responses API image requests require a deployment with confirmed vision support. LiteLLM uses the deployment's
+`model_info.supports_vision` override when present, then the loaded model catalog. For named
+deployments, catalog lookup uses `model_info.base_model`, then `litellm_params.base_model`, before
+the deployment model name. It does not probe providers during routing. Deployments with false or unknown vision support can still serve
+text requests, but are excluded from image requests.
+
+A model group may contain both text-only and vision deployments. The group remains eligible for
+an image request when it has compatible deployments. Normal routing then chooses within that
+subset, preserving health, access, quota, order, and routing plugin checks.
+
+The auto-router can select compatible peers or higher tiers and an allowed default model. If
+none can serve the request, LiteLLM returns an actionable 400 before contacting an incompatible
+provider. Existing tier floors and routing plugin restrictions still apply.
+
+:::danger Upgrade behavior
+
+Responses API image capability checks apply by default, including when `modality_routing: false`.
+Other endpoints retain their existing modality routing behavior. Custom deployments without catalog metadata need an explicit vision declaration
+before they can receive images. Only declare support when the underlying model accepts images.
+Existing mixed model groups do not need to be split.
+
+:::
+
+For a custom vision deployment, use the existing deployment override.
+
+```yaml
+model_list:
+  - model_name: image-pool
+    litellm_params:
+      model: openai/my-vision-deployment
+      api_base: os.environ/VISION_API_BASE
+      api_key: os.environ/VISION_API_KEY
+    model_info:
+      supports_vision: true
+```
+
+Session pins are retained by default. If the pinned group has no compatible deployment, the image
+request fails before provider dispatch. Set `modality_pin_override: true` in the auto-router config
+to allow that image turn to move to a compatible model without changing the stored session pin.
+
 ## Classification
 
 Choose a classifier, with optional keyword rules before classification. Unless configured otherwise, an LLM, JEV or custom classifier failure falls back to the heuristic scorer
@@ -203,7 +244,7 @@ classifier_llm_config:
 
 ### JEV classifier
 
-This reference retains the field names supported by released builds. A build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626) also accepts `classifier_type: oss_classifier` with `opensource_classifier_config.provider: jev`; the settings below apply inside `opensource_classifier_config`. The existing names remain accepted. See the [OSS classifier guide](/docs/auto_router/decision_classifiers) for migration and the Jev, Nimble and Laya provider configurations.
+This reference retains the field names supported by released builds. A build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626) also accepts `classifier_type: oss_classifier` with `opensource_classifier_config.provider: jev`; the settings below apply inside `opensource_classifier_config`. The existing names remain accepted. See the [OSS classifier guide](/docs/auto_router/decision_classifiers) for migration and the Jev, Nimble, Laya and Databricks provider configurations. With `provider: databricks`, `model` is `ai_decide` or a bare serving endpoint name, and `api_key` and `api_base` read `DATABRICKS_API_KEY` (or `DATABRICKS_TOKEN`) and `DATABRICKS_API_BASE` when omitted.
 
 Set `classifier_type: jev` with `jev_classifier_config` to use [TypeSafe System One](/docs/pass_through/typesafe). It sends one `questions.tier` Choice question to `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
 

@@ -51,7 +51,7 @@ litellm --config config.yaml
 
 ### 3. Verify
 
-Send a request through the proxy, then check the logs for:
+The line below is logged at INFO level, so it only shows when the proxy runs with `LITELLM_LOG=INFO` (or `--detailed_debug`). Send a request through the proxy, then check the logs for:
 
 ```
 Enterprise billing metrics enabled: exporting to https://telemetry.litellm.ai every 60000 ms

@@ -75,7 +75,7 @@ model_list:
       model: {{openai_small}}
 litellm_settings:
   success_callback: ["langfuse"]
-  turn_off_message_logging: True # 👈 Key Change
+  turn_off_message_logging: True # Key Change
 ```
 
 **2. Send request**
@@ -233,7 +233,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
       }
     ],
     "max_tokens": 300,
-    "no-log": true # 👈 Key Change
+    "no-log": true # Key Change
 }'
 ```
 
@@ -257,7 +257,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={
-      "no-log": True # 👈 Key Change
+      "no-log": True # Key Change
     }
 )
 
@@ -273,7 +273,7 @@ print(response)
 LiteLLM.Info: "no-log request, skipping logging"
 ```
 
-### ✨ Dynamically Disable specific callbacks
+### Dynamically Disable specific callbacks
 
 <EnterpriseFeature />
 
@@ -331,13 +331,13 @@ print(response)
 </Tabs>
 
 
-### ✨ Conditional Logging by Virtual Keys, Teams
+### Conditional Logging by Virtual Keys, Teams
 
 Use this to:
 1. Conditionally enable logging for some virtual keys/teams
 2. Set different logging providers for different virtual keys/teams
 
-[👉 **Get Started** - Team/Key Based Logging](team_logging)
+[**Get Started** - Team/Key Based Logging](team_logging)
 
 
 
@@ -347,7 +347,7 @@ Use this to:
 
 Terminal success and failure callback events include `kwargs["standard_logging_object"]` when LiteLLM finishes building the standard payload. Intermediate streaming events and callbacks where payload construction fails can omit it.
 
-[👉 **Standard Logging Payload Specification**](./logging_spec)
+[**Standard Logging Payload Specification**](./logging_spec)
 
 ## Langfuse
 
@@ -639,7 +639,7 @@ model_list:
 litellm_settings:
   success_callback: ["langfuse"]
 
-  # 👇 Key Change
+  # Key Change
   langfuse_default_tags: ["cache_hit", "cache_key", "proxy_base_url", "user_api_key_alias", "user_api_key_user_id", "user_api_key_user_email", "user_api_key_team_alias", "semantic-similarity", "proxy_base_url"]
 ```
 
@@ -949,7 +949,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 </Tabs>
 
-** 🎉 Expect to see this trace logged in your OTEL collector**
+** Expect to see this trace logged in your OTEL collector**
 
 ### Redacting Messages, Response Content
 
@@ -959,7 +959,7 @@ Set `message_logging=False` for `otel`, no messages / response will be logged
 litellm_settings:
   callbacks: ["otel"]
 
-## 👇 Key Change
+## Key Change
 callback_settings:
   otel:
     message_logging: False
@@ -968,7 +968,7 @@ callback_settings:
 ### Traceparent Header
 ##### Context propagation across Services `Traceparent HTTP Header`
 
-❓ Use this when you want to **pass information about the incoming request in a distributed tracing system**
+Use this when you want to **pass information about the incoming request in a distributed tracing system**
 
 ✅ Key change: Pass the **`traceparent` header** in your requests. [Read more about traceparent headers here](https://uptrace.dev/opentelemetry/opentelemetry-traceparent.html#what-is-traceparent-header)
 
@@ -1059,7 +1059,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_bucket"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_bucket"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1111,6 +1111,10 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 5. Click on 'Keys' -> Add Key -> Create New Key -> JSON
 6. Save the JSON file and add the path to `GCS_PATH_SERVICE_ACCOUNT`
 
+#### Batch line items
+
+To also keep every request and response of your managed batches, as part objects per batch under `batch_line_items/`, add `gcs_bucket` to `litellm_settings.batch_line_item_callbacks`. See [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response)
+
 
 
 ## Google Cloud Storage - PubSub Topic
@@ -1140,7 +1144,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_pubsub"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_pubsub"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1368,6 +1372,10 @@ On s3 bucket, you will see the object key as `my-test-path/my-key-alias/...`
 if both team alias and key alias are enabled then the path becomes
 `my-test-path/my-team-alias/my-key-alias/...`
 
+#### Batch line items
+
+To also keep every request and response of your managed batches, as part objects per batch under `<s3_path>/batch_line_items/`, add `s3_v2` to `litellm_settings.batch_line_item_callbacks`. It writes with the same `s3_callback_params`. See [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response)
+
 ## AWS SQS
 
 
@@ -1406,7 +1414,7 @@ litellm_settings:
   callbacks: ["aws_sqs"]
 
   aws_sqs_callback_params:
-    # --- 🧱 Required Parameters ---
+    # --- Required Parameters ---
     sqs_queue_url: https://sqs.us-west-2.amazonaws.com/123456789012/my-queue
     # The AWS SQS Queue URL to which LiteLLM will send log events.
 
@@ -1470,7 +1478,7 @@ model_list:
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
 
 litellm_settings:
-  callbacks: ["azure_storage"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["azure_storage"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -1542,11 +1550,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## [Datadog](../observability/datadog)
 
-👉 Go here for using [Datadog LLM Observability](../observability/datadog) with LiteLLM Proxy
+Go here for using [Datadog LLM Observability](../observability/datadog) with LiteLLM Proxy
 
 ## [Azure Sentinel](../observability/azure_sentinel)
 
-👉 Go here for using [Azure Sentinel](../observability/azure_sentinel) with LiteLLM Proxy
+Go here for using [Azure Sentinel](../observability/azure_sentinel) with LiteLLM Proxy
 
 
 ## Lunary
@@ -1600,7 +1608,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## MLflow
 
-👉 Follow the tutorial [here](../observability/mlflow) to get started with mlflow on LiteLLM Proxy Server
+Follow the tutorial [here](../observability/mlflow) to get started with mlflow on LiteLLM Proxy Server
 
 
 
@@ -2283,7 +2291,7 @@ environment_variables:
   GALILEO_LOG_STREAM_ID: "your-log-stream-id"  # optional
 
 litellm_settings:
-  success_callback: ["galileo"] # 👈 KEY CHANGE
+  success_callback: ["galileo"] # KEY CHANGE
 ```
 
 2. Start Proxy
@@ -2309,7 +2317,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-🎉 That's it - Expect to see your Logs on your Galileo Dashboard
+That's it - Expect to see your Logs on your Galileo Dashboard
 
 ## OpenMeter
 
@@ -2336,7 +2344,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  success_callback: ["openmeter"] # 👈 KEY CHANGE
+  success_callback: ["openmeter"] # KEY CHANGE
 ```
 
 2. Start Proxy

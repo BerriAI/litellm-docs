@@ -7,7 +7,7 @@ Track Spend, and control model access via virtual keys for the proxy
 
 :::info
 
-- 🔑 [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
+- [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
 - [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy#provision-the-data-stores)
 - [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
 
@@ -20,7 +20,7 @@ Requirements:
 
 - Need a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc)
 - Set `DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname>` in your env 
-- Set a `master key`, this is your Proxy Admin key - you can use this to create other keys (🚨 must start with `sk-`).
+- Set a `master key`, this is your Proxy Admin key - you can use this to create other keys (must start with `sk-`).
   - ** Set on config.yaml** set your master key under `general_settings:master_key`, example below
   - ** Set env variable** set `LITELLM_MASTER_KEY`
 
@@ -49,7 +49,7 @@ model_list:
 
 general_settings: 
   master_key: os.environ/LITELLM_MASTER_KEY 
-  database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # 👈 KEY CHANGE
+  database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # KEY CHANGE
 ```
 
 **Step 2: Start litellm**
@@ -86,7 +86,7 @@ Get spend per:
 - key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
 - user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
 - team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
-- ⏳ end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
+- end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
 
@@ -116,7 +116,7 @@ This is automatically updated (in USD) when calls are made to /completions, /cha
     "key": "sk-tXL0wt5-lOOVK9sfY2UacA",
     "info": {
         "token": "sk-tXL0wt5-lOOVK9sfY2UacA",
-        "spend": 0.0001065, # 👈 SPEND
+        "spend": 0.0001065, # SPEND
         "expires": "2023-11-24T23:19:11.131000Z",
         "models": [
             "{{openai_small}}",
@@ -149,7 +149,7 @@ curl --location 'http://localhost:4000/user/new' \
 {
     ...
     "expires": "2023-12-22T09:53:13.861000Z",
-    "user_id": "my-unique-id", # 👈 unique id
+    "user_id": "my-unique-id", # unique id
     "max_budget": 0.0
 }
 ```
@@ -178,7 +178,7 @@ Expected Response
 ```bash
 {
   ...
-  "spend": 0 # 👈 SPEND
+  "spend": 0 # SPEND
 }
 ```
 
@@ -202,7 +202,7 @@ curl --location 'http://localhost:4000/team/new' \
 {
     ...
     "expires": "2023-12-22T09:53:13.861000Z",
-    "team_id": "my-unique-id", # 👈 unique id
+    "team_id": "my-unique-id", # unique id
     "max_budget": 0.0
 }
 ```
@@ -231,7 +231,7 @@ Expected Response
 ```bash
 {
   ...
-  "spend": 0 # 👈 SPEND
+  "spend": 0 # SPEND
 }
 ```
 
@@ -278,7 +278,7 @@ curl -X POST "https://0.0.0.0:4000/key/generate" \
 -H "Content-Type: application/json" \
 -d '{
 	"models": ["my-free-tier"], 
-	"aliases": {"{{openai_small}}": "my-free-tier"}, # 👈 KEY CHANGE
+	"aliases": {"{{openai_small}}": "my-free-tier"}, # KEY CHANGE
 	"duration": "30min"
 }'
 ```
@@ -321,7 +321,7 @@ model_list:
 
 general_settings: 
   master_key: os.environ/LITELLM_MASTER_KEY 
-  litellm_key_header_name: "X-Litellm-Key" # 👈 Key Change
+  litellm_key_header_name: "X-Litellm-Key" # Key Change
 
 ```
 
@@ -678,7 +678,9 @@ litellm_settings:
 ### Default /key/generate params
 Use this, if you need to control the default `max_budget` or any `key/generate` param per key. 
 
-When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies).
+When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies). `allowed_routes` is applied the same way, so you can let eligible new keys call `/key/spend/report` by setting it to `["llm_api_routes", "/key/spend/report"]`. A non-empty `allowed_routes` is an allowlist, so include the route groups the key still needs. A non-empty `allowed_routes` on the request is kept unless a selected `key_type` preset overrides it. An empty list is treated as missing. A `key_type` of `llm_api` on the request (the Admin UI sends it by default) is replaced by this list only when the list includes `llm_api_routes`, so with the example below those keys also get `/key/spend/report`. The `management` and `read_only` key types always keep their presets, and a `key_type` of `default` (the Admin UI's "Full Access") keeps full access. A key created with no `allowed_routes` and no `key_type` gets only this list, so list every route group those keys need.
+
+Every route in this `allowed_routes` list is granted to eligible new keys whatever the owner's role, so list only routes you want those keys to reach. Since the routes come from the proxy admin, a key owner who is not a proxy admin cannot change them later with `/key/update`, which includes picking a different key type for the key in the Admin UI. A proxy admin can, and an owner who needs full access can create a key with the `default` key type. Service account keys from `/key/service-account/generate` do not get this default, so they keep access to `/key/generate` and `/key/update`. The routes are copied into each key when it is created, so changing or removing this default later leaves existing keys with the routes they already have.
 
 Set `litellm_settings:default_key_generate_params`:
 ```yaml
@@ -689,9 +691,10 @@ litellm_settings:
     duration:     # blank means `null`
     metadata: {"setting":"default"}
     team_id: "core-infra"
+    allowed_routes: ["llm_api_routes", "/key/spend/report"]
 ```
 
-### ✨ Key Rotations 
+### Key Rotations {#-key-rotations}
 
 <EnterpriseFeature />
 
@@ -723,7 +726,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -833,6 +836,34 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 
 [API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
 
+### Let key owners edit their own key budgets
+
+By default any change to `max_budget` or `budget_limits` on `/key/update` needs a proxy admin, team admin, or org admin, and anyone else gets a 403. Set `general_settings.self_serve_budget_policy` to let the person who created a key, and still owns it, change its budget themselves. It applies to `/key/update` from the API and from the Admin UI key edit form, which calls the same route. There is no Admin UI toggle for the setting itself, so set it in `config.yaml` or through `/config/update`.
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  self_serve_budget_policy: lower_only
+```
+
+| Value | What the key's owner can change without an admin |
+|-------|---------------------------------------------------|
+| `disabled` (default) | Nothing. Every `max_budget` or `budget_limits` change needs an admin. |
+| `lower_only` | Add budget windows or lower caps. Raising a cap, removing `max_budget`, and dropping or renaming a window still need an admin. |
+| `ceiling` | Everything in `lower_only`, plus raising or removing `max_budget` or `budget_limits`, as long as the owner could have created the key with that budget through `/key/generate`. The `key_generation_settings` role gates apply, a non-admin team member needs the `/key/generate` team member permission, the new budget cannot exceed the caller's own `max_budget` (or `user_max_budget` for a UI session), and the key cannot be left uncapped while `upperbound_key_generate_params.max_budget` is set. |
+
+The owner is the caller whose `user_id` matches both the key's `user_id` and its `created_by`. A team member still needs the `/key/update` team member permission to edit a team key at all. Whatever the policy, `spend`, `soft_budget`, `max_budget` on a key with a linked `budget_id`, and any key the caller did not create stay admin-only. A value other than the three above logs a warning and behaves as `disabled`.
+
+With `lower_only` on, a key owner can add a tighter 24h window under their existing 7d one:
+
+```bash
+curl http://localhost:4000/key/update \
+  -H "Authorization: Bearer $OWNER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "'$OWNER_KEY'", "budget_limits": [{"budget_duration": "7d", "max_budget": 50}, {"budget_duration": "24h", "max_budget": 5}]}'
+```
+
+See [Set multiple budget windows on a key](./users#set-multiple-budget-windows-on-a-key) for how `budget_limits` works.
 
 ### Restricting Key Generation
 
@@ -919,16 +950,15 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
 
 ### Users
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
 
 
 ### Teams
 
-#### [**👉 API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
-
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
 
 

@@ -764,7 +764,7 @@ config = {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
                 "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
-                "x-litellm-end-user-id": "customer_123",  # 👈 CUSTOMER ID
+                "x-litellm-end-user-id": "customer_123",  # CUSTOMER ID
                 "Authorization": "Bearer gho_token"
             }
         }

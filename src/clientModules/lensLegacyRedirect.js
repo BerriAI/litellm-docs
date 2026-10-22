@@ -2,10 +2,16 @@ import legacy from '@site/docs/proxy/lens/legacy-links.json';
 
 const own = (map, key) => (key && Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined);
 
-// Preserve section and framework links from the original single-page guide.
+// Preserve section links when Lens guides move to subpages.
 export function onRouteDidUpdate({location}) {
-  if (location.pathname.replace(/\/$/, '') !== '/docs/proxy/lens') return;
+  const pathname = location.pathname.replace(/\/$/, '');
   const hash = location.hash.slice(1);
+  if (pathname === '/docs/proxy/lens/deployment') {
+    const target = own(legacy.deploymentAnchors, hash);
+    if (target) window.location.replace(target);
+    return;
+  }
+  if (pathname !== '/docs/proxy/lens') return;
   const section = own(legacy.anchors, hash);
   const framework = own(legacy.frameworks, new URLSearchParams(location.search).get('framework'));
   const target = framework && (!section || hash === 'send-your-first-trace') ? framework : section;

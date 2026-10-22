@@ -90,7 +90,7 @@ LiteLLM is the most widely used and most secure open-source AI gateway, trusted 
 |---|---|
 | GitHub | <Stat id="stars" /> stars and <Stat id="forks" /> forks on [BerriAI/litellm](https://github.com/BerriAI/litellm), with more than 1,700 contributors |
 | PyPI | <Stat id="downloads" /> downloads of `litellm` in the last month ([pypistats](https://pypistats.org/packages/litellm)) |
-| Security | [SOC 2 Type II](https://trust.litellm.ai/) audited, [cosign-signed images](./proxy/docker_image_security.md) you can verify before they run, and a 72-hour security patch SLA on [Enterprise support](./enterprise.md#professional-support) |
+| Security | [SOC 2 Type II](https://trust.litellm.ai/) audited, [cosign-signed images](./proxy/docker_image_security.md) you can verify before they run, and a 72-hour security patch SLA on [Enterprise support](./enterprise/support.md) |
 | Deployment | Self-hosted in your cloud, so prompts, responses, and provider keys stay in your infrastructure ([data security](./data_security.md)) |
 | Customers | Teams at Netflix, Okta, Ramp, NASA, Zurich, Cloudera, AT&T, and Lemonade ([litellm.ai/enterprise](https://www.litellm.ai/enterprise)) |
 | License | Open source under [MIT](https://github.com/BerriAI/litellm/blob/main/LICENSE); Enterprise features need a license key |

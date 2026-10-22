@@ -139,7 +139,7 @@ Set these under a model's `model_info` unless noted otherwise. They control how 
 | `health_check_max_tokens_reasoning` | unset | `max_tokens` for reasoning models when `health_check_max_tokens` is not set |
 | `health_check_max_tokens_non_reasoning` | unset | `max_tokens` for non-reasoning models when `health_check_max_tokens` is not set |
 | `health_check_reasoning_effort` | unset | `reasoning_effort` on the probe (chat, completion, batch, responses modes only) |
-| `health_check_voice` | `alloy` | Voice for `audio_speech` probes |
+| `health_check_voice` | `alloy` | Voice for `audio_speech` probes. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
 | `health_check_model` | unset | Concrete model a wildcard route probes |
 | `disable_background_health_check` | false | Skip this model in the background loop |
 
