@@ -1671,6 +1671,7 @@ const sidebars = {
           "providers/scaleway",
           "providers/scx_ai",
           "providers/snowflake",
+          "providers/speechify",
           "providers/stability",
           "providers/strands_decider",
           "providers/synthetic",
