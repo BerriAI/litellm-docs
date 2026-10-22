@@ -375,7 +375,7 @@ export AWS_S3_ENCRYPTION_KEY_ID=arn:aws:kms:us-west-2:123456789012:key/12345678-
 
 Bedrock checks that the input and output buckets belong to the account named in `s3BucketOwner`, and when that field is missing it defaults to the account running the batch job. If your buckets live in another account the job fails validation with an S3 permission error even though the bucket policy grants access. Set `s3_bucket_owner` to the id of the account that owns the buckets and LiteLLM sends it on both the input and output data config
 
-Through the proxy, an `s3_bucket_owner` passed in the `/v1/batches` request body takes precedence over the deployment's `litellm_params` value, which in turn takes precedence over the `AWS_S3_BUCKET_OWNER` env var. This is the same order the router applies to every other deployment parameter such as `s3_bucket_name` or `s3_encryption_key_id`. When none is set the field is omitted and Bedrock keeps its default
+Through the proxy, an `s3_bucket_owner` passed in the `/v1/batches` request body takes precedence over the deployment's `litellm_params` value, which in turn takes precedence over the `AWS_S3_BUCKET_OWNER` env var. This is the same order the router applies to every other deployment parameter such as `s3_encryption_key_id`. When none is set the field is omitted and Bedrock keeps its default
 
 ```yaml
 model_list:
@@ -390,6 +390,34 @@ model_list:
 ```bash
 export AWS_S3_BUCKET_OWNER=123456789012
 ```
+
+### Can a client choose the S3 bucket per request?
+
+By default no. The proxy rejects `s3_bucket_name`, `s3_output_bucket_name`, `s3_endpoint_url` and `allow_legacy_cloud_file_ids` in a client's request body, because the proxy reads and writes those buckets with the deployment's AWS credentials. The bucket comes from the deployment's `litellm_params` or the `AWS_S3_BUCKET_NAME` env var.
+
+To let clients pick from a fixed set of buckets, list them in `general_settings`. A bucket on the list is accepted as `s3_bucket_name` or `s3_output_bucket_name` and overrides the deployment's value for that request. Any other bucket is rejected.
+
+```yaml
+general_settings:
+  allowed_client_side_s3_buckets:
+    - team-a-batch-output
+    - team-b-batch-output
+```
+
+```bash
+curl http://localhost:4000/v1/batches \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_file_id": "file-abc123",
+    "endpoint": "/v1/chat/completions",
+    "completion_window": "24h",
+    "model": "bedrock-batch-claude",
+    "s3_output_bucket_name": "team-a-batch-output"
+  }'
+```
+
+`allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields.
 
 ### How does LiteLLM get Bedrock output file details?
 

@@ -145,6 +145,8 @@ general_settings:
   skip_batch_input_file_rate_limiting_for_providers: ["hosted_vllm"]  # apply the batch accounting skip only to these providers
   disable_budget_reservation: boolean  # disable pre-request budget reservation; may allow overspend under concurrency
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
+  allowed_client_side_s3_buckets: ["my-batch-bucket"]  # buckets a client may pick with s3_bucket_name or s3_output_bucket_name in a request body, e.g. on /v1/batches
+  allowed_client_side_s3_endpoint_urls: ["https://s3.us-west-2.amazonaws.com"]  # exact s3_endpoint_url values a client may send in a request body
   key_management_system: google_kms  # either google_kms or azure_kms
   master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or has a known unsafe value
   dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or a known unsafe value
@@ -398,6 +400,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allow_cli_sso_verification_uri_complete | boolean | `false` | Default `false`. When `true`, `POST /sso/cli/start` also returns `verification_uri_complete`, and `lite login` opens the browser verification page with the code already filled in so the user only confirms it. Off by default so the code has to be typed by hand. [Doc on CLI SSO](./cli_sso.md#pre-fill-the-verification-code) |
 | include_call_id_in_error_body | boolean | `false` | Default `false`. When `true`, JSON error bodies also carry the value of the `x-litellm-call-id` response header, as `error.litellm_call_id` on the OpenAI-shaped routes and `/v1/messages` and as a top-level `litellm_call_id` on pass-through routes, so a client that only prints the body still names the request to look up. [Doc on reporting a problem](./error_reference.md#reporting-a-problem) |
 | allow_client_side_credentials | boolean | `false` | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md) |
+| allowed_client_side_s3_buckets | List[str] | `null` (none allowed) | S3 bucket names a client may send as `s3_bucket_name` or `s3_output_bucket_name` in a request body, for example on `/v1/batches`. Any other bucket is rejected, as is `allow_legacy_cloud_file_ids`, unless `allow_client_side_credentials` is on or the deployment lists the field in `configurable_clientside_auth_params`. [Doc on choosing the batch bucket per request](../providers/bedrock_batches#can-a-client-choose-the-s3-bucket-per-request) |
+| allowed_client_side_s3_endpoint_urls | List[str] | `null` (none allowed) | Exact `s3_endpoint_url` values a client may send in a request body. Any other value is rejected unless `allow_client_side_credentials` is on or the deployment lists the field in `configurable_clientside_auth_params`. |
 | admin_only_routes | List[str] | `null` | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes) |
 | use_azure_key_vault | boolean | `false` | If true, load keys from azure key vault |
 | use_google_kms | boolean | `false` | If true, load keys from google kms |
