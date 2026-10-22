@@ -10,6 +10,12 @@ import TabItem from '@theme/TabItem';
 Route Claude Code traffic signed in with a Claude Pro, Max, Team, or Enterprise subscription through LiteLLM AI Gateway.
 </div>
 
+:::tip
+
+LiteLLM can also use ChatGPT (Codex) and GitHub Copilot subscriptions. To compare the three subscriptions, refer to [Claude, Codex, and Copilot subscriptions](/docs/subscriptions).
+
+:::
+
 **Why a Claude subscription over direct API?**
 - **Lower costs**: Claude subscriptions are cheaper for Claude Code power users than per-token API pricing
 

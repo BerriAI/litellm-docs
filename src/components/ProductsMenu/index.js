@@ -62,6 +62,10 @@ const ICONS = {
     <rect x="3" y="14" width="7" height="7" rx="1.5" />
     <rect x="14" y="14" width="7" height="7" rx="1.5" />
   </>),
+  subscriptions: icon(<>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
+  </>),
   terminal: icon(<>
     <rect x="3" y="4" width="18" height="16" rx="2" />
     <path d="M7 9l3 3-3 3M13 15h4" />
@@ -70,16 +74,20 @@ const ICONS = {
 
 const HOME = {id: 'home', icon: 'home', title: 'Home', desc: 'Get started with LiteLLM', to: '/docs/'};
 
-// Each column holds one or more groups, each with its own heading.
+// Each column holds one or more groups, each with its own heading. A group's
+// `featured` items sit first, in a highlighted box.
 const COLUMNS = [
   [
     {
       heading: 'Build',
-      items: [
+      featured: [
         {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/simple_proxy'},
+        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
+        {id: 'subscriptions', icon: 'subscriptions', title: 'Claude, Codex & Copilot', desc: 'Use your existing subscriptions through the gateway', to: '/docs/subscriptions'},
+      ],
+      items: [
         {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
         {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
-        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
         {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
         {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows for every model', to: 'https://models.litellm.ai'},
       ],
@@ -90,7 +98,7 @@ const COLUMNS = [
       heading: 'Monitor',
       items: [
         {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
-        {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
+        {id: 'logs', icon: 'logs', title: 'Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
       ],
     },
     {
@@ -102,10 +110,11 @@ const COLUMNS = [
   ],
 ];
 
-const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => g.items)];
+const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => [...(g.featured || []), ...g.items])];
 
 // Ordered most-specific first: /docs/proxy/lens must win over the /docs/proxy prefix.
 const SECTION_MATCHERS = [
+  ['subscriptions', ({pathname}) => pathname.startsWith('/docs/subscriptions')],
   ['moyai', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents')],
   ['lens', ({pathname}) => pathname.startsWith('/docs/proxy/lens')],
   ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
@@ -219,6 +228,13 @@ export default function ProductsMenu({mobile}) {
             {groups.map((group) => (
               <React.Fragment key={group.heading}>
                 <div className={styles.heading}>{group.heading}</div>
+                {group.featured && (
+                  <div className={styles.featured}>
+                    {group.featured.map((item) => (
+                      <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
+                    ))}
+                  </div>
+                )}
                 {group.items.map((item) => (
                   <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
                 ))}

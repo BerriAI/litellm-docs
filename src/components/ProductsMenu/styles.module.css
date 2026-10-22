@@ -225,6 +225,45 @@
   color: var(--aurora-muted, #646875);
 }
 
+/* The featured items of a group: one tinted box with solid icons, so the
+   main products stand out from the rest of the column. */
+.featured {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  background: var(--aurora-tint, #f2f4fd);
+  border: 1px solid var(--aurora-accent-line, #d3d8f3);
+}
+
+.featured .item:hover,
+.featured .itemActive {
+  background: var(--ifm-background-surface-color, #fff);
+}
+
+.featured .icon {
+  background: var(--aurora-accent-ink, #0117be);
+  border-color: transparent;
+  color: #fff;
+}
+
+[data-theme='dark'] .featured {
+  background: rgba(143, 160, 255, 0.08);
+  border-color: rgba(143, 160, 255, 0.25);
+}
+
+[data-theme='dark'] .featured .item:hover,
+[data-theme='dark'] .featured .itemActive {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .featured .icon {
+  background: #8fa0ff;
+  color: #11131f;
+}
+
 [data-theme='dark'] .item:hover,
 [data-theme='dark'] .icon {
   background: rgba(255, 255, 255, 0.06);
