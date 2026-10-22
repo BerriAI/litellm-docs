@@ -14,7 +14,7 @@ GigaChat is Sber AI's large language model, Russia's leading LLM provider.
 
 :::warning
 
-GigaChat API uses self-signed SSL certificates. You must pass `ssl_verify=False` in your requests.
+GigaChat API certificates are issued under the Russian Trusted Root CA, which most trust stores do not include. Pass `ssl_verify=False` in your requests, or install the Russian Trusted Root CA certificate into your system trust store. The OAuth token exchange runs with certificate verification disabled regardless of this setting.
 
 :::
 
@@ -32,7 +32,7 @@ GigaChat API uses self-signed SSL certificates. You must pass `ssl_verify=False`
 
 ## API Key
 
-GigaChat uses OAuth authentication. Set your credentials as environment variables:
+GigaChat uses OAuth authentication. LiteLLM exchanges your credentials for a short-lived access token and refreshes it automatically. Set your credentials as environment variables:
 
 ```python
 import os
@@ -41,10 +41,20 @@ import os
 os.environ['GIGACHAT_CREDENTIALS'] = "your-credentials-here"
 
 # Optional: Set scope (default is GIGACHAT_API_PERS for personal use)
-os.environ['GIGACHAT_SCOPE'] = "GIGACHAT_API_PERS"  # or GIGACHAT_API_B2B for business
+os.environ['GIGACHAT_SCOPE'] = "GIGACHAT_API_PERS"  # or GIGACHAT_API_B2B, GIGACHAT_API_CORP
 ```
 
 Get your credentials at: https://developers.sber.ru/studio/
+
+### Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GIGACHAT_CREDENTIALS` | Yes | - | Base64-encoded `client_id:client_secret` |
+| `GIGACHAT_SCOPE` | No | `GIGACHAT_API_PERS` | OAuth scope: `GIGACHAT_API_PERS`, `GIGACHAT_API_B2B`, or `GIGACHAT_API_CORP` |
+| `GIGACHAT_API_BASE` | No | `https://gigachat.devices.sberbank.ru/api/v1` | Chat API base URL. The official address since July 2026 is `https://api.giga.chat` (`https://api.giga.chat/v1` in these examples); the default legacy address is scheduled for decommission |
+| `GIGACHAT_AUTH_URL` | No | `https://ngw.devices.sberbank.ru:9443/api/v2/oauth` | OAuth token endpoint |
+| `GIGACHAT_ACCESS_TOKEN` | No | - | Pre-issued access token. When set, LiteLLM skips the OAuth exchange |
 
 ## Sample Usage
 
@@ -194,20 +204,37 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: gigachat
+  - model_name: gigachat-max
     litellm_params:
-      model: gigachat/GigaChat-2-Max
+      model: gigachat/GigaChat-3-Ultra
+      api_key: "os.environ/GIGACHAT_CREDENTIALS"
+      ssl_verify: false
+  - model_name: gigachat-pro
+    litellm_params:
+      model: gigachat/GigaChat-3-Pro
       api_key: "os.environ/GIGACHAT_CREDENTIALS"
       ssl_verify: false
   - model_name: gigachat-lite
     litellm_params:
-      model: gigachat/GigaChat-2-Lite
+      model: gigachat/GigaChat-3-Lightning
       api_key: "os.environ/GIGACHAT_CREDENTIALS"
       ssl_verify: false
   - model_name: gigachat-embeddings
     litellm_params:
       model: gigachat/Embeddings
       api_key: "os.environ/GIGACHAT_CREDENTIALS"
+      ssl_verify: false
+```
+
+If your key targets a different endpoint than the default, set `api_base` (or the `GIGACHAT_API_BASE` environment variable) on each model:
+
+```yaml
+model_list:
+  - model_name: gigachat-max
+    litellm_params:
+      model: gigachat/GigaChat-3-Ultra
+      api_key: "os.environ/GIGACHAT_CREDENTIALS"
+      api_base: "os.environ/GIGACHAT_API_BASE"  # e.g. https://api.giga.chat/v1
       ssl_verify: false
 ```
 
@@ -256,13 +283,22 @@ print(response)
 
 ## Supported Models
 
+The models your key can use depend on the scope and access level. Query the live list with a `GET /models` request against your `GIGACHAT_API_BASE` endpoint.
+
+The chat models below were returned by `GET https://api.giga.chat/v1/models` with a `GIGACHAT_API_CORP` key in September 2026. Per the official documentation, `https://api.giga.chat` is the current connection address (since July 2026) and the legacy `https://gigachat.devices.sberbank.ru` is scheduled for decommission:
+
 ### Chat Models
 
-| Model Name | Context Window | Vision | Description |
-|------------|----------------|--------|-------------|
-| gigachat/GigaChat-2-Lite | 128K | No | Fast, lightweight model |
-| gigachat/GigaChat-2-Pro | 128K | Yes | Professional model with vision |
-| gigachat/GigaChat-2-Max | 128K | Yes | Maximum capability model |
+| Model Name | Description |
+|------------|-------------|
+| gigachat/GigaChat-3-Ultra | GigaChat-3 flagship model |
+| gigachat/GigaChat-3-Pro | GigaChat-3 professional model |
+| gigachat/GigaChat-3-Lightning | Fast GigaChat-3 model |
+| gigachat/GigaChat-2-Max | Maximum capability GigaChat-2 model (vision) |
+| gigachat/GigaChat-2-Pro | Professional GigaChat-2 model (vision) |
+| gigachat/GigaChat-2 | Base GigaChat-2 model |
+
+`GigaChat-2-Lite`, listed in earlier revisions of this page, no longer exists on the API and returns 404 "No such model".
 
 ### Embedding Models
 
@@ -273,11 +309,11 @@ print(response)
 | gigachat/EmbeddingsGigaR | 4096 | 2560 | High-dimensional embeddings |
 
 :::note
-Available models may vary depending on your API access level (personal or business).
+Available models may vary depending on your API access level (personal, business, or corporate scope).
 :::
 
 ## Limitations
 
 - Only one function call per request (GigaChat API limitation)
 - Maximum 1 image per message, 10 images total per conversation
-- GigaChat API uses self-signed SSL certificates - `ssl_verify=False` is required
+- GigaChat API certificates chain to the Russian Trusted Root CA. Pass `ssl_verify=False`, or install the CA into your system trust store and keep verification enabled
