@@ -311,6 +311,7 @@ LiteLLM supports customizing the following Datadog environment variables
 | `DD_LLMOBS_ML_APP` | Default ml_app name for LLM Observability (Application column). Can be overridden per-request via `metadata.ml_app`. | Falls back to `DD_SERVICE` | ❌ No |
 | `DD_SOURCE` | Source name for your logs | "litellm" | ❌ No |
 | `DD_VERSION` | Version tag for your logs | "unknown" | ❌ No |
+| `DD_TAGS` | Comma-separated `key:value` tags (for example, `team:platform,cost_center:engineering`). Starting with a release containing [the `DD_TAGS` fix](https://github.com/BerriAI/litellm/pull/43802), LiteLLM sends these as individual tags on Datadog Logs and LLM Observability spans, without the `request_tag:` prefix used for per-request tags. Earlier releases do not forward these tags through the callbacks. | None | ❌ No |
 | `HOSTNAME` | Hostname tag for your logs | "" | ❌ No |
 | `POD_NAME` | Pod name tag (useful for Kubernetes deployments) | "unknown" | ❌ No |
 
