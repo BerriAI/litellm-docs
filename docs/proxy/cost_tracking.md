@@ -577,6 +577,12 @@ litellm_settings:
   disable_add_user_agent_to_request_tags: true
 ```
 
+### Spend per tag for a team
+
+On the Usage page, the Team view shows a **Spend per tag** card when exactly one team is selected. The card lists that team's spend for each tag. The same data is available from `/team/daily/activity/aggregated` with `group_by=tag` and a single team in `team_ids`.
+
+A request with several tags counts in full under each of its tags, so the tag rows can add up to more than the team's total spend. Use the team total for the team's actual spend. Requests without a tag are not in the card, and user-agent tags are left out. Tag spend is attributed to teams from the upgrade that added this card onward, so earlier dates show no rows.
+
 ## (Enterprise) Generate Spend Reports {#-enterprise-generate-spend-reports}
 
 Use this to charge other teams, customers, users

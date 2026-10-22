@@ -82,6 +82,22 @@ Compare the full result with the [migration files](https://github.com/BerriAI/li
 
 </details>
 
+### Migrations that need every old instance stopped
+
+Some migrations change a unique key that the proxy writes with `ON CONFLICT`. Once such a migration runs, instances on the previous version fail those writes, and the spend they were about to record is lost. Instances on the new version are not affected. For these releases, stop every old instance before the migration runs. The release notes name the releases that need this.
+
+The Helm migration job and the Argo CD PreSync job run while the previous Deployment is still serving, so scale it to zero first.
+
+```bash
+kubectl scale deployment/<litellm-deployment> --replicas=0
+kubectl rollout status deployment/<litellm-deployment>
+helm upgrade <release> <chart> --version <new-chart-version> -f values.yaml
+```
+
+The migration job runs, then the new pods start at the replica count in your values. Without Helm, stop every instance, start one instance on the new version and let it finish its migrations, then start the rest.
+
+Requests fail from the moment the old pods stop until the new pods are ready, so plan a maintenance window. In our test of the team tag spend migration on a 10M-row, 5 GB `LiteLLM_DailyTagSpend` table (PostgreSQL 16 on `db.m6g.large`), the migration job took 187 seconds and the whole `helm upgrade` took 295 seconds.
+
 ## Custom deployments
 
 If your deployment does not provide a migration job, run this in a separate container using the **target LiteLLM proxy image**, with `DATABASE_URL` and the required database credentials configured:
