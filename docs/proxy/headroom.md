@@ -159,6 +159,31 @@ LiteLLM decides whether `headroom-compression` runs on a given request before th
 
 Concretely: with `default_on: false` and no `headroom-compression` attached to the caller's key, sending `x-headroom-bypass: false` does not turn compression on for that request, and there is no per-request header that does. Skipping compression per request works (`x-headroom-bypass: true`, as in the Claude Code section above); enabling it per request without admin involvement requires the `guardrails` / `litellm_metadata.guardrails` field, not a header.
 
+## Inspecting the compressed prompt
+
+Enable prompt storage in your proxy configuration to include Headroom's compressed messages in spend logs:
+
+```yaml
+general_settings:
+  store_prompts_in_spend_logs: true
+```
+
+This requires configured database spend logging. Compression must already be enabled through the configuration, key, team, or per-request guardrail selection above. No prompt content is returned in response headers.
+
+After a successful request, use the response's `x-litellm-call-id` to find its spend log. Open the Logs page at `/ui/?page=logs`, find the request, and inspect its Headroom guardrail details. The guardrail response contains `compressed_messages` alongside compression statistics. You can also use the existing spend-log API with a key authorized to view that request:
+
+```bash
+curl -sS --get http://localhost:4000/spend/logs/v2 \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  --data-urlencode "request_id=$LITELLM_CALL_ID"
+```
+
+The snapshot contains the restored, normalized message list immediately after Headroom compression, including protected messages. Provider adapters may translate roles and content blocks afterward, and later guardrail changes are not included. The same snapshot is recorded for Chat Completions, Messages, and Responses, including streaming requests. Logs are written asynchronously, so the record may not be available immediately after the response.
+
+Prompt capture respects message-redaction settings and existing storage limits. Oversized strings carry the existing truncation marker. When prompt storage is disabled or message redaction is enabled, compression statistics remain available without the snapshot. Skipped, bypassed, or failed-open compression does not produce a compressed snapshot. Internal routing-only compression without trusted request context records statistics without a prompt snapshot.
+
+For requests that expand managed prompt templates, the snapshot is recorded only for proxy admins and admin viewers. Other callers can still run inference with the template, but its compressed snapshot is omitted. Existing spend-log access permissions continue to apply. The snapshot is part of standard guardrail logging, so configured logging integrations can also receive it when capture is enabled.
+
 ## Compression behind an auto router
 
 A request an [auto router](./auto_routing.md) serves makes two calls, one to classify the request and one to the model it routes to. By default both see the same compressed text. From v1.101.0 the router can name a compression guardrail per hop, or `none` for either, with `auto_router_routing_compression` and `auto_router_model_compression`. Setting either field puts the router in charge of compression for its own requests and suppresses the guardrails above for them, whether they were attached to a key, a team, or the request body. See [Compression](./auto_routing.md#compression).
