@@ -868,6 +868,7 @@ const sidebars = {
           label: "MCP Servers",
           items: [
             "mcp_servers/index",
+            "mcp_servers/acedatacloud",
             "mcp_servers/slack",
             "mcp_servers/atlassian",
             "mcp_servers/linear",
@@ -1580,6 +1581,7 @@ const sidebars = {
         ] },
         { type: "category", label: "All Providers A-Z", items: [
           "providers/abliteration",
+          "providers/acedatacloud",
           "providers/ai21",
           "providers/aiml",
           "providers/aleph_alpha",
