@@ -170,6 +170,47 @@ We have already taken the following steps:
 - Removed compromised packages from PyPI
 - Revoked maintainer credentials to minimal necessary while we investigate the scope of compromise
 
+---
+
+## Investigation Details
+
+After the prior incident in March, we meaningfully hardened our CI release pipeline. We moved releases to a private repo, have a strict set of workflows used in order to create them via Trusted Github Publishers, made our docker release tags immutable, and are signing docker images.
+
+We believe we have identified the attack chain which facilitated this attack. The attacker had to compromise multiple independent security controls to be successful.
+
+After the prior incident in March, we meaningfully hardened our CI release pipeline. We moved releases to a private repo, have a strict set of workflows used in order to create them via Trusted Github Publishers, made our docker release tags immutable, and are signing docker images.
+
+
+### Normal release flow
+1. Cut a release-candidate branch and tag. This happens on Friday at 3AM, and the branch and tag do not change.
+2. Qualify the release candidate. We run the code through our integration tests, both publicly through CircleCI and privately through Buildkite, and check that everything is correct.
+3. Create artifacts. This step is a github workflow that runs in a private repo, and creates artifacts based on the SHA that been qualified. This must be done by an engineer with write permissions to the private release repo.
+4. Deploy artifacts to testing environment. We run a second round of testing against the produced artifacts.
+5. Publish the artifacts. This is a github workflow that uses Trusted Github Publishers to publish the artifacts made in the previous step. **Publishing can only be performed by an account locked to a specific laptop physically located within our office** at all times. No docker image is rebuilt at publish time.
+
+
+### How it was undermined
+
+1. On Monday, we temporarily expanded release permissions to allow two internal engineers to publish daily bugfix backports for customers.
+2. The attacker had access to three sets of developer github CLI credentials (more on this below). One of which had the ability to run github workflows.
+3. The attacker tried to merge a change to allow the releaser to be pointed at a different source repository, but was unable to due to our protections. One of the tokens held by the attacker belonged to one of our two Github organization owners. The attacker used this to disable branch protections and force push the change.
+4. Finally, they ran the compromised workflow, pointed at a lookalike repository (`Berri-AI/litellm` instead of `BerriAI/litellm`), which signed and published the poisoned artifacts.
+
+
+### GitHub CLI OAuth token exposure
+
+After a thorough investigation, we have observed specific situations in which Claude Code will embed a user’s GitHub CLI OAuth token into a response body, and in situations where response bodies are logged, these tokens may appear in LiteLLM logs. 
+
+
+### Access to our internal LiteLLM deployment
+
+We identified an unexpected, innocuously named user account in our internal LiteLLM deployment, which was exposed to the public internet. We believe the attacker gained access to this deployment, obtained the GitHub CLI OAuth tokens from its logs, and subsequently used those credentials to compromise our release workflow.
+
+We have not yet confirmed how the attacker gained access to our internal deployment, but currently suspect it was through a recently patched vulnerability.
+
+### Continued investigation
+
+We are still working on confirming some of the above, as well as determining whether (and how) our internal LiteLLM deployment was accessed.
 
 ---
 
