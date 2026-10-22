@@ -7,6 +7,12 @@ import TabItem from '@theme/TabItem';
 
 Anthropic-compatible token counting endpoint. Count tokens for messages before sending them to the model.
 
+:::warning Gemini counts are estimates
+
+For Google AI Studio and Vertex AI Gemini, `input_tokens` can differ from the input usage reported after inference, including for images, PDFs and tools. See [Gemini count accuracy](./count_tokens.md#gemini-count-accuracy) for how to compare the count with actual usage.
+
+:::
+
 | Feature | Supported | Notes |
 |---------|-----------|-------|
 | Cost Tracking | ❌ | Token counting only, no cost incurred |
@@ -129,7 +135,7 @@ model_list:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `input_tokens` | integer | Number of tokens in the input messages |
+| `input_tokens` | integer | Provider's input token count. For Gemini, this is an estimate that can differ from inference usage. |
 
 ## Supported Providers
 
