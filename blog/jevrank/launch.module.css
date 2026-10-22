@@ -137,7 +137,7 @@
   letter-spacing: 0.11em;
   line-height: 1.4;
 }
-.primaryAction {
+.root .primaryAction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -546,7 +546,7 @@
     width: calc(100vw - 40px);
     font-size: 16px;
   }
-  .primaryAction {
+  .root .primaryAction {
     gap: 16px;
     font-size: 13px;
     padding: 12px 16px;
