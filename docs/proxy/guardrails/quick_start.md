@@ -168,8 +168,8 @@ A `logging_only` guardrail observes the request and the response by default. Set
 
 - `input` — scan only the request
 - `output` — scan only the response
-- `both` — scan both directions (the default directions)
-- unset / `null` (default): scans both directions and keeps the pre-existing behavior, so existing deployments are unchanged
+- unset / `null` (default): scans both directions
+- `both`: deprecated alias for unset plus `logging_only_continue_on_input_failure: true`, still accepted everywhere `input` and `output` are
 
 ```yaml
 guardrails:
@@ -199,12 +199,12 @@ guardrails:
       api_base: os.environ/GUARDRAIL_API_BASE
       default_on: true
 
-  # explicitly scans both directions
+  # keep observing the response after a flagged request
   - guardrail_name: "observe-both"
     litellm_params:
       guardrail: generic_guardrail_api
       mode: logging_only
-      logging_only_scope: both
+      logging_only_continue_on_input_failure: true
       api_base: os.environ/GUARDRAIL_API_BASE
       default_on: true
 ```
@@ -213,18 +213,22 @@ The scan never blocks or changes the client call in any of these cases; each ver
 
 #### If the input scan fails
 
-In `logging_only` mode nothing is actually blocked, so a request the input scan flags still reaches the model and the conversation continues. The scope decides whether the response is still observed:
+In `logging_only` mode nothing is actually blocked, so a request the input scan flags still reaches the model and the conversation continues. `logging_only_continue_on_input_failure` decides whether the response is still observed:
 
-- **Scope unset** (default): if the input scan fails (the guardrail errors, or returns a verdict that would have blocked the call), the output scan is skipped and only the input verdict/error is logged. This is the pre-existing behavior, unchanged for existing deployments.
-- **Explicit `both`**: the input failure is logged as a warning and the response is **still scanned**, so you get both verdicts. Since nothing is blocked in `logging_only` mode, explicit `both` keeps watching the responses of flagged conversations.
+- **Unset / `false`** (default): if the input scan fails (the guardrail errors, or returns a verdict that would have blocked the call), the output scan is skipped and only the input verdict/error is logged. This is the pre-existing behavior, unchanged for existing deployments.
+- **`true`**: the input failure is logged as a warning and the response is **still scanned**, so you get both verdicts. Since nothing is blocked in `logging_only` mode, this keeps watching the responses of flagged conversations.
 
-`input` and `output` only ever scan one direction, so this distinction applies to unset and `both`.
+The flag only applies when the scope is unset; with `input` or `output` it is accepted and ignored. The legacy `both` scope value is a deprecated alias for unset plus the flag set to `true` and behaves identically, even when the flag is explicitly `false`.
+
+#### Admin UI
+
+The Admin UI exposes the scope as three options, `Default (request and response)`, `Input only (request)` and `Output only (response)`, plus a `Continue observing the response after a flagged request` toggle for `logging_only_continue_on_input_failure`. The toggle is disabled when `Input only` or `Output only` is selected, because the flag only applies to the `Default` scope. A stored `both` scope shows as `Default` with the toggle on.
 
 #### Validation
 
 - A `logging_only_scope` value other than `input`, `output` or `both` is rejected with `422` on create and update.
-- A scope the guardrail cannot use (`logging_only_scope` set without `logging_only` in `mode`, or `input`/`output` on a guardrail that runs its own logging hook) returns `400` on create, and `422` on an update that sets such a scope. The rejected write is rolled back, so the stored guardrail keeps its previous configuration.
-- At startup, whether loaded from a config file or a stored database row, an invalid `logging_only_scope` is ignored with an error log and the guardrail keeps its configured mode.
+- A scope or flag the guardrail cannot use (`logging_only_scope` or `logging_only_continue_on_input_failure` set without `logging_only` in `mode`, or `input`/`output` on a guardrail that runs its own logging hook) returns `400` on create, and `422` on an update that sets it. The rejected write is rolled back, so the stored guardrail keeps its previous configuration.
+- At startup, whether loaded from a config file or a stored database row, an invalid `logging_only_scope` or `logging_only_continue_on_input_failure` is ignored with an error log and the guardrail keeps its configured mode.
 
 `logging_only_scope` only narrows the `logging_only` scan. Enforcement modes (`pre_call`, `during_call`, `post_call`) on the same guardrail are unaffected and still block: `mode: [pre_call, logging_only]` with `logging_only_scope: output` blocks bad requests and records response verdicts without blocking them. To observe a direction without ever blocking it, leave the matching blocking mode out of `mode`.
 
@@ -886,7 +890,8 @@ guardrails:
       api_key: string          # Required: API key for the guardrail service
       api_base: string         # Optional: Base URL for the guardrail service
       default_on: boolean      # Optional: Default False. When set to True, will run on every request, does not need client to specify guardrail in request
-      logging_only_scope: string # Optional: "input" (request only), "output" (response only), or "both" (both directions). Unset scans both directions and keeps the pre-existing behavior
+      logging_only_scope: string # Optional: "input" (request only) or "output" (response only). Unset scans both directions; "both" is a deprecated alias for unset plus logging_only_continue_on_input_failure: true
+      logging_only_continue_on_input_failure: boolean # Optional: Default false. When true, a flagged or failing logging_only input scan is logged and the response is still scanned
     guardrail_info:            # Optional[Dict]: Additional information about the guardrail
       
 ```
