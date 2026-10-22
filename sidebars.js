@@ -1100,6 +1100,7 @@ const sidebars = {
         "completion/message_trimming",
         "completion/model_alias",
         "completion/prompt_formatting",
+        "completion/developer_role",
         { type: "html", value: "Reliability & testing", className: "sidebar-group-label", defaultStyle: true },
         "completion/reliable_completions",
         "completion/mock_requests",
