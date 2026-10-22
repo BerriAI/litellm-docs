@@ -24,7 +24,7 @@ Want per-user model restrictions, spend limits, and rate limits without distribu
 export JWT_PUBLIC_KEY_URL="" # "https://demo.duendesoftware.com/.well-known/openid-configuration/jwks"
 ```
 
-- `enable_jwt_auth` in your config. This will tell the proxy to check if a token is a jwt token.
+- `enable_jwt_auth` in your config. This will tell the proxy to check if a token is a jwt token. Virtual keys and the master key keep working after you turn this on, see [Use virtual keys alongside JWT auth](#use-virtual-keys-alongside-jwt-auth).
 
 ```yaml
 general_settings:
@@ -99,6 +99,32 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 
 </TabItem>
 </Tabs>
+
+### Use virtual keys alongside JWT auth
+
+Turning on `enable_jwt_auth` does not turn off virtual key auth. For each request, LiteLLM checks whether the bearer token is shaped like a JWT (three dot-separated segments, like `eyJhbGciOi...`). If it is, the proxy validates it against your OIDC provider. Any other token, such as an `sk-...` virtual key or the master key, goes through the normal virtual key checks, so that key's model access, budgets, and rate limits still apply.
+
+This means you can roll out JWT auth to users who sign in through your identity provider while services and scripts keep using virtual keys on the same proxy.
+
+With the Step 1 config running, create a virtual key with your master key:
+
+```bash
+curl --location 'http://0.0.0.0:4000/key/generate' \
+--header 'Authorization: Bearer sk-<your-master-key>' \
+--header 'Content-Type: application/json' \
+--data '{"models": ["azure-gpt-3.5"]}'
+```
+
+Then call the proxy with the returned `sk-...` key, exactly as you would without JWT auth:
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer sk-<virtual-key-from-key-generate>' \
+--data '{"model": "azure-gpt-3.5", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+The same proxy also accepts the JWT from Step 3 in the `Authorization` header. If you want JWT clients to get per-client budgets and limits like a virtual key, see [JWT to Virtual Key Mapping](./jwt_key_mapping.md).
 
 ## Advanced
 
