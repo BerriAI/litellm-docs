@@ -36,6 +36,7 @@ module.exports = {
       items: imported['coding-agents'],
     },
     'proxy/lens/investigations',
+    'proxy/lens/ci',
     'proxy/lens/api',
     {type: 'doc', id: 'proxy/lens/scalability', label: 'Scalability design'},
   ],
