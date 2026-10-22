@@ -710,6 +710,8 @@ router_settings:
 | BATCH_LINE_ITEMS_MAX_PART_BYTES | Raw request and result bytes after which a batch line-item part object closes and the next record starts a new part, see [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response). Default is `16777216` (16 MB)
 | BATCH_STATUS_POLL_INTERVAL_SECONDS | Interval in seconds for polling batch status. Default is 3600 (1 hour)
 | BATCH_STATUS_POLL_MAX_ATTEMPTS | Maximum number of attempts for polling batch status. Default is 24 (for 24 hours)
+| BETTERTOKEN_API_BASE | Base URL for BetterToken. Default is https://bettertoken.ai/v1
+| BETTERTOKEN_API_KEY | API key for BetterToken
 | BEDROCK_API_BASE | Base URL for Bedrock rerank requests
 | BEDROCK_MANTLE_API_BASE | Base URL for Bedrock Mantle
 | BEDROCK_MAX_POLICY_SIZE | Maximum size for Bedrock policy. Default is 75
