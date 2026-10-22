@@ -66,45 +66,33 @@ const ICONS = {
     <rect x="3" y="5" width="18" height="14" rx="2" />
     <path d="M3 10h18M7 15h4" />
   </>),
-  terminal: icon(<>
-    <rect x="3" y="4" width="18" height="16" rx="2" />
-    <path d="M7 9l3 3-3 3M13 15h4" />
-  </>),
 };
 
 const HOME = {id: 'home', icon: 'home', title: 'Home', desc: 'Get started with LiteLLM', to: '/docs/'};
 
-// Each column holds one or more groups, each with its own heading. A group's
-// `featured` items sit first, in a highlighted box.
+// Each column holds one or more groups. A group's `featured` items sit first,
+// in a highlighted box.
 const COLUMNS = [
   [
     {
-      heading: 'Build',
       featured: [
         {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/simple_proxy'},
         {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
         {id: 'subscriptions', icon: 'subscriptions', title: 'Claude, Codex & Copilot', desc: 'Use your existing subscriptions through the gateway', to: '/docs/subscriptions'},
       ],
       items: [
-        {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
-        {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
-        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
-        {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows for every model', to: 'https://models.litellm.ai'},
+        {id: 'logs', icon: 'logs', title: 'Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
       ],
     },
   ],
   [
     {
-      heading: 'Monitor',
       items: [
+        {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
+        {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
+        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
+        {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows for every model', to: 'https://models.litellm.ai'},
         {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
-        {id: 'logs', icon: 'logs', title: 'Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
-      ],
-    },
-    {
-      heading: 'Self-Hosted Coding Agents',
-      items: [
-        {id: 'moyai', icon: 'terminal', title: 'Moyai', desc: 'Open source coding agent for background work', to: '/docs/self_hosted_coding_agents/moyai'},
       ],
     },
   ],
@@ -113,9 +101,10 @@ const COLUMNS = [
 const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => [...(g.featured || []), ...g.items])];
 
 // Ordered most-specific first: /docs/proxy/lens must win over the /docs/proxy prefix.
+// Moyai has no menu entry, so its pages show Home.
 const SECTION_MATCHERS = [
   ['subscriptions', ({pathname}) => pathname.startsWith('/docs/subscriptions')],
-  ['moyai', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents')],
+  ['home', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents')],
   ['lens', ({pathname}) => pathname.startsWith('/docs/proxy/lens')],
   ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
@@ -223,11 +212,10 @@ export default function ProductsMenu({mobile}) {
         <div className={styles.home}>
           <MenuLink item={HOME} active={current.id === HOME.id} onNavigate={close} />
         </div>
-        {COLUMNS.map((groups) => (
-          <div key={groups[0].heading} className={styles.column}>
-            {groups.map((group) => (
-              <React.Fragment key={group.heading}>
-                <div className={styles.heading}>{group.heading}</div>
+        {COLUMNS.map((groups, col) => (
+          <div key={col} className={styles.column}>
+            {groups.map((group, i) => (
+              <React.Fragment key={i}>
                 {group.featured && (
                   <div className={styles.featured}>
                     {group.featured.map((item) => (
