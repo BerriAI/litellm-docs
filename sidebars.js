@@ -1383,6 +1383,7 @@ const sidebars = {
             "pass_through/comprehend_medical",
             "pass_through/cursor",
             "pass_through/deepgram_listen_websocket",
+            "pass_through/eu_jev",
             "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
