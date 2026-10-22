@@ -8,7 +8,7 @@ Use Guardrails AI ([guardrailsai.com](https://www.guardrailsai.com/)) to add che
 
 ## Pre-requisites
 
-- Setup Guardrails AI Server. [quick start](https://www.guardrailsai.com/docs/getting_started/guardrails_server)
+- Setup Guardrails AI Server. [quick start](https://guardrailsai.com/guardrails/docs/quickstart/guardrails_server)
 
 ## Usage
 
