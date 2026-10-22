@@ -1561,6 +1561,7 @@ const sidebars = {
           "providers/openai_compatible",
           "providers/litellm_proxy",
           "providers/openrouter",
+          "providers/trustedrouter",
           "providers/vercel_ai_gateway",
           "providers/helicone",
           "providers/cometapi",
