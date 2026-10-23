@@ -9,6 +9,7 @@ Supported Providers:
 - OpenAI
 - Azure
 - xAI ([see full docs](/docs/providers/xai_realtime))
+- ElevenLabs Eleven Realtime ([see full docs](/docs/providers/elevenlabs_realtime))
 - Google AI Studio (Gemini)
 - Vertex AI
 - Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
@@ -71,6 +72,21 @@ model_list:
 ```
 
 **[See full xAI Realtime documentation →](/docs/providers/xai_realtime)**
+
+</TabItem>
+<TabItem value="elevenlabs" label="ElevenLabs Eleven Realtime">
+
+```yaml
+model_list:
+  - model_name: eleven-realtime
+    litellm_params:
+      model: elevenlabs/eleven_realtime_v1_mini
+      api_key: os.environ/ELEVENLABS_API_KEY
+    model_info:
+      mode: realtime
+```
+
+**[See full ElevenLabs Realtime documentation →](/docs/providers/elevenlabs_realtime)**
 
 </TabItem>
 </Tabs>
