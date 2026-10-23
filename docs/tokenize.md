@@ -6,11 +6,46 @@ description: Call one tokenization API across vLLM and IBM watsonx.ai. Keep your
 
 # /tokenize
 
-Send text to a model's tokenizer and get its token count, token IDs, and token strings where the provider returns them. Use one request shape across vLLM and IBM watsonx.ai. With a gateway model alias, you can switch providers in configuration and keep your client code unchanged.
+Send one text string to vLLM or IBM watsonx.ai and read its token count, plus token IDs and text where the provider returns them. Use a gateway model alias to switch providers in configuration and keep your client request unchanged.
 
-:::info Preview
+## /tokenize or token counting
 
-This guide covers the implementation in [LiteLLM PR #48079](https://github.com/BerriAI/litellm/pull/48079). Use a build that includes this change and the compiled LiteLLM Rust extension. The endpoint requires that extension; it has no Python fallback.
+Use `/tokenize` to inspect how a model's tokenizer splits text. For an app that checks context limits or estimates input cost, use the token counting APIs with the request you plan to send, including messages and tools where supported. Counts can be estimates when LiteLLM uses a local tokenizer or fallback.
+
+| API                                                                                                                                | Input                                                                  | Result                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `/tokenize`, `litellm.tokenize()`, `litellm.atokenize()`                                                                           | One text string                                                        | Token count and available token IDs or text from vLLM or watsonx.ai.                                                               |
+| `/utils/token_counter`                                                                                                             | Prompt, messages, or contents; tools and system input where applicable | `total_tokens` and metadata. Uses a local tokenizer by default; `?call_endpoint=true` requests provider counting where configured. |
+| [Provider token counting](./count_tokens.md): `litellm.acount_tokens()`, `/v1/messages/count_tokens`, `/v1/responses/input_tokens` | Messages or input in the API's format; tools where supported           | A token count; see the guide for provider support and fallback behavior.                                                           |
+
+For local counting in Python, [`litellm.token_counter()`](./completion/token_usage.md#3-token_counter) returns an integer. `/tokenize` accepts a single `prompt` string, not a complete chat request with `messages` and `tools`. A tokenization call returns tokens without generating an answer.
+
+### Tokens and token IDs
+
+A token is a chunk of text: a word, part of a word, a space, or punctuation. The tokenizer has a vocabulary that maps those pieces to numeric IDs. Consider this made-up vocabulary excerpt:
+
+| Text piece | Token ID |
+| ---------- | -------- |
+| `"Hello"`  | `101`    |
+| `" world"` | `102`    |
+
+To encode `Hello world` in this example, the tokenizer selects `"Hello"` and `" world"`, looks up their rows, and returns `[101, 102]` in the same order. The second piece includes the space. `count` is `2` because the list has two entries; the values `101` and `102` do not affect the count.
+
+During inference, the model uses each ID to look up a learned vector: a list of numbers that represents that token. The model processes those vectors to predict the next token. `/tokenize` exposes the tokens without running inference. Use IDs with their matching tokenizer vocabulary: another model can use a different split and numbering. This table and the [response examples](#response) use illustrative IDs.
+
+### Use cases
+
+**Inspect a large token count.** A long identifier or URL can take many tokens. Read `tokens` to see the split, then compare the counts and token strings for two versions of your prompt.
+
+**Debug extra tokens in vLLM.** Tokenizers can add tokens at the beginning or end of text. Call `/tokenize` with `add_special_tokens: true`, then `false`, for the same prompt. Compare the counts and IDs to see which tokens the model's tokenizer adds.
+
+**Check a vLLM deployment.** Record the IDs for a fixed prompt before and after a deployment, using the same `add_special_tokens` setting. If the IDs change, check the tokenizer version and configuration.
+
+**Replace custom provider translators.** A serving team can configure a `tokenizer` alias for vLLM, then point it at watsonx.ai. App developers keep the same `/tokenize` request and response fields while the serving team maintains provider credentials and model settings.
+
+:::info Installation
+
+`/tokenize` requires a build containing [LiteLLM PR #48079](https://github.com/BerriAI/litellm/pull/48079) and the compiled LiteLLM Rust extension. LiteLLM runs the provider integration in Rust; the provider's tokenizer computes the tokens.
 
 :::
 
@@ -117,16 +152,16 @@ async def main():
 asyncio.run(main())
 ```
 
-The [LiteLLM Router](./routing.md) also exposes `router.tokenize()` and `router.atokenize()` for model aliases configured in `model_list`.
+Use `router.tokenize()` and `router.atokenize()` with [LiteLLM Router](./routing.md) model aliases configured in `model_list`.
 
 ## Supported providers
 
 | Provider       | Model prefix              | `token_ids`       | `tokens`                                                     |
 | -------------- | ------------------------- | ----------------- | ------------------------------------------------------------ |
-| vLLM           | `hosted_vllm/` or `vllm/` | Numeric token IDs | Token strings when the server returns them; otherwise `null` |
+| vLLM           | `hosted_vllm/` or `vllm/` | Numeric token IDs | Token strings when the server returns them; `null` if absent |
 | IBM watsonx.ai | `watsonx/`                | `null`            | Token strings                                                |
 
-The initial implementation supports these two providers and a single text prompt per request. Use the [token counting APIs](./count_tokens.md) for count-only calls across other providers, including Gemini.
+Use the [token counting APIs](./count_tokens.md) to count tokens across other providers, including Gemini.
 
 ## Request
 
@@ -161,7 +196,7 @@ Authentication uses `api_key` or `HOSTED_VLLM_API_KEY` when present. LiteLLM req
 | `token`       | string | `WATSONX_TOKEN`                                     | Existing bearer token.                                           |
 | `zen_api_key` | string | `WATSONX_ZENAPIKEY`                                 | Zen API key for deployments that use this authentication scheme. |
 
-Provide a project or a space. A resolved project takes precedence over a space. Set `api_base` or `WATSONX_API_BASE`; LiteLLM also accepts `WATSONX_URL`.
+Provide a project or a space. A resolved project takes precedence over a space. Set `api_base` or `WATSONX_API_BASE`; LiteLLM accepts `WATSONX_URL` as an alternative.
 
 For IBM Cloud authentication, set `api_key` or `WATSONX_APIKEY` and LiteLLM obtains an IAM token. Authentication precedence is an explicit `Authorization` header, a bearer `token`, a `zen_api_key`, then an API key for IAM. Keep gateway credentials in deployment configuration or environment variables.
 
@@ -209,14 +244,3 @@ Illustrative watsonx.ai response:
 ```
 
 `null` means the provider does not expose that representation in its response. An empty array means the provider returned zero tokens. LiteLLM preserves this distinction and does not invent token IDs for watsonx.ai.
-
-## Tokenization or token counting
-
-Choose `/tokenize` when you need the tokens themselves, such as inspecting how a model splits text. Choose the [token counting APIs](./count_tokens.md) when you need a count for messages, tools, or context-window checks across a broader set of providers.
-
-| API                                                      | Input                                                            | Result                                                                        |
-| -------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `/tokenize`, `litellm.tokenize()`, `litellm.atokenize()` | One text string                                                  | Count and available token IDs or strings from vLLM or watsonx.ai              |
-| [Token counting](./count_tokens.md)                      | Provider-supported messages or input, with tools where supported | Token count; see that guide for provider coverage and local fallback behavior |
-
-LiteLLM's Rust implementation handles provider routing, authentication, HTTP requests, and request/response translation. The provider's tokenizer computes the tokens.

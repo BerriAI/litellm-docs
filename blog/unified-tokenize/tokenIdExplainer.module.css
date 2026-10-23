@@ -1,0 +1,184 @@
+.explainer {
+  margin-top: 40px;
+  scroll-margin-top: 90px;
+  border: 1px solid #cbd6ee;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.heading {
+  padding: 28px 32px 0;
+}
+.heading > span,
+.stepLabel {
+  display: block;
+  color: #3048db;
+  font:
+    11px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+.heading h3 {
+  font-size: 30px !important;
+  margin-bottom: 16px;
+}
+.heading p {
+  max-width: 800px;
+}
+.diagram {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin: 28px 0 0;
+  border-top: 1px solid #dce3f2;
+  border-bottom: 1px solid #dce3f2;
+  background: #f7f9ff;
+}
+.step {
+  min-width: 0;
+  padding: 24px;
+}
+.step + .step {
+  border-left: 1px solid #dce3f2;
+}
+.explainer .step p {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.prompt {
+  font:
+    20px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+  color: #15213c;
+  margin: 22px 0 18px;
+}
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tokens button {
+  border: 1px solid #b9c5e3;
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: #2038b5;
+  background: #fff;
+  white-space: pre;
+  font:
+    14px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+.tokens button[aria-pressed="true"] {
+  color: #fff;
+  background: #243ce0;
+  border-color: #243ce0;
+}
+.tokens button:hover {
+  border-color: #243ce0;
+  box-shadow: 0 0 0 2px #243ce020;
+}
+.vocabulary {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.vocabulary caption {
+  text-align: left;
+  font-size: 11px;
+  padding: 0 0 12px;
+  color: #526382;
+}
+.vocabulary th,
+.vocabulary td {
+  padding: 10px 12px;
+  border: 1px solid #cbd6ee;
+  background: #fff;
+  color: #40506b;
+  white-space: pre;
+}
+.explainer .vocabulary thead th {
+  background: #e8edfb !important;
+  color: #43577e !important;
+}
+.vocabulary td {
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+.vocabulary tr[data-selected="true"] td {
+  color: #1b32bd;
+  background: #e5ebff;
+  font-weight: 600;
+}
+.ids {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #73819c;
+  font:
+    24px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+  margin-top: 40px;
+}
+.ids > span[data-selected] {
+  padding: 5px;
+  color: #4f6082;
+  border-radius: 6px;
+}
+.ids > span[data-selected="true"] {
+  color: #fff;
+  background: #243ce0;
+}
+.selection {
+  padding: 20px 32px;
+  margin: 0 !important;
+  border-bottom: 1px solid #dce3f2;
+  font-size: 14px;
+}
+.takeaway {
+  padding: 24px 32px;
+  font-size: 15px;
+}
+.takeaway h4 {
+  color: #15213c;
+  font-size: 19px;
+  margin: 0 0 12px;
+}
+.takeaway p:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 850px) {
+  .diagram {
+    grid-template-columns: 1fr;
+  }
+  .step + .step {
+    border-left: 0;
+    border-top: 1px solid #dce3f2;
+  }
+  .ids {
+    margin-top: 18px;
+  }
+}
+@media (max-width: 480px) {
+  .heading,
+  .takeaway {
+    padding: 24px 20px;
+  }
+  .heading {
+    padding-bottom: 0;
+  }
+  .heading h3 {
+    font-size: 26px !important;
+  }
+  .selection {
+    padding: 20px;
+  }
+  .step {
+    padding: 20px;
+  }
+}

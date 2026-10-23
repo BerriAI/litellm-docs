@@ -112,7 +112,7 @@ export default function RustBenchmark() {
           className={styles.route}
           key={selected}
           role="img"
-          aria-label="The Python SDK sends a request through Rust to a local HTTP test server and receives a normalized response."
+          aria-label="The Python SDK sends a request through Rust to a local HTTP test server and receives the shared response format."
         >
           <div className={styles.tracks} aria-hidden="true">
             {[0, 1, 2].map((lane) => (
@@ -141,7 +141,7 @@ export default function RustBenchmark() {
           </div>
           <div className={styles.returnPath} aria-hidden="true">
             <span>←</span>
-            <span>normalized response</span>
+            <span>shared response format</span>
             <span>←</span>
           </div>
         </div>
@@ -156,8 +156,8 @@ export default function RustBenchmark() {
           <p>
             Public async SDK calls through the vLLM adapter with a fixed
             two-token response. Includes the Python/Rust bridge, loopback HTTP
-            and response normalization. Excludes real token computation,
-            internet latency and the proxy server.
+            and response translation. Excludes real token computation, internet
+            latency and the proxy server.
           </p>
         </div>
         <details className={styles.methods}>

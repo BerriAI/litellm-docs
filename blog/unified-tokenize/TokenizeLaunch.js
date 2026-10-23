@@ -4,6 +4,7 @@ import CodeWindow from "./CodeWindow";
 import HeroDemo from "./HeroDemo";
 import ProviderLabel from "./ProviderLabel";
 import TokenizeScene from "./TokenizeScene";
+import TokenIdExplainer from "./TokenIdExplainer";
 import RustBenchmark from "./RustBenchmark";
 import styles from "./launch.module.css";
 
@@ -84,6 +85,36 @@ function SectionLabel({ number, children }) {
   );
 }
 
+function ChooseApi() {
+  return (
+    <section
+      id="choose-api"
+      className={styles.section}
+      aria-labelledby="choose-api-title"
+    >
+      <SectionLabel number="01">CHOOSE AN API</SectionLabel>
+      <h2 id="choose-api-title">/tokenize vs. token counting</h2>
+      <ul className={styles.apiChoices}>
+        <li>
+          <strong>Check prompt size.</strong> Use{" "}
+          <Link to="https://docs.litellm.ai/api-reference/#/llm%20utils/token_counter_utils_token_counter_post">
+            <code>/utils/token_counter</code>
+          </Link>{" "}
+          to check context limits or estimate input cost.
+        </li>
+        <li>
+          <strong>See how your text splits.</strong> Use{" "}
+          <a href="#interface">
+            <code>/tokenize</code>
+          </a>{" "}
+          to inspect token text and available IDs. Find why a URL takes so many
+          tokens, or check for tokenizer changes after a vLLM rollout.
+        </li>
+      </ul>
+    </section>
+  );
+}
+
 function Setup({ provider, onProviderChange }) {
   const [surface, setSurface] = useState("gateway");
   const item = providers[provider];
@@ -93,7 +124,7 @@ function Setup({ provider, onProviderChange }) {
       className={styles.section}
       aria-labelledby="setup-title"
     >
-      <SectionLabel number="03">MAKE YOUR FIRST CALL</SectionLabel>
+      <SectionLabel number="04">MAKE YOUR FIRST CALL</SectionLabel>
       <div className={styles.sectionHeading}>
         <h2 id="setup-title">Call /tokenize</h2>
         <p>
@@ -101,6 +132,13 @@ function Setup({ provider, onProviderChange }) {
           provider configuration out of your client.
         </p>
       </div>
+      <aside className={styles.requirement} aria-label="Build requirement">
+        <strong>Build requirement</strong>
+        <p>
+          Use a build containing <a href={implementation}>PR #48079</a> and its
+          compiled Rust extension to run these examples.
+        </p>
+      </aside>
       <div className={styles.setupPanel}>
         <div className={styles.controls}>
           <div
@@ -228,7 +266,7 @@ export default function TokenizeLaunch() {
                 alt="LiteLLM"
               />
             </Link>
-            <span>DEVELOPER PREVIEW / OCTOBER 2026</span>
+            <span>OCTOBER 2026</span>
           </div>
           <div className={styles.heroTitle}>
             <h1>/tokenize</h1>
@@ -238,67 +276,48 @@ export default function TokenizeLaunch() {
             </p>
           </div>
           <p className={styles.heroIntro}>
-            Send a prompt. Get a token count, plus IDs and text where supported.
+            Inspect a prompt’s tokens through one API for vLLM and Watsonx.
             Switch providers in gateway config without changing your client.
           </p>
           <TokenizeScene />
           <div className={styles.heroActions}>
+            <a href="#choose-api">
+              Tokenize vs. token counting <span aria-hidden="true">↓</span>
+            </a>
             <a href="#setup">
               SDK and curl examples <span aria-hidden="true">↗</span>
-            </a>
-            <a href="#performance">
-              See the Rust benchmark <span aria-hidden="true">↓</span>
             </a>
             <span>PROMPT → TOKEN COUNT, IDS + TEXT</span>
           </div>
         </div>
       </header>
 
-      <aside className={styles.preview} aria-label="Preview availability">
-        <strong>Developer preview</strong>
-        <p>
-          Use a build containing <a href={implementation}>PR #48079</a> and its
-          compiled Rust extension. This page documents the preview interface.
-        </p>
-      </aside>
+      <ChooseApi />
 
       <section
         id="interface"
         className={styles.section}
         aria-labelledby="interface-title"
       >
-        <SectionLabel number="01">ONE REQUEST ACROSS PROVIDERS</SectionLabel>
+        <SectionLabel number="02">ONE REQUEST ACROSS PROVIDERS</SectionLabel>
         <div className={styles.sectionHeading}>
           <h2 id="interface-title">Send a prompt and read the tokens</h2>
           <p>
-            A tokenizer splits text into the pieces a model reads. Your app
-            sends a prompt and a model alias. LiteLLM resolves the provider,
-            translates the request and returns the same response fields.
+            Send a prompt and a model alias. Choose vLLM or Watsonx below to
+            compare responses while keeping the client request unchanged.
+            Configure the provider behind the alias in your gateway.
           </p>
         </div>
         <div className={styles.requestDemo}>
           <HeroDemo provider={provider} onProviderChange={setProvider} />
         </div>
-        <div className={styles.valueGrid}>
-          <div>
-            <span>APPLICATION CODE</span>
-            <h3>Inspect tokens before inference</h3>
-            <p>
-              Check a text chunk’s size with your model’s tokenizer, inspect
-              token boundaries, or store token IDs when the provider returns
-              them. Read count, token_ids and tokens from one response shape.
-            </p>
-          </div>
-          <div>
-            <span>GATEWAY CONFIGURATION</span>
-            <h3>Change providers without a client release</h3>
-            <p>
-              Point the tokenizer alias at vLLM or Watsonx. App developers keep
-              POST /tokenize and the same JSON body. Your platform team
-              maintains the provider URL, credentials and model ID.
-            </p>
-          </div>
-        </div>
+        <p className={styles.routingNote}>
+          To switch providers, point the <code>tokenizer</code> alias at vLLM or
+          Watsonx. Your platform team changes the provider URL, credentials and
+          model ID in gateway configuration. App developers keep the same
+          <code> POST /tokenize</code> request and response fields.
+        </p>
+        <TokenIdExplainer />
       </section>
 
       <section
@@ -306,7 +325,7 @@ export default function TokenizeLaunch() {
         className={styles.rustSection}
         aria-labelledby="rust-title"
       >
-        <SectionLabel number="02">RUST PERFORMANCE</SectionLabel>
+        <SectionLabel number="03">RUST PERFORMANCE</SectionLabel>
         <div className={styles.sectionHeading}>
           <h2 id="rust-title">Built in Rust</h2>
           <p>
@@ -321,18 +340,18 @@ export default function TokenizeLaunch() {
       <Setup provider={provider} onProviderChange={setProvider} />
 
       <section className={styles.section} aria-labelledby="response-title">
-        <SectionLabel number="04">RESPONSE FORMAT</SectionLabel>
+        <SectionLabel number="05">RESPONSE FORMAT</SectionLabel>
         <div className={styles.sectionHeading}>
           <h2 id="response-title">Supported providers and output fields</h2>
           <p>
             Keep your parsing code when you switch providers. Token values and
-            counts still depend on the model; numeric IDs do not transfer
-            between tokenizers.
+            counts depend on the model; numeric IDs do not transfer between
+            tokenizers.
           </p>
         </div>
         <div className={styles.tableWrap}>
           <table>
-            <caption>Provider support in the preview</caption>
+            <caption>Provider support</caption>
             <thead>
               <tr>
                 <th scope="col">Provider</th>
@@ -362,7 +381,7 @@ export default function TokenizeLaunch() {
         <p className={styles.caption}>
           Both <code>/tokenize</code> and <code>/v1/tokenize</code> return{" "}
           <code>model</code>, <code>count</code>, <code>token_ids</code> and{" "}
-          <code>tokens</code>. The preview accepts text prompts. For count-only
+          <code>tokens</code>. Send one text prompt per call. For count-only
           workflows, see <Link to="/docs/count_tokens">token counting</Link>.
         </p>
       </section>

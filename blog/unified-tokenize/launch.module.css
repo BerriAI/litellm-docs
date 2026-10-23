@@ -97,8 +97,7 @@
 .heroActions > span,
 .codeLabel,
 .sectionLabel,
-.valueGrid > div > span,
-.preview > strong {
+.requirement > strong {
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -173,7 +172,8 @@
 .requestDemo {
   margin-top: 32px;
 }
-.preview {
+.requirement {
+  margin: 0 0 28px;
   display: grid;
   grid-template-columns: 170px 1fr;
   align-items: baseline;
@@ -181,11 +181,11 @@
   padding: 24px 0;
   border-bottom: 1px solid var(--line);
 }
-.preview > strong {
+.requirement > strong {
   color: var(--blue);
   text-transform: uppercase;
 }
-.preview p {
+.requirement p {
   font-size: 14px;
   margin: 0;
 }
@@ -213,20 +213,32 @@
   max-width: 525px;
   margin-top: 3px;
 }
-.valueGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 50px;
-  padding-top: 40px;
+.apiChoices {
+  max-width: 980px;
+  margin: 28px 0 0;
+  padding-left: 24px;
 }
-.valueGrid > div > span {
-  color: #58698c;
-  display: block;
-  margin-bottom: 14px;
+.apiChoices li {
+  padding-left: 8px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  line-height: 1.7;
 }
-.valueGrid p {
+.apiChoices li:last-child {
   margin-bottom: 0;
 }
+.apiChoices li::marker {
+  color: var(--blue);
+}
+.apiChoices strong {
+  color: var(--ink);
+}
+.routingNote {
+  max-width: 900px;
+  margin: 24px 0 0 !important;
+  font-size: 15px;
+}
+
 .rustSection {
   padding: 72px 0;
   border-bottom: 1px solid var(--line);
@@ -431,7 +443,7 @@
   .rustSection {
     padding: 48px 0;
   }
-  .preview {
+  .requirement {
     grid-template-columns: 1fr;
     gap: 10px;
   }
@@ -439,7 +451,6 @@
     padding: 48px 0;
   }
   .sectionHeading,
-  .valueGrid,
   .footer {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -452,9 +463,6 @@
   }
   .sectionHeading p {
     margin-bottom: 0;
-  }
-  .valueGrid {
-    gap: 32px;
   }
   .setupContent {
     padding: 20px 0 0;
