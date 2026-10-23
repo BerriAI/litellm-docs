@@ -20,16 +20,17 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models
 
-FlexAI's chat models as of 2026-10-05. The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models), and `GET /v1/models` is the source of truth for the current set.
+FlexAI's chat models as of 2026-10-22. The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models), and `GET /v1/models` is the source of truth for the current set.
 
 | Model | Capabilities | Context Window |
 |-------|-------------|----------------|
 | `flexai/DeepSeek-V4-Flash-0731` | tool use, reasoning | 1M tokens |
 | `flexai/DeepSeek-V4.1-Flash` | tool use, reasoning, vision | 1M tokens |
+| `flexai/DeepSeek-V4.1-Flash-1017` | tool use, reasoning, vision | 1M tokens |
 | `flexai/gemma-4-26B-A4B-it` | tool use, reasoning, vision | 256K tokens |
 | `flexai/gemma-4-31b-it` | tool use, reasoning, vision | 256K tokens |
 | `flexai/GLM-4.5-Air-FP8` | tool use, reasoning | 128K tokens |
-| `flexai/GLM-5.2` | tool use, reasoning | 128K tokens |
+| `flexai/GLM-5.2` | tool use, reasoning | 1M tokens |
 | `flexai/GLM-5.3-Flash` | tool use, reasoning, vision | 1M tokens |
 | `flexai/gpt-oss-120b` | tool use, reasoning | 128K tokens |
 | `flexai/gpt-oss-20b` | tool use, reasoning | 128K tokens |
