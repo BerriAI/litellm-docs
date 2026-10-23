@@ -96,12 +96,16 @@ $ litellm --model petals/meta-llama/Llama-2-70b-chat-hf
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
+<TabItem value="gemini" label="Gemini">
 
 ```shell
-$ export PALM_API_KEY=my-palm-key
-$ litellm --model palm/chat-bison
+$ export GEMINI_API_KEY=my-gemini-key
+$ litellm --model gemini/gemini-2.5-flash
 ```
+
+:::note
+The PaLM API (`palm/`) was decommissioned by Google in October 2024 and is no longer supported. Use `gemini/` (Google AI Studio) or `vertex_ai/gemini-*` instead.
+:::
 
 </TabItem>
 
