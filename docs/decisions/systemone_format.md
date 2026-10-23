@@ -60,7 +60,7 @@ Changing `"model"` to `"luna"` asks OpenAI instead and still returns System One 
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `state` | string, object or array | The thing being judged, such as a support ticket, a document or a chat transcript |
-| `questions` | object | 1 to 128 named questions. Each key becomes a key in `answers` |
+| `questions` | object | One or more named questions. Each key becomes a key in `answers`. Provider limits still apply |
 | `images` | array, optional | Image URLs or data URLs. OpenAI and Cloudflare Clef only, with the rules in [Image input](./openai_format.md#image-input) |
 | `assets` | object, optional | Images keyed by a name you use in `state`, each `{"type": "image", "format": "png", "jpg" or "jpeg", "data_base64": ...}`. TypeSafe only, with the [images header](./typesafe_images.md) |
 
