@@ -202,7 +202,7 @@ async def audio_conversation():
             # Run both tasks concurrently
             await asyncio.gather(send_audio(), receive_events())
         except websockets.ConnectionClosedError as e:
-            print(f"\nSession closed: {e.rcvd.reason if e.rcvd else e}")
+            print(f"\nSession closed (code {e.rcvd.code if e.rcvd else 'none'})")
         finally:
             playback_queue.put(None)
 
