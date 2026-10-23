@@ -104,7 +104,7 @@ litellm --config /path/to/config.yaml
 | gpt-4o-mini-tts | speech(model="gpt-4o-mini-tts", voice="alloy", input="Hello, world!") |
 
 
-## ✨ Enterprise LiteLLM Proxy - Set Max Request File Size 
+## Enterprise LiteLLM Proxy - Set Max Request File Size
 
 Use this when you want to limit the file size for requests sent to `audio/transcriptions`
 
@@ -113,7 +113,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
   litellm_params:
     model: whisper-1
     api_key: sk-*******
-    max_file_size_mb: 0.00001 # 👈 max file size in MB  (Set this intentionally very small for testing)
+    max_file_size_mb: 0.00001 # max file size in MB  (Set this intentionally very small for testing)
   model_info:
     mode: audio_transcription
 ```

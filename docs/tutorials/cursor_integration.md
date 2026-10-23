@@ -86,7 +86,7 @@ model_list:
 :::
 
 :::tip[Model variants]
-Cursor's model picker can emit thinking and fast variants of a model name, e.g. `claude-opus-5-thinking`. LiteLLM v1.97.0+ resolves these suffixes to the underlying model automatically, so key scopes and per-model budgets apply to the resolved model and you don't need separate `model_list` entries for the variants.
+Cursor's model picker can emit thinking and fast variants of a model name, e.g. `claude-opus-5-thinking-high` or `claude-opus-5-fast`. LiteLLM v1.97.0+ strips a trailing `-fast` and a `-thinking-<effort>` suffix, where `<effort>` is a `reasoning_effort` value (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`) that LiteLLM forwards as the request's reasoning effort unless the request already sets one. Key scopes and per-model budgets apply to the resolved model, so you don't need separate `model_list` entries for these variants. A bare `-thinking` suffix with no effort level, e.g. `claude-opus-5-thinking`, is not resolved and returns `Invalid model name` unless it has its own `model_list` entry
 :::
 
 ### 4. Test

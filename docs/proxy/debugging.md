@@ -177,6 +177,26 @@ Expected Output:
 # no info statements
 ```
 
+## Suppress Startup Output
+
+At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them all off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
+
+```bash showLineNumbers
+export LITELLM_SUPPRESS_STARTUP_OUTPUT="true"
+```
+**OR**
+
+Set `suppress_startup_output: true` in your yaml:
+
+```yaml showLineNumbers
+litellm_settings:
+    suppress_startup_output: true
+```
+
+Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON.
+
+When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. Available from v1.108.0.
+
 ## Common Errors 
 
 1. "No available deployments..."
@@ -192,7 +212,7 @@ How to control this?
 
 ```yaml showLineNumbers
 router_settings:
-    cooldown_time: 0 # 👈 KEY CHANGE
+    cooldown_time: 0 # KEY CHANGE
 ```
 
 - Disable Cooldowns [NOT RECOMMENDED]

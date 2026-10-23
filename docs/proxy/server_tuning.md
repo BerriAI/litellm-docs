@@ -32,11 +32,17 @@ If you observe gradual memory growth under sustained load, recycle each worker a
 
 ```shell
 # CLI
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "2", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
 
 # or ENV (for deployment manifests / containers)
 export MAX_REQUESTS_BEFORE_RESTART=10000
 ```
+
+:::warning
+
+Only use `--max_requests_before_restart` with two or more workers. With `--num_workers 1` there is no other worker to keep serving, so hitting the limit takes the whole pod out of service: Uvicorn exits the process with code 0 and the container restarts, and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup when the flag is set with a single worker. Every HTTP request counts toward the limit, health probes included, so two probes every 15 seconds use up 11,520 requests a day on their own. With one worker per pod, rely on Kubernetes replacing pods instead.
+
+:::
 
 :::tip
 
@@ -60,7 +66,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
 
-**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). With one worker per pod, recycling briefly reduces that pod's capacity, which is why we recommend scaling horizontally so the load balancer can route around it.
+**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). This only holds with two or more workers, where the other workers keep serving while one is replaced. With one worker per pod, recycling takes the pod out of service instead of reducing its capacity, so do not use `--max_requests_before_restart` there (see [Recycle workers](#recycle-workers)).
 
 **Rolling deploys and pod restarts (Kubernetes).** Make restarts hitless at the orchestration layer rather than relying on the server alone:
 

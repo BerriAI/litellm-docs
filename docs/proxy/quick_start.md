@@ -191,13 +191,13 @@ $ litellm --model petals/meta-llama/Llama-2-70b-chat-hf
 
 </TabItem>
 
-<TabItem value="palm" label="Palm">
+<TabItem value="gemini" label="Gemini (Google AI Studio)">
 
 ```shell
-$ export PALM_API_KEY=my-palm-key
+$ export GEMINI_API_KEY=my-gemini-key
 ```
 ```shell
-$ litellm --model palm/chat-bison
+$ litellm --model gemini/{{gemini_flash}}
 ```
 
 </TabItem>
@@ -429,7 +429,7 @@ print(message.content)
 
 
 
-## 📖 Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
+## Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
 - POST `/chat/completions` - chat completions endpoint to call 100+ LLMs
 - POST `/completions` - completions endpoint
 - POST `/embeddings` - embedding endpoint for Azure, OpenAI, Huggingface endpoints

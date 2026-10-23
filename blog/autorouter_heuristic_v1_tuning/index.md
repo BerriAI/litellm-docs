@@ -21,7 +21,7 @@ Heuristic v1 scores seven prompt signals, including reasoning language, code, te
 
 Test heuristic tuning on your production traffic with the LiteLLM team and influence the roadmap.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 

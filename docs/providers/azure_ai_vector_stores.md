@@ -101,8 +101,9 @@ Add this to your config.yaml:
 vector_store_registry:
   - vector_store_name: "azure-ai-search-litellm-website-knowledgebase"
     litellm_params:
-        vector_store_id: "test-litellm-app_1761094730750"
+        vector_store_id: "my-vector-index"  # Your Azure AI Search index name
         custom_llm_provider: "azure_ai"
+        azure_search_service_name: "your-search-service"  # or api_base: https://your-search-service.search.windows.net
         api_key: os.environ/AZURE_SEARCH_API_KEY
         litellm_embedding_model: "azure/text-embedding-3-large"
         litellm_embedding_config:
@@ -124,7 +125,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-vector-index/search' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "query": "What is the capital of France?",
+  "query": "What is the capital of France?"
 }'
 ```
 

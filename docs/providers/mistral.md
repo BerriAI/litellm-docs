@@ -384,6 +384,102 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --form 'model="voxtral"'
 ```
 
+## Text to Speech
+
+Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported. Available from v1.102.0.
+
+### SDK Usage
+
+```python
+from litellm import speech
+import os
+
+os.environ["MISTRAL_API_KEY"] = ""
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="The quick brown fox jumped over the lazy dog.",
+    voice="alloy",
+)
+
+response.write_to_file("speech.mp3")
+```
+
+### Voices
+
+`voice` takes either an OpenAI voice name or a native Mistral voice id. LiteLLM maps these six OpenAI names onto Mistral voices, so an integration that uses one of them keeps working without a change:
+
+| OpenAI voice | Mistral voice     |
+|--------------|-------------------|
+| `alloy`      | `en_paul_neutral` |
+| `echo`       | `gb_oliver_neutral` |
+| `fable`      | `en_paul_cheerful` |
+| `onyx`       | `en_paul_confident` |
+| `nova`       | `gb_jane_sarcasm` |
+| `shimmer`    | `gb_jane_sarcasm` |
+
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `nova` and `shimmer` both map to a sarcastic voice, so pass `gb_jane_neutral` directly when you want a neutral female voice. `GET https://api.mistral.ai/v1/audio/voices?limit=100` lists the voices your account can use. The endpoint is paginated and returns 10 voices when you leave `limit` out.
+
+### Response Formats
+
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`. OpenAI's `aac` format is not supported, and Mistral rejects it with a 422. Mistral's `pcm` is raw 32-bit float little-endian samples at 24 kHz mono, not the 16-bit signed samples OpenAI's `pcm` returns, so read it as float32 or ask for `wav` instead.
+
+### Voice Cloning
+
+Pass a base64 encoded audio sample as `ref_audio`, and Voxtral speaks the input in the sampled voice:
+
+```python
+import base64
+from litellm import speech
+
+with open("sample.wav", "rb") as sample:
+    ref_audio = base64.b64encode(sample.read()).decode()
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="This sentence comes back in the sampled voice.",
+    ref_audio=ref_audio,
+)
+
+response.write_to_file("cloned.mp3")
+```
+
+On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech`. When a request also carries a `voice`, including a default `voice` set on the deployment, Mistral uses `ref_audio`, so a client that requires `voice`, such as the OpenAI SDK, can pass any voice and send `ref_audio` through `extra_body`.
+
+### Unsupported Parameters
+
+Mistral's speech API rejects `speed` and `instructions` with a 422, so LiteLLM drops both before sending the request instead of failing it. A call that passes either one still returns audio, generated from the parameters Mistral does accept.
+
+### Usage with LiteLLM Proxy
+
+```yaml
+model_list:
+  - model_name: voxtral-tts
+    litellm_params:
+      model: mistral/voxtral-mini-tts-2603
+      api_key: os.environ/MISTRAL_API_KEY
+```
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": "voxtral-tts",
+    "input": "The quick brown fox jumped over the lazy dog.",
+    "voice": "alloy"
+}' \
+--output speech.mp3
+```
+
+### Cost Tracking
+
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so whenever `input` contains whitespace, the spend LiteLLM tracks is lower than what Mistral meters.
+
 ## Files and Batches API
 
 LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's Files and Batch APIs. See [Mistral AI Batch API](./mistral_batches) for the full flow and cost tracking.

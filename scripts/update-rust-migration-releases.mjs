@@ -5,7 +5,7 @@ import * as semver from 'semver';
 
 const RELEASES_URL = 'https://api.github.com/repos/BerriAI/litellm/releases?per_page=100';
 const PYPROJECT_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/pyproject.toml';
-const OUTPUT_URL = new URL('../src/data/rustMigrationReleases.json', import.meta.url);
+const OUTPUT_URL = new URL('../src/data/rustMigration/releases.json', import.meta.url);
 const RELEASE_COUNT = 10;
 
 function request(url, accept) {
@@ -35,10 +35,6 @@ function request(url, accept) {
 
 function isRcVersion(version) {
   return semver.valid(version) !== null && semver.prerelease(version)?.[0] === 'rc';
-}
-
-function isStableVersion(version) {
-  return semver.valid(version) !== null && semver.prerelease(version) === null;
 }
 
 function baseVersion(version) {
@@ -75,9 +71,6 @@ async function generateSnapshot() {
     .filter(release => release.releasedAt && semver.valid(release.version) !== null)
     .sort((left, right) => semver.compare(left.version, right.version));
   const releases = allReleases.filter(release => isRcVersion(release.version));
-  // Every stable release and RC in the fetched window, so readers can look up
-  // the one they run. `published` stays the chart's short window.
-  const stable = allReleases.filter(release => isStableVersion(release.version));
   const projectVersion = pyproject.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
   if (!projectVersion || semver.valid(projectVersion) === null) {
     throw new Error('Could not read a valid project version from main/pyproject.toml');
@@ -94,8 +87,6 @@ async function generateSnapshot() {
   return `${JSON.stringify({
     source: 'BerriAI/litellm',
     published,
-    candidates: releases,
-    stable,
     main,
   }, null, 2)}\n`;
 }

@@ -179,7 +179,7 @@ For Cursor, use a network URL and match the credential header to the configured 
     "github": {
       "url": "http://localhost:4000/github_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer sk-1234",
+        "x-litellm-api-key": "Bearer sk-<your-virtual-key>",
         "x-mcp-github_mcp-authorization": "Bearer gho_your_token"
       }
     }

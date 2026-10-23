@@ -167,7 +167,7 @@ response = client.chat.completions.create(
 
 # Access the generated image
 print(response.choices[0].message.content)  # Text response (if any)
-print(response.choices[0].message.image)    # Image data
+print(response.choices[0].message.images[0]["image_url"]["url"])  # "data:image/png;base64,..."
 ```
 
 **Using curl:**
@@ -203,8 +203,12 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
         "role": "assistant",
         "content": "Here's an image of a cat for you!",
         "images": [{
-          "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
-          "detail": "auto"
+          "image_url": {
+            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+            "detail": "auto"
+          },
+          "index": 0,
+          "type": "image_url"
         }]
       },
       "finish_reason": "stop"
