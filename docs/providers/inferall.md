@@ -22,7 +22,7 @@
 | `inferall/openai/gpt-oss-20b` | Open model, $0 input and output. Supports function calling. |
 | `inferall/anthropic/claude-sonnet-4-6` | Paid model, billed per token from the InferAll balance. |
 
-New InferAll accounts get 25 free calls on the open models without a card. A one-time $5 activation unlocks ongoing $0 use of the open models, within daily request limits, and becomes balance for paid models. See [inferall.ai/pricing](https://inferall.ai/pricing).
+New InferAll accounts get 25 free calls on the open models without a card, then 25 a day. A one-time $5 activation raises that to 50 chat calls a day and becomes balance for paid models. See [inferall.ai/pricing](https://inferall.ai/pricing).
 
 ## Required Variables
 
