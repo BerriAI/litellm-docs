@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import benchmark from "./results.json";
 import styles from "./benchmark.module.css";
 
@@ -7,12 +7,29 @@ const source =
 
 export default function RustBenchmark() {
   const [selected, setSelected] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [hasEntered, setHasEntered] = useState(false);
+  const racewayRef = useRef(null);
   const result = benchmark.results[selected];
   const latency = result.p50_ms.toFixed(2);
 
+  useEffect(() => {
+    const raceway = racewayRef.current;
+    if (!raceway || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasEntered(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(raceway);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <figure className={`${styles.benchmark} ${paused ? styles.paused : ""}`}>
+    <figure className={styles.benchmark}>
       <div className={styles.masthead}>
         <span>SDK / RUST / LOCAL BENCHMARK</span>
         <span>RECORDED ON {benchmark.environment.machine.toUpperCase()}</span>
@@ -84,23 +101,16 @@ export default function RustBenchmark() {
         </span>
       </div>
 
-      <div className={styles.raceway}>
+      <div
+        ref={racewayRef}
+        className={`${styles.raceway} ${hasEntered ? styles.entered : ""}`}
+      >
         <div className={styles.racewayHeader}>
           <span>REQUEST PATH / ANIMATED ILLUSTRATION</span>
-          <button
-            className={styles.motionControl}
-            type="button"
-            onClick={() => setPaused(!paused)}
-            aria-label={
-              paused ? "Resume request animation" : "Pause request animation"
-            }
-          >
-            <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
-            {paused ? "Resume" : "Pause"}
-          </button>
         </div>
         <div
           className={styles.route}
+          key={selected}
           role="img"
           aria-label="The Python SDK sends a request through Rust to a local HTTP test server and receives a normalized response."
         >

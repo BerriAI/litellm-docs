@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Link from "@docusaurus/Link";
-import CodeBlock from "@theme/CodeBlock";
-import TokenizeFlow from "./TokenizeFlow";
+import CodeWindow from "./CodeWindow";
 import HeroDemo from "./HeroDemo";
 import TokenizeScene from "./TokenizeScene";
 import RustBenchmark from "./RustBenchmark";
@@ -45,10 +44,14 @@ general_settings:
   },
 };
 
-const request = `curl --fail-with-body http://localhost:4000/tokenize \\
+const request = `curl http://localhost:4000/tokenize \\
+  --fail-with-body \\
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"model":"tokenizer","prompt":"Hello world"}'`;
+  -d '{
+    "model": "tokenizer",
+    "prompt": "Hello world"
+  }'`;
 
 function sdkExample(provider, asynchronous) {
   const item = providers[provider];
@@ -154,19 +157,15 @@ function Setup({ provider, onProviderChange }) {
               <div className={styles.codeGrid}>
                 <div>
                   <div className={styles.codeLabel}>PROVIDER CONFIGURATION</div>
-                  <CodeBlock
-                    language="yaml"
-                    title="config.yaml"
-                    showLineNumbers
-                  >
+                  <CodeWindow language="yaml" title="config.yaml">
                     {item.config}
-                  </CodeBlock>
+                  </CodeWindow>
                 </div>
                 <div>
                   <div className={styles.codeLabel}>SAME CLIENT REQUEST</div>
-                  <CodeBlock language="bash" title="request.sh">
+                  <CodeWindow language="bash" title="request.sh">
                     {request}
-                  </CodeBlock>
+                  </CodeWindow>
                   <p className={styles.caption}>
                     Start with{" "}
                     <code>litellm --config config.yaml --port 4000</code>.
@@ -193,15 +192,14 @@ function Setup({ provider, onProviderChange }) {
                   </>
                 )}
               </p>
-              <CodeBlock
+              <CodeWindow
                 language="python"
-                showLineNumbers
                 title={
                   surface === "async" ? "tokenize_async.py" : "tokenize.py"
                 }
               >
                 {sdkExample(provider, surface === "async")}
-              </CodeBlock>
+              </CodeWindow>
               <p className={styles.caption}>
                 These SDK examples call the provider. Choose Gateway + curl to
                 move provider configuration behind a stable client-facing alias.
@@ -242,7 +240,7 @@ export default function TokenizeLaunch() {
             Send a prompt. Get a token count, plus IDs and text where supported.
             Switch providers in gateway config without changing your client.
           </p>
-          <TokenizeScene provider={provider} onProviderChange={setProvider} />
+          <TokenizeScene />
           <div className={styles.heroActions}>
             <a href="#setup">
               SDK and curl examples <span aria-hidden="true">↗</span>
@@ -280,10 +278,6 @@ export default function TokenizeLaunch() {
         <div className={styles.requestDemo}>
           <HeroDemo provider={provider} onProviderChange={setProvider} />
         </div>
-        <details className={styles.translationDetails}>
-          <summary>Inspect the native provider requests</summary>
-          <TokenizeFlow provider={provider} onProviderChange={setProvider} />
-        </details>
         <div className={styles.valueGrid}>
           <div>
             <span>APPLICATION CODE</span>

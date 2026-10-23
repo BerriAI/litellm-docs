@@ -171,18 +171,7 @@
   outline-color: #fff;
 }
 .requestDemo {
-  padding: 1px 28px 24px;
-  background: #243ce0;
-}
-.translationDetails {
-  margin-top: 24px;
-  padding: 18px 24px;
-  border: 1px solid var(--line);
-}
-.translationDetails summary {
-  cursor: pointer;
-  color: var(--ink);
-  font-size: 15px;
+  margin-top: 32px;
 }
 .preview {
   display: grid;
@@ -243,17 +232,15 @@
   border-bottom: 1px solid var(--line);
 }
 .setupPanel {
-  border: 1px solid #bccae7;
-  background: #fff;
+  min-width: 0;
 }
 .controls {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 18px;
-  padding: 18px;
+  padding: 0 0 20px;
   border-bottom: 1px solid var(--line);
-  background: #e7edfc;
 }
 .buttonGroup {
   display: flex;
@@ -274,10 +261,14 @@
   color: #fff;
 }
 .setupContent {
-  padding: 30px;
+  padding: 24px 0 0;
 }
 .setupContent > p {
   font-size: 15px;
+}
+.setupContent > [data-code-window] {
+  max-width: 900px;
+  margin: 0 auto;
 }
 .codeGrid {
   display: grid;
@@ -292,64 +283,6 @@
   display: block;
   color: #425577;
   margin-bottom: 14px;
-}
-.root :global(.theme-code-block) {
-  border: 1px solid #2a3754;
-  background: #0c1425 !important;
-  border-radius: 10px !important;
-  box-shadow: 0 10px 30px #101c3614 !important;
-  overflow: hidden;
-}
-.root :global(.theme-code-block) pre,
-.root :global(.theme-code-block) pre code {
-  background: #0c1425 !important;
-  color: #dbe6fb !important;
-  border-radius: 0 !important;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 13px !important;
-  line-height: 1.85;
-}
-.root :global(.theme-code-block) pre {
-  padding: 24px 20px !important;
-}
-.root :global(.theme-code-block) pre code {
-  overflow-wrap: normal;
-}
-.root :global(.token) {
-  color: #dbe6fb !important;
-}
-.root :global(.token.string) {
-  color: #b3e6ba !important;
-}
-.root :global(.token.keyword),
-.root :global(.token.function) {
-  color: #b9a4ff !important;
-}
-.root :global(.token.property),
-.root :global(.token.key),
-.root :global(.token.atrule) {
-  color: #9bcfff !important;
-}
-.root :global(.token.punctuation),
-.root :global(.token.operator) {
-  color: #90a3c4 !important;
-}
-.root :global(.token.comment) {
-  color: #8a9ab5 !important;
-}
-.root [class*="codeBlockTitle"] {
-  color: #c4d4ef !important;
-  background: #17223a !important;
-  border-color: #2a3754 !important;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 11px;
-  padding: 13px 18px;
-}
-.root :global(.theme-code-block) button {
-  color: #afc3ed !important;
-  background: #1d2b46 !important;
-  border: 1px solid #3b4c6b !important;
-  border-radius: 5px !important;
 }
 .caption {
   font-size: 14px;
@@ -472,12 +405,6 @@
   .heroActions > span {
     font-size: 9px;
   }
-  .requestDemo {
-    padding: 1px 16px 16px;
-  }
-  .translationDetails {
-    padding: 16px;
-  }
   .rustSection {
     padding: 48px 0;
   }
@@ -507,10 +434,10 @@
     gap: 32px;
   }
   .setupContent {
-    padding: 18px;
+    padding: 20px 0 0;
   }
   .controls {
-    padding: 12px;
+    padding: 0 0 16px;
     gap: 12px;
   }
   .buttonGroup button {

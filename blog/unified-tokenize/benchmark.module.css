@@ -1,10 +1,11 @@
 .benchmark {
-  --lime: #dbff55;
-  --dark: #152019;
+  --cobalt: #243ce0;
+  --paper: #f2f5ff;
+  --indigo: #111c65;
   margin: 32px 0 0;
   overflow: hidden;
-  background: var(--lime);
-  color: var(--dark);
+  background: var(--cobalt);
+  color: var(--paper);
   font-family:
     Geist,
     -apple-system,
@@ -20,7 +21,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 20px 36px;
-  border-bottom: 1px solid #15201940;
+  border-bottom: 1px solid #d5dfff40;
   font:
     10px/1.5 "Geist Mono",
     monospace;
@@ -46,8 +47,8 @@
     112deg,
     transparent 0,
     transparent 62px,
-    #15201909 62px,
-    #15201909 63px
+    #e8eeff12 62px,
+    #e8eeff12 63px
   );
   mask-image: linear-gradient(90deg, transparent 15%, #000);
 }
@@ -75,7 +76,7 @@
   display: flex;
   align-items: baseline;
   gap: 14px;
-  color: var(--dark);
+  color: var(--paper);
   line-height: 0.85;
 }
 
@@ -106,7 +107,7 @@
 }
 
 .secondaryMetrics > div {
-  border-top: 1px solid #15201966;
+  border-top: 1px solid #d5dfff66;
   padding-top: 13px;
 }
 
@@ -145,7 +146,7 @@
   flex-wrap: wrap;
   gap: 18px;
   padding: 20px 36px;
-  border-top: 1px solid #15201940;
+  border-top: 1px solid #d5dfff40;
 }
 
 .controlLabel {
@@ -160,10 +161,10 @@
 .benchmark .selections button {
   min-width: 52px;
   padding: 9px 16px;
-  border: 1px solid #15201966;
+  border: 1px solid #d5dfff66;
   border-radius: 0;
   background: transparent;
-  color: var(--dark);
+  color: var(--paper);
   font:
     500 18px/1.2 "Geist Mono",
     monospace;
@@ -173,17 +174,17 @@
 }
 
 .benchmark .selections button:hover {
-  background: #15201918;
+  background: #d5dfff18;
 }
 
 .benchmark .selections button[aria-pressed="true"] {
-  background: var(--dark);
-  border-color: var(--dark);
-  color: var(--lime);
+  background: var(--indigo);
+  border-color: var(--paper);
+  color: #a5b6ff;
 }
 
 .benchmark .selections button:focus-visible {
-  outline: 3px solid var(--dark);
+  outline: 3px solid var(--paper);
   outline-offset: 3px;
 }
 
@@ -194,8 +195,8 @@
 .raceway {
   padding: 20px 36px 24px;
   overflow: hidden;
-  background: var(--dark);
-  color: #f2f5e9;
+  background: var(--indigo);
+  color: #f2f5ff;
 }
 
 .racewayHeader {
@@ -203,36 +204,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  color: #bfceb9;
+  color: #c2ceff;
   font:
     10px/1.5 "Geist Mono",
     monospace;
   letter-spacing: 0.04em;
-}
-
-.benchmark .motionControl {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid #5f715b;
-  border-radius: 0;
-  background: transparent;
-  color: #ecf3e5;
-  font:
-    11px/1.4 "Geist Mono",
-    monospace;
-}
-
-.benchmark .motionControl:hover {
-  border-color: var(--lime);
-  color: var(--lime);
-}
-
-.benchmark .motionControl:focus-visible {
-  outline: 2px solid var(--lime);
-  outline-offset: 4px;
 }
 
 .route {
@@ -252,7 +228,7 @@
 .track {
   position: relative;
   height: 2px;
-  background: #546a414d;
+  background: #7f95f04d;
 }
 
 .track > span {
@@ -263,13 +239,11 @@
     90deg,
     transparent,
     transparent 82%,
-    #dbff554d 87%,
-    var(--lime) 95%,
-    #f9ffe3 100%
+    #a5b6ff4d 87%,
+    #a5b6ff 95%,
+    #ffffff 100%
   );
-  animation: requestStreak 1.2s linear infinite;
-  animation-delay: var(--delay);
-  will-change: transform;
+  transform: translateX(100%);
 }
 
 .nodes {
@@ -287,12 +261,12 @@
   gap: 5px;
   min-width: 120px;
   padding: 12px 18px;
-  border: 1px solid #617654;
-  background: var(--dark);
+  border: 1px solid #677fcd;
+  background: var(--indigo);
 }
 
 .node > span {
-  color: #a0b091;
+  color: #a8b9f2;
   font:
     9px/1.5 "Geist Mono",
     monospace;
@@ -307,7 +281,7 @@
 }
 
 .node small {
-  color: #bfceb9;
+  color: #c2ceff;
   font:
     9px/1.6 "Geist Mono",
     monospace;
@@ -316,14 +290,14 @@
 .rustNode {
   min-width: 170px;
   padding: 15px 22px;
-  border-color: var(--lime);
-  background: var(--lime);
-  color: var(--dark);
+  border-color: var(--paper);
+  background: var(--paper);
+  color: var(--cobalt);
 }
 
 .rustNode > span,
 .rustNode small {
-  color: #334727;
+  color: #354a96;
 }
 
 .rustNode strong {
@@ -337,7 +311,7 @@
   gap: 14px;
   width: calc(100% - 44px);
   margin: 16px auto 0;
-  color: #a5b995;
+  color: #a9bbee;
   font:
     9px/1.5 "Geist Mono",
     monospace;
@@ -347,13 +321,13 @@
 .returnPath > span:last-child {
   flex: 1;
   overflow: hidden;
-  background: linear-gradient(#617654, #617654) center / 100% 1px no-repeat;
+  background: linear-gradient(#677fcd, #677fcd) center / 100% 1px no-repeat;
   font-size: 16px;
 }
 
 .benchmark .animationNote {
   margin: 22px 0 0;
-  color: #b4c3ab;
+  color: #bacaf2;
   font:
     10px/1.7 "Geist Mono",
     monospace;
@@ -361,10 +335,10 @@
 
 .caption {
   padding: 28px 36px 32px;
-  border: 1px solid #ccd4bf;
+  border: 1px solid #c7d3f4;
   border-top: 0;
-  background: #f2f4e9;
-  color: #34422e;
+  background: #edf2ff;
+  color: #304475;
 }
 
 .scope {
@@ -378,12 +352,12 @@
   font:
     500 12px/1.8 "Geist Mono",
     monospace;
-  color: #24311e;
+  color: #243ce0;
 }
 
 .benchmark .caption p {
   margin: 0 0 16px;
-  color: #44543c;
+  color: #43577f;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -393,7 +367,7 @@
 }
 
 .benchmark .caption a {
-  color: #24311e !important;
+  color: #243ce0 !important;
   font-size: 13px;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -401,14 +375,14 @@
 
 .methods {
   margin: 0 0 22px;
-  border-top: 1px solid #b6c1aa;
-  border-bottom: 1px solid #b6c1aa;
+  border-top: 1px solid #b9c9ee;
+  border-bottom: 1px solid #b9c9ee;
   padding: 15px 0;
 }
 
 .methods summary {
   cursor: pointer;
-  color: #24311e;
+  color: #243ce0;
   font-size: 13px;
   font-weight: 500;
 }
@@ -426,12 +400,13 @@
 
 .benchmark .caption a:focus-visible,
 .methods summary:focus-visible {
-  outline: 2px solid #24311e;
+  outline: 2px solid #243ce0;
   outline-offset: 4px;
 }
 
-.paused .track > span {
-  animation-play-state: paused;
+.entered .track > span {
+  animation: requestStreak 1.2s linear 3 both;
+  animation-delay: var(--delay);
 }
 
 .srOnly {
@@ -565,16 +540,6 @@
     gap: 14px;
   }
 
-  .racewayHeader > span {
-    max-width: 145px;
-  }
-
-  .benchmark .motionControl {
-    gap: 6px;
-    padding: 7px 9px;
-    font-size: 10px;
-  }
-
   .nodes {
     gap: 18px;
     padding: 0;
@@ -634,18 +599,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .track > span {
+  .track > span,
+  .entered .track > span {
     animation: none;
     transform: translateX(0);
     opacity: 0.25;
-    will-change: auto;
   }
 
   .benchmark .selections button {
     transition: none;
-  }
-
-  .motionControl {
-    display: none !important;
   }
 }

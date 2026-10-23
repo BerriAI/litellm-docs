@@ -1,323 +1,290 @@
 .scene {
-  color: #fff;
-  background: #243ce0;
-  margin: 34px 0 0;
-  padding: 0 0 22px;
-  border-top: 1px solid #ffffff45;
-  text-align: center;
-}
-
-.providerRow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 18px 0 4px;
-}
-
-.rowLabel,
-.step,
-.rust {
-  color: #e3e7ff;
-  font:
-    10px/1.5 "Geist Mono",
-    ui-monospace,
-    monospace;
-  letter-spacing: 0.1em;
-}
-
-.providerButtons {
-  display: flex;
-  gap: 22px;
-}
-
-.scene .providerButtons button {
-  position: relative;
-  min-height: 38px;
-  padding: 7px 1px;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #d1d8ff;
-  font:
-    500 13px/1.5 "Geist",
-    sans-serif;
-  cursor: pointer;
-}
-
-.scene .providerButtons button[aria-pressed="true"] {
-  border-bottom-color: #fff;
-  color: #fff;
-}
-
-.scene button:hover {
-  color: #fff;
-}
-
-.scene button:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 5px;
-}
-
-.canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.dots path {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.35;
-  stroke-linecap: round;
-}
-
-.surfaceDots {
-  opacity: 0.25;
-}
-.edgeDots {
-  opacity: 0.95;
-}
-.faintDots {
-  opacity: 0.33;
-}
-.inkDots {
-  opacity: 0.75;
-}
-.ringDots {
-  opacity: 0.5;
-}
-.gateEdges {
-  opacity: 0.25;
-}
-.dots .gateCore {
-  stroke-width: 1;
-  opacity: 0.85;
-}
-.coreDot {
-  fill: currentColor;
-}
-
-.shapeText {
-  fill: #fff;
-  stroke: #243ce0;
-  stroke-width: 9px;
-  paint-order: stroke;
-  font:
-    19px "Geist Mono",
-    ui-monospace,
-    monospace;
-  letter-spacing: -0.05em;
-}
-
-.routeGuide,
-.outerLanes,
-.movingDots {
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-}
-
-.routeGuide {
-  stroke-width: 1.2;
-  stroke-dasharray: 0.1 5.5;
-  opacity: 0.4;
-}
-
-.outerLanes {
-  stroke-width: 1;
-  stroke-dasharray: 0.1 7;
-  opacity: 0.23;
-}
-
-.movingDots {
-  stroke-width: 2.5;
-  stroke-dasharray: 0.1 44;
-  animation: flow 2.4s linear infinite;
-}
-
-.selectedRoute {
-  opacity: 1;
-}
-.idleRoute {
-  opacity: 0.22;
-}
-.routeNode {
-  fill: #243ce0;
-  stroke: #fff;
-  stroke-width: 1;
-}
-.providerName {
-  fill: #fff;
-  font:
-    10px "Geist Mono",
-    ui-monospace,
-    monospace;
-}
-
-.paused .movingDots {
-  animation-play-state: paused;
-}
-
-.labels {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: -3px;
-}
-
-.labelCopy {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: minmax(0, 0.8fr) 80px minmax(0, 1.65fr);
   align-items: center;
-  gap: 5px;
+  gap: 24px;
+  margin: 34px 0 0;
+  padding: 36px 0 24px;
+  border-top: 1px solid #ffffff40;
+  color: #fff;
 }
-
-.scene .label strong {
-  color: #fff !important;
-  font-size: clamp(20px, 2.25vw, 29px);
-  line-height: 1.3;
+.eyebrow,
+.field,
+.format,
+.inputFields,
+.endpoint,
+.tokenId,
+.model {
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #dce3ff;
+}
+.prompt {
+  margin-top: 20px;
+  font-size: clamp(28px, 3.5vw, 46px);
   font-weight: 450;
-  letter-spacing: -0.035em;
-}
-
-.scene .label code {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent !important;
-  box-shadow: none;
-  color: #edf0ff !important;
-  font:
-    11px/1.6 "Geist Mono",
-    ui-monospace,
-    monospace !important;
+  letter-spacing: -0.05em;
   white-space: nowrap;
 }
-
-.rust {
-  margin-top: 4px;
-  font-size: 9px;
-  letter-spacing: 0.16em;
+.inputFields {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #c7d2ff;
 }
-.mobileShape {
-  display: none;
+.endpoint {
+  display: inline-flex;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 9px 13px;
+  border: 1px solid #ffffff4d;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #fff;
 }
-
-.footnote {
+.endpoint > span {
+  color: #c7d2ff;
+  font-size: 10px;
+  align-self: center;
+}
+.arrow {
+  display: block;
+  width: 100%;
+  fill: none;
+  stroke: #c7d2ff;
+  stroke-width: 1;
+}
+.output {
+  min-width: 0;
+  border: 1px solid #ffffff4d;
+  border-radius: 18px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #ffffff1c, #ffffff08);
+  box-shadow:
+    0 16px 50px #13249b30,
+    inset 0 1px #ffffff14;
+}
+.outputTop {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 20px;
-  margin-top: 23px;
-  color: #d6ddff;
-  font:
-    10px/1.5 "Geist Mono",
-    ui-monospace,
-    monospace;
 }
-
-.scene .motionControl {
-  display: inline-flex;
-  align-items: center;
+.format {
+  font-size: 10px;
+  color: #c7d2ff;
+}
+.result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  align-items: start;
+  gap: 24px;
+  margin-top: 26px;
+}
+.field {
+  display: block;
+  margin-bottom: 13px;
+  color: #dce3ff;
+  font-size: 12px;
+}
+.tokens {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.token {
+  min-width: 0;
+}
+.piece {
+  display: block;
+  padding: 15px 12px;
+  border: 1px solid #ffffff60;
+  border-radius: 9px;
+  background: #eef3ff;
+  color: #1d35bb;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: clamp(16px, 1.75vw, 23px);
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: -0.06em;
+  white-space: pre;
+}
+.token:last-child .piece {
+  background: #b5caff;
+  border-color: #d4e1ff;
+  color: #172b9d;
+}
+.tokenId {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
   gap: 6px;
-  min-height: 32px;
+  padding: 12px 2px 0;
+}
+.tokenId > span {
+  font-size: 9px;
+  color: #c7d2ff;
+}
+.scene .tokenId strong {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 450;
+}
+.count {
+  text-align: center;
+}
+.scene .count strong {
+  display: block;
+  color: #fff;
+  font-size: 72px;
+  font-weight: 450;
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+  margin-top: 20px;
+}
+.count > span:last-child {
+  display: block;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #dce3ff;
+}
+.model {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 15px;
+  border-top: 1px solid #ffffff30;
+  font-size: 11px;
+  color: #edf2ff;
+}
+.model > span:first-child {
+  color: #c7d2ff;
+}
+.caption {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  color: #d4ddff;
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: right;
+}
+.scene .caption code {
   padding: 0;
-  border: 0;
-  border-bottom: 1px solid #ffffff60;
-  border-radius: 0;
-  background: transparent;
-  color: #e8ecff;
-  font: inherit;
-  cursor: pointer;
+  background: transparent !important;
+  color: #edf2ff !important;
+  font-size: inherit;
 }
-
-.motionControl svg {
-  width: 12px;
-  height: 12px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.2;
-}
-
-@keyframes flow {
-  to {
-    stroke-dashoffset: -88.2;
-  }
-}
-
-@media (max-width: 650px) {
+@media (max-width: 1000px) {
   .scene {
-    margin-top: 24px;
-    padding-bottom: 10px;
+    grid-template-columns: minmax(0, 0.65fr) 40px minmax(0, 1.5fr);
+    gap: 18px;
   }
-  .providerRow {
-    padding-top: 14px;
-    gap: 16px;
+  .output {
+    padding: 20px;
   }
-  .providerButtons {
-    gap: 20px;
+  .result {
+    grid-template-columns: minmax(0, 1fr) 50px;
+    gap: 14px;
   }
-  .canvas {
-    display: none;
+  .piece {
+    padding: 14px 7px;
+    font-size: 15px;
   }
-  .labels {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 12px;
+  .tokenId {
+    flex-direction: column;
+    gap: 2px;
   }
-  .label {
-    display: grid;
-    grid-template-columns: 38% 1fr;
-    align-items: center;
-    min-height: 103px;
+  .count strong {
+    font-size: 60px !important;
   }
-  .labelCopy {
-    align-items: flex-start;
-    gap: 3px;
+  .caption {
     text-align: left;
   }
-  .mobileShape {
-    display: block;
-    width: 100%;
-    height: 104px;
-    overflow: visible;
+}
+@media (max-width: 700px) {
+  .scene {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-top: 24px;
+    margin-top: 24px;
   }
-  .scene .label strong {
-    font-size: 24px;
+  .input {
+    display: grid;
+    grid-template-columns: 1fr auto;
   }
-  .scene .label code {
-    font-size: 10px !important;
+  .input > .eyebrow {
+    grid-column: 1 / -1;
   }
-  .step {
-    font-size: 9px;
+  .prompt {
+    margin-top: 12px;
+    font-size: 32px;
   }
-  .footnote {
-    margin-top: 18px;
-    gap: 5px;
-    padding: 0 6px;
-    font-size: 9px;
+  .inputFields {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    flex-direction: row;
+    gap: 20px;
+    margin-top: 8px;
+    font-size: 10px;
   }
-  .footnote > span {
-    max-width: 300px;
+  .endpoint {
+    align-self: center;
+    margin-top: 12px;
+    padding: 7px 9px;
+    font-size: 10px;
   }
-  .motionControl {
-    display: none !important;
+  .arrow {
+    display: none;
   }
-  .movingDots {
-    animation: none;
+  .output {
+    padding: 20px;
+  }
+  .result {
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 16px;
+  }
+  .tokens {
+    gap: 8px;
+  }
+  .piece {
+    font-size: 15px;
+    padding: 14px 5px;
+  }
+  .count strong {
+    font-size: 56px !important;
+  }
+  .model {
+    font-size: 10px;
+    gap: 12px;
+  }
+  .caption {
+    margin-top: -8px;
+    font-size: 10px;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .movingDots {
-    animation: none;
+@media (max-width: 360px) {
+  .prompt {
+    font-size: 28px;
   }
-  .motionControl {
-    display: none !important;
+  .endpoint {
+    font-size: 9px;
+    padding: 6px;
+    gap: 6px;
+  }
+  .output {
+    padding: 16px;
+  }
+  .result {
+    gap: 12px;
+  }
+  .piece {
+    font-size: 13px;
   }
 }
