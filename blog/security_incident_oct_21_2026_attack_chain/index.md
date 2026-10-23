@@ -88,6 +88,7 @@ All times in UTC.
 | Oct 10, 22:12:09 | 3 | Owner's token | Workflow run on branch `ci-tmp-be33e9` of `BerriAI/litellm-auto` posts `RELEASE_PLEASE_TOKEN` to the same endpoint |
 | Oct 10, 22:14:14 | 2 | Owner's token | The `BerriAI/litellm` run is deleted |
 | Oct 10, 22:14:31 | 3 | Owner's token | The `BerriAI/litellm-auto` run is deleted |
+| Oct 12, 12:08-12:30 | 3 | Owner's token | Workflows are run on a variety of private repos, posting all repository secrets to the same endpoint |
 | Oct 21, 10:08:29 | 4 | Second maintainer's token | Push of commit `9cf97e9` to `main` of `BerriAI/project-releaser` is rejected by branch protection |
 | Oct 21, 10:08:34 | 4 | Owner's token | The same push succeeds by overriding branch protection |
 | Oct 21, 10:46:39 | 4 | Owner's token | Staging workflow dispatched with the source set to the lookalike `Berri-AI/litellm` at commit `20535d8f` |
@@ -135,13 +136,17 @@ With the owner's token, the attacker turned a repository's own CI into the exfil
 
 The GitHub audit log records a hash of the token behind each action, and the hash of `GH_TOKEN` matches the token that approved the release in step 5.
 
-### Step 3: the same on BerriAI/litellm-auto (October 10, 22:12)
+### Step 3: Further exfiltrations (October 10, 22:12; October 12 12:08-12:30)
 
 1. Twenty-four seconds after step 2, commit `78d968b` on branch `ci-tmp-be33e9` in `BerriAI/litellm-auto` ran a workflow that posted `RELEASE_PLEASE_TOKEN` to the same endpoint.
 2. That secret held the GitHub CLI OAuth token of a third maintainer.
 3. The run was deleted at 22:14:31.
 
 Its token hash matches the token that deleted the release runs in step 6.
+
+In addition, the attacker ran a second round of exfiltrations two days later across a variety of private repos. This includes commit `1a6e3c1`, which exfiltrated some minimally sensitive secrets and minimally funded provider keys used in our CI testing. See the details in the [Socket report](https://socket.dev/blog/litellm-attack-timeline#Secrets-Targeted).
+
+The additional secrets were not involved in the path taken towards the poisoned artifacts, and were resolved by rotating involved tokens and auditing security logs for access.
 
 ### Step 4: the release workflow is pointed at a fork (October 21, 10:08 to 11:08)
 
@@ -183,6 +188,8 @@ With the owner's token, again by overriding branch protection, the attacker remo
 We would like to thank [LidorMachluf](https://github.com/LidorMachluf) for their service to the open source community by catching the malicious release within 20 minutes of publication, maintaining a thorough writeup of the issue, and keeping it up to date with ongoing analysis and information.
 
 We would also like to thank Karlo Zanki and the Socket Threat Research team for sharing their investigation with us and coordinating on disclosure of their findings.
+
+Additionally, we want to give a big thanks to Asritha Bodepudi and Evan Sultanik at [Trail of Bits](https://trailofbits.com/), who have been assisting us with internal security audits as part of [Patch the Planet](https://trailofbits.com/patch-the-planet/) and were also very helpful in addressing, investigating, and communicating about this incident.
 
 ## Indicators
 
