@@ -38,6 +38,71 @@ You can overwrite the base url with:
 os.environ["MOONSHOT_API_BASE"] = "https://api.moonshot.cn/v1"
 ```
 
+## Kimi K3.1 Pro
+
+Use `moonshot/kimi-k3.1-pro` or `moonshot/kimi-k3.1-pro-highspeed` for Kimi K3.1 Pro. Both models support a 1M-token context, image and video input, streaming, and tool calls. See the [provider quickstart](https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart) and [pricing](https://platform.kimi.ai/docs/pricing/chat).
+
+Thinking is always enabled. Set `reasoning_effort` to `"low"`, `"high"`, or `"max"`; the provider defaults to `"max"` when omitted. Preserve the complete assistant message, including `reasoning_content` and `tool_calls`, when you send conversation history.
+
+<Tabs>
+<TabItem value="sdk" label="LiteLLM Python SDK">
+
+Set `MOONSHOT_API_KEY` in your environment, then call the model.
+
+```python showLineNumbers title="Kimi K3.1 Pro"
+from litellm import completion
+
+response = completion(
+    model="moonshot/kimi-k3.1-pro",
+    messages=[{"role": "user", "content": "Explain the tradeoffs of database sharding."}],
+    reasoning_effort="high",
+    max_completion_tokens=8192,
+)
+
+print(response.choices[0].message.content)
+```
+
+Use `model="moonshot/kimi-k3.1-pro-highspeed"` for the high-speed variant. Add `stream=True` to stream the response.
+
+</TabItem>
+<TabItem value="proxy" label="LiteLLM Proxy">
+
+Add both models to your proxy configuration.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: kimi-k3.1-pro
+    litellm_params:
+      model: moonshot/kimi-k3.1-pro
+      api_key: os.environ/MOONSHOT_API_KEY
+
+  - model_name: kimi-k3.1-pro-highspeed
+    litellm_params:
+      model: moonshot/kimi-k3.1-pro-highspeed
+      api_key: os.environ/MOONSHOT_API_KEY
+```
+
+Start the proxy with `litellm --config config.yaml`. Set `LITELLM_API_KEY` to your proxy key, then send a request.
+
+```bash showLineNumbers title="Kimi K3.1 Pro via Proxy"
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "kimi-k3.1-pro-highspeed",
+    "messages": [{"role": "user", "content": "Explain the tradeoffs of database sharding."}],
+    "reasoning_effort": "high",
+    "max_completion_tokens": 8192
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Omit `temperature`, `top_p`, `n`, `presence_penalty`, and `frequency_penalty`. These parameters have fixed values on K3.1 Pro. LiteLLM rejects unsupported overrides unless you set `drop_params=True` on the SDK call or `litellm_settings.drop_params: true` in the proxy configuration.
+
+K3.1 Pro supports `tool_choice="required"` natively. LiteLLM forwards it without adding a prompt hint. Return one tool result with the matching `tool_call_id` for every assistant tool call.
+
 ## Usage - LiteLLM Python SDK
 
 ### Non-streaming
@@ -221,18 +286,22 @@ For more detailed information on using the LiteLLM Proxy, see the [LiteLLM Proxy
 
 ## Image / Vision Support
 
-Moonshot vision models (`kimi-k2.5`, `kimi-latest`, `moonshot-v1-*-vision-preview`, etc.) accept the standard OpenAI content array with `image_url` blocks.
+Moonshot vision models (`kimi-k3.1-pro`, `kimi-k3.1-pro-highspeed`, `kimi-k2.5`, `kimi-latest`, `moonshot-v1-*-vision-preview`, etc.) accept the standard OpenAI content array with `image_url` blocks.
 
 LiteLLM automatically detects when your messages contain images and preserves the content array so the image payload reaches the Moonshot API. For text-only requests the content is flattened to a plain string, as required by Moonshot text models.
 
-```python showLineNumbers title="Moonshot Vision Example"
-import os
+K3.1 Pro does not accept public image URLs. Use a base64 data URL for an image or an `ms://` file URI after uploading the media to Moonshot. See the [vision input guide](https://platform.kimi.ai/docs/guide/use-kimi-vision-model).
+
+```python showLineNumbers title="Kimi K3.1 Pro Vision Example"
+import base64
+from pathlib import Path
+
 import litellm
 
-os.environ["MOONSHOT_API_KEY"] = ""
+image_data = base64.b64encode(Path("image.png").read_bytes()).decode()
 
 response = litellm.completion(
-    model="moonshot/kimi-k2.5",
+    model="moonshot/kimi-k3.1-pro",
     messages=[
         {
             "role": "user",
@@ -240,7 +309,7 @@ response = litellm.completion(
                 {"type": "text", "text": "What is in this image?"},
                 {
                     "type": "image_url",
-                    "image_url": {"url": "https://example.com/image.png"},
+                    "image_url": {"url": f"data:image/png;base64,{image_data}"},
                 },
             ],
         }
@@ -254,6 +323,8 @@ print(response.choices[0].message.content)
 
 LiteLLM automatically handles the following [Moonshot AI limitations](https://platform.moonshot.ai/docs/guide/migrating-from-openai-to-kimi#about-api-compatibility) to keep OpenAI compatibility:
 
+The temperature handling below applies to older Moonshot models. For K3.1 Pro, omit the fixed sampling parameters described above.
+
 ### Temperature Range Limitation
 **Limitation**: Moonshot AI only supports temperature range [0, 1] (vs OpenAI's [0, 2])  
 **LiteLLM Handling**: Automatically clamps any temperature > 1 to 1
@@ -262,8 +333,6 @@ LiteLLM automatically handles the following [Moonshot AI limitations](https://pl
 **Limitation**: If temperature < 0.3 and n > 1, Moonshot AI raises an exception  
 **LiteLLM Handling**: Automatically sets temperature to 0.3 when this condition is detected
 
-### Tool Choice "Required" Not Supported
-**Limitation**: Moonshot AI doesn't support `tool_choice="required"`  
-**LiteLLM Handling**: Converts this by:
-- Adding message: "Please select a tool to handle the current issue."
-- Removing the `tool_choice` parameter from the request
+### Tool Choice "Required"
+
+K3.1 Pro and K3.1 Pro Highspeed support `tool_choice="required"` natively. For older Moonshot models without this capability in the model catalog, LiteLLM removes the parameter and adds the message "Please select a tool to handle the current issue."
