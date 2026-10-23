@@ -3,6 +3,7 @@ import Link from "@docusaurus/Link";
 import CodeBlock from "@theme/CodeBlock";
 import TokenizeFlow from "./TokenizeFlow";
 import HeroDemo from "./HeroDemo";
+import TokenizeScene from "./TokenizeScene";
 import RustBenchmark from "./RustBenchmark";
 import styles from "./launch.module.css";
 
@@ -232,31 +233,24 @@ export default function TokenizeLaunch() {
           </div>
           <div className={styles.heroTitle}>
             <h1>/tokenize</h1>
-            <div className={styles.heroCopy}>
-              <p className={styles.heroSubtitle}>
-                Token counts, IDs and text.
-                <br />
-                One API for vLLM and Watsonx.
-              </p>
-              <p className={styles.heroIntro}>
-                Switch providers in gateway configuration. Keep the same request
-                and response format in your app.
-              </p>
-            </div>
+            <p className={styles.heroSubtitle}>
+              One API for
+              <br /> vLLM + Watsonx
+            </p>
           </div>
-          <HeroDemo provider={provider} onProviderChange={setProvider} />
+          <p className={styles.heroIntro}>
+            Send a prompt. Get a token count, plus IDs and text where supported.
+            Switch providers in gateway config without changing your client.
+          </p>
+          <TokenizeScene provider={provider} onProviderChange={setProvider} />
           <div className={styles.heroActions}>
-            <a href="#setup" className={styles.heroPrimary}>
+            <a href="#setup">
               SDK and curl examples <span aria-hidden="true">↗</span>
             </a>
-            <Link to="/docs/tokenize" className={styles.heroSecondary}>
-              Read the API guide <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-          <div className={styles.heroBottom}>
-            <span>POST /tokenize</span>
-            <span>vLLM + Watsonx</span>
-            <span>BUILT IN RUST</span>
+            <a href="#performance">
+              See the Rust benchmark <span aria-hidden="true">↓</span>
+            </a>
+            <span>PROMPT → TOKEN COUNT, IDS + TEXT</span>
           </div>
         </div>
       </header>
@@ -276,14 +270,20 @@ export default function TokenizeLaunch() {
       >
         <SectionLabel number="01">ONE REQUEST ACROSS PROVIDERS</SectionLabel>
         <div className={styles.sectionHeading}>
-          <h2 id="interface-title">How LiteLLM translates the call</h2>
+          <h2 id="interface-title">Send a prompt and read the tokens</h2>
           <p>
             A tokenizer splits text into the pieces a model reads. Your app
             sends a prompt and a model alias. LiteLLM resolves the provider,
             translates the request and returns the same response fields.
           </p>
         </div>
-        <TokenizeFlow provider={provider} onProviderChange={setProvider} />
+        <div className={styles.requestDemo}>
+          <HeroDemo provider={provider} onProviderChange={setProvider} />
+        </div>
+        <details className={styles.translationDetails}>
+          <summary>Inspect the native provider requests</summary>
+          <TokenizeFlow provider={provider} onProviderChange={setProvider} />
+        </details>
         <div className={styles.valueGrid}>
           <div>
             <span>APPLICATION CODE</span>
@@ -306,13 +306,18 @@ export default function TokenizeLaunch() {
         </div>
       </section>
 
-      <section className={styles.rustSection} aria-labelledby="rust-title">
+      <section
+        id="performance"
+        className={styles.rustSection}
+        aria-labelledby="rust-title"
+      >
         <SectionLabel number="02">RUST PERFORMANCE</SectionLabel>
         <div className={styles.sectionHeading}>
-          <h2 id="rust-title">Provider requests run in Rust</h2>
+          <h2 id="rust-title">Built in Rust</h2>
           <p>
-            Rust handles provider authentication, sends the request and
-            normalizes the response. We reuse HTTP clients and async I/O.
+            Rust handles authentication, provider requests and response
+            translation. We measured the SDK’s native request path against a
+            local test server.
           </p>
         </div>
         <RustBenchmark />

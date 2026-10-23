@@ -4,7 +4,7 @@ title: "Tokenize text across vLLM and Watsonx"
 date: 2026-10-23T13:00:00-07:00
 authors:
   - ishaan
-description: "Send a prompt and get token counts, IDs and text through /tokenize. Switch between vLLM and Watsonx in gateway config without changing your client."
+description: "Get token counts through /tokenize, plus IDs and text where supported. Switch vLLM and Watsonx in gateway config without changing your client."
 tags: [engineering]
 hide_table_of_contents: true
 custom_hero: true

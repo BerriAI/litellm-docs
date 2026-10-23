@@ -1,182 +1,651 @@
 .benchmark {
+  --lime: #dbff55;
+  --dark: #152019;
   margin: 32px 0 0;
-  border: 1px solid #263c65;
-  border-radius: 12px;
-  background: #0c1425;
-  color: #e8efff;
   overflow: hidden;
-  box-shadow: 0 18px 48px #1426491a;
+  background: var(--lime);
+  color: var(--dark);
+  font-family:
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
 }
-.header {
+
+.masthead {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 18px 28px;
-  border-bottom: 1px solid #263450;
-  font:
-    11px/1.5 "Geist Mono",
-    monospace;
-  letter-spacing: 0.06em;
-}
-.recorded {
-  color: #9eb1d4;
-}
-.metrics {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 32px;
-  padding: 36px 28px;
-  align-items: center;
-  background: radial-gradient(ellipse at 0 0, #243ce02b, transparent 70%);
-  font-variant-numeric: tabular-nums;
-}
-.throughput {
-  display: flex;
-  flex-direction: column;
-}
-.throughput strong {
-  color: #b9cbff;
-  font-size: clamp(56px, 8vw, 100px);
-  letter-spacing: -0.06em;
-  line-height: 1.05;
-  font-weight: 500;
-}
-.throughput > span {
-  color: #b8c7e4;
-  font-size: 15px;
-  margin-top: 10px;
-}
-.latency {
-  display: flex;
-  justify-content: space-around;
-  gap: 20px;
-}
-.latency > div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.latency strong {
-  font-size: clamp(24px, 3.5vw, 40px);
-  font-weight: 500;
-  letter-spacing: -0.04em;
-}
-.latency small {
-  font-size: 18px;
-  color: #9eb1d4;
-}
-.latency span {
-  color: #9eb1d4;
-  font-size: 12px;
-}
-.chart {
-  padding: 0 28px 28px;
-}
-.chartLabel {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  color: #9eb1d4;
+  gap: 12px;
+  padding: 20px 36px;
+  border-bottom: 1px solid #15201940;
   font:
     10px/1.5 "Geist Mono",
     monospace;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
-.chart button {
+
+.performance {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 40px;
+  align-items: end;
+  padding: 44px 44px 36px;
+}
+
+.speedLines {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: repeating-linear-gradient(
+    112deg,
+    transparent 0,
+    transparent 62px,
+    #15201909 62px,
+    #15201909 63px
+  );
+  mask-image: linear-gradient(90deg, transparent 15%, #000);
+}
+
+.primaryMetric {
+  min-width: 0;
+}
+
+.metricLabel,
+.measurementNote,
+.controlLabel,
+.recorded {
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+}
+
+.metricLabel {
+  display: block;
+  margin-bottom: 28px;
+  letter-spacing: 0.08em;
+}
+
+.latency {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  color: var(--dark);
+  line-height: 0.85;
+}
+
+.latency strong {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  font-size: clamp(120px, 18vw, 228px);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.85;
+}
+
+.latency > span {
+  font-size: clamp(30px, 4.5vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+
+.measurementNote {
+  display: block;
+  margin-top: 26px;
+}
+
+.secondaryMetrics {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+  padding-bottom: 4px;
+}
+
+.secondaryMetrics > div {
+  border-top: 1px solid #15201966;
+  padding-top: 13px;
+}
+
+.secondaryMetrics dt {
+  margin-bottom: 7px;
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+}
+
+.secondaryMetrics dd {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.055em;
+}
+
+.secondaryMetrics dd span {
+  display: inline-block;
+  margin-left: 6px;
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0;
+}
+
+.secondaryMetrics > div:last-child dd span {
+  display: block;
+  margin: 6px 0 0;
+}
+
+.controls {
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  color: #dbe6ff;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 20px 36px;
+  border-top: 1px solid #15201940;
+}
+
+.controlLabel {
+  letter-spacing: 0.04em;
+}
+
+.selections {
+  display: flex;
+  gap: 6px;
+}
+
+.benchmark .selections button {
+  min-width: 52px;
+  padding: 9px 16px;
+  border: 1px solid #15201966;
+  border-radius: 0;
   background: transparent;
+  color: var(--dark);
   font:
-    13px/1.5 "Geist Mono",
+    500 18px/1.2 "Geist Mono",
     monospace;
-  text-align: left;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
 }
-.chart button[aria-pressed="true"] {
-  background: #1a2946;
-  border-color: #5876b6;
+
+.benchmark .selections button:hover {
+  background: #15201918;
 }
-.chart button:hover {
-  background: #18263f;
+
+.benchmark .selections button[aria-pressed="true"] {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: var(--lime);
 }
-.concurrency {
-  flex: 0 0 28px;
+
+.benchmark .selections button:focus-visible {
+  outline: 3px solid var(--dark);
+  outline-offset: 3px;
 }
-.track {
-  flex: 1;
-  height: 17px;
-  background: #1d2b43;
-  border-radius: 2px;
+
+.recorded {
+  margin-left: auto;
+}
+
+.raceway {
+  padding: 20px 36px 24px;
+  overflow: hidden;
+  background: var(--dark);
+  color: #f2f5e9;
+}
+
+.racewayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #bfceb9;
+  font:
+    10px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0.04em;
+}
+
+.benchmark .motionControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #5f715b;
+  border-radius: 0;
+  background: transparent;
+  color: #ecf3e5;
+  font:
+    11px/1.4 "Geist Mono",
+    monospace;
+}
+
+.benchmark .motionControl:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.benchmark .motionControl:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 4px;
+}
+
+.route {
+  position: relative;
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+}
+
+.tracks {
+  position: absolute;
+  inset: 34px 0 auto;
+  display: grid;
+  gap: 12px;
   overflow: hidden;
 }
+
+.track {
+  position: relative;
+  height: 2px;
+  background: #546a414d;
+}
+
 .track > span {
-  display: block;
-  height: 100%;
-  background: #7a9aff;
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    transparent 82%,
+    #dbff554d 87%,
+    var(--lime) 95%,
+    #f9ffe3 100%
+  );
+  animation: requestStreak 1.2s linear infinite;
+  animation-delay: var(--delay);
+  will-change: transform;
 }
-.rate {
-  flex: 0 0 65px;
-  text-align: right;
+
+.nodes {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 0 22px;
 }
-.caption {
-  padding: 22px 28px;
-  border-top: 1px solid #263450;
-  background: #111d32;
+
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+  padding: 12px 18px;
+  border: 1px solid #617654;
+  background: var(--dark);
 }
-.caption > strong {
-  display: block;
-  color: #e1eaff;
+
+.node > span {
+  color: #a0b091;
   font:
-    12px/1.6 "Geist Mono",
+    9px/1.5 "Geist Mono",
     monospace;
 }
+
+.node strong {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.node small {
+  color: #bfceb9;
+  font:
+    9px/1.6 "Geist Mono",
+    monospace;
+}
+
+.rustNode {
+  min-width: 170px;
+  padding: 15px 22px;
+  border-color: var(--lime);
+  background: var(--lime);
+  color: var(--dark);
+}
+
+.rustNode > span,
+.rustNode small {
+  color: #334727;
+}
+
+.rustNode strong {
+  font-size: 50px;
+  letter-spacing: -0.04em;
+}
+
+.returnPath {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - 44px);
+  margin: 16px auto 0;
+  color: #a5b995;
+  font:
+    9px/1.5 "Geist Mono",
+    monospace;
+}
+
+.returnPath > span:first-child,
+.returnPath > span:last-child {
+  flex: 1;
+  overflow: hidden;
+  background: linear-gradient(#617654, #617654) center / 100% 1px no-repeat;
+  font-size: 16px;
+}
+
+.benchmark .animationNote {
+  margin: 22px 0 0;
+  color: #b4c3ab;
+  font:
+    10px/1.7 "Geist Mono",
+    monospace;
+}
+
+.caption {
+  padding: 28px 36px 32px;
+  border: 1px solid #ccd4bf;
+  border-top: 0;
+  background: #f2f4e9;
+  color: #34422e;
+}
+
+.scope {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 32px;
+  margin-bottom: 22px;
+}
+
+.scope > strong {
+  font:
+    500 12px/1.8 "Geist Mono",
+    monospace;
+  color: #24311e;
+}
+
 .benchmark .caption p {
-  color: #adbedc;
+  margin: 0 0 16px;
+  color: #44543c;
   font-size: 13px;
-  margin: 12px 0;
-  max-width: 850px;
+  line-height: 1.7;
 }
+
+.benchmark .scope p {
+  margin: 0;
+}
+
 .benchmark .caption a {
-  color: #9bb9ff !important;
+  color: #24311e !important;
   font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
+
 .methods {
-  margin: 18px 0;
-  color: #adbedc;
-  font-size: 13px;
+  margin: 0 0 22px;
+  border-top: 1px solid #b6c1aa;
+  border-bottom: 1px solid #b6c1aa;
+  padding: 15px 0;
 }
+
 .methods summary {
   cursor: pointer;
-  color: #c6d7fa;
+  color: #24311e;
+  font-size: 13px;
+  font-weight: 500;
 }
-@media (max-width: 700px) {
-  .metrics {
+
+.methods[open] summary {
+  margin-bottom: 18px;
+}
+
+.benchmark .caption .sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  font-weight: 600;
+}
+
+.benchmark .caption a:focus-visible,
+.methods summary:focus-visible {
+  outline: 2px solid #24311e;
+  outline-offset: 4px;
+}
+
+.paused .track > span {
+  animation-play-state: paused;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes requestStreak {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 900px) {
+  .performance {
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 24px;
+    padding: 36px 28px;
+  }
+
+  .latency strong {
+    font-size: clamp(112px, 18vw, 168px);
+  }
+
+  .secondaryMetrics dd {
+    font-size: 34px;
+  }
+
+  .nodes {
+    gap: 24px;
+    padding: 0;
+  }
+
+  .node {
+    min-width: 108px;
+  }
+
+  .rustNode {
+    min-width: 150px;
+  }
+
+  .scope {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .masthead {
+    gap: 8px;
+    padding: 18px 20px;
+    font-size: 9px;
+  }
+
+  .performance {
     grid-template-columns: 1fr;
     gap: 28px;
-    padding: 28px 20px;
+    padding: 32px 20px 26px;
   }
+
+  .metricLabel {
+    margin-bottom: 24px;
+  }
+
   .latency {
-    justify-content: flex-start;
-    gap: 40px;
+    gap: 10px;
   }
-  .header,
-  .caption {
+
+  .latency strong {
+    font-size: clamp(82px, 23vw, 140px);
+  }
+
+  .latency > span {
+    font-size: 34px;
+  }
+
+  .measurementNote {
+    margin-top: 20px;
+  }
+
+  .secondaryMetrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .secondaryMetrics dd {
+    font-size: 30px;
+  }
+
+  .secondaryMetrics dt,
+  .secondaryMetrics dd span {
+    font-size: 9px;
+  }
+
+  .controls {
+    gap: 12px;
     padding: 18px 20px;
   }
-  .chart {
-    padding: 0 12px 20px;
+
+  .controlLabel {
+    width: 100%;
+    font-size: 9px;
   }
-  .chartLabel {
-    margin: 0 8px 12px;
+
+  .benchmark .selections button {
+    min-width: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .recorded {
+    font-size: 9px;
+  }
+
+  .raceway {
+    padding: 18px 16px 22px;
+  }
+
+  .racewayHeader {
+    font-size: 8px;
+    gap: 14px;
+  }
+
+  .racewayHeader > span {
+    max-width: 145px;
+  }
+
+  .benchmark .motionControl {
+    gap: 6px;
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+
+  .nodes {
+    gap: 18px;
+    padding: 0;
+  }
+
+  .node {
+    min-width: 0;
+    width: 27%;
+    padding: 10px 7px;
+    gap: 6px;
+  }
+
+  .node strong {
+    font-size: 24px;
+  }
+
+  .node small {
+    min-height: 26px;
+    font-size: 8px;
+    line-height: 1.6;
+  }
+
+  .rustNode {
+    width: 31%;
+    padding: 14px 8px;
+  }
+
+  .rustNode strong {
+    font-size: 33px;
+  }
+
+  .returnPath {
+    width: 100%;
+    gap: 10px;
     font-size: 8px;
   }
-  .chart button {
-    gap: 9px;
+
+  .benchmark .animationNote {
+    font-size: 9px;
+  }
+
+  .caption {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  .nodes {
+    gap: 10px;
+  }
+  .node strong {
+    font-size: 18px;
+  }
+  .rustNode strong {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track > span {
+    animation: none;
+    transform: translateX(0);
+    opacity: 0.25;
+    will-change: auto;
+  }
+
+  .benchmark .selections button {
+    transition: none;
+  }
+
+  .motionControl {
+    display: none !important;
   }
 }

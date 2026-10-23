@@ -77,14 +77,16 @@
 }
 .heroInner {
   max-width: 1280px;
-  padding: 36px 60px 0;
+  padding: 32px 60px 0;
   margin: 0 auto;
 }
 .heroTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #ffffff40;
 }
 .heroTop img {
   display: block;
@@ -92,7 +94,7 @@
   height: auto;
 }
 .heroTop > span,
-.heroBottom,
+.heroActions > span,
 .codeLabel,
 .sectionLabel,
 .valueGrid > div > span,
@@ -102,77 +104,85 @@
   letter-spacing: 0.08em;
   line-height: 1.5;
 }
+.heroTop > span {
+  color: #dce3ff;
+  font-size: 10px;
+}
 .heroTitle {
-  display: grid;
-  grid-template-columns: 0.9fr 1fr;
-  align-items: center;
-  gap: 48px;
-  margin: 38px 0 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin-top: 32px;
 }
 .heroTitle h1 {
-  color: #f4f6ff !important;
+  color: #fff !important;
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-  font-size: clamp(82px, 10vw, 140px) !important;
+  font-size: clamp(100px, 15.5vw, 210px) !important;
   font-weight: 600 !important;
-  letter-spacing: -0.05em;
-  line-height: 1 !important;
+  letter-spacing: -0.055em;
+  line-height: 0.95 !important;
   margin: 0 !important;
 }
-.heroCopy {
-  padding-top: 8px;
-}
 .heroSubtitle {
-  font-size: clamp(23px, 2.3vw, 30px);
-  line-height: 1.2;
+  font-size: clamp(23px, 3vw, 37px);
+  font-weight: 350;
+  line-height: 1.14;
   letter-spacing: -0.035em;
-  margin-bottom: 14px !important;
+  margin: 0 0 12px !important;
+  flex-shrink: 0;
 }
 .heroIntro {
-  max-width: 510px;
-  font-size: 15px;
+  max-width: 680px;
+  font-size: 17px;
   line-height: 1.6;
-  color: #e3e8ff;
-  margin-bottom: 0 !important;
+  color: #dce3ff;
+  margin: 24px 0 0 !important;
 }
 .heroActions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 700px;
-  gap: 12px;
-  margin: 24px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0 28px;
+  border-top: 1px solid #ffffff40;
 }
 .heroActions a {
-  padding: 18px 20px;
-  display: flex;
+  padding: 11px 16px;
+  display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  font-size: 15px;
+  gap: 32px;
+  color: #fff !important;
+  font-size: 13px;
   text-decoration: none !important;
-  border: 1px solid #8e9bf4;
+  border: 1px solid #ffffff70;
 }
-.root .heroPrimary {
-  color: #2036bc !important;
-  background: #f4f6ff;
-  border-color: #f4f6ff;
+.heroActions a:hover {
+  background: #ffffff12;
+  border-color: #fff;
 }
-.root .heroSecondary {
-  color: #f4f6ff !important;
-  background: #ffffff08;
-}
-.heroActions a > span {
-  font-size: 28px;
-  line-height: 1;
+.heroActions > span {
+  color: #dce3ff;
+  font-size: 10px;
+  margin-left: auto;
 }
 .hero a:focus-visible {
   outline-color: #fff;
 }
-.heroBottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  border-top: 1px solid #ffffff4d;
-  padding: 19px 0;
+.requestDemo {
+  padding: 1px 28px 24px;
+  background: #243ce0;
+}
+.translationDetails {
+  margin-top: 24px;
+  padding: 18px 24px;
+  border: 1px solid var(--line);
+}
+.translationDetails summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 15px;
 }
 .preview {
   display: grid;
@@ -229,9 +239,7 @@
   margin-bottom: 0;
 }
 .rustSection {
-  padding: 60px 44px;
-  margin: 0 -44px;
-  background: #e7edfc;
+  padding: 72px 0;
   border-bottom: 1px solid var(--line);
 }
 .setupPanel {
@@ -409,9 +417,9 @@
   .heroTitle {
     gap: 28px;
   }
-  .rustSection {
-    margin: 0 -24px;
-    padding: 48px 24px;
+  .heroActions > span {
+    width: 100%;
+    margin-left: 0;
   }
   .codeGrid {
     grid-template-columns: 1fr;
@@ -429,28 +437,49 @@
   .heroInner {
     padding: 24px 24px 0;
   }
+  .heroTop {
+    padding-bottom: 20px;
+  }
+  .heroTop img {
+    width: 112px;
+  }
   .heroTitle {
-    grid-template-columns: 1fr;
-    margin-top: 28px;
-    gap: 18px;
+    display: block;
+    margin-top: 24px;
   }
   .heroTitle h1 {
-    font-size: clamp(62px, 15vw, 104px) !important;
+    font-size: clamp(72px, 18vw, 120px) !important;
+  }
+  .heroSubtitle {
+    font-size: 23px;
+    margin: 16px 0 0 !important;
+  }
+  .heroSubtitle br {
+    display: none;
   }
   .heroIntro {
     font-size: 15px;
   }
   .heroActions {
-    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 20px 0 24px;
   }
   .heroActions a {
     padding: 12px;
     font-size: 13px;
     gap: 10px;
   }
-  .heroBottom {
-    gap: 10px;
+  .heroActions > span {
     font-size: 9px;
+  }
+  .requestDemo {
+    padding: 1px 16px 16px;
+  }
+  .translationDetails {
+    padding: 16px;
+  }
+  .rustSection {
+    padding: 48px 0;
   }
   .preview {
     grid-template-columns: 1fr;
@@ -505,14 +534,7 @@
     padding-left: 16px;
     padding-right: 16px;
   }
-  .heroActions {
-    grid-template-columns: 1fr;
-  }
-  .heroTitle {
-    gap: 8px;
-  }
-  .rustSection {
-    margin: 0 -16px;
-    padding: 40px 16px;
+  .heroActions a {
+    width: 100%;
   }
 }

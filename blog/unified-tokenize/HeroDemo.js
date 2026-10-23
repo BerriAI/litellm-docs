@@ -1,30 +1,10 @@
 import React, { useEffect, useState } from "react";
 import styles from "./heroDemo.module.css";
 
-const request = { model: "tokenizer", prompt: "Hello world" };
-
-const providers = {
-  vllm: {
-    name: "vLLM",
-    target: "hosted_vllm/your-served-model",
-    response: {
-      model: "your-served-model",
-      count: 2,
-      token_ids: [101, 102],
-      tokens: ["Hello", " world"],
-    },
-  },
-  watsonx: {
-    name: "Watsonx",
-    target: "watsonx/your-model-id",
-    response: {
-      model: "your-model-id",
-      count: 2,
-      token_ids: null,
-      tokens: ["Hello", " world"],
-    },
-  },
-};
+import {
+  clientRequest as request,
+  providerExamples as providers,
+} from "./exampleData";
 
 /** @typedef {string | number | null | Array<string | number>} JsonValue */
 

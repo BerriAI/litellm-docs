@@ -1,0 +1,323 @@
+.scene {
+  color: #fff;
+  background: #243ce0;
+  margin: 34px 0 0;
+  padding: 0 0 22px;
+  border-top: 1px solid #ffffff45;
+  text-align: center;
+}
+
+.providerRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 18px 0 4px;
+}
+
+.rowLabel,
+.step,
+.rust {
+  color: #e3e7ff;
+  font:
+    10px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.providerButtons {
+  display: flex;
+  gap: 22px;
+}
+
+.scene .providerButtons button {
+  position: relative;
+  min-height: 38px;
+  padding: 7px 1px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #d1d8ff;
+  font:
+    500 13px/1.5 "Geist",
+    sans-serif;
+  cursor: pointer;
+}
+
+.scene .providerButtons button[aria-pressed="true"] {
+  border-bottom-color: #fff;
+  color: #fff;
+}
+
+.scene button:hover {
+  color: #fff;
+}
+
+.scene button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 5px;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.dots path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+}
+
+.surfaceDots {
+  opacity: 0.25;
+}
+.edgeDots {
+  opacity: 0.95;
+}
+.faintDots {
+  opacity: 0.33;
+}
+.inkDots {
+  opacity: 0.75;
+}
+.ringDots {
+  opacity: 0.5;
+}
+.gateEdges {
+  opacity: 0.25;
+}
+.dots .gateCore {
+  stroke-width: 1;
+  opacity: 0.85;
+}
+.coreDot {
+  fill: currentColor;
+}
+
+.shapeText {
+  fill: #fff;
+  stroke: #243ce0;
+  stroke-width: 9px;
+  paint-order: stroke;
+  font:
+    19px "Geist Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: -0.05em;
+}
+
+.routeGuide,
+.outerLanes,
+.movingDots {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.routeGuide {
+  stroke-width: 1.2;
+  stroke-dasharray: 0.1 5.5;
+  opacity: 0.4;
+}
+
+.outerLanes {
+  stroke-width: 1;
+  stroke-dasharray: 0.1 7;
+  opacity: 0.23;
+}
+
+.movingDots {
+  stroke-width: 2.5;
+  stroke-dasharray: 0.1 44;
+  animation: flow 2.4s linear infinite;
+}
+
+.selectedRoute {
+  opacity: 1;
+}
+.idleRoute {
+  opacity: 0.22;
+}
+.routeNode {
+  fill: #243ce0;
+  stroke: #fff;
+  stroke-width: 1;
+}
+.providerName {
+  fill: #fff;
+  font:
+    10px "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+
+.paused .movingDots {
+  animation-play-state: paused;
+}
+
+.labels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: -3px;
+}
+
+.labelCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.scene .label strong {
+  color: #fff !important;
+  font-size: clamp(20px, 2.25vw, 29px);
+  line-height: 1.3;
+  font-weight: 450;
+  letter-spacing: -0.035em;
+}
+
+.scene .label code {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  color: #edf0ff !important;
+  font:
+    11px/1.6 "Geist Mono",
+    ui-monospace,
+    monospace !important;
+  white-space: nowrap;
+}
+
+.rust {
+  margin-top: 4px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+.mobileShape {
+  display: none;
+}
+
+.footnote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 23px;
+  color: #d6ddff;
+  font:
+    10px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+
+.scene .motionControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #ffffff60;
+  border-radius: 0;
+  background: transparent;
+  color: #e8ecff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.motionControl svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -88.2;
+  }
+}
+
+@media (max-width: 650px) {
+  .scene {
+    margin-top: 24px;
+    padding-bottom: 10px;
+  }
+  .providerRow {
+    padding-top: 14px;
+    gap: 16px;
+  }
+  .providerButtons {
+    gap: 20px;
+  }
+  .canvas {
+    display: none;
+  }
+  .labels {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .label {
+    display: grid;
+    grid-template-columns: 38% 1fr;
+    align-items: center;
+    min-height: 103px;
+  }
+  .labelCopy {
+    align-items: flex-start;
+    gap: 3px;
+    text-align: left;
+  }
+  .mobileShape {
+    display: block;
+    width: 100%;
+    height: 104px;
+    overflow: visible;
+  }
+  .scene .label strong {
+    font-size: 24px;
+  }
+  .scene .label code {
+    font-size: 10px !important;
+  }
+  .step {
+    font-size: 9px;
+  }
+  .footnote {
+    margin-top: 18px;
+    gap: 5px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+  .footnote > span {
+    max-width: 300px;
+  }
+  .motionControl {
+    display: none !important;
+  }
+  .movingDots {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .movingDots {
+    animation: none;
+  }
+  .motionControl {
+    display: none !important;
+  }
+}

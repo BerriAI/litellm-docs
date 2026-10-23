@@ -1,11 +1,8 @@
 import React from "react";
 import styles from "./flow.module.css";
+import { clientRequest as request } from "./exampleData";
 
-const clientRequest = JSON.stringify(
-  { model: "tokenizer", prompt: "Hello world" },
-  null,
-  2,
-);
+const clientRequest = JSON.stringify(request, null, 2);
 
 const providers = {
   vllm: {
