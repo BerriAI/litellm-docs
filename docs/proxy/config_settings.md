@@ -920,6 +920,8 @@ router_settings:
 | VERTEX_CREDENTIALS | Fallback for `VERTEXAI_CREDENTIALS`: either a path to a Vertex AI service account JSON file or the JSON itself
 | VLLM_API_BASE | Base URL for a self-hosted vLLM server
 | VOLCENGINE_API_BASE | Base URL for Volcengine. Default is https://ark.cn-beijing.volces.com/api/v3
+| VOLTAGEGPU_API_BASE | Base URL for VoltageGPU. Default is https://api.voltagegpu.com/v1
+| VOLTAGEGPU_API_KEY | API key for VoltageGPU
 | VOYAGE_AI_API_KEY | Alias for the VoyageAI by MongoDB API key, read after `VOYAGE_API_KEY`
 | VOYAGE_AI_TOKEN | Last of the three accepted names for the VoyageAI by MongoDB API key, after `VOYAGE_API_KEY` and `VOYAGE_AI_API_KEY`
 | VOYAGE_API_BASE | Base URL for VoyageAI by MongoDB rerank requests; without it a MongoDB-issued key (`al-`) goes to ai.mongodb.com and any other key to api.voyageai.com
