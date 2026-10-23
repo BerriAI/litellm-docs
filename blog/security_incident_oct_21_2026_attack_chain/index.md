@@ -1,7 +1,7 @@
 ---
 slug: security-incident-oct-21-2026-attack-chain
 title: "The attack chain behind the v1.107.0 LiteLLM release"
-date: 2026-10-23T10:00:00
+date: 2026-10-23T21:00:00
 authors:
   - oliver
   - mateo
@@ -12,7 +12,7 @@ hide_table_of_contents: false
 
 On October 21, our release pipeline published a compromised `litellm==1.107.0` to PyPI and to our container registries. The [incident post](/blog/security-incident-oct-21-2026) covers the affected artifacts and what to do if you ran them. We have completed our investigation into the actions taken by the threat actor, and can confidently assert the timeline and sequence of events that led to the publication of the malicious `v1.107.0` release.
 
-We posted regular status updates during our investigation yesterday reflecting the scenario to the best of our knowledge as the investigation proceeded. The investigation was a process in which we continually learned additional information, meaning some of our assumptions and beliefs were later proven to be inaccurate or incomplete. This post should be considered the canonical source of truth where the status updates and the narrative below disagree.
+We posted regular status updates during our investigation yesterday reflecting the scenario to the best of our knowledge as the investigation proceeded. The investigation was ongoing, and some assumptions and beliefs in those updates were later proven to be inaccurate or incomplete. This post is the canonical source of truth.
 
 
 {/* truncate */}
@@ -20,7 +20,7 @@ We posted regular status updates during our investigation yesterday reflecting t
 
 ## Narrative
 
-On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained the master key to a deployment of the LiteLLM Agent Platform, an open source tool we use for orchestrating agents. The error was quickly identified, the commit force-pushed over, and we identified the key as requiring revocation. However, key revocation did not occur.
+On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained the master key to a deployment of the LiteLLM Agent Platform, an open source tool we use for orchestrating agents. The error was quickly identified, the commit force-pushed over, and we identified the exposed keys as requiring revocation. However, key revocation did not occur for the master key.
 
 ### GitHub Owner Access
 
@@ -30,7 +30,7 @@ On October 10th, the threat actor used this key to gain access to our LiteLLM Ag
 
 ### Exfiltrating additional tokens
 
-Using the access provided by this token, the threat actor began to perform additional credential exfiltration actions. They authored comits into branches on internal repositories to execute workflows designed to exfiltrate any tokens and secrets configured to be available to CI in our repositories. In so doing, they acquired similar GitHub CLI Oauth tokens associated with two engineers with maintainer privileges.
+Using the access provided by the Github CLI OAuth token, the threat actor began to perform additional credential exfiltration actions. They authored commits into branches on internal repositories to execute workflows designed to exfiltrate any tokens and secrets configured to be available to CI in our repositories. In so doing, they acquired similar GitHub CLI Oauth tokens associated with two engineers with maintainer privileges.
 
 They also acquired tokens to several other internal systems. Reviewing the actor's activity on these other systems shows attempts to identify and exfiltrate additional keys and tokens, with a primary focus on upstream inference API tokens.
 
@@ -64,14 +64,14 @@ We know many of you want to hear what we’ve learned and what we’re changing.
 
 ## Timeline
 
-### Major Event Summary
+### Compromised Credentials
 
-| Step | Credential | How the attacker got it | What it was used for |
-|---|---|---|---|
-| 0 | Master key of the LiteLLM Agent Platform, an internal alpha service | Committed to a public repository on May 27 | Reading the Agent Platform API |
-| 1 | GitHub CLI token of a GitHub organization owner | Returned by the Agent Platform API on October 10 | Pushing the exfiltration branches, changing the release workflow, running the staging build, force-pushing the cover-up |
-| 2 | GitHub CLI token of a second maintainer, stored as the `GH_TOKEN` secret of `BerriAI/litellm` | Posted to the attacker's endpoint by a throwaway workflow on October 10 | Approving the production gate |
-| 3 | GitHub CLI token of a third maintainer, stored as the `RELEASE_PLEASE_TOKEN` secret of `BerriAI/litellm-auto` | Posted to the same endpoint by a second throwaway workflow on October 10 | Deleting the release run records |
+| Credential | How the attacker got it | What it was used for |
+|---|---|---|
+| Master key of the LiteLLM Agent Platform, an internal alpha service | Committed to a public repository on May 27 | Reading the Agent Platform API |
+| GitHub CLI token of a GitHub organization owner | Returned by the Agent Platform API on October 10 | Pushing the exfiltration branches, changing the release workflow, running the staging build, force-pushing the cover-up |
+| GitHub CLI token of a second maintainer, stored as the `GH_TOKEN` secret of `BerriAI/litellm` | Posted to the attacker's endpoint by a throwaway workflow on October 10 | Approving the production gate |
+| GitHub CLI token of a third maintainer, stored as the `RELEASE_PLEASE_TOKEN` secret of `BerriAI/litellm-auto` | Posted to the same endpoint by a second throwaway workflow on October 10 | Deleting the release run records |
 
 Our first post suspected the tokens were taken from the logs of an internal LiteLLM deployment. The request logs show the first token came from a different service, described in step 1.
 
@@ -98,8 +98,19 @@ All times in UTC.
 | Oct 21, 11:46:56 | 5 | none | Docker Hub and GHCR images are published |
 | Oct 21, 11:53:49 | 6 | Third maintainer's token | Production run record deleted |
 | Oct 21, 11:54:01 | 6 | Third maintainer's token | Staging run record deleted |
+| Oct 21, 12:06:41 | - | - | [LidorMachluf](https://github.com/LidorMachluf) publishes [issue #47826](https://github.com/BerriAI/litellm/issues/47826) identifying the compromise |
 | Oct 21, 12:09:38 | 7 | Owner's token | Revert commit `285fbdc5` pushed to `main` by overriding branch protection |
 | Oct 21, 12:24:52 | 7 | Owner's token | `main` force-pushed back to `d687b69`, overriding the force-push block |
+| Oct 21, 13:02 | - | - | LiteLLM begins incident response |
+| Oct 21, by 13:23 | - | - | PyPI quarantines `litellm==1.107.0` |
+| Oct 21, 13:50 | - | - | LiteLLM adopts LidorMachluf's issue as the communication channel for status updates |
+| Oct 21, by 13:51 | - | - | The affected GHCR tags are made unavailable |
+| Oct 21, 14:19 | - | - | LiteLLM identifies the release workflow as compromised and removes all GitHub permissions |
+| Oct 21, 14:20 | - | - | Docker Hub tags `v1.107.0`, `latest`, `main-latest`, and `main-stable` are removed or repointed to verified clean images |
+| Oct 21, 18:20 | - | - | LiteLLM publishes the [incident post](/blog/security-incident-oct-21-2026) |
+| Oct 22, 17:38 | - | - | The Socket team reaches out with their independent [investigation](https://socket.dev/blog/litellm-attack-timeline) into the malicious workflows used for credential exfiltration and release publication |
+| Oct 23, 21:00 | - | - | LiteLLM publishes this root cause analysis |
+
 
 
 ## Annotated Events
@@ -137,8 +148,8 @@ Its token hash matches the token that deleted the release runs in step 6.
 Our releases are built by workflows in the private `BerriAI/project-releaser` repository. From `199.91.221.39`, the attacker changed where those workflows take their source from.
 
 1. The attacker authored commit `9cf97e9` ("ci: release from a fork source repository") as the organization owner. It let the release workflow build from a source repository other than `BerriAI/litellm`.
-2. At 10:08:29 a push of that commit to `main` with the second maintainer's token was rejected by branch protection, which requires a pull request and two passing checks.
-3. At 10:08:34 the same push with the owner's token succeeded by overriding those rules.
+2. At 10:08:29 a push of that commit to `main` with the second maintainer's token was rejected by branch protection, which requires a pull request, two passing checks, and approval from the codeowner for this workflow.
+3. At 10:08:34 the attacker disables branch protections and then force-pushes with the owner's token.
 4. At 10:46:39 the attacker dispatched the staging workflow at `9cf97e9`, as the owner, with the source set to the lookalike `Berri-AI/litellm` at commit `20535d8f`.
 5. The staging run finished at 11:08:09 and the production release pipeline started at 11:08:53.
 
@@ -166,6 +177,12 @@ With the owner's token, again by overriding branch protection, the attacker remo
 2. At 12:24:52 they force-pushed `main` back to `d687b69`, the commit before the change, overriding GitHub's force-push block as well.
 
 `main` then showed neither the change nor the revert. Both commits are still retrievable by SHA, and the organization audit log recorded each override.
+
+## Acknowledgements
+
+We would like to thank [LidorMachluf](https://github.com/LidorMachluf) for their service to the open source community by catching the malicious release within 20 minutes of publication, maintaining a thorough writeup of the issue, and keeping it up to date with ongoing analysis and information.
+
+We would also like to thank Karlo Zanki and the Socket Threat Research team for sharing their investigation with us and coordinating on disclosure of their findings.
 
 ## Indicators
 
