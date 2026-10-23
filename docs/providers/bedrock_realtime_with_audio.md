@@ -201,6 +201,8 @@ async def audio_conversation():
         try:
             # Run both tasks concurrently
             await asyncio.gather(send_audio(), receive_events())
+        except websockets.ConnectionClosedError as e:
+            print(f"\nSession closed: {e.rcvd.reason if e.rcvd else e}")
         finally:
             playback_queue.put(None)
 
@@ -334,13 +336,11 @@ Available voices: `matthew`, `joanna`, `ruth`, `stephen`, `gregory`, `amy`
 - **Output**: 24kHz PCM16 (mono)
 
 ### Modalities
-- `["text"]` - Text only
-- `["audio"]` - Audio only  
-- `["text", "audio"]` - Both text and audio
+Nova Sonic always produces both text and audio, so LiteLLM sends both `response.text.delta` and `response.audio.delta` events whatever `modalities` is set to. Ignore the events your client does not need.
 
 ## Session Limits
 
-Bedrock ends a Nova Sonic session on its own in three cases: no audio or other input arrives for 55 seconds, no speech is detected for about 5 minutes (sending silence does not keep the session open), or the session reaches 8 minutes. The client receives an `error` event with Bedrock's message, then the websocket closes with code 1011. Clients that need longer conversations should open a new session when this happens.
+Bedrock ends a Nova Sonic session on its own in three cases: no audio or other input arrives for 55 seconds, no new speech arrives for about 5 minutes (295 seconds) after the last response ends (sending silence does not keep the session open), or the session reaches 8 minutes. The client receives an `error` event, then the websocket closes with code 1011. For the two input timeouts the error carries Bedrock's `ValidationException: ... Timed out waiting for audio bytes or interactive content`. For the 8 minute limit it carries Bedrock's `ModelTimeoutException`. Clients that need longer conversations should open a new session when this happens.
 
 LiteLLM versions before v1.103.0 closed the websocket with code 1000 and no error event in these cases, so the client saw `ConnectionClosedOK: received 1000 (OK)` with no explanation. Upgrade to see Bedrock's reason.
 
