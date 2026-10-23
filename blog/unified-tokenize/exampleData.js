@@ -1,11 +1,12 @@
-export const clientRequest = { model: "tokenizer", prompt: "Hello world" };
+export const clientRequest = { model: "llama-3.1-8b", prompt: "Hello world" };
 
 export const providerExamples = {
   vllm: {
     name: "vLLM",
-    target: "hosted_vllm/your-served-model",
+    modelName: "llama-3.1-8b",
+    target: "hosted_vllm/meta-llama/Llama-3.1-8B-Instruct",
     response: {
-      model: "your-served-model",
+      model: "meta-llama/Llama-3.1-8B-Instruct",
       count: 2,
       token_ids: [101, 102],
       tokens: ["Hello", " world"],
@@ -13,9 +14,10 @@ export const providerExamples = {
   },
   watsonx: {
     name: "Watsonx",
-    target: "watsonx/your-model-id",
+    modelName: "granite-3.3-8b",
+    target: "watsonx/ibm/granite-3-3-8b-instruct",
     response: {
-      model: "your-model-id",
+      model: "ibm/granite-3-3-8b-instruct",
       count: 2,
       token_ids: null,
       tokens: ["Hello", " world"],

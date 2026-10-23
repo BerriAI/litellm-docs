@@ -3,6 +3,7 @@ import Link from "@docusaurus/Link";
 import CodeWindow from "./CodeWindow";
 import HeroDemo from "./HeroDemo";
 import ProviderLabel from "./ProviderLabel";
+import { clientRequest, providerExamples } from "./exampleData";
 import TokenizeScene from "./TokenizeScene";
 import TokenIdExplainer from "./TokenIdExplainer";
 import RustBenchmark from "./RustBenchmark";
@@ -13,14 +14,12 @@ const implementation = "https://github.com/BerriAI/litellm/pull/48079";
 const providers = {
   vllm: {
     name: "vLLM",
-    prefix: "hosted_vllm",
-    modelEnv: "VLLM_MODEL",
     baseEnv: "HOSTED_VLLM_API_BASE",
     key: 'api_key=os.environ.get("HOSTED_VLLM_API_KEY"),',
     config: `model_list:
-  - model_name: tokenizer
+  - model_name: ${providerExamples.vllm.modelName}
     litellm_params:
-      model: hosted_vllm/your-served-model
+      model: ${providerExamples.vllm.target}
       api_base: os.environ/HOSTED_VLLM_API_BASE
       api_key: os.environ/HOSTED_VLLM_API_KEY
 
@@ -29,37 +28,35 @@ general_settings:
   },
   watsonx: {
     name: "Watsonx",
-    prefix: "watsonx",
-    modelEnv: "WATSONX_MODEL",
     baseEnv: "WATSONX_API_BASE",
     key: 'api_key=os.environ["WATSONX_APIKEY"],',
     config: `model_list:
-  - model_name: tokenizer
+  - model_name: ${providerExamples.watsonx.modelName}
     litellm_params:
-      model: watsonx/your-model-id
+      model: ${providerExamples.watsonx.target}
       api_base: os.environ/WATSONX_API_BASE
       api_key: os.environ/WATSONX_APIKEY
-      project_id: your-project-id
+      project_id: os.environ/WATSONX_PROJECT_ID
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY`,
   },
 };
 
-const request = `curl http://localhost:4000/tokenize \\
+const curlExample = (provider) => `curl http://localhost:4000/tokenize \\
   --fail-with-body \\
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "tokenizer",
-    "prompt": "Hello world"
+    "model": "${providerExamples[provider].modelName}",
+    "prompt": "${clientRequest.prompt}"
   }'`;
 
 function sdkExample(provider, asynchronous) {
   const item = providers[provider];
   const indent = asynchronous ? "    " : "";
   const params = [
-    `model=f"${item.prefix}/{os.environ['${item.modelEnv}']}",`,
+    `model="${providerExamples[provider].target}",`,
     'prompt="Hello world",',
     `api_base=os.environ["${item.baseEnv}"],`,
     item.key,
@@ -182,12 +179,8 @@ function Setup({ provider, onProviderChange }) {
           {surface === "gateway" ? (
             <>
               <p>
-                Replace the model{" "}
-                {provider === "watsonx"
-                  ? "and project placeholders"
-                  : "placeholder"}{" "}
-                with your {item.name} values. Set the environment variables used
-                below
+                Use a model available on your {item.name} deployment and set the
+                environment variables below
                 {provider === "vllm"
                   ? "; omit api_key if your vLLM server does not require it"
                   : ""}
@@ -201,9 +194,9 @@ function Setup({ provider, onProviderChange }) {
                   </CodeWindow>
                 </div>
                 <div>
-                  <div className={styles.codeLabel}>SAME CLIENT REQUEST</div>
+                  <div className={styles.codeLabel}>PASS YOUR MODEL</div>
                   <CodeWindow language="bash" title="request.sh">
-                    {request}
+                    {curlExample(provider)}
                   </CodeWindow>
                   <p className={styles.caption}>
                     Start with{" "}
@@ -217,8 +210,8 @@ function Setup({ provider, onProviderChange }) {
           ) : (
             <>
               <p>
-                Set <code>{item.modelEnv}</code> and <code>{item.baseEnv}</code>{" "}
-                to your model ID and provider base URL.{" "}
+                Pass the provider and model in <code>model</code>. Set{" "}
+                <code>{item.baseEnv}</code> to the provider base URL.{" "}
                 {provider === "watsonx" ? (
                   <>
                     Set <code>WATSONX_APIKEY</code> and{" "}
@@ -276,8 +269,8 @@ export default function TokenizeLaunch() {
             </p>
           </div>
           <p className={styles.heroIntro}>
-            Inspect a prompt’s tokens through one API for vLLM and Watsonx.
-            Switch providers in gateway config without changing your client.
+            Choose a model. Inspect your prompt’s tokens through the same API
+            for vLLM and Watsonx.
           </p>
           <TokenizeScene />
           <div className={styles.heroActions}>
@@ -303,19 +296,19 @@ export default function TokenizeLaunch() {
         <div className={styles.sectionHeading}>
           <h2 id="interface-title">Send a prompt and read the tokens</h2>
           <p>
-            Send a prompt and a model alias. Choose vLLM or Watsonx below to
-            compare responses while keeping the client request unchanged.
-            Configure the provider behind the alias in your gateway.
+            Pick a model below and watch the <code>model</code> field change.
+            Send the same JSON fields to the same endpoint for either provider.
           </p>
         </div>
         <div className={styles.requestDemo}>
           <HeroDemo provider={provider} onProviderChange={setProvider} />
         </div>
         <p className={styles.routingNote}>
-          To switch providers, point the <code>tokenizer</code> alias at vLLM or
-          Watsonx. Your platform team changes the provider URL, credentials and
-          model ID in gateway configuration. App developers keep the same
-          <code> POST /tokenize</code> request and response fields.
+          To choose between models on each call, give each one a different{" "}
+          <code>model_name</code> in your gateway config, then send that name in{" "}
+          <code>model</code>. Use a name your API key can access. To change
+          providers without a client update, keep the alias and change its
+          provider configuration.
         </p>
         <TokenIdExplainer />
       </section>

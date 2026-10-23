@@ -104,6 +104,8 @@
 }
 .scene .output pre code {
   display: block;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
   padding: 17px 20px 20px !important;
 }
 .scene .output :global(.token) {

@@ -112,35 +112,19 @@
     monospace;
 }
 
-.mapping {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 13px;
-  margin-top: 22px;
-  color: #7c88a1;
-  font-size: 12px;
-}
-.mapping > span {
-  margin-right: 3px;
-}
-.demo .mapping code {
-  padding: 0;
-  border: 0;
-  background: transparent !important;
-  color: #40568b !important;
+.modelName {
+  display: block;
+  margin-top: 6px;
   font:
     12px/1.5 "Geist Mono",
     ui-monospace,
     monospace;
-  overflow-wrap: anywhere;
 }
-.mapping svg {
-  width: 28px;
-  height: 16px;
-  fill: none;
-  stroke: #8a99bc;
-  stroke-width: 1.1;
+.demo .modelHint {
+  margin: 16px 3px 0;
+  color: #40506b;
+  font-size: 13px;
+  line-height: 1.7;
 }
 .caption {
   margin-top: 10px;
@@ -182,16 +166,6 @@
     flex-wrap: wrap;
     margin-bottom: 14px;
     gap: 10px 20px;
-  }
-  .mapping {
-    gap: 9px;
-    margin-top: 18px;
-  }
-  .mapping > span {
-    flex-basis: 100%;
-  }
-  .demo .mapping code {
-    font-size: 11px;
   }
   .caption {
     font-size: 11px;

@@ -7,11 +7,12 @@ import styles from "./heroDemo.module.css";
 /** @param {{provider: 'vllm' | 'watsonx', onProviderChange: (provider: 'vllm' | 'watsonx') => void}} props */
 export default function HeroDemo({ provider, onProviderChange }) {
   const selected = providerExamples[provider];
+  const request = { ...clientRequest, model: selected.modelName };
 
   return (
     <figure className={styles.demo} aria-label="Unified tokenize API example">
       <div className={styles.providers}>
-        <span>Switch provider</span>
+        <span>Choose a model</span>
         <div
           className={styles.selector}
           role="group"
@@ -23,6 +24,9 @@ export default function HeroDemo({ provider, onProviderChange }) {
             onClick={() => onProviderChange("vllm")}
           >
             <ProviderLabel provider="vllm" />
+            <span className={styles.modelName}>
+              {providerExamples.vllm.modelName}
+            </span>
           </button>
           <button
             type="button"
@@ -30,6 +34,9 @@ export default function HeroDemo({ provider, onProviderChange }) {
             onClick={() => onProviderChange("watsonx")}
           >
             <ProviderLabel provider="watsonx" />
+            <span className={styles.modelName}>
+              {providerExamples.watsonx.modelName}
+            </span>
           </button>
         </div>
       </div>
@@ -37,12 +44,17 @@ export default function HeroDemo({ provider, onProviderChange }) {
       <div className={styles.stage}>
         <section className={styles.editor} aria-label="Client request">
           <div className={styles.panelHeading}>
-            <span>Same client request</span>
+            <span>Pass the model you want to tokenize for</span>
             <code>POST /tokenize</code>
           </div>
           <CodeWindow language="json" title="request.json">
-            {formatJson(clientRequest)}
+            {formatJson(request)}
           </CodeWindow>
+          <p className={styles.modelHint}>
+            <code>model</code> matches <code>model_name</code> in your{" "}
+            <a href="#setup">gateway config</a>. This request calls{" "}
+            <strong>{selected.name}</strong>.
+          </p>
         </section>
         <section
           className={styles.editor}
@@ -58,20 +70,12 @@ export default function HeroDemo({ provider, onProviderChange }) {
         </section>
       </div>
 
-      <div className={styles.mapping}>
-        <span>Gateway target</span>
-        <code>{clientRequest.model}</code>
-        <svg viewBox="0 0 28 16" aria-hidden="true" focusable="false">
-          <path d="M1 8h24m-5-5 5 5-5 5" />
-        </svg>
-        <code>{selected.target}</code>
-      </div>
-
       <figcaption className={styles.caption}>
-        Your client keeps the same request. Your model determines the token
-        values.
+        Change <code>model</code> to choose another configured model. Keep the
+        same endpoint and JSON fields across providers.
         <span className={styles.srOnly} aria-live="polite" aria-atomic="true">
-          {selected.name} selected. The client request stays the same.
+          {selected.modelName} on {selected.name} selected. The request model is{" "}
+          {selected.modelName}.
         </span>
       </figcaption>
     </figure>

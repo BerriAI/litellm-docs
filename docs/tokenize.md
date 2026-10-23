@@ -1,12 +1,12 @@
 ---
 title: Unified tokenization
 sidebar_label: /tokenize
-description: Call one tokenization API across vLLM and IBM watsonx.ai. Keep your client request unchanged and route providers through LiteLLM.
+description: Choose a model in your /tokenize request and get its token count, IDs, and text through one API for vLLM and IBM watsonx.ai.
 ---
 
 # /tokenize
 
-Send one text string to vLLM or IBM watsonx.ai and read its token count, plus token IDs and text where the provider returns them. Use a gateway model alias to switch providers in configuration and keep your client request unchanged.
+Pass a model name and one text string to `/tokenize`. Read the token count, plus token IDs and text where the provider returns them. Choose Llama on vLLM or Granite on IBM watsonx.ai through the same endpoint and JSON fields.
 
 ## /tokenize or token counting
 
@@ -41,7 +41,7 @@ During inference, the model uses each ID to look up a learned vector: a list of 
 
 **Check a vLLM deployment.** Record the IDs for a fixed prompt before and after a deployment, using the same `add_special_tokens` setting. If the IDs change, check the tokenizer version and configuration.
 
-**Replace custom provider translators.** A serving team can configure a `tokenizer` alias for vLLM, then point it at watsonx.ai. App developers keep the same `/tokenize` request and response fields while the serving team maintains provider credentials and model settings.
+**Replace custom provider translators.** App developers select a model through `/tokenize`. LiteLLM translates requests and responses for vLLM and watsonx.ai, while the serving team maintains provider credentials and model settings.
 
 :::info Installation
 
@@ -51,15 +51,15 @@ During inference, the model uses each ID to look up a learned vector: a list of 
 
 ## Gateway quickstart
 
-Set `HOSTED_VLLM_API_BASE` to your vLLM server URL, `HOSTED_VLLM_API_KEY` to its API key, and `LITELLM_MASTER_KEY` to your gateway key. Replace `your-served-model` with the model name your vLLM server serves. Omit `api_key` if your server does not require authentication.
+This example uses `meta-llama/Llama-3.1-8B-Instruct`. Your vLLM server must serve that model under this name; replace it with your server's model name if needed. Set `HOSTED_VLLM_API_BASE` to the server URL, `HOSTED_VLLM_API_KEY` to its API key, and `LITELLM_MASTER_KEY` to your gateway key. Omit `api_key` if your server does not require authentication.
 
 Save this as `config.yaml`:
 
 ```yaml
 model_list:
-  - model_name: tokenizer
+  - model_name: llama-3.1-8b
     litellm_params:
-      model: hosted_vllm/your-served-model
+      model: hosted_vllm/meta-llama/Llama-3.1-8B-Instruct
       api_base: os.environ/HOSTED_VLLM_API_BASE
       api_key: os.environ/HOSTED_VLLM_API_KEY
 
@@ -73,29 +73,36 @@ Start the gateway:
 litellm --config config.yaml --port 4000
 ```
 
-Call the `tokenizer` alias:
+Pass `llama-3.1-8b` in the request to select that model:
 
 ```bash
 curl --fail-with-body http://localhost:4000/tokenize \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "tokenizer",
+    "model": "llama-3.1-8b",
     "prompt": "Hello world"
   }'
 ```
 
-You can use `/v1/tokenize` with the same body. For applications, use a [LiteLLM virtual key](./proxy/virtual_keys.md) with access to the model alias.
+You can use `/v1/tokenize` with the same body. For applications, use a [LiteLLM virtual key](./proxy/virtual_keys.md) with access to `llama-3.1-8b`.
 
-### Switch the alias to watsonx.ai
+### Choose a model on each request
 
-Set `WATSONX_API_BASE`, `WATSONX_APIKEY`, and `WATSONX_PROJECT_ID` for your watsonx.ai instance. Replace `your-model-id` with a model available in that project, then replace `config.yaml` with:
+The request's `model` field selects a `model_name` from your gateway configuration. Its `litellm_params.model` selects the provider and upstream model. In this example, `llama-3.1-8b` selects `meta-llama/Llama-3.1-8B-Instruct` on vLLM, and `granite-3.3-8b` selects `ibm/granite-3-3-8b-instruct` on watsonx.ai.
+
+To offer both models, use this configuration. Set `WATSONX_API_BASE`, `WATSONX_APIKEY`, and `WATSONX_PROJECT_ID` for your watsonx.ai instance. The Granite model must be available in your project; replace its upstream name if you use another model.
 
 ```yaml
 model_list:
-  - model_name: tokenizer
+  - model_name: llama-3.1-8b
     litellm_params:
-      model: watsonx/your-model-id
+      model: hosted_vllm/meta-llama/Llama-3.1-8B-Instruct
+      api_base: os.environ/HOSTED_VLLM_API_BASE
+      api_key: os.environ/HOSTED_VLLM_API_KEY
+  - model_name: granite-3.3-8b
+    litellm_params:
+      model: watsonx/ibm/granite-3-3-8b-instruct
       api_base: os.environ/WATSONX_API_BASE
       api_key: os.environ/WATSONX_APIKEY
       project_id: os.environ/WATSONX_PROJECT_ID
@@ -104,9 +111,21 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-Restart the gateway and run the same curl request. Your client keeps the alias and request format. LiteLLM translates `prompt` to watsonx.ai's `input`, adds the configured project, and returns the shared response format.
+Restart the gateway, then pass `granite-3.3-8b` to select Granite. Your API key must have access to that model name.
 
-The model's tokenizer determines the token values and count, so a provider or model change can change the result.
+```bash
+curl --fail-with-body http://localhost:4000/tokenize \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "granite-3.3-8b",
+    "prompt": "Hello world"
+  }'
+```
+
+The endpoint and JSON fields stay the same; the `model` value selects the tokenizer. LiteLLM translates `prompt` to watsonx.ai's `input`, adds the configured project, and returns the shared response fields.
+
+For a stable client request, choose a shared gateway name such as `text-tokenizer` and update the model behind that name in gateway configuration. Clients keep sending `"model": "text-tokenizer"` when you change providers. The upstream tokenizer determines the token values and count, so a model change can change the result.
 
 ## Python SDK
 
@@ -119,7 +138,7 @@ import os
 import litellm
 
 response = litellm.tokenize(
-    model="hosted_vllm/your-served-model",
+    model="hosted_vllm/meta-llama/Llama-3.1-8B-Instruct",
     prompt="Hello world",
     api_base=os.environ["HOSTED_VLLM_API_BASE"],
     api_key=os.environ.get("HOSTED_VLLM_API_KEY"),
@@ -140,7 +159,7 @@ import litellm
 
 async def main():
     response = await litellm.atokenize(
-        model="watsonx/your-model-id",
+        model="watsonx/ibm/granite-3-3-8b-instruct",
         prompt="Hello world",
         api_base=os.environ["WATSONX_API_BASE"],
         api_key=os.environ["WATSONX_APIKEY"],
@@ -167,10 +186,10 @@ Use the [token counting APIs](./count_tokens.md) to count tokens across other pr
 
 Both gateway paths accept a JSON object with these required fields:
 
-| Field    | Type   | Description                                                                                 |
-| -------- | ------ | ------------------------------------------------------------------------------------------- |
-| `model`  | string | Gateway model alias, or provider-prefixed model name in the SDK.                            |
-| `prompt` | string | Text to tokenize. LiteLLM accepts an empty string; the provider applies its own validation. |
+| Field    | Type   | Description                                                                                        |
+| -------- | ------ | -------------------------------------------------------------------------------------------------- |
+| `model`  | string | Configured gateway model name, such as `llama-3.1-8b`, or provider-prefixed model name in the SDK. |
+| `prompt` | string | Text to tokenize. LiteLLM accepts an empty string; the provider applies its own validation.        |
 
 Pass provider options as additional top-level fields in the JSON body or as SDK keyword arguments. To keep clients portable between providers, configure provider-specific options in the gateway's `litellm_params` and send only `model` and `prompt` from the client.
 
@@ -221,22 +240,24 @@ The gateway returns JSON. The SDK returns a `TokenizeResponse` with the same fie
 | `token_ids` | array of nonnegative integers or `null` | Numeric token IDs, when the provider exposes them.                                                                   |
 | `tokens`    | array of strings or `null`              | Token strings, when the provider exposes them.                                                                       |
 
-Illustrative vLLM response; actual IDs, strings, and counts depend on the model and special-token setting:
+The examples below use the configured model names and made-up token data. Your model and special-token setting determine the actual IDs, strings, and counts.
+
+Illustrative response for the `llama-3.1-8b` request:
 
 ```json
 {
-  "model": "your-served-model",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
   "count": 2,
   "token_ids": [101, 102],
   "tokens": ["Hello", " world"]
 }
 ```
 
-Illustrative watsonx.ai response:
+Illustrative response for the `granite-3.3-8b` request:
 
 ```json
 {
-  "model": "your-model-id",
+  "model": "ibm/granite-3-3-8b-instruct",
   "count": 2,
   "token_ids": null,
   "tokens": ["Hello", " world"]
