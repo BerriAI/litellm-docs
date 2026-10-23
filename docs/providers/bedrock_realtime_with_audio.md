@@ -14,15 +14,20 @@ Create a `config.yaml` file:
 model_list:
   - model_name: "bedrock-sonic"
     litellm_params:
-      model: bedrock/amazon.nova-sonic-v1:0
+      model: bedrock/amazon.nova-2-sonic-v1:0
       aws_region_name: us-east-1  # or your preferred region
     model_info:
       mode: realtime
 ```
 
+`amazon.nova-sonic-v1:0` has reached end of life on Bedrock, and requests to it fail with `The provided model identifier is invalid`. Use `amazon.nova-2-sonic-v1:0`.
+
 ### 2. Start LiteLLM Proxy
 
+Nova Sonic needs AWS's bidirectional streaming SDK, which ships in the `bedrock-realtime` extra. The LiteLLM Docker image already includes it.
+
 ```bash
+pip install 'litellm[proxy,bedrock-realtime]'
 litellm --config config.yaml
 ```
 
@@ -80,7 +85,7 @@ async def test_text_conversation():
             if event['type'] == 'response.text.delta':
                 print(event['delta'], end='', flush=True)
             elif event['type'] == 'response.done':
-                print("\n✓ Complete")
+                print("\nComplete")
                 break
 
 if __name__ == "__main__":
@@ -89,12 +94,17 @@ if __name__ == "__main__":
 
 ## Audio Streaming with Voice Conversation
 
+Nova Sonic sends answer audio much faster than it plays, often tens of seconds ahead. Keep reading the websocket while audio plays: put received audio on a queue and play it from a separate thread. A client that plays each chunk inside its receive loop stops reading the socket, misses the proxy's keepalive pings, and gets disconnected with `1011 (internal error) keepalive ping timeout` on long answers.
+
 ```python
 import asyncio
-import websockets
-import json
 import base64
+import json
+import queue
+import threading
+
 import pyaudio
+import websockets
 
 LITELLM_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
@@ -103,6 +113,14 @@ LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
 INPUT_RATE = 16000   # Nova Sonic expects 16kHz input
 OUTPUT_RATE = 24000  # Nova Sonic outputs 24kHz
 CHUNK = 1024
+
+def play_audio(output_stream, playback_queue):
+    """Play received audio on its own thread so the websocket keeps being read"""
+    while True:
+        audio_bytes = playback_queue.get()
+        if audio_bytes is None:
+            return
+        output_stream.write(audio_bytes)
 
 async def audio_conversation():
     # Initialize PyAudio
@@ -125,6 +143,9 @@ async def audio_conversation():
         output=True,
         frames_per_buffer=CHUNK
     )
+
+    playback_queue = queue.Queue()
+    threading.Thread(target=play_audio, args=(output_stream, playback_queue), daemon=True).start()
     
     async with websockets.connect(
         LITELLM_URL,
@@ -132,7 +153,7 @@ async def audio_conversation():
     ) as ws:
         # Wait for session.created
         await ws.recv()
-        print("✓ Connected")
+        print("Connected")
         
         # Configure session with audio
         session_update = {
@@ -151,34 +172,39 @@ async def audio_conversation():
         async def send_audio():
             """Capture and send audio from microphone"""
             while True:
-                audio_data = input_stream.read(CHUNK, exception_on_overflow=False)
+                audio_data = await asyncio.to_thread(input_stream.read, CHUNK, exception_on_overflow=False)
                 audio_b64 = base64.b64encode(audio_data).decode('utf-8')
                 await ws.send(json.dumps({
                     "type": "input_audio_buffer.append",
                     "audio": audio_b64
                 }))
-                await asyncio.sleep(0.01)
         
-        async def receive_audio():
-            """Receive and play audio responses"""
-            while True:
-                response = await ws.recv()
-                event = json.loads(response)
+        async def receive_events():
+            """Queue audio for playback and print text as it arrives"""
+            async for message in ws:
+                event = json.loads(message)
                 
                 if event['type'] == 'response.audio.delta':
                     audio_b64 = event.get('delta', '')
                     if audio_b64:
-                        audio_bytes = base64.b64decode(audio_b64)
-                        output_stream.write(audio_bytes)
+                        playback_queue.put(base64.b64decode(audio_b64))
                 
                 elif event['type'] == 'response.text.delta':
                     print(event['delta'], end='', flush=True)
                 
                 elif event['type'] == 'response.done':
-                    print("\n✓ Response complete")
+                    print("\nResponse complete")
+                
+                elif event['type'] == 'error':
+                    print(f"\nError: {event['error'].get('message')}")
         
-        # Run both tasks concurrently
-        await asyncio.gather(send_audio(), receive_audio())
+        try:
+            # Run both tasks concurrently
+            await asyncio.gather(send_audio(), receive_events())
+        except websockets.ConnectionClosedError as e:
+            print(f"\nSession closed (code {e.rcvd.code if e.rcvd else 'none'})")
+        finally:
+            playback_queue.put(None)
 
 if __name__ == "__main__":
     try:
@@ -189,11 +215,12 @@ if __name__ == "__main__":
 
 ## Using Tools/Function Calling
 
+After the client sends a tool result, Nova Sonic answers in a new response, so keep listening past the `response.done` that ends the tool call turn.
+
 ```python
 import asyncio
 import websockets
 import json
-from datetime import datetime
 
 LITELLM_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
@@ -259,6 +286,7 @@ async def conversation_with_tools():
         await ws.send(json.dumps({"type": "response.create"}))
         
         # Handle responses and tool calls
+        awaiting_tool_answer = False
         while True:
             response = await ws.recv()
             event = json.loads(response)
@@ -271,7 +299,7 @@ async def conversation_with_tools():
                 function_name = event['name']
                 arguments = json.loads(event['arguments'])
                 
-                print(f"\n Calling {function_name}({arguments})")
+                print(f"\nCalling {function_name}({arguments})")
                 result = get_weather(**arguments)
                 
                 # Send tool result back
@@ -285,9 +313,13 @@ async def conversation_with_tools():
                 }
                 await ws.send(json.dumps(tool_result))
                 await ws.send(json.dumps({"type": "response.create"}))
+                awaiting_tool_answer = True
             
             elif event['type'] == 'response.done':
-                print("\n✓ Complete")
+                if awaiting_tool_answer:
+                    awaiting_tool_answer = False
+                    continue
+                print("\nComplete")
                 break
 
 if __name__ == "__main__":
@@ -304,22 +336,18 @@ Available voices: `matthew`, `joanna`, `ruth`, `stephen`, `gregory`, `amy`
 - **Output**: 24kHz PCM16 (mono)
 
 ### Modalities
-- `["text"]` - Text only
-- `["audio"]` - Audio only  
-- `["text", "audio"]` - Both text and audio
+Nova Sonic always produces both text and audio, so LiteLLM sends both `response.text.delta` and `response.audio.delta` events whatever `modalities` is set to. Ignore the events your client does not need.
 
-## Example Test Scripts
+## Session Limits
 
-Complete working examples are available in the LiteLLM repository:
+Bedrock ends a Nova Sonic session on its own in three cases: no audio or other input arrives for 55 seconds, no new speech arrives for about 5 minutes (295 seconds) after the last response ends (sending silence does not keep the session open), or the session reaches 8 minutes. The client receives an `error` event, then the websocket closes with code 1011. For the two input timeouts the error carries Bedrock's `ValidationException: ... Timed out waiting for audio bytes or interactive content`. For the 8 minute limit it carries Bedrock's `ModelTimeoutException`. Clients that need longer conversations should open a new session when this happens.
 
-- **Basic audio streaming**: `test_bedrock_realtime_client.py`
-- **Simple text test**: `test_bedrock_realtime_simple.py`
-- **Tool calling**: `test_bedrock_realtime_tools.py`
+LiteLLM versions before v1.103.0 closed the websocket with code 1000 and no error event in these cases, so the client saw `ConnectionClosedOK: received 1000 (OK)` with no explanation. Upgrade to see Bedrock's reason.
 
 ## Requirements
 
 ```bash
-uv add litellm websockets pyaudio
+uv add websockets pyaudio
 ```
 
 ## AWS Configuration
@@ -344,6 +372,8 @@ aws configure
 - Ensure LiteLLM proxy is running on the correct port
 - Verify AWS credentials are properly configured
 - Check that the Bedrock model is available in your region
+- `ConnectionClosedError: received 1011 (internal error) keepalive ping timeout` means the client stopped reading the websocket for about 20 seconds or more, usually because it plays audio inside its receive loop. Play audio from a queue on a separate thread as shown above. Setting `ping_interval=None` on the client does not help, because the proxy sends the pings
+- A close with an `error` event about timing out or a model timeout is one of Bedrock's [session limits](#session-limits)
 
 ### Audio Issues
 - Verify PyAudio is properly installed
