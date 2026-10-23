@@ -5,12 +5,12 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-LiteLLM provides exact token counting by calling provider-specific token counting APIs. This gives you accurate token counts before sending requests, helping with cost estimation and context window management.
+LiteLLM provides token counts before sending a generation request. Supported providers use their token counting APIs; local tokenizers provide estimates for other providers.
 
 | Feature | Details |
 |---------|---------|
 | SDK Method | `litellm.acount_tokens()` |
-| Proxy Endpoints | `/v1/messages/count_tokens` (Anthropic format), `/v1/responses/input_tokens` (OpenAI format) |
+| Proxy Endpoints | `/utils/token_counter` (LiteLLM format), `/v1/messages/count_tokens` (Anthropic format), `/v1/responses/input_tokens` (OpenAI format), `/v1beta/models/{model}:countTokens` (Gemini format) |
 | Fallback | Local tiktoken-based counting for unsupported providers |
 
 ## Supported Providers
@@ -21,9 +21,15 @@ LiteLLM provides exact token counting by calling provider-specific token countin
 | Anthropic | [Messages `/count_tokens`](https://docs.anthropic.com/en/docs/build-with-claude/token-counting) | Anthropic Messages |
 | Vertex AI (Claude) | Vertex AI Partner Models Token Counter | Anthropic Messages |
 | Bedrock (Claude) | AWS Bedrock CountTokens API, then bedrock-mantle for a Claude model it rejects (see [Bedrock Claude models](#bedrock-claude-models)) | Anthropic Messages |
-| Gemini | Google AI Studio countTokens API | Anthropic Messages |
-| Vertex AI (Gemini) | Vertex AI countTokens API | Anthropic Messages |
+| Gemini | Google AI Studio countTokens API | Anthropic Messages or Gemini contents |
+| Vertex AI (Gemini) | Vertex AI countTokens API | Anthropic Messages or Gemini contents |
 | Other providers | Local tiktoken fallback | N/A |
+
+### Token counts and tokenization
+
+The counting endpoints return a count without token IDs or token strings. If your client needs vLLM's `tokens` array and `count`, use the existing [`/vllm/tokenize` pass-through endpoint](./pass_through/vllm.md#tokenize). It forwards to a vLLM server and preserves its response format.
+
+LiteLLM does not expose a unified `/tokenize` endpoint that translates token arrays between vLLM, Gemini, and Watsonx. In particular, the counting endpoints do not replace a translator that converts Watsonx's `result.tokens` and `result.token_count` into a vLLM-shaped response.
 
 ## SDK Usage
 
@@ -121,6 +127,61 @@ The credentials need the IAM action `bedrock-mantle:CountTokens` next to `bedroc
 Set `BEDROCK_MANTLE_API_BASE` to send the Mantle call to another host, for example a VPC endpoint. The deployment's `api_base` and `aws_bedrock_runtime_endpoint` apply to bedrock-runtime only. A Claude model Mantle does not serve in the region, and any non-Claude model, keeps the local fallback
 
 ## Proxy Usage
+
+### LiteLLM Format: `/utils/token_counter`
+
+Use this endpoint for a consistent count response across models. Pass the `model_name` from your proxy configuration and either a `prompt` string or `messages`.
+
+```bash
+curl -X POST "http://localhost:4000/utils/token_counter" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "{{openai_large}}",
+    "prompt": "Hello, how are you?"
+  }'
+```
+
+The response includes `total_tokens`, `request_model`, `model_used`, and `tokenizer_type`. By default this endpoint uses a local tokenizer, including the deployment's `model_info.custom_tokenizer` when configured. Local counts are estimates and can differ from the provider's tokenization or chat template.
+
+To use a supported provider's counting API, add `call_endpoint=true` as a **query parameter**. The model must resolve to a configured deployment with the provider's credentials. For example, with the Gemini deployment below:
+
+```bash
+curl -X POST "http://localhost:4000/utils/token_counter?call_endpoint=true" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "my-gemini-model",
+    "messages": [{"role": "user", "content": "Hello, how are you?"}]
+  }'
+```
+
+vLLM and Watsonx do not have a native counting adapter on this route; they use the local tokenizer even with `call_endpoint=true`. Use [`/vllm/tokenize`](./pass_through/vllm.md#tokenize) to get tokens from the vLLM server itself.
+
+### Gemini Format: `/v1beta/models/{model}:countTokens`
+
+Configure a Gemini deployment:
+
+```yaml
+model_list:
+  - model_name: my-gemini-model
+    litellm_params:
+      model: gemini/{{gemini_flash}}
+      api_key: os.environ/GEMINI_API_KEY
+```
+
+Send Gemini `contents` to the proxy, using the configured `model_name` in the URL:
+
+```bash
+curl -X POST "http://localhost:4000/v1beta/models/my-gemini-model:countTokens" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "Hello, how are you?"}]}]
+  }'
+```
+
+This route calls the provider's counting API and returns `totalTokens` and `promptTokensDetails`. `/models/my-gemini-model:countTokens` is an alias. No custom pass-through route or translation callback is required for this count request.
 
 ### OpenAI Format: `/v1/responses/input_tokens`
 

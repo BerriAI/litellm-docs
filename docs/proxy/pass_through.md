@@ -14,6 +14,12 @@ Route requests from your LiteLLM proxy to any external API. Perfect for custom m
 
 ## Quick Start with UI (Recommended)
 
+:::tip Token counting and tokenization
+
+LiteLLM already has [token counting endpoints](../count_tokens.md), including `/utils/token_counter` and Gemini's `/v1beta/models/{model}:countTokens`. To get token IDs from a vLLM server, use the built-in [`/vllm/tokenize`](../pass_through/vllm.md#tokenize) route. These do not require a custom pass-through endpoint. Cross-provider token-array translation, such as converting a Watsonx response into vLLM's format, remains a separate customization.
+
+:::
+
 The easiest way to create pass through endpoints is through the LiteLLM UI. In this example, we'll onboard the [Bria API](https://docs.bria.ai/image-generation/endpoints/text-to-image-base) and set a cost per request.
 
 ### Step 1: Create Route Mappings

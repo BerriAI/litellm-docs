@@ -139,6 +139,24 @@ curl -L -X POST 'https://my-vllm-server.com/chat/completions' \
 ```
 
 
+### Tokenization: `/tokenize` {#tokenize}
+
+Use `POST /vllm/tokenize` to call the vLLM server's `/tokenize` endpoint through LiteLLM. With the `my-vllm-model` deployment from the Quick Start:
+
+```bash
+curl -X POST "http://localhost:4000/vllm/tokenize" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "my-vllm-model",
+    "prompt": "Hello, how are you?"
+  }'
+```
+
+Set the deployment's `api_base` to the vLLM server root, such as `http://localhost:8000`, so this request reaches `/tokenize`. LiteLLM resolves `my-vllm-model` to the configured upstream model and returns vLLM's JSON response, including `tokens`, `count`, and `max_model_len`. Token IDs and counts depend on the model's tokenizer. See the [vLLM tokenization API](https://docs.vllm.ai/en/latest/api/vllm/entrypoints/serve/tokenize/).
+
+This uses the built-in vLLM pass-through route; no `pass_through_endpoints` entry or custom callback is required. The response stays in vLLM's native format. For a consistent token count response across providers, see [`/utils/token_counter`](../count_tokens.md#litellm-format-utilstoken_counter). That endpoint returns a count without a token array and uses a local tokenizer for vLLM.
+
 ## Advanced - Use with Virtual Keys 
 
 Pre-requisites

@@ -11,6 +11,7 @@ LiteLLM supports all models on VLLM.
 | Provider Route on LiteLLM | `hosted_vllm/` (for OpenAI compatible server), `vllm/` ([DEPRECATED] for vLLM sdk usage) |
 | Provider Doc | [vLLM ↗](https://docs.vllm.ai/en/latest/index.html) |
 | Supported Endpoints | `/chat/completions`, `/embeddings`, `/completions`, `/rerank`, `/audio/transcriptions` |
+| Tokenization | [`/vllm/tokenize`](../pass_through/vllm.md#tokenize) (vLLM's native token IDs and count) |
 
 
 ## Quick Start

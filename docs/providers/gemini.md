@@ -13,6 +13,7 @@ import TabItem from '@theme/TabItem';
 | Supported OpenAI Endpoints | `/chat/completions`, [`/embeddings`](../embedding/supported_embedding#gemini-ai-embedding-models), `/completions`, [`/videos`](./gemini/videos.md), [`/images/edits`](../image_edits.md) |
 | Lyria (music) | [Cost map & notes](./gemini/music.md) |
 | Pass-through Endpoint | [Supported](../pass_through/google_ai_studio.md) |
+| Token Counting | [`/v1beta/models/{model}:countTokens`](../count_tokens.md#gemini-format-v1betamodelsmodelcounttokens), or [`/utils/token_counter?call_endpoint=true`](../count_tokens.md#litellm-format-utilstoken_counter) for LiteLLM's count format |
 
 <br />
 
