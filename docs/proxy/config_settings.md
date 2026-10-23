@@ -860,6 +860,8 @@ router_settings:
 | NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
 | NOVITA_API_BASE | Base URL for Novita. Default is https://api.novita.ai/v3/openai
 | NSCALE_API_BASE | Base URL for Nscale
+| OCEANTOKEN_API_BASE | Base URL for OceanToken. Default is https://api.oceantoken.ai/v1
+| OCEANTOKEN_API_KEY | API key for OceanToken
 | OLLAMA_API_BASE | Base URL for Ollama. Default is http://localhost:11434
 | OLLAMA_API_KEY | API key for Ollama, for deployments that sit behind an authenticating proxy
 | OPENAI_LIKE_API_BASE | Base URL for the `openai_like` provider, used to reach any OpenAI-compatible endpoint
