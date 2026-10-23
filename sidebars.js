@@ -1355,6 +1355,7 @@ const sidebars = {
         },
         "count_tokens",
         "anthropic_count_tokens",
+        "tokenize",
         {
           type: "category",
           label: "/v1/decisions, /v1/systemone",

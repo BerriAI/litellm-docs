@@ -1,0 +1,182 @@
+.benchmark {
+  margin: 32px 0 0;
+  border: 1px solid #263c65;
+  border-radius: 12px;
+  background: #0c1425;
+  color: #e8efff;
+  overflow: hidden;
+  box-shadow: 0 18px 48px #1426491a;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 28px;
+  border-bottom: 1px solid #263450;
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0.06em;
+}
+.recorded {
+  color: #9eb1d4;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  padding: 36px 28px;
+  align-items: center;
+  background: radial-gradient(ellipse at 0 0, #243ce02b, transparent 70%);
+  font-variant-numeric: tabular-nums;
+}
+.throughput {
+  display: flex;
+  flex-direction: column;
+}
+.throughput strong {
+  color: #b9cbff;
+  font-size: clamp(56px, 8vw, 100px);
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+  font-weight: 500;
+}
+.throughput > span {
+  color: #b8c7e4;
+  font-size: 15px;
+  margin-top: 10px;
+}
+.latency {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+.latency > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.latency strong {
+  font-size: clamp(24px, 3.5vw, 40px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.latency small {
+  font-size: 18px;
+  color: #9eb1d4;
+}
+.latency span {
+  color: #9eb1d4;
+  font-size: 12px;
+}
+.chart {
+  padding: 0 28px 28px;
+}
+.chartLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #9eb1d4;
+  font:
+    10px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0.03em;
+}
+.chart button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #dbe6ff;
+  background: transparent;
+  font:
+    13px/1.5 "Geist Mono",
+    monospace;
+  text-align: left;
+}
+.chart button[aria-pressed="true"] {
+  background: #1a2946;
+  border-color: #5876b6;
+}
+.chart button:hover {
+  background: #18263f;
+}
+.concurrency {
+  flex: 0 0 28px;
+}
+.track {
+  flex: 1;
+  height: 17px;
+  background: #1d2b43;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.track > span {
+  display: block;
+  height: 100%;
+  background: #7a9aff;
+}
+.rate {
+  flex: 0 0 65px;
+  text-align: right;
+}
+.caption {
+  padding: 22px 28px;
+  border-top: 1px solid #263450;
+  background: #111d32;
+}
+.caption > strong {
+  display: block;
+  color: #e1eaff;
+  font:
+    12px/1.6 "Geist Mono",
+    monospace;
+}
+.benchmark .caption p {
+  color: #adbedc;
+  font-size: 13px;
+  margin: 12px 0;
+  max-width: 850px;
+}
+.benchmark .caption a {
+  color: #9bb9ff !important;
+  font-size: 13px;
+}
+.methods {
+  margin: 18px 0;
+  color: #adbedc;
+  font-size: 13px;
+}
+.methods summary {
+  cursor: pointer;
+  color: #c6d7fa;
+}
+@media (max-width: 700px) {
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px 20px;
+  }
+  .latency {
+    justify-content: flex-start;
+    gap: 40px;
+  }
+  .header,
+  .caption {
+    padding: 18px 20px;
+  }
+  .chart {
+    padding: 0 12px 20px;
+  }
+  .chartLabel {
+    margin: 0 8px 12px;
+    font-size: 8px;
+  }
+  .chart button {
+    gap: 9px;
+  }
+}

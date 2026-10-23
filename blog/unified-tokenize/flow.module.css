@@ -1,0 +1,368 @@
+.flow {
+  --flow-blue: #243ce0;
+  --flow-ink: #17213a;
+  --flow-muted: #4a5874;
+  --flow-border: #c9d2eb;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--flow-border);
+  background: #f7f9ff;
+  color: var(--flow-ink);
+  font-family:
+    "Geist",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color-scheme: light;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--flow-border);
+  background: #edf1ff;
+}
+
+.eyebrow,
+.fixedLabel,
+.providerLabel,
+.configLabel {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--flow-muted);
+}
+
+.switch {
+  display: inline-flex;
+  border: 1px solid var(--flow-blue);
+}
+
+.switch button {
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--flow-blue);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.switch button + button {
+  border-left: 1px solid var(--flow-blue);
+}
+
+.switch button:hover {
+  background: #dce4ff;
+}
+
+.switch button[aria-pressed="true"] {
+  background: var(--flow-blue);
+  color: #fff;
+}
+
+.switch button:focus-visible {
+  position: relative;
+  outline: 3px solid var(--flow-ink);
+  outline-offset: 4px;
+  z-index: 1;
+}
+
+.stages {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px minmax(0, 0.85fr) 30px minmax(
+      0,
+      1.15fr
+    );
+  align-items: stretch;
+  padding: 30px 22px;
+  background-image: radial-gradient(#243ce023 0.8px, transparent 0.8px);
+  background-size: 8px 8px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 1px solid var(--flow-border);
+  background: #fff;
+}
+
+.endpoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  margin: 19px 0 13px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.endpoint > span {
+  color: var(--flow-blue);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.flow .endpoint code,
+.flow .config code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: var(--flow-ink) !important;
+  font-size: inherit;
+}
+
+.flow .request,
+.flow .request code {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: var(--flow-ink) !important;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.flow .request {
+  width: 100%;
+  overflow: visible;
+}
+
+.fixedLabel,
+.providerLabel {
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+.fixedLabel {
+  color: var(--flow-blue);
+}
+
+.fixedLabel::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 7px 1px 0;
+  background: var(--flow-blue);
+  content: "";
+}
+
+.connector {
+  align-self: center;
+  width: 100%;
+  height: 20px;
+  fill: none;
+  stroke: var(--flow-blue);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.gateway {
+  align-items: center;
+  border-color: #93a2ee;
+  background: #edf1ff;
+  text-align: center;
+}
+
+.gatewayGraphic {
+  width: 148px;
+  max-width: 100%;
+  height: 96px;
+  margin: 9px 0 6px;
+  color: var(--flow-blue);
+}
+
+.gatewayTitle {
+  font-size: 17px;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  line-height: 1.4;
+}
+
+.flow .gatewayDescription {
+  margin: 9px 0 18px;
+  color: var(--flow-muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.config {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 13px;
+  border-top: 1px solid #bcc7f0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.configLabel {
+  margin-bottom: 6px;
+  font-size: 9px;
+}
+
+.configArrow,
+.config code span {
+  color: var(--flow-muted);
+}
+
+.provider {
+  border-color: #93a2ee;
+}
+
+.response {
+  padding: 18px 22px;
+  border-top: 1px solid var(--flow-border);
+  background: #edf1ff;
+}
+
+.responseHeading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.returnArrow {
+  color: var(--flow-blue);
+  font-size: 19px;
+  line-height: 1;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.fields > div {
+  min-width: 0;
+  padding-left: 10px;
+  border-left: 1px solid #aebbe5;
+}
+
+.fields dt,
+.fields dd {
+  margin: 0;
+  padding: 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+.fields dt {
+  color: var(--flow-blue);
+  font-weight: 600;
+}
+
+.fields dd {
+  color: var(--flow-muted);
+}
+
+.flow .responseNote {
+  margin: 13px 0 0;
+  color: var(--flow-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.caption {
+  padding: 12px 22px;
+  border-top: 1px solid var(--flow-border);
+  color: var(--flow-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .stages {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    padding: 20px 16px;
+  }
+
+  .connector {
+    justify-self: center;
+    width: 32px;
+    height: 34px;
+    transform: rotate(90deg);
+  }
+
+  .node {
+    padding: 17px;
+  }
+
+  .gatewayGraphic {
+    height: 70px;
+    margin: 5px 0;
+  }
+
+  .config {
+    max-width: 240px;
+  }
+
+  .fixedLabel,
+  .providerLabel {
+    padding-top: 15px;
+  }
+
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .toolbar,
+  .response,
+  .caption {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .stages {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .switch button {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch button {
+    transition: none;
+  }
+}
