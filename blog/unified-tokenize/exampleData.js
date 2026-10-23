@@ -22,3 +22,15 @@ export const providerExamples = {
     },
   },
 };
+
+/** @param {Record<string, string | number | null | Array<string | number>>} value */
+export function formatJson(value) {
+  const entries = Object.entries(value);
+  const properties = entries.map(([key, item], index) => {
+    const formatted = Array.isArray(item)
+      ? `[${item.map((token) => JSON.stringify(token)).join(", ")}]`
+      : JSON.stringify(item);
+    return `  "${key}": ${formatted}${index < entries.length - 1 ? "," : ""}`;
+  });
+  return `{\n${properties.join("\n")}\n}`;
+}

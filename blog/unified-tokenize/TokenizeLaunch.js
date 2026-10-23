@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Link from "@docusaurus/Link";
 import CodeWindow from "./CodeWindow";
 import HeroDemo from "./HeroDemo";
+import ProviderLabel from "./ProviderLabel";
 import TokenizeScene from "./TokenizeScene";
 import RustBenchmark from "./RustBenchmark";
 import styles from "./launch.module.css";
@@ -107,14 +108,14 @@ function Setup({ provider, onProviderChange }) {
             aria-label="Example provider"
             className={styles.buttonGroup}
           >
-            {Object.entries(providers).map(([key, value]) => (
+            {Object.keys(providers).map((key) => (
               <button
                 type="button"
                 key={key}
                 aria-pressed={provider === key}
                 onClick={() => onProviderChange(key)}
               >
-                {value.name}
+                <ProviderLabel provider={key} />
               </button>
             ))}
           </div>

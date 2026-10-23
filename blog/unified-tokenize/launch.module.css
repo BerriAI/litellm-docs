@@ -244,21 +244,44 @@
 }
 .buttonGroup {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   flex-wrap: wrap;
 }
-.buttonGroup button {
+.root .buttonGroup button {
+  appearance: none;
+  color-scheme: light;
+  min-height: 46px;
   font: inherit;
   font-size: 13px;
-  border: 1px solid transparent;
-  background: transparent;
+  font-weight: 500;
+  border: 1px solid #cbd4ea;
+  border-radius: 10px;
+  background: #ffffff;
   color: #344768;
   padding: 8px 13px;
 }
-.buttonGroup button[aria-pressed="true"] {
-  background: #243ce0;
+.root .buttonGroup button[aria-pressed="true"] {
+  background: #e9edff;
   border-color: #243ce0;
-  color: #fff;
+  color: #2038c6;
+}
+.root .buttonGroup button:hover {
+  background: #f1f4ff;
+  border-color: #94a5e8;
+  color: #2038c6;
+}
+.root .buttonGroup button[aria-pressed="true"]:hover,
+.root .buttonGroup button:active {
+  background: #dde5ff;
+  border-color: #243ce0;
+  color: #152cae;
+}
+.root .buttonGroup button:focus-visible {
+  background: #e9edff;
+  border-color: #243ce0;
+  color: #2038c6;
+  outline: 2px solid #526bff;
+  outline-offset: 5px;
 }
 .setupContent {
   padding: 24px 0 0;
@@ -440,7 +463,7 @@
     padding: 0 0 16px;
     gap: 12px;
   }
-  .buttonGroup button {
+  .root .buttonGroup button {
     padding: 8px 10px;
     font-size: 12px;
   }

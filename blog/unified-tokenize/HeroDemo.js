@@ -1,19 +1,8 @@
 import React from "react";
 import CodeWindow from "./CodeWindow";
-import { clientRequest, providerExamples } from "./exampleData";
+import ProviderLabel from "./ProviderLabel";
+import { clientRequest, formatJson, providerExamples } from "./exampleData";
 import styles from "./heroDemo.module.css";
-
-/** @param {Record<string, string | number | null | Array<string | number>>} value */
-function formatJson(value) {
-  const entries = Object.entries(value);
-  const properties = entries.map(([key, item], index) => {
-    const formatted = Array.isArray(item)
-      ? `[${item.map((token) => JSON.stringify(token)).join(", ")}]`
-      : JSON.stringify(item);
-    return `  "${key}": ${formatted}${index < entries.length - 1 ? "," : ""}`;
-  });
-  return `{\n${properties.join("\n")}\n}`;
-}
 
 /** @param {{provider: 'vllm' | 'watsonx', onProviderChange: (provider: 'vllm' | 'watsonx') => void}} props */
 export default function HeroDemo({ provider, onProviderChange }) {
@@ -33,14 +22,14 @@ export default function HeroDemo({ provider, onProviderChange }) {
             aria-pressed={provider === "vllm"}
             onClick={() => onProviderChange("vllm")}
           >
-            vLLM
+            <ProviderLabel provider="vllm" />
           </button>
           <button
             type="button"
             aria-pressed={provider === "watsonx"}
             onClick={() => onProviderChange("watsonx")}
           >
-            Watsonx
+            <ProviderLabel provider="watsonx" />
           </button>
         </div>
       </div>
