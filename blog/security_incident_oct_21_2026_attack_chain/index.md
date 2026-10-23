@@ -1,10 +1,10 @@
 ---
 slug: security-incident-oct-21-2026-attack-chain
-title: "The attack chain behind the Oct 21, 2026 release compromise"
+title: "The attack chain behind the v1.107.0 LiteLLM release"
 date: 2026-10-23T10:00:00
 authors:
-  - mateo
   - oliver
+  - mateo
 description: "How a master key committed to a public repository in May led to three stolen GitHub tokens and the compromised litellm v1.107.0 release, step by step."
 tags: [security, incident-report]
 hide_table_of_contents: false
