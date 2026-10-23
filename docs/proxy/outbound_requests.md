@@ -47,10 +47,10 @@ Offline mode doesn't change requests to destinations in your config, such as LLM
 
 ### Hugging Face model lookups
 
-For `huggingface/` models, LiteLLM can call `huggingface.co` with no switch to turn it off:
+These model lookups can call `huggingface.co`, and no switch turns them off:
 
 - **Model config.** Looking up the context window of a `huggingface/` model reads its `config.json`. When the host is unreachable, the lookup returns no value.
-- **Chat templates.** Providers that build a text prompt from chat messages, such as SageMaker, vLLM, Replicate, Triton and Bedrock invoke, read the model's chat template. When the host is unreachable, LiteLLM falls back to a generic prompt format. Set a [custom prompt template](../completion/prompt_formatting) for the model to skip the lookup.
+- **Chat templates.** Providers that build a text prompt from chat messages, such as SageMaker, vLLM, Replicate, Triton, watsonx and Bedrock invoke, read the model's chat template. When the host is unreachable, LiteLLM falls back to a generic prompt format. Set a [custom prompt template](../completion/prompt_formatting) for the model to skip the lookup.
 - **Embedding task.** `huggingface/` embedding requests look up the model's task, and the request fails when the host is unreachable. Send `input_type` in the request to skip the lookup.
 
 ### Database tooling
