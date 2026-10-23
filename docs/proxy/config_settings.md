@@ -1336,6 +1336,7 @@ router_settings:
 | LITELLM_STORE_AUDIT_LOGS | Flag to record an audit log entry for every create, update and delete performed on management objects such as keys, teams and users. Environment equivalent of `litellm_settings.store_audit_logs`, read only when the config leaves that setting unset, and writing the entries requires an enterprise license. **Defaults to True on an enterprise license, False otherwise**
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
+| LITELLM_OFFLINE_MODE | Set to `true` to stop every request LiteLLM makes on its own, such as fetching the model cost map, Anthropic beta headers, auto router presets, policy templates, blog posts and the latest release, the breached password check and Hugging Face tokenizer downloads. Bundled copies are used instead. Requests to providers and other destinations you configure are unaffected. Default is `false`. See [Outbound requests and offline mode](./outbound_requests).
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
 | LITELLM_REASONING_AUTO_SUMMARY | If set to "true", automatically enables detailed reasoning summaries (`summary: "detailed"`) for reasoning models across all translation paths (Anthropic adapter, Responses API, etc.). Default is "false"
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM

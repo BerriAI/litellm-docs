@@ -430,6 +430,7 @@ const sidebars = {
               ],
             },
             "proxy/security_best_practices",
+            "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
             "proxy/rust_gateway",
           ],
