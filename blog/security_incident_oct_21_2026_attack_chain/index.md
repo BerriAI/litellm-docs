@@ -55,11 +55,11 @@ In response, at the beginning of our investigation, we took the following tempor
 
 As investigations began to shed light on the scope and details of the attack, we were able to begin laying out a roadmap necessary for secure account and process reinstatement.
 
-At this point, we are confident in our ability to safely issue a release by EOD today, and can finally provide our users with a fix for removing the eMudhra certificate authority from our trust store. We understand it has been frustrating that we have been slow to issue a release to remediate this high-profile issue. We will only issue releases when we can be confident in their safety.
+At this point, we are confident in our ability to safely issue a release by EOD today, providing our users with a fix for removing the eMudhra certificate authority from our trust store. We understand it has been frustrating that we have been slow to issue a release to remediate this high-profile issue. We will only issue releases when we can be confident in their safety.
 
 ### Process Improvements
 
-We know many of you want to hear what we’ve learned and what we’re changing. We’ll share that next week. Incidents like this create pressure to announce sweeping changes immediately, but we’d rather take a few days to understand where the real failures were, and why we didn’t detect this sooner, than commit to fixes that address the wrong problems. In the meantime, we didn’t want to hold back the investigation itself.
+We know many of you want to hear what we’ve learned and what we’re changing. We’ll share that next week.
 
 
 ## Timeline
