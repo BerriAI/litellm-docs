@@ -24,7 +24,7 @@ On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM
 
 ### GitHub Owner Access
 
-We use the LiteLLM Agent Platform internally to trigger automated pull requests to the LiteLLM repository for model price updates, which are then human-reviewed and merged. In order to create PRs, the system was configured with a GitHub authentication token. The token in question was not associated with a service account and was not scoped down. The key used was a GitHub CLI OAuth token associated with our GitHub organization owner's account.
+LiteLLM Agent Platform was an experimental project for self-hosted cloud agents to file PRs to GitHub repositories. In order to create PRs, the system was configured with a GitHub authentication token. The token in question was not associated with a service account and was not scoped down. The key used was a GitHub CLI OAuth token associated with our GitHub organization owner's account.
 
 On October 10th, the threat actor used this key to gain access to our LiteLLM Agent Platform and extracted this GitHub CLI OAuth token. From this point onwards, the threat actor had owner-level access to all repositories in our GitHub. GitHub CLI tokens are post-2fa and not subject to GitHub's "super-user" 2fa reauth flows associated with sensitive organization or repository actions.
 
