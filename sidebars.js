@@ -1549,6 +1549,7 @@ const sidebars = {
           "providers/llamafile",
           "providers/docker_model_runner",
           "providers/lemonade",
+          "providers/llmman",
           "providers/triton-inference-server",
           "providers/xinference",
           "providers/infinity",
