@@ -172,6 +172,10 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
         raise Exception("Failed custom auth")
 ```
 
+:::note Assigning roles
+LiteLLM only saves the `user_role` your handler returns when it creates the user on their first login. For users who already exist, the stored role isn't updated from the handler. If you're using the handler to translate IdP groups into LiteLLM roles, use role mappings instead (see "Mapping IdP Groups to LiteLLM Roles" under the Generic SSO Provider tab of [SSO for Admin UI](./admin_ui_sso.md)). They map group names to roles without code and update the stored role on every login.
+:::
+
 #### 2. Configure in config.yaml
 
 Pass the filepath to the config.yaml. 
