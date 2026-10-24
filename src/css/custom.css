@@ -2640,3 +2640,21 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
 :root:root {
   --doc-sidebar-hidden-width: 40px;
 }
+
+/* Blog embeds retain .markdown but not the surrounding docs page wrapper. */
+.markdown .button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Rich admonition titles contain inline code and text nodes, not flex columns. */
+.markdown .theme-admonition [class*='admonitionHeading'] {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.markdown .theme-admonition [class*='admonitionIcon'] {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 8px;
+}

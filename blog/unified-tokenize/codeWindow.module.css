@@ -155,7 +155,7 @@
   color: #c2ceff !important;
 }
 
-@media (max-width: 650px) {
+@container tokenize (max-width: 650px) {
   .canvas {
     padding: 12px 8px;
     border-radius: 13px;
@@ -180,5 +180,18 @@
 @media (prefers-reduced-motion: reduce) {
   .window .windowCode :global([class*="buttonGroup"]) * {
     transition: none !important;
+  }
+}
+
+@container tokenize (max-width: 360px) {
+  .titleBar {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 40px;
+  }
+  .windowDots {
+    display: none;
+  }
+  .filename {
+    text-align: left;
   }
 }

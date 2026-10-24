@@ -1,4 +1,5 @@
 .scene {
+  min-width: 0;
   margin: 32px 0 0;
   padding: 26px 0 24px;
   border-top: 1px solid #ffffff40;
@@ -12,6 +13,8 @@
 .canvas {
   display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: auto;
   overflow: visible;
 }
@@ -158,7 +161,7 @@
   letter-spacing: 0.06em;
 }
 .scene .labels strong {
-  font-size: clamp(20px, 2.3vw, 28px);
+  font-size: clamp(20px, 2.3cqw, 28px);
   font-weight: 450;
   letter-spacing: -0.04em;
   line-height: 1.3;
@@ -205,7 +208,7 @@
     stroke-dashoffset: -198;
   }
 }
-@media (max-width: 1000px) {
+@container tokenize (max-width: 1000px) {
   .scene .output pre,
   .scene .output pre code {
     font-size: 11px !important;
@@ -224,7 +227,7 @@
     font-size: 9px;
   }
 }
-@media (max-width: 650px) {
+@container tokenize (max-width: 650px) {
   .scene {
     margin-top: 24px;
     padding-top: 16px;
@@ -234,7 +237,7 @@
   }
   .scene {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .canvas {
     grid-row: 1;
@@ -270,8 +273,10 @@
     margin-top: 18px;
   }
 }
-@media (max-width: 360px) {
+@container tokenize (max-width: 360px) {
   .providerLogos {
+    flex-wrap: wrap;
+    max-width: 100%;
     font-size: 9px;
     gap: 5px;
   }

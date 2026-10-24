@@ -18,7 +18,7 @@ export default function MoyaiHero() {
 
   return (
     <>
-      <header className={styles.hero}>
+      <header className={styles.hero} data-full-width>
         <div className={styles.heading}>
           <time className={styles.date} dateTime={metadata.date}>{publishedDate}</time>
           <h1 className={styles.title}>{metadata.title}</h1>

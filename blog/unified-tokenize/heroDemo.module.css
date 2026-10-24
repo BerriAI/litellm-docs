@@ -144,7 +144,7 @@
   border: 0;
 }
 
-@media (max-width: 900px) {
+@container tokenize (max-width: 900px) {
   .stage {
     gap: 23px;
     padding: 34px 25px;
@@ -155,7 +155,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@container tokenize (max-width: 720px) {
   .stage {
     grid-template-columns: 1fr;
     gap: 29px;

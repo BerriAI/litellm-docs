@@ -1,13 +1,15 @@
 .root {
+  container: tokenize / inline-size;
   --blue: #243ce0;
   --ink: #15213c;
   --text: #40506b;
   --line: #cbd6ee;
   position: relative;
   isolation: isolate;
-  left: 50%;
-  width: min(1160px, calc(100vw - 48px));
-  transform: translateX(-50%);
+  --page-gutter: 24px;
+  width: 100%;
+  min-width: 0;
+  background: #f3f6fc;
   color-scheme: light;
   color: var(--text);
   font-family:
@@ -19,14 +21,12 @@
   font-size: 17px;
   line-height: 1.65;
 }
-.root::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  left: calc(50% - 50vw);
-  width: 100vw;
-  z-index: -1;
-  background: #f3f6fc;
+.root > section,
+.root > footer {
+  width: calc(100% - 2 * var(--page-gutter));
+  max-width: 1160px;
+  min-width: 0;
+  margin-inline: auto;
 }
 .root h1,
 .root h2,
@@ -35,7 +35,7 @@
 }
 .root h2 {
   margin: 0 0 20px !important;
-  font-size: clamp(30px, 3.8vw, 48px) !important;
+  font-size: clamp(30px, 3.8cqw, 48px) !important;
   line-height: 1.08;
   letter-spacing: -0.045em;
   font-weight: 500 !important;
@@ -69,8 +69,7 @@
 }
 .hero {
   position: relative;
-  left: calc(50% - 50vw);
-  width: 100vw;
+  width: 100%;
   background: var(--blue);
   color: #f4f6ff;
   overflow: hidden;
@@ -117,14 +116,14 @@
 .heroTitle h1 {
   color: #fff !important;
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-  font-size: clamp(100px, 15.5vw, 210px) !important;
+  font-size: clamp(100px, 15.5cqw, 210px) !important;
   font-weight: 600 !important;
   letter-spacing: -0.055em;
   line-height: 0.95 !important;
   margin: 0 !important;
 }
 .heroSubtitle {
-  font-size: clamp(23px, 3vw, 37px);
+  font-size: clamp(23px, 3cqw, 37px);
   font-weight: 350;
   line-height: 1.14;
   letter-spacing: -0.035em;
@@ -350,6 +349,7 @@
   border: 1px solid #cbd6ee;
   text-align: left;
   white-space: normal;
+  overflow-wrap: anywhere;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -387,7 +387,7 @@
   margin-top: 18px;
   font-size: 14px;
 }
-@media (max-width: 996px) {
+@container tokenize (max-width: 996px) {
   .heroInner {
     padding: 28px 32px 0;
   }
@@ -405,9 +405,10 @@
     grid-template-columns: 1fr 290px;
   }
 }
-@media (max-width: 700px) {
-  .root {
-    width: calc(100vw - 32px);
+@container tokenize (max-width: 700px) {
+  .root > section,
+  .root > footer {
+    --page-gutter: 16px;
     font-size: 16px;
   }
   .apiChoices li {
@@ -433,7 +434,7 @@
     margin-top: 24px;
   }
   .heroTitle h1 {
-    font-size: clamp(72px, 18vw, 120px) !important;
+    font-size: clamp(40px, 18cqw, 120px) !important;
   }
   .heroSubtitle {
     font-size: 23px;
@@ -501,7 +502,7 @@
     padding-top: 48px;
   }
 }
-@media (max-width: 360px) {
+@container tokenize (max-width: 360px) {
   .heroActions a {
     width: 100%;
   }

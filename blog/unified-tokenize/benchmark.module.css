@@ -82,14 +82,14 @@
 
 .latency strong {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-  font-size: clamp(120px, 18vw, 228px);
+  font-size: clamp(120px, 18cqw, 228px);
   font-weight: 600;
   letter-spacing: -0.075em;
   line-height: 0.85;
 }
 
 .latency > span {
-  font-size: clamp(30px, 4.5vw, 56px);
+  font-size: clamp(30px, 4.5cqw, 56px);
   font-weight: 500;
   letter-spacing: -0.06em;
 }
@@ -432,7 +432,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@container tokenize (max-width: 900px) {
   .performance {
     grid-template-columns: minmax(0, 1fr) 170px;
     gap: 24px;
@@ -440,7 +440,7 @@
   }
 
   .latency strong {
-    font-size: clamp(112px, 18vw, 168px);
+    font-size: clamp(112px, 18cqw, 168px);
   }
 
   .secondaryMetrics dd {
@@ -466,7 +466,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@container tokenize (max-width: 600px) {
   .masthead {
     gap: 8px;
     padding: 18px 20px;
@@ -488,7 +488,7 @@
   }
 
   .latency strong {
-    font-size: clamp(82px, 23vw, 140px);
+    font-size: clamp(82px, 23cqw, 140px);
   }
 
   .latency > span {
@@ -588,7 +588,7 @@
   }
 }
 
-@media (max-width: 400px) {
+@container tokenize (max-width: 400px) {
   .nodes {
     gap: 10px;
   }
