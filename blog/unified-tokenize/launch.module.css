@@ -328,12 +328,14 @@
   overflow-x: auto;
   margin-bottom: 24px;
 }
-.tableWrap table {
+.root .tableWrap table {
   display: table;
   width: 100%;
   margin: 0;
   font-size: 15px;
   border-collapse: collapse;
+  table-layout: fixed;
+  background: #f3f6fc;
 }
 .tableWrap caption {
   text-align: left;
@@ -341,20 +343,27 @@
   color: #566584;
   font-size: 13px;
 }
-.tableWrap th,
-.tableWrap td {
+.root .tableWrap th,
+.root .tableWrap td {
   color: var(--ink) !important;
   padding: 20px;
   border: 1px solid #cbd6ee;
   text-align: left;
   white-space: normal;
+  letter-spacing: normal;
+  text-transform: none;
 }
-.tableWrap thead {
+.root .tableWrap thead th {
   background: #e7edfc;
   color: #243653;
 }
-.tableWrap tbody tr {
+.root .tableWrap tbody th,
+.root .tableWrap tbody td {
   background: #f3f6fc;
+}
+.root .tableWrap tbody tr:hover th,
+.root .tableWrap tbody tr:hover td {
+  background: #e7edfc;
 }
 .footer {
   padding: 64px 0 16px;
@@ -397,13 +406,21 @@
   }
 }
 @media (max-width: 700px) {
+  .root {
+    width: calc(100vw - 32px);
+    font-size: 16px;
+  }
+  .apiChoices li {
+    font-size: 16px;
+    padding-left: 0;
+  }
   .heroTop > span {
     font-size: 9px;
     max-width: 135px;
     text-align: right;
   }
   .heroInner {
-    padding: 24px 24px 0;
+    padding: 24px 16px 0;
   }
   .heroTop {
     padding-bottom: 20px;
@@ -475,23 +492,16 @@
     padding: 8px 10px;
     font-size: 12px;
   }
-  .tableWrap th,
-  .tableWrap td {
-    padding: 12px;
-    font-size: 13px;
+  .root .tableWrap th,
+  .root .tableWrap td {
+    padding: 12px 6px;
+    font-size: 12px;
   }
   .footer {
     padding-top: 48px;
   }
 }
 @media (max-width: 360px) {
-  .root {
-    width: calc(100vw - 32px);
-  }
-  .heroInner {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
   .heroActions a {
     width: 100%;
   }

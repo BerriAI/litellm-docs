@@ -159,7 +159,7 @@
   .stage {
     grid-template-columns: 1fr;
     gap: 29px;
-    padding: 29px 20px 34px;
+    padding: 24px 12px;
     border-radius: 16px;
   }
   .providers {

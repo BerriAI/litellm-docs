@@ -157,7 +157,7 @@
 
 @media (max-width: 650px) {
   .canvas {
-    padding: 22px 16px;
+    padding: 12px 8px;
     border-radius: 13px;
   }
   .window {
@@ -171,7 +171,9 @@
     font-size: 12px !important;
   }
   .window .windowCode pre code {
-    padding: 7px 18px 24px !important;
+    padding: 7px 12px 20px !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
   }
 }
 

@@ -373,16 +373,18 @@
   text-underline-offset: 4px;
 }
 
-.methods {
+.benchmark .methods {
   margin: 0 0 22px;
   border-top: 1px solid #b9c9ee;
   border-bottom: 1px solid #b9c9ee;
   padding: 15px 0;
+  background: #edf2ff !important;
+  color: #304475 !important;
 }
 
-.methods summary {
+.benchmark .methods summary {
   cursor: pointer;
-  color: #243ce0;
+  color: #243ce0 !important;
   font-size: 13px;
   font-weight: 500;
 }
