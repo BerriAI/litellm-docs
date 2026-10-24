@@ -421,6 +421,11 @@ const config = {
             label: 'Docs',
           },
           {
+            to: '/docs/providers',
+            label: 'AI Providers',
+            position: 'left',
+          },
+          {
             type: 'docSidebar',
             sidebarId: 'integrationsSidebar',
             position: 'left',
