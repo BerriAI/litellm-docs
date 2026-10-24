@@ -1048,9 +1048,7 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 
 #### Keep the replacement after failover
 
-:::note Unreleased
-This option is introduced by [PR #48206](https://github.com/BerriAI/litellm/pull/48206) and is not yet included in a published release.
-:::
+See [PR #48206](https://github.com/BerriAI/litellm/pull/48206) for this option.
 
 To keep a session on its successful replacement after the original deployment recovers, add this to the proxy configuration and restart it:
 
