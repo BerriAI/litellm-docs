@@ -1546,6 +1546,7 @@ const sidebars = {
             "providers/vllm_batches",
           ] },
           "providers/lm_studio",
+          "providers/foundry_local",
           "providers/llamafile",
           "providers/docker_model_runner",
           "providers/lemonade",
