@@ -232,6 +232,38 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 
 To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. This is available starting in `v1.104.0`
 
+#### Apply a new team default to members with their own budget
+
+Changing `team_member_budget` leaves every member with their own budget on it. To move some of them onto the new default in the same update, send `team_member_budget_backfill` with `team_member_budget` on `/team/update`. This is available starting in `v1.108.0`.
+
+| `team_member_budget_backfill` | Members it moves onto the default |
+|---|---|
+| `none` (default) | Nobody |
+| `raise_to_default` | Members whose own budget is below the new default |
+| `lower_to_default` | Members whose own budget is above the new default |
+| `all_to_default` | Both of the above |
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "team_member_budget": 20, "team_member_budget_backfill": "raise_to_default"}'
+```
+
+The response says how many members moved:
+
+```json
+"team_member_budget_backfill_result": {"moved_to_default": 3, "skipped_other_reset_period": 1}
+```
+
+A moved member follows the team default from then on, so later changes to `team_member_budget` reach them too. Members are compared on their permanent budget, and a temporary increase keeps applying until its expiry. Only the dollar budget changes, so a member keeps any rate limit, model list or reset period of their own. Members whose budget resets on a different schedule than the default, such as weekly against a monthly default, are not compared and keep their budget. `skipped_other_reset_period` counts them.
+
+The new default and every member it moves are saved together, so an update that fails changes nothing. One update moves at most 50,000 members. Past that, `/team/update` returns a 422 and saves nothing. Save the default with `team_member_budget_backfill` set to `none`, then move members in batches with `POST /management/v1/teams/{team_id}/members/bulk_update`.
+
+In the Admin UI, saving a new **Default Budget (USD)** under **Team Member Settings** asks which members to move whenever a member has their own budget on either side of it. Team admins can apply a backfill when they are allowed to edit `team_member_budget`.
+
+<Image img={require('../../img/team_member_budget_backfill.png')} alt="The prompt asking which members with their own budget move onto the new team default" />
+
 #### Reset a team member's spend
 
 Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
