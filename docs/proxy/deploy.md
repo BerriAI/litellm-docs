@@ -424,7 +424,7 @@ Each module version defaults the four component images (gateway, backend, UI, mi
   <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true" target="_blank" rel="nofollow"><img src="/img/deploy-on-gcp.png" alt="Deploy on GCP" height="40" /></a>
 </div>
 
-Both buttons run the default example stacks from the [LiteLLM repo](https://github.com/BerriAI/litellm/tree/main/terraform/litellm) in a browser shell that is already authenticated to your cloud account, so there is nothing to install on your own machine.
+Both buttons open a browser shell that is already authenticated to your cloud account, so you deploy the default example stacks from the [LiteLLM repo](https://github.com/BerriAI/litellm/tree/main/terraform/litellm) without installing anything on your own machine. The GCP button also starts a guided tutorial; the AWS button only opens the shell, and you run the steps below in it.
 
 **GCP** clones the [terraform-google-litellm](https://github.com/BerriAI/terraform-google-litellm) module mirror at the latest stable release into Cloud Shell, which is a much smaller download than the full LiteLLM repo, and opens a guided [DeployStack tutorial](https://github.com/BerriAI/terraform-google-litellm/blob/v1.105.0/examples/default/TUTORIAL.md). You pick the project and answer a few prompts; the tutorial creates the Artifact Registry remote repository that Cloud Run needs to pull from `ghcr.io`, writes `terraform.tfvars` from your answers, and runs `terraform apply`.
 
@@ -451,7 +451,7 @@ cd litellm/terraform/litellm/aws/examples/default
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars`. A clone of the repo has no image tag of its own, so `image_tag` must name a published [LiteLLM release](https://github.com/BerriAI/litellm/releases). The example refuses a plaintext ALB unless you set `acm_certificate_arn` or, for a trial stack, `allow_plaintext_alb = true`. The gateway only loads models added in the Admin UI when it has `STORE_MODEL_IN_DB` set, so set it through `gateway_extra_env`. For a stack you plan to delete, `s3_force_destroy` and `skip_final_snapshot` let `terraform destroy` remove the bucket and the Aurora cluster without keeping a final snapshot:
+Edit `terraform.tfvars`. A clone of the repo has no image tag of its own, so `image_tag` must name a published [LiteLLM release](https://github.com/BerriAI/litellm/releases). The example refuses a plaintext ALB unless you set `acm_certificate_arn` or, for a trial stack, `allow_plaintext_alb = true`. The gateway only loads models added in the Admin UI when it has `STORE_MODEL_IN_DB` set, so set it through `gateway_extra_env`. The stack creates ElastiCache Redis and passes `REDIS_HOST`, `REDIS_PORT`, and `REDIS_SSL` to the containers, but the proxy only connects to it when `proxy_config` enables the cache with `litellm_settings = { cache = true }`. Without it, the Admin UI shows "No Redis configured" and `/cache/ping` returns `litellm.cache is None`. Keep `general_settings`, `router_settings`, and `litellm_settings` as sibling keys of `proxy_config`; a `litellm_settings` block nested inside `general_settings` is ignored. For a stack you plan to delete, `s3_force_destroy` and `skip_final_snapshot` let `terraform destroy` remove the bucket and the Aurora cluster without keeping a final snapshot:
 
 ```hcl title="terraform.tfvars"
 region = "us-east-1"
@@ -463,6 +463,13 @@ image_tag           = "v1.106.2"
 allow_plaintext_alb = true
 
 gateway_extra_env = { STORE_MODEL_IN_DB = "True" }
+
+proxy_config = {
+  general_settings = {}
+  litellm_settings = {
+    cache = true
+  }
+}
 
 s3_force_destroy    = true
 skip_final_snapshot = true
@@ -481,15 +488,25 @@ Apply the stack. It takes 10 to 15 minutes, and part of it runs the database boo
 terraform init && terraform apply
 ```
 
-When the apply finishes, get the URL and the generated master key:
+Terraform returns before the ECS services are ready, and until they are, the ALB answers with HTTP 503 and the Admin UI fails to log in. The same applies after each later `terraform apply` that changes `proxy_config` or `image_tag`: the old tasks keep serving the old configuration for a few minutes. Wait for the services to become stable, then get the URL and the generated master key:
 
 ```bash
-terraform output -raw alb_url
-aws secretsmanager get-secret-value --secret-id "$(terraform output -raw master_key_secret_arn)" \
-  --query SecretString --output text
+NAME="$(terraform output -raw ecs_cluster)"
+aws ecs wait services-stable --cluster "$NAME" \
+  --services "$NAME-gateway" "$NAME-backend" "$NAME-ui"
+ALB_URL="$(terraform output -raw alb_url)"
+MASTER_KEY="$(aws secretsmanager get-secret-value \
+  --secret-id "$(terraform output -raw master_key_secret_arn)" --query SecretString --output text)"
+echo "$ALB_URL"
 ```
 
-Log in to the Admin UI at `<alb_url>/ui` with the username `admin` and the master key as the password. The stack starts with no models, so add one in the UI, or declare models with `proxy_config` and their provider keys with `gateway_extra_secrets` as shown in the next section. Each service logs to CloudWatch under `/ecs/<tenant>-litellm-<env>/` (`gateway`, `backend`, `ui`, `migrations`, and `bootstrap-db`). To upgrade, change `image_tag` and run `terraform apply` again, which reruns the migrations.
+Check that the proxy uses Redis. A healthy response has `"status": "healthy"` and `"cache_type": "redis"`; `Cache not initialized` means the tasks that answered do not have `litellm_settings.cache` set:
+
+```bash
+curl -s "$ALB_URL/cache/ping" -H "Authorization: Bearer $MASTER_KEY"
+```
+
+Log in to the Admin UI at `<alb_url>/ui` with the username `admin` and the master key as the password. The stack starts with no models. To add one in the UI, open **Models + Endpoints**, select **Add Model**, choose the provider, enter the model and its credentials, and save; then send a test message from **Playground**. To declare models in Terraform instead, add a `model_list` to `proxy_config` and pass the provider keys with `gateway_extra_secrets` as shown in the next section. Each service logs to CloudWatch under `/ecs/<tenant>-litellm-<env>/` (`gateway`, `backend`, `ui`, `migrations`, and `bootstrap-db`). To upgrade, change `image_tag` and run `terraform apply` again, which reruns the migrations.
 
 Terraform keeps the stack's state in `terraform.tfstate` in the example directory. CloudShell deletes your home directory after 120 days without a session in that region, and without the state file Terraform can no longer update or destroy the stack, so use an [S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3) for any stack you keep. To delete a trial stack, run `terraform destroy` from the same directory. Without `s3_force_destroy`, the destroy fails if the versioned S3 bucket holds any object or old object version, and without `skip_final_snapshot` it leaves a final Aurora snapshot named `<tenant>-litellm-<env>-final-<hash>` that you delete yourself.
 
