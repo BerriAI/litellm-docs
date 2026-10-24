@@ -59,6 +59,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/enterprise', to: '/docs/enterprise'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
