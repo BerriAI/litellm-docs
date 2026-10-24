@@ -7,10 +7,6 @@ description: Use OpenCode Go through LiteLLM with one API key, automatic model r
 
 Use your OpenCode Go or Go Plus subscription through LiteLLM with the `opencode_go/` model prefix. LiteLLM selects the upstream API format for each supported model and records usage under the OpenCode Go provider.
 
-:::info Unreleased
-This provider is under development. Use a LiteLLM build containing the OpenCode Go provider before following this guide.
-:::
-
 OpenCode Go is the hosted inference service. The OpenCode coding app can also use other providers through LiteLLM. For that setup, see the [OpenCode quickstart](../tutorials/opencode_integration.md).
 
 ## Connect your Go account
