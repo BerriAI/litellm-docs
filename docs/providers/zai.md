@@ -19,7 +19,7 @@ import os
 
 os.environ['ZAI_API_KEY'] = ""
 response = completion(
-    model="zai/glm-4.7",
+    model="zai/glm-5.1",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -34,7 +34,7 @@ import os
 
 os.environ['ZAI_API_KEY'] = ""
 response = completion(
-    model="zai/glm-4.7",
+    model="zai/glm-5.1",
     messages=[
        {"role": "user", "content": "hello from litellm"}
    ],
@@ -47,33 +47,13 @@ for chunk in response:
 
 ## Supported Models
 
-We support ALL Z.AI GLM models, just set `zai/` as a prefix when sending completion requests.
+LiteLLM's Z.AI provider forwards chat completion requests to Z.AI's API without a model allowlist. Prefix a model available through that API with `zai/`, for example [`zai/glm-5.1`](https://models.litellm.ai/models/glm-5.1).
 
-| Model Name | Function Call | Notes |
-|------------|---------------|-------|
-| glm-4.7 | `completion(model="zai/glm-4.7", messages)` | **Latest flagship**, 200K context, **Reasoning** |
-| glm-4.6 | `completion(model="zai/glm-4.6", messages)` | 200K context |
-| glm-4.5 | `completion(model="zai/glm-4.5", messages)` | 128K context |
-| glm-4.5v | `completion(model="zai/glm-4.5v", messages)` | Vision model |
-| glm-4.5-x | `completion(model="zai/glm-4.5-x", messages)` | Premium tier |
-| glm-4.5-air | `completion(model="zai/glm-4.5-air", messages)` | Lightweight |
-| glm-4.5-airx | `completion(model="zai/glm-4.5-airx", messages)` | Fast lightweight |
-| glm-4-32b-0414-128k | `completion(model="zai/glm-4-32b-0414-128k", messages)` | 32B parameter model |
-| glm-4.5-flash | `completion(model="zai/glm-4.5-flash", messages)` | **FREE tier** |
+Browse the [Z.AI model catalog](https://models.litellm.ai/providers/zai) for current model names, context windows, and capabilities. The catalog uses LiteLLM's model price file and includes newer models as their metadata is added.
 
 ## Model Pricing
 
-| Model | Input ($/1M tokens) | Output ($/1M tokens) | Cached Input ($/1M tokens) | Context Window |
-|-------|---------------------|----------------------|---------------------------|----------------|
-| glm-4.7 | $0.60 | $2.20 | $0.11 | 200K |
-| glm-4.6 | $0.60 | $2.20 | - | 200K |
-| glm-4.5 | $0.60 | $2.20 | - | 128K |
-| glm-4.5v | $0.60 | $1.80 | - | 128K |
-| glm-4.5-x | $2.20 | $8.90 | - | 128K |
-| glm-4.5-air | $0.20 | $1.10 | - | 128K |
-| glm-4.5-airx | $1.10 | $4.50 | - | 128K |
-| glm-4-32b-0414-128k | $0.10 | $0.10 | - | 128K |
-| glm-4.5-flash | **FREE** | **FREE** | - | 128K |
+See the [Z.AI model catalog](https://models.litellm.ai/providers/zai) and individual model pages for current input, output, and cache pricing. These prices come from the same [model price file](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) that LiteLLM uses for cost tracking.
 
 ## Using with LiteLLM Proxy
 
@@ -86,7 +66,7 @@ import os
 
 os.environ['ZAI_API_KEY'] = ""
 response = completion(
-    model="zai/glm-4.7",
+    model="zai/glm-5.1",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 
@@ -100,9 +80,9 @@ print(response.choices[0].message.content)
 
 ```yaml
 model_list:
-  - model_name: glm-4.7
+  - model_name: glm-5.1
     litellm_params:
-        model: zai/glm-4.7
+        model: zai/glm-5.1
         api_key: os.environ/ZAI_API_KEY
   - model_name: glm-4.5-flash  # Free tier
     litellm_params:
@@ -123,7 +103,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "glm-4.7",
+    "model": "glm-5.1",
     "messages": [
       {
         "role": "user",
