@@ -6,7 +6,7 @@ Search retrieves matches through the same-origin `/api/docs/search` endpoint ove
 
 Run `npm run search:lab` and open [localhost:3347](http://localhost:3347/?q=entra) to compare **Jev ranking** and **Current ranking**. This experiment is local only and does not change the production search box. It reuses the search engine to retrieve up to 100 candidates, shows 25 initially, and offers **Show 25 more**. Each Jev result shows its previous rank and estimated first-result suitability. The toolbar shows server latency and gateway-reported model cost; these scores are not measured percentages of users.
 
-Use Node 24 or later and the existing dependencies. Put `DOCS_AI_API_KEY` in `.env.local`, with access to `typesafe/jev-latest` on the existing `DOCS_AI_BASE_URL` gateway. To reuse an existing environment file, set `DOCS_AI_ENV_FILE` to its path when launching. Credentials stay on the server. Download a matching snapshot of the public search corpus once:
+Use Node 24 or later and the existing dependencies. Set `DOCS_AI_BASE_URL` to your gateway’s HTTPS API base URL and put `DOCS_AI_API_KEY` in `.env.local`, with access to `typesafe/jev-latest` on the existing `DOCS_AI_BASE_URL` gateway. To reuse an existing environment file, set `DOCS_AI_ENV_FILE` to its path when launching. Credentials stay on the server. Download a matching snapshot of the public search corpus once:
 
 ```bash
 mkdir -p .cache-loader/jev-search
@@ -45,7 +45,7 @@ openai/gpt-6-luna
 openai/gpt-6.1-sol
 ```
 
-The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
+Set `DOCS_AI_BASE_URL` in `.env.local` to your gateway’s HTTPS API base URL, for example `https://your-gateway.example.com`. Include `/v1` if your gateway requires it; do not include `/chat/completions`. There is no default gateway. Without this setting, Ask AI returns 503 while keyword search still works. Start the local server:
 
 ```bash
 npm run search:serve
@@ -61,7 +61,7 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 The same-origin `/api/docs/search` function bundles only `build/search-index.json` and loads it once per function instance. `/api/docs/ask` bundles `build/search-*.json` for its research tools. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
-In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
+In the docs project's **Settings > Environment Variables**, set `DOCS_AI_BASE_URL` to the gateway’s HTTPS API base URL, add `DOCS_AI_API_KEY` as a server secret, and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. Existing deployments must set `DOCS_AI_BASE_URL` before deploying this version to keep Ask AI and the Slack bot available. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
 
 Keyword search is available without model credentials or an enable flag. `POST /api/docs/search` accepts `{query, type}`, with a query of 1 to 500 characters and an optional `all`, `docs`, `blog`, or `release` filter. It returns up to 100 results, uses `Cache-Control: no-store`, and makes no model calls. The existing engine preserves ranking, snippets, filters, typo handling, and chronological browsing. The endpoint limits request bodies to 16 KB and four concurrent requests per instance. The old Jev request-rate allowance does not apply to keyword searches. The Jev comparison remains available only through `npm run search:lab`.
 
@@ -69,7 +69,7 @@ Verify that typing produces a 200 response from `/api/docs/search` and no browse
 
 Before enabling public Ask AI access, use a dedicated virtual key restricted to the needed aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
 
-After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
+After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the gateway base URL, secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
 
 For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets and enable flags behind HTTPS. Route `/api/docs/ask` and `/api/docs/search` to it on the docs origin, and deploy the site and index together.
 
@@ -196,6 +196,6 @@ Configure `DOCS_BOT_SERVICE_TOKEN` with a random service secret and `DOCS_BOT_AI
 
 The bot route does not require `DOCS_AI_PUBLIC_ENABLED` and has no public per-IP, per-minute or four-request concurrency restriction. Authentication is mandatory, including on localhost. It retains body-read and answer deadlines, origin checks, client-disconnect cancellation, generic failures, the provider context-window error, and `Cache-Control: no-store`. The worker queues work and controls concurrency; its dedicated gateway key and hosting platform enforce the deployed capacity and budget.
 
-Both Vercel and `npm run search:serve` expose the route. Vercel bundles the same build-generated index and documents into its function; a warm function instance reuses that corpus across requests. The Slack worker never loads an index. Missing either bot secret returns 503; an incorrect bearer credential returns 401. An authenticated empty JSON object returns 400 without calling a model, which the worker uses as a configuration preflight.
+Both Vercel and `npm run search:serve` expose the route. Vercel bundles the same build-generated index and documents into its function; a warm function instance reuses that corpus across requests. The Slack worker never loads an index. Missing the gateway base URL or either bot secret returns 503; an incorrect bearer credential returns 401. An authenticated empty JSON object returns 400 without calling a model, which the worker uses as a configuration preflight.
 
 To record bot requests with a dedicated Lens ingestion key, set `DOCS_BOT_TRACING_KEY` in the docs hosting environment and redeploy. It overrides `LITELLM_TRACING_KEY` only for the authenticated bot route and uses the existing `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` and HTTP/protobuf exporter. Without the override, the bot retains the existing docs tracing configuration. The agent name remains `litellm-docs-search`; bot root spans include `docs.search.surface=slack`. Search, full-page reads, model calls, usage and complete answers use the existing instrumentation. The worker saves the signed trace reference per conversation so follow-ups join the same trace. No tracing SDK or Lens ingestion key is needed in the Slack worker.

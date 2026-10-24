@@ -10,7 +10,7 @@ function createRerankHandler(options) {
   let windowStart = now(), globalCount = 0, active = 0;
   return async (req, res) => {
     if (req.method !== 'POST') return send(res, 405, {error: 'Use POST'}, {Allow: 'POST'});
-    if (!config.apiKey || !allowAI({...config, publicAIEnabled: config.publicRerankEnabled})) {
+    if (!config.apiKey || !config.baseUrl || !allowAI({...config, publicAIEnabled: config.publicRerankEnabled})) {
       return send(res, 503, {error: 'Search reranking is not enabled. Local search is still available.'});
     }
     if (!config.publicRerankEnabled && (!loopback(req.socket.remoteAddress) || req.headers.host !== new URL(config.origin).host)) {

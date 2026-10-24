@@ -38,7 +38,7 @@ async function answerQuestion(options) {
 }
 
 async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
-  if (!config.apiKey) return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
+  if (!config.apiKey || !config.baseUrl) return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   const {mapCitations} = await import('./citations.mjs');
   const tracing = getTracing(config), callModel = createModelCaller({config, signal, fetchImpl});
   const emit = async (event, data) => {signal?.throwIfAborted(); await onEvent?.(event, data);};

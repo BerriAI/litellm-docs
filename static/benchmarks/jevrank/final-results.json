@@ -1,7 +1,7 @@
 {
   "timestamp_utc": "2026-10-21T04:45:59.060461+00:00",
   "head": "931b03c0bc12c8e82ce0e5dd27b510f2468c76ed",
-  "gateway": "https://gateway.litellm-sandbox.ai",
+  "gateway": "[redacted gateway URL]",
   "requested_model": "typesafe/jev-latest",
   "pricing_source": "gateway /model/info",
   "input_cost_per_token": 4.2e-08,

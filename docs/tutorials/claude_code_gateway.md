@@ -63,7 +63,7 @@ Sign in to LiteLLM with your organization's SSO. Inference uses the gateway's pr
 Replace the base URL with your gateway's URL. Set `claude_subscription` to `false` to select gateway-funded inference, including if you previously used subscription mode.
 
 ```bash
-lite config set base_url https://dev.gateway.litellm-sandbox.ai
+lite config set base_url https://your-gateway.example.com
 lite config set pkce true
 lite config set claude_subscription false
 ```
@@ -88,7 +88,7 @@ Use your own Claude subscription for inference while routing requests through Li
 Replace the base URL with your gateway's URL.
 
 ```bash
-lite config set base_url https://dev.gateway.litellm-sandbox.ai
+lite config set base_url https://your-gateway.example.com
 lite config set pkce true
 lite config set claude_subscription true
 ```

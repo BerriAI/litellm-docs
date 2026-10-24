@@ -7,7 +7,7 @@
       "case": "pointwise_sync",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "rerank_mode": "decisions",
         "decision_rerank": {
           "strategy": "pointwise",
@@ -32,7 +32,7 @@
       "case": "pointwise_async",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "rerank_mode": "decisions",
         "decision_rerank": {
           "strategy": "pointwise",
@@ -57,7 +57,7 @@
       "case": "multiple_choice",
       "request": {
         "model": "openai/typesafe/jev-latest",
-        "api_base": "https://gateway.litellm-sandbox.ai/v1",
+        "api_base": "[redacted gateway URL]",
         "rerank_mode": "decisions",
         "decision_rerank": {
           "strategy": "multiple_choice",

@@ -5,6 +5,12 @@ const {getTracing} = require('./tracing');
 const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
 
 const config = {baseUrl: 'https://gateway.example.com', apiKey: 'model-test-secret'};
+test('model calls require an explicitly configured gateway', () => {
+  for (const baseUrl of [undefined, '']) {
+    assert.throws(() => createModelCaller({config: {...config, baseUrl},
+      fetchImpl: () => assert.fail('must not send credentials without a configured gateway')}), /DOCS_AI_BASE_URL/);
+  }
+});
 const completion = (finish_reason, content, extra = {}) => Response.json({
   id: 'completion-test', model: 'actual-model', ...extra,
   choices: [{finish_reason, message: {content}}],

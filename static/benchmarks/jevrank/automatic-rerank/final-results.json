@@ -1,7 +1,7 @@
 {
   "timestamp_utc": "2026-10-21T05:31:50.507910+00:00",
   "head": "10de80b6452a9945af05fdbea9e0aa0501661c69",
-  "gateway": "https://gateway.litellm-sandbox.ai",
+  "gateway": "[redacted gateway URL]",
   "requested_model": "typesafe/jev-latest",
   "pricing_source": "gateway /model/info",
   "catalog_source": "bundled preview-branch catalog (LITELLM_LOCAL_MODEL_COST_MAP=True)",
