@@ -856,6 +856,8 @@ router_settings:
 | MODELSCOPE_API_BASE | Base URL for ModelScope
 | MODELSCOPE_API_KEY | API key for ModelScope
 | MORPH_API_BASE | Base URL for Morph. Default is https://api.morphllm.com/v1
+| NADIR_API_BASE | Base URL for Nadir, read by the `nadir/` chat provider, `nadir/bucket` [decision models](/docs/decisions/providers#nadir) and [Auto Router classifiers](/docs/auto_router/decision_classifiers#nadir) with `provider: nadir`. Default is https://api.getnadir.com/v1. Set it only for a self-hosted Nadir
+| NADIR_API_KEY | API key for Nadir, read by the `nadir/` chat provider, `nadir/bucket` decision models and Auto Router classifiers with `provider: nadir`. It goes only to `NADIR_API_BASE`, or to the hosted API when that is unset, and an explicit `api_key` always wins. Optional for decisions and classifiers, which call Nadir anonymously without it, rate-limited per IP
 | NEBIUS_API_BASE | Base URL for Nebius. Default is https://api.studio.nebius.ai/v1
 | NIMBLE_API_BASE | Base URL for the Nimble search provider. Default is https://sdk.nimbleway.com/v2
 | NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
