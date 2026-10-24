@@ -2025,7 +2025,9 @@ article a.card:hover {
     width: 100%;
   }
 
-  .blog-wrapper .markdown table {
+  .blog-wrapper .markdown table,
+  .blog-wrapper[data-theme='dark'] .markdown table {
+    background: transparent;
     border: 0;
     border-radius: 0;
     overflow: visible;
@@ -2044,7 +2046,11 @@ article a.card:hover {
     margin-bottom: 12px;
     padding: 6px 0;
     border: 1px solid var(--aurora-line-strong);
-    border-radius: 14px;
+    border-radius: var(--lite-radius-lg, 14px);
+  }
+
+  .blog-wrapper[data-theme='dark'] .markdown table tbody tr {
+    background: #161b22;
   }
 
   .blog-wrapper .markdown table td,
