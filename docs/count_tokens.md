@@ -186,7 +186,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 
 ### Proxy errors instead of local estimates
 
-From v1.107.0, the proxy count routes do not return a local tiktoken estimate when they cannot use the count from the provider. Before v1.107.0, the routes returned a 200 with this estimate. For some models, the estimate was very different from the correct count. The proxy count routes are:
+From v1.108.0, the proxy count routes do not return a local tiktoken estimate when they cannot use the count from the provider. Before v1.108.0, the routes returned a 200 with this estimate. For some models, the estimate was very different from the correct count. The proxy count routes are:
 
 - `/v1/messages/count_tokens`
 - `/v1/responses/input_tokens`
