@@ -227,6 +227,7 @@ const sidebars = {
             "observability/openmeter",
             "observability/pointfive",
             "observability/ramp_integration",
+            "observability/veqen",
             "observability/ternary",
             "observability/vantage",
         {
