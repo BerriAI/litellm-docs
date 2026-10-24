@@ -26,6 +26,7 @@ const sidebars = {
         slug: "/ai_tools"
       },
       items: [
+        { type: "ref", id: "subscriptions", className: "sidebar-xlink" },
         {
           type: "doc",
           id: "tutorials/openweb_ui",
@@ -1110,6 +1111,7 @@ const sidebars = {
     require('./docs/proxy/lens/sidebar'),
     { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "guides/index", className: "top-level-doc-item" },
+    { type: "doc", id: "subscriptions", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Routing & Reliability",
