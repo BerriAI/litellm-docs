@@ -1046,12 +1046,33 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 - If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
 - Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
 
+#### Keep the replacement after failover
+
+:::note Unreleased
+This option is introduced by [PR #48206](https://github.com/BerriAI/litellm/pull/48206) and is not yet included in a published release.
+:::
+
+To keep a session on its successful replacement after the original deployment recovers, add this to the proxy configuration and restart it:
+
+```yaml
+router_settings:
+  optional_pre_call_checks: ["session_affinity"]
+  session_affinity_repin_on_failover: true
+```
+
+For async Router SDK requests, pass `session_affinity_repin_on_failover=True` to `Router()` alongside the existing session-affinity configuration. The option defaults to `false`. When disabled, it adds no re-pinning cache reads, Redis calls, or background tasks.
+
+The pin moves only if the original deployment is still in cooldown or removed from the route when the replacement's successful response is processed. Failed or incomplete responses and temporary request filters do not move the pin. The replacement remains pinned after the original recovers, subject to the existing affinity TTL. Priority routing groups retain their existing behavior.
+
+When enabled with Redis, session selection reads the shared pin so another worker's local cache cannot send the session back to the original deployment. Re-pinning runs in the existing success callback, so requests already underway can finish on different replacements before the new pin takes effect.
+
 #### Settings
 
 | Setting | Description |
 |---|---|
 | `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
+| `session_affinity_repin_on_failover` | Keep a successful replacement after cooldown or removal. Default `false`, set at startup. Applies to proxy and async Router requests. See [re-pinning](#keep-the-replacement-after-failover). |
 | `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
 `deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
