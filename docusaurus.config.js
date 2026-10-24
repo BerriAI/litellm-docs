@@ -243,6 +243,7 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {

@@ -2013,6 +2013,64 @@ article a.card:hover {
   background: var(--ifm-menu-color-background-hover);
 }
 
+/* Blog tables on narrow screens: wide tables clip past the article edge, so
+   stack each row into a card and label every cell with its column header
+   (data-label comes from src/rehype/table-cell-labels.js). */
+@media (max-width: 996px) {
+  .blog-wrapper .markdown table,
+  .blog-wrapper .markdown table tbody,
+  .blog-wrapper .markdown table tr,
+  .blog-wrapper .markdown table td {
+    display: block;
+    width: 100%;
+  }
+
+  .blog-wrapper .markdown table {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .blog-wrapper .markdown table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .blog-wrapper .markdown table tbody tr {
+    margin-bottom: 12px;
+    padding: 6px 0;
+    border: 1px solid var(--aurora-line-strong);
+    border-radius: 14px;
+  }
+
+  .blog-wrapper .markdown table td,
+  .blog-wrapper .markdown table tbody tr:first-child td {
+    padding: 6px 14px;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .blog-wrapper .markdown table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .blog-wrapper .markdown table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--aurora-soft);
+    font-family: var(--ifm-font-family-monospace);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
 /* Key column: when the first cell is just a code span (a parameter, field or
    model name), set it as plain mono text instead of a chip. */
 :is(.markdown, [class*='mdxPageWrapper'] article) table td:first-child:has(> code:only-child) {
