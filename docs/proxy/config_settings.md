@@ -430,6 +430,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | custom_ui_sso_sign_in_handler | string | `null` | Custom handler for SSO sign-in logic in the UI |
 | database_connection_pool_timeout | integer | `60` (seconds) | Database connection pool timeout in seconds |
 | disable_error_logs | boolean | `false` | If true, suppresses error tracking and storage in the database |
+| disable_pre_routing_error_logs | boolean | `false` | If true, requests the proxy rejects before selecting a deployment (invalid or expired key, budget exceeded, model access denied, unknown model, unparsable body) are not written to `LiteLLM_SpendLogs` or the daily spend tables. Provider errors, guardrail blocks and rate limits are still logged. See [DB info](./db_info.md#disable-litellm_spendlogs) |
 | enable_health_check_routing | boolean | `false` | If true, enables health check-driven request routing to avoid unhealthy deployments |
 | background_health_check_model_groups | Optional[List[str]] | `null` (all groups) | Opt-in allowlist of model group names for background health checks. When set, only listed groups are probed and health-check routing applies only to them; unlisted groups keep their configured routing behavior. Defaults to None (all groups) |
 | health_check_ignore_transient_errors | boolean | `false` | If true, 429 (rate limit) and 408 (timeout) health check failures are ignored and do not affect routing or cooldown |
