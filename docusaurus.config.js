@@ -246,7 +246,9 @@ const config = {
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
-          limit: 50,
+          // Every post, so feed readers get every post's tags. Full text is
+          // trimmed to the newest 50 in src/feed/card-categories.js.
+          limit: false,
           createFeedItems: require('./src/feed/card-categories').createFeedItems,
         },
       },
