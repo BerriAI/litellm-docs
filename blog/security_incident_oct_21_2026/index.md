@@ -22,9 +22,9 @@ compiled malware which steals credentials and loads remote-code execution tools.
 All previous versions are safe, and the impacted releases have been pulled.
 **Enterprise Customers running the private enterprise release of LiteLLM were not impacted.**
 
-**Update (October 23, 21:50 UTC):** We have completed our investigation into the attack chain. The investigation was a process in which we continually learned additional information, meaning some of our assumptions and beliefs reflected in our status updates and the post below were later proven to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
-
 **Update (20:30 UTC):** We believe we have identified the attack chain which facilitated this attack. The attacker had to compromise multiple independent security controls to be successful. See **How this happened** below.
+
+**Update (October 23, 21:50 UTC):** This post was written while our investigation was ongoing. Some our assumptions and beliefs reflected in our status updates and the text below were later discovered to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
 
 {/* truncate */}
 
@@ -106,6 +106,10 @@ These instructions are courtesy of [LidorMachluf](https://github.com/LidorMachlu
 ---
 
 ## How this happened?
+
+:::tip Notice
+This post was written while our investigation was ongoing. Some our assumptions and beliefs reflected in our status updates and the text below were later discovered to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
+:::
 
 After the prior incident in March, we [meaningfully hardened our CI release pipeline](/blog/ci-cd-v2-improvements). We moved releases to a private repo, have a strict set of workflows used in order to create them via Trusted GitHub Publishers, made our docker release tags immutable, and are signing docker images.
 
