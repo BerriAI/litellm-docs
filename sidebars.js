@@ -1650,6 +1650,7 @@ const sidebars = {
           "providers/oci",
           "providers/openinfer",
           "providers/ovhcloud",
+          "providers/paxa",
           { type: "category", label: "Perplexity AI", items: [
             "providers/perplexity",
             "providers/perplexity_embedding",
