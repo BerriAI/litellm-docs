@@ -377,11 +377,24 @@
 }
 
 .immersive > :global(.markdown) {
-  max-width: 760px;
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0;
   font-size: 18px;
   line-height: 1.8;
+}
+
+/* Reading-width content and explicitly full-width components stay in normal flow.
+   The marketing blog also imports these components into a narrow column. */
+.immersive > :global(.markdown) > :not([aria-hidden='true']) {
+  max-width: min(712px, calc(100% - 48px));
+  margin-inline: auto !important;
+}
+
+.immersive > :global(.markdown) > [data-full-width] {
+  width: 100%;
+  max-width: none;
 }
 
 .immersive > :global(.markdown) h2 {
@@ -402,12 +415,10 @@
 
 .page.immersiveByline {
   position: relative;
-  left: 50%;
-  width: max-content;
-  max-width: calc(100vw - 48px);
-  margin: 0 0 2.5rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 2.5rem;
   padding: 0;
-  transform: translateX(-50%);
   background: transparent;
 }
 
@@ -429,17 +440,22 @@
 }
 
 .immersiveByline .authors {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 24px;
 }
 
 .immersiveByline .author {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
+
+.immersiveByline .author > span { min-width: 0; }
+.immersiveByline .avatar { flex-shrink: 0; }
 
 .immersiveByline .author b,
 .immersiveByline .author small {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .page.horizontalByline {

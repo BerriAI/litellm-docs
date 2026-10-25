@@ -55,6 +55,13 @@ You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/ma
 
 Set `disable_spend_logs: True` or `disable_error_logs: True` under `general_settings` to stop writing those tables. With spend logs disabled you lose per-request log detail in the UI but keep cost metrics in your logging integrations (s3, Prometheus, Langfuse); with error logs disabled you lose the Errors view in the UI but keep errors in application logs and other logging integrations. See [keeping error logs out of the database](./prod.md#keep-error-logs-out-of-the-database) in the production checklist.
 
+To keep the Errors view but stop rejected requests from filling the table, set `disable_pre_routing_error_logs: True` instead. Requests the proxy rejects before selecting a deployment (invalid or expired key, budget exceeded, model access denied, unknown model, unparsable body) then write no row to `LiteLLM_SpendLogs` or the daily spend tables, so a client retrying an exhausted key cannot create millions of zero-spend rows. Provider errors, guardrail blocks and rate limit errors are still logged.
+
+```yaml
+general_settings:
+  disable_pre_routing_error_logs: True
+```
+
 
 ## Migrating Databases 
 

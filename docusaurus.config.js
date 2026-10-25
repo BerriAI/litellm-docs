@@ -243,6 +243,7 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
@@ -419,6 +420,11 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Docs',
+          },
+          {
+            to: '/docs/providers',
+            label: 'AI Providers',
+            position: 'left',
           },
           {
             type: 'docSidebar',
