@@ -1,3 +1,8 @@
+---
+title: TopxAI
+description: Call TopxAI through LiteLLM with one API key. Configure chat, Responses, current model IDs and route-specific token prices.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -13,7 +18,7 @@ https://ai.topxea.com/docs
 
 | Property | Details |
 |-------|-------|
-| Description | One OpenAI- and Anthropic-compatible endpoint for Claude, GPT, Grok, Kimi, DeepSeek and a fine-tuned GLM served from a private deployment, at fixed USD prices on prepaid credit; prompts and completions are relayed in memory and never stored. |
+| Description | One OpenAI- and Anthropic-compatible endpoint for Claude, GPT, Grok, Kimi, and private DeepSeek and GLM deployments, at fixed USD prices on prepaid credit; prompts and completions are relayed in memory and never stored. |
 | Provider Route on LiteLLM | `topxai/` |
 | Supported Endpoints | `/chat/completions`, `/responses` |
 | API Reference | [TopxAI API reference](https://ai.topxea.com/docs/api-reference) |
@@ -28,7 +33,7 @@ os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://ai.topxea
 
 ## Available Models
 
-The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The models registered in LiteLLM's cost map, with the Auto-route price per million tokens:
+The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on October 25, 2026. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
@@ -38,14 +43,19 @@ The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://a
 | `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
 | `topxai/gpt-6-astra` | $5 | $25 | from 272,001 input tokens the whole request bills at $10 / $37.50; also on `/responses` |
 | `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
-| `topxai/kimi-k3` | $2.40 | $12 | 1M context |
-| `topxai/deepseek-flash` | $0.12 off-peak, $0.24 peak | $0.48 off-peak, $0.96 peak | 1M context; peak hours below |
-| `topxai/deepseek-v4-pro` | $0.528 off-peak, $1.056 peak | $1.584 off-peak, $3.168 peak | 1M context; peak hours below |
+| `topxai/kimi-k3.1-pro` | $2.40 | $12 | 1,048,576 context; 131,072 output; also on `/responses` |
+| `topxai/deepseek-flash-Abliterated` | $1.20 | $2.40 | 1,048,576 context; 262,144 output; private deployment; also on `/responses` |
 | `topxai/GLM-5.3-Abliterated` | $4 | $7 | text only; a fine-tuned GLM-5.3 served from a private deployment, not Z.ai's API |
 
-A key on TopxAI's Auto route sends each request to the lowest-priced line that serves the model. For Claude, GPT and Grok that is normally the shared pool at 50% of the provider's list price; keys pinned to the official line pay 90% of list instead. Kimi and DeepSeek each have one official line at 80% of list, and GLM-5.3-Abliterated one private-deployment route priced above the base model's list price. DeepSeek bills at the peak rate when TopxAI accepts the request during 01:00-04:00 or 06:00-10:00 UTC on a weekday that is not a Chinese public holiday, and at the off-peak rate at all other times.
+A key on TopxAI's Auto route sends each request to the lowest-priced line that serves the model. For Claude, GPT and Grok that is normally the shared pool at 50% of the provider's list price. Keys pinned to their official line pay 90% of list instead. Kimi K3.1 Pro has one official line at 120% of Kimi's current list price. GLM-5.3-Abliterated and deepseek-flash-Abliterated are private deployments with their own fixed prices, rather than the original providers' APIs.
 
-Cost tracking in LiteLLM uses the Auto-route prices above. For the DeepSeek models it applies the off-peak rate on the same UTC windows, but it prices a request when it completes and has no holiday calendar, so a request that crosses a window boundary or falls on a Chinese public holiday can be tracked at a different rate from the one TopxAI bills. For a key pinned to an official line, set that line's prices as described in [Custom Pricing](../proxy/custom_pricing).
+Cost tracking in LiteLLM uses the Auto-route prices above. For a key pinned to an official Claude, GPT or Grok line, set that line's prices as described in [Custom Pricing](../proxy/custom_pricing). DeepSeek Abliterated does not use the original DeepSeek model's peak and off-peak schedule.
+
+Kimi's cache read and default five-minute cache write cost $0.24 and $2.40 per million tokens. DeepSeek Abliterated cache reads cost $0.15 per million tokens. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
+
+Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `max` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://ai.topxea.com/docs/kimi-k3-1-pro).
+
+`kimi-k3`, `deepseek-flash` and `deepseek-v4-pro` are retired. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
 ## Usage - LiteLLM Python SDK
 
@@ -81,7 +91,7 @@ for chunk in stream:
 
 ### Responses API
 
-The GPT models and `grok-4.7` are also served on `/v1/responses`:
+The GPT models, `grok-4.7`, `kimi-k3.1-pro` and `deepseek-flash-Abliterated` are also served on `/v1/responses`. For Kimi, supply the conversation in `input` and set `store=False`; server-side conversation persistence has not been verified.
 
 ```python keep-model-ids showLineNumbers title="TopxAI Responses API"
 import litellm
@@ -91,6 +101,7 @@ os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = litellm.responses(
     model="topxai/gpt-6.1-sol",
     input="What is LiteLLM?",
+    store=False,
 )
 print(response)
 ```
@@ -109,9 +120,9 @@ model_list:
     litellm_params:
       model: topxai/gpt-6.1-sol
       api_key: os.environ/TOPXAI_API_KEY
-  - model_name: topxai/kimi-k3
+  - model_name: topxai/kimi-k3.1-pro
     litellm_params:
-      model: topxai/kimi-k3
+      model: topxai/kimi-k3.1-pro
       api_key: os.environ/TOPXAI_API_KEY
 ```
 
