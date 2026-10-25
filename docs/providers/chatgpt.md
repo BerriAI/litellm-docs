@@ -228,7 +228,7 @@ router_settings:
 
 Restart the proxy and send requests with `model: chatgpt-coding`. The router selects an eligible deployment and uses its saved account. Keep separate aliases when you need explicit account selection. For SDK calls, the path belongs to the process running Python. Both `litellm.completion` and `litellm.responses` accept the selector:
 
-```python title="Select an account in the SDK"
+```python keep-model-ids title="Select an account in the SDK"
 import litellm
 
 response = litellm.responses(
