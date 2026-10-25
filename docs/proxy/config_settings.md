@@ -833,6 +833,8 @@ router_settings:
 | GROQ_API_BASE | Base URL for Groq. Default is https://api.groq.com/openai/v1
 | HYPERBOLIC_API_BASE | Base URL for Hyperbolic
 | INCEPTION_API_BASE | Base URL for Inception. Default is https://api.inceptionlabs.ai/v1
+| INFERALL_API_BASE | Base URL for InferAll. Default is https://api.inferall.ai/v1
+| INFERALL_API_KEY | API key for InferAll
 | JINA_AI_API_BASE | Base URL for Jina AI embeddings. Default is https://api.jina.ai/v1
 | JINA_AI_API_KEY | API key for Jina AI
 | JINA_AI_TOKEN | Fallback for `JINA_AI_API_KEY`
