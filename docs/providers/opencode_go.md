@@ -79,6 +79,12 @@ curl http://localhost:4000/v1/chat/completions \
 
 The response contains the greeting in `choices[0].message.content`. Keep the upstream OpenCode key on the gateway. Clients use the LiteLLM key.
 
+## Add Go through the dashboard
+
+On a database-backed gateway, open **Models + Endpoints → Add Model**. Choose **OpenCode Go**, select a model, set its public model name, and enter your Console key in **API Key**. Use **Test Connect** to check the credentials, then **Add Model** to save the deployment. Follow your gateway's model-management permissions.
+
+Keep the Console key on the gateway. A client uses the saved public model name and its LiteLLM virtual key. To combine Go with other subscriptions, see the [local subscription setup guide](/blog/ai-subscriptions), which includes separate ChatGPT account deployments.
+
 ## Use OpenCode with this gateway
 
 Add this provider to your project's `opencode.json`, or merge it into your existing `provider` object:
