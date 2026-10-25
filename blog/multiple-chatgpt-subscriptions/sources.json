@@ -1,6 +1,6 @@
 {
   "runtime_revision": "2bfb56921662f75d7f6cc9f35a1d61f1858dedde",
-  "release_status": "Merge this documentation after runtime PR 41928. Source installation pins the verified implementation.",
+  "release_status": "Merge after runtime PR 41928 and a published gateway image containing per-deployment chatgpt_auth_file support. The guide uses the standard gateway quickstart; existing deployments skip installation.",
   "sources": [
     "https://github.com/BerriAI/litellm/pull/41928",
     "https://docs.litellm.ai/docs/providers/chatgpt",
@@ -8,11 +8,14 @@
     "https://opencode.ai/docs/providers",
     "https://opencode.ai/docs/go",
     "https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan",
-    "https://help.openai.com/en/articles/12642688"
+    "https://help.openai.com/en/articles/12642688",
+    "https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.sh",
+    "https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml"
   ],
   "screenshots": "Real dashboard at the runtime revision, using fictional account data and an API fixture. No model creation or credentials in screenshots. 1600x1000 captures; rounded frame supplied by article CSS.",
   "verification": "Two distinct ChatGPT accounts passed live Chat Completions and Responses through the proxy, including saved prompts. OpenCode Go configuration is checked against provider source and documentation; no live Go subscription request verified.",
   "render": "Render launch.html with the litellm-brand-visuals render.mjs script, --brand 2026 --theme light --scale 2.",
   "browser_verification": "Desktop and 390px mobile article layouts and listing cards inspected. Collapsed setup-prompt copy verified by a real paste into a local test field. Setup prompt has not been executed by a separate agent.",
-  "docker_verification": "Official Dockerfile built at the pinned runtime revision. Both ChatGPT accounts returned HTTP 200 and greeting text through Chat Completions and Responses with gateway authentication and writable auth directory mounts."
+  "docker_verification": "Official Dockerfile built at the pinned runtime revision. Both ChatGPT accounts returned HTTP 200 and greeting text through Chat Completions and Responses with gateway authentication and writable auth directory mounts.",
+  "installation_verification": "Quickstart command, default directory, Compose service, and file name checked against the official installer and Compose source. No fresh installation of a published image containing the feature has been verified. Runtime and prior container verification remain pinned to runtime_revision."
 }
