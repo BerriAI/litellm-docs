@@ -1642,6 +1642,7 @@ const sidebars = {
           "providers/morph",
           "providers/nadir",
           "providers/nano-gpt",
+          "providers/nearai",
           "providers/nebius",
           "providers/neosantara",
           "providers/nlp_cloud",
