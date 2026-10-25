@@ -161,9 +161,105 @@ curl http://localhost:4000/v1/responses \
   -d '{"model": "chatgpt/{{chatgpt}}", "input": [{"role": "user", "content": "Write a Python hello world"}]}'
 ```
 
+## Multiple accounts in one proxy
+
+Assign a saved ChatGPT login to each model deployment with `chatgpt_auth_file`. For the complete installation and client setup, see [How to use multiple ChatGPT subscriptions with LiteLLM](/blog/multiple-chatgpt-subscriptions).
+
+### Save each account's login
+
+From the directory where you will run the proxy, run each command in a terminal and complete its browser sign-in. Use a private browser window for the second command and choose the second account. The authenticator creates the directories and files.
+
+```bash title="Separate saved logins"
+umask 077
+python -c 'from litellm.llms.chatgpt.authenticator import Authenticator; Authenticator(auth_file="./auth/account-a/auth.json").get_access_token()'
+python -c 'from litellm.llms.chatgpt.authenticator import Authenticator; Authenticator(auth_file="./auth/account-b/auth.json").get_access_token()'
+```
+
+Keep each auth file private and writable for token refresh. In Docker, mount the containing directory on persistent writable storage and use the path inside the container. Relative paths resolve from the proxy's working directory, not from the configuration file's directory.
+
+### Assign a login to each deployment
+
+Save the following as `config.yaml`. This example gives each account a separate alias so you can verify them before pooling requests. Select a model that each account can use; access can differ between plans.
+
+```yaml keep-model-ids title="config.yaml"
+model_list:
+  - model_name: chatgpt-account-a
+    litellm_params:
+      model: chatgpt/gpt-6-luna
+      chatgpt_auth_file: ./auth/account-a/auth.json
+  - model_name: chatgpt-account-b
+    litellm_params:
+      model: chatgpt/gpt-6-luna
+      chatgpt_auth_file: ./auth/account-b/auth.json
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+Generate a gateway key in the same shell and start one proxy process. Keep the key in your local secret manager so you can load it in client shells.
+
+```bash title="Start the local proxy"
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+litellm --config config.yaml --host 127.0.0.1 --port 4000 --num_workers 1
+```
+
+From a second terminal with the same `LITELLM_MASTER_KEY` loaded, call account-a, then replace the model alias with `chatgpt-account-b`:
+
+```bash title="Check an account"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"chatgpt-account-a","input":[{"role":"user","content":"Say hello."}]}'
+```
+
+Each successful response contains a greeting in its `output` messages. If one alias fails, check that account's model access and saved login before pooling it. Both aliases also work with `/v1/chat/completions`.
+
+### Route across accounts
+
+To distribute requests, change both entries' `model_name` to `chatgpt-coding` and add this top-level configuration:
+
+```yaml title="Router settings"
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  allowed_fails: 1
+  cooldown_time: 60
+```
+
+Restart the proxy and send requests with `model: chatgpt-coding`. The router selects an eligible deployment and uses its saved account. Keep separate aliases when you need explicit account selection. For SDK calls, the path belongs to the process running Python. Both `litellm.completion` and `litellm.responses` accept the selector:
+
+```python title="Select an account in the SDK"
+import litellm
+
+response = litellm.responses(
+    model="chatgpt/gpt-6-luna",
+    chatgpt_auth_file="./auth/account-b/auth.json",
+    input=[{"role": "user", "content": "Say hello."}],
+)
+print(response.output)
+```
+
+LiteLLM does not read remaining subscription allowance or switch accounts before purchased credits start covering requests. Each account keeps its provider limits. Retries and cooldowns respond to eligible failures, while successful credit-backed requests continue. See [retry and fallback configuration](../proxy/reliability.md).
+
+### Configure accounts through the dashboard
+
+On a database-backed proxy, sign in as a proxy administrator and open **Models + Endpoints → Add Model**. Choose **ChatGPT Subscription**, select the model, and set its public alias. In **Advanced Settings → LiteLLM Params**, enter:
+
+```json
+{"chatgpt_auth_file":"/app/auth/account-a/auth.json"}
+```
+
+The file must already exist on the proxy host or inside its container. Repeat for the second account with its own file. Proxy administrators can set or replace this server-owned credential selector; delegated model-management access does not grant that permission. Inference callers cannot send `chatgpt_auth_file` at the top level or in `extra_body`, even with `allow_client_side_credentials` enabled.
+
+If an account needs a new login, stop the local proxy, repeat that account's terminal sign-in command with the same file path, and restart the proxy.
+
+Run one process for a local setup. Per-account file selection does not add cross-process refresh locking; the [refresh and storage limitations](#sign-in-before-starting-the-proxy) still apply to each account.
+
 ## Credential Scope and Attribution
 
-A proxy uses exactly one ChatGPT login: the `auth.json` in `CHATGPT_TOKEN_DIR`, which is set once for the whole process. Every request to a `chatgpt/` model goes upstream with that file's access token and the `ChatGPT-Account-Id` taken from it, whatever virtual key made the call, and LiteLLM ignores any ChatGPT token a client sends. Every key, user, and team that can call a `chatgpt/` model therefore uses the same ChatGPT account and workspace, and users cannot bring their own ChatGPT subscription through this provider. Serving several ChatGPT accounts takes one proxy deployment per account.
+Without `chatgpt_auth_file`, ChatGPT deployments use the process-wide login from `CHATGPT_TOKEN_DIR` and `CHATGPT_AUTH_FILE`. A proxy administrator can assign a different saved login to each deployment with `chatgpt_auth_file`.
+
+The selected deployment supplies both the access token and `ChatGPT-Account-Id`. A caller's LiteLLM virtual key controls model access; it does not select a ChatGPT login or override that deployment's credentials.
 
 LiteLLM attributes `chatgpt/` requests to the calling virtual key, user, and team like any other model and records their token counts. The models have no price in the cost map, so recorded spend is $0 and `max_budget` limits never trigger; cap usage with `rpm_limit` or `tpm_limit` on keys and teams instead. On the OpenAI side, all of the usage shows up under the account that signed in.
 
@@ -174,6 +270,12 @@ LiteLLM refreshes only when the stored access token is expired. A 401 from the C
 LiteLLM has no logout or revoke call for this provider. To stop the proxy using the account, delete `auth.json` (and the Secret it was seeded from on Kubernetes) and restart the proxy. To invalidate the tokens themselves, sign the session out from the ChatGPT account's security settings.
 
 ## Configuration
+
+### Per-deployment parameter
+
+| Parameter | Behavior |
+| --- | --- |
+| `chatgpt_auth_file` | Path to the selected account's saved login. Expands `~`, resolves relative paths against the process working directory, and overrides the default auth-file location. Omit it to retain the process-wide login. Configure it on the server, not in an inference request. |
 
 ### Environment Variables
 
