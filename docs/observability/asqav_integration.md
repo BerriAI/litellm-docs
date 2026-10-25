@@ -19,7 +19,7 @@ This callback writes a local, tamper-evident log: the SHA-256 chain shows a reco
 
 ## Quick start
 
-Set `ASQAV_LOG_PATH` to choose where the file lands (default: `~/.litellm_asqav_audit.jsonl`), then add `asqav` to `success_callback` and `failure_callback`:
+Set `ASQAV_LOG_PATH` to choose where the file lands (default: `~/.litellm_asqav_audit.jsonl`), then add `asqav` to `litellm.callbacks`. That one setting logs both successful and failed calls:
 
 ```python
 import litellm
@@ -27,8 +27,7 @@ import os
 
 os.environ["ASQAV_LOG_PATH"] = "/var/log/litellm_audit.jsonl"
 
-litellm.success_callback = ["asqav"]
-litellm.failure_callback = ["asqav"]
+litellm.callbacks = ["asqav"]
 
 response = litellm.completion(
     model="gpt-3.5-turbo",
@@ -58,8 +57,9 @@ Each line in the log is a JSON object. Fields:
 | `status` | `"success"` or `"failure"` |
 | `latency_ms` | End-to-end latency in milliseconds |
 | `prompt_tokens` / `completion_tokens` / `total_tokens` | Token counts |
-| `messages_digest` | SHA-256 of the messages array (omitted when `ASQAV_REDACT_CONTENT=false`) |
-| `response_content_digest` | SHA-256 of the response text (omitted when `ASQAV_REDACT_CONTENT=false`) |
+| `messages_digest` | SHA-256 of the messages array |
+| `response_content_digest` | SHA-256 of the response text |
+| `messages` / `response_content` | Message and response text in the clear, present only when `ASQAV_REDACT_CONTENT=false` |
 | `finish_reason` | Model finish reason |
 | `provider_request_id` | Provider request ID if available |
 | `metadata` | String-keyed metadata from the call |
@@ -74,7 +74,9 @@ ok, message = logger.verify_chain()
 print(ok, message)  # True ok
 ```
 
-`verify_chain` checks that every record's hash matches its content and that `prev_hash` links correctly to the previous record. Any missing or modified record causes it to return `(False, reason)`.
+`verify_chain` checks that every record's hash matches its content and that `prev_hash` links correctly to the previous record. An edited record, or a deleted or reordered record before the last one, makes it return `(False, reason)` naming the first broken line. It cannot tell that records were cut off the end of the file, or that the whole file was rebuilt. Signed receipts (below) cover that.
+
+The logger expects one writer per file. In a proxy with several workers, give each worker its own `ASQAV_LOG_PATH`.
 
 ## Local file vs. signed receipts
 
@@ -114,14 +116,13 @@ litellm.callbacks = [AsqavSigningLogger(agent_name="my-agent")]
 Without an API key the logger warns once and no-ops; signing is evidence, not enforcement, so it
 never blocks the LLM call.
 
-`AsqavSigningLogger` signs each call through the Asqav API and stitches the returned receipt into the same local JSONL index, so the chain and the third-party-verifiable receipts stay linked. See [`asqav/extras/litellm`](https://github.com/jagmarques/asqav-sdk/blob/main/python/src/asqav/extras/litellm.py).
+`AsqavSigningLogger` signs each call through the Asqav API and appends a local JSONL index line with the receipt's `signature_id` and `verification_url`, which `asqav verify-litellm-log` checks later. Its index lines are not part of the `asqav` callback's hash chain, so if you turn on both, point them at different files (the SDK logger takes `log_path=`). Otherwise `verify_chain` reports a hash mismatch on the first index line. See [`asqav/extras/litellm`](https://github.com/jagmarques/asqav-sdk/blob/main/python/src/asqav/extras/litellm.py).
 
 ## LiteLLM proxy config
 
 ```yaml
 litellm_settings:
-  success_callback: ["asqav"]
-  failure_callback: ["asqav"]
+  callbacks: ["asqav"]
 
 environment_variables:
   ASQAV_LOG_PATH: "/var/log/litellm_audit.jsonl"
