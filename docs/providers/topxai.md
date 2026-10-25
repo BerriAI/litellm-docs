@@ -12,7 +12,7 @@ https://ai.topxea.com/docs
 
 :::tip
 
-**We support ALL TopxAI chat models, just set `model=topxai/<any-model-on-topxai>` as a prefix when sending litellm requests**
+Use `model="topxai/<model-id>"` for the text models below. Endpoint support varies by model.
 
 :::
 
