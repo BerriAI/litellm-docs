@@ -619,6 +619,29 @@ If LiteLLM cannot tokenize an individual record, it uses a conservative estimate
 
 :::
 
+### Tokens-per-day limits (`tpd_limit`)
+
+`tpd_limit` is an optional integer field for keys, teams, budgets, and end users or customers. Set it on keys with `/key/generate` or `/key/update`, teams with `/team/new` or `/team/update`, budgets with `/budget/new` or `/budget/update`, and end users or customers with `/customer/new`. The Admin UI shows the field on key, team, and budget create and edit forms.
+
+When a key, team, or end user has `tpd_limit`, batch submissions use that scope's daily token limit instead of its per-minute RPM and TPM limits. LiteLLM charges the total token count described above. Scopes without `tpd_limit` continue to use their per-minute checks. The 24-hour window starts when the scope is first charged and resets 24 hours after the window starts. Its counter is separate from the online limiter's counters.
+
+Only `POST /v1/batches` counts against `tpd_limit`. Online traffic, including `/chat/completions`, does not count against it and continues to use `rpm_limit` and `tpm_limit`. LiteLLM does not yet offer a requests-per-day limit or a daily limit for online traffic.
+
+Organization budgets can store `tpd_limit`, but batch submissions do not enforce it at the organization scope.
+
+An over-limit batch returns HTTP `429`. The error includes the batch's total tokens, the tokens remaining, the configured limit, and the reset time. For example, `Batch contains 18 tokens but only 12 tokens remaining out of 30 TPD limit. Limit resets at: <time>`.
+
+This example creates a key with a one-request-per-minute limit and a 30-token daily batch limit:
+
+```bash
+curl -X POST http://0.0.0.0:4000/key/generate \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{"rpm_limit": 1, "tpd_limit": 30}'
+```
+
+A two-row batch that fits within the token limit is accepted even though `rpm_limit` is `1`. A second batch that pushes the combined token count above 30 within the active window returns `429`. Online chat requests still hit the one-request-per-minute limit.
+
 ### Enqueued-token limits
 
 Per-minute windows fit batches poorly: a batch runs for hours, but its whole input file is charged to a single minute at submission. To govern batch submissions by outstanding batch work instead, set an enqueued-token allowance in the key or team metadata:
