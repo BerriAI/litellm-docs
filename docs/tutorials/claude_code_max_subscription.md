@@ -265,12 +265,6 @@ Claude Code owns the subscription credential. It stores the login locally (the m
 
 When a token is expired or revoked, Anthropic answers `401 OAuth access token is invalid.` and LiteLLM returns that to Claude Code; the user runs `/login` again. LiteLLM cannot revoke a Claude login. To cut a user off at the gateway, [block](/docs/proxy/virtual_keys) or delete their virtual key, which stops their requests through LiteLLM; their Claude login itself still works directly against Anthropic until they or their admin remove it.
 
-### Rate limits and cooldowns
-
-One caller's subscription error does not put the shared deployment into cooldown for other callers. Anthropic still enforces each account's limits. This requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485); no extra configuration is needed.
-
-If a healthy account still receives `429 No deployments available for selected model` after an upgrade, an old shared cooldown can remain in Redis or worker memory. See [recovering an existing cooldown](./claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit). That guide also includes a per-deployment workaround for older versions.
-
 ### Attribution and cost
 
 Spend is attributed to the virtual key in `x-litellm-api-key` and the user and team it belongs to, so per-user and per-team reporting, budgets, and rate limits work as usual. LiteLLM does not see which Claude account or organization the token belongs to. Cost is calculated at Anthropic API list prices and counts toward key, user, and team budgets even though Anthropic bills the usage to the subscription, so treat budgets here as usage caps in API-equivalent dollars.
@@ -334,6 +328,10 @@ curl "http://localhost:4000/spend/logs/ui?used_client_oauth_token=true" \
 Pass `used_client_oauth_token=false` for the requests the configured key paid for
 
 ## Troubleshooting
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, ask the proxy operator to check for an existing deployment cooldown. See [recovery steps](./claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### OAuth Token Not Being Forwarded
 
