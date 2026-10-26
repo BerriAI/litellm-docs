@@ -53,7 +53,13 @@ search_tools:
     litellm_params:
       search_provider: google_pse
       api_key: os.environ/GOOGLE_PSE_API_KEY
-      search_engine_id: os.environ/GOOGLE_PSE_ENGINE_ID
+```
+
+The search engine id (`cx`) is read only from the `GOOGLE_PSE_ENGINE_ID` environment variable of the proxy process, so export it before starting the proxy. A `search_engine_id` key in the search tool's `litellm_params` is not used as `cx`
+
+```bash
+export GOOGLE_PSE_API_KEY="AIza..."
+export GOOGLE_PSE_ENGINE_ID="your-search-engine-id"
 ```
 
 ### 2. Start the proxy

@@ -6,12 +6,14 @@ authors:
   - yujonglee
 description: "Starting with v1.102.0-rc.1, OCR calls use the Rust implementation by default while preserving the existing API."
 keywords: [litellm, rust, ocr, python sdk, ai gateway]
-tags: [litellm, rust, ocr, reliability]
+tags: [litellm, rust, rust-migration, ocr, reliability]
 ---
 
 import {OcrFixedArrivalChart, OcrProviderDelayChart, OcrThroughputChart} from '@site/src/components/OcrBenchmarkCharts';
 
 Starting with LiteLLM `v1.102.0-rc.1`, OCR runs on Rust by default. 
+
+{/* truncate */}
 
 ## No action required
 

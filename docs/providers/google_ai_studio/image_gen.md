@@ -92,9 +92,7 @@ response = litellm.image_generation(
     model="gemini/imagen-4.0-generate-001",
     prompt="A futuristic cityscape at night with neon lights",
     n=1,
-    size="1024x1024",
-    quality="standard",
-    response_format="url"
+    size="1024x1024"
 )
 
 for image in response.data:

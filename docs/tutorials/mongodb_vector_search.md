@@ -2,7 +2,7 @@
 
 Create three fictional policy documents, index them in MongoDB Atlas, test semantic search in the LiteLLM Admin UI, and use the results in a chat completion. The sample text below was written for this tutorial and does not describe real company policies.
 
-:::warning BETA
+:::warning[BETA]
 MongoDB vector stores are a **BETA** feature in LiteLLM. The integration searches existing MongoDB indexes. This tutorial prepares documents using the MongoDB Python driver before registering the index with LiteLLM. See the [integration guide](../providers/mongodb_vector_stores.md) for general setup and limitations.
 :::
 

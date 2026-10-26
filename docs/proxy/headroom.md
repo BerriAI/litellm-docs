@@ -9,7 +9,7 @@ This is available on both `/v1/chat/completions` and `/v1/messages` (Anthropic f
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/6cb57484c5444c9aa0585db1a1b17bb5" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/6cb57484c5444c9aa0585db1a1b17bb5" frameBorder="0" allowFullScreen></iframe>
 
 ## Architecture
 

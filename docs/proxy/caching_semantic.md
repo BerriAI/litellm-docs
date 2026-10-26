@@ -86,7 +86,7 @@ on**
 
 Semantic caching on a Valkey instance running the [valkey-search](https://github.com/valkey-io/valkey-search) module, such as AWS ElastiCache for Valkey. RediSearch and RedisVL are not required.
 
-:::info Requirements
+:::info[Requirements]
 
 The `valkey-search` module must be loaded (check with `MODULE LIST` / `FT._LIST`). On AWS ElastiCache, vector search needs a **node-based Valkey 8.2+ cluster**; a cluster-mode-disabled node group is supported and recommended, and a primary with read replicas is fine since only horizontal sharding is unsupported. ElastiCache **Serverless does not support vector search**. Multi-shard (cluster-mode-enabled) endpoints are not supported here, so use a cluster-mode-disabled endpoint and scale vertically.
 
@@ -205,7 +205,7 @@ replays cannot happen.
 
 :::note
 
-Caching only runs on the call types listed in `supported_call_types` (OpenAI-compatible surfaces such as `/chat/completions`, `/completions`, `/embeddings`, `/responses`). Requests on `/v1/messages` (Anthropic format) and provider passthrough routes never go through the cache.
+Caching only runs on the call types listed in `supported_call_types`. The default list covers `/chat/completions`, `/completions`, `/embeddings`, `/audio/transcriptions`, `/rerank`, `/responses` and `/v1/messages` (Anthropic format), so agentic clients that speak the Anthropic Messages API hit the semantic cache just like OpenAI-format clients. Provider passthrough routes such as `/anthropic/v1/messages` never go through the cache
 
 :::
 

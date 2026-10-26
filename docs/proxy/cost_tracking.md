@@ -6,15 +6,15 @@ import Image from '@theme/IdealImage';
 
 Track spend for keys, users, and teams across 100+ LLMs.
 
-LiteLLM automatically tracks spend for all known models. See our [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
+LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
-:::tip Keep Pricing Data Updated
+:::tip[Keep Pricing Data Updated]
 [Sync model pricing data from GitHub](./sync_models_github.md) to ensure accurate cost tracking.
 :::
 
-:::info Cost does not match your provider bill?
+:::info[Cost does not match your provider bill?]
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
@@ -22,7 +22,7 @@ Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/
 
 **Step 1**
 
-👉 [Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
+[Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
 
 **Step2** Send `/chat/completions` request
 
@@ -164,6 +164,15 @@ Navigate to the Usage Tab on the LiteLLM UI (found on https://your-proxy-endpoin
 
 </TabItem>
 </Tabs>
+
+### Requests that price to $0
+
+A request that carries usage but prices to `$0` on a model whose pricing entry has a non-zero rate is still written to `LiteLLM_SpendLogs` with `spend = 0`, and LiteLLM flags it in two places so the gap is visible instead of silently under-billed
+
+- one `WARNING` line in the proxy log naming the model group, the deployment's pricing entry and the pricing key it is missing, for example `pricing entry '<model_id>' has no input_cost_per_token, output_cost_per_token`
+- the Prometheus counter `litellm_zero_cost_requests_total`, labelled by `requested_model`, `model`, `model_id`, `api_provider` and `reason` (`missing_pricing_key`, `pricing_not_applied` or `cost_calculation_error`), so you can alert on it (see [Prometheus metrics](prometheus#request-counting-metrics))
+
+Free models (every rate the request used is set to `0`) and requests that carry no usage are not flagged. To fix a `missing_pricing_key`, set the missing rate in the deployment's `model_info` or in the model cost map, or set every rate to `0` to mark the model free
 
 ### Allowing Non-Proxy Admins to access `/spend` endpoints
 
@@ -310,31 +319,9 @@ curl -X GET 'http://localhost:4000/spend/keys' \
   -H 'Authorization: Bearer <internal-user-key>'
 ```
 
-### Legacy unscoped behavior (upgrade path)
+### Scoping cannot be disabled
 
-Before this scoping change, any authenticated key could list the **full** key/user tables. If you rely on that behavior (for example automation using an `internal_user` key), opt out explicitly:
-
-```yaml title="config.yaml" showLineNumbers
-general_settings:
-  legacy_unscoped_spend_list_endpoints: true
-```
-
-Or set the environment variable:
-
-```shell
-export LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS=true
-```
-
-When legacy mode is enabled, `/spend/keys` and `/spend/users` behave as they did previously for non-admin callers.
-
-To disable scoping without the legacy flag name:
-
-```yaml
-general_settings:
-  scope_spend_list_endpoints_to_caller: false
-```
-
-See [general_settings reference](./config_settings.md#general_settings---reference) for `scope_spend_list_endpoints_to_caller` and `legacy_unscoped_spend_list_endpoints`.
+Caller scoping on `/spend/keys` and `/spend/users` is unconditional. There is no `general_settings` key or environment variable that restores the pre-scoping behavior where any authenticated key could list the full key and user tables. Automation that needs the full tables must use a `proxy_admin` or `proxy_admin_viewer` key.
 
 :::info
 Prefer `/user/info?user_id=...` or `/global/spend/report` for per-user spend analytics. The list endpoints are intended for admin dashboards and scoped self-service views.
@@ -389,7 +376,7 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
 
 ### API Reference
 
-See our [Swagger API](https://litellm-api.up.railway.app/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
+See our [Swagger API](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
 :::info
 Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
@@ -397,7 +384,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 
 ## Custom Tags
 
-:::tip See Full Request Tags Documentation
+:::tip[See Full Request Tags Documentation]
 For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
 :::
 
@@ -466,7 +453,7 @@ response = client.chat.completions.create(
     ],
     extra_body={
         "metadata": {
-            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # 👈 Key Change
+            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # Key Change
         }
     }
 )
@@ -497,7 +484,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // 👈 Key Change
+        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // Key Change
       },
     });
     console.log(response);
@@ -590,7 +577,7 @@ litellm_settings:
   disable_add_user_agent_to_request_tags: true
 ```
 
-## ✨ (Enterprise) Generate Spend Reports
+## (Enterprise) Generate Spend Reports {#-enterprise-generate-spend-reports}
 
 Use this to charge other teams, customers, users
 
@@ -602,7 +589,7 @@ Use the `/global/spend/report` endpoint to get spend reports
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=team`
+Key Change: Specify `group_by=team`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=team' \
@@ -732,7 +719,7 @@ Customer [this is `user` passed to `/chat/completions` request](#how-to-track-sp
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=customer`
+Key Change: Specify `group_by=customer`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=customer' \
@@ -785,7 +772,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="per key" label="Spend for Specific API Key">
 
-👉 Key Change: Specify `api_key=sk-<your-litellm-api-key>`
+Key Change: Specify `api_key=sk-<your-litellm-api-key>`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-<your-litellm-api-key>' \
@@ -825,11 +812,11 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 :::info
 
-Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://litellm-api.up.railway.app/#/key%20management/generate_key_fn_key_generate_post)
+Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://docs.litellm.ai/api-reference/#/key%20management/generate_key_fn_key_generate_post)
 
 :::
 
-👉 Key Change: Specify `internal_user_id=ishaan`
+Key Change: Specify `internal_user_id=ishaan`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-12-30&internal_user_id=ishaan' \
@@ -901,7 +888,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 </Tabs>
 
-## 📊 Spend Logs API - Individual Transaction Logs
+## Spend Logs API - Individual Transaction Logs {#-spend-logs-api---individual-transaction-logs}
 
 The `/spend/logs` endpoint now supports a `summarize` parameter to control data format when using date filters.
 
@@ -932,11 +919,39 @@ curl -X GET "http://localhost:4000/spend/logs?start_date=2024-01-01&end_date=202
 - `summarize=false`: Analytics dashboards, ETL processes, detailed audit trails
 - `summarize=true`: Daily spending reports, high-level cost tracking (legacy behavior)
 
-## ✨ Custom Spend Log metadata
+## Paginated Spend Logs - `/spend/logs/v2`
+
+Use `/spend/logs/v2` for programmatic access to individual spend logs with page-based pagination. The legacy `/spend/logs` endpoint above truncates results to the 10,000 most recent matching rows (the response then carries an `x-litellm-spend-logs-truncated: true` header), so `/spend/logs/v2` is the recommended endpoint for exports and integrations.
+
+```bash title="Get a page of spend logs" showLineNumbers
+curl -X GET "http://localhost:4000/spend/logs/v2?start_date=2024-01-01%2000:00:00&end_date=2024-01-02%2023:59:59&page=1&page_size=100" \
+-H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+`start_date` and `end_date` take `YYYY-MM-DD HH:MM:SS` timestamps. `page` starts at 1 and `page_size` accepts up to 1000 rows per page. The endpoint also accepts filters such as `api_key`, `user_id`, `team_id`, `model`, `status_filter`, `min_spend` and `max_spend`; the full list is on your proxy's Swagger page (`/docs`) under `/spend/logs/v2`.
+
+```json title="Response format"
+{
+  "data": ["..."],
+  "total": 10000,
+  "page": 1,
+  "page_size": 100,
+  "total_pages": 100,
+  "total_is_capped": true
+}
+```
+
+### The `total` count is capped at 10,000
+
+Counting every matching row in a large time window caused expensive full scans on the spend logs table, so since v1.93.0 the count query behind this endpoint is bounded at 10,000 rows. When more rows match, `total` reports exactly `10000`, `total_pages` is derived from that capped value, and `total_is_capped` is `true`. Only the advertised count is capped. The data itself is never truncated, so pages past the advertised `total_pages` keep returning rows until the results are exhausted.
+
+There are two ways to read every matching row. When `total_is_capped` is `true`, ignore `total_pages` and keep requesting pages until you receive an empty `data` array. Alternatively, chunk your query into smaller time windows so each window matches fewer than 10,000 rows; every window then reports an exact `total`. Prefer the windowing approach for large exports, since it also avoids deep offset pagination, which gets slower the further in you page.
+
+With `group_by_session=true`, pagination is bounded to the same 10,000-row window and a page starting past it returns no rows, so chunk the time window instead of paging past the cap.
+
+## Custom Spend Log metadata
 
 Log specific key,value pairs as part of the metadata for a spend log
-
-<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
@@ -1065,7 +1080,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        spend_logs_metadata: { // 👈 Key Change
+        spend_logs_metadata: { // Key Change
             hello: "world"
         }
       }
@@ -1225,7 +1240,7 @@ curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
         "metadata": {
             "user_api_key": "example-api-key-123",
             "user_api_key_alias": null,
-            "spend_logs_metadata": { # 👈 LOGGED CUSTOM METADATA
+            "spend_logs_metadata": { # LOGGED CUSTOM METADATA
                 "hello": "world"
             },
             "user_api_key_team_id": null,

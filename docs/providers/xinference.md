@@ -19,6 +19,8 @@ os.environ['XINFERENCE_API_BASE'] = "http://127.0.0.1:9997/v1"
 os.environ['XINFERENCE_API_KEY'] = "anything" #[optional] no api key required
 ```
 
+These env variables are only read by `embedding()`. `image_generation()` ignores them, so pass `api_base` and a non-empty `api_key` on the call or in `litellm_params`. Without `api_base` the request goes to `https://api.openai.com/v1`, and without `api_key` the call fails with an AuthenticationError unless `OPENAI_API_KEY` is set
+
 ## Sample Usage - Embedding
 ```python showLineNumbers
 from litellm import embedding
@@ -58,6 +60,7 @@ response = image_generation(
     model="xinference/stabilityai/stable-diffusion-3.5-large",
     prompt="A beautiful sunset over a calm ocean",
     api_base="http://127.0.0.1:9997/v1",
+    api_key="anything",  # any non-empty value, Xinference does not check it
 )
 print(response)
 ```
@@ -109,11 +112,11 @@ curl --location 'http://0.0.0.0:4000/v1/images/generations' \
 from litellm import image_generation
 import os
 
-os.environ['XINFERENCE_API_BASE'] = "http://127.0.0.1:9997/v1"
-
 response = image_generation(
     model="xinference/stabilityai/stable-diffusion-3.5-large",
     prompt="A beautiful sunset over a calm ocean",
+    api_base="http://127.0.0.1:9997/v1",
+    api_key="anything",            # any non-empty value, Xinference does not check it
     n=1,                           # number of images
     size="1024x1024",             # image size
     response_format="b64_json",   # return format

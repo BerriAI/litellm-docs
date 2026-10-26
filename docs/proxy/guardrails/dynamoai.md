@@ -87,15 +87,17 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-**Expected Response on Block: HTTP 400 Error**
+**Expected Response on Block: HTTP 500 Error**
+
+The guardrail raises a `ValueError` on a policy violation, which the proxy returns as an HTTP 500
 
 ```json showLineNumbers
 {
   "error": {
     "message": "Guardrail failed: 1 violation(s) detected\n\n- POLICY NAME:\n  Action: BLOCK\n  Method: TOXICITY\n  Description: Policy description\n  Policy ID: policy-id-123",
-    "type": "None",
-    "param": "None",
-    "code": "400"
+    "type": "internal_server_error",
+    "param": null,
+    "code": "500"
   }
 }
 ```

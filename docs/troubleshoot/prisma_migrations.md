@@ -9,6 +9,8 @@ For a full guide on safely reverting your LiteLLM version, see the **[Safe Rollb
 - LiteLLM uses [Prisma](https://www.prisma.io/) to manage its PostgreSQL database schema.
 - Migration history is tracked in the `_prisma_migrations` table in your database.
 - When LiteLLM starts, it runs `prisma migrate deploy` to apply any new migrations.
+- If database setup fails at startup (the database is unreachable, connection retries are exhausted, or `prisma migrate deploy` fails), the proxy exits nonzero instead of serving requests against an older schema. Under a rolling update the new pods crash-loop while the old pods keep serving, and the migration error is in the new pod's logs.
+- The same applies when `DATABASE_URL` is set but the Prisma CLI is neither on `PATH` nor importable: the proxy exits with a red error instead of starting without a database. Install it with `pip install 'litellm[extra_proxy]'` or run a shipped LiteLLM image, which bundles it.
 - Upgrading LiteLLM applies all migrations added since your last applied version.
 
 ## Common Errors

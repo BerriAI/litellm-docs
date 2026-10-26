@@ -89,7 +89,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-vertex", # 👈 the 'model_name' in config
+            "model": "anthropic-vertex", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -374,7 +374,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-llama", # 👈 the 'model_name' in config
+            "model": "anthropic-llama", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -468,7 +468,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-mistral", # 👈 the 'model_name' in config
+            "model": "vertex-mistral", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -492,7 +492,7 @@ Note: You can also call Codestral via `/chat/completion`.
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm import completion
+from litellm import text_completion
 import os
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
@@ -553,7 +553,7 @@ curl -X POST 'http://0.0.0.0:4000/completions' \
       -H "Authorization: Bearer $LITELLM_API_KEY" \
       -H 'Content-Type: application/json' \
       -d '{
-            "model": "vertex-codestral", # 👈 the 'model_name' in config
+            "model": "vertex-codestral", # the 'model_name' in config
             "prompt": "def is_odd(n): \n return n % 2 == 1 \ndef test_is_odd():", 
             "suffix":"return True",                                              # optional
             "temperature":0,                                                     # optional
@@ -587,7 +587,7 @@ import os
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
 
-model = "meta/jamba-1.5-mini@001"
+model = "jamba-1.5-mini@001"
 
 vertex_ai_project = "your-vertex-project" # can also set this as os.environ["VERTEXAI_PROJECT"]
 vertex_ai_location = "your-vertex-location" # can also set this as os.environ["VERTEXAI_LOCATION"]
@@ -720,7 +720,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-qwen", # 👈 the 'model_name' in config
+            "model": "vertex-qwen", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -800,7 +800,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "gpt-oss", # 👈 the 'model_name' in config
+            "model": "gpt-oss", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

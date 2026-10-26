@@ -24,7 +24,7 @@ Each provider uses their own search backend:
 | **Anthropic** (`claude-3-5-sonnet`) | Anthropic's web search | Real-time web data |
 | **Perplexity** | Perplexity's search engine | AI-powered search and reasoning |
 
-:::warning Important: Only Search Models Support `web_search_options`
+:::warning[Important: Only Search Models Support `web_search_options`]
 For OpenAI, only dedicated search models support the `web_search_options` parameter:
 - `gpt-4o-search-preview`
 - `gpt-4o-mini-search-preview`
@@ -33,7 +33,7 @@ For OpenAI, only dedicated search models support the `web_search_options` parame
 **Regular models like `{{openai_large}}` and `{{openai_small}}` do not support `web_search_options`**
 :::
 
-:::tip The `web_search_options` parameter is optional
+:::tip[The `web_search_options` parameter is optional]
 Search models (like `gpt-4o-search-preview`) **automatically search the web** even without the `web_search_options` parameter.
 
 Use `web_search_options` when you need to:
@@ -54,7 +54,7 @@ OpenAI offers two distinct ways to use web search depending on the endpoint and 
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
 | **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
 
-:::tip Search models search automatically
+:::tip[Search models search automatically]
 Search models like `gpt-5-search-api` **automatically search the web** even without the `web_search_options` parameter. Use `web_search_options` to set `search_context_size` (`"low"`, `"medium"`, `"high"`) or specify `user_location` for localized results.
 :::
 
@@ -186,10 +186,12 @@ response = completion(
 ```
 
 **xAI (using web_search_options)**
+
+xAI no longer runs web search on its own `/chat/completions`, so when `web_search_options` is set LiteLLM sends the request to xAI's Responses API with a `web_search` tool and converts the result back to a chat completion. xAI does not support `search_context_size`, so it is dropped
+
 ```python showLineNumbers
 from litellm import completion
 
-# Customize search context size for xAI
 response = completion(
     model="xai/grok-3",
     messages=[
@@ -198,9 +200,7 @@ response = completion(
             "content": "What was a positive news story from today?",
         }
     ],
-    web_search_options={
-        "search_context_size": "high"  # Options: "low", "medium" (default), "high"
-    }
+    web_search_options={}  # search_context_size is ignored for xAI
 )
 ```
 
@@ -671,6 +671,35 @@ model_list:
         search_context_size_high: 0.014
 ```
 
+### Google's free grounding allowance
+
+Google gives every billing account a free allowance of Google Search grounding before the per-query price applies: 5,000 queries per month shared across the Gemini 3 models, 1,500 grounded prompts per day shared across Gemini 2.0 Flash, 2.5 Flash and 2.5 Flash-Lite, and 10,000 grounded prompts per day for Gemini 2.5 Pro. By default LiteLLM bills grounding from the first query, so logged grounding spend is an upper bound on the Google invoice.
+
+The cost map describes each allowance with `search_free_requests` on the Gemini rows. `count` is the free units per period, `period` is `"day"` or `"month"`, and models with the same `shared_group` draw from one pool, counted in the row's `web_search_billing_unit`.
+
+```json keep-model-ids
+{
+    "gemini/{{gemini_flash}}": {
+        "web_search_billing_unit": "per_query",
+        "search_free_requests": {"count": 5000, "period": "month", "shared_group": "gemini-3"}
+    }
+}
+```
+
+The field does nothing on its own. To have the proxy log grounding at $0 until the shared allowance is used up, opt in with `apply_search_free_tier`. The proxy keeps one counter per `shared_group` and UTC period in its Redis, the same Redis it uses for budgets, so every proxy instance draws from the same pool and a restart does not reset it. A request that crosses the allowance is split: the queries still inside it are free and the rest are billed at `search_context_cost_per_query`. The spend row keeps the full price in `metadata.cost_breakdown.original_cost` and the freed amount in `discount_amount`.
+
+```yaml
+litellm_settings:
+  apply_search_free_tier: true   # default false
+  cache: true
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+```
+
+Two things to know before turning it on. The allowance is per Google billing account and LiteLLM only sees its own traffic, so if anything else on the account also grounds, LiteLLM frees queries that Google billed and the logged spend becomes a lower bound inside the allowance window; leave the setting off if other workloads share the account. Google does not publish the time zone its allowance resets in, so LiteLLM resets on the UTC calendar day and month. Without Redis, or when the counter cannot be reached, the request is billed at full price and a warning is logged. The `x-litellm-response-cost` header and logging callbacks still report the pre-allowance cost; only the spend row, budgets and spend counters see the reduced spend.
+
 ### How LiteLLM tracks search usage
 
 The number of web search requests is stored in `usage.prompt_tokens_details.web_search_requests`. LiteLLM extracts this from each provider's response:
@@ -678,7 +707,7 @@ The number of web search requests is stored in `usage.prompt_tokens_details.web_
 - **Gemini**: Extracted from `groundingMetadata.webSearchQueries` in the response. For Gemini 2.x, clamped to 1 (per-prompt billing).
 - **OpenAI**: Reported directly in the usage metadata.
 - **Anthropic**: Reported via `server_tool_use.web_search_requests`.
-- **xAI**: Mapped from `num_sources_used` in the response.
+- **xAI**: Reported in `usage.server_side_tool_usage_details.web_search_calls` rather than `web_search_requests`. `num_sources_used` is not read. When xAI returns `usage.cost`, LiteLLM uses it as the response cost, which already includes the search charge
 
 ```python
 response = litellm.completion(

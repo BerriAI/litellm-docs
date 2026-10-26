@@ -2,7 +2,7 @@
 
 Pass-through endpoints for Langfuse - call langfuse endpoints with LiteLLM Virtual Key.
 
-Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse` 🚀
+Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse`
 
 #### **Example Usage**
 ```python
@@ -15,7 +15,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 
@@ -30,11 +31,11 @@ Supports **ALL** Langfuse Endpoints.
 
 Let's log a trace to Langfuse.
 
-1. Add Langfuse Public/Private keys to environment
+1. Add Langfuse Public/Secret keys to environment
 
 ```bash
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 2. Start LiteLLM Proxy 
@@ -59,7 +60,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 
@@ -82,7 +84,7 @@ Use this, to avoid giving developers the raw Google AI Studio key, but still let
 export DATABASE_URL=""
 export LITELLM_MASTER_KEY=""
 export LANGFUSE_PUBLIC_KEY=""
-export LANGFUSE_PRIVATE_KEY=""
+export LANGFUSE_SECRET_KEY=""
 ```
 
 ```bash
@@ -122,7 +124,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 

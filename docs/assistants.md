@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # /assistants
 
-:::warning Deprecation Notice
+:::warning[Deprecation Notice]
 
 OpenAI has deprecated the Assistants API. It will shut down on **August 26, 2026**.
 
@@ -162,7 +162,7 @@ added_message = add_message(
             thread_id=_new_thread.id, custom_llm_provider="openai", **message
         )
 
-## 🚨 RUN THREAD
+## RUN THREAD
 response = run_thread(
             custom_llm_provider="openai", thread_id=thread_id, assistant_id=assistant_id
         )
@@ -296,7 +296,7 @@ curl -X POST 'http://0.0.0.0:4000/threads/{thread_id}/runs' \
 </TabItem>
 </Tabs>
 
-## [👉 Proxy API Reference](https://litellm-api.up.railway.app/#/assistants)
+## [Proxy API Reference](https://docs.litellm.ai/api-reference/#/assistants)
 
 
 ## Azure OpenAI

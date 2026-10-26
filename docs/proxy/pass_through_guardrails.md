@@ -24,7 +24,7 @@ Go to **Models + Endpoints** → Click **+ Add Pass-Through Endpoint**
 
 Scroll to the **Guardrails** section and select which guardrails to enforce.
 
-:::tip Default Behavior
+:::tip[Default Behavior]
 By default, you don't need to specify fields - LiteLLM will JSON dump the entire request/response payload and send it to the guardrail.
 :::
 

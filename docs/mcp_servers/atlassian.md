@@ -41,7 +41,7 @@ Atlassian documents `authv2` for manually configured clients, which is what Lite
 
 ## Connect via LiteLLM MCP Gateway
 
-:::warning Leave the client credentials out
+:::warning[Leave the client credentials out]
 Do not set `client_id`, `client_secret`, or `token_url` on this server. Those switch it to a machine-to-machine identity shared by every caller, so Jira changes get attributed to one service account instead of the person who asked for them. Atlassian's dynamic registration makes them unnecessary.
 :::
 
@@ -149,10 +149,10 @@ The server is in beta, and Atlassian applies its own hourly request quota that v
 
 ***
 
-:::info Restrict who can use it
+:::info[Restrict who can use it]
 Grant the server per key or per team with `object_permission`, and cap call volume per server with `mcp_rpm_limit`, both covered in [MCP Permission Management](../mcp_control.md). A per-key cap matters more here than on most servers, since Atlassian's beta quota is shared across the whole site and one runaway agent can exhaust it.
 :::
 
-:::warning Put the LiteLLM key in `x-litellm-api-key`
+:::warning[Put the LiteLLM key in `x-litellm-api-key`]
 Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and LiteLLM forwards your LiteLLM key to Atlassian, which rejects it. To diagnose, add `x-litellm-mcp-debug: true` and read the response headers; a healthy call reports `x-mcp-debug-auth-resolution: oauth2-passthrough` against `https://mcp.atlassian.com/v1/mcp/authv2`, while `SAME_AS_LITELLM_KEY` confirms this case and `m2m-client-credentials` means client credentials are set and every caller shares one identity. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
 :::

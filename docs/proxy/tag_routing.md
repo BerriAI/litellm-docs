@@ -1,3 +1,7 @@
+---
+sidebar_label: "Tag Routing"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -14,12 +18,12 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["free"] # 👈 Key Change
+      tags: ["free"] # Key Change
   - model_name: {{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-      tags: ["paid"] # 👈 Key Change
+      tags: ["paid"] # Key Change
   - model_name: {{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
@@ -28,7 +32,7 @@ model_list:
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
 
 router_settings:
-  enable_tag_filtering: True # 👈 Key Change
+  enable_tag_filtering: True # Key Change
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -135,7 +139,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["default"] # 👈 Key Change - All untagged requests will get routed to this
+      tags: ["default"] # Key Change - All untagged requests will get routed to this
     model_info:
       id: "default-model"
 ```
@@ -423,7 +427,7 @@ curl http://localhost:4000/v1/chat/completions \
 # ban is treated as advisory rather than failing the request
 ```
 
-:::caution
+:::warning
 Falling back to the default-tagged pool can still return a deployment the request explicitly tried to exclude, for any constraint attributable to the caller. Only set `allow_fail_open` on a model group where a `!`/`&` constraint that can't be honored is acceptable to degrade rather than fail; do not set it on a group where the constraint is a hard compliance requirement (for example, "never route this account's traffic to Provider X").
 
 A constraint inherited from key- or team-level policy is protected from being discarded. The proxy tracks which tags came from key/team metadata separately from what the request itself supplied (`metadata.inherited_tags`), so `allow_fail_open` only ever drops a constraint the caller controlled. That holds even if the caller also resubmits the inherited tag's exact value alongside a conflicting one, a value-collision that plain set subtraction could not tell apart from an honest caller-only tag. If dropping the caller-controlled portion alone still leaves nothing to route to, the request raises instead of falling open.
@@ -445,7 +449,13 @@ This protection requires the proxy layer. A direct SDK `Router` call that bypass
 
 Tag-based routing infers "is this tag meant for routing" by checking whether some deployment's literal tag string happens to match. That heuristic is usually right, but a caller-invented `&`/`!` tag that matches nothing is treated as suspicious noise and can block `allow_fail_open`'s fallback (see above) even when the caller genuinely wanted an honest, if unsatisfiable, request. Configure `router_settings.tag_routing_prefix` to let a caller mark specific tags as trusted, unambiguous routing directives, removing that ambiguity entirely for the tags that use it.
 
-Any request tag starting with the configured prefix is stripped of the prefix and matched using the usual `!`/`&`/plain-tag logic, with no vocabulary check needed since the caller already declared routing intent explicitly. An unprefixed tag keeps going through today's existing handling unchanged, so adopting the prefix requires no migration.
+Any request tag starting with the configured prefix is stripped of the prefix and matched using the usual `!`/`&`/plain-tag logic, with no vocabulary check needed since the caller already declared routing intent explicitly. Once the prefix is configured, a request tag without it is ignored by tag routing: it is never matched, required, or excluded, so a spend or attribution tag such as `user_id:234` can no longer cause `no_deployments_with_tag_routing`. Tags set on the key, team, or project (`metadata.inherited_tags`) are the exception. The caller does not control them, so they keep routing with or without the prefix.
+
+:::caution
+
+Configuring `tag_routing_prefix` on a proxy whose callers route with plain, unprefixed tags (including `!` and `&` tags) stops that routing for those callers. When you turn it on, move every caller's routing tags to the prefix (`route:region:eu`, `route:!provider:openai`), or set those routing tags on the key or team instead.
+
+:::
 
 ### Quick example
 
@@ -517,7 +527,7 @@ curl http://localhost:4000/v1/chat/completions \
 | Default | `""`. `str.startswith("")` matches every string, so the mechanism is a full no-op until configured |
 | Matching | Exact literal prefix, no delimiter auto-appended. Configure a trailing delimiter yourself (e.g. `"route:"`, not `"route"`) — a prefix with no delimiter can coincidentally match an unrelated tag that happens to start with the same characters |
 | Stripping order | The prefix is stripped first, before `!`/`&` parsing, so `route:!provider:x` and `route:&provider:x` both work |
-| Unprefixed tags | Keep going through today's existing handling unchanged: the known-tag-vocabulary heuristic for plain tags, and the unknown-tag fail-open guard for `!`/`&` tags |
+| Unprefixed tags | Ignored once the prefix is configured: never matched, required, or excluded, and never a cause of `no_deployments_with_tag_routing`. Key, team, and project tags (`metadata.inherited_tags`) keep routing with or without the prefix |
 | Interaction with fail-open | A prefixed `&`/`!` tag counts as known to `allow_fail_open`'s unknown-tag guard regardless of deployment tag vocabulary |
 
 ## Per-Model-Group Tag Filtering (`enable_tag_filtering`)
@@ -592,7 +602,7 @@ With this config, `chat-compliance` evaluates tags on every request even though 
 
 Use `tag_regex` on a deployment to match incoming requests by their headers (e.g. `User-Agent`) without requiring the client to send explicit tags. Patterns are operator-configured and compiled server-side, not supplied by callers.
 
-:::caution
+:::warning
 User-Agent is a client-supplied header and can be set to any value by any caller. Use `tag_regex` for traffic classification, not access-control enforcement.
 
 Header-based routing is not a security boundary on its own. It is only meaningful when requests pass through an upstream authentication layer (e.g., an API gateway or reverse proxy that validates credentials and rejects unauthenticated traffic before it reaches LiteLLM). Without such a layer, any client can spoof the User-Agent and be routed to a deployment it should not reach.
@@ -738,7 +748,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["teamA"] # 👈 Key Change
+      tags: ["teamA"] # Key Change
     model_info:
       id: "team-a-model"
   - model_name: fake-openai-endpoint
@@ -746,7 +756,7 @@ model_list:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
-      tags: ["teamB"] # 👈 Key Change
+      tags: ["teamB"] # Key Change
     model_info:
       id: "team-b-model"
   - model_name: fake-openai-endpoint
@@ -757,7 +767,7 @@ model_list:
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
 
 router_settings:
-  enable_tag_filtering: True # 👈 Key Change
+  enable_tag_filtering: True # Key Change
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

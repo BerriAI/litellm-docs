@@ -192,8 +192,8 @@ os.environ['AZURE_API_VERSION'] = ""
 
 ### Usage
 ```python showLineNumbers
-from litellm import embedding
-response = embedding(
+from litellm import image_generation
+response = image_generation(
     model="azure/<your deployment name>",
     prompt="cute baby otter",
     api_key=api_key,
@@ -312,7 +312,7 @@ print(f"response: {response}")
 
 ## Supported Providers
 
-#### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
+#### See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
 
 | Provider | Documentation Link |
 |----------|-------------------|

@@ -29,6 +29,7 @@ import os
 os.environ["LAGO_API_BASE"] = "" # http://0.0.0.0:3000
 os.environ["LAGO_API_KEY"] = ""
 os.environ["LAGO_API_EVENT_CODE"] = "" # The billable metric's code - https://docs.getlago.com/guide/events/ingesting-usage#define-a-billable-metric
+os.environ["LAGO_API_CHARGE_BY"] = "user_id" # the default, end_user_id, is only populated for proxy requests
 
 # LLM API Keys
 os.environ['OPENAI_API_KEY']=""
@@ -40,9 +41,9 @@ litellm.success_callback = ["lago"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ],
-  user="your_customer_id" # 👈 SET YOUR CUSTOMER ID HERE
+  metadata={"user_api_key_user_id": "your_customer_id"} # SET YOUR CUSTOMER ID HERE
 )
 ```
 
@@ -59,7 +60,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["lago"] # 👈 KEY CHANGE
+  callbacks: ["lago"] # KEY CHANGE
 ```
 
 2. Start Proxy
@@ -84,7 +85,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
           "content": "what llm are you"
         }
       ],
-      "user": "your-customer-id" # 👈 SET YOUR CUSTOMER ID
+      "user": "your-customer-id" # SET YOUR CUSTOMER ID
     }
 '
 ```
@@ -104,7 +105,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
         "role": "user",
         "content": "this is a test request, write a short poem"
     }
-], user="my_customer_id") # 👈 whatever your customer id is
+], user="my_customer_id") # whatever your customer id is
 
 print(response)
 ```
@@ -128,7 +129,7 @@ chat = ChatOpenAI(
     model = "{{openai_small}}",
     temperature=0.1,
     extra_body={
-        "user": "my_customer_id"  # 👈 whatever your customer id is
+        "user": "my_customer_id"  # whatever your customer id is
     }
 )
 
@@ -160,14 +161,17 @@ This is what LiteLLM will log to Lagos
 {
     "event": {
       "transaction_id": "<generated_unique_id>",
-      "external_customer_id": <litellm_end_user_id>, # passed via `user` param in /chat/completion call - https://platform.openai.com/docs/api-reference/chat/create
+      "external_subscription_id": <customer_id>, # selected by LAGO_API_CHARGE_BY
       "code": os.getenv("LAGO_API_EVENT_CODE"), 
       "properties": {
-          "input_tokens": <number>,
-          "output_tokens": <number>,
           "model": <string>,
-          "response_cost": <number>, # 👈 LITELLM CALCULATED RESPONSE COST - https://github.com/BerriAI/litellm/blob/d43f75150a65f91f60dc2c0c9462ce3ffc713c1f/litellm/utils.py#L1473
+          "response_cost": <number>, # LITELLM CALCULATED RESPONSE COST - https://github.com/BerriAI/litellm/blob/d43f75150a65f91f60dc2c0c9462ce3ffc713c1f/litellm/utils.py#L1473
+          "prompt_tokens": <number>,
+          "completion_tokens": <number>,
+          "total_tokens": <number>
       }
     }
 }
 ```
+
+`LAGO_API_CHARGE_BY` picks the value sent as `external_subscription_id`. `end_user_id` (default) uses the `user` param of a proxy request, `user_id` uses the virtual key's `user_id` and `team_id` uses the virtual key's `team_id`. If the selected value is missing, nothing is sent to Lago. In the SDK there is no proxy request, so set `LAGO_API_CHARGE_BY=user_id` and pass the customer id as `metadata={"user_api_key_user_id": ...}`

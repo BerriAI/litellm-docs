@@ -100,8 +100,9 @@ model_list:
       api_key: sk-xxxxxxx
 
 # Add your custom MCP hook
-callbacks:
-  - custom_mcp_hook.custom_mcp_cost_tracker
+litellm_settings:
+  callbacks:
+    - custom_mcp_hook.custom_mcp_cost_tracker
 
 mcp_servers:
   zapier_server:

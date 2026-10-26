@@ -23,7 +23,7 @@ LiteLLM checks for a customer/end-user ID in the following order (first match wi
 | 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
 | 8 | `safety_identifier` field | Request body | Responses API |
 
-:::info JWT auth takes precedence
+:::info[JWT auth takes precedence]
 
 If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
 
@@ -115,8 +115,8 @@ If the customer_id already exists, spend will be incremented.
 Call `/customer/info` to get a customer's all up spend
 
 ```bash showLineNumbers title="Get customer spend"
-# end_user_id: 👈 CUSTOMER ID
-# Authorization: 👈 YOUR PROXY KEY
+# end_user_id: CUSTOMER ID
+# Authorization: YOUR PROXY KEY
 curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
         -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
@@ -152,7 +152,7 @@ export WEBHOOK_URL="https://webhook.site/6ab090e8-c55f-4a23-b075-3209f5c57906"
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings: 
-  alerting: ["webhook"] # 👈 KEY CHANGE
+  alerting: ["webhook"] # KEY CHANGE
 ```
 
 3. Test it! 
@@ -178,10 +178,10 @@ Expected Response
 
 ```json showLineNumbers title="Webhook event payload"
 {
-  "spend": 0.0011120000000000001, # 👈 SPEND
+  "spend": 0.0011120000000000001, # SPEND
   "max_budget": null,
   "token": "example-api-key-123",
-  "customer_id": "krrish12",  # 👈 CUSTOMER ID
+  "customer_id": "krrish12",  # CUSTOMER ID
   "user_id": null,
   "team_id": null,
   "user_email": null,
@@ -231,9 +231,63 @@ litellm_settings:
 
 ### Bucketing internal traffic under one customer
 
-If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md).
+If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change, while Codex CLI does the same through `http_headers` in its `config.toml`. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md) and [Codex CLI granular cost tracking](../tutorials/codex_customer_tracking.md).
 
 Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
+
+## Restricting Which Models a Customer Can Use
+
+Set `models` on a customer to limit which models requests made on its behalf can call. A request that carries this customer's ID, through the `user` field or the `x-litellm-customer-id` header, is rejected with a 403 when the requested model is not in the list, even if the virtual key and team allow it. An empty or missing list means the customer adds no model restriction. The customer list only narrows access: the key's and team's own model restrictions still apply on top, so listing a model on the customer never grants a key access to it
+
+Entries follow the same rules as key and team `models`, so a wildcard such as `anthropic/*` or a model access group name works here too
+
+Client-supplied `fallbacks` are checked against the customer's list too, as are router fallbacks unless `enforce_fallback_model_access` is set to `false`
+
+```bash showLineNumbers title="Create a customer limited to one model"
+curl -L -X POST 'http://localhost:4000/customer/new' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+    "user_id": "user_1",
+    "models": ["{{openai_small}}"]
+  }'
+```
+
+A request for any other model on behalf of `user_1` then fails with the same error shape as key and team model checks, with `type` set to `customer_model_access_denied`
+
+```bash showLineNumbers title="Request a model outside the customer's list"
+curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-H 'x-litellm-customer-id: user_1' \
+-d '{
+    "model": "{{openai_large}}",
+    "messages": [{"role": "user", "content": "hi"}]
+  }'
+```
+
+```json title="Response (403)"
+{
+  "error": {
+    "message": "The requested model '{{openai_large}}' is not in the allowed models for this customer. Check the models this customer can use and try again.",
+    "type": "customer_model_access_denied",
+    "param": "model",
+    "code": "403"
+  }
+}
+```
+
+Change the list with `/customer/update`. Omitting `models` leaves the current list untouched, and sending `"models": []` removes the restriction. `/customer/info` returns the current list in its `models` field
+
+```bash showLineNumbers title="Remove the customer's model restriction"
+curl -L -X POST 'http://localhost:4000/customer/update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+    "user_id": "user_1",
+    "models": []
+  }'
+```
 
 ## Setting Customer Object Permissions
 
@@ -503,7 +557,7 @@ Create and assign customers to pricing tiers.
 </TabItem>
 <TabItem value="api" label="API">
 
-Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://litellm-api.up.railway.app/#/budget%20management/new_budget_budget_new_post)
+Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management/new_budget_budget_new_post)
 
 ```bash showLineNumbers title="Create budget via API"
 curl -X POST 'http://localhost:4000/budget/new' \
@@ -524,7 +578,7 @@ curl -X POST 'http://localhost:4000/budget/new' \
 
 ```bash
 curl -X POST 'http://localhost:4000/budget/info' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"budgets": ["my-free-tier"]}'
 ```
@@ -545,7 +599,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # 👈 KEY CHANGE
+    "budget_id": "my-free-tier" # KEY CHANGE
 }
 ```
 
@@ -560,7 +614,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # 👈 KEY CHANGE
+    "budget_id": "my-free-tier" # KEY CHANGE
 }
 ```
 

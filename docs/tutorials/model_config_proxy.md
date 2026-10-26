@@ -1,100 +1,93 @@
-import Image from '@theme/IdealImage';
-
 # Customize Prompt Templates on OpenAI-Compatible server 
 
 **You will learn:** How to set a custom prompt template on our OpenAI compatible server. 
-**How?** We will modify the prompt template for CodeLlama
+**How?** We will modify the prompt template for a Mistral 7B Instruct model on Bedrock
+
+Custom prompt templates only apply to providers where LiteLLM builds the raw text prompt itself (for example Bedrock Mistral and Llama text models). Providers that receive chat `messages`, such as `huggingface/` models (including TGI endpoints set with `api_base`), apply the chat template on the server side and ignore `roles`
 
 ## Step 1: Start OpenAI Compatible server
-Let's spin up a local OpenAI-compatible server, to call a deployed `codellama/CodeLlama-34b-Instruct-hf` model using Huggingface's [Text-Generation-Inference (TGI)](https://github.com/huggingface/text-generation-inference) format.
 
-```shell
-$ litellm --model huggingface/codellama/CodeLlama-34b-Instruct-hf --api_base https://my-endpoint.com
+Create a `config.yaml` with the model:
 
-# OpenAI compatible server running on http://0.0.0.0/8000
+```yaml
+model_list:
+  - model_name: mistral-7b
+    litellm_params:
+      model: bedrock/mistral.mistral-7b-instruct-v0:2
+      aws_region_name: us-east-1
 ```
 
-In a new shell, run: 
+Set a master key (the proxy refuses to start without one), then start the proxy with `--detailed_debug` so it logs the raw request it sends to the provider:
+
 ```shell
-$ litellm --test
+$ export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+$ litellm --config config.yaml --detailed_debug
+
+# OpenAI compatible server running on http://0.0.0.0:4000
+```
+
+In a new shell with the same `LITELLM_MASTER_KEY` exported, send a test request: 
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "mistral-7b",
+    "max_tokens": 30,
+    "messages": [
+      {"role": "system", "content": "You are terse."},
+      {"role": "user", "content": "Say hi"}
+    ]
+  }'
 ``` 
-This will send a test request to our endpoint. 
 
-Now, let's see what got sent to huggingface. Run: 
+The proxy logs show the prompt LiteLLM built with its default Mistral formatting:
+
 ```shell
-$ litellm --logs
+POST Request Sent from LiteLLM:
+curl -X POST \
+https://bedrock-runtime.us-east-1.amazonaws.com/model/mistral.mistral-7b-instruct-v0:2/invoke \
+-d '{'prompt': '<s>[INST] \nYou are terse. [/INST]\n[INST] Say hi [/INST]\n', 'max_tokens': 30}'
 ```
-This will return the most recent log (by default logs are stored in a local file called 'api_logs.json').
 
-As we can see, this is the formatting sent to huggingface: 
-
-<Image img={require('../../img/codellama_input.png')} />  
-
-
-This follows [our formatting](https://github.com/BerriAI/litellm/blob/9932371f883c55fd0f3142f91d9c40279e8fe241/litellm/llms/prompt_templates/factory.py#L10) for CodeLlama (based on the [Huggingface's documentation](https://huggingface.co/blog/codellama#conversational-instructions)). 
-
-But this lacks BOS(`<s>`) and EOS(`</s>`) tokens.
-
-So instead of using the LiteLLM default, let's use our own prompt template to use these in our messages. 
+Let's say we want our own template instead:
+* BOS (`<s>`) tokens at the start of every System and Human message
+* A `<<SYS>>` block around the system message
+* EOS (`</s>`) tokens at the end of every assistant message
 
 ## Step 2: Create Custom Prompt Template
 
-Our litellm server accepts prompt templates as part of a config file. You can save api keys, fallback models, prompt templates etc. in this config. [See a complete config file](../proxy_server.md)
+Our litellm server accepts prompt templates as part of the model's `litellm_params` in `config.yaml`. You can save api keys, fallback models, prompt templates etc. in this config. [See a complete config file](../proxy/configs.md#set-custom-prompt-templates)
 
-For now, let's just create a simple config file with our prompt template, and tell our server about it. 
+Update `config.yaml`:
 
-Create a file called `litellm_config.toml`:
-
-```shell
-$ touch litellm_config.toml
-```
-We want to add:
-* BOS (`<s>`) tokens at the start of every System and Human message
-* EOS (`</s>`) tokens at the end of every assistant message. 
-
-Let's open our file in our terminal: 
-```shell
-$ vi litellm_config.toml
-```
-
-paste our prompt template:
-```shell
-[model."huggingface/codellama/CodeLlama-34b-Instruct-hf".prompt_template] 
-MODEL_SYSTEM_MESSAGE_START_TOKEN = "<s>[INST]  <<SYS>>\n]" 
-MODEL_SYSTEM_MESSAGE_END_TOKEN = "\n<</SYS>>\n [/INST]\n"
-
-MODEL_USER_MESSAGE_START_TOKEN = "<s>[INST] " 
-MODEL_USER_MESSAGE_END_TOKEN = " [/INST]\n"
-
-MODEL_ASSISTANT_MESSAGE_START_TOKEN = ""
-MODEL_ASSISTANT_MESSAGE_END_TOKEN = "</s>"
-```
-
-save our file (in vim): 
-```shell
-:wq
+```yaml
+model_list:
+  - model_name: mistral-7b
+    litellm_params:
+      model: bedrock/mistral.mistral-7b-instruct-v0:2
+      aws_region_name: us-east-1
+      roles:
+        system:
+          pre_message: "<s>[INST] <<SYS>>\n"
+          post_message: "\n<</SYS>>\n [/INST]\n"
+        user:
+          pre_message: "<s>[INST] "
+          post_message: " [/INST]\n"
+        assistant:
+          pre_message: ""
+          post_message: "</s>"
 ```
 
 ## Step 3: Run new template
 
-Let's save our custom template to our litellm server by running:
+Restart the proxy with the updated config:
 ```shell
-$ litellm --config -f ./litellm_config.toml 
-```
-LiteLLM will save a copy of this file in it's package, so it can persist these settings across restarts.
-
-Re-start our server: 
-```shell
-$ litellm --model huggingface/codellama/CodeLlama-34b-Instruct-hf --api_base https://my-endpoint.com
+$ litellm --config config.yaml --detailed_debug
 ```
 
-In a new shell, run: 
+Send the same curl request as in Step 1. The proxy logs now show our custom prompt sent to Bedrock:
+
 ```shell
-$ litellm --test
-``` 
-
-See our new input prompt to Huggingface! 
-
-<Image img={require('../../img/codellama_formatted_input.png')} /> 
-
-Congratulations 🎉
+-d '{'prompt': '<s>[INST] <<SYS>>\nYou are terse.\n<</SYS>>\n [/INST]\n<s>[INST] Say hi [/INST]\n', 'max_tokens': 30}'
+```

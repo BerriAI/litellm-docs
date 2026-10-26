@@ -113,8 +113,7 @@ import litellm
 
 # Configure gitlab access
 gitlab_config = {
-    "workspace": "your-workspace",
-    "repository": "your-repo",
+    "project": "your-group/your-repo",  # project path or numeric project id
     "access_token": "your-access-token",
     "branch": "main"
 }
@@ -171,8 +170,7 @@ litellm_settings:
     branch: "main"
   # Or use Gitlab for team-based prompt management
   global_gitlab_config:
-    workspace: "your-workspace"
-    repository: "your-repo"
+    project: "your-group/your-repo"  # project path or numeric project id
     access_token: "your-access-token"
     branch: "main"
 ```

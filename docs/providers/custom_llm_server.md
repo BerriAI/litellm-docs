@@ -38,7 +38,7 @@ class MyCustomLLM(CustomLLM):
 
 my_custom_llm = MyCustomLLM()
 
-litellm.custom_provider_map = [ # 👈 KEY STEP - REGISTER HANDLER
+litellm.custom_provider_map = [ # KEY STEP - REGISTER HANDLER
         {"provider": "my-custom-llm", "custom_handler": my_custom_llm}
     ]
 
@@ -206,7 +206,7 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
         return ImageResponse(
             created=int(time.time()),
             data=[ImageObject(url="https://example.com/image.png")],
@@ -453,7 +453,7 @@ from litellm import CustomLLM, completion, get_llm_provider
 
 class MyCustomLLM(CustomLLM):
     def completion(self, *args, **kwargs) -> litellm.ModelResponse:
-        assert kwargs["optional_params"] == {"my_custom_param": "my-custom-param"} # 👈 CHECK HERE
+        assert kwargs["optional_params"] == {"my_custom_param": "my-custom-param"} # CHECK HERE
         return litellm.completion(
             model="{{openai_small}}",
             messages=[{"role": "user", "content": "Hello world"}],
@@ -462,7 +462,7 @@ class MyCustomLLM(CustomLLM):
 
 my_custom_llm = MyCustomLLM()
 
-litellm.custom_provider_map = [ # 👈 KEY STEP - REGISTER HANDLER
+litellm.custom_provider_map = [ # KEY STEP - REGISTER HANDLER
         {"provider": "my-custom-llm", "custom_handler": my_custom_llm}
     ]
 
@@ -481,8 +481,8 @@ from litellm.types.utils import ImageResponse, ImageObject
 
 
 class MyCustomLLM(CustomLLM):
-    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
-        assert optional_params == {"my_custom_param": "my-custom-param"} # 👈 CHECK HERE
+    async def aimage_generation(self, model: str, prompt: str, model_response: ImageResponse, api_key: Optional[str], api_base: Optional[str], optional_params: dict, logging_obj: Any, timeout: Optional[Union[float, httpx.Timeout]] = None, client: Optional[AsyncHTTPHandler] = None,) -> ImageResponse:
+        assert optional_params == {"my_custom_param": "my-custom-param"} # CHECK HERE
         return ImageResponse(
             created=int(time.time()),
             data=[ImageObject(url="https://example.com/image.png")],
@@ -509,7 +509,7 @@ model_list:
   - model_name: "my-custom-model"
     litellm_params:
       model: "my-custom-llm/my-model"
-      my_custom_param: "my-custom-param" # 👈 CUSTOM PARAM
+      my_custom_param: "my-custom-param" # CUSTOM PARAM
 
 litellm_settings:
   custom_provider_map:
@@ -576,6 +576,8 @@ class CustomLLM(BaseLLM):
         self,
         model: str,
         prompt: str,
+        api_key: Optional[str],
+        api_base: Optional[str],
         model_response: ImageResponse,
         optional_params: dict,
         logging_obj: Any,
@@ -589,6 +591,8 @@ class CustomLLM(BaseLLM):
         model: str,
         prompt: str,
         model_response: ImageResponse,
+        api_key: Optional[str],
+        api_base: Optional[str],
         optional_params: dict,
         logging_obj: Any,
         timeout: Optional[Union[float, httpx.Timeout]] = None,

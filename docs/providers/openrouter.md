@@ -47,7 +47,7 @@ response = completion(
 This approach provides better flexibility for managing configurations across different environments (dev, staging, production) and makes it easier to switch between self-hosted and cloud endpoints.
 
 ## OpenRouter Completion Models
-🚨 LiteLLM supports ALL OpenRouter models, send `model=openrouter/<your-openrouter-model>` to send it to open router. See all openrouter models [here](https://openrouter.ai/models)
+LiteLLM supports ALL OpenRouter models, send `model=openrouter/<your-openrouter-model>` to send it to open router. See all openrouter models [here](https://openrouter.ai/models)
 
 | Model Name                | Function Call                                       |
 |---------------------------|-----------------------------------------------------|
@@ -297,3 +297,65 @@ response = image_edit(
 
 print(response)
 ```
+
+## Decisions (Jev)
+
+OpenRouter serves TypeSafe's Jev decision models on its Decisions API, `POST https://openrouter.ai/api/alpha/decisions`, and rejects them on `/chat/completions`. The LiteLLM proxy reaches that API in two ways.
+
+### Through `/v1/systemone` and `/v1/decisions`
+
+Add the model to your `model_list` with the `openrouter/` prefix. The model then goes through the router like any other deployment, so it gets load balancing, fallbacks and per-deployment keys, and you can call it with a System One body on [`/v1/systemone`](../decisions/systemone_format.md) or an OpenAI Decisions body on [`/v1/decisions`](../decisions/openai_format.md).
+
+```yaml showLineNumbers
+model_list:
+  - model_name: jev
+    litellm_params:
+      model: openrouter/typesafe/jev-1.14
+      api_key: os.environ/OPENROUTER_API_KEY
+```
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "jev",
+  "state": "The sky is blue on a clear day.",
+  "questions": {"blue": {"type": "noul", "instructions": "Is the sky described as blue?"}}
+}'
+```
+
+From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. Earlier releases have no price for `jev-1.14`, and `v1.105.0-rc.3` and the `v1.106.0` dev builds do not read `usage.cost` either. See [Decisions](../decisions/index.md) for the formats and the supported features.
+
+### Through the `/openrouter` pass-through
+
+`/openrouter/{path}` sends the request body to OpenRouter as it is. The key it sends comes from the first OpenRouter deployment in `model_list` (an `openrouter/` model or `custom_llm_provider: openrouter`) that sets `use_in_pass_through: true` and has a key, either its `api_key` or the one in its `litellm_credential_name`, or from `OPENROUTER_API_KEY` when no deployment does. The request always goes to `OPENROUTER_API_BASE`, never to that deployment's `api_base`. Use it when you already have OpenRouter Decisions request bodies and do not need routing. It is in v1.104.0 and later, and in v1.101.1 and v1.102.1 and the later patches on those two lines, but in no v1.103 release.
+
+The path is relative to `https://openrouter.ai/api`, which is `OPENROUTER_API_BASE` without its trailing `/v1`. So the Decisions API is `/openrouter/alpha/decisions`. Do not add `/api` to the path, since `/openrouter/api/alpha/decisions` goes to `https://openrouter.ai/api/api/alpha/decisions` and OpenRouter answers it with a 404.
+
+A virtual key with a `models` list needs `typesafe/jev-1.14`, the model name in the request body, in that list to call the pass-through. A `model_list` alias such as `jev` is not enough, and the call gets a 403.
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/openrouter/alpha/decisions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "typesafe/jev-1.14",
+  "state": "The sky is blue on a clear day.",
+  "questions": {"blue": {"type": "noul", "instructions": "Is the sky described as blue?"}}
+}'
+```
+
+Response
+
+```json
+{
+  "model": "typesafe/jev-1.14-20261014",
+  "answers": {"blue": {"type": "noul", "noul": 0.99}},
+  "usage": {"input_tokens": 282, "output_tokens": 20, "cost": 0.000011844},
+  "id": "gen-dec-1792543634-CgEHGExRXfbzgBwKxiWf",
+  "provider": "TypeSafe"
+}
+```
+
+LiteLLM logs each `/alpha/decisions` call under the versioned model that OpenRouter returns, for example `openrouter/typesafe/jev-1.14-20261014`. From v1.104.3, the spend is the `usage.cost` in the response, and earlier releases have no price for `jev-1.14`. The `v1.105.0` dev builds and release candidates and the `v1.106.0` dev builds do not read `usage.cost` either. Calls to other `/openrouter` paths, such as `/openrouter/v1/chat/completions`, are forwarded but record $0 spend, so budgets do not count them.

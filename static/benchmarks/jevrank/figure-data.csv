@@ -1,0 +1,7 @@
+model,method,score,cost,origin,cost_source
+Perplexity Decider v1.2,Multiple choice,0.777,146,Reference,Reference Table 8
+TypeSafe Jev 1.14,Per-document,0.776,580,Reference,"Rounded reference Table 2 per-1,000 price × 1,000"
+Perplexity Decider Flash v1.2,Multiple choice,0.775,73,Reference,Reference Table 8
+Cohere Rerank 4 Pro,Rerank API,0.775,2500,Reference,Reference Table 8
+TypeSafe Jev 1.13.0,Per-document,0.7676260618846087,575.39426,LiteLLM run,Estimated from returned tokens: $0.042 / million input; $0 output
+BM25,Local retrieval,0.6863002612489066,0,LiteLLM run,No reranking calls

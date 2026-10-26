@@ -253,4 +253,5 @@ came back empty, so the pod has no role attached or the environment has no crede
 
 Everything else about the Redis cache, including cluster topology, namespaces and TLS, lives on
 [Redis and Valkey](./caching_redis.md). For Memorystore, see
-[GCP Memorystore IAM Authentication](./gcp_memorystore_iam.md)
+[GCP Memorystore IAM Authentication](./gcp_memorystore_iam.md); for Azure, see
+[Azure Redis Entra ID Authentication](./azure_redis_ad.md)

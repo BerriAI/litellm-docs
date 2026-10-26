@@ -21,7 +21,7 @@ Create a playground to **evaluate multiple LLM Providers in less than 10 minutes
 
 Let's make sure our keys are working. Run this script in any environment of your choice (e.g. [Google Colab](https://colab.research.google.com/#create=true)).
 
-🚨 Don't forget to replace the placeholder key values with your keys!
+Don't forget to replace the placeholder key values with your keys!
 
 ```bash
 uv add litellm
@@ -53,7 +53,7 @@ response = completion("j2-mid", messages)
 Let's build a basic Flask app as our backend server. We'll give it a specific route for our completion calls.  
 
 **Notes**:
-* 🚨 Don't forget to replace the placeholder key values with your keys!
+* Don't forget to replace the placeholder key values with your keys!
 * `completion_with_retries`: LLM API calls can fail in production. This function wraps the normal litellm completion() call with [tenacity](https://tenacity.readthedocs.io/en/latest/) to retry the call in case it fails. 
 
 LiteLLM specific snippet:
@@ -179,7 +179,7 @@ This is what you should see:
 <Image img={require('../../img/litellm_streamlit_playground.png')} alt="streamlit_playground" />
 
 
-## Congratulations 🚀 
+## Congratulations
 
 You've created your first LLM Playground - with the ability to call 50+ LLM APIs. 
 

@@ -48,6 +48,8 @@ The fields below mirror the A2A v1.0 specification ([§4.4 Agent Discovery Objec
 | `extensions` | ❌ |
 | `extendedAgentCard` | ❌ |
 
+A `capabilities` block with no truthy `streaming` marks an agent that cannot stream: a streaming chat completion to it runs as one blocking `message/send` and is replayed as a single chunk. A card with no `capabilities` block keeps `message/stream`
+
 ### AgentExtension (§4.4.4)
 
 | Field | Supported |
@@ -92,7 +94,7 @@ The fields below mirror the A2A v1.0 specification ([§4.4 Agent Discovery Objec
 When you register an A2A agent in LiteLLM:
 
 1. You provide a base URL (and, for some providers, an assistant identifier).
-2. LiteLLM fetches the upstream agent card from the agent's `/.well-known/agent-card.json` (or the provider-specific equivalent).
+2. LiteLLM fetches the upstream agent card from the agent's `/.well-known/agent-card.json`, then `/.well-known/agent.json`, then `/agentCard/v1.0`, stopping at the first path that answers. Set `agent_card_path` in the agent's `litellm_params` (for example `agentCard/v1.0`, the path Microsoft Foundry serves) to fetch that path directly.
 3. You review the parsed card in the LiteLLM UI, choose which skills and fields to expose, and pick a **Protocol Version** (`1.0` or `0.3`) for clients.
 4. LiteLLM saves the curated card and serves it at:
 

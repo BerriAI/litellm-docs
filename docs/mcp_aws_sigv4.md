@@ -74,7 +74,7 @@ mcp_servers:
     aws_service_name: "bedrock-agentcore"
 ```
 
-:::info URL encoding
+:::info[URL encoding]
 
 The AgentCore runtime ARN must be URL-encoded in the `url` field. For example:
 

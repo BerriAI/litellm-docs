@@ -34,7 +34,7 @@ response = litellm.ocr(
 
 # Access extracted text
 for page in response.pages:
-    print(page.text)
+    print(page.markdown)
 ```
 
 ### **LiteLLM PROXY**
@@ -122,8 +122,8 @@ response.usage_info     # Token usage information
 
 # Access page content
 for page in response.pages:
-    print(f"Page {page.page_number}:")
-    print(page.text)
+    print(f"Page {page.index}:")
+    print(page.markdown)
 ```
 
 ## Async Support
@@ -142,7 +142,7 @@ response = await litellm.aocr(
 
 ## Important Notes
 
-:::info URL Conversion
+:::info[URL Conversion]
 Azure AI OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Azure AI.
 :::
 
@@ -188,7 +188,7 @@ model_list:
 
 ```bash showLineNumbers title="Test request"
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "azure-cohere-parse",
@@ -211,4 +211,3 @@ Health checks (`/health` and the Admin UI's Test Connection button) send Parse a
 - `Cohere-parse-v5` - Cohere Parse, image documents only
 
 Use the Azure AI provider prefix: `azure_ai/<model-name>`
-

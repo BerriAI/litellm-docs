@@ -8,6 +8,8 @@ LiteLLM supports OpenAI Chat + Embedding calls.
 **We recommend using `litellm.responses()` / Responses API** for the latest OpenAI models (GPT-5, gpt-5-codex, o3-mini, etc.)
 :::
 
+For Fast mode on supported OpenAI models and Ultrafast on GPT-6 Astra, see [Fast & Ultrafast mode](./openai/ultrafast.md) for Admin UI setup, gateway configuration, and request examples.
+
 ### Required API Keys
 
 ```python
@@ -29,7 +31,7 @@ response = completion(
 )
 ```
 
-:::info Metadata passthrough (preview)
+:::info[Metadata passthrough (preview)]
 When `litellm.enable_preview_features = True`, LiteLLM forwards only the values inside `metadata` to OpenAI.
 
 ```python
@@ -220,7 +222,7 @@ Values set on a deployment take precedence over the environment variables, so di
 
 A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
 
-Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation, and API-backed token counting uses it from v1.107.0. From v1.108.0, every other OpenAI route uses it too: text completions, images, audio and transcription, moderation, files, batches, fine-tuning, assistants, containers, vector stores, videos, evals, decisions, and realtime sessions and client secrets. Before v1.108.0, those routes read `OPENAI_API_KEY`.
 
 ### OpenAI Chat Completion Models
 
@@ -824,7 +826,7 @@ LiteLLM offers a chat completion to Responses API bridge. This lets you use the 
 
 This is useful when you want to use [Responses API](https://platform.openai.com/docs/api-reference/responses) specific features (like built-in tools, web search preview, or code interpreter).
 
-:::tip gpt-5.4+ + reasoning_effort + function tools
+:::tip[gpt-5.4+ + reasoning_effort + function tools]
 
 LiteLLM drops `reasoning_effort` from `gpt-5.4` and newer (`gpt-5.4`, `gpt-5.5`, future 5.x releases) requests to `litellm.completion()` that include tools, since that combination is only supported in the Responses API.
 
@@ -1286,7 +1288,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-    forward_openai_org_id: true # 👈 KEY CHANGE
+    forward_openai_org_id: true # KEY CHANGE
 ```
 
 2. Start Proxy

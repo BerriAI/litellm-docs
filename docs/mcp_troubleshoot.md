@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 When LiteLLM acts as an MCP gateway, traffic flows `Client -> LiteLLM Proxy -> MCP Server`, and OAuth-enabled setups add an authorization server for metadata discovery. This page is a symptom-to-fix runbook: run one diagnostic, match the symptom in the matrix, and follow the row to the fix. If you still need to escalate, collect the [support bundle](#support-bundle) so nobody has to reconstruct context later
 
-For provisioning steps, transport options, and configuration fields, refer to [mcp.md](./mcp.md)
+For provisioning steps and configuration fields, refer to [mcp.md](./mcp.md). For choosing endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference)
 
 ## Five-Minute Triage {#locate-the-error-source}
 
@@ -74,12 +74,14 @@ HTTP/1.1 401 Unauthorized
 {"detail":"Authentication Error, Malformed API Key passed in. Ensure Key has `Bearer ` prefix."}
 ```
 
-An unknown or expired key also returns 401, with a body naming the rejected key:
+An unknown or deleted key also returns 401. Starting in v1.107.0, the body no longer names the rejected key:
 
 ```text
 HTTP/1.1 401 Unauthorized
-{"detail":"Authentication Error, Invalid proxy server token passed. Received API Key = sk-..., Key Hash (Token) =2ab06c... Unable to find token in cache or `LiteLLM_VerificationTokenTable`"}
+{"detail":"Authentication Error, Invalid API key provided."}
 ```
+
+Earlier versions answer the same request with `Invalid proxy server token passed` followed by the key's hash. An expired key returns its own `Expired Key` message.
 
 A 403 means the key authenticated but lacks MCP permissions for that server; fix the key/team [permission assignment](./mcp_control.md) rather than the credential
 
@@ -178,7 +180,11 @@ The `issuer` value should equal the origin the user types into their browser (`h
 
 3. **Fix the ingress.** If the ingress is stripping or rewriting `X-Forwarded-*`, no proxy setting will help; restore the headers at the ingress layer
 
-If the `redirect_uri` legitimately lives on a sister domain you control (e.g. an internal web app registering as an OAuth client of the MCP proxy), allowlist its origin via `MCP_TRUSTED_REDIRECT_ORIGINS`. See [Allowing additional first-party redirect_uri origins](./mcp_oauth#allowing-additional-first-party-redirect_uri-origins). If a client reports it cannot register (dynamic client registration), capture the client's verbatim error and the metadata JSON above; the supported grant types are listed in the metadata
+For an approved OAuth client on a separate domain, such as an internal web application, add the callback host to `MCP_TRUSTED_REDIRECT_ORIGINS`. See [Allowing additional first-party redirect_uri origins](./mcp_oauth#allowing-additional-first-party-redirect_uri-origins).
+
+For pre-registered OAuth applications, see [Redirect URLs for static OAuth clients](./mcp_oauth#static-client-redirect-urls) for IdP callback configuration, MCP client callback requirements, and validation errors.
+
+For Dynamic Client Registration failures, collect the client's error response and the authorization server metadata shown above. The metadata lists the supported grant types.
 
 ### Network, TLS, and timeouts {#network-tls-timeouts}
 

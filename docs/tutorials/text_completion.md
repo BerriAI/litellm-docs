@@ -32,7 +32,7 @@ response = text_completion(
 ### With llama2
 ```python
 response = text_completion(
-    model="togethercomputer/llama-2-70b-chat",
+    model="together_ai/togethercomputer/llama-2-70b-chat",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)

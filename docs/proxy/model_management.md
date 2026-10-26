@@ -30,7 +30,11 @@ Most deployments have several models behind the same provider account. Rather th
 
 Open the **LLM Credentials** tab and click **Add Credential**. Pick your provider, enter the API key, and give the credential a name. The fields adapt to the provider you choose, so selecting Vertex AI, for example, gives you `Vertex Project`, `Vertex Location`, and `Vertex Credentials` instead of a single key field.
 
-<Image img={require('../../img/ui_add_credential.png')} alt="Add New Credential modal" />
+<Image
+  img={require('../../img/ui_add_credential.png')}
+  dark={require('../../img/ui_add_credential_dark.png')}
+  alt="Add New Credential modal with OpenAI selected as the provider"
+/>
 
 Once saved, the credential is available wherever you add or edit a model. In the Add Model form, choose it from the **Existing Credentials** dropdown instead of typing a key. From a model's detail page you can also go the other way with the **Re-use Credentials** button, which turns the credentials of a model you already configured into a named credential for future models. Models attached to a named credential are tagged `Credential: <name>` in the Usage page, so you can filter spend by credential without any extra setup; see [Credential Usage Tracking](./credential_usage_tracking.md).
 

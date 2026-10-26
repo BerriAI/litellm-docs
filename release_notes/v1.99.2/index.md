@@ -1,5 +1,6 @@
 ---
-title: "v1.99.2 - Caller Timeout Cooldowns"
+title: "LiteLLM v1.99.2 - Caller Timeout Cooldowns"
+description: "Fixes the router so caller-set timeout 408 errors no longer count toward deployment cooldowns. Healthy deployments stay in rotation."
 slug: "v1-99-2"
 date: 2026-09-15T10:00:00
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.99.2` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.99.2` will not resolve, and `1.99.0` is the newest version this line ever published to PyPI. If you install LiteLLM from PyPI, this fix does not reach you yet: it is on the development line but is not in `1.101.0`, the current PyPI release, so it arrives in a later one.
 

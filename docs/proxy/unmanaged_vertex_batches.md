@@ -142,6 +142,8 @@ Skipping unmanaged vertex batch 8823717160934178816: no vertex_ai deployment con
 | Batch ID format | Base64-encoded unified ID | Raw Vertex numeric ID |
 | Cost tracking | On by default | Opt-in flag |
 
+A managed batch can also take Vertex native input: set `passthrough=true` on the upload and LiteLLM stores the file byte for byte and returns the native output. See [Native Vertex JSONL passthrough](/docs/providers/vertex_batch#native-vertex-jsonl-passthrough).
+
 ## See also
 
 - [Managed Batches](/docs/proxy/managed_batches)

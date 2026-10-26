@@ -3,77 +3,31 @@
 
 require('dotenv').config();
 
-// @ts-ignore
-const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
-// @ts-ignore
-const darkCodeTheme = require('prism-react-renderer/themes/nightOwl');
-
-const inkeepApiKey = process.env.INKEEP_API_KEY;
-// Conditional check: docs should work if this key is missing.
-const hasInkeepSearch = Boolean(inkeepApiKey);
-
-const inkeepConfig = {
-  baseSettings: {
-    apiKey: inkeepApiKey,
-    organizationDisplayName: 'liteLLM',
-    primaryBrandColor: '#4965f5',
-    theme: {
-      styles: [
-        {
-          key: "custom-theme",
-          type: "style",
-          value: `
-            .ikp-chat-button__button {
-              margin-right: 80px !important;
-            }
-          `,
-        },
-      ],
-      syntaxHighlighter: {
-        lightTheme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    },
-  },
-  searchSettings: {
-    searchBarPlaceholder: 'Search docs, guides, API reference...',
-    debounceTimeMs: 0,
-    maxResults: 7 
-  },
-  aiChatSettings: {
-    aiAssistantName: 'LiteLLM AI',
-    chatSubjectName: 'LiteLLM',
-    aiAssistantAvatar: '/img/favicon.ico',
-    placeholder: 'Ask anything about LiteLLM...',
-    introMessage: 'Hi! I can help you with LiteLLM — proxy setup, model routing, caching, spend tracking, and more. What would you like to know?',
-    exampleQuestions: [
-      'How do I set up the LiteLLM proxy?',
-      'How do I route requests across multiple models?',
-      'How do I enable response caching?',
-      'How do I track spend per team or API key?',
-    ],
-    exampleQuestionsLabel: 'Common questions',
-    isFirstExampleQuestionHighlighted: true,
-    shouldOpenLinksInNewTab: true,
-    isCopyChatButtonVisible: true,
-    isShareButtonVisible: false,
-    prompts: [
-      'You are a helpful assistant specializing in LiteLLM. Answer questions about setup, configuration, model routing, the proxy server, caching, logging, and spend tracking. When referencing configuration options, include YAML or Python code examples where helpful. If a question is outside the scope of LiteLLM, politely redirect the user to the relevant docs or GitHub.',
-    ],
-  },
-};
+// Same code-block palettes as docusaurus.io (github + vsDark, with their token overrides).
+const lightCodeTheme = require('./src/utils/prismLight');
+const darkCodeTheme = require('./src/utils/prismDark');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  // Temporary fallback while the internal gateway is unavailable.
+  // Set DOCS_CHAT_PROVIDER=internal and rebuild to switch back.
+  customFields: {
+    inkeepApiKey: process.env.DOCS_CHAT_PROVIDER === 'internal' ? null : process.env.INKEEP_API_KEY || null,
+  },
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
-  favicon: '/img/favicon.ico', 
+  // SVG favicon that turns white on dark browser themes; PNG for browsers without SVG icons
+  favicon: '/img/brand/litellm-favicon.svg',
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'alternate icon', type: 'image/png', href: '/img/brand/litellm-monogram-blue-192.png'}},
+  ],
 
   // Set the production url of your site here
   url: 'https://docs.litellm.ai/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  staticDirectories: ['static', require('./plugins/social-cards').cacheDir],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -86,12 +40,38 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/decisionsLegacyRedirect.js')],
   plugins: [
+    require('./plugins/litellm-stats'),
+    require('./plugins/release-feed'),
+    require('./plugins/llms'),
+    // vega-canvas tries to load the optional node `canvas` package during SSR.
+    // Charts render as SVG, so resolve it to an empty module.
+    () => ({
+      name: 'ignore-optional-canvas',
+      configureWebpack: () => ({resolve: {alias: {canvas: false}}}),
+    }),
     require('./plugins/optimize-images'),
+    require('./plugins/webpack-cache'),
+    require('./plugins/rust-migration-posts'),
+    require('./plugins/social-cards'),
     [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
+          {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
+          {from: '/docs/tutorials/proxy_features_safety', to: '/docs/learn/add-safety'},
+          {from: '/docs/tutorials/observability_evaluation', to: '/docs/learn/observe-and-evaluate'},
+          {from: '/docs/manage_with_ai_agents', to: '/docs/ai_tools'},
+          {from: '/docs/routing-load-balancing', to: '/docs/proxy/load_balancing'},
+          {from: '/docs/guides/retrieval_knowledge', to: '/docs/guides/tools_integrations'},
+          {from: '/docs/guides/security_network', to: '/docs/guides/security_settings'},
+          {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
+          {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
+          {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
+          {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -99,6 +79,10 @@ const config = {
           {
             from: '/docs/proxy/high_availability_control_plane',
             to: '/docs/proxy/global_control_plane',
+          },
+          {
+            from: '/docs/tutorials/openai_codex',
+            to: '/docs/proxy/client_setup/codex_cli',
           },
           {
             from: '/docs/proxy/deploy_cloud',
@@ -139,21 +123,7 @@ const config = {
         ],
       },
     ],
-    ...(hasInkeepSearch
-      ? [
-          [
-            '@inkeep/cxkit-docusaurus',
-            {
-              SearchBar: {
-                ...inkeepConfig,
-              },
-              ChatButton: {
-                ...inkeepConfig,
-              },
-            },
-          ],
-        ]
-      : []),
+    require('./plugins/docs-search'),
     [
       '@docusaurus/plugin-ideal-image',
       {
@@ -273,22 +243,64 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
+        onInlineAuthors: 'throw',
+        onUntruncatedBlogPosts: 'throw',
+        feedOptions: {
+          limit: 50,
+          createFeedItems: require('./src/feed/card-categories').createFeedItems,
+        },
       },
     ],
 
-    () => ({
-      name: 'cripchat',
-      injectHtmlTags() {
-        return {
-          headTags: [
-            {
-              tagName: 'script',
-              innerHTML: `window.$crisp=[];window.CRISP_WEBSITE_ID="be07a4d6-dba0-4df7-961d-9302c86b7ebc";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`,
-            },
-          ],
-        };
+    // PostHog product analytics. Same project as the Webflow marketing site
+    // (www.litellm.ai), so a visitor moving between the two domains is one
+    // person and one journey: persistence keeps a first-party cookie on
+    // .litellm.ai, which every litellm.ai subdomain can read.
+    // Uses the official posthog-docusaurus plugin, which is production-only
+    // by default (mirroring the gtag setup below) and forwards every extra
+    // option below to posthog.init via JSON.stringify.
+    //
+    // capture_pageview is false because the plugin ships a client module whose
+    // onRouteUpdate captures $pageview on the initial load and on every
+    // Docusaurus route change. Leaving the SDK's own pageview on as well logs
+    // every landing page twice.
+    //
+    // $pageleave and dead clicks are on for docs UX analysis: time on page,
+    // bounce rate and scroll depth, plus clicks on things readers expect to be
+    // links. capture_pageleave must be an explicit true, since the SDK default
+    // only captures it when capture_pageview is on.
+    //
+    // Kept off the docs on purpose, so this stays analytics and nothing else:
+    // no session replay (no rrweb bundle downloaded, no DOM observation;
+    // replay is scoped to litellm.ai/enterprise and /pricing by URL trigger in
+    // the project settings), no heatmap capture despite the project-level
+    // opt-in (skips the mousemove listener and its periodic requests; link and
+    // button clicks are already captured with their hrefs by autocapture).
+    // Surveys are off too, which drops the surveys.js request the SDK
+    // otherwise makes on every page; docs feedback already goes through
+    // Feedback Rocket below.
+    [
+      'posthog-docusaurus',
+      {
+        apiKey: 'phc_upsFA5iBuDFKnznEdV9pA5HYW8fwsLMJ8pF2p4xZzzpD',
+        appUrl: 'https://us.i.posthog.com',
+        enableInDevelopment: false,
+        defaults: '2026-05-30',
+        person_profiles: 'identified_only',
+        cross_subdomain_cookie: true,
+        capture_pageview: false,
+        capture_pageleave: true,
+        capture_dead_clicks: true,
+        disable_session_recording: true,
+        capture_heatmaps: false,
+        disable_surveys: true,
+        autocapture: {
+          dom_event_allowlist: ['click'],
+          element_allowlist: ['a', 'button'],
+        },
       },
-    }),
+    ],
     // Ensure gtag exists before the GA script loads.
     () => ({
       name: 'gtag-shim',
@@ -331,7 +343,7 @@ const config = {
         blog: false, // Disable the default blog plugin from preset-classic
         pages: {},
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
       }),
     ],
@@ -366,9 +378,43 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
+      // The whole bar links to the page; the close button still works.
+      // Entries live in src/announcements.js and are rotated by
+      // src/theme/AnnouncementBar/Content, which also drops an entry once its
+      // expiresAt passes. `content` is required by the theme schema but is not
+      // rendered; it holds the evergreen entry so the config still reads true.
+      // Bump `id` to resurface the bar for readers who dismissed the last one.
+      announcementBar: {
+        id: 'townhall_oct_23_2026_decisions_api',
+        content:
+          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
+        isCloseable: true,
+      },
+      docs: {
+        sidebar: {
+          // Collapse chevron at the bottom of the sidebar; see src/theme/DocSidebar
+          hideable: true,
+        },
+      },
       navbar: {
-        title: '🚅 LiteLLM',
+        // Primary logo (monogram + wordmark): blue on light, white on dark,
+        // per the logo guidelines. The wordmark-only secondary logo ships in
+        // white only, so it cannot sit on the light header.
+        // Shown beside the logo as a "DOCS" label (styled in logo-shape.css)
+        title: 'Docs',
+        logo: {
+          alt: 'LiteLLM',
+          src: '/img/brand/litellm-logo-blue.png',
+          srcDark: '/img/brand/litellm-logo-white.png',
+          width: 132,
+          height: 25,
+        },
         items: [
+          {
+            type: 'custom-productsMenu',
+            label: 'Products',
+            position: 'left',
+          },
           {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
@@ -376,10 +422,9 @@ const config = {
             label: 'Docs',
           },
           {
-            type: 'docSidebar',
-            sidebarId: 'learnSidebar',
+            to: '/docs/providers',
+            label: 'AI Providers',
             position: 'left',
-            label: 'Learn',
           },
           {
             type: 'docSidebar',
@@ -388,76 +433,74 @@ const config = {
             label: 'Integrations',
           },
           {
+            type: 'docSidebar',
+            sidebarId: 'enterpriseSidebar',
             position: 'left',
             label: 'Enterprise',
-            to: "docs/enterprise"
+          },
+          {
+            type: 'docSidebar',
+            sidebarId: 'learnSidebar',
+            position: 'left',
+            label: 'Learn',
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
-          {
-            type: 'docSidebar',
-            sidebarId: 'autoRouterSidebar',
-            position: 'left',
-            label: 'Auto Router',
-          },
-          {
-            href: 'https://trust.litellm.ai/',
-            label: 'Trust Center',
-            position: 'right',
-          },
+          { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://github.com/BerriAI/litellm',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
-          {
-            href: 'https://www.litellm.ai/support',
-            position: 'right',
-            className: 'header-discord-link',
-            'aria-label': 'Discord / Slack community',
-          },
-          ...(hasInkeepSearch
-            ? [{type: 'search', position: 'right'}]
-            : []),
         ],
       },
       footer: {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Product',
             items: [
-              {
-                label: 'Getting Started',
-                to: 'https://docs.litellm.ai/docs/',
-              },
+              {label: 'Gateway quickstart', to: '/docs/proxy/docker_quick_start'},
+              {label: 'Python SDK', to: '/docs/python_sdk'},
+              {label: 'Production deployment', to: '/docs/proxy/deploy'},
+              {label: 'MCP Gateway', to: '/docs/mcp'},
+              {label: 'Agent Gateway', to: '/docs/a2a'},
+              {label: 'Rust AI Gateway (beta)', to: '/docs/proxy/rust_gateway'},
+              {label: 'Enterprise', to: '/docs/enterprise'},
+            ],
+          },
+          {
+            title: 'Resources',
+            items: [
+              {label: 'Blog', to: '/blog'},
+              {label: 'Changelog', to: '/release_notes'},
+              {label: 'Agent resources', to: '/docs/agent_resources'},
+              {label: 'llms.txt', href: 'https://docs.litellm.ai/llms.txt'},
+              {label: 'Trust Center', href: 'https://trust.litellm.ai/'},
             ],
           },
           {
             title: 'Community',
             items: [
-              {
-                label: 'Discord',
-                href: 'https://discord.com/invite/wuPM9dRgDw',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/LiteLLM',
-              },
+              {label: 'GitHub', href: 'https://github.com/BerriAI/litellm/'},
+              {label: 'Discord', href: 'https://discord.com/invite/wuPM9dRgDw'},
+              {label: 'Slack', href: 'https://litellmossslack.slack.com/'},
+              {label: 'YouTube', href: 'https://www.youtube.com/@LiteLLMAIGateway'},
+              {label: 'X', href: 'https://twitter.com/LiteLLM'},
+              {label: 'LinkedIn', href: 'https://www.linkedin.com/company/berri-ai/'},
             ],
           },
           {
-            title: 'More',
+            title: 'Company',
             items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/BerriAI/litellm/',
-              },
+              {label: 'litellm.ai', href: 'https://www.litellm.ai/'},
+              {label: 'Talk to sales', href: 'https://www.litellm.ai/enterprise#talk-to-sales'},
+              {label: 'Careers', href: 'https://jobs.ashbyhq.com/litellm'},
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} liteLLM`,
+        copyright: `© ${new Date().getFullYear()} LiteLLM`,
       },
       colorMode: {
         defaultMode: 'light',

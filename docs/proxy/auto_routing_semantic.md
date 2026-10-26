@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Semantic Auto Router (deprecated)
 
-:::warning Deprecated
+:::warning[Deprecated]
 
 The semantic Auto Router is superseded by [Auto Routing](./auto_routing.md), which folds semantic keyword matching, complexity scoring, and adaptive routing into a single `auto_router/complexity_router`. New deployments should start there; the semantic router page is preserved for existing configs.
 

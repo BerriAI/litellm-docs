@@ -1,0 +1,15 @@
+Microsoft 365 Copilot cover
+
+Static LiteLLM × Microsoft 365 Copilot logo pairing on a subtle dot grid, with no headline and a transparent background. Desktop: 1600x836, horizontal layout. Mobile: 800x700, stacked layout. Light and dark PNG/SVG variants use matching geometry and preserve the original logos. The React component selects the page theme and mobile layout; it contains no animation.
+
+Reproduce all variants with:
+  node render.mjs
+Install sharp in the local project, or set SHARP_PATH to its installed package directory. The script uses the fonts under assets/. Generated review files are ignored by Git.
+
+scene.mjs is the editable source. Each exported SVG embeds its logo assets so it can be opened or shared on its own. PNGs preserve transparency.
+
+Asset provenance:
+Microsoft Copilot icon: downloaded without modification from https://adoption.microsoft.com/wp-content/uploads/2026/08/icon-microsoft-copilot.png , linked by Microsoft's official Copilot page at https://adoption.microsoft.com/en-us/copilot/ . The source image is a 438x438 transparent PNG. Microsoft owns the logo.
+LiteLLM blue and white wordmarks: BerriAI/litellm-docs/static/img/brand/litellm-logo-blue.png and litellm-logo-white.png, copied without modification. LiteLLM owns these logos.
+Dot grid and multiplication sign: original SVG geometry.
+Liberation Sans Regular and Bold: BerriAI/litellm-docs/scripts/social-card/assets. SIL Open Font License is included as assets/LICENSE_LIBERATION.

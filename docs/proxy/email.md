@@ -8,9 +8,7 @@ import TabItem from '@theme/TabItem';
   img={require('../../img/email_2_0.png')}
   style={{width: '70%', display: 'block', margin: '0 0 2rem 0'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM Email Notifications
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM Email Notifications</p>
 
 ## Overview
 
@@ -130,6 +128,30 @@ With the key above, spend of $50 emails the owner, $75 emails the owner and fina
 Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. To change thresholds on an existing key, send the same `metadata` block to `/key/update`.
 
 There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
+
+#### Team member budget thresholds and recipients
+
+Teams that set `team_member_budget` cap what each member can spend inside that team, and by default nothing is emailed before or when a member hits the cap. To alert on a member's budget, set `team_member_max_budget_alert_emails` in the team's metadata. Each entry maps a percentage of `team_member_budget` to the extra recipients notified once that member's spend in the team crosses it.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_id": "my-team",
+    "team_member_budget": 100,
+    "metadata": {
+      "team_member_max_budget_alert_emails": {
+        "50": [],
+        "100": ["finance@your-company.com"]
+      }
+    }
+  }'
+```
+
+With the team above, a member who has spent $50 of their $100 budget gets an email, and at $100 both the member and finance get one. The member's own email (from their user record) is always included, so an empty list means only the member is notified, and a member with no email on file gets nothing while the configured recipients still do. Alerts fire once per member, per team, per threshold within `EMAIL_BUDGET_ALERT_TTL`, and the 100% alert is sent on the request that exhausts the budget, before that request is rejected. Once spend reaches the lowest configured threshold, Slack and webhook destinations also get a `Team Member Budget` event for that member at the fixed points other budget types use (15% and 5% remaining, and budget crossed), with `event_group` set to `team_member`.
+
+The same block is available in the Admin UI under the team's Team Member Settings, and `/team/new` accepts it in `metadata` as well. Invalid entries, such as a threshold that is not a whole number from 1 to 100, are ignored.
 
 #### Default thresholds for every key
 
@@ -360,15 +382,13 @@ If environment variables are not set, LiteLLM will use default templates:
 
 ## Template Variables
 
-When setting custom email subjects, you can use template variables that will be replaced with actual values:
+When setting custom email subjects, the only supported template variable is `\{event_message\}`, which is replaced with the event message (for example "Welcome to LiteLLM Proxy" or "API Key Created"). Any other placeholder, such as `\{company_name\}`, causes a `KeyError` when the email is built and the email is not sent. Use plain text for anything else:
 
 ```bash
 # Examples of template variable usage
-EMAIL_SUBJECT_INVITATION="Welcome to \{company_name\}!"
-EMAIL_SUBJECT_KEY_CREATED="Your \{company_name\} API Key"
+EMAIL_SUBJECT_INVITATION="Welcome to Acme! \{event_message\}"
+EMAIL_SUBJECT_KEY_CREATED="Your Acme API Key"
 ```
-
-The system will automatically replace `\{event_message\}` and other template variables with their actual values when sending emails.
 
 ## FAQ 
 
