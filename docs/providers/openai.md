@@ -222,7 +222,7 @@ Values set on a deployment take precedence over the environment variables, so di
 
 A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
 
-Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation, and API-backed token counting uses it from v1.107.0. From v1.108.0, every other OpenAI route uses it too: text completions, images, audio and transcription, moderation, files, batches, fine-tuning, assistants, containers, vector stores, videos, evals, decisions, and realtime sessions and client secrets. Before v1.108.0, those routes read `OPENAI_API_KEY`.
 
 ### OpenAI Chat Completion Models
 
@@ -1288,7 +1288,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-    forward_openai_org_id: true # 👈 KEY CHANGE
+    forward_openai_org_id: true # KEY CHANGE
 ```
 
 2. Start Proxy

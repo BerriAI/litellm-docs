@@ -671,6 +671,35 @@ model_list:
         search_context_size_high: 0.014
 ```
 
+### Google's free grounding allowance
+
+Google gives every billing account a free allowance of Google Search grounding before the per-query price applies: 5,000 queries per month shared across the Gemini 3 models, 1,500 grounded prompts per day shared across Gemini 2.0 Flash, 2.5 Flash and 2.5 Flash-Lite, and 10,000 grounded prompts per day for Gemini 2.5 Pro. By default LiteLLM bills grounding from the first query, so logged grounding spend is an upper bound on the Google invoice.
+
+The cost map describes each allowance with `search_free_requests` on the Gemini rows. `count` is the free units per period, `period` is `"day"` or `"month"`, and models with the same `shared_group` draw from one pool, counted in the row's `web_search_billing_unit`.
+
+```json keep-model-ids
+{
+    "gemini/{{gemini_flash}}": {
+        "web_search_billing_unit": "per_query",
+        "search_free_requests": {"count": 5000, "period": "month", "shared_group": "gemini-3"}
+    }
+}
+```
+
+The field does nothing on its own. To have the proxy log grounding at $0 until the shared allowance is used up, opt in with `apply_search_free_tier`. The proxy keeps one counter per `shared_group` and UTC period in its Redis, the same Redis it uses for budgets, so every proxy instance draws from the same pool and a restart does not reset it. A request that crosses the allowance is split: the queries still inside it are free and the rest are billed at `search_context_cost_per_query`. The spend row keeps the full price in `metadata.cost_breakdown.original_cost` and the freed amount in `discount_amount`.
+
+```yaml
+litellm_settings:
+  apply_search_free_tier: true   # default false
+  cache: true
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+```
+
+Two things to know before turning it on. The allowance is per Google billing account and LiteLLM only sees its own traffic, so if anything else on the account also grounds, LiteLLM frees queries that Google billed and the logged spend becomes a lower bound inside the allowance window; leave the setting off if other workloads share the account. Google does not publish the time zone its allowance resets in, so LiteLLM resets on the UTC calendar day and month. Without Redis, or when the counter cannot be reached, the request is billed at full price and a warning is logged. The `x-litellm-response-cost` header and logging callbacks still report the pre-allowance cost; only the spend row, budgets and spend counters see the reduced spend.
+
 ### How LiteLLM tracks search usage
 
 The number of web search requests is stored in `usage.prompt_tokens_details.web_search_requests`. LiteLLM extracts this from each provider's response:

@@ -9,11 +9,11 @@ Akto's key capabilities include:
 - **Runtime Guardrails** - enforce configurable policies covering prompt injection, jailbreaks, sensitive data leakage, unauthorized tool use, schema violations, and more
 - **AI Security Posture Management** - unified visibility into risk scores, compliance gaps, and security metrics, with support for 10+ standards including OWASP GenAI, NIST AI RMF, and MITRE ATLAS
 
-Each Akto guardrail entry checks traffic with Akto at the point its `mode` names and records it in the Akto dashboard. `pre_call` checks the request before it reaches the LLM, `post_call` checks the LLM response before it reaches the caller, and `pre_mcp_call` / `post_mcp_call` check MCP tool arguments and tool results. When Akto flags the traffic, LiteLLM blocks it; when Akto returns a masked version, LiteLLM forwards the masked version instead.
+Each Akto guardrail entry checks traffic with Akto at the point its `mode` names and records it in the Akto dashboard. `pre_call` checks the request before it reaches the LLM, `post_call` checks the LLM response before it reaches the caller, and `pre_mcp_call` / `post_mcp_call` check MCP tool arguments and tool results. When Akto flags the traffic, LiteLLM blocks it; when Akto returns a masked version, LiteLLM forwards the masked version instead. `logging_only` sends the request and the response to Akto after the call finishes and never blocks or changes it, see [Monitor without blocking](#monitor-without-blocking).
 
 :::warning `post_call` now blocks
 
-Older versions sent `post_call` traffic to Akto in the background and never blocked the response, so a `post_call`-only setup worked as a monitor-only mode. Starting with [PR #44343](https://github.com/BerriAI/litellm/pull/44343), `post_call` waits for Akto's verdict: a flagged response is blocked with `403`, and every response waits for the check. With the default `unreachable_fallback: fail_closed`, a response also fails with `503` when Akto is down or slow. There is no monitor-only mode in this version; set `unreachable_fallback: fail_open` if responses should pass when Akto cannot be reached.
+Older versions sent `post_call` traffic to Akto in the background and never blocked the response, so a `post_call`-only setup worked as a monitor-only mode. Starting with [PR #44343](https://github.com/BerriAI/litellm/pull/44343), `post_call` waits for Akto's verdict: a flagged response is blocked with `403`, and every response waits for the check. With the default `unreachable_fallback: fail_closed`, a response also fails with `503` when Akto is down or slow. For a monitor-only setup, use `mode: logging_only` instead, see [Monitor without blocking](#monitor-without-blocking). To keep `post_call` blocking but let responses pass when Akto cannot be reached, set `unreachable_fallback: fail_open`.
 
 :::
 
@@ -106,10 +106,31 @@ Every check is one awaited call to Akto that both evaluates the traffic and reco
 | `pre_mcp_call` | MCP tool name and arguments | `guardrails=true&ingest_data=true` |
 | `post_mcp_call` | MCP tool result | `response_guardrails=true&ingest_data=true` |
 | `pre_call` | Images and files attached to the request | `file_guardrails=true`, timeout `file_guardrail_timeout` |
+| `logging_only` | Request, attachments and LLM response on `/v1/chat/completions`, `/v1/responses` and `/v1/messages`, after the call finishes | the `pre_call`, file and `post_call` calls above, never blocking |
 
 **Streaming.** A streamed response is checked every `streaming_sampling_rate` chunks, and the stream pauses at that chunk until Akto replies. Chunks between two checks reach the caller before Akto sees them, so a flagged stream can show part of the flagged text before it ends with an error frame. Lower the rate to check more often, at the cost of more latency. A masked stream is blocked, because chunks already sent cannot be replaced.
 
 **MCP tool lists.** With an MCP mode on, `tools/list` checks each tool definition with Akto and leaves out the tools Akto flags. These checks are not recorded.
+
+## Monitor without blocking
+
+Use `mode: logging_only` to send traffic to Akto for evaluation and recording without enforcing anything. After each call finishes, LiteLLM checks the request and the response with Akto, so they show up in the Akto dashboard, and the caller always gets the LLM response unchanged:
+
+```yaml
+guardrails:
+  - guardrail_name: "akto-monitor"
+    litellm_params:
+      guardrail: akto
+      mode: logging_only
+      akto_base_url: os.environ/AKTO_GUARDRAIL_API_BASE
+      akto_api_key: os.environ/AKTO_API_KEY
+      default_on: true
+      logging_only_scope: both   # recommended: keeps checking the response when Akto flags the request
+```
+
+A verdict Akto would block is recorded as `guardrail_intervened` in the request's `guardrail_information` on the [Logs](/docs/proxy/ui_logs) page, and the response still reaches the caller. Akto being down or slow never fails the call, whatever `unreachable_fallback` is set to, and LLM responses do not wait for the check. The call's spend log and other logging callbacks are written after the checks finish, so they can arrive up to `guardrail_timeout` seconds per check later. Without `logging_only_scope: both`, a request Akto flags or cannot check skips the response check. `logging_only_scope` can also limit the check to the request (`input`) or the response (`output`), as described in [Guardrails quick start](./quick_start.md#observe-only-one-direction-with-logging_only_scope). Attached images and files are checked once, with `file_guardrails=true`.
+
+On MCP tool calls, `logging_only` sends Akto only the tool result, and the tool call waits for that check. Use `pre_mcp_call` / `post_mcp_call` to check tool names and arguments.
 
 ## Supported Parameters
 

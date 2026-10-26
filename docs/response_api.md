@@ -8,6 +8,8 @@ LiteLLM provides an endpoint in the spec of [OpenAI's `/responses` API](https://
 
 Requests to /chat/completions may be bridged here automatically when the provider lacks support for that endpoint. The model’s default `mode` determines how bridging works.(see `model_prices_and_context_window`) 
 
+The reverse also happens: a deployment whose provider has no Responses API config of its own (`custom_openai/`, `baseten/`, `openai_like/` and most other OpenAI-compatible providers) bridges `/v1/responses` through `/v1/chat/completions`. When the server serves `/responses` itself, add `supported_endpoints: ["/v1/responses"]` under the deployment's `model_info` to forward the request untranslated. See [Native /v1/responses passthrough](./response_api_native_passthrough.md)
+
 | Feature | Supported | Notes |
 |---------|-----------|--------|
 | Cost Tracking | ✅ | Works with all supported models |
@@ -1345,6 +1347,10 @@ EncryptedContentAffinityCheck: model_id=<id> cannot serve group <model> and no d
 
 Only a peer keeps the reasoning across such a turn. On an auto-router, `complexity_router_config.session_affinity: true` keeps a session that carries a `session_id` on the tier that produced the items (see [auto routing](./proxy/auto_routing.md)), so the turn usually stays with its origin, though escalation and routing plugins can still move it. Releases through v1.103.x failed a cooled-down origin with no peer with a 429 or 503 instead of serving the turn, and releases before v1.102.0 failed a removed origin or a group change the same way
 
+The same strip runs on every fallback hop, with or without the check: an [order-based hop](./proxy/load_balancing.md#how-order-based-fallback-works) to the next `order`, a configured [`fallbacks`](./proxy/reliability.md) hop to another model group, and the retry of a Responses stream that broke before completing. The hop drops the reasoning items its target cannot decrypt and keeps their summaries, so a hop from OpenAI to Bedrock, or between two keys of one provider, answers the turn instead of failing with `invalid_encrypted_content`. There is no per-deployment switch for it. Without the check the items carry no origin marker, so the hop attributes every one of them to the deployment that just failed: a hop to a deployment with the same `api_base` and `api_key` keeps them, any other hop drops them, the ones the hop target produced itself on an earlier turn included, and the turn after a hop replays the hop target's reasoning to `order: 1` first, which fails on it before the request hops again. Such a hop logs only its `Falling back to model_group` line
+
+Turn the check on for an ordered group of two providers all the same. Its marker names the deployment that produced each item, so the turn after a hop keeps the reasoning of the deployment that answers it with no failed call first, a hop logs the warning above as well, and a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops what that deployment cannot decrypt through the pin instead of failing. Releases through v1.105.x replayed the failed deployment's reasoning on the hop, so the target answered 400 (`invalid_encrypted_content` on OpenAI, `invalid encrypted reasoning` on Bedrock), and with the check on, an order-based hop answered 429 `No deployments available` instead
+
 The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
 
 ### Configuration
@@ -1436,7 +1442,7 @@ litellm --config config.yaml
 |---------------|----------|-------|--------------|
 | **`encrypted_content_affinity`** | **[Recommended]** Multi-region Responses API with different API keys | Only requests with tracked encrypted items | ✅ None (surgical pinning) |
 | `responses_api_deployment_check` | When `previous_response_id` is available | Requests with `previous_response_id` | ✅ None |
-| `session_affinity` | Session-based applications | All requests with same `session_id` | ⚠️ Reduces quota by # of sessions |
+| `session_affinity` | Session-based applications | All requests with same `session_id` | Reduces quota by # of sessions |
 | `deployment_affinity` | Simple sticky sessions | All requests from same API key | ❌ Reduces quota by # of users |
 
 

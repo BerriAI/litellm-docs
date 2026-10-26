@@ -1,6 +1,5 @@
 ---
 title: Codex (CLI)
-sidebar_label: Codex (CLI)
 ---
 
 import Image from '@theme/IdealImage';
@@ -15,7 +14,7 @@ import Image from '@theme/IdealImage';
 |---|---|
 | Config file | `~/.codex/config.toml` |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](#sign-in-with-litellm-sso) |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](./codex_cli_sso.md) |
 | `model_catalog_url` | `<LITELLM_PROXY_BASE_URL>/v1/models`, plus `api_key_model_discovery = true` under `[features]` |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
@@ -99,58 +98,14 @@ wire_api = "responses"
 
 On startup Codex calls `GET /v1/models?client_version=<its version>` with your virtual key, and the gateway answers in Codex's own catalog format. The `/model` picker then lists your gateway's chat models in `model_list` order, named by `model_info.display_name` when you set one and by the `model_name` otherwise. Wildcard entries such as `openai/*` and models that are not chat models (embeddings, for example) are left out. A model Codex already knows, by its `model_name` or by the upstream model in `litellm_params.model`, keeps Codex's own metadata (reasoning levels, prompt, tool support) under your name, so `my-coding-model` backed by `openai/gpt-6.1-sol` gets the same reasoning levels and prompt as Codex's own `gpt-6.1-sol`. Any other model gets the same fallback metadata Codex uses for `codex -m <unknown name>`, with the gateway's `max_input_tokens` as its context window, so it works but offers no reasoning-effort choices
 
-`model_info.service_tiers` sets the service tiers Codex offers for a model, and each tier becomes a slash command. The tier id `ultrafast` becomes `/ultrafast`; toggling it makes Codex send `service_tier: "ultrafast"` on every request, which the gateway forwards upstream and prices with the tier's cost fields (`input_cost_per_token_ultrafast` and the other `*_ultrafast` fields) when the model's pricing entry carries them. Each entry is a tier id string or an object with `id`, `name`, and `description`. A plain string gets the id capitalized as its name and `Sends service_tier=<id> upstream` as its description, and Codex lowercases the name to form the command. A string naming a tier Codex itself ships for that model, such as `priority`, keeps Codex's own name and description, so it still shows as `/fast`. An object sets the name and the description Codex shows in the command popup. The configured list replaces the tiers Codex ships for that model, so list `priority` as well to keep `/fast` next to a new tier. An empty list removes every tier, and leaving `service_tiers` unset keeps Codex's stock tiers for a model it knows (a model it does not know has none)
+**Prerequisites for service tiers:** Ask your gateway administrator to configure the model's [Fast and Ultrafast settings](../../providers/openai/ultrafast.md#set-up-with-configyaml). Select the gateway model in Codex, then use `/fast` or `/ultrafast` when available.
 
-```yaml title="config.yaml"
-model_list:
-  - model_name: gpt-6-astra
-    litellm_params:
-      model: openai/gpt-6-astra
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      service_tiers: ["priority", "ultrafast"]
-  - model_name: my-coding-model
-    litellm_params:
-      model: openai/gpt-6-astra
-      api_key: os.environ/OPENAI_API_KEY
-    model_info:
-      service_tiers:
-        - id: ultrafast
-          name: Ultrafast
-          description: Fastest responses, higher cost
-```
+Codex caches the catalog for five minutes in `models_cache.json` under its home directory. Gateway model or service-tier changes appear on a launch after that cache expires.
 
-Only list tiers supported by the upstream model and your provider account. Both deployments above use GPT-6 Astra; see [Fast and Ultrafast supported models](../../providers/openai/ultrafast.md#supported-models-and-availability) before advertising a tier on another model.
-
-The same `model_info` works for a model added through the Admin UI or `POST /model/new`. Codex caches the catalog for five minutes in `models_cache.json` under its home directory, so a model added to the gateway shows up in `/model` on a launch after that cache lapses. An invalid `service_tiers` value (not a list, an empty id, an unknown object key) offers no tier for that model, Codex's built-in ones included, and the gateway logs one warning naming it; the rest of the listing is unaffected
-
-When several deployments share one `model_name`, a request can route to any of them, so Codex is offered only the tiers every deployment of that name the key's team can route to lists, in the first deployment's order; another team's deployment of the name and a paused one are left out, as routing leaves them out, and a key with no team reads the deployments no team owns. The same deployments decide which upstream model Codex's own metadata comes from, so a team whose deployment of `my-coding-model` is backed by `openai/gpt-6.1-sol` gets that model's reasoning levels and prompt while a team whose deployment is backed by another model gets the fallback metadata. A routable deployment that leaves `service_tiers` unset, or sets an invalid value, therefore removes every tier for that name. Both cases log a warning naming the model, so set the same list on each deployment
-
-Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway keeps only the entries that fit: models that list a service tier are kept first, then the rest in `model_list` order, an entry too large for the bytes left is passed over while smaller ones after it are still kept, and the models left out are logged. Each entry is 20 to 65 KB, so roughly 20 to 45 models fit, and a model without a tier that was left out still works by name with Codex's fallback metadata. Put the models your Codex users need first in `model_list`
+Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway keeps only the entries that fit: models that list a service tier are kept first, then the rest in `model_list` order, an entry too large for the bytes left is passed over while smaller ones after it are still kept, and the models left out are logged. Each entry is 20 to 65 KB, so roughly 20 to 45 models fit, and a model without a tier that was left out still works by name with Codex's fallback metadata.
 ## Sign in with LiteLLM SSO
 
-In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
-
-Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
-
-```toml title="~/.codex/config.toml"
-model_provider = "litellm"
-
-[model_providers.litellm]
-name = "LiteLLM"
-base_url = "https://litellm.example.com/v1"
-wire_api = "responses"
-
-[model_providers.litellm.auth]
-command = "/absolute/path/to/lite"
-args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
-timeout_ms = 30000
-refresh_interval_ms = 300000
-```
-
-Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
-
-Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
+Use the [Codex CLI SSO guide](./codex_cli_sso.md) to authenticate with `lite auth print-token` in place of a long-lived virtual key.
 
 ## Model metadata for custom aliases
 

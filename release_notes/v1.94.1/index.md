@@ -1,5 +1,6 @@
 ---
-title: "v1.94.1 - Team Key Budget Enforcement Reverted"
+title: "LiteLLM v1.94.1 - Team Key Budget Enforcement Reverted"
+description: "Reverts user budget enforcement on team keys that locked users out of the Admin UI. Removes skip_user_budget_on_team_key."
 slug: "v1-94-1"
 date: 2026-07-30T21:45:00
 authors:

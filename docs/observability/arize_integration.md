@@ -43,7 +43,7 @@ litellm.callbacks = ["arize"]
 response = litellm.completion(
   model="{{openai_large}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -105,6 +105,10 @@ Open your Arize project; the trace appears under the project named by `ARIZE_PRO
 
 The `openinference` mapper stamps the OpenInference vocabulary onto the LLM-call span alongside the canonical `gen_ai.*` keys, so Arize reads its native schema without dropping the canonical ones. That covers `llm.model_name` and `llm.provider`, the `llm.token_count.*` usage split, `llm.invocation_parameters`, the `llm.input_messages.*` and `llm.output_messages.*` message arrays when content capture is on, and `llm.tools.*` for tool definitions. See the [full attribute table](./opentelemetry_v2#seeing-your-traces) or the [OpenInference spec](https://github.com/Arize-ai/openinference/blob/main/spec/semantic_conventions.md) for the definitive vocabulary.
 
+The mapper also writes each assistant tool call as structured `llm.output_messages.{idx}.message.tool_calls.{idx}.tool_call.*` attributes and the allowlisted request metadata as a `metadata` attribute, so Arize's LLM view shows the tool name and arguments and the metadata panel fills from the same allowlist as `litellm.metadata.*`. Before, a tool-calling reply showed up as `{"role": "assistant", "content": null}` with an empty metadata panel. See [OpenInference tool calls and metadata](./opentelemetry_v2#openinference-tool-calls-and-metadata) for the attributes, the `mapper_names` setting, and the attribute budget.
+
+The `arize` preset names the `openinference` mapper for you, so no extra setting is needed. `MAPPER_NAMES` (or `callback_settings.otel.mapper_names`) only comes into play when you ship Arize-bound spans through your own collector on the generic OTLP path.
+
 ![LiteLLM trace in Arize](/img/observability/otel_v2_arize.png)
 
 ## Configuration
@@ -134,12 +138,39 @@ litellm_settings:
 
 Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
+### Sample a team's or key's traces {#sample-a-teams-or-keys-traces}
+
+To send only a share of a tenant's requests to its Arize space, add `arize_success_sampling_rate` and `arize_error_sampling_rate` to the same `callback_vars`. Each takes a number from `0.0` to `1.0`: `0.1` keeps about one request in ten, `0.0` keeps none, and a rate left unset keeps every request. A request with a failed span answers to the error rate and every other request to the success rate, so an error rate above the success rate keeps more of the failures. Saving a rate outside that range, or on a callback other than `arize`, returns an error.
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "arize",
+    "callback_type": "success_and_failure",
+    "callback_vars": {
+      "arize_space_id": "...",
+      "arize_api_key": "...",
+      "arize_success_sampling_rate": "0.1",
+      "arize_error_sampling_rate": "1.0"
+    }
+  }'
+```
+
+With `LITELLM_OTEL_V2=true` the proxy keeps or drops each request whole, from the HTTP request span down to the model call and the spend write, and the request's trace ID makes the decision. Every pod and worker reaches the same answer for the same trace ID and outcome, so when a caller sends several requests with one W3C `traceparent`, as an agent or an internal service usually does, the tenant sees all of them or none of them, however they are load balanced. A request without a `traceparent` starts a trace of its own and is sampled on its own.
+
+Requests of one trace that end differently can still land apart when the two rates differ. At a success rate of `0.1` and an error rate of `1.0`, a trace whose third request fails usually shows only that failed request. As long as the error rate is at least the success rate, a trace whose successful requests are kept always keeps its failed ones too.
+
+Because the trace ID decides, a caller that reuses one trace ID gets the same answer every time, and a caller can pick a trace ID that is always kept or always dropped, as with OpenTelemetry's `TraceIdRatioBased` sampler. The rates thin only the tenant's own Arize space. Your proxy-wide exporters, and the copy that [`additive` mode](./opentelemetry_v2#keep-your-own-copy-as-well) keeps, receive every request.
+
+OpenTelemetry v1, without `LITELLM_OTEL_V2`, makes a random draw for each request instead, so requests that share a trace can be kept on one pod and dropped on another.
+
 ## Full OpenTelemetry reference
 
 This page covers the Arize-specific setup. For span attributes, prompt and response capture, metrics, distributed tracing, and which routes are traced, see the [OpenTelemetry v2 guide](./opentelemetry_v2).
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

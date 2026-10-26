@@ -2,7 +2,7 @@
 
 Vertex AI supports two types of image generation:
 
-1. **Gemini Image Generation Models** (Nano Banana 🍌) - Conversational image generation using `generateContent` API
+1. **Gemini Image Generation Models** (Nano Banana) - Conversational image generation using `generateContent` API
 2. **Imagen Models** - Traditional image generation using `predict` API
 
 | Property | Details |

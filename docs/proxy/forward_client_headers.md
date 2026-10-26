@@ -72,7 +72,7 @@ Add `forward_llm_provider_auth_headers: true` to your `general_settings`:
 ```yaml
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Enable BYOK
+  forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
 ### Which Headers Are Forwarded
@@ -112,7 +112,7 @@ general_settings:
   forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
-For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting.
+For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting. From LiteLLM v1.105.0, each spend log row records which credential the upstream call used in `metadata.used_client_oauth_token` (`true` for a forwarded OAuth token, `false` for the deployment's configured key, never the token itself), filterable on the Logs page **Credential** dropdown or with `GET /spend/logs/ui?used_client_oauth_token=true`.
 
 Client request:
 ```bash
@@ -193,7 +193,7 @@ Do not send the LiteLLM key in `x-api-key`. LiteLLM accepts it there as proxy au
 
 #### Cooldowns with client keys
 
-A 429 on a client's own key usually reflects that client's quota, but the router still cools down the shared deployment for every caller, and without a deployment `cooldown_time` the cooldown lasts as long as the provider's `retry-after` header asks. Set `cooldown_time: 0` under `model_info` on deployments that forward client credentials; see [Rate Limits and Cooldowns](../tutorials/claude_code_byok.md#rate-limits-and-cooldowns) for the details and trade-off.
+Forwarded Anthropic subscription tokens and API keys use the caller's credential without cooling down the shared deployment for other callers. Subscription-token isolation requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485). Other providers can behave differently. See [Rate Limits and Cooldowns](../tutorials/claude_code_byok.md#rate-limits-and-cooldowns) for older-version workarounds and recovery from an existing shared cooldown.
 
 ### Security Considerations
 
@@ -222,7 +222,7 @@ general_settings:
 # BYOK enabled - auth headers ARE forwarded
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Opt-in required
+  forward_llm_provider_auth_headers: true  # Opt-in required
 ```
 
 ## Enable for a Model Group
@@ -289,7 +289,7 @@ When `add_user_information_to_llm_headers` is enabled, LiteLLM adds:
 
 ## Security Considerations
 
-⚠️ **Important Security Notes:**
+**Important Security Notes:**
 
 1. **Sensitive Data**: Only enable header forwarding for trusted model groups, as headers may contain sensitive information
 2. **API Keys**: Never include API keys or secrets in forwarded headers

@@ -309,7 +309,7 @@ os.environ["AWS_REGION_NAME"] = ""
 response = completion(
   model="sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -322,7 +322,7 @@ model_list:
   - model_name: jumpstart-model
     litellm_params:
       model: sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -431,7 +431,7 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 os.environ["AWS_ACCESS_KEY_ID"] = ""
 os.environ["AWS_SECRET_ACCESS_KEY"] = ""
@@ -483,7 +483,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-[**👉 See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
+[** See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
 
 </TabItem>
 </Tabs>
@@ -614,7 +614,7 @@ response = litellm.completion(
     stream_options={"include_usage": True},
 )
 for chunk in response:
-    if chunk.choices[0].delta.content:
+    if chunk.choices and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="")
 ```
 

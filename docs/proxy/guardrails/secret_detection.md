@@ -1,5 +1,5 @@
-# ✨ Secret Detection/Redaction (Enterprise-only)
-❓ Use this to REDACT API Keys, Secrets sent in requests to an LLM. 
+# Secret Detection/Redaction (Enterprise-only)
+Use this to REDACT API Keys, Secrets sent in requests to an LLM.
 
 Example if you want to redact the value of `OPENAI_API_KEY` in the following request
 

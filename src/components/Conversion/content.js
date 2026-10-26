@@ -144,6 +144,8 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
   ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm', 'https://render.com/images/deploy-to-render-button.svg'],
+  ['AWS', 'https://console.aws.amazon.com/cloudshell/home', '/img/deploy-on-aws.png'],
+  ['GCP', 'https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true', '/img/deploy-on-gcp.png'],
 ];
 
 const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
@@ -213,7 +215,7 @@ const TIERS = [
     plus: 'Everything in AI Gateway, plus',
     items: [
       ['SSO and SCIM', '/docs/proxy/admin_ui_sso'],
-      ['Audit logs', '/docs/proxy/multiple_admins'],
+      ['Audit logs', '/docs/proxy/audit_logs'],
       ['Org and team admins', '/docs/proxy/access_control'],
       ['Secret managers', '/docs/secret_managers/overview'],
       ['IP allowlists', '/docs/proxy/ip_address'],

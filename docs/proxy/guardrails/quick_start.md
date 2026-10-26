@@ -86,6 +86,82 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
 - A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
+### Run on streaming or non-streaming requests only with `stream_scope`
+
+A guardrail runs on both streaming and non-streaming requests by default. Set `stream_scope` under the guardrail's `litellm_params` to choose which request shapes it evaluates:
+
+- `streaming` — run only when the client asked for a streamed response
+- `non_streaming` — run only for regular request/response calls
+- `both` — run on every request (the default, and the pre-existing behavior when `stream_scope` is unset)
+
+```yaml
+guardrails:
+  # runs only on streaming requests; non-streaming calls bypass the scan
+  - guardrail_name: "moderate-streams-only"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+
+  # runs only on non-streaming requests
+  - guardrail_name: "moderate-non-streams"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: post_call
+      stream_scope: non_streaming
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+A guardrail configured with several modes (for example `mode: [pre_call, post_call]`) can scope each mode separately with a map. Keys are mode names; a mode left out of the map defaults to `both`:
+
+```yaml
+guardrails:
+  - guardrail_name: "scoped-by-mode"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: [pre_call, post_call]
+      stream_scope:
+        pre_call: streaming
+        post_call: both
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+The dashboard exposes the same control on the guardrail creation form as **Request shape**; each configured mode gets its own dropdown.
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_ui.png')}
+  alt="Create guardrail form: Request shape control with the pre_call applies to dropdown set to Streaming only"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
+The dropdown open, showing the three scope choices:
+
+<Image
+  img={require('../../../img/stream_scope_request_shape_closeup.png')}
+  alt="Closeup: the pre_call applies to dropdown open with Streaming and non-streaming, Streaming only, and Non-streaming only options"
+  style={{ width: '100%', maxWidth: '700px', height: 'auto' }}
+/>
+
+The stored guardrail's detail page shows the per-mode scope summary:
+
+<Image
+  img={require('../../../img/stream_scope_guardrail_detail_ui.png')}
+  alt="Guardrail detail page: per-mode stream scope summary showing pre_call Streaming only and post_call Streaming and non-streaming"
+  style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
+/>
+
+Realtime audio input transcription counts as streaming, so a `streaming` scope also covers guardrails running on realtime transcription events, and a `non_streaming` scope excludes them.
+
+Bedrock pass-through requests report their streaming state from the invoked Bedrock action, so `stream_scope` gates them the same way as native routes.
+
+#### Validation
+
+A `stream_scope` value other than `streaming`, `non_streaming` or `both` (or a map whose keys are not mode names) is rejected with `422` on create and update. At startup, whether loaded from a config file or a stored database row, an invalid `stream_scope` is ignored with a warning log and the guardrail keeps running with the default `both` scope.
+
 ### Observe only one direction with `logging_only_scope`
 
 A `logging_only` guardrail observes the request and the response by default. Set `logging_only_scope` under the guardrail's `litellm_params` to choose which direction the scan observes:
@@ -159,6 +235,10 @@ Editing a guardrail (for example, a description-only PUT) no longer reorders gua
 ### Skip system messages in guardrail evaluation
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
+
+Since v1.103.0, guardrails on Anthropic `/v1/messages` also scan the top-level `system` prompt. Claude Desktop and Cowork send a long system prompt with every request, and a strict prompt-attack filter, such as a Bedrock guardrail's `PROMPT_ATTACK` filter, can block it even when the user's own text is harmless. Set this flag to keep that prompt out of the scan.
+
+On `/v1/messages` the flag skips only the top-level `system` prompt. A `role: system` entry inside `messages` is client input, so guardrails scan it even with the flag set. Claude Code sends these entries mid-conversation, for example its environment details and corrections typed while a tool runs. To keep them out of a Bedrock guardrail's scan, set [`experimental_use_latest_role_message_only: true`](./bedrock#experimental-only-send-latest-user-message) on the guardrail.
 
 **Global**, in `litellm_settings`:
 
@@ -485,7 +565,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-### 4. ✨ Pass Dynamic Parameters to Guardrail
+### 4. Pass Dynamic Parameters to Guardrail
 
 <EnterpriseFeature />
 
@@ -580,7 +660,7 @@ Monitor which guardrails were executed and whether they passed or failed. e.g. g
 
 <Image img={require('../../../img/gd_fail.png')} />
 
-### ✨ Control Guardrails per API Key
+### Control Guardrails per API Key {#-control-guardrails-per-api-key}
 
 <EnterpriseFeature />
 
@@ -632,7 +712,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-### ✨ Tag-based Guardrail Modes
+### Tag-based Guardrail Modes {#-tag-based-guardrail-modes}
 
 <EnterpriseFeature />
 
@@ -653,12 +733,12 @@ guardrails:
   - guardrail_name: "guardrails_ai-guard"
     litellm_params:
       guardrail: guardrails_ai
-      guard_name: "pii_detect" # 👈 Guardrail AI guard name
+      guard_name: "pii_detect" # Guardrail AI guard name
       mode:
         tags:
             "User-Agent: claude-cli": "logging_only"                 # Claude CLI - only mask in logs
         default: "pre_call"               # Default mode when no tags match
-      api_base: os.environ/GUARDRAILS_AI_API_BASE # 👈 Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
+      api_base: os.environ/GUARDRAILS_AI_API_BASE # Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
       default_on: true # run on every request
 ```
 
@@ -708,7 +788,7 @@ guardrails:
 
 
 
-### ✨ Model-level Guardrails
+### Model-level Guardrails {#-model-level-guardrails}
 
 <EnterpriseFeature />
 
@@ -742,7 +822,7 @@ guardrails:
       api_base: os.environ/AZURE_GUARDRAIL_API_BASE 
 ```
 
-### ✨ Disable team from turning on/off guardrails
+### Disable team from turning on/off guardrails
 
 <EnterpriseFeature />
 

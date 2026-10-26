@@ -1,0 +1,230 @@
+[
+  {
+    "folders": [
+      "v1.106.1"
+    ],
+    "title": "LiteLLM v1.106.1 fixes count_tokens, MCP tool calls and thinking blocks",
+    "points": [
+      "Bare MCP tool names on a single-server scope now go to that server, so a cold replica no longer returns `Tool not found`.",
+      "Vector stores created through the proxy send only the caller's `metadata` to the provider, so later metadata updates no longer fail with 400.",
+      "Token count responses carry `litellm_count_source`, and Anthropic-format count requests for OpenAI and Gemini models match how `/v1/messages` converts them."
+    ]
+  },
+  {
+    "folders": [
+      "v1.105.2"
+    ],
+    "title": "LiteLLM v1.105.2 fixes count_tokens, bridged tool calls and thinking blocks",
+    "points": [
+      "Chat completions bridged to `/responses` return text and tool calls in one `choices[0]`, so agents that read only `choices[0]` run the tool.",
+      "Signed thinking blocks with empty text stay on `/v1/messages` and chat completion requests, so replayed turns keep their reasoning.",
+      "The `v1.104.4` token count fixes are included, and count responses carry `litellm_count_source`."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.6"
+    ],
+    "title": "LiteLLM v1.103.6 fixes realtime handshake errors and double spend logs",
+    "points": [
+      "A refused upstream realtime handshake now sends the client an `error` event and closes with 1008, 1013 or 1011.",
+      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
+      "This patch has no new database migrations."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.0"
+    ],
+    "title": "LiteLLM v1.106.0 adds Claude Haiku 5.5, a Rust Lens service and MCP rate limits",
+    "points": [
+      "Claude Haiku 5.5 works on day one across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI and Perplexity.",
+      "Lens runs as a standalone Rust service, and agents upload traces to it directly with dedicated keys.",
+      "MCP Gateway rate limits now cover every MCP operation, and a new server-level `rpm` caps all callers of one server.",
+      "The caller's LiteLLM key is never forwarded to MCP servers, so each upstream server needs its own static header or OAuth credential."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.5"
+    ],
+    "title": "LiteLLM v1.103.5 fixes tool calls in chat completions on GPT-5.4 and newer",
+    "points": [
+      "Tool calls no longer appear on a separate `choices[1]`, so agents that read only `choices[0]` run them.",
+      "Each tool call in one non-streaming reply now gets its own `index` value instead of 0.",
+      "The fix applies to `/chat/completions` calls with tools on GPT-5.4 and newer and on `responses/` deployments."
+    ]
+  },
+  {
+    "folders": [
+      "v1.105.1"
+    ],
+    "title": "LiteLLM v1.105.1 fixes SpendLogs rows and daily model usage writes",
+    "points": [
+      "The model leaderboard rollup now writes `LiteLLM_DailyModelUsage` in batches, so heavy traffic to one model no longer drops SpendLogs rows.",
+      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
+      "This patch has no new database migrations and no breaking changes."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.3"
+    ],
+    "title": "LiteLLM v1.104.3 adds hosted vLLM and Microsoft-Decision-1 to Decisions",
+    "points": [
+      "Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400, so set `drop_params` to `true` to keep the old behavior.",
+      "The `litellm.systemone()` SDK function takes the System One format, and `litellm.decisions()` takes the OpenAI format.",
+      "The `azure_ai/` prefix serves Microsoft-Decision-1, and `hosted_vllm/` is a new Decisions provider that requires `api_base`."
+    ]
+  },
+  {
+    "folders": [
+      "v1.105.0"
+    ],
+    "title": "LiteLLM v1.105.0 adds Claude Sonnet 5.5, the Decisions API and litellm.agent()",
+    "points": [
+      "Claude Sonnet 5.5 works on day one across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI, OpenRouter and Perplexity.",
+      "`/v1/decisions` and `/v1/systemone` let decision models answer yes/no, choice and score questions across OpenAI, Perplexity, TypeSafe, OpenRouter and Cloudflare.",
+      "`litellm.agent()` runs Claude Code, Codex, OpenCode and Deep Agents through the AI gateway from the SDK.",
+      "Bedrock GPT-5.6, GPT-6 and GPT-6.1 use native Chat Completions, which changes response ids and reasoning fields, so use `bedrock/converse/<model>` to stay on Converse."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.2"
+    ],
+    "title": "LiteLLM v1.104.2 adds Decisions API routes for OpenAI and System One",
+    "points": [
+      "The proxy now serves `POST /v1/decisions` in OpenAI's Decisions API format and `POST /v1/systemone` in the System One format.",
+      "Decision models from OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare Clef and self-hosted Strands Decider answer on both routes.",
+      "Malformed requests, such as a missing `state` or more than 128 questions, return HTTP 400 before any upstream call."
+    ]
+  },
+  {
+    "folders": [
+      "v1.102.4"
+    ],
+    "title": "LiteLLM v1.102.4 fixes double-counted spend on the chat to Responses bridge",
+    "points": [
+      "Since v1.102.0, large non-streaming chat requests to `openai/responses/*` models logged spend twice, and each request now logs once.",
+      "Key, team and daily spend now match the real cost of each request, and streaming requests are unchanged."
+    ]
+  },
+  {
+    "folders": [
+      "v1.101.6"
+    ],
+    "title": "LiteLLM v1.101.6 fixes Codex CLI tool calls on the Responses to Chat bridge",
+    "points": [
+      "Codex CLI tools now reach models behind the Responses to Chat Completions bridge, such as Bedrock Converse models.",
+      "The bridge moves `additional_tools` input items into `tools` for every bridged provider.",
+      "The model call returns to Codex as a `custom_tool_call` in both streaming and non-streaming responses."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.1",
+      "v1.103.4",
+      "v1.102.3"
+    ],
+    "title": "LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0",
+    "points": [
+      "Wolfi's `openssl-dev` package now installs OpenSSL 4.0, so the Docker images bundle pgbouncer 1.26.0 to build again.",
+      "The locked Python dependencies update `langgraph-sdk` to 0.4.4, `mako` to 1.4.2 and `werkzeug` to 3.1.9.",
+      "The Admin UI updates `next` to 16.3.6 and `moment` to 2.31.0."
+    ]
+  },
+  {
+    "folders": [
+      "v1.100.5",
+      "v1.101.5"
+    ],
+    "title": "LiteLLM v1.100.5 and v1.101.5 update next to 16.3.6 and urllib3 to 2.8.0",
+    "points": [
+      "The locked Python dependencies update `urllib3` to 2.8.0, `pypdf` to 6.19.0 and `pyjwt` to 2.15.0.",
+      "The Admin UI updates `next` to 16.3.6, and the wolfi-base image digest picks up glibc 2.44-r6."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.3"
+    ],
+    "title": "LiteLLM v1.103.3 fixes streamed alias spend and bridged tool calls",
+    "points": [
+      "The proxy exits at startup when database setup fails, unless you set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior.",
+      "Streamed requests through an alias such as `claude-opus-4.6` now record spend from the deployment model instead of $0.",
+      "Chat replies bridged from the Responses API now put tool calls in `choices[0]`, so clients that read only the first choice run the tool."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.0"
+    ],
+    "title": "LiteLLM v1.104.0 adds Claude Opus 5.5, GPT-6 and master key enforcement",
+    "points": [
+      "The model catalog adds 331 entries, such as Claude Opus 5.5, GPT-6 Sol and GPT-6 Luna.",
+      "The proxy refuses to start when `LITELLM_MASTER_KEY` is unset, empty or publicly known, so set a strong key before you upgrade.",
+      "An exhausted budget now returns HTTP 422 instead of 429, so set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status.",
+      "stdio MCP servers are off by default, so set `LITELLM_ENABLE_MCP_STDIO=true` in the proxy environment to start them again."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.2"
+    ],
+    "title": "LiteLLM v1.103.2 supports Claude Code auto mode and fixes CLI spend",
+    "points": [
+      "The proxy forwards `safeguards` and `anthropic-beta` unchanged on `/v1/messages`, so Claude Code auto mode runs through the gateway.",
+      "New CLI session spend is recorded under the per-user `cli-session-<user_id>` alias instead of a 64-character session hash.",
+      "Pass-through endpoints from the config and the database merge again, and `forward_headers: true` forwards `Authorization` again."
+    ]
+  },
+  {
+    "folders": [
+      "v1.101.4"
+    ],
+    "title": "LiteLLM v1.101.4 supports Straiker v3 keys and fixes Azure Content Safety",
+    "points": [
+      "The Straiker guardrail calls `/api/v3/detect` for v3 platform keys, which start with `sk_agt_`.",
+      "A block from Straiker now reaches the caller as HTTP 400 with the tenant's block message.",
+      "Azure Content Safety guardrails now use `2024-09-01` when `api_version` is unset, so requests no longer return HTTP 404."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.1",
+      "v1.102.2",
+      "v1.101.3",
+      "v1.100.4"
+    ],
+    "title": "LiteLLM v1.103.1, v1.102.2, v1.101.3 and v1.100.4 fix UI and CLI session tokens",
+    "points": [
+      "Session tokens issued before the upgrade are rejected, so Admin UI and `lite` CLI users must run `lite login` again.",
+      "Session tokens now use AES-256-GCM with their own context and return as `litellm_login_` followed by unpadded base64url.",
+      "Login tokens no longer start with `sk-`, so the proxy no longer returns HTTP 401 for about one login in 262,144."
+    ]
+  },
+  {
+    "folders": [
+      "v1.103.0"
+    ],
+    "title": "LiteLLM v1.103.0 adds Fuse V2, TypeSafe Jev and config file ownership",
+    "points": [
+      "The proxy now ignores database values for keys in `config.yaml` and returns 400 on runtime writes, so edit the file and restart.",
+      "Fuse V2 routing now runs after the capability forecast, and per-model Fast mode is available.",
+      "Without a license, the proxy allows one Capability router and one Fuse v2 router, and a second router returns 403.",
+      "The catalog adds 408 models from providers such as AIHubMix, Azure, Together AI and Vertex AI, and corrects the price of 147 models."
+    ]
+  },
+  {
+    "folders": [
+      "v1.100.3"
+    ],
+    "title": "LiteLLM v1.100.3 fixes GPT-6 request rules and end-user budget resets",
+    "points": [
+      "GPT-6 names such as `gpt-6-astra` now get the GPT-5 request rules, so chat completions accept `reasoning_effort`, `max_tokens` and function tools.",
+      "The end-user budget reset now zeroes the cached spend counter in memory and Redis, so customers no longer get 429 errors.",
+      "Shared end-user budgets with more than about 32,700 customers now reset, because the job resets end users by budget link."
+    ]
+  }
+]

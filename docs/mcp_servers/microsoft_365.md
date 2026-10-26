@@ -196,7 +196,7 @@ Claude Desktop on third-party inference adds MCP servers under **Configure Third
 ]
 ```
 
-Fleets that sign in through SSO replace `headers` with `headersHelper`, covered in [Claude Desktop (Cowork)](../tutorials/claude_desktop_cowork.md#mcp-servers-through-the-litellm-mcp-gateway). The built-in Microsoft 365 connector in Claude Desktop calls Microsoft directly and never passes through LiteLLM, so it gets none of the access control or logging above; use the `url` entry instead.
+For rotating LiteLLM credentials, use `headersHelper` to supply the `x-litellm-api-key` header; see Claude's [MCP headers helper guide](https://claude.com/docs/third-party/claude-desktop/extensions#short-lived-credentials-with-a-headers-helper). The Microsoft OAuth sign-in remains separate. The built-in Microsoft 365 connector in Claude Desktop calls Microsoft directly and never passes through LiteLLM, so it gets none of the access control or logging above; use the `url` entry instead.
 
 </TabItem>
 <TabItem value="cursor" label="Cursor">

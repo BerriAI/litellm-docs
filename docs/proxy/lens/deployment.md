@@ -1,46 +1,61 @@
 ---
-title: "Deployment"
-description: "Choose how to install Lens locally or for a team, with new or existing LiteLLM."
+title: "Set up Lens"
+description: "Use Lens in your LiteLLM dashboard or deploy it as a separate application."
 slug: "/proxy/lens/deployment"
 ---
 
-# Deployment
+# Set up Lens
 
-Lens runs alongside LiteLLM and stores traces in ClickHouse. Your agents send model requests to LiteLLM and traces to Lens. View traces and investigations in the LiteLLM dashboard.
+Lens lets you inspect agent traces, investigate failures, and save useful runs as datasets. You can open it inside your LiteLLM dashboard or use it as a separate application.
 
-![Your agent sends model requests to LiteLLM and traces directly to Lens.](/img/lens-architecture.svg)
+In both cases, Lens runs as its own service and stores its data in ClickHouse. Your agent can keep its existing model provider.
 
-If Lens is already installed, [send your first trace](./first-trace.md).
+## How the pieces connect {#architecture}
 
-## New deployment {#new-deployment}
+```mermaid
+flowchart LR
+  agent["Your agent"] -- "OTLP traces with a tracing key" --> lens
+  subgraph infra["Your infrastructure"]
+    lens["Lens<br/>UI, API, and investigation workers"] <--> clickhouse[("ClickHouse")]
+    litellm["LiteLLM proxy and dashboard"] -- "reads, investigations, and spend records" --> lens
+  end
+  user["Dashboard user"] --> litellm
+  lens -- "selected trace content" --> provider["Analysis model provider"]
+```
 
-Choose where you want to run LiteLLM and Lens:
+Lens is one service. It serves the UI and API and runs investigations in background workers. It stores traces, LiteLLM spend records, and investigation results in ClickHouse. Every Lens replica shares that ClickHouse state, so you can run more than one.
 
-| Where | Guide | What it sets up |
-| --- | --- | --- |
-| On your computer | [Local quickstart](./deployment/local.md) | LiteLLM, Lens, PostgreSQL, and ClickHouse |
-| On a Kubernetes cluster | [Kubernetes](./deployment/kubernetes.md#new-deployment) | LiteLLM, Lens, and ClickHouse, with your PostgreSQL and Redis |
-| On a server with Docker | [Docker Compose](./deployment/server.md) | LiteLLM, Lens, PostgreSQL, and ClickHouse behind your HTTPS proxy |
+Agents send OpenTelemetry traces directly to Lens with a tracing key. Traces do not pass through LiteLLM. When you use Lens inside LiteLLM, the dashboard and the LiteLLM trace and investigation routes call Lens on the user's behalf. LiteLLM authenticates those calls with `LITELLM_LENS_SERVICE_TOKEN`, signs the user's identity with `LENS_GATEWAY_SECRET`, and sends its spend records so each run can show its cost.
 
-## Add Lens to an existing deployment {#configure-an-existing-proxy}
+Investigations send only the selected trace content to the analysis model you configure. Everything else stays on your infrastructure. Standalone Lens needs only Lens and ClickHouse.
 
-Choose how you run LiteLLM. Keep your existing model configuration, database, and keys.
+## Choose your starting point {#new-deployment}
 
-| Your deployment | Guide |
+| Your starting point | Follow this guide |
 | --- | --- |
-| Helm | [Add Lens with Helm](./deployment/kubernetes.md#existing-deployment) |
-| Docker Compose | [Add Lens to your Compose project](./deployment/docker-compose.md) |
-| Standalone Docker | [Add a Lens container](./deployment/docker.md) |
+| You use LiteLLM and want Lens in its sidebar | [Add Lens to LiteLLM](./deployment/litellm.md) |
+| You already run Lens and want to connect it to a gateway | [Connect your existing Lens deployment](./deployment/litellm.md#1-get-the-lens-address) |
+| You want to run Lens without a gateway | [Start standalone Lens](./deployment/local.md) |
+| Your team has already set up Lens | [Send your first trace](./first-trace.md) |
 
-Each guide includes setup commands and a test trace. Use [Storage and secrets](./deployment/storage.md) for external ClickHouse or GitOps, and [Configuration](./deployment/configuration.md) for credential definitions and custom routing.
+For a persistent standalone deployment, use [Docker Compose on a server](./deployment/server.md) or [Kubernetes](./deployment/kubernetes.md). The local quickstart builds from source. See [Releases and images](./deployment/releases.md) for the release status.
 
-## Check the installation
+## Use Lens inside LiteLLM {#configure-an-existing-proxy}
 
-1. Sign in to the LiteLLM dashboard as a proxy administrator.
-2. Open **Lens**, then **Set up Lens**. If Lens already has traces, use **Traces > Set up tracing**. Under **Connection details**, check the **Traces endpoint**. It should include `/v1/traces`.
-3. Click **Generate tracing key**, then **Send a test trace**.
-4. Click **View trace**. Seeing the trace confirms upload, storage, and read access.
+A gateway administrator configures the connection once. Users then open **Lens** in the LiteLLM sidebar and use their existing LiteLLM session. They do not enter the standalone Lens admin token. LiteLLM supplies their identity and access scope to Lens.
 
-For investigations, open **Lens > Investigations > Connect worker**. Choose an analysis model and monthly budget, then click **Enable investigations**. Wait for **Worker connected**, then [create an investigation](./investigations.md). The service connects automatically; you do not need to start another worker or copy a worker token.
+If Lens is not configured, the dashboard shows its setup page. Connecting the service does not instrument your agents. After the connection is ready, send a trace from an agent.
 
-If a check fails, use [Troubleshooting](./deployment/configuration.md#troubleshooting). For a later release, follow [Upgrade Lens](./deployment/upgrades.md).
+Follow [Add Lens to LiteLLM](./deployment/litellm.md). If Lens already runs, use its current address, storage, and credentials. You do not need to install a second copy or move its data.
+
+## Use Lens on its own
+
+One command, `./deploy/lens/start`, starts Lens and ClickHouse together. Then sign in at the Lens URL with its admin token. A LiteLLM gateway and PostgreSQL are not required. You can record and inspect traces before you configure an analysis model.
+
+Follow the [standalone quickstart](./deployment/local.md). Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
+
+## Check your first result {#check-the-installation}
+
+Open Lens, generate a tracing key, and follow [Send your first trace](./first-trace.md). Open the resulting run and inspect its content. A health check confirms that the service is ready; a stored trace confirms that your exporter can send data and you can read it.
+
+For help from a coding agent, copy the **Set it up for me** prompt in the [Lens setup guide](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md). It covers standalone setup, an existing gateway, and connecting an agent.

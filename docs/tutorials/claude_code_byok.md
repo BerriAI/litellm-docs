@@ -24,8 +24,6 @@ model_list:
     litellm_params:
       model: anthropic/{{anthropic}}
       # No api_key needed — client's key will be used
-    model_info:
-      cooldown_time: 0  # See "Rate Limits and Cooldowns" below
 
 litellm_settings:
   forward_llm_provider_auth_headers: true  # Required for the x-api-key path; not needed for /login
@@ -107,11 +105,27 @@ x-litellm-user-id: my-user-id"
 
 ## Rate Limits and Cooldowns
 
-When Anthropic answers with a 429 on a forwarded client credential, it usually means that one client has used up its own quota, but the router still treats it as a failure of the shared deployment and cools the deployment down. If the deployment sets no `cooldown_time`, the cooldown lasts as long as the provider's `retry-after` header asks, with no upper bound. In a test against LiteLLM v1.104.1 with `allowed_fails_policy.RateLimitErrorAllowedFails: 1`, a 429 carrying `retry-after: 86400` put the deployment into an 86,400 second cooldown on the second 429, and later requests were refused for every user of the model group, or sent to the group's fallback if it had one.
+A rate-limit error on a forwarded Anthropic credential does not put the shared deployment into cooldown for other callers. Each caller keeps using their own subscription or API key. Anthropic still enforces that account's quota; LiteLLM does not add quota or switch to another user's login.
 
-The cooldown is keyed to the deployment (`deployment:<model_id>:cooldown`), not to the credential that caused it, so a user whose usage resets or who buys more credit still cannot use the model. It is held in each worker's memory and in Redis. Restarting the proxy alone does not clear it, because it is read back from Redis, and deleting the Redis key alone does not either, because the worker that recorded it keeps its in-memory copy. There is no endpoint to clear it.
+This behavior for subscription OAuth requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485). No additional cooldown setting is needed. Requests that use the gateway's saved key retain normal [deployment cooldowns](../routing.md#cooldowns).
 
-Set `cooldown_time: 0` under `model_info` on deployments that forward client credentials, as in the Step 1 config. The deployment value takes precedence over `retry-after`; in the same test no cooldown was recorded and every request reached Anthropic. The trade-off is that during a real Anthropic outage each request still tries Anthropic before any fallback. A short cap such as `cooldown_time: 30` is a middle ground. See [Cooldowns](../routing.md#cooldowns) for how per-deployment `cooldown_time` works.
+<details>
+<summary>Workaround for older proxy versions</summary>
+
+On versions without the fix, one caller's subscription error can cool down a shared deployment. Until you upgrade, set `cooldown_time: 0` only on the affected deployment:
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+    model_info:
+      cooldown_time: 0
+```
+
+Keep your existing authentication settings. This disables cooldowns for that deployment, including during a provider outage, so each request can still attempt the failing provider. Avoid disabling cooldowns for the whole proxy. This setting does not clear an existing cooldown; see [recovery below](#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
+
+</details>
 
 ## Summary
 
@@ -146,7 +160,15 @@ This applies to the `x-api-key` path; the OAuth `Authorization` header from `/lo
 
 ### Model is unavailable for everyone after one user hits their limit
 
-One user's 429 has cooled down the shared deployment, possibly for as long as Anthropic's `retry-after` header asked. Set `cooldown_time: 0` on the deployment as described in [Rate Limits and Cooldowns](#rate-limits-and-cooldowns).
+If a healthy account receives `429 No deployments available for selected model` after another caller hits a limit, check for a shared cooldown left by an older proxy version. Upgrade to a build containing the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485) first. An existing cooldown can remain until it expires.
+
+Recovery before expiry briefly interrupts proxy traffic. Have the proxy operator:
+
+1. Stop all proxy workers that use the affected deployment.
+2. If Redis is configured, remove only that deployment's `deployment:<model_id>:cooldown` key using your Redis management tool. Use the deployment's `model_info.id`, not its model name, and include the configured Redis namespace prefix if present. Preserve all other keys.
+3. Start the proxy workers and send a request from a healthy account. Confirm it succeeds in **Logs**.
+
+With Redis, restarting workers alone can reload the old entry. Without Redis, restarting all workers clears the in-memory cooldown. This recovery does not reset the provider's account quota.
 
 ## Related
 

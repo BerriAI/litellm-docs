@@ -8,7 +8,7 @@ Covers Batches, Files
 | Feature | Supported | Notes | 
 |-------|-------|-------|
 | Supported Providers | OpenAI, Azure, Vertex, Bedrock, Mistral, vLLM, xAI | - |
-| ✨ Cost Tracking | ✅ | LiteLLM Enterprise only |
+| Cost Tracking | ✅ | LiteLLM Enterprise only |
 | Logging | ✅ | Works across all logging integrations |
 
 Guardrails configured on your proxy are applied to the records inside a batch input file when it is
@@ -156,7 +156,7 @@ while True:
     )
     
     status = retrieved_batch.status
-    print(f"⏳ Batch status: {status}")
+    print(f"Batch status: {status}")
     
     if status == "completed" and retrieved_batch.output_file_id:
         print("✅ Batch complete. Output file ID:", retrieved_batch.output_file_id)
@@ -208,7 +208,7 @@ Route batch operations to different provider accounts using model-specific crede
 
 ### Configuration
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-4o-account-1
     litellm_params:
@@ -224,7 +224,7 @@ model_list:
   
   - model_name: azure-batches
     litellm_params:
-      model: azure/{{openai_large}}
+      model: azure/gpt-5.6-terra
       api_key: azure-key-123
       api_base: https://my-resource.openai.azure.com
       api_version: "2024-02-01"
@@ -684,7 +684,7 @@ Use the global or provider-specific settings above to manage this behavior at th
 
 ## How Cost Tracking for Batches API Works
 
-✨ **Enterprise:** Automated batch cost tracking requires a LiteLLM Enterprise license.
+**Enterprise:** Automated batch cost tracking requires a LiteLLM Enterprise license.
 
 For managed batches, LiteLLM monitors the provider job in the background. When the job reaches a terminal state, LiteLLM:
 

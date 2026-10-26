@@ -1,146 +1,113 @@
 ---
 title: Moyai
-description: Connect Moyai, the open source self-hosted coding agent, to your LiteLLM AI Gateway for model access, budgets, and spend tracking.
+sidebar_label: Moyai
+description: Run open source coding agents in your cloud, choose models through LiteLLM, and track each teammate's costs. See Moyai in action and set up your first task.
+hide_title: true
+hide_table_of_contents: true
 ---
 
+import {MoyaiHero, BenefitGrid, GuideCards, SetupCallout} from '@site/src/components/Moyai';
+import BugWorkflowDemo from '@site/blog/internal-devin-two-days/BugWorkflowDemo';
 import Image from '@theme/IdealImage';
+import styles from '@site/src/components/Moyai/styles.module.css';
+import Heading from '@theme/Heading';
 
-# Moyai
+<MoyaiHero />
 
-[Moyai](https://github.com/BerriAI/moyai) is an open source coding agent that you host on your infrastructure. You give it a task in the browser or in Slack. Moyai edits the code, runs the tests, and opens a pull request for review.
+Moyai is an open source coding agent you run in your cloud. Delegate a bug fix or repository change from Slack or the browser, then review the pull request. Connect your LiteLLM gateway to choose models and track what each task costs.
 
-The LiteLLM team built Moyai as its internal coding agent. The team gives all its code tasks to Moyai. Moyai also decreases the cost of external tools. Before Moyai, the team used Devin. For the same work in 31 days, Devin cost $101,872 and Moyai cost approximately $21,700, 79% less. For the full story, refer to [Moyai is now open source](/blog/moyai-open-source).
+<section className={styles.why} aria-labelledby="why-moyai">
+  <Heading as="h2" id="why-moyai">Why Moyai</Heading>
+  <BenefitGrid />
+  <GuideCards />
+  <p className={styles.setupRequirements}>Start with a Modal account and a LiteLLM gateway. The setup guide verifies a cloud task before you connect a repository.</p>
+</section>
 
-Moyai sends all its model requests through a LiteLLM AI Gateway. The provider API keys stay on the gateway, and the agent sandbox does not get them.
+## Give Moyai a task from your browser {#start-in-the-browser}
 
-**Source code:** [github.com/BerriAI/moyai](https://github.com/BerriAI/moyai)
+Describe the change, choose an agent and model, and add repository context. Keep your team's sessions in one workspace alongside its skills and app connections.
 
-<Image
-  img={require('../../img/moyai_hero.png')}
-  alt="Moyai, an open source cloud agent, with the harnesses and providers that it supports"
-  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
-/>
+<figure className={styles.spendFigure}>
+  <Image
+    img={require('../../img/moyai_task_composer.jpg')}
+    alt="Moyai's browser workspace with a bug-fix prompt, agent and model selectors, connected apps, and recent sessions."
+    style={{width: '100%', display: 'block'}}
+  />
+  <figcaption>The Moyai interface with an example prompt and sample workspace data. This screenshot shows task setup; it does not show a completed agent run.</figcaption>
+</figure>
 
-## How Moyai uses LiteLLM
+## Watch a task go from request to PR {#watch-a-task}
 
-Moyai runs each task with an agent harness. Each harness sends its requests to a different API on the gateway:
+See a team ask Moyai to investigate a bug, run regression tests, and return a pull request to Slack. You can follow the work in the browser and send a correction in the same conversation.
 
-| Harness | Gateway API |
-|---|---|
-| Claude Agent SDK (default) | `/v1/messages` |
-| Codex | `/v1/responses` |
-| Hermes, OpenCode, Deep Agents, Tool Loop | `/v1/chat/completions` |
+<BugWorkflowDemo />
 
-Moyai sends each request in the API format of its harness, with no changes. LiteLLM converts the request to the format of the model provider. You can use a model from a different provider with each harness. For example, the Claude Agent SDK harness can use an OpenAI model. The model must support tool calls.
+## See what each teammate spends {#see-agent-spend}
 
-Moyai sends all requests with one virtual key. Moyai records the spend for each teammate. It reads the cost of each response from the `x-litellm-response-cost` header that the gateway returns.
+Use Moyai's spend dashboard to find the users, sessions, and models behind your model bill. Moyai records LiteLLM's reported charge for each tracked request, so you can trace a total back to the same cost data.
 
-## Prerequisites
+<figure className={styles.spendFigure}>
+  <Image
+    img={require('../../img/moyai_spend_users.jpg')}
+    alt="Moyai's LLM spend by user table showing each teammate's recorded cost, session count, model requests, and share of team spend."
+    style={{width: '100%', display: 'block'}}
+  />
+  <figcaption>Moyai's spend dashboard with sample data. Names and figures illustrate the interface; they are not LiteLLM's production usage or evidence for the savings estimate above.</figcaption>
+</figure>
 
-- A LiteLLM AI Gateway at an HTTPS address that Moyai can connect to. Moyai runs in the cloud (on Modal by default). A `localhost` address does not work.
-- A proxy admin key for the gateway.
-- A Moyai installation. Refer to [Getting started](https://github.com/BerriAI/moyai#getting-started) in the Moyai repository.
+[Check a request against LiteLLM](./moyai/setup.md#track-spend). The [cost accounting guide](./moyai/architecture.md#cost-accounting) explains coverage and missing receipts. Cloud hosting and storage costs remain separate from these model charges.
 
-## Step 1: Add the models
+## Start with a bug your team already knows {#put-moyai-to-work}
 
-Add the models that Moyai will use to the gateway. The `model_name` of each model is the alias that Moyai sends.
+After the setup checks pass, connect one repository and give Moyai a small, reproducible issue:
 
-```yaml title="config.yaml"
-model_list:
-  - model_name: openai/gpt-6-astra
-    litellm_params:
-      model: openai/gpt-6-astra
-      api_key: os.environ/OPENAI_API_KEY
-  - model_name: claude-sonnet-5-5
-    litellm_params:
-      model: anthropic/claude-sonnet-5-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-```
+> Reproduce this bug, add a regression test, fix it, and open a pull request. Include the failing test before the fix and the passing result afterward.
 
-The default model of Moyai is `openai/gpt-6-astra`. If you use a different alias, set `AGENT_MODEL` to that alias in Step 3.
+Review the diff and test output, then check the session's model cost in Moyai. Use that first result to decide which tasks to delegate next.
 
-## Step 2: Create a virtual key for Moyai
+## Before you set it up {#prerequisites}
 
-Create one virtual key for Moyai. Give the key access to the models from Step 1, and set a budget.
+<div className={styles.questions}>
+<details>
+<summary>What do I need to get started?</summary>
 
-```bash
-curl -X POST "$PROXY_BASE_URL/key/generate" \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "key_alias": "moyai",
-    "models": ["openai/gpt-6-astra", "claude-sonnet-5-5"],
-    "max_budget": 100
-  }'
-```
+A Modal account, a cloud-reachable LiteLLM gateway, and a virtual key for your chosen model. The [setup guide](./moyai/setup.md) walks through installation and a cloud task. Opening GitHub PRs also requires an organization-owned GitHub App; verify the first task before connecting a repository.
 
-The gateway stops the requests on this key when its spend gets to `max_budget`. The Moyai documentation recommends a key with a budget, because limits on requests and output do not limit the cost.
+</details>
+<details>
+<summary>What will I pay for?</summary>
 
-## Step 3: Set the gateway in Moyai
+Model usage plus hosting, agent sandboxes, and storage. Your workload and model choices determine the bill. The $700/day figure is our team's estimate, not a starting price or a promise about your costs. Measure your own tasks before expanding the rollout.
 
-Add these values to the `.env` file of Moyai:
+</details>
+<details>
+<summary>What does my team maintain?</summary>
 
-```dotenv
-LITELLM_API_BASE=https://your-gateway.example.com/v1
-LITELLM_API_KEY=sk-...   # the virtual key from Step 2
-AGENT_MODEL=openai/gpt-6-astra
-```
+You manage the service, including deployments, updates, credentials, and backups. Moyai fits a trusted engineering team willing to operate its own cloud agent. The [architecture guide](./moyai/architecture.md) explains deployment choices, checkpoints, and recovery before you commit to running it.
 
-Make sure that `LITELLM_API_BASE` ends in `/v1`. Do not add `/messages` to it. Moyai adds `/messages`, `/responses`, or `/chat/completions` for each request.
+</details>
+<details>
+<summary>Can I choose what the agent can access?</summary>
 
-Then deploy Moyai again. Refer to [Deploy and sign in](https://github.com/BerriAI/moyai#3-deploy-and-sign-in).
+Select the apps and repositories in **Connections**. Enabled app tools can write under their connection policy without a per-use approval prompt. You review and merge GitHub PRs. Model requests go through your LiteLLM gateway to the provider you select, so account for that provider when deciding what code to share.
 
-## Step 4: Do a test of the connection
+</details>
+</div>
 
-Send a request in the same format as the Claude Agent SDK harness of Moyai:
+<SetupCallout />
 
-```bash
-curl -i -X POST "https://your-gateway.example.com/v1/messages" \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "anthropic-version: 2023-06-01" \
-  -d '{
-    "model": "openai/gpt-6-astra",
-    "max_tokens": 256,
-    "messages": [{"role": "user", "content": "hello"}]
-  }'
-```
+<details>
+<summary>Looking for the previous gateway instructions?</summary>
 
-The gateway returns `HTTP/1.1 200 OK` and an `x-litellm-response-cost` header. Moyai uses this header to record the spend.
+<span id="how-moyai-uses-litellm" />
+<span id="step-1-add-the-models" />
+<span id="step-2-create-a-virtual-key-for-moyai" />
+<span id="step-3-set-the-gateway-in-moyai" />
+<span id="step-4-do-a-test-of-the-connection" />
+<span id="track-spend" />
+<span id="troubleshooting" />
+<span id="more-information" />
 
-## Track spend
+The [gateway configuration](./moyai/setup.md#configure-litellm), [connection check](./moyai/setup.md#check-the-model-connection), [spend tracking](./moyai/setup.md#track-spend), and [troubleshooting](./moyai/setup.md#troubleshooting) now live in the setup guide.
 
-Moyai administrators can see the cost for each user, session, and model in **Settings** > **Spend**. These values come from the gateway.
-
-On the gateway, all Moyai requests use the `moyai` virtual key. To see them, open **Logs** in the Admin UI. Click **Filters**, and set **Key Alias** to `moyai`.
-
-<Image
-  img={require('../../img/moyai_gateway_logs.png')}
-  dark={require('../../img/moyai_gateway_logs_dark.png')}
-  alt="Request Logs in the LiteLLM Admin UI, filtered to the moyai key alias"
-  style={{width: '100%', display: 'block', margin: '1.5rem 0'}}
-/>
-
-Moyai also sends its request ID in the spend log metadata:
-
-```json
-"spend_logs_metadata": {"moyai_request_id": "<Moyai request ID>"}
-```
-
-Moyai sends the same ID in the `x-litellm-call-id` header. Use this ID to find a Moyai request in the gateway logs.
-
-## Troubleshooting
-
-| Error from the gateway | Cause | Fix |
-|---|---|---|
-| `401` | The virtual key is not correct. | Set `LITELLM_API_KEY` to the key from Step 2. |
-| `403` `The requested model ... is not available for this API key` | The key does not have access to the model. | Add the model alias to the `models` of the key. |
-| `404` | `LITELLM_API_BASE` is not correct. | Make sure that the value ends in `/v1`, without `/messages`. |
-| `422` `Budget has been exceeded` | The key spent its `max_budget`. | Increase the budget of the key. |
-| Moyai cannot connect to the gateway | Moyai cannot get to the gateway address. | Use an HTTPS address that Moyai can connect to from the cloud. |
-
-The gateway examines the budget before each request. The last request before the stop can make the spend go above `max_budget`.
-
-## More information
-
-The Moyai repository has the full guides for [setup](https://github.com/BerriAI/moyai/blob/main/docs/getting-started.md), [harnesses](https://github.com/BerriAI/moyai/blob/main/docs/harnesses.md), [Slack](https://github.com/BerriAI/moyai/blob/main/docs/slack.md), [deployment](https://github.com/BerriAI/moyai/blob/main/docs/deployment.md), and [costs](https://github.com/BerriAI/moyai/blob/main/docs/costs.md).
+</details>

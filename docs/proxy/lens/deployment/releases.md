@@ -1,78 +1,35 @@
 ---
 title: "Releases and images"
-description: "Select matching LiteLLM and Lens artifacts and find the Lens image digest."
+description: "Understand paired Lens and LiteLLM releases, standalone deployment, and source builds."
 slug: "/proxy/lens/deployment/releases"
 ---
 
 # Releases and images
 
-Use LiteLLM and Lens from the same release. A LiteLLM release number alone does not confirm that its Lens image and chart have been published. Check the artifacts below before installing.
+Lens can run on its own. For the manual setup guides, use the [source quickstart](./local.md) or build the [source Helm chart](./kubernetes.md#new-deployment).
 
-## Helm charts {#helm-charts}
+As of October 9, 2026, the Lens repository has no published GitHub release. The latest LiteLLM prerelease, `v1.106.0-dev.3`, was published before the independent Lens integration merged in [PR #45529](https://github.com/BerriAI/litellm/pull/45529). Do not use that version for the gateway connection steps. Those steps need a build that includes the integration. Standalone Lens remains usable while you prepare the gateway build.
 
-Select a version from [LiteLLM releases](https://github.com/BerriAI/litellm/releases). Replace `RELEASE_VERSION` with the version without its leading `v`, then download the published chart values:
+The release pipeline builds official paired Lens and LiteLLM artifacts with the same version and tests them together. This does not mean those artifacts have already been published. Check the [Lens releases](https://github.com/BerriAI/lens/releases) and [LiteLLM releases](https://github.com/BerriAI/litellm/releases) before selecting a release.
 
-```bash
-export CHART_VERSION="RELEASE_VERSION"
-helm show values oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version "$CHART_VERSION" > release-values.yaml
-```
-
-For the single-container chart, use `oci://ghcr.io/berriai/litellm-helm` instead.
-
-Open `release-values.yaml` and find `lensWorker`. The setup guides require `lensWorker.clickhouse.enabled` and a nonempty `lensWorker.image.digest`. The digest begins with `sha256:`. A chart missing these values cannot provide the bundled setup described in these guides.
-
-Use this same chart reference and version in your install command. Its published values supply the matching Lens image; you do not need to enter a digest in your own values file.
+The Lens UI inside LiteLLM is part of the gateway build. Updating a separate Lens backend does not replace that embedded UI. An existing external Lens deployment also does not upgrade when you upgrade LiteLLM; deploy it through its own release process.
 
 ## Container images {#container-images}
 
-Docker's `buildx imagetools inspect` reads registry metadata without downloading image layers. Set `RELEASE_VERSION` to the release you selected, without its leading `v`:
+For a source build, clone [BerriAI/lens](https://github.com/BerriAI/lens), record the selected commit and use [Build from source](./development.md#try-backend-changes). The current runtime Dockerfile is `deploy/runtime/Dockerfile`. Supply a development version with `LENS_VERSION`. Official paired builds use LiteLLM’s computed release version, including its dev or RC suffix
 
-```bash
-export LITELLM_VERSION="RELEASE_VERSION"
-docker buildx imagetools inspect "ghcr.io/berriai/litellm:${LITELLM_VERSION}"
-docker buildx imagetools inspect "ghcr.io/berriai/litellm-lens-worker:v${LITELLM_VERSION}"
-```
+Before using a published artifact, check [Lens releases](https://github.com/BerriAI/lens/releases) for the exact image digest and signed release manifest. Verify the manifest, source identity and artifact checksums using that release's instructions. Pin the selected digest in your deployment and retain the prior image for rollback
 
-Both commands must succeed. If an image is missing, use a release with both published images before continuing. The [local](./local.md) and [server](./server.md) Compose setups select these two tags from `LITELLM_VERSION`.
+Existing installations may retain deployment or registry names containing `litellm-lens-worker`. A retained name does not establish compatibility with the independent runtime. Check the selected source and release metadata
 
-For an existing container deployment, take the top-level `Digest:` from the Lens command's output. This is the multi-platform image digest, not an individual architecture's digest listed under `Manifests`. Put it after `@` in the Lens image reference:
+## Helm charts {#helm-charts}
 
-```dotenv
-LENS_WORKER_IMAGE=ghcr.io/berriai/litellm-lens-worker@sha256:RELEASE_DIGEST
-```
+The independent chart lives in [the Lens repository](https://github.com/BerriAI/lens/tree/main/helm/lens). A published release uses `oci://ghcr.io/berriai/charts/lens` with an exact chart version and verified image digest. Until that release exists, follow the [source chart installation](./kubernetes.md#new-deployment) with an image you built and published to your own accessible registry
 
-Replace `sha256:RELEASE_DIGEST` with the complete digest from that output. Keep LiteLLM on the corresponding release too. For image signatures, see [Docker image verification](../../docker_image_security.md).
+For gateway embedding, keep the existing LiteLLM chart family and choose a version that contains the compatible adapter and shared Lens chart. Paired releases pin the Lens image digest and chart built for that release version. Inspect the chart's actual values and release qualification before adopting it
 
 ## Source charts {#source-charts}
 
-Source charts can contain development image defaults. From the matching LiteLLM release checkout, set every component to the published release and supply the Lens digest. Replace `vRELEASE_VERSION` with the matching image tag and `sha256:RELEASE_DIGEST` with the Lens digest:
+A source chart's default image tag is a development value and may not exist in a registry. Supply `image.repository` and `image.tag`, or `image.digest`, using the artifact you built. The [Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) owns the complete source-build and installation commands
 
-```yaml
-gateway:
-  image:
-    tag: vRELEASE_VERSION
-backend:
-  image:
-    tag: vRELEASE_VERSION
-ui:
-  image:
-    tag: vRELEASE_VERSION
-migrationJob:
-  image:
-    tag: vRELEASE_VERSION
-lensWorker:
-  enabled: true
-  image:
-    digest: sha256:RELEASE_DIGEST
-```
-
-Then build the chart dependencies before deploying:
-
-```bash
-helm dependency build ./helm/litellm
-helm upgrade --install litellm ./helm/litellm \
-  --namespace litellm -f values.yaml --wait
-```
-
-For the single-container chart, use `./helm/litellm-helm` and set `image.tag` to the LiteLLM image tag instead of the four component tags. For custom image builds and hot reload, see [Build from source](./development.md).
+For an existing Lens deployment, an image or chart replacement also requires the [upgrade and migration checks](./upgrades.md). Keep storage, secrets, access scope and release ownership intact

@@ -6,7 +6,7 @@ import Image from '@theme/IdealImage';
 
 Track spend for keys, users, and teams across 100+ LLMs.
 
-LiteLLM automatically tracks spend for all known models. See our [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
+LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
@@ -22,7 +22,7 @@ Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/
 
 **Step 1**
 
-👉 [Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
+[Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
 
 **Step2** Send `/chat/completions` request
 
@@ -453,7 +453,7 @@ response = client.chat.completions.create(
     ],
     extra_body={
         "metadata": {
-            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # 👈 Key Change
+            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # Key Change
         }
     }
 )
@@ -484,7 +484,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // 👈 Key Change
+        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // Key Change
       },
     });
     console.log(response);
@@ -577,7 +577,7 @@ litellm_settings:
   disable_add_user_agent_to_request_tags: true
 ```
 
-## ✨ (Enterprise) Generate Spend Reports
+## (Enterprise) Generate Spend Reports {#-enterprise-generate-spend-reports}
 
 Use this to charge other teams, customers, users
 
@@ -589,7 +589,7 @@ Use the `/global/spend/report` endpoint to get spend reports
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=team`
+Key Change: Specify `group_by=team`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=team' \
@@ -719,7 +719,7 @@ Customer [this is `user` passed to `/chat/completions` request](#how-to-track-sp
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=customer`
+Key Change: Specify `group_by=customer`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=customer' \
@@ -772,7 +772,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="per key" label="Spend for Specific API Key">
 
-👉 Key Change: Specify `api_key=sk-<your-litellm-api-key>`
+Key Change: Specify `api_key=sk-<your-litellm-api-key>`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-<your-litellm-api-key>' \
@@ -816,7 +816,7 @@ Internal User (Key Owner): This is the value of `user_id` passed when calling [`
 
 :::
 
-👉 Key Change: Specify `internal_user_id=ishaan`
+Key Change: Specify `internal_user_id=ishaan`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-12-30&internal_user_id=ishaan' \
@@ -888,7 +888,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 </Tabs>
 
-## 📊 Spend Logs API - Individual Transaction Logs
+## Spend Logs API - Individual Transaction Logs {#-spend-logs-api---individual-transaction-logs}
 
 The `/spend/logs` endpoint now supports a `summarize` parameter to control data format when using date filters.
 
@@ -1080,7 +1080,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        spend_logs_metadata: { // 👈 Key Change
+        spend_logs_metadata: { // Key Change
             hello: "world"
         }
       }
@@ -1240,7 +1240,7 @@ curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
         "metadata": {
             "user_api_key": "example-api-key-123",
             "user_api_key_alias": null,
-            "spend_logs_metadata": { # 👈 LOGGED CUSTOM METADATA
+            "spend_logs_metadata": { # LOGGED CUSTOM METADATA
                 "hello": "world"
             },
             "user_api_key_team_id": null,
