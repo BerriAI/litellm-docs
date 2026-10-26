@@ -145,8 +145,6 @@ We are still working on confirming some of the above, and identifying a timeline
 Sincerely,
 Oliver, Krrish, and Ishaan
 
-We will publish a new status update two hours from now at 22:30 UTC.
-
 ---
 
 ## Timeline
@@ -166,8 +164,6 @@ All times are UTC on October 21, 2026.
 - By 13:23: PyPI had removed litellm==1.107.0.
 - 13:51: A registry verification found the affected GHCR tags unavailable. Docker Hub tags v1.107.0, latest, main-latest, and main-stable still resolved to compromised image index sha256:1bbcb1443bc962e45f5aad53fe3d2c30600e0379715fb6c664cdd3ac126c339e.
 - 14:20: All affected Docker Hub tags and image variants were removed or repointed to verified clean artifacts.
-
-We will keep this post updated with the most recent information, and continue to update every two hours. Our next update will be at 22:30 UTC.
 
 ## Response and Remediation
 

@@ -40,7 +40,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/decisionsLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
@@ -59,6 +59,13 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          // The decisions page was split into subpages for a few days in October 2026.
+          {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
+          {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},
+          {from: '/docs/decisions/systemone_format', to: '/docs/decisions#v1systemone'},
+          {from: '/docs/decisions/typesafe_images', to: '/docs/decisions#typesafe-images-box-questions-and-long-context'},
+          {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
+          {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
@@ -247,7 +254,9 @@ const config = {
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
-          limit: 50,
+          // Every post, so feed readers get every post's tags. Full text is
+          // trimmed to the newest 50 in src/feed/card-categories.js.
+          limit: false,
           createFeedItems: require('./src/feed/card-categories').createFeedItems,
         },
       },

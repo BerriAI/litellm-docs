@@ -1205,16 +1205,6 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "Decision Models",
-      link: { type: "doc", id: "decisions/index" },
-      items: [
-        "decisions/providers",
-        "decisions/benchmark",
-        "decisions/admin_ui",
-      ],
-    },
-    {
-      type: "category",
       label: "Compatibility",
       link: {
         type: "generated-index",
@@ -1360,13 +1350,10 @@ const sidebars = {
         "tokenize",
         {
           type: "category",
-          label: "/v1/decisions, /v1/systemone",
+          label: "/v1/decisions",
           items: [
-            { type: "link", label: "Decision Models overview", href: "/docs/decisions" },
-            "decisions/openai_format",
-            "decisions/systemone_format",
-            "decisions/typesafe_images",
-            "decisions/sdk",
+            "decisions",
+            "decisions/benchmark",
           ]
         },
         "extraction",
