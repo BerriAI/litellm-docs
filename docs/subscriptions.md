@@ -19,19 +19,34 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose
   items={[
     {
       title: 'ChatGPT / Codex',
-      description: 'Use your ChatGPT login in Codex CLI, the Codex app, or Pi. Requires LiteLLM v1.108.0+.',
+      description: 'Sign in with ChatGPT in your client.',
+      listDescription: [
+        'ChatGPT account with access to your chosen model',
+        'Codex CLI, Codex app, or Pi',
+        'LiteLLM v1.108.0+',
+      ],
       icon: <img src="/img/integrations/openai.svg" alt="" />,
       to: '/docs/tutorials/openai_codex_byok',
     },
     {
       title: 'Claude',
-      description: 'Use your Claude subscription in Claude Code.',
+      description: 'Sign in with Claude in Claude Code.',
+      listDescription: [
+        'Claude Pro, Max, Team, or Enterprise',
+        'Claude Code installed',
+        'LiteLLM v1.81.14+',
+      ],
       icon: <img src="/img/integrations/anthropic.svg" alt="" />,
       to: '/docs/tutorials/claude_code_max_subscription',
     },
     {
       title: 'GitHub Copilot',
-      description: 'Connect your GitHub account in LiteLLM to use your Copilot subscription.',
+      description: 'Connect GitHub in the LiteLLM dashboard.',
+      listDescription: [
+        'GitHub account with Copilot access',
+        'LiteLLM dashboard access',
+        'An app that connects to LiteLLM',
+      ],
       icon: <img src="/img/integrations/github-copilot.svg" alt="" />,
       to: '/docs/providers/github_copilot',
     },
