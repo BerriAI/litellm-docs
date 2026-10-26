@@ -11,7 +11,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 Keep using your subscription in your coding client, with LiteLLM access controls and request logs. Each developer connects their own account and uses their plan's allowance.
 
-Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md) on **v1.108.0 or later**, then choose your subscription:
+Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose your subscription:
 
 <NavigationCards
   variant="cards"
@@ -19,7 +19,7 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md) on **v1.108.
   items={[
     {
       title: 'ChatGPT / Codex',
-      description: 'Use your ChatGPT login in Codex CLI, the Codex app, or Pi.',
+      description: 'Use your ChatGPT login in Codex CLI, the Codex app, or Pi. Requires LiteLLM v1.108.0+.',
       icon: <img src="/img/integrations/openai.svg" alt="" />,
       to: '/docs/tutorials/openai_codex_byok',
     },
