@@ -118,7 +118,13 @@ Single-speaker input maps to `{"input":{"mode":"single","text":input,"voiceName"
 
 `response_format` may be omitted or set to `wav`. Other formats, speed, instructions, streaming, separate prompts, legacy speaker fields and provider model selections are rejected instead of silently ignored, including when parameter dropping is enabled. Use FlowSpeech voice names; OpenAI voice names are not translated
 
-The adapter waits at least five seconds between pending status checks, and honors a longer numeric or HTTP-date `Retry-After`, including on rate limits. `timeout` is a finite positive total budget for submission, retries, polling and download; it defaults to LiteLLM's configured request timeout. When passing `httpx.Timeout`, its finite `read` value is the total budget and individual phase timeouts are bounded by the remaining budget
+The adapter waits at least five seconds between pending status checks, and honors a longer numeric or HTTP-date `Retry-After`, including on rate limits. `timeout` is a finite positive cooperative budget for submission, retries, polling, download and validation; it defaults to LiteLLM's configured request timeout. When passing `httpx.Timeout`, its finite `read` value supplies this budget. Each HTTP operation's phase timeouts are limited by the remaining budget when that request is built.
+
+:::warning Synchronous Timeout Limit
+`litellm.speech` cannot preempt blocking synchronous I/O and has no strict wall-clock return guarantee. Ordinary HTTPX transports can exceed the budget while receiving response headers or protocol events in many small reads, even when every individual read meets its timeout. Once control returns and the adapter observes expiry, it rejects late success and starts no further request, retry, sleep or success callback. Timeout errors retain the request ID and any known job ID for recovery; they do not cancel the remote job or close a caller-owned client.
+
+`litellm.aspeech` additionally uses `asyncio.wait_for` to cancel cooperative asynchronous waits. Cancellation and response cleanup can take time, and arbitrary blocking custom transports or callbacks cannot be preempted. Neither entry point promises a hard wall-clock bound for arbitrary custom code.
+:::
 
 `max_retries` allows zero to ten retries per HTTP operation. Creation retries preserve the same UUID and exact JSON body. Transient transport failures, rate limits, and retryable server errors are retried within the total budget. Download retries reuse the result URL and never create another job. JSON responses and request bodies are limited to 1 MiB, and audio downloads to 100 MiB. The downloaded WAV encoding and completeness are validated
 
