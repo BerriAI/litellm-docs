@@ -4,9 +4,6 @@ sidebar_label: ChatGPT subscription
 description: Connect Codex to LiteLLM with your ChatGPT subscription. Configure a model, create a virtual key, and start using the CLI or desktop app.
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Use your ChatGPT subscription with Codex
 
 Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM controls model access and records token usage; Codex keeps your login and refreshes it.
@@ -33,40 +30,19 @@ The wildcard routes Codex model names such as GPT-6 Luna and GPT-6 Astra through
 
 ## Step 2: Create and save a virtual key
 
-Open your proxy's dashboard at `/ui`. Go to **Virtual Keys → + Create New Key**, enter a name, select `gpt-*` under **Models**, then click **Create Key** and copy the key. Keep **Owned By** set to **You**. If your administrator has already given you a key, save it below.
+In your proxy dashboard, open **Virtual Keys → + Create New Key**. Enter a name, select `gpt-*` under **Models**, and create the key. If you already have a key, use it below.
 
-<Tabs>
-<TabItem value="desktop" label="Desktop (macOS)" default>
-
-Save your LiteLLM virtual key in `~/.codex/.env` once. Create the file if needed; preserve any existing entries and replace an existing `LITELLM_API_KEY` value instead of adding a duplicate:
+Save your key in `~/.codex/.env`. Both the app and CLI read this file. Create it if needed; replace the key if it already exists.
 
 ```dotenv title="~/.codex/.env"
 LITELLM_API_KEY=sk-<your-litellm-virtual-key>
 ```
 
-Replace the placeholder with your key and keep the file private:
-
-```bash
-chmod 600 ~/.codex/.env
-```
-
-The app reads this file on startup. You only need to update it when your key changes.
-
-</TabItem>
-<TabItem value="cli" label="Codex CLI">
-
-Export your key in the Terminal where you will run Codex:
-
-```bash
-export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
-```
-
-</TabItem>
-</Tabs>
+Replace the placeholder with your key. Run `chmod 600 ~/.codex/.env` to keep the file private.
 
 ## Step 3: Connect Codex
 
-Open `~/.codex/config.toml`. In the desktop app, use **Settings → Configuration → Open config.toml**. Keep your existing model and reasoning settings. Set `model_provider` at the top of the file, before any `[table]` headings, and add the provider block:
+Open `~/.codex/config.toml` or use **Settings → Configuration → Open config.toml** in the app. Keep your model and reasoning settings. Update `model_provider` above any `[table]` headings, then add this provider:
 
 ```toml title="~/.codex/config.toml"
 model_provider = "litellm_subscription"
@@ -80,15 +56,9 @@ requires_openai_auth = true
 env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
 ```
 
-Replace `http://localhost:4000` with your proxy URL. Choose a GPT model available to your subscription in Codex. Keep `env_key` unset so Codex uses your ChatGPT login.
+Replace `http://localhost:4000` with your proxy URL. Keep `env_key` unset so Codex uses your ChatGPT login.
 
-**Desktop:** Save the config, fully quit the app with **⌘Q**, then open it normally from the Dock or Finder. Sign in with ChatGPT if needed and start a **new Codex chat**.
-
-**CLI:** If needed, run `codex login` and sign in with ChatGPT. Then start Codex from the Terminal where you exported your key:
-
-```bash
-codex
-```
+Save the file and **restart Codex**. Sign in with ChatGPT if needed, then start a new chat and choose your model.
 
 ## Step 4: Verify a request
 
@@ -114,7 +84,13 @@ An explicit ChatGPT workspace selection is preserved for OpenAI to validate. Gat
 
 ### Pi {#pi}
 
-In Pi, run `/login` and choose the built-in OpenAI Codex provider. Export `LITELLM_API_KEY` as in step 2's **Codex CLI** tab, then add this override to `~/.pi/agent/models.json`:
+In Pi, run `/login` and choose the built-in OpenAI Codex provider. Export your key in the Terminal that launches Pi:
+
+```bash
+export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
+```
+
+Add this override to `~/.pi/agent/models.json`:
 
 ```json title="~/.pi/agent/models.json"
 {
@@ -139,7 +115,7 @@ Codex can use this native route too: change its provider's `base_url` to `http:/
 
 | Problem | Fix |
 |---|---|
-| Gateway rejects the key | Desktop: check `LITELLM_API_KEY` in `~/.codex/.env` and restart the app. CLI: export the key in the Terminal that launches Codex. |
+| Gateway rejects the key | Check `LITELLM_API_KEY` in `~/.codex/.env` and restart Codex. |
 | Model access denied | Allow `gpt-*` on the key and choose a GPT model your subscription supports. |
 | OpenAI rejects the login or model | Sign in again with ChatGPT and choose a model your plan supports. |
 | No request appears in LiteLLM | Check `model_provider` and `base_url`, then start a new Codex chat. |
