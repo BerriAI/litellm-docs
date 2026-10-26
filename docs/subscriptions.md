@@ -10,7 +10,7 @@ You can send the requests of a Claude, ChatGPT, or GitHub Copilot subscription t
 
 The gateway adds access controls, request logs, and usage attribution. Give each developer a separate LiteLLM virtual key to track their requests.
 
-**Using Codex?** Follow [Use your ChatGPT login through LiteLLM](./tutorials/openai_codex_byok.md) to keep your existing login and route requests through a local or existing proxy. Compare the other subscription options below.
+**Using Codex?** Follow [Use your ChatGPT subscription with Codex](./tutorials/openai_codex_byok.md) to keep your existing login and route requests through your proxy. Compare the other subscription options below.
 
 ## Compare the subscriptions
 
@@ -69,16 +69,16 @@ Each developer signs in with ChatGPT through their client. The client sends its 
 
 The administrator adds a `chatgpt/` model using the usual LiteLLM model setup. Developers point Codex at the gateway's `/v1` URL and keep their login in the client. No auth file is uploaded. Leave gateway credentials and paid-provider fallbacks unset for a subscription-only deployment.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: {{chatgpt_small}}
+  - model_name: "gpt-*"
     litellm_params:
-      model: chatgpt/{{chatgpt_small}}
+      model: "chatgpt/gpt-*"
     model_info:
       mode: responses
 ```
 
-Use a model available to the caller's subscription and allow that model name on their virtual key. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
+Allow `gpt-*` on the virtual key, then choose a GPT model available to the caller's subscription. The wildcard routes the requested model without an entry per model. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
 
 Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for the complete setup, including the native route used by Pi. Like Claude Code, the client keeps and refreshes its subscription login while a separate key authenticates to LiteLLM.
 
