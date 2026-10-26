@@ -8,19 +8,20 @@ description: Send the requests of a Claude, ChatGPT (Codex), or GitHub Copilot s
 
 You can send the requests of a Claude, ChatGPT, or GitHub Copilot subscription through the LiteLLM AI Gateway. The provider continues to charge the requests to the subscription, not to an API key.
 
-The gateway adds virtual keys, request logs, rate limits, budgets, and guardrails to the subscription requests. Each request log shows the user and the team that sent the request.
+The gateway adds access controls, request logs, and usage attribution. Available controls depend on the integration. Give each developer a separate virtual key to attribute requests to their gateway user and team.
 
 ## Compare the subscriptions
 
 | Subscription | Clients | Sign-in | Python SDK | Full guide |
 |---|---|---|---|---|
 | Claude Pro, Max, Team, and Enterprise | Claude Code | Each user signs in to Claude Code with a different Claude account | Gateway only | [Claude subscription](./tutorials/claude_code_max_subscription.md) |
-| ChatGPT plans that include Codex | Codex CLI, Codex in the ChatGPT desktop app, and OpenAI API clients | One ChatGPT account for each proxy | Yes | [ChatGPT subscription](./providers/chatgpt.md) |
+| ChatGPT plans that include Codex, client login | Codex and Pi | Each user signs in through their client | Gateway only | [ChatGPT client login](./tutorials/openai_codex_byok.md) |
+| ChatGPT plans that include Codex, gateway login | OpenAI API clients | One ChatGPT account for each proxy | Yes | [ChatGPT provider](./providers/chatgpt.md) |
 | GitHub Copilot | Claude Code, OpenAI API clients, and Anthropic API clients | Each user connects a different GitHub account | Yes | [GitHub Copilot](./providers/github_copilot.md) |
 
 ## Desktop apps
 
-**Codex in the ChatGPT desktop app.** The ChatGPT desktop app reads the same `~/.codex/config.toml` file as the Codex CLI. Set `model` in that file to a `chatgpt/` model on the gateway. Codex then uses the ChatGPT account of the proxy, not the account that is signed in to the app. For the full steps, refer to [Codex (ChatGPT Desktop)](./proxy/client_setup/codex_chatgpt_desktop.md).
+**Codex.** To use the account signed in on your computer, configure a provider with `requires_openai_auth = true` and a separate LiteLLM key. Follow [ChatGPT client login](./tutorials/openai_codex_byok.md). The desktop app also needs the key in its environment. The separate [virtual-key setup](./proxy/client_setup/codex_chatgpt_desktop.md) uses credentials configured on the gateway.
 
 **Claude Desktop.** Claude Desktop connects to the gateway in third-party inference mode. In this mode, the app does not use a Claude account. Thus, a Claude subscription does not apply. To use a subscription from Claude Desktop, add a GitHub Copilot model with a name that starts with `claude-`. For the full steps, refer to [Claude Desktop & Cowork](./proxy/client_setup/claude_desktop.md).
 
@@ -60,7 +61,17 @@ LiteLLM calculates the cost of each request with the Anthropic API rates. Budget
 
 ## ChatGPT subscriptions (Codex)
 
-The `chatgpt/` provider uses one ChatGPT account for the full proxy. All the virtual keys that can call a `chatgpt/` model use that same account. To use more than one ChatGPT account, deploy one proxy for each account.
+### Keep each user's login in Codex or Pi
+
+Each developer signs in with ChatGPT through their client. The client sends its subscription token in `Authorization` and a separate LiteLLM virtual key in `x-litellm-api-key`. The gateway forwards the subscription request to OpenAI, enforces the virtual key's model permissions, and records usage under the gateway identity.
+
+No `chatgpt/` deployment or uploaded auth file is needed. The client keeps and refreshes its login. Authentication or quota errors return to that caller without switching accounts. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
+
+Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for Codex and Pi setup, verification, and troubleshooting. This uses the same separate gateway-key convention as Claude Code subscription forwarding, with a native Codex endpoint.
+
+### Configure a gateway-owned login
+
+The separate `chatgpt/` provider uses one ChatGPT account for the full proxy. All the virtual keys that can call a `chatgpt/` model use that same account. To use more than one ChatGPT account, deploy one proxy for each account.
 
 To set up a ChatGPT subscription, do these steps:
 
