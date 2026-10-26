@@ -144,5 +144,27 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## [PROXY-Only] List wildcard routes in `/v1/models`
+
+By default `GET /v1/models` returns only the models a wildcard route expands to, so a config with `openai/*` lists `openai/{{openai_large}}` and the rest but not `openai/*` itself. A single request can ask for the routes with `?return_wildcard_routes=true`, and `general_settings.return_wildcard_routes` makes that the default for every request.
+
+```yaml
+model_list:
+  - model_name: "openai/*"
+    litellm_params:
+      model: "openai/*"
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  return_wildcard_routes: true
+```
+
+```bash
+curl http://localhost:4000/v1/models \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+The response now has `openai/*` next to the expanded models. A request that passes `return_wildcard_routes` explicitly always wins over the setting, so `?return_wildcard_routes=false` still leaves the routes out and `?return_wildcard_routes=true` still lists them when the setting is off.
 
 ## [[PROXY-Only] Control Wildcard Model Access](/docs/proxy/model_access#advanced-model-access-groups)
