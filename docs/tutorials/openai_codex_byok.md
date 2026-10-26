@@ -31,9 +31,38 @@ model_list:
 
 The wildcard routes Codex model names such as GPT-6 Luna and GPT-6 Astra through ChatGPT. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
 
-## Step 2: Create a virtual key
+## Step 2: Create and save a virtual key
 
-Open your proxy's dashboard at `/ui`. Go to **Virtual Keys → + Create New Key**, enter a name, select `gpt-*` under **Models**, then click **Create Key** and copy the key. Keep **Owned By** set to **You**. Skip this step if your administrator has already given you a key.
+Open your proxy's dashboard at `/ui`. Go to **Virtual Keys → + Create New Key**, enter a name, select `gpt-*` under **Models**, then click **Create Key** and copy the key. Keep **Owned By** set to **You**. If your administrator has already given you a key, save it below.
+
+<Tabs>
+<TabItem value="desktop" label="Desktop (macOS)" default>
+
+Save your LiteLLM virtual key in `~/.codex/.env` once. Create the file if needed; preserve any existing entries and replace an existing `LITELLM_API_KEY` value instead of adding a duplicate:
+
+```dotenv title="~/.codex/.env"
+LITELLM_API_KEY=sk-<your-litellm-virtual-key>
+```
+
+Replace the placeholder with your key and keep the file private:
+
+```bash
+chmod 600 ~/.codex/.env
+```
+
+The app reads this file on startup. You only need to update it when your key changes.
+
+</TabItem>
+<TabItem value="cli" label="Codex CLI">
+
+Export your key in the Terminal where you will run Codex:
+
+```bash
+export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
+```
+
+</TabItem>
+</Tabs>
 
 ## Step 3: Connect Codex
 
@@ -53,35 +82,13 @@ env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
 
 Replace `http://localhost:4000` with your proxy URL. Choose a GPT model available to your subscription in Codex. Keep `env_key` unset so Codex uses your ChatGPT login.
 
-<Tabs>
-<TabItem value="desktop" label="Desktop (macOS)" default>
+**Desktop:** Save the config, fully quit the app with **⌘Q**, then open it normally from the Dock or Finder. Sign in with ChatGPT if needed and start a **new Codex chat**.
 
-Add your LiteLLM virtual key to `~/.codex/.env` once. Create the file if needed; preserve any existing entries and replace an existing `LITELLM_API_KEY` value instead of adding a duplicate:
-
-```dotenv title="~/.codex/.env"
-LITELLM_API_KEY=sk-<your-litellm-virtual-key>
-```
-
-Replace the placeholder with the key from step 2 and keep the file private:
+**CLI:** If needed, run `codex login` and sign in with ChatGPT. Then start Codex from the Terminal where you exported your key:
 
 ```bash
-chmod 600 ~/.codex/.env
-```
-
-Save the config, fully quit the app with **⌘Q**, then open it normally from the Dock or Finder. Sign in with ChatGPT if needed and start a **new Codex chat**. Future launches use the saved key; no Terminal launch command is needed.
-
-</TabItem>
-<TabItem value="cli" label="Codex CLI">
-
-In Terminal, export the key from step 2. If you are not already signed in with ChatGPT, run `codex login` and complete browser sign-in. Start Codex from that Terminal:
-
-```bash
-export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
 codex
 ```
-
-</TabItem>
-</Tabs>
 
 ## Step 4: Verify a request
 
@@ -107,7 +114,7 @@ An explicit ChatGPT workspace selection is preserved for OpenAI to validate. Gat
 
 ### Pi {#pi}
 
-In Pi, run `/login` and choose the built-in OpenAI Codex provider. Export `LITELLM_API_KEY` as in step 3's **Codex CLI** tab, then add this override to `~/.pi/agent/models.json`:
+In Pi, run `/login` and choose the built-in OpenAI Codex provider. Export `LITELLM_API_KEY` as in step 2's **Codex CLI** tab, then add this override to `~/.pi/agent/models.json`:
 
 ```json title="~/.pi/agent/models.json"
 {
