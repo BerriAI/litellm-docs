@@ -11,7 +11,7 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md) with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md) with [ChatGPT client-login support](https://github.com/BerriAI/litellm/pull/41522) and PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
@@ -102,7 +102,7 @@ Luna falls back to API Luna; Astra falls back to API Astra. The model must be av
 
 ## Limits
 
-Your ChatGPT plan's model access and quota still apply. LiteLLM does not pool subscriptions or switch accounts when you reach a limit. Leave paid-provider fallbacks unset for subscription-only traffic. ChatGPT requests have a recorded cost of $0 in LiteLLM; use request or token rate limits rather than dollar budgets.
+A caller's subscription error does not put the shared ChatGPT deployment into cooldown for other callers. Your ChatGPT plan's model access and quota still apply. LiteLLM does not pool subscriptions or switch accounts when you reach a limit. Leave paid-provider fallbacks unset for subscription-only traffic. ChatGPT requests have a recorded cost of $0 in LiteLLM; use request or token rate limits rather than dollar budgets.
 
 <details>
 <summary>How credentials are handled</summary>

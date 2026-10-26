@@ -271,12 +271,11 @@ Claude Code owns the subscription credential. It stores the login locally (the m
 
 When a token is expired or revoked, Anthropic answers `401 OAuth access token is invalid.` and LiteLLM returns that to Claude Code; the user runs `/login` again. LiteLLM cannot revoke a Claude login. To cut a user off at the gateway, [block](/docs/proxy/virtual_keys) or delete their virtual key, which stops their requests through LiteLLM; their Claude login itself still works directly against Anthropic until they or their admin remove it.
 
-One user's expired or revoked token can currently block everyone else on the same model. LiteLLM counts the upstream 401 as a deployment failure and puts the deployment into cooldown, and while the cooldown lasts every other user's request to that model fails with `429 No deployments available for selected model` without reaching Anthropic. On proxies that serve subscription users, turn cooldowns off:
+### Rate limits and cooldowns
 
-```yaml showLineNumbers title="config.yaml - Keep one user's 401 from blocking others"
-router_settings:
-  disable_cooldowns: true
-```
+One caller's subscription error does not put the shared deployment into cooldown for other callers. Anthropic still enforces each account's limits. This requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485); no extra configuration is needed.
+
+If a healthy account still receives `429 No deployments available for selected model` after an upgrade, an old shared cooldown can remain in Redis or worker memory. See [recovering an existing cooldown](./claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit). That guide also includes a per-deployment workaround for older versions.
 
 ### Attribution and cost
 

@@ -23,7 +23,7 @@ The gateway adds access controls, request logs, and usage attribution. Give each
 
 ## Desktop apps
 
-**Codex.** To use the account signed in on your computer, configure a provider with `requires_openai_auth = true` and a separate LiteLLM key. Follow [ChatGPT client login](./tutorials/openai_codex_byok.md). The desktop app also needs the key in its environment. The separate [virtual-key setup](./proxy/client_setup/codex_chatgpt_desktop.md) uses credentials configured on the gateway.
+**Codex.** To use the account signed in on your computer, configure a provider with `requires_openai_auth = true` and a separate LiteLLM key. Follow [ChatGPT client login](./tutorials/openai_codex_byok.md). Save the LiteLLM key once in `~/.codex/.env`; both the desktop app and CLI read it. The separate [virtual-key setup](./proxy/client_setup/codex_chatgpt_desktop.md) uses credentials configured on the gateway.
 
 **Claude Desktop.** Claude Desktop connects to the gateway in third-party inference mode. In this mode, the app does not use a Claude account. Thus, a Claude subscription does not apply. To use a subscription from Claude Desktop, add a GitHub Copilot model with a name that starts with `claude-`. For the full steps, refer to [Claude Desktop & Cowork](./proxy/client_setup/claude_desktop.md).
 
@@ -45,9 +45,6 @@ model_list:
   - model_name: "anthropic/*"
     litellm_params:
       model: "anthropic/*"
-
-router_settings:
-  disable_cooldowns: true
 ```
 
 ```bash showLineNumbers title="Claude Code environment"
@@ -57,7 +54,7 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-<your-virtual-key>
 
 Do not set `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, or `apiKeyHelper`. If you set one of them, Claude Code sends that key and not the subscription token.
 
-Keep `disable_cooldowns: true` on a proxy that has many users. Without it, the expired token of one user can stop the model for all users.
+Each developer keeps their own subscription allowance. With the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485), one caller's subscription error does not cool down the shared deployment for other callers. No extra cooldown setting is needed. See [cooldown recovery](./tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit) if an older deployment is already blocked.
 
 LiteLLM calculates the cost of each request with the Anthropic API rates. Budgets use this cost, but Anthropic charges the requests to the subscription.
 

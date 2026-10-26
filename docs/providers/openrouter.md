@@ -304,7 +304,7 @@ OpenRouter serves TypeSafe's Jev decision models on its Decisions API, `POST htt
 
 ### Through `/v1/systemone` and `/v1/decisions`
 
-Add the model to your `model_list` with the `openrouter/` prefix. The model then goes through the router like any other deployment, so it gets load balancing, fallbacks and per-deployment keys, and you can call it with a System One body on [`/v1/systemone`](../decisions/systemone_format.md) or an OpenAI Decisions body on [`/v1/decisions`](../decisions/openai_format.md).
+Add the model to your `model_list` with the `openrouter/` prefix. The model then goes through the router like any other deployment, so it gets load balancing, fallbacks and per-deployment keys, and you can call it with a System One body on [`/v1/systemone`](../decisions.md#v1systemone) or an OpenAI Decisions body on [`/v1/decisions`](../decisions.md#v1decisions).
 
 ```yaml showLineNumbers
 model_list:
@@ -325,7 +325,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 }'
 ```
 
-From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. Earlier releases have no price for `jev-1.14`, and `v1.105.0-rc.3` and the `v1.106.0` dev builds do not read `usage.cost` either. See [Decisions](../decisions/index.md) for the formats and the supported features.
+From v1.104.3, the spend is the `usage.cost` that OpenRouter returns. LiteLLM sends it back in the `x-litellm-response-cost` header and writes it to the spend logs. Earlier releases have no price for `jev-1.14`, and `v1.105.0-rc.3` and the `v1.106.0` dev builds do not read `usage.cost` either. See [Decisions](../decisions.md) for the formats and the supported features.
 
 ### Through the `/openrouter` pass-through
 
