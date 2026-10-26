@@ -54,8 +54,6 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-<your-virtual-key>
 
 Do not set `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, or `apiKeyHelper`. If you set one of them, Claude Code sends that key and not the subscription token.
 
-Each developer keeps their own subscription allowance. With the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485), one caller's subscription error does not cool down the shared deployment for other callers. No extra cooldown setting is needed. See [cooldown recovery](./tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit) if an older deployment is already blocked.
-
 LiteLLM calculates the cost of each request with the Anthropic API rates. Budgets use this cost, but Anthropic charges the requests to the subscription.
 
 ## ChatGPT subscriptions (Codex)
@@ -64,7 +62,7 @@ LiteLLM calculates the cost of each request with the Anthropic API rates. Budget
 
 Each developer signs in with ChatGPT through their client. The client sends its subscription token in `Authorization` and a separate LiteLLM virtual key in `x-litellm-api-key`. The gateway forwards the subscription request to OpenAI, enforces the virtual key's model permissions, and records usage under the gateway identity.
 
-The administrator adds a `chatgpt/` model using the usual LiteLLM model setup. Developers point Codex at the gateway's `/v1` URL and keep their login in the client. No auth file is uploaded. Leave gateway credentials and paid-provider fallbacks unset for a subscription-only deployment.
+The administrator adds a `chatgpt/` model using the usual LiteLLM model setup. Developers point Codex at the gateway's `/v1` URL and keep their login in the client. Leave gateway credentials and paid-provider fallbacks unset for a subscription-only deployment.
 
 ```yaml title="config.yaml" keep-model-ids
 model_list:
@@ -75,7 +73,7 @@ model_list:
       mode: responses
 ```
 
-Allow `gpt-*` on the virtual key, then choose a GPT model available to the caller's subscription. The wildcard routes the requested model without an entry per model. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
+Allow `gpt-*` on the virtual key, then choose a GPT model available to the caller's subscription. The wildcard routes the requested model without an entry per model. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges.
 
 Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for the complete setup, including the native route used by Pi. Like Claude Code, the client keeps and refreshes its subscription login while a separate key authenticates to LiteLLM.
 

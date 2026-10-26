@@ -191,10 +191,6 @@ A forwarded provider header takes precedence over the deployment's `api_key` for
 
 Do not send the LiteLLM key in `x-api-key`. LiteLLM accepts it there as proxy authentication and then removes it, so it is not forwarded and the request falls back as described above
 
-#### Cooldowns with client keys
-
-Forwarded Anthropic subscription tokens and API keys use the caller's credential without cooling down the shared deployment for other callers. Subscription-token isolation requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485). Other providers can behave differently. See [Rate Limits and Cooldowns](../tutorials/claude_code_byok.md#rate-limits-and-cooldowns) for older-version workarounds and recovery from an existing shared cooldown.
-
 ### Security Considerations
 
 **When to Use This Feature:**
@@ -393,6 +389,10 @@ To test if headers are being forwarded:
 1. **Check Model Name**: Ensure the model name in your request matches the configuration
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### Provider Errors
 

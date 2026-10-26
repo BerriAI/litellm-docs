@@ -103,30 +103,6 @@ x-litellm-user-id: my-user-id"
 
 4. LiteLLM authenticates you via `x-litellm-api-key`. It forwards the OAuth `Authorization` header to Anthropic automatically; forwarding `x-api-key` additionally requires `forward_llm_provider_auth_headers: true`. Either way, your Anthropic credential takes precedence over any proxy-configured key.
 
-## Rate Limits and Cooldowns
-
-A rate-limit error on a forwarded Anthropic credential does not put the shared deployment into cooldown for other callers. Each caller keeps using their own subscription or API key. Anthropic still enforces that account's quota; LiteLLM does not add quota or switch to another user's login.
-
-This behavior for subscription OAuth requires the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485). No additional cooldown setting is needed. Requests that use the gateway's saved key retain normal [deployment cooldowns](../routing.md#cooldowns).
-
-<details>
-<summary>Workaround for older proxy versions</summary>
-
-On versions without the fix, one caller's subscription error can cool down a shared deployment. Until you upgrade, set `cooldown_time: 0` only on the affected deployment:
-
-```yaml title="config.yaml"
-model_list:
-  - model_name: {{anthropic}}
-    litellm_params:
-      model: anthropic/{{anthropic}}
-    model_info:
-      cooldown_time: 0
-```
-
-Keep your existing authentication settings. This disables cooldowns for that deployment, including during a provider outage, so each request can still attempt the failing provider. Avoid disabling cooldowns for the whole proxy. This setting does not clear an existing cooldown; see [recovery below](#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
-
-</details>
-
 ## Summary
 
 | Header | Source | Purpose | Needs `forward_llm_provider_auth_headers`? |
@@ -160,7 +136,7 @@ This applies to the `x-api-key` path; the OAuth `Authorization` header from `/lo
 
 ### Model is unavailable for everyone after one user hits their limit
 
-If a healthy account receives `429 No deployments available for selected model` after another caller hits a limit, check for a shared cooldown left by an older proxy version. Upgrade to a build containing the [caller-isolation fix](https://github.com/BerriAI/litellm/pull/48485) first. An existing cooldown can remain until it expires.
+If a healthy account receives `429 No deployments available for selected model`, ask the proxy operator to check for an existing deployment cooldown. Wait for it to expire, or clear it with the steps below.
 
 Recovery before expiry briefly interrupts proxy traffic. Have the proxy operator:
 
