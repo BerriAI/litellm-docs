@@ -19,6 +19,7 @@ sidebar_label: "Supported providers"
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) (self-hosted) | `bespoke/nimble` on Ollama, else `bespoke/nimble-latest` or `bespoke/bespokelabs/Bespoke-Nimble-9B` | `api_base` or `BESPOKE_API_BASE` required, `BESPOKE_API_KEY` optional | `/v1/systemone` | No |
+| [Nadir](#nadir) (tier classifier) | `nadir/bucket` | `NADIR_API_KEY` optional, optional `NADIR_API_BASE` | `/v1/systemone` | No |
 
 Some of these providers need a newer LiteLLM release than the decision routes, as listed in [Availability and supported features](./index.md#availability-and-supported-features)
 
@@ -51,3 +52,35 @@ model_list:
 A `laya/*` or `bespoke/*` deployment takes only the model names in the provider table above, and any other name answers 400 before a request leaves the proxy. Ollama serves Nimble as `bespoke/nimble`. The API base must be an HTTP or HTTPS URL without credentials, a query, or a fragment. `LAYA_API_KEY` and `BESPOKE_API_KEY` go only to a deployment whose `api_base` is `LAYA_API_BASE` or `BESPOKE_API_BASE`, ignoring a trailing `/` or `/v1`, and an `api_key` set on the deployment always wins. Both are priced at $0 because you pay for the hardware, so set Custom Pricing on the deployment to track spend
 
 Laya, Nimble and Jev can also pick the model tier for Auto Router. For request examples and the classifier setup, see [Call a native decision API](../auto_router/decision_classifiers.md#call-a-native-decision-api)
+
+## Nadir
+
+[Nadir](https://getnadir.com) decides which model tier a request needs, so `nadir/bucket` answers only one kind of request: a single `choice` question whose choices include `simple`, `medium` and `complex`, matched without regard to case. The answer uses the question's own choice keys. Any other question set, such as a `predicate` or `score` question or more than one question, is rejected with a 400 before a request leaves the proxy. It needs a build containing [LiteLLM #41797](https://github.com/BerriAI/litellm/pull/41797)
+
+LiteLLM calls Nadir's `POST /v1/bucket`, which classifies the input without generating text. A `state` shaped `{"messages": [{"role": ..., "content": ...}]}`, with `system`, `user` or `assistant` roles and string content, goes to Nadir as a conversation, and so do OpenAI-format `input` messages. Any other `state` is sent as the prompt
+
+```yaml showLineNumbers
+model_list:
+  - model_name: nadir-decider
+    litellm_params:
+      model: nadir/bucket
+```
+
+```bash showLineNumbers
+curl http://localhost:4000/v1/systemone \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "nadir-decider",
+    "state": "What is 2+2?",
+    "questions": {
+      "tier": {
+        "type": "choice",
+        "instructions": "Which tier should serve this request?",
+        "criteria": {"simple": null, "medium": null, "complex": null}
+      }
+    }
+  }'
+```
+
+`NADIR_API_KEY` is optional. LiteLLM sends it only to `NADIR_API_BASE`, or to the hosted API at `https://api.getnadir.com/v1` when `NADIR_API_BASE` is unset, and an `api_key` set on the deployment always wins. Without a key the call is anonymous, Nadir rate-limits it per IP, and Nadir does not save it to its usage logs. With a key, Nadir saves the user text of the request to that account's usage logs, or only a hash of it when the account has turned prompt storage off. `nadir/bucket` is priced at $0 in the cost map because Nadir does not bill `/v1/bucket`. To let Nadir pick the Auto Router tier, see [Nadir](../auto_router/decision_classifiers.md#nadir)
