@@ -11,7 +11,7 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md) with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.108.0 or later**, with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
