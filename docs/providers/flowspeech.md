@@ -23,6 +23,10 @@ Set `FLOWSPEECH_API_KEY` in the server-side SDK process or proxy. Generation req
 
 Explicit `api_key` and `api_base` arguments override environment variables. A configured `litellm.api_key` also takes precedence over `FLOWSPEECH_API_KEY`
 
+:::warning Debug Logging
+LiteLLM's shared DEBUG request logger runs before provider validation. Malformed `headers` or `extra_headers` inputs can expose a value supplied as the whole container or as a header name, even when the provider rejects it before making a request. Do not place secrets in those positions, and keep DEBUG request logging disabled when processing untrusted inputs. This inherited logging limitation is not fixed by this adapter.
+:::
+
 ## Python SDK
 
 ```python
