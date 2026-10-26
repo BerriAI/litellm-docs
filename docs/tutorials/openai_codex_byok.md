@@ -9,6 +9,13 @@ Sign in to ChatGPT in Codex or Pi and send model requests through LiteLLM. Your 
 
 This is the same two-credential pattern as [Claude Code subscription forwarding](./claude_code_max_subscription.md). You do not upload your ChatGPT auth file or create a `chatgpt/` model on the gateway.
 
+<video controls playsInline preload="metadata" poster="/img/codex-subscriptions/poster.png" style={{width: '100%', aspectRatio: '16 / 10', borderRadius: '16px'}}>
+  <source src="/img/codex-subscriptions/walkthrough.mp4" type="video/mp4" />
+  <track default kind="captions" src="/img/codex-subscriptions/walkthrough.vtt" srcLang="en" label="English" />
+</video>
+
+*Recorded Codex terminal output with live OpenAI responses. Idle time is shortened. The recording reuses an existing ChatGPT login; browser sign-in is not shown. The final usage table comes from a disposable gateway database.*
+
 ## 1. Get your gateway URL and virtual key
 
 If you already use a LiteLLM proxy, keep it. Ask its administrator for the URL and a [virtual key](../proxy/virtual_keys.md) assigned to your user. If you need a proxy, follow the [proxy quickstart](../proxy/docker_quick_start.md) first.

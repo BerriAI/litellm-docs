@@ -1,0 +1,16 @@
+WEBVTT
+
+00:00.000 --> 00:05.000
+Check your existing ChatGPT login. New users run codex login.
+
+00:05.000 --> 00:17.000
+Add the gateway provider. Read the virtual key from the environment.
+
+00:17.000 --> 00:24.000
+Start Codex and send a prompt using your subscription.
+
+00:24.000 --> 00:34.500
+The real response streams through LiteLLM.
+
+00:34.500 --> 00:43.500
+The gateway records token usage under the developer's virtual key.
