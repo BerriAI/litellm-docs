@@ -66,6 +66,34 @@ Send: **Reply with exactly Hello. Do not use tools.**
 
 You should receive `Hello`. In the LiteLLM dashboard, open **Logs** and find the successful request with your model, virtual key, and input/output token counts.
 
+## Step 5: Add a paid fallback (optional)
+
+To keep working when your subscription reaches its limit, add an API-backed deployment as a fallback. **API usage is billed separately.** Fallbacks can also trigger on other request failures, not only quota errors.
+
+Use the same `gpt-*` wildcard for both deployments. `order: 1` tries ChatGPT first; `order: 2` uses the same model through the OpenAI API. Merge this into your proxy's `config.yaml`, preserving your other models and settings:
+
+```yaml title="config.yaml" keep-model-ids
+model_list:
+  - model_name: "gpt-*"
+    litellm_params:
+      model: "chatgpt/gpt-*"
+      order: 1
+    model_info:
+      mode: responses
+
+  - model_name: "gpt-*"
+    litellm_params:
+      model: "openai/gpt-*"
+      api_key: os.environ/OPENAI_API_KEY
+      order: 2
+    model_info:
+      mode: responses
+```
+
+Set `OPENAI_API_KEY` in the **proxy's environment** and restart the proxy. Keep your Codex config and virtual key's `gpt-*` access unchanged.
+
+Luna falls back to API Luna; Astra falls back to API Astra. The model must be available to both your subscription and API account. Check **Logs** to see which deployment served the request and its API cost. See [deployment ordering](../proxy/load_balancing.md#deployment-ordering-priority) for more options.
+
 ## Limits
 
 Your ChatGPT plan's model access and quota still apply. LiteLLM does not pool subscriptions or switch accounts when you reach a limit. Leave paid-provider fallbacks unset for subscription-only traffic. ChatGPT requests have a recorded cost of $0 in LiteLLM; use request or token rate limits rather than dollar budgets.
