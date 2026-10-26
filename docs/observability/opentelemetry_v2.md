@@ -833,7 +833,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 | Preset | Callback | Fields on the key or team | What varies per tenant |
 |---|---|---|---|
 | Langfuse | `langfuse_otel` | `langfuse_public_key`, `langfuse_secret_key`, `langfuse_host` | The Langfuse project traces land in, and the server they are sent to |
-| Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key`, and optionally the [sampling rates](./arize_integration#sample-a-teams-or-keys-traces) | The Arize space, and the share of requests it receives |
+| Arize AX | `arize` | `arize_space_id` (or the deprecated `arize_space_key`), `arize_api_key` | The Arize space |
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
 | SigNoz | `signoz` | `signoz_ingestion_key`, `signoz_ingestion_endpoint` | The SigNoz account, and optionally the SigNoz Cloud region or self-hosted collector it is sent to |
