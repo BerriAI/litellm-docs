@@ -46,6 +46,7 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose
         'GitHub account with Copilot access',
         'LiteLLM dashboard access',
         'An app that connects to LiteLLM',
+        'LiteLLM v1.108.0+',
       ],
       icon: <img src="/img/integrations/github-copilot.svg" alt="" />,
       to: '/docs/providers/github_copilot',
