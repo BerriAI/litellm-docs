@@ -11,7 +11,7 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md) with [ChatGPT client-login support](https://github.com/BerriAI/litellm/pull/41522) and PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md) with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
@@ -94,15 +94,9 @@ Set `OPENAI_API_KEY` in the **proxy's environment** and restart the proxy. Keep 
 
 Luna falls back to API Luna; Astra falls back to API Astra. The model must be available to both your subscription and API account. Check **Logs** to see which deployment served the request and its API cost. See [deployment ordering](../proxy/load_balancing.md#deployment-ordering-priority) for more options.
 
-:::danger Upgrade note
-
-**A forwarded ChatGPT login takes precedence over a saved gateway login.** Requests that include both use the caller's subscription and quota. To use the gateway's saved account, do not forward a client ChatGPT login. Codex owns sign-in and token refresh; LiteLLM preserves explicit workspace selection for OpenAI to validate. See [PR #41522](https://github.com/BerriAI/litellm/pull/41522).
-
-:::
-
 ## Limits
 
-A caller's subscription error does not put the shared ChatGPT deployment into cooldown for other callers. Your ChatGPT plan's model access and quota still apply. LiteLLM does not pool subscriptions or switch accounts when you reach a limit. Leave paid-provider fallbacks unset for subscription-only traffic. ChatGPT requests have a recorded cost of $0 in LiteLLM; use request or token rate limits rather than dollar budgets.
+Your ChatGPT plan determines model access and quota. To continue after reaching your limit, configure the [optional paid fallback](#step-5-add-a-paid-fallback-optional). ChatGPT requests have a recorded cost of $0 in LiteLLM; use request or token rate limits to cap usage.
 
 <details>
 <summary>How credentials are handled</summary>
