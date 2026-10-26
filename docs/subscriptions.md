@@ -8,7 +8,9 @@ description: Send the requests of a Claude, ChatGPT (Codex), or GitHub Copilot s
 
 You can send the requests of a Claude, ChatGPT, or GitHub Copilot subscription through the LiteLLM AI Gateway. The provider continues to charge the requests to the subscription, not to an API key.
 
-The gateway adds access controls, request logs, and usage attribution. Available controls depend on the integration. Give each developer a separate virtual key to attribute requests to their gateway user and team.
+The gateway adds access controls, request logs, and usage attribution. Give each developer a separate LiteLLM virtual key to track their requests.
+
+**Using Codex?** Follow [Use your ChatGPT login through LiteLLM](./tutorials/openai_codex_byok.md) to keep your existing login and route requests through a local or existing proxy. Compare the other subscription options below.
 
 ## Compare the subscriptions
 
@@ -61,7 +63,7 @@ LiteLLM calculates the cost of each request with the Anthropic API rates. Budget
 
 ## ChatGPT subscriptions (Codex)
 
-### Keep each user's login in Codex or Pi
+### Use your Codex or Pi login
 
 Each developer signs in with ChatGPT through their client. The client sends its subscription token in `Authorization` and a separate LiteLLM virtual key in `x-litellm-api-key`. The gateway forwards the subscription request to OpenAI, enforces the virtual key's model permissions, and records usage under the gateway identity.
 
@@ -78,7 +80,7 @@ model_list:
 
 Use a model available to the caller's subscription and allow that model name on their virtual key. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
 
-Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for Codex and Pi setup, verification, and troubleshooting. This uses the same separate gateway-key convention as Claude Code subscription forwarding, with standard LiteLLM model routing. A native `/backend-api/codex` option supports Pi and clients that need the native model catalog; that option requires no model deployment and does not use router fallbacks.
+Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for the complete setup, including the native route used by Pi. Like Claude Code, the client keeps and refreshes its subscription login while a separate key authenticates to LiteLLM.
 
 ### Configure a gateway-owned login
 
