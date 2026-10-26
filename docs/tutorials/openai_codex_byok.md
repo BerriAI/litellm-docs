@@ -20,20 +20,20 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 
 Add this entry to your proxy's `model_list` and restart the proxy. Skip this step if your administrator has already added the model.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
-  - model_name: {{chatgpt_small}}
+  - model_name: "gpt-*"
     litellm_params:
-      model: chatgpt/{{chatgpt_small}}
+      model: "chatgpt/gpt-*"
     model_info:
       mode: responses
 ```
 
-No OpenAI API key or ChatGPT auth file is needed on the proxy. Use a model available to your subscription.
+The wildcard routes Codex model names such as GPT-6 Luna and GPT-6 Astra through ChatGPT. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
 
 ## Step 2: Create a virtual key
 
-Open your proxy's dashboard at `/ui`. Go to **Virtual Keys → + Create New Key**, enter a name, select `{{chatgpt_small}}` under **Models**, then click **Create Key** and copy the key. Keep **Owned By** set to **You**. Skip this step if your administrator has already given you a key.
+Open your proxy's dashboard at `/ui`. Go to **Virtual Keys → + Create New Key**, enter a name, select `gpt-*` under **Models**, then click **Create Key** and copy the key. Keep **Owned By** set to **You**. Skip this step if your administrator has already given you a key.
 
 ## Step 3: Connect Codex
 
@@ -43,10 +43,9 @@ In Terminal, export your LiteLLM key:
 export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
 ```
 
-Open `~/.codex/config.toml`. In the desktop app, use **Settings → Configuration → Open config.toml**. Update the existing `model` and `model_provider` at the top of the file, before any `[table]` headings, and add the provider block:
+Open `~/.codex/config.toml`. In the desktop app, use **Settings → Configuration → Open config.toml**. Keep your existing model and reasoning settings. Set `model_provider` at the top of the file, before any `[table]` headings, and add the provider block:
 
 ```toml title="~/.codex/config.toml"
-model = "{{chatgpt_small}}"
 model_provider = "litellm_subscription"
 
 [model_providers.litellm_subscription]
@@ -58,7 +57,7 @@ requires_openai_auth = true
 env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
 ```
 
-Replace `http://localhost:4000` with your proxy URL. Use the same model name in the proxy, virtual key, and Codex. Keep `env_key` unset so Codex uses your ChatGPT login.
+Replace `http://localhost:4000` with your proxy URL. Choose a GPT model available to your subscription in Codex. Keep `env_key` unset so Codex uses your ChatGPT login.
 
 <Tabs>
 <TabItem value="desktop" label="Desktop (macOS)" default>
@@ -133,7 +132,7 @@ Codex can use this native route too: change its provider's `base_url` to `http:/
 | Problem | Fix |
 |---|---|
 | Gateway rejects the key | Export `LITELLM_API_KEY` and relaunch the client from that Terminal. |
-| Model access denied | Match the model name in the proxy, key permissions, and Codex. |
+| Model access denied | Allow `gpt-*` on the key and choose a GPT model your subscription supports. |
 | OpenAI rejects the login or model | Sign in again with ChatGPT and choose a model your plan supports. |
 | No request appears in LiteLLM | Check `model_provider` and `base_url`, then start a new Codex chat. |
 
