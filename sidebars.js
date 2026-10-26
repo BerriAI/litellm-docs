@@ -506,6 +506,7 @@ const sidebars = {
                   items: [
                     { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/codex_cli", label: "Virtual keys" },
+                    { type: "doc", id: "tutorials/openai_codex_byok", label: "ChatGPT subscription" },
                   ],
                 },
               ],
