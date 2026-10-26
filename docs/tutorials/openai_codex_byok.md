@@ -1,13 +1,14 @@
 ---
 title: Use your ChatGPT login with Codex and Pi
 sidebar_label: ChatGPT subscription
+description: Keep your ChatGPT login in Codex and send requests through LiteLLM with a separate gateway key. Includes local setup and Pi.
 ---
 
 # Use your ChatGPT login through LiteLLM
 
-Sign in to ChatGPT in Codex or Pi and send model requests through LiteLLM. Your client keeps the login and refreshes it. LiteLLM authenticates a separate virtual key, enforces model access, and records usage for that gateway user.
+Use Codex with your ChatGPT subscription while LiteLLM controls model access and records usage. You keep the same Codex interface and sign-in. This guide starts with Codex; [Pi setup](#pi) is below.
 
-This is the same two-credential pattern as [Claude Code subscription forwarding](./claude_code_max_subscription.md). An administrator adds a `chatgpt/` model using the usual LiteLLM model configuration. Each developer keeps their own login; no auth file is uploaded to the gateway.
+You need [Codex installed](https://developers.openai.com/codex/cli) and a ChatGPT account with access to the model you choose. The walkthrough was tested with Codex CLI 0.160.0. Each developer keeps their login on their computer; no ChatGPT auth file is uploaded to LiteLLM.
 
 <video controls playsInline preload="metadata" poster="/img/codex-subscriptions/poster.png" style={{width: '100%', aspectRatio: '16 / 10', borderRadius: '16px'}}>
   <source src="/img/codex-subscriptions/walkthrough.mp4" type="video/mp4" />
@@ -20,7 +21,7 @@ This is the same two-credential pattern as [Claude Code subscription forwarding]
 
 **Already have a proxy?** Keep it and add the model below. If your administrator has already exposed the model, move to step 2.
 
-If you need a proxy, follow the [proxy quickstart](../proxy/docker_quick_start.md) first. Ask its administrator for the gateway URL and a [virtual key](../proxy/virtual_keys.md) assigned to your user.
+**Need a local proxy?** Use the curl setup in the [proxy quickstart](../proxy/docker_quick_start.md), then return here once the proxy is running and you can open its dashboard. Skip that guide's API-key model and Playground steps: Codex will supply your subscription login.
 
 The administrator adds a model available to the developers' subscriptions. This example exposes `{{chatgpt_small}}`:
 
@@ -33,7 +34,27 @@ model_list:
       mode: responses
 ```
 
-Merge this entry into the existing `model_list` and restart the proxy with the updated config. There is no OpenAI API key or saved ChatGPT login to add. Give each developer a virtual key that allows `{{chatgpt_small}}`. If you use another model name, use it consistently in the key permissions and client configuration.
+Merge this entry into your proxy's existing `model_list` and restart it with the updated config. There is no OpenAI API key or saved ChatGPT login to add.
+
+If you used the Docker Compose quickstart, open its installation directory (normally `~/litellm-gateway`) and save `config.yaml` next to `docker-compose.quickstart.yml`. Create this additional file to load it:
+
+```yaml title="compose.codex.yml"
+services:
+  litellm:
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+```
+
+Run this in that directory to apply the configuration. Use both `-f` arguments when you restart or update this stack so it keeps loading your model config:
+
+```bash
+docker compose -f docker-compose.quickstart.yml -f compose.codex.yml up -d
+```
+
+In the dashboard, open **Virtual Keys** and click **+ Create New Key**. Give the key a name, select `{{chatgpt_small}}` under **Models**, keep **Owned By** set to **You**, and click **Create Key**. Copy the key when it appears. If someone else manages the proxy, ask them for its URL, model name, and a virtual key assigned to you.
+
+Use the same model name in the proxy, key permissions, and Codex configuration below.
 
 For a proxy dedicated to client-owned subscriptions, leave gateway auth files and API credentials unset and do not configure paid-provider fallbacks. Requests without a forwarded login can otherwise use an existing gateway-owned login.
 
@@ -50,14 +71,19 @@ export LITELLM_API_KEY="sk-<your-litellm-virtual-key>"
 | ChatGPT login | Codex or Pi on your computer | Your subscription at OpenAI |
 | LiteLLM virtual key | `LITELLM_API_KEY` in your client environment | Your access to the gateway |
 
-Use a Codex version that supports ChatGPT login with a custom model provider. Sign in with ChatGPT if you have not already:
+Check your existing login:
 
 ```bash
-codex login
 codex login status
 ```
 
-Add the following to `~/.codex/config.toml`, preserving your other settings. Put `model_provider` at the top level, before any table headings. Set `model` to the name exposed by your gateway. The model must also be available to your ChatGPT subscription.
+If it says you are logged in with ChatGPT, continue. Otherwise, run this command and complete sign-in in your browser:
+
+```bash
+codex login
+```
+
+Add the following to `~/.codex/config.toml`, preserving your other settings. Put `model` and `model_provider` at the top level, before any table headings. Update existing entries instead of adding duplicate keys. Set `model` to the name exposed by your gateway. The model must also be available to your ChatGPT subscription.
 
 ```toml title="~/.codex/config.toml"
 model = "{{chatgpt_small}}"
@@ -84,7 +110,13 @@ For the desktop app, make `LITELLM_API_KEY` available to the app's environment a
 
 ## 3. Verify your request
 
-Ask the client to reply with `Hello`. In LiteLLM, open **Logs** and find the completed `/v1/responses` request. Check its model, gateway user, virtual key, and input/output token counts. Each developer needs their own LiteLLM key for separate gateway attribution.
+Ask Codex: `Reply with exactly Hello. Do not use tools.` You should see `Hello` in the same Codex interface.
+
+Open your LiteLLM dashboard at `/ui`, then **Logs**. Find the completed request and check its model, virtual key, and input/output token counts. Each developer needs their own LiteLLM key for separate gateway attribution.
+
+## How your login is used
+
+This follows the same two-credential pattern as [Claude Code subscription forwarding](./claude_code_max_subscription.md).
 
 The ChatGPT bearer and account header go to OpenAI. The LiteLLM key and cookies do not. The gateway redacts credential headers from logging callbacks and does not save the subscription login for later requests. The client handles token refresh and reauthentication.
 
@@ -125,6 +157,14 @@ Native requests do not run through model-group routing or its fallbacks. Authent
 
 The native routes are `GET /backend-api/codex/models` and `POST /backend-api/codex/responses`. The model catalog is returned in OpenAI's native format. Listing a model does not grant access to it; the gateway enforces the key's model permissions on inference. This integration supports HTTP and SSE, not native WebSockets or other Codex backend routes.
 
-If LiteLLM rejects the request, check the virtual key and allowed model names. If OpenAI rejects the login, check `codex login status` or sign in again through Pi. If requests still go directly to OpenAI, confirm the selected client provider and gateway URL.
+## Troubleshooting
+
+| What you see | What to check |
+|---|---|
+| LiteLLM rejects the gateway key | Export `LITELLM_API_KEY` in the terminal that launches Codex. Restart the client after changing it. |
+| Model access denied | Use the same model name in `model_list`, the virtual key's allowed models, and the client configuration. |
+| OpenAI rejects your login | Run `codex login status`, then `codex login` if needed. In Pi, run `/login`. |
+| OpenAI rejects the model or reports a limit | Choose a model your subscription supports, or wait for its allowance to reset. LiteLLM does not add quota. |
+| Codex answers, but no request appears in LiteLLM | Check `model_provider` and `base_url`, then start a new Codex session. |
 
 For a managed Codex rollout, see OpenAI's [Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway). For gateway-owned ChatGPT credentials, see the separate [`chatgpt/` provider guide](../providers/chatgpt.md).
