@@ -16,7 +16,7 @@ The gateway adds access controls, request logs, and usage attribution. Available
 |---|---|---|---|---|
 | Claude Pro, Max, Team, and Enterprise | Claude Code | Each user signs in to Claude Code with a different Claude account | Gateway only | [Claude subscription](./tutorials/claude_code_max_subscription.md) |
 | ChatGPT plans that include Codex, client login | Codex and Pi | Each user signs in through their client | Gateway only | [ChatGPT client login](./tutorials/openai_codex_byok.md) |
-| ChatGPT plans that include Codex, gateway login | OpenAI API clients | One ChatGPT account for each proxy | Yes | [ChatGPT provider](./providers/chatgpt.md) |
+| ChatGPT plans that include Codex, gateway login | OpenAI API clients | A saved login selected by the model deployment | Yes | [ChatGPT provider](./providers/chatgpt.md) |
 | GitHub Copilot | Claude Code, OpenAI API clients, and Anthropic API clients | Each user connects a different GitHub account | Yes | [GitHub Copilot](./providers/github_copilot.md) |
 
 ## Desktop apps
@@ -65,13 +65,24 @@ LiteLLM calculates the cost of each request with the Anthropic API rates. Budget
 
 Each developer signs in with ChatGPT through their client. The client sends its subscription token in `Authorization` and a separate LiteLLM virtual key in `x-litellm-api-key`. The gateway forwards the subscription request to OpenAI, enforces the virtual key's model permissions, and records usage under the gateway identity.
 
-No `chatgpt/` deployment or uploaded auth file is needed. The client keeps and refreshes its login. Authentication or quota errors return to that caller without switching accounts. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
+The administrator adds a `chatgpt/` model using the usual LiteLLM model setup. Developers point Codex at the gateway's `/v1` URL and keep their login in the client. No auth file is uploaded. Leave gateway credentials and paid-provider fallbacks unset for a subscription-only deployment.
 
-Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for Codex and Pi setup, verification, and troubleshooting. This uses the same separate gateway-key convention as Claude Code subscription forwarding, with a native Codex endpoint.
+```yaml title="config.yaml"
+model_list:
+  - model_name: {{chatgpt_small}}
+    litellm_params:
+      model: chatgpt/{{chatgpt_small}}
+    model_info:
+      mode: responses
+```
+
+Use a model available to the caller's subscription and allow that model name on their virtual key. Forwarded logins take precedence over gateway credentials. Retries across ChatGPT deployments keep the caller's login; explicitly configured cross-provider fallbacks can incur API charges. This HTTP/SSE flow does not pool subscriptions or provide dashboard sign-in.
+
+Follow [ChatGPT client login](./tutorials/openai_codex_byok.md) for Codex and Pi setup, verification, and troubleshooting. This uses the same separate gateway-key convention as Claude Code subscription forwarding, with standard LiteLLM model routing. A native `/backend-api/codex` option supports Pi and clients that need the native model catalog; that option requires no model deployment and does not use router fallbacks.
 
 ### Configure a gateway-owned login
 
-The separate `chatgpt/` provider uses one ChatGPT account for the full proxy. All the virtual keys that can call a `chatgpt/` model use that same account. To use more than one ChatGPT account, deploy one proxy for each account.
+The separate `chatgpt/` provider can use a saved login on the gateway. Without a client login, requests use the selected deployment's account. The default is the proxy's shared auth file; `chatgpt_auth_file` selects a different file for a particular deployment. Keep each account's file separate and grant model access deliberately.
 
 To set up a ChatGPT subscription, do these steps:
 
@@ -93,7 +104,7 @@ model_list:
       model: chatgpt/{{chatgpt}}
 ```
 
-The token has a time limit. When the time limit ends, the proxy writes a new token to `auth.json`. All the workers and replicas must use the same copy of the file.
+The token has a time limit. When the time limit ends, the proxy writes a new token to `auth.json`. Workers and replicas serving the same configured account need access to its current file. See the [ChatGPT provider guide](./providers/chatgpt.md) for auth-file configuration.
 
 LiteLLM records a cost of $0 for `chatgpt/` models. Thus, `max_budget` has no effect. Use `rpm_limit` or `tpm_limit` to limit the requests.
 
