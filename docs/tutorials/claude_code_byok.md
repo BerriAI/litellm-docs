@@ -12,7 +12,7 @@ Use Claude Code with your own Anthropic credentials through the LiteLLM proxy. C
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) installed
 - Anthropic API key (from [console.anthropic.com](https://console.anthropic.com))
-- LiteLLM proxy with a virtual key for authentication
+- LiteLLM proxy **v1.108.0 or later**, with a virtual key for authentication
 
 ## Step 1: Configure LiteLLM Proxy
 
