@@ -32,7 +32,7 @@ guardrails:
         api_base: https://edge01.us.reco.ai
 ```
 
-`reco_tenant_id` must be a valid UUID; it is sent as the `X-Reco-Tenant-Id` header on every request to Reco. Behavior on a Reco outage or error is fixed to fail-open and is not configurable, so an outage on Reco's side never blocks live traffic.
+`reco_tenant_id` must be a valid UUID; it is sent as the `X-Reco-Tenant-Id` header on every request to Reco. By default the guardrail fails closed: if Reco errors or is unreachable, the request is blocked. To let traffic through uninspected instead, set `fail_on_error: false` under `optional_params`.
 
 ### 3. Start LiteLLM Proxy
 
@@ -98,8 +98,8 @@ The request reaches the model and the response is returned unchanged.
 |---|---|---|
 | `reco_tenant_id` | Yes | Your Reco tenant ID, as a UUID. Sent as the `X-Reco-Tenant-Id` header on every request to Reco. |
 | `api_base` | Yes | Your Reco receiving endpoint. Reco's endpoint is per-silo and per-region, so there is no default; every customer sets their own. |
-
-`unreachable_fallback` and `fail_on_error` are fixed for this guardrail, fail-open on both an unreachable endpoint and any other error, and are not exposed as config.
+| `fail_on_error` | No | Behavior on any Reco error, including an unreachable endpoint. `true` (default) blocks the request; `false` lets it through uninspected. |
+| `unreachable_fallback` | No | Behavior when Reco is unreachable (timeouts, connection errors, and HTTP 502/503/504). `"fail_closed"` (default) blocks the request; `"fail_open"` lets it through uninspected while other errors still block. Only applies while `fail_on_error` is `true`. |
 
 ## Response details
 
