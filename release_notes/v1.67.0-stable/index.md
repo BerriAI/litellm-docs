@@ -1,5 +1,6 @@
 ---
-title: v1.67.0-stable - SCIM Integration
+title: "LiteLLM v1.67.0-stable - SCIM Integration"
+description: "Adds SCIM user and team provisioning, team and tag spend views at 1M+ logs and Responses API calls to Anthropic and Gemini models."
 slug: v1.67.0-stable
 date: 2025-04-19T10:00:00
 authors:
@@ -50,7 +51,7 @@ This release improves team and tag based usage tracking at 1m+ spend logs, makin
 
 ## Unified Responses API
 
-This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/tutorials/openai_codex) with your own models. 
+This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google Vertex AI models via the POST /v1/responses endpoint on LiteLLM. This means you can now use popular tools like [OpenAI Codex](https://docs.litellm.ai/docs/proxy/client_setup/codex_cli) with your own models.
 
 <Image img={require('../../img/release_notes/unified_responses_api_rn.png')}/>
 
@@ -91,7 +92,7 @@ This release allows you to call Azure OpenAI, Anthropic, AWS Bedrock, and Google
 - **Triton**
     1. Remove fixed remove bad_words / stop words from `/generate` call - [Get Started](../../docs/providers/triton-inference-server#triton-generate---chat-completion), [PR](https://github.com/BerriAI/litellm/pull/10163)
 - **Other**
-    1. Support for all litellm providers on Responses API (works with Codex) - [Get Started](../../docs/tutorials/openai_codex), [PR](https://github.com/BerriAI/litellm/pull/10132)
+    1. Support for all litellm providers on Responses API (works with Codex) - [Get Started](../../docs/proxy/client_setup/codex_cli), [PR](https://github.com/BerriAI/litellm/pull/10132)
     2. Fix combining multiple tool calls in streaming response - [Get Started](../../docs/completion/stream#helper-function), [PR](https://github.com/BerriAI/litellm/pull/10040)
 
 

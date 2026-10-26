@@ -72,7 +72,9 @@ REDIS_PASSWORD = ""   # REDIS_PASSWORD='liteLlmIsAmazing'
 ```
 
 For namespaces, ACL users, cluster and sentinel topologies, TLS, IAM authentication and the full
-list of `REDIS_*` variables, see [Redis and Valkey](./caching_redis.md).
+list of `REDIS_*` variables, see [Redis and Valkey](./caching_redis.md). The per-command timeout
+of the cache client is `cache_params.socket_timeout` (default 5 s), not `REDIS_SOCKET_TIMEOUT`;
+see [Redis socket_timeout](./caching_redis.md#redis-socket_timeout).
 
 ### Step 3: Run proxy with config
 
@@ -106,6 +108,27 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```
 
 </TabItem>
+<TabItem value="responses" label="/v1/responses">
+
+Send the same request twice:
+
+```shell
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+     "model": "{{openai_small}}",
+     "input": "write a poem about litellm!"
+   }'
+
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+     "model": "{{openai_small}}",
+     "input": "write a poem about litellm!"
+   }'
+```
+
+</TabItem>
 <TabItem value="embeddings" label="/embeddings">
 
 Send the same request twice:
@@ -131,6 +154,15 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 
 The second response is served from the cache. It carries an `x-litellm-cache-key` response header,
 which you can feed to [`/cache/delete`](./caching_controls.md#deleting-cache-keys---cachedelete).
+
+With `cache: True` and no `supported_call_types`, caching is on for `/chat/completions`,
+`/completions`, `/embeddings`, `/audio/transcriptions`, `/rerank`, `/v1/responses` and
+`/v1/messages`. To restrict it to some of them, see
+[supported call types](./caching_controls.md#control-call-types-caching-is-on-for---chatcompletion-embeddings-etc).
+
+On `/v1/responses`, exact-match caches key on the request body, so a request that carries
+`previous_response_id` is a different key from the one that inlines the conversation, and each
+turn of a multi-turn conversation is its own entry.
 
 ## In memory and disk caches
 
@@ -168,7 +200,7 @@ LiteLLM Proxy exposes a `/cache/ping` endpoint to test if the cache is working a
 **Usage**
 
 ```shell
-curl --location 'http://0.0.0.0:4000/cache/ping'  -H "Authorization: Bearer sk-1234"
+curl --location 'http://0.0.0.0:4000/cache/ping'  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Expected Response - when cache healthy**

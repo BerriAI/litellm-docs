@@ -95,7 +95,7 @@ model_list:
 ```python
 import openai
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
@@ -104,3 +104,7 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello!"}]
 )
 ```
+
+## Responses API (`/v1/responses`)
+
+Baseten's Model API serves `/v1/responses` itself. To forward `/v1/responses` requests to it untranslated instead of bridging them through `/v1/chat/completions`, add `supported_endpoints: ["/v1/responses"]` under the deployment's `model_info`, see [Native /v1/responses passthrough](../response_api_native_passthrough.md).

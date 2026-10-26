@@ -18,7 +18,7 @@ import TabItem from '@theme/TabItem';
   "sub": "1234567890",
   "name": "John Doe",
   "email": "john.doe@example.com",
-  "roles": ["basic_user"] # 👈 ROLE
+  "roles": ["basic_user"] # ROLE
 }
 ```
 </TabItem>
@@ -31,7 +31,7 @@ import TabItem from '@theme/TabItem';
   "email": "john.doe@example.com",
   "resource_access": {
     "litellm-test-client-id": {
-      "roles": ["basic_user"] # 👈 ROLE
+      "roles": ["basic_user"] # ROLE
     }
   }
 }
@@ -57,10 +57,10 @@ general_settings:
       models: ["anthropic-claude"]
 
 model_list:
-    - model: anthropic-claude
+    - model_name: anthropic-claude
       litellm_params:
         model: {{anthropic}}
-    - model: openai-gpt-4o
+    - model_name: openai-gpt-4o
       litellm_params:
         model: {{openai_large}}
 ```
@@ -81,10 +81,10 @@ general_settings:
       models: ["anthropic-claude"]
 
 model_list:
-    - model: anthropic-claude
+    - model_name: anthropic-claude
       litellm_params:
         model: {{anthropic}}
-    - model: openai-gpt-4o
+    - model_name: openai-gpt-4o
       litellm_params:
         model: {{openai_large}}
 ```

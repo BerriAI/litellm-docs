@@ -58,7 +58,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Chirp3 Quick Start"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -74,7 +74,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
 ```python showLineNumbers title="Chirp3 Quick Start"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.audio.speech.create(
     model="vertex-tts",
@@ -140,7 +140,7 @@ response.stream_to_file("speech.mp3")
 
 ```bash showLineNumbers title="Chirp3 HD Voice"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -152,7 +152,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
 
 ```bash showLineNumbers title="Voice as Dict (Multilingual)"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -168,7 +168,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
 ```python showLineNumbers title="Chirp3 HD Voice"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.audio.speech.create(
     model="vertex-tts",
@@ -181,7 +181,7 @@ response.stream_to_file("speech.mp3")
 ```python showLineNumbers title="Voice as Dict (Multilingual)"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.audio.speech.create(
     model="vertex-tts",
@@ -242,7 +242,7 @@ response.stream_to_file("speech.mp3")
 
 ```bash showLineNumbers title="SSML Input"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -258,7 +258,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
 ```python showLineNumbers title="SSML Input"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 ssml = """<speak><p>Hello!</p><break time="500ms"/><p>How are you?</p></speak>"""
 
@@ -306,6 +306,8 @@ asyncio.run(main())
 ## Gemini TTS
 
 Gemini models with audio output capabilities using the chat completions API.
+
+The Voice Mapping table above is for Chirp. For Gemini TTS, pass a Gemini prebuilt voice name such as `Kore`, or from v1.107.0 an OpenAI voice name, which maps to a Gemini voice as listed in the [Gemini provider docs](./gemini#voice-names).
 
 :::warning
 **Limitations:**
@@ -368,7 +370,7 @@ litellm --config /path/to/config.yaml
 ```bash showLineNumbers title="Gemini TTS Request"
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "gemini-tts",
     "messages": [{"role": "user", "content": "Say hello in a friendly voice"}],
@@ -384,7 +386,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```python showLineNumbers title="Gemini TTS Request"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.chat.completions.create(
     model="gemini-tts",

@@ -11,12 +11,17 @@ To use a GradientAI model, specify it as `gradient_ai/<model-name>` in your Lite
 
 ## API Key & Endpoint
 
-Set your credentials and endpoint as environment variables:
+Set your API key as an environment variable. Requests go to the serverless inference endpoint `https://inference.do-ai.run/v1/chat/completions` by default, so no endpoint variable is needed:
 
 ```python
 import os
 os.environ['GRADIENT_AI_API_KEY'] = "your-api-key"
-os.environ['GRADIENT_AI_AGENT_ENDPOINT'] = "https://api.gradient_ai.com/api/v1/chat"  # default endpoint
+```
+
+To call a GradientAI agent instead, set `GRADIENT_AI_AGENT_ENDPOINT` (or pass `api_base`) to the agent's base URL. LiteLLM appends `/api/v1/chat/completions` to it, so do not include a path:
+
+```python
+os.environ['GRADIENT_AI_AGENT_ENDPOINT'] = "https://<agent-id>.agents.do-ai.run"  # optional, agents only
 ```
 
 ## Sample Usage

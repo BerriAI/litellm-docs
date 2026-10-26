@@ -1,5 +1,6 @@
 ---
-title: "v1.97.1 - Docker-Only Maintenance Release"
+title: "LiteLLM v1.97.1 - Docker-Only Maintenance Release"
+description: "Refreshes dependency pins and pins the build Python to 3.13 on the 1.97.x line."
 slug: "v1-97-1"
 date: 2026-09-02T00:10:30
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.97.1` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.97.1` will not resolve. If you install LiteLLM from PyPI, stay on `1.97.0`; everything in this release is either a container-image build fix or a dependency refresh that only reaches you through the image.
 

@@ -2,6 +2,8 @@ import React from 'react';
 import clsx from 'clsx';
 import TOCItems from '@theme/TOCItems';
 import Link from '@docusaurus/Link';
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
 const LINK_CLASS_NAME = 'table-of-contents__link toc-highlight';
@@ -21,11 +23,20 @@ export default function TOC({ className, ...props }) {
 
       {/* Enterprise promo card pinned at the bottom */}
       <div className={styles.promoCard}>
-        <div className={styles.promoEmoji}>🚅</div>
+        <ThemedImage
+          className={styles.promoMark}
+          alt=""
+          width={22}
+          height={22}
+          sources={{
+            light: useBaseUrl('/img/brand/litellm-monogram-blue.svg'),
+            dark: useBaseUrl('/img/brand/litellm-monogram-white.svg'),
+          }}
+        />
         <div className={styles.promoHeading}>LiteLLM Enterprise</div>
         <div className={styles.promoDescription}>
           SSO/SAML, audit logs, spend tracking, multi-team management, and
-          guardrails — built for production.
+          guardrails, built for production.
         </div>
         <Link to="/docs/enterprise" className={styles.promoButton}>
           Learn more →

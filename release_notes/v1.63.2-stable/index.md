@@ -1,5 +1,6 @@
 ---
-title: v1.63.2-stable
+title: "LiteLLM v1.63.2-stable"
+description: "Adds /openai/ passthrough for Assistants, Bedrock Claude tool and response_format fixes and PDF input flags for Bedrock Claude."
 slug: v1.63.2-stable
 date: 2025-03-08T10:00:00
 authors:
@@ -40,7 +41,7 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 
 ## New Models / Updated Models

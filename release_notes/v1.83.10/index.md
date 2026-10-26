@@ -1,5 +1,6 @@
 ---
-title: "v1.83.10 - Claude Opus 4.7, Prompt Compression & Multi-Window Budgets"
+title: "LiteLLM v1.83.10 - Claude Opus 4.7, Prompt Compression & Multi-Window Budgets"
+description: "Adds Claude Opus 4.7, litellm.compress() and multi-threshold budget alerts. Strips caller tags unless a key or team opts in."
 slug: "v1-83-10"
 date: 2026-04-27T00:00:00
 authors:
@@ -79,13 +80,13 @@ pip install litellm==1.83.10
   ```bash
   # Per key
   curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
 
   # Per team
   curl -L -X POST 'http://0.0.0.0:4000/team/new' \
-    -H 'Authorization: Bearer sk-1234' \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H 'Content-Type: application/json' \
     -d '{"metadata": {"allow_client_tags": true}}'
   ```

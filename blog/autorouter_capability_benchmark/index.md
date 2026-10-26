@@ -19,7 +19,7 @@ We solved 23 of 25 SWE-bench Verified tasks with LiteLLM's experimental capabili
 
 Get early access and work with the LiteLLM team on routing for your production traffic.
 
-<a className="button button--primary button--lg" href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
@@ -70,6 +70,6 @@ Capability forecasting is an experimental approach to Auto Router. It estimates 
 
 Work with the LiteLLM team to evaluate Auto Router on your production traffic.
 
-<a className="button button--primary button--lg" href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 :::

@@ -1,5 +1,6 @@
 ---
-title: "v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+title: "LiteLLM v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+description: "Makes pass-through endpoints require auth by default and adds Routing Groups for per-model strategies. Also improves multi-pod budget accuracy."
 slug: "v1-84-0"
 date: 2026-05-14T00:00:00
 authors:
@@ -186,7 +187,7 @@ This release tightens a number of defaults across auth, ingress, callbacks, MCP,
 - **Restore prior behavior:** Set the opt-in on the key that sends the header (or on its team):
   ```shell
   curl -X POST 'http://0.0.0.0:4000/key/update' \
-      -H 'Authorization: Bearer sk-1234' \
+      -H "Authorization: Bearer $LITELLM_API_KEY" \
       -H 'Content-Type: application/json' \
       -d '{"key": "<admin key that sends the header>", "metadata": {"allow_litellm_changed_by_header": true}}'
   ```

@@ -1,9 +1,10 @@
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Budgets, Rate Limits
 
-:::info **Budget Setup Options**
+:::info[**Budget Setup Options**]
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
 **Team budgets**: Add team_id to virtual keys to draw on a team's shared budget
@@ -19,7 +20,7 @@ Requirements:
 
 - Need to a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc) [**See Setup**](./virtual_keys.md#setup)
 
-:::warning Budgets require a database
+:::warning[Budgets require a database]
 
 Every budget on this page is enforced against spend read from the database, so none of them cap anything on a [DB-less deployment](./docker_quick_start.md#running-without-a-database). `litellm_settings.max_budget` fails open there rather than erroring: the proxy's global spend is only loaded when a database client exists, and with no total to compare against, the global budget check is skipped and requests keep being served past the limit. A warning is logged once at startup when a budget is set with no database connected, but nothing blocks at request time. Key, team, and user budgets are unavailable for the same reason, since virtual keys cannot be resolved without a database (`No connected db.`). Run with a database if a budget is part of how you bound spend
 
@@ -36,7 +37,7 @@ Apply a budget across all calls on the proxy
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   # other litellm settings
@@ -54,7 +55,7 @@ litellm /path/to/config.yaml
 
 ```bash
 curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Autherization: Bearer sk-1234' \
+    --header "Autherization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "{{openai_small}}",
@@ -89,7 +90,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -143,7 +144,7 @@ Create a user with `user_id=ishaan`
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan"
@@ -156,7 +157,7 @@ Set `max_budget_in_team` when adding a User to a team. We use the same `user_id`
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_add' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "max_budget_in_team": 0.000000000001, "member": {"role": "user", "user_id": "ishaan"}}'
 ```
@@ -167,7 +168,7 @@ Set `user_id=ishaan` from step 1
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
         "user_id": "ishaan",
@@ -205,31 +206,78 @@ curl --location 'http://localhost:4000/chat/completions' \
 
 Update `max_budget_in_team` for an existing team member with `/team/member_update`. The new budget takes effect on the member's next request
 
+This gives the member their own budget. It no longer follows the team's `team_member_budget` default, and later `/team/update` changes to that default leave this member untouched. To change the budget for every member still on the default, update `team_member_budget` on `/team/update` instead
+
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/member_update' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "max_budget_in_team": 10}'
 ```
 
+Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
+
+A budget change is permanent. When the member's `budget_duration` window rolls over, the reset only sets their current cycle spend back to $0 and moves the next reset date forward, so a raised `max_budget_in_team` stays at the new value in every later cycle and does not revert to the earlier amount or to the team default. Raising `team_member_budget` with `/team/update` behaves the same way for every member still on the team default
+
+When a member on the team default gets their own budget this way, their current reset window carries over and the next reset lands on the same date as before. Sending `budget_duration` in the same `/team/member_update` call starts a new window from that point instead
+
+To raise a member's budget for a limited time, send `temp_budget_increase` together with `temp_budget_expiry` (a UTC datetime) on `/team/member_update`, or fill in **Temporary Budget Increase (USD)** and **Temporary Budget Expiry (UTC)** when editing the member in the UI. The increase is added on top of the member's budget, or the team default if they are on it, until `temp_budget_expiry` and stops applying after that without any action. It expires at that time rather than at the next budget reset, so set the expiry to the member's next reset if you want it to last only for the current cycle. A member on the team default who only gets a temporary increase stays on the team default, and the increase has no effect on a member with no budget at all
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "temp_budget_increase": 25, "temp_budget_expiry": "2026-11-01T00:00:00Z"}'
+```
+
+To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. This is available starting in `v1.104.0`
+
 #### Reset a team member's spend
 
-Reset the spend tracked against a member's in-team budget without changing the budget itself. Callable by a proxy admin or the team's admin, but a team admin cannot reset their own spend
+Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
+
+<Tabs>
+<TabItem value="ui" label="UI">
+
+1. Go to **Teams** and open the team
+2. Open the **Members** tab
+3. In the **Actions** column of the member's row, click the **Reset spend** icon (the refresh icon between the edit and delete icons)
+4. The **Reset Team Member Spend** dialog shows the member and their current cycle spend. Click **Reset** to set it to $0
+
+The icon is shown only to users who can edit the team, and only on rows where **Current Cycle Spend (USD)** is above $0. A team admin does not see it on their own row, but a proxy admin does
+
+</TabItem>
+<TabItem value="api" label="API">
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/team/e8d1460f-846c-45d7-9b43-55f3cc52ac32/member/ishaan/reset_spend' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"reset_to": 0}'
 ```
 
-`reset_to` must be a number no greater than the member's current spend or their budget. The reset takes effect on the member's next request
+`reset_to` must be a number of at least 0 that is no greater than the member's current spend or their budget
 
 Response:
 
 ```shell
 {"team_id":"e8d1460f-846c-45d7-9b43-55f3cc52ac32","user_id":"ishaan","spend":0.0,"previous_spend":3.495e-05,"max_budget":10.0}
 ```
+
+The endpoint returns a 403 (`Cannot reset your own spend. Ask a proxy admin.`) when a team admin targets their own user, and a 404 when the user has no membership row in that team
+
+</TabItem>
+</Tabs>
+
+The reset takes effect on the member's next request, on every proxy instance. It applies to one member at a time and there is no bulk version, so repeat it for each member you want to reset
+
+#### Existing spend counts against a budget added later
+
+Spend is tracked for every team member, including members with no budget. On the team's **Members** tab, **Current Cycle Spend (USD)** is the value checked against the member's budget and it goes back to $0 when the member's `budget_duration` window rolls over, while **Total Spend (USD)** is cumulative and never resets. A member with no budget has no budget window, so their current cycle spend is never reset automatically and keeps growing. Older versions only tracked spend for members that had a budget, and a member added on one of those versions starts being tracked on their next request after the upgrade
+
+If you give that member a budget later, the spend they already accrued counts against it right away. This applies both to setting `team_member_budget` on the team with `/team/update`, which links the team's member budget to every member that has no budget yet, and to setting `max_budget_in_team` for one member with `/team/member_update`. For example, a member spends $500 with no budget, an admin then sets a $100 member budget, and the member's next request is rejected with a budget exceeded error
+
+There are two ways out. If the new budget has a `budget_duration`, the member's current cycle spend goes back to $0 at the next reset and they are unblocked without any action. If it has no `budget_duration`, the member stays blocked until someone [resets their spend](#reset-a-team-members-spend) in the UI or through the API
 
 
 ### Internal User
@@ -260,7 +308,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -409,29 +457,29 @@ Each window is tracked independently and resets on its own schedule:
 |---|---|
 | `1h`  | Every hour |
 | `24h` | Daily at midnight UTC |
-| `7d`  | Every Sunday at midnight UTC |
+| `7d`  | Every Monday at midnight UTC (or the configured reset time) |
 | `30d` | 1st of every month at midnight UTC |
 
 **Via Dashboard**
 
 Open **Virtual Keys → Create Key → Optional Settings → Budget Windows**.
 
-![Step 1 - open key settings](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/18930ba5-67c0-4031-afc0-57f37b4e59e4/ascreenshot_ef79d8a000bb41cdacf1bd9827732ee8_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_1.png')} dark={require('../../img/key_budget_window_1_dark.png')} alt="Budget Windows section in the key form" />
 
 Click **+ Add Budget Window** to add a row, choose the period from the dropdown, and enter the spend cap.
 
-![Step 2 - add a window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/5ae8c0b3-2d03-41ad-a63c-47b20c350dfe/ascreenshot_1a7dc6c7d65544f38fd8a65604674f22_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_2.png')} dark={require('../../img/key_budget_window_2_dark.png')} alt="A budget window row with a period and spend cap" />
 
 Add a second row for a different time period (e.g. monthly $100 on top of a daily $10).
 
-![Step 3 - add second window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/cbded3a7-1086-4e20-8f0f-de154b76146c/ascreenshot_c51c18752c3b4f8b976d28799b2638b6_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_3.png')} dark={require('../../img/key_budget_window_3_dark.png')} alt="Two budget windows with different periods" />
 
 Each window shows the reset schedule below the input so it's always clear when spend resets.
 
-![Step 4 - reset hints](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/8754f121-1640-4892-9dd0-fd4a870418bf/ascreenshot_8079eb0df2194e8f99e5258ba4b3c082_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_4.png')} dark={require('../../img/key_budget_window_4_dark.png')} alt="Reset schedule shown below each budget window" />
 
 
-### ✨ Virtual Key (Model Specific)
+### Virtual Key (Model Specific) {#-virtual-key-model-specific}
 
 Set a separate budget for each model available to a virtual key. For example, one key can have:
 
@@ -558,7 +606,7 @@ Expected response:
 
 By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is exceeded. To route the request to another model instead, see [Budget Fallbacks](./budget_fallbacks).
 
-### ✨ Internal User (Model Specific)
+### Internal User (Model Specific)
 
 Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
 
@@ -615,7 +663,7 @@ Set `tpm_limit` and `rpm_limit` on the agent to cap total throughput across all 
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -637,7 +685,7 @@ Set `session_tpm_limit` and `session_rpm_limit` to cap throughput per individual
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -659,7 +707,7 @@ Set `max_iterations` and `max_budget_per_session` in agent `litellm_params` to c
 
 ```bash
 curl -X POST 'http://localhost:4000/v1/agents' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "agent_name": "my-research-agent",
@@ -690,7 +738,7 @@ You can also update rate limits on existing agents using `PATCH /v1/agents/{agen
 
 ```bash
 curl -X PATCH 'http://localhost:4000/v1/agents/<agent_id>' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "tpm_limit": 200000,
@@ -711,7 +759,7 @@ Use this to budget `user` passed to `/chat/completions`, **without needing to cr
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
-        --header 'Authorization: Bearer sk-1234' \
+        --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
         "budget_id": "default-customer-budget",
@@ -723,7 +771,7 @@ curl --location 'http://0.0.0.0:4000/budget/new' \
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
   max_end_user_budget_id: "default-customer-budget" # applied to any 'user' without their own budget
@@ -787,7 +835,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -799,7 +847,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 
@@ -812,7 +860,7 @@ curl 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -917,7 +965,7 @@ Set `token_rate_limit_type` in your `config.yaml`:
 
 ```yaml
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
   token_rate_limit_type: "output"  # Options: "input", "output", "total" (default)
 ```
 
@@ -939,7 +987,7 @@ Declare what your models actually emit with `default_estimated_output_tokens` (o
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -956,7 +1004,7 @@ The same two fields work on `/team/new` and `/team/update`, and both are editabl
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -998,12 +1046,12 @@ Use `/team/new` or `/team/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -1026,7 +1074,7 @@ Use `/team/new` or `/team/update` with `model_rpm_limit` and `model_tpm_limit` a
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1039,7 +1087,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1054,7 +1102,7 @@ You can also pass per-model limits via the `metadata` field:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/team/update' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "team_id": "my-prod-team",
@@ -1067,9 +1115,22 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
 
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
+
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -1079,12 +1140,12 @@ Use `/user/new` or `/user/update`, to persist rate limits across multiple keys f
 
 ```shell
 curl --location 'http://0.0.0.0:4000/user/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Expected Response**
 
@@ -1103,7 +1164,7 @@ Use `/key/generate`, if you want them for just that key.
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
@@ -1114,7 +1175,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 {
     "key": "sk-ulGNRXWtv7M0lFnnsQk0wQ",
     "expires": "2024-01-18T20:48:44.297973",
-    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // 👈 auto-generated
+    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // auto-generated
 }
 ```
 
@@ -1129,9 +1190,9 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 
 ```shell
 curl --location 'http://0.0.0.0:4000/key/generate' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}": 1000}}' 
 ```
 
 **Expected Response**
@@ -1181,7 +1242,7 @@ Set rate limits on agents registered with the [Agent Gateway](../a2a.md).
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "tpm_limit": 100000, "rpm_limit": 100}'
 ```
@@ -1190,7 +1251,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/agents' \
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/v1/agents' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{"agent_name": "my-agent", "agent_card_params": {"name": "my-agent", "description": "My agent", "url": "http://my-agent:8080", "version": "1.0.0"}, "session_tpm_limit": 50000, "session_rpm_limit": 50}'
 ```
@@ -1216,7 +1277,7 @@ Both are optional; a budget with neither set applies no LiteLLM TPM or RPM limit
 
 ```shell
 curl --location 'http://0.0.0.0:4000/budget/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "budget_id" : "free-tier",
@@ -1231,7 +1292,7 @@ We use `budget_id="free-tier"` from Step 1 when creating this new customers
 
 ```shell
 curl --location 'http://0.0.0.0:4000/customer/new' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id" : "palantir",
@@ -1246,7 +1307,7 @@ Pass the `user_id` from Step 2 as `user="palantir"`
 
 ```shell
 curl --location 'http://localhost:4000/chat/completions' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --header 'Content-Type: application/json' \
     --data '{
     "model": "llama3",
@@ -1290,7 +1351,7 @@ litellm_settings:
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{}'
 ```
@@ -1333,13 +1394,28 @@ Expected Response:
 
 
 **Important Notes:**
-- **Rate limits do not apply to proxy admin users.** 
-- When testing rate limits, use internal user roles (non-admin) to ensure limits are enforced as expected.
+- Rate limits apply to any key, user or team that has `tpm_limit`, `rpm_limit` or `max_parallel_requests` set, regardless of role. The master key has no limits unless you configure them.
+- When testing rate limits, use a virtual key with explicit limits so the limiter has something to enforce.
 
 Changes: 
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
 - The in-memory cache is synced with redis every 0.01s, to avoid calling redis for every request. 
 - In testing, this was found to be 2x faster than the previous implementation, and reduced drift between expected and actual fails to at most 10 requests at high-traffic (100 RPS across 3 instances). 
+
+### Hard rate limit enforcement (fail closed)
+
+Across several instances, the tpm, rpm, and max_parallel_requests counters live in Redis (`general_settings.coordination_redis` or the `REDIS_*` environment variables) so every instance enforces the same limit. While Redis is unreachable, each instance falls back to counters in its own memory and keeps serving, so a key with `rpm_limit: 2` is admitted up to 2 requests per instance, N times the limit across N instances, until Redis is back
+
+For deployments where a configured rate limit must be a hard ceiling even while Redis is down, set `fail_closed_rate_limit_enforcement`:
+
+```yaml
+general_settings:
+  fail_closed_rate_limit_enforcement: true
+```
+
+With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
+
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 
@@ -1359,7 +1435,7 @@ model_list:
       api_key: "os.environ/AZURE_API_KEY"
       api_version: "2023-07-01-preview"
     model_info:
-      access_groups: ["beta-models"] # 👈 Model Access Group
+      access_groups: ["beta-models"] # Model Access Group
 ```
 
 **Step 2. Create key with access group**
@@ -1368,7 +1444,7 @@ model_list:
 curl --location 'http://localhost:4000/user/new' \
 -H 'Authorization: Bearer <your-master-key>' \
 -H 'Content-Type: application/json' \
--d '{"models": ["beta-models"], # 👈 Model Access Group
+-d '{"models": ["beta-models"], # Model Access Group
 			"max_budget": 0}'
 ```
 

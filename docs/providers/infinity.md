@@ -56,7 +56,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -100,7 +100,7 @@ response = rerank(
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -135,7 +135,7 @@ response = rerank(
     model="infinity/rerank",
     query="What is the capital of France?",
     documents=["Paris", "London", "Berlin", "Madrid"],
-    raw_scores=True, # 👈 PROVIDER-SPECIFIC PARAM
+    raw_scores=True, # PROVIDER-SPECIFIC PARAM
 )
 ```
 
@@ -151,7 +151,7 @@ model_list:
     litellm_params:
       model: infinity/rerank
       api_base: https://localhost:8080
-      raw_scores: True # 👈 EITHER SET PROVIDER-SPECIFIC PARAMS HERE OR IN REQUEST BODY
+      raw_scores: True # EITHER SET PROVIDER-SPECIFIC PARAMS HERE OR IN REQUEST BODY
 ```
 
 2. Start litellm
@@ -166,7 +166,7 @@ litellm --config /path/to/config.yaml
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-rerank",
@@ -177,7 +177,7 @@ curl http://0.0.0.0:4000/rerank \
         "Washington, D.C. is the capital of the United States.",
         "Capital punishment has existed in the United States since before it was a country."
     ],
-    "raw_scores": True # 👈 PROVIDER-SPECIFIC PARAM
+    "raw_scores": True # PROVIDER-SPECIFIC PARAM
   }'
 ```
 
@@ -206,7 +206,7 @@ model_list:
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-embedding",
@@ -228,15 +228,15 @@ curl http://0.0.0.0:4000/embeddings \
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
+`INFINITY_API_BASE` is only read by rerank, so embedding calls need `api_base` passed explicitly
+
 ```python
 from litellm import embedding
-import os
-
-os.environ["INFINITY_API_BASE"] = "http://localhost:8080"
 
 response = embedding(
     model="infinity/bge-small",
-    input=["good morning from litellm"]
+    input=["good morning from litellm"],
+    api_base="http://localhost:8080",
 )
 
 print(response.data[0]['embedding'])
@@ -248,7 +248,7 @@ print(response.data[0]['embedding'])
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "custom-infinity-embedding",
@@ -287,7 +287,7 @@ print(response.data[0].embedding)
 
 ```bash
 curl http://0.0.0.0:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "bge-small",

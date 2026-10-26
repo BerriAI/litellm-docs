@@ -36,7 +36,7 @@ guardrails:
     litellm_params:
       guardrail: openai_moderation
       mode: "pre_call"
-      api_key: os.environ/OPENAI_API_KEY  # Optional if already set globally
+      api_key: os.environ/OPENAI_API_KEY  # Optional if already set globally, or if OPENAI_IDENTITY_* federation is set (v1.108.0+)
       model: "omni-moderation-latest"     # Optional, defaults to omni-moderation-latest
       api_base: "https://api.openai.com/v1"  # Optional, defaults to OpenAI API
 ```
@@ -81,7 +81,7 @@ Expect this to fail since the request contains harmful content:
 ```shell
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [
@@ -123,7 +123,7 @@ Expected response on failure:
 ```shell
 curl -i http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
     "model": "{{openai_large}}",
     "messages": [

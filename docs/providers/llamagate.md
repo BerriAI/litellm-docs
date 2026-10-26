@@ -8,7 +8,7 @@
 | Provider Route on LiteLLM | `llamagate/` |
 | Link to Provider Doc | [LlamaGate Documentation ↗](https://llamagate.dev/docs) |
 | Base URL | `https://api.llamagate.dev/v1` |
-| Supported Operations | [`/chat/completions`](/docs/providers/llamagate#usage---litellm-python-sdk), [`/embeddings`](#embeddings) |
+| Supported Operations | [`/chat/completions`](/docs/providers/llamagate#usage---litellm-python-sdk) |
 
 <br />
 
@@ -20,7 +20,6 @@ LlamaGate provides access to open-source LLMs through an OpenAI-compatible API:
 - **Vision Models**: Qwen VL, LLaVA, olmOCR, UI-TARS for multimodal tasks
 - **Reasoning Models**: DeepSeek R1, OpenThinker for complex problem-solving
 - **Code Models**: CodeLlama, DeepSeek Coder, Qwen Coder, StarCoder2
-- **Embedding Models**: Nomic, Qwen3 Embedding for RAG and search
 - **Competitive Pricing**: $0.02-$0.55 per 1M tokens
 
 ## Required Variables
@@ -67,12 +66,9 @@ Get your API key from [llamagate.dev](https://llamagate.dev).
 | olmOCR 7B | `llamagate/olmocr-7b` |
 | UI-TARS 1.5 7B | `llamagate/ui-tars-7b` |
 
-### Embedding Models
-| Model | Model ID |
-|-------|----------|
-| Nomic Embed Text | `llamagate/nomic-embed-text` |
-| Qwen 3 Embedding 8B | `llamagate/qwen3-embedding-8b` |
-| EmbeddingGemma 300M | `llamagate/embeddinggemma-300m` |
+:::info
+LiteLLM currently supports LlamaGate for `/chat/completions` only. `litellm.embedding()` is not supported for the `llamagate/` route.
+:::
 
 ## Usage - LiteLLM Python SDK
 
@@ -146,24 +142,6 @@ response = completion(
 print(response)
 ```
 
-### Embeddings
-
-```python showLineNumbers title="LlamaGate Embeddings"
-import os
-import litellm
-from litellm import embedding
-
-os.environ["LLAMAGATE_API_KEY"] = ""  # your LlamaGate API key
-
-# LlamaGate embedding call
-response = embedding(
-    model="llamagate/nomic-embed-text",
-    input=["Hello world", "How are you?"]
-)
-
-print(response)
-```
-
 ## Usage - LiteLLM Proxy Server
 
 ### 1. Save key in your environment
@@ -215,7 +193,6 @@ LlamaGate offers competitive per-token pricing:
 
 | Model Category | Input (per 1M) | Output (per 1M) |
 |----------------|----------------|-----------------|
-| Embeddings | $0.02 | - |
 | Small (3-4B) | $0.03-$0.04 | $0.08 |
 | Medium (7-8B) | $0.03-$0.15 | $0.05-$0.55 |
 | Code Models | $0.06-$0.10 | $0.12-$0.20 |

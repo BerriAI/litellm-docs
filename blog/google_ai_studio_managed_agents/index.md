@@ -70,7 +70,7 @@ export GEMINI_API_KEY="AIzaSy..."
 
 ```yaml
 general_settings:
-  master_key: "sk-1234"
+  master_key: "sk-<your-litellm-master-key>"
 
 environment_variables:
   GEMINI_API_KEY: "AIzaSy..."   # or set in shell env
@@ -105,7 +105,7 @@ You can also pass `api_key="AIzaSy..."` to each call instead of setting the envi
 
 ```bash
 curl -X POST "http://localhost:4000/v1beta/agents" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "my-custom-slides-agent",
@@ -162,7 +162,7 @@ Async variant: `litellm.interactions.agents.acreate(...)`.
 
 ```bash
 curl -X POST "http://localhost:4000/v1beta/interactions" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "agent": "my-slides-agent",
@@ -201,7 +201,7 @@ See also: [/interactions](/docs/interactions) for the full Interactions API.
 
 ```bash
 curl "http://localhost:4000/v1beta/agents" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Response**
@@ -235,7 +235,7 @@ agents = litellm.interactions.agents.list()
 
 ```bash
 curl "http://localhost:4000/v1beta/agents/my-slides-agent" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Response**
@@ -276,7 +276,7 @@ agent = litellm.interactions.agents.get(
 
 ```bash
 curl -X DELETE "http://localhost:4000/v1beta/agents/my-slides-agent" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
@@ -299,7 +299,7 @@ litellm.interactions.agents.delete(
 
 ```bash
 curl "http://localhost:4000/v1beta/agents/my-slides-agent/versions" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 **Response**
 ```json

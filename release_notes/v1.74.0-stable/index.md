@@ -1,5 +1,6 @@
 ---
-title: "v1.74.0-stable"
+title: "LiteLLM v1.74.0-stable"
+description: "Adds namespaced MCP servers on the MCP Gateway, team and key logging in the UI, Azure Content Safety guardrails and GitHub Copilot as a provider."
 slug: "v1-74-0-stable"
 date: 2025-07-05T10:00:00
 authors:
@@ -128,7 +129,7 @@ This configuration restricts the request to only use tools from the specified MC
     "LiteLLM": {
       "url": "<your-litellm-proxy-base-url>/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer $LITELLM_API_KEY",
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "Zapier_Gmail,Server2"
       }
     }

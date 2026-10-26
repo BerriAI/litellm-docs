@@ -185,7 +185,7 @@ ElastiCache, and a write round-tripped
 
 ```shell
 curl -s -X GET 'http://localhost:4000/cache/ping' \
-  -H 'Authorization: Bearer sk-1234'
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json
@@ -202,7 +202,7 @@ call returns the same response id and comes back in a fraction of the time
 
 ```shell
 curl -s -X POST 'http://localhost:4000/v1/chat/completions' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "temperature": 0}'
 ```
@@ -253,4 +253,5 @@ came back empty, so the pod has no role attached or the environment has no crede
 
 Everything else about the Redis cache, including cluster topology, namespaces and TLS, lives on
 [Redis and Valkey](./caching_redis.md). For Memorystore, see
-[GCP Memorystore IAM Authentication](./gcp_memorystore_iam.md)
+[GCP Memorystore IAM Authentication](./gcp_memorystore_iam.md); for Azure, see
+[Azure Redis Entra ID Authentication](./azure_redis_ad.md)

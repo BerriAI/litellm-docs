@@ -11,6 +11,7 @@ Supported Providers:
 - xAI ([see full docs](/docs/providers/xai_realtime))
 - Google AI Studio (Gemini)
 - Vertex AI
+- Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 
@@ -94,7 +95,7 @@ const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
 // const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
 const ws = new WebSocket(url, {
     headers: {
-        "api-key": `sk-1234`,
+        "api-key": `sk-<your-litellm-api-key>`,
         "OpenAI-Beta": "realtime=v1",
     },
 });
@@ -126,9 +127,11 @@ Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?mode
 LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
 
 ```python
+import os
+
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(base_url="http://0.0.0.0:4000", api_key="sk-1234")
+client = AsyncOpenAI(base_url="http://0.0.0.0:4000", api_key=os.environ["LITELLM_API_KEY"])
 
 async with client.realtime.connect(model="azure-gpt-realtime") as connection:
     await connection.session.update(
@@ -180,7 +183,7 @@ const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&gu
 
 const ws = new WebSocket(url, {
     headers: {
-        "Authorization": "Bearer sk-1234",
+        "Authorization": "Bearer sk-<your-litellm-api-key>",
     },
 });
 
@@ -212,7 +215,7 @@ async def main():
     url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
-        additional_headers={"Authorization": "Bearer sk-1234"},
+        additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         print("Connected — guardrail active")
         async for msg in ws:

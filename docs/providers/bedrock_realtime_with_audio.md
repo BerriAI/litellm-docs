@@ -33,7 +33,7 @@ import asyncio
 import websockets
 import json
 
-LITELLM_API_KEY = "sk-1234"  # Your LiteLLM API key
+LITELLM_API_KEY = "sk-<your-litellm-api-key>"  # Your LiteLLM API key
 LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
 
 async def test_text_conversation():
@@ -96,7 +96,7 @@ import json
 import base64
 import pyaudio
 
-LITELLM_API_KEY = "sk-1234"
+LITELLM_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
 
 # Audio configuration
@@ -146,7 +146,7 @@ async def audio_conversation():
             }
         }
         await ws.send(json.dumps(session_update))
-        print("🎤 Speak into your microphone...")
+        print("Speak into your microphone...")
         
         async def send_audio():
             """Capture and send audio from microphone"""
@@ -195,7 +195,7 @@ import websockets
 import json
 from datetime import datetime
 
-LITELLM_API_KEY = "sk-1234"
+LITELLM_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_URL = 'ws://localhost:4000/v1/realtime?model=bedrock-sonic'
 
 # Define tools
@@ -271,7 +271,7 @@ async def conversation_with_tools():
                 function_name = event['name']
                 arguments = json.loads(event['arguments'])
                 
-                print(f"\n🔧 Calling {function_name}({arguments})")
+                print(f"\n Calling {function_name}({arguments})")
                 result = get_weather(**arguments)
                 
                 # Send tool result back

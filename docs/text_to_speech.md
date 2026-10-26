@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to input text (non-streaming only) |
-| Supported Providers | OpenAI, Azure OpenAI, Vertex AI, AWS Polly, ElevenLabs , MiniMax |
+| Supported Providers | OpenAI, Azure OpenAI, Vertex AI, AWS Polly, ElevenLabs , MiniMax, Mistral |
 
 ## **LiteLLM Python SDK Usage**
 ### Quick Start 
@@ -70,7 +70,7 @@ LiteLLM provides an openai-compatible `/audio/speech` endpoint for Text-to-speec
 
 ```bash
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tts-1",
@@ -106,6 +106,7 @@ litellm --config /path/to/config.yaml
 | Gemini      |   [Usage](#gemini-text-to-speech)                 |
 | ElevenLabs  |   [Usage](../docs/providers/elevenlabs#text-to-speech-tts)                 |
 | MiniMax     |   [Usage](/docs/providers/minimax)                 |
+| Mistral     |   [Usage](/docs/providers/mistral#text-to-speech)                 |
 
 ## `/audio/speech` to `/chat/completions` Bridge
 
@@ -185,7 +186,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Gemini TTS Request"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemini-tts",
@@ -194,6 +195,8 @@ curl http://0.0.0.0:4000/v1/audio/speech \
   }' \
   --output gemini_speech.mp3
 ```
+
+From v1.107.0, OpenAI voice names such as `alloy` map to a Gemini prebuilt voice (`alloy` becomes `Kore`). Pass a Gemini voice name such as `Kore` or `Puck` to pick one directly; the full mapping is in the [Gemini provider docs](./providers/gemini#voice-names).
 
 ### Vertex AI Text-to-Speech
 
@@ -238,7 +241,7 @@ model_list:
 
 ```bash showLineNumbers title="Vertex AI TTS Request"
 curl http://0.0.0.0:4000/v1/audio/speech \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-tts",
@@ -254,7 +257,7 @@ AWS Polly provides neural and standard text-to-speech engines with support for m
 
 See the [AWS Polly provider documentation](../docs/providers/aws_polly) for detailed usage examples.
 
-## ✨ Enterprise LiteLLM Proxy - Set Max Request File Size 
+## Enterprise LiteLLM Proxy - Set Max Request File Size
 
 Use this when you want to limit the file size for requests sent to `audio/transcriptions`
 
@@ -263,7 +266,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
   litellm_params:
     model: whisper-1
     api_key: sk-*******
-    max_file_size_mb: 0.00001 # 👈 max file size in MB  (Set this intentionally very small for testing)
+    max_file_size_mb: 0.00001 # max file size in MB  (Set this intentionally very small for testing)
   model_info:
     mode: audio_transcription
 ```
@@ -271,7 +274,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
 Make a test Request with a valid file
 ```shell
 curl --location 'http://localhost:4000/v1/audio/transcriptions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/ishaanjaffer/Github/litellm/tests/gettysburg.wav"' \
 --form 'model="whisper"'
 ```

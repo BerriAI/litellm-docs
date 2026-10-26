@@ -1,3 +1,7 @@
+---
+sidebar_label: "Request Prioritization (Beta)"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -46,10 +50,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -65,7 +69,7 @@ To prioritize requests on LiteLLM Proxy add `priority` to the request.
 ```curl 
 curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "gpt-3.5-turbo-fake-model",
     "messages": [
@@ -73,7 +77,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```
 
@@ -97,7 +101,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ 
-        "priority": 0 # 👈 SET VALUE HERE
+        "priority": 0 # SET VALUE HERE
     }
 )
 
@@ -133,10 +137,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -153,7 +157,7 @@ model_list:
         api_key: my-good-key
 
 litellm_settings:
-    request_timeout: 600 # 👈 Will keep retrying until timeout occurs
+    request_timeout: 600 # Will keep retrying until timeout occurs
 
 router_settings:
     redis_host: os.environ/REDIS_HOST
@@ -170,7 +174,7 @@ $ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://localhost:4000/queue/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "model": "gpt-3.5-turbo-fake-model",
     "messages": [
@@ -178,6 +182,6 @@ curl -X POST 'http://localhost:4000/queue/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```

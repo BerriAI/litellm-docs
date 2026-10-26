@@ -8,7 +8,7 @@
 | Provider Route on LiteLLM | `nano-gpt/` |
 | Link to Provider Doc | [NanoGPT Website ↗](https://nano-gpt.com) |
 | Base URL | `https://nano-gpt.com/api/v1` |
-| Supported Operations | [`/chat/completions`](/docs/providers/nano-gpt#usage---litellm-python-sdk), `/completions`, `/embeddings` |
+| Supported Operations | [`/chat/completions`](/docs/providers/nano-gpt#usage---litellm-python-sdk), `/completions` |
 
 <br />
 
@@ -150,7 +150,6 @@ NanoGPT provides access to multiple model categories:
 - **Text Generation**: 200+ LLMs for chat, completion, and analysis
 - **Image Generation**: AI models for creating images
 - **Video Generation**: AI models for video creation
-- **Embedding Models**: Text embedding models for vector search
 
 ## Pricing Model
 

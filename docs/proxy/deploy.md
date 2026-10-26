@@ -144,6 +144,18 @@ proxy_config:
 helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml
 ```
 
+If the database takes short-lived tokens instead of a password (RDS or Aurora with IAM database authentication, Azure Database for PostgreSQL with Microsoft Entra ID), there is no password to put in `litellm-db`. Set `db.useIAMAuth: true` (or `db.useAzureEntraAuth: true`) with `db.username` and drop the `secret` block. The chart then sets `IAM_TOKEN_DB_AUTH` (or `AZURE_POSTGRESQL_AUTH`) and emits `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USERNAME` and `DATABASE_NAME` instead of `DATABASE_PASSWORD` and `DATABASE_URL`, and the proxy, the migrations job and the collector sidecar each mint their own token at startup. The pod needs cloud credentials for that token, IRSA or Pod Identity on EKS and workload identity on AKS.
+
+```yaml title="values.yaml (RDS IAM)"
+db:
+  useExisting: true
+  deployStandalone: false
+  useIAMAuth: true
+  endpoint: "<postgres-endpoint>"
+  database: litellm
+  username: litellm_iam   # the role granted rds_iam
+```
+
 The chart lives at [`helm/litellm-helm`](https://github.com/BerriAI/litellm/tree/main/helm/litellm-helm); the published chart versions carry LiteLLM release numbers (for example `1.90.2`), and `helm show values oci://ghcr.io/berriai/litellm-helm` lists every knob. Beyond the values above it supports [autoscaling](#autoscaling) (`autoscaling.*` or `keda.*`), PodDisruptionBudgets (`pdb.*`), a Prometheus ServiceMonitor (`serviceMonitor.*`), read replica routing (`db.readReplicaUrl`, see [Database Read Replica](./db_read_replica.md)), graceful drain on shutdown (`lifecycle`), ArgoCD or Helm hooks for the migrations job (`migrationJob.hooks.*`, see [Helm PreSync hooks](./prod.md#run-migrations-from-the-helm-presync-hook)), and an optional [dedicated Prometheus metrics listener](./prometheus.md#isolate-prometheus-scraping-from-inference-traffic) configured through `metricsServer.*`.
 
 </TabItem>
@@ -190,6 +202,8 @@ ingress:
       service: gateway     # default; backend and ui also work
 ```
 
+For one DNS hostname per component without path-based routing, see [Separate hostname per component](./manifests_to_microservices.md#separate-hostname-per-component).
+
 ```bash
 helm upgrade --install litellm \
   oci://ghcr.io/berriai/litellm/chart/litellm \
@@ -201,7 +215,7 @@ This deploys `gateway`, `backend`, and `ui` as separate services. You can scale 
 
 Pin the chart to `1.89.0` or newer. Each component image tag defaults to the chart version. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) for every option, [Autoscaling](#autoscaling) for scaling configuration, and [Prometheus metrics isolation](./prometheus.md#isolate-prometheus-scraping-from-inference-traffic) for the gateway metrics sidecar.
 
-The [high-throughput deployment profile](./high_throughput.md) adds shared database connections, isolated spend processing, and RPS/TPS autoscaling. This profile is currently available in nightly builds.
+The [high-throughput deployment profile](./high_throughput.md) adds shared database connections, isolated spend processing, and RPS/TPS autoscaling.
 
 </TabItem>
 </Tabs>
@@ -401,6 +415,105 @@ The official modules deploy the full microservices stack (network, database, Red
 - [`BerriAI/litellm/aws`](https://registry.terraform.io/modules/BerriAI/litellm/aws/latest)
 - [`BerriAI/litellm/google`](https://registry.terraform.io/modules/BerriAI/litellm/google/latest)
 
+Each module version defaults the four component images (gateway, backend, UI, migrations) to the matching LiteLLM release, so upgrading LiteLLM is a bump of the module `version`. Set `image_tag` only to pin a different release, or `image_registry` to pull the same images from a mirror.
+
+### 1-click deploy from Cloud Shell
+
+<div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
+  <a href="https://console.aws.amazon.com/cloudshell/home" target="_blank" rel="nofollow"><img src="/img/deploy-on-aws.png" alt="Deploy on AWS" height="40" /></a>
+  <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true" target="_blank" rel="nofollow"><img src="/img/deploy-on-gcp.png" alt="Deploy on GCP" height="40" /></a>
+</div>
+
+Both buttons open a browser shell that is already authenticated to your cloud account, so you deploy the default example stacks from the [LiteLLM repo](https://github.com/BerriAI/litellm/tree/main/terraform/litellm) without installing anything on your own machine. The GCP button also starts a guided tutorial; the AWS button only opens the shell, and you run the steps below in it.
+
+**GCP** clones the [terraform-google-litellm](https://github.com/BerriAI/terraform-google-litellm) module mirror at the latest stable release into Cloud Shell, which is a much smaller download than the full LiteLLM repo, and opens a guided [DeployStack tutorial](https://github.com/BerriAI/terraform-google-litellm/blob/v1.105.0/examples/default/TUTORIAL.md). You pick the project and answer a few prompts; the tutorial creates the Artifact Registry remote repository that Cloud Run needs to pull from `ghcr.io`, writes `terraform.tfvars` from your answers, and runs `terraform apply`.
+
+**AWS** opens CloudShell. The default stack runs Aurora (writer plus reader), multi-AZ ElastiCache, a NAT gateway, an ALB, and Fargate tasks, all billed by the hour, so use a sandbox account for a trial. The user you are signed in as needs permission to manage EC2 networking, RDS, ElastiCache, S3, Secrets Manager, ECS, Application Auto Scaling, Elastic Load Balancing, and CloudWatch Logs, and to create IAM roles and policies named `*-litellm-*`.
+
+CloudShell does not ship Terraform, and the module needs Terraform 1.12 or later. Install it into your home directory, which CloudShell keeps between sessions:
+
+```bash
+TF_VERSION=1.13.5
+mkdir -p ~/bin && cd ~/bin
+curl -fsSLO "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
+curl -fsSLO "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_SHA256SUMS"
+sha256sum --check --ignore-missing "terraform_${TF_VERSION}_SHA256SUMS"
+unzip -o "terraform_${TF_VERSION}_linux_amd64.zip" terraform && rm "terraform_${TF_VERSION}"_*
+export PATH="$HOME/bin:$PATH" && cd ~
+terraform version
+```
+
+Then clone the repo and copy the default example's variables file:
+
+```bash
+git clone https://github.com/BerriAI/litellm.git
+cd litellm/terraform/litellm/aws/examples/default
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform.tfvars`. A clone of the repo has no image tag of its own, so `image_tag` must name a published [LiteLLM release](https://github.com/BerriAI/litellm/releases). The example refuses a plaintext ALB unless you set `acm_certificate_arn` or, for a trial stack, `allow_plaintext_alb = true`. The gateway only loads models added in the Admin UI when it has `STORE_MODEL_IN_DB` set, so set it through `gateway_extra_env`. The stack creates ElastiCache Redis and passes `REDIS_HOST`, `REDIS_PORT`, and `REDIS_SSL` to the containers, but the proxy only connects to it when `proxy_config` enables the cache with `litellm_settings = { cache = true }`. Without it, the Admin UI shows "No Redis configured" and `/cache/ping` returns `litellm.cache is None`. Keep `general_settings`, `router_settings`, and `litellm_settings` as sibling keys of `proxy_config`; a `litellm_settings` block nested inside `general_settings` is ignored. For a stack you plan to delete, `s3_force_destroy` and `skip_final_snapshot` let `terraform destroy` remove the bucket and the Aurora cluster without keeping a final snapshot:
+
+```hcl title="terraform.tfvars"
+region = "us-east-1"
+azs    = ["us-east-1a", "us-east-1b"]
+tenant = "acme"
+env    = "trial"
+
+image_tag           = "v1.106.2"
+allow_plaintext_alb = true
+
+gateway_extra_env = { STORE_MODEL_IN_DB = "True" }
+
+proxy_config = {
+  general_settings = {}
+  litellm_settings = {
+    cache = true
+  }
+}
+
+s3_force_destroy    = true
+skip_final_snapshot = true
+```
+
+The module defaults Aurora PostgreSQL to 16.4, which some regions no longer offer (us-east-1 among them), and the apply then fails at the database after it has created the network and Redis. The example does not expose `db_engine_version` in `terraform.tfvars`, so list the versions your region offers and add one to the `module "litellm"` block in `main.tf`, for example `db_engine_version = "16.15"`:
+
+```bash
+aws rds describe-db-engine-versions --engine aurora-postgresql \
+  --query 'DBEngineVersions[?starts_with(EngineVersion, `16.`)].EngineVersion' --output text
+```
+
+Apply the stack. It takes 10 to 15 minutes, and part of it runs the database bootstrap and migrations as one-off ECS tasks that Terraform starts with `bash` and the AWS CLI from CloudShell:
+
+```bash
+terraform init && terraform apply
+```
+
+Terraform returns before the ECS services are ready, and until they are, the ALB answers with HTTP 503 and the Admin UI fails to log in. The same applies after each later `terraform apply` that changes `proxy_config` or `image_tag`: the old tasks keep serving the old configuration for a few minutes. Wait for the services to become stable, then get the URL and the generated master key:
+
+```bash
+NAME="$(terraform output -raw ecs_cluster)"
+aws ecs wait services-stable --cluster "$NAME" \
+  --services "$NAME-gateway" "$NAME-backend" "$NAME-ui"
+ALB_URL="$(terraform output -raw alb_url)"
+MASTER_KEY="$(aws secretsmanager get-secret-value \
+  --secret-id "$(terraform output -raw master_key_secret_arn)" --query SecretString --output text)"
+echo "$ALB_URL"
+```
+
+Check that the proxy uses Redis. A healthy response has `"status": "healthy"` and `"cache_type": "redis"`; `Cache not initialized` means the tasks that answered do not have `litellm_settings.cache` set:
+
+```bash
+curl -s "$ALB_URL/cache/ping" -H "Authorization: Bearer $MASTER_KEY"
+```
+
+Log in to the Admin UI at `<alb_url>/ui` with the username `admin` and the master key as the password. The stack starts with no models. To add one in the UI, open **Models + Endpoints**, select **Add Model**, choose the provider, enter the model and its credentials, and save; then send a test message from **Playground**. To declare models in Terraform instead, add a `model_list` to `proxy_config` and pass the provider keys with `gateway_extra_secrets` as shown in the next section. Each service logs to CloudWatch under `/ecs/<tenant>-litellm-<env>/` (`gateway`, `backend`, `ui`, `migrations`, and `bootstrap-db`). To upgrade, change `image_tag` and run `terraform apply` again, which reruns the migrations.
+
+Terraform keeps the stack's state in `terraform.tfstate` in the example directory. CloudShell deletes your home directory after 120 days without a session in that region, and without the state file Terraform can no longer update or destroy the stack, so use an [S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3) for any stack you keep. To delete a trial stack, run `terraform destroy` from the same directory. Without `s3_force_destroy`, the destroy fails if the versioned S3 bucket holds any object or old object version, and without `skip_final_snapshot` it leaves a final Aurora snapshot named `<tenant>-litellm-<env>-final-<hash>` that you delete yourself.
+
+To call the modules from your own root config instead, use the examples below.
+
+### Use the modules directly
+
 <Tabs>
 <TabItem value="aws" label="AWS (ECS Fargate)">
 
@@ -435,7 +548,7 @@ module "litellm" {
 }
 ```
 
-Before you apply: provision the TLS certificate in [AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (the module refuses a plaintext ALB unless you explicitly set `allow_plaintext_alb = true`), and create any provider-key secrets in [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_secret.html) first, since `gateway_extra_secrets` takes their ARNs. After apply, point your DNS record at the ALB hostname.
+Before you apply: use Terraform 1.12 or later, and run it where `bash` and the AWS CLI are available, since the module starts its database bootstrap and migration tasks from the machine running Terraform. Provision the TLS certificate in [AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (the module refuses a plaintext ALB unless you explicitly set `allow_plaintext_alb = true`), and create any provider-key secrets in [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_secret.html) first, since `gateway_extra_secrets` takes their ARNs. After apply, point your DNS record at the ALB hostname.
 
 The module auto-generates the master key into Secrets Manager if you do not supply one. The application connects to Aurora with short-lived IAM tokens, so its `DATABASE_URL` carries no password (the database master password itself is generated into Secrets Manager and never touches the application). Every resource is named `<tenant>-litellm-<env>`, and the module declares no provider, so you can `for_each` it to run one stack per tenant.
 
@@ -525,14 +638,14 @@ To manage LiteLLM resources (keys, teams, models) as code once the stack is up, 
 
 Deploy on [Render](https://render.com/):
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/805964b3c8384b41be180a61442389a3" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/805964b3c8384b41be180a61442389a3" frameBorder="0" allowFullScreen></iframe>
 
 </TabItem>
 <TabItem value="railway" label="Railway">
 
-Deploy on [Railway](https://railway.app): click the button, then set `PORT=4000` in the Railway environment variables.
+Deploy on [Railway](https://railway.com): click the button, then set `PORT=4000` in the Railway environment variables.
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/S7P9sn?referralCode=t3ukrU)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 </TabItem>
 </Tabs>

@@ -1,5 +1,6 @@
 ---
-title: "v1.96.0 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
+title: "LiteLLM v1.96.0 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
+description: "Adds MCP entitlements for users, guardrails on MCP tool results and GPT-5.6 price cuts. Config changes sync to all pods through Redis."
 slug: "v1-96-0"
 date: 2026-08-09T00:00:00
 authors:
@@ -43,7 +44,7 @@ pip install litellm==1.96.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Mock testing request params are gated behind one config flag.** Six `mock_*` request params previously had three different behaviors, and a dropped param returned a normal success, so a fallback drill could pass without ever running. All six now reject with a 400 naming the params and the key unless an admin sets `general_settings.dangerously_allow_mock_testing_request_params: true` in `config.yaml`; the flag cannot be changed from the Admin UI or the API. See [PR #35423](https://github.com/BerriAI/litellm/pull/35423).
 

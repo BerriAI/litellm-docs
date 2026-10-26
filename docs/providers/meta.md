@@ -93,7 +93,7 @@ Send one `session.update` (or `transcription_session.update`). Muse's acknowledg
 | `format` | `type` must be `audio/pcm`, `rate` must be `16000` or `24000`, `channels` must be `1`. Omitted means mono 24 kHz. |
 | `transcription.model` | Optional. With `intent=transcription` the proxy replaces it with `muse-voice-transcribe-1.0`; without it, only `muse-voice-transcribe-1.0` or `meta/muse-voice-transcribe-1.0` is accepted. |
 | `transcription.language` | Optional bias toward one language, as a name or ISO 639 code. Region suffixes are ignored, so `en-US`, `zh-Hans` and `pt-BR` work. |
-| `turn_detection` | Selects the mode (table below). Any `type` other than `server_vad` is rejected; an object without `type` means server VAD. |
+| `turn_detection` | Selects the mode (table below). Any `type` other than `server_vad` is rejected, or falls back to server VAD when [`drop_params`](/docs/completion/drop_params) is set; an object without `type` means server VAD. |
 | Anything else | Dropped with a warning in the proxy log. |
 | Beta layout | `input_audio_format: "pcm16"` plus `input_audio_transcription` is accepted at 24 kHz. Do not mix the two layouts in one update. |
 
@@ -153,10 +153,11 @@ import base64
 import json
 import wave
 
+import os
 import websockets
 
 URL = "ws://localhost:4000/v1/realtime?model=muse-voice-transcribe&intent=transcription"
-HEADERS = {"Authorization": "Bearer sk-1234"}  # your proxy API key
+HEADERS = {"Authorization": f'Bearer {os.environ["LITELLM_API_KEY"]}'}
 
 
 def pcm_chunks(path, chunk_ms=100):

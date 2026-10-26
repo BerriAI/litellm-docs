@@ -24,7 +24,7 @@ LiteLLM supports Azure OpenAI's video generation models including Sora with full
 ```python
 import os 
 os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_OPENAI_API_BASE"] = "https://your-resource.openai.azure.com/"
+os.environ["AZURE_API_BASE"] = "https://your-resource.openai.azure.com/"
 ```
 
 ### Basic Usage
@@ -35,7 +35,7 @@ import os
 import time
 
 os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-api-key"
-os.environ["AZURE_OPENAI_API_BASE"] = "https://your-resource.openai.azure.com/"
+os.environ["AZURE_API_BASE"] = "https://your-resource.openai.azure.com/"
 
 # Generate video
 response = video_generation(
@@ -82,7 +82,7 @@ Here's how to call Azure video generation models with the LiteLLM Proxy Server
 
 ```bash
 export AZURE_OPENAI_API_KEY="your-azure-api-key"
-export AZURE_OPENAI_API_BASE="https://your-resource.openai.azure.com/"
+export AZURE_API_BASE="https://your-resource.openai.azure.com/"
 ```
 
 ### 2. Start the proxy 
@@ -96,7 +96,7 @@ model_list:
     litellm_params:
       model: azure/sora-2
       api_key: os.environ/AZURE_OPENAI_API_KEY
-      api_base: os.environ/AZURE_OPENAI_API_BASE
+      api_base: os.environ/AZURE_API_BASE
 ```
 
 </TabItem>
@@ -118,9 +118,9 @@ $ litellm --model azure/sora-2
 <TabItem value="Curl" label="Curl Request">
 
 ```shell
-curl --location 'http://0.0.0.0:4000/videos/generations' \
+curl --location 'http://0.0.0.0:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --data '{
     "model": "azure-sora-2",
     "prompt": "A cat playing with a ball of yarn in a sunny garden",

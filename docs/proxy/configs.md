@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Overview
+# Config.yaml
 Set model list, `api_base`, `api_key`, `temperature` & proxy server settings (`master-key`) on the config.yaml. 
 
 | Param Name           | Description                                                   |
@@ -73,7 +73,7 @@ litellm_settings: # module level litellm settings - https://github.com/BerriAI/l
   success_callback: ["langfuse"] # OPTIONAL - if you want to start sending LLM Logs to Langfuse. Make sure to set `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in your env
 
 general_settings: 
-  master_key: sk-1234 # [OPTIONAL] Only use this if you to require all calls to contain this key (Authorization: Bearer sk-1234)
+  master_key: os.environ/LITELLM_MASTER_KEY # [OPTIONAL] Only use this if you to require all calls to contain this key (Authorization: Bearer $LITELLM_API_KEY)
   alerting: ["slack"] # [OPTIONAL] If you want Slack Alerts for Hanging LLM requests, Slow llm responses, Budget Alerts. Make sure to set `SLACK_WEBHOOK_URL` in your env
 ```
 :::info
@@ -224,7 +224,7 @@ model_list:
       api_version: "2023-07-01-preview"
 
 general_settings:
-  master_key: sk-1234 # [OPTIONAL] if set all calls to proxy will require either this key or a valid generated token
+  master_key: os.environ/LITELLM_MASTER_KEY # [OPTIONAL] if set all calls to proxy will require either this key or a valid generated token
 ```
 
 </TabItem>
@@ -447,7 +447,7 @@ model_list:
       model: azure/chatgpt-v-2
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
       api_version: "2023-05-15"
-      api_key: os.environ/AZURE_NORTH_AMERICA_API_KEY # 👈 KEY CHANGE
+      api_key: os.environ/AZURE_NORTH_AMERICA_API_KEY # KEY CHANGE
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/c12d6c3fe80e1b5e704d9846b246c059defadce7/litellm/utils.py#L2366)
@@ -482,6 +482,21 @@ credential_list:
 - `credential_name`: Unique identifier for the credential set
 - `credential_values`: Key-value pairs of credentials/secrets (supports `os.environ/` syntax)
 - `credential_info`: Key-value pairs of user provided credentials information.  No key-value pairs are required, but the dictionary must exist.
+
+#### Credential names are permanent
+
+Models and vector stores reference a credential by `credential_name`, so it can't change after creation. A `PATCH` with a different `credential_name` returns 400
+
+To relabel a credential in the Admin UI, set `display_name` instead. It is optional, doesn't need to be unique, and is capped at 255 characters. On a `PATCH`, omit it to keep the current label or send `null` to clear it:
+
+```bash
+curl -X PATCH http://localhost:4000/credentials/default_azure_credential \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"display_name": "Azure EU (prod)", "credential_info": {}}'
+```
+
+Credentials in `credential_list` can only be changed in `config.yaml`. `PATCH` and `DELETE` on them return 405, the UI disables Edit and Delete, and a `display_name` set there is ignored. `GET /credentials` returns each credential's `display_name` and its `source`, either `db` or `config`
 
 ### Load API Keys from Secret Managers (Azure Vault, etc)
 
@@ -553,7 +568,7 @@ $ litellm --config /path/to/config.yaml
 
 ### Set custom tokenizer 
 
-If you're using the [`/utils/token_counter` endpoint](https://litellm-api.up.railway.app/#/llm%20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
+If you're using the [`/utils/token_counter` endpoint](https://docs.litellm.ai/api-reference/#/llm%20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
 
 ```yaml
 model_list:
@@ -726,7 +741,7 @@ NO_REDOC="True"
 NO_OPENAPI="True"
 ```
 
-Restart the proxy after setting these. `/docs`, `/redoc` and `/openapi.json` then all 404 with no schema in the response, while inference and management routes are unaffected.
+Restart the proxy after setting these. `/redoc` and `/openapi.json` then 404 with no schema in the response, `/` returns only the plain `"LiteLLM: RUNNING"` status string, and inference and management routes are unaffected.
 
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 

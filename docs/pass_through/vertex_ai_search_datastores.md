@@ -4,7 +4,7 @@ Call the Vertex AI Discovery Engine Search API through LiteLLM, using Google's n
 
 Provider Doc: https://cloud.google.com/generative-ai-app-builder/docs/reference/rest/v1/projects.locations.dataStores.servingConfigs/search
 
-:::tip Want the unified API instead?
+:::tip[Want the unified API instead?]
 This page is the raw Google API through the proxy. If you want to query the datastore through the OpenAI-compatible `POST /v1/vector_stores/{id}/search` endpoint, or use it for RAG in `/chat/completions`, register it as a [managed vector store](../vector_stores/managed_vector_stores.md) (provider `vertex_ai/search_api`).
 :::
 
@@ -36,7 +36,7 @@ litellm
 curl -X POST \
   "http://localhost:4000/vertex_ai/discovery/v1/projects/my-project/locations/global/collections/default_collection/dataStores/my-datastore/servingConfigs/default_config:search" \
   -H "Content-Type: application/json" \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -d '{
     "query": "How do I authenticate?",
     "pageSize": 10
@@ -57,7 +57,7 @@ Routes to `https://discoveryengine.googleapis.com`
 curl -X POST \
   "http://localhost:4000/vertex_ai/discovery/v1/projects/my-project/locations/global/collections/default_collection/dataStores/my-datastore/servingConfigs/default_config:search" \
   -H "Content-Type: application/json" \
-  -H "x-litellm-api-key: Bearer sk-1234" \
+  -H "x-litellm-api-key: Bearer $LITELLM_API_KEY" \
   -d '{
     "query": "tutorials",
     "pageSize": 20,
@@ -76,7 +76,7 @@ url = "http://localhost:4000/vertex_ai/discovery/v1/projects/my-project/location
 response = requests.post(url, 
     headers={
         "Content-Type": "application/json",
-        "x-litellm-api-key": "Bearer sk-1234"
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
     },
     json={"query": "pricing", "pageSize": 10}
 )
