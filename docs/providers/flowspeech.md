@@ -19,7 +19,7 @@ This page requires the v1 implementation in [LiteLLM PR #38498](https://github.c
 
 Set `FLOWSPEECH_API_KEY` in the server-side SDK process or proxy. Generation requires a developer API key, an active paid Basic, Pro or Scale subscription, and sufficient available credits. Browser cookies and plugin login tokens do not authenticate the public API
 
-`FLOWSPEECH_API_BASE` defaults to `https://flowspeech.io`. An override must be an HTTPS origin or the complete `/api/v1/tts/jobs` endpoint, with no embedded credentials, query or fragment. Only configure a trusted endpoint because it receives the key and input text. API and audio redirects are rejected
+`FLOWSPEECH_API_BASE` defaults to `https://flowspeech.io`. An override may be an HTTPS origin, a trusted gateway path prefix, or the complete `/api/v1/tts/jobs` endpoint, with no embedded credentials, query or fragment. For example, `https://gateway.example/flowspeech/` resolves to `https://gateway.example/flowspeech/api/v1/tts/jobs`. Only configure a trusted endpoint because it receives the key and input text. API and audio redirects are rejected.
 
 Explicit `api_key` and `api_base` arguments override environment variables. A configured `litellm.api_key` also takes precedence over `FLOWSPEECH_API_KEY`
 
