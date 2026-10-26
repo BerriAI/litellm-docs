@@ -189,7 +189,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Credentials Management
 
-- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name
+- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name. `connect`, `connections` and `disconnect` manage your own GitHub Copilot connection on a [per-user credential](../providers/github_copilot.md)
 - Example:
 
   ```bash
@@ -202,6 +202,9 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite credentials update azure-prod --clear-display-name
   lite credentials get azure-cred
   lite credentials delete azure-cred
+  lite credentials connect github-copilot --no-browser
+  lite credentials connections
+  lite credentials disconnect github-copilot
   ```
 
   [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/credential%20management)
