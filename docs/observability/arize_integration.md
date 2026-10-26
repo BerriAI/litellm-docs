@@ -138,6 +138,33 @@ litellm_settings:
 
 Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
 
+### Sample a team's or key's traces {#sample-a-teams-or-keys-traces}
+
+To send only a share of a tenant's requests to its Arize space, add `arize_success_sampling_rate` and `arize_error_sampling_rate` to the same `callback_vars`. Each takes a number from `0.0` to `1.0`: `0.1` keeps about one request in ten, `0.0` keeps none, and a rate left unset keeps every request. A request with a failed span answers to the error rate and every other request to the success rate, so an error rate above the success rate keeps more of the failures. Saving a rate outside that range, or on a callback other than `arize`, returns an error.
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "arize",
+    "callback_type": "success_and_failure",
+    "callback_vars": {
+      "arize_space_id": "...",
+      "arize_api_key": "...",
+      "arize_success_sampling_rate": "0.1",
+      "arize_error_sampling_rate": "1.0"
+    }
+  }'
+```
+
+With `LITELLM_OTEL_V2=true` the proxy keeps or drops each request whole, from the HTTP request span down to the model call and the spend write, and the request's trace ID makes the decision. Every pod and worker reaches the same answer for the same trace ID and outcome, so when a caller sends several requests with one W3C `traceparent`, as an agent or an internal service usually does, the tenant sees all of them or none of them, however they are load balanced. A request without a `traceparent` starts a trace of its own and is sampled on its own.
+
+Requests of one trace that end differently can still land apart when the two rates differ. At a success rate of `0.1` and an error rate of `1.0`, a trace whose third request fails usually shows only that failed request. As long as the error rate is at least the success rate, a trace whose successful requests are kept always keeps its failed ones too.
+
+Because the trace ID decides, a caller that reuses one trace ID gets the same answer every time, and a caller can pick a trace ID that is always kept or always dropped, as with OpenTelemetry's `TraceIdRatioBased` sampler. The rates thin only the tenant's own Arize space. Your proxy-wide exporters, and the copy that [`additive` mode](./opentelemetry_v2#keep-your-own-copy-as-well) keeps, receive every request.
+
+Before [PR #47468](https://github.com/BerriAI/litellm/pull/47468) each pod made its own random draw, so a trace that crossed pods could reach Arize with requests missing. OpenTelemetry v1, without `LITELLM_OTEL_V2`, still makes a random draw for each request.
+
 ## Full OpenTelemetry reference
 
 This page covers the Arize-specific setup. For span attributes, prompt and response capture, metrics, distributed tracing, and which routes are traced, see the [OpenTelemetry v2 guide](./opentelemetry_v2).
