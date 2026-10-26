@@ -9,6 +9,11 @@ const darkCodeTheme = require('./src/utils/prismDark');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  // Temporary fallback while the internal gateway is unavailable.
+  // Set DOCS_CHAT_PROVIDER=internal and rebuild to switch back.
+  customFields: {
+    inkeepApiKey: process.env.DOCS_CHAT_PROVIDER === 'internal' ? null : process.env.INKEEP_API_KEY || null,
+  },
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
   // SVG favicon that turns white on dark browser themes; PNG for browsers without SVG icons
@@ -238,6 +243,7 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
@@ -414,6 +420,11 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Docs',
+          },
+          {
+            to: '/docs/providers',
+            label: 'AI Providers',
+            position: 'left',
           },
           {
             type: 'docSidebar',

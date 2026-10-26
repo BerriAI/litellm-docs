@@ -1,7 +1,8 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const cheerio = require('cheerio');
-const {createIndex} = require('../search/engine');
+const {createIndex, loadIndex} = require('../search/engine');
+const {serializeRuntimeIndex} = require('../search/runtime-index');
 const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
 const {extractStructure} = require('../search/page-structure');
 const {extractOpenAPI} = require('../search/openapi');
@@ -111,7 +112,10 @@ async function buildSearchIndex({outDir, outputDir = outDir, pages, routesBuildM
   documents.push(...api.documents);
   Object.assign(structure, api.structure);
   if (!documents.length) throw new Error('Docs search index is empty');
-  await fs.writeFile(path.join(outputDir, 'search-index.json'), JSON.stringify(createIndex(documents)));
+  const json = JSON.stringify(createIndex(documents));
+  await fs.writeFile(path.join(outputDir, 'search-index.json'), json);
+  // Preserve the portable loader's term iteration order, including score ties.
+  await fs.writeFile(path.join(outputDir, 'search-runtime.bin'), serializeRuntimeIndex(loadIndex(json)));
   await fs.writeFile(path.join(outputDir, 'search-documents.json'), JSON.stringify(documents));
   await fs.writeFile(path.join(outputDir, 'search-structure.json'), JSON.stringify({pages: structure}));
   console.log(`[docs-search] Indexed ${documents.length} passages from ${new Set(documents.map(d => contentPage(d.url))).size} public pages.`);

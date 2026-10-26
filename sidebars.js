@@ -431,6 +431,7 @@ const sidebars = {
               ],
             },
             "proxy/security_best_practices",
+            "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
             "proxy/rust_gateway",
           ],
@@ -1357,6 +1358,7 @@ const sidebars = {
         },
         "count_tokens",
         "anthropic_count_tokens",
+        "tokenize",
         {
           type: "category",
           label: "/v1/decisions, /v1/systemone",
@@ -1563,6 +1565,7 @@ const sidebars = {
           "providers/openai_compatible",
           "providers/litellm_proxy",
           "providers/openrouter",
+          "providers/opencode_go",
           "providers/vercel_ai_gateway",
           "providers/helicone",
           "providers/cometapi",

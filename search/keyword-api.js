@@ -46,6 +46,7 @@ function createKeywordSearchHandler({index, getIndex = () => index, config, now 
       const started = now();
       const results = search(readyIndex, query, {type, limit: 100});
       const elapsedMs = now() - started;
+      res.setHeader('Server-Timing', `corpus;dur=${(started - corpusStarted).toFixed(1)}, ranking;dur=${elapsedMs.toFixed(1)}`);
       return send(res, 200, {query, type, results, candidateCount: results.length,
         ranking: 'lexical', rankingVersion: 'lexical-v4', cached: false, costUsd: 0,
         timingsMs: {retrieval: elapsedMs}, elapsedMs});

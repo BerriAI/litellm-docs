@@ -336,7 +336,7 @@
   transform: scaleX(var(--walkthrough-progress));
   transform-origin: left;
 }
-@media (max-width: 650px) {
+@container jevrank (max-width: 650px) {
   .section {
     padding: 42px 0;
   }
