@@ -163,7 +163,7 @@ Requests of one trace that end differently can still land apart when the two rat
 
 Because the trace ID decides, a caller that reuses one trace ID gets the same answer every time, and a caller can pick a trace ID that is always kept or always dropped, as with OpenTelemetry's `TraceIdRatioBased` sampler. The rates thin only the tenant's own Arize space. Your proxy-wide exporters, and the copy that [`additive` mode](./opentelemetry_v2#keep-your-own-copy-as-well) keeps, receive every request.
 
-Before [PR #47468](https://github.com/BerriAI/litellm/pull/47468) each pod made its own random draw, so a trace that crossed pods could reach Arize with requests missing. OpenTelemetry v1, without `LITELLM_OTEL_V2`, still makes a random draw for each request.
+OpenTelemetry v1, without `LITELLM_OTEL_V2`, makes a random draw for each request instead, so requests that share a trace can be kept on one pod and dropped on another.
 
 ## Full OpenTelemetry reference
 
