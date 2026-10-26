@@ -1,0 +1,291 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Foundry Local
+
+https://github.com/microsoft/Foundry-Local
+
+:::tip
+
+Use `model="foundry_local/<model-id>"` for chat, embedding, and transcription models served by Foundry Local's HTTP service.
+
+:::
+
+
+| Property | Details |
+|-------|-------|
+| Description | Run AI models on-device with Microsoft Foundry Local. |
+| Provider Route on LiteLLM | `foundry_local/` |
+| Provider Doc | [Foundry Local ↗](https://learn.microsoft.com/en-us/azure/foundry-local/) |
+| Supported OpenAI Endpoints | `/chat/completions`, `/embeddings`, `/audio/transcriptions` |
+
+## Quick Start
+
+Use [Foundry Local Python SDK 2.2.1](https://pypi.org/project/foundry-local-sdk/2.2.1/) to run models on-device. Foundry Local supports in-process inference, but LiteLLM uses its optional OpenAI-compatible HTTP service. Start that service and point `FOUNDRY_LOCAL_API_BASE` at its `/v1` URL.
+
+<Tabs>
+<TabItem value="python" label="Python SDK">
+
+```bash
+pip install foundry-local-sdk==2.2.1
+```
+
+```python
+import os
+from foundry_local_sdk import Configuration, FoundryLocalManager
+from litellm import completion
+
+FoundryLocalManager.initialize(Configuration(app_name="litellm-foundry-local"))
+manager = FoundryLocalManager.instance
+
+ep_result = manager.download_and_register_eps()
+if not ep_result.success:
+    raise RuntimeError(f"Execution provider setup failed: {ep_result.failed_eps}")
+
+model = manager.catalog.get_model("qwen2.5-0.5b")
+model.download()
+model.load()
+manager.start_web_service()
+
+os.environ["FOUNDRY_LOCAL_API_BASE"] = f"{manager.urls[0].rstrip('/')}/v1"
+try:
+    response = completion(
+        model=f"foundry_local/{model.id}",
+        messages=[{"role": "user", "content": "What is the golden ratio?"}],
+    )
+    print(response.choices[0].message.content)
+finally:
+    manager.stop_web_service()
+    model.unload()
+    manager.close()
+```
+
+</TabItem>
+<TabItem value="javascript" label="JavaScript SDK">
+
+```bash
+npm install foundry-local-sdk
+```
+
+```javascript
+import { FoundryLocalManager } from "foundry-local-sdk";
+
+const manager = FoundryLocalManager.create({
+  appName: "litellm-foundry-local",
+});
+
+const epResult = await manager.downloadAndRegisterEps();
+if (!epResult.success) {
+  throw new Error(`Execution provider setup failed: ${epResult.failedEps}`);
+}
+
+const model = await manager.catalog.getModel("qwen2.5-0.5b");
+await model.download();
+await model.load();
+manager.startWebService();
+
+const apiBase = `${manager.urls[0].replace(/\/$/, "")}/v1`;
+console.log(apiBase);
+console.log(`Use model: foundry_local/${model.id}`);
+```
+
+Keep this process running while LiteLLM uses the service. Configure the printed URL in the Python or proxy process, since JavaScript cannot set another process's environment variables. When finished, stop the service with `manager.stopWebService()` and unload the model with `await model.unload()`.
+
+</TabItem>
+</Tabs>
+
+### SDK 2.2.1 requirements
+
+The unified `foundry-local-sdk` Python wheel supports Windows x64, Linux x64/ARM64, and macOS Apple silicon. The [SDK package metadata](https://pypi.org/pypi/foundry-local-sdk/2.2.1/json) requires Python `>=3.11,<3.15`. Windows wheels include the WinML runtime, so the separate `foundry-local-sdk-winml` package is no longer needed.
+
+Call `download_and_register_eps()` before selecting and loading a model to make hardware execution providers available. Catalog access no longer waits for execution-provider downloads.
+
+The service uses a dynamically assigned local port by default. Read `manager.urls` after starting it instead of assuming port 5272. For a separate proxy process that needs a fixed address, initialize Python with `Configuration(app_name="litellm-foundry-local", web=Configuration.WebService(urls="http://127.0.0.1:5272"))` and keep that service process running.
+
+LiteLLM does not import or install the Foundry Local SDK. The SDK's Python requirement applies only to the process hosting Foundry Local, and existing OpenAI-compatible Foundry Local endpoints continue to work. Chat supports streaming and non-streaming requests. Embeddings and transcription support synchronous and asynchronous calls.
+
+## Endpoint and API Key
+
+Set `FOUNDRY_LOCAL_API_BASE` to the running service's URL, including `/v1`. `FOUNDRY_LOCAL_API_KEY` is optional for local use. Explicit `api_base` and `api_key` arguments take precedence over these environment variables.
+
+```python
+# env variable
+os.environ['FOUNDRY_LOCAL_API_BASE']  # e.g. http://127.0.0.1:5272/v1
+os.environ['FOUNDRY_LOCAL_API_KEY']   # optional, not required for local use
+```
+
+## Sample Usage
+```python
+from litellm import completion
+import os
+
+os.environ['FOUNDRY_LOCAL_API_BASE'] = "http://127.0.0.1:5272/v1"
+
+response = completion(
+    model="foundry_local/qwen2.5-0.5b",
+    messages=[
+        {
+            "role": "user",
+            "content": "What's the weather like in Boston today in Fahrenheit?",
+        }
+    ]
+)
+print(response)
+```
+
+## Sample Usage - Streaming
+```python
+from litellm import completion
+import os
+
+os.environ['FOUNDRY_LOCAL_API_BASE'] = "http://127.0.0.1:5272/v1"
+
+response = completion(
+    model="foundry_local/qwen2.5-0.5b",
+    messages=[
+        {
+            "role": "user",
+            "content": "What's the weather like in Boston today in Fahrenheit?",
+        }
+    ],
+    stream=True,
+)
+
+for chunk in response:
+    print(chunk)
+```
+
+## Embeddings
+
+Download and load an embedding model, such as `qwen3-embedding-0.6b`, in the Foundry Local service before calling it. Use its model ID in the request:
+
+```python
+from litellm import embedding
+
+response = embedding(
+    model="foundry_local/<embedding-model-id>",
+    input=["The quick brown fox", "The lazy dog"],
+)
+print(response.data[0]["embedding"])
+```
+
+Use `await litellm.aembedding(...)` for asynchronous requests. Both methods use the same `FOUNDRY_LOCAL_API_BASE` and optional `FOUNDRY_LOCAL_API_KEY` as chat.
+
+## Audio transcription
+
+Download and load a transcription model, such as `whisper-tiny`, in the Foundry Local service before calling it:
+
+```python
+from pathlib import Path
+from litellm import transcription
+
+response = transcription(
+    model="foundry_local/<transcription-model-id>",
+    file=Path("recording.wav"),
+    language="en",
+)
+print(response.text)
+```
+
+Use `await litellm.atranscription(...)` for asynchronous requests. Inputs can be bytes, an open binary file, a `pathlib.Path`, or an OpenAI-style `(filename, content)` tuple. Bare string paths are rejected; use `pathlib.Path` for local files.
+
+:::warning Shared filesystem required for transcription
+
+Foundry Local's transcription endpoint reads a JSON `filename`, not a multipart upload. LiteLLM writes the audio to a private temporary file, closes it before sending the request, and removes it after completion, error, or cancellation.
+
+Run LiteLLM and Foundry Local on the same machine with access to the same temporary directory. Separate containers or remote services without that shared path cannot transcribe these files. Chat and embeddings do not have this restriction.
+
+:::
+
+The transcription integration supports `language`, `prompt`, `temperature`, and `response_format`. Audio streaming and `timestamp_granularities` are not supported.
+
+## Usage with DSPy
+
+Use Foundry Local with [DSPy](https://dspy.ai/) through LiteLLM:
+
+```python
+import dspy
+import os
+
+os.environ['FOUNDRY_LOCAL_API_BASE'] = "http://127.0.0.1:5272/v1"
+
+lm = dspy.LM("foundry_local/qwen2.5-0.5b")
+dspy.configure(lm=lm)
+```
+
+## Usage with LiteLLM Proxy Server
+
+Here's how to call a Foundry Local model with the LiteLLM Proxy Server
+
+1. Modify the config.yaml
+
+  ```yaml
+  model_list:
+    - model_name: my-model
+      litellm_params:
+        model: foundry_local/qwen2.5-0.5b
+        api_base: http://127.0.0.1:5272/v1
+  ```
+
+
+2. Start the proxy
+
+  ```bash
+  $ litellm --config /path/to/config.yaml
+  ```
+
+3. Send Request to LiteLLM Proxy Server
+
+  Set `LITELLM_API_KEY` in the client process to your proxy key.
+
+  <Tabs>
+
+  <TabItem value="openai" label="OpenAI Python v1.0.0+">
+
+  ```python
+  import os
+  import openai
+
+  client = openai.OpenAI(
+      api_key=os.environ["LITELLM_API_KEY"],
+      base_url="http://localhost:4000"
+  )
+
+  response = client.chat.completions.create(
+      model="my-model",
+      messages = [
+          {
+              "role": "user",
+              "content": "what llm are you"
+          }
+      ],
+  )
+
+  print(response)
+  ```
+  </TabItem>
+
+  <TabItem value="curl" label="curl">
+
+  ```shell
+  curl --location 'http://localhost:4000/chat/completions' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
+      --header 'Content-Type: application/json' \
+      --data '{
+      "model": "my-model",
+      "messages": [
+          {
+          "role": "user",
+          "content": "what llm are you"
+          }
+      ]
+  }'
+  ```
+  </TabItem>
+
+  </Tabs>
+
+
+## Supported Parameters
+
+See [Supported Parameters](../completion/input.md#translated-openai-params) for supported parameters.
