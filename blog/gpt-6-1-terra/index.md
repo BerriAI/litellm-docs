@@ -7,6 +7,8 @@ authors:
   - mateo
   - kerry
 description: "GPT-6.1 Terra costs $1 per 1M input tokens and $5 per 1M output tokens, half the price of GPT-6.1 Sol. LiteLLM supports it on day 0."
+card_title: "GPT-6.1 Terra"
+card_summary: "Half the price of GPT-6.1 Sol at $1 / $5 per 1M tokens, 50.3% on Terminal-Bench 4.0, 1.05M context."
 image: ./hero.png
 tags: [openai, gpt-6.1, gpt-6.1-terra, pricing, day 0 support]
 hide_table_of_contents: false
