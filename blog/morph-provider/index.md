@@ -4,6 +4,7 @@ title: "Morph open-weight models on LiteLLM"
 date: 2026-10-27T12:00:00
 authors:
   - moe
+  - ryan
 description: "Use Morph's Kimi, GLM, and DeepSeek models through LiteLLM with tool calling, structured output, streaming, and prompt-cache cost tracking."
 image: ./hero.png
 hide_table_of_contents: true
