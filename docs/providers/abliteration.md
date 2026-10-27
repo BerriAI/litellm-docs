@@ -90,7 +90,7 @@ stream = completion(
 for chunk in stream:
     if chunk.choices:
         print(chunk.choices[0].delta.content or "", end="")
-    if chunk.usage:
+    if getattr(chunk, "usage", None):
         print(chunk.usage)
 ```
 
