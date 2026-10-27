@@ -24,7 +24,7 @@ model_list:
       model: "anthropic/*"
 ```
 
-The wildcard routes whichever Claude model your plan allows. No Anthropic API key or `forward_client_headers_to_llm_api` setting is needed. Without an API key configured, requests without a subscription token fail; a configured API key pays for requests that arrive without one.
+The wildcard routes whichever Claude model your plan allows. Keep this deployment configured as shown to use each developer's subscription login. LiteLLM forwards that login automatically.
 
 ## Step 2: Create a virtual key
 
@@ -34,43 +34,41 @@ For an existing key, allow `anthropic/*`. Leaving **Models** empty allows every 
 
 ## Step 3: Connect Claude Code
 
-In the terminal where you will run Claude Code, set your proxy's root URL and virtual key:
+If you previously used API-key authentication, remove `apiKeyHelper` and the `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_API_KEY` entries in `env` from your active [Claude Code settings](https://code.claude.com/docs/en/settings): `~/.claude/settings.json` and your project's `.claude/settings.json` or `.claude/settings.local.json`.
+
+From your project folder, clear shell overrides, set your proxy's root URL and virtual key, and launch Claude Code:
 
 ```bash
+unset ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY ANTHROPIC_MODEL
 export ANTHROPIC_BASE_URL="http://localhost:4000"
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: Bearer sk-<your-litellm-virtual-key>"
-```
 
-Replace the URL and key. Do not append `/anthropic` or `/v1/messages`. Retain any existing custom headers on separate lines.
-
-**Remove `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, and any `apiKeyHelper` from your Claude Code settings and launch environment.** They override subscription authentication. Clear shell overrides, then launch from your project folder:
-
-```bash
-unset ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
 claude
 ```
 
+Replace the URL with your proxy's root address, such as `https://litellm.example.com`, and replace the key. Retain any existing custom headers on separate lines.
+
 Choose **Claude account with subscription** and complete browser sign-in if needed. If the browser does not open, press `c` to copy the URL; paste a code back into the terminal if prompted. Complete the workspace trust prompt for your project. An existing subscription login can stay signed in.
 
-Use `/model` to switch from your plan's default. `ANTHROPIC_MODEL` is optional; if set, use a Claude model ID such as `{{anthropic_large}}`, not a custom proxy alias. Repeat the exports in each new terminal, or save them in your shell profile.
+Use `/model` to select a Claude model your subscription supports. To set a default explicitly, set `ANTHROPIC_MODEL` to a Claude model ID such as `{{anthropic_large}}`. For future terminals, add the `unset` and `export` lines to the end of your shell profile (`~/.zshrc` or `~/.bashrc`).
 
 ## Step 4: Verify a request
 
-Send: **Reply with exactly Hello. Do not use tools.**
+Send: **Reply with exactly Hello.**
 
-You should receive `Hello`. In the dashboard, open **Logs** and find the successful session under your virtual key. Open it to inspect the model, tokens, and cost.
+You should receive a greeting. In the dashboard, open **Logs** and find the successful session under your virtual key. Open it to inspect the model, tokens, and cost.
 
 ### Confirm subscription usage {#seeing-which-requests-were-billed-to-a-seat}
 
-On **LiteLLM v1.105.0 or later**, filter **Logs** with **Credential: Client OAuth token**; Request Details shows the same value. Spend-log metadata records `used_client_oauth_token=true` for subscription requests and `false` for configured credentials. Older rows have no value. Administrators can also filter `/spend/logs/ui?used_client_oauth_token=true` with their usual gateway authentication.
+On **LiteLLM v1.105.0 or later**, filter **Logs** with **Credential: Client OAuth token**; Request Details shows the same value. Spend-log metadata records `used_client_oauth_token=true` for subscription requests and `false` for configured credentials. For API access, query `/spend/logs/ui` with that filter and UTC `start_date` / `end_date` values in `YYYY-MM-DD HH:MM:SS` format.
 
 ## Limits and billing {#attribution-and-cost}
 
-Your Claude plan controls model access and quota. LiteLLM attributes usage to the virtual key and its user/team; it cannot identify the Claude account or organization behind the login.
+Your Claude plan controls model access and quota. Use the LiteLLM virtual key's user and team for gateway attribution, and Claude's admin console for subscription membership.
 
-**LiteLLM reports cost at Anthropic API list prices, even for subscription requests.** These amounts count toward [budgets](../proxy/virtual_keys.md) as API-equivalent usage caps; they are not an additional Anthropic API charge. Exclude subscription rows when calculating API-billed spend.
+**LiteLLM reports cost at Anthropic API list prices, even for subscription requests.** Use these amounts for [budgets](../proxy/virtual_keys.md) in API-equivalent dollars. Anthropic bills subscription requests through your plan; calculate API-billed spend from rows that used configured API credentials.
 
-Each developer signs in with their own subscription. Do not share a subscription token through a deployment's `api_key`; see [Anthropic's usage terms](https://code.claude.com/docs/en/legal-and-compliance). Team and Enterprise administration stays in Claude's admin console; [`forceLoginOrgUUID`](https://code.claude.com/docs/en/authentication#restrict-login-to-your-organization) restricts Claude Code to your organization.
+Have each developer sign in with their own subscription, following [Anthropic's usage terms](https://code.claude.com/docs/en/legal-and-compliance). Team and Enterprise administration stays in Claude's admin console; use [`forceLoginOrgUUID`](https://code.claude.com/docs/en/authentication#restrict-login-to-your-organization) to restrict Claude Code to your organization.
 
 <details>
 <summary>Credentials and supported routes</summary>
@@ -81,13 +79,13 @@ Each developer signs in with their own subscription. Do not share a subscription
 
 ### Which requests use the subscription token
 
-Subscription forwarding applies to `/v1/messages` and `/v1/chat/completions` for direct Anthropic deployments. Bedrock and Vertex AI use their own credentials (provider isolation requires v1.99.0 or later). `/v1/messages/count_tokens` uses configured credentials. The `/anthropic` pass-through route uses the proxy's Anthropic key when configured and does not record `used_client_oauth_token`; use the proxy root for this guide.
+Use direct Anthropic deployments on `/v1/messages` or `/v1/chat/completions` for subscription forwarding and credential attribution. Bedrock and Vertex AI use their own credentials (provider isolation requires v1.99.0 or later). `/v1/messages/count_tokens` uses configured credentials. The `/anthropic` pass-through route uses the proxy's Anthropic key when configured; use the proxy root for the subscription setup in this guide.
 
 ### Credential storage, refresh, and revocation
 
-Claude Code stores and refreshes its login locally. LiteLLM uses each caller's token for that request without caching it across users or storing it in logs. `/logout` signs out; `/login` repairs an expired or revoked login.
+Claude Code stores and refreshes its login locally. LiteLLM forwards each caller's token for that request and records the credential type in spend logs. Use `/logout` to sign out or `/login` to renew an expired or revoked login.
 
-Blocking or deleting a [LiteLLM key](../proxy/virtual_keys.md) stops gateway access. It does not revoke the Claude login, which the user or their Claude administrator manages separately.
+To end gateway access, block or delete the [LiteLLM key](../proxy/virtual_keys.md). To end subscription access too, sign out of Claude Code or ask the Claude administrator to revoke it.
 
 </details>
 
@@ -108,6 +106,6 @@ curl "http://localhost:4000/v1/models" \
   -H "x-litellm-api-key: Bearer sk-<your-litellm-virtual-key>"
 ```
 
-A `200` lists accessible models; a `401` means the gateway rejected the key. This checks gateway access, not the subscription login.
+A `200` confirms gateway authentication and lists accessible models. For a `401`, replace the key with an active virtual key. Use the prompt and Credential filter in Step 4 to confirm subscription access.
 
 See the [setup video](https://www.loom.com/share/2d069b9e3bcc4cecaa5eb27a72ba7b3c), [subscription options](../subscriptions.md), or [Claude Code with Lite CLI SSO](./claude_code_gateway.md#claude-subscription).
