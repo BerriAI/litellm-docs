@@ -126,6 +126,7 @@ function formatDate(dateStr) {
 }
 
 function CardImage({item, title}) {
+  const containImage = item.content?.metadata?.frontMatter?.image_fit === 'contain';
   const image = item.content?.assets?.image || item.content?.metadata?.frontMatter?.image;
   const lightImage = item.content?.metadata?.frontMatter?.image_light;
   const resolved = useBaseUrl(typeof image === 'string' ? image : '');
@@ -133,7 +134,7 @@ function CardImage({item, title}) {
   const src = typeof image === 'string' && /^(https?:)?\/\//.test(image) ? image : image ? resolved : null;
   const lightSrc = typeof lightImage === 'string' && /^(https?:)?\/\//.test(lightImage) ? lightImage : lightImage ? resolvedLight : null;
   return (
-    <div className={styles.cover}>
+    <div className={`${styles.cover}${containImage ? ` ${styles.coverContain}` : ''}`}>
       {src && lightSrc ? (
         <ThemedImage sources={{light: lightSrc, dark: src}} alt="" loading="lazy" decoding="async" />
       ) : src ? (

@@ -10,6 +10,7 @@ description: "LiteLLM is committing to a private registry to provide early acces
 tags: [security]
 hide_table_of_contents: false
 image: /img/blog/litellm_private_registry/header.png
+image_fit: contain
 ---
 
 ![LiteLLM Private Registry: private fixes for the most severe vulnerabilities](/img/blog/litellm_private_registry/header.png)

@@ -383,6 +383,15 @@
   transform: scale(1.03);
 }
 
+.coverContain img {
+  object-fit: contain;
+}
+
+.featured:hover .coverContain img,
+.tile:hover .coverContain img {
+  transform: none;
+}
+
 /* Posts without a cover show their title on the tinted panel, like the
    website's placeholder. */
 .coverTitle {
