@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | EmpirioLabs AI hosts open, proprietary, and custom models behind one OpenAI-compatible API with pay-as-you-go pricing across text, image, video, audio, search, and 3D endpoints. |
+| Description | EmpirioLabs AI is specialized AI model hosting for open, proprietary, and custom stacks, with pay-as-you-go pricing across text, image, video, audio, search, and 3D endpoints. |
 | Provider Route on LiteLLM | `empiriolabs/` |
 | Link to Provider Doc | [EmpirioLabs AI Documentation ↗](https://docs.empiriolabs.ai) |
 | Base URL | `https://api.empiriolabs.ai/v1` |
@@ -27,7 +27,7 @@ The full live catalog with pricing is at [empiriolabs.ai/models](https://empirio
 | `empiriolabs/qwen3-7-max` | Qwen3.7 Max flagship text model for coding, agents, and deep thinking | 1M tokens |
 | `empiriolabs/qwen3-7-plus` | Cost-effective Qwen3.7 vision-language model (text, image, video input) | 1M tokens |
 | `empiriolabs/deepseek-v4-pro` | DeepSeek V4 flagship MoE (1.6T total / 49B active parameters) | 1M tokens |
-| `empiriolabs/deepseek-v4-flash` | Lightweight DeepSeek V4 MoE (284B total / 13B active parameters) | 1M tokens |
+| `empiriolabs/deepseek-v4-1-flash` | DeepSeek V4.1 Flash with image understanding and hybrid thinking | 1M tokens |
 | `empiriolabs/glm-5-1` | Zhipu AI long-context reasoning model with tool use | 202K tokens |
 | `empiriolabs/kimi-k2-6` | Moonshot Kimi K2.6 multimodal reasoning model | 256K tokens |
 | `empiriolabs/minimax-m3` | MiniMax M3 multimodal reasoning for coding and agents | 524K tokens |
@@ -93,9 +93,9 @@ model_list:
       model: empiriolabs/qwen3-7-plus
       api_key: os.environ/EMPIRIOLABS_API_KEY
 
-  - model_name: deepseek-v4-flash
+  - model_name: deepseek-v4-1-flash
     litellm_params:
-      model: empiriolabs/deepseek-v4-flash
+      model: empiriolabs/deepseek-v4-1-flash
       api_key: os.environ/EMPIRIOLABS_API_KEY
 ```
 
@@ -143,6 +143,26 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+## Image Generation
+
+EmpirioLabs image models work through the OpenAI-compatible route by passing the EmpirioLabs base URL and `extra_body={"sync": True}` (the EmpirioLabs image endpoint is async by default; `sync` returns the finished OpenAI-shaped response directly):
+
+```python showLineNumbers title="EmpirioLabs Image Generation"
+import os
+import litellm
+
+response = litellm.image_generation(
+    prompt="A glass cathedral at sunset, dramatic lighting",
+    model="openai/seedream-5-0-lite",
+    api_base="https://api.empiriolabs.ai/v1",
+    api_key=os.environ["EMPIRIOLABS_API_KEY"],
+    extra_body={"sync": True},
+)
+print(response.data[0].url)
+```
+
+Image model ids (for example `seedream-5-0-lite`, `wan-2-7-image`, `qwen-image-2-0`) are listed at [empiriolabs.ai/models](https://empiriolabs.ai/models).
 
 ## Additional Notes
 
