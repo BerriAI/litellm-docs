@@ -160,7 +160,7 @@ litellm_settings:
 ```shell
 LITELLM_OTEL_V2=true
 LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only    # model calls only
-OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only   # send prompts and responses
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only
 LANGFUSE_PUBLIC_KEY="pk-..."
 LANGFUSE_SECRET_KEY="sk-..."
 LANGFUSE_HOST="https://cloud.langfuse.com"   # or your self-hosted URL
