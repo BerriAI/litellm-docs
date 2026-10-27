@@ -431,9 +431,10 @@ const config = {
             label: 'Docs',
           },
           {
-            to: '/docs/providers',
-            label: 'AI Providers',
+            type: 'docSidebar',
+            sidebarId: 'providersSidebar',
             position: 'left',
+            label: 'AI Providers',
           },
           {
             type: 'docSidebar',
