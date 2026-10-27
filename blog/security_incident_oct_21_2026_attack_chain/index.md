@@ -20,7 +20,7 @@ We posted regular status updates during our investigation yesterday reflecting t
 
 ## Narrative
 
-On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained the master key to a deployment of the LiteLLM Agent Platform, an open source tool we use for orchestrating agents. We caught the mistake quickly, force-pushed over the commit, and marked the exposed keys for revocation. Because of human error, nobody then revoked the master key, so it was still valid on October 10, more than four months later, when the threat actor used it.
+On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained the master key to a deployment of the LiteLLM Agent Platform, an open source tool we use for orchestrating agents. About three hours later we deleted the file in a follow-up commit and marked the exposed keys for revocation, but the original commit stayed in the repository's public history until October 22. Because of human error, nobody then revoked the master key, so it was still valid on October 10, more than four months later, when the threat actor used it.
 
 ### GitHub Owner Access
 
