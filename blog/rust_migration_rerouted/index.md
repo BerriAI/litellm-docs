@@ -5,6 +5,7 @@ date: 2026-10-26T09:00:00
 authors:
   - nate
 description: "By December 1st, the proxy will handle Anthropic messages requests 20x faster"
+image: ./request-flow-cover.gif
 keywords: [litellm rust, rust migration, ai gateway]
 tags: [rust, rust-migration, ai-gateway, engineering]
 hide_table_of_contents: true
