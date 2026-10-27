@@ -171,7 +171,7 @@ For packing multiple workers into one container, alternative servers (Gunicorn, 
 
 :::warning Unreleased feature
 
-`LITELLM_JOB_ROLE` is not implemented on LiteLLM `main` or in a released version. The implementation is still under review in [LiteLLM PR #36618](https://github.com/BerriAI/litellm/pull/36618). The topology below is a preview; setting this variable on a current version has no effect. Do not use it until the release notes identify the first supporting version.
+`LITELLM_JOB_ROLE` is not implemented on LiteLLM `main` or in a released version. The implementation is still under review in [LiteLLM PR #47878](https://github.com/BerriAI/litellm/pull/47878). The topology below is a preview; setting this variable on a current version has no effect. Do not use it until the release notes identify the first supporting version.
 
 :::
 
