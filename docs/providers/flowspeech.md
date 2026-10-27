@@ -24,7 +24,9 @@ Set `FLOWSPEECH_API_KEY` in the server-side SDK process or proxy. Generation req
 Explicit `api_key` and `api_base` arguments override environment variables. A configured `litellm.api_key` also takes precedence over `FLOWSPEECH_API_KEY`
 
 :::warning Debug Logging
-LiteLLM's shared DEBUG request logger runs before provider validation. Malformed `headers` or `extra_headers` inputs can expose a value supplied as the whole container or as a header name, even when the provider rejects it before making a request. Do not place secrets in those positions, and keep DEBUG request logging disabled when processing untrusted inputs. This inherited logging limitation is not fixed by this adapter.
+This unmerged, unpublished candidate also fixes LiteLLM's shared request-line logger for DEBUG and verbose output. Credentials passed positionally, including the fourth `speech` argument `api_key` and its `aspeech` equivalent, are redacted using the function signature. Unidentified positional arguments are hidden. For `headers` and `extra_headers`, only an allowlist of standard, authentication and request-correlation header names is retained, with credential values redacted. A malformed container, unknown header name or non-string value hides the entire header mapping in this log, including a credential accidentally used as an otherwise valid header name. Logging does not change the request or its validation.
+
+These protections have not been merged or published, and this local change does not establish that any existing release is fixed. Code without this fix can expose positional keys or malformed headers before provider validation. Continue to use keyword `api_key=...` and disable request debugging for untrusted inputs. Input text, ordinary parameters and non-sensitive values under the allowed header names remain visible, so never put secrets in those fields. This request-line fix does not promise redaction in every callback, custom logger or application log.
 :::
 
 ## Python SDK
