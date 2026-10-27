@@ -58,13 +58,13 @@ export default function drawArtwork(canvas) {
       const active=lum>.055&&Math.pow(lum,.85)>threshold;
       const v=active?Math.round(148+lum*99):5;
       for(let yy=0;yy<cell&&y+yy<ph;yy++)for(let xx=0;xx<cell&&x+xx<pw;xx++){
-        const k=((y+yy)*pw+x+xx)*4;out.data[k]=v;out.data[k+1]=v;out.data[k+2]=active?Math.max(0,v-7):5;out.data[k+3]=255;
+        const k=((y+yy)*pw+x+xx)*4;out.data[k]=v;out.data[k+1]=v;out.data[k+2]=active?Math.max(0,v-7):5;out.data[k+3]=active?255:0;
       }
     }
     ink.getContext('2d').putImageData(out,0,0);
   }
   function draw(){
-    ctx.fillStyle='#050505';ctx.fillRect(0,0,width,height);ctx.imageSmoothingEnabled=false;
+    ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=false;
     ctx.drawImage(ink,0,0,width,height);
   }
   function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;width=r.width;height=r.height;const d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*d);canvas.height=Math.round(height*d);ctx.setTransform(d,0,0,d,0,0);buildPlate();draw();}

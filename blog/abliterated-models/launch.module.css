@@ -6,12 +6,12 @@
 }
 
 .root {
-  --page: #f3f2ed;
+  --page: #f3f3f3;
   --ink: #191a18;
   --text: #44463f;
   --muted: #65675f;
   --rule: #cfcec5;
-  --panel: #e9e8e1;
+  --panel: #ffffff;
   --accent: #2547ce;
   --art-opacity: .23;
   --art-filter: grayscale(1) invert(1);
@@ -28,12 +28,12 @@
 }
 
 :global(html[data-theme='dark']) .root {
-  --page: #080908;
+  --page: var(--ifm-background-color);
   --ink: #efefe7;
   --text: #bfc1b6;
   --muted: #a2a699;
   --rule: #34372f;
-  --panel: #141711;
+  --panel: var(--ifm-background-surface-color);
   --accent: #a1b2ff;
   --art-opacity: .34;
   --art-filter: none;
