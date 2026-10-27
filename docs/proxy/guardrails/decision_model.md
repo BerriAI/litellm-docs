@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Description | Ask a decision model such as TypeSafe Jev yes/no questions you write about every request or response, and block or log when a question's probability reaches its threshold. |
 | Provider | LiteLLM native. Any model that serves [`/v1/decisions`](../../decisions.md) can be the decision model: TypeSafe Jev, Perplexity, OpenAI, Microsoft Foundry, Databricks and the other providers listed there. |
 | Supported Actions | `block` (HTTP 400 naming the questions that fired), `log` (records the probability and lets the call through) |
-| Supported Modes | `pre_call`, `during_call`, `post_call` |
+| Supported Modes | `pre_call`, `during_call`, `post_call`, `logging_only` |
 | Endpoints | `/v1/chat/completions`, `/v1/messages`, `/v1/responses` |
 | Streaming Support | Yes. A flagged answer ends the stream with an error frame. |
 
@@ -26,6 +26,25 @@ On every guarded call the guardrail screens each message on its own, sending all
 A message longer than `max_input_chars` (default 24000) is split into chunks that overlap by 2000 characters (or a quarter of `max_input_chars`, whichever is smaller), and every chunk is screened, so nothing past the limit is dropped. Messages are screened one after another and screening stops at the first message a `block` question flags. The chunks of one long message run in parallel, capped by `max_concurrent_decision_calls` (default 8), a limit every request on the guardrail shares within each proxy worker.
 
 A question flags when any message or chunk scores at or above its threshold. If a `block` question flags, the call fails with HTTP 400 that lists only the names of the `block` questions that fired; the probabilities stay in the guardrail logs. A `log` question that flags lets the call through and is recorded with status `guardrail_flagged`.
+
+### Observe without blocking with `logging_only`
+
+In `logging_only` mode the guardrail observes and never enforces. It screens the request and the response after the call has finished, inside the proxy's success logging, which runs on the background logging worker and is never awaited by the client request. A slow decision model therefore adds no latency to the response. A `block` question that fires is recorded with status `guardrail_intervened` and the call still goes through, and a `log` question that fires is recorded as `guardrail_flagged`. Set `logging_only_scope` to `input` or `output` to screen only one direction; the [guardrails quick start](./quick_start#observe-only-one-direction-with-logging_only_scope) covers the scope and the `logging_only_continue_on_input_failure` flag. The worker's `LOGGING_WORKER_CONCURRENCY`, `LOGGING_WORKER_MAX_TIME_PER_COROUTINE` and `LOGGING_WORKER_MAX_QUEUE_SIZE` settings in [config settings](/docs/proxy/config_settings) bound how many scans run at once and how long one request's logging, decision calls included, may take.
+
+```yaml showLineNumbers title="config.yaml"
+guardrails:
+  - guardrail_name: secrets-observe
+    litellm_params:
+      guardrail: decision_model
+      mode: logging_only
+      decision_model: jev
+      default_on: true
+      checks:
+        - name: secret_detection
+          instructions: Does the text contain an API key, access token, password or other credential?
+          action: log
+          threshold: 0.7
+```
 
 ## Quick Start
 

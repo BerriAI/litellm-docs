@@ -83,7 +83,7 @@ For generic guardrail APIs you can also set **static headers** (`headers`: key/v
 - `pre_call` Run **before** LLM call, on **input**
 - `post_call` Run **after** LLM call, on **input & output**
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
-- `logging_only` Scan logged input and output without changing the client response. Support depends on the guardrail integration
+- `logging_only` Scan logged input and output after the call finishes, on the background logging worker, without changing the client response or adding latency to it. Support depends on the guardrail integration
 - A list of the supported values to run multiple modes, e.g. `mode: [pre_call, post_call]`
 
 ### Run on streaming or non-streaming requests only with `stream_scope`
@@ -164,12 +164,15 @@ A `stream_scope` value other than `streaming`, `non_streaming` or `both` (or a m
 
 ### Observe only one direction with `logging_only_scope`
 
+A `logging_only` scan runs after the call finishes, inside the proxy's success logging on the background logging worker, so the client request never waits for it and its latency does not reach the response. The worker's `LOGGING_WORKER_CONCURRENCY`, `LOGGING_WORKER_MAX_TIME_PER_COROUTINE` and `LOGGING_WORKER_MAX_QUEUE_SIZE` settings in [config settings](/docs/proxy/config_settings) bound how many scans run at once and how long one request's logging may take.
+
 A `logging_only` guardrail observes the request and the response by default. Set `logging_only_scope` under the guardrail's `litellm_params` to choose which direction the scan observes:
 
 - `input` — scan only the request
 - `output` — scan only the response
-- `both` — scan both directions (the default directions)
 - unset / `null` (default): scans both directions and keeps the pre-existing behavior, so existing deployments are unchanged
+
+`both` is not a value. Leaving the scope unset already scans both directions, and a `both` value is logged and ignored at startup and rejected with `422` on create and update.
 
 ```yaml
 guardrails:
@@ -198,31 +201,33 @@ guardrails:
       logging_only_scope: output
       api_base: os.environ/GUARDRAIL_API_BASE
       default_on: true
-
-  # explicitly scans both directions
-  - guardrail_name: "observe-both"
-    litellm_params:
-      guardrail: generic_guardrail_api
-      mode: logging_only
-      logging_only_scope: both
-      api_base: os.environ/GUARDRAIL_API_BASE
-      default_on: true
 ```
 
 The scan never blocks or changes the client call in any of these cases; each verdict, including a would-block verdict, is recorded in `guardrail_information` on the spend log and counted in the Guardrails Monitor.
 
 #### If the input scan fails
 
-In `logging_only` mode nothing is actually blocked, so a request the input scan flags still reaches the model and the conversation continues. The scope decides whether the response is still observed:
+In `logging_only` mode nothing is actually blocked, so a request the input scan flags still reaches the model and the conversation continues. `logging_only_continue_on_input_failure` decides whether the response is still observed:
 
-- **Scope unset** (default): if the input scan fails (the guardrail errors, or returns a verdict that would have blocked the call), the output scan is skipped and only the input verdict/error is logged. This is the pre-existing behavior, unchanged for existing deployments.
-- **Explicit `both`**: the input failure is logged as a warning and the response is **still scanned**, so you get both verdicts. Since nothing is blocked in `logging_only` mode, explicit `both` keeps watching the responses of flagged conversations.
+- **Unset or `false`** (default): if the input scan fails (the guardrail errors, or returns a verdict that would have blocked the call), the output scan is skipped and only the input verdict/error is logged. This is the pre-existing behavior, unchanged for existing deployments.
+- **`logging_only_continue_on_input_failure: true`**: the input failure is logged as a warning and the response is **still scanned**, so you get both verdicts. Since nothing is blocked in `logging_only` mode, this keeps watching the responses of flagged conversations.
 
-`input` and `output` only ever scan one direction, so this distinction applies to unset and `both`.
+```yaml
+guardrails:
+  - guardrail_name: "observe-both-verdicts"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_continue_on_input_failure: true
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+`input` and `output` only ever scan one direction, so the flag is ignored when `logging_only_scope` is set.
 
 #### Validation
 
-- A `logging_only_scope` value other than `input`, `output` or `both` is rejected with `422` on create and update.
+- A `logging_only_scope` value other than `input` or `output` is rejected with `422` on create and update.
 - A scope the guardrail cannot use (`logging_only_scope` set without `logging_only` in `mode`, or `input`/`output` on a guardrail that runs its own logging hook) returns `400` on create, and `422` on an update that sets such a scope. The rejected write is rolled back, so the stored guardrail keeps its previous configuration.
 - At startup, whether loaded from a config file or a stored database row, an invalid `logging_only_scope` is ignored with an error log and the guardrail keeps its configured mode.
 
@@ -890,7 +895,8 @@ guardrails:
       api_key: string          # Required: API key for the guardrail service
       api_base: string         # Optional: Base URL for the guardrail service
       default_on: boolean      # Optional: Default False. When set to True, will run on every request, does not need client to specify guardrail in request
-      logging_only_scope: string # Optional: "input" (request only), "output" (response only), or "both" (both directions). Unset scans both directions and keeps the pre-existing behavior
+      logging_only_scope: string # Optional: "input" (request only) or "output" (response only). Unset scans both directions and keeps the pre-existing behavior
+      logging_only_continue_on_input_failure: boolean # Optional: when true, a flagged or failing logging_only request scan is logged and the response is still scanned. Ignored when logging_only_scope is set
     guardrail_info:            # Optional[Dict]: Additional information about the guardrail
       
 ```
