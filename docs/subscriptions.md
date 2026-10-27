@@ -3,19 +3,28 @@ title: Claude, Codex, and Copilot subscriptions
 sidebar_label: Claude, Codex & Copilot subscriptions
 description: Use your ChatGPT, Claude, or GitHub Copilot subscription through LiteLLM. Choose your subscription and follow the setup guide.
 hide_table_of_contents: true
+hide_title: true
 ---
 
-import NavigationCards from '@site/src/components/NavigationCards';
+import SubscriptionCards from '@site/src/components/SubscriptionCards';
+import styles from '@site/src/components/SubscriptionCards/styles.module.css';
 
-# Use your Claude, Codex, or Copilot subscription
+<div className={styles.page}>
 
-Keep using your subscription in your coding client, with LiteLLM access controls and request logs. Each developer connects their own account and uses their plan's allowance.
+<p className={styles.eyebrow}>Claude, Codex &amp; Copilot</p>
 
-Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose your subscription:
+<h1 className={styles.heading} id="use-your-claude-codex-or-copilot-subscription">Use your subscription<br />with LiteLLM.</h1>
 
-<NavigationCards
-  variant="cards"
-  columns={3}
+<p className={styles.intro}>Keep your coding client and your plan's allowance.<br />Get LiteLLM access controls and request logs.</p>
+
+<p className={styles.prerequisite}>Before you start, you need a running <a href="/docs/proxy/docker_quick_start">LiteLLM proxy</a>.</p>
+
+<div className={styles.choicesHeading}>
+  <h2>Choose your subscription</h2>
+  <p>Each developer connects their own account</p>
+</div>
+
+<SubscriptionCards
   items={[
     {
       title: 'ChatGPT / Codex',
@@ -23,9 +32,10 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose
       listDescription: [
         'ChatGPT account with access to your chosen model',
         'Codex CLI, Codex app, or Pi',
-        'LiteLLM v1.108.0+',
       ],
-      icon: <img src="/img/integrations/openai.svg" alt="" />,
+      version: 'LiteLLM v1.108.0+',
+      ctaLabel: 'Set up Codex',
+      icon: '/img/integrations/openai.svg',
       to: '/docs/tutorials/openai_codex_byok',
     },
     {
@@ -34,9 +44,10 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose
       listDescription: [
         'Claude Pro, Max, Team, or Enterprise',
         'Claude Code installed',
-        'LiteLLM v1.81.14+',
       ],
-      icon: <img src="/img/integrations/anthropic.svg" alt="" />,
+      version: 'LiteLLM v1.81.14+',
+      ctaLabel: 'Set up Claude',
+      icon: '/img/integrations/anthropic.svg',
       to: '/docs/tutorials/claude_code_max_subscription',
     },
     {
@@ -46,10 +57,13 @@ Start with a running [LiteLLM proxy](./proxy/docker_quick_start.md), then choose
         'GitHub account with Copilot access',
         'LiteLLM dashboard access',
         'An app that connects to LiteLLM',
-        'LiteLLM v1.108.0+',
       ],
-      icon: <img src="/img/integrations/github-copilot.svg" alt="" />,
+      version: 'LiteLLM v1.108.0+',
+      ctaLabel: 'Set up Copilot',
+      icon: '/img/integrations/github-copilot.svg',
       to: '/docs/providers/github_copilot',
     },
   ]}
 />
+
+</div>
