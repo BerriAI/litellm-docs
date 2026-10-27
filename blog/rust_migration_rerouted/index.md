@@ -1,6 +1,6 @@
 ---
 slug: rust-migration-rerouted
-title: "The Rust migration has rerouted"
+title: "Rust Migration: /v1/messages end-to-end in Rust by Dec 1"
 date: 2026-10-26T09:00:00
 authors:
   - nate
@@ -33,7 +33,7 @@ In some cases, the poorly defined boundary of what needs to be _provided_ to a c
 
 We want to give our users an incredible experience as quickly as possible. That means that we will migrate the hot path of as large a portion of our requests, and then gradually expand to include more configurations and requests in this fast track. For now, the focus is the path for requests to `/v1/messages` which are routed to a provider that natively supports `/v1/messages`.
 
-![A dense Sankey shows endpoint, routing strategy, and provider as choose-one rows. Callbacks form one choose-many group with checkboxes for S3 logs, Prometheus, spend logging, Langfuse, and Datadog. Requests pass through the whole group and can enable both spend logging and S3. Blue ribbons mark requests that meet every fast-path condition; gray ribbons mark other requests. Traffic widths are illustrative and have no numeric labels.](./rust-request-mix.svg)
+![One request stream splits into blue fast-path candidates and gray Python requests at the top. Horizontally aligned layers show endpoint, routing strategy, callbacks, and providers. Blue means eligible so far; further requests branch into the left side of the Python lane between each layer, including endpoint and routing. The remaining blue requests reach Rust. Endpoints, routing strategies, and providers each allow one choice. Callbacks allow any combination of supported options, including both S3 logs and spend logging. Bedrock and Vertex AI eligibility applies to Anthropic models. Traffic widths are illustrative and have no numeric labels.](./rust-request-mix.svg)
 
 Once we have this written, you can expect `/v1/messages` requests with ~1.5 milliseconds of latency. We have updated, more representative benchmarks with all of these common features which will be made available soon.
 
