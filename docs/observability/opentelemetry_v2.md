@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 OpenTelemetry v2 (OTel v2) is LiteLLM Proxy's next-generation tracing. It gives you **one clean trace per request** covering the incoming HTTP call, authentication, guardrails, the LLM call itself, and the internal database/cache work, all nested in a single tree.
 
-It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz).
+It follows standard [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/), so the traces it produces are readable in any OTel backend (Grafana Tempo, Jaeger, Honeycomb, Datadog, …) and come with ready-made presets for popular LLM observability tools (Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz, Mixpanel).
 
 :::info[Opt-in feature]
 
@@ -32,7 +32,7 @@ Highlights:
 - **One trace, end to end** — the HTTP request, auth, guardrails, the LLM call, and DB writes all live in the same trace, correctly nested.
 - **Rich GenAI attributes** — every LLM-call span carries `gen_ai.*` attributes: model, provider, token usage, cost, finish reasons, request parameters, and more.
 - **Standards-based** — built on the official OpenTelemetry GenAI semantic conventions, so it works with any OTel-compatible backend.
-- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, or SigNoz in the format each tool expects.
+- **Vendor presets** — one line to ship traces to Arize, Phoenix, Langfuse, Weave, Langtrace, Levo, AgentOps, SigNoz, or Mixpanel in the format each tool expects.
 - **Safe by default** — prompts and responses are **not** captured unless you explicitly opt in. Noisy routes (health checks, metrics scrapes, UI assets) are excluded automatically.
 - **Distributed tracing** — if your client sends a `traceparent` header, LiteLLM's spans nest inside your existing trace.
 
@@ -266,6 +266,21 @@ SIGNOZ_INGESTION_KEY="your-ingestion-key"                              # omit fo
 
 </TabItem>
 
+<TabItem value="mixpanel" label="Mixpanel">
+
+```yaml title="config.yaml"
+litellm_settings:
+  callbacks: ["mixpanel"]
+```
+
+```shell
+LITELLM_OTEL_V2=true
+MIXPANEL_PROJECT_TOKEN="your-mixpanel-project-token"
+MIXPANEL_REGION="us"   # optional: "us" (default), "eu", or "in"
+```
+
+</TabItem>
+
 </Tabs>
 
 :::tip[Send to several backends at once]
@@ -295,6 +310,7 @@ Every preset turns into one exporter on a single shared tracer. The table lists,
 | Levo | `levo` | `LEVOAI_API_KEY`, `LEVOAI_ORG_ID`, `LEVOAI_WORKSPACE_ID`, `LEVOAI_COLLECTOR_URL` | — | Levo collector | canonical `gen_ai.*` only | No |
 | AgentOps | `agentops` | `AGENTOPS_API_KEY` | `AGENTOPS_SERVICE_NAME` (default `agentops`), `AGENTOPS_ENVIRONMENT` (no default) | AgentOps (`https://otlp.agentops.ai/v1/traces`) | canonical `gen_ai.*` only | No |
 | SigNoz | `signoz` | `SIGNOZ_INGESTION_ENDPOINT` (OTLP base URL; `/v1/traces` is appended) | `SIGNOZ_INGESTION_KEY` (sent as `signoz-ingestion-key`; omit for self-hosted) | SigNoz Cloud or self-hosted SigNoz, OTLP HTTP | canonical `gen_ai.*` only | Yes |
+| Mixpanel | `mixpanel` | `MIXPANEL_PROJECT_TOKEN` | `MIXPANEL_REGION` (`us` default, `eu`, or `in`), `MIXPANEL_ENDPOINT` | Mixpanel OTLP traces (`https://ingestion-<region>.mixpanel.com/v1/ai/otel/traces`) | canonical `gen_ai.*` + `user.id` | Yes |
 
 Notes:
 
@@ -504,6 +520,27 @@ No vendor mapper is added. Spans carry only the canonical keys from [Span attrib
 - `SIGNOZ_INGESTION_ENDPOINT` is the OTLP base URL for both SigNoz Cloud (`https://ingest.<region>.signoz.cloud:443`) and a self-hosted collector (`http://<host>:4318`). The preset appends `/v1/traces`; a value that already ends in `/v1/traces` is used as is. An unset or empty value fails at startup with an error naming the variable, and nothing is exported.
 - `SIGNOZ_INGESTION_KEY` is optional. When set it is sent as the `signoz-ingestion-key` header; when unset no auth header is sent, which is the self-hosted case.
 - Per-team and per-key routing is supported, including a per-tenant endpoint. See [SigNoz](./signoz#per-team-and-per-key-routing).
+
+</TabItem>
+
+<TabItem value="mixpanel-shot" label="Mixpanel">
+
+#### What Mixpanel renders
+
+Open Mixpanel; spans arrive at Mixpanel's regional OTLP traces endpoint (`/v1/ai/otel/traces`) with standard `gen_ai.*` attributes and `user.id` mapped to Mixpanel's `distinct_id`.
+
+#### Attributes added by the `mixpanel` mapper
+
+| Attribute | Purpose |
+|---|---|
+| `user.id` | End-user identifier mapped to Mixpanel `distinct_id` on every span |
+
+#### Setup notes
+
+- Auth is HTTP Basic (`Authorization: Basic <base64(project_token:)>`), built automatically from `MIXPANEL_PROJECT_TOKEN`.
+- Mixpanel requires a non-empty `user.id` attribute on every span and drops spans without one. The `mixpanel` preset promotes `user.id` into OpenTelemetry Baggage and stamps it across the request span tree from request `user`, `metadata.user.id`, `metadata.user_id`, `metadata.trace_user_id`, `x-litellm-customer-id`, or inbound OTel Baggage (`user.id`).
+- Set `MIXPANEL_REGION` to `us` (default), `eu`, or `in` to select `https://ingestion-<region>.mixpanel.com/v1/ai/otel/traces`.
+- Per-team and per-key routing is supported via `mixpanel_project_token` and `mixpanel_region`. See [Mixpanel](./mixpanel).
 
 </TabItem>
 
@@ -837,6 +874,7 @@ This is the same key/team callback mechanism described in [Team/Key based loggin
 | Weave (W&B) | `weave_otel` | `wandb_api_key`, `weave_project_id` | The W&B account and Weave project |
 | New Relic | `newrelic` | `newrelic_api_key`, `newrelic_region` (`us` or `eu`, default `us`) | The New Relic account and its data center |
 | SigNoz | `signoz` | `signoz_ingestion_key`, `signoz_ingestion_endpoint` | The SigNoz account, and optionally the SigNoz Cloud region or self-hosted collector it is sent to |
+| Mixpanel | `mixpanel` | `mixpanel_project_token`, `mixpanel_region` (`us`, `eu`, or `in`, default `us`) | The Mixpanel project and regional ingestion endpoint |
 
 Every other preset (`arize_phoenix`, `langtrace`, `levo`, `agentops`) and the plain `otel` OTLP exporter has no per-request credentials, so those always export with the proxy-wide configuration. For Phoenix, split tenants by project instead of by backend, with [`phoenix_project_name` on the team or key](./phoenix_integration#route-traces-to-a-phoenix-project-per-team-or-key). To keep one backend but label a tenant's spans with its own `service.name`, set `otel_service_name` in the key's or team's `metadata` instead.
 
