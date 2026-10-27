@@ -97,7 +97,9 @@ This provider uses IteraCompute's Chat Completions endpoint. LiteLLM translates 
 
 ## Model capabilities and cost tracking
 
-This integration does not add static model prices. Configure the model's current capabilities and per-token input and output rates on your deployment to enable validation and spend tracking. Public retail rates are available in the [machine-readable catalog](https://api.iteracompute.com/openmodels/v1/models), in USD per token. Verify account-specific limits and current pricing before deploying.
+This integration does not add static model prices. LiteLLM can record the cost reported by IteraCompute in the `x-litellm-response-cost` response header for non-streaming requests and `usage.cost` in the final usage event for streaming requests. These values are in USD and reflect the accepted account price for that request. Static model prices are not required for this reported-cost path.
+
+Configure per-token input and output costs only when you intentionally want LiteLLM to use local rates; explicit custom pricing takes precedence over the provider-reported cost. LiteLLM's built-in price-map refresh does not discover IteraCompute model prices automatically. Check the [live model list](https://api.iteracompute.com/v1/models) and [model catalog](https://iteracompute.com/models/) for current models, capabilities and public prices. Account-specific prices can differ.
 
 For a model that supports tool calling, enable that capability in `model_info`.
 
@@ -107,10 +109,8 @@ model_list:
     litellm_params:
       model: iteracompute/qwen/qwen3.8-27b
       api_key: os.environ/ITERACOMPUTE_API_KEY
-      input_cost_per_token: 0
-      output_cost_per_token: 0
     model_info:
       supports_function_calling: true
 ```
 
-The example uses Qwen3.8-27B's free retail rate. Other models require their own rates. Context limits can depend on the account tier.
+This example configures capability metadata without overriding cost tracking. Context limits can depend on the account tier.
