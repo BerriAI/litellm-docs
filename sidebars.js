@@ -390,6 +390,7 @@ const sidebars = {
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
+        { type: "doc", id: "learn/gateway_quickstart", label: "pip Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
         {
@@ -1439,6 +1440,84 @@ const sidebars = {
     { type: "html", value: "More", className: "sidebar-caption", defaultStyle: true },
     {
       type: "category",
+      label: "Cookbook",
+      link: { type: "doc", id: "tutorials/index" },
+      items: [
+        {
+          type: "category",
+          label: "Connect apps and providers",
+          link: { type: "generated-index", title: "Connect apps and providers", description: "Install the SDK, set provider keys, and send requests to models from different providers.", slug: "/learn/call-any-model" },
+          items: [
+            "tutorials/installation",
+            "tutorials/first_playground",
+            "tutorials/text_completion",
+            "tutorials/mock_completion",
+            "tutorials/provider_specific_params",
+            "tutorials/gradio_integration",
+            "tutorials/azure_openai",
+            "tutorials/TogetherAI_liteLLM",
+            "tutorials/huggingface_tutorial",
+            "tutorials/huggingface_codellama",
+            "tutorials/finetuned_chat_gpt",
+            "tutorials/oobabooga",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control access",
+          link: { type: "generated-index", title: "Control access", description: "Give access to teams and users, and connect your identity provider.", slug: "/learn/run-the-gateway" },
+          items: [
+            "tutorials/default_team_self_serve",
+            "tutorials/msft_sso",
+            "tutorials/tag_management",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control cost and capacity",
+          link: { type: "generated-index", title: "Control cost and capacity", description: "Add fallbacks, use prompt caching, and send each request to the most suitable model.", slug: "/learn/cost-and-reliability" },
+          items: [
+            "tutorials/model_fallbacks",
+            "tutorials/fallbacks",
+            "tutorials/prompt_caching",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control content",
+          link: { type: "generated-index", title: "Control content", description: "Add guardrails that examine requests and mask personal data before the model receives it.", slug: "/learn/add-safety" },
+          items: [
+            "tutorials/litellm_proxy_aporia",
+            "tutorials/presidio_pii_masking",
+          ],
+        },
+        {
+          type: "category",
+          label: "Connect tools and agents",
+          link: { type: "generated-index", title: "Connect tools and agents", description: "Use LiteLLM with agent frameworks, coding tools, files, and vector stores.", slug: "/learn/agents-and-tools" },
+          items: [
+            "tutorials/file_search_responses_api",
+            "tutorials/mongodb_vector_search",
+            "tutorials/anthropic_file_usage",
+            "tutorials/gemini_realtime_with_audio",
+          ],
+        },
+        {
+          type: "category",
+          label: "See what happened",
+          link: { type: "generated-index", title: "See what happened", description: "Send logs to observability tools and compare models on your own prompts.", slug: "/learn/observe-and-evaluate" },
+          items: [
+            "tutorials/elasticsearch_logging",
+            "tutorials/compare_llms",
+            "tutorials/litellm_Test_Multiple_Providers",
+            "tutorials/eval_suites",
+            "tutorials/lm_evaluation_harness",
+          ],
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Troubleshooting",
       items: [
         "troubleshoot/ui_issues",
@@ -1580,88 +1659,6 @@ const enterpriseSidebar = {
 };
 
 
-const learnSidebar = {
-  learnSidebar: [
-    { type: "doc", id: "learn/index", label: "Overview" },
-    { type: "html", value: "Quickstarts", className: "sidebar-caption", defaultStyle: true },
-    "learn/gateway_quickstart",
-    "learn/python_sdk_quickstart",
-    "learn/enterprise_quickstart_learn",
-    { type: "html", value: "Cookbook", className: "sidebar-caption", defaultStyle: true },
-    {
-      type: "category",
-      label: "Connect apps and providers",
-      link: { type: "generated-index", title: "Connect apps and providers", description: "Install the SDK, set provider keys, and send requests to models from different providers.", slug: "/learn/call-any-model" },
-      items: [
-        "tutorials/installation",
-        "tutorials/first_playground",
-        "tutorials/text_completion",
-        "tutorials/mock_completion",
-        "tutorials/provider_specific_params",
-        "tutorials/gradio_integration",
-        "tutorials/azure_openai",
-        "tutorials/TogetherAI_liteLLM",
-        "tutorials/huggingface_tutorial",
-        "tutorials/huggingface_codellama",
-        "tutorials/finetuned_chat_gpt",
-        "tutorials/oobabooga",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control access",
-      link: { type: "generated-index", title: "Control access", description: "Give access to teams and users, and connect your identity provider.", slug: "/learn/run-the-gateway" },
-      items: [
-        "tutorials/default_team_self_serve",
-        "tutorials/msft_sso",
-        "tutorials/tag_management",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control cost and capacity",
-      link: { type: "generated-index", title: "Control cost and capacity", description: "Add fallbacks, use prompt caching, and send each request to the most suitable model.", slug: "/learn/cost-and-reliability" },
-      items: [
-        "tutorials/model_fallbacks",
-        "tutorials/fallbacks",
-        "tutorials/prompt_caching",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control content",
-      link: { type: "generated-index", title: "Control content", description: "Add guardrails that examine requests and mask personal data before the model receives it.", slug: "/learn/add-safety" },
-      items: [
-        "tutorials/litellm_proxy_aporia",
-        "tutorials/presidio_pii_masking",
-      ],
-    },
-    {
-      type: "category",
-      label: "Connect tools and agents",
-      link: { type: "generated-index", title: "Connect tools and agents", description: "Use LiteLLM with agent frameworks, coding tools, files, and vector stores.", slug: "/learn/agents-and-tools" },
-      items: [
-        "tutorials/file_search_responses_api",
-        "tutorials/mongodb_vector_search",
-        "tutorials/anthropic_file_usage",
-        "tutorials/gemini_realtime_with_audio",
-      ],
-    },
-    {
-      type: "category",
-      label: "See what happened",
-      link: { type: "generated-index", title: "See what happened", description: "Send logs to observability tools and compare models on your own prompts.", slug: "/learn/observe-and-evaluate" },
-      items: [
-        "tutorials/elasticsearch_logging",
-        "tutorials/compare_llms",
-        "tutorials/litellm_Test_Multiple_Providers",
-        "tutorials/eval_suites",
-        "tutorials/lm_evaluation_harness",
-      ],
-    },
-    "tutorials/index",
-  ],
-};
 
 
 // ════════════════════════════════════════════════════════════
@@ -1900,4 +1897,4 @@ const providersSidebar = {
 };
 
 
-module.exports = { ...sidebars, ...enterpriseSidebar, ...learnSidebar, ...providersSidebar };
+module.exports = { ...sidebars, ...enterpriseSidebar, ...providersSidebar };

@@ -38,7 +38,6 @@ const START_HERE = [
 // The main sidebar is split by its top-level categories; the others are small
 // enough to list under one heading each.
 const SIDEBAR_TITLES = {
-  learnSidebar: 'Learn: guides and tutorials',
   integrationsSidebar: 'Integrations',
   autoRouterSidebar: 'Auto Router',
   providersSidebar: 'Providers',
@@ -716,7 +715,7 @@ module.exports = function llmsPlugin(context) {
         }
         for (const id of ids) listed.add(id);
       };
-      const order = ['tutorialSidebar', 'learnSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
+      const order = ['tutorialSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
       const sidebarNames = [...order.filter((n) => sidebars[n]), ...Object.keys(sidebars).filter((n) => !order.includes(n))];
       for (const name of sidebarNames) {
         if (SIDEBAR_TITLES[name]) {
