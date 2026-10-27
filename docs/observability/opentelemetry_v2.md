@@ -559,7 +559,7 @@ Request-side keys:
 
 | Attribute | When set |
 |---|---|
-| `gen_ai.operation.name` | always (`chat`, `text_completion`, `embeddings`) |
+| `gen_ai.operation.name` | always (`chat`, `text_completion`, `embeddings`); a pass-through call uses the target's [`x-litellm-operation-name`](../proxy/pass_through_cost_tracking#naming-the-operation), or `litellm.passthrough` when LiteLLM cannot parse the response |
 | `gen_ai.provider.name` | always |
 | `gen_ai.request.model` | always (the user-facing model group name) |
 | `gen_ai.request.temperature`, `top_p`, `top_k`, `max_tokens` | when set on the request |

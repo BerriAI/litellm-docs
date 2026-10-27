@@ -558,7 +558,7 @@ Attributes set on the LLM-call span. Names follow [OTEL GenAI semconv](https://o
 
 | Attribute | Default mode | Semconv mode |
 |---|---|---|
-| `gen_ai.operation.name` | the litellm `call_type` (e.g. `acompletion`) | the semconv operation (`chat`, `embeddings`, `text_completion`) |
+| `gen_ai.operation.name` | the litellm `call_type` (e.g. `acompletion`) | the semconv operation (`chat`, `embeddings`, `text_completion`); a pass-through call uses the target's [`x-litellm-operation-name`](../proxy/pass_through_cost_tracking#naming-the-operation), or `litellm.passthrough` when LiteLLM cannot parse the response |
 | `gen_ai.system` | provider name (e.g. `openai`) | unchanged |
 | `gen_ai.provider.name` | not set | provider name (the renamed Required attribute per spec) |
 | `gen_ai.framework` | `litellm` | `litellm` |
