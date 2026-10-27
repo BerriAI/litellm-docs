@@ -74,7 +74,7 @@ export default function Launch() {
         <p>These models give you another option for prompts that a standard chat model refuses, including research into model behavior. The provider hosts the modified weights; LiteLLM connects your application to its API.</p>
       </Section>
 
-      <Section id="providers" number="02" label="PROVIDERS" title="Two providers, one gateway">
+      <Section id="providers" number="02" label="PROVIDERS" title="Supported providers">
         <Prices name="Refuseless" href="/docs/providers/refuseless" rows={[
           ['glm-5.3-abliterated', '$1.25', '$0.25', '$2.25', 'GLM 5.3'],
           ['glm-5.3-flash-abliterated', '$0.25', '$0.15', '$0.80', 'GLM 5.3 Flash'],
