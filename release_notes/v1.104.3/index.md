@@ -1,5 +1,6 @@
 ---
-title: "v1.104.3 - Decisions Providers, SDK and Guardrail"
+title: "LiteLLM v1.104.3 adds hosted vLLM and Microsoft-Decision-1 to Decisions"
+description: "Adds hosted vLLM and Microsoft-Decision-1 as Decisions providers and the litellm.systemone() SDK function. Rejects safety_identifier on non-OpenAI providers."
 slug: "v1-104-3"
 date: 2026-10-11T10:37:40
 authors:

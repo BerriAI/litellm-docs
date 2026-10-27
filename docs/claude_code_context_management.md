@@ -302,11 +302,21 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 | `trigger.value` | No | `100000` | Threshold; edits fire when current value **exceeds** this |
 | `keep.type` | No | `"tool_uses"` | Must be `"tool_uses"` |
 | `keep.value` | No | `3` | Number of most-recent tool results to preserve |
-| `clear_at_least` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
-| `exclude_tools` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
-| `clear_tool_inputs` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
+| `clear_at_least.type` | No | - | Must be `"input_tokens"` |
+| `clear_at_least.value` | No | - | Clear old tool uses in batches that each free at least this many tokens |
+| `exclude_tools` | No | - | Tool names whose uses are never cleared |
+| `clear_tool_inputs` | No | `false` | `true`, or a list of tool names, to also empty the `input` of each cleared `tool_use` |
 
 > **Hard floor:** regardless of `keep`, LiteLLM's polyfill never clears the most recently completed `tool_result` - the one the model is about to reply to.
+
+`clear_at_least`, `exclude_tools` and `clear_tool_inputs` are available from v1.108.0. Earlier versions accept them and ignore them.
+
+The polyfill handles these fields the way Anthropic's API does:
+
+- **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
+- **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
+- **Small results.** A tool use whose result is 1 to 46 bytes of text is skipped, unless `clear_tool_inputs` covers that tool.
+- **Malformed values.** A malformed field, such as `exclude_tools: "memory"`, gets an HTTP 400 that names the edit and the field. With `drop_params: true`, LiteLLM drops only that field instead and still applies the edit and the other edits.
 
 ## Responses
 
@@ -426,6 +436,6 @@ litellm.completion(..., additional_drop_params=["context_management"])
 
 - **`compact_20260112` requires `context_management_summary_model`** to be set in `general_settings`. Without it, the edit is acknowledged but no compaction is performed.
 - **Token counting** for polyfill threshold checks uses `litellm.token_counter` (tiktoken `cl100k_base` fallback for unknown models).
-- **`clear_tool_uses_20250919`** preserves the message array structure: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`.
+- **`clear_tool_uses_20250919`** preserves the message array structure: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`, and the `tool_use.input` of those uses is emptied when `clear_tool_inputs` covers the tool.
 - **`compact_20260112`** collapses the entire prior history to a single system-prefix summary + the last user question. The `compaction` block in the response gives the Claude Code client the summary text to carry forward into the next turn.
 - The 50,000-token minimum for `compact_20260112` trigger is enforced at the proxy; requests with a lower value are rejected with HTTP 400.

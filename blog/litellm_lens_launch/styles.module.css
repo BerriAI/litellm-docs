@@ -5,9 +5,9 @@
   --blue: #0017b7;
   --p: 0;
   position: relative;
-  width: 100vw;
+  container: lens / inline-size;
+  width: 100%;
   height: 260vh;
-  margin-left: calc(50% - 50vw);
   color: var(--ink);
 }
 
@@ -46,7 +46,7 @@
   right: 0;
   z-index: 2;
   margin: 0 !important;
-  font-size: clamp(44px, 6vw, 96px) !important;
+  font-size: clamp(44px, 6cqw, 96px) !important;
   font-weight: 500 !important;
   line-height: 1 !important;
   letter-spacing: -0.035em;
@@ -57,8 +57,8 @@
 .stage {
   position: absolute;
   top: 26%;
-  left: 3vw;
-  right: 3vw;
+  left: 3cqw;
+  right: 3cqw;
   bottom: 3%;
 }
 
@@ -130,12 +130,12 @@
 
 .tagline {
   position: absolute;
-  left: calc(3vw + (100vw - 6vw) * 0.665);
+  left: calc(3cqw + (100cqw - 6cqw) * 0.665);
   top: 63%;
   z-index: 2;
-  width: min(40vw, 560px);
+  width: min(40cqw, 560px);
   margin: 0 !important;
-  font-size: clamp(22px, 2.6vw, 40px);
+  font-size: clamp(22px, 2.6cqw, 40px);
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -353,3 +353,11 @@
     display: none;
   }
 }
+
+.scroller:not([data-animated]) { height: auto; }
+.scroller:not([data-animated]) .hero { position: relative; height: auto; min-height: 0; padding: 32px 16px; }
+.scroller:not([data-animated]) .date,
+.scroller:not([data-animated]) .headline,
+.scroller:not([data-animated]) .tagline { position: static; width: 100%; transform: none; translate: none; opacity: 1; }
+.scroller:not([data-animated]) .headline { font-size: clamp(28px, 8cqw, 80px) !important; margin: 20px 0 !important; }
+.scroller:not([data-animated]) .stage { display: none; }

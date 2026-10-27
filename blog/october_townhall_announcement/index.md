@@ -5,14 +5,14 @@ date: 2026-10-10T12:00:00
 authors:
   - krrish
   - ishaan-alt
-description: "Join the LiteLLM October townhall on Thursday, 22 October at 7:30 AM PT to learn about LiteLLM's product updates and roadmap."
+description: "Join the LiteLLM October townhall on Friday, 23 October at 7:30 AM PT to learn about LiteLLM's product updates and roadmap."
 tags: [announcement, townhall]
 hide_table_of_contents: true
 ---
 
 import Image from '@theme/IdealImage';
 
-We are hosting our October townhall on **Thursday, 22 October at 7:30 AM PT**.
+We are hosting our October townhall on **Friday, 23 October at 7:30 AM PT**.
 
 <Image
   img={require('../../img/october_townhall_banner.png')}
@@ -23,19 +23,10 @@ We are hosting our October townhall on **Thursday, 22 October at 7:30 AM PT**.
 
 ## Agenda
 
-- **Security.** This month's fixes and the hardening work behind them.
-- **Stability**
-  - **Bug fixes.** The month's count, and where they landed.
-  - **Rust path.** The messages and responses APIs.
-  - **Performance.** Where the gateway got faster.
-- **Product**
-  - **Lens.** Trace agent runs, investigate recurring failures.
-  - **Moyai.** Open source coding agents in your cloud.
-  - **LiteLLM Relay.** Point company Macs at the gateway.
-  - **Claude Code and Codex.** SSO and per-user spend through the gateway.
-  - **Decisions API.** Typed questions on `/v1/decisions`.
-  - **Auto Router.** What changed since September.
-- **Open Q&A.** Bring your questions for the team.
+- Security
+- Stability & Performance
+- Recent product releases & what we're planning to ship
+- Q&A
 
 ## Stability
 

@@ -72,7 +72,7 @@ Add `forward_llm_provider_auth_headers: true` to your `general_settings`:
 ```yaml
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Enable BYOK
+  forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
 ### Which Headers Are Forwarded
@@ -218,7 +218,7 @@ general_settings:
 # BYOK enabled - auth headers ARE forwarded
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Opt-in required
+  forward_llm_provider_auth_headers: true  # Opt-in required
 ```
 
 ## Enable for a Model Group
@@ -285,7 +285,7 @@ When `add_user_information_to_llm_headers` is enabled, LiteLLM adds:
 
 ## Security Considerations
 
-⚠️ **Important Security Notes:**
+**Important Security Notes:**
 
 1. **Sensitive Data**: Only enable header forwarding for trusted model groups, as headers may contain sensitive information
 2. **API Keys**: Never include API keys or secrets in forwarded headers
@@ -389,6 +389,10 @@ To test if headers are being forwarded:
 1. **Check Model Name**: Ensure the model name in your request matches the configuration
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### Provider Errors
 

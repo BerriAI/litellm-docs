@@ -2,18 +2,29 @@
 
 Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](https://developers.openai.com/codex/pricing) for the plans, from Plus and Pro to Business and Enterprise) through LiteLLM with OAuth device flow authentication.
 
+:::tip
+
+LiteLLM can also use Claude and GitHub Copilot subscriptions. To compare the three subscriptions, refer to [Claude, Codex, and Copilot subscriptions](/docs/subscriptions).
+
+:::
+
 | Property | Details |
 |-------|-------|
-| Description | ChatGPT subscription access (Codex + GPT-5.3/5.4 family) via ChatGPT backend API |
+| Description | ChatGPT subscription access via the ChatGPT backend API |
 | Provider Route on LiteLLM | `chatgpt/` |
 | Supported Endpoints | `/responses`, `/chat/completions` (bridged to Responses for supported models) |
 | API Reference | https://chatgpt.com |
 
-ChatGPT subscription access is native to the Responses API. Chat Completions requests are bridged to Responses for supported models (for example `chatgpt/gpt-5.4`).
+ChatGPT subscription access is native to the Responses API. Chat Completions requests are bridged to Responses for supported models (for example `chatgpt/{{chatgpt}}`).
+
+Use a model that your ChatGPT plan and workspace can call. [OpenAI's Codex models page](https://learn.chatgpt.com/docs/models) lists the current and retired models. That list differs from the models the OpenAI API serves.
+
+The examples use `{{chatgpt}}` and `{{chatgpt_small}}`. Check the models page for which plans can call them. As of October 2026, OpenAI rolls out GPT-6.1 Sol (`gpt-6.1-sol`) to Plus, Pro, Business, Enterprise, and Edu plans, and on Enterprise and Edu an admin has to enable GPT-6.1 Sol and GPT-6 Luna (`gpt-6-luna`) first. Free and Go plans do not get GPT-6.1 Sol at launch, and OpenAI tells them to choose GPT-6 Luna in the ChatGPT desktop app when available, so LiteLLM may not be able to call either model on those plans. A model the backend does not serve to your account, such as a retired one, fails with `The '<model>' model is not supported when using Codex with a ChatGPT account.`
 
 Notes:
 - The ChatGPT subscription backend rejects token limit fields (`max_tokens`, `max_output_tokens`, `max_completion_tokens`) and `metadata`. LiteLLM strips these fields for this provider.
 - `/v1/chat/completions` honors `stream`. When `stream` is false (default), LiteLLM aggregates the Responses stream into a single JSON response.
+- Send Responses `input` as a list of messages, as the examples below do. On LiteLLM 1.106.0, a plain string `input` fails with `{"detail":"Input must be a list"}` from both the SDK and the proxy.
 
 ## Authentication
 
@@ -23,14 +34,20 @@ Device code login has to be allowed for the account first: in ChatGPT's security
 
 ## Usage - LiteLLM Python SDK
 
+On LiteLLM 1.106.0, the `chatgpt/` provider needs the `mcp` package, which a plain `pip install litellm` does not include. Install LiteLLM with the `mcp` extra:
+
+```bash showLineNumbers title="Install"
+pip install 'litellm[mcp]'
+```
+
 ### Responses (recommended for Codex models)
 
 ```python showLineNumbers title="ChatGPT Responses"
 import litellm
 
 response = litellm.responses(
-    model="chatgpt/gpt-5.3-codex",
-    input="Write a Python hello world"
+    model="chatgpt/{{chatgpt}}",
+    input=[{"role": "user", "content": "Write a Python hello world"}]
 )
 
 print(response)
@@ -42,7 +59,7 @@ print(response)
 import litellm
 
 response = litellm.completion(
-    model="chatgpt/gpt-5.4",
+    model="chatgpt/{{chatgpt}}",
     messages=[{"role": "user", "content": "Write a Python hello world"}]
 )
 
@@ -50,6 +67,12 @@ print(response)
 ```
 
 ## Usage - LiteLLM Proxy
+
+Install LiteLLM with the `proxy` extra, which also includes the `mcp` package:
+
+```bash showLineNumbers title="Install the proxy"
+pip install 'litellm[proxy]'
+```
 
 ### Sign in before starting the proxy
 
@@ -117,40 +140,31 @@ spec:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: chatgpt/gpt-5.4
+  - model_name: chatgpt/{{chatgpt}}
     model_info:
       mode: responses
     litellm_params:
-      model: chatgpt/gpt-5.4
-  - model_name: chatgpt/gpt-5.4-pro
+      model: chatgpt/{{chatgpt}}
+  - model_name: chatgpt/{{chatgpt_small}}
     model_info:
       mode: responses
     litellm_params:
-      model: chatgpt/gpt-5.4-pro
-  - model_name: chatgpt/gpt-5.3-codex
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-codex
-  - model_name: chatgpt/gpt-5.3-codex-spark
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-codex-spark
-  - model_name: chatgpt/gpt-5.3-instant
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-instant
-  - model_name: chatgpt/gpt-5.3-chat-latest
-    model_info:
-      mode: responses
-    litellm_params:
-      model: chatgpt/gpt-5.3-chat-latest
+      model: chatgpt/{{chatgpt_small}}
 ```
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config config.yaml
+```
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then call the proxy:
+
+```bash showLineNumbers title="Call the proxy"
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "chatgpt/{{chatgpt}}", "input": [{"role": "user", "content": "Write a Python hello world"}]}'
 ```
 
 ## Credential Scope and Attribution

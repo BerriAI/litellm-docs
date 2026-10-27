@@ -6,6 +6,8 @@ import TabItem from '@theme/TabItem';
 
 This tutorial shows how to connect OpenCode to your existing LiteLLM instance and switch between models.
 
+To use your OpenCode Go subscription as the upstream service, see [OpenCode Go](../providers/opencode_go.md).
+
 :::info 
 
 This integration allows you to use any LiteLLM supported model through OpenCode with centralized authentication, usage tracking, and cost controls.

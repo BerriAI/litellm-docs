@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import ThemedImage from '@theme/ThemedImage';
 import SubscribeForm from '@site/src/components/SubscribeForm';
 import styles from './styles.module.css';
 
@@ -126,11 +127,16 @@ function formatDate(dateStr) {
 
 function CardImage({item, title}) {
   const image = item.content?.assets?.image || item.content?.metadata?.frontMatter?.image;
+  const lightImage = item.content?.metadata?.frontMatter?.image_light;
   const resolved = useBaseUrl(typeof image === 'string' ? image : '');
+  const resolvedLight = useBaseUrl(typeof lightImage === 'string' ? lightImage : '');
   const src = typeof image === 'string' && /^(https?:)?\/\//.test(image) ? image : image ? resolved : null;
+  const lightSrc = typeof lightImage === 'string' && /^(https?:)?\/\//.test(lightImage) ? lightImage : lightImage ? resolvedLight : null;
   return (
     <div className={styles.cover}>
-      {src ? (
+      {src && lightSrc ? (
+        <ThemedImage sources={{light: lightSrc, dark: src}} alt="" loading="lazy" decoding="async" />
+      ) : src ? (
         <img src={src} alt="" loading="lazy" decoding="async" />
       ) : (
         <div className={styles.coverTitle} aria-hidden="true">{title}</div>

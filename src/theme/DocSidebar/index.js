@@ -4,7 +4,6 @@ import {useThemeConfig} from '@docusaurus/theme-common';
 import DocSidebarDesktop from '@theme/DocSidebar/Desktop';
 import DocSidebarMobile from '@theme/DocSidebar/Mobile';
 import CollapseButton from '@theme/DocSidebar/Desktop/CollapseButton';
-import SearchBar from '@theme/SearchBar';
 import styles from './styles.module.css';
 
 export default function DocSidebar({onCollapse, ...props}) {
@@ -18,11 +17,6 @@ export default function DocSidebar({onCollapse, ...props}) {
     <>
       <div className={styles.sidebarDesktop}>
         <div className={clsx(styles.sidebarContainer, props.isHidden && styles.sidebarContainerHidden)}>
-          <div className={styles.searchBarSection}>
-            <div className={styles.searchBarInner}>
-              <SearchBar />
-            </div>
-          </div>
           <div className={styles.sidebarScroll}>
             <DocSidebarDesktop {...props} />
           </div>

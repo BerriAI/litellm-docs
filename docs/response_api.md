@@ -8,6 +8,8 @@ LiteLLM provides an endpoint in the spec of [OpenAI's `/responses` API](https://
 
 Requests to /chat/completions may be bridged here automatically when the provider lacks support for that endpoint. The model’s default `mode` determines how bridging works.(see `model_prices_and_context_window`) 
 
+The reverse also happens: a deployment whose provider has no Responses API config of its own (`custom_openai/`, `baseten/`, `openai_like/` and most other OpenAI-compatible providers) bridges `/v1/responses` through `/v1/chat/completions`. When the server serves `/responses` itself, add `supported_endpoints: ["/v1/responses"]` under the deployment's `model_info` to forward the request untranslated. See [Native /v1/responses passthrough](./response_api_native_passthrough.md)
+
 | Feature | Supported | Notes |
 |---------|-----------|--------|
 | Cost Tracking | ✅ | Works with all supported models |
@@ -1440,7 +1442,7 @@ litellm --config config.yaml
 |---------------|----------|-------|--------------|
 | **`encrypted_content_affinity`** | **[Recommended]** Multi-region Responses API with different API keys | Only requests with tracked encrypted items | ✅ None (surgical pinning) |
 | `responses_api_deployment_check` | When `previous_response_id` is available | Requests with `previous_response_id` | ✅ None |
-| `session_affinity` | Session-based applications | All requests with same `session_id` | ⚠️ Reduces quota by # of sessions |
+| `session_affinity` | Session-based applications | All requests with same `session_id` | Reduces quota by # of sessions |
 | `deployment_affinity` | Simple sticky sessions | All requests from same API key | ❌ Reduces quota by # of users |
 
 

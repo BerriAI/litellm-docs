@@ -6,7 +6,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "A recap of the April LiteLLM town hall covering CI/CD v2, product stability work, and the near-term roadmap."
-tags: [townhall, security, reliability, product]
+tags: [townhall, reliability, product]
 hide_table_of_contents: false
 ---
 

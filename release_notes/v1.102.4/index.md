@@ -1,5 +1,6 @@
 ---
-title: "v1.102.4 - Fix Double-Counted Spend on the Chat to Responses Bridge"
+title: "LiteLLM v1.102.4 fixes double-counted spend on the chat to Responses bridge"
+description: "Fixes spend that was logged twice for large non-streaming chat requests to openai/responses models, so key, team and daily spend match real cost."
 slug: "v1-102-4"
 date: 2026-10-08T07:49:06
 authors:

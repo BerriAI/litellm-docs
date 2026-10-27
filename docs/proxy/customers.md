@@ -115,8 +115,8 @@ If the customer_id already exists, spend will be incremented.
 Call `/customer/info` to get a customer's all up spend
 
 ```bash showLineNumbers title="Get customer spend"
-# end_user_id: 👈 CUSTOMER ID
-# Authorization: 👈 YOUR PROXY KEY
+# end_user_id: CUSTOMER ID
+# Authorization: YOUR PROXY KEY
 curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
         -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
@@ -152,7 +152,7 @@ export WEBHOOK_URL="https://webhook.site/6ab090e8-c55f-4a23-b075-3209f5c57906"
 
 ```yaml showLineNumbers title="config.yaml"
 general_settings: 
-  alerting: ["webhook"] # 👈 KEY CHANGE
+  alerting: ["webhook"] # KEY CHANGE
 ```
 
 3. Test it! 
@@ -178,10 +178,10 @@ Expected Response
 
 ```json showLineNumbers title="Webhook event payload"
 {
-  "spend": 0.0011120000000000001, # 👈 SPEND
+  "spend": 0.0011120000000000001, # SPEND
   "max_budget": null,
   "token": "example-api-key-123",
-  "customer_id": "krrish12",  # 👈 CUSTOMER ID
+  "customer_id": "krrish12",  # CUSTOMER ID
   "user_id": null,
   "team_id": null,
   "user_email": null,
@@ -599,7 +599,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # 👈 KEY CHANGE
+    "budget_id": "my-free-tier" # KEY CHANGE
 }
 ```
 
@@ -614,7 +614,7 @@ curl -X POST 'http://localhost:4000/customer/new' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
     "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # 👈 KEY CHANGE
+    "budget_id": "my-free-tier" # KEY CHANGE
 }
 ```
 
