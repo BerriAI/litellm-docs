@@ -1674,6 +1674,7 @@ const sidebars = {
           "providers/topaz",
           "providers/v0",
           "providers/volcano",
+          "providers/voltagegpu",
           "providers/voyage",
           "providers/wandb_inference",
           { type: "category", label: "WatsonX", items: [
