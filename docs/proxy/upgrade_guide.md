@@ -19,6 +19,29 @@ flowchart LR
 
 Read the [release notes](/release_notes) for the versions you will cross. Check breaking changes and database changes, take a database snapshot, and test the upgrade against a restored copy of production to measure its duration. Rolling back an image does not undo database changes.
 
+### Check the rows before the schema
+
+From v1.108.0 the migration job reads the rows a pending schema change depends on before it applies anything, and refuses when they would make the change fail. Run the same check yourself before the upgrade, from any machine that can reach the database, with the **target** image:
+
+```bash
+docker run --rm \
+-e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
+docker.litellm.ai/berriai/litellm:X.Y.Z --check_migrations_against_existing_data
+```
+
+It writes nothing and takes no table lock. Exit code 0 means the pending migrations and request-log indexes fit the rows the database has. Exit code 2 prints what blocks them, with the table and columns, the row count, the statement they block and the SQL that clears them:
+
+```
+LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
+  "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
+    blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
+    fix:    Rows written before v1.99.0 hold the raw key. Hash them in place (one-way, idempotent):
+            UPDATE "LiteLLM_SpendLogs" SET api_key = ...
+No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
+```
+
+The checks come from the pending migration SQL itself: a btree index whose entry for some row would not fit in a third of a page, a UNIQUE index or constraint over duplicate values, `SET NOT NULL` or a `NOT NULL` column with no default on a table that has rows, a `FOREIGN KEY` with orphan rows, and a `CHECK` constraint some rows fail. Each one is a single read-only count on the table it guards, which on a large `LiteLLM_SpendLogs` can take minutes. A count that does not finish within `LITELLM_MIGRATION_DATA_CHECK_TIMEOUT` (default **600 seconds**) is reported as unverified and refused, so raise that value rather than skip the check. The check does not see failures that are not about rows (lock waits, disk, permissions), and `ALTER COLUMN ... TYPE` and indexes over expressions get no check, so the rehearsal against a restored copy stays the complete test. The spend-log key case in the example is explained in [migration troubleshooting](../troubleshoot/prisma_migrations.md#6-database-migration-cannot-proceed-existing-rows-would-make-a-pending-schema-change-fail).
+
 ## Upgrade with Helm or Terraform
 
 | Deployment | Select the release | Run migrations before rollout |
@@ -90,7 +113,7 @@ If your deployment does not provide a migration job, run this in a separate cont
 DISABLE_SCHEMA_UPDATE=false litellm --skip_server_startup
 ```
 
-This LiteLLM command runs schema migrations **and request-log indexing**, waits for both to finish, and exits without starting the gateway. Require a successful exit before rolling out gateway containers with `DISABLE_SCHEMA_UPDATE=true`.
+This LiteLLM command runs schema migrations **and request-log indexing**, waits for both to finish, and exits without starting the gateway. Require a successful exit before rolling out gateway containers with `DISABLE_SCHEMA_UPDATE=true`. From v1.108.0 it runs the [row check](#check-the-rows-before-the-schema) first and exits 2 with the report, before the first migration, when existing rows would make one fail.
 
 ## When a migration is slow or stuck
 

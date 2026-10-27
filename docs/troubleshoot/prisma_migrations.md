@@ -199,3 +199,44 @@ ALTER COLUMN "updated_at" SET NOT NULL;
 Then upgrade. Do not insert a row into `_prisma_migrations` by hand and do not run `prisma migrate resolve --applied`; let `prisma migrate deploy` record the migration itself when it finds the columns already in place.
 
 If you would rather let the proxy perform the rewrite at boot, raise the timeout so the Prisma client is not killed mid-statement. From v1.101.0 `prisma migrate deploy` has its own limit, `LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT` (default 600 seconds). On v1.99.x and v1.100.x it runs under `LITELLM_PRISMA_COMMAND_TIMEOUT` (default 60 seconds), which also covers every other Prisma command. A longer timeout only stops the retry loop: the proxy is still unavailable and the table still locked until the rewrite completes, so plan the restart as a maintenance window either way.
+
+---
+
+### 6. `Database migration cannot proceed. Existing rows would make a pending schema change fail`
+
+**Symptom on v1.108.0 and later:** the proxy, or the migration job, exits 2 before the first migration runs, and the log names the rows:
+
+```
+LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
+  "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
+    blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
+    fix:    Rows written before v1.99.0 hold the raw key. Hash them in place (one-way, idempotent):
+            UPDATE "LiteLLM_SpendLogs" SET api_key = encode(sha256(convert_to(regexp_replace(api_key, '^[Bb][Ee][Aa][Rr][Ee][Rr] ', ''), 'UTF8')), 'hex')
+            WHERE api_key <> '' AND api_key !~ '^[0-9a-fA-F]{64}$' AND api_key !~ '^hashed-jwt-[0-9A-Fa-f]{64}$';
+No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
+```
+
+`_prisma_migrations` is untouched. `litellm --check_migrations_against_existing_data` prints the same report without starting anything, see the [Upgrade Guide](../proxy/upgrade_guide.md#check-the-rows-before-the-schema).
+
+**Symptom on v1.103.0 to v1.107.x:** the same rows fail inside the upgrade instead, with `index row size 2976 exceeds btree version 4 maximum 2704 for index "LiteLLM_SpendLogs_api_key_startTime_idx"` in the log. On v1.103.x and v1.104.x the index is created inside migration `20260823000000_add_spend_logs_api_key_starttime_index`, so that migration fails, the ones after it never run, and the pods start against a partly upgraded schema, so requests fail with errors such as `column t.tpd_limit does not exist`. From v1.105.0 the index is built after the migrations as a request-log index, so the migrations apply, the index is left `INVALID`, and the job exits 1 with `Database setup failed after multiple retries ... check your database connection` on every rerun.
+
+**Cause:** before v1.99.0 the proxy hashed only `sk-` virtual keys before writing `LiteLLM_SpendLogs.api_key`; a JWT or a pass-through bearer token was stored as sent, sometimes several kilobytes long. A btree entry has to fit in a third of an 8 KB page, 2704 bytes including the entry header and every indexed column, which for `("api_key", "startTime")` leaves 2684 bytes for the key. Rows written since v1.99.0 hold a 64-character hash and are never affected.
+
+**How to fix:** count the rows first:
+
+```sql
+SELECT count(*), max(octet_length("api_key"))
+FROM "LiteLLM_SpendLogs"
+WHERE octet_length("api_key") > 2684;
+```
+
+Then run the `UPDATE` from the report. It replaces every raw key with the hash the proxy writes today, which is one way and idempotent (a hashed row matches neither pattern and is skipped). In our test it took about 8 seconds per 100,000 legacy rows and did not block inserts. Rows the proxy wrote with the raw key keep their spend and are now found under the hashed key, the same way rows written since v1.99.0 are.
+
+On v1.108.0 and later, start the proxy or the job again; the check passes and the upgrade proceeds. On an earlier version, also clean up what the failed attempt left behind. If the index was left invalid, drop it and let the next start rebuild it:
+
+```sql
+SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
+DROP INDEX CONCURRENTLY "LiteLLM_SpendLogs_api_key_startTime_idx";
+```
+
+If a migration failed, remove its entry as in [section 2](#2-new-migrations-cannot-be-applied-before-the-error-is-recovered-from) and restart.
