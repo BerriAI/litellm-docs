@@ -1586,6 +1586,7 @@ const sidebars = {
           "providers/bytez",
           "providers/cerebras",
           "providers/chatgpt",
+          "providers/cheapaimodel",
           "providers/chutes",
           "providers/clarifai",
           "providers/cloudflare_workers",
