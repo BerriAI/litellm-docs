@@ -102,7 +102,7 @@ Abliteration caches prompt prefixes automatically. Cache creation uses the stand
 
 Chat Completions supports `tools`, `tool_choice`, and `response_format`. Use [LiteLLM function calling](../completion/function_call.md) for tool-result continuations and [structured outputs](../completion/json_mode.md) for JSON Schema examples.
 
-Use `reasoning_effort="low"`, `"high"`, or `"max"` to select reasoning depth. `none` disables reasoning on all models except Large v2, where it selects low reasoning and hides the trace. Reasoning text, when returned, is available as `message.reasoning_content`. On native Responses, `abliterated-model` accepts effort through `xhigh` but rejects `max`. See [Abliteration reasoning](https://docs.abliteration.ai/capabilities/thinking).
+Use `reasoning_effort="low"`, `"high"`, or `"max"` to select reasoning depth. `none` disables reasoning on all models except Large v2, where it selects low reasoning and hides the trace. LiteLLM excludes `none` from Large v2's advertised reasoning choices because this model cannot turn reasoning off. Reasoning text, when returned, is available as `message.reasoning_content`. On native Responses, `abliterated-model` accepts effort through `xhigh` but rejects `max`. See [Abliteration reasoning](https://docs.abliteration.ai/capabilities/thinking).
 
 ## Responses API
 
