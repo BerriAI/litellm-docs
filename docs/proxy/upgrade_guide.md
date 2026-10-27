@@ -78,7 +78,7 @@ WHERE finished_at IS NOT NULL
 ORDER BY finished_at;
 ```
 
-Compare the full result with the [migration files](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations) at your **target release tag**, rather than `main`. Inspect pending SQL for operations on large tables. Request-log indexing is a separate stage, so migration history alone does not confirm that the job is done.
+Compare the full result with the [migration files](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations) and the [`LiteLLM_SpendLogs` migration files](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/spend_logs/migrations) at your **target release tag**, rather than `main`. The proxy applies both folders in timestamp order. Inspect pending SQL for operations on large tables. Request-log indexing is a separate stage, so migration history alone does not confirm that the job is done.
 
 </details>
 
