@@ -1,0 +1,164 @@
+@font-face {
+  font-family: 'Abliteration Geist';
+  src: url('/animations/internal-devin-two-days/assets/geist-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.root {
+  --page: #f3f2ed;
+  --ink: #191a18;
+  --text: #44463f;
+  --muted: #65675f;
+  --rule: #cfcec5;
+  --panel: #e9e8e1;
+  --accent: #2547ce;
+  --art-opacity: .23;
+  --art-filter: grayscale(1) invert(1);
+  background: var(--page);
+  color: var(--text);
+  font: 17px/1.7 'Abliteration Geist', 'Geist', sans-serif;
+  container-type: inline-size;
+  --ifm-link-color: var(--accent);
+  --ifm-color-primary: var(--accent);
+  --aurora-accent-line: var(--rule);
+  --aurora-inline-code-bg: var(--panel);
+  --aurora-accent-ink: var(--ink);
+  --ifm-heading-color: var(--ink);
+}
+
+:global(html[data-theme='dark']) .root {
+  --page: #080908;
+  --ink: #efefe7;
+  --text: #bfc1b6;
+  --muted: #a2a699;
+  --rule: #34372f;
+  --panel: #141711;
+  --accent: #a1b2ff;
+  --art-opacity: .34;
+  --art-filter: none;
+}
+
+.root a { color: var(--accent); text-underline-offset: 4px; }
+.root a:hover { text-decoration: underline; }
+.root a:focus-visible, .root button:focus-visible, .tableScroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.root p { margin: 0 0 22px; }
+.root code { background: var(--panel); color: var(--ink); border-color: var(--rule); font-size: .78em; overflow-wrap: anywhere; }
+.root h1, .root h2, .root h3, .root strong { color: var(--ink); }
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 30px 4% 46px;
+  min-height: 640px;
+}
+.heroMeta { display: flex; align-items: center; justify-content: space-between; font: 11px/1.5 'Geist Mono', monospace; letter-spacing: .035em; }
+.heroMeta a { color: var(--ink); }
+.heroMeta span { color: var(--muted); }
+.art { position: absolute; inset: 66px 0 auto; height: 500px; z-index: -1; opacity: var(--art-opacity); filter: var(--art-filter); mix-blend-mode: multiply; mask-image: linear-gradient(transparent, #000 18%, #000 78%, transparent); }
+:global(html[data-theme='dark']) .art { mix-blend-mode: screen; }
+.art canvas { width: 100%; height: 100%; display: block; }
+.root .hero h1 { margin: 173px 0 0; font-weight: 550; line-height: .87; letter-spacing: -.07em; }
+.title { display: block; font-size: min(17.8cqw, 256px); white-space: nowrap; }
+.subtitle { display: flex; align-items: center; justify-content: space-between; font-size: min(4.7cqw, 68px); font-weight: 400; letter-spacing: -.05em; line-height: 1.1; margin-top: 28px; }
+.subtitle > span { font-size: 1.4em; line-height: .7; }
+.heroBottom { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 88px; gap: 24px; }
+.heroBottom p { font-size: 18px; line-height: 1.5; color: var(--ink); margin: 0; }
+.heroBottom a { font: 12px 'Geist Mono', monospace; color: var(--ink); white-space: nowrap; }
+.heroBottom a span { margin-left: 36px; }
+
+.article { max-width: 1080px; margin: 0 auto; padding: 0 40px; }
+.byline { border-block: 1px solid var(--rule); padding: 20px 0; }
+.root .article .byline > div { width: 100%; max-width: none; margin: 0 !important; padding: 0; color: var(--muted); }
+.root .article .byline > div > div { border: none; padding: 0; }
+.byline b { color: var(--ink) !important; }
+.byline small, .byline time, .byline [class*='published'] { color: var(--muted) !important; }
+.intro { max-width: 760px; margin: 28px 0 30px 168px; }
+.intro p:first-child { font-size: 31px; letter-spacing: -.035em; line-height: 1.25; color: var(--ink); }
+.contents { display: flex; flex-wrap: wrap; gap: 12px 30px; padding: 0 0 32px 168px; font: 10px/1.6 'Geist Mono', monospace; }
+.contents a { color: var(--muted); }
+.section { display: grid; grid-template-columns: 128px minmax(0,1fr); gap: 40px; padding: 48px 0 52px; border-top: 1px solid var(--rule); scroll-margin-top: 105px; }
+.sectionLabel { font: 10px/1.7 'Geist Mono', monospace; letter-spacing: .04em; color: var(--muted); padding-top: 4px; }
+.sectionLabel span { display: block; font-size: 12px; margin-bottom: 8px; color: var(--ink); }
+.sectionBody { min-width: 0; }
+.root .section h2 { font-size: 34px !important; font-weight: 450 !important; line-height: 1.15; letter-spacing: -.04em; margin: 0 0 25px !important; }
+.root .section .provider h3 { font-size: 26px; font-weight: 450; line-height: 1.2; letter-spacing: -.035em; margin: 0 0 16px; }
+.provider + .provider { margin-top: 40px; }
+.provider h3 a { display: flex; justify-content: space-between; color: var(--ink); }
+.provider h3 a span { color: var(--muted); }
+.root .caption { font-size: 13px; line-height: 1.7; color: var(--muted); }
+/* Scoped table rules keep the site's generic mobile cards out of this comparison. */
+.root .section .provider .tableScroll { margin: 28px 0; }
+.root .section .provider .tableScroll table { display: table; width: 100%; min-width: 0; max-width: none; border: 0; border-radius: 0; border-collapse: collapse; font-variant-numeric: tabular-nums; background: transparent; }
+.root .section .provider .tableScroll caption { text-align: left; font: 10px/1.6 'Geist Mono', monospace; color: var(--muted); padding: 0 0 19px; }
+.root .section .provider .tableScroll thead { display: table-header-group; position: static; width: auto; height: auto; overflow: visible; clip: auto; background: transparent; }
+.root .section .provider .tableScroll tbody { display: table-row-group; width: auto; }
+.root .section .provider .tableScroll tr { display: table-row; width: auto; background: none; border: 0; border-bottom: 1px solid var(--rule); margin: 0; padding: 0; }
+.root .section .provider .tableScroll th, .root .section .provider .tableScroll td { display: table-cell; width: auto; border: 0; padding: 22px 0 22px 20px; background: none; vertical-align: middle; text-align: right; }
+.root .section .provider .tableScroll th:first-child { text-align: left; padding-left: 0; }
+.root .section .provider .tableScroll th strong { display: block; font-size: 17px; line-height: 1.3; font-weight: 450; letter-spacing: -.02em; }
+.modelNote { display: block; margin-top: 5px; font: 10px/1.5 'Geist Mono', monospace; color: var(--muted); }
+.root .section .provider .tableScroll th code { display: block; margin-top: 7px; padding: 0; font: 10px/1.6 'Geist Mono', monospace; background: none; border: 0; color: var(--muted); overflow-wrap: anywhere; }
+.root .section .provider .tableScroll td { font-size: 20px; font-weight: 400; white-space: nowrap; letter-spacing: -.025em; color: var(--ink); }
+.root .section .provider .tableScroll thead th { padding-top: 0; padding-bottom: 12px; color: var(--muted); font: 10px/1.6 'Geist Mono', monospace; letter-spacing: 0; text-transform: none; }
+.root .section .provider .tableScroll td::before { content: none; }
+@container (max-width: 600px) {
+  .root .section .provider .tableScroll table { display: block; }
+  .root .section .provider .tableScroll caption { display: block; width: 100%; white-space: nowrap; padding-bottom: 0; }
+  .root .section .provider .tableScroll thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .root .section .provider .tableScroll tbody { display: block; }
+  .root .section .provider .tableScroll tr { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); padding: 20px 0; gap: 18px 12px; border-radius: 0; }
+  .root .section .provider .tableScroll th { grid-column: 1/-1; padding: 0; }
+  .root .section .provider .tableScroll td { padding: 0; text-align: left; }
+  .root .section .provider .tableScroll td::before { content: attr(data-label); display: block; font: 9px/1.6 'Geist Mono', monospace; color: var(--muted); margin-bottom: 4px; letter-spacing: 0; text-transform: none; }
+}
+.route { display: grid; grid-template-columns: minmax(0,1fr) 18px minmax(0,1fr) 18px minmax(0,1fr); gap: 14px; margin: 30px 0; padding: 25px 0 20px; border-block: 1px solid var(--rule); }
+.route strong { font-size: 16px; font-weight: 500; display: block; }
+.route small { display: block; font: 10px/1.7 'Geist Mono', monospace; margin-top: 10px; color: var(--muted); }
+.route > span { color: var(--accent); }
+.route figcaption { grid-column: 1/-1; margin-top: 8px; }
+.root figcaption { font-size: 12px; line-height: 1.7; color: var(--muted); }
+.root :global(.theme-code-block) { border: 1px solid var(--rule); border-radius: 2px; background: var(--panel); box-shadow: none; margin: 25px 0; }
+.root pre, .root pre code { font: 12px/1.8 'Geist Mono', monospace; background: var(--panel) !important; color: var(--ink) !important; border-radius: 0; }
+.root pre code { overflow-wrap: normal; }
+.root :global(.token) { color: var(--text) !important; }
+.root :global(.token.keyword), .root :global(.token.key), .root :global(.token.function) { color: var(--accent) !important; }
+.root [class*='codeBlockTitle'] { color: var(--muted); background: var(--panel); border-color: var(--rule); font: 11px/1.6 'Geist Mono', monospace; }
+.root :global(.theme-code-block) button { color: var(--ink); background: var(--panel); border-color: var(--rule); }
+.end { border-top: 1px solid var(--rule); padding: 35px 0 64px 168px; }
+.end p { font-size: 28px; letter-spacing: -.035em; color: var(--ink); }
+.end > div { display: flex; flex-wrap: wrap; gap: 20px 40px; font-size: 14px; }
+
+@container (max-width: 800px) {
+  .hero { min-height: 570px; padding-bottom: 36px; }
+  .art { height: 430px; }
+  .root .hero h1 { margin-top: 153px; }
+  .heroBottom { margin-top: 75px; }
+  .heroBottom p { font-size: 16px; }
+  .article { padding: 0 24px; }
+  .intro { margin: 26px 0; }
+  .contents { padding-left: 0; gap: 12px 24px; }
+  .section { display: block; padding: 35px 0; }
+  .sectionLabel { display: flex; gap: 16px; margin-bottom: 16px; }
+  .sectionLabel span { font-size: 10px; margin: 0; }
+  .root .section h2 { font-size: 29px !important; }
+  .end { padding-left: 0; }
+}
+@container (max-width: 480px) {
+  .hero { padding-inline: 22px; min-height: 530px; }
+  .heroMeta { font-size: 9px; }
+  .art { width: 150%; left: -25%; height: 350px; top: 78px; }
+  .root .hero h1 { margin-top: 165px; }
+  .title { font-size: 17.5cqw; }
+  .subtitle { font-size: 7cqw; margin-top: 20px; }
+  .heroBottom { margin-top: 80px; align-items: flex-start; flex-direction: column; gap: 22px; }
+  .heroBottom a { font-size: 10px; }
+  .intro p:first-child { font-size: 27px; }
+  .root { font-size: 16px; }
+  .route { grid-template-columns: 1fr; gap: 12px; }
+  .route > span { transform: rotate(90deg); width: 20px; }
+  .route small { margin-top: 4px; }
+}
