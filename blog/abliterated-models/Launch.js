@@ -69,9 +69,9 @@ export default function Launch() {
       </nav>
 
       <Section id="abliteration" number="01" label="THE MODELS" title="What is an abliterated model?">
-        <p>Abliteration modifies a model's weights to reduce its learned refusal behavior. Developers identify directions in the model's internal representations associated with refusal, then suppress those directions.</p>
+        <p>Abliteration modifies the weights of an open-weight model to reduce its learned refusal behavior. Developers identify directions in the model's internal representations associated with refusal, then suppress those directions.</p>
         <p><a href="https://arxiv.org/abs/2406.11717">Arditi and colleagues demonstrated this in 13 chat models</a> in 2024. Hosted providers may use different methods. Reducing refusals can also change answer quality, so evaluate the modified model on the tasks you want it to perform.</p>
-        <p>These models give you another option for prompts that a standard chat model refuses, including research into model behavior. The provider hosts the modified weights; LiteLLM connects your application to its API.</p>
+        <p>You can use these models for security research, red-teaming, and other workflows where a standard chat model refuses prompts you need to explore. The provider hosts the modified weights; LiteLLM connects your application to its API.</p>
       </Section>
 
       <Section id="providers" number="02" label="PROVIDERS" title="Supported providers">
