@@ -1570,7 +1570,6 @@ const sidebars = {
         ] },
         { type: "category", label: "All Providers A-Z", items: [
           "providers/abliteration",
-          "providers/refuseless",
           "providers/ai21",
           "providers/aiml",
           "providers/aleph_alpha",
@@ -1649,6 +1648,7 @@ const sidebars = {
           "providers/qwencloud",
           "providers/ragflow",
           "providers/recraft",
+          "providers/refuseless",
           "providers/reka",
           "providers/replicate",
           { type: "category", label: "RunwayML", items: [
