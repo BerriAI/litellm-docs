@@ -4,6 +4,8 @@ title: "Introducing the LiteLLM Private Registry"
 date: 2026-10-27T10:00:00
 authors:
   - oliver
+  - krrish
+  - ishaan
 description: "LiteLLM is committing to a private registry to provide early access to fixes for the most severe security vulnerabilities, ahead of public release."
 tags: [security]
 hide_table_of_contents: false
