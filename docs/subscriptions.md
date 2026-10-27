@@ -3,26 +3,19 @@ title: Claude, Codex, and Copilot subscriptions
 sidebar_label: Claude, Codex & Copilot subscriptions
 description: Use your ChatGPT, Claude, or GitHub Copilot subscription through LiteLLM. Choose your subscription and follow the setup guide.
 hide_table_of_contents: true
-hide_title: true
 ---
 
 import SubscriptionCards from '@site/src/components/SubscriptionCards';
-import styles from '@site/src/components/SubscriptionCards/styles.module.css';
 
-<div className={styles.page}>
+# Use your subscription with LiteLLM {#use-your-claude-codex-or-copilot-subscription}
 
-<p className={styles.eyebrow}>Claude, Codex &amp; Copilot</p>
+Keep your coding client and your plan's allowance. Get LiteLLM access controls and request logs.
 
-<h1 className={styles.heading} id="use-your-claude-codex-or-copilot-subscription">Use your subscription<br />with LiteLLM.</h1>
+Before you start, you need a running [LiteLLM proxy](./proxy/docker_quick_start.md).
 
-<p className={styles.intro}>Keep your coding client and your plan's allowance.<br />Get LiteLLM access controls and request logs.</p>
+## Choose your subscription
 
-<p className={styles.prerequisite}>Before you start, you need a running <a href="/docs/proxy/docker_quick_start">LiteLLM proxy</a>.</p>
-
-<div className={styles.choicesHeading}>
-  <h2>Choose your subscription</h2>
-  <p>Each developer connects their own account</p>
-</div>
+Each developer connects their own account.
 
 <SubscriptionCards
   items={[
@@ -65,5 +58,3 @@ import styles from '@site/src/components/SubscriptionCards/styles.module.css';
     },
   ]}
 />
-
-</div>

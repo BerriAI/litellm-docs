@@ -1,62 +1,5 @@
-:global(html.docs-doc-id-subscriptions) {
-  --doc-sidebar-width: 220px;
-}
-
-.page {
+.container {
   container-type: inline-size;
-  padding: 16px 16px 24px;
-}
-
-.page .eyebrow {
-  margin: 0 0 18px;
-  color: var(--ifm-color-primary);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.page .heading {
-  margin: 0 0 24px;
-  font-size: clamp(36px, 5.5cqi, 48px);
-  font-weight: 500;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
-}
-
-.page .intro {
-  margin: 0 0 28px;
-  color: var(--ifm-color-emphasis-700);
-  font-size: 19px;
-  line-height: 1.6;
-}
-
-.page .prerequisite {
-  margin: 0 0 32px;
-  font-size: 17px;
-  line-height: 1.6;
-}
-
-.choicesHeading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px 24px;
-  margin-bottom: 20px;
-}
-
-.page .choicesHeading h2 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.page .choicesHeading p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--ifm-color-emphasis-700);
 }
 
 .cards {
@@ -155,16 +98,6 @@
 @container (max-width: 700px) {
   .cards {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .page {
-    padding: 8px 0 16px;
-  }
-
-  .page .intro {
-    font-size: 18px;
   }
 }
 
