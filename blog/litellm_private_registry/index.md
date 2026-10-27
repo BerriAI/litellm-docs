@@ -37,7 +37,7 @@ The vulnerability was limited to enterprise deployments, which created an opport
 
 On October 6, we stood up a private package registry and began publishing patched LiteLLM releases to it. We attempted to notify every enterprise, and allocated credentials to pull the fixed versions. Throughout the embargo period we continued to publish new releases to both the private registry and our public channels, so customers who upgraded through the registry could stay current with new releases and bugfixes.
 
-The embargo ended today, October 27. Patched versions are now being published to PyPI, GHCR, and Docker Hub, and the public advisory is available as [GHSA-w4c7-34wj-hqm8](https://github.com/BerriAI/litellm/security/advisories/GHSA-w4c7-34wj-hqm8).
+The embargo ended today, October 27. Patched versions (`v1.103.10`,  `v1.104.8`, `v1.105.6`, `v1.106.5`) have been published to PyPI, GHCR, and Docker Hub, and the public advisory is available as [GHSA-w4c7-34wj-hqm8](https://github.com/BerriAI/litellm/security/advisories/GHSA-w4c7-34wj-hqm8).
 
 ## What we learned
 
