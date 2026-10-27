@@ -35,9 +35,10 @@ Prices below are USD per million tokens, checked against the [published pricing]
 | `deepseek-v4.1-flash-abliterated` | 1,048,576 | 130,000 | $0.22 | $0.045 | $0.75 |
 | `deepseek-v4.1-flash-fast` | 1,048,576 | 262,144 | $0.05 | $0.003 | $0.15 |
 | `minimax-m3.1-flash` | 1,048,576 | 512,000 | $0.05 | $0.002 | $0.25 |
-| `deepseek-v4.1-flash-free` | 524,288 | 131,072 | $0.05 | $0.003 | $0.15 |
 
-The first three models use abliterated weights. The other three use unmodified weights. The `free` model name does not mean zero token charges. At verification, `deepseek-v4.1-flash-free` appeared in the catalog but returned `404 model_not_found` on inference. Choose another catalog model if that error persists.
+The first three models use abliterated weights. The other two use unmodified weights.
+
+Refuseless also lists `deepseek-v4.1-flash-free`, but live inference returned `404 model_not_found` at verification. LiteLLM excludes it from its model catalog and the supported-model table above until inference works. Choose one of the five verified models instead.
 
 ## Gateway setup
 
