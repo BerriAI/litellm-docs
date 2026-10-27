@@ -20,6 +20,7 @@
     "prefix": "gemini",
     "capabilities": [
       "chat",
+      "embeddings",
       "images",
       "audio",
       "video",
@@ -83,7 +84,9 @@
     "prefix": "xai",
     "capabilities": [
       "chat",
-      "audio"
+      "images",
+      "audio",
+      "video"
     ]
   },
   "providers/deepseek": {
@@ -179,15 +182,15 @@
   "providers/custom_llm_server": {
     "prefix": "custom",
     "capabilities": [
-      "chat"
+      "chat",
+      "embeddings"
     ]
   },
   "providers/openai_compatible": {
     "prefix": "custom_openai",
     "capabilities": [
       "chat",
-      "embeddings",
-      "audio"
+      "embeddings"
     ]
   },
   "providers/litellm_proxy": {
@@ -195,7 +198,9 @@
     "capabilities": [
       "chat",
       "embeddings",
-      "images"
+      "images",
+      "audio",
+      "rerank"
     ]
   },
   "providers/openrouter": {
@@ -207,6 +212,7 @@
     ]
   },
   "providers/opencode_go": {
+    "prefix": "opencode_go",
     "capabilities": [
       "chat"
     ]
@@ -240,8 +246,7 @@
   "providers/poe": {
     "prefix": "poe",
     "capabilities": [
-      "chat",
-      "embeddings"
+      "chat"
     ]
   },
   "providers/milvus_vector_stores": {
@@ -315,6 +320,7 @@
     ]
   },
   "providers/anyscale": {
+    "prefix": "anyscale",
     "capabilities": [
       "chat"
     ]
@@ -322,8 +328,7 @@
   "providers/apertis": {
     "prefix": "apertis",
     "capabilities": [
-      "chat",
-      "embeddings"
+      "chat"
     ]
   },
   "providers/aws_sagemaker": {
@@ -371,8 +376,7 @@
   "providers/chutes": {
     "prefix": "chutes",
     "capabilities": [
-      "chat",
-      "embeddings"
+      "chat"
     ]
   },
   "providers/clarifai": {
@@ -384,7 +388,8 @@
   "providers/cloudflare_workers": {
     "prefix": "cloudflare",
     "capabilities": [
-      "chat"
+      "chat",
+      "audio"
     ]
   },
   "providers/codestral": {
@@ -451,7 +456,6 @@
   "providers/deepgram": {
     "prefix": "deepgram",
     "capabilities": [
-      "chat",
       "audio"
     ]
   },
@@ -475,7 +479,6 @@
   "providers/elevenlabs": {
     "prefix": "elevenlabs",
     "capabilities": [
-      "chat",
       "audio"
     ]
   },
@@ -504,6 +507,8 @@
     "capabilities": [
       "chat",
       "embeddings",
+      "images",
+      "audio",
       "rerank"
     ]
   },
@@ -592,7 +597,8 @@
   "providers/llamagate": {
     "prefix": "llamagate",
     "capabilities": [
-      "chat"
+      "chat",
+      "embeddings"
     ]
   },
   "providers/manus": {
@@ -605,6 +611,7 @@
     "prefix": "meta",
     "capabilities": [
       "chat",
+      "images",
       "audio"
     ]
   },
@@ -649,8 +656,7 @@
   "providers/nano-gpt": {
     "prefix": "nanogpt",
     "capabilities": [
-      "chat",
-      "embeddings"
+      "chat"
     ]
   },
   "providers/nebius": {
@@ -675,13 +681,16 @@
   "providers/novita": {
     "prefix": "novita",
     "capabilities": [
-      "chat"
+      "chat",
+      "embeddings",
+      "rerank"
     ]
   },
   "providers/nscale": {
     "prefix": "nscale",
     "capabilities": [
-      "chat"
+      "chat",
+      "images"
     ]
   },
   "providers/nvidia_riva": {
@@ -846,8 +855,7 @@
   "providers/synthetic": {
     "prefix": "synthetic",
     "capabilities": [
-      "chat",
-      "embeddings"
+      "chat"
     ]
   },
   "providers/tencent": {
@@ -866,6 +874,7 @@
     "prefix": "together_ai",
     "capabilities": [
       "chat",
+      "embeddings",
       "rerank"
     ]
   },
