@@ -160,14 +160,17 @@ litellm_settings:
 ```shell
 LITELLM_OTEL_V2=true
 LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only    # model calls only
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only   # send prompts and responses
 LANGFUSE_PUBLIC_KEY="pk-..."
 LANGFUSE_SECRET_KEY="sk-..."
 LANGFUSE_HOST="https://cloud.langfuse.com"   # or your self-hosted URL
 ```
 
+OTel v2 captures no message content by default, so without `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only` Langfuse shows each generation's model, tokens and timing with an empty input and output. See [Capturing prompts & responses](#capturing-prompts--responses).
+
 :::warning[Leaving out `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` sends every proxy span to Langfuse]
 
-Without `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` the scope is `full`, so every request also sends its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to Langfuse, and health checks and admin calls arrive as traces of their own. This can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
+Without `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` the scope is `full`, so every request also sends its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to Langfuse, and admin API calls such as `/model/info` arrive as traces of their own. This can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 
 :::
 
@@ -829,6 +832,8 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=""
 OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 ```
 
+Excluding a route drops its server span only. `/health/liveliness` and `/health/readiness` make no model calls and send nothing, but `/health` checks each model with a real call, so every check is still traced as a model-call span under an `auth /health` root. A Langfuse project on `llm_only` drops the auth span and still receives the model calls.
+
 ## Per-key / per-team credentials (multi-tenant)
 
 One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, or SigNoz account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
@@ -948,7 +953,7 @@ LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # recommended; unset means full
 
 :::warning[`full` sends significantly more data to Langfuse]
 
-Under `full`, which applies whenever the scope is unset, each proxy request adds its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to the model call, and health checks and admin calls become traces of their own. On a busy proxy this can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. Use `llm_only` unless you need those spans in Langfuse.
+Under `full`, which applies whenever the scope is unset, each proxy request adds its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to the model call, and admin API calls such as `/model/info` become traces of their own. On a busy proxy this can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. Use `llm_only` unless you need those spans in Langfuse.
 
 :::
 
