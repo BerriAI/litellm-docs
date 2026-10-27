@@ -24,7 +24,7 @@ Read the [release notes](/release_notes) for the versions you will cross. Check 
 From v1.108.0 the migration job reads the rows a pending schema change depends on before it applies anything, and refuses when they would make the change fail. Run the same check yourself before the upgrade, from any machine that can reach the database, with the **target** image:
 
 ```bash
-docker run --rm \
+docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 docker.litellm.ai/berriai/litellm:X.Y.Z --check_migrations_against_existing_data
 ```
