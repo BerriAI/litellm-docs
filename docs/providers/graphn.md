@@ -105,9 +105,9 @@ for chunk in stream:
 
 Reasoning text, when returned, is available as `message.reasoning_content`. How you control it depends on the model.
 
-`gpt-oss-120b` takes `reasoning_effort` `"low"`, `"medium"` or `"high"`. `deepseek-v4.1-flash` takes `"none"`, `"low"`, `"high"` or `"max"` and rejects `"medium"` with a 400. `glm-5.3` bounds its reasoning only at `"low"` or `"high"`; any other value, and leaving it unset, runs at its maximum, so set an effort when you also set a small `max_tokens`. Reasoning tokens count toward `max_tokens`, and a model still thinking at the limit returns an empty answer.
+`gpt-oss-120b` takes `reasoning_effort` `"low"`, `"medium"` or `"high"`. `deepseek-v4.1-flash` takes `"none"`, `"low"`, `"high"` or `"max"` and rejects `"medium"` with a 400. `glm-5.3` bounds its reasoning only at `"low"` or `"high"`; any other value, and leaving it unset, runs at its maximum, so set an effort when you also set a small `max_tokens`. `kimi-k2.5` does not reason unless asked: it takes `"none"`, `"low"`, `"medium"` or `"high"`, and on short prompts only `"high"` returns reasoning. Reasoning tokens count toward `max_tokens`, and a model still thinking at the limit returns an empty answer.
 
-`qwen3-vl` and `qwen3.8-27b` think by default and turn it off with a chat template flag rather than an effort level.
+`qwen3-vl` and `qwen3.8-27b` think by default. `qwen3.8-27b` also takes `reasoning_effort` `"none"`, `"low"`, `"medium"` or `"xhigh"` and rejects `"high"`. On either model, `"none"` or the chat template flag turns thinking off.
 
 ```python
 from litellm import completion
@@ -119,7 +119,7 @@ response = completion(
 )
 ```
 
-`qwen3-80b`, `kimi-k2.5`, `qwen3-vl-235b` and `mistral-large-3` do not return reasoning.
+`qwen3-80b`, `qwen3-vl-235b` and `mistral-large-3` do not return reasoning.
 
 ## Responses API
 
