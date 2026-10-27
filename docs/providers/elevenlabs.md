@@ -10,7 +10,7 @@ ElevenLabs provides high-quality AI voice technology, including speech-to-text c
 | Description | ElevenLabs offers advanced AI voice technology with speech-to-text transcription and text-to-speech capabilities that support multiple languages and speaker diarization. |
 | Provider Route on LiteLLM | `elevenlabs/` |
 | Provider Doc | [ElevenLabs API ↗](https://elevenlabs.io/docs/api-reference) |
-| Supported Endpoints | `/audio/transcriptions`, `/audio/speech` |
+| Supported Endpoints | `/audio/transcriptions`, `/audio/speech`, `/v1/realtime` ([Eleven Realtime](/docs/providers/elevenlabs_realtime)) |
 
 ## Quick Start
 

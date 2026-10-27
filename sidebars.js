@@ -1601,7 +1601,10 @@ const sidebars = {
           "providers/deepgram",
           "providers/deepinfra",
           "providers/edenai",
-          "providers/elevenlabs",
+          { type: "category", label: "ElevenLabs", items: [
+            "providers/elevenlabs",
+            "providers/elevenlabs_realtime",
+          ] },
           "providers/empiriolabs",
           "providers/fal_ai",
           "providers/featherless_ai",
