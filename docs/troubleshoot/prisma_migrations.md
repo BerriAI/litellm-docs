@@ -210,9 +210,7 @@ If you would rather let the proxy perform the rewrite at boot, raise the timeout
 LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
   "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
     blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
-    fix:    Rows written before v1.99.0 hold the raw key. Hash them in place (one-way, idempotent):
-            UPDATE "LiteLLM_SpendLogs" SET api_key = encode(sha256(convert_to(regexp_replace(api_key, '^[Bb][Ee][Aa][Rr][Ee][Rr] ', ''), 'UTF8')), 'hex')
-            WHERE api_key <> '' AND api_key !~ '^[0-9a-fA-F]{64}$' AND api_key !~ '^hashed-jwt-[0-9A-Fa-f]{64}$';
+    fix:    Shorten or hash the long "LiteLLM_SpendLogs" (api_key, startTime) values so every row's index entry fits.
 No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
 ```
 
@@ -230,7 +228,17 @@ FROM "LiteLLM_SpendLogs"
 WHERE octet_length("api_key") > 2684;
 ```
 
-Then run the `UPDATE` from the report. It replaces every raw key with the hash the proxy writes today, which is one way and idempotent (a hashed row matches neither pattern and is skipped). In our test it took about 8 seconds per 100,000 legacy rows and did not block inserts. Rows the proxy wrote with the raw key keep their spend and are now found under the hashed key, the same way rows written since v1.99.0 are.
+Then hash the raw keys in place, the same hash the proxy writes today:
+
+```sql
+UPDATE "LiteLLM_SpendLogs"
+SET api_key = encode(sha256(convert_to(regexp_replace(api_key, '^[Bb][Ee][Aa][Rr][Ee][Rr] ', ''), 'UTF8')), 'hex')
+WHERE api_key <> ''
+  AND api_key !~ '^[0-9a-fA-F]{64}$'
+  AND api_key !~ '^hashed-jwt-[0-9A-Fa-f]{64}$';
+```
+
+This is one way and idempotent (a hashed row matches neither pattern and is skipped). In our test it took about 8 seconds per 100,000 legacy rows and did not block inserts. Rows the proxy wrote with the raw key keep their spend and are now found under the hashed key, the same way rows written since v1.99.0 are.
 
 On v1.108.0 and later, start the proxy or the job again; the check passes and the upgrade proceeds. On an earlier version, also clean up what the failed attempt left behind. If the index was left invalid, drop it and let the next start rebuild it:
 

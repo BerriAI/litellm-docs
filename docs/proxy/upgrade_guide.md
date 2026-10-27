@@ -35,8 +35,7 @@ It writes nothing and takes no table lock. Exit code 0 means the pending migrati
 LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
   "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
     blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
-    fix:    Rows written before v1.99.0 hold the raw key. Hash them in place (one-way, idempotent):
-            UPDATE "LiteLLM_SpendLogs" SET api_key = ...
+    fix:    Shorten or hash the long "LiteLLM_SpendLogs" (api_key, startTime) values so every row's index entry fits.
 No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
 ```
 
