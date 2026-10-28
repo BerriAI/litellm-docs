@@ -223,7 +223,7 @@ print(response.choices[0].message.content)
 model_list:
   - model_name: claude-sonnet-4-6
     litellm_params:
-      model: bedrock/anthropic.claude-sonnet-4-6-v1
+      model: bedrock/global.anthropic.claude-sonnet-4-6
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
@@ -266,7 +266,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 from litellm import completion
 
 response = completion(
-    model="bedrock/anthropic.claude-sonnet-4-6-v1",
+    model="bedrock/global.anthropic.claude-sonnet-4-6",
     aws_access_key_id="your-access-key",
     aws_secret_access_key="your-secret-key",
     aws_region_name="us-east-1",

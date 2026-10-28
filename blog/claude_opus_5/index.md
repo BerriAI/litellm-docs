@@ -140,7 +140,7 @@ docker run -d \
 model_list:
   - model_name: claude-opus-5
     litellm_params:
-      model: bedrock/anthropic.claude-opus-5
+      model: bedrock/global.anthropic.claude-opus-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
