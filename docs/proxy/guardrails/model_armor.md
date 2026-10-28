@@ -154,10 +154,10 @@ A document larger than Model Armor's 4 MB byte limit does carry bytes but exceed
 - `location` - str - Google Cloud location/region. Default is `us-central1`
 - `credentials` - Union[str, dict] - Path to service account JSON file or credentials dictionary
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
-- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
+- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`. On `/v1/extraction`, `/v1/decisions` and `/v1/systemone` a Model Armor error lets the request through unscanned even when this is `true`, as the [extraction guardrails section](../../extraction.md#guardrails) describes
 - `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
 - `sanitize_error_detail` - bool - Keep the raw Model Armor API response out of caller-facing error details, debug logs, and guardrail trace payloads. Default is `true`; set `false` to restore verbose output for debugging
-- `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`
+- `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`. On `/v1/extraction`, `/v1/decisions` and `/v1/systemone` a flagged request answers 400 even when this is `true`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
 

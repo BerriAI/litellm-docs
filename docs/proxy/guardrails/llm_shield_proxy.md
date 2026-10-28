@@ -9,7 +9,7 @@ Because the substitution is reversible, both halves belong on one guardrail entr
 
 The guardrail fails closed. If your Shield deployment is unreachable, times out, or answers with an error status, the request is blocked rather than forwarded, since a redaction guardrail that failed open would send the very data it exists to protect to the provider.
 
-It covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming.
+It covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/messages`, streaming and non-streaming. It also redacts request text on `/v1/extraction`, `/v1/decisions` and `/v1/systemone`, and the [extraction](../../extraction.md#guardrails) and [decisions](../../decisions.md#guardrails) pages list the fields it sees there.
 
 ## Quick Start
 
