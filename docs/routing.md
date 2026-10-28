@@ -1377,7 +1377,7 @@ Defaults:
 - allowed_fails: not set
 - cooldown_time: 5s (`DEFAULT_COOLDOWN_TIME_SECONDS` in constants.py)
 
-With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value in `router_settings` of your config.yaml or in `Router(...)`, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once. A value saved from the Admin UI or `/config/update` counts only when it is not 3, since the Admin UI saves the default back with every change.
+With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value in `router_settings` of your config.yaml or in `Router(...)`, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once. A value saved from the Admin UI or `/config/update` counts only when it is not 3, since the Admin UI saves the default back with every change. Before v1.109.0, the router treated an explicit 3 as unset and kept using those rules.
 
 **Set Per Model**
 
