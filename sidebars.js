@@ -1816,6 +1816,7 @@ const providersSidebar = {
     "providers/fal_ai",
     "providers/featherless_ai",
     "providers/fireworks_ai",
+    "providers/flowspeech",
     "providers/friendliai",
     "providers/galadriel",
     "providers/github",
