@@ -101,11 +101,19 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
     rpm: 60     # 60 requests per minute
     tpm: 90000  # 90k tokens per minute
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      rpd: 1500     # 1500 requests per UTC day
+      tpd: 1000000  # 1M tokens per UTC day
 
 router_settings:
   optional_pre_call_checks:
     - enforce_model_rate_limits  # Enables strict enforcement
 ```
+
+`rpm`, `tpm`, `rpd` and `tpd` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`.
 
 ### How It Works
 
@@ -113,8 +121,14 @@ router_settings:
 |------------|-------------|----------|
 | **RPM** | Hard limit - blocked at exact threshold | 100% accurate |
 | **TPM** | Best-effort - may slightly exceed | Blocked when already over limit |
+| **RPD** | Hard limit - blocked at exact threshold | 100% accurate |
+| **TPD** | Best-effort - may slightly exceed | Blocked when already over limit |
 
-**Why TPM is best-effort:** Token count is unknown until the LLM responds. TPM is checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+**Why TPM and TPD are best-effort:** Token count is unknown until the LLM responds. TPM and TPD are checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+
+**Daily limits reset at midnight UTC.** The counter key carries the UTC date, so a new day starts a fresh count on every proxy instance at the same moment. Provider quotas may reset in another timezone (Google free-tier quotas reset at midnight Pacific), so a `rpd` or `tpd` set from a provider's published daily quota can still be exceeded on the provider side in the hours between the two resets.
+
+When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until midnight UTC.
 
 ### Error Response
 
@@ -128,7 +142,7 @@ router_settings:
 }
 ```
 
-Response includes `retry-after: 60` header.
+Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1500`) and `retry-after` is the number of seconds until midnight UTC.
 
 ### Multi-Instance Deployment
 
