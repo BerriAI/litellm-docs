@@ -171,49 +171,23 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     # auto_router_model_compression: none
 ```
 
-## Routing Responses API image requests
+## Image requests and text-only tiers
 
-These checks apply to HTTP `POST /v1/responses`, including streamed responses.
-
-Responses API image requests require a deployment with confirmed vision support. LiteLLM uses the deployment's
-`model_info.supports_vision` override when present, then the loaded model catalog. For named
-deployments, catalog lookup uses `model_info.base_model`, then `litellm_params.base_model`, before
-the deployment model name. It does not probe providers during routing. Deployments with false or unknown vision support can still serve
-text requests, but are excluded from image requests.
-
-A model group may contain both text-only and vision deployments. The group remains eligible for
-an image request when it has compatible deployments. Normal routing then chooses within that
-subset, preserving health, access, quota, order, and routing plugin checks.
-
-The auto-router can select compatible peers or higher tiers and an allowed default model. If
-none can serve the request, LiteLLM returns an actionable 400 before contacting an incompatible
-provider. Existing tier floors and routing plugin restrictions still apply.
-
-:::danger Upgrade behavior
-
-Responses API image capability checks apply by default, including when `modality_routing: false`.
-Other endpoints retain their existing modality routing behavior. Custom deployments without catalog metadata need an explicit vision declaration
-before they can receive images. Only declare support when the underlying model accepts images.
-Existing mixed model groups do not need to be split.
-
-:::
-
-For a custom vision deployment, use the existing deployment override.
+An image request is a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. LiteLLM does not send one to a deployment that is declared text-only. A deployment is text-only when `model_info.supports_vision` is `false`, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the deployment model name. A deployment with no declaration and no catalog entry is treated as image-capable, so a custom text-only deployment needs an explicit `model_info.supports_vision: false` before it is skipped. LiteLLM never probes a provider during routing.
 
 ```yaml
 model_list:
-  - model_name: image-pool
+  - model_name: oss-120b
     litellm_params:
-      model: openai/my-vision-deployment
-      api_base: os.environ/VISION_API_BASE
-      api_key: os.environ/VISION_API_KEY
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
     model_info:
-      supports_vision: true
+      supports_vision: false
 ```
 
-Session pins are retained by default. If the pinned group has no compatible deployment, the image
-request fails before provider dispatch. Set `modality_pin_override: true` in the auto-router config
-to allow that image turn to move to a compatible model without changing the stored session pin.
+Within a model group this check runs on by default under every routing strategy, including streaming, and does not need `enable_pre_call_checks`. When the group mixes text-only and vision deployments, an image request chooses among the vision deployments and the rest of routing (health, cooldowns, access, quota, order, plugins) applies within that subset. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, so a group that only ever served text keeps its previous behavior. See [vision capability filtering](./reliability#vision-capability-filtering-image-requests) for the model group version.
+
+The auto-router adds a tier level check on top of that. With `modality_routing: true` in the complexity router config, an image turn that was classified onto a text-only tier moves to the next capable tier or the default model instead of failing at the provider. It skips a tier when any deployment behind that tier's model is declared text-only, resolved the same way as above, and an undeclared model stays eligible. Session pins are retained by default, so a pinned text-only model keeps receiving the image turns of that session. Set `modality_pin_override: true` to let that image turn move to a capable model without changing the stored session pin.
 
 ## Classification
 

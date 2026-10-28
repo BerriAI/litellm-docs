@@ -603,6 +603,31 @@ li.tabs__item--active {
   border-top: 0;
   padding-top: 4px;
 }
+/* A multi-page provider in the AI Providers sidebar (className
+   "sidebar-provider"): set it like the single-page providers around it, not
+   like a top-level Docs section. */
+.theme-doc-sidebar-item-category-level-1.sidebar-provider {
+  margin-bottom: 0 !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider > .menu__list-item-collapsible {
+  min-height: 0;
+  padding: 0 !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link:first-of-type,
+[data-theme='dark']
+  .theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link:first-of-type {
+  color: var(--ifm-menu-color);
+  font-weight: var(--ifm-font-weight-normal) !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link--active:first-of-type {
+  color: var(--ifm-menu-color-active);
+}
 .sidebar-xlink > .menu__link::after,
 .menu__link.sidebar-xlink::after {
   content: "\2197";
@@ -2013,6 +2038,70 @@ article a.card:hover {
   background: var(--ifm-menu-color-background-hover);
 }
 
+/* Blog tables on narrow screens: wide tables clip past the article edge, so
+   stack each row into a card and label every cell with its column header
+   (data-label comes from src/rehype/table-cell-labels.js). */
+@media (max-width: 996px) {
+  .blog-wrapper .markdown table,
+  .blog-wrapper .markdown table tbody,
+  .blog-wrapper .markdown table tr,
+  .blog-wrapper .markdown table td {
+    display: block;
+    width: 100%;
+  }
+
+  .blog-wrapper .markdown table,
+  .blog-wrapper[data-theme='dark'] .markdown table {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .blog-wrapper .markdown table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .blog-wrapper .markdown table tbody tr {
+    margin-bottom: 12px;
+    padding: 6px 0;
+    border: 1px solid var(--aurora-line-strong);
+    border-radius: var(--lite-radius-lg, 14px);
+  }
+
+  .blog-wrapper[data-theme='dark'] .markdown table tbody tr {
+    background: #161b22;
+  }
+
+  .blog-wrapper .markdown table td,
+  .blog-wrapper .markdown table tbody tr:first-child td {
+    padding: 6px 14px;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .blog-wrapper .markdown table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .blog-wrapper .markdown table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--aurora-soft);
+    font-family: var(--ifm-font-family-monospace);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
 /* Key column: when the first cell is just a code span (a parameter, field or
    model name), set it as plain mono text instead of a chip. */
 :is(.markdown, [class*='mdxPageWrapper'] article) table td:first-child:has(> code:only-child) {
@@ -2639,4 +2728,22 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
    :root so it wins over the theme's own :root value, which loads later. */
 :root:root {
   --doc-sidebar-hidden-width: 40px;
+}
+
+/* Blog embeds retain .markdown but not the surrounding docs page wrapper. */
+.markdown .button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Rich admonition titles contain inline code and text nodes, not flex columns. */
+.markdown .theme-admonition [class*='admonitionHeading'] {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.markdown .theme-admonition [class*='admonitionIcon'] {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 8px;
 }

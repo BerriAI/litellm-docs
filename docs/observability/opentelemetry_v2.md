@@ -159,10 +159,20 @@ litellm_settings:
 
 ```shell
 LITELLM_OTEL_V2=true
+LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only    # model calls only
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only
 LANGFUSE_PUBLIC_KEY="pk-..."
 LANGFUSE_SECRET_KEY="sk-..."
 LANGFUSE_HOST="https://cloud.langfuse.com"   # or your self-hosted URL
 ```
+
+OTel v2 captures no message content by default, so without `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only` Langfuse shows each generation's model, tokens and timing with an empty input and output. See [Capturing prompts & responses](#capturing-prompts--responses).
+
+:::warning[Leaving out `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` sends every proxy span to Langfuse]
+
+Without `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` the scope is `full`, so every request also sends its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to Langfuse, and admin API calls such as `/model/info` arrive as traces of their own. This can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
+
+:::
 
 </TabItem>
 
@@ -370,7 +380,7 @@ Phoenix has more than one collector endpoint shape, and picking the wrong one is
 
 #### What Langfuse renders
 
-Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generation**, filterable by team. Endpoint resolution is `LANGFUSE_OTEL_HOST`, then `LANGFUSE_HOST`, then the US cloud default, with `/api/public/otel` appended for a self-hosted host.
+Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generation**, filterable by team, key, user and end user. Endpoint resolution is `LANGFUSE_OTEL_HOST`, then `LANGFUSE_HOST`, then the US cloud default, with `/api/public/otel` appended for a self-hosted host.
 
 #### Attributes added by the `langfuse` mapper
 
@@ -384,14 +394,18 @@ Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generat
 | `langfuse.observation.usage_details` | Input/output/total token counts |
 | `langfuse.observation.cost_details` | Total cost |
 | `langfuse.trace.metadata.team_id`, `team_alias` | Filterable team identity |
+| `langfuse.observation.metadata` | JSON of the caller identity, shown as the generation's own Metadata fields: `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id`, `user_api_key_team_id`, `user_api_key_team_alias` and `user_api_key_org_id` |
+| `langfuse.trace.metadata.user_api_key_*` | The same identity fields as trace metadata, so you can filter traces by key, user, end user, team or org |
 
 These are set by the preset from the request and response, not from a client-supplied metadata dict, so you get them without extra config.
+
+The key alias, user, team and org come from the virtual key the proxy authenticated, and the end user is the one the proxy resolved for the request, the same value spend tracking uses; a caller cannot set any of them through request `metadata`. A field with no value is left out, such as `user_api_key_org_id` for a key outside an organization. The team ID and alias are always sent. The key alias, user, end user and org follow the metadata allowlist in [Request identity on every span](#request-identity-on-every-span), so removing one from `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` also removes it here. Setting `redact_user_api_key_info: true` under `litellm_settings` drops all of them, as it does for the `langfuse` callback. Other exporters next to Langfuse, such as a plain `otel` collector or Arize, do not receive these keys on LiteLLM's spans.
 
 #### Setup notes
 
 - Auth is HTTP Basic, `Authorization: Basic <base64(public_key:secret_key)>`; the preset builds this from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` so you never set the header directly.
 - If your client already sends a W3C `traceparent` and Langfuse is picking up the wrong parent, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true` in the proxy environment to drop inbound context.
-- By default your Langfuse project receives the whole request tree. Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
+- Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations. Without it your Langfuse project receives the whole request tree, which can multiply the volume ingested into Langfuse; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 - This is a Langfuse-flavored path; for a general-purpose OTel backend, use the [generic OTLP setup](#1-send-traces-to-any-otlp-collector) instead.
 
 ![LiteLLM trace in Langfuse](/img/observability/otel_v2_langfuse.png)
@@ -822,6 +836,8 @@ OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=""
 OTEL_PYTHON_FASTAPI_EXCLUDED_URLS="/health,/internal"
 ```
 
+Excluding a route drops its server span only. `/health/liveliness` and `/health/readiness` make no model calls and send nothing, but `/health` checks each model with a real call, so every check is still traced as a model-call span under an `auth /health` root. A Langfuse project on `llm_only` drops the auth span and still receives the model calls.
+
 ## Per-key / per-team credentials (multi-tenant)
 
 One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, or SigNoz account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
@@ -936,8 +952,14 @@ The Admin UI shows the same field as a `langfuse span scope` pick between `full`
 Your own Langfuse exporter has a separate switch in the proxy environment:
 
 ```shell
-LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # default: full
+LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only   # recommended; unset means full
 ```
+
+:::warning[`full` sends significantly more data to Langfuse]
+
+Under `full`, which applies whenever the scope is unset, each proxy request adds its HTTP, auth, Postgres, Redis, guardrail and spend-write spans to the model call, and admin API calls such as `/model/info` become traces of their own. On a busy proxy this can raise the volume ingested into Langfuse by an order of magnitude or more, which shows up directly in Langfuse Cloud usage and cost. Use `llm_only` unless you need those spans in Langfuse.
+
+:::
 
 The two are independent. A tenant's `llm_only` narrows only that tenant's project, and the operator setting narrows only the exporter built from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, whichever mode `otel_tenant_destination_mode` is in. Neither touches a plain `otel` collector or any other preset, so a Datadog or Grafana view of the same request stays complete. The accepted values are `full` and `llm_only`, and a key or team callback with any other value is rejected when it is saved. The setting applies to the `langfuse_otel` preset only: saving a `langfuse_span_scope` on a legacy `langfuse` callback or on another backend's callback is rejected as well, since nothing there would read it
 
@@ -1045,7 +1067,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 |---|---|---|
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
 | `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
-| `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
+| `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter and is the recommended setting; `full` can multiply the volume ingested into Langfuse. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
 | `LITELLM_OTEL_EXCLUDED_SERVICES` | none | Comma-separated datastores, `redis` and `postgres`, whose spans are not forwarded to key and team destinations. `callback_settings.otel.excluded_services` overrides it. See [Keep Redis and Postgres spans out of tenant traces](#keep-redis-and-postgres-spans-out-of-tenant-traces). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. For traces, a `callback_settings.otel.exporters` list replaces it; see [Send to more than one collector](#send-to-more-than-one-collector). |

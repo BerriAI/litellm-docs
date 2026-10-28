@@ -172,4 +172,4 @@ items={[
 
 ## When To Use The SDK Path Instead
 
-If you only need to call models from one application and do not need centralized auth or shared infrastructure, start with the [SDK Quickstart](/docs/learn/python_sdk_quickstart) instead.
+If you only need to call models from one application and do not need centralized auth or shared infrastructure, start with the [SDK Quickstart](/docs/learn/sdk_quickstart) instead.
