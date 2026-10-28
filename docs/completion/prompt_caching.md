@@ -652,9 +652,9 @@ curl -X POST http://localhost:4000/chat/completions \
 
 | Model | Bedrock Model ID | Min Tokens | TTL Options |
 |---|---|---|---|
-| Claude Opus 5 | `anthropic.claude-opus-5` | 512 | 5 min, 1 hour |
-| Claude Sonnet 5 | `anthropic.claude-sonnet-5` | 1,024 | 5 min, 1 hour |
-| Claude Opus 4.8 | `anthropic.claude-opus-4-8` | 1,024 | 5 min, 1 hour |
+| Claude Opus 5 | `global.anthropic.claude-opus-5` | 512 | 5 min, 1 hour |
+| Claude Sonnet 5 | `global.anthropic.claude-sonnet-5` | 1,024 | 5 min, 1 hour |
+| Claude Opus 4.8 | `global.anthropic.claude-opus-4-8` | 1,024 | 5 min, 1 hour |
 | Claude 3.5 Sonnet v2 | `anthropic.claude-3-5-sonnet-20241022-v2:0` | 1,024 | 5 min, 1 hour |
 | Claude 3.7 Sonnet | `anthropic.claude-3-7-sonnet-20250219-v1:0` | 1,024 | 5 min, 1 hour |
 | Claude Opus 4 | `anthropic.claude-opus-4-20250514-v1:0` | 1,024 | 5 min, 1 hour |
