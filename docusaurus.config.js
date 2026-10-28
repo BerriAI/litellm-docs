@@ -67,6 +67,7 @@ const config = {
           {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
           {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
           {from: '/docs/learn', to: '/docs/tutorials'},
+          {from: '/docs/learn/gateway_quickstart', to: '/docs/proxy/quick_start'},
           {from: '/docs/learn/python_sdk_quickstart', to: '/docs/learn/sdk_quickstart'},
           {from: '/docs/learn/enterprise_quickstart_learn', to: '/docs/learn/enterprise_quickstart'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
