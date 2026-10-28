@@ -134,7 +134,7 @@ Blocked requests return the reason:
 {"error": "Model Armor could not scan an attachment and blocked the request: attachment of 5242880 bytes exceeds Model Armor's 4194304 byte scan limit"}
 ```
 
-If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact; it only affects attachments there is nothing to send.
+If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact, except on `/v1/extraction`, `/v1/decisions` and `/v1/systemone`, where those errors let the request through; it only affects attachments there is nothing to send.
 
 A document larger than Model Armor's 4 MB byte limit does carry bytes but exceeds what the byte API accepts, so it stays fail-closed under `fail_on_error`; `skip_unscannable_attachments` does not cover it, since that is a real document you likely want blocked rather than forwarded unscanned.
 
