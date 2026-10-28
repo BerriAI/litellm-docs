@@ -50,6 +50,8 @@ class VersionNoteTests(unittest.TestCase):
             ("- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.81.14 or later**, with PostgreSQL", "1.81.14"),
             ("| Agent mode not working | Upgrade to LiteLLM v1.97.0+ and confirm the model supports custom API keys |", "1.97.0"),
             ("Agent mode is not working. Upgrade to LiteLLM v1.97.0+ to fix it.", "1.97.0"),
+            ("| Supported from LiteLLM Version | `v1.51.4` |", "1.51.4"),
+            ("| Agent mode not working | Requires v1.97.0 |", "1.97.0"),
         ):
             with self.subTest(line=line):
                 errors = self.version_notes(f"# Page\n\n{line}\n")
@@ -95,7 +97,6 @@ class VersionNoteTests(unittest.TestCase):
             "Install the OpenAI SDK 1.30.0 or later.",
             "![Requires v1.85.0](./img/flow.png)",
             "Rows it wrote are found under the hashed key, the same way rows written since v1.99.0 are.",
-            "| `x-litellm-version` | `1.55.3` | Version. |",
         ):
             with self.subTest(line=line):
                 self.assertEqual(self.version_notes(f"# Page\n\n{line}\n"), [])

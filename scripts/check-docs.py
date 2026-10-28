@@ -61,9 +61,9 @@ cell holding "1.63.8+") and points at the badge. The version has to end its
 sentence, table cell, or parenthesis, so a sentence that happens to mention a
 release ("From v1.81.0 the request is set as attributes on the parent span") is
 left alone, and so is a removal or regression note ("No longer supported since
-v1.110.0", "Broken since v1.86.0"). Only the words in the version's own
-sentence and table cell count, so "not working" in the cell before "Upgrade to
-LiteLLM v1.97.0+" does not hide that note. "LiteLLM v1.97.0+ strips ..." fires
+v1.110.0", "Broken since v1.86.0"). A negation word counts only inside the
+version's own sentence and table cell, so "not working" in the cell before
+"Upgrade to LiteLLM v1.97.0+" does not hide that note. "LiteLLM v1.97.0+ strips ..." fires
 wherever the sentence goes, since LiteLLM's name with a "+" or "and later" is a
 note on its own. Another project's version is usually left alone too, since the words
 leading into it are not availability words, but a line like "requires the SDK
@@ -581,7 +581,7 @@ RELEASE_VERSION = r"v?\d+\.\d+\.\d+[\w.-]*"
 SINCE_VERSION_PROP_RE = re.compile(
     rf"\bv\s*=\s*(?:[\"']{RELEASE_VERSION}[\"']|\{{\s*[\"'`]{RELEASE_VERSION}[\"'`]\s*\}})"
 )
-VERSION_NOTE_BOUNDARY_RE = re.compile(r"\||[.;!?](?=\s)")
+VERSION_NOTE_SENTENCE_END_RE = re.compile(r"[.;!?](?=\s)")
 
 
 def version_note_literal(raw):
@@ -592,9 +592,10 @@ def version_note_literal(raw):
 def is_version_note(text, match):
     after = text[match.end():]
     before = text[: match.start()]
-    start = max((m.end() for m in VERSION_NOTE_BOUNDARY_RE.finditer(before)), default=0)
-    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(before[start:])]
-    negated = not VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[-VERSION_NOTE_LOOKBACK:])
+    sentence = before[max((m.end() for m in VERSION_NOTE_SENTENCE_END_RE.finditer(before)), default=0):]
+    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(sentence)]
+    cell_start = len(lead_in) - len(VERSION_NOTE_WORD_RE.findall(sentence[sentence.rfind("|") + 1 :]))
+    negated = not VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[max(cell_start, len(lead_in) - VERSION_NOTE_LOOKBACK):])
     loose_shape = LITELLM_RELEASE_RE.match(match.group(0)) and VERSION_NOTE_QUALIFIER_RE.match(after)
     if loose_shape and names_litellm(lead_in):
         return not negated
@@ -605,14 +606,14 @@ def is_version_note(text, match):
         return not negated
     if VERSION_NOTE_COPULA_RE.search(clause_tail):
         return False
-    if loose_shape and all(word in VERSION_NOTE_FILLER_WORDS for word in lead_in):
+    if loose_shape and all(word in VERSION_NOTE_FILLER_WORDS for word in lead_in[cell_start:]):
         return not negated
     for distance, word in enumerate(reversed(lead_in[-VERSION_NOTE_LOOKBACK:]), start=1):
-        if word in VERSION_NOTE_NEGATION_WORDS:
+        lead_at = len(lead_in) - distance
+        if word in VERSION_NOTE_NEGATION_WORDS and lead_at >= cell_start:
             return False
         if word in VERSION_NOTE_LEAD_WORDS:
-            lead_at = len(lead_in) - distance
-            return VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[max(0, lead_at - 2):lead_at])
+            return VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[max(cell_start, lead_at - 2):lead_at])
         if word not in VERSION_NOTE_FILLER_WORDS:
             return False
     return False
