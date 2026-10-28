@@ -88,13 +88,7 @@ Set `itpm` and `otpm` instead of `tpm`/`rpm` when a provider publishes distinct 
 :::
 
 :::info
-By default, `rpm` and `tpm` values are only used for **routing decisions** (picking deployments with capacity). With `enforce_model_rate_limits`, they become **hard limits**. This is the only setting that enforces deployment `rpm` and `tpm`; `enable_pre_call_checks` filters by context window and region and never rate limits a deployment.
-:::
-
-:::danger Breaking Changes
-
-**`enable_pre_call_checks: true` no longer rate limits deployments by `rpm`.** Before this change it also dropped a deployment for the rest of the minute once its request count reached `litellm_params.rpm`. Proxies running `router_settings.enable_pre_call_checks: true` with `rpm` on a deployment and no `enforce_model_rate_limits` now keep picking that deployment past its `rpm`. To keep the hard limit, add `optional_pre_call_checks: ["enforce_model_rate_limits"]` to `router_settings`. See [PR #48873](https://github.com/BerriAI/litellm/pull/48873).
-
+By default, `rpm` and `tpm` values are only used for **routing decisions** (picking deployments with capacity). With `enforce_model_rate_limits`, they become **hard limits**.
 :::
 
 ### Quick Start
