@@ -1,6 +1,6 @@
 # /containers
 
-Manage OpenAI code interpreter containers (sessions) for executing code in isolated environments.
+Manage OpenAI and Azure OpenAI code interpreter containers (sessions) for executing code in isolated environments.
 
 :::tip
 Looking for how to use Code Interpreter? See the [Code Interpreter Guide](/docs/guides/code_interpreter).
@@ -13,7 +13,7 @@ Looking for how to use Code Interpreter? See the [Code Interpreter Guide](/docs/
 | Load Balancing | ✅ |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
 | Spend Management | ✅ Budget tracking and rate limiting |
-| Supported Providers | `openai`|
+| Supported Providers | `openai`, `azure` |
 
 :::tip
 
@@ -211,7 +211,7 @@ You can specify the custom LLM provider in multiple ways (priority order):
 ```bash
 # Default provider (openai)
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container",
@@ -225,7 +225,7 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via header
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "custom-llm-provider: openai" \
     -H "Content-Type: application/json" \
     -d '{
@@ -236,7 +236,7 @@ curl -X POST "http://localhost:4000/v1/containers" \
 ```bash
 # Via query parameter
 curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container"
@@ -246,7 +246,7 @@ curl -X POST "http://localhost:4000/v1/containers?custom_llm_provider=openai" \
 ```bash
 # With model_list credentials: name the deployment
 curl -X POST "http://localhost:4000/v1/containers" \
-    -H "Authorization: Bearer sk-1234" \
+    -H "Authorization: Bearer $LITELLM_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "My Container",
@@ -258,27 +258,27 @@ curl -X POST "http://localhost:4000/v1/containers" \
 
 ```bash
 curl "http://localhost:4000/v1/containers?limit=20&order=desc" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```bash
 # With model_list credentials: name the deployment
 curl "http://localhost:4000/v1/containers?model=gpt-5.6&limit=20&order=desc" \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Retrieve a Container**
 
 ```bash
 curl "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Delete a Container**
 
 ```bash
 curl -X DELETE "http://localhost:4000/v1/containers/cntr_123..." \
-    -H "Authorization: Bearer sk-1234"
+    -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ## **Using OpenAI Client with LiteLLM Proxy**
@@ -293,7 +293,7 @@ First, configure your OpenAI client to point to your LiteLLM proxy:
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1234",  # Your LiteLLM proxy key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
     base_url="http://localhost:4000"  # LiteLLM proxy URL
 )
 ```
@@ -380,7 +380,7 @@ from openai import OpenAI
 
 # Initialize client
 client = OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -509,12 +509,20 @@ print(f"Deleted: {result.deleted}")
 | Provider    | Support Status | Notes |
 |-------------|----------------|-------|
 | OpenAI      | ✅ Supported   | Full support for all container operations |
+| Azure OpenAI | ✅ Supported  | Set `custom_llm_provider="azure"`. Requests go to `{api_base}/openai/v1/containers` with the `api-key` header |
 
-:::info
+For Azure OpenAI, pass the resource endpoint as `api_base` and the key as `api_key`, or set `AZURE_API_BASE` and `AZURE_API_KEY`
 
-Currently, only OpenAI supports container management for code interpreter sessions. Support for additional providers may be added in the future.
+```python
+container = litellm.create_container(
+    name="My Code Interpreter Container",
+    custom_llm_provider="azure",
+    api_base="https://<your-resource>.openai.azure.com",
+    api_key=os.environ["AZURE_API_KEY"],
+)
+```
 
-:::
+On the proxy, send `-H "custom-llm-provider: azure"` to use the `AZURE_API_BASE` and `AZURE_API_KEY` environment variables, or pass the `model` of an `azure/` deployment in `model_list` to use that deployment's `api_base` and `api_key`
 
 ## Related
 

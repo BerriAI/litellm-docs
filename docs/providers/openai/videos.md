@@ -47,10 +47,12 @@ with open("generated_video.mp4", "wb") as f:
 
 LiteLLM provides OpenAI API compatible video endpoints for complete video generation workflow:
 
-- `/videos/generations` - Generate new videos
-- `/videos/remix` - Edit existing videos with reference images  
-- `/videos/status` - Check video generation status
-- `/videos/retrieval` - Download completed videos
+- `POST /v1/videos` - Generate new videos
+- `GET /v1/videos/{video_id}` - Check video generation status
+- `GET /v1/videos/{video_id}/content` - Download completed videos
+- `POST /v1/videos/{video_id}/remix` - Remix an existing video with a new prompt
+
+Each route is also served without the `/v1` prefix.
 
 **Setup**
 
@@ -77,7 +79,7 @@ Test video generation request
 ```bash
 curl --location 'http://localhost:4000/v1/videos' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "model": "sora-2",
     "prompt": "A beautiful sunset over the ocean"
@@ -90,7 +92,7 @@ Test video status request
 # Using custom-llm-provider header
 curl --location 'http://localhost:4000/v1/videos/video_id' \
 --header 'Accept: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --header 'custom-llm-provider: openai'
 ```
 
@@ -100,14 +102,14 @@ Test video retrieval request
 # Using custom-llm-provider header
 curl --location 'http://localhost:4000/v1/videos/video_id/content' \
 --header 'Accept: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --header 'custom-llm-provider: openai' \
 --output video.mp4
 
 # Or using query parameter
 curl --location 'http://localhost:4000/v1/videos/video_id/content?custom_llm_provider=openai' \
 --header 'Accept: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --output video.mp4
 ```
 
@@ -118,7 +120,7 @@ Test video remix request
 curl --location --request POST 'http://localhost:4000/v1/videos/video_id/remix' \
 --header 'Accept: application/json' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --data '{
     "prompt": "New remix instructions",
     "custom_llm_provider": "openai"
@@ -128,7 +130,7 @@ curl --location --request POST 'http://localhost:4000/v1/videos/video_id/remix' 
 curl --location --request POST 'http://localhost:4000/v1/videos/video_id/remix' \
 --header 'Accept: application/json' \
 --header 'Content-Type: application/json' \
---header 'x-litellm-api-key: sk-1234' \
+--header 'x-litellm-api-key: sk-<your-litellm-api-key>' \
 --header 'custom-llm-provider: openai' \
 --data '{
     "prompt": "New remix instructions"
@@ -150,9 +152,9 @@ OpenAI video routes supported by LiteLLM proxy:
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 -F 'name=hero' \
--F 'target_model_names=gpt-4' \
+-F 'target_model_names={{openai_large}}' \
 -F 'video=@/path/to/character.mp4'
 ```
 
@@ -171,7 +173,7 @@ Use that encoded ID directly on get:
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/characters/character_...' \
---header 'Authorization: Bearer sk-1234'
+--header "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 #### Encoded and non-encoded video IDs for edit/extension
@@ -183,7 +185,7 @@ Both routes accept either plain or encoded `video.id`:
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/edits' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Make this brighter",
@@ -193,7 +195,7 @@ curl --location 'http://localhost:4000/v1/videos/edits' \
 
 ```bash
 curl --location 'http://localhost:4000/v1/videos/extensions' \
---header 'Authorization: Bearer sk-1234' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
 --data '{
   "prompt": "Continue this scene",
@@ -214,7 +216,7 @@ Test OpenAI video generation request
 
 ```bash
 curl http://localhost:4000/v1/videos \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "sora-2",

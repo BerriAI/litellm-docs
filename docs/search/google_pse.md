@@ -43,9 +43,9 @@ response = search(
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: gpt-4
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 search_tools:
@@ -53,7 +53,13 @@ search_tools:
     litellm_params:
       search_provider: google_pse
       api_key: os.environ/GOOGLE_PSE_API_KEY
-      search_engine_id: os.environ/GOOGLE_PSE_ENGINE_ID
+```
+
+The search engine id (`cx`) is read only from the `GOOGLE_PSE_ENGINE_ID` environment variable of the proxy process, so export it before starting the proxy. A `search_engine_id` key in the search tool's `litellm_params` is not used as `cx`
+
+```bash
+export GOOGLE_PSE_API_KEY="AIza..."
+export GOOGLE_PSE_ENGINE_ID="your-search-engine-id"
 ```
 
 ### 2. Start the proxy
@@ -68,7 +74,7 @@ litellm --config /path/to/config.yaml
 
 ```bash showLineNumbers title="Test Request"
 curl http://0.0.0.0:4000/v1/search/google-search \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "latest AI developments",

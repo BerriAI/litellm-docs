@@ -20,7 +20,7 @@ class User(BaseModel):
 
 def extract_user(text: str):
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="{{openai_small}}",
         response_model=User,
         messages=[
             {"role": "user", "content": text},
@@ -56,7 +56,7 @@ class User(BaseModel):
 
 async def extract(text: str) -> User:
     return await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="{{openai_small}}",
         response_model=User,
         messages=[
             {"role": "user", "content": text},

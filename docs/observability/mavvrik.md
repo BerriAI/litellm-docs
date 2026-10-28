@@ -30,7 +30,7 @@ You need the following from your Mavvrik account:
 | `MAVVRIK_CONNECTION_ID` | Yes | AI cost connection identifier |
 | `MAVVRIK_FOCUS_MAX_ROWS` | No | Maximum rows per daily export (default: 500000). Increase for very high-traffic deployments. |
 
-:::info Daily export only
+:::info[Daily export only]
 Only `daily` frequency is supported. The Mavvrik ingestion protocol stores one file per calendar date (`metrics/YYYY-MM-DD`). Hourly or interval exports would overwrite each other within the same day, producing incomplete data.
 :::
 
@@ -38,9 +38,9 @@ Only `daily` frequency is supported. The Mavvrik ingestion protocol stores one f
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: sk-your-key
 
 litellm_settings:

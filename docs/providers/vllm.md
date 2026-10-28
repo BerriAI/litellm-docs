@@ -13,7 +13,7 @@ LiteLLM supports all models on VLLM.
 | Supported Endpoints | `/chat/completions`, `/embeddings`, `/completions`, `/rerank`, `/audio/transcriptions` |
 
 
-# Quick Start
+## Quick Start
 
 ## Usage - litellm.completion (calling OpenAI compatible endpoint)
 vLLM Provides an OpenAI compatible endpoints - here's how to call it with LiteLLM 
@@ -66,7 +66,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
   ```python
   import openai
   client = openai.OpenAI(
-      api_key="sk-1234",             # pass litellm proxy key, if you're using virtual keys
+      api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -88,7 +88,7 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: Bearer sk-1234' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",
@@ -195,7 +195,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/embeddings' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{"input": ["hello world"], "model": "my-model"}'
 ```
@@ -289,7 +289,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/rerank' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "model": "my-rerank-model",
@@ -343,7 +343,7 @@ print(response)
 
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/rerank' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "model": "my-rerank-model",
@@ -352,6 +352,64 @@ curl -L -X POST 'http://0.0.0.0:4000/rerank' \
     "truncate_prompt_tokens": 512,
     "truncation_side": "left"
 }'
+```
+
+</TabItem>
+</Tabs>
+
+## Image Edits
+
+vLLM-Omni serves OpenAI-compatible `/v1/images/edits` for image editing models such as `Qwen/Qwen-Image-Edit-2511`. Use the `hosted_vllm/` prefix and point `api_base` at the vLLM-Omni server; extra provider fields such as `seed` or `negative_prompt` are passed through as form fields. vLLM-Omni has no `quality` or `input_fidelity` form field and takes its mask as `mask_image` (a URL string) rather than OpenAI's `mask` file, so LiteLLM rejects `mask`, `quality`, and `input_fidelity` for `hosted_vllm/` models unless `drop_params: true` is set, in which case they are dropped before the request is sent. To mask an edit, pass `mask_image` as an extra field with the mask's URL.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import image_edit
+import os
+
+os.environ["HOSTED_VLLM_API_BASE"] = "http://localhost:8091"
+
+response = image_edit(
+    model="hosted_vllm/Qwen/Qwen-Image-Edit-2511",
+    image=open("original_image.png", "rb"),
+    prompt="Add a red hat to the person in the image",
+)
+
+print(response)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. Setup config.yaml
+
+```yaml
+model_list:
+    - model_name: qwen-image-edit
+      litellm_params:
+        model: hosted_vllm/Qwen/Qwen-Image-Edit-2511  # add hosted_vllm/ prefix to route as OpenAI provider
+        api_base: http://localhost:8091              # your vLLM-Omni server
+      model_info:
+        mode: image_edit
+```
+
+2. Start the proxy 
+
+```bash
+$ litellm --config /path/to/config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+3. Test it! 
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/v1/images/edits' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-F 'model=qwen-image-edit' \
+-F 'image=@original_image.png' \
+-F 'prompt=Add a red hat to the person in the image'
 ```
 
 </TabItem>
@@ -415,7 +473,7 @@ response = completion(
 # call gemini 
 os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 response = completion(
-    model="gemini/gemini-1.5-flash", # pass the gemini model name
+    model="gemini/{{gemini_flash}}", # pass the gemini model name
     messages=messages,
 )
 
@@ -435,7 +493,7 @@ model_list:
         api_base: https://hosted-vllm-api.co      # add api base for OpenAI compatible provider
     - model_name: my-gemini-model
       litellm_params:
-        model: gemini/gemini-1.5-flash  # add gemini/ prefix to route as Google AI Studio provider
+        model: gemini/{{gemini_flash}}  # add gemini/ prefix to route as Google AI Studio provider
         api_key: os.environ/GEMINI_API_KEY
 ```
 
@@ -451,7 +509,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST http://0.0.0.0:4000/chat/completions \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H "Content-Type: application/json" \
 -d '{
     "model": "my-model",
@@ -544,7 +602,7 @@ $ litellm --config /path/to/config.yaml
 
 ```bash
 curl -X POST http://0.0.0.0:4000/chat/completions \
--H "Authorization: Bearer sk-1234" \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H "Content-Type: application/json" \
 -d '{
     "model": "my-model",
@@ -566,6 +624,10 @@ curl -X POST http://0.0.0.0:4000/chat/completions \
 </TabItem>
 </Tabs>
 
+
+## Decisions
+
+vLLM v0.32.0 and later serve [`/v1/systemone`](https://github.com/vllm-project/vllm/pull/59299) and answer `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. They serve the model architectures listed in vLLM's [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them. Use a `hosted_vllm/` model on LiteLLM's [`/v1/decisions` and `/v1/systemone` routes](../decisions.md), or as the [Auto Router classifier](../auto_router/decision_classifiers.md#vllm).
 
 ## (Deprecated) for packaged `vllm` installs
 ### Using - `litellm.completion`

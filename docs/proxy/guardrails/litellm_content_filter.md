@@ -17,7 +17,7 @@ import Image from '@theme/IdealImage';
 | Guardrail Name | `litellm_content_filter` |
 | Detection Methods | Prebuilt regex patterns, custom regex, keyword matching |
 | Actions | `BLOCK` (reject request), `MASK` (redact content) |
-| Supported Modes | `pre_call`, `post_call`, `during_call` (streaming) |
+| Supported Modes | `pre_call`, `post_call`, `during_call` (streaming), `logging_only` |
 | Performance | Fast - runs locally, no external API calls |
 
 ## Quick Start
@@ -63,9 +63,9 @@ Test examples:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -98,9 +98,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -132,9 +132,9 @@ guardrails:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -182,9 +182,9 @@ litellm --config config.yaml
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My SSN is 123-45-6789"}
     ],
@@ -212,9 +212,9 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```shell
 curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Contact me at john@example.com"}
     ],
@@ -237,6 +237,29 @@ Contact me at [EMAIL_REDACTED]
 - **`pre_call`** - Run before LLM call, filters input messages
 - **`post_call`** - Run after LLM call, filters output responses
 - **`during_call`** - Run during streaming, filters each chunk in real-time
+- **`logging_only`** - Scan the logged request and response after the call without changing what the client receives
+
+In `logging_only` mode the filter only observes. Every match is recorded in the request's guardrail information on the [Logs](/docs/proxy/ui_logs) page, whatever its action. A `BLOCK` match is recorded with status `guardrail_flagged` instead of rejecting the call, and the response is still scanned after a request match. A `MASK` match is recorded with its masked entity counts and the logged text is left as it was. Anything an enforcing mode would reject, such as a `MASK` match on a tool argument name that cannot be rewritten, is also recorded as `guardrail_flagged`.
+
+```yaml
+guardrails:
+  - guardrail_name: "secrets-audit"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: logging_only
+      default_on: true
+      patterns:
+        - pattern_type: regex
+          pattern: "AKIA[0-9A-Z]{16}"
+          name: aws_access_key
+          action: BLOCK
+        - pattern_type: regex
+          pattern: "ghp_[A-Za-z0-9]{36}"
+          name: github_pat
+          action: BLOCK
+```
+
+In the Admin UI, pick **Logging Only** as the mode when you add the guardrail.
 
 ### Actions
 
@@ -251,7 +274,7 @@ Contact me at [EMAIL_REDACTED]
 |-------------|-------------|---------|
 | `us_ssn` | US Social Security Numbers | `123-45-6789` |
 | `email` | Email addresses | `user@example.com` |
-| `phone` | Phone numbers | `+1-555-123-4567` |
+| `us_phone` | US phone numbers | `+1-555-123-4567` |
 | `visa` | Visa credit cards | `4532-1234-5678-9010` |
 | `mastercard` | Mastercard credit cards | `5425-2334-3010-9903` |
 | `amex` | American Express cards | `3782-822463-10005` |
@@ -376,12 +399,12 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Tell me about yourself"}],
     stream=True,
     extra_body={"guardrails": ["streaming-filter"]}
@@ -411,7 +434,7 @@ This is because, each request containing images will be sent to the vision-capab
 model_list:
   - model_name: gpt-4-vision
     litellm_params:
-      model: openai/gpt-4-vision-preview
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -446,7 +469,7 @@ guardrails:
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://localhost:4000"
 )
 
@@ -567,7 +590,7 @@ Reference any category below by name; no `category_file:` is required
 | `claims_prior_auth_gaming` | Prior authorization gaming attempts |
 | `claims_system_override` | Claims system override / role impersonation attempts |
 
-:::info Bias Detection Considerations
+:::info[Bias Detection Considerations]
 
 Bias detection is **complex and context-dependent**. Rule-based systems catch explicit discriminatory language but may generate false positives on legitimate discussions. Start with **high severity thresholds** and test thoroughly. For mission-critical bias detection, consider combining with AI-based guardrails (e.g., HiddenLayer, Lakera).
 
@@ -641,7 +664,7 @@ Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/lite
 ```yaml title="values.yaml (Helm)"
 extraVolumeMounts:
   - name: content-filter-categories
-    mountPath: /usr/local/lib/python3.13/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    mountPath: /usr/local/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
     subPath: <your-category-name>.yaml
     readOnly: true
 

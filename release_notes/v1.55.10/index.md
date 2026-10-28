@@ -1,5 +1,6 @@
 ---
-title: v1.55.10
+title: "LiteLLM v1.55.10"
+description: "Adds cost tracking and logging for the Batches API, a /guardrails/list endpoint and enterprise team admins who manage their own team keys and models."
 slug: v1.55.10
 date: 2024-12-24T10:00:00
 authors:
@@ -40,7 +41,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint 
 
-Show available guardrails to users. [Start here](https://litellm-api.up.railway.app/#/Guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
 
 
 ## ✨ Allow teams to add models

@@ -21,11 +21,20 @@ The master key is the proxy admin credential: it authenticates admin API calls a
 export LITELLM_MASTER_KEY="sk-<long-random-value>"
 ```
 
+### Set trusted proxy ranges
+
+Failed Admin UI sign-ins are limited per source address (see [security best practices](./security_best_practices.md#limit-failed-admin-ui-sign-in-attempts)). That limit only runs when the proxy knows which address is the client, so set `general_settings.trusted_proxy_ranges` to the CIDR ranges of the load balancer or ingress in front of LiteLLM, or to `[]` if clients connect directly. Left unset, the proxy warns at startup and only the weaker per-username limit applies.
+
+```yaml
+general_settings:
+  trusted_proxy_ranges: ["10.0.0.0/8"]   # or [] when clients connect directly
+```
+
 ### Turn on alerting
 
 Get notified about LLM exceptions, slow or hanging requests, budget crossings, database exceptions, outages, and weekly spend reports. In the Admin UI go to **Settings** then **Logging & Alerts**, open the **Alerting Types** tab, toggle the alert types you want, paste your Slack webhook URL, and click **Test Alerts** to confirm delivery. Thresholds and report frequency live in the **Alerting Settings** tab next to it.
 
-<Image img={require('../../img/ui_alerting_types.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
+<Image img={require('../../img/ui_alerting_types.png')} dark={require('../../img/ui_alerting_types_dark.png')} alt="Alerting Types tab in the Admin UI with per-alert toggles and Slack webhook fields" />
 
 To bake it into config instead, set `alerting: ["slack"]` under `general_settings` and export `SLACK_WEBHOOK_URL` in the environment.
 
@@ -52,7 +61,7 @@ general_settings:
 
 The value is read at startup, so a change takes effect once each pod restarts. It can also be set from the admin UI under Router Settings on the General tab, and via the `PROXY_CONFIG_RELOAD_INTERVAL_SECONDS` environment variable.
 
-<Image img={require('../../img/proxy_config_reload_interval_ui.png')} />
+<Image img={require('../../img/proxy_config_reload_interval_ui.png')} dark={require('../../img/proxy_config_reload_interval_ui_dark.png')} alt="Router Settings General tab showing proxy_config_reload_interval_seconds set to 12" />
 
 ### Bound database connections
 
@@ -63,7 +72,7 @@ general_settings:
   database_connection_pool_limit: 10
 ```
 
-:::warning Multiple instances
+:::warning[Multiple instances]
 
 Each instance multiplies your total connections: 3 instances × 4 workers × 10 connections = 120 total connections against your database.
 
@@ -112,7 +121,7 @@ Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which wou
 If you use the database, set a salt key for encrypting and decrypting stored variables. Do not change it after adding a model; it encrypts your LLM API key credentials, and changing it makes them unreadable. Use a [password generator](https://1password.com/password-generator/) to get a random hash.
 
 ```bash
-export LITELLM_SALT_KEY="sk-1234"
+export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 ```
 
 [**See Code**](https://github.com/BerriAI/litellm/blob/036a6821d588bd36d170713dcf5a72791a694178/litellm/proxy/common_utils/encrypt_decrypt_utils.py#L15)
@@ -159,11 +168,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
 
-If you see gradual memory growth under sustained load, recycle each worker after a fixed number of requests with `--max_requests_before_restart` to bound memory usage.
-
-```shell
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
-```
+Do not combine `--num_workers 1` with `--max_requests_before_restart`. With a single worker the flag does not recycle anything; once the limit is hit the whole pod stops serving. Under Uvicorn the process exits with code 0 and Kubernetes restarts the container, and under Gunicorn nothing accepts connections until the old worker has drained and a replacement has booted, which is long enough for liveness probes to fail. Health probes count toward the limit too, so two probes every 15 seconds use up 11,520 requests a day before any real traffic. If you see gradual memory growth under sustained load, rely on Kubernetes replacing pods, or run two or more workers with jitter as described in [Recycle workers](./server_tuning.md#recycle-workers).
 
 For packing multiple workers into one container, alternative servers (Gunicorn, Hypercorn, Granian), staggering recycles with jitter, hitless rolling restarts on Kubernetes, terminating TLS at the proxy, keepalive tuning, and loading `config.yaml` from S3 or GCS, see [Server Tuning](./server_tuning.md).
 
@@ -335,11 +340,14 @@ When `allow_requests_on_db_unavailable` is set to `true`, LiteLLM will handle er
 
 | Type of Error | Expected Behavior | Details |
 |---------------|-------------------|----------------|
-| Prisma Errors | Request will be allowed | Covers issues like DB connection resets or rejections from the DB via Prisma, the ORM used by LiteLLM. |
+| Prisma connection errors | Request will be allowed | The database engine cannot be reached (connection refused or reset, `EngineConnectionError`). Requests proceed with a restricted `INTERNAL_USER` fallback identity, never admin. |
+| Prisma query errors (P2xxx, e.g. P2010) | Request will be blocked | The database answered but the query failed, so the key cannot be verified and the request gets a 401. Treated as fail-closed because the database is reachable. |
 | Httpx Errors | Request will be allowed | Occurs when the database is unreachable, allowing the request to proceed despite the DB outage. |
 | Pod Startup Behavior | Pods start regardless | LiteLLM Pods will start even if the database is down or unreachable, ensuring higher uptime guarantees for deployments. |
 | Health/Readiness Check | Always returns 200 OK | The /health/readiness endpoint returns a 200 OK status to ensure that pods remain operational even when the database is unavailable. |
 | LiteLLM Budget Errors or Model Errors | Request will be blocked | Triggered when the DB is reachable but the authentication token is invalid, lacks access, or exceeds budget limits. |
+
+During a database outage, virtual keys already in the in-memory auth cache keep authenticating until `user_api_key_cache_ttl` expires, which defaults to 60 seconds and can be longer with `enable_redis_auth_cache`; see [caching_redis](./caching_redis.md#virtual-key-authentication-cache-redis). The master key and models defined in the config file keep working. Uncached virtual key lookups, key/team/user management endpoints, and spend log writes fail or are deferred until the database is back
 
 [More information about what the Database is used for here](db_info)
 
@@ -359,7 +367,7 @@ Plain Docker:
 docker run \
   -v /path/to/global-bundle.pem:/certs/global-bundle.pem:ro \
   -e DATABASE_URL="postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/litellm?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem" \
-  -e LITELLM_MASTER_KEY="sk-1234" \
+  -e LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>" \
   -p 4000:4000 \
   ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
 ```
@@ -470,6 +478,8 @@ How LiteLLM ships migrations:
 2. The core litellm pip package is bumped to point to the new `litellm-proxy-extras` package. This ensures, older versions of LiteLLM will continue to use the old migrations. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/pyproject.toml#L58)
 
 3. When you upgrade to a new version of LiteLLM, the migration file is applied to the database. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/litellm-proxy-extras/litellm_proxy_extras/utils.py#L42)
+
+For how long migrations take at production scale and how to plan an upgrade around them, see the [Upgrade Guide](./upgrade_guide.md#database-migrations).
 
 ### Read-only file system
 
@@ -599,7 +609,7 @@ Notes: always set `LITELLM_MIGRATION_DIR` to a writable emptyDir path, and set `
 
 ### Expected performance
 
-See benchmarks [here](../benchmarks#performance-metrics).
+See the [gateway load-test results](../benchmarks.md#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts).
 
 ### Confirm debug logging is off
 

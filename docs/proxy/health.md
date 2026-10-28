@@ -41,16 +41,16 @@ The primary way to check whether your models are serving is the Admin UI. Go to 
 The API equivalent is `GET /health`, which accepts any valid key. It runs a real test request against every configured model, so it costs a few tokens per model.
 
 ```shell
-curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer sk-1234"
+curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json
 {
     "healthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
+        {"model": "azure/{{openai_small}}", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
     ],
     "unhealthy_endpoints": [
-        {"model": "azure/gpt-35-turbo", "api_base": "https://openai-france-1234.openai.azure.com/"}
+        {"model": "azure/{{openai_small}}", "api_base": "https://openai-france-1234.openai.azure.com/"}
     ]
 }
 ```
@@ -74,9 +74,9 @@ To exclude a model from the background loop, set `disable_background_health_chec
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o
+  - model_name: openai/{{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       disable_background_health_check: true
@@ -110,6 +110,9 @@ The health check picks the operation to test from the model's `model_info.mode`.
 | `ocr` | OCR |
 | `video_generation` | video generation |
 | `image_edit` | image edit |
+| `anthropic_messages` | `/v1/messages` |
+
+Bedrock Mantle serves Claude models only on the Anthropic Messages API, so a `bedrock_mantle/anthropic.claude-*` deployment with `mode` unset is probed with `anthropic_messages` instead of a chat completion. An explicit `mode` still wins
 
 For a wildcard route (`*` in `litellm_params.model`), set `health_check_model` to the concrete model the probe should call. With `mode` unset on a wildcard route, `max_tokens` is left unset on the probe request.
 
@@ -136,7 +139,7 @@ Set these under a model's `model_info` unless noted otherwise. They control how 
 | `health_check_max_tokens_reasoning` | unset | `max_tokens` for reasoning models when `health_check_max_tokens` is not set |
 | `health_check_max_tokens_non_reasoning` | unset | `max_tokens` for non-reasoning models when `health_check_max_tokens` is not set |
 | `health_check_reasoning_effort` | unset | `reasoning_effort` on the probe (chat, completion, batch, responses modes only) |
-| `health_check_voice` | `alloy` | Voice for `audio_speech` probes |
+| `health_check_voice` | `alloy` | Voice for `audio_speech` probes. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
 | `health_check_model` | unset | Concrete model a wildcard route probes |
 | `disable_background_health_check` | false | Skip this model in the background loop |
 

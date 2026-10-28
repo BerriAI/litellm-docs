@@ -1,8 +1,6 @@
-# ✨ Event Hooks for SSO Login
+# Event Hooks for SSO Login
 
-:::info
-✨ SSO is free for up to 5 users. After that, an enterprise license is required. [Get Started with Enterprise here](https://www.litellm.ai/enterprise)
-:::
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 ## Overview
 
@@ -25,7 +23,7 @@ Use this when you have an **OAuth proxy in front of LiteLLM** that has already a
 
 ### How it works
 - User lands on Admin UI  
-- 👉 **Your custom SSO sign-in handler is called to parse request headers and return user info**
+- **Your custom SSO sign-in handler is called to parse request headers and return user info**
 - LiteLLM has retrieved user information from your custom handler
 - User signed in to UI
 
@@ -81,7 +79,7 @@ custom_ui_sso_sign_in_handler = MyCustomSSOLoginHandler()
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
 
 general_settings:
   custom_ui_sso_sign_in_handler: custom_sso_handler.custom_ui_sso_sign_in_handler
@@ -111,7 +109,7 @@ Use this if you want to run your own code **after** a user signs on to the LiteL
 - LiteLLM redirects user to your SSO provider (Google, Microsoft, etc.)
 - Your SSO provider redirects user back to LiteLLM  
 - LiteLLM has retrieved user information from your IDP
-- 👉 **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
+- **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
 - User signed in to UI
 
 ### Usage
@@ -184,7 +182,7 @@ e.g. if they're both in the same dir - `./config.yaml` and `./custom_sso.py`, th
 model_list: 
   - model_name: "openai-model"
     litellm_params: 
-      model: "gpt-3.5-turbo"
+      model: "{{openai_small}}"
 
 general_settings:
   custom_sso: custom_sso.custom_sso_handler

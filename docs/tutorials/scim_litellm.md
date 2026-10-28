@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # SCIM with LiteLLM
 
-✨ **Enterprise**: SCIM support requires a premium license.
+**Enterprise**: SCIM support requires a premium license.
 
 Enables identity providers (Okta, Azure AD, OneLogin, etc.) to automate user and team (group) provisioning, updates, and deprovisioning on LiteLLM.
 
@@ -105,7 +105,7 @@ This behavior is independent of `litellm_settings.scim_upsert_user`. That settin
 
 ## Assigning the proxy admin role
 
-By default, newly provisioned SCIM users receive the role configured in `litellm_settings.default_internal_user_params.user_role`. If no role is configured, LiteLLM assigns `internal_user_view_only`. Existing users retain their current role.
+By default, newly provisioned SCIM users receive the role configured in `litellm_settings.default_internal_user_params.user_role`. If no role is configured, LiteLLM assigns `internal_user_viewer`. Existing users retain their current role.
 
 Configure `scim_admin_group` to manage global roles through SCIM group membership:
 
@@ -115,6 +115,10 @@ litellm_settings:
 ```
 
 LiteLLM compares this setting with each group's `value` and `display` name. Members of the matching group receive the `proxy_admin` role; all other users receive the default role described above. LiteLLM evaluates this mapping on every SCIM write, so removing a user from the configured admin group changes the user's role during the next synchronization. If `scim_admin_group` is not configured, SCIM does not modify roles assigned through the Admin UI or management API.
+
+## Granting MCP access to SCIM groups
+
+Each SCIM group becomes a LiteLLM team, so you grant MCP servers or access groups to the team that SCIM created and members reach them with keys that belong to that team. SCIM syncs keep the grant in place. Group, role, and entitlement values that name an MCP access group do not grant MCP access by themselves; see [Grant MCP access through SCIM-provisioned teams](../mcp_grant_access#grant-mcp-access-through-scim-provisioned-teams) for the walkthrough and the reasoning.
 
 ## Deactivation and deprovisioning
 

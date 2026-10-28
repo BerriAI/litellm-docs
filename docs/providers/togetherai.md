@@ -97,7 +97,7 @@ completion(model="together_ai/togethercomputer/Llama-2-7B-32K-Instruct", message
 
 ### Using another model
 
-You can create a custom prompt template on LiteLLM (and we [welcome PRs](https://github.com/BerriAI/litellm) to add them to the main repo 🤗)
+You can create a custom prompt template on LiteLLM (and we [welcome PRs](https://github.com/BerriAI/litellm) to add them to the main repo)
 
 Let's make one for `OpenAssistant/llama2-70b-oasst-sft-v10`!
 
@@ -238,7 +238,7 @@ print(response.choices[0].message.content)  # direct answer, no reasoning_conten
 
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen/Qwen3.5-9B",
@@ -344,7 +344,7 @@ Test request
 
 ```bash
 curl http://0.0.0.0:4000/rerank \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Salesforce/Llama-Rank-V1",

@@ -1,5 +1,7 @@
 # Native /v1/messages Passthrough for OpenAI-Compatible Providers
 
+This page covers the `/v1/messages` half of the `model_info.supported_endpoints` opt-in. The same field also opts a deployment into native `/v1/responses`, see [Native /v1/responses passthrough](../response_api_native_passthrough.md). The two opt-ins are independent: list both when the server serves both
+
 When a deployment's provider has no native Anthropic Messages support, LiteLLM translates each `/v1/messages` request into the provider's own API: `openai/` deployments go through the OpenAI Responses API (see [the parameter mapping](./messages_to_responses_mapping.md)) and everything else goes through `/v1/chat/completions`. That translation only keeps what the target API can express: `cache_control` blocks are dropped, `thinking` is mapped to the provider's own reasoning parameter, and other Anthropic-only request details are approximated or lost
 
 Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. Available from v1.92.0
@@ -47,7 +49,7 @@ Test it with an Anthropic-only feature in the request:
 
 ```bash
 curl http://0.0.0.0:4000/v1/messages \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
@@ -62,18 +64,11 @@ The response comes back in the provider's native Anthropic shape, including its 
 
 The opt-in only matters for providers LiteLLM would otherwise translate, such as `openai/` and `custom_openai/` deployments. Providers with built-in Anthropic Messages support (`anthropic/`, `bedrock/`, `vertex_ai/`, and others) already forward natively and ignore it
 
-## `/v1/responses` is not part of the opt-in
+| Deployment `model` | `/v1/messages` with the opt-in | `/v1/messages` without it |
+|---|---|---|
+| `openai/<model>` | Native passthrough | Translated via the Responses API |
+| `custom_openai/<model>` and other OpenAI-compatible providers without built-in Anthropic Messages support | Native passthrough | Translated via `/v1/chat/completions` |
 
-`supported_endpoints` does not change how `/v1/responses` is routed. Whether a `/v1/responses` request reaches the provider natively depends on the provider prefix of the deployment's `model`, not on `model_info`:
+## Native `/v1/responses` passthrough
 
-- A deployment whose `litellm_params.model` is prefixed `openai/` sends `/v1/responses` natively to `{api_base}/responses`. No `supported_endpoints` entry is needed
-- A generic OpenAI-compatible deployment, such as one prefixed `custom_openai/`, is bridged through `/v1/chat/completions` instead, even when `/v1/responses` is listed in `supported_endpoints`
-
-So for an OpenAI-compatible server that natively serves chat completions, the Anthropic Messages API, and the Responses API, use the `openai/` prefix with your `api_base` and add the `/v1/messages` opt-in:
-
-| Deployment `model` | `/v1/messages` with the opt-in | `/v1/messages` without it | `/v1/responses` |
-|---|---|---|---|
-| `openai/<model>` | Native passthrough | Translated via the Responses API | Native |
-| `custom_openai/<model>` | Native passthrough | Translated via `/v1/chat/completions` | Bridged via `/v1/chat/completions` |
-
-Some named OpenAI-compatible providers (for example `hosted_vllm/`) ship their own Responses API support and also send `/v1/responses` natively. Check the provider's page for that
+The `/v1/responses` opt-in has its own page: [Native /v1/responses passthrough for OpenAI-compatible providers](../response_api_native_passthrough.md)

@@ -1,5 +1,6 @@
 ---
-title: "v1.75.8-stable - Team Member Rate Limits"
+title: "LiteLLM v1.75.8-stable - Team Member Rate Limits"
+description: "Adds team member rate limits with JWT auth, GPT-5 support with reasoning_effort and Azure AI Flux image generation."
 slug: "v1-75-8"
 date: 2025-08-16T10:00:00
 authors:
@@ -58,9 +59,7 @@ pip install litellm==1.75.8
   img={require('../../img/release_notes/team_member_rate_limits.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models</p>
 
 
 This release adds support for setting rate limits on individual members (including machine users) within a team. Teams can now give each agent its own rate limits, so that heavy-traffic agents don’t impact other agents or human users. 

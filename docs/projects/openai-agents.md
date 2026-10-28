@@ -19,19 +19,19 @@ uv add "openai-agents[litellm]"
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: "openai/gpt-4o"
+      model: "openai/{{openai_large}}"
       api_key: "os.environ/OPENAI_API_KEY"
 
   - model_name: claude-sonnet
     litellm_params:
-      model: "anthropic/claude-3-5-sonnet-20241022"
+      model: "anthropic/{{anthropic}}"
       api_key: "os.environ/ANTHROPIC_API_KEY"
 
-  - model_name: gemini-pro
+  - model_name: {{gemini_pro}}
     litellm_params:
-      model: "gemini/gemini-2.0-flash-exp"
+      model: "gemini/{{gemini_pro}}"
       api_key: "os.environ/GEMINI_API_KEY"
 ```
 
@@ -56,7 +56,7 @@ agent = Agent(
     instructions="You are a helpful assistant.",
     model=LitellmModel(
         model="claude-sonnet",  # Model from config.yaml
-        api_key="sk-1234",      # LiteLLM API key
+        api_key="sk-<your-litellm-api-key>",      # LiteLLM API key
         base_url="http://localhost:4000"
     )
 )
@@ -77,7 +77,7 @@ agent = Agent(
     name="Assistant",
     instructions="You are a helpful assistant.",
     model=LitellmModel(
-        model="anthropic/claude-3-5-sonnet-20241022",
+        model="anthropic/{{anthropic}}",
         api_key="your-anthropic-key"
     )
 )
@@ -99,7 +99,7 @@ from agents.extensions.models.litellm_model import LitellmModel
 
 agent = Agent(
     name="Assistant",
-    model=LitellmModel(model="claude-sonnet", api_key="sk-1234"),
+    model=LitellmModel(model="claude-sonnet", api_key="sk-<your-litellm-api-key>"),
     model_settings=ModelSettings(include_usage=True)
 )
 
@@ -112,7 +112,7 @@ print(result.context_wrapper.usage)  # Token counts
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `LITELLM_BASE_URL` | `http://localhost:4000` | LiteLLM proxy URL |
-| `LITELLM_API_KEY` | `sk-1234` | Your LiteLLM API key |
+| `LITELLM_API_KEY` | `sk-<your-litellm-api-key>` | Your LiteLLM API key |
 
 ## Related Resources
 

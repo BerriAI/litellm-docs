@@ -32,15 +32,15 @@ Set `rust: true` in a model's `litellm_params`. Everything else about the deploy
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: claude-sonnet-5
+  - model_name: {{anthropic}}
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       rust: true            # run this deployment through the Rust core
 
   - model_name: azure-claude
     litellm_params:
-      model: azure_ai/claude-sonnet-5
+      model: azure_ai/{{anthropic}}
       api_base: os.environ/AZURE_AI_API_BASE
       api_key: os.environ/AZURE_AI_API_KEY
       rust: true
@@ -53,7 +53,7 @@ curl -i http://localhost:4000/v1/messages \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
-    "model": "claude-sonnet-5",
+    "model": "{{anthropic}}",
     "max_tokens": 128,
     "messages": [{"role": "user", "content": "hello from rust"}]
   }'
@@ -84,7 +84,7 @@ The response body is the same on either path, token counts included, so the head
 
 Mode 2 replaces the Python host with the Rust `litellm-ai-gateway` Axum server binary, so routing and network I/O run entirely in Rust. This is the higher-ceiling option for throughput, but it currently covers fewer routes than the Python host and does not yet have the full proxy feature set.
 
-:::note Pending
+:::note[Pending]
 
 A prebuilt Docker image for the Axum server is not published yet. This section will be filled in with the image reference and a deployment example once it ships. In the meantime you can build the server from the `litellm-rust` workspace with the `server` feature; reach out in the community channel if you want to trial it early.
 

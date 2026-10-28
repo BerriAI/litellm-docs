@@ -46,9 +46,9 @@ litellm.callbacks = ["langsmith"]
  
 # openai call
 response = litellm.completion(
-  model="gpt-3.5-turbo",
+  model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -58,9 +58,9 @@ response = litellm.completion(
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -78,7 +78,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-eWkpOhYaHiuIZV-29JDeTQ' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -114,12 +114,12 @@ os.environ['OPENAI_API_KEY']=""
 
 # set langsmith as a callback, litellm will send the data to langsmith
 litellm.callbacks = ["langsmith"] 
-litellm.langsmith_batch_size = 1 # 👈 KEY CHANGE
+litellm.langsmith_batch_size = 1 # KEY CHANGE
  
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
      messages=[
-        {"role": "user", "content": "Hi 👋 - i'm openai"}
+        {"role": "user", "content": "Hi - i'm openai"}
     ]
 )
 print(response)
@@ -130,9 +130,9 @@ print(response)
 1. Setup config.yaml
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
@@ -151,7 +151,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-eWkpOhYaHiuIZV-29JDeTQ' \
 -d '{
-  "model": "gpt-3.5-turbo",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",
@@ -184,9 +184,9 @@ os.environ['OPENAI_API_KEY']=""
 litellm.success_callback = ["langsmith"] 
  
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
      messages=[
-        {"role": "user", "content": "Hi 👋 - i'm openai"}
+        {"role": "user", "content": "Hi - i'm openai"}
     ],
     metadata={
         "run_name": "litellmRUN",                                   # langsmith run name
@@ -225,6 +225,6 @@ environment_variables:
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

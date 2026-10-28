@@ -1,5 +1,6 @@
 ---
-title: "v1.73.0-stable - Set default team for new users"
+title: "LiteLLM v1.73.0-stable - Set default team for new users"
+description: "Adds a default team for new users, Passthrough Endpoints v2 with custom cost tracking and a model health check dashboard."
 slug: "v1-73-0-stable"
 date: 2025-06-21T10:00:00
 authors:
@@ -332,6 +333,6 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 ## [Git Diff](https://github.com/BerriAI/litellm/compare/v1.72.6-stable...v1.73.0.rc)

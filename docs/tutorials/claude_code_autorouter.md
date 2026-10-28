@@ -18,7 +18,7 @@ Discovery is a convenience for populating the picker automatically, not a gate o
 
 The one place a family word still costs you something is the allowlist in the next section, not the client: `opus-auto` counts there as a specific Opus entry, which disables the `opus` family wildcard and leaves every other Opus version you still want selectable to be listed by hand. Building the name on `claude` avoids that.
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: claude-auto
     litellm_params:
@@ -62,7 +62,7 @@ export ANTHROPIC_MODEL=claude-auto
 
 To get the router into the `/model` picker rather than only into the startup model, set `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` and Claude Code populates the picker from the proxy's `/v1/models`. Where discovery is turned off, `ANTHROPIC_CUSTOM_MODEL_OPTION=claude-auto` adds the single entry instead.
 
-For Claude Desktop, enter the proxy URL and virtual key under **Developer > Configure Third-Party Inference**, then pick the router in the model list. The [Claude Desktop integration guide](./claude_desktop_cowork.md) walks the dialog screen by screen.
+For Claude Desktop, enter the proxy URL and virtual key under **Developer > Configure Third-Party Inference**, then pick the router in the model list. The [Claude Desktop setup guide](../proxy/client_setup/claude_desktop.md) walks the dialog screen by screen.
 
 ## Context window shown in the client
 
@@ -100,5 +100,5 @@ Model discovery lists whatever the key can reach, and Claude Desktop's **Test co
 
 - [Auto Routing](../proxy/auto_routing.md)
 - [Claude Code - Cut Costs](./claude_code_cut_costs.md)
-- [Claude Desktop integration](./claude_desktop_cowork.md)
+- [Claude Desktop setup](../proxy/client_setup/claude_desktop.md)
 - [Virtual Keys](../proxy/virtual_keys.md)

@@ -113,7 +113,7 @@ response = await litellm.anthropic.messages.acreate(
 
 You can also trigger on tool-use count instead of tokens:
 
-```python
+```python nolint
 "trigger": {"type": "tool_uses", "value": 10}   # activate after 10 tool calls
 ```
 
@@ -124,7 +124,7 @@ curl -X POST http://localhost:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-5.4-mini",
+    "model": "{{openai_small}}",
     "max_tokens": 1024,
     "messages": [...],
     "tools": [...],
@@ -153,7 +153,7 @@ The polyfill calls a separately-configured model to generate the summary. Add `c
 ```yaml
 # proxy_server_config.yaml
 general_settings:
-  context_management_summary_model: claude-sonnet-4-5   # any model alias in your model_list
+  context_management_summary_model: {{anthropic}}   # any model alias in your model_list
 ```
 
 Without this setting, the polyfill is a no-op and `applied_edits[0].error: "summary_model_not_configured"` is returned.
@@ -164,7 +164,7 @@ Without this setting, the polyfill is a no-op and `applied_edits[0].error: "summ
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="gpt-5.4-mini",          # any non-Anthropic provider
+    model="{{openai_small}}",          # any non-Anthropic provider
     max_tokens=1024,
     messages=[...],                # multi-turn history
     context_management={
@@ -188,7 +188,7 @@ curl -X POST http://localhost:4000/v1/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-5.4-mini",
+    "model": "{{openai_small}}",
     "max_tokens": 1024,
     "messages": [...],
     "context_management": {
@@ -261,7 +261,7 @@ When compaction fires, the response includes `context_management.applied_edits` 
     },
     {"type": "text", "text": "Sure, here's the output formatter..."}
   ],
-  "model": "gpt-5.4-mini",
+  "model": "{{openai_small}}",
   "stop_reason": "end_turn",
   "usage": {"input_tokens": 420, "output_tokens": 120},
   "context_management": {
@@ -302,11 +302,21 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 | `trigger.value` | No | `100000` | Threshold; edits fire when current value **exceeds** this |
 | `keep.type` | No | `"tool_uses"` | Must be `"tool_uses"` |
 | `keep.value` | No | `3` | Number of most-recent tool results to preserve |
-| `clear_at_least` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
-| `exclude_tools` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
-| `clear_tool_inputs` | Accepted | - | Accepted in request but ignored by polyfill (v0) |
+| `clear_at_least.type` | No | - | Must be `"input_tokens"` |
+| `clear_at_least.value` | No | - | Clear old tool uses in batches that each free at least this many tokens |
+| `exclude_tools` | No | - | Tool names whose uses are never cleared |
+| `clear_tool_inputs` | No | `false` | `true`, or a list of tool names, to also empty the `input` of each cleared `tool_use` |
 
 > **Hard floor:** regardless of `keep`, LiteLLM's polyfill never clears the most recently completed `tool_result` - the one the model is about to reply to.
+
+`clear_at_least`, `exclude_tools` and `clear_tool_inputs` are available from v1.108.0. Earlier versions accept them and ignore them.
+
+The polyfill handles these fields the way Anthropic's API does:
+
+- **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
+- **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
+- **Small results.** A tool use whose result is 1 to 46 bytes of text is skipped, unless `clear_tool_inputs` covers that tool.
+- **Malformed values.** A malformed field, such as `exclude_tools: "memory"`, gets an HTTP 400 that names the edit and the field. With `drop_params: true`, LiteLLM drops only that field instead and still applies the edit and the other edits.
 
 ## Responses
 
@@ -320,7 +330,7 @@ When at least one edit fires, the response includes a `context_management` field
   "type": "message",
   "role": "assistant",
   "content": [{"type": "text", "text": "Based on the latest weather data..."}],
-  "model": "gpt-5.4-mini",
+  "model": "{{openai_small}}",
   "stop_reason": "end_turn",
   "usage": {
     "input_tokens": 620,
@@ -346,7 +356,7 @@ The `context_management.applied_edits` field is included in the final `message_d
 
 ```
 event: message_start
-data: {"type":"message_start","message":{"id":"msg_01...","type":"message","role":"assistant","content":[],"model":"gpt-5.4-mini","stop_reason":null,"usage":{"input_tokens":620,"output_tokens":0}}}
+data: {"type":"message_start","message":{"id":"msg_01...","type":"message","role":"assistant","content":[],"model":"{{openai_small}}","stop_reason":null,"usage":{"input_tokens":620,"output_tokens":0}}}
 
 event: content_block_start
 data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
@@ -386,24 +396,27 @@ data: {"type":"message_stop"}
 
 Simply don't include `context_management` in the request body.
 
-### Proxy-wide - `drop_params: true`
+### Per-model - `additional_drop_params`
 
-When `drop_params: true` is set in your proxy config (or passed as a litellm setting), LiteLLM will silently strip `context_management` from any request instead of running the polyfill:
+To opt a model out of the polyfill, list `context_management` in that model's `additional_drop_params`. LiteLLM will silently strip `context_management` from requests to that model instead of running the polyfill:
 
 ```yaml
 # proxy_server_config.yaml
-litellm_settings:
-  drop_params: true
+model_list:
+  - model_name: gpt-4.1
+    litellm_params:
+      model: openai/gpt-4.1
+      additional_drop_params: ["context_management"]
 ```
 
 Or at call time:
 
 ```python
 import litellm
-litellm.drop_params = True
+litellm.completion(..., additional_drop_params=["context_management"])
 ```
 
-This is useful when you have a global `drop_params` policy to suppress unsupported parameters - context management is treated like any other unsupported parameter and dropped rather than polyfilled.
+`drop_params: true` does not disable the polyfill. `context_management` is a LiteLLM-supported parameter (native on Anthropic, polyfilled elsewhere), and `drop_params` only drops genuinely unsupported parameters.
 
 ## Provider Support Matrix
 
@@ -423,6 +436,6 @@ This is useful when you have a global `drop_params` policy to suppress unsupport
 
 - **`compact_20260112` requires `context_management_summary_model`** to be set in `general_settings`. Without it, the edit is acknowledged but no compaction is performed.
 - **Token counting** for polyfill threshold checks uses `litellm.token_counter` (tiktoken `cl100k_base` fallback for unknown models).
-- **`clear_tool_uses_20250919`** preserves the message array structure: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`.
+- **`clear_tool_uses_20250919`** preserves the message array structure: same number of messages, same role order. Only `tool_result.content` inside matching messages is replaced with `"[Cleared by context management]"`, and the `tool_use.input` of those uses is emptied when `clear_tool_inputs` covers the tool.
 - **`compact_20260112`** collapses the entire prior history to a single system-prefix summary + the last user question. The `compaction` block in the response gives the Claude Code client the summary text to carry forward into the next turn.
 - The 50,000-token minimum for `compact_20260112` trigger is enforced at the proxy; requests with a lower value are rejected with HTTP 400.

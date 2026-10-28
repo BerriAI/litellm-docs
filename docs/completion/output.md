@@ -46,7 +46,7 @@ Here's what an example response looks like
       }
     ],
  'created': 1691429984.3852863,
- 'model': 'claude-instant-1',
+ 'model': '{{anthropic}}',
  'usage': {'prompt_tokens': 18, 'completion_tokens': 23, 'total_tokens': 41}
 }
 ```
@@ -58,7 +58,7 @@ LiteLLM maps all provider-specific `finish_reason` values to OpenAI-compatible v
 This is useful for agent loops that need to distinguish between different stop conditions (e.g., Gemini's `MALFORMED_FUNCTION_CALL` vs a normal `stop`).
 
 ```python
-response = completion(model="gemini/gemini-2.0-flash", messages=messages)
+response = completion(model="gemini/{{gemini_flash}}", messages=messages)
 
 choice = response.choices[0]
 print(choice.finish_reason)  # "stop" (OpenAI-compatible)
@@ -84,7 +84,7 @@ os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
 
 messages=[{"role": "user", "content": "Hey!"}]
 
-response = completion(model="claude-2", messages=messages)
+response = completion(model="{{anthropic}}", messages=messages)
 
 print(response.response_ms) # 616.25# 616.25
 ```

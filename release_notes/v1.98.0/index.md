@@ -1,5 +1,6 @@
 ---
-title: "v1.98.0 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
+title: "LiteLLM v1.98.0 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
+description: "Adds provisioned throughput billing, shadow evals for the auto-router and routing groups as callable models. Langfuse metadata uses an allowlist."
 slug: "v1-98-0"
 date: 2026-08-22T00:00:00
 authors:
@@ -43,7 +44,7 @@ pip install litellm==1.98.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **The Langfuse metadata blob is now sourced from the StandardLoggingPayload allowlist instead of raw request metadata.** Roughly 20 fields no longer appear on the generation, measured live at 52 keys down to 38, so any saved Langfuse filter, dashboard, or alert built on `model_group`, `model_info`, `deployment`, `deployment_model_name`, `model_group_alias`, `model_group_size`, `litellm_api_version`, `litellm_received_at`, `litellm_parent_otel_span`, `queue_time_seconds`, `attempted_retries`, `max_retries`, `agent_id`, `caller_tags`, `inherited_tags`, `global_max_parallel_requests`, `user_api_key`, or the remaining `user_api_key_*` budget and permission-id fields will stop matching. `model_group` and the deployment id are still recoverable from `hidden_params`. Direct-SDK callers passing flat custom metadata must nest it, `metadata={"metadata": {"my_key": "v"}}`, and it arrives under `requester_metadata`; proxy callers are unaffected. `debug_langfuse` now emits caller scalars rather than the raw metadata dump. See [PR #36744](https://github.com/BerriAI/litellm/pull/36744).
 

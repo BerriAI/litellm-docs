@@ -163,7 +163,7 @@ litellm --config /path/to/config.yaml
 ```bash
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "llama3.1",
   "messages": [
@@ -249,8 +249,8 @@ litellm --config /path/to/config.yaml --detailed_debug
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="anything", # 👈 PROXY KEY (can be anything, if master_key not set)
-    base_url="http://0.0.0.0:4000" # 👈 PROXY BASE URL
+    api_key="anything", # PROXY KEY (can be anything, if master_key not set)
+    base_url="http://0.0.0.0:4000" # PROXY BASE URL
 )
 
 response = client.completions.create(
@@ -343,8 +343,8 @@ from pydantic import BaseModel
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="anything", # 👈 PROXY KEY (can be anything, if master_key not set)
-    base_url="http://0.0.0.0:4000" # 👈 PROXY BASE URL
+    api_key="anything", # PROXY KEY (can be anything, if master_key not set)
+    base_url="http://0.0.0.0:4000" # PROXY BASE URL
 )
 
 class Step(BaseModel):

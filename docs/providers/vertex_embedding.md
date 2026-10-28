@@ -51,7 +51,7 @@ $ litellm --config /path/to/config.yaml
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="snowflake-arctic-embed-m-long-1731622468876", 
@@ -100,7 +100,7 @@ All models listed [here](https://github.com/BerriAI/litellm/blob/57f37f743886a02
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     input_type = "RETRIEVAL_DOCUMENT",
     dimensions=1,
 )
@@ -112,7 +112,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -149,7 +149,7 @@ You can pass any vertex specific params to the embedding model. Just pass them t
 ```python
 response = litellm.embedding(
     model="vertex_ai/text-embedding-004",
-    input=["good morning from litellm", "gm"]
+    input=["good morning from litellm", "gm"],
     task_type = "RETRIEVAL_DOCUMENT",
     title = "test",
     dimensions=1,
@@ -163,7 +163,7 @@ response = litellm.embedding(
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="text-embedding-004", 
@@ -232,7 +232,7 @@ $ litellm --config /path/to/config.yaml
 ```python showLineNumbers title="Making requests to BGE"
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.embeddings.create(
     model="bge-embedding",
@@ -263,7 +263,7 @@ model_list:
 
 `gemini-embedding-2-preview` supports **unified multimodal embeddings**: text, images, audio, video, and PDF in a single request. See [blog post](/blog/gemini_embedding_2_multimodal) for details. The GA model id `gemini-embedding-2` exposes the same behavior, so swap the model name in any example below. See [GA blog](/blog/gemini_embedding_2_ga) for cost-map coverage and pricing notes.
 
-:::warning Response shape: Vertex returns one combined vector
+:::warning[Response shape: Vertex returns one combined vector]
 
 Vertex AI's Gemini embedding endpoint only exposes single-content `embedContent` (no `batchEmbedContents`), so passing `N` items in `input=[...]` returns **1 unified embedding** that fuses all parts rather than N separate vectors. To get one vector per item, call `embedding(...)` once per input.
 
@@ -275,6 +275,7 @@ This differs from the Gemini API path (`gemini/gemini-embedding-2-preview`), whi
 **Input formats:**
 - **Data URIs:** `data:image/png;base64,<encoded_data>`
 - **GCS URLs:** `gs://bucket/path/to/file.png` (MIME type inferred from extension)
+- **File content blocks:** `{"type": "file", "file": {...}}`, the same block chat completions take, when a media part needs an explicit MIME type or a video clip (see [below](#video-clips-and-explicit-mime-types))
 
 **Supported MIME types:** `image/png`, `image/jpeg`, `audio/mpeg`, `audio/wav`, `video/mp4`, `video/quicktime`, `application/pdf`
 
@@ -321,7 +322,7 @@ model_list:
 
 ```bash
 curl -X POST http://localhost:4000/embeddings \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-gemini-embedding-2-preview",
@@ -331,6 +332,28 @@ curl -X POST http://localhost:4000/embeddings \
 
 </TabItem>
 </Tabs>
+
+#### Video Clips and Explicit MIME Types
+
+To embed one window of a video, or to name a MIME type LiteLLM cannot infer from a GCS extension or a data URI, pass the element as the OpenAI file content block that [chat completions](./vertex#video-metadata-control) already take: `file.file_id` (`gs://...`) or `file.file_data` (a data URI), an optional `file.format` MIME type, and an optional `file.video_metadata` with `fps`, `start_offset`, and `end_offset`, which LiteLLM forwards as the part's `videoMetadata`. On Vertex the block is combined with the other elements into the single vector like any other part; nested lists stay unsupported on this path.
+
+```python
+response = embedding(
+    model="vertex_ai/gemini-embedding-2-preview",
+    input=[
+        {
+            "type": "file",
+            "file": {
+                "file_id": "gs://my-bucket/clip.mp4",
+                "video_metadata": {"start_offset": "3s", "end_offset": "6s"},
+            },
+        },
+        "a solid blue clip",
+    ],
+)
+```
+
+The Gemini embeddings API always runs OCR on PDF inputs and has no parameter for it, so there is nothing to pass.
 
 ### multimodalembedding@001 (Legacy)
 
@@ -396,7 +419,7 @@ Requests with GCS Image / Video URI
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -412,7 +435,7 @@ Requests with base64 encoded images
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -436,7 +459,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -457,7 +480,7 @@ embeddings_models = "multimodalembedding@001"
 embeddings = OpenAIEmbeddings(
     model="multimodalembedding@001",
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # type: ignore
+    api_key="sk-<your-litellm-api-key>",  # type: ignore
 )
 
 
@@ -500,7 +523,7 @@ from vertexai.vision_models import VideoSegmentConfig
 from google.auth.credentials import Credentials
 
 
-LITELLM_PROXY_API_KEY = "sk-1234"
+LITELLM_PROXY_API_KEY = "sk-<your-litellm-api-key>"
 LITELLM_PROXY_BASE = "http://0.0.0.0:4000/vertex-ai"
 
 import datetime
@@ -618,7 +641,7 @@ Text + Image
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -633,7 +656,7 @@ Text + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(
@@ -648,7 +671,7 @@ Image + Video
 ```python
 import openai
 
-client = openai.OpenAI(api_key="sk-1234", base_url="http://0.0.0.0:4000")
+client = openai.OpenAI(api_key="sk-<your-litellm-api-key>", base_url="http://0.0.0.0:4000")
 
 # # request sent to model set on litellm proxy, `litellm --model`
 response = client.embeddings.create(

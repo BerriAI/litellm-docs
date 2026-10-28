@@ -48,7 +48,7 @@ POST Request Sent from LiteLLM:
 curl -X POST \
 https://api.openai.com/v1/chat/completions \
 -H 'content-type: application/json' -H 'Authorization: Bearer sk-qnWGUIW9****************************************' \
--d '{"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": "this is a test request, write a short poem"}]}'
+-d '{"model": "{{openai_small}}", "messages": [{"role": "user", "content": "this is a test request, write a short poem"}]}'
 ```
 
 ## Debug single request
@@ -58,7 +58,7 @@ Pass in `litellm_request_debug=True` in the request body
 ```bash showLineNumbers
 curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{ 
     "model":"fake-openai-endpoint",
     "messages": [{"role": "user","content": "How many r in the word strawberry?"}],
@@ -69,7 +69,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 This will emit the raw request sent by LiteLLM to the API Provider and raw response received from the API Provider for **just** this request in the logs. 
 
 
-```bash showLineNumbers
+```bash showLineNumbers keep-model-ids
 INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
 20:14:06 - LiteLLM:WARNING: litellm_logging.py:938 - 
 
@@ -177,12 +177,32 @@ Expected Output:
 # no info statements
 ```
 
+## Suppress Startup Output
+
+At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them all off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
+
+```bash showLineNumbers
+export LITELLM_SUPPRESS_STARTUP_OUTPUT="true"
+```
+**OR**
+
+Set `suppress_startup_output: true` in your yaml:
+
+```yaml showLineNumbers
+litellm_settings:
+    suppress_startup_output: true
+```
+
+Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON.
+
+When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. Available from v1.108.0.
+
 ## Common Errors 
 
 1. "No available deployments..."
 
 ```
-No deployments available for selected model, Try again in 60 seconds. Passed model=claude-3-5-sonnet. pre-call-checks=False, allowed_model_region=n/a.
+No deployments available for selected model, Try again in 60 seconds. Passed model={{anthropic}}. pre-call-checks=False, allowed_model_region=n/a.
 ```
 
 This can be caused due to all your models hitting rate limit errors, causing the cooldown to kick in. 
@@ -192,7 +212,7 @@ How to control this?
 
 ```yaml showLineNumbers
 router_settings:
-    cooldown_time: 0 # 👈 KEY CHANGE
+    cooldown_time: 0 # KEY CHANGE
 ```
 
 - Disable Cooldowns [NOT RECOMMENDED]

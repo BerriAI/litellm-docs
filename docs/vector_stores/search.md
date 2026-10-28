@@ -168,6 +168,38 @@ print(response)
 
 </TabItem>
 
+<TabItem value="mongodb-provider" label="MongoDB Provider (BETA)">
+
+#### Using MongoDB (BETA)
+
+Search an existing MongoDB Vector Search index on Atlas or a self-managed deployment. Install `litellm[mongodb]`, then set `MONGODB_CONNECTION_STRING` and your embedding provider's credentials. Replace the placeholders with your index, collection fields, and the model used to embed your documents.
+
+```python showLineNumbers title="Search Vector Store - MongoDB Provider (BETA)"
+import os
+
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="<index-name>",  # Exact MongoDB Vector Search index name
+    query="<question-about-your-documents>",
+    custom_llm_provider="mongodb",
+    mongodb_connection_string=os.environ["MONGODB_CONNECTION_STRING"],
+    mongodb_database="<database-name>",
+    mongodb_collection="<collection-name>",
+    mongodb_text_field="<text-field>",
+    mongodb_embedding_field="<vector-field>",
+    litellm_embedding_model="<provider>/<embedding-model>",
+    max_num_results=3,
+)
+print(response)
+```
+
+The embedding model must match the one used for the stored vectors. This BETA integration supports search only; index creation, ingestion, filters, ranking options, and query rewriting are not supported.
+
+[MongoDB setup and reference](../providers/mongodb_vector_stores.md) · [Sample-document example](../tutorials/mongodb_vector_search.md)
+
+</TabItem>
+
 <TabItem value="valkey-provider" label="Valkey Provider">
 
 #### Using Valkey
@@ -235,9 +267,9 @@ print(response)
 
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
@@ -258,7 +290,7 @@ from openai import OpenAI
 # Point OpenAI SDK to LiteLLM proxy
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-1234",  # Your LiteLLM API key
+    api_key="sk-<your-litellm-api-key>",  # Your LiteLLM API key
 )
 
 search_results = client.beta.vector_stores.search(
@@ -276,7 +308,7 @@ print(search_results)
 ```bash showLineNumbers title="Search Vector Store via curl"
 curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
   "query": "What is the capital of France?",
   "filters": {
@@ -289,6 +321,47 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
   "rewrite_query": true
 }'
 ```
+
+</TabItem>
+
+<TabItem value="vertex-search-proxy" label="Vertex AI Search">
+
+Register the data store or search app as a [managed vector store](./managed_vector_stores.md) with provider `vertex_ai/search_api`. Native Discovery Engine search fields go in `extra_body`.
+
+A data store that uses layout-based chunking returns whole-document snippets by default. Ask for chunk results so each hit carries the matching passage:
+
+```bash showLineNumbers title="Search a chunked data store"
+curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-datastore_1234567890/search' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+  "query": "annual pass refund window",
+  "max_num_results": 5,
+  "extra_body": {
+    "contentSearchSpec": {"searchResultMode": "CHUNKS"}
+  }
+}'
+```
+
+Each result's `content[0].text` is the chunk text, `file_id` and `filename` are the source document's URI and title, and `attributes` carry `document_id`, `chunk_id`, `pageSpan`, and the document's `structData` when the store provides them.
+
+An Enterprise-tier search app can return extractive segments or answers instead. They take precedence over snippets in `content[0].text` (segments first, then answers):
+
+```bash showLineNumbers title="Search with extractive content"
+curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-search-app/search' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+  "query": "how does billing work",
+  "extra_body": {
+    "contentSearchSpec": {
+      "extractiveContentSpec": {"maxExtractiveSegmentCount": 1, "maxExtractiveAnswerCount": 1}
+    }
+  }
+}'
+```
+
+A structured data store returns each record under `attributes.structData`.
 
 </TabItem>
 </Tabs>

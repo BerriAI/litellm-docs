@@ -1,3 +1,7 @@
+---
+sidebar_label: "Traffic Mirroring"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -22,17 +26,17 @@ from litellm import Router
 
 model_list = [
     {
-        "model_name": "gpt-3.5-turbo",
+        "model_name": "{{openai_small}}",
         "litellm_params": {
             "model": "azure/chatgpt-v-2",
             "api_key": "...",
-            "silent_model": "gpt-4" # 👈 Mirror traffic to gpt-4
+            "silent_model": "{{openai_large}}" # Mirror traffic to {{openai_large}}
         },
     },
     {
-        "model_name": "gpt-4",
+        "model_name": "{{openai_large}}",
         "litellm_params": {
-            "model": "openai/gpt-4",
+            "model": "openai/{{openai_large}}",
             "api_key": "..."
         },
     }
@@ -40,9 +44,9 @@ model_list = [
 
 router = Router(model_list=model_list)
 
-# The request to "gpt-3.5-turbo" will trigger a background call to "gpt-4"
+# The request to "{{openai_small}}" will trigger a background call to "{{openai_large}}"
 response = await router.acompletion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "How does traffic mirroring work?"}]
 )
 ```
@@ -56,24 +60,53 @@ Add `silent_model` to your `config.yaml`:
 model_list:
   - model_name: primary-model
     litellm_params:
-      model: azure/gpt-35-turbo
+      model: azure/{{openai_small}}
       api_key: os.environ/AZURE_API_KEY
-      silent_model: evaluation-model # 👈 Mirror traffic here
+      silent_model: evaluation-model # Mirror traffic here
   - model_name: evaluation-model
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 ```
 
 </TabItem>
 </Tabs>
 
+## Streaming requests
+
+Available from v1.103.0.
+
+The mirrored call follows the `stream` flag of the primary request. A streaming request is mirrored as a streaming call, and LiteLLM reads the mirrored stream to the end in the background, so the silent model's spend log row and logging callbacks get streaming timings such as time to first token. A non-streaming request is mirrored as a non-streaming call. Earlier versions always mirrored with `stream=False`.
+
+## Multiple silent models
+
+Available from v1.103.0.
+
+`silent_model` also takes a list of model names. LiteLLM then mirrors each request to every model in the list, with one background call per model.
+
+```yaml
+model_list:
+  - model_name: primary-model
+    litellm_params:
+      model: azure/{{openai_small}}
+      api_key: os.environ/AZURE_API_KEY
+      silent_model: [evaluation-model-a, evaluation-model-b]
+  - model_name: evaluation-model-a
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: evaluation-model-b
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+```
+
 ## How it works
 1. **Request Received**: A request is made to a model group (e.g. `primary-model`).
 2. **Deployment Picked**: LiteLLM picks a deployment from the group.
 3. **Primary Call**: LiteLLM makes the call to the primary deployment.
-4. **Mirroring**: If `silent_model` is present, LiteLLM triggers a background call to that model. 
-   - For **Sync** calls: Uses a shared thread pool.
+4. **Mirroring**: For each model in `silent_model`, LiteLLM triggers a background call to that model with the same `stream` flag as the primary request.
+   - For **Sync** calls: Starts one background thread per silent model.
    - For **Async** calls: Uses `asyncio.create_task`.
 5. **Isolation**: The background call uses a `deepcopy` of the original request parameters and sets `metadata["is_silent_experiment"] = True`. It also strips out logging IDs to prevent collisions in usage tracking.
 

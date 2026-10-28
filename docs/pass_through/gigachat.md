@@ -42,7 +42,7 @@ litellm
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/gigachat/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "GigaChat-2",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -65,7 +65,7 @@ Key Changes:
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/gigachat/chat/completions' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "GigaChat-2",
     "messages": [{"role": "user", "content": "Hello!"}],
@@ -78,7 +78,7 @@ curl -L -X POST 'http://0.0.0.0:4000/gigachat/chat/completions' \
 ```bash
 curl -L -X POST 'http://0.0.0.0:4000/gigachat/embeddings' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $LITELLM_API_KEY' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
     "model": "EmbeddingsGigaR",
     "input": ["Hello!"]
@@ -89,5 +89,5 @@ curl -L -X POST 'http://0.0.0.0:4000/gigachat/embeddings' \
 
 ```bash
 curl -L -X GET 'http://0.0.0.0:4000/gigachat/models' \
--H 'Authorization: Bearer $LITELLM_API_KEY'
+-H "Authorization: Bearer $LITELLM_API_KEY"
 ```

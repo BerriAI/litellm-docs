@@ -1,5 +1,6 @@
 ---
-title: "[Preview] v1.81.6 - Logs v2 with Tool Call Tracing"
+title: "LiteLLM [Preview] v1.81.6 - Logs v2 with Tool Call Tracing"
+description: "Redesigns the logs view with tool call tracing, a side panel and error message search in this preview release."
 slug: "v1-81-6"
 date: 2026-01-31T00:00:00
 authors:
@@ -14,7 +15,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::danger Known Issue - CPU Usage
+:::danger[Known Issue - CPU Usage]
 
 This release had known issues with CPU usage. This has been fixed in [v1.81.9-stable](/release_notes/v1.81.9/v1-81-9).
 

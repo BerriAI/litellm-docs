@@ -23,9 +23,9 @@ Add `model_info.access_groups` to a deployment, either in `config.yaml` or throu
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: premium-haiku
+  - model_name: premium-sonnet
     litellm_params:
-      model: anthropic/claude-haiku-4-5
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
     model_info:
       access_groups: ["premium"]
@@ -37,11 +37,11 @@ model_list:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/model/new' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
-           "model_name": "premium-haiku",
-           "litellm_params": {"model": "anthropic/claude-haiku-4-5", "api_key": "os.environ/ANTHROPIC_API_KEY"},
+           "model_name": "premium-sonnet",
+           "litellm_params": {"model": "anthropic/{{anthropic}}", "api_key": "os.environ/ANTHROPIC_API_KEY"},
            "model_info": {"access_groups": ["premium"]}
          }'
 ```
@@ -54,7 +54,7 @@ curl -X POST 'http://0.0.0.0:4000/model/new' \
 
 ```shell
 curl -X PUT 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "max_budget": 500.0,
@@ -77,7 +77,7 @@ The key has to name the group in its `models` list. That grant is what ties the 
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-     -H 'Authorization: Bearer sk-1234' \
+     -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
      -d '{
            "models": ["premium"]
@@ -95,7 +95,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H 'Authorization: Bearer sk-your-premium-key' \
      -H 'Content-Type: application/json' \
      -d '{
-           "model": "premium-haiku",
+           "model": "premium-sonnet",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```
@@ -119,7 +119,7 @@ Read the pool and the spend drawn against it:
 
 ```shell
 curl -X GET 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234'
+     -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json
@@ -140,7 +140,7 @@ Clearing the budget leaves the group and its models in place:
 
 ```shell
 curl -X DELETE 'http://0.0.0.0:4000/access_group/premium/budget' \
-     -H 'Authorization: Bearer sk-1234'
+     -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json

@@ -35,7 +35,7 @@ Use the `/key/service-account/generate` endpoint to generate a service account k
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "my-unique-team"
@@ -48,7 +48,7 @@ You can optionally provide a `service_account_id` inside `metadata` to give the 
 
 ```bash
 curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
--H 'Authorization: Bearer sk-1234' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
 -d '{
     "team_id": "my-unique-team",
@@ -97,7 +97,7 @@ curl --location 'http://localhost:4000/chat/completions' \
     --header 'Authorization: Bearer <sk-your-service-account>' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -130,7 +130,7 @@ curl --location 'http://localhost:4000/chat/completions' \
     --header 'Authorization: Bearer <sk-your-service-account>' \
     --header 'Content-Type: application/json' \
     --data '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
         {
         "role": "user",
@@ -159,7 +159,7 @@ Expected Response
     }
   ],
   "created": 1677652288,
-  "model": "gpt-3.5-turbo-0125",
+  "model": "{{openai_small}}",
   "object": "chat.completion",
   "system_fingerprint": "fp_44709d6fcb",
   "usage": {

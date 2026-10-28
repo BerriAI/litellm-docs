@@ -1,0 +1,100 @@
+{
+  "buildCommand": "npm run build",
+  "rewrites": [
+    {
+      "source": "/api/docs/bot-ask",
+      "destination": "/api/docs/bot-ask"
+    },
+    {
+      "source": "/api/docs/search",
+      "destination": "/api/docs/search"
+    },
+    {
+      "source": "/api/workshop/signup",
+      "destination": "/api/workshop/signup"
+    },
+    {
+      "source": "/api/docs/ask",
+      "destination": "/api/docs/ask"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/markdown(.*)"
+        }
+      ],
+      "destination": "/index.md"
+    },
+    {
+      "source": "/:path((?:.*/)?[^./]+){/}?",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)text/markdown(.*)"
+        }
+      ],
+      "destination": "/:path.md"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/:path*.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/:path((?:.*/)?[^./]*){/}?",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "Accept"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/docs/proxy/lens/coding_agents",
+      "destination": "/docs/proxy/lens/coding-agents",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "api/docs/search.js": {
+      "includeFiles": "build/search-runtime.bin",
+      "maxDuration": 20,
+      "memory": 1024
+    },
+    "api/workshop/signup.js": {
+      "maxDuration": 15,
+      "memory": 256
+    },
+    "api/docs/ask.js": {
+      "includeFiles": "build/search-*.json",
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/docs/bot-ask.js": {
+      "includeFiles": "build/search-*.json",
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}

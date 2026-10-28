@@ -21,8 +21,10 @@ uv add litellm
 To obtain your Clarifai Personal access token follow this [link](https://docs.clarifai.com/clarifai-basics/authentication/personal-access-tokens/).
 
 ```python
-os.environ["CLARIFAI_PAT"] = "CLARIFAI_API_KEY"  # CLARIFAI_PAT
+os.environ["CLARIFAI_API_KEY"] = "your-clarifai-pat"
 ```
+
+LiteLLM reads the PAT from `CLARIFAI_API_KEY` or the `api_key` argument. `CLARIFAI_PAT` is not read
 
 ## Usage
 
@@ -79,7 +81,6 @@ tools = [{
             "additionalProperties": False
         },
     }
-  }
 }]
 
 response = litellm.completion(
@@ -95,7 +96,7 @@ print(response.choices[0].message.tool_calls)
 ## Clarifai models
 liteLLM supports all models on [Clarifai community](https://clarifai.com/explore/models?filterData=%5B%7B%22field%22%3A%22use_cases%22%2C%22value%22%3A%5B%22llm%22%5D%7D%5D&page=1&perPage=24)
 
-### 🧠 OpenAI Models
+### OpenAI Models
 - [gpt-oss-20b](https://clarifai.com/openai/chat-completion/models/gpt-oss-20b)
 - [gpt-oss-120b](https://clarifai.com/openai/chat-completion/models/gpt-oss-120b)
 - [gpt-5-nano](https://clarifai.com/openai/chat-completion/models/gpt-5-nano)
@@ -106,7 +107,7 @@ liteLLM supports all models on [Clarifai community](https://clarifai.com/explore
 - Many more...
 
 
-### 🤖 Anthropic Models
+### Anthropic Models
 - [claude-sonnet-4](https://clarifai.com/anthropic/completion/models/claude-sonnet-4)
 - [claude-opus-4](https://clarifai.com/anthropic/completion/models/claude-opus-4)
 - [claude-3_5-haiku](https://clarifai.com/anthropic/completion/models/claude-3_5-haiku)
@@ -114,7 +115,7 @@ liteLLM supports all models on [Clarifai community](https://clarifai.com/explore
 - Many more...
 
 
-### 🪄 xAI Models
+### xAI Models
 - [grok-3](https://clarifai.com/xai/chat-completion/models/grok-3)
 - [grok-2-vision-1212](https://clarifai.com/xai/chat-completion/models/grok-2-vision-1212)
 - [grok-2-1212](https://clarifai.com/xai/chat-completion/models/grok-2-1212)
@@ -123,7 +124,7 @@ liteLLM supports all models on [Clarifai community](https://clarifai.com/explore
 - Many more...
 
 
-### 🔷 Google Gemini Models
+### Google Gemini Models
 - [gemini-2_5-pro](https://clarifai.com/gcp/generate/models/gemini-2_5-pro)
 - [gemini-2_5-flash-lite](https://clarifai.com/gcp/generate/models/gemini-2_5-flash-lite)
 - [gemini-2_0-flash](https://clarifai.com/gcp/generate/models/gemini-2_0-flash)
@@ -131,7 +132,7 @@ liteLLM supports all models on [Clarifai community](https://clarifai.com/explore
 - Many more...
 
 
-### 🧩 Qwen Models
+### Qwen Models
 - [Qwen3-30B-A3B-Instruct-2507](https://clarifai.com/qwen/qwenLM/models/Qwen3-30B-A3B-Instruct-2507)
 - [Qwen3-30B-A3B-Thinking-2507](https://clarifai.com/qwen/qwenLM/models/Qwen3-30B-A3B-Thinking-2507)
 - [Qwen3-14B](https://clarifai.com/qwen/qwenLM/models/Qwen3-14B)
@@ -141,25 +142,25 @@ liteLLM supports all models on [Clarifai community](https://clarifai.com/explore
 - Many more...
 
 
-### 💡 MiniCPM (OpenBMB) Models
+### MiniCPM (OpenBMB) Models
 - [MiniCPM-o-2_6-language](https://clarifai.com/openbmb/miniCPM/models/MiniCPM-o-2_6-language)
 - [MiniCPM3-4B](https://clarifai.com/openbmb/miniCPM/models/MiniCPM3-4B)
 - [MiniCPM4-8B](https://clarifai.com/openbmb/miniCPM/models/MiniCPM4-8B)
 - Many more...
 
 
-### 🧬 Microsoft Phi Models
+### Microsoft Phi Models
 - [Phi-4-reasoning-plus](https://clarifai.com/microsoft/text-generation/models/Phi-4-reasoning-plus)
 - [phi-4](https://clarifai.com/microsoft/text-generation/models/phi-4)
 - Many more...
 
 
-### 🦙 Meta Llama Models
+### Meta Llama Models
 - [Llama-3_2-3B-Instruct](https://clarifai.com/meta/Llama-3/models/Llama-3_2-3B-Instruct)
 - Many more...
 
 
-### 🔍 DeepSeek Models
+### DeepSeek Models
 - [DeepSeek-R1-0528-Qwen3-8B](https://clarifai.com/deepseek-ai/deepseek-chat/models/DeepSeek-R1-0528-Qwen3-8B)
 - Many more...
 
@@ -170,7 +171,7 @@ Here's how to call Clarifai with the LiteLLM Proxy Server
 ### 1. Save key in your environment
 
 ```bash
-export CLARIFAI_PAT="CLARIFAI_API_KEY"
+export CLARIFAI_API_KEY="your-clarifai-pat"
 ```
 
 ### 2. Start the proxy
@@ -183,7 +184,7 @@ model_list:
   - model_name: clarifai-model
     litellm_params:
       model: clarifai/openai.chat-completion.gpt-oss-20b
-      api_key: os.environ/CLARIFAI_PAT
+      api_key: os.environ/CLARIFAI_API_KEY
 ```
 
 ```bash

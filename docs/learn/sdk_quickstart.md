@@ -11,7 +11,7 @@ Use this path if you are integrating LiteLLM directly into application code.
 ## 1. Install LiteLLM
 
 ```bash
-uv add 'litellm==1.82.6'
+uv add litellm
 ```
 
 ## 2. Set Provider Credentials
@@ -35,7 +35,7 @@ import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 response = completion(
-    model="openai/gpt-4o",
+    model="openai/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello, how are you?"}],
 )
 
@@ -68,7 +68,7 @@ you will see a Python `ModelResponse(...)` object. For an OpenAI-backed model, i
 ModelResponse(
     id='chatcmpl-abc123',
     created=1773782130,
-    model='gpt-4o-2024-08-06',
+    model='{{openai_large}}',
     object='chat.completion',
     system_fingerprint='fp_4ff89bf575',
     choices=[
@@ -104,7 +104,7 @@ The same response follows an OpenAI-style shape. Conceptually, it looks like thi
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1677858242,
-  "model": "gpt-4o",
+  "model": "{{openai_large}}",
   "choices": [
     {
       "index": 0,
@@ -135,31 +135,26 @@ Need more provider examples? See the main [Getting Started](/docs/#quick-start) 
 columns={3}
 items={[
 {
-icon: "⚡",
 title: "Stream Responses",
 description: "Receive tokens incrementally with stream=True.",
 to: "/docs/completion/stream",
 },
 {
-icon: "🧰",
 title: "Use Tools",
 description: "Add function calling in a provider-agnostic way.",
 to: "/docs/completion/function_call",
 },
 {
-icon: "📦",
 title: "Return JSON",
 description: "Constrain responses to structured JSON output.",
 to: "/docs/completion/json_mode",
 },
 {
-icon: "🔀",
 title: "Add Routing",
 description: "Use retries, fallbacks, and load balancing in app code.",
 to: "/docs/routing",
 },
 {
-icon: "🌐",
 title: "Choose A Provider",
 description: "Find provider-specific auth, model naming, and params.",
 to: "/docs/providers",

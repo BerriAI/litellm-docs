@@ -13,9 +13,9 @@ Define your guardrails under the `guardrails` section
 
 ```yaml showLineNumbers title="litellm config.yaml"
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-3.5-turbo
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -68,7 +68,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi my email is ishaan@berri.ai"}
     ],
@@ -123,7 +123,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-npnwjPQciVRok5yNZgKmFQ" \
   -d '{
-    "model": "gpt-3.5-turbo",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "hi what is the weather"}
     ],
@@ -208,5 +208,5 @@ A PII-only flag is masked in place rather than getting the advisory message: the
 
 Advisory mode has two limitations tied to when in the request lifecycle the guardrail runs:
 
-- **`mode: "during_call"` is not supported.** `during_call` runs the guardrail concurrently with the LLM request with no barrier between the two, so there is no reliable point at which to append the advisory before the request is dispatched. Configuring `on_flagged: "inject_system_message"` with a mode that includes `during_call` raises an error when the guardrail is configured. Use `mode: "pre_call"` instead.
+- **`mode: "during_call"` has no advisory effect.** `during_call` runs the guardrail concurrently with the LLM request with no barrier between the two, so there is no reliable point at which to append the advisory before the request is dispatched. Configuring `on_flagged: "inject_system_message"` with a mode that includes `during_call` is accepted without error, but on that hook a flag that includes PII blocks the request, and any other flag is logged as a warning and the request is allowed unchanged, as with `on_flagged: "monitor"`. Use `mode: "pre_call"` to get the advisory message.
 - **`mode: "post_call"` behaves like `on_flagged: "monitor"`.** By the time a post-call guardrail runs, the LLM has already produced its response, so there is nothing left to inject the advisory into. The flag is logged and the response is returned unchanged.

@@ -22,7 +22,7 @@ import os
 # set keys 
 os.environ["COHERE_API_KEY"] = "co-.."
 
-litellm.drop_params = True # 👈 KEY CHANGE
+litellm.drop_params = True # KEY CHANGE
 
 response = litellm.completion(
                 model="command-r",
@@ -73,7 +73,7 @@ response = litellm.completion(
 - litellm_params:
     api_base: my-base
     model: openai/my-model
-    drop_params: true # 👈 KEY CHANGE
+    drop_params: true # KEY CHANGE
   model_name: my-model
 ```
 </TabItem>
@@ -109,7 +109,7 @@ response = litellm.completion(
 - litellm_params:
     api_base: my-base
     model: openai/my-model
-    additional_drop_params: ["response_format"] # 👈 KEY CHANGE
+    additional_drop_params: ["response_format"] # KEY CHANGE
   model_name: my-model
 ```
 </TabItem>
@@ -128,7 +128,7 @@ Drop nested fields within complex objects using JSONPath-like notation:
 import litellm
 
 response = litellm.completion(
-    model="bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    model="bedrock/us.anthropic.{{anthropic}}",
     messages=[{"role": "user", "content": "Hello"}],
     tools=[{
         "name": "search",
@@ -147,7 +147,7 @@ response = litellm.completion(
 model_list:
   - model_name: my-bedrock-model
     litellm_params:
-      model: bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+      model: bedrock/us.anthropic.{{anthropic}}
       additional_drop_params: ["tools[*].input_examples"]  # Remove from all tools
 ```
 
@@ -184,7 +184,7 @@ await litellm.acompletion(
     api_key="xxxxx",
     api_base=api_base,
     messages=[{"role": "user", "content": "Hello! return a json object"}],
-    tools=[{"type": "function", "function": {"name": "get_current_time", "description": "Get the current time in a given location.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The city name, e.g. San Francisco"}}, "required": ["location"]}}}]
+    tools=[{"type": "function", "function": {"name": "get_current_time", "description": "Get the current time in a given location.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The city name, e.g. San Francisco"}}, "required": ["location"]}}}],
     allowed_openai_params=["tools"],
 )
 ```
@@ -210,7 +210,7 @@ client = openai.OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages = [
         {
             "role": "user",

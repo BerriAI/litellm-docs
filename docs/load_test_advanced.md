@@ -12,7 +12,7 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
     - [litellm docker containers](https://github.com/BerriAI/litellm/pkgs/container/litellm)
 - [ ] Ensure you're following **ALL** [best practices for production](./proxy/prod.md)
 - [ ] Locust - Ensure you're Locust instance can create 1K+ requests per second
-    - 👉 You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**
+    - You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**
     - If you're self hosting locust
         - [here's the spec used for our locust machine](#machine-specifications-for-running-locust)
         - [here  is the locustfile.py used for our tests](#locust-file-used-for-testing)
@@ -28,7 +28,7 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
 
 **Note:**  we're currently migrating to aiohttp which has 10x higher throughput. We recommend using the `openai/` provider for load testing.
 
-:::tip Setting Up a Fake OpenAI Endpoint
+:::tip[Setting Up a Fake OpenAI Endpoint]
 You can use our hosted fake endpoint or self-host your own using [github.com/BerriAI/example_openai_endpoint](https://github.com/BerriAI/example_openai_endpoint).
 :::
 
@@ -120,15 +120,15 @@ All requests with `model="gemini-vision"` will be load balanced equally across t
 model_list:
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-1.0-pro-vision-001
-      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-1.0-pro-vision-001
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json
   - model_name: gemini-vision
     litellm_params:
-      model: vertex_ai/gemini-1.0-pro-vision-001
-      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/gemini-1.0-pro-vision-001
+      model: vertex_ai/{{gemini_pro}}
+      api_base: https://exampleopenaiendpoint-production-c715.up.railway.app/v1/projects/bad-adroit-crow-413218/locations/us-central1/publishers/google/models/{{gemini_pro}}
       vertex_project: "adroit-crow-413218"
       vertex_location: "us-central1"
       vertex_credentials: /etc/secrets/adroit_crow.json
@@ -185,7 +185,7 @@ Use the following [prometheus metrics to debug your load tests / failures](./pro
 
 ## Machine Specifications for Running LiteLLM Proxy
 
-👉 **Number of Replicas of LiteLLM Proxy=4** for getting 1K+ RPS
+**Number of Replicas of LiteLLM Proxy=4** for getting 1K+ RPS
 
 | Service | Spec | CPUs | Memory | Architecture | Version|
 | --- | --- | --- | --- | --- | --- | 
@@ -219,6 +219,6 @@ class MyUser(HttpUser):
 
 
     def on_start(self):
-        self.api_key = os.getenv('API_KEY', 'sk-1234')
+        self.api_key = os.getenv('API_KEY', 'sk-<your-litellm-api-key>')
         self.client.headers.update({'Authorization': f'Bearer {self.api_key}'})
 ```

@@ -40,8 +40,8 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"]
 
 response = completion(
-  model="gpt-4o",
-  messages=[{"role": "user", "content": "Hi there 👋"}],
+  model="{{openai_large}}",
+  messages=[{"role": "user", "content": "Hi there "}],
   user="ishaan_litellm"
 )
 ```
@@ -60,8 +60,9 @@ litellm.success_callback = ["lunary"]
 litellm.failure_callback = ["lunary"] 
 
 chat = ChatLiteLLM(
-  model="gpt-4o"
-  messages = [
+  model="{{openai_large}}"
+)
+messages = [
     HumanMessage(
         content="what model are you"
     )
@@ -76,7 +77,7 @@ You can use Lunary to manage [prompt templates](https://lunary.ai/docs/features/
 
 ```python
 from litellm import completion
-from lunary
+import lunary
 
 template = lunary.render_template("template-slug", {
   "name": "John", # Inject variables
@@ -102,13 +103,13 @@ litellm.failure_callback = ["lunary"]
 def my_chain(chain_input):
   chain_run_id = lunary.run_manager.current_run_id
   response = completion(
-    model="gpt-4o", 
+    model="{{openai_large}}", 
     messages=[{"role": "user", "content": "Say 1"}],
     metadata={"parent_run_id": chain_run_id},
   )
 
   response = completion(
-    model="gpt-4o", 
+    model="{{openai_large}}", 
     messages=[{"role": "user", "content": "Say 2"}],
     metadata={"parent_run_id": chain_run_id},
   )
@@ -155,7 +156,7 @@ litellm --config config.yaml
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model": "gpt-4o",
+    "model": "{{openai_large}}",
     "messages": [
       {
         "role": "system",
@@ -174,6 +175,6 @@ You can find more details about the different ways of making requests to the Lit
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

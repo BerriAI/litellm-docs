@@ -1,5 +1,6 @@
 ---
-title: "v1.91.1 - DB Model Config Consistency & OTel Error Spans"
+title: "LiteLLM v1.91.1 - DB Model Config Consistency & OTel Error Spans"
+description: "Fixes database-stored model config to match YAML models. Restores the full error attribute set on OpenTelemetry v2 error spans."
 slug: "v1-91-1"
 date: 2026-07-08T23:01:36
 authors:

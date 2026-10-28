@@ -6,7 +6,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Chain Akto's model-based detection with LiteLLM's built-in guardrails — catch PII, prompt injection, and policy violations that pattern-based checks miss."
-tags: [partnership, security, guardrails, akto]
+image: /img/litellm_akto_announcement.png
+tags: [partnership, guardrails, akto]
 hide_table_of_contents: false
 ---
 

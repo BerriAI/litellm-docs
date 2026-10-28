@@ -77,7 +77,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_litellm_key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "MASTERCARD 5555555555554444 03/2027 123"}
     ],
@@ -97,7 +97,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_litellm_key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My credit card is 5555555555554444, please summarize this."}
     ],
@@ -114,7 +114,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_litellm_key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Return my credit card number: 5555555555554444."}
     ],
@@ -134,7 +134,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_litellm_key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "My employee ID is 123456 (test) and my phone is 555-0100"}
     ],
@@ -154,7 +154,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_litellm_key>" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "Summarize the main differences between TCP and UDP."}
     ],
@@ -204,7 +204,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "x-qostodian-nexus-identifiers-container: container-id" \
   -H "x-qostodian-nexus-identifiers-identity: identity@example.com" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [
       {"role": "user", "content": "..."}
     ],

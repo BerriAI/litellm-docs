@@ -31,7 +31,7 @@ This page documents all command-line interface (CLI) arguments available for the
     ```
 
 ### --num_workers
-   - **Default:** Number of logical CPUs in the system, or `4` if that cannot be determined
+   - **Default:** `1`, or the value of the `DEFAULT_NUM_WORKERS_LITELLM_PROXY` environment variable if set
    - The number of worker processes to spin up (uvicorn, gunicorn, or Granian `--workers`).
    - **Usage:** 
      ```shell
@@ -94,7 +94,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --max_requests_before_restart
    - **Default:** `None`
    - **Type:** `int`
-   - Restart worker after this many requests. This is useful for mitigating memory growth over time.
+   - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
+   - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
@@ -150,7 +151,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - **Status:** Beta. Opt in when you want higher gateway throughput; uvicorn remains the default.
    - Starts the proxy via [Granian](https://github.com/emmett-framework/granian) (Rust-backed ASGI server) instead of uvicorn. Supports HTTP/1 and HTTP/2.
    - **Why use it:** Granian moves the HTTP layer off Python into a Rust runtime, which tends to handle concurrent proxy traffic more predictably than uvicorn alone. In LiteLLM load tests, Granian showed a **10–20 RPS improvement** over an equivalent uvicorn multi-worker setup, with **better stability under sustained load and fewer request failures**.
-   - **Requirements:** Python 3.9+ and the `granian` package (included in `litellm[proxy]`).
+   - **Requirements:** Python {{python_min_version}}+ and the `granian` package (included in `litellm[proxy]`).
    - **Limitations when using Granian:**
      - `--max_requests_before_restart` is not supported (Granian uses `workers_lifetime` in seconds, not a per-request limit).
      - `--ciphers` is not applied.
@@ -215,7 +216,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - The model name to pass to LiteLLM.
    - **Usage:** 
      ```shell
-     litellm --model gpt-3.5-turbo
+     litellm --model {{openai_small}}
      ```
 
 ### --alias
@@ -235,7 +236,7 @@ This page documents all command-line interface (CLI) arguments available for the
      ```
 
 ### --api_version
-   - **Default:** `2024-07-01-preview`
+   - **Default:** `litellm.AZURE_DEFAULT_API_VERSION` (currently `2025-02-01-preview`)
    - For Azure services, specify the API version.
    - **Usage:** 
      ```shell
@@ -263,7 +264,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - Save the model-specific config.
    - **Usage:** 
      ```shell
-     litellm --model gpt-3.5-turbo --save
+     litellm --model {{openai_small}} --save
      ```
 
 ## Model Parameters
@@ -442,6 +443,15 @@ A read replica takes the same key under `database.reader`, and it requires the w
      litellm --use_prisma_db_push
      ```
 
+### --check_migrations_against_existing_data
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Check, read-only, that the rows in `DATABASE_URL` can take this version's pending migrations and request-log indexes, print what would block them, then exit without applying anything. Exit code 0 when nothing blocks, 2 when something does. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#check-the-rows-before-the-schema).
+   - **Usage:**
+     ```shell
+     litellm --check_migrations_against_existing_data
+     ```
+
 ## Debugging
 
 ### --debug
@@ -526,15 +536,6 @@ A read replica takes the same key under `database.reader`, and it requires the w
    - **Usage:** 
      ```shell
      litellm --version
-     ```
-
-### --telemetry
-   - **Default:** `True`
-   - **Type:** `bool`
-   - Help track usage of this feature. Turn off for privacy.
-   - **Usage:** 
-     ```shell
-     litellm --telemetry False
      ```
 
 ### --use_queue
