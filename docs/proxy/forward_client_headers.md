@@ -390,6 +390,10 @@ To test if headers are being forwarded:
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
 
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
+
 ### Provider Errors
 
 1. **Invalid Headers**: Some providers reject unknown headers

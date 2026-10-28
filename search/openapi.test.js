@@ -103,6 +103,9 @@ test('build outputs and reranking include isolated API operation evidence', asyn
   t.after(() => fs.rm(directory, {recursive: true, force: true}));
   await fs.writeFile(path.join(directory, 'openapi.json'), JSON.stringify(spec));
   await buildSearchIndex({outDir: directory, pages: new Map()});
+  const runtime = require('./runtime-index').loadRuntimeIndex(await fs.readFile(path.join(directory, 'search-runtime.bin')));
+  const portable = loadIndex(await fs.readFile(path.join(directory, 'search-index.json'), 'utf8'));
+  assert.deepEqual(search(runtime, 'reset key spend'), search(portable, 'reset key spend'));
   const corpus = await loadRerankCorpus(directory);
   assert.deepEqual(Object.keys(corpus.pageStructure), [operation, inspection]);
   let checked = 0;

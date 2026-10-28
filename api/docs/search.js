@@ -1,7 +1,7 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const {createKeywordSearchHandler} = require('../../search/keyword-api');
-const {loadIndex} = require('../../search/engine');
+const {loadRuntimeIndex} = require('../../search/runtime-index');
 const {send} = require('../../search/api');
 const {readConfig} = require('../../search/runtime');
 
@@ -14,8 +14,8 @@ module.exports = async (req, res) => {
       handler = createKeywordSearchHandler({config, getIndex() {
         // Start after request validation and body reading so cold starts do not
         // queue cancelled keystrokes in front of the body-read limit.
-        if (!index) index = fs.readFile(path.join(process.cwd(), 'build/search-index.json'), 'utf8')
-          .then(loadIndex)
+        if (!index) index = fs.readFile(path.join(process.cwd(), 'build/search-runtime.bin'))
+          .then(loadRuntimeIndex)
           .catch(error => {index = undefined; throw error;});
         return index;
       }});

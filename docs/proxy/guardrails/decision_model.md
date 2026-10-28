@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 | Property | Details |
 |-------|-------|
 | Description | Ask a decision model such as TypeSafe Jev yes/no questions you write about every request or response, and block or log when a question's probability reaches its threshold. |
-| Provider | LiteLLM native. Any model that serves [`/v1/decisions`](../../decisions/index.md) can be the decision model: TypeSafe Jev, Perplexity, OpenAI, Microsoft Foundry, Databricks and the other providers listed there. |
+| Provider | LiteLLM native. Any model that serves [`/v1/decisions`](../../decisions.md) can be the decision model: TypeSafe Jev, Perplexity, OpenAI, Microsoft Foundry, Databricks and the other providers listed there. |
 | Supported Actions | `block` (HTTP 400 naming the questions that fired), `log` (records the probability and lets the call through) |
 | Supported Modes | `pre_call`, `during_call`, `post_call` |
 | Endpoints | `/v1/chat/completions`, `/v1/messages`, `/v1/responses` |
@@ -136,7 +136,7 @@ model_list:
       mode: evaluation
 ```
 
-With no such model the form says so and links to **Models + Endpoints**, where [Add a decision model](../../decisions/admin_ui.md#add-a-decision-model) walks through adding one.
+With no such model the form says so and links to **Models + Endpoints**, where [Add a decision model](../../decisions.md#add-a-decision-model) walks through adding one.
 
 The form starts with an **Add question** button. Each click adds a card with the name, the question, **Block** or **Log only**, and a threshold slider from 0 to 1. Every card stays editable until the guardrail is created and is removed with its X. **Create Guardrail** is refused while a question is blank or two questions share a name.
 

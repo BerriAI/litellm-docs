@@ -398,7 +398,7 @@ response = await litellm.anthropic.messages.acreate(
 import litellm
 
 response = await litellm.anthropic.messages.acreate(
-    model="bedrock/invoke/anthropic.{{anthropic_large}}",
+    model="bedrock/invoke/global.anthropic.{{anthropic_large}}",
     messages=[
         {
             "role": "user",
