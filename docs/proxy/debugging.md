@@ -193,9 +193,9 @@ litellm_settings:
     suppress_startup_output: true
 ```
 
-Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. A few startup warnings that need action, such as an ignored or deprecated CLI flag, still print whatever `LITELLM_LOG` is set to. Other warnings follow `LITELLM_LOG`. With JSON logs on, those startup warnings are `WARNING` records on stdout, whether or not this setting is on.
+Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. A few startup warnings that need action, such as an ignored or deprecated CLI flag, still print whatever `LITELLM_LOG` is set to. Other warnings follow `LITELLM_LOG`. With JSON logs on, those startup warnings are `WARNING` records on stdout, whether or not this setting is on. Available from v1.109.0.
 
-When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. From v1.109.0 the same goes for the startup messages and for color codes inside a log message.
+When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set to any non-empty value, plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. From v1.109.0 the same goes for the startup messages and for color codes inside a log message.
 
 ## Common Errors 
 
