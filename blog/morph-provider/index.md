@@ -1,7 +1,7 @@
 ---
 slug: morph-provider
 title: "Morph open-weight models on LiteLLM"
-date: 2026-10-27T12:00:00
+date: 2026-10-27T09:00:00
 authors:
   - moe
   - ryan
