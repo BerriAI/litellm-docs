@@ -61,9 +61,11 @@ cell holding "1.63.8+") and points at the badge. The version has to end its
 sentence, table cell, or parenthesis, so a sentence that happens to mention a
 release ("From v1.81.0 the request is set as attributes on the parent span") is
 left alone, and so is a removal or regression note ("No longer supported since
-v1.110.0", "Broken since v1.86.0"). "LiteLLM v1.97.0+ strips ..." fires wherever
-the sentence goes, since LiteLLM's name with a "+" or "and later" is a note on
-its own. Another project's version is usually left alone too, since the words
+v1.110.0", "Broken since v1.86.0"). Only the words in the version's own
+sentence and table cell count, so "not working" in the cell before "Upgrade to
+LiteLLM v1.97.0+" does not hide that note. "LiteLLM v1.97.0+ strips ..." fires
+wherever the sentence goes, since LiteLLM's name with a "+" or "and later" is a
+note on its own. Another project's version is usually left alone too, since the words
 leading into it are not availability words, but a line like "requires the SDK
 1.1.0" does fire. Add `{/* keep-version-note */}` to the line there, and wherever
 the release itself is the subject, as on the release-cycle page. Pages with
@@ -71,8 +73,8 @@ the release itself is the subject, as on the release-cycle page. Pages with
 skips them.
 
 With `--base=<git ref>`, the version-missing rule also fails a row added to
-docs/proxy/config_settings.md since that ref that carries no badge, so a new
-setting says which release it arrived in. CI passes the pull request's base.
+docs/proxy/config_settings.md since that ref that carries no badge with a
+release version, so a new setting says which release it arrived in. CI passes the pull request's base.
 
 Requires PyYAML (pip install pyyaml).
 """
@@ -423,7 +425,7 @@ def check_page(page, site, page_cache):
                 err("model-literal", line_no, model_literal_message(m.group(0)))
         for match in SINCE_VERSION_TAG_RE.finditer(strip_inline_code(raw)):
             if not SINCE_VERSION_PROP_RE.search(match.group(1)):
-                err("version-note", line_no, "<SinceVersion> without a `v` prop renders nothing; write `<SinceVersion v=\"1.85.0\" />`")
+                err("version-note", line_no, "<SinceVersion> without a release version in its `v` prop shows no real version; write `<SinceVersion v=\"X.Y.Z\" />` with X.Y.Z set to the first release that carries the feature")
         if "keep-version-note" not in raw and not plain_markdown:
             literal = version_note_literal(SINCE_VERSION_TAG_RE.sub(" ", raw))
             if literal:
@@ -575,7 +577,11 @@ VERSION_NOTE_NEGATION_WORDS = frozenset(
 )
 VERSION_NOTE_LOOKBACK = 5
 SINCE_VERSION_TAG_RE = re.compile(r"<SinceVersion\b([^>]*)>")
-SINCE_VERSION_PROP_RE = re.compile(r"\bv\s*=\s*(?:[\"'][^\"']+[\"']|\{\s*[\"'`][^\"'`]+[\"'`]\s*\})")
+RELEASE_VERSION = r"v?\d+\.\d+\.\d+[\w.-]*"
+SINCE_VERSION_PROP_RE = re.compile(
+    rf"\bv\s*=\s*(?:[\"']{RELEASE_VERSION}[\"']|\{{\s*[\"'`]{RELEASE_VERSION}[\"'`]\s*\}})"
+)
+VERSION_NOTE_BOUNDARY_RE = re.compile(r"\||[.;!?](?=\s)")
 
 
 def version_note_literal(raw):
@@ -585,7 +591,9 @@ def version_note_literal(raw):
 
 def is_version_note(text, match):
     after = text[match.end():]
-    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(text[: match.start()])]
+    before = text[: match.start()]
+    start = max((m.end() for m in VERSION_NOTE_BOUNDARY_RE.finditer(before)), default=0)
+    lead_in = [word.lower() for word in VERSION_NOTE_WORD_RE.findall(before[start:])]
     negated = not VERSION_NOTE_NEGATION_WORDS.isdisjoint(lead_in[-VERSION_NOTE_LOOKBACK:])
     loose_shape = LITELLM_RELEASE_RE.match(match.group(0)) and VERSION_NOTE_QUALIFIER_RE.match(after)
     if loose_shape and names_litellm(lead_in):
@@ -597,8 +605,7 @@ def is_version_note(text, match):
         return not negated
     if VERSION_NOTE_COPULA_RE.search(clause_tail):
         return False
-    cell_lead_in = VERSION_NOTE_WORD_RE.findall(text[text.rfind("|", 0, match.start()) + 1 : match.start()])
-    if loose_shape and all(word.lower() in VERSION_NOTE_FILLER_WORDS for word in cell_lead_in):
+    if loose_shape and all(word in VERSION_NOTE_FILLER_WORDS for word in lead_in):
         return not negated
     for distance, word in enumerate(reversed(lead_in[-VERSION_NOTE_LOOKBACK:]), start=1):
         if word in VERSION_NOTE_NEGATION_WORDS:
@@ -638,8 +645,12 @@ def new_config_rows_without_badge(base_text, head_text):
     return [
         (line_no, m.group(1))
         for line_no, line, m in rows
-        if m and m.group(1) not in known and not SINCE_VERSION_TAG_RE.search(line) and "keep-version-note" not in line
+        if m and m.group(1) not in known and not has_release_badge(line) and "keep-version-note" not in line
     ]
+
+
+def has_release_badge(line):
+    return any(SINCE_VERSION_PROP_RE.search(m.group(1)) for m in SINCE_VERSION_TAG_RE.finditer(line))
 
 
 def version_missing_errors(base_ref, repo_root=REPO_ROOT):
@@ -658,8 +669,8 @@ def version_missing_errors(base_ref, repo_root=REPO_ROOT):
             "version-missing",
             CONFIG_SETTINGS_PATH,
             line_no,
-            f"new setting `{key}` has no <SinceVersion /> badge; add `<SinceVersion v=\"1.85.0\" />` naming the first "
-            "release that carries it (the next release while its code is unreleased)",
+            f"new setting `{key}` has no <SinceVersion /> badge; add `<SinceVersion v=\"X.Y.Z\" />` with X.Y.Z set to "
+            "the first release that carries it (the next release while its code is unreleased)",
         )
         for line_no, key in new_config_rows_without_badge(shown.stdout, head_text)
     ]

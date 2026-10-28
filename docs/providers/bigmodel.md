@@ -1,6 +1,6 @@
 # BigModel (Zhipu AI)
 
-Available from v1.109.0.
+<SinceVersion v="1.109.0" />
 
 Use `bigmodel/` for the domestic BigModel platform and `zai/` for international Z.AI. Each platform uses its own credentials and default URL
 
