@@ -58,6 +58,7 @@ Decision routes are available in LiteLLM `v1.104.2` and later, except the `v1.10
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| Guardrails | Requests only | Guardrails that define `apply_guardrail`, see [Guardrails](#guardrails) |
 | Streaming | No | |
 
 ## Supported providers
@@ -555,6 +556,14 @@ Problems the form can catch, such as an empty **Input**, are listed above **Send
 <Image img={require('../img/decisions_playground_openai.png')} alt="Decisions playground with /v1/decisions and the luna model picked, the bug report triage example with choice, predicate and score questions and its answers" />
 
 The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
+
+## Guardrails
+
+[Guardrails](./proxy/guardrails/quick_start.md) that define LiteLLM's unified `apply_guardrail` interface scan `/v1/decisions` and `/v1/systemone` requests and are set up the same way as on `/chat/completions`. These include Presidio, `litellm_content_filter`, the Generic Guardrail API and custom code guardrails that define `apply_guardrail`, plus the secret detection guardrail `hide-secrets`, Model Armor, Azure Prompt Shield, Azure Text Moderation and LLM Shield Proxy, which run their own hooks on `/chat/completions`. On `/v1/decisions` they see the text in `input`, as a string or as the `input_text` parts of each message, and each question's `instructions`. On `/v1/systemone` they see the text in `state` and each question's `instructions`. The model reads the text the guardrail returns, so a key that `hide-secrets` replaces with `[REDACTED]` never reaches the provider. Guardrails do not scan the answers, so a `post_call` guardrail lets every answer through.
+
+Guardrails that do not define `apply_guardrail`, such as Lakera, Aporia and the others listed for [`/v1/extraction`](./extraction.md#guardrails), do not scan the question `instructions` or `/v1/systemone` requests. A guardrail with its own hook can still scan `input` on `/v1/decisions`, as Lakera does. When one of these guardrails skips a request, LiteLLM sends it to the model and returns no error. When a `/v1/systemone` request names one of these guardrails, or it is `default_on`, the proxy logs a warning such as `Guardrails lakera-guard do not implement apply_guardrail, so they cannot scan the text of asystemone requests`. The `x-litellm-applied-guardrails` header lists only the guardrails that scanned the request, so a guardrail that skipped it is left out even when the request names it.
+
+Earlier builds do not scan `/v1/systemone` requests or the question `instructions`, and on `/v1/decisions` only guardrails with their own hooks, such as `hide-secrets` and Lakera, scan `input`.
 
 ## Use a decision model as a guardrail
 
