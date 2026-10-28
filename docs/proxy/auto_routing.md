@@ -763,6 +763,8 @@ Effort levels are per-model capabilities, so check the model supports the rung y
 
 ## Python SDK
 
+For installation, credentials, and a complete runnable example, follow the [Autorouter SDK guide](/docs/autorouter_sdk).
+
 ```python
 from litellm import Router
 
