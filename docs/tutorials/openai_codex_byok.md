@@ -11,7 +11,7 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.108.0 or later**, with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.109.0 or later**, with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
@@ -65,6 +65,20 @@ env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
 Replace `http://localhost:4000` with your proxy URL. Keep `env_key` unset so Codex uses your ChatGPT login.
 
 Save the file and **restart Codex**. Sign in with ChatGPT if needed, then start a new chat and choose your model.
+
+### Or launch the CLI with `lite` {#lite-cli}
+
+The [`lite` CLI](../proxy/management_cli.md) from LiteLLM **v1.109.0 or later** can set up this provider each time it starts the Codex CLI, so you can skip `~/.codex/.env` and the `config.toml` edit above. Use the virtual key from Step 2:
+
+```bash
+export LITELLM_PROXY_URL=http://localhost:4000
+export LITELLM_PROXY_API_KEY=sk-<your-litellm-virtual-key>
+lite codex --subscription -m gpt-<model>
+```
+
+`lite` prints `(keeping your ChatGPT login)` and starts Codex, which keeps your ChatGPT login and sends your LiteLLM key in the `x-litellm-api-key` header.
+
+To make this the default, run `lite config set codex_subscription true`. Pass `--no-subscription` to send your LiteLLM key as Codex's API key for one session instead.
 
 ## Step 4: Verify a request
 
