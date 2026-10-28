@@ -73,6 +73,41 @@
   background: var(--ifm-background-surface-color);
 }
 
+.trackerNote {
+  margin: 0.75rem 0 1.5rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.8rem;
+}
+
+.milestone {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ifm-color-primary);
+  border-radius: 0 8px 8px 0;
+  background: var(--ifm-background-surface-color);
+  font-size: 0.9rem;
+}
+
+.milestone h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.milestone p:not(.kicker) {
+  margin: 0 0 0.5rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 640px) {
+  .milestone {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+}
+
 .goalSentence {
   margin: 0;
   padding: 1.25rem 1.5rem 0;
@@ -276,6 +311,16 @@
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
   color: var(--ifm-color-emphasis-700);
+}
+
+.detailsSummary {
+  padding-bottom: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.detailsSummary p {
+  margin: 0 0 0.35rem;
 }
 
 .detailsList {
