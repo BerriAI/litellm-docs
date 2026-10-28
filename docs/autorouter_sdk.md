@@ -33,6 +33,17 @@ import asyncio
 
 from litellm import Router
 
+routing_config = {
+    "classifier_type": "heuristic",
+    "tiers": {
+        "SIMPLE": "fast",
+        "MEDIUM": "fast",
+        "COMPLEX": "capable",
+        "REASONING": "capable",
+    },
+    "return_raw_model_name": True,
+}
+
 router = Router(
     model_list=[
         {
@@ -47,16 +58,7 @@ router = Router(
             "model_name": "auto",
             "litellm_params": {
                 "model": "auto_router/complexity_router",
-                "complexity_router_config": {
-                    "classifier_type": "heuristic",
-                    "tiers": {
-                        "SIMPLE": "fast",
-                        "MEDIUM": "fast",
-                        "COMPLEX": "capable",
-                        "REASONING": "capable",
-                    },
-                    "return_raw_model_name": True,
-                },
+                "complexity_router_config": routing_config,
                 "complexity_router_default_model": "capable",
             },
         },
@@ -96,8 +98,10 @@ Selected model: {{openai_small}}
 
 If authentication fails, check that `OPENAI_API_KEY` is set in this terminal. If a model is unavailable to your account, replace its `litellm_params.model` value with an OpenAI model you can access.
 
-## Use your own models
+## Next steps
 
 Change the two provider model names and the tier assignments to fit your application. To use another provider, set that provider's credentials and use its `provider/model` name; see [supported providers](/docs/providers).
 
-For LLM classifiers, keyword rules, and other options, see the [auto-routing configuration reference](/docs/proxy/auto_routing#full-config). To run routing as an HTTP service for multiple applications, see [gateway setup](/docs/auto_router/setup).
+[Choose a classifier](./autorouter_sdk/classifiers.md) to route by prompt complexity, keywords, or your own Python logic. [Configure routing](./autorouter_sdk/routing.md) to use model pools, keep a conversation on one model, or handle long prompts. [Inspect and evaluate](./autorouter_sdk/evaluation.md) to see routing decisions and compare answers with a fixed model.
+
+For the full list of settings, see the [configuration reference](/docs/proxy/auto_routing#full-config). To serve multiple applications over HTTP, see [gateway setup](/docs/auto_router/setup).
