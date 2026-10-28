@@ -185,11 +185,13 @@ With the owner's token, again by overriding branch protection, the attacker remo
 
 ## Acknowledgements
 
-We would like to thank [LidorMachluf](https://github.com/LidorMachluf) for their service to the open source community by catching the malicious release within 20 minutes of publication, maintaining a thorough writeup of the issue, and keeping it up to date with ongoing analysis and information.
+We would like to thank [Lidor Machluf from Upwind Security](https://github.com/LidorMachluf) for his service to the open source community by catching the malicious release within 20 minutes of publication, maintaining a thorough writeup of the issue, and keeping it up to date with ongoing analysis and information.
 
 We would also like to thank Karlo Zanki and the Socket Threat Research team for sharing their investigation with us and coordinating on disclosure of their findings.
 
 Additionally, we want to give a big thanks to Asritha Bodepudi and Evan Sultanik at [Trail of Bits](https://trailofbits.com/), who have been assisting us with internal security audits as part of [Patch the Planet](https://trailofbits.com/patch-the-planet/) and were also very helpful in addressing, investigating, and communicating about this incident.
+
+Finally, we are very grateful to Ryan McGeehan of R10N Security for his advice, assistance, and contacts across the industry to quickly get otherwise inaccessible information about our cloud accounts, which was enormously helpful in confirming or ruling out potential attack paths.
 
 ## Indicators
 
