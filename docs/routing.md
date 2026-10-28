@@ -372,7 +372,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="simple-shuffle", # RECOMMENDED - best performance
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -454,7 +454,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# set routing strategy
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 ## CALL 1+2
@@ -577,7 +577,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -1772,6 +1772,8 @@ When configuring Redis caching in router settings, use `cache_kwargs` to pass ad
 Enable pre-call checks to filter out:
 1. deployments with context window limit < messages for a call.
 2. deployments outside of eu-region
+
+`enable_pre_call_checks` does not rate limit deployments. A deployment's `rpm` and `tpm` stay routing weights unless you also set `optional_pre_call_checks: ["enforce_model_rate_limits"]`, which is the only setting that turns them into hard limits. See [Enforce Model Rate Limits](./proxy/load_balancing#enforce-model-rate-limits).
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
