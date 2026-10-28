@@ -142,7 +142,7 @@ When a deployment is over its daily limit, the request is retried on another dep
 }
 ```
 
-Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1500`) and `retry-after` is the number of seconds until midnight UTC.
+Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1501`) and `retry-after` is the number of seconds until midnight UTC.
 
 ### Multi-Instance Deployment
 
