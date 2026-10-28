@@ -1,197 +1,64 @@
 {
   "kind": "illustrative",
-  "assumption": "Independent configuration choices; widths are synthetic, not measured production traffic.",
-  "endpoint_ratio": "Messages:chat completions:responses:other endpoints = 9:3:2:1",
-  "callback_scope": "Internal disjoint cohorts account for overlapping callback choices once; the visible diagram presents one choose-many callback stage.",
-  "layers": [
+  "mix_assumption": "Cumulative eligibility, not independent option weights or production telemetry.",
+  "blue_meaning": "Eligible so far; only the final remaining blue stream meets all conditions.",
+  "show_numbers": false,
+  "initial_eligible_share": "3/5",
+  "stages": [
     {
-      "label": [
-        "Endpoint"
+      "label": "Endpoint",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "12/25",
+      "supported": [
+        "/v1/messages"
       ],
-      "note": [
-        "Choose one"
-      ],
-      "nodes": [
-        {
-          "label": "Chat completions",
-          "detail": "/v1/chat/completions",
-          "weight": 3,
-          "eligible": false
-        },
-        {
-          "label": "Responses",
-          "detail": "/v1/responses",
-          "weight": 2,
-          "eligible": false
-        },
-        {
-          "label": "/v1/messages",
-          "detail": "Anthropic-style API",
-          "weight": 9,
-          "eligible": true
-        },
-        {
-          "label": "Other APIs",
-          "detail": "Other endpoints",
-          "weight": 1,
-          "eligible": false
-        }
-      ],
-      "selection_mode": "one"
-    },
-    {
-      "label": [
-        "Routing",
-        "strategy"
-      ],
-      "note": [
-        "Choose one"
-      ],
-      "nodes": [
-        {
-          "label": "Least busy",
-          "weight": 15,
-          "eligible": false
-        },
-        {
-          "label": "Usage-based",
-          "weight": 10,
-          "eligible": false
-        },
-        {
-          "label": "Latency-based",
-          "weight": 10,
-          "eligible": false
-        },
-        {
-          "label": "Simple shuffle",
-          "weight": 60,
-          "eligible": true
-        },
-        {
-          "label": "Cost-based",
-          "weight": 5,
-          "eligible": false
-        }
-      ],
-      "selection_mode": "one"
-    },
-    {
-      "label": [
-        "Callbacks"
-      ],
-      "note": [
-        "Choose many"
-      ],
-      "nodes": [
-        {
-          "label": "S3 logs",
-          "detail": "only",
-          "weight": 10,
-          "eligible": true
-        },
-        {
-          "label": "Prometheus",
-          "weight": 20,
-          "eligible": false
-        },
-        {
-          "label": "Langfuse",
-          "weight": 10,
-          "eligible": false
-        },
-        {
-          "label": "Spend + S3",
-          "detail": "both",
-          "weight": 35,
-          "eligible": true
-        },
-        {
-          "label": "Datadog",
-          "weight": 10,
-          "eligible": false
-        },
-        {
-          "label": "Spend logging",
-          "detail": "only",
-          "weight": 15,
-          "eligible": true
-        }
-      ],
-      "selection_mode": "many",
-      "display_options": [
-        {
-          "label": "S3 logs",
-          "eligible": true
-        },
-        {
-          "label": "Prometheus",
-          "eligible": false
-        },
-        {
-          "label": "Spend logging",
-          "eligible": true
-        },
-        {
-          "label": "Langfuse",
-          "eligible": false
-        },
-        {
-          "label": "Datadog",
-          "eligible": false
-        }
+      "other": [
+        "Chat completions",
+        "Responses \u00b7 Other APIs"
       ]
     },
     {
-      "label": [
-        "Providers"
+      "label": "Routing strategy",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "9/25",
+      "supported": [
+        "Simple shuffle"
       ],
-      "note": [
-        "Choose one"
+      "other": [
+        "Least busy \u00b7 Usage-based",
+        "Latency-based \u00b7 Cost-based"
+      ]
+    },
+    {
+      "label": "Callbacks",
+      "selection_mode": "many",
+      "eligible_share_of_all_requests": "27/100",
+      "supported": [
+        "S3 logs",
+        "Spend logging"
       ],
-      "nodes": [
-        {
-          "label": "OpenAI",
-          "weight": 18,
-          "eligible": false
-        },
-        {
-          "label": "Anthropic",
-          "weight": 24,
-          "eligible": true
-        },
-        {
-          "label": "Gemini",
-          "weight": 12,
-          "eligible": false
-        },
-        {
-          "label": "Azure",
-          "detail": "OpenAI",
-          "weight": 6,
-          "eligible": false
-        },
-        {
-          "label": "Amazon",
-          "detail": "Bedrock",
-          "weight": 21,
-          "eligible": true
-        },
-        {
-          "label": "Cohere",
-          "weight": 4,
-          "eligible": false
-        },
-        {
-          "label": "Vertex AI",
-          "detail": "Claude",
-          "weight": 15,
-          "eligible": true
-        }
+      "other": [
+        "Any unsupported callback",
+        "Prometheus \u00b7 Langfuse",
+        "Datadog"
+      ]
+    },
+    {
+      "label": "Provider",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "1/5",
+      "supported": [
+        "Anthropic",
+        "Amazon Bedrock",
+        "Vertex AI"
       ],
-      "selection_mode": "one"
+      "other": [
+        "OpenAI \u00b7 Gemini",
+        "Azure OpenAI \u00b7 Cohere"
+      ],
+      "scope": "Anthropic models"
     }
   ],
-  "mix_assumption": "independent",
-  "show_numbers": false
+  "author_direction": "Start around 60% eligible and end around 20%, with additional departures between endpoint and routing. Intermediate widths are illustrative design choices.",
+  "layout": "One input splits above the aligned option rows. Later fallback branches join the left edge of the Python lane, whose right edge stays fixed."
 }

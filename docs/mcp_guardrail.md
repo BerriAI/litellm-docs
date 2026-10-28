@@ -57,9 +57,9 @@ PANW support requires a LiteLLM version containing [the integration fix](https:/
 
 ### Scanning Tool Descriptions on Discovery
 
-A `pre_mcp_call` guardrail also runs on every tool an upstream server returns from `tools/list`, before the gateway serves the listing. What the guardrail sees on that pass is the tool's description plus every `description` inside its input schema; at call time it sees the arguments, as before. The scan covers `tools/list` over `/mcp` and `/{server_name}/mcp`, `GET /mcp-rest/tools/list`, and the discovery a `/v1/responses` or `/v1/chat/completions` request runs with `server_url: "litellm_proxy"`
+A `pre_mcp_call` guardrail also runs on every tool an upstream server returns from `tools/list`, before the gateway serves the listing. What the guardrail sees on that pass is the tool's description plus every `description` inside its input schema. At call time, guardrails receive the arguments and the tool definition served to that caller. The scan covers `tools/list` over `/mcp` and `/{server_name}/mcp`, `GET /mcp-rest/tools/list`, and the discovery a `/v1/responses` or `/v1/chat/completions` request runs with `server_url: "litellm_proxy"`
 
-- A tool whose description the guardrail blocks is left out of the listing, so no model ever reads it
+- A tool whose description or input schema the guardrail blocks is left out of the listing and refused on `tools/call`, even when the client already knows its name
 - A tool whose description the guardrail masks is listed with the masked text
 - The gateway logs a warning and sends an `mcp_tool_description_blocked` [alert](./proxy/alerting#all-possible-alert-types) naming the hidden tools, once per distinct set of hidden tools per server; the alert clears on its own once the upstream serves a clean catalog again
 
@@ -96,7 +96,9 @@ MCP server `notes`: 1 tool description(s) blocked by a guardrail and hidden from
 - `get_note`: Content blocked: prompt_injection_jailbreak conditional match 'enable + no restrictions' detected (severity: high)
 ```
 
-Hiding happens at listing time. A client that cached the tool name earlier can still attempt the call, and the same guardrail then runs on the call's arguments. To refuse calls to any tool the admin has not approved, [pin the server's tool list](./mcp_control#pin-a-servers-tool-list); the scan still runs on a pinned server, on the pinned text the proxy is about to serve
+When a call has no tool definition from the caller's listing, LiteLLM retrieves the definition using that caller's upstream credentials and applies the discovery guardrail before execution. This also covers clients that never called `tools/list` and calls handled by another proxy worker. A blocked tool or a definition that cannot be retrieved is refused before the upstream tool runs. Masked descriptions and pinned definitions retain the text served to the caller.
+
+To restrict calls to an admin-approved set of tools, [pin the server's tool list](./mcp_control#pin-a-servers-tool-list). Guardrails still scan the pinned text. This behavior requires a version containing [the call enforcement fix](https://github.com/BerriAI/litellm/pull/48669).
 
 Custom guardrails: on a discovery scan the hook's `call_type` is `list_mcp_tools` instead of `call_mcp_tool`, `mcp_tool_description` and `mcp_input_schema` are set in the request data, and a guardrail built on `apply_guardrail` receives the description and the schema descriptions as extra `texts` entries ahead of the argument texts. Raising blocks the tool; returning rewritten texts masks it
 

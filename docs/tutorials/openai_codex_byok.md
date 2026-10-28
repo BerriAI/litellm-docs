@@ -11,11 +11,11 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.108.0 or later**, with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.109.0 or later**, with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
-Add this entry to your proxy's `model_list` and restart the proxy. Skip this step if your administrator has already added the model.
+Add both entries to your proxy's `model_list` and restart the proxy. Skip this step if your administrator has already configured them.
 
 ```yaml title="config.yaml" keep-model-ids
 model_list:
@@ -24,13 +24,19 @@ model_list:
       model: "chatgpt/gpt-*"
     model_info:
       mode: responses
+
+  - model_name: "codex-*"
+    litellm_params:
+      model: "chatgpt/codex-*"
+    model_info:
+      mode: responses
 ```
 
-The wildcard routes Codex model names such as GPT-6 Luna and GPT-6 Astra through ChatGPT. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
+`gpt-*` routes GPT models through ChatGPT, including `gpt-image-2` for Codex's image generation tool. `codex-*` also routes Codex requests such as `codex-auto-review`, which runs approval checks. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
 
 ## Step 2: Create and save a virtual key
 
-In your proxy dashboard, open **Virtual Keys → + Create New Key**. Enter a name, select `gpt-*` under **Models**, and create the key. If you already have a key, use it below.
+In your proxy dashboard, open **Virtual Keys → + Create New Key**. Enter a name, select both `gpt-*` and `codex-*` under **Models**, and create the key. If you already have a key, allow both patterns before using it below.
 
 Save your key in `~/.codex/.env`. Both the app and CLI read this file. Create it if needed; replace the key if it already exists.
 
@@ -60,6 +66,20 @@ Replace `http://localhost:4000` with your proxy URL. Keep `env_key` unset so Cod
 
 Save the file and **restart Codex**. Sign in with ChatGPT if needed, then start a new chat and choose your model.
 
+### Or launch the CLI with `lite` {#lite-cli}
+
+The [`lite` CLI](../proxy/management_cli.md) from LiteLLM **v1.109.0 or later** can set up this provider each time it starts the Codex CLI, so you can skip `~/.codex/.env` and the `config.toml` edit above. Use the virtual key from Step 2:
+
+```bash
+export LITELLM_PROXY_URL=http://localhost:4000
+export LITELLM_PROXY_API_KEY=sk-<your-litellm-virtual-key>
+lite codex --subscription -m gpt-<model>
+```
+
+`lite` prints `(keeping your ChatGPT login)` and starts Codex, which keeps your ChatGPT login and sends your LiteLLM key in the `x-litellm-api-key` header.
+
+To make this the default, run `lite config set codex_subscription true`. Pass `--no-subscription` to send your LiteLLM key as Codex's API key for one session instead.
+
 ## Step 4: Verify a request
 
 Send: **Reply with exactly Hello. Do not use tools.**
@@ -88,9 +108,15 @@ model_list:
       order: 2
     model_info:
       mode: responses
+
+  - model_name: "codex-*"
+    litellm_params:
+      model: "chatgpt/codex-*"
+    model_info:
+      mode: responses
 ```
 
-Set `OPENAI_API_KEY` in the **proxy's environment** and restart the proxy. Keep your Codex config and virtual key's `gpt-*` access unchanged.
+Set `OPENAI_API_KEY` in the **proxy's environment** and restart the proxy. Keep your Codex config, `codex-*` deployment, and virtual key's access to both patterns unchanged.
 
 Luna falls back to API Luna; Astra falls back to API Astra. The model must be available to both your subscription and API account. Check **Logs** to see which deployment served the request and its API cost. See [deployment ordering](../proxy/load_balancing.md#deployment-ordering-priority) for more options.
 
@@ -144,7 +170,7 @@ Codex can use this native route too: change its provider's `base_url` to `http:/
 | Problem | Fix |
 |---|---|
 | Gateway rejects the key | Check `LITELLM_API_KEY` in `~/.codex/.env` and restart Codex. |
-| Model access denied | Allow `gpt-*` on the key and choose a GPT model your subscription supports. |
+| Model access denied | Allow both `gpt-*` and `codex-*` on the key and choose a model your subscription supports. |
 | OpenAI rejects the login or model | Sign in again with ChatGPT and choose a model your plan supports. |
 | No request appears in LiteLLM | Check `model_provider` and `base_url`, then start a new Codex chat. |
 

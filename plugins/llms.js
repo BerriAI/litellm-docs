@@ -38,9 +38,9 @@ const START_HERE = [
 // The main sidebar is split by its top-level categories; the others are small
 // enough to list under one heading each.
 const SIDEBAR_TITLES = {
-  learnSidebar: 'Learn: guides and tutorials',
   integrationsSidebar: 'Integrations',
   autoRouterSidebar: 'Auto Router',
+  providersSidebar: 'Providers',
 };
 
 const SUMMARY = `LiteLLM is an open-source (MIT) Python SDK and AI Gateway that give 100+ LLM providers one OpenAI-compatible API. The SDK is a library for Python apps; the gateway is a server you run in your own environment, with virtual keys, budgets, spend tracking, routing and fallbacks, guardrails, and an MCP gateway, that apps in any language call by changing their base URL.`;
@@ -273,9 +273,30 @@ function useCasesMarkdown() {
   ].join('\n');
 }
 
+// The AI Providers landing page (<ProviderCatalog />) as a markdown list,
+// built in postBuild from providersSidebar.
+let providerIndex = '';
+
+function providerIndexMarkdown(items, byId) {
+  const lines = [];
+  for (const item of items || []) {
+    if (item.type === 'html') {
+      lines.push('', `## ${clean(item.value)}`, '');
+      continue;
+    }
+    // Entries above the first group label are this page and an external link.
+    if (!lines.length) continue;
+    const id = item.type === 'doc' ? item.id : item.link?.type === 'doc' ? item.link.id : null;
+    const doc = id && byId.get(id);
+    if (doc) lines.push(`- [${clean(item.label || doc.title)}](${mdUrl(doc.permalink)})`);
+  }
+  return lines.join('\n').trim();
+}
+
 function expandComponent(tag) {
   // Signup forms have no meaning in markdown
   if (/^<Newsletter\b/.test(tag)) return '';
+  if (/^<ProviderCatalog\b/.test(tag)) return providerIndex;
   let m = /^<AgentPrompt\b[^>]*\bid="([^"]+)"[^>]*\/>$/.exec(tag);
   if (m && PROMPTS[m[1]]) {
     const p = PROMPTS[m[1]];
@@ -568,6 +589,7 @@ module.exports = function llmsPlugin(context) {
       if (!docs.length) return;
       const byId = new Map(docs.map((d) => [d.id, d]));
       const markdown = new Map();
+      providerIndex = providerIndexMarkdown(sidebars.providersSidebar, byId);
 
       const updated = lastUpdatedDates(context.siteDir);
       const writeMd = async (permalink, content) => {
@@ -693,7 +715,7 @@ module.exports = function llmsPlugin(context) {
         }
         for (const id of ids) listed.add(id);
       };
-      const order = ['tutorialSidebar', 'learnSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
+      const order = ['tutorialSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
       const sidebarNames = [...order.filter((n) => sidebars[n]), ...Object.keys(sidebars).filter((n) => !order.includes(n))];
       for (const name of sidebarNames) {
         if (SIDEBAR_TITLES[name]) {

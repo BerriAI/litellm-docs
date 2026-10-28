@@ -188,8 +188,8 @@ router_settings:
   redis_password: <your-redis-password>   # string
   redis_port: <your-redis-port>           # string
   enable_pre_call_checks: true            # bool - Before call is made check if a call is within model context window 
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
   disable_cooldowns: True                  # bool - Disable cooldowns for all models 
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
@@ -491,8 +491,8 @@ router_settings:
   redis_password: <your-redis-password>   # string
   redis_port: <your-redis-port>           # string
   enable_pre_call_checks: true            # bool - Before call is made check if a call is within model context window
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute.
-  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
   disable_cooldowns: True                  # bool - Disable cooldowns for all models
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
@@ -539,7 +539,7 @@ router_settings:
 | cooldown_time | integer | `5` (seconds) | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
 | disable_cooldowns | boolean | `false` | If true, disables cooldowns for all models. [More information here](reliability) |
 | retry_policy | object | `null` | Specifies the number of retries for different types of exceptions. [More information here](reliability) |
-| allowed_fails | integer | `3` | The number of failures allowed before cooling down a model. [More information here](reliability) |
+| allowed_fails | integer | `null` | How many calls a deployment can fail within `cooldown_time` before it cools down. When unset, a rate-based cooldown applies instead. [More information here](../routing#cooldowns) |
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
 | default_priority | (Optional[int]) | `null` | The priority a `/chat/completions`, `/completions` or `/queue/chat/completions` request is queued at when it sends no `priority`. Lower numbers are served first. Default is None, so only requests that send a `priority` are queued. |
@@ -1279,8 +1279,8 @@ router_settings:
 | LITELLM_DEFAULT_EMBEDDING_ENCODING_FORMAT | Default `encoding_format` for OpenAI-compatible embedding calls when it is not set on the request or in model `litellm_params` (e.g. `float`, `base64`). Fallback is `float`. See [Embeddings](./embedding.md#embedding-encoding-format).
 | LITELLM_DEV_ENV_HOT_RELOAD | Internal flag the proxy sets on itself when started with `--reload`, signalling reloaded workers to re-read `.env` with `override=True` so edits to existing keys take effect on reload. Not meant to be set by users
 | LITELLM_DONT_SHOW_FEEDBACK_BOX | Flag to hide feedback box in LiteLLM UI
-| LITELLM_DROP_PARAMS | Parameters to drop in LiteLLM requests
-| LITELLM_MODIFY_PARAMS | Parameters to modify in LiteLLM requests
+| LITELLM_DROP_PARAMS | Set to `true` to drop request params the target provider does not support on every request instead of raising, same as `litellm_settings.drop_params: true`. It is a flag, not a list of params. Accepts true/false, 1/0, yes/no, on/off, t/f and y/n in any letter case. An empty value counts as `false`, and any other value that does not read as true or false, such as a param name, logs a warning and counts as `true`. Before v1.102.0, any non-empty value turned it on, `false` included. Only read from the proxy's process environment, not from `environment_variables` in config.yaml, and `litellm_settings.drop_params` in config.yaml wins when both are set. To drop specific params, use [`additional_drop_params`](../completion/drop_params#specify-params-to-drop) on the model instead, and with this flag unset any other unsupported param returns a 400 again. Requests from Claude Code and Codex, found by their user agent, drop unsupported params whatever this flag or `litellm_settings.drop_params` says, unless the request sets `drop_params` itself. Default is `false`.
+| LITELLM_MODIFY_PARAMS | Set to `true` to let LiteLLM change a request so the provider accepts it, same as `litellm_settings.modify_params: true`. This changes params as well as messages, such as adding a result for a tool call that has none (see [Message Sanitization](../completion/message_sanitization)), lowering `max_tokens` to fit the model's limit, dropping `thinking` on Claude models when the earlier assistant tool calls carry no thinking blocks, and leaving out the system prompt and tools on Gemini requests that use `cached_content`, which Gemini would otherwise reject with a 400. It is a flag, not a list of params. Any non-empty value turns it on, `false`, `0` and `no` included, so leave it unset to keep it off. Only read from the proxy's process environment, not from `environment_variables` in config.yaml. Default is off.
 | LITELLM_EMAIL | Email associated with LiteLLM account
 | LITELLM_FAVICON_URL | Custom URL for the LiteLLM UI favicon. When set, overrides the default favicon
 | LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS | Available from v1.108.0. Output token budget for a Gemini chat completion, text completion or Responses API request, through the proxy or the Python SDK, on Google AI Studio or Vertex AI (Gemini Enterprise Agent Platform), that sends no output limit. On a model that returns a continuation token, such as Gemini 4 Argon, [long outputs](/blog/gemini-4-argon#long-outputs) keep going past Google's per-request cap until it is spent, and on other models it is a plain output limit. Capped at the model's `max_output_tokens` in the cost map, or at the deployment's own `model_info.max_output_tokens` when that is lower. Not applied to a model missing from the cost map or listed there as anything besides a chat model, such as an image model, to a chat model whose cost map entry leaves text out of `supported_output_modalities`, such as a Lyria music model, to a request whose `modalities` asks for anything besides text, to a request whose `extra_body` field holds a snake_case `generation_config`, to a request that resumes with a `continuation_token`, to `/v1/messages`, which requires `max_tokens`, to the native `:generateContent` route on a `gemini/` or `vertex_ai/` model or to Vertex AI batch jobs. Any output limit the request already carries wins, such as its own `max_tokens`, `max_completion_tokens` or `max_output_tokens`, or a deployment's `litellm_params.max_tokens`. Zero, a negative number or a value that is not an integer counts as unset. A value below the model's own per-request limit cuts shorter answers off sooner, and thinking tokens count against it. A large value makes a non-streamed request run as long as the answer, which can pass the client's timeout. It bounds output tokens, not cost, since each continuation request sends the prompt again. Default is unset
@@ -1298,6 +1298,7 @@ router_settings:
 | LITELLM_UI_API_DOC_BASE_URL | Optional override for the API Reference base URL (used in sample code/docs) when the admin UI runs on a different host than the proxy. Defaults to `PROXY_BASE_URL` when unset.
 | LITELLM_UI_PATH | Path to directory for Admin UI files. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/ui` in Docker.
 | LITELLM_UI_SESSION_DURATION | Duration for UI login session (username/password, SSO, invitation links). Format: "30s", "30m", "24h", "7d". Does not apply to EXPERIMENTAL_UI_LOGIN flow, which uses a fixed 10-minute expiry for security. Default is "24h"
+| LITELLM_UI_USE_SI_TERMINOLOGY | When `true`, the Admin UI shows "SI" in place of "AI" and "Super Intelligence" in place of "Artificial Intelligence" in its own text. Third-party product and provider names are left unchanged. Default is `false`.
 | LITELLM_EXECUTED_BATCH_CONCURRENCY | How many lines of one batch LiteLLM runs in parallel when it executes the batch itself, which it does for `hosted_vllm` deployments whose server has no Files API. Default is 4. See [vLLM batches](../providers/vllm_batches)
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_BATCH_SIZE | Maximum number of expired LiteLLM dashboard session keys to delete per cleanup run. Default is 1000.
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.

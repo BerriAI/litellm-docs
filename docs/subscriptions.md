@@ -26,7 +26,7 @@ Each developer connects their own account.
         'ChatGPT account with access to your chosen model',
         'Codex CLI, Codex app, or Pi',
       ],
-      version: 'LiteLLM v1.108.0+',
+      version: 'LiteLLM v1.109.0+',
       ctaLabel: 'Set up Codex',
       icon: '/img/integrations/openai.svg',
       to: '/docs/tutorials/openai_codex_byok',
