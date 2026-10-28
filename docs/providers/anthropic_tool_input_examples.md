@@ -390,7 +390,7 @@ LiteLLM supports input examples across the following Anthropic-compatible provid
 
 - **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
 - **Azure Anthropic / Microsoft Foundry** (`azure_ai/{{anthropic}}`) ✅
-- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only)
+- **Amazon Bedrock** (`bedrock/invoke/global.anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only)
 - **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
 The beta header (`advanced-tool-use-2025-11-20`) is automatically added when LiteLLM detects tools with the `input_examples` field.

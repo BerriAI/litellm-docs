@@ -76,7 +76,7 @@ model_list:
 ```
 
 :::note
-For cross-region routing, use a regional inference profile such as `bedrock/converse/us.anthropic.claude-sonnet-5-5`. Regional profiles carry a 10% premium and `global.` stays at base price; LiteLLM tracks each variant.
+To keep requests inside one geography, swap the model ID for a geographic inference profile such as `bedrock/converse/us.anthropic.claude-sonnet-5-5` (the model's AWS model card lists the profiles it has). These cost 10% more than `global.`, which can serve a request from any commercial AWS region. LiteLLM tracks the cost of each variant automatically.
 :::
 
 **2. Start the proxy**
