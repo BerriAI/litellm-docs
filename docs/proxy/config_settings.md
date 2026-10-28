@@ -1308,7 +1308,7 @@ router_settings:
 | LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS | Interval in seconds for how often to run job that auto-rotates keys. Default is 86400 (24 hours).
 | LITELLM_KEY_ROTATION_GRACE_PERIOD | Duration to keep old key valid after rotation (e.g. "24h", "2d"). Default is empty (immediate revoke). Used for scheduled rotations and as fallback when not specified in regenerate request.
 | LITELLM_KEY_ROTATION_LOCK_TTL_SECONDS | TTL in seconds for the distributed lock used by the key rotation job. Default is 600 (10 minutes).
-| LITELLM_JOB_ROLE | Unreleased. This setting is not implemented on LiteLLM `main` or in a released version. Its implementation is under review in [LiteLLM PR #47878](https://github.com/BerriAI/litellm/pull/47878); setting it on a current version has no effect. See the [planned dedicated-worker topology](./prod.md#run-background-jobs-on-a-dedicated-worker).
+| LITELLM_JOB_ROLE | On current LiteLLM `main`, `collector` prevents the spend collector from forwarding events back to itself. The proposed `all`, `worker`, and `serving` scheduler roles are not implemented and do not control background-job registration. See [dedicated-worker availability](./prod.md#run-background-jobs-on-a-dedicated-worker) for source links and implementation status.
 | LITELLM_LICENSE | License key for LiteLLM usage
 | LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS | Set to `True` to use the local bundled Anthropic beta headers config only, disabling remote fetching. Default is `False`
 | LITELLM_LOCAL_AUTOROUTER_PRESETS | Set to `True` to serve the auto-router preset catalog bundled with the package only, disabling remote fetching. Default is `False`
