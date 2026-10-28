@@ -232,6 +232,37 @@ Directional scopes apply to guardrails that run their `logging_only` scan throug
 
 Editing a guardrail (for example, a description-only PUT) no longer reorders guardrail execution: guardrail order is stable across updates, so which guardrail wins between a BLOCK and a MASK over the same content does not change.
 
+### Send the request to a `logging_only` guardrail as it arrives
+
+By default a `logging_only` guardrail scans a copy of the request once the call has ended. To have the guardrail receive the request while the call is still running, set `logging_only_input_timing: on_arrival` together with `logging_only_scope: input`, as in this example.
+
+```yaml
+guardrails:
+  - guardrail_name: "audit-requests"
+    litellm_params:
+      guardrail: generic_guardrail_api
+      mode: logging_only
+      logging_only_scope: input
+      logging_only_input_timing: on_arrival
+      logging_only_verdict_timeout: 3   # optional, in seconds, default 3, minimum 1
+      api_base: os.environ/GUARDRAIL_API_BASE
+      default_on: true
+```
+
+The proxy sends the request to the guardrail in the background once it passes the `pre_call` guardrails, in parallel with the model call, with the same headers and body a blocking guardrail would get. The client never waits for the guardrail. When the call is logged, the proxy waits up to `logging_only_verdict_timeout` seconds for the verdict and records it in `guardrail_information` on the spend log. If the guardrail has not answered by then, the scan is cancelled and recorded as `not_run`, so a slow or unreachable guardrail cannot hold up spend tracking or other logging.
+
+`on_arrival` needs `mode: logging_only`, `logging_only_scope: input` and a guardrail that scans through the generic `apply_guardrail` interface. Any other combination is rejected with `400` on create and `422` on update, and at startup it is ignored with an error log, so the request is scanned after the call. A request that skips `pre_call`, or that another guardrail blocks first, is also scanned after the call.
+
+#### Failed calls
+
+A `logging_only` guardrail that scans through the generic interface also sees model calls that fail, such as a provider error or a timeout, and the error response and any router retry are never delayed for it. With `on_arrival`, the failure log records the verdict only if it has already come back, otherwise `not_run`, and a retry that succeeds still records the verdict once it arrives. With the default timing, the request of a failed call is scanned in the background and its verdict is not recorded on the failure log.
+
+Requests the proxy rejects before calling any model, such as an invalid key, a rate limit, an exceeded budget or a blocking guardrail, are never sent to a `logging_only` guardrail.
+
+#### Keys and teams opted out of a guardrail
+
+`opted_out_global_guardrails` and `disable_global_guardrails` on a key or team apply to a generic `logging_only` guardrail after the call, the same way they apply at `pre_call`, so those requests are not sent to it. Guardrails with their own logging hook, such as Presidio masking what gets logged, keep running for those keys and teams, so an opt-out never turns log redaction off.
+
 ### Skip system messages in guardrail evaluation
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
