@@ -236,6 +236,10 @@ Editing a guardrail (for example, a description-only PUT) no longer reorders gua
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
+Since v1.103.0, guardrails on Anthropic `/v1/messages` also scan the top-level `system` prompt. Claude Desktop and Cowork send a long system prompt with every request, and a strict prompt-attack filter, such as a Bedrock guardrail's `PROMPT_ATTACK` filter, can block it even when the user's own text is harmless. Set this flag to keep that prompt out of the scan.
+
+On `/v1/messages` the flag skips only the top-level `system` prompt. A `role: system` entry inside `messages` is client input, so guardrails scan it even with the flag set. Claude Code sends these entries mid-conversation, for example its environment details and corrections typed while a tool runs. To keep them out of a Bedrock guardrail's scan, set [`experimental_use_latest_role_message_only: true`](./bedrock#experimental-only-send-latest-user-message) on the guardrail.
+
 **Global**, in `litellm_settings`:
 
 ```yaml
@@ -561,7 +565,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-### 4. ✨ Pass Dynamic Parameters to Guardrail
+### 4. Pass Dynamic Parameters to Guardrail
 
 <EnterpriseFeature />
 
@@ -656,7 +660,7 @@ Monitor which guardrails were executed and whether they passed or failed. e.g. g
 
 <Image img={require('../../../img/gd_fail.png')} />
 
-### ✨ Control Guardrails per API Key
+### Control Guardrails per API Key {#-control-guardrails-per-api-key}
 
 <EnterpriseFeature />
 
@@ -708,7 +712,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-### ✨ Tag-based Guardrail Modes
+### Tag-based Guardrail Modes {#-tag-based-guardrail-modes}
 
 <EnterpriseFeature />
 
@@ -729,12 +733,12 @@ guardrails:
   - guardrail_name: "guardrails_ai-guard"
     litellm_params:
       guardrail: guardrails_ai
-      guard_name: "pii_detect" # 👈 Guardrail AI guard name
+      guard_name: "pii_detect" # Guardrail AI guard name
       mode:
         tags:
             "User-Agent: claude-cli": "logging_only"                 # Claude CLI - only mask in logs
         default: "pre_call"               # Default mode when no tags match
-      api_base: os.environ/GUARDRAILS_AI_API_BASE # 👈 Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
+      api_base: os.environ/GUARDRAILS_AI_API_BASE # Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
       default_on: true # run on every request
 ```
 
@@ -784,7 +788,7 @@ guardrails:
 
 
 
-### ✨ Model-level Guardrails
+### Model-level Guardrails {#-model-level-guardrails}
 
 <EnterpriseFeature />
 
@@ -818,7 +822,7 @@ guardrails:
       api_base: os.environ/AZURE_GUARDRAIL_API_BASE 
 ```
 
-### ✨ Disable team from turning on/off guardrails
+### Disable team from turning on/off guardrails
 
 <EnterpriseFeature />
 

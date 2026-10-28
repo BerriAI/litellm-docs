@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Bedrock Guardrails
 
-:::tip[⚡️]
+:::tip[]
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
@@ -341,6 +341,8 @@ When you're chaining long conversations through Bedrock guardrails, you can opt 
 - keeps Bedrock payloads smaller, reducing latency and cost
 - applies to proxy hooks (`pre_call`, `during_call`) and the `/guardrails/apply_guardrail` testing endpoint
 
+Use it with Claude Code and other clients that send `role: system` entries inside `messages` on `/v1/messages`. `skip_system_message_in_guardrail` removes only the top-level `system` prompt there, so those entries still reach Bedrock without this flag.
+
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 guardrails:
   - guardrail_name: "bedrock-pre-guard"
@@ -353,7 +355,7 @@ guardrails:
       experimental_use_latest_role_message_only: true  # NEW
 ```
 
-> ⚠️ This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
+> This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
 
 ## Disabling Exceptions on Bedrock BLOCK
 

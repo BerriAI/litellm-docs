@@ -1,5 +1,6 @@
 ---
-title: v1.65.0-stable - Model Context Protocol
+title: "LiteLLM v1.65.0-stable - Model Context Protocol"
+description: "Adds MCP server support so developers list and call MCP tools through the proxy. Also adds a DailyUserSpend table for usage analytics after 1M+ logs."
 slug: v1.65.0-stable
 date: 2025-03-30T10:00:00
 authors:

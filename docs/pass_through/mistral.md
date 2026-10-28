@@ -9,7 +9,7 @@ Pass-through endpoints for Mistral - call provider-specific endpoint, in native 
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://api.mistral.ai/v1` with `LITELLM_PROXY_BASE_URL/mistral` 🚀
+Just replace `https://api.mistral.ai/v1` with `LITELLM_PROXY_BASE_URL/mistral`
 
 #### **Example Usage**
 

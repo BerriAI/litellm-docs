@@ -121,7 +121,7 @@ curl http://0.0.0.0:4000/rerank \
 
 ## **Supported Providers**
 
-#### ⚡️See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
+#### See all supported models and providers at [models.litellm.ai](https://models.litellm.ai/)
 
 | Provider                 | Link to Usage                                        |
 |--------------------------|------------------------------------------------------|
@@ -137,4 +137,4 @@ curl http://0.0.0.0:4000/rerank \
 | Vertex AI                | [Usage](../docs/providers/vertex#rerank-api)         |
 | Fireworks AI             | [Usage](/docs/providers/fireworks_ai#rerank) |
 | VoyageAI by MongoDB      | [Usage](../docs/providers/voyage#rerank)             |  
-| IBM watsonx.ai           | [Usage](../docs/providers/watsonx/rerank)            |  
+| IBM watsonx.ai           | [Usage](../docs/providers/watsonx/rerank)            |

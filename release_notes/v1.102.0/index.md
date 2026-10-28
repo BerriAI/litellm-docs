@@ -1,5 +1,6 @@
 ---
-title: "v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+title: "LiteLLM v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+description: "Adds Auto Router controls, native OCR and Meta Muse Voice realtime transcription. Also adds 99 model catalog entries and shared PgBouncer connections."
 slug: "v1-102-0"
 date: 2026-09-19T00:00:00
 authors:

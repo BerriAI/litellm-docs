@@ -8,7 +8,7 @@ description: Route every request to the cheapest model that can answer it well. 
 import NavigationCards from '@site/src/components/NavigationCards';
 import AutoRouterDiagram from '@site/src/components/AutoRouterDiagram';
 
-:::info[🚀 Help shape the Auto-Router]
+:::info[Help shape the Auto-Router]
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 

@@ -1,5 +1,6 @@
 ---
-title: "v1.96.0 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
+title: "LiteLLM v1.96.0 - MCP Entitlements, Redis Config Sync & Auto-Router Context"
+description: "Adds MCP entitlements for users, guardrails on MCP tool results and GPT-5.6 price cuts. Config changes sync to all pods through Redis."
 slug: "v1-96-0"
 date: 2026-08-09T00:00:00
 authors:

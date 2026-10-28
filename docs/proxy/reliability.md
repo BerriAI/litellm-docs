@@ -26,7 +26,7 @@ import TabItem from '@theme/TabItem';
 Fallbacks are how LiteLLM does automatic **failover**. If a call fails after num_retries, LiteLLM falls back to another model group, so a failing model or provider automatically fails over to a healthy backup. If you are looking for "provider failover" or "model failover", this is the page. 
 
 - Quick Start [load balancing](./load_balancing.md)
-- Quick Start [client side fallbacks](#client-side-fallbacks)
+- Quick Start [client side fallbacks](./client_side_fallbacks.md)
 
 
 Fallbacks are typically done from one `model_name` to another `model_name`. 
@@ -67,7 +67,7 @@ router = Router(
       }
     }
   ],
-  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # 👈 KEY CHANGE
+  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # KEY CHANGE
 )
 
 ```
@@ -159,270 +159,7 @@ A fallback to a deployment on another provider, or on another API key, cannot de
 
 ## Client Side Fallbacks
 
-Set fallbacks in the `.completion()` call for SDK and client-side for proxy. 
-
-In this request the following will occur:
-1. The request to `model="zephyr-beta"` will fail
-2. litellm proxy will loop through all the model_groups specified in `fallbacks=["{{openai_small}}"]`
-3. The request to `model="{{openai_small}}"` will succeed and the client making the request will get a response from gpt-5.6-luna 
-
-👉 Key Change: `"fallbacks": ["{{openai_small}}"]`
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "zephyr-beta",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "fallbacks": ["{{openai_small}}"]
-}'
-```
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-</TabItem>
-
-</Tabs>
-
-### Control Fallback Prompts  
-
-Pass in messages/temperature/etc. per model in fallback (works for embedding/image generation/etc. as well).
-
-Key Change:
-
-```
-fallbacks = [
-  {
-    "model": <model_name>,
-    "messages": <model-specific-messages>
-    ... # any other model-specific parameters
-  }
-]
-```
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```bash
-curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "model": "{{openai_small}}",
-    "messages": [
-      {
-        "role": "user",
-        "content": [
-          {
-            "type": "text",
-            "text": "Hi, how are you ?"
-          }
-        ]
-      }
-    ],
-    "fallbacks": [{
-        "model": "{{anthropic}}",
-        "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-    }]
-}'
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-
-</TabItem>
-</Tabs>
+To set fallbacks per request from the client or the Python SDK, see [Client-Side Fallbacks](./client_side_fallbacks.md).
 
 ## Content Policy Violation Fallback
 
@@ -457,7 +194,7 @@ router = Router(
       },
     },
   ],
-  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # context_window_fallbacks=[..], # [OPTIONAL]
 )
@@ -470,7 +207,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -521,7 +258,7 @@ router = Router(
       },
     },
   ],
-  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # content_policy_fallbacks=[..], # [OPTIONAL]
 )
@@ -534,7 +271,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -609,7 +346,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_large}}
     model_info:
-      id: my-specific-model-id # 👈 KEY CHANGE
+      id: my-specific-model-id # KEY CHANGE
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/chatgpt-v-2
@@ -749,7 +486,7 @@ model_list:
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-4o-mini
     litellm_params:
@@ -808,7 +545,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
@@ -931,7 +668,7 @@ model_list:
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
-    region_name: "eu" # 👈 SET EU-REGION
+    region_name: "eu" # SET EU-REGION
 
 - model_name: {{openai_small}}
   litellm_params:
@@ -942,7 +679,7 @@ model_list:
   litellm_params:
     model: vertex_ai/{{gemini_flash}}
     vertex_project: adroit-crow-1234
-    vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
+    vertex_location: us-east1 # AUTOMATICALLY INFERS 'region_name'
 ```
 
 **2. Start proxy**
@@ -972,6 +709,54 @@ print(response)
 
 print(response.headers.get('x-litellm-model-api-base'))
 ```
+
+### Vision Capability Filtering (Image Requests)
+
+**Before call is made** LiteLLM removes deployments declared text-only from the candidates for a request that carries an image, meaning a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. This runs on by default under every routing strategy and does not need `enable_pre_call_checks: true`.
+
+A deployment is text-only when `model_info.supports_vision: false` is set, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the model name. A deployment with no declaration and no catalog entry stays eligible, so declare `supports_vision: false` on custom text-only deployments. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, which keeps the earlier behavior for groups that only ever served text. The `x-litellm-model-id` response header names the deployment that served, or failed, the request.
+
+**1. Set Config**
+
+The Bedrock gpt-oss deployment below needs no declaration because the model catalog already marks it text-only. The custom deployment does.
+
+```yaml
+model_list:
+  - model_name: mixed
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: mixed
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: us-east-1
+  - model_name: mixed
+    litellm_params:
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
+    model_info:
+      supports_vision: false
+
+router_settings:
+  routing_strategy: latency-based-routing
+```
+
+**2. Test it**
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mixed",
+    "messages": [{"role": "user", "content": [
+      {"type": "text", "text": "What is in this image?"},
+      {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}
+    ]}]
+  }'
+```
+
+The `x-litellm-model-id` header names the `openai/gpt-5.6` deployment every time, while a plain text request can still land on any of the three.
 
 ### Setting Fallbacks for Wildcard Models
 

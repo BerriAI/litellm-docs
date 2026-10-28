@@ -1,5 +1,6 @@
 ---
-title: "v1.97.0 - Tool-Result Guardrails, Deployment Affinity & Viewer Parity"
+title: "LiteLLM v1.97.0 - Tool-Result Guardrails, Deployment Affinity & Viewer Parity"
+description: "Adds scan_only_tool_results for guardrails and makes auto-router deployment_affinity the default. Request checks now cover path and form inputs."
 slug: "v1-97-0"
 date: 2026-08-15T00:00:00
 authors:

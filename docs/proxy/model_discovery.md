@@ -28,7 +28,7 @@ model_list:
         api_key: os.environ/XAI_API_KEY
 
 litellm_settings:
-    check_provider_endpoint: true # 👈 Enable checking provider endpoint for wildcard models
+    check_provider_endpoint: true # Enable checking provider endpoint for wildcard models
 ```
 
 **2. Start proxy**

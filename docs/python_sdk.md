@@ -79,6 +79,14 @@ For all the endpoints that LiteLLM supports, refer to [Supported Endpoints](/doc
 | Cache responses | [Caching](/docs/caching/all_caches) |
 | Run coding agents from Python | [Agent harnesses](/docs/harness) |
 
+## Threads and concurrency
+
+The SDK is not thread-safe. Settings such as `litellm.api_key`, `litellm.callbacks`, `litellm.cache`, and the logging setup are global to the process, and the SDK does not lock them.
+
+Free-threaded (no-GIL) Python builds are not supported.
+
+To send many requests at the same time, use the async functions, such as `acompletion()`, on one event loop. You can also send the requests to an [AI Gateway](/docs/simple_proxy).
+
 ## SDK or AI Gateway
 
 Use the SDK if you send requests to LLMs from one Python application. Use the [AI Gateway](/docs/simple_proxy) if more than one application sends requests, or if virtual keys, spend tracking, or logs in one location are necessary.

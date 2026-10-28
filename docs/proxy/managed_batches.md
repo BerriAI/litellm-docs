@@ -165,6 +165,23 @@ curl -s -X POST "${LITELLM_BASE_URL}/v1/batches/${BATCH_ID}/cancel" \
   -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
+## Access control
+
+Every managed batch and file belongs to the user, team, and key that created it, and LiteLLM checks that ownership on every batch and file endpoint. Tenants that share a proxy cannot see or touch each other's batch jobs or results.
+
+| Caller | Can retrieve, cancel, list, and download |
+|--------|------------------------------------------|
+| Proxy admin | Every batch and file |
+| The user that created the batch | Yes |
+| Another key or user on the same team | Yes |
+| A key or user on a different team | No |
+
+A caller without access gets a `403` from `GET /v1/batches/{batch_id}`, `POST /v1/batches/{batch_id}/cancel`, `GET /v1/files/{file_id}`, and `GET /v1/files/{file_id}/content`, and from `POST /v1/batches` when the `input_file_id` belongs to someone else. `GET /v1/batches` only returns the batches the caller can access, so a key on another team gets an empty list. A batch's output and error files get the same owner and team as the batch, so the same rules cover its results (see [Output and error files](#output-and-error-files)).
+
+A key with a team but no user reaches every batch of its team. A key with neither a user nor a team only reaches the batches it created.
+
+To also keep each team's batch data in its own storage, give each team its own batch model with its own bucket. See [Bedrock Batches](../providers/bedrock_batches#how-do-i-keep-each-teams-batch-data-in-its-own-bucket) for an example.
+
 ## Batch Lifecycle
 
 A batch's `status` moves through `validating` → `in_progress` → `finalizing` → `completed`. The other terminal states are `failed` (validation failed), `expired` (the completion window elapsed), and `cancelled` (after a cancel call, which first reports `cancelling`).
@@ -345,6 +362,111 @@ curl -s "http://0.0.0.0:4000/v1/files/${ERROR_FILE_ID}/content" \
 ```
 
 Failed requests cost nothing, so `spend` covers the successful lines only and a batch that half failed costs about half of what you budgeted for. A request the provider accepted but LiteLLM could not price still counts as successful and is billed at `$0`, which keeps the counts reconcilable with the provider's own numbers. A batch whose requests all failed has no output file at all, and its cost row records `$0`, zero successful requests, and the failure count read from the error file. Anthropic and Bedrock extended thinking batches do not report reasoning tokens per line, so `reasoning_tokens` stays absent for them even though the model was thinking. The one case where the two counts do not add up to the provider's total is an output line that is not valid JSON, which gets skipped with a warning and lands in neither count
+
+### Storing every line's request and response
+
+The cost row sums the whole batch, and providers delete batch files after a while. To keep each request and its answer, list a bucket under `batch_line_item_callbacks`. Once the poller has billed a batch, it writes the batch's records to every bucket listed there as JSONL part objects, one record per line
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  batch_line_item_callbacks: ["s3_v2", "gcs_bucket"]
+  s3_callback_params:          # read by s3_v2, same keys as the s3 logging callback
+    s3_bucket_name: my-batch-logs
+    s3_region_name: us-east-2
+    s3_path: litellm           # optional prefix
+```
+
+`gcs_bucket` reads `GCS_BUCKET_NAME` and `GCS_PATH_SERVICE_ACCOUNT` from the environment, the same as the [GCS logging callback](./logging#google-cloud-storage-buckets), and like that callback it needs an enterprise license. Listing a bucket here does not turn on request logging to it, and `success_callback` does not turn on batch line items. The two settings are independent
+
+A batch's parts sit under the day the batch finished, in UTC, and the batch id you got back from `POST /v1/batches`, with any `/` in the id replaced by `_`. Vertex AI reports no finish time, so a Vertex AI batch's parts and its records' `finished_at` use the time the batch was created:
+
+| Bucket | Part objects |
+| --- | --- |
+| S3 | `<s3_path>/batch_line_items/<YYYY-MM-DD>/<batch id>/part-00000.jsonl`, `part-00001.jsonl`, ... |
+| GCS | `batch_line_items/<YYYY-MM-DD>/<batch id>/part-00000.jsonl`, `part-00001.jsonl`, ... |
+
+A part closes once the raw request and result lines in it reach 16 MB, which `BATCH_LINE_ITEMS_MAX_PART_BYTES` changes, and the next record starts a new part. Most batches fit in `part-00000.jsonl`. Records follow the order of the provider's output file, then its error file, so reading the parts in order reads the batch in that order
+
+Each line of a part is one record:
+
+```json showLineNumbers title="one record (pretty-printed, trimmed)"
+{
+  "batch_id": "bGl0ZWxsbV9wcm94eTttb2RlbF9pZDpjZDky...",
+  "custom_id": "request-1",
+  "status": "success",
+  "request": {
+    "custom_id": "request-1",
+    "method": "POST",
+    "url": "/v1/chat/completions",
+    "body": {
+      "model": "gpt-5.4-nano",
+      "messages": [
+        {"role": "system", "content": "Answer in one word"},
+        {"role": "user", "content": "Is the sky blue?"}
+      ]
+    }
+  },
+  "response": {
+    "id": "batch_req_6acdfc86d8548190b47c54904f2f5727",
+    "custom_id": "request-1",
+    "response": {
+      "status_code": 200,
+      "body": {
+        "id": "chatcmpl-EYTHQP5vBYthXQpZJLgGTmNbLjwdq",
+        "object": "chat.completion",
+        "choices": [
+          {"index": 0, "message": {"role": "assistant", "content": "Yes"}, "finish_reason": "stop"}
+        ],
+        "usage": {"prompt_tokens": 19, "completion_tokens": 5, "total_tokens": 24}
+      }
+    },
+    "error": null
+  },
+  "usage": {"prompt_tokens": 19, "completion_tokens": 5, "total_tokens": 24},
+  "response_cost": 5.025e-06,
+  "model": "gpt-5.4-nano",
+  "custom_llm_provider": "openai",
+  "metadata": {
+    "user_api_key_hash": "d6f6bc353e745199f3f1aa285952f2dc...",
+    "user_api_key_alias": "batch-jobs",
+    "user_api_key_team_id": null,
+    "user_api_key_team_alias": null,
+    "user_api_key_user_id": "key:d6f6bc353e745199f3f1aa285952f2dc...",
+    "user_api_key_org_id": null
+  }
+}
+```
+
+| Field | What it holds |
+| --- | --- |
+| `batch_id` | The batch id you got back from `POST /v1/batches` |
+| `custom_id` | The `custom_id` from your input file, or the `recordId` for Bedrock |
+| `status` | `success` when the provider answered the request, `failure` when it rejected it |
+| `request` | Your input line as the provider holds it: the line you uploaded for OpenAI, Azure and Mistral, the converted line with `recordId` and `modelInput` for Bedrock, and the converted line with `request` for Vertex AI, which carries your `custom_id` in its labels |
+| `response` | The provider's output or error line, exactly as the provider wrote it |
+| `usage` | That line's tokens, `null` for a failed line |
+| `response_cost` | That line's cost at the deployment's batch rates, `0` for a failed line. The records of a batch add up to the cost row's `spend` |
+| `model`, `custom_llm_provider` | The deployment the batch ran on |
+| `metadata` | The key, team, user and organization that created the batch. `user_api_key_hash` is a SHA-256 hash: the virtual key's hash, or for a batch created without a virtual key, such as with an OAuth2 token, the hash of what was saved in its place, so the bucket never holds a usable credential |
+
+A few things to know:
+
+- Only managed batches get records, meaning batches created from a file uploaded with `target_model_names`, because the poller only bills those
+- A batch where every line failed still gets its parts, holding its error lines
+- `request` is `null` for Anthropic, which has no input file, for a Vertex AI embeddings line whose `input` list was split into one row per item, and when the input file can no longer be read
+- A Vertex AI line whose row carries no `custom_id` shows `unknown`, as in the batch's output file (or no `custom_id` at all for a batch uploaded in Vertex AI's own row format), and gets `request` `null`, so a Vertex AI line you gave the `custom_id` `unknown` also gets `request` `null`
+- When the error file can no longer be read, the parts leave the failed lines out and a warning is logged, so a batch where every line failed then gets no parts
+- `request` and `response` are both `null`, with every other field kept, when the key or team that created the batch has message logging turned off in its logging settings, when `litellm.turn_off_message_logging` is on, or when that key or team no longer exists
+- A batch created without a virtual key, such as with a JWT, a built-in OAuth2 token or the master key, follows its team's logging settings and `litellm.turn_off_message_logging`
+- A batch created from an Admin UI session, or with an `sk-` credential through custom auth (the master key included when custom auth is on) or on a proxy with no master key, gets `request` and `response` `null`, because litellm cannot find the key or team it records. So does a batch created with an OAuth2 token that is exactly 64 hex characters, which reads like a virtual key's hash
+- A batch's parts are written in the background once the poller run that billed the batch and marked it done has finished with every other batch it found, one batch at a time on each proxy worker and one part at a time within a batch, so neither pricing the lines nor a slow or unreachable bucket holds up billing. A billed batch's output file is downloaded again when its turn comes, so a batch waiting for its turn holds none of its files in memory. If the output file can no longer be read by then, or the batch's model has been removed from the proxy, no part is written and an error naming the batch is logged. `s3_v2` tries a write up to 3 times when the bucket answers 403, 429, 500 or 503 or the connection fails or times out, with each try cut off after `S3_UPLOAD_ATTEMPT_TIMEOUT_SECONDS` (30 by default), the same as for request logs, and `gcs_bucket` tries once. When the bucket closes the connection without answering, the shared HTTP client sends the part again at once, as it does for request logs. A part write that still fails is logged as an error naming the batch and the part and is never retried later, the batch's other parts are still written, and the batch stays billed. `s3_v2` writes the parts through the same S3 logger as your request logs, so a failed part write counts in its `S3Logger` callback failure metric, a part's retries count in its per-flush retry warning, and with `s3_adaptive_concurrency` on, a throttled part write lowers the shared upload limit, never below `s3_max_concurrent_uploads`. A part write does not wait for that limit, so a worker can have one PUT above it
+- Parts are UTF-8 with non-ASCII text kept as is. A line holding an unpaired surrogate escape from the provider, such as a lone `\ud83d`, has no UTF-8 form, so that line alone is written with its non-ASCII characters escaped
+- With several proxy instances, the parts of an expired, cancelled or all-failed batch can be written by more than one instance. The names are the same, so the bucket keeps one copy of each part
+- Batches still waiting to be written when the proxy shuts down are not written, and a batch being written at shutdown can be left with only its first parts. While 50 batches (`MAX_OBJECTS_PER_POLL_CYCLE`) on one worker are waiting or being written, the next batch's records are skipped and an error is logged
+- Writing a batch's parts reads its output and error files from the provider a second time, after the cost row's reads, and its input file unless the bodies are dropped. Those reads are file content calls, so your request logging callbacks log them like any other
+- Writing the parts prices every line again, the way the cost row already priced them, so anything that pricing does per line happens once more per line, such as a secret manager lookup when `key_management_system` reads secrets, or an INFO log line per line for a Vertex AI batch. Checking the creating key's or team's logging settings also looks up their secret references once per batch
+- `s3_use_team_prefix`, `s3_use_key_prefix`, `s3_log_prompts_only` and `s3_strip_base64_files` do not apply to these parts
+- While a batch is written, the worker holds its input, output and error files plus the records of the part being built and sent, so plan memory for your largest batch's files plus a few times the part size. Encrypting a part for an HTTPS bucket runs on the worker's event loop, so a large part briefly slows the requests that worker is serving. A part still being priced when the proxy shuts down makes the shutdown take a few seconds longer
 
 ## FAQ
 

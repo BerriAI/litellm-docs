@@ -1,5 +1,6 @@
 ---
-title: "v1.99.2 - Caller Timeout Cooldowns"
+title: "LiteLLM v1.99.2 - Caller Timeout Cooldowns"
+description: "Fixes the router so caller-set timeout 408 errors no longer count toward deployment cooldowns. Healthy deployments stay in rotation."
 slug: "v1-99-2"
 date: 2026-09-15T10:00:00
 authors:
