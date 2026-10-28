@@ -33,12 +33,16 @@ os.environ["ZEROGPU_API_BASE"] = "https://api.zerogpu.ai/v1"  # optional overrid
 | `zerogpu/gpt-4.1-mini` | 1,047,576 | $0.40 | $1.60 | $0.10 |
 | `zerogpu/gpt-5.4-nano` | 272,000 | $0.20 | $1.25 | $0.02 |
 | `zerogpu/gpt-5.6-luna` | 272,000 | $0.20 | $1.20 | $0.20 |
+| `zerogpu/gpt-6-luna` | 272,000 | $0.10 | $0.50 | $0.01 |
 | `zerogpu/gpt-oss-120b` | 128,000 | $0.15 | $0.60 | $0.03 |
 | `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | $0.02 | $0.05 | n/a |
+| `zerogpu/LFM2.5-1.2B-Thinking` | 32,768 | $0.02 | $0.05 | n/a |
 | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | $0.025 |
+| `zerogpu/llama-3.2-3b-instruct-fast` | 131,072 | $0.05 | $0.30 | $0.025 |
 | `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | $0.05 |
+| `zerogpu/qwen3.6-35b-a3b` | 16,384 | $0.20 | $1.50 | $0.20 |
 
-Pricing follows the [ZeroGPU model catalog](https://docs.zerogpu.ai/docs/model-catalog). Every model except `LFM2.5-1.2B-Instruct` supports `tools`, `tool_choice` and a `json_schema` `response_format`. The reasoning models are `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-oss-120b` and `qwen3-30b-a3b-fp8`.
+Pricing follows the [ZeroGPU model catalog](https://docs.zerogpu.ai/docs/model-catalog). `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-4.1-mini`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-oss-120b`, `llama-3.1-8b-instruct-fast` and `qwen3-30b-a3b-fp8` support `tools`, `tool_choice` and a `json_schema` `response_format`. The reasoning models are `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-oss-120b` and `qwen3-30b-a3b-fp8`.
 
 ## Usage - LiteLLM Python SDK
 
@@ -111,7 +115,7 @@ print(response.choices[0].message.tool_calls)
 
 ### Reasoning Effort
 
-LiteLLM forwards `reasoning_effort` only to ZeroGPU models flagged `supports_reasoning` in the cost map, which are the six reasoning models listed above. The other three, `gpt-4.1-mini`, `llama-3.1-8b-instruct-fast` and `LFM2.5-1.2B-Instruct`, reject it, so when the same call can reach them, pass `drop_params=True` and LiteLLM drops the parameter for them instead of rejecting the request.
+LiteLLM forwards `reasoning_effort` only to ZeroGPU models flagged `supports_reasoning` in the cost map, which are the reasoning models listed above. The rest, `gpt-4.1-mini`, `llama-3.1-8b-instruct-fast`, `llama-3.2-3b-instruct-fast`, `LFM2.5-1.2B-Instruct`, `LFM2.5-1.2B-Thinking` and `qwen3.6-35b-a3b`, reject it, so when the same call can reach them, pass `drop_params=True` and LiteLLM drops the parameter for them instead of rejecting the request.
 
 ```python showLineNumbers title="ZeroGPU Reasoning Effort" keep-model-ids
 import os
@@ -230,5 +234,3 @@ model_list:
       api_base: https://your-zerogpu-endpoint/v1
       api_key: os.environ/ZEROGPU_API_KEY
 ```
-
-LiteLLM also recognizes `https://api.zerogpu.ai/v1` as a ZeroGPU base URL, so a call with that `api_base` and a bare model name such as `gpt-oss-120b` resolves to the `zerogpu` provider and reads `ZEROGPU_API_KEY`.
