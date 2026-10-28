@@ -8,7 +8,7 @@ authors:
   - ishaan-alt
 description: "Day 0 support for Claude Sonnet 5 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
 card_title: "Claude Sonnet 5"
-card_summary: "Opus-class quality at Sonnet pricing, adaptive thinking only, $3 / $15 per 1M ($2 / $10 intro), 1M context."
+card_summary: "Opus-class quality at Sonnet pricing, adaptive thinking only, $2 / $10 per 1M, 1M context."
 image: /img/litellm_claude_sonnet_5_announcement.png
 tags: [anthropic, claude, sonnet 5, day 0 support]
 hide_table_of_contents: false
@@ -30,7 +30,7 @@ Sonnet 5 is the most agentic Sonnet model yet, with performance close to Opus 4.
 - **Opus-class quality, Sonnet pricing.** Anthropic reports Sonnet 5 performs close to Opus 4.8 while costing far less, and is a substantial step up from Sonnet 4.6 on reasoning, tool use, coding, and knowledge work. ([details from Anthropic](https://www.anthropic.com/news/claude-sonnet-5))
 - **Built to run agents.** It plans, drives tools like browsers and terminals, runs autonomously, and checks its own output without being asked, finishing complex tasks where earlier Sonnet models would stop short. Anthropic highlights gains on BrowseComp (agentic search) and OSWorld-Verified (computer use).
 - **Adaptive thinking only.** Sonnet 5 decides how deeply to think on its own. You steer it per request with `reasoning_effort` or `output_config.effort`; fixed thinking budgets, `temperature`, `top_p`, and assistant message prefill are not supported by the model.
-- **$3 / MTok input and $15 / MTok output**, with prompt caching at $0.30 / MTok (read) and $3.75 / MTok (write). Anthropic is running introductory pricing of $2 / MTok input and $10 / MTok output through August 31, 2026. On Bedrock, the `us.`, `eu.`, and `au.` inference profiles carry the usual 10% regional premium while `global.` stays at base price, and LiteLLM tracks the cost of all four.
+- **$2 / MTok input and $10 / MTok output**, with prompt caching at $0.20 / MTok (read) and $2.50 / MTok (write). Anthropic launched this as introductory pricing through August 31, 2026, then made it the standard price. On Bedrock, the `us.`, `eu.`, and `au.` inference profiles carry the usual 10% regional premium while `global.` stays at base price, and LiteLLM tracks the cost of all four.
 - **1M-token context**, up to 128K output tokens.
 - **One gateway, every surface.** Vision, PDF input, computer use, tool calling, prompt caching, adaptive thinking, and structured output, all available across Anthropic, Azure, Vertex AI, and Bedrock with unified spend tracking, logging, and fallbacks.
 
