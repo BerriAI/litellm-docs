@@ -47,6 +47,7 @@ class VersionNoteTests(unittest.TestCase):
             ("Upgrade to v1.90.0 or later.", "1.90.0"),
             ("Bump to v1.90.0.", "1.90.0"),
             ("You need v1.90.0: earlier releases drop the header.", "1.90.0"),
+            ("- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.81.14 or later**, with PostgreSQL", "1.81.14"),
         ):
             with self.subTest(line=line):
                 errors = self.version_notes(f"# Page\n\n{line}\n")
@@ -89,6 +90,7 @@ class VersionNoteTests(unittest.TestCase):
             "# Migration Guide - LiteLLM v1.0.0+",
             "Install the OpenAI SDK 1.30.0 or later.",
             "![Requires v1.85.0](./img/flow.png)",
+            "Rows it wrote are found under the hashed key, the same way rows written since v1.99.0 are.",
         ):
             with self.subTest(line=line):
                 self.assertEqual(self.version_notes(f"# Page\n\n{line}\n"), [])

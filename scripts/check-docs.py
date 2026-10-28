@@ -549,13 +549,14 @@ def python_literal_message(literal):
 VERSION_TOKEN_RE = re.compile(
     r"(?<![\w.])(?:v?[12]\.\d{1,3}\.(?:\d{1,2}|x)(?:[.-](?:stable|nightly|dev|rc)\.?\d*)?|v[12]\.\d{1,3}(?!\w|\.\w))"
 )
-VERSION_NOTE_STRIP_RE = re.compile(r"!\[[^\]]*\]|<br\s*/?>|[`*_>]")
+VERSION_NOTE_STRIP_RE = re.compile(r"!\[[^\]]*\]|\]\([^)\s]*\)|<br\s*/?>|[`*_>]")
 VERSION_NOTE_CLAUSE_END_RE = re.compile(r"[.;:!?](?=\s|$)|[|()]|,\s*which\b")
 VERSION_NOTE_TAIL_RE = re.compile(
     r"^(?:[\s+.,;:!?)\]]|\b(?:or|and|later|higher|newer|above|greater|only|onwards?|up|is|are|required|needed)\b)*$",
     re.I,
 )
 VERSION_NOTE_TAIL_LEAD_RE = re.compile(r"\b(?:required|needed)\b", re.I)
+VERSION_NOTE_COPULA_RE = re.compile(r"\b(?:is|are)\b", re.I)
 VERSION_NOTE_QUALIFIER_RE = re.compile(r"^\s*(?:\+|(?:or|and)\s+(?:later|higher|newer|above|up)\b)", re.I)
 LITELLM_RELEASE_RE = re.compile(r"^v?1\.\d{2,3}(?!\d)")
 LITELLM_NAME_WORDS = ("litellm", "gateway", "proxy", "sdk")
@@ -594,6 +595,8 @@ def is_version_note(text, match):
         return False
     if VERSION_NOTE_TAIL_LEAD_RE.search(clause_tail):
         return not negated
+    if VERSION_NOTE_COPULA_RE.search(clause_tail):
+        return False
     cell_lead_in = VERSION_NOTE_WORD_RE.findall(text[text.rfind("|", 0, match.start()) + 1 : match.start()])
     if loose_shape and all(word.lower() in VERSION_NOTE_FILLER_WORDS for word in cell_lead_in):
         return not negated
