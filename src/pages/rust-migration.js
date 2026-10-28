@@ -64,7 +64,8 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = baseHeight - plot.top - plot.bottom;
   const goalX = plot.left + plotWidth;
-  const dateX = createTimeScale(points[0].date, goal.endsOn, plot.left, goalX);
+  const endDate = goal.endsOn ?? points.at(-1).date;
+  const dateX = createTimeScale(points[0].date, endDate, plot.left, goalX);
   const x = index => dateX(points[index].date);
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
@@ -78,7 +79,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
     const route = point.route ? ROUTES[point.route] : '';
     const moved = index > 0 && points[index - 1].percent !== point.percent;
     return {key: index, anchor: x(index), width: Math.max(labelWidth(point.route ? point.label : name, date), route.length * 7), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
-  }), goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)), width);
+  }), goal.endsOn ? goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)) : width, width);
   const values = layoutTimelineValues(points, x, y);
   // A route plan's label takes three lines, so its rows grow by one line.
   const routeLines = points.some(point => point.route) ? 1 : 0;
@@ -94,7 +95,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
   const projectionPath = points
     .slice(current)
     .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
-    .join('') + `L${goalX},${y(100)}`;
+    .join('') + (goal.endsOn ? `L${goalX},${y(100)}` : '');
 
   // A clicked point takes the chart's place at the chart's size, like a page in the card.
   if (selected >= 0) {
@@ -126,8 +127,8 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
         <desc id="timeline-description">
           {wholePercent(points[current].percent)} percent of {goal.text} is built in {CURRENT_VERSION}.
           {points.filter(point => point.kind === 'plan').map(point => ` ${pointName(point)} is planned to reach ${wholePercent(point.percent)} percent.`)}
-          {' '}The goal targets 100 percent by {goal.endsOn}.
-          {' '}Horizontal distance represents elapsed time on the same scale for releases, plans, and the goal.
+          {goal.endsOn && ` The goal targets 100 percent by ${goal.endsOn}.`}
+          {' '}Horizontal distance represents elapsed time.
         </desc>
         <defs>
           <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
@@ -135,7 +136,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
             <stop offset="100%" className={styles.areaEnd} />
           </linearGradient>
         </defs>
-        {monthTicks(points[0].date, goal.endsOn).map(month => (
+        {monthTicks(points[0].date, endDate).map(month => (
           <g key={month}>
             <line className={styles.monthLine} x1={dateX(month)} x2={dateX(month)} y1={plot.top - 18} y2={baseline} />
             {goalX - dateX(month) >= 96 && (
@@ -252,7 +253,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
             </g>
           );
         })}
-        <g className={styles.goal}>
+        {goal.endsOn && <g className={styles.goal}>
           <title>{goal.text}: 100% by {goal.endsOn}</title>
           <circle cx={goalX} cy={y(100)} r="5" />
           <text className={styles.goalLabel} x={goalX} y={y(100) - 14} textAnchor="end">
@@ -264,7 +265,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
               {formatDate(SHORT_DATE, goal.endsOn)}
             </tspan>
           </text>
-        </g>
+        </g>}
       </svg>
       {term && <TermTooltip id={term.id} anchor={term.anchor} />}
       {hovered !== null && !term && (
@@ -542,7 +543,7 @@ function GoalSelect({goal, onChange}) {
               {GOALS.map(item => (
                 <Select.Item className={picker.selectItem} value={item.id} key={item.id} disabled={item.disabled}>
                   <Select.ItemText className={picker.selectLabel}>{item.text}</Select.ItemText>
-                  <span className={picker.selectMeta}>{item.disabled ? 'Not tracked yet' : `by ${formatDate(FULL_DATE, item.endsOn)}`}</span>
+                  <span className={picker.selectMeta}>{item.disabled ? 'Not tracked yet' : item.endsOn ? `by ${formatDate(FULL_DATE, item.endsOn)}` : 'No completion date announced'}</span>
                   {/* Answers "what is in this goal" right where it is picked. */}
                   <span className={picker.selectScope}>
                     {item.summary ?? item.components.map(component => component.text).join(', ')}
@@ -584,6 +585,11 @@ function MigrationTracker() {
   return (
     <section className={styles.section} aria-labelledby="migration-tracker-title">
       <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
+      <p className={styles.sectionLead}>
+        This tracks released components across the broader migration, not the share of traffic served by Rust
+        or progress toward the December 1 fast path. The earlier roadmap dates are superseded by the{' '}
+        <Link to="/blog/rust-migration-rerouted">October 26 update</Link>.
+      </p>
       <div className={styles.chartCard}>
         {/* Open details swap the sentence for a back button, which holds its
             place so the card keeps its size. */}
@@ -781,7 +787,7 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
-// AIGatewayBench results for the finished Rust gateway. Every figure is from
+// AIGatewayBench results for the early Rust beta. Every figure is from
 // blog/rust_ai_gateway_benchmarks; do not edit one here without editing it
 // there. Rows are ascending in both panels, so the order is the same in each.
 const BENCHMARK = [
@@ -828,11 +834,11 @@ function barWidth(panel, value) {
 function GatewayBenchmark() {
   return (
     <section className={styles.section} aria-labelledby="benchmark-title">
-      <SectionHeading id="benchmark-title" kicker="Result" title="The result of the move to Rust" />
+      <SectionHeading id="benchmark-title" kicker="Earlier benchmark" title="Forwarding-only Rust beta results" />
       <p className={styles.sectionLead}>
-        This is where the migration takes us. AIGatewayBench measured four gateways against the
-        same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
-        delay and the memory that each gateway adds.
+        The July 2026 AIGatewayBench report measured four gateways against the same mock server with no
+        logging callbacks, spend tracking, or persistence enabled. These results isolate forwarding overhead;
+        they do not measure the December 1 fast path with common proxy features.
       </p>
       {/* One card per panel. The two use different scales, so they are two
           measurements rather than one chart cut in half. */}
@@ -879,6 +885,39 @@ function GatewayBenchmark() {
   );
 }
 
+function MessagesFastPath() {
+  return (
+    <section className={styles.section} aria-labelledby="messages-fast-path-title">
+      <SectionHeading id="messages-fast-path-title" kicker="December 1, 2026 target" title="The common Messages path first" />
+      <p className={styles.sectionLead}>
+        <Link to="/blog/rust-migration-rerouted">Nate's October 26 update</Link> shifts the migration from
+        porting translation, then routing, then the web server to moving a common request path to Rust
+        end to end. The target is about 20 times less proxy latency, around 1.5 milliseconds, for these
+        requests. This is an expected result, not a shipped performance guarantee. Updated benchmarks
+        with common proxy features are still to come.
+      </p>
+      <h3>Which requests are targeted?</h3>
+      <p className={styles.sectionLead}>
+        The initial scope is <code>/v1/messages</code> with simple-shuffle routing, Anthropic models on
+        Anthropic, Amazon Bedrock, or Vertex AI, and supported callbacks such as S3 logs and spend logging.
+        Every enabled callback must be supported. Other endpoints, routing strategies, providers, and
+        unsupported callbacks stay on Python until the fast path expands to cover them.
+      </p>
+      <h3>How requests reach Rust or Python</h3>
+      <p className={styles.sectionLead}>
+        An Axum server will sit in front of all requests and check early whether Rust can handle them.
+        Supported requests will use the Rust fast path. Other requests will be forwarded to a Python
+        worker on the same host. Rust implementations of the router and callbacks will be shared with
+        Python through thin wrappers, and both servers will use the same Redis and Postgres protocols.
+      </p>
+      <p className={styles.sectionLead}>
+        December 1 is the target for this common configuration, not for every Messages request or the
+        full API surface. Coverage will expand to more configurations and request types after this path.
+      </p>
+    </section>
+  );
+}
+
 function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
@@ -907,13 +946,17 @@ function MigrationUpdates() {
 
 export default function RustMigrationPage() {
   return (
-    <Layout title="LiteLLM Rust Migration" description="Updates from LiteLLM's migration to Rust.">
+    <Layout title="LiteLLM Rust Migration" description="Native /v1/messages requests with common proxy features are targeted to run end to end in Rust by December 1, 2026.">
       <main className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Rust Migration</p>
-          <h1 className={styles.title}>LiteLLM is moving to Rust</h1>
-          <p className={styles.description}>See how much of the move to Rust is built and what is next.</p>
+          <h1 className={styles.title}>Messages end to end in Rust by December 1</h1>
+          <p className={styles.description}>
+            The next milestone is a Rust fast path for <code>/v1/messages</code> requests to providers that
+            natively support Anthropic-style APIs, with common proxy features enabled.
+          </p>
         </header>
+        <MessagesFastPath />
         <MigrationTracker />
         <GatewayBenchmark />
         <MigrationUpdates />

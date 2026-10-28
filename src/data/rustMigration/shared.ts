@@ -184,7 +184,7 @@ export interface Component {
 export interface Goal {
   id: string;
   text: string;
-  endsOn: IsoDay;
+  endsOn?: IsoDay;
   summary?: string;
   disabled?: boolean;
   size: number;
