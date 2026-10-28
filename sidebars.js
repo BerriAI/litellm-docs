@@ -974,8 +974,8 @@ const sidebars = {
       link: { type: "doc", id: "python_sdk" },
       items: [
         { type: "doc", id: "learn/sdk_quickstart", label: "Quickstart" },
-        "autorouter_sdk",
         { type: "doc", id: "litellm_core", label: "LiteLLM Core" },
+        "autorouter_sdk",
         {
           type: "category",
           label: "SDK Functions",

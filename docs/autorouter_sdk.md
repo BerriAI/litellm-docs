@@ -4,11 +4,11 @@ sidebar_label: Autorouter SDK
 description: Build an auto router in Python that chooses a model for each request. Install LiteLLM, configure two models, and see which model answers.
 ---
 
-Build an auto router inside your Python application with `litellm.Router`. It classifies each request and sends it to a model you choose for that complexity level. Direct SDK use does not require a proxy server or an Enterprise license.
+Choose a model for each prompt with `litellm.Router`. You define the models and routing rules in Python. No proxy server or Enterprise license is required.
 
-This example uses two OpenAI models and a local heuristic classifier, so you need one OpenAI API key. Classification does not make an extra model call; the selected model's response uses your provider account.
+This example routes between two OpenAI models using a local heuristic classifier. You need Python and an OpenAI API key; you pay for the model responses.
 
-## Install and set your API key
+## 1. Install and set your API key
 
 Run this in your project directory:
 
@@ -24,7 +24,7 @@ export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
 
 Replace `YOUR_OPENAI_API_KEY` with your key. Your account needs access to both models in the example.
 
-## Build your router
+## 2. Create your router
 
 Save this as `autorouter.py`:
 
@@ -77,17 +77,22 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-`fast` and `capable` are names you define in `model_list`. The four tiers map the classifier's decision to those names; multiple tiers can use the same model. `auto` is the name your application calls on every request. The default model is the fallback when the router cannot classify a request.
+Call `auto` from your application. The classifier assigns a complexity tier to the prompt: `SIMPLE` and `MEDIUM` use `fast`; `COMPLEX` and `REASONING` use `capable`. If it cannot classify the request, the router uses `capable` as the default.
 
-`return_raw_model_name=True` lets you see the selected model in `response.model`.
-
-## Run it
+## 3. Send a request
 
 ```bash
 python autorouter.py
 ```
 
-You should see `Selected model:` followed by the model that handled the request, then its answer. Change the message and run it again to try your own prompts. The heuristic uses prompt signals to estimate complexity; it does not guarantee that every difficult question goes to the larger model.
+The script prints the selected model and its answer. Example output:
+
+```text
+Selected model: {{openai_small}}
+4
+```
+
+`return_raw_model_name=True` exposes the selected model in `response.model`. Change the message to try your own prompts. Heuristic classification estimates complexity from prompt signals, so check its choices on your own requests before relying on it.
 
 If authentication fails, check that `OPENAI_API_KEY` is set in this terminal. If a model is unavailable to your account, replace its `litellm_params.model` value with an OpenAI model you can access.
 
