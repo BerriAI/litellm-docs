@@ -5,7 +5,7 @@ date: 2026-10-23T21:00:00
 authors:
   - oliver
   - mateo
-description: "How a master key committed to a public repository in May led to three stolen GitHub tokens and the compromised litellm v1.107.0 release, step by step."
+description: "How an internal key committed to a public repository in May led to three stolen GitHub tokens and the compromised litellm v1.107.0 release."
 tags: [security, incident-report]
 hide_table_of_contents: false
 ---
@@ -20,13 +20,14 @@ We posted regular status updates during our investigation yesterday reflecting t
 
 ## Narrative
 
-On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained the master key to a deployment of the LiteLLM Agent Platform, an open source tool we use for orchestrating agents. The error was quickly identified, the commit force-pushed over, and we identified the exposed keys as requiring revocation. However, key revocation did not occur for the master key.
+On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained an administrative key to an internal deployment of LiteLLM Agent Platform. The mistake was quickly identified, the commit force-pushed over, and the keys were noted as requiring revocation. However, revocation of the administrative key to the LiteLLM Agent Platform did not occur.
 
 ### GitHub Owner Access
 
-LiteLLM Agent Platform was an experimental project for self-hosted cloud agents to file PRs to GitHub repositories. In order to create PRs, the system was configured with a GitHub authentication token. The token in question was not associated with a service account and was not scoped down. The key used was a GitHub CLI OAuth token associated with our GitHub organization owner's account.
+On October 10th, the threat actor used this key to gain control of our LiteLLM Agent Platform deployment. LiteLLM Agent Platform is an experimental project for self-hosted cloud agents to file PRs to GitHub repositories. In order to create PRs, the system was configured with a GitHub authentication token. The threat actor used their access to extract this GitHub token.
 
-On October 10th, the threat actor used this key to gain access to our LiteLLM Agent Platform and extracted this GitHub CLI OAuth token. From this point onwards, the threat actor had owner-level access to all repositories in our GitHub. GitHub CLI tokens are post-2fa and not subject to GitHub's "super-user" 2fa reauth flows associated with sensitive organization or repository actions.
+Unfortunately, the token configured in our LiteLLM Agent Platform was not a Personal Access Token scoped to the appropriate repositories and capabilities, but was the GitHub CLI OAuth token associated with our organization owner. Note that GitHub CLI tokens are not scoped, are post-2fa, and not subject to GitHub's "super-user" 2fa reauth flows associated with sensitive organization or repository actions. From this point onward, the threat actor had owner capabilities over our GitHub organization.
+
 
 ### Exfiltrating additional tokens
 
@@ -68,7 +69,7 @@ We know many of you want to hear what we’ve learned and what we’re changing.
 
 | Credential | How the attacker got it | What it was used for |
 |---|---|---|
-| Master key of the LiteLLM Agent Platform, an internal alpha service | Committed to a public repository on May 27 | Reading the Agent Platform API |
+| Administrative key for the LiteLLM Agent Platform, an internal alpha service | Committed to a public repository on May 27 | Reading the Agent Platform API |
 | GitHub CLI token of a GitHub organization owner | Returned by the Agent Platform API on October 10 | Pushing the exfiltration branches, changing the release workflow, running the staging build, force-pushing the cover-up |
 | GitHub CLI token of a second maintainer, stored as the `GH_TOKEN` secret of `BerriAI/litellm` | Posted to the attacker's endpoint by a throwaway workflow on October 10 | Approving the production gate |
 | GitHub CLI token of a third maintainer, stored as the `RELEASE_PLEASE_TOKEN` secret of `BerriAI/litellm-auto` | Posted to the same endpoint by a second throwaway workflow on October 10 | Deleting the release run records |
@@ -81,9 +82,9 @@ All times in UTC.
 
 | Time (UTC) | Step | Credential | Event |
 |---|---|---|---|
-| May 27, 18:53:14 | 0 | none | `opencode.json` with the Agent Platform master key is committed to the public `LiteLLM-Labs/lite-harness` repository |
-| Oct 10, 21:13 to 21:28 | 1 | Master key | The attacker calls the Agent Platform API from `69.48.229.143` |
-| Oct 10, 21:27:10 | 1 | Master key | `GET /api/v1/managed_agents/agents?limit=100` returns the owner's GitHub CLI token |
+| May 27, 18:53:14 | 0 | none | `opencode.json` with the LiteLLM Agent Platform administrative key is committed to the public `LiteLLM-Labs/lite-harness` repository |
+| Oct 10, 21:13 to 21:28 | 1 | LAP key | The attacker calls the Agent Platform API from `69.48.229.143` |
+| Oct 10, 21:27:10 | 1 | LAP key | `GET /api/v1/managed_agents/agents?limit=100` returns the owner's GitHub CLI token |
 | Oct 10, 22:11:45 | 2 | Owner's token | Workflow run on branch `ci-tmp-a351cc` of `BerriAI/litellm` posts six secrets, `GH_TOKEN` among them, to `webhook.site` |
 | Oct 10, 22:12:09 | 3 | Owner's token | Workflow run on branch `ci-tmp-be33e9` of `BerriAI/litellm-auto` posts `RELEASE_PLEASE_TOKEN` to the same endpoint |
 | Oct 10, 22:14:14 | 2 | Owner's token | The `BerriAI/litellm` run is deleted |
@@ -117,9 +118,9 @@ All times in UTC.
 ## Annotated Events
 
 
-### Step 1: the master key returns a GitHub token (October 10, 21:13 to 21:28)
+### Step 1: the LAP key returns a GitHub token (October 10, 21:13 to 21:28)
 
-From `69.48.229.143`, the attacker called the Agent Platform API with the master key.
+From `69.48.229.143`, the attacker called the Agent Platform API with the administrative key that had been committed to source.
 
 1. Between 21:13 and 21:28 the attacker made a series of authenticated requests to the API.
 2. At 21:27:10 a request to `GET /api/v1/managed_agents/agents?limit=100` returned the configuration of every managed agent.
