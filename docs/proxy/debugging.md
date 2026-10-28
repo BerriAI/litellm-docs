@@ -195,7 +195,7 @@ litellm_settings:
 
 Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. Warnings that need action, such as an ignored CLI flag or a failed migration check, still print, and with JSON logs on they are `WARNING` records.
 
-When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. Available from v1.108.0.
+When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. Available from v1.109.0.
 
 ## Common Errors 
 
