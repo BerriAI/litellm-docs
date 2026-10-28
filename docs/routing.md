@@ -1773,8 +1773,6 @@ Enable pre-call checks to filter out:
 1. deployments with context window limit < messages for a call.
 2. deployments outside of eu-region
 
-`enable_pre_call_checks` does not rate limit deployments. A deployment's `rpm` and `tpm` stay routing weights unless you also set `optional_pre_call_checks: ["enforce_model_rate_limits"]`, which is the only setting that turns them into hard limits. See [Enforce Model Rate Limits](./proxy/load_balancing#enforce-model-rate-limits).
-
 <Tabs>
 <TabItem value="sdk" label="SDK">
 
