@@ -30,7 +30,7 @@ os.environ["ASQAV_LOG_PATH"] = "/var/log/litellm_audit.jsonl"
 litellm.callbacks = ["asqav"]
 
 response = litellm.completion(
-    model="gpt-3.5-turbo",
+    model="{{openai_small}}",
     messages=[{"role": "user", "content": "Hello"}],
 )
 ```
@@ -100,7 +100,7 @@ The signed receipts and an offline verifier are documented at [asqav.com/docs](h
 If you want the cloud-signed receipts as a LiteLLM callback rather than a separate step, install the `litellm` extra:
 
 ```bash
-pip install asqav[litellm]
+pip install "asqav[litellm]"
 ```
 
 ```python
@@ -116,7 +116,7 @@ litellm.callbacks = [AsqavSigningLogger(agent_name="my-agent")]
 Without an API key the logger warns once and no-ops; signing is evidence, not enforcement, so it
 never blocks the LLM call.
 
-`AsqavSigningLogger` signs each call through the Asqav API and appends a local JSONL index line with the receipt's `signature_id` and `verification_url`, which `asqav verify-litellm-log` checks later. Its index lines are not part of the `asqav` callback's hash chain, so if you turn on both, point them at different files (the SDK logger takes `log_path=`). Otherwise `verify_chain` reports a hash mismatch on the first index line. See [`asqav/extras/litellm`](https://github.com/jagmarques/asqav-sdk/blob/main/python/src/asqav/extras/litellm.py).
+`AsqavSigningLogger` signs each call through the Asqav API and appends a local JSONL index line with the receipt's `signature_id` and `verification_url`, which `asqav verify-litellm-log` (from the `asqav[cli]` extra) checks later. Its index lines are not part of the `asqav` callback's hash chain, so if you turn on both, point them at different files (the SDK logger takes `log_path=`). Otherwise `verify_chain` reports a hash mismatch on the first index line. See [`asqav/extras/litellm`](https://github.com/jagmarques/asqav-sdk/blob/main/python/src/asqav/extras/litellm.py).
 
 ## LiteLLM proxy config
 
