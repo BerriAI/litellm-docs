@@ -114,6 +114,20 @@ curl -X POST 'http://localhost:4000/key/generate' \
 
 The Admin UI exposes the same two fields on a team's or key's logging settings under the Mixpanel tile. The project token is stored encrypted and reads back masked.
 
+## Prompt and completion content
+
+By default the Mixpanel callback exports request metadata only (model, token usage, cost, latency and `user.id`). Prompts and completions are not sent. To include them, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only`, which adds `gen_ai.input.messages` and `gen_ai.output.messages` to the `chat` span.
+
+If only some traffic is safe to record, keep capture on but redact every request by default, then let trusted callers opt in per request. Turn on redaction in the proxy config, and spans carry `redacted-by-litellm` in place of message content:
+
+```yaml
+litellm_settings:
+  callbacks: ["mixpanel"]
+  turn_off_message_logging: true
+```
+
+Add `allow_client_message_redaction_opt_out: true` to the metadata of each key or team that may opt out, and have those callers send `LiteLLM-Disable-Message-Redaction: true` on requests whose content can be recorded. The proxy drops the header on any other key, so content is only exported when both the key and the request opt in. See [Disable Message Redaction](../proxy/logging#disable-message-redaction) for the key setup.
+
 ## Environment variables
 
 | Variable | Required | Description |
