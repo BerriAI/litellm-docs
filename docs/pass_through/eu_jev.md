@@ -86,7 +86,7 @@ A request carries a `state`, either a string of up to 100,000 characters or a JS
 
 A virtual key needs access to `eu_jev/<model>`, for example `eu_jev/eu-jeff-latest` or `eu_jev/*`. A request without `model`, and the older names `jeff-latest` and `jeff-1.0.0`, count as `eu_jev/eu-jeff-latest`. A `model_rpm_limit` on the key applies to that same name.
 
-A key that only lists a proxy model name or an access group gets a 403 on `/eu_jev/v1/systemone`. Give it `eu_jev/eu-jeff-latest` as well, or call the proxy model through `/v1/systemone` as shown below.
+A key that only lists a proxy model name like `eu-jev`, or an access group without `eu_jev/eu-jeff-latest`, gets a 403 on `/eu_jev/v1/systemone`. Give it `eu_jev/eu-jeff-latest` as well, or call the proxy model through `/v1/systemone` as shown below.
 
 ## Config and Admin UI Models
 
@@ -120,7 +120,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 }'
 ```
 
-When that model also sets `use_in_pass_through: true`, `/eu_jev/v1/systemone` uses its `api_key`, and its `api_base` when set, instead of `EU_JEV_API_KEY` and `EU_JEV_API_BASE`.
+When a proxy-wide model, one not added for a team, also sets `use_in_pass_through: true`, `/eu_jev/v1/systemone` uses its `api_key`, and its `api_base` when set, instead of `EU_JEV_API_KEY` and `EU_JEV_API_BASE`. A team's model never supplies them.
 
 ## Cost Tracking
 
