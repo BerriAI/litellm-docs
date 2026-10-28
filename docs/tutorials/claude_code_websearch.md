@@ -135,19 +135,32 @@ sequenceDiagram
 
 ## Search Providers
 
-Configure which search provider to use. LiteLLM supports multiple search providers:
+Any search provider LiteLLM supports can run Claude Code's web searches. Set its `search_provider` value in `search_tools`:
 
 | Provider | `search_provider` Value | Environment Variable |
 |----------|------------------------|----------------------|
-| **Perplexity AI** | `perplexity` | `PERPLEXITYAI_API_KEY` |
-| **Tavily** | `tavily` | `TAVILY_API_KEY` |
-| **Exa AI** | `exa_ai` | `EXA_API_KEY` |
-| **Parallel AI** | `parallel_ai` | `PARALLEL_AI_API_KEY` |
-| **Google PSE** | `google_pse` | `GOOGLE_PSE_API_KEY`, `GOOGLE_PSE_ENGINE_ID` |
-| **DataForSEO** | `dataforseo` | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` |
-| **Firecrawl** | `firecrawl` | `FIRECRAWL_API_KEY` |
-| **SearXNG** | `searxng` | `SEARXNG_API_BASE` (required) |
-| **Linkup** | `linkup` | `LINKUP_API_KEY` |
+| [**Perplexity AI**](../search/perplexity.md) | `perplexity` | `PERPLEXITYAI_API_KEY` |
+| [**Tavily**](../search/tavily.md) | `tavily` | `TAVILY_API_KEY` |
+| [**Exa AI**](../search/exa_ai.md) | `exa_ai` | `EXA_API_KEY` |
+| [**Parallel AI**](../search/parallel_ai.md) | `parallel_ai` | `PARALLEL_AI_API_KEY` |
+| [**Google PSE**](../search/google_pse.md) | `google_pse` | `GOOGLE_PSE_API_KEY`, `GOOGLE_PSE_ENGINE_ID` |
+| [**DataForSEO**](../search/dataforseo.md) | `dataforseo` | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` |
+| [**Firecrawl**](../search/firecrawl.md) | `firecrawl` | `FIRECRAWL_API_KEY` |
+| [**SearXNG**](../search/searxng.md) | `searxng` | `SEARXNG_API_BASE` (required) |
+| [**Linkup**](../search/linkup.md) | `linkup` | `LINKUP_API_KEY` |
+| [**Brave Search**](../search/brave.md) | `brave` | `BRAVE_API_KEY` |
+| [**fastCRW**](https://fastcrw.com/docs/rest-api) | `fastcrw` | `CRW_API_KEY` |
+| [**DuckDuckGo**](https://duckduckgo.com/api) | `duckduckgo` | None |
+| [**SearchAPI.io**](../search/searchapi.md) | `searchapi` | `SEARCHAPI_API_KEY` |
+| [**Serper**](../search/serper.md) | `serper` | `SERPER_API_KEY` |
+| [**You.com**](../search/you_com.md) | `you_com` | `YOUCOM_API_KEY` (optional) |
+| [**APISerpent**](../search/apiserpent.md) | `apiserpent` | `APISERPENT_API_KEY` |
+| [**TinyFish**](https://docs.tinyfish.ai/search-api) | `tinyfish` | `TINYFISH_API_KEY` |
+| [**Bedrock AgentCore**](../search/agentcore.md) | `agentcore` | `AGENTCORE_GATEWAY_URL`, AWS credentials or `AGENTCORE_GATEWAY_TOKEN` |
+| [**Nimble**](../search/nimble.md) | `nimble` | `NIMBLE_API_KEY` |
+| [**Grounding with Bing**](../search/bing_grounding.md) | `bing_grounding` | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL`, Azure credentials or `BING_GROUNDING_TOKEN` |
+| [**DeepSeek**](../search/deepseek.md) | `deepseek` | `DEEPSEEK_API_KEY` |
+| [**xAI X Search**](https://docs.x.ai/developers/tools/x-search) (from v1.109.0) | `xai` | `XAI_API_KEY` |
 
 See [all supported search providers](../search/index.md) for detailed setup instructions and provider-specific parameters.
 
