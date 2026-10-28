@@ -1099,6 +1099,16 @@ const sidebars = {
         },
         "completion/token_usage",
         { type: "html", value: "Utilities", className: "sidebar-group-label", defaultStyle: true },
+        {
+          type: "category",
+          label: "Autorouter SDK",
+          link: { type: "doc", id: "autorouter_sdk" },
+          items: [
+            "autorouter_sdk/classifiers",
+            "autorouter_sdk/routing",
+            "autorouter_sdk/evaluation",
+          ],
+        },
         "completion/message_trimming",
         "completion/model_alias",
         "completion/prompt_formatting",
