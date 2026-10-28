@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Gemini and Chirp 3 speech-to-text on Vertex AI via the OpenAI `/v1/audio/transcriptions` endpoint, and Chirp streaming speech-to-text via `/v1/realtime` |
+| Description | Gemini speech-to-text on Vertex AI and Chirp 3 speech-to-text on Google Cloud Speech-to-Text via the OpenAI `/v1/audio/transcriptions` endpoint, and Chirp streaming speech-to-text via `/v1/realtime` |
 | Provider Route on LiteLLM | `vertex_ai/gemini-3.5-transcribe-preview` (batch), `vertex_ai/chirp_3` ([batch](#chirp-3-transcription) and [realtime](#chirp-realtime-transcription)) |
 | Supported OpenAI Params | `language`, `response_format` (`json`, `text`) |
 
@@ -140,7 +140,7 @@ LiteLLM sends each request to the synchronous Speech-to-Text `recognize` method,
 
 The same deployment also serves the [realtime endpoint](#chirp-realtime-transcription) below from v1.103.0, and `/health` checks it with a transcription request without any `model_info`, since the model cost map lists `vertex_ai/chirp_3` as an `audio_transcription` model.
 
-`language` is normalized to a BCP-47 tag, and when it is left out Google detects the language. `response_format` takes `json` (default) or `text`, and other values are rejected with a 400 unless `drop_params` is set, in which case they are dropped. The response carries the `language` Google reports and the billed `duration` in seconds. Chirp 3 is billed per second of audio (`input_cost_per_second` in the model cost map), and LiteLLM returns the cost of that billed duration in the `x-litellm-response-cost` header.
+`language` takes a BCP-47 tag. A bare two-letter code for a common language is expanded to its default region (`en` becomes `en-US`, `pt` becomes `pt-BR`), and other values are sent as given, so a bare code such as `nl` returns a 400, `The language "nl" is not supported by the model "chirp_3"`, while `nl-NL` works. When `language` is left out, Google detects the language. `response_format` takes `json` (default) or `text`, and other values are rejected with a 400 unless `drop_params` is set, in which case they are dropped. The response carries the `language` Google reports and the billed `duration` in seconds. Chirp 3 is billed per second of audio (`input_cost_per_second` in the model cost map), and LiteLLM returns the cost of that billed duration in the `x-litellm-response-cost` header.
 
 For text-to-speech with Chirp 3 HD voices, see [Vertex AI Text to Speech](./vertex_speech.md) (`vertex_ai/chirp`).
 
