@@ -1064,7 +1064,7 @@ class EventsList(BaseModel):
     events: list[CalendarEvent]
 
 response = completion(
-  model="bedrock/anthropic.{{anthropic}}", # specify invoke via `bedrock/invoke/anthropic.{{anthropic}}`
+  model="bedrock/global.anthropic.{{anthropic}}", # specify invoke via `bedrock/invoke/global.anthropic.{{anthropic}}`
   response_format=EventsList,
   messages=[
     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -2328,7 +2328,7 @@ LiteLLM supports ALL Bedrock models.
 
 Here's an example of using a bedrock model with LiteLLM. For a complete list, refer to the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
 
-Recent Claude models on Bedrock, Opus 5.5 among them, take on-demand calls only through an inference profile, so call them with the `global.` prefix or a geographic one such as `us.` or `eu.` (each model's AWS model card lists the profiles it has). The bare model ID, such as `bedrock/anthropic.claude-opus-5-5`, gets a 400 from AWS unless the region serves the model in-region (for Opus 5.5, AWS lists only London). `global.` can send a request to any commercial AWS region, so if your team has data residency rules or an SCP that limits regions, read [AWS's global cross-Region inference guide](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html) or use a geographic profile instead. Geographic profiles cost 10% more than `global.` (for Opus 5.5, $4.40 instead of $4 per million input tokens), and LiteLLM tracks the cost of every Opus 5.5 profile.
+Recent Claude models on Bedrock, Opus 5.5 among them, take on-demand calls only through an inference profile, so call them with the `global.` prefix or a geographic one such as `us.` or `eu.` (each model's AWS model card lists the profiles it has). The bare model ID, such as `bedrock/anthropic.claude-opus-5-5`, gets a 400 from AWS unless the region serves the model in-region (for Opus 5.5, AWS lists only London). `global.` can send a request to any commercial AWS region, so if your team has data residency rules or an SCP that limits regions, read [AWS's global cross-Region inference guide](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html) or use a geographic profile instead. Geographic profiles cost 10% more than `global.` (for Opus 5.5, $4.40 instead of $4 per million input tokens), and LiteLLM tracks the cost of every Opus 5.5 profile. On older images this needs the remote cost map, which LiteLLM loads at startup unless `LITELLM_LOCAL_MODEL_COST_MAP` is set.
 
 | Model Name                 | Command                                                          |
 |----------------------------|------------------------------------------------------------------|
