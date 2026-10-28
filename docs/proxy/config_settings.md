@@ -188,8 +188,8 @@ router_settings:
   redis_password: <your-redis-password>   # string
   redis_port: <your-redis-port>           # string
   enable_pre_call_checks: true            # bool - Before call is made check if a call is within model context window 
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
   disable_cooldowns: True                  # bool - Disable cooldowns for all models 
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
@@ -491,8 +491,8 @@ router_settings:
   redis_password: <your-redis-password>   # string
   redis_port: <your-redis-port>           # string
   enable_pre_call_checks: true            # bool - Before call is made check if a call is within model context window
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute.
-  cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
   disable_cooldowns: True                  # bool - Disable cooldowns for all models
   enable_tag_filtering: True                # bool - Use tag based routing for requests
   tag_filtering_match_any: True             # bool - Tag matching behavior (only when enable_tag_filtering=true). `true`: match if deployment has ANY requested tag; `false`: match only if deployment has ALL requested tags
@@ -539,7 +539,7 @@ router_settings:
 | cooldown_time | integer | `5` (seconds) | The duration (in seconds) to cooldown a model if it exceeds the allowed failures. |
 | disable_cooldowns | boolean | `false` | If true, disables cooldowns for all models. [More information here](reliability) |
 | retry_policy | object | `null` | Specifies the number of retries for different types of exceptions. [More information here](reliability) |
-| allowed_fails | integer | `3` | The number of failures allowed before cooling down a model. [More information here](reliability) |
+| allowed_fails | integer | `null` | How many calls a deployment can fail within `cooldown_time` before it cools down. When unset, a rate-based cooldown applies instead. [More information here](../routing#cooldowns) |
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
 | default_priority | (Optional[int]) | `null` | The priority a `/chat/completions`, `/completions` or `/queue/chat/completions` request is queued at when it sends no `priority`. Lower numbers are served first. Default is None, so only requests that send a `priority` are queued. |
