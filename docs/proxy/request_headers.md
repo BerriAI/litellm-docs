@@ -10,6 +10,8 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-timeout` Optional[float]: The timeout for the request in seconds.
 
+`x-litellm-priority` Optional[int]: The [scheduler](../scheduler#priority-header) queue priority for the request. Lower values run first. This outranks a `priority` in the request body. Available from v1.109.0.
+
 `x-litellm-stream-timeout` Optional[float]: The timeout for getting the first chunk of the response in seconds (only applies for streaming requests). [Demo Video](https://www.loom.com/share/8da67e4845ce431a98c901d4e45db0e5)
 
 `x-litellm-enable-message-redaction`: Optional[bool]: Don't log the message content to logging integrations. Just track spend. [Learn More](./logging#redact-messages-response-content)
