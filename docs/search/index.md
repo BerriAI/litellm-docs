@@ -2,7 +2,7 @@
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek`, `xai` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -40,6 +40,8 @@ for result in response.results:
 ```
 
 To use [Parallel AI Search](./parallel_ai.md), set `PARALLEL_API_KEY` and pass `search_provider="parallel_ai"`.
+
+To search X posts with [xAI X Search](./xai.md), set `XAI_API_KEY` and pass `search_provider="xai"`.
 
 ### Async Usage 
 
