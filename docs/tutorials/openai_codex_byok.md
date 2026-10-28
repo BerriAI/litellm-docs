@@ -32,7 +32,7 @@ model_list:
       mode: responses
 ```
 
-`gpt-*` routes GPT models through ChatGPT. `codex-*` also routes Codex requests such as `codex-auto-review`, which runs approval checks. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
+`gpt-*` routes GPT models through ChatGPT, including `gpt-image-2` for Codex's image generation tool. `codex-*` also routes Codex requests such as `codex-auto-review`, which runs approval checks. You do not need an entry per model, an OpenAI API key, or a ChatGPT auth file on the proxy. Your subscription determines which models you can use.
 
 ## Step 2: Create and save a virtual key
 
