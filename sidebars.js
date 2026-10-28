@@ -1887,6 +1887,7 @@ const providersSidebar = {
     ] },
     "providers/xiaomi_mimo",
     "providers/zai",
+    "providers/zerogpu",
     { type: "html", value: "Guides", className: "sidebar-group-label", defaultStyle: true },
     "guides/finetuned_models",
     { type: "doc", id: "provider_registration/index", label: "Integrate as a Model Provider" },
