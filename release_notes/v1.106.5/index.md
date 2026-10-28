@@ -50,7 +50,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.106.5`](https://github
 
 :::warning Known performance regression
 
-`v1.106.5` has a known performance regression that adds latency to non-streaming requests, such as `/chat/completions` and `/embeddings`, from clients that send `Accept-Encoding: gzip`, which most HTTP clients and the OpenAI SDKs do by default. The added latency grows with response size and request concurrency.
+`v1.106.5` has a known performance regression that adds latency to all requests, including streaming and MCP requests, when clients send `Accept-Encoding: gzip`, which most HTTP clients and the OpenAI SDKs do by default. The proxy gzips non-streaming responses over 500 bytes, such as `/chat/completions` and `/embeddings`, on the event loop, and every other request on that worker waits while it runs.
 
 Wait for `v1.106.6`, expected by end of day Wednesday, October 28, before you upgrade. The fix is backported in [PR #48680](https://github.com/BerriAI/litellm/pull/48680).
 
