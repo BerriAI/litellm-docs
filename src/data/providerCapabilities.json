@@ -1,0 +1,935 @@
+{
+  "providers/openai": {
+    "prefix": "openai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video",
+      "vector_stores"
+    ]
+  },
+  "providers/anthropic": {
+    "prefix": "anthropic",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/gemini": {
+    "prefix": "gemini",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video",
+      "vector_stores"
+    ]
+  },
+  "providers/vertex": {
+    "prefix": "vertex_ai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video",
+      "rerank",
+      "vector_stores"
+    ]
+  },
+  "providers/azure/azure": {
+    "prefix": "azure",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video",
+      "vector_stores"
+    ]
+  },
+  "providers/azure_ai": {
+    "prefix": "azure_ai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "rerank",
+      "vector_stores"
+    ]
+  },
+  "providers/bedrock": {
+    "prefix": "bedrock",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "rerank",
+      "vector_stores"
+    ]
+  },
+  "providers/mistral": {
+    "prefix": "mistral",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "audio"
+    ]
+  },
+  "providers/xai": {
+    "prefix": "xai",
+    "capabilities": [
+      "chat",
+      "images",
+      "audio",
+      "video"
+    ]
+  },
+  "providers/deepseek": {
+    "prefix": "deepseek",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/groq": {
+    "prefix": "groq",
+    "capabilities": [
+      "chat",
+      "audio"
+    ]
+  },
+  "providers/ollama": {
+    "prefix": "ollama",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/vllm": {
+    "prefix": "vllm",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video",
+      "rerank"
+    ]
+  },
+  "providers/lm_studio": {
+    "prefix": "lm_studio",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/llamafile": {
+    "prefix": "llamafile",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/docker_model_runner": {
+    "prefix": "docker_model_runner",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/lemonade": {
+    "prefix": "lemonade",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/triton-inference-server": {
+    "prefix": "triton",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/xinference": {
+    "prefix": "xinference",
+    "capabilities": [
+      "embeddings",
+      "images"
+    ]
+  },
+  "providers/infinity": {
+    "prefix": "infinity",
+    "capabilities": [
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/nvidia_nim": {
+    "prefix": "nvidia_nim",
+    "capabilities": [
+      "chat",
+      "rerank"
+    ]
+  },
+  "providers/petals": {
+    "prefix": "petals",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/custom_llm_server": {
+    "prefix": "custom",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/openai_compatible": {
+    "prefix": "custom_openai",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/litellm_proxy": {
+    "prefix": "litellm_proxy",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "rerank"
+    ]
+  },
+  "providers/openrouter": {
+    "prefix": "openrouter",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images"
+    ]
+  },
+  "providers/opencode_go": {
+    "prefix": "opencode_go",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/vercel_ai_gateway": {
+    "prefix": "vercel_ai_gateway",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/helicone": {
+    "prefix": "helicone",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/cometapi": {
+    "prefix": "cometapi",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images"
+    ]
+  },
+  "providers/clf_ai_gateway": {
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/poe": {
+    "prefix": "poe",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/milvus_vector_stores": {
+    "prefix": "milvus",
+    "capabilities": [
+      "vector_stores"
+    ]
+  },
+  "providers/mongodb_vector_stores": {
+    "prefix": "mongodb",
+    "capabilities": [
+      "vector_stores"
+    ]
+  },
+  "providers/s3_vectors": {
+    "prefix": "s3_vectors",
+    "capabilities": [
+      "vector_stores"
+    ]
+  },
+  "providers/valkey_vector_stores": {
+    "prefix": "valkey",
+    "capabilities": [
+      "vector_stores"
+    ]
+  },
+  "providers/ragflow_vector_store": {
+    "capabilities": [
+      "vector_stores"
+    ]
+  },
+  "providers/langgraph": {
+    "prefix": "langgraph",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/pydantic_ai_agent": {
+    "prefix": "pydantic_ai_agents",
+    "capabilities": []
+  },
+  "providers/abliteration": {
+    "prefix": "abliteration",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/ai21": {
+    "prefix": "ai21",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/aiml": {
+    "prefix": "aiml",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images"
+    ]
+  },
+  "providers/aleph_alpha": {
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/amazon_nova": {
+    "prefix": "amazon_nova",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/anyscale": {
+    "prefix": "anyscale",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/apertis": {
+    "prefix": "apertis",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/aws_sagemaker": {
+    "prefix": "sagemaker",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/baseten": {
+    "prefix": "baseten",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/black_forest_labs": {
+    "prefix": "black_forest_labs",
+    "capabilities": [
+      "images"
+    ]
+  },
+  "providers/black_forest_labs_img_edit": {
+    "capabilities": [
+      "images"
+    ]
+  },
+  "providers/bytez": {
+    "prefix": "bytez",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/cerebras": {
+    "prefix": "cerebras",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/chatgpt": {
+    "prefix": "chatgpt",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/chutes": {
+    "prefix": "chutes",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/clarifai": {
+    "prefix": "clarifai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/cloudflare_workers": {
+    "prefix": "cloudflare",
+    "capabilities": [
+      "chat",
+      "audio"
+    ]
+  },
+  "providers/codestral": {
+    "prefix": "codestral",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/cognition": {
+    "prefix": "cognition",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/cohere": {
+    "prefix": "cohere",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/compactifai": {
+    "prefix": "compactifai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/coralbricks": {
+    "prefix": "coralbricks",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/crusoe": {
+    "prefix": "crusoe",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/dashscope": {
+    "prefix": "dashscope",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "video",
+      "rerank"
+    ]
+  },
+  "providers/databricks": {
+    "prefix": "databricks",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/datarobot": {
+    "prefix": "datarobot",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/deepgram": {
+    "prefix": "deepgram",
+    "capabilities": [
+      "audio"
+    ]
+  },
+  "providers/deepinfra": {
+    "prefix": "deepinfra",
+    "capabilities": [
+      "chat",
+      "rerank"
+    ]
+  },
+  "providers/edenai": {
+    "prefix": "edenai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "video"
+    ]
+  },
+  "providers/elevenlabs": {
+    "prefix": "elevenlabs",
+    "capabilities": [
+      "audio"
+    ]
+  },
+  "providers/empiriolabs": {
+    "prefix": "empiriolabs",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/fal_ai": {
+    "prefix": "fal_ai",
+    "capabilities": [
+      "chat",
+      "images",
+      "video"
+    ]
+  },
+  "providers/featherless_ai": {
+    "prefix": "featherless_ai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/fireworks_ai": {
+    "prefix": "fireworks_ai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "audio",
+      "rerank"
+    ]
+  },
+  "providers/friendliai": {
+    "prefix": "friendliai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/galadriel": {
+    "prefix": "galadriel",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/github": {
+    "prefix": "github",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/github_copilot": {
+    "prefix": "github_copilot",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/gmi": {
+    "prefix": "gmi",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/gradient_ai": {
+    "prefix": "gradient_ai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/heroku": {
+    "prefix": "heroku",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/huggingface": {
+    "prefix": "huggingface",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/hyperbolic": {
+    "prefix": "hyperbolic",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/inception": {
+    "prefix": "inception",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/inferenceapis": {
+    "prefix": "inferenceapis",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/jina_ai": {
+    "prefix": "jina_ai",
+    "capabilities": [
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/lambda_ai": {
+    "prefix": "lambda_ai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/llamagate": {
+    "prefix": "llamagate",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/manus": {
+    "prefix": "manus",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/meta": {
+    "prefix": "meta",
+    "capabilities": [
+      "chat",
+      "images",
+      "audio"
+    ]
+  },
+  "providers/meta_llama": {
+    "prefix": "meta_llama",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/microsoft_365_copilot": {
+    "prefix": "microsoft_365_copilot",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/minimax": {
+    "prefix": "minimax",
+    "capabilities": [
+      "chat",
+      "audio",
+      "video"
+    ]
+  },
+  "providers/moonshot": {
+    "prefix": "moonshot",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/morph": {
+    "prefix": "morph",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/nadir": {
+    "prefix": "nadir",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/nano-gpt": {
+    "prefix": "nanogpt",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/nebius": {
+    "prefix": "nebius",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/neosantara": {
+    "prefix": "neosantara",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/nlp_cloud": {
+    "prefix": "nlp_cloud",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/novita": {
+    "prefix": "novita",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/nscale": {
+    "prefix": "nscale",
+    "capabilities": [
+      "chat",
+      "images"
+    ]
+  },
+  "providers/nvidia_riva": {
+    "prefix": "nvidia_riva",
+    "capabilities": [
+      "audio"
+    ]
+  },
+  "providers/oci": {
+    "prefix": "oci",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/openinfer": {
+    "prefix": "openinfer",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/ovhcloud": {
+    "prefix": "ovhcloud",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "audio"
+    ]
+  },
+  "providers/perplexity": {
+    "prefix": "perplexity",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/predibase": {
+    "prefix": "predibase",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/prism": {
+    "prefix": "prism",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/publicai": {
+    "prefix": "publicai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/qwencloud": {
+    "prefix": "qwencloud",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "images",
+      "video",
+      "rerank"
+    ]
+  },
+  "providers/ragflow": {
+    "prefix": "ragflow",
+    "capabilities": [
+      "chat",
+      "vector_stores"
+    ]
+  },
+  "providers/recraft": {
+    "prefix": "recraft",
+    "capabilities": [
+      "images"
+    ]
+  },
+  "providers/refuseless": {
+    "prefix": "refuseless",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/reka": {
+    "prefix": "reka",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/replicate": {
+    "prefix": "replicate",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/runwayml/images": {
+    "prefix": "runwayml",
+    "capabilities": [
+      "images",
+      "audio",
+      "video"
+    ]
+  },
+  "providers/sambanova": {
+    "prefix": "sambanova",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/sap": {
+    "prefix": "sap",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/sarvam": {
+    "prefix": "sarvam",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/scaledown": {
+    "prefix": "scaledown",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/scaleway": {
+    "prefix": "scaleway",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "audio",
+      "rerank"
+    ]
+  },
+  "providers/scx_ai": {
+    "prefix": "scx-ai",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/snowflake": {
+    "prefix": "snowflake",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
+  "providers/stability": {
+    "prefix": "stability",
+    "capabilities": [
+      "images"
+    ]
+  },
+  "providers/strands_decider": {
+    "prefix": "strands_decider",
+    "capabilities": []
+  },
+  "providers/synthetic": {
+    "prefix": "synthetic",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/tencent": {
+    "prefix": "tencent",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/tensormesh": {
+    "prefix": "tensormesh",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/togetherai": {
+    "prefix": "together_ai",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/topaz": {
+    "prefix": "topaz",
+    "capabilities": [
+      "images"
+    ]
+  },
+  "providers/v0": {
+    "prefix": "v0",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/volcano": {
+    "prefix": "volcengine",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "video"
+    ]
+  },
+  "providers/voyage": {
+    "prefix": "voyage",
+    "capabilities": [
+      "embeddings",
+      "rerank"
+    ]
+  },
+  "providers/wandb_inference": {
+    "prefix": "wandb",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/watsonx/index": {
+    "prefix": "watsonx",
+    "capabilities": [
+      "chat",
+      "embeddings",
+      "audio",
+      "rerank"
+    ]
+  },
+  "providers/xiaomi_mimo": {
+    "prefix": "xiaomi_mimo",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "providers/zai": {
+    "prefix": "zai",
+    "capabilities": [
+      "chat"
+    ]
+  }
+}

@@ -144,7 +144,7 @@ def UserAPIKeyAuth(
 ### Object permission (MCP, agents, etc.)
 
 ```python
-from litellm.proxy._experimental.mcp_server.mcp_server_manager import (
+from litellm.proxy.mcp_server.mcp_server_manager import (
     global_mcp_server_manager,
 )
 

@@ -603,6 +603,31 @@ li.tabs__item--active {
   border-top: 0;
   padding-top: 4px;
 }
+/* A multi-page provider in the AI Providers sidebar (className
+   "sidebar-provider"): set it like the single-page providers around it, not
+   like a top-level Docs section. */
+.theme-doc-sidebar-item-category-level-1.sidebar-provider {
+  margin-bottom: 0 !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider > .menu__list-item-collapsible {
+  min-height: 0;
+  padding: 0 !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link:first-of-type,
+[data-theme='dark']
+  .theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link:first-of-type {
+  color: var(--ifm-menu-color);
+  font-weight: var(--ifm-font-weight-normal) !important;
+}
+.theme-doc-sidebar-item-category-level-1.sidebar-provider
+  > .menu__list-item-collapsible
+  > .menu__link--active:first-of-type {
+  color: var(--ifm-menu-color-active);
+}
 .sidebar-xlink > .menu__link::after,
 .menu__link.sidebar-xlink::after {
   content: "\2197";

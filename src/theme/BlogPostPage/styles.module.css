@@ -51,11 +51,27 @@
   padding: 6rem 5% 96px;
 }
 
+/* The post is a closed box: top and bottom edges join the side rails, so the
+   rails no longer start and stop in empty space, and a small accent square
+   marks each corner, as on the litellm.ai grid. */
 .post {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
-  border-left: 1px solid var(--lb-line);
-  border-right: 1px solid var(--lb-line);
+  border: 1px solid var(--lb-line);
+}
+
+.post::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--lb-accent), var(--lb-accent)) top left / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) top right / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) bottom left / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) bottom right / 5px 5px no-repeat;
 }
 
 .row {
