@@ -3,13 +3,13 @@
 Provide concrete examples of valid tool inputs to help Claude understand how to use your tools more effectively. This is particularly useful for complex tools with nested objects, optional parameters, or format-sensitive inputs.
 
 :::info
-Tool input examples is a beta feature. LiteLLM automatically detects tools with the `input_examples` field and adds the appropriate beta header based on your provider:
+Tool input examples is a beta feature. On the Anthropic API and Microsoft Foundry, LiteLLM detects tools with the `input_examples` field and adds the beta header for you:
 
 - **Anthropic API & Microsoft Foundry**: `advanced-tool-use-2025-11-20`
-- **Amazon Bedrock**: `advanced-tool-use-2025-11-20` (Claude Opus 4.5 only)
+- **Amazon Bedrock**: LiteLLM does not add a header yet, so pass `anthropic-beta: tool-examples-2025-10-29` yourself (Claude Opus 4.5 only)
 - **Google Cloud Vertex AI**: Not supported
 
-You don't need to manually specify beta headers; LiteLLM handles this automatically.
+Outside Bedrock you don't need to specify beta headers, since LiteLLM handles this automatically.
 :::
 
 ## When to Use Input Examples
@@ -390,10 +390,10 @@ LiteLLM supports input examples across the following Anthropic-compatible provid
 
 - **Standard Anthropic API** (`anthropic/{{anthropic}}`) ✅
 - **Azure Anthropic / Microsoft Foundry** (`azure_ai/{{anthropic}}`) ✅
-- **Amazon Bedrock** (`bedrock/invoke/anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only)
+- **Amazon Bedrock** (`bedrock/invoke/global.anthropic.claude-opus-4-5-20251101-v1:0`) ✅ (Opus 4.5 only, with the beta header below)
 - **Google Cloud Vertex AI** (`vertex_ai/{{anthropic}}`) ❌ Not supported
 
-The beta header (`advanced-tool-use-2025-11-20`) is automatically added when LiteLLM detects tools with the `input_examples` field.
+On the Anthropic API and Microsoft Foundry, the beta header (`advanced-tool-use-2025-11-20`) is added automatically when LiteLLM detects tools with the `input_examples` field. On Bedrock, pass `extra_headers={"anthropic-beta": "tool-examples-2025-10-29"}` to `litellm.completion`, or set the same header under the deployment's `litellm_params.extra_headers` on the proxy. Without it, Bedrock answers with a 400 (`Extra inputs are not permitted`). Bare Opus 4.5 needs an inference profile such as `global.` for on-demand calls.
 
 ## Troubleshooting
 
