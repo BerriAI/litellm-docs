@@ -171,5 +171,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Notes
 
+- The current Claude models accept automatic tool selection or `tool_choice="none"`. They reject `required` and forced named-tool calls with HTTP 400. For structured output, use a JSON Schema response format and validate the result in your application; Claude accepts a subset of JSON Schema. See the [structured-output guide](https://ai.topxea.com/docs/use-topxai-with-langchain).
+- The endpoint table above lists the native TopxAI transports used by this provider. LiteLLM's generated endpoint matrix also marks protocol bridges to Chat Completions; those flags do not mean TopxAI exposes those additional endpoints directly.
 - Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://ai.topxea.com"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
 - Image generation (`gpt-image-2.5-sunburst`, `gpt-image-2.5-flare`), video generation and TypeSafe's Jev (`/v1/systemone`) are outside the `topxai/` route; see the [API reference](https://ai.topxea.com/docs/api-reference).
