@@ -5,8 +5,8 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Gemini speech-to-text on Vertex AI via the OpenAI `/v1/audio/transcriptions` endpoint, and Chirp streaming speech-to-text via `/v1/realtime` |
-| Provider Route on LiteLLM | `vertex_ai/gemini-3.5-transcribe-preview` (batch), `vertex_ai/chirp_3` (realtime, [see below](#chirp-realtime-transcription)) |
+| Description | Gemini and Chirp 3 speech-to-text on Vertex AI via the OpenAI `/v1/audio/transcriptions` endpoint, and Chirp streaming speech-to-text via `/v1/realtime` |
+| Provider Route on LiteLLM | `vertex_ai/gemini-3.5-transcribe-preview` (batch), `vertex_ai/chirp_3` ([batch](#chirp-3-transcription) and [realtime](#chirp-realtime-transcription)) |
 | Supported OpenAI Params | `language`, `response_format` (`json`, `text`) |
 
 Gemini transcribe models on Vertex AI are served from the `global` location, which LiteLLM uses by default when no `vertex_location` is set. If you set a regional location (in config, `litellm.vertex_location`, or the `VERTEXAI_LOCATION` / `VERTEX_LOCATION` env vars), that value takes precedence and Vertex returns a 404 for regions where the model is unavailable, so pin `vertex_location: global` for these models.
@@ -90,6 +90,55 @@ print(response.text)
 ## Usage and Cost Tracking
 
 Vertex AI reports token usage split by modality, and LiteLLM tracks audio input tokens and text output tokens separately, so spend logs and the `x-litellm-response-cost` header reflect Google's published per-token audio transcription pricing.
+
+## Chirp 3 Transcription
+
+`vertex_ai/chirp_3` sends audio to the Google Cloud Speech-to-Text v2 Chirp 3 model through the same `/v1/audio/transcriptions` endpoint. The model id is `chirp_3` with an underscore. LiteLLM passes the name to Google as written, so `vertex_ai/chirp-3` fails with a 400, `The model "chirp-3" does not exist in the location named "us"`.
+
+Speech-to-Text serves Chirp 3 from the `us` and `eu` multi-regions, so set `vertex_location` to one of them. LiteLLM uses `us` when no location is set, but a location from config, `litellm.vertex_location`, or the `VERTEXAI_LOCATION` / `VERTEX_LOCATION` env vars takes precedence, and a regional value such as `us-central1`, or `global`, fails with `The model "chirp_3" does not exist in the location named "us-central1"`. Google's [Chirp 3 page](https://docs.cloud.google.com/speech-to-text/docs/models/chirp-3) lists the current locations.
+
+### LiteLLM Python SDK
+
+```python showLineNumbers title="Chirp 3 Quick Start"
+from litellm import transcription
+
+audio_file = open("speech.wav", "rb")
+response = transcription(
+    model="vertex_ai/chirp_3",
+    file=audio_file,
+    language="en",
+    vertex_project="your-project-id",
+    vertex_location="us",
+    vertex_credentials="/path/to/service_account.json",
+)
+print(response.text)
+```
+
+### LiteLLM AI Gateway
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: chirp-3
+    litellm_params:
+      model: vertex_ai/chirp_3
+      vertex_project: "your-project-id"
+      vertex_location: us
+      vertex_credentials: "/path/to/service_account.json"
+```
+
+```bash showLineNumbers title="Chirp 3 Quick Start"
+curl http://0.0.0.0:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -F file=@speech.wav \
+  -F model=chirp-3 \
+  -F language=en
+```
+
+The same deployment serves the [realtime endpoint](#chirp-realtime-transcription) below, and `/health` checks it with a transcription request without any `model_info`, since the model cost map lists `vertex_ai/chirp_3` as an `audio_transcription` model.
+
+`language` is normalized to a BCP-47 tag, and when it is left out Google detects the language. `response_format` takes `json` (default) or `text`; other values are rejected with a 400 unless `drop_params` is set, in which case they are dropped. The response carries the `language` Google reports and the billed `duration` in seconds. Chirp 3 is billed per second of audio (`input_cost_per_second` in the model cost map), and spend logs and the `x-litellm-response-cost` header use that billed duration.
+
+For text-to-speech with Chirp 3 HD voices, see [Vertex AI Text to Speech](./vertex_speech.md) (`vertex_ai/chirp`).
 
 ## Chirp Realtime Transcription
 
