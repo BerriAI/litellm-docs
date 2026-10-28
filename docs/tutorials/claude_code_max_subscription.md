@@ -10,6 +10,12 @@ import TabItem from '@theme/TabItem';
 Route Claude Code traffic signed in with a Claude Pro, Max, Team, or Enterprise subscription through LiteLLM AI Gateway.
 </div>
 
+:::tip
+
+LiteLLM can also use ChatGPT (Codex) and GitHub Copilot subscriptions. To compare the three subscriptions, refer to [Claude, Codex, and Copilot subscriptions](/docs/subscriptions).
+
+:::
+
 **Why a Claude subscription over direct API?**
 - **Lower costs**: Claude subscriptions are cheaper for Claude Code power users than per-token API pricing
 
@@ -52,7 +58,7 @@ Claude Code asks for Claude model ids such as `{{anthropic}}`, and the model dep
 
 :::info[No header forwarding setting is needed]
 
-Since v1.81.14, LiteLLM forwards a client's `Authorization: Bearer sk-ant-oat...` subscription token to `anthropic/` deployments without `forward_client_headers_to_llm_api`. The token takes precedence over any `api_key` set on the deployment, and LiteLLM adds the `anthropic-beta: oauth-2025-04-20` header Anthropic requires for OAuth. Turn on `forward_client_headers_to_llm_api` only if you also want other client headers forwarded.
+LiteLLM forwards a client's `Authorization: Bearer sk-ant-oat...` subscription token to `anthropic/` deployments without `forward_client_headers_to_llm_api`. The token takes precedence over any `api_key` set on the deployment, and LiteLLM adds the `anthropic-beta: oauth-2025-04-20` header Anthropic requires for OAuth. Turn on `forward_client_headers_to_llm_api` only if you also want other client headers forwarded.
 
 A deployment without an `api_key` serves only subscription users: a request that arrives without a subscription token fails with `401 Missing Anthropic API Key`. If you set an `api_key`, requests without a token fall back to it and are billed to that API key.
 
@@ -265,13 +271,6 @@ Claude Code owns the subscription credential. It stores the login locally (the m
 
 When a token is expired or revoked, Anthropic answers `401 OAuth access token is invalid.` and LiteLLM returns that to Claude Code; the user runs `/login` again. LiteLLM cannot revoke a Claude login. To cut a user off at the gateway, [block](/docs/proxy/virtual_keys) or delete their virtual key, which stops their requests through LiteLLM; their Claude login itself still works directly against Anthropic until they or their admin remove it.
 
-One user's expired or revoked token can currently block everyone else on the same model. LiteLLM counts the upstream 401 as a deployment failure and puts the deployment into cooldown, and while the cooldown lasts every other user's request to that model fails with `429 No deployments available for selected model` without reaching Anthropic. On proxies that serve subscription users, turn cooldowns off:
-
-```yaml showLineNumbers title="config.yaml - Keep one user's 401 from blocking others"
-router_settings:
-  disable_cooldowns: true
-```
-
 ### Attribution and cost
 
 Spend is attributed to the virtual key in `x-litellm-api-key` and the user and team it belongs to, so per-user and per-team reporting, budgets, and rate limits work as usual. LiteLLM does not see which Claude account or organization the token belongs to. Cost is calculated at Anthropic API list prices and counts toward key, user, and team budgets even though Anthropic bills the usage to the subscription, so treat budgets here as usage caps in API-equivalent dollars.
@@ -335,6 +334,10 @@ curl "http://localhost:4000/spend/logs/ui?used_client_oauth_token=true" \
 Pass `used_client_oauth_token=false` for the requests the configured key paid for
 
 ## Troubleshooting
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, ask the proxy operator to check for an existing deployment cooldown. See [recovery steps](./claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### OAuth Token Not Being Forwarded
 

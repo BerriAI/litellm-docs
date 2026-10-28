@@ -26,6 +26,7 @@ const sidebars = {
         slug: "/ai_tools"
       },
       items: [
+        { type: "ref", id: "subscriptions", className: "sidebar-xlink" },
         {
           type: "doc",
           id: "tutorials/openweb_ui",
@@ -505,6 +506,7 @@ const sidebars = {
                   items: [
                     { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/codex_cli", label: "Virtual keys" },
+                    { type: "doc", id: "tutorials/openai_codex_byok", label: "ChatGPT subscription" },
                   ],
                 },
               ],
@@ -1110,6 +1112,7 @@ const sidebars = {
     require('./docs/proxy/lens/sidebar'),
     { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "guides/index", className: "top-level-doc-item" },
+    { type: "doc", id: "subscriptions", className: "top-level-doc-item" },
     {
       type: "category",
       label: "Routing & Reliability",
@@ -1200,16 +1203,6 @@ const sidebars = {
         "completion/prompt_caching",
         "completion/prefix",
         "completion/predict_outputs",
-      ],
-    },
-    {
-      type: "category",
-      label: "Decision Models",
-      link: { type: "doc", id: "decisions/index" },
-      items: [
-        "decisions/providers",
-        "decisions/benchmark",
-        "decisions/admin_ui",
       ],
     },
     {
@@ -1359,13 +1352,10 @@ const sidebars = {
         "tokenize",
         {
           type: "category",
-          label: "/v1/decisions, /v1/systemone",
+          label: "/v1/decisions",
           items: [
-            { type: "link", label: "Decision Models overview", href: "/docs/decisions" },
-            "decisions/openai_format",
-            "decisions/systemone_format",
-            "decisions/typesafe_images",
-            "decisions/sdk",
+            "decisions",
+            "decisions/benchmark",
           ]
         },
         "extraction",
@@ -1662,6 +1652,7 @@ const sidebars = {
           "providers/qwencloud",
           "providers/ragflow",
           "providers/recraft",
+          "providers/refuseless",
           "providers/reka",
           "providers/replicate",
           { type: "category", label: "RunwayML", items: [
