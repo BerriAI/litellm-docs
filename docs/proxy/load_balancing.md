@@ -129,7 +129,7 @@ router_settings:
 
 **Daily limits reset at midnight UTC, or at `reset_time`.** The counter key carries the date of the current window, so a new day starts a fresh count on every proxy instance at the same moment. `reset_time` is `"HH:MM"` in UTC and moves that moment, for example `"08:00"` for a provider whose quota resets at midnight Pacific during daylight saving time (`"07:00"` outside it, the value does not follow daylight saving). Without `reset_time` the window is the UTC calendar day.
 
-When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until midnight UTC.
+When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until the next reset.
 
 ### Error Response
 
