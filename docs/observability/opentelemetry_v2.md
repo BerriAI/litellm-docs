@@ -380,7 +380,7 @@ Phoenix has more than one collector endpoint shape, and picking the wrong one is
 
 #### What Langfuse renders
 
-Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generation**, filterable by team. Endpoint resolution is `LANGFUSE_OTEL_HOST`, then `LANGFUSE_HOST`, then the US cloud default, with `/api/public/otel` appended for a self-hosted host.
+Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generation**, filterable by team, key, user and end user. Endpoint resolution is `LANGFUSE_OTEL_HOST`, then `LANGFUSE_HOST`, then the US cloud default, with `/api/public/otel` appended for a self-hosted host.
 
 #### Attributes added by the `langfuse` mapper
 
@@ -394,8 +394,12 @@ Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generat
 | `langfuse.observation.usage_details` | Input/output/total token counts |
 | `langfuse.observation.cost_details` | Total cost |
 | `langfuse.trace.metadata.team_id`, `team_alias` | Filterable team identity |
+| `langfuse.observation.metadata` | JSON of the caller identity, shown as the generation's own Metadata fields: `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id`, `user_api_key_team_id`, `user_api_key_team_alias` and `user_api_key_org_id` |
+| `langfuse.trace.metadata.user_api_key_*` | The same identity fields as trace metadata, so you can filter traces by key, user, end user, team or org |
 
 These are set by the preset from the request and response, not from a client-supplied metadata dict, so you get them without extra config.
+
+The key alias, user, team and org come from the virtual key the proxy authenticated, and the end user is the one the proxy resolved for the request, the same value spend tracking uses; a caller cannot set any of them through request `metadata`. A field with no value is left out, such as `user_api_key_org_id` for a key outside an organization. The team ID and alias are always sent. The key alias, user, end user and org follow the metadata allowlist in [Request identity on every span](#request-identity-on-every-span), so removing one from `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` also removes it here. Setting `redact_user_api_key_info: true` under `litellm_settings` drops all of them, as it does for the `langfuse` callback. Other exporters next to Langfuse, such as a plain `otel` collector or Arize, do not receive these keys on LiteLLM's spans.
 
 #### Setup notes
 
