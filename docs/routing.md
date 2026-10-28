@@ -372,7 +372,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="simple-shuffle", # RECOMMENDED - best performance
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -454,7 +454,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# set routing strategy
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 ## CALL 1+2
@@ -577,7 +577,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -1046,12 +1046,31 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 - If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
 - Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
 
+#### Keep the replacement after failover
+
+See [PR #48206](https://github.com/BerriAI/litellm/pull/48206) for this option.
+
+To keep a session on its successful replacement after the original deployment recovers, add this to the proxy configuration and restart it:
+
+```yaml
+router_settings:
+  optional_pre_call_checks: ["session_affinity"]
+  session_affinity_repin_on_failover: true
+```
+
+For async Router SDK requests, pass `session_affinity_repin_on_failover=True` to `Router()` alongside the existing session-affinity configuration. The option defaults to `false`. When disabled, it adds no re-pinning cache reads, Redis calls, or background tasks.
+
+The pin moves only if the original deployment is still in cooldown or removed from the route when the replacement's successful response is processed. Failed or incomplete responses and temporary request filters do not move the pin. The replacement remains pinned after the original recovers, subject to the existing affinity TTL. Priority routing groups retain their existing behavior.
+
+When enabled with Redis, session selection reads the shared pin so another worker's local cache cannot send the session back to the original deployment. Re-pinning runs in the existing success callback, so requests already underway can finish on different replacements before the new pin takes effect.
+
 #### Settings
 
 | Setting | Description |
 |---|---|
 | `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
+| `session_affinity_repin_on_failover` | Keep a successful replacement after cooldown or removal. Default `false`, set at startup. Applies to proxy and async Router requests. See [re-pinning](#keep-the-replacement-after-failover). |
 | `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
 `deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
@@ -1369,13 +1388,15 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  allowed_fails: 3 # cool a deployment down once it fails more than 3 calls
   cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
-- allowed_fails: 3
+- allowed_fails: not set
 - cooldown_time: 5s (`DEFAULT_COOLDOWN_TIME_SECONDS` in constants.py)
+
+With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value in `router_settings` of your config.yaml or in `Router(...)`, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once. A value saved from the Admin UI or `/config/update` counts only when it is not 3, since the Admin UI saves the default back with every change. Before v1.109.0, the router treated an explicit 3 as unset and kept using those rules.
 
 **Set Per Model**
 
@@ -1463,7 +1484,7 @@ Each deployment gets a unique `model_id` (e.g., `1234567890`, `9129922`, `498292
 
 #### When are deployments cooled down?
 
-The router automatically cools down deployments based on the following conditions:
+When `allowed_fails` and `allowed_fails_policy` are not set, the router cools down deployments based on the following conditions:
 
 | Condition | Trigger | Cooldown Duration |
 |-----------|---------|-------------------|

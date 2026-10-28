@@ -6,7 +6,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "A recap of the May LiteLLM town hall covering 89 security fixes, new release versioning, MCP toolsets, performance wins, and the LiteLLM Agent Platform."
-tags: [townhall, security, performance, product, agents]
+tags: [townhall, performance, product, agents]
 hide_table_of_contents: false
 ---
 

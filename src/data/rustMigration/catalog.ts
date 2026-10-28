@@ -282,7 +282,7 @@ export type WorkSet = {[C in ComponentId]?: readonly WorkId<C>[] | '*'};
 export interface GoalDeclaration {
   id: string;
   text: string;
-  endsOn: IsoDay;
+  endsOn?: IsoDay;
   // The components the goal covers, in the order the page lists them.
   components: readonly ComponentId[];
   // Describes the scope in the goal picker instead of listing it.
@@ -313,7 +313,6 @@ export const GOALS: readonly GoalDeclaration[] = [
     // and in the SDK.
     id: 'major-apis',
     text: 'Major APIs',
-    endsOn: '2026-12-31',
     summary: 'Messages, Chat completions and Responses on the Rust gateway and SDK',
     components: MAJOR_API_COMPONENTS,
   },
@@ -322,7 +321,6 @@ export const GOALS: readonly GoalDeclaration[] = [
     // Major APIs plus moving Python off Prisma.
     id: 'all-apis',
     text: 'All APIs',
-    endsOn: '2027-06-30',
     components: ALL_COMPONENTS,
     summary: 'Every route on Rust and almost all Python replaced',
     disabled: true,
@@ -332,61 +330,6 @@ export const GOALS: readonly GoalDeclaration[] = [
 // Oldest first, one per day, the first after the latest release. The timeline
 // draws each as a grey dot. When its work ships, record the RCs above and drop
 // or revise the plan.
-export const PLANS: readonly PlanDeclaration[] = [
-  {
-    // The first route on Rust end to end, for the simplest requests: Anthropic
-    // Messages for a virtual key with nothing else on it. The deploy, key
-    // checks and spend it needs are real; budgets, callbacks, fallbacks, cache
-    // and other providers are gap rows that forward to Python. Authorization
-    // only checks model access, so it lands partial. Budgets, routing, the
-    // logging payload and cache wiring that the next plan finishes ship opt-in
-    // in the RCs before it, so they land partial here too.
-    id: 'messages-simple',
-    date: '2026-11-07',
-    route: 'messages',
-    label: ['e2e', 'simple'],
-    description: 'Anthropic Messages on Rust end to end for virtual keys with no budgets, callbacks or cache. Every other request forwards to Python.',
-    partial: {
-      auth: ['authorization'],
-      budgets: '*',
-      router: ['strategies', 'health'],
-      logging: ['payload', 'hooks'],
-      cache: ['wiring', 'gaps'],
-    },
-    done: {
-      deploy: '*',
-      db: '*',
-      auth: ['key-lookup', 'invalidation'],
-      spend: ['buffer'],
-      messages: ['anthropic'],
-    },
-  },
-  {
-    // Every Messages request on Rust: each gap row the first plan forwarded is
-    // now served. The shared pieces built for it are new, so they land partial
-    // and reach done by the goal, once Chat completions and Responses run on
-    // them too. Authorization, JWT and the providers only Messages uses are done.
-    id: 'messages-all',
-    date: '2026-11-21',
-    route: 'messages',
-    label: ['e2e', 'all'],
-    description: 'Every Messages request on Rust end to end, with budgets, routing, callbacks and cache. Chat completions and Responses reuse all of it.',
-    partial: {
-      budgets: '*',
-      router: '*',
-      logging: '*',
-      cache: ['compat', 'wiring', 'gaps', 'accounting', 'backends', 'other-backends'],
-      config: '*',
-      features: [
-        'mock', 'mcp-tools', 'caller-client', 'timeouts', 'agentic-loop', 'tls', 'modify-params', 'cache-control-injection',
-        'workload-identity', 'thinking-retry', 'stream-cost', 'websearch', 'interceptors', 'safeguards',
-      ],
-    },
-    done: {
-      auth: ['authorization', 'jwt'],
-      messages: ['deepseek', 'vertex_ai', 'bedrock', 'bedrock_mantle', 'azure_ai', 'minimax', 'github_copilot', 'tencent', 'edenai', 'openai_like'],
-    },
-  },
-];
+export const PLANS: readonly PlanDeclaration[] = [];
 
 export const CATALOG = {components: COMPONENTS, goals: GOALS, plans: PLANS};

@@ -57,8 +57,19 @@ test('each goal has one latest release, then plans in date order, all as days', 
       assert.match(point.date, DAY);
       if (index > latest) assert.ok(point.date > points[index - 1].date);
     });
-    assert.ok(goal.endsOn > points.at(-1).date);
+    if (goal.endsOn !== undefined) assert.ok(goal.endsOn > points.at(-1).date);
   }
+});
+
+test('goals can track released work without a completion date', () => {
+  const catalog = {...CATALOG, plans: [], goals: CATALOG.goals.map(({endsOn, ...goal}) => goal)};
+  const {goals} = buildModel(catalog);
+  assert.equal(goals[0].endsOn, undefined);
+  assert.equal(progressAt(goals[0], CURRENT_VERSION), progressAt(GOALS[0], CURRENT_VERSION));
+  const withDate = endsOn => buildModel({...catalog, goals: catalog.goals.map(goal => ({...goal, endsOn}))});
+  assert.doesNotThrow(() => withDate(afterLatest(7)));
+  assert.throws(() => withDate(latestDay), /needs to end after/);
+  assert.throws(() => withDate('invalid'), /invalid date/);
 });
 
 test('progress weighs each piece of work by its size, at 0.8 when partial and 1 when done', () => {
