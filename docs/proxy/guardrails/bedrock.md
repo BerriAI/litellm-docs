@@ -203,7 +203,7 @@ Chunks now stream to the client as they arrive, and one OUTPUT scan runs over th
 
 With `streaming_buffer_until_moderated: false` alone, the guardrail scans the accumulated response every `streaming_sampling_rate` chunks while streaming. Each sampled scan is a separate ApplyGuardrail call over all text so far, so it adds mid-stream latency and repeated Bedrock text-unit charges. Pair it with `streaming_end_of_stream_only: true` unless you need mid-stream blocking.
 
-To keep mid-stream blocking without that pause, add `streaming_scan_in_background: true`. Each sampled scan then runs while chunks keep streaming, one scan at a time. A violation ends the stream with the block message before the next chunk, so text that streamed while the scan ran has already reached the client. A violation found after the last chunk still ends the stream with the block message.
+To keep mid-stream blocking without that pause, add `streaming_scan_in_background: true`. Each sampled scan then runs while chunks keep streaming, one scan at a time. A violation ends the stream with the block message before the next chunk, so text that streamed while the scan ran has already reached the client. The end of the stream (`finish_reason` or `message_delta`) waits for the last scan, so a violation found after the last chunk still ends the stream with the block message in place of the normal finish.
 
 These settings apply to both `/v1/chat/completions` and native `/v1/messages` streams.
 
