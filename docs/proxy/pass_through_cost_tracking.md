@@ -96,7 +96,7 @@ x-litellm-operation-name: retrieval
 
 LiteLLM uses it for `gen_ai.operation.name` and the span name when OpenTelemetry tracing follows the GenAI semantic conventions (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental` or `LITELLM_OTEL_V2=1`). Send an operation name from the [OpenTelemetry GenAI conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/), such as `retrieval`, `embeddings`, `execute_tool` or `invoke_agent`. An unknown name is ignored, with a warning in the proxy logs
 
-A pass-through response LiteLLM cannot parse, sent without this header, is labelled `litellm.passthrough`. Provider routes LiteLLM understands, such as Anthropic `/v1/messages`, keep their own operation
+Without this header, a route defined under `pass_through_endpoints` is labelled `litellm.passthrough`. LiteLLM's built-in provider routes, such as `/anthropic` and `/openai`, keep the label they have today
 
 ## Reading the values back
 
