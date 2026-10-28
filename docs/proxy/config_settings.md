@@ -1474,6 +1474,7 @@ router_settings:
 | PAGERDUTY_API_KEY | API key for PagerDuty Alerting
 | PANW_PRISMA_AIRS_API_KEY | API key for PANW Prisma AIRS service
 | PANW_PRISMA_AIRS_API_BASE | Base URL for PANW Prisma AIRS service
+| PATRONUS_API_KEY | Bearer token for Wolf Defender checks through the Patronus Control API when `ark.wolf.backend` is `api`. Native PII and secret detection stay local. API mode sends selected original text to Control before local redaction. Not needed for native-only checks or local Wolf inference. |
 | PHOENIX_API_KEY | API key for Arize Phoenix
 | PHOENIX_COLLECTOR_ENDPOINT | API endpoint for Arize Phoenix
 | PHOENIX_COLLECTOR_HTTP_ENDPOINT | API http endpoint for Arize Phoenix
