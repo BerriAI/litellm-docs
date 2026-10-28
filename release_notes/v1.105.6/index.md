@@ -48,6 +48,14 @@ pip install litellm==1.105.6
 
 This release is published as [`ghcr.io/berriai/litellm:v1.105.6`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.105.6) and the full [releases page](https://github.com/BerriAI/litellm/releases)
 
+:::warning Known performance regression
+
+`v1.105.6` has a known performance regression compared to `v1.104.x` when clients send `Accept-Encoding: gzip`, which most HTTP clients and the OpenAI SDKs do by default. The proxy gzips non-streaming responses over 500 bytes on the event loop, which slows down those requests and every other request on the same worker, including streaming and MCP requests.
+
+Wait for `v1.105.7`, expected by end of day Wednesday, October 28, before you upgrade. The fix is backported in [PR #48679](https://github.com/BerriAI/litellm/pull/48679).
+
+:::
+
 `v1.105.6` is a patch release on top of [`v1.105.5`](/release_notes/v1.105.5/v1-105-5). It changes what failure logs for rejected requests carry and how the GCS logger picks its bucket on `stable/1.105.x`. There are no new database migrations. The `v1.105.6` tag points at [`3a05120`](https://github.com/BerriAI/litellm/commit/3a05120f107575d215730006c1e8299e33862aaa)
 
 ### What's Changed
