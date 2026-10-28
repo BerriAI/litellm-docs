@@ -50,7 +50,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.106.5`](https://github
 
 :::warning Known performance regression
 
-`v1.106.5` has a known performance regression. Wait for `v1.106.6`, the next stable release on this line, expected on Wednesday, October 28, before you upgrade. The fix is backported in [PR #48680](https://github.com/BerriAI/litellm/pull/48680).
+`v1.106.5` has a known performance regression. Wait for `v1.106.6`, the next stable release on this line, expected by end of day Wednesday, October 28, before you upgrade. The fix is backported in [PR #48680](https://github.com/BerriAI/litellm/pull/48680).
 
 :::
 
