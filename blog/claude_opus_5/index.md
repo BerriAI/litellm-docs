@@ -147,7 +147,7 @@ model_list:
 ```
 
 :::note
-To keep requests inside one geography, swap the model ID for a geographic inference profile such as `bedrock/converse/us.anthropic.claude-opus-5` (the model's AWS model card lists the profiles it has). These cost 10% more than `global.`, which can serve a request from any commercial AWS region. LiteLLM tracks the cost of each variant automatically.
+To keep requests inside one geography, swap the model ID for a geographic inference profile such as `bedrock/converse/us.anthropic.claude-opus-5` (the model's AWS model card lists the profiles it has). These cost 10% more than `global.`, which can serve a request from any commercial AWS region. LiteLLM tracks the cost of `global.` and of the `us.`, `eu.`, and `au.` profiles.
 :::
 
 **2. Start the proxy**
