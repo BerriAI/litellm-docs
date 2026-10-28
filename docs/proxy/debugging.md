@@ -179,7 +179,7 @@ Expected Output:
 
 ## Suppress Startup Output
 
-At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them all off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
+At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
 
 ```bash showLineNumbers
 export LITELLM_SUPPRESS_STARTUP_OUTPUT="true"
@@ -193,7 +193,7 @@ litellm_settings:
     suppress_startup_output: true
 ```
 
-Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. Warnings that need action, such as an ignored CLI flag or a failed migration check, still print, and with JSON logs on they are `WARNING` records.
+Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. Warnings that need action, such as an ignored CLI flag or a migration check that could not run, still print whatever `LITELLM_LOG` is set to, and with JSON logs on they are `WARNING` records.
 
 When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. Available from v1.109.0.
 
