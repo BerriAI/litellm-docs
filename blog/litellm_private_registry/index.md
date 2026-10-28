@@ -15,8 +15,11 @@ image: /img/blog/litellm_private_registry/header.png
 ![LiteLLM Private Registry: private fixes for the most severe vulnerabilities](/img/blog/litellm_private_registry/header.png)
 
 We are committed to continuously improving the security of LiteLLM, for both our open-source community and enterprise customers.
+
 With AI agents, publicly releasing a security patch can give attackers an immediate blueprint for exploiting the vulnerability, before users have had time to upgrade.
+
 To address this, we're introducing a LiteLLM Private Registry in the coming weeks. For the most severe vulnerabilities, we'll first distribute fixes privately, giving organizations time to upgrade before publishing the patch and security advisory publicly.
+
 **Our commitment to open source remains unchanged.** All security fixes will continue to be released publicly.
 
 {/* truncate */}
@@ -49,11 +52,11 @@ This was our first attempt at running a private registry, and we learnt valuable
 
 **Proactive communication/assistance was essential.** Building the registry and publishing to it turned out to be the easy part. Making sure every affected customer knew the fix existed, knew how to get it, and had actually applied it was where we struggled, and it is the reason the embargo ran a week longer than we intended. This problem is ancillary to the implementation of a private registry, but nonetheless one that it highlighted and one that we must solve.
 
-## Next steps
-
+:::tip Next steps
 LiteLLM is committing to a permanent private registry. In the next few weeks, we will detail how this process will work. In addition to including our enterprise customers, we are evaluating how we can support OSS users with this registry.
 
 If you have any feedback on this, we welcome it at [this GitHub discussion](https://github.com/BerriAI/litellm/discussions/48643).
+:::
 
 ## The advisory
 
