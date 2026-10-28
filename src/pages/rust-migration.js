@@ -889,6 +889,10 @@ function MigrationUpdates() {
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
       <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
+      <p className={styles.sectionLead}>
+        Watch the <Link to="https://github.com/BerriAI/litellm/discussions/48869">GitHub discussion</Link> for weekly
+        updates directly from the developers, with much more detail than the blog posts.
+      </p>
       <ol className={styles.events}>
         {events.map(event => (
           <li className={styles.event} key={event.href}>
