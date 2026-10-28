@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `zerogpu/` |
 | Link to Provider Doc | [ZeroGPU Documentation](https://docs.zerogpu.ai) |
 | Default Base URL | `https://api.zerogpu.ai/v1` |
-| Supported Operations | `/chat/completions`, plus `/messages` and `/responses` through LiteLLM's adapters |
+| Supported Operations | `/chat/completions` and `/responses`, plus `/messages` through LiteLLM's adapter |
 
 LiteLLM's `zerogpu/` route covers the ZeroGPU text generation models listed below. ZeroGPU is its own provider on LiteLLM rather than a generic OpenAI-compatible route, so its spend is priced from the `zerogpu/` cost map entries and reported under provider `zerogpu`.
 
@@ -208,7 +208,7 @@ curl http://localhost:4000/v1/messages \
   }'
 ```
 
-`litellm.responses()` and the proxy's `/v1/responses` endpoint work the same way; LiteLLM bridges Responses API requests onto ZeroGPU chat completions, so no extra configuration is needed.
+`litellm.responses()` and the proxy's `/v1/responses` endpoint call ZeroGPU's own `/responses` endpoint natively rather than going through the chat completions bridge, so no extra configuration is needed.
 
 ## Cost Tracking
 
