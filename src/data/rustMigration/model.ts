@@ -116,7 +116,7 @@ export function buildModel(catalog: CatalogInput): Model {
   });
 
   const goals = catalog.goals.map(({components: ids, ...goal}): Goal => {
-    if (isoDay(goal.endsOn, goal.id) !== goal.endsOn || goal.endsOn <= after) {
+    if (goal.endsOn !== undefined && (isoDay(goal.endsOn, goal.id) !== goal.endsOn || goal.endsOn <= after)) {
       fail(`${goal.id} needs to end after ${after}: ${goal.endsOn}`);
     }
     if (new Set(ids).size !== ids.length) {

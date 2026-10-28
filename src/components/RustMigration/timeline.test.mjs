@@ -9,10 +9,11 @@ const DRAWN_GOALS = GOALS.filter(goal => !goal.disabled);
 test('every interval uses the same elapsed-time scale for each goal and viewport', () => {
   for (const goal of DRAWN_GOALS) {
     const points = timelineFor(goal);
+    const endDate = goal.endsOn ?? points.at(-1).date;
     for (const width of [280, 368, 560, 920, 1200]) {
-      const x = createTimeScale(points[0].date, goal.endsOn, 40, width - 20);
-      const dates = [...points.map(point => point.date), goal.endsOn];
-      const pixelsPerMs = (width - 60) / (Date.parse(goal.endsOn) - Date.parse(dates[0]));
+      const x = createTimeScale(points[0].date, endDate, 40, width - 20);
+      const dates = goal.endsOn ? [...points.map(point => point.date), goal.endsOn] : points.map(point => point.date);
+      const pixelsPerMs = (width - 60) / (Date.parse(endDate) - Date.parse(dates[0]));
       for (let index = 1; index < dates.length; index += 1) {
         const expectedGap = (Date.parse(dates[index]) - Date.parse(dates[index - 1])) * pixelsPerMs;
         assert.ok(Math.abs(x(dates[index]) - x(dates[index - 1]) - expectedGap) < 1e-9);
@@ -32,14 +33,15 @@ test('equal time intervals have equal widths regardless of release density', () 
   assert.throws(() => createTimeScale('2026-12-31', '2026-09-01', 48, 880));
 });
 
-test('crowded dates keep the first release, today, plans, and goal readable without shifting dots', () => {
+test('crowded dates keep required labels readable without shifting dots', () => {
   for (const goal of DRAWN_GOALS) {
     const points = timelineFor(goal);
+    const endDate = goal.endsOn ?? points.at(-1).date;
     for (const width of [280, 368, 560, 920, 1200]) {
-      const dateX = createTimeScale(points[0].date, goal.endsOn, 40, width - 20);
+      const dateX = createTimeScale(points[0].date, endDate, 40, width - 20);
       const x = index => dateX(points[index].date);
       const before = points.map((point, index) => x(index));
-      const goalLeft = width - 20 - labelWidth('Goal', 'Dec 31');
+      const goalLeft = goal.endsOn ? width - 20 - labelWidth('Goal', 'Dec 31') : width;
       const items = points.map((point, index) => ({
         key: index,
         anchor: x(index),
