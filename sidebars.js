@@ -1832,6 +1832,7 @@ const providersSidebar = {
     "providers/gmi",
     "providers/gradient_ai",
     "providers/heroku",
+    "providers/hostinger_router",
     { type: "category", label: "HuggingFace", className: "sidebar-provider", link: { type: "doc", id: "providers/huggingface" }, items: [
       "providers/huggingface_rerank",
     ] },
