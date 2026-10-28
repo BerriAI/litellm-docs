@@ -1105,8 +1105,8 @@ router_settings:
 | GALILEO_PASSWORD | Password for Galileo enterprise Observe authentication
 | GALILEO_PROJECT_ID | Project ID for Galileo usage
 | GALILEO_USERNAME | Username for Galileo enterprise Observe authentication
-| GCE_METADATA_HOST | Host, or host:port with no scheme, of the Google Cloud metadata server that `oidc/google/` secret references get ID tokens from. Google's client libraries read it too. Default is `metadata.google.internal`. Available from v1.108.0. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
-| GCE_METADATA_TIMEOUT | Seconds each read from the Google Cloud metadata server waits when an `oidc/google/` secret reference gets an ID token. Must be a positive number. Google's client libraries read it too. Default is 3. Available from v1.108.0. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
+| GCE_METADATA_HOST | Host, or host:port with no scheme, of the Google Cloud metadata server that `oidc/google/` secret references get ID tokens from. Google's client libraries read it too. Default is `metadata.google.internal`. Available from v1.109.0. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
+| GCE_METADATA_TIMEOUT | Seconds each read from the Google Cloud metadata server waits when an `oidc/google/` secret reference gets an ID token. Google's client libraries read it too. Default is 3, which is also used when the value is not a positive number. Available from v1.109.0. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
 | GOOGLE_SECRET_MANAGER_PROJECT_ID | Project ID for Google Secret Manager
 | GRACEFUL_SHUTDOWN_TIMEOUT | Seconds the proxy waits for in-flight requests to drain on shutdown (SIGTERM or the `/health/drain` preStop hook) before proceeding with teardown. **Default is 30**
 | GCS_BATCH_BUCKET_NAME | GCS bucket used by Vertex AI files and batches. Takes precedence over GCS_BUCKET_NAME so batch data can live apart from the logging bucket
