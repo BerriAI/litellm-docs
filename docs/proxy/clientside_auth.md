@@ -274,7 +274,7 @@ model_list:
       configurable_clientside_auth_params: ["vertex_location"] # 👈 lets the request pick the region
 ```
 
-When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it.
+When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it. The same goes for the model group a `model_group_alias` routes the name to and for every fallback the request or the router's `fallbacks` can move it onto, since each of them serves the same request.
 
 :::info
 
