@@ -363,7 +363,7 @@ for page in response.pages:
 
 Available from v1.109.0.
 
-Set `outputContentFormat` to get Azure's Markdown output instead of plain text. It takes `text` or `markdown`, and the value is case-insensitive. If you leave it out, the response is the same text output as before.
+Set `outputContentFormat` to get Azure's Markdown output instead of plain text. It takes `text` or `markdown`, and the value is case-insensitive. The snake_case spelling `output_content_format` works the same way. If you leave it out, the response is the same text output as before.
 
 Markdown comes from Azure's `prebuilt-layout` model. Azure ignores the setting on other models and returns text.
 
@@ -373,7 +373,7 @@ When you ask for Markdown in the default format, the response also carries `"str
 
 With `"req_format": "native"`, the proxy returns Azure's raw analyze body. Its `analyzeResult.contentFormat` reads `markdown`, and its offsets keep Azure's default unit.
 
-Any other value returns a 400 error with `invalid OCR outputContentFormat, expected text or markdown`.
+Any other value returns a 400 error with `invalid OCR outputContentFormat, expected text or markdown`. With `drop_params` set in the request, on the deployment's `litellm_params`, or as `litellm.drop_params = True`, the value is dropped instead and you get text output.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
