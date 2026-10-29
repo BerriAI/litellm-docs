@@ -114,7 +114,7 @@ router_settings:
     - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
-`rpm`, `tpm`, `rpd` and `tpd` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`. `reset_time` goes inside `litellm_params` or `model_info`.
+`rpm` and `tpm` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`. `rpd`, `tpd` and `reset_time` go inside `litellm_params`.
 
 ### How It Works
 
