@@ -60,9 +60,11 @@ Change the quickstart's message to `"Explain Kubernetes deployments"` and run it
 
 ## Write a classifier in Python
 
-Use your own code when application metadata should decide the tier. `metadata` is a dictionary your application passes to `router.acompletion()`; you choose the keys and values. Here, your code marks a request as `code_review`.
+Your classifier can read the messages, inspect conversation history, call an LLM, or use application metadata. Return a tier name; `tiers` maps it to a model.
 
-Add this class and configuration before you create the router:
+### Route by message content
+
+Add this before you create the router. This example reads the latest user message and sends escalation requests, Kubernetes questions, and longer prompts to `capable`.
 
 ```python
 from litellm.types.router import RoutingContext
@@ -70,32 +72,75 @@ from litellm.types.router import RoutingContext
 
 class TaskClassifier:
     async def classify(self, context: RoutingContext) -> str | None:
-        if context.metadata.get("task_type") == "code_review":
-            return "review"
-        return "routine"
+        text = next(
+            (m["content"] for m in reversed(context.structured_messages) if m.get("role") == "user"),
+            None,
+        )
+        if not isinstance(text, str):
+            return None
+        if text.startswith("ESCALATE") or "kubernetes" in text.lower():
+            return "careful"
+        return "quick" if len(text) < 500 else "careful"
 
 
 routing_config.update({
     "classifier_type": "custom",
     "classifier_plugin": TaskClassifier(),
-    "tiers": {"routine": "fast", "review": "capable"},
-    "classifier_plugin_timeout_ms": 3000,
+    "tiers": {"quick": "fast", "careful": "capable"},
     "classifier_fallback": "default_model",
 })
 ```
 
-Inside `main()`, replace the `router.acompletion(...)` call with:
+Run `python autorouter.py`. The quickstart's `"What is 2+2?"` uses `fast`. Change that message to `"Explain Kubernetes deployments"` or `"ESCALATE: check this calculation"` to use `capable`. The 500-character threshold is your rule; change it to fit your application.
+
+`context.structured_messages` contains the conversation in OpenAI message format, including message roles. You can also branch on the last message's role or inspect previous turns. This example handles string content; it returns `None` for images or other content blocks.
+
+### Ask an LLM only for longer prompts
+
+Keep the checks above, but replace the final `return` in `classify()` with:
+
+```python
+        if len(text) < 500:
+            return "quick"
+        response = await router.acompletion(
+            model="fast",
+            messages=[
+                {"role": "system", "content": "Classify the task. Reply quick for routine work or careful for difficult reasoning. Reply with only the label."},
+                {"role": "user", "content": text},
+            ],
+        )
+        return response.choices[0].message.content.strip()
+```
+
+Before creating the router, allow up to 10 seconds for your classifier:
+
+```python
+routing_config["classifier_plugin_timeout_ms"] = 10000
+```
+
+Short prompts use local rules. Longer prompts make one classification call to `fast`, then one call to the selected answering model. The `ESCALATE` and Kubernetes checks still take precedence. Use `fast` for the classification call; calling `auto` here would invoke your classifier again.
+
+### Include application metadata
+
+Metadata is useful for information outside the messages, such as the current agent step. To route reviews to `careful`, add this at the start of `classify()`:
+
+```python
+        if context.metadata.get("agent_step") == "review":
+            return "careful"
+```
+
+Your application supplies that value when it calls the router:
 
 ```python
 response = await router.acompletion(
     model="auto",
-    messages=[{"role": "user", "content": "Review this function: def add(a, b): return a - b"}],
-    metadata={"task_type": "code_review"},
+    messages=[{"role": "user", "content": "Check this deployment plan for errors."}],
+    metadata={"agent_step": "review"},
 )
 ```
 
-Run the script. You should see the model assigned to `capable`. Without `task_type="code_review"`, this classifier returns `routine` and uses `fast`.
+Without that metadata, the message-based rules still run. You choose the metadata keys and values.
 
-Choose your own tier names in `tiers`. Return one of those names from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
+Return `None` to use `classifier_fallback`. Exceptions, timeouts, and unknown tier names also use that fallback; here, the quickstart's default model is `capable`. Keyword rules run before your classifier, so omit them when your Python code should make the decision.
 
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).
