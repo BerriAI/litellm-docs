@@ -31,9 +31,9 @@ Available from v1.109.0.
 | `hostinger_router/text-embedding-3-small` | embedding |
 | `hostinger_router/text-embedding-3-large` | embedding |
 
-LiteLLM tracks spend for the models above. Any other model in the router's catalog also works with the `hostinger_router/` prefix, but LiteLLM records its spend as $0 until a price is added, which you can set yourself through `model_info` on the proxy.
+LiteLLM tracks spend for the models above, counting one Hostinger credit as $0.01. Any other model in the router's catalog also works with the `hostinger_router/` prefix, but LiteLLM records its spend as $0 until a price is added, which you can set yourself through `model_info` on the proxy.
 
-Not every model serves every route. The router's model list at `https://router.hostinger.com/v1/models` names the routes each model serves in its `supported_endpoints` field, and a model called on `/v1/messages` or `/v1/responses` without that route listed gets a 403 from the router, so send it through `/chat/completions` instead.
+Every chat model works on `/chat/completions`, `/responses`, and `/messages`. When LiteLLM knows a model serves `/v1/responses` or `/v1/messages` on the router, such as `gpt-5.2` on `/responses` or `claude-sonnet-5` on `/messages`, it calls that route directly. For every other model, LiteLLM converts the call and sends it through the router's `/v1/chat/completions`.
 
 ## Required Variables
 
@@ -87,7 +87,7 @@ for chunk in response:
 
 ### Responses API
 
-LiteLLM sends `/responses` calls to the router's own `/v1/responses` endpoint.
+LiteLLM sends `/responses` calls for `gpt-5.2` to the router's own `/v1/responses` endpoint, and converts calls for other models through `/v1/chat/completions`.
 
 ```python showLineNumbers title="Hostinger AI Router Responses API"
 import os
@@ -105,7 +105,7 @@ print(response.output[0].content[0].text)
 
 ### Anthropic Messages API
 
-LiteLLM sends `/messages` calls to the router's own `/v1/messages` endpoint.
+LiteLLM sends `/messages` calls for `claude-sonnet-5` to the router's own `/v1/messages` endpoint, and converts calls for other models through `/v1/chat/completions`.
 
 ```python showLineNumbers keep-model-ids title="Hostinger AI Router Messages API"
 import asyncio
