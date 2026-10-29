@@ -1288,15 +1288,17 @@ Example of using [Bedrock Guardrails with LiteLLM](https://docs.aws.amazon.com/b
 
 ### Selective Content Moderation with `guarded_text`
 
-LiteLLM supports selective content moderation using the `guarded_text` content type. This allows you to wrap only specific content that should be moderated by Bedrock Guardrails, rather than evaluating the entire conversation.
+LiteLLM supports selective content moderation using the `guarded_text` content type. This lets you choose exactly which content Bedrock Guardrails evaluate.
 
 **How it works:**
-- Content with `type: "guarded_text"` gets automatically wrapped in `guardrailConverseContent` blocks
-- Only the wrapped content is evaluated by Bedrock Guardrails
-- Regular content with `type: "text"` bypasses guardrail evaluation
+- Content with `type: "guarded_text"` in a user message is sent to Bedrock as a [`guardContent`](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ContentBlock.html) block.
+- When a request has `guardContent` blocks, Bedrock Guardrails evaluate only those blocks. In a message with a `guarded_text` part, the `type: "text"` parts are not evaluated.
+- When the last message is a user message, LiteLLM also sends its text as `guardContent`, and does the same for any user messages directly before it. A user message that already has a `guarded_text` part is sent as written.
 
 :::note
-If `guarded_text` is not used, the entire conversation history will be sent to the guardrail for evaluation, which can increase latency and costs.
+When `guardrailConfig` is set and the request ends with a user message, Bedrock Guardrails evaluate that latest user turn and any `guarded_text` parts. Earlier turns and the system prompt are not evaluated, so put earlier content in `guarded_text` parts when it must be checked, for example when your clients can edit the conversation history.
+
+When the request ends with a tool result or an assistant message and has no `guarded_text` parts, LiteLLM adds no `guardContent` block, so Bedrock evaluates the entire conversation history, which can increase latency and costs.
 :::
 
 <Tabs>
