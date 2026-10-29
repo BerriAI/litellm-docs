@@ -546,7 +546,7 @@ A follow-up turn can send the `tool_search_call` back as an input item together 
 
 This works on routes where LiteLLM builds an Anthropic request (Anthropic, Azure Anthropic, Vertex AI and Bedrock Invoke) for every model whose cost map entry has `supports_tool_search`, which covers Claude 4.5 and newer. On every other route, Bedrock Converse included, LiteLLM drops the `tool_search` tool, logs a warning and sends the function tools without `defer_loading`.
 
-Two parts of OpenAI's tool search are not translated. LiteLLM drops a `tool_search` tool with `"execution": "client"` and keeps `defer_loading` on the other tools, so a request where every tool is deferred gets a 400 from Anthropic (`All tools cannot be deferred.`). LiteLLM also returns no `tool_search_output` item. OpenAI fills that item with the definitions of the tools the search loaded, which the caller already has.
+Two parts of OpenAI's tool search are not translated. LiteLLM drops a `tool_search` tool with `"execution": "client"`, and on Claude routes it keeps `defer_loading` on the other tools, so a request where every tool is deferred gets a 400 from Anthropic (`All tools cannot be deferred.`). LiteLLM also returns no `tool_search_output` item. OpenAI fills that item with the definitions of the tools the search loaded, which the caller already has.
 
 ### AI Gateway Usage
 
