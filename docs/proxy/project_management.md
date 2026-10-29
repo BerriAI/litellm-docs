@@ -319,11 +319,46 @@ curl --location 'http://0.0.0.0:4000/project/new' \
 }'
 ```
 
-Quotas are optional by default, so a project can be created with some models limited and others unbounded. To require one for every model, set `enforce_project_model_quota` in `general_settings` (available from `v1.100.0`):
+### Require quotas on project models
+
+Quotas are optional by default, so a project can be created with some models limited and others unbounded. Set `enforce_project_model_quota` in `general_settings` to require them <SinceVersion v="1.100.0" />.
 
 ```yaml
 general_settings:
   enforce_project_model_quota: true
 ```
 
-With this on, `POST /project/new` and `POST /project/update` return a `400` unless every model on the project has a positive `model_rpm_limit` and `model_tpm_limit`. Updates are checked against the project as it will look after the change, so a partial update that leaves models and quotas untouched still passes, while one that adds a model or clears a limit has to leave every model covered. Projects that list `all-proxy-models`, a wildcard such as `azure/*`, or a model access group are rejected while the flag is on, because those expand to several models at request time and the rate limiter looks quotas up by the exact model name; list the concrete model names instead.
+With `true`, `POST /project/new` and `POST /project/update` answer `400` unless every model on the project has a positive `model_rpm_limit` and `model_tpm_limit`, and the error names each model with the limits it is missing. Updates are checked against the project as it will look after the change, so a partial update that leaves models and quotas untouched still passes, while one that adds a model or clears a limit has to leave every model covered. Projects that list `all-proxy-models`, a wildcard such as `azure/*`, or a model access group are rejected while the setting is on, because those expand to several models at request time and the rate limiter looks quotas up by the exact model name. List the concrete model names instead.
+
+### Per-provider and per-model requirements
+
+<SinceVersion v="1.109.0" />
+
+Some models do not need an rpm or tpm limit, such as a video generation model or a pass-through name. Instead of `true`, give the setting a mapping that says which limits each provider and model needs:
+
+```yaml
+general_settings:
+  enforce_project_model_quota:
+    default: [rpm, tpm]
+    providers:
+      vertex_ai: [rpm, tpm]
+      runwayml: []
+    models:
+      "veo-*": [rpm]
+      jev-latest: []
+```
+
+Each entry lists the limits it requires: `[rpm, tpm]`, `[rpm]`, `[tpm]`, or `[]`. An entry replaces the whole requirement, so `[]` exempts that provider or model and `[rpm]` drops the `tpm` requirement. `default` applies wherever no other entry decides, and it is `[rpm, tpm]` when left out, so a mapping that only lists exemptions still requires both limits on every other model. With the config above, a project can list a Runway model and `jev-latest` with no limits, a Veo model with only `model_rpm_limit`, and a Gemini model on Vertex AI with both.
+
+For each model on the project, the first of these that applies decides:
+
+1. The entry under `models` with the model's exact name.
+2. The most specific `*` pattern under `models` that matches the name from its start, ranked the same way the router ranks its wildcard routes.
+3. The entries under `providers` for the providers of the deployments the name routes to, aliases, routing groups, and the wildcard route a request would use included. A name served by more than one provider needs every limit any of them requires.
+4. `default`, which also covers a name that no deployment serves.
+
+A provider is the deployment's LiteLLM provider id, the `custom_llm_provider` it sets or else the prefix of its `litellm_params.model`, such as `vertex_ai` in `vertex_ai/gemini-3.8-flash`. A team model is matched against `models` entries by the model it calls, its `litellm_params.model` without the provider prefix, rather than by the public name its team admin picked, so a team cannot skip a limit by naming its model after an exempt entry. A limit that is set still has to be positive, even on an exempt model, so a `0` or negative value answers `400` as before.
+
+While a policy exempts any provider or model, a team model add, update, or delete re-checks the team's projects that list a name the change serves. It answers `400` naming those projects when the change makes that name need a limit they do not set, such as moving it from an exempt provider to one that needs limits, so set the limits on the projects first and then change the model.
+
+Every value the boolean setting accepted keeps its meaning. Anything falsy is off, and any other value, such as `true`, `"true"`, or `{enabled: true}`, requires both limits on every model. Only a mapping that names `default`, `providers`, or `models` is read as a policy. A policy with an unknown key next to those three, a limit other than `rpm` or `tpm`, or a provider id LiteLLM does not know makes project create and update answer `500` with an error naming `general_settings.enforce_project_model_quota`, instead of turning the check off. Model names under `models` are not checked against the model list, since an entry may name a model before anyone adds it, so a misspelled name is ignored and that model falls back to its providers.
