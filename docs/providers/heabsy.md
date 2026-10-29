@@ -31,7 +31,7 @@ These models run on dedicated GPUs in the EEA, and Heabsy does not store prompts
 | `heabsy/glm53-flash-unc` | 1,048,576 | 131,072 |
 | `heabsy/cyberheabsy` | 1,048,576 | 65,536 |
 
-All four support tool calling and reasoning. `qwen38`, `mimo-v26-flash` and `glm53-flash-unc` also accept images.
+All four support tool calling and reasoning. `qwen38` and `glm53-flash-unc` also accept images.
 
 The [Heabsy model catalog](https://heabsy.com/models) lists every model with its region and price. Models outside the EEA tier, such as `glm-5.3`, are served from other regions or through partners, and the catalog labels each one. `GET https://api.heabsy.com/v1/models` with your key returns the current list of model IDs.
 
