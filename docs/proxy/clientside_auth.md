@@ -262,20 +262,39 @@ main();
 
 Specify the region, project id, etc. to use for making requests to Vertex AI on the clientside.
 
+`vertex_location`, `vertex_project`, `vertex_ai_location`, and `vertex_ai_project` override the region and project set on the deployment, so the proxy rejects them in a request body by default with `Rejected Request: vertex_location is not allowed in request body`. To let users pick them, list them in `configurable_clientside_auth_params` on the deployment, or set `general_settings.allow_client_side_credentials: true` proxy-wide.
+
+```yaml
+model_list:
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: vertex_ai/gemini-2.5-flash
+      vertex_project: my-project
+      vertex_location: europe-west4
+      configurable_clientside_auth_params: ["vertex_location"] # 👈 lets the request pick the region
+```
+
+When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it. The same goes for the model group a `model_group_alias` routes the name to and for every fallback the request or the router's `fallbacks` can move it onto, since each of them serves the same request.
+
+:::info
+
+The proxy rejects these params without an opt-in <SinceVersion v="1.109.0" />. Earlier versions accept them from any request body, so add the opt-in before you upgrade if your users send them.
+
+:::
+
 Any value passed in the Proxy's request body, will be checked by LiteLLM against the mapped openai / litellm auth params. 
 
 Unmapped params, will be assumed to be provider-specific params, and will be passed through to the provider in the LLM API's request body.
 
-```bash
+```python
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
-# request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_small}}",
+    model="gemini-2.5-flash",
     messages = [
         {
             "role": "user",
@@ -283,7 +302,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass any additional litellm_params here
-        vertex_ai_location: "us-east1" 
+        "vertex_location": "us-central1"
     }
 )
 
