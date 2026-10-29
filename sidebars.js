@@ -1891,6 +1891,7 @@ const providersSidebar = {
     "providers/tensormesh",
     "providers/togetherai",
     "providers/topaz",
+    "providers/topxai",
     "providers/v0",
     "providers/volcano",
     "providers/voyage",
