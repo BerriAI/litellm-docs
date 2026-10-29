@@ -4,12 +4,12 @@ Tool search enables Claude to dynamically discover and load tools on-demand from
 
 ## Supported Providers
 
-| Provider | Chat Completions API | Messages API |
-|----------|---------------------|--------------|
-| **Anthropic API** | ✅ | ✅ |
-| **Azure Anthropic** (Microsoft Foundry) | ✅ | ✅ |
-| **Google Cloud Vertex AI** | ✅ | ✅ |
-| **Amazon Bedrock** | ✅ (Invoke API only, Claude 4.5 and newer) | ✅ (Invoke API only, Claude 4.5 and newer) |
+| Provider | Chat Completions API | Messages API | [Responses API](#responses-api) |
+|----------|---------------------|--------------|---------------|
+| **Anthropic API** | ✅ | ✅ | ✅ |
+| **Azure Anthropic** (Microsoft Foundry) | ✅ | ✅ | ✅ |
+| **Google Cloud Vertex AI** | ✅ | ✅ | ✅ |
+| **Amazon Bedrock** | ✅ (Invoke API only, Claude 4.5 and newer) | ✅ (Invoke API only, Claude 4.5 and newer) | ✅ (Invoke API only, Claude 4.5 and newer) |
 
 
 ## Benefits
@@ -532,6 +532,127 @@ response = client.messages.create(
 )
 
 print(response)
+```
+
+---
+
+## Responses API
+
+From v1.107.0, an OpenAI Responses API caller can send OpenAI's `tool_search` tool to a Claude model on `/v1/responses`. LiteLLM sends Claude Anthropic's regex tool search tool in its place and returns Claude's search as a `tool_search_call` output item, so one request works on both OpenAI and Claude models.
+
+A `{"type": "tool_search"}` tool with `"execution": "server"`, or with no `execution`, becomes `tool_search_tool_regex_20251119`. Function tools keep `defer_loading`, and so do the member tools of a `namespace` tool. Claude's search comes back as a `tool_search_call` item before the `function_call` it led to. Its `call_id` is Anthropic's `srvtoolu_` id, its `id` is `tsc_` plus that id, its `arguments` is an object that holds Claude's search pattern, and its `execution` is `server`. A streamed response sends it as `response.output_item.added` and `response.output_item.done` events, and the pattern is in the `done` event.
+
+A follow-up turn can send the `tool_search_call` back as an input item together with the rest of the output, or use `previous_response_id` when the proxy [stores sessions](../response_api.md#session-management). LiteLLM leaves the search call out of the request it sends Claude, so Claude sees the function calls and their outputs but not the search that found them, and its answer can say that it called a tool without a search first.
+
+This works on routes where LiteLLM builds an Anthropic request (Anthropic, Azure Anthropic, Vertex AI and Bedrock Invoke) for every model whose cost map entry has `supports_tool_search`, which covers Claude 4.5 and newer. On every other route, Bedrock Converse included, LiteLLM drops the `tool_search` tool, logs a warning and sends the function tools without `defer_loading`.
+
+Two parts of OpenAI's tool search are not translated. LiteLLM drops a `tool_search` tool with `"execution": "client"`, and on Claude routes it keeps `defer_loading` on the other tools, so a request where every tool is deferred gets a 400 from Anthropic (`All tools cannot be deferred.`). LiteLLM also returns no `tool_search_output` item. OpenAI fills that item with the definitions of the tools the search loaded, which the caller already has.
+
+### AI Gateway Usage
+
+#### Proxy Configuration
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+```
+
+#### Client Request
+
+Every function tool in this request sets `defer_loading`, so Claude has to search for the one it needs.
+
+```bash showLineNumbers title="tool_search on a Claude model through /v1/responses"
+curl http://0.0.0.0:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet",
+    "input": "What is the weather in Paris right now? Use the right tool.",
+    "tools": [
+      {"type": "tool_search", "execution": "server"},
+      {"type": "function", "name": "get_weather", "description": "Get the current weather for a city", "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}, "defer_loading": true},
+      {"type": "function", "name": "get_stock_price", "description": "Get the current stock price for a ticker", "parameters": {"type": "object", "properties": {"ticker": {"type": "string"}}, "required": ["ticker"]}, "defer_loading": true},
+      {"type": "function", "name": "send_email", "description": "Send an email to a recipient", "parameters": {"type": "object", "properties": {"to": {"type": "string"}, "body": {"type": "string"}}, "required": ["to", "body"]}, "defer_loading": true}
+    ]
+  }'
+```
+
+The `output` array of the response holds the search call and then the function call:
+
+```json showLineNumbers title="Response output"
+[
+  {
+    "id": "tsc_srvtoolu_01F8hTt8WqVTUttskjushEVj",
+    "arguments": {"pattern": "weather|forecast|temperature"},
+    "call_id": "srvtoolu_01F8hTt8WqVTUttskjushEVj",
+    "execution": "server",
+    "status": "completed",
+    "type": "tool_search_call"
+  },
+  {
+    "arguments": "{\"city\": \"Paris\"}",
+    "call_id": "toolu_01K24WmFy7Wp67qTowYf2cw3",
+    "name": "get_weather",
+    "type": "function_call",
+    "id": "fc_toolu_01K24WmFy7Wp67qTowYf2cw3",
+    "namespace": null,
+    "status": "completed"
+  }
+]
+```
+
+With the OpenAI Python SDK, the follow-up turn sends the first response's output back with the function result:
+
+```python showLineNumbers title="tool_search on a Claude model with the OpenAI SDK"
+from openai import OpenAI
+
+client = OpenAI(api_key="your-litellm-proxy-key", base_url="http://0.0.0.0:4000")
+
+tools = [
+    {"type": "tool_search"},
+    {
+        "type": "function",
+        "name": "get_weather",
+        "description": "Get the current weather for a city",
+        "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]},
+        "defer_loading": True,
+    },
+    {
+        "type": "function",
+        "name": "send_email",
+        "description": "Send an email to a recipient",
+        "parameters": {
+            "type": "object",
+            "properties": {"to": {"type": "string"}, "body": {"type": "string"}},
+            "required": ["to", "body"],
+        },
+        "defer_loading": True,
+    },
+]
+
+question = [{"role": "user", "content": "What is the weather in Paris right now? Use the right tool."}]
+response = client.responses.create(model="claude-sonnet", input=question, tools=tools)
+
+for item in response.output:
+    if item.type == "tool_search_call":
+        print(f"Searched with {item.arguments}")
+    elif item.type == "function_call":
+        print(f"Called {item.name}({item.arguments})")
+
+weather_call = next(item for item in response.output if item.type == "function_call")
+follow_up = client.responses.create(
+    model="claude-sonnet",
+    input=[
+        *question,
+        *response.output,
+        {"type": "function_call_output", "call_id": weather_call.call_id, "output": '{"temp_c": 18, "condition": "cloudy"}'},
+    ],
+    tools=tools,
+)
+print(follow_up.output_text)
 ```
 
 ---
