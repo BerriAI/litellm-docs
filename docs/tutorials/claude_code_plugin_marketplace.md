@@ -66,6 +66,8 @@ If you were granted private plugins, add your key so they appear too:
 claude plugin marketplace add "http://your-litellm-proxy:4000/claude-code/marketplace.json?key=sk-..."
 ```
 
+The `?key=` form works only while `claude_code_marketplace_auth_required` is off. If your proxy requires a key for the marketplace, add it through `settings.json` as shown in [Require a key for the marketplace](#require-a-key-for-the-marketplace).
+
 <Image img={require('../../img/claude_code_marketplace/step12_cli_marketplace.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
 ### Step 2: Browse Available Plugins
@@ -92,16 +94,60 @@ The plugin is now installed and ready to use:
 
 <Image img={require('../../img/claude_code_marketplace/step16_cli_complete.jpeg')} style={{ width: '800px', height: 'auto' }} />
 
+## Require a key for the marketplace
+
+<SinceVersion v="1.109.0" />
+
+By default `GET /claude-code/marketplace.json` serves the enabled plugins to anyone who can reach the proxy. To require a LiteLLM key, turn on `claude_code_marketplace_auth_required` in your proxy config:
+
+```yaml
+general_settings:
+  claude_code_marketplace_auth_required: true
+```
+
+The setting is a boolean and defaults to `false`. A quoted `"true"`, such as a value from an environment variable or one saved in the database, also turns it on. In `config.yaml`, a value that is not a boolean stops the proxy at startup with a validation error that names the setting.
+
+With the setting on, the endpoint reads the key only from a header, either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`, and it does not accept the `?key=` query param. A request with no key, an unknown key, or a `?key=` param gets `401` with a `WWW-Authenticate: Bearer` header, and Claude Code shows `HTTP 401` when you add the marketplace. A key whose `allowed_routes` does not include `/claude-code/marketplace.json` gets `403`. The setting also makes `GET /public/skill_hub` return an empty list, so the Skills tab of the public model hub is empty. If you also set `allow_requests_on_db_unavailable: true`, a key that the proxy cannot check during a database outage gets `503`, not the catalog.
+
+Each engineer then adds the key to the marketplace source's `headers` in their user `~/.claude/settings.json`. Avoid a project's `.claude/settings.json`, since that file is often committed to the repository:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "litellm": {
+      "source": {
+        "source": "url",
+        "url": "https://<your-proxy>/claude-code/marketplace.json",
+        "headers": {
+          "Authorization": "Bearer <your-litellm-key>"
+        }
+      }
+    }
+  }
+}
+```
+
+If you added the marketplace before with `/plugin marketplace add`, run `/plugin marketplace remove litellm` in Claude Code first. Then install plugins with `/plugin install <plugin>@litellm` as before. Once the proxy requires a key, the Admin UI shows the same snippet on a skill's page, under **How to Use** and then **See one-time setup**.
+
+This keeps the key in plain text in the settings file. To have a command print the header instead, set Claude Code's [`headersHelper`](https://code.claude.com/docs/en/settings-reference#marketplace-source-types) on an `https://` `url` source, which needs Claude Code v2.1.238 or later.
+
 ## API Reference
 
-### Public Endpoint (No Auth Required)
+### Marketplace Endpoint (Public Unless a Key Is Required)
 
 #### GET `/claude-code/marketplace.json`
 
-Returns the marketplace catalog for Claude Code discovery. Without a key it lists enabled plugins. With `?key=sk-...` it also lists the disabled plugins granted to that key or its team.
+Returns the marketplace catalog for Claude Code discovery. The endpoint is public unless `claude_code_marketplace_auth_required` is on, in which case it needs a LiteLLM key in a header, as described in [Require a key for the marketplace](#require-a-key-for-the-marketplace). While the setting is off, a request without a key lists enabled plugins, and a request with `?key=sk-...` also lists the disabled plugins granted to that key or its team. With the setting on, the key in the header does the same.
 
 ```bash
 curl http://localhost:4000/claude-code/marketplace.json
+```
+
+With the setting on, send the key in a header:
+
+```bash
+curl http://localhost:4000/claude-code/marketplace.json \
+  -H "Authorization: Bearer sk-..."
 ```
 
 **Response:**
@@ -254,7 +300,7 @@ Claude Desktop honors a per-plugin `installationPreference` only when `marketpla
 
 Claude Desktop 2.31226.1 treats a per-plugin `required` the same as `auto_install`. It installs the plugin on its own, but the user can still turn it off or remove it, and a removed plugin stays removed on the next sync. A whole-marketplace `required` setting in Claude Desktop is the one that stops users from removing plugins.
 
-Claude Desktop sends the marketplace URL without `?key=`, and LiteLLM does not read the bearer token Desktop sends with it, so Desktop sees only enabled plugins. Enable an auto-install plugin instead of granting it to a key or team. Enabling makes the plugin public, so its name, description, archive URL, and `sha256` show up without auth in `marketplace.json` and `GET /public/skill_hub`. In Claude Desktop's own marketplace configuration, leave the entry's `installationPreference` at `available` and let the per-plugin values decide. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
+Claude Desktop sends the marketplace URL without `?key=`, and while `claude_code_marketplace_auth_required` is off LiteLLM does not read the bearer token Desktop sends with it, so Desktop sees only enabled plugins. With the setting on, the bearer token Desktop sends must be a LiteLLM key, or the marketplace answers `401`. Enable an auto-install plugin instead of granting it to a key or team. While the setting is off, enabling makes the plugin public, so its name, description, archive URL, and `sha256` show up without auth in `marketplace.json` and `GET /public/skill_hub`. In Claude Desktop's own marketplace configuration, leave the entry's `installationPreference` at `available` and let the per-plugin values decide. See [Per-plugin auto-install from a trusted origin](https://claude.com/docs/third-party/claude-desktop/extensions#per-plugin-auto-install-from-a-trusted-origin) for the Desktop side of the setup.
 
 :::warning Older Claude Code releases
 
@@ -375,8 +421,11 @@ claude plugin install internal-tools@litellm
 ## Troubleshooting
 
 **Plugin not appearing in marketplace:**
-- Verify the plugin is **enabled** in the admin UI, or that it is granted to your key and you added the marketplace with `?key=`
+- Verify the plugin is **enabled** in the admin UI, or that it is granted to your key and you added the marketplace with `?key=`. The `?key=` param works only while `claude_code_marketplace_auth_required` is off. With it on, send the key in the marketplace source's `headers` as shown in [Require a key for the marketplace](#require-a-key-for-the-marketplace).
 - Run `claude plugin marketplace update litellm` to refresh the local copy of the catalog
+
+**`HTTP 401` when adding the marketplace:**
+- The proxy has `claude_code_marketplace_auth_required` on and got no valid key in a header. Add your LiteLLM key to the marketplace source's `headers` as shown in [Require a key for the marketplace](#require-a-key-for-the-marketplace).
 
 **Installation fails:**
 - Ensure the git repository is accessible from the engineer's machine
