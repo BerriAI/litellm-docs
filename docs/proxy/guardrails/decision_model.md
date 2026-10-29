@@ -188,7 +188,9 @@ Every run records `standard_logging_guardrail_information` on the request, visib
 
 ## Limitations
 
-A `/v1/responses` input made only of `function_call` and `function_call_output` items, with no instructions or user text, is not screened, because the shared Responses guardrail handler skips requests that have no text. A guardrail holds at most 128 questions.
+A `/v1/responses` input made only of `function_call` and `function_call_output` items, with no instructions or user text, is not screened, because the shared Responses guardrail handler skips requests that have no text.
+
+From v1.109.0, LiteLLM sets no limit on the number of checks. Earlier versions skip a guardrail with more than 128 checks at startup and serve its requests unscreened. Every decisions call sends all of a guardrail's checks as one request, so a guardrail with more checks than its decision model's provider accepts fails every call. With the default `fail_closed` every screened request then returns 502, and with `fail_open` every request goes through unscreened. Keep the number of checks within your provider's per-request limit.
 
 ## Configuration reference
 
@@ -197,7 +199,7 @@ A `/v1/responses` input made only of `function_call` and `function_call_output` 
 | `guardrail` | str | | Must be `decision_model`. |
 | `mode` | str or list | | `pre_call`, `during_call`, `post_call`, or a list of them. |
 | `decision_model` | str | | Required. A model name from `model_list` or a provider-qualified decision model. |
-| `checks` | list | | Required. One to 128 questions, each with `name` (unique), `instructions`, `action` (`block` or `log`, default `block`) and `threshold` (0 to 1, default `0.7`). |
+| `checks` | list | | Required. One or more questions, each with `name` (unique), `instructions`, `action` (`block` or `log`, default `block`) and `threshold` (0 to 1, default `0.7`). |
 | `unreachable_fallback` | str | `fail_closed` | `fail_closed` returns 502 when a decisions call fails; `fail_open` lets the request through. |
 | `timeout` | float | deployment timeout | Seconds allowed for each decisions call. |
 | `max_input_chars` | int | `24000` | Longer messages are split into overlapping chunks that are each screened. |
