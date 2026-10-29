@@ -9,7 +9,7 @@ Fallbacks | ✅ (Between supported models) |
 | Guardrails Support | ✅ Content moderation and safety checks |
 | Proxy Server Support | ✅ Full proxy integration with virtual keys |
 | Spend Management | ✅ Budget tracking and rate limiting |
-| Supported Providers | `openai`, `azure`, `gemini`, `vertex_ai`, `runwayml`, `qwencloud`, `qwen_ai_platform`, `dashscope`, `minimax` |
+| Supported Providers | `openai`, `azure`, `gemini`, `vertex_ai`, `runwayml`, `qwencloud`, `qwen_ai_platform`, `dashscope`, `minimax`, `volcengine` |
 
 :::tip
 
@@ -683,3 +683,4 @@ The response follows OpenAI's video generation format with the following structu
 | RunwayML    |   [Usage](providers/runwayml/videos) |
 | QwenCloud / Qianwen AI Platform / DashScope | [Usage](providers/qwencloud#video-generation) |
 | MiniMax     |   [Usage](providers/minimax#minimax---video-generation) |
+| Volcengine  |   [Usage](providers/volcano#video-generation) |

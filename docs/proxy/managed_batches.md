@@ -165,6 +165,23 @@ curl -s -X POST "${LITELLM_BASE_URL}/v1/batches/${BATCH_ID}/cancel" \
   -H "Authorization: Bearer ${LITELLM_API_KEY}"
 ```
 
+## Access control
+
+Every managed batch and file belongs to the user, team, and key that created it, and LiteLLM checks that ownership on every batch and file endpoint. Tenants that share a proxy cannot see or touch each other's batch jobs or results.
+
+| Caller | Can retrieve, cancel, list, and download |
+|--------|------------------------------------------|
+| Proxy admin | Every batch and file |
+| The user that created the batch | Yes |
+| Another key or user on the same team | Yes |
+| A key or user on a different team | No |
+
+A caller without access gets a `403` from `GET /v1/batches/{batch_id}`, `POST /v1/batches/{batch_id}/cancel`, `GET /v1/files/{file_id}`, and `GET /v1/files/{file_id}/content`, and from `POST /v1/batches` when the `input_file_id` belongs to someone else. `GET /v1/batches` only returns the batches the caller can access, so a key on another team gets an empty list. A batch's output and error files get the same owner and team as the batch, so the same rules cover its results (see [Output and error files](#output-and-error-files)).
+
+A key with a team but no user reaches every batch of its team. A key with neither a user nor a team only reaches the batches it created.
+
+To also keep each team's batch data in its own storage, give each team its own batch model with its own bucket. See [Bedrock Batches](../providers/bedrock_batches#how-do-i-keep-each-teams-batch-data-in-its-own-bucket) for an example.
+
 ## Batch Lifecycle
 
 A batch's `status` moves through `validating` → `in_progress` → `finalizing` → `completed`. The other terminal states are `failed` (validation failed), `expired` (the completion window elapsed), and `cancelled` (after a cancel call, which first reports `cancelling`).

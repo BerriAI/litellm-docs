@@ -48,8 +48,8 @@ async function waitForReceipt(endpoint, key, record) {
 async function main() {
   require('dotenv').config({path: '.env.local'});
   const questions = process.argv.slice(2).map(question => question.trim());
-  if (!questions.length || questions.some(question => !question || question.length > 500)) {
-    throw new Error('Pass each real docs question in quotes, with 1 to 500 characters per question.');
+  if (!questions.length || questions.some(question => !question)) {
+    throw new Error('Pass each non-empty docs question in quotes.');
   }
   const config = readConfig(process.env);
   const tracing = getTracing(config);
@@ -67,10 +67,10 @@ async function main() {
     let traceContext;
     const history = [];
     for (const question of questions) {
-      const result = await answerQuestion({question, history: history.slice(-4), ...corpus, config, traceContext,
+      const result = await answerQuestion({question, history, ...corpus, config, traceContext,
         onTraceContext: value => {traceContext = value;}});
       if (result.status !== 200) throw new Error(`The docs assistant returned HTTP ${result.status}.`);
-      history.push({question});
+      history.push({question, answer: result.body.answer});
     }
     if (tracing.exportState.failedExports || tracing.exportState.endedSpans !== tracing.exportState.exportedSpans) {
       throw new Error('The exporter did not confirm every span. Check Lens connectivity and the dedicated tracing key.');

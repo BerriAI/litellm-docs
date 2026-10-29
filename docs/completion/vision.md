@@ -176,7 +176,7 @@ Expected Response
       "max_input_tokens": 922000,
       "max_output_tokens": 128000,
       "mode": "chat",
-      "supports_vision": true, # 👈 supports_vision is true
+      "supports_vision": true, # supports_vision is true
       "supports_function_calling": true
     },
     {
@@ -185,7 +185,7 @@ Expected Response
       "max_input_tokens": null,
       "max_output_tokens": null,
       "mode": null,
-      "supports_vision": true, # 👈 supports_vision is true
+      "supports_vision": true, # supports_vision is true
       "supports_function_calling": false
     }
   ]

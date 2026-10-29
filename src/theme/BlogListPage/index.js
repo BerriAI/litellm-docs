@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import ThemedImage from '@theme/ThemedImage';
 import SubscribeForm from '@site/src/components/SubscribeForm';
 import styles from './styles.module.css';
 
@@ -126,11 +127,16 @@ function formatDate(dateStr) {
 
 function CardImage({item, title}) {
   const image = item.content?.assets?.image || item.content?.metadata?.frontMatter?.image;
+  const lightImage = item.content?.metadata?.frontMatter?.image_light;
   const resolved = useBaseUrl(typeof image === 'string' ? image : '');
+  const resolvedLight = useBaseUrl(typeof lightImage === 'string' ? lightImage : '');
   const src = typeof image === 'string' && /^(https?:)?\/\//.test(image) ? image : image ? resolved : null;
+  const lightSrc = typeof lightImage === 'string' && /^(https?:)?\/\//.test(lightImage) ? lightImage : lightImage ? resolvedLight : null;
   return (
     <div className={styles.cover}>
-      {src ? (
+      {src && lightSrc ? (
+        <ThemedImage sources={{light: lightSrc, dark: src}} alt="" loading="lazy" decoding="async" />
+      ) : src ? (
         <img src={src} alt="" loading="lazy" decoding="async" />
       ) : (
         <div className={styles.coverTitle} aria-hidden="true">{title}</div>
@@ -168,6 +174,28 @@ function Pagination({metadata}) {
   );
 }
 
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function SecurityAlertsCard() {
+  return (
+    <Link to="/security/subscribe" className={styles.securityCard}>
+      <span className={styles.securityIcon}><ShieldIcon /></span>
+      <span className={styles.securityText}>
+        <strong>Security Announcements</strong>
+        <span>Join the security mailing list</span>
+      </span>
+      <span className={styles.securityArrow} aria-hidden="true">&rarr;</span>
+    </Link>
+  );
+}
+
 function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -184,6 +212,7 @@ export default function BlogListPage(props) {
   const [activeTab, setActiveTab] = useState('all');
   const [query, setQuery] = useState('');
   const [shown, setShown] = useState(PAGE_SIZE);
+  const [searchOpen, setSearchOpen] = useState(false);
   const tokens = queryTokens(query);
   const filtered = filterItems(items, activeTab)
     .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
@@ -208,6 +237,7 @@ export default function BlogListPage(props) {
               Insights on routing, reliability, and observability from the team building the most widely used open-source AI gateway.
             </p>
             <div className={styles.subscribe}>
+              <div className={styles.subscribeMain}>
               <SubscribeForm />
               <p className={styles.subscribeNote}>
                 <span>Get new posts in your inbox, or follow the <a href="/blog/rss.xml">RSS feed</a>.</span>
@@ -215,29 +245,14 @@ export default function BlogListPage(props) {
                   We're hiring
                 </a>
               </p>
+              </div>
+              <SecurityAlertsCard />
             </div>
           </header>
 
           <div className={styles.body}>
             <div className={styles.inner}>
               <div className={styles.bar}>
-                <label className={styles.search}>
-                  <SearchIcon />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={event => {
-                      setQuery(event.target.value);
-                      setShown(PAGE_SIZE);
-                    }}
-                    onKeyDown={event => {
-                      if (event.key === 'Escape') setQuery('');
-                    }}
-                    placeholder="Search posts"
-                    aria-label="Search posts"
-                    autoComplete="off"
-                  />
-                </label>
                 <nav className={styles.chips} aria-label="Filter posts by category">
                   {TABS.map(tab => (
                     <button
@@ -253,6 +268,32 @@ export default function BlogListPage(props) {
                       {tab.label}
                     </button>
                   ))}
+                  {searchOpen || query ? (
+                    <label className={styles.search}>
+                      <SearchIcon />
+                      <input
+                        type="search"
+                        value={query}
+                        onChange={event => {
+                          setQuery(event.target.value);
+                          setShown(PAGE_SIZE);
+                        }}
+                        onKeyDown={event => {
+                          if (event.key === 'Escape') setQuery('');
+                        }}
+                        placeholder="Search posts"
+                        aria-label="Search posts"
+                        autoComplete="off"
+                        autoFocus
+                        onBlur={() => setSearchOpen(false)}
+                      />
+                    </label>
+                  ) : (
+                    <button type="button" className={`${styles.chip} ${styles.searchChip}`} onClick={() => setSearchOpen(true)}>
+                      <SearchIcon />
+                      Search posts
+                    </button>
+                  )}
                 </nav>
               </div>
 

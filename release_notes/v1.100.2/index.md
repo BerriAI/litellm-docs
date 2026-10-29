@@ -1,5 +1,6 @@
 ---
-title: "v1.100.2 - Claude Code Auto Mode, Bedrock GPT and Grok Fixes & TypeSafe Jev"
+title: "LiteLLM v1.100.2 - Claude Code Auto Mode, Bedrock GPT and Grok Fixes & TypeSafe Jev"
+description: "Lets Claude Code auto mode work through the gateway and routes Bedrock GPT and xAI Grok models on Converse. Also adds the TypeSafe Jev pass-through."
 slug: "v1-100-2"
 date: 2026-09-23T06:12:15
 authors:

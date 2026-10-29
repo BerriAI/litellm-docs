@@ -19,7 +19,7 @@ Some Enterprise functions connect to LiteLLM. [Billable request metering](../pro
 
 ## Verify the images that you run
 
-LiteLLM signs each Docker image on GHCR with cosign, from v1.83.0. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
+LiteLLM signs each Docker image on GHCR with cosign <SinceVersion v="1.83.0" />. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
 
 ## Vulnerability management
 
@@ -35,6 +35,6 @@ These pages give the answers that security teams ask for most:
 - [Shared responsibility](../shared_responsibility.md): the problems that LiteLLM owns and the problems that you own.
 - [Security and encryption FAQ](../proxy/security_encryption_faq.md): encryption in transit and at rest.
 - [OWASP LLM Top 10](../proxy/security_owasp_llm_top10.md): the LiteLLM controls for each OWASP risk, and the limits of each control.
-- [Audit logs](../proxy/multiple_admins.md): the record of admin changes to keys, teams, and models.
+- [Audit logs](../proxy/audit_logs.md): the record of admin changes to keys, teams, and models.
 
 For a question that these pages do not answer, [book a demo](https://enterprise.litellm.ai/demo) or ask in your Enterprise support channel.

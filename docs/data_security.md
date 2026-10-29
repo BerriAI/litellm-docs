@@ -6,9 +6,9 @@ At LiteLLM, **safeguarding your data privacy and security** is our top priority.
 
 ### Self-hosted Instances LiteLLM
 
-- **No data or telemetry is stored on LiteLLM Servers when you self-host**
+- **No data or telemetry is stored on LiteLLM Servers when you self-host**, unless you point usage telemetry's HTTP endpoint at them as described below
 - For installation and configuration, see: [Self-hosting guide](../docs/proxy/deploy.md)
-- **Telemetry**: We run no telemetry when you self-host LiteLLM
+- **Telemetry**: Usage telemetry is off by default when you self-host LiteLLM. If you turn it on, it keeps aggregate counts in your own database or sends them to the HTTP endpoint you set. There is no default endpoint, so nothing reaches LiteLLM servers unless you set one that points there. See [Usage telemetry](./proxy/telemetry.md) for every field it can collect
 
 For security inquiries, please contact us at support@berri.ai
 
@@ -72,7 +72,7 @@ Has an information security management system been implemented?
 - Yes - [CodeQL](https://codeql.github.com/) and an ISMS covering multiple security domains.
 
 Is logging of key events - auth, creation, update changes occurring? 
-- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/multiple_admins#1-switch-on-audit-logs)
+- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/audit_logs#1-switch-on-audit-logs)
 
 Does the Vendor have an established Cybersecurity incident management program? 
 - Yes, Incident Response Policy available upon request.

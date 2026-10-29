@@ -1,4 +1,4 @@
-# ✨ Event Hooks for SSO Login
+# Event Hooks for SSO Login
 
 <EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
@@ -23,7 +23,7 @@ Use this when you have an **OAuth proxy in front of LiteLLM** that has already a
 
 ### How it works
 - User lands on Admin UI  
-- 👉 **Your custom SSO sign-in handler is called to parse request headers and return user info**
+- **Your custom SSO sign-in handler is called to parse request headers and return user info**
 - LiteLLM has retrieved user information from your custom handler
 - User signed in to UI
 
@@ -109,7 +109,7 @@ Use this if you want to run your own code **after** a user signs on to the LiteL
 - LiteLLM redirects user to your SSO provider (Google, Microsoft, etc.)
 - Your SSO provider redirects user back to LiteLLM  
 - LiteLLM has retrieved user information from your IDP
-- 👉 **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
+- **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
 - User signed in to UI
 
 ### Usage
@@ -164,7 +164,7 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
             models=[],                                      # models user has access to
             user_id=userIDPInfo.id,                         # user id to use in the LiteLLM DB
             user_email=userIDPInfo.email,                   # user email to use in the LiteLLM DB
-            user_role=LitellmUserRoles.INTERNAL_USER.value, # role to use for the user 
+            user_role=None,                                 # None keeps the role stored in LiteLLM (new users default to internal_user_viewer); a value here overrides the stored role on every login
             max_budget=0.01,                                # Max budget for this UI login Session
             budget_duration="1d",                           # Duration of the budget for this UI login Session, 1d, 2d, 30d ...
         )

@@ -1,5 +1,6 @@
 ---
-title: v1.71.1-stable - 2x Higher Requests Per Second (RPS)
+title: "LiteLLM v1.71.1-stable - 2x Higher Requests Per Second (RPS)"
+description: "Adds aiohttp transport for 200 RPS per instance, file permissions for managed files and MCP servers in the OpenAI Responses API."
 slug: v1.71.1-stable
 date: 2025-05-24T10:00:00
 authors:

@@ -103,6 +103,7 @@ function createTracing(config) {
         'agent.name': AGENT_NAME,
         'gen_ai.operation.name': 'invoke_agent',
         'openinference.span.kind': 'AGENT',
+        'docs.search.surface': config.tracing.surface,
         'input.value': question,
         'input.mime_type': 'text/plain',
       }, async () => {

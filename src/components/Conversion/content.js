@@ -215,7 +215,7 @@ const TIERS = [
     plus: 'Everything in AI Gateway, plus',
     items: [
       ['SSO and SCIM', '/docs/proxy/admin_ui_sso'],
-      ['Audit logs', '/docs/proxy/multiple_admins'],
+      ['Audit logs', '/docs/proxy/audit_logs'],
       ['Org and team admins', '/docs/proxy/access_control'],
       ['Secret managers', '/docs/secret_managers/overview'],
       ['IP allowlists', '/docs/proxy/ip_address'],

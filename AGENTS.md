@@ -43,3 +43,13 @@ docker run \
 -p 4000:4000 \
 docker.litellm.ai/berriai/litellm:X.Y.Z
 ```
+
+## Release notes: titles, descriptions and the changelog summary
+
+Every release note is also a search result and a changelog entry, so each new note needs three things beyond its body. The `title` frontmatter names the product, the version and the change, in the form `LiteLLM vX.Y.Z <verb> <the 2 or 3 most important named changes>`, such as `LiteLLM v1.104.0 adds Claude Opus 5.5, GPT-6 and master key enforcement`. Use a plain verb (adds, fixes, updates, removes, supports), exact model, provider and feature names, at most about 75 characters, and no colon or em dash. A backport shipped on several release lines lists every version, as in `LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0`.
+
+The `description` frontmatter is the snippet under that title in search and answer engines. Without it Docusaurus uses the first heading, "Deploy this version". Write 110 to 155 characters in one or two sentences that say what changed with concrete names, start with a verb or the main subject rather than the version number, "This release" or "LiteLLM", and leave out how the release is published (images, PyPI, tags).
+
+Add an entry at the top of `release_notes/summaries.json`, which feeds the changelog at `/release_notes` and its RSS feed, and remove the oldest entry so the file keeps the latest 20. An entry is `{"folders": [...], "title": ..., "points": [...]}`: same-day backports share one entry with all their folders, `title` matches the frontmatter title, and `points` holds 2 to 4 sentences (2 or 3 for a patch). Each point is one sentence of at most 25 words that says what changed and what it means for someone upgrading, with model names, endpoints, settings and numbers in backticks where they are code. Never write a bare label such as "New models on day one". When the release has a breaking change, one point states it and the setting that restores the old behavior. Use only facts from the note.
+
+Write titles, descriptions and points in ASD-STE100 Simplified Technical English: active voice, simple present, no "-ing" verb forms except in technical names such as streaming, and no should, would, may or might. Check them with `python3 ~/.claude/skills/simplified-technical-english/scripts/ste_check.py --mode descriptive <file>` when that skill is installed, and fix every error it reports.

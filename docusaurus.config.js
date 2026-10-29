@@ -9,6 +9,11 @@ const darkCodeTheme = require('./src/utils/prismDark');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  // Temporary fallback while the internal gateway is unavailable.
+  // Set DOCS_CHAT_PROVIDER=internal and rebuild to switch back.
+  customFields: {
+    inkeepApiKey: process.env.DOCS_CHAT_PROVIDER === 'internal' ? null : process.env.INKEEP_API_KEY || null,
+  },
   title: 'liteLLM',
   tagline: 'Simplify LLM API Calls',
   // SVG favicon that turns white on dark browser themes; PNG for browsers without SVG icons
@@ -38,6 +43,7 @@ const config = {
   clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
+    require('./plugins/release-feed'),
     require('./plugins/llms'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
@@ -53,6 +59,17 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          // The decisions page was split into subpages for a few days in October 2026.
+          {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
+          {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},
+          {from: '/docs/decisions/systemone_format', to: '/docs/decisions#v1systemone'},
+          {from: '/docs/decisions/typesafe_images', to: '/docs/decisions#typesafe-images-box-questions-and-long-context'},
+          {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
+          {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
+          {from: '/docs/learn', to: '/docs/tutorials'},
+          {from: '/docs/learn/gateway_quickstart', to: '/docs/proxy/quick_start'},
+          {from: '/docs/learn/python_sdk_quickstart', to: '/docs/learn/sdk_quickstart'},
+          {from: '/docs/learn/enterprise_quickstart_learn', to: '/docs/learn/enterprise_quickstart'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
@@ -64,6 +81,7 @@ const config = {
           {from: '/docs/guides/security_network', to: '/docs/guides/security_settings'},
           {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
+          {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
@@ -236,28 +254,18 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
-          limit: 50,
+          // Every post, so feed readers get every post's tags. Full text is
+          // trimmed to the newest 50 in src/feed/card-categories.js.
+          limit: false,
           createFeedItems: require('./src/feed/card-categories').createFeedItems,
         },
       },
     ],
 
-    () => ({
-      name: 'cripchat',
-      injectHtmlTags() {
-        return {
-          headTags: [
-            {
-              tagName: 'script',
-              innerHTML: `window.$crisp=[];window.CRISP_WEBSITE_ID="be07a4d6-dba0-4df7-961d-9302c86b7ebc";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`,
-            },
-          ],
-        };
-      },
-    }),
     // PostHog product analytics. Same project as the Webflow marketing site
     // (www.litellm.ai), so a visitor moving between the two domains is one
     // person and one journey: persistence keeps a first-party cookie on
@@ -390,7 +398,7 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'townhall_oct_2026_decisions_api',
+        id: 'townhall_oct_23_2026_decisions_api',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
@@ -428,6 +436,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'providersSidebar',
+            position: 'left',
+            label: 'AI Providers',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'integrationsSidebar',
             position: 'left',
             label: 'Integrations',
@@ -438,31 +452,14 @@ const config = {
             position: 'left',
             label: 'Enterprise',
           },
-          {
-            type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
-          {
-            href: 'https://trust.litellm.ai/',
-            label: 'Trust Center',
-            position: 'right',
-          },
           {
             href: 'https://github.com/BerriAI/litellm',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
-          },
-          {
-            href: 'https://www.litellm.ai/support',
-            position: 'right',
-            className: 'header-discord-link',
-            'aria-label': 'Discord / Slack community',
           },
         ],
       },

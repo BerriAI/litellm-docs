@@ -146,7 +146,7 @@ async def audio_conversation():
             }
         }
         await ws.send(json.dumps(session_update))
-        print("🎤 Speak into your microphone...")
+        print("Speak into your microphone...")
         
         async def send_audio():
             """Capture and send audio from microphone"""
@@ -271,7 +271,7 @@ async def conversation_with_tools():
                 function_name = event['name']
                 arguments = json.loads(event['arguments'])
                 
-                print(f"\n🔧 Calling {function_name}({arguments})")
+                print(f"\n Calling {function_name}({arguments})")
                 result = get_weather(**arguments)
                 
                 # Send tool result back

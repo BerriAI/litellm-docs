@@ -1,5 +1,6 @@
 ---
-title: "v1.90.6 - Prisma Bake for Non-Root Migrations"
+title: "LiteLLM v1.90.6 - Prisma Bake for Non-Root Migrations"
+description: "Fixes database migrations for non-root users by baking the Prisma CLI and engines at a fixed path. Fresh databases migrate offline."
 slug: "v1-90-6"
 date: 2026-07-19T02:09:06
 authors:

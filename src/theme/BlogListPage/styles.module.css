@@ -120,7 +120,16 @@
 
 /* Newsletter signup, restyled to the website's input and button. */
 .subscribe {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
   margin-top: 1.75rem;
+}
+
+.subscribeMain {
+  flex: 0 1 460px;
+  min-width: 0;
 }
 
 .subscribe form > div {
@@ -215,6 +224,68 @@
   border-color: var(--lb-tag-ink);
 }
 
+/* Security mailing list card, beside the newsletter form */
+.securityCard {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  background: var(--lb-surface);
+  color: var(--lb-ink) !important;
+  text-align: left;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.securityCard:hover {
+  border-color: var(--lb-accent);
+  transform: translateY(-1px);
+}
+
+.securityIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--lb-tag-bg);
+  color: var(--lb-tag-ink);
+}
+
+.securityText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.securityText span {
+  color: var(--lb-muted);
+}
+
+.securityArrow {
+  color: var(--lb-accent);
+  font-size: 15px;
+}
+
+@media (max-width: 900px) {
+  .subscribe {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .subscribeMain {
+    flex: none;
+    width: 100%;
+  }
+}
+
 /* ── Posts area ───────────────────────────────────────────────────────── */
 .body {
   padding: 0 5%;
@@ -236,16 +307,16 @@
   margin: 0 0 28px;
 }
 
+/* Search opens in place of the "Search posts" chip at the end of the filters. */
 .search {
   position: relative;
-  flex: 1 1 320px;
-  max-width: 460px;
+  width: 220px;
   margin: 0;
 }
 
 .search svg {
   position: absolute;
-  left: 14px;
+  left: 13px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--lb-muted);
@@ -254,15 +325,14 @@
 
 .search input {
   width: 100%;
-  height: 44px;
-  padding: 0 14px 0 40px;
+  height: 34px;
+  padding: 0 14px 0 34px;
   border: 1px solid var(--lb-line);
-  border-radius: 10px;
+  border-radius: 999px;
   background: var(--lb-surface);
   color: var(--lb-ink);
   font: inherit;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -279,7 +349,21 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.searchChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-style: dashed;
+}
+
+.searchChip svg,
+.search svg {
+  width: 13px;
+  height: 13px;
 }
 
 .chip {

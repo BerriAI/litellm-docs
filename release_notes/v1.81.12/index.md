@@ -1,5 +1,6 @@
 ---
-title: "v1.81.12-stable.1 - Guardrail Policy Templates & Action Builder"
+title: "LiteLLM v1.81.12-stable.1 - Guardrail Policy Templates & Action Builder"
+description: "Adds guardrail policy templates, a guardrail action builder and access groups for models, MCP servers and agents. Adds the Responses API shell tool."
 slug: "v1-81-12"
 date: 2026-02-14T00:00:00
 authors:

@@ -86,6 +86,18 @@ Recorded cost counts toward budgets the same way any other request's cost does
 
 Streaming targets work, because response headers arrive before the body. A target that only knows its final cost after it has finished streaming cannot report it through this contract, since by then the headers are already on the wire
 
+## Naming the operation
+
+A target can also say which GenAI operation it ran, so its traces stop reading as `chat`:
+
+```
+x-litellm-operation-name: retrieval
+```
+
+LiteLLM uses it for `gen_ai.operation.name` and the span name when OpenTelemetry tracing follows the GenAI semantic conventions (`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental` or `LITELLM_OTEL_V2=1`). Send an operation name from the [OpenTelemetry GenAI conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/), such as `retrieval`, `embeddings`, `execute_tool` or `invoke_agent`. An unknown name is ignored, with a warning in the proxy logs
+
+Without this header, a route defined under `pass_through_endpoints` is labelled `litellm.passthrough`. LiteLLM's built-in provider routes, such as `/anthropic` and `/openai`, keep the label they have today
+
 ## Reading the values back
 
 Upstream response headers relay through to the calling client, so callers see the same `x-litellm-response-cost` shape they get from the general API. LiteLLM adds `x-litellm-call-id` on the way out, which is the value to match against the spend logs when reconciling any individual request

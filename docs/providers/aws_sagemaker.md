@@ -309,7 +309,7 @@ os.environ["AWS_REGION_NAME"] = ""
 response = completion(
   model="sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -322,7 +322,7 @@ model_list:
   - model_name: jumpstart-model
     litellm_params:
       model: sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -431,7 +431,7 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 os.environ["AWS_ACCESS_KEY_ID"] = ""
 os.environ["AWS_SECRET_ACCESS_KEY"] = ""
@@ -483,7 +483,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-[**👉 See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
+[** See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
 
 </TabItem>
 </Tabs>
@@ -574,6 +574,21 @@ model_list:
 
 Provider-specific keys in `litellm_params` are sent in the request body as-is, so keep only the ones your container accepts.
 
+### Reject chat calls on embedding endpoints
+
+<SinceVersion v="1.109.0" />
+
+An embedding container answers a chat request after the round trip to SageMaker with its own error, or with an empty assistant message when it treats the prompt as text to embed. To have the proxy reject chat calls before they leave it, list the endpoints the deployment serves and turn on enforcement:
+
+```yaml
+    model_info:
+      mode: embedding
+      supported_endpoints: ["/v1/embeddings"]
+      enforce_supported_endpoints: true
+```
+
+Chat-style requests to that model then go to a configured fallback, or get a 400 that names the endpoint and the supported list, and `/v1/embeddings` keeps working. See [Reject chat calls on non-chat models](../proxy/model_management.md#reject-chat-calls-on-non-chat-models) for the routes covered and how fallbacks are handled.
+
 
 
 ## Nova Models on SageMaker
@@ -614,7 +629,7 @@ response = litellm.completion(
     stream_options={"include_usage": True},
 )
 for chunk in response:
-    if chunk.choices[0].delta.content:
+    if chunk.choices and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="")
 ```
 

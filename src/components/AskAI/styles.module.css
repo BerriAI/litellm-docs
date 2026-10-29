@@ -1,0 +1,84 @@
+.panel {--ai-bg:var(--aurora-surface,var(--ifm-background-color));--ai-text:var(--ifm-font-color-base);--ai-strong:var(--ifm-heading-color);--ai-muted:var(--aurora-muted,#646875);--ai-border:var(--aurora-line-strong,#e3e5ee);--ai-tint:var(--aurora-tint,#f2f4fd);--ai-accent:var(--ifm-color-primary);--ai-accent-ink:var(--aurora-accent-ink,var(--ifm-color-primary));
+  position:fixed;top:var(--ask-ai-top,var(--ifm-navbar-height));right:0;bottom:0;z-index:190;display:flex;flex-direction:column;width:min(380px,100vw);overflow:hidden;border-left:1px solid var(--ai-border);background:var(--ai-bg);color:var(--ai-text);font-size:14px;line-height:1.5;animation:enter .18s ease-out}
+@keyframes enter {from {opacity:0;transform:translateX(12px)} to {opacity:1;transform:none}}
+.panel button {font-family:inherit;cursor:pointer}
+.panel button:disabled {cursor:default}
+.panel button:focus-visible,.panel a:focus-visible,.panel textarea:focus-visible {outline:2px solid var(--ai-accent);outline-offset:2px}
+
+.header {display:flex;align-items:center;gap:2px;flex-shrink:0;padding:10px 12px 10px 16px;border-bottom:1px solid var(--ai-border)}
+.header h2 {display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;font-size:14px;font-weight:600;line-height:24px;color:var(--ai-strong)}
+.header h2 svg {color:var(--ai-accent-ink)}
+.iconButton {display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border:0;border-radius:var(--lite-radius-sm,6px);background:none;color:var(--ai-muted)}
+.iconButton:hover {background:var(--ai-tint);color:var(--ai-strong)}
+
+.body {position:relative;flex:1;min-height:0;padding:16px;overflow-y:auto;overscroll-behavior:contain;scroll-padding:16px}
+.intro p {margin:0;color:var(--ai-muted)}
+.intro h3 {margin:20px 0 8px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ai-muted)}
+.commonQuestions {display:flex;flex-direction:column;gap:8px}
+.commonQuestions button {padding:8px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);background:none;color:var(--ai-text);text-align:left;font-size:13px;line-height:20px}
+.commonQuestions button:hover {border-color:var(--aurora-accent-line,var(--ai-border));background:var(--ai-tint);color:var(--ai-accent-ink)}
+
+.turn {display:flex;flex-direction:column;gap:10px;padding-top:18px}
+.user {align-self:flex-end;max-width:88%;margin:0;padding:7px 11px;border-radius:var(--lite-radius-md,10px) var(--lite-radius-md,10px) 2px var(--lite-radius-md,10px);background:var(--ai-accent);color:var(--lite-on-primary,#fff);white-space:pre-wrap;overflow-wrap:anywhere}
+.answer {min-width:0;padding:10px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px) var(--lite-radius-md,10px) var(--lite-radius-md,10px) 2px;background:var(--ai-bg);color:var(--ai-text);overflow-wrap:anywhere}
+.answer>:first-child {margin-top:0}
+.answer>:last-child {margin-bottom:0}
+.answer p {margin:0 0 12px}
+.answer ul,.answer ol {margin:0 0 12px;padding-left:20px}
+.answer pre {max-width:100%;margin:0 0 12px;padding:10px 12px;overflow:auto;border-radius:var(--lite-radius-sm,6px);background:var(--ai-tint);font-size:12px;line-height:18px;white-space:pre}
+.answer pre code {padding:0;border:0;background:none;color:inherit}
+.answer code {font-size:12px}
+.answer table {display:block;max-width:100%;overflow:auto}
+.citation {display:inline-flex;align-items:center;justify-content:center;min-width:14px;margin:0 2px;padding:0 3px;border-radius:2px;background:var(--ai-tint);color:var(--ai-accent-ink);font-size:10px;font-weight:600;line-height:15px;text-decoration:none;vertical-align:super}
+.citation:hover {color:var(--ai-accent-ink);text-decoration:underline}
+.sources {display:flex;flex-wrap:wrap;gap:6px}
+.sources a {display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px 2px 4px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-xs,4px);background:var(--ai-bg);color:var(--ai-muted);font-size:12px;line-height:18px;text-decoration:none}
+.sources a:hover {border-color:var(--aurora-accent-line,var(--ai-border));background:var(--ai-tint);color:var(--ai-accent-ink);text-decoration:none}
+.sources b {display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:16px;height:16px;border-radius:2px;background:var(--ai-tint);color:var(--ai-accent-ink);font-size:10px;font-weight:600}
+.sources span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sources i {font-style:normal;opacity:.75}
+.thinking {display:block;margin:4px 0 0;color:var(--ai-muted);font-size:13px}
+.error {margin-top:16px;padding:10px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);color:var(--ai-text)}
+.error p {margin:0}
+.error button {margin-top:6px;padding:0;border:0;background:none;color:var(--ai-accent-ink);font-size:13px;font-weight:600}
+.error button:hover {text-decoration:underline}
+
+.footer {flex-shrink:0;padding:10px 16px 14px;border-top:1px solid var(--ai-border)}
+.human {margin:0 0 8px;color:var(--ai-muted);font-size:12px;line-height:1.5}
+.human button,.human a {padding:0;border:0;background:none;color:var(--ai-accent-ink);font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.human button:hover,.human a:hover {text-decoration:underline}
+.composer {display:flex;align-items:flex-end;gap:4px;padding:4px 4px 4px 4px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);background:var(--ai-bg)}
+.composer:focus-within {border-color:var(--ai-accent)}
+.composer textarea {flex:1;min-width:0;height:36px;max-height:120px;padding:6px 8px;border:0;outline:0;resize:none;background:none;color:var(--ai-text);font-family:inherit;font-size:14px;line-height:24px;box-shadow:none}
+.composer textarea:focus-visible {outline:0}
+.composer textarea::placeholder {color:var(--ai-muted)}
+.composer button {display:flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;padding:0;border:0;border-radius:var(--lite-radius-sm,6px);background:none;color:var(--ai-accent-ink)}
+.composer button:hover:not(:disabled) {background:var(--ai-tint)}
+.composer button:disabled {opacity:.35;color:var(--ai-muted)}
+.note {margin:6px 0 0;color:var(--ai-muted);font-size:11px}
+
+/* Resize handle on the left edge, only where the panel is docked beside the page (see layout.css) */
+.resizeHandle {display:none}
+@media(min-width:1200px) {
+  .panel {width:var(--ask-ai-panel-width,380px)}
+  .resizeHandle {display:block;position:absolute;top:0;bottom:0;left:0;z-index:1;width:6px;cursor:col-resize;touch-action:none}
+  .resizeHandle:hover,.resizeHandle:focus-visible,:global(html[data-ask-ai-resizing]) .resizeHandle {background:var(--ai-accent);opacity:.4;outline:0}
+}
+
+/* Drawer: overlays the right edge, no page reflow */
+/* Tablets and narrow desktops: a drawer over the page */
+@media(min-width:641px) and (max-width:1199px) {
+  .panel {box-shadow:-12px 0 32px -16px rgba(8,11,38,.25)}
+}
+/* Touch screens: 16px input text so iOS does not zoom in on focus */
+@media(max-width:996px) {
+  .composer textarea {font-size:16px}
+}
+/* Phones: full-screen sheet */
+@media(max-width:640px) {
+  .panel {top:0;width:100%;height:100dvh;border-left:0;z-index:1000;animation-name:rise}
+  .header {padding-top:max(10px,env(safe-area-inset-top,0px))}
+  .footer {padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+}
+@keyframes rise {from {opacity:0;transform:translateY(12px)} to {opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce) {.panel {animation:none}}
