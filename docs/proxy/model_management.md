@@ -93,7 +93,7 @@ You can attach arbitrary `model_info` fields when you create or update a model, 
 
 ## Reject chat calls on non-chat models
 
-`model_info.mode` and `model_info.supported_endpoints` are informational by default. To have the proxy enforce the list for chat-style requests, set `enforce_supported_endpoints: true` on the deployment next to a `supported_endpoints` list with no chat endpoint. The proxy then skips that deployment for chat-style requests without calling its provider, and the routes it does list, such as `/v1/embeddings`, work as before.
+`model_info.mode` and `model_info.supported_endpoints` are informational by default. To have the proxy enforce the list for chat-style requests, set `enforce_supported_endpoints: true` on the deployment next to a `supported_endpoints` list with no chat endpoint. The proxy then skips that deployment for chat-style requests without calling its provider, and the routes it does list, such as `/v1/embeddings`, work as before. Only chat-style requests are checked, so embeddings, image, audio, and other non-chat requests reach the deployment whatever its list says. The flag does nothing on its own. When `supported_endpoints` is missing or is not a list of strings, the deployment is not restricted and the proxy logs a warning naming it when the deployment is loaded.
 
 ```yaml
 model_list:
@@ -120,7 +120,7 @@ The same `model_info` fields work through `POST /model/new` and `PATCH /model/{m
 }
 ```
 
-The check covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses` (including its WebSocket mode and `/v1/responses/compact`), their unprefixed and Azure-style aliases, `/v1/messages` (answered in the Anthropic error shape), the Gemini `generateContent` and `streamGenerateContent` routes, and `/v1beta/interactions`. On the Responses WebSocket the proxy sends an `error` event and closes the socket with code 1008. A `supported_endpoints` list that contains any of those endpoints counts as chat-capable and is never enforced. The check applies the same way when the request names the deployment by its `model_info.id` or `litellm_params.model`, or reaches it through an alias or a wildcard route.
+The check covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses` (including its WebSocket mode and `/v1/responses/compact`), their unprefixed and Azure-style aliases, `/v1/messages` (answered in the Anthropic error shape), the Gemini `generateContent` and `streamGenerateContent` routes, and `/v1beta/interactions`. On the Responses WebSocket the proxy sends an `error` event and closes the socket with code 1008. A `supported_endpoints` list that contains any of those endpoints counts as chat-capable and is never enforced, and entries match regardless of case, a trailing slash, or a full Gemini path such as `/v1beta/models/<model>:generateContent`. The check applies the same way when the request names the deployment by its `model_info.id` or `litellm_params.model`, or reaches it through an alias or a wildcard route.
 
 The flag is read per deployment. When a model name has several deployments, chat-style requests go only to the ones without the restriction, and the 400 comes only when every deployment behind the name is restricted. Without the flag, `mode` and `supported_endpoints` keep their informational behavior, and `mode` plays no part in the check either way.
 
