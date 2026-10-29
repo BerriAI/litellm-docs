@@ -361,7 +361,7 @@ for page in response.pages:
 
 ## Markdown Output
 
-Available from v1.109.0.
+<SinceVersion v="1.109.0" />
 
 Set `outputContentFormat` to get Azure's Markdown output instead of plain text. It takes `text` or `markdown`, and the value is case-insensitive. The snake_case spelling `output_content_format` works the same way. If you leave it out, the response is the same text output as before.
 
