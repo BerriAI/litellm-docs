@@ -155,6 +155,7 @@ const sidebars = {
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
             "observability/signoz",
+            "observability/mixpanel",
           ],
         },
         {
