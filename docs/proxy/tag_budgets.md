@@ -299,11 +299,11 @@ The proxy counts spend for a mapped tag from the first request that carries it, 
 
 ### What mappings apply to
 
-Mappings apply to POST requests on LLM API routes such as `/chat/completions`, `/v1/responses` and `/v1/messages`, A2A agent routes, and registered pass-through endpoints. Token counting, model listing, request previews and MCP routes are skipped.
+Mappings apply to POST requests on LLM API routes such as `/chat/completions`, `/v1/responses` and `/v1/messages`, A2A agent routes, and registered pass-through endpoints. Token counting, model listing, request previews, MCP routes and the experimental `/queue/chat/completions` route are skipped, so a `required` rule never rejects them and their spend carries no mapped tag. A background `/v1/responses` call and a batch whose input file was uploaded with `target_model_names` keep the mapped tag from the request that created them, so the spend billed when they finish goes to that tag even though the later read or poll sends no baggage.
 
 Mapped tags only drive spend tracking and budgets. They never select a deployment under `enable_tag_filtering`, attach a tag-scoped policy, or pick a tag-mode guardrail, unless the caller, key, team or project already carries the same tag. `reject_clientside_metadata_tags` does not block mapped tags, since an admin configured them. The client still chooses the baggage value, though, so any key can send another service's value and spend that tag's budget, and a `tag_prefix` rule lets the caller pick any tag under the prefix. Use exact `value` rules or `require_budgeted_tag` to limit callers to tags you created.
 
-Baggage is decoded the way OpenTelemetry decodes it. Percent-encoded values are decoded, a bare `+` reads as a space, and properties after `;` are ignored. A value with a control character such as `%00` maps no tag.
+Baggage is decoded the way OpenTelemetry decodes it. Percent-encoded values are decoded and a bare `+` reads as a space, so send a literal plus as `%2B`. Properties after `;` and spaces around `=` are ignored, and a value with a control character such as `%00` maps no tag.
 
 You can also edit the rules in the Admin UI. Open **Router Settings** in the Settings section, then the **General** tab, and use the `request_tag_mappings` row. Rules from `config.yaml` show there read-only.
 
