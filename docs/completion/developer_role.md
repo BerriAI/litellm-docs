@@ -65,7 +65,7 @@ The model cost map declares the flag for some hosted models, such as `fireworks_
 
 ## Native Responses API routes
 
-Some backends implement the Responses API themselves and receive the client's `input` items. Fireworks (`fireworks_ai/`) folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, unless the model declares `supports_mid_conversation_system: true`, in which case each `developer` item is sent as a `system` item in place. A `developer` item that is not folded, such as one that closes the input after an assistant turn, is sent as a `user` item on a model that declares the flag `false`, and as a `system` item otherwise.
+Some backends implement the Responses API themselves and receive the client's `input` items. Fireworks (`fireworks_ai/`) folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, unless the deployment's own `model_info` declares `supports_mid_conversation_system: true`, in which case each `developer` item is sent as a `system` item in place. A `true` set on another deployment of the same model does not turn the fold off. A `developer` item that is not folded, such as one that closes the input after an assistant turn, is sent as a `user` item on a model that declares the flag `false`, and as a `system` item otherwise.
 
 `hosted_vllm/` deployments that serve `/v1/responses` natively forward `developer` items as they arrive, unless the model declares `supports_mid_conversation_system: false`. With that declaration they fold the items into `instructions` the same way Fireworks does.
 
