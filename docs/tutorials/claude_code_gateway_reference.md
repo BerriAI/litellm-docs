@@ -187,7 +187,7 @@ Every renewal re-reads the developer's user record and team membership in LiteLL
 
 `/logout` posts the session token and the refresh token to `POST /claude_code_gateway/oauth/revoke`, the `revocation_endpoint` from the discovery document, then removes the stored credential. Revoking the refresh token ends that sign-in, since every refresh token rotated from it, whoever holds one, is refused from then on. The session token itself is self-contained and is not revoked; it stays valid until it expires
 
-Renewal and revocation need LiteLLM v1.106.0 or later (first in `v1.106.0-rc.1`). Earlier releases issue no refresh token and answer every refresh with `401`, so Claude Code asks for `/login` again at every expiry, and during a rolling upgrade a renewal served by a replica still on the previous release does the same for that developer once
+Renewal and revocation work <SinceVersion v="1.106.0" />, first in `v1.106.0-rc.1`. Earlier releases issue no refresh token and answer every refresh with `401`, so Claude Code asks for `/login` again at every expiry, and during a rolling upgrade a renewal served by a replica still on the previous release does the same for that developer once
 
 ## 4. Push managed settings from the proxy
 

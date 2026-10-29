@@ -20,7 +20,7 @@ export function LiteLLMLogo({className = '', ...props}) {
 }
 
 export function WorkshopShell({children}) {
-  return <div className={styles.workshop}>{children}</div>;
+  return <div className={styles.workshop} data-full-width>{children}</div>;
 }
 
 export function WorkshopHero() {

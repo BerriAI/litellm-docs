@@ -376,7 +376,7 @@
   white-space: nowrap;
   border: 0;
 }
-@media (max-width: 720px) {
+@container jevrank (max-width: 720px) {
   .figure {
     margin: 24px 0 30px;
   }
@@ -480,7 +480,7 @@
     font-size: 10px;
   }
 }
-@media (max-width: 450px) {
+@container jevrank (max-width: 450px) {
   .figureHeading {
     display: block;
   }
@@ -504,4 +504,8 @@
   .plotTop {
     font-size: 9px;
   }
+}
+
+@container jevrank (max-width: 360px) {
+  .value { white-space: normal; overflow-wrap: anywhere; }
 }

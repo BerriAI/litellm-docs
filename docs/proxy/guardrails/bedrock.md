@@ -341,6 +341,8 @@ When you're chaining long conversations through Bedrock guardrails, you can opt 
 - keeps Bedrock payloads smaller, reducing latency and cost
 - applies to proxy hooks (`pre_call`, `during_call`) and the `/guardrails/apply_guardrail` testing endpoint
 
+Use it with Claude Code and other clients that send `role: system` entries inside `messages` on `/v1/messages`. `skip_system_message_in_guardrail` removes only the top-level `system` prompt there, so those entries still reach Bedrock without this flag.
+
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 guardrails:
   - guardrail_name: "bedrock-pre-guard"

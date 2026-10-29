@@ -2,7 +2,7 @@
 
 When you send a request to `/v1/messages` targeting an OpenAI or Azure model, LiteLLM internally routes it through the OpenAI Responses API. This page documents exactly how every parameter gets translated in both directions.
 
-The transformation lives in `litellm/llms/anthropic/experimental_pass_through/responses_adapters/transformation.py`.
+The transformation lives in `litellm/llms/anthropic/messages/responses_adapters/transformation.py`.
 
 
 ## Request: Anthropic → Responses API

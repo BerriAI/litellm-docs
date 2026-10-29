@@ -138,7 +138,7 @@ The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is s
 
 `auto` and `auto-instant` only use Fireworks open models, so your Fireworks API key is the only credential they need. `firerouter/auto` and `firerouter/auto-instant` behave the same way. See [Example router IDs](https://docs.fireworks.ai/nexus/firerouter#example-router-ids) for more routes
 
-The full resource path works on every LiteLLM version. The short `firerouter` IDs need v1.104.0-rc.1 or later, and the short `auto` and `auto-instant` IDs need v1.105.0 or later. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
+The full resource path works on every LiteLLM version. The short `firerouter` IDs work <SinceVersion v="1.104.0" /> (first in `v1.104.0-rc.1`), and the short `auto` and `auto-instant` IDs work <SinceVersion v="1.105.0" />. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
 
 ```yaml
 model_list:
@@ -303,7 +303,7 @@ print(response)
 
 ## Decisions (System One)
 
-Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions/index.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
+Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
 
 <Tabs>
 <TabItem value="sdk" label="SDK">

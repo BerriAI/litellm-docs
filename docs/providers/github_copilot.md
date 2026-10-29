@@ -9,6 +9,12 @@ Use [GitHub Copilot](https://docs.github.com/en/copilot) models through the Lite
 
 On the gateway, each person connects their own GitHub account and their requests use their own Copilot plan. Your GitHub Copilot plan determines which models you can use, and each model supports specific endpoints. See [supported endpoints and models](#supported-endpoints-and-models)
 
+:::tip
+
+LiteLLM can also use Claude and ChatGPT (Codex) subscriptions. To compare the three subscriptions, refer to [Claude, Codex, and Copilot subscriptions](/docs/subscriptions).
+
+:::
+
 ## Set up the gateway
 
 An admin adds the model and a **Per-user GitHub OAuth** credential once. Each user then connects their GitHub account from the dashboard before sending requests.

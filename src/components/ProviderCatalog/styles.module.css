@@ -1,0 +1,211 @@
+/* Card surface and hover follow NavigationCards (src/components/NavigationCards). */
+.catalog {
+  margin: 1.25rem 0 2rem;
+}
+
+.controls {
+  position: sticky;
+  top: var(--ifm-navbar-height);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 -4px 1.25rem;
+  padding: 10px 4px;
+  background: var(--ifm-background-surface-color);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-color-emphasis-600);
+}
+
+.search:focus-within {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 1px var(--ifm-color-primary);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-800);
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: var(--ifm-background-surface-color);
+}
+
+.group + .group {
+  margin-top: 1.75rem;
+}
+
+.catalog h2.groupLabel {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  line-height: 1.4;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 6px;
+  background: var(--ifm-background-surface-color);
+  color: inherit !important;
+  text-decoration: none !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 1px var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .card {
+  border-color: #2d3748;
+}
+
+[data-theme='dark'] .card:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+/* Logos sit on a white tile in both themes, so dark marks stay legible
+   without recoloring the vendor's file. */
+.logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  background: #fff;
+}
+
+[data-theme='dark'] .logo {
+  border-color: transparent;
+}
+
+.logo img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.initial {
+  font-size: 15px;
+  font-weight: 600;
+  color: #526078;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ifm-heading-color);
+}
+
+.meta {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.pages::before {
+  content: '\00b7';
+  margin: 0 5px;
+}
+
+.prefix {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 0 5px;
+  border: 0;
+  font-size: 11.5px;
+  color: var(--ifm-color-emphasis-700);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.empty {
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.guides {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .controls {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
