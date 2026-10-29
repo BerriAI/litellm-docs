@@ -10,7 +10,7 @@ ElevenLabs provides high-quality AI voice technology, including speech-to-text c
 | Description | ElevenLabs offers advanced AI voice technology with speech-to-text transcription and text-to-speech capabilities that support multiple languages and speaker diarization. |
 | Provider Route on LiteLLM | `elevenlabs/` |
 | Provider Doc | [ElevenLabs API ↗](https://elevenlabs.io/docs/api-reference) |
-| Supported Endpoints | `/audio/transcriptions`, `/audio/speech` |
+| Supported Endpoints | `/audio/transcriptions`, `/audio/speech`, `/v1/realtime` |
 
 ## Quick Start
 
@@ -227,6 +227,167 @@ ElevenLabs returns transcription responses in OpenAI-compatible format:
 ### Common Issues
 
 1. **Invalid API Key**: Ensure `ELEVENLABS_API_KEY` is set correctly
+
+## Realtime Transcription (Scribe v2 Realtime)
+
+LiteLLM serves `scribe_v2_realtime` through the proxy's OpenAI-compatible `/v1/realtime` WebSocket. Clients speak the OpenAI Realtime transcription protocol; LiteLLM opens the ElevenLabs realtime speech-to-text socket after the client's first `session.update`, forwards the audio and maps ElevenLabs transcripts back to OpenAI events. The model is realtime only; for file transcription use `scribe_v2` on `/audio/transcriptions`.
+
+### 1. Add the model to your config
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: scribe-realtime
+    litellm_params:
+      model: elevenlabs/scribe_v2_realtime
+      api_key: os.environ/ELEVENLABS_API_KEY
+      # optional ElevenLabs settings
+      keyterms: ["LiteLLM", "Scribe"]
+      no_verbatim: true
+      vad_silence_threshold_secs: 1.2
+```
+
+`api_key` falls back to `ELEVENLABS_API_KEY` and is sent only in the `xi-api-key` header. `api_base` is optional and falls back to `ELEVENLABS_API_BASE`; set it to a regional host such as `https://api.eu.residency.elevenlabs.io`. It must be an absolute `https://` or `wss://` URL; LiteLLM keeps its host and port and replaces the path with `/v1/speech-to-text/realtime`. Embedded credentials and URL fragments are rejected.
+
+These optional `litellm_params` become ElevenLabs session settings. Invalid values fail the session before anything is sent to ElevenLabs.
+
+| Setting | Type | Effect |
+| --- | --- | --- |
+| `keyterms` | list of strings | Bias recognition toward these terms |
+| `secondary_languages` | list of ISO language codes | Additional languages to expect |
+| `no_verbatim` | bool | Remove filler words and disfluencies |
+| `filter_background_audio` | bool | Suppress background audio |
+| `vad_threshold` | number, at least 0 | Voice activity detection threshold |
+| `vad_silence_threshold_secs` | number, at least 0 | Silence that ends a VAD segment |
+| `min_speech_duration_ms` | integer, at least 0 | Shortest speech that counts |
+| `min_silence_duration_ms` | integer, at least 0 | Shortest silence that counts |
+| `enable_logging` | bool | `false` turns on ElevenLabs zero retention mode, which ElevenLabs limits to enterprise accounts |
+
+```bash showLineNumbers title="Start LiteLLM Proxy"
+litellm --config config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+### 2. Connect
+
+```text
+ws://localhost:4000/v1/realtime?model=scribe-realtime
+```
+
+Authenticate with `Authorization: Bearer <proxy key>`. LiteLLM sends `session.created` right away with default settings (24 kHz PCM, server VAD); nothing is sent to ElevenLabs yet.
+
+### 3. Configure the session
+
+Send one `session.update` (or `transcription_session.update`). LiteLLM opens the ElevenLabs session with these settings and sends `session.updated`, with the same session id, once ElevenLabs accepts it. Later updates are ignored. Audio sent before `session.updated` is buffered and replayed, so you can start streaming right away.
+
+```json showLineNumbers title="session.update"
+{
+  "type": "session.update",
+  "session": {
+    "type": "transcription",
+    "audio": {
+      "input": {
+        "format": {"type": "audio/pcm", "rate": 24000},
+        "turn_detection": {"type": "server_vad"},
+        "transcription": {"model": "scribe_v2_realtime", "language": "en"}
+      }
+    }
+  }
+}
+```
+
+| Field | Rules |
+| --- | --- |
+| `format` | `type` must be `audio/pcm` and `channels` must be `1`. `rate` must be `8000`, `16000`, `22050`, `24000`, `44100` or `48000`; omitted means 24 kHz. |
+| `transcription.model` | Optional. Only `scribe_v2_realtime` or `elevenlabs/scribe_v2_realtime` is accepted. |
+| `transcription.language` | Optional ISO 639-1 or ISO 639-3 code. Region suffixes are dropped, so `en-US` becomes `en`. |
+| `turn_detection` | Omitted or `{"type": "server_vad"}` selects ElevenLabs VAD commits; `null` selects manual commits. Any other `type` is rejected, or falls back to server VAD when [`drop_params`](/docs/completion/drop_params) is set. |
+| Beta layout | `input_audio_format: "pcm16"` plus `input_audio_transcription` is accepted at 24 kHz. |
+
+An invalid `session.update` (bad format, rate, model, language or turn detection type) closes the connection without an `error` event; the reason is in the proxy log at debug level. Invalid audio after setup, such as invalid base64 or an odd number of PCM bytes, closes the same way.
+
+### 4. Stream audio
+
+`input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. LiteLLM forwards it as ElevenLabs `input_audio_chunk` messages, splitting large appends into chunks of at most 32000 bytes. `input_audio_buffer.commit` and `input_audio_buffer.end` commit the current segment in either mode. `input_audio_buffer.clear` and every other client event, including `response.create`, are dropped.
+
+With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_threshold_secs`, so keep streaming audio (silence included) in real time, or send `input_audio_buffer.commit` to commit at once.
+
+### 5. Read transcripts
+
+| Event | Fields | When |
+| --- | --- | --- |
+| `session.created` | `session.type: transcription`, default 24 kHz server VAD settings | On connect |
+| `session.updated` | Effective settings, same `session.id` | After ElevenLabs accepts your `session.update` |
+| `input_audio_buffer.speech_started` | `item_id` | First partial transcript of a segment |
+| `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | New words of the partial transcript |
+| `input_audio_buffer.speech_stopped` | `item_id` | The segment is committed |
+| `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`, `usage: {"type": "duration", "seconds": 7.57}` | Final transcript for the segment |
+| `error` | `error.type: server_error`, `error.message: ElevenLabs realtime transcription failed: <type>` | ElevenLabs reported an error such as `auth_error` or `quota_exceeded` |
+
+ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. The `completed` transcript is the authoritative text for the segment. An invalid ElevenLabs key arrives as an `error` event with `auth_error`, followed by a normal close. If LiteLLM cannot open the ElevenLabs socket at all (a network failure, a timeout or an HTTP rejection of the handshake), the proxy closes the client connection with code `1011` and a reason such as `ElevenLabs realtime connection failed (HTTP 403)`.
+
+### Pricing and usage
+
+Scribe v2 Realtime is billed per second of input audio (`input_cost_per_second` in the model cost map). `usage.seconds` is the audio LiteLLM sent to ElevenLabs since the previous `completed` event, silence included. Audio after the last `completed` event is billed when the session closes. The keyterm and transcript edit add-on rates are not included in the cost.
+
+### Example Python client
+
+Server VAD: configure, stream a mono PCM16 WAV file in 100 ms chunks in real time, add silence so ElevenLabs commits, then print transcript events.
+
+```python showLineNumbers title="Scribe v2 Realtime client"
+import asyncio
+import base64
+import json
+import os
+import wave
+
+import websockets
+
+URL = "ws://localhost:4000/v1/realtime?model=scribe-realtime"
+HEADERS = {"Authorization": f'Bearer {os.environ["LITELLM_API_KEY"]}'}
+
+
+async def main():
+    with wave.open("speech.wav") as w:  # mono PCM16
+        rate, audio = w.getframerate(), w.readframes(w.getnframes())
+    step = rate * 2 // 10
+    async with websockets.connect(URL, additional_headers=HEADERS) as ws:
+        await ws.send(json.dumps({
+            "type": "session.update",
+            "session": {
+                "type": "transcription",
+                "audio": {"input": {
+                    "format": {"type": "audio/pcm", "rate": rate},
+                    "turn_detection": {"type": "server_vad"},
+                    "transcription": {"model": "scribe_v2_realtime"},
+                }},
+            },
+        }))
+
+        async def send_audio():
+            for i in range(0, len(audio), step):
+                chunk = base64.b64encode(audio[i : i + step]).decode()
+                await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": chunk}))
+                await asyncio.sleep(0.1)
+            silence = base64.b64encode(b"\x00\x00" * rate * 3).decode()
+            await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": silence}))
+
+        sender = asyncio.create_task(send_audio())
+        async for raw in ws:
+            event = json.loads(raw)
+            if event["type"].endswith(".delta"):
+                print(event["delta"], end="", flush=True)
+            elif event["type"].endswith(".completed"):
+                print("\n" + event["transcript"], event.get("usage"))
+                break
+            elif event["type"] == "error":
+                print(event["error"])
+                break
+        sender.cancel()
+
+
+asyncio.run(main())
+```
 
 ---
 
