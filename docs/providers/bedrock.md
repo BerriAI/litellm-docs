@@ -1288,22 +1288,25 @@ Example of using [Bedrock Guardrails with LiteLLM](https://docs.aws.amazon.com/b
 
 ### Selective Content Moderation with `guarded_text`
 
-LiteLLM supports selective content moderation using the `guarded_text` content type. This lets you choose exactly which content Bedrock Guardrails evaluate. These rules apply to the Bedrock Converse API route. Models called with the `bedrock/invoke/` prefix send `guardrailConfig` as request headers, and LiteLLM adds no `guardContent` blocks for them.
+LiteLLM supports selective content moderation using the `guarded_text` content type. It lets you mark which user content Bedrock Guardrails evaluate. LiteLLM also marks some content on its own, as described below.
+
+These rules apply only when LiteLLM sends the request to the Bedrock Converse API, which most Bedrock chat models on `/v1/chat/completions` use. Requests that LiteLLM sends to the Bedrock Invoke API work differently. These include models with the `bedrock/invoke/` prefix, models that LiteLLM sends to Invoke by default (for example `bedrock/mistral.mistral-7b-instruct-v0:2`), and `/v1/messages` requests to Claude models on Bedrock. For these requests, LiteLLM sends `guardrailConfig` as request headers and Bedrock evaluates the whole prompt. Do not use `guarded_text` with them. For Claude models, LiteLLM removes `guarded_text` parts from the request, so the model never sees that content.
 
 **How LiteLLM builds `guardContent` blocks:**
-- Content with `type: "guarded_text"` in a user message is sent to Bedrock as a [`guardContent`](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ContentBlock.html) block. Use `guarded_text` only in user messages, because LiteLLM drops `guarded_text` parts from system and assistant messages.
-- When the last message is a user message, LiteLLM also sends the text parts of that message as `guardContent`, and does the same for any user messages directly before it. Images and documents in those messages are not wrapped. A user message that already has a `guarded_text` part is sent as written.
-- When the request has tool results but no `tools` parameter, LiteLLM turns each tool result into a user message and sends its text as `guardContent`.
+- Content with `type: "guarded_text"` in a user message is sent to Bedrock as a [`guardContent`](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ContentBlock.html) block. LiteLLM does not support `guarded_text` in system or assistant messages yet. It drops those parts, so the model never sees them.
+- When the last message is a user message, LiteLLM also sends the text parts of that message as `guardContent`, and does the same for any user messages directly before it. A user message that already has a `guarded_text` part is sent as written, so its `type: "text"` parts stay plain text. Images and documents are never wrapped.
+- A system message that comes after another message is sent as a user message, so the rule above also applies to it.
+- When the request has tool results but no `tools` parameter, LiteLLM turns each tool result into a user message and sends its text as `guardContent`. This happens while `litellm.bedrock_neutralize_orphaned_tool_blocks` is `True`, which is the default.
 
 **What Bedrock Guardrails evaluate:**
-- When a request has at least one `guardContent` block, Bedrock Guardrails evaluate only the `guardContent` blocks. In a message with a `guarded_text` part, the `type: "text"` parts are not evaluated.
+- When a request has at least one `guardContent` block, Bedrock Guardrails evaluate only the `guardContent` blocks, with the exceptions AWS notes below. Plain `type: "text"` parts, images, and documents are not evaluated, so an image content filter does not see an image sent next to text in the last user message.
 - When a request has no `guardContent` blocks, Bedrock Guardrails evaluate the text of every user and assistant message.
 - In both cases, Bedrock does not evaluate system messages at the start of the request or tool results sent with the `tools` parameter.
 
 :::note
-When the request ends with a user message that has text, Bedrock Guardrails evaluate the text of that latest user turn, any `guarded_text` parts, and any tool results LiteLLM converted. Earlier turns are not evaluated, so put earlier user content in `guarded_text` parts when it must be checked, for example when your clients can edit the conversation history.
+When the request ends with a user or system message that has text, or with a tool result and no `tools` parameter, Bedrock Guardrails evaluate only the `guardContent` blocks. These are your `guarded_text` parts, the text of the trailing messages that have no `guarded_text` part, and any tool results LiteLLM converted. Earlier turns and the `type: "text"` parts of a message with a `guarded_text` part are not evaluated. Put content in `guarded_text` parts when it must be checked, for example when your clients can edit the conversation history.
 
-When LiteLLM adds no `guardContent` block, for example when the request ends with an assistant message or with a tool result sent with the `tools` parameter, Bedrock evaluates every user and assistant message, which can increase latency and costs.
+When the request ends with an assistant message, a user message with no text, or a tool result sent with the `tools` parameter, LiteLLM adds no `guardContent` block of its own. Bedrock then evaluates only your `guarded_text` parts if there are any. If there are none, Bedrock evaluates every user and assistant message, which can increase latency and costs.
 
 AWS notes that some guardrail policies can still evaluate content outside `guardContent` blocks. For details, see [Include a guardrail with the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
 :::
