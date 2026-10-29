@@ -545,15 +545,15 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
 }
 ```
 
-<SinceVersion v="1.107.0" /> Each entry also has `budget_reset_at`, first in `v1.107.0-rc.1`. It is the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over this limit accepts requests again at this time, unless another budget still blocks it, such as a per-model budget on the key, user, team, team member, or end user, or an overall budget like the key's `max_budget`. The value is an ISO 8601 timestamp in UTC.
+<SinceVersion v="1.107.0" /> Each entry also has `budget_reset_at`, first in `v1.107.0-rc.1`. It is the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over this limit accepts requests again at this time, unless another budget still blocks it, such as a per-model budget on the key, user, team, team member, or end user, or an overall budget like the key's `max_budget`. The value is an ISO 8601 timestamp in UTC. It is not the `budget_reset_at` at the top level of the same response, which belongs to the overall budget set with `budget_duration`.
 
 A window opens when the first successful request on the model finishes, even one that costs $0, such as a cache hit or a request to a model priced at $0, and lasts for `time_period` from that moment, not from a calendar boundary. Later requests in the same window do not move `budget_reset_at`. For example, a `1d` window ends 24 hours after it opens. A `1mo` window ends at the same time on the same day of the next month in UTC, or on the last day of that month when it is shorter.
 
 `budget_reset_at` is `null` when no window is open, which is the case before the first request on the model and after a window ends, until the next request opens a new one.
 
-Before v1.109.0, without Redis, each proxy instance and each worker keeps its own windows. The same entry can then read `null` on one and a timestamp on another, or two different timestamps, depending on which one answers. <SinceVersion v="1.109.0" /> They share each key, user, and team window through the database. One that did not serve the request that opened the window reads `null` until the window has spend in the database, which takes up to about 20 seconds after a request that costs more than $0 with the default `proxy_batch_write_at` of 10 seconds, and longer with a larger one.
+Before v1.109.0, without Redis, each proxy instance and each worker keeps its own windows. The same entry can then read `null` on one and a timestamp on another, or two different timestamps, depending on which one answers. <SinceVersion v="1.109.0" /> They share each key, user, and team window through the database. One that did not serve the request that opened the window reads `null` until the window has spend in the database, which usually takes up to about 20 seconds after a request that costs more than $0 with the default `proxy_batch_write_at` of 10 seconds. It takes longer with a larger `proxy_batch_write_at`, or when a [read replica](./db_read_replica) lags behind the primary database.
 
-On `/team/info`, when a key has its own `budget_limit` for the model a request uses, that request skips the team's entry for the model, with both entries matched to the request's model name as described in [How LiteLLM matches model names](#how-litellm-matches-model-names). Those requests are not charged to that team entry, so its window opens only with a request from a key that has no such budget.
+On `/team/info`, when a key has its own `budget_limit` for the model a request uses, that request is neither limited by nor charged to the team's entry under that model's name, with both names matched to the request's model name as described in [How LiteLLM matches model names](#how-litellm-matches-model-names). That entry's window then opens only with a request from a key that has no such budget.
 
 If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
@@ -639,7 +639,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 }'
 ```
 
-Use `1mo` for a monthly budget. The window opens with the user's first request on the model and resets one calendar month later, as described in [View current usage](#view-current-usage). After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
+Use `1mo` for a monthly budget. <SinceVersion v="1.107.0" /> The window opens with the user's first request on the model and resets one calendar month later in UTC, first in `v1.107.0-rc.1`, as described in [View current usage](#view-current-usage). After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
 
 ```json
 {
