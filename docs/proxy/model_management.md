@@ -90,3 +90,28 @@ The rest of the operations:
 | Delete a model | `POST /model/delete` | Body `{"id": "<model_id>"}`, admin only. This is a POST; there is no DELETE-verb route |
 
 You can attach arbitrary `model_info` fields when you create or update a model, and they pass straight through to `GET /model/info` alongside the mapped cost and context data. That is the mechanism for annotating models with your own metadata, such as an owning team, a description, or a version, and reading it back programmatically.
+
+## Require rpm and tpm on new models
+
+By default `rpm` and `tpm` are optional on a model, so a fleet can end up with some deployments rate limited and others unbounded. Set `enforce_rpm_tpm_on_model_add` in `general_settings` to require them <SinceVersion v="1.100.0" />.
+
+```yaml
+general_settings:
+  enforce_rpm_tpm_on_model_add: true
+```
+
+With `true`, `POST /model/new` answers `400` unless `litellm_params` sets both `rpm` and `tpm` to a positive value. In the Admin UI's Add Model form, set them in the LiteLLM Params field under Advanced Settings, such as `{"rpm": 100, "tpm": 100000}`. Only models added through the API or the Admin UI are checked, so a model in `config.yaml`'s `model_list` still loads without `rpm` or `tpm`.
+
+The setting also takes the same `default`, `providers`, and `models` mapping as [`enforce_project_model_quota`](project_management#per-provider-and-per-model-requirements), with the same precedence <SinceVersion v="1.109.0" />. A proxy older than 1.109.0 reads the mapping as `true` and requires both limits on every new model. A new model is matched against `models` entries by its `model_name`, or by the model it calls when it is a team model, and against `providers` by the provider in its `litellm_params`.
+
+```yaml
+general_settings:
+  enforce_rpm_tpm_on_model_add:
+    providers:
+      vertex_ai: [rpm, tpm]
+      runwayml: []
+    models:
+      "veo-*": [rpm]
+```
+
+With this mapping, a `runwayml/gen4.5` model can be added with no limits, a model whose `model_name` starts with `veo-` needs only `rpm`, and a Gemini model on Vertex AI needs both. A model update through `POST /model/update` or `PATCH /model/{id}/update` is checked only for the limits its new name and provider require that its old ones did not, so a model added as exempt cannot move to a provider that needs limits without setting them. The limits a model already needed are not checked again, so an update can lower or zero `rpm` and `tpm`, or remove them with `litellm_params_to_remove` on `PATCH /model/{id}/update`, and under `true` an update never fails this check. A malformed mapping makes model add and update answer `500` with an error naming `general_settings.enforce_rpm_tpm_on_model_add`.
