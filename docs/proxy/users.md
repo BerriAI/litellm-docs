@@ -551,6 +551,8 @@ A window opens when the first request on the model is charged, after its respons
 
 `budget_reset_at` is `null` when no window is open, which is the case before the first charged request and after a window ends with no new spend. It is also `null` when the window would end after the year 9999.
 
+On `/team/info`, a key that has its own `budget_limit` for a model, set under that model's name, replaces the team's budget for that model on the key's requests. Those requests are not charged to the team's budget for the model, so the team's window opens only with a request from a key that has no budget of its own for the model.
+
 If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
 #### Test the budget
