@@ -576,6 +576,8 @@ Provider-specific keys in `litellm_params` are sent in the request body as-is, s
 
 ### Reject chat calls on embedding endpoints
 
+<SinceVersion v="1.109.0" />
+
 An embedding container answers a chat request after the round trip to SageMaker with its own error, or with an empty assistant message when it treats the prompt as text to embed. To have the proxy reject chat calls before they leave it, list the endpoints the deployment serves and turn on enforcement:
 
 ```yaml

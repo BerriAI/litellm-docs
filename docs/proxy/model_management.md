@@ -93,6 +93,8 @@ You can attach arbitrary `model_info` fields when you create or update a model, 
 
 ## Reject chat calls on non-chat models
 
+<SinceVersion v="1.109.0" />
+
 `model_info.mode` and `model_info.supported_endpoints` are informational by default. To have the proxy enforce the list for chat-style requests, set `enforce_supported_endpoints: true` on the deployment next to a `supported_endpoints` list with no chat endpoint. The proxy then skips that deployment for chat-style requests without calling its provider, and the routes it does list, such as `/v1/embeddings`, work as before. Only chat-style requests are checked, so embeddings, image, audio, and other non-chat requests reach the deployment whatever its list says. The flag does nothing on its own. When `supported_endpoints` is missing or is not a list of strings, the deployment is not restricted and the proxy logs a warning naming it when the deployment is loaded.
 
 ```yaml
@@ -125,3 +127,28 @@ The check covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses` (inc
 The flag is read per deployment. When a model name has several deployments, chat-style requests go only to the ones without the restriction, and the 400 comes only when every deployment behind the name is restricted. Without the flag, `mode` and `supported_endpoints` keep their informational behavior, and `mode` plays no part in the check either way.
 
 When the model has fallbacks, the proxy moves on to them without calling the restricted deployment's provider. This covers router `fallbacks` and `default_fallbacks`, key and team `router_settings` fallbacks, and `fallbacks` in the request body, and a chain through another restricted model is followed until a model that serves chat answers. Since `default_fallbacks` applies to every model, a proxy that sets it to a chat model answers these requests from that model instead of returning the 400. A chain that reaches only restricted models, or loops back to them, keeps the 400, and so does `disable_fallbacks: true` or `fallbacks: []` in the request.
+
+## Require rpm and tpm on new models
+
+By default `rpm` and `tpm` are optional on a model, so a fleet can end up with some deployments rate limited and others unbounded. Set `enforce_rpm_tpm_on_model_add` in `general_settings` to require them <SinceVersion v="1.100.0" />.
+
+```yaml
+general_settings:
+  enforce_rpm_tpm_on_model_add: true
+```
+
+With `true`, `POST /model/new` answers `400` unless `litellm_params` sets both `rpm` and `tpm` to a positive value. In the Admin UI's Add Model form, set them in the LiteLLM Params field under Advanced Settings, such as `{"rpm": 100, "tpm": 100000}`. Only models added through the API or the Admin UI are checked, so a model in `config.yaml`'s `model_list` still loads without `rpm` or `tpm`.
+
+The setting also takes the same `default`, `providers`, and `models` mapping as [`enforce_project_model_quota`](project_management#per-provider-and-per-model-requirements), with the same precedence <SinceVersion v="1.109.0" />. A proxy older than 1.109.0 reads the mapping as `true` and requires both limits on every new model. A new model is matched against `models` entries by its `model_name`, or by the model it calls when it is a team model, and against `providers` by the provider in its `litellm_params`.
+
+```yaml
+general_settings:
+  enforce_rpm_tpm_on_model_add:
+    providers:
+      vertex_ai: [rpm, tpm]
+      runwayml: []
+    models:
+      "veo-*": [rpm]
+```
+
+With this mapping, a `runwayml/gen4.5` model can be added with no limits, a model whose `model_name` starts with `veo-` needs only `rpm`, and a Gemini model on Vertex AI needs both. A model update through `POST /model/update` or `PATCH /model/{id}/update` is checked only for the limits its new name and provider require that its old ones did not, so a model added as exempt cannot move to a provider that needs limits without setting them. The limits a model already needed are not checked again, so an update can lower or zero `rpm` and `tpm`, or remove them with `litellm_params_to_remove` on `PATCH /model/{id}/update`, and under `true` an update never fails this check. A malformed mapping makes model add and update answer `500` with an error naming `general_settings.enforce_rpm_tpm_on_model_add`.

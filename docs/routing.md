@@ -184,6 +184,8 @@ If `rpm` or `tpm` is not provided, it randomly picks a deployment
 
 You can also set a `weight` param, to specify which model should get picked when.
 
+A deployment can also carry daily limits, `rpd` (requests per UTC day) and `tpd` (tokens per UTC day), in `litellm_params` next to `rpm` and `tpm`. An optional `daily_reset_time` (`"HH:MM"` in UTC) moves the moment the daily counts start over; without it they start over at midnight UTC. They do not change how deployments are picked. They are enforced with [`enforce_model_rate_limits`](./proxy/load_balancing#enforce-model-rate-limits), which moves a request off a deployment whose daily quota is spent and onto another deployment in the group.
+
 <Tabs>
 <TabItem value="rpm" label="RPM-based shuffling">
 
@@ -372,7 +374,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="simple-shuffle", # RECOMMENDED - best performance
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -454,7 +456,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# set routing strategy
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 ## CALL 1+2
@@ -577,7 +579,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -1388,13 +1390,15 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  allowed_fails: 3 # cool a deployment down once it fails more than 3 calls
   cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
-- allowed_fails: 3
+- allowed_fails: not set
 - cooldown_time: 5s (`DEFAULT_COOLDOWN_TIME_SECONDS` in constants.py)
+
+With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value in `router_settings` of your config.yaml or in `Router(...)`, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once. A value saved from the Admin UI or `/config/update` counts only when it is not 3, since the Admin UI saves the default back with every change. Before v1.109.0, the router treated an explicit 3 as unset and kept using those rules.
 
 **Set Per Model**
 
@@ -1482,7 +1486,7 @@ Each deployment gets a unique `model_id` (e.g., `1234567890`, `9129922`, `498292
 
 #### When are deployments cooled down?
 
-The router automatically cools down deployments based on the following conditions:
+When `allowed_fails` and `allowed_fails_policy` are not set, the router cools down deployments based on the following conditions:
 
 | Condition | Trigger | Cooldown Duration |
 |-----------|---------|-------------------|

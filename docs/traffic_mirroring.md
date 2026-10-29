@@ -74,13 +74,13 @@ model_list:
 
 ## Streaming requests
 
-Available from v1.103.0.
+<SinceVersion v="1.103.0" />
 
 The mirrored call follows the `stream` flag of the primary request. A streaming request is mirrored as a streaming call, and LiteLLM reads the mirrored stream to the end in the background, so the silent model's spend log row and logging callbacks get streaming timings such as time to first token. A non-streaming request is mirrored as a non-streaming call. Earlier versions always mirrored with `stream=False`.
 
 ## Multiple silent models
 
-Available from v1.103.0.
+<SinceVersion v="1.103.0" />
 
 `silent_model` also takes a list of model names. LiteLLM then mirrors each request to every model in the list, with one background call per model.
 
