@@ -2,6 +2,12 @@
 
 Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](https://developers.openai.com/codex/pricing) for the plans, from Plus and Pro to Business and Enterprise) through LiteLLM with OAuth device flow authentication.
 
+:::tip
+
+LiteLLM can also use Claude and GitHub Copilot subscriptions. To compare the three subscriptions, refer to [Claude, Codex, and Copilot subscriptions](/docs/subscriptions).
+
+:::
+
 | Property | Details |
 |-------|-------|
 | Description | ChatGPT subscription access via the ChatGPT backend API |

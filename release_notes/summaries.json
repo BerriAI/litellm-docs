@@ -1,6 +1,80 @@
 [
   {
     "folders": [
+      "v1.106.5",
+      "v1.105.6",
+      "v1.104.8",
+      "v1.103.10"
+    ],
+    "title": "LiteLLM v1.106.5, v1.105.6, v1.104.8 and v1.103.10 trim failure logs for rejected requests",
+    "points": [
+      "Failure logs for rejected requests keep only core request fields, `tags` and guardrail details.",
+      "The GCS logger uses the bucket and credentials configured on the proxy."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.4",
+      "v1.105.5",
+      "v1.104.7",
+      "v1.103.9"
+    ],
+    "title": "LiteLLM v1.106.4, v1.105.5, v1.104.7 and v1.103.9 refresh image base layers",
+    "points": [
+      "Docker images move to newer base images, so image scans stop flagging brotli 1.2.0 and packages the images never install.",
+      "v1.106.4, v1.105.5 and v1.104.7 no longer sometimes exit on startup with an `ImportError` when the remote model cost map is unreachable."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.3",
+      "v1.105.4",
+      "v1.104.6",
+      "v1.103.8"
+    ],
+    "title": "LiteLLM v1.106.3, v1.105.4, v1.104.6 and v1.103.8 change the image-signing key",
+    "points": [
+      "Docker images and Helm charts are signed with the cosign key from commit `e82a3c6`, and the previous key no longer verifies them.",
+      "Every certificate bundle the SDK, proxy and images trust drops the eMudhra root CA.",
+      "v1.104.6 also fixes spend on failed and batch requests, token counts and tool calls on gpt-5.4+ models."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.2",
+      "v1.105.3",
+      "v1.103.7"
+    ],
+    "title": "LiteLLM v1.106.2, v1.105.3 and v1.103.7 fix spend on failed requests and batch cost",
+    "points": [
+      "Requests that time out after reaching the provider, client cancellations and each billed retry attempt are priced on their prompt instead of logging $0.",
+      "Completed batches keep their spend through malformed results and temporary accounting failures, and Bedrock inference profiles are priced.",
+      "Azure `gpt-6-astra` with `reasoning_effort: none` and `gpt-5.3-codex` with `minimal` now return 400 unless `drop_params` is on.",
+      "v1.105.3 also lists per-user auth MCP tools in the catalog again."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.5"
+    ],
+    "title": "LiteLLM v1.104.5 counts Claude tokens on Bedrock Mantle when Bedrock Runtime cannot",
+    "points": [
+      "Token counts for newer Claude models on Bedrock come from the Bedrock Mantle endpoint instead of a local estimate that undercounts."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.4"
+    ],
+    "title": "LiteLLM v1.104.4 fixes count_tokens, team batch access and guardrail settings",
+    "points": [
+      "Anthropic-format count requests for OpenAI and Gemini models are converted the same way `/v1/messages` inference converts them.",
+      "Team keys can read and cancel their own team's batches and download the finished results.",
+      "The Add Guardrail wizard in the Admin UI lists its providers again."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.1"
     ],
     "title": "LiteLLM v1.106.1 fixes count_tokens, MCP tool calls and thinking blocks",
@@ -154,77 +228,6 @@
       "The proxy exits at startup when database setup fails, unless you set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior.",
       "Streamed requests through an alias such as `claude-opus-4.6` now record spend from the deployment model instead of $0.",
       "Chat replies bridged from the Responses API now put tool calls in `choices[0]`, so clients that read only the first choice run the tool."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.0"
-    ],
-    "title": "LiteLLM v1.104.0 adds Claude Opus 5.5, GPT-6 and master key enforcement",
-    "points": [
-      "The model catalog adds 331 entries, such as Claude Opus 5.5, GPT-6 Sol and GPT-6 Luna.",
-      "The proxy refuses to start when `LITELLM_MASTER_KEY` is unset, empty or publicly known, so set a strong key before you upgrade.",
-      "An exhausted budget now returns HTTP 422 instead of 429, so set `litellm_settings.budget_exceeded_status_code: 429` to keep the old status.",
-      "stdio MCP servers are off by default, so set `LITELLM_ENABLE_MCP_STDIO=true` in the proxy environment to start them again."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.2"
-    ],
-    "title": "LiteLLM v1.103.2 supports Claude Code auto mode and fixes CLI spend",
-    "points": [
-      "The proxy forwards `safeguards` and `anthropic-beta` unchanged on `/v1/messages`, so Claude Code auto mode runs through the gateway.",
-      "New CLI session spend is recorded under the per-user `cli-session-<user_id>` alias instead of a 64-character session hash.",
-      "Pass-through endpoints from the config and the database merge again, and `forward_headers: true` forwards `Authorization` again."
-    ]
-  },
-  {
-    "folders": [
-      "v1.101.4"
-    ],
-    "title": "LiteLLM v1.101.4 supports Straiker v3 keys and fixes Azure Content Safety",
-    "points": [
-      "The Straiker guardrail calls `/api/v3/detect` for v3 platform keys, which start with `sk_agt_`.",
-      "A block from Straiker now reaches the caller as HTTP 400 with the tenant's block message.",
-      "Azure Content Safety guardrails now use `2024-09-01` when `api_version` is unset, so requests no longer return HTTP 404."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.1",
-      "v1.102.2",
-      "v1.101.3",
-      "v1.100.4"
-    ],
-    "title": "LiteLLM v1.103.1, v1.102.2, v1.101.3 and v1.100.4 fix UI and CLI session tokens",
-    "points": [
-      "Session tokens issued before the upgrade are rejected, so Admin UI and `lite` CLI users must run `lite login` again.",
-      "Session tokens now use AES-256-GCM with their own context and return as `litellm_login_` followed by unpadded base64url.",
-      "Login tokens no longer start with `sk-`, so the proxy no longer returns HTTP 401 for about one login in 262,144."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.0"
-    ],
-    "title": "LiteLLM v1.103.0 adds Fuse V2, TypeSafe Jev and config file ownership",
-    "points": [
-      "The proxy now ignores database values for keys in `config.yaml` and returns 400 on runtime writes, so edit the file and restart.",
-      "Fuse V2 routing now runs after the capability forecast, and per-model Fast mode is available.",
-      "Without a license, the proxy allows one Capability router and one Fuse v2 router, and a second router returns 403.",
-      "The catalog adds 408 models from providers such as AIHubMix, Azure, Together AI and Vertex AI, and corrects the price of 147 models."
-    ]
-  },
-  {
-    "folders": [
-      "v1.100.3"
-    ],
-    "title": "LiteLLM v1.100.3 fixes GPT-6 request rules and end-user budget resets",
-    "points": [
-      "GPT-6 names such as `gpt-6-astra` now get the GPT-5 request rules, so chat completions accept `reasoning_effort`, `max_tokens` and function tools.",
-      "The end-user budget reset now zeroes the cached spend counter in memory and Redis, so customers no longer get 429 errors.",
-      "Shared end-user budgets with more than about 32,700 customers now reset, because the job resets end users by budget link."
     ]
   }
 ]
