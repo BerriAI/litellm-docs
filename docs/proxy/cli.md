@@ -446,7 +446,7 @@ A read replica takes the same key under `database.reader`, and it requires the w
 ### --check_migrations_against_existing_data
    - **Default:** `False`
    - **Type:** `bool` (Flag)
-   - Check, read-only, that the rows in `DATABASE_URL` can take this version's pending migrations and request-log indexes, print what would block them, then exit without applying anything. Exit code 0 when nothing blocks, 2 when something does. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#check-the-rows-before-the-schema).
+   - Dry-run this version's pending migrations on `DATABASE_URL`: the real SQL runs inside one transaction that is rolled back, so PostgreSQL reports the row or schema that would make the upgrade fail, then exit. Exit code 0 lists each migration with its duration, 2 prints PostgreSQL's error. Holds the same locks the upgrade will, so run it off-peak. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#dry-run-the-migrations-before-the-upgrade).
    - **Usage:**
      ```shell
      litellm --check_migrations_against_existing_data
