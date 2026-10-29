@@ -1437,6 +1437,7 @@ router_settings:
 | NEW_RELIC_APP_NAME | Application name for New Relic AI Monitoring integration |
 | NEW_RELIC_LICENSE_KEY | License key for New Relic authentication |
 | NO_DOCS | Flag to disable Swagger UI documentation
+| NO_MAX_TOKENS_TPM_RESERVATION_FRACTION | <SinceVersion v="1.109.0" /> Share of a TPM limit reserved for a request that sets no output cap, as a fraction from 0.01 to 1. On a deployment with `otpm`, a request without `max_tokens` reserves the smaller of the model's max output and this share of `otpm`. On the proxy, it also sets the `max_tokens` written into a request without one when its key, team, or project has a TPM limit under 4096. A value outside the range logs a warning and uses the default. Default is 0.25. [Docs](./io_token_rate_limits.md#pre-call-admission)
 | NO_OPENAPI | Flag to disable the /openapi.json endpoint
 | NO_REDOC | Flag to disable Redoc documentation
 | NO_PROXY | List of addresses to bypass proxy
