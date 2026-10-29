@@ -49,7 +49,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 |---------------------|---------|
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
-| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and the [`supports_box_questions`](#box-questions-on-other-deployments) deployment flag | `v1.107.0-rc.1` |
+| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and the [`supports_box_questions`](#box-questions-on-other-deployments) deployment flag in the config and the SDK | `v1.107.0-rc.1` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -203,7 +203,7 @@ Every question takes `instructions` and an optional `name` that is echoed in its
 | `predicate` | None | `probability` that the answer is yes |
 | `choice` | `choices`: 2 to 255 entries of `{"value": string or boolean, "description": optional}` | `choice`, `probabilities` per value, `confidence` |
 | `score` | `levels`: 2 to 10 entries of `{"label": ..., "description": optional}`, lowest first | `score` (the probability-weighted level index), `probabilities` per level, `confidence` |
-| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment that sets [`supports_box_questions`](#box-questions-on-other-deployments) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
+| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment with [`supports_box_questions: true`](#box-questions-on-other-deployments) and, on TypeSafe, the same header | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
 
 A question the model will not answer comes back as `{"type": "refusal", "name": ...}`
 
@@ -384,7 +384,7 @@ Every question has a `type` and an optional `instructions` field. Extra fields o
 | `noul` | Optional object with `true` and `false` descriptions. A noul question needs `instructions` or `criteria` | `noul`: probability that the answer is true |
 | `choice` | Required object mapping 1 to 255 labels to descriptions | `choice`, `confidence`, `probabilities` per label |
 | `score` | Required array of 1 to 10 levels, lowest first | `score` (0 to levels - 1), `confidence`, `legend`, `probabilities` per level |
-| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment that sets [`supports_box_questions`](#box-questions-on-other-deployments) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
+| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment with [`supports_box_questions: true`](#box-questions-on-other-deployments) and, on TypeSafe, the same header | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
 
 On both routes, requests that break these rules, such as no questions at all, duplicate choice values or a `score` question with 11 levels, are rejected by LiteLLM with a 400 before any provider is called
 
@@ -465,11 +465,11 @@ model_list:
 
 TypeSafe still needs the [images header](#typesafe-images-box-questions-and-long-context) for box questions. Send it with each request as shown above, or set it in the deployment's `extra_headers`. A deployment on another route that calls TypeSafe's API must use `extra_headers`, since the proxy forwards the client's TypeSafe headers only to `typesafe/` deployments.
 
-The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. The value must be a boolean, since any other value, such as the string `"true"`, does not turn box questions on and can turn them off. In the SDK, pass `model_info={"supports_box_questions": True}`. The proxy ignores a `model_info` field at the top level of a request body.
+The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. The value must be a boolean, since any other value, such as the string `"true"`, does not turn box questions on and can turn them off, on that deployment and on its unflagged siblings. On a wildcard deployment such as `typesafe/*`, the flag applies to every model the deployment matches. In the SDK, pass `model_info={"supports_box_questions": True}`. The proxy ignores a `model_info` field at the top level of a request body.
 
-The flag only controls what LiteLLM sends, and the provider still has to answer. OpenAI does not answer box questions, so a flagged OpenAI deployment still fails with the 400 OpenAI returns for a box question to `gpt-6-luna`. Check that a self-hosted server answers box questions before you set the flag on it.
+The flag only controls what LiteLLM sends, and the provider still has to answer. `typesafe/jev-latest` is an alias TypeSafe can move to another model, and it answers box questions while it serves `jev-1.14.0`, which each response names in its `model` field. OpenAI does not answer box questions, so a flagged OpenAI deployment still fails with the 400 OpenAI returns for a box question to `gpt-6-luna`. Check that a self-hosted server answers box questions before you set the flag on it.
 
-LiteLLM keeps one value per provider and model, so set the flag the same way on every deployment that shares a provider and model. A deployment that leaves it unset can pick up the value set on another deployment of the same model, and that value can stay after the deployment that set it is removed.
+A deployment that leaves the flag unset can pick up the value set on another deployment of the same provider and model, so one `false` can turn box questions off on its unflagged siblings too, and that value can stay after the deployment that set it is removed. When one deployment of a model sets the flag, set it on every deployment of that model.
 
 ## SDK usage
 
