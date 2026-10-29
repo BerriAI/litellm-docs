@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # Context Selection (Needlepath)
 
+<SinceVersion v="1.109.0" />
+
 [Needlepath](https://nextmoca.com) performs query-conditioned extractive selection over LLM context. Given a block of text and a query, it returns the spans of that text which carry the answer, verbatim. As a LiteLLM guardrail it runs over tool outputs before they reach the model, so the model receives the part of a search result, retrieved document, or API dump that the current step actually needs.
 
 Selection is extractive, not generative. The returned block is made of extracts of the text that was submitted. Nothing is paraphrased, summarised, or rewritten.
@@ -20,6 +22,8 @@ Selection happens per message and is query-conditioned:
 3. **Select.** Each target is sent to `{api_base}/v1/context/select` as a single record, authenticated with `Authorization: Bearer <api_key>`. Requests for different messages run concurrently, so the added latency is roughly one round trip rather than one per message.
 4. **Rewrite.** The `rendered_context` returned for a target replaces that message's text in place. Every other message stays byte-identical, and multimodal parts such as images are preserved.
 
+On the default operating point, the service also screens what it returns for instruction-like text. See [Security screening](#security-screening).
+
 Each message is selected independently, so the outcome for one never changes the outcome for another.
 
 ## Fail-open by design
@@ -35,6 +39,7 @@ The guardrail forwards the original content when any of these hold:
 | The service is unreachable, times out, or the call is refused | the original request, unchanged |
 | The service answers a non-2xx status, including `402`, `403`, and `429` | the original request, unchanged |
 | The body is not JSON, or is JSON of an unexpected shape | the original request, unchanged |
+| `outcome` is `blocked`: security screening left nothing deliverable | the original request, unchanged |
 | `gate.reason` reports a stand-down (any value prefixed `standdown:`) | the original request, unchanged |
 | `records_selected` is `0`, `tokens_after` is `0`, or `rendered_context` is missing or blank | the original request, unchanged |
 | The selected block is not shorter than the text it would replace | the original request, unchanged |
@@ -42,6 +47,20 @@ The guardrail forwards the original content when any of these hold:
 A stand-down is the service reporting that it declined to select for this input. It is a normal outcome, not an error, and it means the full content is what the caller should send.
 
 Because a decline is per message, a stand-down on one tool output does not prevent selection on another in the same request.
+
+The stand-down and size conditions do not apply to a block that security screening has cleaned, described below. Forwarding the original in that case would send the flagged text on to the model.
+
+## Security screening
+
+`np-2026-10-r8` selects as `np-2026-10-r6` does and also screens the context it returns for instruction-like text, such as a prompt injection planted in a tool output. Each flagged span is replaced in place by the marker `[QUARANTINED: instruction-like candidate text removed]`. The guardrail handles the outcomes as the published Needlepath clients do:
+
+| `outcome` | What the guardrail does |
+| --- | --- |
+| `engaged` | Applies `rendered_context`, subject to the fail-open conditions above. When screening removed a span (`format_metrics.security_action` is `quarantine`), the block is applied even if it is not shorter than the original. |
+| `sanitized_fallback` | The service declined to select, and returned your full content with the flagged spans removed. The guardrail applies that `rendered_context` instead of forwarding the original. |
+| `blocked` | Nothing deliverable remained after screening. The guardrail forwards the original message unchanged, the same as any other decline. |
+
+Screening runs on the service and needs no configuration in the proxy. To run selection without screening, pin `operating_point: np-2026-10-r6`. The [Needlepath error reference](https://docs.nextmoca.com/errors#security-screening-outcomes) documents both outcomes and the `format_metrics` keys that report them.
 
 ## Requirements
 
@@ -85,7 +104,7 @@ guardrails:
         select_system: false           # default; opt in for system prompts
         min_chars_to_select: 500       # default; shorter messages skipped
         max_context_tokens: 4000       # default; budget per message
-        operating_point: np-2026-08-r4 # default; pinned, see below
+        operating_point: np-2026-10-r8 # default; pinned, see below
 ```
 
 ### 2. Start the LiteLLM gateway
@@ -141,7 +160,7 @@ When `default_on` is not set, selection runs only for requests that opt in. The 
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
         "guardrails": ["needlepath-selection"]
@@ -194,7 +213,7 @@ The response carries an `x-litellm-applied-guardrails: needlepath-selection` hea
 
 ## The pinned operating point
 
-`operating_point` is an immutable engine label. The guardrail pins `np-2026-08-r4` by default instead of inheriting whatever the service currently treats as its default, so the behaviour of a given proxy build does not change underneath a deployment. Change it only deliberately, and change it in config rather than relying on a service-side default.
+`operating_point` is an immutable engine label, sent as `budget.operating_point` on every selection request. The guardrail pins `np-2026-10-r8` by default instead of inheriting whatever the service currently treats as its default, so the behaviour of a given proxy build does not change underneath a deployment. Change it only deliberately, and change it in config rather than relying on a service-side default.
 
 ## Why nothing was selected
 
@@ -237,7 +256,7 @@ Nested `optional_params` (each is also accepted directly under `litellm_params`;
 | `select_system` | bool | `false` | Select over system messages. |
 | `min_chars_to_select` | int | `500` | Messages shorter than this are skipped. |
 | `max_context_tokens` | int | `4000` | Token budget requested for the selected block of a single message. |
-| `operating_point` | str | `np-2026-08-r4` | Immutable engine label sent with every request. |
+| `operating_point` | str | `np-2026-10-r8` | Immutable engine label sent with every request. |
 
 ## Environment variables
 
