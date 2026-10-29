@@ -6,7 +6,7 @@ import Image from '@theme/IdealImage';
 
 Track spend for keys, users, and teams across 100+ LLMs.
 
-LiteLLM automatically tracks spend for all known models. See our [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
+LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
@@ -304,7 +304,7 @@ By default, non-admin callers are **scoped to their own data**:
 | Caller role | `/spend/keys` | `/spend/users` |
 |-------------|---------------|----------------|
 | `proxy_admin` / `proxy_admin_viewer` | All keys | All users (or `?user_id=` for one row) |
-| `internal_user` / `internal_user_view_only` | Keys where `user_id` matches the caller | Only the caller's row |
+| `internal_user` / `internal_user_viewer` | Keys where `user_id` matches the caller | Only the caller's row |
 | Non-admin with no `user_id` on the key | Empty list `[]` | Empty list `[]` |
 
 An internal user who passes `?user_id=` for **another** user receives **HTTP 403** (not a silently filtered list).
@@ -385,7 +385,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 ## Custom Tags
 
 :::tip[See Full Request Tags Documentation]
-For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page. To tag requests from the W3C `baggage` header that OpenTelemetry clients already send, see [Map Baggage Values to Tags](./tag_budgets.md#map-baggage-values-to-tags).
 :::
 
 Requirements:

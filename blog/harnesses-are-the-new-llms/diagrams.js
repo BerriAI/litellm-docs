@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './diagrams.module.css';
 
 // ── Hero ──────────────────────────────────────────────────────────────────
 // Two-focal bundle: many curves fan in from the left, pass through two focal
@@ -170,7 +171,8 @@ const s = {
 export function StackComparison() {
   return (
     <figure style={s.fig}>
-      <div style={s.wrap}>
+      <div className={styles.scroll} role="region" aria-label="Model and agent stack comparison, scroll horizontally" tabIndex={0}>
+      <div style={{...s.wrap, minWidth: 640}}>
         <div />
         <div>
           <div style={s.colHeader}>Model stack — today</div>
@@ -201,6 +203,7 @@ export function StackComparison() {
         ))}
       </div>
 
+      </div>
       <div style={s.legend}>
         <div style={s.legendItem}>
           <div style={s.legendSwatch(true)} />

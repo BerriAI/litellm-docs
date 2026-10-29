@@ -179,4 +179,5 @@ The tag from the model config appears in `LiteLLM_SpendLogs`:
 
 - [Spend Tracking Overview](cost_tracking.md) - Complete tutorial on tracking spend with tags
 - [Tag Budgets](tag_budgets.md) - Set budget limits per tag
+- [Map Baggage Values to Tags](tag_budgets.md#map-baggage-values-to-tags) - Tag requests from the W3C `baggage` header
 - [Virtual Keys Setup](virtual_keys.md) - Required for tag tracking

@@ -1,5 +1,6 @@
 ---
-title: v1.59.8-stable
+title: "LiteLLM v1.59.8-stable"
+description: "Adds OpenAI image variations with Topaz support, DeepSeek R1 reasoning_content and more Bedrock Nova document types. Also adds Azure o1 pricing."
 slug: v1.59.8-stable
 date: 2025-01-31T10:00:00
 authors:

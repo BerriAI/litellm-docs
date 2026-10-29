@@ -236,6 +236,10 @@ Editing a guardrail (for example, a description-only PUT) no longer reorders gua
 
 You can stop guardrails from scanning `role: system` content while still sending the full `messages` list to the model.
 
+Since v1.103.0, guardrails on Anthropic `/v1/messages` also scan the top-level `system` prompt. Claude Desktop and Cowork send a long system prompt with every request, and a strict prompt-attack filter, such as a Bedrock guardrail's `PROMPT_ATTACK` filter, can block it even when the user's own text is harmless. Set this flag to keep that prompt out of the scan.
+
+On `/v1/messages` the flag skips only the top-level `system` prompt. A `role: system` entry inside `messages` is client input, so guardrails scan it even with the flag set. Claude Code sends these entries mid-conversation, for example its environment details and corrections typed while a tool runs. To keep them out of a Bedrock guardrail's scan, set [`experimental_use_latest_role_message_only: true`](./bedrock#experimental-only-send-latest-user-message) on the guardrail.
+
 **Global**, in `litellm_settings`:
 
 ```yaml
@@ -279,7 +283,7 @@ litellm_settings:
 
 ### Where the skip flags apply
 
-**Where these apply:** The **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`. **Lakera v2** also honors both flags, despite running via a direct hook rather than the unified path; see [Lakera AI](./lakera_ai#supported-params).
+**Where these apply:** The **unified** guardrail path (providers that implement `apply_guardrail` and run through LiteLLM’s message translation layer) on **OpenAI Chat Completions** (`/v1/chat/completions`) and **Anthropic Messages** (`/v1/messages`). Examples include Presidio, Bedrock guardrails, `litellm_content_filter`, OpenAI Moderation, Generic Guardrail API, and custom code guardrails that define `apply_guardrail`. **Lakera v2** also honors both flags, despite running via a direct hook rather than the unified path; see [Lakera AI](./lakera_ai#supported-params). **hide-secrets** honors `skip_tool_message_in_guardrail` on both routes the same way, but not the system-message flag; see [Secret Detection](./secret_detection#skip-tool-results).
 
 **Where these do *not* apply:** Other guardrails that run only via direct hooks on the raw request (e.g. Aporia, DynamoAI, Javelin, Lasso, Pangea, Model Armor, Azure Content Safety hooks, Guardrails AI, AIM, Cato Networks, tool permission, MCP security). These flags also do not apply to other routes until those endpoints use the same translation layer (e.g. Responses API, embeddings, speech).
 

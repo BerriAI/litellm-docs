@@ -1,0 +1,108 @@
+.container {
+  container-type: inline-size;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.cards .card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.cards .card:hover,
+.cards .card:focus-visible {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+.cards .card:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 4px;
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  margin-bottom: 24px;
+}
+
+:global([data-theme='dark']) .icon {
+  filter: invert(1);
+}
+
+.card .title {
+  margin: 0 0 14px;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.card .description,
+.card .requirements {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.card .description {
+  margin: 0 0 20px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.card .requirements {
+  margin: 0 0 24px;
+  padding-left: 18px;
+}
+
+.requirements li + li {
+  margin-top: 10px;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.version {
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ifm-color-primary);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@container (max-width: 700px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards .card {
+    transition: none;
+  }
+}
