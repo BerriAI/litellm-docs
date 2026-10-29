@@ -49,7 +49,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 |---------------------|---------|
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
-| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form | `v1.107.0-rc.1` |
+| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and the [`supports_box_questions`](#box-questions-on-other-deployments) deployment flag | `v1.107.0-rc.1` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -203,7 +203,7 @@ Every question takes `instructions` and an optional `name` that is echoed in its
 | `predicate` | None | `probability` that the answer is yes |
 | `choice` | `choices`: 2 to 255 entries of `{"value": string or boolean, "description": optional}` | `choice`, `probabilities` per value, `confidence` |
 | `score` | `levels`: 2 to 10 entries of `{"label": ..., "description": optional}`, lowest first | `score` (the probability-weighted level index), `probabilities` per level, `confidence` |
-| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` only, with the [images header](#typesafe-images-box-questions-and-long-context) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
+| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment that sets [`supports_box_questions`](#box-questions-on-other-deployments) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
 
 A question the model will not answer comes back as `{"type": "refusal", "name": ...}`
 
@@ -384,7 +384,7 @@ Every question has a `type` and an optional `instructions` field. Extra fields o
 | `noul` | Optional object with `true` and `false` descriptions. A noul question needs `instructions` or `criteria` | `noul`: probability that the answer is true |
 | `choice` | Required object mapping 1 to 255 labels to descriptions | `choice`, `confidence`, `probabilities` per label |
 | `score` | Required array of 1 to 10 levels, lowest first | `score` (0 to levels - 1), `confidence`, `legend`, `probabilities` per level |
-| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` only, with the [images header](#typesafe-images-box-questions-and-long-context) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
+| `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment that sets [`supports_box_questions`](#box-questions-on-other-deployments) | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
 
 On both routes, requests that break these rules, such as no questions at all, duplicate choice values or a `score` question with 11 levels, are rejected by LiteLLM with a 400 before any provider is called
 
@@ -432,7 +432,7 @@ The box edges are fractions of the image height and width, measured from the top
 
 On `/v1/decisions`, send the images as `input_image` parts with the same header. LiteLLM turns each PNG or JPEG into an asset, puts the asset's name where the image was in the text, and downloads image URLs first. A `box` question comes back as `{"type": "box", "name": ..., "box": {...}, "confidence": ...}` in its place in `answers`.
 
-`box` works on `jev-1.14.0` and `jev-preview`, and only with the images header, even when the request has no image. A box question to another model, `jev-1.13.0` and `jev-latest` included, or without the header gets a 400 before the provider is called, or with `drop_params` on, LiteLLM drops the question. A dropped question comes back as `{"type": "refusal"}` on `/v1/decisions` and is left out of `answers` on `/v1/systemone`. Without the images header, `assets` and `input_image` parts get the same 400 or drop on TypeSafe that they get on providers without image input, and with `drop_params` on, LiteLLM also drops any `assets` entry it cannot read and keeps the rest.
+`box` works on `jev-1.14.0` and `jev-preview`, and only with the images header, even when the request has no image. A box question to another model, `jev-1.13.0` and `jev-latest` included, or without the header gets a 400 before the provider is called, or with `drop_params` on, LiteLLM drops the question. A deployment's [`supports_box_questions`](#box-questions-on-other-deployments) flag changes which models take box questions, but a TypeSafe deployment still needs the header. A dropped question comes back as `{"type": "refusal"}` on `/v1/decisions` and is left out of `answers` on `/v1/systemone`. Without the images header, `assets` and `input_image` parts get the same 400 or drop on TypeSafe that they get on providers without image input, and with `drop_params` on, LiteLLM also drops any `assets` entry it cannot read and keeps the rest.
 
 In the SDK, pass the headers in `extra_headers`
 
@@ -448,6 +448,24 @@ response = litellm.systemone(
 )
 print(response.answers["red_square"].box)
 ```
+
+### Box questions on other deployments
+
+LiteLLM reads the cost map to decide which models take `box` questions, and the cost map lists only TypeSafe `jev-1.14.0` and `jev-preview`. To send box questions to a deployment the cost map does not cover, such as Jev 1.14 served by vLLM or by another OpenAI-format or self-hosted server, set `supports_box_questions: true` in the deployment's `model_info`.
+
+```yaml showLineNumbers
+model_list:
+  - model_name: jev-selfhosted
+    litellm_params:
+      model: hosted_vllm/jev-1.14.0
+      api_base: http://<your-vllm-host>:8000
+    model_info:
+      supports_box_questions: true
+```
+
+The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. Only the proxy config sets the flag, and the proxy ignores a `model_info` field in a request body.
+
+The flag only controls what LiteLLM sends, and the provider still has to answer. A provider that has no box questions returns its own error, such as the 400 OpenAI returns for a box question to `gpt-6-luna`. A `typesafe/` deployment with the flag on still needs the images header. Set the flag the same way on every deployment that shares a `litellm_params.model`, since a deployment that leaves it unset can pick up the value set on another deployment of the same model.
 
 ## SDK usage
 
