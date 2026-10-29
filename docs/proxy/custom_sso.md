@@ -164,19 +164,13 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
             models=[],                                      # models user has access to
             user_id=userIDPInfo.id,                         # user id to use in the LiteLLM DB
             user_email=userIDPInfo.email,                   # user email to use in the LiteLLM DB
-            user_role=LitellmUserRoles.INTERNAL_USER.value, # role to use for the user 
+            user_role=None,                                 # None keeps the role stored in LiteLLM (new users default to internal_user_viewer); a value here overrides the stored role on every login
             max_budget=0.01,                                # Max budget for this UI login Session
             budget_duration="1d",                           # Duration of the budget for this UI login Session, 1d, 2d, 30d ...
         )
     except Exception as e:
         raise Exception("Failed custom auth")
 ```
-
-:::info The returned `user_role` wins over the role stored in LiteLLM
-
-LiteLLM applies the `user_role` your handler returns on every login, and it takes precedence over the role saved in the LiteLLM database. A handler that always returns `LitellmUserRoles.INTERNAL_USER.value` (like the example above) keeps that role even after a proxy admin promotes the user to `proxy_admin` in the Admin UI. Return `user_role=None` to keep the role stored in LiteLLM, or derive the role from your IdP's claims and return that.
-
-:::
 
 #### 2. Configure in config.yaml
 
