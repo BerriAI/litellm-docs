@@ -20,8 +20,6 @@ You choose the models for each tier. For each request, the router picks a tier a
 
 You need a LiteLLM gateway with models already configured and permission to add models. If you do not have a gateway yet, start with the [gateway quickstart](/docs/proxy/quick_start).
 
-![Add Auto Router dialog with automatic configuration and model templates](../../blog/autorouter_setup_and_testing/auto-setup.png)
-
 1. Open **Models + Endpoints**, then the **Auto Router** tab, and add a router.
 2. Give it a name, such as `smart-router`. Click **Configure automatically** to fill the tiers from your deployed models, then review the selections.
 3. Use **Test Routing** with a prompt from your application. Check which tier and model it selects. This tests the routing decision without calling the selected model; an LLM classifier can still incur a charge.
