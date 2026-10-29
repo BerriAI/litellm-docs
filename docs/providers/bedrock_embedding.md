@@ -164,7 +164,7 @@ def wait_for_async_job(invocation_arn, aws_region_name="us-east-1", max_wait=360
             if elapsed > max_wait:
                 raise TimeoutError(f"Job timed out after {max_wait} seconds")
             
-            print(f"⏳ Job still processing... (elapsed: {elapsed:.0f}s)")
+            print(f"Job still processing... (elapsed: {elapsed:.0f}s)")
             time.sleep(10)  # Wait 10 seconds before checking again
 
 # Wait for completion

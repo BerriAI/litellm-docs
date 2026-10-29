@@ -1,5 +1,6 @@
 ---
-title: "v1.74.3-stable"
+title: "LiteLLM v1.74.3-stable"
+description: "Adds MCP model access groups, MCP tool cost tracking, Model Hub v2 for listing proxy models, and the Bytez and Dashscope providers."
 slug: "v1-74-3-stable"
 date: 2025-07-12T10:00:00
 authors:

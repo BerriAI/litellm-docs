@@ -165,7 +165,7 @@ Routing failures do not currently set a distinctive `error.type`; identify them 
 
 | Message prefix | Status | Cause |
 |---|---|---|
-| `No deployments available for selected model` | 429 | Every deployment in the model group is in cooldown after repeated failures. The message lists the cooling deployment ids and the seconds remaining |
+| `No deployments available for selected model` | 429 | Every deployment in the model group is in cooldown after repeated failures. The message lists the cooling deployment ids and the seconds remaining. The failure log lists the ones this request could have used, with their `api_base`, in [`error_information.error_cooldown_deployments`](/docs/proxy/logging_spec#standardloggingpayloaderrorinformation) |
 | `There are no healthy deployments for this model` | 400 | The model group has no deployment that can serve the request |
 | `Not allowed to access model due to tags configuration` | 401 | Tag-based routing excluded every deployment for this caller |
 | `No deployments available - crossed budget` | 429 | Provider-budget routing has exhausted the budget for every candidate deployment |

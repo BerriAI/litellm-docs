@@ -8,7 +8,7 @@ Litellm Proxy has the following release cycle:
 
 In production, we recommend pinning to the latest stable `1.x.x` release.
 
-:::info[Versioning changed starting 1.84.0]
+:::info[Versioning changed with the 1.84.0 release]
 
 The `-stable` and `-nightly` suffixes are gone. Stable releases are now plain PEP 440 / SemVer 2.0 (e.g. `1.84.0`), weekly scheduled releases bump the **MINOR** component, and **PATCH** is reserved for hotfixes. Docker publishes both bare (`1.84.0`) and `v`-prefixed (`v1.84.0`) tags pointing to the same image; PyPI uses the bare PEP 440 form (`1.84.0`, never `v1.84.0`). Releases published under the old naming (`v1.83.x-stable`, etc.) stay available forever.
 
@@ -36,11 +36,11 @@ If a Saturday `rc` fails QA it is not promoted; a fix lands, a follow-up `rc` ma
 
 ### Is there a release schedule for LiteLLM stable release?
 
-Stable releases come out every week (typically Sunday). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`.
+Stable releases come out every week (typically Sunday). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
 
 ### What is considered a 'minor' bump vs. 'patch' bump?
 
-Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-versions)):
+Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-versions)): {/* keep-version-note */}
 
 - 'minor' bumps: the regular weekly scheduled stable release (`1.84.0` → `1.85.0`). This is the normal cadence and may include new backward-compatible features or database tables.
 - 'patch' bumps: reserved for hotfixes to the current stable (`1.84.0` → `1.84.1`).

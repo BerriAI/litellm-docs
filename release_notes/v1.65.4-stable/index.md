@@ -1,5 +1,6 @@
 ---
-title: v1.65.4-stable
+title: "LiteLLM v1.65.4-stable"
+description: "Fixes DB deadlocks at 10K+ RPS when many instances write spend data. Adds a Usage tab with daily spend by model and Databricks Claude cost tracking."
 slug: v1.65.4-stable
 date: 2025-04-05T10:00:00
 authors:

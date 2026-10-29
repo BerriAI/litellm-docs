@@ -168,7 +168,7 @@ Here's how to call an Nvidia NIM Endpoint with the LiteLLM Proxy Server
 
 
 
-## Supported Models - 💥 ALL Nvidia NIM Models Supported!
+## Supported Models - ALL Nvidia NIM Models Supported!
 We support ALL `nvidia_nim` models, just set `nvidia_nim/` as a prefix when sending completion requests
 
 | Model Name | Function Call |

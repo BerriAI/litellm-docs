@@ -443,6 +443,15 @@ A read replica takes the same key under `database.reader`, and it requires the w
      litellm --use_prisma_db_push
      ```
 
+### --check_migrations_against_existing_data
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Check, read-only, that the rows in `DATABASE_URL` can take this version's pending migrations and request-log indexes, print what would block them, then exit without applying anything. Exit code 0 when nothing blocks, 2 when something does. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#check-the-rows-before-the-schema).
+   - **Usage:**
+     ```shell
+     litellm --check_migrations_against_existing_data
+     ```
+
 ## Debugging
 
 ### --debug

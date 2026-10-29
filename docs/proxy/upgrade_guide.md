@@ -1,74 +1,123 @@
 ---
 title: Upgrade Guide
-description: How to plan and run a LiteLLM Proxy upgrade, including how database migrations run and how long they take at production scale.
+description: Upgrade LiteLLM with Helm or Terraform. Run schema migrations and request-log indexing in a separate job before the gateway rollout.
 ---
 
 # Upgrade Guide
 
-Upgrading LiteLLM Proxy means rolling out a new image and letting it bring the database schema up to date. The image swap is quick; the database work is what needs planning, because its cost depends on how large your tables are and on what the new release changes. This page covers how to prepare, how migrations run, and how long to expect them to take.
+Helm charts and the official Terraform modules provide a **separate migration job** for schema changes and request-log indexing. Keep `DISABLE_SCHEMA_UPDATE=true` on the gateway pods and let the job finish before rolling out the new gateway version.
+
+```mermaid
+flowchart LR
+    subgraph Job["Migration job"]
+        Schema["Schema migrations"] --> Indexes["Request-log indexes"]
+    end
+    Indexes -->|Success| Gateway["Roll out gateway pods"]
+```
 
 ## Before you upgrade
 
-Read the [release notes](/release_notes) for every version between the one you run and the one you are moving to, and look for anything marked as a breaking change or a database change. Pin the exact image tag you are moving to rather than a floating tag such as `main-latest`, so every pod in the rollout runs the same code.
+Read the [release notes](/release_notes) for the versions you will cross. Check breaking changes and database changes, take a database snapshot, and test the upgrade against a restored copy of production to measure its duration. Rolling back an image does not undo database changes.
 
-Take a backup or snapshot of the database first. Migrations only move forward, so restoring that backup is how you go back if an upgrade has to be reversed. If your spend log table is large, run the upgrade once against a restored copy of production before doing it for real; it is the only way to get a firm duration for your hardware and data, and it shows you exactly which migrations will apply.
+### Check the rows before the schema
 
-## How migrations run
+From v1.108.0 the migration job reads the rows a pending schema change depends on before it applies anything, and refuses when they would make the change fail. Run the same check yourself before the upgrade, from any machine that can reach the database, with the **target** image:
 
-By default every proxy pod runs `prisma migrate deploy` when it starts, and only one of them does the work at a time: the others wait on a database lock and then find nothing left to apply. Once migrations finish, the pod starts serving and builds the request log indexes in the background. Larger deployments usually move this out of the pods into the [Helm PreSync migrations job](./prod.md#run-migrations-from-the-helm-presync-hook) and set `DISABLE_SCHEMA_UPDATE=true` on the pods, so a rollout waits for one job instead of racing pods against each other. See [Use prisma migrate deploy](./prod.md#use-prisma-migrate-deploy) for how migrations ship with each release.
+```bash
+docker run \
+-e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
+docker.litellm.ai/berriai/litellm:X.Y.Z --check_migrations_against_existing_data
+```
+
+It writes nothing and takes no table lock. Exit code 0 means the pending migrations and request-log indexes fit the rows the database has. Exit code 2 prints what blocks them, with the table and columns, the row count, the statement they block and the SQL that clears them:
+
+```
+LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
+  "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
+    blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
+    fix:    Shorten or hash the long "LiteLLM_SpendLogs" (api_key, startTime) values so every row's index entry fits.
+No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
+```
+
+The checks come from the pending migration SQL itself: a btree index whose entry for some row would not fit in a third of a page, a UNIQUE index or constraint over duplicate values, `SET NOT NULL` or a `NOT NULL` column with no default on a table that has rows, a `FOREIGN KEY` with orphan rows, and a `CHECK` constraint some rows fail. Each one is a single read-only count on the table it guards, which on a large `LiteLLM_SpendLogs` can take minutes. A count that does not finish within `LITELLM_MIGRATION_DATA_CHECK_TIMEOUT` (default **600 seconds**) is reported as unverified and refused, so raise that value rather than skip the check. The check does not see failures that are not about rows (lock waits, disk, permissions), and `ALTER COLUMN ... TYPE` and indexes over expressions get no check, so the rehearsal against a restored copy stays the complete test. The spend-log key case in the example is explained in [migration troubleshooting](../troubleshoot/prisma_migrations.md#6-database-migration-cannot-proceed-existing-rows-would-make-a-pending-schema-change-fail).
+
+## Upgrade with Helm or Terraform
+
+| Deployment | Select the release | Run migrations before rollout |
+|---|---|---|
+| [Helm](./deploy.md#deploy-with-helm) | Pin the chart and image versions. Keep the migration job and application images on the same LiteLLM release. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
+| [Terraform](./deploy.md#deploy-with-terraform-aws-and-gcp) | Bump the module `version`. Component images default to that release; review any image overrides. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
+
+<details>
+<summary>Helm and Argo CD hook settings</summary>
+
+For `helm upgrade`, use these values. The componentized `litellm` chart defaults to Helm hooks; the older `litellm-helm` chart defaults to Argo CD hooks and needs this change when used with Helm directly.
+
+```yaml title="values.yaml"
+migrationJob:
+  enabled: true
+  hooks:
+    helm:
+      enabled: true
+    argocd:
+      enabled: false
+```
+
+For Argo CD, enable `argocd` and disable `helm` instead. The PreSync job then runs before the application sync. See the chart values for [`litellm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) and [`litellm-helm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
+
+</details>
+
+Check the **migration job logs** for both schema and indexing completion. After the gateway rollout, verify [`/health/readiness`](./health.md#probe-endpoints) and send a test request through the gateway.
 
 ## Database migrations
 
 ### What takes time
 
-Each migration falls into one of two groups, and only the second depends on how much data you have.
+The migration job runs schema migrations first, then builds any missing request-log indexes. **Both stages count toward the job's runtime.** Existing valid indexes are skipped.
 
-Most migrations only change schema: they add a table, add a nullable column, add a column with a constant default, or add an index to a small table. On PostgreSQL 11 or later, adding a column, even one with a default, updates the catalog without touching existing rows, so these finish in milliseconds whether `LiteLLM_SpendLogs` is empty or holds a year of traffic. The fixed cost of an upgrade made up of these migrations is starting the Prisma CLI and checking migration state, roughly 15 seconds, regardless of how many migrations are pending.
-
-The second group reads or rewrites every row of a table, so its time grows with the table. Building an index on `LiteLLM_SpendLogs`, changing a column's type, adding a constraint that must be validated, and backfilling data with `UPDATE` are in this group. LiteLLM builds the request log indexes on `LiteLLM_SpendLogs` with `CREATE INDEX CONCURRENTLY` after the migrations finish, which keeps spend log writes flowing during the build. A migration that builds a plain `CREATE INDEX` on a large table, or rewrites one, holds a lock that stops spend log writes for the whole time it runs.
-
-`LiteLLM_SpendLogs` is the table that grows. At 100 requests per second it gains roughly 3 billion rows a year, and at 10,000 requests per second hundreds of billions, which is tens of GB to tens of TB on disk depending on whether you store request and response bodies. The daily spend tables, keys, teams, and users stay small enough that operations on them take seconds at any traffic level.
+| Work | What affects duration | Effect on the database |
+|---|---|---|
+| Schema changes, such as new tables or nullable columns | Usually short; lock waits can still delay them | Brief locks can delay other queries |
+| Request-log indexes | `LiteLLM_SpendLogs` size, disk speed, memory, and database load | Concurrent index builds allow reads and writes, but consume database resources |
+| A migration with a plain index build, table rewrite, or data backfill | Rows scanned or changed; inspect the release's migration SQL | Can block writes or other queries; test and plan a maintenance window if needed |
 
 ### Expected duration
 
-The table below gives expected times by the size of `LiteLLM_SpendLogs` (`pg_total_relation_size`, table plus indexes) for each kind of work. The 10 GB row is measured; the larger rows are extrapolated from it and from a 35 GB table, where the request log index build took 2 minutes 12 seconds. The plain index and rewrite estimates also apply the slowdown described below.
+Time the **complete migration job** against a production-sized database copy. A schema-only upgrade can be quick while a new index on a large spend-log table takes much longer. Table size alone is not enough to predict an upgrade window.
 
-The columns are the kinds of work described above. "Request log indexes" is the concurrent build LiteLLM runs after migrations, during which spend log writes continue. "Plain index" is one `CREATE INDEX` on `LiteLLM_SpendLogs` inside a migration, which blocks spend log writes while it runs. "Table rewrite" is a migration that rewrites the table, such as a column type change, which blocks reads and writes.
+For Helm, set `migrationJob.activeDeadlineSeconds` (default **1800 seconds**) and the deployment controller's timeout to cover the complete job. With `helm upgrade`, also set `--timeout` accordingly. For Terraform, check the ECS task or Cloud Run job timeout and the deployment wait limit; Helm settings do not apply there.
 
-| Table size | Schema only | Request log indexes | Plain index | Table rewrite |
-|---|---|---|---|---|
-| 10 GB (measured) | about 15 s | about 20 s | 4 to 8 s | about 1 min |
-| 100 GB (estimate) | about 15 s | about 6 min | 1 to 2 min | about 15 min |
-| 1 TB (estimate) | about 15 s | about 1 h | 10 to 20 min | about 2.5 h |
-| 10 TB (estimate) | about 15 s | about 10 h | 1.5 to 3.5 h | about 1 day |
+Use [spend-log retention](./spend_logs_deletion.md) to limit the data future index builds must scan.
 
-The measurements come from PostgreSQL 14 on an 8 vCPU, 32 GB machine with the database on local disk, default `maintenance_work_mem`, and no other traffic, using synthetic spend log rows without stored request or response bodies. Per GB, the index build ran about 1.7 times slower on the 35 GB table than on the 10 GB one, once the table no longer fit in memory, so read the estimates as a floor rather than a ceiling. Network attached storage, a busy primary, or a smaller instance will be slower. Rows that store request and response bodies are larger, so the same number of requests makes a bigger table. When you need a firm figure, time the upgrade against a restored copy of your production database.
-
-The request log index build does not delay a proxy that runs its own migrations: it runs in the background once the proxy is serving, and a build that is interrupted resumes on the next start. The [Helm migrations job](./prod.md#run-migrations-from-the-helm-presync-hook) is different. It builds the indexes before it exits, and the chart stops it after `migrationJob.activeDeadlineSeconds` (default 1800 seconds), so on a table of several hundred GB or more raise that value, and the `--timeout` of `helm upgrade`, to cover the request log indexes column above.
-
-Schema only migrations are the common case, and most upgrades contain nothing else. The two right hand columns are what to look for before upgrading a large deployment, because they hold a lock on `LiteLLM_SpendLogs` for the whole time they run.
-
-### Check what an upgrade will apply
-
-To see which migrations your database already has, query the Prisma migration history:
+<details>
+<summary>Check which schema migrations are already applied</summary>
 
 ```sql
 SELECT migration_name, finished_at
 FROM "_prisma_migrations"
-ORDER BY finished_at DESC
-LIMIT 10;
+WHERE finished_at IS NOT NULL
+  AND rolled_back_at IS NULL
+ORDER BY finished_at;
 ```
 
-Every migration in the [`litellm-proxy-extras` migrations folder](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations) for the target version that is not in that list will run. Open the `migration.sql` of each one and look for statements that touch `LiteLLM_SpendLogs`: a `CREATE INDEX` without `CONCURRENTLY`, `ALTER COLUMN ... TYPE`, `ADD CONSTRAINT`, or `UPDATE` means the upgrade will take time proportional to that table and will block writes to it while it runs, so schedule it in a maintenance window. If the only statements are `CREATE TABLE`, `ADD COLUMN`, and indexes on other tables, expect the fixed cost above.
+Compare the full result with the [migration files](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations) at your **target release tag**, rather than `main`. Inspect pending SQL for operations on large tables. Request-log indexing is a separate stage, so migration history alone does not confirm that the job is done.
 
-### Keep migrations fast
+</details>
 
-The most effective way to keep upgrades short is to keep `LiteLLM_SpendLogs` from growing without bound. Set a [retention period](./spend_logs_deletion.md) so old rows are deleted, and at high volume [partition the table](./spend_logs_deletion.md#partitioning-for-high-volume-deployments) so retention drops whole partitions and each index build only has to cover the partitions that remain.
+## Custom deployments
 
-### When a migration is slow or stuck
+If your deployment does not provide a migration job, run this in a separate container using the **target LiteLLM proxy image**, with `DATABASE_URL` and the required database credentials configured:
 
-Every schema change has to take a lock on its table, so a long running query or an idle transaction holding a lock on a LiteLLM table delays the migration until it ends. If a migration seems stuck, look in `pg_stat_activity` for sessions that have been open a long time against LiteLLM tables.
+```bash
+DISABLE_SCHEMA_UPDATE=false litellm --skip_server_startup
+```
 
-On PostgreSQL 10, adding a column with a default rewrites the whole table under an `ACCESS EXCLUSIVE` lock, which turns a migration that is instant elsewhere into one that scales with table size. See [Upgrade stalls on PostgreSQL 10](../troubleshoot/prisma_migrations.md#5-upgrade-to-v1990-or-later-stalls-on-20260818000000_add_spend_log_timestamps-postgresql-10) for the measured cost and how to handle it.
+This LiteLLM command runs schema migrations **and request-log indexing**, waits for both to finish, and exits without starting the gateway. Require a successful exit before rolling out gateway containers with `DISABLE_SCHEMA_UPDATE=true`. From v1.108.0 it runs the [row check](#check-the-rows-before-the-schema) first and exits 2 with the report, before the first migration, when existing rows would make one fail.
 
-The proxy stops `prisma migrate deploy` after `LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT` seconds (default 600) and retries it. If you expect an upgrade to run longer than that, for example one that builds a plain index on a large spend log table, raise the timeout for that rollout so the proxy does not cut the migration off partway. The request log index build is not covered by this timeout.
+## When a migration is slow or stuck
+
+Start with the **migration job's logs and status**. Check database lock waits in `pg_stat_activity` and index-build progress in `pg_stat_progress_create_index` before changing timeouts.
+
+`LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT` controls the schema migration subprocess (default **600 seconds**). Set it on the **migration job** if that stage needs longer; it does not cover request-log indexing. The whole-job and deployment timeouts must allow enough time for both stages and retries.
+
+See [migration troubleshooting](../troubleshoot/prisma_migrations.md) for failed migrations and PostgreSQL version-specific issues.

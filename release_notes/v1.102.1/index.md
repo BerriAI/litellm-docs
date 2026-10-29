@@ -1,5 +1,6 @@
 ---
-title: "v1.102.1 - Claude Code Auto Mode, Realtime Handshake Errors, OTEL Metadata & TypeSafe Jev"
+title: "LiteLLM v1.102.1 - Claude Code Auto Mode, Realtime Handshake Errors, OTEL Metadata & TypeSafe Jev"
+description: "Lets Claude Code auto mode work through the gateway. Also reports refused realtime handshakes to clients and promotes nested OTEL caller metadata."
 slug: "v1-102-1"
 date: 2026-09-23T06:12:28
 authors:

@@ -15,7 +15,9 @@ import TabItem from '@theme/TabItem';
 | Endpoints | `/v1/chat/completions`, `/v1/messages`, `/v1/responses` |
 | Streaming Support | Yes. A flagged answer ends the stream with an error frame. |
 
-Ships in `v1.106.0`. It landed on `main` after `v1.106.0-dev.3`.
+<SinceVersion v="1.106.0" />
+
+The guardrail landed on `main` after `v1.106.0-dev.3`.
 
 ## How it works
 
@@ -126,7 +128,7 @@ Go to **Guardrails**, click **Add New Guardrail**, then **Add Provider Guardrail
 
 The **Decision Model** picker lists every model on the proxy whose `mode` is `evaluation` and whose provider serves `/v1/decisions`, each with its provider's logo, so chat models are hidden. Cost map entries such as `typesafe/jev-latest` and `perplexity/pplx-decider-v1-27b` are already `evaluation`. Other decision-capable deployments, such as `openai/gpt-6-luna` (a `chat` model in the cost map), `openrouter/typesafe/jev-1.13`, self-hosted vLLM and Strands Decider models, and Databricks endpoints other than `databricks-openjev-qwen35-4b`, appear once the deployment sets `model_info.mode: evaluation`:
 
-```yaml showLineNumbers
+```yaml showLineNumbers keep-model-ids
 model_list:
   - model_name: luna
     litellm_params:

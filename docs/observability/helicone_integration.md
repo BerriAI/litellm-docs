@@ -29,7 +29,7 @@ os.environ["HELICONE_API_KEY"] = "your-helicone-key"
 # OpenAI call
 response = completion(
     model="helicone/{{openai_small}}",
-    messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
+    messages=[{"role": "user", "content": "Hi - I'm OpenAI"}],
 )
 
 print(response)
@@ -175,7 +175,7 @@ Log requests to Helicone while using any LLM provider directly.
   # OpenAI call
   response = completion(
       model="{{openai_large}}",
-      messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
+      messages=[{"role": "user", "content": "Hi - I'm OpenAI"}],
   )
 
   print(response)

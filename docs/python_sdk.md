@@ -47,6 +47,7 @@ To use a different provider, change the model name and the API key. The code for
 - **One interface.** Each provider uses the same `completion()` function and the same parameters.
 - **One output format.** Each response has the OpenAI format, for all providers.
 - **Exception mapping.** The SDK changes provider errors into the OpenAI exception types. Your code that catches OpenAI exceptions also catches the errors of each provider.
+- **Auto routing.** Build an [Autorouter in Python](/docs/autorouter_sdk) to choose a model for each request based on its complexity.
 - **Routing.** The [Router](/docs/routing) gives you retries, fallbacks, and load balancing across deployments.
 - **Callbacks.** Send logs and costs to Langfuse, MLflow, Helicone, and other tools with one line of code.
 

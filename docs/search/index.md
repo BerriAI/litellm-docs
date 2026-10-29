@@ -2,7 +2,7 @@
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -13,10 +13,7 @@ LiteLLM follows the [Perplexity API request/response for the Search API](https:/
 
 :::
 
-:::info
-
-Supported from LiteLLM v1.78.7+
-:::
+<SinceVersion v="1.78.7" />
 
 ## **LiteLLM Python SDK Usage**
 ### Quick Start 
@@ -281,7 +278,7 @@ See the [official Perplexity Search documentation](https://docs.perplexity.ai/ap
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string or array | Yes | Search query. Can be a single string or array of strings |
-| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` |
+| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` or `"deepseek"` |
 | `search_tool_name` | string | Yes (Proxy) | Name of the search tool configured in `config.yaml` |
 | `max_results` | integer | No | Maximum number of results to return (1-20). Default: 10 |
 | `search_domain_filter` | array | No | List of domains to filter results (max 20 domains) |
@@ -354,6 +351,7 @@ The response follows Perplexity's search format with the following structure:
 | APISerpent | `APISERPENT_API_KEY` | `apiserpent` |
 | Bedrock AgentCore | `AGENTCORE_GATEWAY_URL` (required), AWS credentials or `AGENTCORE_GATEWAY_TOKEN` | `agentcore` |
 | Nimble | `NIMBLE_API_KEY` | `nimble` |
+| DeepSeek | `DEEPSEEK_API_KEY` | `deepseek` |
 | Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.

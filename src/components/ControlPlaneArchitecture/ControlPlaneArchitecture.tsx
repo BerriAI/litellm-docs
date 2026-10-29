@@ -1,9 +1,10 @@
 import React from 'react';
+import {Database, Zap} from 'lucide-react';
 import styles from './styles.module.css';
 
 /* ────────────────────── Shared small pieces ────────────────────── */
 
-function InfraBox({ icon, label, color }: { icon: string; label: string; color: 'green' | 'blue' | 'orange' }) {
+function InfraBox({ icon, label, color }: { icon: React.ReactNode; label: string; color: 'green' | 'blue' | 'orange' }) {
   const colorClass =
     color === 'green'
       ? styles.infraBoxGreen
@@ -45,8 +46,8 @@ function WorkerColumn({
         <div className={styles.nodeCaption}>Handles LLM requests</div>
       </div>
       <div className={styles.infraStack}>
-        <InfraBox icon="🗄" label="Own Database" color="green" />
-        <InfraBox icon="⚡" label="Own Redis" color="orange" />
+        <InfraBox icon={<Database size={16} aria-hidden="true" />} label="Own Database" color="green" />
+        <InfraBox icon={<Zap size={16} aria-hidden="true" />} label="Own Redis" color="orange" />
       </div>
     </div>
   );
