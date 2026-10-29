@@ -65,7 +65,7 @@ The endpoint scopes its result to the calling key, answers a targeted check with
 
 ### Which deployments a key sees
 
-A proxy admin, meaning the master key or a key whose user has the `proxy_admin` or `proxy_admin_viewer` role, sees every deployment, unless the admin's key has its own `models` list, which then decides what it sees. A non-admin key whose own `models` list is empty or contains `all-proxy-models` sees every deployment except those another team owns. Any other key sees only the deployments its `models` list allows, with access group names and `all-team-models` in that list expanded, and never a deployment another team owns.
+A proxy admin, meaning the master key or a key whose user has the `proxy_admin` or `proxy_admin_viewer` role, sees every deployment, unless the admin's key has its own `models` list, which then decides what it sees. A non-admin key whose own `models` list is empty or contains `all-proxy-models` sees every deployment except those another team owns. A team's own `models` list does not narrow this result yet, unlike a chat request, so give a team key its own `models` list, or `all-team-models`, to scope what it sees. Any other key sees only the deployments its `models` list allows, with access group names and `all-team-models` in that list expanded, and never a deployment another team owns.
 
 ### Check one model
 
@@ -87,15 +87,17 @@ The 403 and 404 bodies come in two shapes. A `model` the key cannot call is refu
 
 ### Response fields
 
-Every entry carries `model`, the deployment's `litellm_params.model`, and `model_id`, the deployment's `model_info.id`. Any other field in an entry comes from this list, and only when the deployment or its probe sets it: `custom_llm_provider`, `mode`, `base_model`, `aws_region_name`, `region_name`, `watsonx_region_name`, `vertex_project`, `vertex_location`, `tpm`, `rpm`, `error`, `raw_request_typed_dict`, `x-ratelimit-remaining-requests`, `x-ratelimit-remaining-tokens`, and `x-ms-region`. An unhealthy entry usually also carries `exception_status`, the HTTP status of the failed probe, which is 500 when the error has none. An entry never has an `api_key` field or any other credential field from `litellm_params`, and leaves out every other `litellm_params` value. Later releases can add fields to this list, so a client should ignore fields it does not know.
+Every entry carries `model`, the deployment's `litellm_params.model`, and `model_id`, the deployment's `model_info.id`. Any other field in an entry comes from this list, and only when the deployment or its probe sets it: `custom_llm_provider`, `mode`, `base_model`, `aws_region_name`, `region_name`, `watsonx_region_name`, `vertex_project`, `vertex_location`, `tpm`, `rpm`, `error`, `raw_request_typed_dict`, `x-ratelimit-remaining-requests`, `x-ratelimit-remaining-tokens`, and `x-ms-region`. An unhealthy entry usually also carries `exception_status`, the HTTP status of the failed probe, which is 500 when the error has none. An entry never has an `api_key` field or any other credential field from `litellm_params`, and the only other `litellm_params` values it can carry are the admin-only fields below. Later releases can add fields to this list, so a client should ignore fields it does not know.
 
-`api_base`, `api_version`, and `aws_bedrock_runtime_endpoint` are removed from each entry for a non-admin key, together with the server-side identity federation and token exchange settings such as `anthropic_identity_source` and `token_exchange_endpoint`. Every 200 or 503 response to a non-admin key has a `Litellm-Health-Field-Notice` header that names each removed field:
+`api_base`, `api_version`, and `aws_bedrock_runtime_endpoint` are removed from each entry for a non-admin key, together with server-side auth settings such as `anthropic_identity_source`, `token_exchange_endpoint`, and `github_copilot_host`. Every 200 or 503 response to a non-admin key has a `Litellm-Health-Field-Notice` header that lists every admin-only field, whether or not an entry in that response had one:
 
 ```text
 Litellm-Health-Field-Notice: api_base, api_version, aws_bedrock_runtime_endpoint, anthropic_disable_workload_identity_federation, ... are admin-only on this endpoint
 ```
 
 Read that header instead of a hardcoded list, because the set of admin-only fields can grow.
+
+On an unhealthy entry, `error` and `raw_request_typed_dict` go to every key that can see the deployment. They can show the upstream URL, a server stack trace, and whatever the provider's error message echoes back, such as a masked API key. Set `health_check_details: false` when non-admin keys should not see them.
 
 With `general_settings.health_check_details: false`, each entry carries only `model`, `model_id`, and `exception_status` on an unhealthy entry, with no `error`. The admin-only fields are left out for proxy admins too.
 
@@ -112,9 +114,9 @@ general_settings:
 
 Set `health_check_details: false` to return only [the minimal entry](#response-fields) when the proxy is exposed to a broad audience.
 
-The cached result follows the same rules as a live check. Each key sees only its own deployments, a targeted call answers 503 when no targeted deployment is healthy in the cache, and non-admin keys get the admin-only fields removed. Until the first background run finishes the cache is empty, so an untargeted call returns `{}` and every targeted call answers 503 with empty lists. On an untargeted call from a scoped key whose deployments all lack a `model_info.id`, the cache cannot be matched to them, so the response adds a `warnings` list that says so instead of an unexplained empty result.
+The cached result follows the same rules as a live check. Each key sees only its own deployments, a targeted call answers 503 when no targeted deployment is healthy in the cache, and non-admin keys get the admin-only fields removed. Until the first background run finishes the cache is empty, so an untargeted call answers 200 with empty lists, or `{}` for an admin key with no `models` list, and every targeted call answers 503 with empty lists. A deployment the background loop skips, through `disable_background_health_check` or `background_health_check_model_groups` below, is never in the cache, so it never shows up and a targeted check of it always answers 503 with empty lists. On an untargeted call from a scoped key whose deployments all lack a `model_info.id`, the cache cannot be matched to them, so the response adds a `warnings` list that says so instead of an unexplained empty result.
 
-To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. That only skips the background loop; an on-demand `GET /health` still probes it unless you also set `general_settings.health_check_skip_disabled_background_models: true`, which omits those deployments from on-demand and shared health checks as well.
+To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. While background checks are on, `/health` only reads the cache, so that deployment drops out of its result as described above. Set `general_settings.health_check_skip_disabled_background_models: true` to also leave those deployments out of on-demand checks, which run when background checks are off, and out of shared health checks.
 
 ```yaml
 model_list:
