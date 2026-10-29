@@ -228,7 +228,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## Map Baggage Values to Tags
 
-<SinceVersion v="1.108.0" />
+<SinceVersion v="1.109.0" />
 
 A request can get its tag from the W3C `baggage` header, which OpenTelemetry uses to pass context between services. Each rule in `general_settings.request_tag_mappings` reads one baggage key and adds a tag to the request, so a service that already sends a value like `baggage: entrypoint=<value>` gets its own tag without setting `metadata.tags` on every call. Spend is tracked against the mapped tag whether or not the tag has a budget, and a spent tag budget rejects the request with HTTP 422 before the provider call, the same as any other tag.
 
