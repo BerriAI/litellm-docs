@@ -440,7 +440,7 @@ curl http://0.0.0.0:4000/v1/responses \
 
 Multi-turn tool calling works the same way it does against Fireworks directly: send back the `function_call_output` items together with the `previous_response_id` Fireworks returned, and Fireworks continues the conversation server-side
 
-`developer` input items are sent to Fireworks as `system` messages, since Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. A model whose chat template needs the system message first (qwen3.8) still rejects a developer item placed after the first input item, the same way it does when called directly
+`developer` input items are not sent to Fireworks as messages, since Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. LiteLLM folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, so a model whose chat template needs the system message first (qwen3.8) accepts a developer item placed after the first input item. A deployment that declares `supports_mid_conversation_system: true` in its own `model_info` gets each `developer` item as a `system` item in place instead. The same request through the chat completions bridge (`use_chat_completions_api: true`) follows the [developer role](../completion/developer_role.md) rules, which move a later `developer` message only for a model that declares `supports_mid_conversation_system: false`.
 
 ## Document Inlining 
 

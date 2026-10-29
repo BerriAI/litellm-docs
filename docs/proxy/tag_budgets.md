@@ -228,7 +228,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## Map Baggage Values to Tags
 
-<SinceVersion v="1.108.0" />
+<SinceVersion v="1.109.0" />
 
 A request can get its tag from the W3C `baggage` header, which OpenTelemetry uses to pass context between services. Each rule in `general_settings.request_tag_mappings` reads one baggage key and adds a tag to the request, so a service that already sends a value like `baggage: entrypoint=<value>` gets its own tag without setting `metadata.tags` on every call. Spend is tracked against the mapped tag whether or not the tag has a budget, and a spent tag budget rejects the request with HTTP 422 before the provider call, the same as any other tag.
 
@@ -299,11 +299,15 @@ The proxy counts spend for a mapped tag from the first request that carries it, 
 
 ### What mappings apply to
 
-Mappings apply to POST requests on LLM API routes such as `/chat/completions`, `/v1/responses` and `/v1/messages`, A2A agent routes, and registered pass-through endpoints. Token counting, model listing, request previews and MCP routes are skipped.
+Mappings apply to POST requests on LLM API routes such as `/chat/completions`, `/v1/responses` and `/v1/messages`, A2A agent routes, and registered pass-through endpoints. That includes follow-up calls such as `POST /v1/batches/{batch_id}/cancel` and `POST /v1/responses/{response_id}/cancel`, so under a `required` rule they need baggage too, while `GET` reads never do. Token counting, model listing, request previews, MCP routes, `/v1/indexes` and `/v1/memory` are skipped, so a `required` rule does not reject them and their spend carries no mapped tag.
+
+A few more routes skip mappings in the same way because of known gaps. These are the experimental `/queue/chat/completions` route, the `/v1/evals` routes, and batch and file requests sent with a provider prefix that does not start with the name of a [pass-through route](../pass_through/intro), such as `/litellm_proxy/v1/batches`, `/hosted_vllm/v1/files` or `/xai/v1/batches`. A prefix that does, such as `/openai/`, `/azure/`, `/vertex_ai/`, `/bedrock/` or `/openai_like/`, is mapped. `/v1/batches` and `/v1/files` are mapped too. They pick the provider from the request, for example `target_model_names` on the upload, the `custom-llm-provider` header or a `custom_llm_provider` field, and send it to OpenAI when the request names none.
+
+A background `/v1/responses` call keeps the mapped tag from the request that created it, so the spend billed when it finishes goes to that tag even though the later read sends no baggage. A batch whose input file was uploaded with `target_model_names` keeps the tag of the batch create request in the same way. When the provider runs that batch, its spend is written by the [batch cost poller](./managed_batches#observability), which runs every `proxy_batch_polling_interval` seconds (an hour by default) and handles up to `MAX_OBJECTS_PER_POLL_CYCLE` batches per run, so a tag budget sees that spend some time after the batch completes. An OpenAI batch whose input file was uploaded without `target_model_names` is billed on the `GET /v1/batches/{batch_id}` call that retrieves it, and that spend carries no mapped tag.
 
 Mapped tags only drive spend tracking and budgets. They never select a deployment under `enable_tag_filtering`, attach a tag-scoped policy, or pick a tag-mode guardrail, unless the caller, key, team or project already carries the same tag. `reject_clientside_metadata_tags` does not block mapped tags, since an admin configured them. The client still chooses the baggage value, though, so any key can send another service's value and spend that tag's budget, and a `tag_prefix` rule lets the caller pick any tag under the prefix. Use exact `value` rules or `require_budgeted_tag` to limit callers to tags you created.
 
-Baggage is decoded the way OpenTelemetry decodes it. Percent-encoded values are decoded, a bare `+` reads as a space, and properties after `;` are ignored. A value with a control character such as `%00` maps no tag.
+Baggage is decoded the way OpenTelemetry decodes it. Percent-encoded values are decoded and a bare `+` reads as a space, so send a literal plus as `%2B`. Properties after `;` and spaces around `=` are ignored, and a value with a control character such as `%00` maps no tag.
 
 You can also edit the rules in the Admin UI. Open **Router Settings** in the Settings section, then the **General** tab, and use the `request_tag_mappings` row. Rules from `config.yaml` show there read-only.
 

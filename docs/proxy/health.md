@@ -179,6 +179,25 @@ model_list:
       mode: embedding
 ```
 
+### Audio output chat models
+
+<SinceVersion v="1.109.0" />
+
+OpenAI and Azure chat models that output audio, such as `gpt-audio-1.5` and `gpt-audio-mini`, reject a request with no audio in its input or output. The chat probe asks these models for text plus audio output, a `wav` clip in the [`health_check_voice`](#health-check-tuning-reference) voice, so they pass the default probe with no `model_info.health_check_params` override. Values you set in `health_check_params` still win, and a `modalities` list there without `"audio"` keeps the probe text only.
+
+LiteLLM picks these models by `base_model`, read from `model_info` and then `litellm_params`, or else by the deployment's model name. So a custom-named Azure deployment gets the audio probe only when `base_model` names its model, as for [cost tracking](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments).
+
+```yaml
+model_list:
+  - model_name: gpt-audio
+    litellm_params:
+      model: azure/my-gpt-audio-deployment
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+    model_info:
+      base_model: azure/gpt-audio-1.5
+```
+
 ## Health check tuning reference
 
 Set these under a model's `model_info` unless noted otherwise. They control how the probe request is shaped.
@@ -190,7 +209,7 @@ Set these under a model's `model_info` unless noted otherwise. They control how 
 | `health_check_max_tokens_reasoning` | unset | `max_tokens` for reasoning models when `health_check_max_tokens` is not set |
 | `health_check_max_tokens_non_reasoning` | unset | `max_tokens` for non-reasoning models when `health_check_max_tokens` is not set |
 | `health_check_reasoning_effort` | unset | `reasoning_effort` on the probe (chat, completion, batch, responses modes only) |
-| `health_check_voice` | `alloy` | Voice for `audio_speech` probes. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
+| `health_check_voice` | `alloy` | Voice for `audio_speech` probes, and for chat probes of [OpenAI and Azure models that output audio](#audio-output-chat-models) <SinceVersion v="1.109.0" />. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
 | `health_check_model` | unset | Concrete model a wildcard route probes |
 | `disable_background_health_check` | false | Skip this model in the background loop |
 
