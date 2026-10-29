@@ -295,7 +295,7 @@ The proxy will automatically load balance your boto3 requests across all configu
 
 ### Bedrock Guardrails on config.yaml models
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
 

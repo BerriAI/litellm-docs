@@ -95,7 +95,7 @@ export function buildModel(catalog: CatalogInput): Model {
       fail(`plans need unique nonempty ids: ${id}`);
     }
     planIds.add(id);
-    if (label.length === 0) {
+    if (label.length === 0 || (typeof label === 'string' && !label.trim())) {
       fail(`${id} needs a label`);
     }
     if (isoDay(date, id) !== date || date <= after) {
@@ -112,7 +112,12 @@ export function buildModel(catalog: CatalogInput): Model {
         work.planned.push({id, date, level: LEVEL_INDEX.get(level)!});
       }
     }
-    return {kind: 'plan', key: `plan:${id}`, id, date, label: label.join(', '), terms: [...label], route, description};
+    return {
+      kind: 'plan', key: `plan:${id}`, id, date,
+      label: typeof label === 'string' ? label : label.join(', '),
+      terms: typeof label === 'string' ? [] : [...label],
+      route, description,
+    };
   });
 
   const goals = catalog.goals.map(({components: ids, ...goal}): Goal => {

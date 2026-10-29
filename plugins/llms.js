@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
+const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
 const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
@@ -402,6 +403,7 @@ function mdxToMarkdown(raw) {
   text = substitute(text);
   // Inline figures, e.g. a <Stat id="stars" /> inside a table cell
   text = text.replace(/<Stat\s+id="([a-zA-Z]+)"\s*\/>/g, (_, id) => STATS[id] ?? '');
+  text = sinceVersionAsText(text);
 
   const out = [];
   let fence = null;

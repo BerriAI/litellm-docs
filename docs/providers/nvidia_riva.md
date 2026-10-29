@@ -91,7 +91,7 @@ model_list:
 
 ### Offline-only models (Parakeet TDT, Whisper)
 
-Some Riva NIMs only load an offline ASR engine, so a streaming request fails with `INVALID_ARGUMENT: Unavailable model requested ... type=online`. Set `riva_offline: true` on the deployment and LiteLLM sends the whole resampled buffer through the unary `Recognize` RPC instead of `StreamingRecognize`. Available from v1.108.0.
+Some Riva NIMs only load an offline ASR engine, so a streaming request fails with `INVALID_ARGUMENT: Unavailable model requested ... type=online`. Set `riva_offline: true` on the deployment and LiteLLM sends the whole resampled buffer through the unary `Recognize` RPC instead of `StreamingRecognize`. <SinceVersion v="1.108.0" />
 
 Word timestamps work the same way as in streaming mode: send `response_format=verbose_json` together with `timestamp_granularities[]=word`, since `verbose_json` alone returns no `words`. Some offline NIMs, such as Whisper Large v3, return the transcript without word timings.
 

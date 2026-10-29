@@ -184,6 +184,8 @@ If `rpm` or `tpm` is not provided, it randomly picks a deployment
 
 You can also set a `weight` param, to specify which model should get picked when.
 
+A deployment can also carry daily limits, `rpd` (requests per UTC day) and `tpd` (tokens per UTC day), in `litellm_params` next to `rpm` and `tpm`. An optional `daily_reset_time` (`"HH:MM"` in UTC) moves the moment the daily counts start over; without it they start over at midnight UTC. They do not change how deployments are picked. They are enforced with [`enforce_model_rate_limits`](./proxy/load_balancing#enforce-model-rate-limits), which moves a request off a deployment whose daily quota is spent and onto another deployment in the group.
+
 <Tabs>
 <TabItem value="rpm" label="RPM-based shuffling">
 
@@ -372,7 +374,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="simple-shuffle", # RECOMMENDED - best performance
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -454,7 +456,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# set routing strategy
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 ## CALL 1+2
@@ -577,7 +579,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
