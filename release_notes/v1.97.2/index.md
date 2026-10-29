@@ -1,5 +1,6 @@
 ---
-title: "v1.97.2 - Docker-Only Dependency Refresh"
+title: "LiteLLM v1.97.2 - Docker-Only Dependency Refresh"
+description: "Updates tornado to 6.5.8 and pypdf on the 1.97.x line, which clears the image scanner findings on v1.97.1."
 slug: "v1-97-2"
 date: 2026-09-03T18:54:20
 authors:

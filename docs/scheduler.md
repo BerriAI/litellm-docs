@@ -50,10 +50,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -77,7 +77,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```
 
@@ -101,7 +101,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ 
-        "priority": 0 # 👈 SET VALUE HERE
+        "priority": 0 # SET VALUE HERE
     }
 )
 
@@ -110,6 +110,56 @@ print(response)
 
 </TabItem>
 </Tabs>
+
+### Priority header
+
+Set the `x-litellm-priority` header to an integer to set the scheduler's request queue priority, for clients that can add headers more easily than body fields. Lower values have higher priority. The header overrides a body `priority` value, and a value that is not an integer gets the same 400 error as a bad body `priority`. An empty header counts as unset. With `drop_params` on, a header value that is not an integer is ignored instead, so the body `priority` or `default_priority` applies. Available from v1.109.0.
+
+The proxy reads the header on the chat completions and text completions routes, such as `/v1/chat/completions`, `/v1/completions` and the Azure-style `/openai/deployments/{model}/chat/completions`, when the router serves the request. It also reads it on `/queue/chat/completions`. Other routes, such as `/v1/responses`, `/v1/messages`, `/v1/embeddings` and `/cursor/chat/completions`, ignore the header, and so does a proxy started with `litellm --model` and no config.
+
+<Tabs>
+<TabItem value="curl" label="curl">
+
+```bash
+curl -X POST 'http://localhost:4000/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'x-litellm-priority: 0' \
+-d '{
+    "model": "{{openai_small}}",
+    "messages": [
+        {
+        "role": "user",
+        "content": "what is the meaning of the universe?"
+        }],
+    "priority": 5
+}'
+```
+
+</TabItem>
+<TabItem value="openai-sdk" label="OpenAI SDK">
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="anything",
+    base_url="http://localhost:4000/v1"
+)
+
+response = client.chat.completions.create(
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "Write a short poem"}],
+    extra_headers={"x-litellm-priority": "0"},
+)
+
+print(response)
+```
+
+</TabItem>
+</Tabs>
+
+Responses can also carry a header named `x-litellm-priority`. On `/queue/chat/completions` it holds the priority the request was queued at. With the dynamic rate limiter on, every non-streaming response, 429s included, holds the key's priority tier, such as `premium` or `default`. That tier comes from the key's metadata `priority` and is separate from this scheduler queue priority, so don't send it back as the request header.
 
 ## Advanced - Redis Caching 
 
@@ -137,10 +187,10 @@ router = Router(
 )
 
 try:
-    _response = await router.acompletion( # 👈 ADDS TO QUEUE + POLLS + MAKES CALL
+    _response = await router.acompletion( # ADDS TO QUEUE + POLLS + MAKES CALL
         model="{{openai_small}}",
         messages=[{"role": "user", "content": "Hey!"}],
-        priority=0, # 👈 LOWER IS BETTER
+        priority=0, # LOWER IS BETTER
     )
 except Exception as e:
     print("didn't make request")
@@ -157,7 +207,7 @@ model_list:
         api_key: my-good-key
 
 litellm_settings:
-    request_timeout: 600 # 👈 Will keep retrying until timeout occurs
+    request_timeout: 600 # Will keep retrying until timeout occurs
 
 router_settings:
     redis_host: os.environ/REDIS_HOST
@@ -182,6 +232,6 @@ curl -X POST 'http://localhost:4000/queue/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
         }],
-    "priority": 0 👈 SET VALUE HERE
+    "priority": 0 SET VALUE HERE
 }'
 ```

@@ -144,7 +144,7 @@ def UserAPIKeyAuth(
 ### Object permission (MCP, agents, etc.)
 
 ```python
-from litellm.proxy._experimental.mcp_server.mcp_server_manager import (
+from litellm.proxy.mcp_server.mcp_server_manager import (
     global_mcp_server_manager,
 )
 
@@ -246,7 +246,7 @@ return UserAPIKeyAuth(
 
 This path also enforces end-user budgets and per-model end-user budgets when `end_user_id` is set.
 
-## ✨ Support LiteLLM Virtual Keys + Custom Auth
+## Support LiteLLM Virtual Keys + Custom Auth
 
 Supported from v1.72.2+
 

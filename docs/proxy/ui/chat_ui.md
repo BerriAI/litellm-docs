@@ -7,7 +7,7 @@ import Image from '@theme/IdealImage';
 
 # Chat UI
 
-The Chat UI is a chat page in the LiteLLM Admin UI, at `/ui/chat`. A proxy admin enables it for the gateway. Then each user who can log in to the Admin UI can use it. Users can send messages to the models that they have access to and use the tools of MCP servers.
+The Chat UI is a chat page in the LiteLLM Admin UI, at `/ui/chat`. When it is on, each user who can log in to the Admin UI can use it. Users can send messages to the models that they have access to and use the tools of MCP servers.
 
 Each request from the Chat UI goes through the gateway. LiteLLM applies the same model access, budgets, and logs to these requests as to API requests.
 
@@ -17,14 +17,14 @@ The Chat UI is a beta feature. Its pages and controls can change in new releases
 
 :::
 
-## Enable the Chat UI
+## Turn the Chat UI on or off
 
-The Chat UI is off by default. A proxy admin must enable it.
+The Chat UI is on by default in releases that include [PR #46918](https://github.com/BerriAI/litellm/pull/46918). In older releases it is off by default, and a proxy admin must turn it on. A proxy admin can turn it off at any time with the same switch.
 
 1. Log in to the Admin UI as a proxy admin.
 2. Go to **Settings** > **Admin Settings**.
 3. Click the **UI Settings** tab.
-4. Set **[BETA] Enable Chat page** to on. The page refreshes.
+4. Set **[BETA] Enable Chat page** to on or off. The page refreshes.
 
 <Image
   img={require('../../../img/chat_ui_enable.png')}

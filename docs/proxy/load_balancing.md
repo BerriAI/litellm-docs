@@ -73,6 +73,12 @@ router_settings:
   redis_port: 1992
 ```
 
+## Kubernetes pod discovery
+
+Use [Cache-Aware Routing](./cache_aware_routing.md) to discover inference pods behind a Kubernetes headless service and keep requests from the same session on one pod for prompt cache reuse. Requests without an explicit session ID use round robin.
+
+The guide covers `kubernetes_pod_discovery` configuration, session IDs, retry behavior, discovery settings, and multi-cluster routing.
+
 ## Enforce Model Rate Limits
 
 Strictly enforce RPM/TPM limits set on deployments. When limits are exceeded, requests are blocked **before** reaching the LLM provider with a `429 Too Many Requests` error.
@@ -98,7 +104,7 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - enforce_model_rate_limits  # 👈 Enables strict enforcement
+    - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
 ### How It Works
@@ -152,7 +158,7 @@ $ litellm --config /path/to/config.yaml
 
 Here requests with model=gpt-5.6-luna will be routed across multiple instances of azure/gpt-5.6-luna
 
-👉 Key Change: `model="{{openai_small}}"`
+Key Change: `model="{{openai_small}}"`
 
 **Check the `model_id` in Response Headers to make sure the requests are being load balanced**
 
@@ -328,13 +334,13 @@ model_list:
     litellm_params:
       model: azure/gpt-4-primary
       api_key: os.environ/AZURE_API_KEY
-      order: 1  # 👈 Highest priority - always tried first
+      order: 1  # Highest priority - always tried first
 
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/gpt-4-fallback
       api_key: os.environ/AZURE_API_KEY_2
-      order: 2  # 👈 Used when order=1 fails
+      order: 2  # Used when order=1 fails
 ```
 
 ### How order-based fallback works
@@ -427,7 +433,7 @@ model_list:
 
 router_settings:
   optional_pre_call_checks:
-    - encrypted_content_affinity  # 👈 Prevents invalid_encrypted_content errors
+    - encrypted_content_affinity  # Prevents invalid_encrypted_content errors
 ```
 
 This ensures requests containing encrypted content are routed to the deployment that created them, while other requests continue to load balance normally.

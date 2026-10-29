@@ -47,7 +47,7 @@ model_list:
       vertex_project: adroit-crow-413218
       vertex_location: us-central1
       vertex_credentials: /path/to/credentials.json
-      use_in_pass_through: true # 👈 KEY CHANGE
+      use_in_pass_through: true # KEY CHANGE
 ```
 
 </TabItem>
@@ -506,3 +506,18 @@ curl http://localhost:4000/vertex_ai/v1/projects/${PROJECT_ID}/locations/us-east
 :::info
 The `x-pass-` prefix works for all LLM pass-through endpoints, not just Vertex AI.
 :::
+
+### Removing Anthropic Beta Values Vertex AI Rejects
+
+Available from v1.108.0.
+
+Some `anthropic-beta` values that the Anthropic API accepts get a 400 from Claude on Vertex AI, such as ``Unexpected value(s) `files-api-2025-04-14` for the `anthropic-beta` header``. When a client you do not control sends one, list it in `general_settings.vertex_ai_pass_through_drop_anthropic_betas`, and the `/vertex_ai/*` and `/vertex-ai/*` routes remove it before calling Vertex AI.
+
+```yaml
+general_settings:
+  vertex_ai_pass_through_drop_anthropic_betas: ["files-api-2025-04-14"]
+```
+
+With this config, a request sent with `anthropic-beta: interleaved-thinking-2025-05-14,files-api-2025-04-14` reaches Vertex AI with `anthropic-beta: interleaved-thinking-2025-05-14`. The client's other values keep their order, and the header is left out when no value remains. A value sent as `x-pass-anthropic-beta` is removed too. Matching is exact and case-sensitive after trimming spaces, and an entry that holds several comma-separated values is split like the header.
+
+The list applies to every Vertex AI Claude model. If you list a beta that another model needs, it is removed for that model too, and a request that uses that feature's body field then gets the 400 from Vertex AI. A value that is not a list of strings stops the proxy at startup with a validation error that names the key. A config reload applies a change without a restart, and so does `/config/field/update` on a proxy with `store_model_in_db: true`.

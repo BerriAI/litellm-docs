@@ -1,5 +1,6 @@
 ---
-title: "v1.105.1 - Batched model usage writes and single spend log on the Responses bridge"
+title: "LiteLLM v1.105.1 fixes SpendLogs rows and daily model usage writes"
+description: "Fixes dropped SpendLogs rows with batched daily model usage writes, and logs spend once for large requests on the chat to Responses bridge."
 slug: "v1-105-1"
 date: 2026-10-14T04:33:53
 authors:

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Mic, Radio } from 'lucide-react';
 
 function useLog() {
   const [entries, setEntries] = useState([]);
@@ -309,7 +310,7 @@ export default function WebRTCTester() {
               <div className={`wrt-tab-content${activeTab==='logs'?' active':''}`}>
                 <div className="wrt-log" ref={logRef}>
                   {entries.length === 0
-                    ? <div className="wrt-empty"><div style={{fontSize:22,opacity:0.3}}>📡</div><div>Hit "Start Session" to begin</div></div>
+                    ? <div className="wrt-empty"><div style={{opacity:0.3}}><Radio size={22} aria-hidden="true" /></div><div>Hit "Start Session" to begin</div></div>
                     : entries.map(e => (
                         <div key={e.id} className={`wrt-entry ${e.level}`}>
                           <span className="we-time">{e.time}</span>
@@ -343,7 +344,7 @@ export default function WebRTCTester() {
                       <div key={i} className="wrt-bar" style={{height: h+'px', background: `hsl(${150-(h/42)*30},100%,55%)`}} />
                     ))}
                   </div>
-                  <button className={`wrt-mic-btn${micActive?' active':''}`} onClick={toggleMic}>🎙️</button>
+                  <button className={`wrt-mic-btn${micActive?' active':''}`} onClick={toggleMic} aria-label="Toggle microphone"><Mic size={18} aria-hidden="true" /></button>
                   <div className="wrt-audio-status">{audioStatus}</div>
                   <audio ref={remoteAudioRef} autoPlay style={{display:'none'}} />
                 </div>

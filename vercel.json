@@ -2,6 +2,14 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/docs/bot-ask",
+      "destination": "/api/docs/bot-ask"
+    },
+    {
+      "source": "/api/docs/search",
+      "destination": "/api/docs/search"
+    },
+    {
       "source": "/api/workshop/signup",
       "destination": "/api/workshop/signup"
     },
@@ -69,11 +77,21 @@
     }
   ],
   "functions": {
+    "api/docs/search.js": {
+      "includeFiles": "build/search-runtime.bin",
+      "maxDuration": 20,
+      "memory": 1024
+    },
     "api/workshop/signup.js": {
       "maxDuration": 15,
       "memory": 256
     },
     "api/docs/ask.js": {
+      "includeFiles": "build/search-*.json",
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/docs/bot-ask.js": {
       "includeFiles": "build/search-*.json",
       "maxDuration": 60,
       "memory": 1024

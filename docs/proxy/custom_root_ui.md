@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # UI - Custom Root Path 
 
-💥 Use this when you want to serve LiteLLM on a custom base url path like `https://localhost:4000/api/v1` 
+Use this when you want to serve LiteLLM on a custom base url path like `https://localhost:4000/api/v1`
 
 :::info
 
@@ -18,7 +18,7 @@ The proxy rewrites the UI files at startup to use the custom path, so the UI dir
 
 ### 1. Set `SERVER_ROOT_PATH` in your .env
 
-👉 Set `SERVER_ROOT_PATH` in your .env and this will be set as your server root path
+Set `SERVER_ROOT_PATH` in your .env and this will be set as your server root path
 
 ```
 export SERVER_ROOT_PATH="/api/v1"

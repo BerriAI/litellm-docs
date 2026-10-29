@@ -20,7 +20,7 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 <Tiles size="lg" columns={3} items={[
   {icon: 'compliance', title: 'Audited security you can hand to your review team', text: 'SOC 2 Type II audited, self-hosted so no data leaves your environment, and signed Docker images you can verify.', to: 'https://trust.litellm.ai/', more: 'Verify the signed images', moreTo: '/docs/proxy/docker_image_security'},
   {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
-  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
+  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/audit_logs'},
   {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
   {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
@@ -40,7 +40,7 @@ Everything below is enabled by the license key. Each item links to its setup gui
 
 - **[SSO for the Admin UI](./proxy/admin_ui_sso.md)**. Okta, Azure AD, Google Workspace, and any OIDC/SAML provider
 - **[JWT-based Authentication](./proxy/token_auth.md)**. Authenticate requests with your identity provider's tokens
-- **[Audit Logs with retention policies](./proxy/multiple_admins.md)**. Track every admin action and key-level change
+- **[Audit Logs with retention policies](./proxy/audit_logs.md)**. Track every admin action and key-level change
 - **[Role-Based Access Control](./proxy/access_control.md)**. Organizations, teams, and user roles
 - **[Public and private route controls](./proxy/public_routes.md)**. Restrict admin routes and lock down surface area
 - **[IP address-based access control lists](./proxy/ip_address.md)**. Restrict proxy access to specific CIDR ranges

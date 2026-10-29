@@ -581,8 +581,8 @@ print(response)
 
 ## Supported Models
 
-`Model Name` 👉 Human-friendly name.  
-`Function Call` 👉 How to call the model in LiteLLM.
+`Model Name` Human-friendly name.  
+`Function Call` How to call the model in LiteLLM.
 
 | Model Name       | Function Call                              |
 |------------------|--------------------------------------------|
@@ -1997,7 +1997,7 @@ response = completion(
                 {
                     "type": "file",
                     "file": {
-                       "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                       "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                     }
                 },
             ],
@@ -2045,7 +2045,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
           {
                 "type": "file",
                 "file": {
-                    "file_data": f"data:application/pdf;base64,{encoded_file}", # 👈 PDF
+                    "file_data": f"data:application/pdf;base64,{encoded_file}", # PDF
                 }
             }
           }

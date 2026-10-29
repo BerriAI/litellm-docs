@@ -311,7 +311,7 @@ Use `CustomStreamWrapper` + `httpx` streaming client to yield content.
 
 ---
 
-### 🧪 Tests
+### Tests
 
 Create tests in `tests/test_litellm/llms/my_provider/chat/test.py`. Iterate until you are satisfied with the quality!
 

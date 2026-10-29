@@ -67,7 +67,7 @@ router = Router(
       }
     }
   ],
-  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # 👈 KEY CHANGE
+  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # KEY CHANGE
 )
 
 ```
@@ -194,7 +194,7 @@ router = Router(
       },
     },
   ],
-  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # context_window_fallbacks=[..], # [OPTIONAL]
 )
@@ -207,7 +207,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -258,7 +258,7 @@ router = Router(
       },
     },
   ],
-  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # content_policy_fallbacks=[..], # [OPTIONAL]
 )
@@ -271,7 +271,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -329,8 +329,10 @@ litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
   fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] # fallback to {{openai_small}} if call fails num_retries 
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  cooldown_time: 30 # how long to cooldown model if fails/min > allowed_fails
+
+router_settings:
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
 ```
 
 ### Fallback to Specific Model ID
@@ -346,7 +348,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_large}}
     model_info:
-      id: my-specific-model-id # 👈 KEY CHANGE
+      id: my-specific-model-id # KEY CHANGE
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/chatgpt-v-2
@@ -486,7 +488,7 @@ model_list:
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
+    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-4o-mini
     litellm_params:
@@ -545,7 +547,7 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
@@ -668,7 +670,7 @@ model_list:
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
-    region_name: "eu" # 👈 SET EU-REGION
+    region_name: "eu" # SET EU-REGION
 
 - model_name: {{openai_small}}
   litellm_params:
@@ -679,7 +681,7 @@ model_list:
   litellm_params:
     model: vertex_ai/{{gemini_flash}}
     vertex_project: adroit-crow-1234
-    vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
+    vertex_location: us-east1 # AUTOMATICALLY INFERS 'region_name'
 ```
 
 **2. Start proxy**
@@ -709,6 +711,54 @@ print(response)
 
 print(response.headers.get('x-litellm-model-api-base'))
 ```
+
+### Vision Capability Filtering (Image Requests)
+
+**Before call is made** LiteLLM removes deployments declared text-only from the candidates for a request that carries an image, meaning a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. This runs on by default under every routing strategy and does not need `enable_pre_call_checks: true`.
+
+A deployment is text-only when `model_info.supports_vision: false` is set, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the model name. A deployment with no declaration and no catalog entry stays eligible, so declare `supports_vision: false` on custom text-only deployments. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, which keeps the earlier behavior for groups that only ever served text. The `x-litellm-model-id` response header names the deployment that served, or failed, the request.
+
+**1. Set Config**
+
+The Bedrock gpt-oss deployment below needs no declaration because the model catalog already marks it text-only. The custom deployment does.
+
+```yaml
+model_list:
+  - model_name: mixed
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: mixed
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: us-east-1
+  - model_name: mixed
+    litellm_params:
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
+    model_info:
+      supports_vision: false
+
+router_settings:
+  routing_strategy: latency-based-routing
+```
+
+**2. Test it**
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mixed",
+    "messages": [{"role": "user", "content": [
+      {"type": "text", "text": "What is in this image?"},
+      {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}
+    ]}]
+  }'
+```
+
+The `x-litellm-model-id` header names the `openai/gpt-5.6` deployment every time, while a plain text request can still land on any of the three.
 
 ### Setting Fallbacks for Wildcard Models
 

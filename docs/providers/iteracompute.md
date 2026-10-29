@@ -97,9 +97,11 @@ This provider uses IteraCompute's Chat Completions endpoint. LiteLLM translates 
 
 ## Model capabilities and cost tracking
 
-This integration does not add static model prices. LiteLLM can record the cost reported by IteraCompute in the `x-litellm-response-cost` response header for non-streaming requests and `usage.cost` in the final usage event for streaming requests. These values are in USD and reflect the accepted account price for that request. Static model prices are not required for this reported-cost path.
+LiteLLM includes public model prices for the `iteracompute/` model IDs, checked against the [live model list](https://api.iteracompute.com/v1/models) on October 29, 2026. Token rates are stored in USD per token. These entries are a snapshot, and LiteLLM's price-map refresh does not query IteraCompute for new prices.
 
-Configure per-token input and output costs only when you intentionally want LiteLLM to use local rates; explicit custom pricing takes precedence over the provider-reported cost. LiteLLM's built-in price-map refresh does not discover IteraCompute model prices automatically. Check the [live model list](https://api.iteracompute.com/v1/models) and [model catalog](https://iteracompute.com/models/) for current models, capabilities and public prices. Account-specific prices can differ.
+For billing, LiteLLM can record the cost reported by IteraCompute in the `x-litellm-response-cost` response header for non-streaming requests and `usage.cost` in the final usage event for streaming requests. These values are in USD and reflect the accepted account price for that request, including any account-specific or time-dependent rates. Provider-reported cost takes precedence over the built-in price map. Explicit custom pricing takes precedence over the provider-reported cost.
+
+Check the [live model list](https://api.iteracompute.com/v1/models) and [model catalog](https://iteracompute.com/models/) for current public prices. Image-generation charges, pricing tiers and optional features can require additional usage fields. Configure local price overrides only when you intentionally want LiteLLM to use those rates.
 
 For a model that supports tool calling, enable that capability in `model_info`.
 

@@ -333,7 +333,7 @@ To set this explicitly, set `model` to `azure/o_series/<your-deployment-name>`.
 ```python
 import litellm
 
-litellm.completion(model="azure/my-o3-deployment", messages=[{"role": "user", "content": "Hello, world!"}]) # 👈 Note: 'o3' in the deployment name
+litellm.completion(model="azure/my-o3-deployment", messages=[{"role": "user", "content": "Hello, world!"}]) # Note: 'o3' in the deployment name
 ```
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -358,7 +358,7 @@ model_list:
 ```python
 import litellm
 
-litellm.completion(model="azure/o_series/my-random-deployment-name", messages=[{"role": "user", "content": "Hello, world!"}]) # 👈 Note: 'o_series/' in the deployment name
+litellm.completion(model="azure/o_series/my-random-deployment-name", messages=[{"role": "user", "content": "Hello, world!"}]) # Note: 'o_series/' in the deployment name
 ```
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -752,7 +752,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 **Scenario 2: Managed Identity (AKS, Azure VMs) - No Hard-coded Credentials Required**
@@ -767,7 +767,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 **Scenario 3: Azure CLI Authentication**
@@ -782,7 +782,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 3. Start proxy
@@ -1038,18 +1038,18 @@ print("list_batches_response=", list_batches_response)
 ### [BETA] Loadbalance Multiple Azure Deployments 
 In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: "batch-gpt-4o-mini"
     litellm_params:
-      model: "azure/{{openai_small}}"
+      model: "azure/gpt-5.6-luna"
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:
       mode: batch
 
 litellm_settings:
-  enable_loadbalancing_on_batch_endpoints: true # 👈 KEY CHANGE
+  enable_loadbalancing_on_batch_endpoints: true # KEY CHANGE
 ```
 
 Note: This works on `{PROXY_BASE_URL}/v1/files` and `{PROXY_BASE_URL}/v1/batches`.
@@ -1307,7 +1307,7 @@ model_list:
         api_version: 2023-06-01-preview
         api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
         api_key: os.environ/AZURE_API_KEY
-        base_model: dall-e-3 # 👈 set dall-e-3 as base model
+        base_model: dall-e-3 # set dall-e-3 as base model
     model_info:
         mode: image_generation
 ```

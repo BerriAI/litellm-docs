@@ -143,11 +143,6 @@ function useScrollProgress(ref) {
   const [stage, setStage] = useState(0);
   useEffect(() => {
     const el = ref.current;
-    const fit = () => {
-      el.style.marginLeft = '0px';
-      el.style.marginLeft = `${-el.getBoundingClientRect().left}px`;
-      el.style.width = `${document.documentElement.clientWidth}px`;
-    };
     const update = () => {
       const rect = el.getBoundingClientRect();
       const p = Math.min(1, Math.max(0, -rect.top / (rect.height - window.innerHeight)));
@@ -155,7 +150,7 @@ function useScrollProgress(ref) {
       el.style.setProperty('--p', p.toFixed(3));
       setStage(STAGE_AT.filter((at) => p >= at).length);
     };
-    const onResize = () => { fit(); update(); };
+    const onResize = update;
     onResize();
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', onResize);
@@ -203,9 +198,9 @@ function Orbit({items, radius, speed, orbit, className}) {
       const title = el.parentElement.querySelector('h1').getBoundingClientRect();
       const top = title.bottom - hero.top + 28;
       const bottom = hero.height * orbit.horizon - 20;
-      const outer = Math.min(window.innerWidth * orbit.outer[0], orbit.outer[1]);
+      const outer = Math.min(hero.width * orbit.outer[0], orbit.outer[1]);
       const scale = Math.min(1, Math.max(0, (bottom - top) / 2 - 18) / (outer * orbit.tilt));
-      const rx = Math.min(window.innerWidth * radius[0], radius[1]) * scale;
+      const rx = Math.min(hero.width * radius[0], radius[1]) * scale;
       const ry = rx * orbit.tilt;
       el.style.top = `${(top + bottom) / 2}px`;
       el.classList.add(styles.orbitPlaced);
@@ -249,6 +244,8 @@ function Starfield({backdrop}) {
 
 export default function MoyaiLaunchHero({date, sections}) {
   const ref = useRef(null);
+  const [animated, setAnimated] = useState(false);
+  useEffect(() => setAnimated(true), []);
   const swirlRef = useRef(null);
   const [progress, stage] = useScrollProgress(ref);
   const object = planetrise;
@@ -259,7 +256,7 @@ export default function MoyaiLaunchHero({date, sections}) {
       <style dangerouslySetInnerHTML={{__html: NIGHT_CSS}} />
       <script dangerouslySetInnerHTML={{__html: "document.documentElement.setAttribute('data-theme','dark')"}} />
       <Starfield backdrop={object.backdrop} />
-      <section id="moyai-hero" className={styles.scroller} ref={ref} data-stage={stage} style={{'--accent': object.accent}}>
+      <section id="moyai-hero" className={styles.scroller} data-full-width data-animated={animated || undefined} ref={ref} data-stage={stage} style={{'--accent': object.accent}}>
         <div className={styles.hero}>
           <canvas ref={swirlRef} className={styles.swirl} aria-hidden="true" />
           <h1 className={styles.split}>

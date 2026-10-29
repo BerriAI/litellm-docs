@@ -1,5 +1,6 @@
 ---
-title: "v1.104.2 - Decisions API"
+title: "LiteLLM v1.104.2 adds Decisions API routes for OpenAI and System One"
+description: "Adds the Decisions API on /v1/decisions and /v1/systemone, with decision models from OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare and Strands."
 slug: "v1-104-2"
 date: 2026-10-08T08:39:07
 authors:

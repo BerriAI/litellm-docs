@@ -96,7 +96,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \ 
 -D '{
-    "model": "{{openai_large}}, groq-llama", # 👈 Comma-separated models
+    "model": "{{openai_large}}, groq-llama", # Comma-separated models
     "messages": [
       {
         "role": "user",
@@ -104,7 +104,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
       }
     ],
     "stream": true,
-    "fastest_response": true # 👈 FLAG
+    "fastest_response": true # FLAG
 }
 
 '
@@ -122,14 +122,14 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_large}}, groq-llama", # 👈 Comma-separated models
+    model="{{openai_large}}, groq-llama", # Comma-separated models
     messages = [
         {
             "role": "user",
             "content": "this is a test request, write a short poem"
         }
     ],
-    extra_body={"fastest_response": true} # 👈 FLAG
+    extra_body={"fastest_response": true} # FLAG
 )
 
 print(response)

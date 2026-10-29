@@ -45,7 +45,7 @@ model_list:
       # Optional: AWS account id that owns the S3 buckets, when they live in another account
       # s3_bucket_owner: "123456789012"
     model_info: 
-      mode: batch # 👈 SPECIFY MODE AS BATCH, to tell user this is a batch model
+      mode: batch # SPECIFY MODE AS BATCH, to tell user this is a batch model
 ```
 
 **Required Parameters:**
@@ -64,6 +64,7 @@ model_list:
 | Parameter | Description |
 |-----------|-------------|
 | `s3_encryption_key_id` | Custom KMS encryption key ID for the batch input file LiteLLM uploads to S3 and for the batch output data. Requires `kms:GenerateDataKey` on that key for the credentials LiteLLM signs the upload with. If not specified, Bedrock uses AWS managed encryption keys. |
+| `s3_output_bucket_name` | S3 bucket Bedrock writes the batch output to, under `litellm-batch-outputs/<job name>/`. Defaults to `s3_bucket_name`. Also settable via the `AWS_S3_OUTPUT_BUCKET_NAME` env var. |
 | `s3_bucket_owner` | AWS account id that owns the batch input and output S3 buckets. Sent as `s3BucketOwner` on both the input and output data config of the Bedrock job. Set it when the buckets live in a different account than the one running the batch job, otherwise Bedrock validates bucket ownership against the job's account and the job fails. Also settable via the `AWS_S3_BUCKET_OWNER` env var. |
 
 ### 2. Create Virtual Key
@@ -270,7 +271,46 @@ The batch output file is in JSONL format with each line containing:
 
 ### Where are my files written?
 
-When a `target_model_names` is specified, the file is written to the S3 bucket configured in your Bedrock batch model configuration.
+When a `target_model_names` is specified, the file is written to the S3 bucket configured in your Bedrock batch model configuration. Bedrock writes the batch output to `s3_output_bucket_name` when it is set, and to the same bucket otherwise.
+
+### How do I keep each team's batch data in its own bucket?
+
+Give each team its own batch model with its own bucket, then restrict each team to its model. A team's input files and batch output then only ever land in that team's bucket.
+
+```yaml showLineNumbers title="litellm_config.yaml"
+model_list:
+  - model_name: "bedrock-batch-team-a"
+    litellm_params:
+      model: bedrock/us.amazon.nova-lite-v1:0
+      s3_bucket_name: team-a-batch-bucket
+      s3_output_bucket_name: team-a-batch-bucket
+      s3_region_name: us-east-1
+      aws_batch_role_arn: arn:aws:iam::123456789012:role/LiteLLMBedrockBatchRole
+    model_info:
+      mode: batch
+  - model_name: "bedrock-batch-team-b"
+    litellm_params:
+      model: bedrock/us.amazon.nova-lite-v1:0
+      s3_bucket_name: team-b-batch-bucket
+      s3_output_bucket_name: team-b-batch-bucket
+      s3_region_name: us-east-1
+      aws_batch_role_arn: arn:aws:iam::123456789012:role/LiteLLMBedrockBatchRole
+    model_info:
+      mode: batch
+```
+
+Create each team with only its batch model, then create the team's keys with that `team_id`:
+
+```bash showLineNumbers title="create_team.sh"
+curl -L -X POST 'https://{PROXY_BASE_URL}/team/new' \
+-H 'Authorization: Bearer ${PROXY_API_KEY}' \
+-H 'Content-Type: application/json' \
+-d '{"team_alias": "team-a", "models": ["bedrock-batch-team-a"]}'
+```
+
+Team A's keys upload with `target_model_names` set to `bedrock-batch-team-a`. A team A key that names `bedrock-batch-team-b` on upload or batch create is rejected, so team A's records never reach team B's bucket. Downloading a batch's output reads from the bucket of the model that ran it, and the [managed batch access rules](../proxy/managed_batches#access-control) stop other teams from reading the results.
+
+The IAM role in `aws_batch_role_arn` needs read access to every input bucket and write access to every output bucket, and the S3 credentials LiteLLM uses need read and write access to all of them. To keep teams apart at the AWS level as well, give each team's model its own role and credentials scoped to that team's bucket.
 
 ### What models are supported?
 

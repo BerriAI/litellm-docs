@@ -8,7 +8,7 @@ authors:
   - oliver
   - mateo
 description: "A recap of the September LiteLLM town hall: security and stability updates, OCR running on Rust by default, test coverage past the 80% target, and new Fusion and liteagents launches."
-tags: [townhall, security, reliability, product]
+tags: [townhall, reliability, product]
 hide_table_of_contents: false
 ---
 

@@ -14,7 +14,7 @@ const metadata = {submissionId: 'qa-stable-id', source: 'https://docs.litellm.ai
 test('client payload contains every workshop answer and stable metadata', () => {
   const values = {...base, onsiteInterest: 'Yes'};
   const payload = buildWorkshopSubmission(values, metadata);
-  assert.deepEqual(payload, {...values, ...metadata});
+  assert.deepEqual(payload, {...values, deploymentTimeline: '', ...metadata});
 });
 
 test('removed fields and sales routing are not sent in workshop payload', () => {
@@ -111,4 +111,15 @@ test('unknown fields are dropped, oversized answers rejected, and submission met
   assert.match(validateWorkshopValues(values).workflow, /3000 characters/);
   assert.throws(() => buildWorkshopSubmission(values, metadata), /field limit/);
   assert.throws(() => buildWorkshopSubmission(base), /metadata is required/);
+});
+
+
+test('deployment timeline is optional and accepts only listed answers', () => {
+  assert.equal(buildWorkshopSubmission(base, metadata).deploymentTimeline, '');
+  for (const deploymentTimeline of ['ASAP', '1 month', '3 months', '6 months']) {
+    assert.equal(buildWorkshopSubmission({...base, deploymentTimeline}, metadata).deploymentTimeline, deploymentTimeline);
+  }
+  for (const deploymentTimeline of ['Tomorrow', 'x'.repeat(101)]) {
+    assert.throws(() => buildWorkshopSubmission({...base, deploymentTimeline}, metadata), /incomplete/);
+  }
 });
