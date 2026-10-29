@@ -104,6 +104,28 @@ Compare the full result with the [migration files](https://github.com/BerriAI/li
 
 </details>
 
+### Indexes the job leaves for you to build
+
+<SinceVersion v="1.109.0" />
+
+The migration job builds the index behind the Logs page **Error Code** filter, `LiteLLM_SpendLogs_error_code_startTime_idx`, only while `LiteLLM_SpendLogs` takes at most **4 GiB** on disk, partitions included. On a larger table it skips that index so the upgrade does not wait on a long build, logs a warning that starts with `Not building index LiteLLM_SpendLogs_error_code_startTime_idx`, and still exits successfully. Until the index exists, filtering logs by error code reads every spend log row in the date window.
+
+Build it off-peak. On a spend log table that is not partitioned, run this statement. It reads the whole table, and reads and writes keep working while it runs:
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_error_code_startTime_idx"
+ON "public"."LiteLLM_SpendLogs" ((left(metadata->'error_information'->>'error_code', 128)), "startTime")
+WHERE (metadata->'error_information'->>'error_code') IS NOT NULL;
+```
+
+On a partitioned table, or after an interrupted build, run the statements from the warning instead. The warning puts one statement on each line, and each one must run on its own, so save them to a file and run `psql -f <file>`; passing them together to `psql -c` fails with `CREATE INDEX CONCURRENTLY cannot run inside a transaction block`. The Helm charts delete the finished migration job, and its logs, after 120 seconds (`migrationJob.ttlSecondsAfterFinished`), so read the logs while the job runs or check for the index afterwards:
+
+```sql
+SELECT indisvalid FROM pg_index WHERE indexrelid = to_regclass('"LiteLLM_SpendLogs_error_code_startTime_idx"');
+```
+
+`t` means the index is built. No row means it is missing, and `f` means an interrupted build left it unusable, which the statements from the next warning repair. The next migration job finds a built index in place and logs `Request-log indexes are all in place`.
+
 ## Custom deployments
 
 If your deployment does not provide a migration job, run this in a separate container using the **target LiteLLM proxy image**, with `DATABASE_URL` and the required database credentials configured:
