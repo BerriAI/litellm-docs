@@ -253,8 +253,8 @@ curl -X POST http://localhost:4000/key/generate \
 Send a question and then a rewording of it with each team's key:
 
 ```shell
-for prompt in "What is the capital of France? Reply with one word." \
-              "Tell me the capital city of France. Reply with one word."; do
+for prompt in "What is the largest planet in the solar system? Reply with one word." \
+              "Which planet in our solar system is the biggest? Reply with one word."; do
   curl -sS -D - -o /dev/null http://localhost:4000/v1/chat/completions \
     -H "Authorization: Bearer $SUPPORT_BOT_KEY" -H "Content-Type: application/json" \
     -d "{\"model\": \"chat\", \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}]}" \
@@ -265,17 +265,17 @@ done
 The `support-bot` team's rewording is served from the cache. It carries `x-litellm-semantic-similarity` above the threshold and `x-litellm-response-cost: 0.0`:
 
 ```
-x-litellm-response-cost: 3.15e-05
+x-litellm-response-cost: 3.825e-05
 x-litellm-semantic-similarity: 0.0
 x-litellm-response-cost: 0.0
-x-litellm-semantic-similarity: 0.93
+x-litellm-semantic-similarity: 0.9236736297607
 ```
 
 Run the same loop with `$RESEARCH_KEY`. Both requests go to the model and are billed, and neither response carries `x-litellm-semantic-similarity`, because the proxy skipped the semantic cache for that team:
 
 ```
-x-litellm-response-cost: 3.15e-05
-x-litellm-response-cost: 3.225e-05
+x-litellm-response-cost: 3.825e-05
+x-litellm-response-cost: 3.825e-05
 ```
 
 Semantic cache entries are already scoped to the key, team and organization that stored them, so the `support-bot` team's entries are never served to `research` with or without the hook. The hook decides whether a team uses the semantic cache at all.
