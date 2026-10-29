@@ -63,6 +63,30 @@ curl -X 'POST' \
 ```
 
 
+## Authenticate to a vLLM server started with `--api-key`
+
+<SinceVersion v="1.109.0" />
+
+A vLLM server started with `vllm serve <model> --api-key <key>` only accepts `Authorization: Bearer <key>`. Give LiteLLM the same key and it sends that header upstream on `/vllm` calls.
+
+For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. The `api_base` can be the server root or end in `/v1`.
+
+```yaml
+model_list:
+  - model_name: "my-vllm-model"
+    litellm_params:
+      model: hosted_vllm/vllm-1.72
+      api_base: https://my-vllm-server.com
+      api_key: os.environ/MY_VLLM_SERVER_KEY
+```
+
+For requests forwarded to `VLLM_API_BASE`, set `VLLM_API_KEY`. LiteLLM sends it as `Authorization: Bearer <key>` and as `x-api-key`. A model in your `model_list` does not fall back to `VLLM_API_KEY`. With no `api_key` set, it uses `HOSTED_VLLM_API_KEY`, as `/chat/completions` does.
+
+```bash
+export VLLM_API_BASE="https://my-vllm-server.com"
+export VLLM_API_KEY="<key your vLLM server was started with>"
+```
+
 ## Examples
 
 Anything after `http://0.0.0.0:4000/vllm` is treated as a provider-specific route, and handled accordingly.
