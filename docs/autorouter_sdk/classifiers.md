@@ -97,6 +97,4 @@ Run the script. You should see the model assigned to `capable`. Without `task_ty
 
 Return a configured tier name from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
 
-[See more examples](./examples.md): route by an HTTP header, an agent step, or feedback from a failed check. The examples also define custom tier names.
-
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).
