@@ -1105,6 +1105,7 @@ const sidebars = {
           link: { type: "doc", id: "autorouter_sdk" },
           items: [
             "autorouter_sdk/classifiers",
+            "autorouter_sdk/examples",
             "autorouter_sdk/routing",
             "autorouter_sdk/evaluation",
           ],

@@ -60,7 +60,9 @@ Change the quickstart's message to `"Explain Kubernetes deployments"` and run it
 
 ## Write a classifier in Python
 
-Use your own code when application metadata should decide the tier. Add this class and configuration before you create the router:
+Use your own code when application metadata should decide the tier. `metadata` is a dictionary your application passes to `router.acompletion()`; you choose the keys and values. Here, your code marks a request as `code_review`.
+
+Add this class and configuration before you create the router:
 
 ```python
 from litellm.types.router import RoutingContext
@@ -94,5 +96,7 @@ response = await router.acompletion(
 Run the script. You should see the model assigned to `capable`. Without `task_type="code_review"`, this classifier returns `SIMPLE` and uses `fast`.
 
 Return a configured tier name from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
+
+[See more examples](./examples.md): route by an HTTP header, an agent step, or feedback from a failed check. The examples also define custom tier names.
 
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).
