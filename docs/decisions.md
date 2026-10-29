@@ -6,7 +6,7 @@ import Image from '@theme/IdealImage';
 
 # /v1/decisions and /v1/systemone
 
-Decision models answer typed questions about an input and return probabilities instead of text: a yes/no probability, a pick from a fixed list, a score on a scale, or on TypeSafe Jev 1.14 a box around something in an image. LiteLLM serves them on two routes that share one provider list, so any decision model in your `model_list` works on either route
+Decision models answer typed questions about an input and return probabilities instead of text: a yes/no probability, a pick from a fixed list, a score on a scale, or, on models that support it, a box around something in an image. LiteLLM serves them on two routes that share one provider list, so any decision model in your `model_list` works on either route
 
 | Route | Alias | Request format | Use it when |
 |-------|-------|----------------|-------------|
@@ -49,7 +49,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 |---------------------|---------|
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
-| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and the [`supports_box_questions`](#box-questions-on-other-deployments) deployment flag in the config and the SDK | `v1.107.0-rc.1` |
+| Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -432,7 +432,7 @@ The box edges are fractions of the image height and width, measured from the top
 
 On `/v1/decisions`, send the images as `input_image` parts with the same header. LiteLLM turns each PNG or JPEG into an asset, puts the asset's name where the image was in the text, and downloads image URLs first. A `box` question comes back as `{"type": "box", "name": ..., "box": {...}, "confidence": ...}` in its place in `answers`.
 
-`box` works on `jev-1.14.0` and `jev-preview`, and only with the images header, even when the request has no image. A box question to another model, `jev-1.13.0` and `jev-latest` included, or without the header gets a 400 before the provider is called, or with `drop_params` on, LiteLLM drops the question. A deployment's [`supports_box_questions`](#box-questions-on-other-deployments) flag changes which models take box questions, but a TypeSafe deployment still needs the header. A dropped question comes back as `{"type": "refusal"}` on `/v1/decisions` and is left out of `answers` on `/v1/systemone`. Without the images header, `assets` and `input_image` parts get the same 400 or drop on TypeSafe that they get on providers without image input, and with `drop_params` on, LiteLLM also drops any `assets` entry it cannot read and keeps the rest.
+Without a deployment flag, `box` works on `jev-1.14.0` and `jev-preview`, and only with the images header, even when the request has no image. A box question to another model, `jev-1.13.0` and `jev-latest` included, or without the header gets a 400 before the provider is called, or with `drop_params` on, LiteLLM drops the question. A deployment's [`supports_box_questions`](#box-questions-on-other-deployments) flag changes which models take box questions, but a TypeSafe deployment still needs the header. A dropped question comes back as `{"type": "refusal"}` on `/v1/decisions` and is left out of `answers` on `/v1/systemone`. Without the images header, `assets` and `input_image` parts get the same 400 or drop on TypeSafe that they get on providers without image input, and with `drop_params` on, LiteLLM also drops any `assets` entry it cannot read and keeps the rest.
 
 In the SDK, pass the headers in `extra_headers`
 
@@ -467,9 +467,9 @@ TypeSafe still needs the [images header](#typesafe-images-box-questions-and-long
 
 The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. The value must be a boolean, since any other value, such as the string `"true"`, does not turn box questions on and can turn them off, on that deployment and on its unflagged siblings. On a wildcard deployment such as `typesafe/*`, the flag applies to every model the deployment matches. In the SDK, pass `model_info={"supports_box_questions": True}`. The proxy ignores a `model_info` field at the top level of a request body.
 
-The flag only controls what LiteLLM sends, and the provider still has to answer. `typesafe/jev-latest` is an alias TypeSafe can move to another model, and it answers box questions while it serves `jev-1.14.0`, which each response names in its `model` field. OpenAI does not answer box questions, so a flagged OpenAI deployment still fails with the 400 OpenAI returns for a box question to `gpt-6-luna`. Check that a self-hosted server answers box questions before you set the flag on it.
+The flag only controls what LiteLLM sends, and the provider still has to answer. With the flag on, LiteLLM sends box questions even when `drop_params` is on, so a model that refuses them fails the whole request with the provider's error. `typesafe/jev-latest` is an alias TypeSafe can move to another model, and it answers box questions while it serves `jev-1.14.0`, which each response names in its `model` field. OpenAI does not answer box questions, so a flagged OpenAI deployment still fails with the 400 OpenAI returns for a box question to `gpt-6-luna`. Check that a self-hosted server, or a hosted route to Jev such as OpenRouter's or Databricks', answers box questions before you set the flag on it.
 
-A deployment that leaves the flag unset can pick up the value set on another deployment of the same provider and model, so one `false` can turn box questions off on its unflagged siblings too, and that value can stay after the deployment that set it is removed. When one deployment of a model sets the flag, set it on every deployment of that model.
+A deployment that leaves the flag unset can pick up the value set on another deployment of the same provider and model, so one `false` can turn box questions off on its unflagged siblings too, and that value can stay after the deployment that set it is removed. When several deployments set different values, the value an unset one gets depends on their order in the config. When one deployment of a model sets the flag, set it on every deployment of that model. Before `v1.107.0-rc.1`, a deployment's own value does not win over the other deployments of the same provider and model, so `true` and `false` cannot be mixed on one provider and model.
 
 ## SDK usage
 
