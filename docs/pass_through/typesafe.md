@@ -104,7 +104,7 @@ curl -X POST "$LITELLM_PROXY_BASE_URL/team/new" \
 
 In the Admin UI, the team and organization **Models** dropdowns, and the key dropdown when no team is picked, offer **All Typesafe models** (`typesafe/*`) and each Jev model when `TYPESAFE_API_KEY` is set in the proxy environment.
 
-The dropdown options are available from v1.108.0. `typesafe/*` matching comes from LiteLLM's model registry, so a proxy that loads the registry from GitHub, which is the default, gets it before upgrading.
+The dropdown options are available from v1.109.0. `typesafe/*` matching comes from LiteLLM's model registry, so a proxy that loads the registry from GitHub, which is the default, gets it before upgrading.
 
 ## Try it in the Admin UI
 
