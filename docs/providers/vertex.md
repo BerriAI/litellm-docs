@@ -3131,6 +3131,52 @@ Here is an example JSON request demonstrating the labels usage:
 }
 ```
 
+### Label requests with key, team, org, and project identity
+
+The proxy can add labels for you from the virtual key that made the call, so Cloud Billing splits Vertex AI costs by key, team, org, and project without any change to your clients. It is off by default. List the fields to send under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  vertex_request_label_fields:
+    - user_api_key_alias
+    - user_api_key_team_alias
+    - user_api_key_org_alias
+    - user_api_key_project_alias
+    - spend_logs_metadata
+```
+
+With that config, a request made with key `chargeback` on team `AI Platform`, org `ml-org`, and project `support-bot`, whose key metadata sets `spend_logs_metadata` to `{"cost-center": "cc-1234"}`, reaches Vertex AI with these labels:
+
+```json
+{
+    "user_api_key_alias": "chargeback",
+    "user_api_key_team_alias": "ai_platform",
+    "user_api_key_org_alias": "ml-org",
+    "user_api_key_project_alias": "support-bot",
+    "cost-center": "cc-1234"
+}
+```
+
+| Field | Label value |
+|-------|-------------|
+| `user_api_key_alias` | Alias of the virtual key |
+| `user_api_key_team_id`, `user_api_key_team_alias` | Team the key belongs to |
+| `user_api_key_org_id`, `user_api_key_org_alias` | Organization the key belongs to |
+| `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
+| `spend_logs_metadata` | Every text pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
+
+Any other text field from the [Bedrock identity list](./bedrock.md#forward-key-team-and-org-identity-from-the-proxy), such as `user_api_key_user_id`, works the same way. A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out. `spend_logs_metadata` is the way to add your own dimensions like cost center. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults.
+
+Vertex AI gets the identity labels first, in the order you list them, then the caller's labels from the [usage](#usage) above, then the `spend_logs_metadata` pairs. When two of them use the same key, the earlier one wins. LiteLLM sends at most 64 labels, the most Vertex AI accepts on a Google model, and at most 32 on Claude, where they go in the `X-Vertex-AI-Labels` header. Identity labels always get a slot.
+
+While the setting is on, keys starting with `user_api_key_` are reserved for the proxy, so a caller label or `spend_logs_metadata` pair with such a key is dropped and a caller cannot forge identity. On Claude, an `X-Vertex-AI-Labels` header the caller sends counts as its labels and is replaced.
+
+Identity and `spend_logs_metadata` text is lowercased, every character outside Google's [label rules](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/add-labels-to-api-calls) becomes `_`, and it is cut to 63 characters, so a team alias like `AI Platform` becomes the valid label value `ai_platform`. A `spend_logs_metadata` key that does not start with a letter after that is dropped. Two aliases that differ only in letter case or in those characters, like `AI Platform` and `ai.platform`, share one label value, so list `user_api_key_team_id` when exact team names matter. The caller's own labels are sent as they are, like with the setting off.
+
+Google keeps at most 1,000 unique values per label key over the life of the billing account and may drop a key that goes past that without notice, so keep per-request ids out of `spend_logs_metadata`. Labels reach Cloud Billing only on pay-as-you-go requests, and Google lists label support only for `generateContent` and `streamGenerateContent` on its own models, so labels on text embeddings and Imagen, which call `predict`, may not show up in Cloud Billing.
+
+The setting covers `/chat/completions` on Gemini and Claude, `/v1/messages` on Claude, text embeddings, image generation, and rerank. It does not cover the `/vertex_ai` pass-through routes, multimodal embeddings, the Google GenAI `generateContent` routes, or batches yet.
+
 
 
 ## Extra
