@@ -1,8 +1,6 @@
 # eu/jev
 
-:::info
-Available from v1.109.0.
-:::
+<SinceVersion v="1.109.0" />
 
 Pass-through endpoint for the [eu/jev](https://eu-jev.com/docs) decision API. eu/jev is hosted in the EU and runs System One inference on its server in Germany, where prompts and responses are processed and not stored, so the data you send stays in Germany. It returns typed decisions (a choice, a score, or a yes/no probability) instead of text, and it takes the same System One request body as [TypeSafe](./typesafe.md).
 
