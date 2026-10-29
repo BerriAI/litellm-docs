@@ -191,4 +191,4 @@ with tracer.start_as_current_span("research_agent") as span:
     run_agent(task)
 ```
 
-The source is returned as `summary.source`, with `type`, `url`, and `title`, from the [trace API](./api.md#agent-tracing-api).
+The source is returned as `summary.source`, with `type`, `url`, and `title`, from the [trace API](./api.md#list-runs).

@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
+const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
 const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
@@ -27,28 +28,182 @@ const SITE = 'https://docs.litellm.ai';
 // from the sidebars, so new pages show up without touching this file.
 const START_HERE = [
   ['index', 'Python SDK quickstart', '`uv add litellm`, then call any provider with `completion()`'],
-  ['proxy/docker_quick_start', 'AI Gateway quickstart', 'Run the gateway with Docker and Postgres, add a model, create a virtual key'],
+  ['proxy/docker_quick_start', 'AI Gateway quickstart', 'One command starts the gateway, Postgres, and the Admin UI; then add a model, create a virtual key, and send a request'],
   ['agent_resources', 'Agent resources', 'Copy-paste prompts, MCP, and skills for coding agents setting up LiteLLM'],
   ['proxy/client_setup/overview', 'Connect clients to the gateway', 'Point Claude Code, Codex, Cursor, or any OpenAI or Anthropic SDK at the gateway'],
   ['proxy/configs', 'Gateway config.yaml reference', 'Every setting the gateway config file supports'],
-  ['proxy/deploy', 'Production deployment', 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure'],
+  ['proxy/deploy', 'Production deployment', 'Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, plus 1-click Cloud Shell deploys into your AWS or GCP account'],
   ['enterprise', 'LiteLLM Enterprise', 'What Enterprise adds on top of the open-source gateway: SSO, audit logs, admin roles, SLAs'],
 ];
 
 // The main sidebar is split by its top-level categories; the others are small
 // enough to list under one heading each.
 const SIDEBAR_TITLES = {
-  learnSidebar: 'Learn: guides and tutorials',
   integrationsSidebar: 'Integrations',
   autoRouterSidebar: 'Auto Router',
+  providersSidebar: 'Providers',
 };
 
-const SUMMARY = `LiteLLM is an open-source Python SDK and a self-hosted AI Gateway (proxy) that give 100+ LLM providers one OpenAI-compatible API, with virtual keys, spend tracking, budgets, routing and fallbacks, guardrails, and an MCP gateway.`;
+const SUMMARY = `LiteLLM is an open-source (MIT) Python SDK and AI Gateway that give 100+ LLM providers one OpenAI-compatible API. The SDK is a library for Python apps; the gateway is a server you run in your own environment, with virtual keys, budgets, spend tracking, routing and fallbacks, guardrails, and an MCP gateway, that apps in any language call by changing their base URL.`;
 
-const NOTES = `- Python SDK: \`uv add litellm\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
-- AI Gateway: Docker image \`docker.litellm.ai/berriai/litellm\`. Keys, the Admin UI (\`/ui\`), and spend tracking need Postgres (\`DATABASE_URL\`) and a \`LITELLM_MASTER_KEY\`. Any OpenAI or Anthropic SDK works against it by changing the base URL.
-- Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image. Contact: https://www.litellm.ai/enterprise#talk-to-sales
+// Only the deploys LiteLLM maintains are offered to agents: the Terraform
+// stacks behind the AWS and GCP Cloud Shell buttons.
+const OFFICIAL_ONE_CLICK = ONE_CLICK.filter(([name]) => name === 'AWS' || name === 'GCP');
+
+// For people who would rather not run the gateway themselves.
+const HOSTED_URL = 'https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version';
+
+const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, or coding agents (Claude Code, Codex, Cursor) share models and need keys, budgets, spend tracking, or a client that is not Python. Use the Python SDK when one Python app calls models directly.
+- Start the gateway: \`${QUICKSTART.gateway.mac}\` (macOS, Linux) or \`${QUICKSTART.gateway.windows}\` (Windows PowerShell). See "Start the AI Gateway" below.
+- Python SDK: \`${QUICKSTART.sdk}\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
+- Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image adds SSO, audit logs, and admin roles. Contact: ${SALES_URL}
 - Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.`;
+
+const fence = (lang, code) => '```' + lang + '\n' + code + '\n```';
+
+// What an agent needs to run the gateway end to end, taken from
+// scripts/quickstart.sh in BerriAI/litellm (the same commands as QuickStartBox).
+const gatewaySection = () => `## Start the AI Gateway
+
+One command installs and starts the gateway, a Postgres database, and the Admin UI with Docker Compose. It needs Docker, Podman, or Rancher Desktop with Compose v2.
+
+macOS and Linux:
+
+${fence('bash', QUICKSTART.gateway.mac)}
+
+Windows (PowerShell):
+
+${fence('powershell', QUICKSTART.gateway.windows)}
+
+- Result: the gateway and Admin UI on http://localhost:4000 (the next free port if 4000 is taken), listening on 127.0.0.1 only. Files go to \`~/litellm-gateway\` by default.
+- Credentials: the script generates \`LITELLM_MASTER_KEY\`, \`LITELLM_SALT_KEY\`, and the database password into \`~/litellm-gateway/.env\` (mode 600) and never prints them. Keep \`.env\`: a new salt key makes stored provider keys unreadable.
+- Admin UI: http://localhost:4000/ui, username \`admin\`, password is the \`LITELLM_MASTER_KEY\` value in \`.env\`. Add a model under Models + Endpoints > Add Model, then create a virtual key under Virtual Keys.
+- Agents and CI: the script asks nothing when there is no terminal, under CI or Claude Code, with \`--yes\` (\`curl -fsSL <url> | sh -s -- --yes\`), or on Windows with \`$env:LITELLM_YES=1\`. \`LITELLM_DIR\` and \`LITELLM_PORT\` override the folder and port.
+- Manage it: \`curl -fsSL <url> | sh -s -- <action>\` or the \`litellm-gateway\` command it installs, with \`status\`, \`start\`, \`stop\`, \`restart\`, \`logs\`, \`open\`, \`update\`, or \`uninstall\`.
+- Read the script first: https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.sh and https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.ps1
+
+Other ways to run it:
+
+- The same stack step by step with Docker Compose, then the Admin UI walkthrough: ${SITE}/docs/proxy/docker_quick_start.md
+- One container with no database, from a \`config.yaml\`: ${SITE}/docs/proxy/docker_quick_start.md#running-without-a-database. Only the master key works on this path: no virtual keys, Admin UI model management, or spend tracking, and budgets are not enforced.
+- Production on Kubernetes with Helm, or with the official Terraform modules for AWS and GCP: ${SITE}/docs/proxy/deploy.md. ${OFFICIAL_ONE_CLICK.map(([name]) => name).join(' and ')} also have 1-click Cloud Shell deploys into your own account: ${SITE}/docs/proxy/deploy.md#1-click-deploy-from-cloud-shell
+- Hosted by LiteLLM, with nothing to operate: talk to sales (${SALES_URL}) or book an onboarding call (${HOSTED_URL}).
+- Image: \`docker.litellm.ai/berriai/litellm\`, also on \`ghcr.io/berriai/litellm\`, signed with cosign (${SITE}/docs/proxy/docker_image_security.md).`;
+
+const callSection = () => `## Call the gateway from any language
+
+The gateway is OpenAI-compatible and Anthropic-compatible, so an app keeps its existing SDK and changes the base URL. Authenticate with a virtual key (or the master key) and use a model name added in the Admin UI.
+
+${fence('python', `from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:4000", api_key="sk-<your-virtual-key>")
+response = client.chat.completions.create(
+    model="{{openai_large}}",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(response.choices[0].message.content)`)}
+
+${fence('typescript', `import OpenAI from "openai";
+
+const client = new OpenAI({ baseURL: "http://localhost:4000", apiKey: "sk-<your-virtual-key>" });
+const response = await client.chat.completions.create({
+  model: "{{openai_large}}",
+  messages: [{ role: "user", content: "Hello" }],
+});
+console.log(response.choices[0].message.content);`)}
+
+${fence('bash', `curl http://localhost:4000/v1/chat/completions \\
+  -H "Authorization: Bearer sk-<your-virtual-key>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'`)}
+
+- Claude Code: \`export ANTHROPIC_BASE_URL=http://localhost:4000\` and \`export ANTHROPIC_AUTH_TOKEN=sk-<your-virtual-key>\` (${SITE}/docs/proxy/client_setup/claude_code.md).
+- Codex, Cursor, OpenCode, and other clients: ${SITE}/docs/proxy/client_setup/overview.md`;
+
+const sdkSection = () => `## Use the Python SDK
+
+${fence('bash', QUICKSTART.sdk)}
+
+${fence('python', `from litellm import completion
+
+# Provider keys come from environment variables, for example OPENAI_API_KEY or ANTHROPIC_API_KEY
+response = completion(
+    model="openai/{{openai_large}}",  # always "<provider>/<model>", for example "anthropic/{{anthropic}}"
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(response.choices[0].message.content)`)}
+
+- Every provider returns the OpenAI Chat Completions shape. Provider list and model names: ${SITE}/docs/providers.md
+- Streaming and async: \`stream=True\` and \`await litellm.acompletion(...)\` (${SITE}/docs/completion/stream.md).
+- Retries, fallbacks, and load balancing across deployments inside one process: the Router (${SITE}/docs/routing.md).
+- Fewer dependencies for SDK-only apps: \`litellm-core\` (${SITE}/docs/litellm_core.md).`;
+
+// Where LiteLLM fits, so an agent comparing gateways can match it to the
+// user's constraints.
+const choosing = () => `## When to choose LiteLLM
+
+- Data and keys stay with you: the gateway runs in your own machine, cluster, or cloud account, so prompts, responses, and provider keys never pass through a third party (${SITE}/docs/data_security.md).
+- One endpoint for 100+ providers, including OpenAI, Anthropic, Azure, Bedrock, Gemini Enterprise Agent Platform (formerly Vertex AI), and self-hosted models, with fallbacks between them.
+- A platform team gives each team, app, user, or coding agent its own virtual key, budget, rate limit, and model access, with spend tracked per key.
+- Open source under MIT with no markup on model spend. Enterprise adds SSO, audit logs, admin roles, and support SLAs on the same image (${SITE}/docs/enterprise.md).`;
+
+// Pages grouped by the questions people bring to the docs, most asked first.
+// The order follows which pages AI assistants and search send visitors to.
+const TASKS = [
+  ['Run and deploy the gateway', [
+    ['proxy/docker_quick_start', 'Start the gateway with one command, log in to the Admin UI, add a model, create a virtual key, send a request', 'AI Gateway quickstart'],
+    ['proxy/deploy', 'Production on Kubernetes with Helm, or Terraform on AWS and GCP, including 1-click Cloud Shell deploys'],
+    ['proxy/prod', 'Production checklist: workers, Redis, database, and migrations'],
+    ['proxy/configs', 'Define models, settings, and routing in config.yaml', 'config.yaml'],
+    ['proxy/config_settings', 'Every config.yaml setting and environment variable', 'All config settings'],
+  ]],
+  ['Keys, budgets, and spend', [
+    ['proxy/virtual_keys', 'Issue virtual keys with model access, expiry, and metadata'],
+    ['proxy/users', 'Budgets and rate limits per key, user, team, and customer'],
+    ['proxy/cost_tracking', 'Spend per key, user, team, and model, and how to query it'],
+    ['proxy/ui', 'The Admin UI: models, keys, teams, and usage in the browser', 'Admin UI'],
+    ['proxy/admin_ui_sso', 'Single sign-on for the Admin UI'],
+  ]],
+  ['Routing, fallbacks, and caching', [
+    ['routing', 'Load balancing, retries, cooldowns, and fallbacks across deployments (SDK Router and gateway)', 'Router: load balancing and fallbacks'],
+    ['proxy/reliability', 'Fail over to another model or provider when one fails'],
+    ['proxy/load_balancing', 'Spread traffic across several deployments of one model on the gateway'],
+    ['auto_router/index', 'Auto Router: send each request to the cheapest model that answers it well'],
+    ['proxy/caching', 'Cache responses to cut spend and latency'],
+  ]],
+  ['Coding agents and clients', [
+    ['proxy/client_setup/overview', 'Point Claude Code, Codex, Cursor, OpenCode, or any SDK at the gateway', 'Connect clients to the gateway'],
+    ['proxy/client_setup/claude_code', 'Claude Code through the gateway'],
+    ['tutorials/claude_code_max_subscription', 'Claude Code with a Claude Pro, Max, Team, or Enterprise subscription through the gateway', 'Claude Code with a Claude subscription'],
+    ['tutorials/claude_non_anthropic_models', 'Claude Code with models from other providers'],
+    ['proxy/client_setup/codex_cli', 'Codex CLI through the gateway'],
+  ]],
+  ['MCP and agents', [
+    ['mcp', 'MCP gateway: one endpoint for MCP servers, with per-key access control'],
+    ['a2a', 'Agent gateway for A2A agents'],
+    ['agent_resources', 'Copy-paste prompts, MCP, and skills for coding agents that set up LiteLLM'],
+  ]],
+  ['Observability and safety', [
+    ['proxy/logging', 'Send request logs to Langfuse, Datadog, S3, OpenTelemetry, and more'],
+    ['proxy/prometheus', 'Prometheus metrics for the gateway'],
+    ['proxy/guardrails/quick_start', 'Guardrails: PII masking, prompt injection checks, and content filters'],
+    ['data_security', 'What data LiteLLM stores and where'],
+  ]],
+  ['Python SDK', [
+    ['index', 'Install the SDK and make a first call to any provider', 'Python SDK quickstart'],
+    ['python_sdk', 'What the SDK covers: completion, embeddings, images, audio, and more'],
+    ['completion/stream', 'Streaming and async calls'],
+    ['completion/prompt_caching', 'Prompt caching across providers'],
+    ['providers/openai_compatible', 'Call any OpenAI-compatible endpoint'],
+  ]],
+  ['Enterprise', [
+    ['enterprise', 'What Enterprise adds: SSO, audit logs, admin roles, multi-region, support SLAs'],
+  ]],
+];
+
+// Large, reference-style sections are listed last, as titles only, so the
+// curated part of llms.txt stays within what agents read in one fetch.
+const DEFERRED = new Set(['Providers', 'Integrations', 'Supported Endpoints', 'Learn: guides and tutorials', 'Resources']);
 
 // Public facts for agents. Each figure links its source so an agent can verify
 // it. Stars, forks, and downloads come from GitHub and PyPI at build time
@@ -119,9 +274,30 @@ function useCasesMarkdown() {
   ].join('\n');
 }
 
+// The AI Providers landing page (<ProviderCatalog />) as a markdown list,
+// built in postBuild from providersSidebar.
+let providerIndex = '';
+
+function providerIndexMarkdown(items, byId) {
+  const lines = [];
+  for (const item of items || []) {
+    if (item.type === 'html') {
+      lines.push('', `## ${clean(item.value)}`, '');
+      continue;
+    }
+    // Entries above the first group label are this page and an external link.
+    if (!lines.length) continue;
+    const id = item.type === 'doc' ? item.id : item.link?.type === 'doc' ? item.link.id : null;
+    const doc = id && byId.get(id);
+    if (doc) lines.push(`- [${clean(item.label || doc.title)}](${mdUrl(doc.permalink)})`);
+  }
+  return lines.join('\n').trim();
+}
+
 function expandComponent(tag) {
   // Signup forms have no meaning in markdown
   if (/^<Newsletter\b/.test(tag)) return '';
+  if (/^<ProviderCatalog\b/.test(tag)) return providerIndex;
   let m = /^<AgentPrompt\b[^>]*\bid="([^"]+)"[^>]*\/>$/.exec(tag);
   if (m && PROMPTS[m[1]]) {
     const p = PROMPTS[m[1]];
@@ -160,7 +336,7 @@ function expandComponent(tag) {
     );
   }
   if (/^<OneClickDeploy\b/.test(tag)) {
-    return `Deploy to the cloud in one click: ${ONE_CLICK.map(([name, url]) => `[${name}](${url})`).join(' or ')}. Use your deployment's URL in place of http://localhost:4000.\n`;
+    return `Deploy into your own cloud account from Cloud Shell: ${OFFICIAL_ONE_CLICK.map(([name, url]) => `[${name}](${url})`).join(' or ')} (steps: ${SITE}/docs/proxy/deploy.md#1-click-deploy-from-cloud-shell). Use your deployment's URL in place of http://localhost:4000.\n`;
   }
   if (/^<EnterpriseFeature\b/.test(tag)) {
     if (/\sfree\b/.test(tag)) {
@@ -227,6 +403,7 @@ function mdxToMarkdown(raw) {
   text = substitute(text);
   // Inline figures, e.g. a <Stat id="stars" /> inside a table cell
   text = text.replace(/<Stat\s+id="([a-zA-Z]+)"\s*\/>/g, (_, id) => STATS[id] ?? '');
+  text = sinceVersionAsText(text);
 
   const out = [];
   let fence = null;
@@ -322,6 +499,14 @@ const oneLine = (s, max = 180) => {
   return t.length > max ? t.slice(0, max - 1).replace(/\s+\S*$/, '') + '...' : t;
 };
 
+// Index entries keep the first sentence of a page's description.
+const shortDescription = (doc) => {
+  const d = usefulDescription(doc.description);
+  if (!d) return '';
+  const first = d.split(/(?<=[.!?])\s/)[0];
+  return oneLine(first, 120);
+};
+
 const mdUrl = (permalink) =>
   SITE + (permalink.endsWith('/') ? `${permalink}index.md` : `${permalink}.md`);
 
@@ -406,6 +591,7 @@ module.exports = function llmsPlugin(context) {
       if (!docs.length) return;
       const byId = new Map(docs.map((d) => [d.id, d]));
       const markdown = new Map();
+      providerIndex = providerIndexMarkdown(sidebars.providersSidebar, byId);
 
       const updated = lastUpdatedDates(context.siteDir);
       const writeMd = async (permalink, content) => {
@@ -499,41 +685,50 @@ module.exports = function llmsPlugin(context) {
 
       // llms.txt
       const link = (doc, note, label) => {
-        const desc = note || usefulDescription(doc.description);
+        const desc = note !== undefined ? note : usefulDescription(doc.description);
         return `- [${label || clean(doc.title)}](${mdUrl(doc.permalink)})${desc ? `: ${oneLine(desc)}` : ''}`;
       };
 
       const listed = new Set();
-      const lines = [`# LiteLLM`, '', `> ${SUMMARY}`, '', NOTES, '', facts(), '', '## Key pages', ''];
-      for (const [id, label, note] of START_HERE) {
-        const doc = byId.get(id);
-        if (!doc) continue;
-        lines.push(link(doc, note, label));
-        listed.add(id);
+      const lines = [
+        `# LiteLLM`, '', `> ${SUMMARY}`, '', NOTES, '',
+        substitute(gatewaySection()), '', substitute(callSection()), '', substitute(sdkSection()), '',
+        choosing(), '', facts(), '', '## Key pages by task',
+      ];
+      for (const [group, pages] of TASKS) {
+        const items = pages.filter(([id]) => byId.has(id) && !listed.has(id));
+        if (!items.length) continue;
+        lines.push('', `### ${group}`, '');
+        for (const [id, note, label] of items) {
+          lines.push(link(byId.get(id), note, label));
+          listed.add(id);
+        }
       }
 
-      const order = ['tutorialSidebar', 'learnSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
+      // The rest of the docs, sidebar by sidebar. Big reference sections are
+      // held back for the Optional part at the end.
+      const deferred = [];
+      const section = (heading, ids) => {
+        if (DEFERRED.has(heading)) {
+          deferred.push(`### ${heading}`, '', ids.map((id) => `[${clean(byId.get(id).title)}](${mdUrl(byId.get(id).permalink)})`).join(', '), '');
+        } else {
+          lines.push('', `## ${heading}`, '');
+          for (const id of ids) lines.push(link(byId.get(id), shortDescription(byId.get(id))));
+        }
+        for (const id of ids) listed.add(id);
+      };
+      const order = ['tutorialSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
       const sidebarNames = [...order.filter((n) => sidebars[n]), ...Object.keys(sidebars).filter((n) => !order.includes(n))];
       for (const name of sidebarNames) {
         if (SIDEBAR_TITLES[name]) {
-          const ids = sidebars[name].flatMap((top) => collectDocIds(top)).filter((id) => byId.has(id) && !listed.has(id));
-          if (!ids.length) continue;
-          lines.push('', `## ${SIDEBAR_TITLES[name]}`, '');
-          for (const id of [...new Set(ids)]) {
-            lines.push(link(byId.get(id)));
-            listed.add(id);
-          }
+          const ids = [...new Set(sidebars[name].flatMap((top) => collectDocIds(top)).filter((id) => byId.has(id) && !listed.has(id)))];
+          if (ids.length) section(SIDEBAR_TITLES[name], ids);
           continue;
         }
         for (const top of sidebars[name]) {
-          const ids = collectDocIds(top).filter((id) => byId.has(id) && !listed.has(id));
+          const ids = [...new Set(collectDocIds(top).filter((id) => byId.has(id) && !listed.has(id)))];
           if (!ids.length) continue;
-          const heading = top.type === 'category' ? clean(top.label) : clean(byId.get(ids[0]).title);
-          lines.push('', `## ${heading}`, '');
-          for (const id of [...new Set(ids)]) {
-            lines.push(link(byId.get(id)));
-            listed.add(id);
-          }
+          section(top.type === 'category' ? clean(top.label) : clean(byId.get(ids[0]).title), ids);
         }
       }
 
@@ -578,14 +773,16 @@ module.exports = function llmsPlugin(context) {
           ...blogPosts.map(postLine),
         ];
         await fs.promises.writeFile(path.join(outDir, 'blog.md'), index.join('\n') + '\n');
-        lines.push('', '## Blog', '', `- [All blog posts](${SITE}/blog.md): every post, newest first`);
-        lines.push(...blogPosts.slice(0, 15).map(postLine));
       }
 
       const orphans = docs.filter((d) => !listed.has(d.id));
-      lines.push('', '## Optional', '');
-      lines.push(`- [Release notes](${SITE}/release_notes): Changelog for every LiteLLM release`);
-      for (const doc of orphans) lines.push(link(doc));
+      lines.push('', '## Optional', '', `- [Release notes](${SITE}/release_notes): Changelog for every LiteLLM release`);
+      if (blogPosts.length) {
+        lines.push(`- [All blog posts](${SITE}/blog.md): every post, newest first`);
+        lines.push(...blogPosts.slice(0, 8).map(postLine));
+      }
+      for (const doc of orphans) lines.push(link(doc, shortDescription(doc)));
+      lines.push('', ...deferred);
 
       await fs.promises.writeFile(path.join(outDir, 'llms.txt'), lines.join('\n') + '\n');
 

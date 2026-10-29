@@ -63,7 +63,9 @@ general_settings:
 
 ## Forward LLM Provider Authentication Headers
 
-**New in v1.82+**: By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
+<SinceVersion v="1.82.0" />
+
+By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
 
 ### Configuration
 
@@ -389,6 +391,10 @@ To test if headers are being forwarded:
 1. **Check Model Name**: Ensure the model name in your request matches the configuration
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### Provider Errors
 

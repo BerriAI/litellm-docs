@@ -57,6 +57,14 @@
 .composer button:disabled {opacity:.35;color:var(--ai-muted)}
 .note {margin:6px 0 0;color:var(--ai-muted);font-size:11px}
 
+/* Resize handle on the left edge, only where the panel is docked beside the page (see layout.css) */
+.resizeHandle {display:none}
+@media(min-width:1200px) {
+  .panel {width:var(--ask-ai-panel-width,380px)}
+  .resizeHandle {display:block;position:absolute;top:0;bottom:0;left:0;z-index:1;width:6px;cursor:col-resize;touch-action:none}
+  .resizeHandle:hover,.resizeHandle:focus-visible,:global(html[data-ask-ai-resizing]) .resizeHandle {background:var(--ai-accent);opacity:.4;outline:0}
+}
+
 /* Drawer: overlays the right edge, no page reflow */
 /* Tablets and narrow desktops: a drawer over the page */
 @media(min-width:641px) and (max-width:1199px) {

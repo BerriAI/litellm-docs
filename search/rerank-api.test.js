@@ -8,7 +8,6 @@ const {once} = require('node:events');
 const {createIndex} = require('./engine');
 const {createReranker} = require('./rerank');
 const {createRerankHandler} = require('./rerank-api');
-const {createHandler} = require('./server');
 const {loadRerankCorpus, loadRerankCorpusFiles, readConfig} = require('./runtime');
 const {buildSearchIndex} = require('../plugins/docs-search');
 
@@ -20,7 +19,7 @@ const success = async (_, request) => Response.json({answers: Object.fromEntries
 const neverFetch = () => assert.fail('must not call model');
 async function serve(t, overrides = {}, parsedBody) {
   const options = {...corpus, config, fetchImpl: success, ...overrides};
-  const handler = parsedBody === undefined ? createHandler(options) : createRerankHandler(options);
+  const handler = createRerankHandler(options);
   const server = http.createServer((req, res) => {
     if (parsedBody !== undefined) req.body = parsedBody;
     return handler(req, res);

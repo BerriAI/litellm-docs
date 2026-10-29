@@ -112,7 +112,7 @@ These headers are available on streaming and non-streaming requests to `/v1/chat
 | `x-litellm-attempted-retries` | `0` | Retries. |
 | `x-litellm-attempted-fallbacks` | `1` | Fallbacks to another deployment. |
 | `x-litellm-call-id` | `019b2c4d-e5f6-7890-abcd-ef1234567890` | Logs / tracing. |
-| `x-litellm-version` | `1.55.3` | Version. |
+| `x-litellm-version` | `1.55.3` {/* keep-version-note */} | Version. |
 | `x-litellm-model-api-base` | `https://api.openai.com/v1` | Provider base (no query string). |
 
 ## Response headers from LLM providers

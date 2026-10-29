@@ -4,7 +4,6 @@ sidebar_label: "Load Balancing"
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Image from '@theme/IdealImage';
 
 # Proxy - Load Balancing
 Load balance multiple instances of the same model
@@ -76,29 +75,9 @@ router_settings:
 
 ## Kubernetes pod discovery
 
-Set `kubernetes_pod_discovery: true` in a deployment's `litellm_params` when its `api_base` is a Kubernetes headless service; the router resolves the service hostname to ready pod IPs and round-robins requests across them, refreshing every `KUBERNETES_POD_DISCOVERY_REFRESH_INTERVAL_SECONDS`
+Use [Cache-Aware Routing](./cache_aware_routing.md) to discover inference pods behind a Kubernetes headless service and keep requests from the same session on one pod for prompt cache reuse. Requests without an explicit session ID use round robin.
 
-```yaml
-model_list:
-  - model_name: gpu-llama
-    litellm_params:
-      model: openai/fake-llama
-      api_base: http://my-vllm-headless.gpu.svc.cluster.local:8000/v1
-      api_key: os.environ/VLLM_API_KEY
-      kubernetes_pod_discovery: true
-```
-
-The Admin UI also exposes this setting at Add Model > Advanced Settings > "Kubernetes pod discovery"
-
-A request that carries an explicit session ID (`litellm_session_id`, or `session_id` in `metadata`) stays on one pod, so the inference server can reuse its prompt cache for that session. When both are set, `litellm_session_id` wins. A retry for that session moves to the next pod in a stable order, and requests without a session ID keep round-robining. Pod IPs that go unused for `KUBERNETES_POD_DISCOVERY_IDLE_EVICTION_SECONDS` are dropped from the cache
-
-Proxy admins can see the pods a model currently resolves to on the model's page in the Admin UI (Models + Endpoints, then select the model). The "Kubernetes pods" card lists the service host and port and each ready pod IP. Other roles do not see the card, and `GET /model/{model_id}/kubernetes_pods` rejects their requests
-
-To see which pod served a request, open Logs in the Admin UI and select the request. API Base shows the pod IP the request was sent to
-
-<Image img={require('../../img/kubernetes_pod_discovery_logs.png')} style={{ width: '100%', maxWidth: '1200px' }} />
-
-LiteLLM must run in the same cluster. Only `http://` bases are rewritten; `https://` bases are left unchanged because connecting to an IP breaks TLS hostname checks. If `HTTP_PROXY` is set and `NO_PROXY` exempts the service host but not each pod IP, LiteLLM keeps the service hostname and logs a warning, because HTTP clients do not match pod IPs against CIDR entries in `NO_PROXY`
+The guide covers `kubernetes_pod_discovery` configuration, session IDs, retry behavior, discovery settings, and multi-cluster routing.
 
 ## Enforce Model Rate Limits
 
@@ -122,11 +101,20 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
     rpm: 60     # 60 requests per minute
     tpm: 90000  # 90k tokens per minute
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      rpd: 1500     # 1500 requests per UTC day
+      tpd: 1000000  # 1M tokens per UTC day
+      daily_reset_time: "08:00"  # counts start over at 08:00 UTC instead of midnight UTC
 
 router_settings:
   optional_pre_call_checks:
     - enforce_model_rate_limits  # Enables strict enforcement
 ```
+
+`rpm` and `tpm` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`. `rpd`, `tpd` and `daily_reset_time` go inside `litellm_params`.
 
 ### How It Works
 
@@ -134,8 +122,14 @@ router_settings:
 |------------|-------------|----------|
 | **RPM** | Hard limit - blocked at exact threshold | 100% accurate |
 | **TPM** | Best-effort - may slightly exceed | Blocked when already over limit |
+| **RPD** | Hard limit - blocked at exact threshold | 100% accurate |
+| **TPD** | Best-effort - may slightly exceed | Blocked when already over limit |
 
-**Why TPM is best-effort:** Token count is unknown until the LLM responds. TPM is checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+**Why TPM and TPD are best-effort:** Token count is unknown until the LLM responds. TPM and TPD are checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+
+**Daily limits reset at midnight UTC, or at `daily_reset_time`.** The counter key carries the date of the current window, so a new day starts a fresh count on every proxy instance at the same moment. `daily_reset_time` is `"HH:MM"` in UTC and moves that moment, for example `"08:00"` for a provider whose quota resets at midnight Pacific during daylight saving time (`"07:00"` outside it, the value does not follow daylight saving). Without `daily_reset_time` the window is the UTC calendar day.
+
+When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until the next reset.
 
 ### Error Response
 
@@ -149,7 +143,7 @@ router_settings:
 }
 ```
 
-Response includes `retry-after: 60` header.
+Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1501`) and `retry-after` is the number of seconds until the next reset (midnight UTC or `daily_reset_time`).
 
 ### Multi-Instance Deployment
 
@@ -432,7 +426,7 @@ If a stale alias is detected and the bypass is **not** enabled, the proxy may em
 
 When load balancing OpenAI's Responses API across deployments with **different API keys** (e.g., different Azure regions or organizations), encrypted content items (like `rs_...` reasoning items) can only be decrypted by the originating API key.
 
-**Solution:** Use the `encrypted_content_affinity` pre-call check (requires LiteLLM >= 1.82.3) to automatically route follow-up requests containing encrypted items to the correct deployment:
+**Solution:** Use the `encrypted_content_affinity` pre-call check <SinceVersion v="1.82.3" /> to automatically route follow-up requests containing encrypted items to the correct deployment:
 
 ```yaml
 model_list:
