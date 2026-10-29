@@ -282,7 +282,7 @@ In the Admin UI, pick **Logging Only** as the mode when you add the guardrail.
 | `aws_secret_key` | AWS secret keys | `wJalrXUtnFEMI/K7MDENG/bPxRfi...` |
 | `github_token` | GitHub tokens | `example-github-token-123` |
 
-The card patterns (`visa`, `mastercard`, `amex`, `discover` and `credit_card`) only match numbers that pass the Luhn checksum, and `iban` and `eu_iban_enhanced` only match IBANs whose mod-97 check digits are valid. Order ids and other numbers that only look like a card or an IBAN are not masked or blocked. A mistyped card number also fails the checksum, so it is not caught; to match on format alone, add a `regex` pattern with the same expression instead. Test with checksum-valid numbers such as the examples above.
+The card patterns (`visa`, `mastercard`, `amex`, `discover` and `credit_card`) only match numbers that pass the Luhn checksum, and `iban` and `eu_iban_enhanced` only match IBANs whose mod-97 check digits are valid. Order ids and other numbers that only look like a card or an IBAN are not masked or blocked. A mistyped card number also fails the checksum, so it is not caught; to match on format alone, add a `regex` pattern with the same expression instead. Test with checksum-valid numbers such as the examples above. Streamed responses skip the checksum and still mask or block every number the pattern matches, since text that has not arrived yet can change what a rule matches.
 
 ### Using Prebuilt Patterns
 
