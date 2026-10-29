@@ -688,7 +688,7 @@ router_settings:
 | AZURE_FEDERATED_TOKEN_FILE | File path to Azure federated token
 | AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY | Cost per GB per day for Azure File Search service
 | AZURE_POSTGRESQL_AUTH | Set to `True` to authenticate Azure Database for PostgreSQL Flexible Server with a short-lived Microsoft Entra ID access token. LiteLLM requests the token for the `https://ossrdbms-aad.database.windows.net/.default` scope through the Azure Identity library and refreshes it before it expires. Cannot be combined with `IAM_TOKEN_DB_AUTH`. Requires `DATABASE_HOST`, `DATABASE_USER`, and `DATABASE_NAME`. For identity options and AKS workload identity setup, see [`--azure_postgresql_auth`](./cli#--azure_postgresql_auth). |
-| AZURE_SCOPE | For EntraID Auth, Scope for Azure services, defaults to "https://cognitiveservices.azure.com/.default"
+| AZURE_SCOPE | For EntraID Auth, Scope for Azure services, defaults to "https://cognitiveservices.azure.com/.default". Foundry agents and `azure_ai` Responses API calls to a Foundry project endpoint (`/api/projects/<project>` in `api_base`) default to "https://ai.azure.com/.default" instead
 | AZURE_SENTINEL_DCR_IMMUTABLE_ID | Immutable ID of the Data Collection Rule for Azure Sentinel logging
 | AZURE_SENTINEL_STREAM_NAME | Stream name for Azure Sentinel logging
 | AZURE_SENTINEL_AUDIT_STREAM_NAME | Stream name for Azure Sentinel audit logs; falls back to AZURE_SENTINEL_STREAM_NAME when unset
