@@ -1587,6 +1587,7 @@ const sidebars = {
             "projects/Agent Lightning",
             "projects/Harbor",
             "projects/CompatCanary",
+            "projects/Token0",
             "projects/GraphRAG",
             "projects/Docq.AI",
             "projects/PDL",
