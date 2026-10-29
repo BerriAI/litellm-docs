@@ -230,7 +230,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 -d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "temp_budget_increase": 25, "temp_budget_expiry": "2026-11-01T00:00:00Z"}'
 ```
 
-To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. This is available starting in `v1.104.0`
+To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. <SinceVersion v="1.104.0" />
 
 #### Reset a team member's spend
 

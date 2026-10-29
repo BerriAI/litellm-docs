@@ -13,7 +13,9 @@ One router for complexity, semantic, and adaptive routing. Classify each request
 
 :::info[Availability]
 
-Auto routing is in **beta**, so config keys and defaults can still change between releases. Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+<SinceVersion v="1.94.0" />
+
+Auto routing is in **beta**, so config keys and defaults can still change between releases. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -363,7 +365,7 @@ The deprecated [semantic auto router](./auto_routing_semantic.md) has a much thi
 
 :::info
 
-Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
+Context-window support works <SinceVersion v="1.96.0" /> ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
 
 :::
 
@@ -580,7 +582,7 @@ savings = cost(baseline model, this request)
 - **"Most expensive" is settled by cost, not by rate**, since a model dearer per output token can be cheaper per cached token. Candidates are priced once against a fixed reference request (20k prompt tokens: 19k cache reads and a 1k cache write, plus 1k completion) through the same engine the savings use. Unpriceable candidates drop out, and if none price the driver reports zero. The ranking is pinned per router instance, so it stays off the per-request path
 - **Only one side is hypothetical.** What the request actually cost is read back from what the cost calculator recorded, on the service tier and data residency it was billed on, rather than re-derived; the baseline never ran, so it is priced through the same engine on that same basis. That figure is input plus output cost, leaving built-in tool cost, discounts and margins outside the comparison
 - **The result is signed.** Switching models leaves the new one cold, and when the resulting cache-creation charge outweighs the cheaper rates the number goes negative and the dashboard says so
-- **The classifier's own charge counts against the saving** (v1.100 and later). An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
+- **The classifier's own charge counts against the saving** <SinceVersion v="1.100.0" />. An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
 - **Zero savings retains both costs.** For supported native Anthropic requests, complete observed usage establishes equal model costs while the recorded session has used the exact baseline deployment at the same prices, including overlapping requests. Both costs remain nonzero when the request was billable. A recorded classifier charge still counts against savings. After routing diverges, returning to the same model requires cache-history evidence; model identity alone does not establish zero savings. Missing pricing or evidence produces an unavailable estimate
 
 ### Cache-prefix history and expiry {#the-baseline-is-priced-with-a-warm-cache}

@@ -101,11 +101,20 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
     rpm: 60     # 60 requests per minute
     tpm: 90000  # 90k tokens per minute
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      rpd: 1500     # 1500 requests per UTC day
+      tpd: 1000000  # 1M tokens per UTC day
+      daily_reset_time: "08:00"  # counts start over at 08:00 UTC instead of midnight UTC
 
 router_settings:
   optional_pre_call_checks:
     - enforce_model_rate_limits  # Enables strict enforcement
 ```
+
+`rpm` and `tpm` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`. `rpd`, `tpd` and `daily_reset_time` go inside `litellm_params`.
 
 ### How It Works
 
@@ -113,8 +122,14 @@ router_settings:
 |------------|-------------|----------|
 | **RPM** | Hard limit - blocked at exact threshold | 100% accurate |
 | **TPM** | Best-effort - may slightly exceed | Blocked when already over limit |
+| **RPD** | Hard limit - blocked at exact threshold | 100% accurate |
+| **TPD** | Best-effort - may slightly exceed | Blocked when already over limit |
 
-**Why TPM is best-effort:** Token count is unknown until the LLM responds. TPM is checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+**Why TPM and TPD are best-effort:** Token count is unknown until the LLM responds. TPM and TPD are checked before each request (blocks if already over), and tracked after (adds actual tokens used).
+
+**Daily limits reset at midnight UTC, or at `daily_reset_time`.** The counter key carries the date of the current window, so a new day starts a fresh count on every proxy instance at the same moment. `daily_reset_time` is `"HH:MM"` in UTC and moves that moment, for example `"08:00"` for a provider whose quota resets at midnight Pacific during daylight saving time (`"07:00"` outside it, the value does not follow daylight saving). Without `daily_reset_time` the window is the UTC calendar day.
+
+When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until the next reset.
 
 ### Error Response
 
@@ -128,7 +143,7 @@ router_settings:
 }
 ```
 
-Response includes `retry-after: 60` header.
+Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1501`) and `retry-after` is the number of seconds until the next reset (midnight UTC or `daily_reset_time`).
 
 ### Multi-Instance Deployment
 
@@ -411,7 +426,7 @@ If a stale alias is detected and the bypass is **not** enabled, the proxy may em
 
 When load balancing OpenAI's Responses API across deployments with **different API keys** (e.g., different Azure regions or organizations), encrypted content items (like `rs_...` reasoning items) can only be decrypted by the originating API key.
 
-**Solution:** Use the `encrypted_content_affinity` pre-call check (requires LiteLLM >= 1.82.3) to automatically route follow-up requests containing encrypted items to the correct deployment:
+**Solution:** Use the `encrypted_content_affinity` pre-call check <SinceVersion v="1.82.3" /> to automatically route follow-up requests containing encrypted items to the correct deployment:
 
 ```yaml
 model_list:
