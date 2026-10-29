@@ -134,7 +134,7 @@ Blocked requests return the reason:
 {"error": "Model Armor could not scan an attachment and blocked the request: attachment of 5242880 bytes exceeds Model Armor's 4194304 byte scan limit"}
 ```
 
-If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact, except on `/v1/extraction`, `/v1/decisions` and `/v1/systemone`, where those errors let the request through; it only affects attachments there is nothing to send.
+If you use `file_id`, `gs://`, or `http(s)://` attachment references (the pattern Vertex AI recommends), the bytes never reach LiteLLM, so Model Armor cannot scan them and the request is blocked by default. Set `skip_unscannable_attachments: true` to let attachments that carry no inline bytes pass through unscanned while still scanning the ones that do. Unlike `fail_on_error: false`, this leaves fail-closed behavior on real Model Armor API errors (network, quota, bad template) intact; it only affects attachments there is nothing to send.
 
 A document larger than Model Armor's 4 MB byte limit does carry bytes but exceeds what the byte API accepts, so it stays fail-closed under `fail_on_error`; `skip_unscannable_attachments` does not cover it, since that is a real document you likely want blocked rather than forwarded unscanned.
 
@@ -154,10 +154,10 @@ A document larger than Model Armor's 4 MB byte limit does carry bytes but exceed
 - `location` - str - Google Cloud location/region. Default is `us-central1`
 - `credentials` - Union[str, dict] - Path to service account JSON file or credentials dictionary
 - `api_endpoint` - str - Custom API endpoint for Model Armor (optional)
-- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`. On `/v1/extraction`, `/v1/decisions` and `/v1/systemone` a Model Armor error lets the request through unscanned even when this is `true`, as the [extraction guardrails section](../../extraction.md#guardrails) describes
+- `fail_on_error` - bool - Whether to fail requests if Model Armor encounters errors, including attachments it cannot scan (see [Document and File Scanning](#document-and-file-scanning)). Default is `true`
 - `skip_unscannable_attachments` - bool - Let attachment references with no inline bytes (`file_id`, `gs://`, `http(s)://`) pass through unscanned instead of blocking, while still fail-closing on real Model Armor API errors (see [Attachments That Cannot Be Scanned](#attachments-that-cannot-be-scanned)). Default is `false`
 - `sanitize_error_detail` - bool - Keep the raw Model Armor API response out of caller-facing error details, debug logs, and guardrail trace payloads. Default is `true`; set `false` to restore verbose output for debugging
-- `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`. On `/v1/extraction`, `/v1/decisions` and `/v1/systemone` a flagged request answers 400 even when this is `true`
+- `mask_request_content` - bool - Enable masking of sensitive content in requests. Default is `false`. On `/v1/extraction`, `/v1/decisions` and `/v1/systemone`, LiteLLM sends each distinct text to Model Armor in its own request when this is `true`
 - `mask_response_content` - bool - Enable masking of sensitive content in responses. Default is `false`
 
 
