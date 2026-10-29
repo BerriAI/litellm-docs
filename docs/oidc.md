@@ -102,7 +102,7 @@ If you are tempted to use oidc/env_path/AZURE_FEDERATED_TOKEN_FILE, don't do tha
 
 ### Using OIDC as a model's `api_key`
 
-Available from v1.109.0.
+<SinceVersion v="1.109.0" />
 
 A model's `api_key` can hold an OIDC reference. The proxy resolves it on each call and sends the result as the key, so a rotated token is used with no restart, and the config keeps the reference text. `api_key` accepts `oidc/file/<absolute path>`, `oidc/env/<VARIABLE_NAME>` and `oidc/google/<audience>`. Other kinds, such as `oidc/github/`, `oidc/azure/`, `oidc/circleci/` and `oidc/env_path/`, answer 401.
 
