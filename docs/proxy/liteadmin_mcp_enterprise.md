@@ -16,7 +16,7 @@ Connect Claude Code or Codex to your gateway at `/admin/mcp` to manage keys, tea
 
 :::info Image availability
 
-**Available in LiteLLM 1.106.x and later.** Start with an HTTPS deployment and a database. Hosting is off by default; a base Enterprise license covers this feature
+<SinceVersion v="1.106.0" /> Start with an HTTPS deployment and a database. Hosting is off by default; a base Enterprise license covers this feature
 
 :::
 
@@ -185,7 +185,7 @@ Keep `full` responses for multiple workers or replicas. With `compact`, send `re
 | Symptom | Check |
 | --- | --- |
 | Startup fails | Check the license, enable flag, and conflicting header names in the startup error |
-| Missing MCP dependency | Use a unified or backend image from LiteLLM 1.106.x or later |
+| Missing MCP dependency | Use a unified or backend image <SinceVersion v="1.106.0" /> |
 | `404` | Check the image version, enable flag, and container restart. Route `/admin/mcp` unchanged to the unified proxy or backend |
 | `401` or `403` in key mode | Use an active personal `proxy_admin` key |
 | OAuth2 proxy authentication fails | Check the trusted direct peer, mapped identity headers, and stored user role |

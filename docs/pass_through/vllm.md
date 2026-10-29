@@ -27,11 +27,7 @@ Let's call the VLLM [`/score` endpoint](https://vllm.readthedocs.io/en/latest/ap
 
 1. Add a VLLM hosted model to your LiteLLM Proxy 
 
-:::info
-
-Works with LiteLLM v1.72.0+. 
-
-:::
+<SinceVersion v="1.72.0" />
 
 ```yaml
 model_list:
