@@ -11,7 +11,7 @@ Enterprise and open source use one image and one version number. The license key
 
 ## How the window moves
 
-LiteLLM releases a new stable minor line approximately each week. When a new line comes out, the oldest line goes out of the window and does not get more releases. There is no separate long-term support track.
+LiteLLM releases a new stable minor line approximately each week. When a new line comes out, the oldest line goes out of the window and does not get more releases. There is no separate long-term support track. Enterprise customers who need longer coverage can reach out through their [support channel](./support.md).
 
 This policy started on Monday, June 29, 2026. For example, in mid-June 2026 the supported lines were 1.86, 1.87, 1.88, and 1.89.
 

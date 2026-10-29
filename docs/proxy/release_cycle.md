@@ -49,5 +49,3 @@ Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-ver
 ### Enterprise Support
 
 Enterprise and open source use one version support policy. Refer to [Version support](../enterprise/version_support.md) for the release lines that get patches and for how the window moves.
-
-Enterprise customers who need longer coverage can reach out through their [support channel](../enterprise/support.md).

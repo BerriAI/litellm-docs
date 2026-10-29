@@ -127,7 +127,7 @@ The response body is shown to the admin who fired the switch, so point the webho
 
 ## Audit log
 
-Every fire that reaches the webhook, whether it came back 2xx or not, writes a `kill_switch_fired` row to the audit log against the `LiteLLM_AgentsTable` table with the agent id as the object. The row records who fired it (user and key), the target URL, method, the status code and truncated body the webhook returned, and the transport error if there was one. The kill switch config itself, including auth, custom headers, body and query params, is never written to the row. Audit logging needs an enterprise license, and with one it is on unless `store_audit_logs` or `LITELLM_STORE_AUDIT_LOGS` is set to `false`, see [Audit Logs](./proxy/audit_logs).
+Every fire that reaches the webhook, whether it came back 2xx or not, writes a `kill_switch_fired` row to the audit log against the `LiteLLM_AgentsTable` table with the agent id as the object. The row records who fired it (user and key), the target URL, method, the status code and truncated body the webhook returned, and the transport error if there was one. The kill switch config itself, including auth, custom headers, body and query params, is never written to the row. Audit logging needs an enterprise license, and with one it is on unless `store_audit_logs` is set to `false`, or it is unset and `LITELLM_STORE_AUDIT_LOGS` is `false`, see [Audit Logs](./proxy/audit_logs).
 
 In the Admin UI, open **Logs**, switch to the **Audit Logs** tab and filter the action to **Kill switch fired** (or the table to **Agents**). Click a row to see the full payload.
 
