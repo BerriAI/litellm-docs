@@ -185,6 +185,105 @@ Set the Redis credentials the same way as for an exact-match Redis cache; see
 $ litellm --config /path/to/config.yaml
 ```
 
+## Choosing Which Requests Use the Semantic Cache
+
+A semantic cache serves every key and team on the proxy by default. From v1.109.0 you can turn it on for some of them only. Add a callback that implements `async_should_semantic_cache`. The proxy calls it once per request on every route the semantic cache serves, after the pre-call hooks, with the authenticated key (`user_api_key_dict`), the request body (`data`) and the route's call type (`call_type`, such as `acompletion`, `aresponses` or `asend_message`). Return `True` to let that request read from and write to the semantic cache. Any other return value, or an exception, skips both for that request, so it goes to the model and nothing is stored.
+
+With no callback that implements the hook, every request is cached as before. With several, every one of them must return `True`. Exact-match caches (`type: redis`, `local`, `s3` and so on) never call the hook. The check applies to client requests on chat completions, text completions, embeddings, `/v1/responses` over HTTP and WebSocket, `/v1/messages`, Gemini `generateContent`, interactions, A2A, MCP sampling and the rows of a batch LiteLLM runs, whatever `supported_call_types` lists.
+
+### Example: semantic caching for an allowlist of teams
+
+Save this as `custom_callbacks.py` next to your `config.yaml`:
+
+```python
+from litellm.integrations.custom_logger import CustomLogger
+from litellm.proxy._types import UserAPIKeyAuth
+
+SEMANTIC_CACHE_TEAMS = frozenset({"support-bot"})
+
+
+class SemanticCacheTeamAllowlist(CustomLogger):
+    async def async_should_semantic_cache(self, user_api_key_dict: UserAPIKeyAuth, data: dict, call_type: str) -> bool:
+        return user_api_key_dict.team_id in SEMANTIC_CACHE_TEAMS
+
+
+semantic_cache_team_allowlist = SemanticCacheTeamAllowlist()
+```
+
+Register it next to the semantic cache:
+
+```yaml
+model_list:
+  - model_name: chat
+    litellm_params:
+      model: {{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: embedding
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  callbacks: custom_callbacks.semantic_cache_team_allowlist
+  cache: true
+  cache_params:
+    type: redis-semantic
+    similarity_threshold: 0.8
+    redis_semantic_cache_embedding_model: embedding
+```
+
+Create one team inside the allowlist and one outside it, and a key for each:
+
+```shell
+curl -X POST http://localhost:4000/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_id": "support-bot", "team_alias": "support-bot"}'
+curl -X POST http://localhost:4000/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_id": "research", "team_alias": "research"}'
+
+curl -X POST http://localhost:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_id": "support-bot"}'
+curl -X POST http://localhost:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" -H "Content-Type: application/json" \
+  -d '{"team_id": "research"}'
+```
+
+Send a question and then a rewording of it with each team's key:
+
+```shell
+for prompt in "What is the capital of France? Reply with one word." \
+              "Tell me the capital city of France. Reply with one word."; do
+  curl -sS -D - -o /dev/null http://localhost:4000/v1/chat/completions \
+    -H "Authorization: Bearer $SUPPORT_BOT_KEY" -H "Content-Type: application/json" \
+    -d "{\"model\": \"chat\", \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}]}" \
+    | grep -iE "x-litellm-(response-cost|semantic-similarity):"
+done
+```
+
+The `support-bot` team's rewording is served from the cache. It carries `x-litellm-semantic-similarity` above the threshold and `x-litellm-response-cost: 0.0`:
+
+```
+x-litellm-response-cost: 3.15e-05
+x-litellm-semantic-similarity: 0.0
+x-litellm-response-cost: 0.0
+x-litellm-semantic-similarity: 0.93
+```
+
+Run the same loop with `$RESEARCH_KEY`. Both requests go to the model and are billed, and neither response carries `x-litellm-semantic-similarity`, because the proxy skipped the semantic cache for that team:
+
+```
+x-litellm-response-cost: 3.15e-05
+x-litellm-response-cost: 3.225e-05
+```
+
+Semantic cache entries are already scoped to the key, team and organization that stored them, so the `support-bot` team's entries are never served to `research` with or without the hook. The hook decides whether a team uses the semantic cache at all.
+
+### Things to know about the hook
+
+The hook must be an `async def`. A plain `def` returns a value the proxy cannot await, which counts as a no for every request. On a `/v1/responses` WebSocket the hook runs once, with the request that opens the socket, and its answer covers every response on that socket. The hook also runs on requests the cache would skip anyway, such as a request with `"cache": {"no-cache": true}`, so a hook that calls another system on each request should cache its own answer. Nothing times the hook out. Calls the proxy makes for its own features, such as an LLM guardrail check or a shadow eval, do not run the hook yet.
+
 ## Semantic Caching and Multi-Turn Agentic Traffic
 
 Semantic caches (`redis-semantic`, `qdrant-semantic`, `valkey-semantic`) embed the text content of the entire `messages` array (system prompt included) and serve the closest cached response whose cosine similarity clears `similarity_threshold`.
