@@ -91,7 +91,7 @@ The rest of the operations:
 
 You can attach arbitrary `model_info` fields when you create or update a model, and they pass straight through to `GET /model/info` alongside the mapped cost and context data. That is the mechanism for annotating models with your own metadata, such as an owning team, a description, or a version, and reading it back programmatically.
 
-### Require rpm and tpm on new models
+## Require rpm and tpm on new models
 
 By default `rpm` and `tpm` are optional on a model, so a fleet can end up with some deployments rate limited and others unbounded. Set `enforce_rpm_tpm_on_model_add` in `general_settings` to require them <SinceVersion v="1.100.0" />.
 
@@ -114,4 +114,4 @@ general_settings:
       "veo-*": [rpm]
 ```
 
-With this mapping, a `runwayml/gen4_turbo` model can be added with no limits, a model whose `model_name` starts with `veo-` needs only `rpm`, and a Gemini model on Vertex AI needs both. A model update through `POST /model/update` or `PATCH /model/{id}/update` is checked only for the limits its new name and provider require that its old ones did not, so a model added as exempt cannot move to a provider that needs limits without setting them. The limits a model already needed are not checked again, so an update can lower or zero `rpm` and `tpm`, and under `true` an update never fails this check. A malformed mapping makes model add and update answer `500` with an error naming `general_settings.enforce_rpm_tpm_on_model_add`.
+With this mapping, a `runwayml/gen4.5` model can be added with no limits, a model whose `model_name` starts with `veo-` needs only `rpm`, and a Gemini model on Vertex AI needs both. A model update through `POST /model/update` or `PATCH /model/{id}/update` is checked only for the limits its new name and provider require that its old ones did not, so a model added as exempt cannot move to a provider that needs limits without setting them. The limits a model already needed are not checked again, so an update can lower or zero `rpm` and `tpm`, or remove them with `litellm_params_to_remove` on `PATCH /model/{id}/update`, and under `true` an update never fails this check. A malformed mapping makes model add and update answer `500` with an error naming `general_settings.enforce_rpm_tpm_on_model_add`.
