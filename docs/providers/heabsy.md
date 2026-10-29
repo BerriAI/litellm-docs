@@ -26,7 +26,7 @@ These models run on dedicated GPUs in the EEA, and Heabsy does not store prompts
 
 | Model | Context window | Max output |
 |-------|----------------|------------|
-| `heabsy/qwen38` | 262,144 | 32,768 |
+| `heabsy/qwen38` | 524,288 | 32,768 |
 | `heabsy/mimo-v26-flash` | 1,048,576 | 65,536 |
 | `heabsy/glm53-flash-unc` | 1,048,576 | 131,072 |
 | `heabsy/cyberheabsy` | 1,048,576 | 65,536 |
