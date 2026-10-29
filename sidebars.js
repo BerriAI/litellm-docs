@@ -307,6 +307,7 @@ const sidebars = {
           "proxy/guardrails/alice",
           "proxy/guardrails/llm_shield_proxy",
           { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
+          { type: "doc", id: "proxy/guardrails/collieai", customProps: { icon: "/img/integrations/collieai.png" } },
         ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
       ],
     },
