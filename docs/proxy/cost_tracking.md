@@ -385,7 +385,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 ## Custom Tags
 
 :::tip[See Full Request Tags Documentation]
-For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page. To tag requests from the W3C `baggage` header that OpenTelemetry clients already send, see [Map Baggage Values to Tags](./tag_budgets.md#map-baggage-values-to-tags).
 :::
 
 Requirements:
