@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # FlexAI
 
+<SinceVersion v="1.109.0" />
+
 ## Overview
 
 | Property | Details |
@@ -11,7 +13,7 @@ import TabItem from '@theme/TabItem';
 | Provider Route on LiteLLM | `flexai/` |
 | Link to Provider Doc | [FlexAI Documentation ↗](https://docs.flex.ai) |
 | Base URL | `https://api.flex.ai/v1` |
-| Supported Operations | [`/chat/completions`](#sample-usage), `/responses` |
+| Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), `/responses` |
 
 <br />
 <br />
@@ -20,12 +22,11 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models
 
-FlexAI's chat models as of 2026-10-22. The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models), and `GET /v1/models` is the source of truth for the current set.
+FlexAI's chat models as of 2026-10-29. The live catalog with pricing is at [platform.flex.ai/models](https://platform.flex.ai/models), and `GET /v1/models` is the source of truth for the current set.
 
 | Model | Capabilities | Context Window |
 |-------|-------------|----------------|
 | `flexai/DeepSeek-V4-Flash-0731` | tool use, reasoning | 1M tokens |
-| `flexai/DeepSeek-V4.1-Flash` | tool use, reasoning, vision | 1M tokens |
 | `flexai/DeepSeek-V4.1-Flash-1017` | tool use, reasoning, vision | 1M tokens |
 | `flexai/gemma-4-26B-A4B-it` | tool use, reasoning, vision | 256K tokens |
 | `flexai/gemma-4-31b-it` | tool use, reasoning, vision | 256K tokens |
@@ -42,7 +43,6 @@ FlexAI's chat models as of 2026-10-22. The live catalog with pricing is at [plat
 | `flexai/NVIDIA-Nemotron-3.5-Lightning-30B-A3B` | tool use, reasoning | 1M tokens |
 | `flexai/PaddleOCR-VL` | vision | 128K tokens |
 | `flexai/Qwen3-30B-A3B-Thinking-2507-FP8` | tool use, reasoning | 256K tokens |
-| `flexai/Qwen3-8B-FP8` | tool use, reasoning | 40K tokens |
 | `flexai/Qwen3-Coder-30B-A3B-Instruct-FP8` | tool use | 256K tokens |
 | `flexai/Qwen3.5-9B` | tool use, reasoning, vision | 256K tokens |
 | `flexai/Qwen3.6-27B-FP8` | tool use, reasoning, vision | 256K tokens |
@@ -185,5 +185,5 @@ print(response)
 ## Additional Notes
 
 - Set `FLEXAI_API_BASE` to point at a different FlexAI endpoint (for example a staging deployment); it defaults to `https://api.flex.ai/v1`.
-- Model IDs are used exactly as the Token Service reports them at `GET /v1/models`, so they are case-sensitive and may carry a dated suffix — for example `flexai/GLM-5.2` and `flexai/DeepSeek-V4-Flash-0731`. Check `GET /v1/models` for the current set rather than assuming an ID is stable.
+- Model IDs are used exactly as the Token Service reports them at `GET /v1/models`, so they are case-sensitive and may carry a dated suffix, for example `flexai/GLM-5.2` and `flexai/DeepSeek-V4-Flash-0731`. Check `GET /v1/models` for the current set rather than assuming an ID is stable.
 - Beyond chat models, FlexAI serves embedding (`bge-m3`), image (`FLUX.1-schnell`), transcription (`whisper-large-v3-turbo`, `parakeet-tdt-0.6b-v3`) and speech (`Kokoro-82M`) models. Pricing for these is registered in LiteLLM's cost map; routing for non-chat endpoints through the `flexai/` prefix is not wired yet.
