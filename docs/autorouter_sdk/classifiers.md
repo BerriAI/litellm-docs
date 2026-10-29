@@ -71,13 +71,14 @@ from litellm.types.router import RoutingContext
 class TaskClassifier:
     async def classify(self, context: RoutingContext) -> str | None:
         if context.metadata.get("task_type") == "code_review":
-            return "REASONING"
-        return "SIMPLE"
+            return "review"
+        return "routine"
 
 
 routing_config.update({
     "classifier_type": "custom",
     "classifier_plugin": TaskClassifier(),
+    "tiers": {"routine": "fast", "review": "capable"},
     "classifier_plugin_timeout_ms": 3000,
     "classifier_fallback": "default_model",
 })
@@ -93,8 +94,8 @@ response = await router.acompletion(
 )
 ```
 
-Run the script. You should see the model assigned to `capable`. Without `task_type="code_review"`, this classifier returns `SIMPLE` and uses `fast`.
+Run the script. You should see the model assigned to `capable`. Without `task_type="code_review"`, this classifier returns `routine` and uses `fast`.
 
-Return a configured tier name from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
+Choose your own tier names in `tiers`. Return one of those names from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
 
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).
