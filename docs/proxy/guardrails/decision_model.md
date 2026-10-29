@@ -17,7 +17,7 @@ import TabItem from '@theme/TabItem';
 
 <SinceVersion v="1.106.0" />
 
-It landed on `main` after `v1.106.0-dev.3`.
+The guardrail landed on `main` after `v1.106.0-dev.3`.
 
 ## How it works
 

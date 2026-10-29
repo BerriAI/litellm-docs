@@ -309,7 +309,7 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway runs v1.104.3 or later. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
+If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway carries decision classifiers <SinceVersion v="1.104.3" />. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
 
 ## Call a native decision API
 

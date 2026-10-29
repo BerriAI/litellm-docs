@@ -43,7 +43,6 @@ class VersionNoteTests(unittest.TestCase):
             ("LiteLLM v1.85.0 or later is required.", "1.85.0"),
             ("LiteLLM v1.97.0+ strips a trailing `-fast` suffix from the model name.", "1.97.0"),
             ("The LiteLLM proxy v1.90.0 and later serves the route", "1.90.0"),
-            ("| Gemini | v1.85.0+ |", "1.85.0"),
             ("Upgrade to v1.90.0 or later.", "1.90.0"),
             ("Bump to v1.90.0.", "1.90.0"),
             ("You need v1.90.0: earlier releases drop the header.", "1.90.0"),
@@ -57,6 +56,38 @@ class VersionNoteTests(unittest.TestCase):
                 errors = self.version_notes(f"# Page\n\n{line}\n")
                 self.assertEqual([e[2] for e in errors], [3])
                 self.assertIn(f'<SinceVersion v="{version}" />', errors[0][3])
+
+    def test_notes_in_more_shapes_are_rejected(self):
+        for line, version in (
+            ("Use LiteLLM >= v1.85.0.", "1.85.0"),
+            ("LiteLLM >= 1.82.3 strips the header.", "1.82.3"),
+            ("This works on v1.85.0 and later releases.", "1.85.0"),
+            ("The route landed in v1.85.0.", "1.85.0"),
+            ("Streaming is supported for Python SDK v1.85.0+", "1.85.0"),
+            ("**The classifier's own charge counts against the saving** (v1.100 and later). It is net.", "1.100.0"),
+            ("Released in v1.85.0.", "1.85.0"),
+            ("Run v1.85.0 or newer.", "1.85.0"),
+        ):
+            with self.subTest(line=line):
+                errors = self.version_notes(f"# Page\n\n{line}\n")
+                self.assertEqual([e[2] for e in errors], [3])
+                self.assertIn(f'<SinceVersion v="{version}" />', errors[0][3])
+
+    def test_a_bare_version_cell_is_a_note_only_in_a_litellm_column(self):
+        table = "# Page\n\n| Provider | {header} |\n|---|---|\n| Gemini | v1.85.0+ |\n"
+        errors = self.version_notes(table.format(header="LiteLLM version"))
+        self.assertEqual([e[2] for e in errors], [5])
+        self.assertIn('<SinceVersion v="1.85.0" />', errors[0][3])
+        self.assertEqual(self.version_notes(table.format(header="Minimum version")), [])
+
+    def test_another_projects_version_is_not_a_note(self):
+        for text in (
+            "Kubernetes v1.29.0 or later is required.",
+            "| Component | Minimum version |\n|---|---|\n| Kubernetes | 1.29.0+ |",
+            "Run it on Kubernetes (1.29+) or Docker.",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.version_notes(f"# Page\n\n{text}\n"), [])
 
     def test_badges_pass(self):
         self.assertEqual(self.version_notes('# Page\n\n<SinceVersion v="1.85.0" />\n'), [])
@@ -158,6 +189,71 @@ class NewConfigRowTests(unittest.TestCase):
 
     def test_editing_an_existing_setting_needs_no_badge(self):
         self.assertEqual(self.version_missing(self.BASE.replace("Stores models.", "Stores models in the DB.")), [])
+
+    def test_a_new_row_named_like_a_setting_in_another_table_is_rejected(self):
+        table = "\n## Router\n\n| Name | Type | Description |\n|---|---|---|\n| `store_model_in_db` | boolean | Other. |\n"
+        errors = self.version_missing(self.BASE + table)
+        self.assertEqual([(e[0], e[2]) for e in errors], [("version-missing", 9)])
+        self.assertIn("store_model_in_db", errors[0][3])
+
+    def test_moving_a_setting_to_a_new_table_needs_no_badge(self):
+        row = "| `store_model_in_db` | boolean | Stores models. |\n"
+        moved = self.BASE.replace(row, "") + "\n## Router\n\n| Name | Type | Description |\n|---|---|---|\n" + row
+        self.assertEqual(self.version_missing(moved), [])
+
+    def test_the_error_names_the_marker_for_a_renamed_setting(self):
+        errors = self.version_missing(self.BASE + "| `request_body_limit_mb` | integer | Caps a request body. |\n")
+        self.assertIn("{/* keep-version-note */}", errors[0][3])
+
+
+class NewPageTests(unittest.TestCase):
+    def version_missing(self, pages, renames=()):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            (root / "docs/existing.md").write_text("# Existing\n\nAn old page.\n")
+            git = ("git", "-C", directory, "-c", "user.name=t", "-c", "user.email=t@example.com")
+            subprocess.run((*git, "init", "-q"), check=True)
+            subprocess.run((*git, "add", "."), check=True)
+            subprocess.run((*git, "commit", "-qm", "base"), check=True)
+            for old, new in renames:
+                subprocess.run((*git, "mv", f"docs/{old}", f"docs/{new}"), check=True)
+            for name, text in pages.items():
+                (root / "docs" / name).write_text(text)
+            subprocess.run((*git, "add", "docs"), check=True)
+            subprocess.run((*git, "commit", "-qm", "head", "--allow-empty"), check=True)
+            (root / "docs/untracked.md").write_text("# Untracked\n\nA page nobody added yet.\n")
+            return [(e[0], e[1], e[2]) for e in checks.version_missing_errors("HEAD~1", repo_root=directory)]
+
+    def test_new_pages_without_a_badge_are_rejected(self):
+        errors = self.version_missing({"session_replay.md": "---\ntitle: Replay\n---\n\n# Session replay\n\nIt replays.\n"})
+        self.assertEqual(
+            errors,
+            [("version-missing", "docs/session_replay.md", 5), ("version-missing", "docs/untracked.md", 1)],
+        )
+
+    def test_new_pages_with_a_badge_or_the_marker_pass(self):
+        errors = self.version_missing(
+            {
+                "badge.md": '# Session replay\n\n<SinceVersion v="1.110.0" />\n\nIt replays.\n',
+                "marker.md": "# Tutorial\n\n{/* keep-version-note */}\n\nA walkthrough.\n",
+                "plain.md": "---\nmdx:\n  format: md\n---\n\n# Plain\n",
+                "_partial.md": "Shared text.\n",
+            }
+        )
+        self.assertEqual(errors, [("version-missing", "docs/untracked.md", 1)])
+
+    def test_a_placeholder_badge_does_not_count(self):
+        errors = self.version_missing({"replay.md": '# Replay\n\n<SinceVersion v="X.Y.Z" />\n'})
+        self.assertIn(("version-missing", "docs/replay.md", 1), errors)
+
+    def test_renamed_and_edited_pages_need_no_badge(self):
+        errors = self.version_missing({"existing.md": "# Existing\n\nAn edited page.\n"})
+        self.assertEqual(errors, [("version-missing", "docs/untracked.md", 1)])
+        self.assertEqual(
+            self.version_missing({}, renames=(("existing.md", "moved.md"),)),
+            [("version-missing", "docs/untracked.md", 1)],
+        )
 
 
 if __name__ == "__main__":

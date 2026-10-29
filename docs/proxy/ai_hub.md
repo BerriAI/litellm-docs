@@ -69,7 +69,7 @@ Go to the public url (`PROXY_BASE_URL/ui/model_hub_table`) and see available mod
 
 ## Agents
 
-<SinceVersion v="1.80.5" />
+<SinceVersion v="1.80.0-stable.1" />
 
 Share pre-built agents (A2A spec) across your organization. Users can discover and use agents without rebuilding them.
 

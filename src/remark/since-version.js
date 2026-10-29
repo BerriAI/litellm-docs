@@ -1,6 +1,6 @@
 const STANDALONE_BADGE = /^[ \t]*<SinceVersion\b[^>]*\/>[ \t]*$/;
 const INLINE_BADGE = /<SinceVersion\b[^>]*\/>/g;
-const KEEP_MARKER = /[ \t]*\{\/\*\s*keep-[a-z-]+\s*\*\/\}/g;
+const KEEP_MARKER = /[ \t]*\{\/\*\s*keep-[a-z-]+(?:[^*]|\*(?!\/\}))*\*\/\}/g;
 
 function badgeVersion(tag) {
   const m = /\bv\s*=\s*(?:"([^"]*)"|'([^']*)'|\{\s*['"`]([^'"`]*)['"`]\s*\})/.exec(tag);

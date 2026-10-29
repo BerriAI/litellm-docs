@@ -15,6 +15,8 @@ test('version badges become plain text in the markdown export', () => {
     '',
     'Requires the SDK 1.1.0 {/* keep-version-note */}',
     '',
+    'Needs Python 3.11 or later. {/* keep-python-version: the integration needs it */}',
+    '',
     '<SinceVersion />',
     '',
     '```jsx',
@@ -35,6 +37,8 @@ test('version badges become plain text in the markdown export', () => {
       '',
       'Requires the SDK 1.1.0',
       '',
+      'Needs Python 3.11 or later.',
+      '',
       '```jsx',
       '<SinceVersion v="1.85.0" />',
       '{/* keep-version-note */}',
@@ -53,6 +57,8 @@ test('copy page gives the same version text as the markdown export', () => {
     'Set it to keep IDs out. <SinceVersion v="v1.87.0" />',
     '',
     'Requires the SDK 1.1.0 {/* keep-version-note */}',
+    '',
+    'Needs Python 3.11 or later. {/* keep-python-version: the integration needs it */}',
   ].join('\n');
   const file = {value: page, data: {}};
   remarkRawMarkdown()(null, file);
@@ -66,6 +72,8 @@ test('copy page gives the same version text as the markdown export', () => {
       'Set it to keep IDs out. (since LiteLLM v1.87.0)',
       '',
       'Requires the SDK 1.1.0',
+      '',
+      'Needs Python 3.11 or later.',
     ].join('\n'),
   );
 });
