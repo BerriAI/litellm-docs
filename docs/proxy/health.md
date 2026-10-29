@@ -183,9 +183,9 @@ model_list:
 
 <SinceVersion v="1.109.0" />
 
-OpenAI and Azure chat models that output audio, such as `gpt-audio-1.5` and `gpt-audio-mini`, reject a request with no audio in its input or output. The chat probe asks these models for text plus audio output, a `wav` clip in the [`health_check_voice`](#health-check-tuning-reference) voice, so they pass the default probe with no `health_check_params` override. Values you set in `health_check_params` still win, and a `modalities` list there without `"audio"` keeps the probe text only.
+OpenAI and Azure chat models that output audio, such as `gpt-audio-1.5` and `gpt-audio-mini`, reject a request with no audio in its input or output. The chat probe asks these models for text plus audio output, a `wav` clip in the [`health_check_voice`](#health-check-tuning-reference) voice, so they pass the default probe with no `model_info.health_check_params` override. Values you set in `health_check_params` still win, and a `modalities` list there without `"audio"` keeps the probe text only.
 
-LiteLLM picks these models by `base_model`, read from `model_info` and then `litellm_params`, or else by the deployment's model name. So a custom-named Azure deployment gets the audio probe only when `base_model` names its model, as for cost tracking.
+LiteLLM picks these models by `base_model`, read from `model_info` and then `litellm_params`, or else by the deployment's model name. So a custom-named Azure deployment gets the audio probe only when `base_model` names its model, as for [cost tracking](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments).
 
 ```yaml
 model_list:
