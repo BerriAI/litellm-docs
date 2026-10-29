@@ -174,12 +174,14 @@ $ litellm
 Expected Output: 
 
 ```bash showLineNumbers
-# no info statements
+# no info log lines
 ```
+
+Startup messages still print, since `LITELLM_LOG` does not filter them. See [Suppress Startup Output](#suppress-startup-output).
 
 ## Suppress Startup Output
 
-At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them all off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
+At startup the proxy prints messages outside its logger, such as the banner, the feedback box, the model list, `Setting Cache on Proxy` and the Search Tools list. `LITELLM_LOG` does not filter them. To turn them off, set `LITELLM_SUPPRESS_STARTUP_OUTPUT` in your env:
 
 ```bash showLineNumbers
 export LITELLM_SUPPRESS_STARTUP_OUTPUT="true"
@@ -193,9 +195,9 @@ litellm_settings:
     suppress_startup_output: true
 ```
 
-Only `true` turns it on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON.
+Only `true` turns it on. When the proxy loads its config from an S3 or GCS bucket, use the env var, since the CLI prints its own startup lines before it reads the yaml. The setting does not cover the plain-text `query-engine` line that Prisma prints once per worker, even with JSON logs on. Log lines still show at the level `LITELLM_LOG` sets, in plaintext or JSON. A few startup warnings that need action, such as an ignored or deprecated CLI flag, still print whatever `LITELLM_LOG` is set to. Other warnings follow `LITELLM_LOG`. With JSON logs on, those startup warnings are `WARNING` records on stdout, whether or not this setting is on. <SinceVersion v="1.109.0" />
 
-When stdout is not a terminal, for example in a container, or when `NO_COLOR` is set, the startup messages and plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. <SinceVersion v="1.108.0" />
+When stdout is not a terminal, for example in a container started without a TTY, or when `NO_COLOR` is set to any non-empty value, plaintext log lines carry no ANSI color codes, so a log pipeline stores plain text. The startup messages and color codes inside a log message are plain too. <SinceVersion v="1.109.0" />
 
 ## Common Errors 
 
