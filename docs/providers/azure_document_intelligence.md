@@ -181,7 +181,7 @@ curl -X POST http://localhost:4000/ocr \
 </Tabs>
 
 **Features:**
-- Text extraction with markdown formatting
+- Text extraction, with Markdown output when you ask for it (see [Markdown Output](#markdown-output))
 - Table detection and extraction
 - Document structure analysis
 - Paragraph and section recognition
@@ -358,6 +358,79 @@ for page in response.pages:
         print(f"Width: {page.dimensions.width}px")
         print(f"Height: {page.dimensions.height}px")
 ```
+
+## Markdown Output
+
+<SinceVersion v="1.109.0" />
+
+Set `outputContentFormat` to get Azure's Markdown output instead of plain text. It takes `text` or `markdown`, and the value is case-insensitive. The snake_case spelling `output_content_format` works the same way. If you leave it out, the response is the same text output as before.
+
+Markdown comes from Azure's `prebuilt-layout` model. Azure ignores the setting on other models and returns text.
+
+In the default LiteLLM response format, `content` is Azure's Markdown, and each `pages[].markdown` is that page's slice of `content`. Joining the pages in order gives you `content` back.
+
+When you ask for Markdown in the default format, the response also carries `"stringIndexType": "unicodeCodePoint"`. This means the span offsets in `tables` and `keyValuePairs` count Unicode code points, which is what Python string indexing uses, instead of Azure's default text elements.
+
+With `"req_format": "native"`, the proxy returns Azure's raw analyze body. Its `analyzeResult.contentFormat` reads `markdown`, and its offsets keep Azure's default unit.
+
+Any other value returns a 400 error with `invalid OCR outputContentFormat, expected text or markdown`. With `drop_params` set in the request, on the deployment's `litellm_params`, or as `litellm.drop_params = True`, the value is dropped instead and you get text output.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python showLineNumbers title="Markdown Output - SDK"
+import litellm
+import os
+
+os.environ["AZURE_DOCUMENT_INTELLIGENCE_API_KEY"] = "your-api-key"
+os.environ["AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"] = "https://your-resource.cognitiveservices.azure.com"
+
+response = litellm.ocr(
+    model="azure_ai/doc-intelligence/prebuilt-layout",
+    document={
+        "type": "document_url",
+        "document_url": "https://example.com/document.pdf"
+    },
+    outputContentFormat="markdown",
+)
+
+print(response.content)
+
+for page in response.pages:
+    print(f"Page {page.index}:")
+    print(page.markdown)
+```
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+```yaml showLineNumbers title="proxy_config.yaml"
+model_list:
+  - model_name: azure-layout
+    litellm_params:
+      model: azure_ai/doc-intelligence/prebuilt-layout
+      api_key: os.environ/AZURE_DOCUMENT_INTELLIGENCE_API_KEY
+      api_base: os.environ/AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+    model_info:
+      mode: ocr
+```
+
+```bash showLineNumbers title="cURL Request"
+curl -X POST http://localhost:4000/v1/ocr \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-api-key" \
+  -d '{
+    "model": "azure-layout",
+    "document": {
+      "type": "document_url",
+      "document_url": "https://example.com/document.pdf"
+    },
+    "outputContentFormat": "markdown"
+  }'
+```
+
+</TabItem>
+</Tabs>
 
 ## Async Support
 

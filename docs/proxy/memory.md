@@ -5,7 +5,9 @@ import TabItem from '@theme/TabItem';
 
 Store user preferences and feedback so your LLM remembers them across sessions. Scoped per user and team, with built-in access control.
 
-**Requires:** LiteLLM `v1.83.10+` with PostgreSQL connected. No config changes needed.
+<SinceVersion v="1.83.10" />
+
+**Requires:** PostgreSQL connected. No config changes needed.
 
 ### Create
 
