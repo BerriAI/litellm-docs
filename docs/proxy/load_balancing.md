@@ -107,13 +107,14 @@ model_list:
       api_key: os.environ/GEMINI_API_KEY
       rpd: 1500     # 1500 requests per UTC day
       tpd: 1000000  # 1M tokens per UTC day
+      daily_reset_time: "08:00"  # counts start over at 08:00 UTC instead of midnight UTC
 
 router_settings:
   optional_pre_call_checks:
     - enforce_model_rate_limits  # Enables strict enforcement
 ```
 
-`rpm`, `tpm`, `rpd` and `tpd` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`.
+`rpm` and `tpm` can be set at the top level of the deployment, inside `litellm_params`, or inside `model_info`. `rpd`, `tpd` and `daily_reset_time` go inside `litellm_params`.
 
 ### How It Works
 
@@ -126,9 +127,9 @@ router_settings:
 
 **Why TPM and TPD are best-effort:** Token count is unknown until the LLM responds. TPM and TPD are checked before each request (blocks if already over), and tracked after (adds actual tokens used).
 
-**Daily limits reset at midnight UTC.** The counter key carries the UTC date, so a new day starts a fresh count on every proxy instance at the same moment. Provider quotas may reset in another timezone (Google free-tier quotas reset at midnight Pacific), so a `rpd` or `tpd` set from a provider's published daily quota can still be exceeded on the provider side in the hours between the two resets.
+**Daily limits reset at midnight UTC, or at `daily_reset_time`.** The counter key carries the date of the current window, so a new day starts a fresh count on every proxy instance at the same moment. `daily_reset_time` is `"HH:MM"` in UTC and moves that moment, for example `"08:00"` for a provider whose quota resets at midnight Pacific during daylight saving time (`"07:00"` outside it, the value does not follow daylight saving). Without `daily_reset_time` the window is the UTC calendar day.
 
-When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until midnight UTC.
+When a deployment is over its daily limit, the request is retried on another deployment in the same model group, or moved to the group's `fallbacks`, by the router's normal retry and fallback logic. A deployment with a spent daily quota therefore falls over to the other deployments in its group until the next reset.
 
 ### Error Response
 
@@ -142,7 +143,7 @@ When a deployment is over its daily limit, the request is retried on another dep
 }
 ```
 
-Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1501`) and `retry-after` is the number of seconds until midnight UTC.
+Response includes `retry-after: 60` header. For `rpd` and `tpd` the message names the daily limit (`RPD limit=1500, current usage=1501`) and `retry-after` is the number of seconds until the next reset (midnight UTC or `daily_reset_time`).
 
 ### Multi-Instance Deployment
 
