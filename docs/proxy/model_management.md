@@ -100,7 +100,7 @@ general_settings:
   enforce_rpm_tpm_on_model_add: true
 ```
 
-With `true`, `POST /model/new` answers `400` unless `litellm_params` sets both `rpm` and `tpm` to a positive value.
+With `true`, `POST /model/new` answers `400` unless `litellm_params` sets both `rpm` and `tpm` to a positive value. In the Admin UI's Add Model form, set them in the LiteLLM Params field under Advanced Settings, such as `{"rpm": 100, "tpm": 100000}`.
 
 The setting also takes the same `default`, `providers`, and `models` mapping as [`enforce_project_model_quota`](project_management#per-provider-and-per-model-requirements), with the same precedence <SinceVersion v="1.109.0" />. A new model is matched against `models` entries by its `model_name`, or by the model it calls when it is a team model, and against `providers` by the provider in its `litellm_params`.
 
