@@ -43,12 +43,11 @@ Stable releases come out every week (typically Sunday). Each scheduled stable bu
 Starting with `1.84.0` (see [the versioning blog post](/blog/cleaner-release-versions)): {/* keep-version-note */}
 
 - 'minor' bumps: the regular weekly scheduled stable release (`1.84.0` → `1.85.0`). This is the normal cadence and may include new backward-compatible features or database tables.
-- 'patch' bumps: reserved for hotfixes to a supported stable line (`1.84.0` → `1.84.1`). [Version support](../enterprise/version_support.md) lists which lines get them.
+- 'patch' bumps: hotfixes to a stable line (`1.84.0` → `1.84.1`). [Version support](../enterprise/version_support.md) says which lines get them.
 - 'major' bumps: break backward compatibility (`1.x.x` → `2.x.x`).
 
 ### Enterprise Support
 
 Enterprise and open source use one version support policy. Refer to [Version support](../enterprise/version_support.md) for the release lines that get patches and for how the window moves.
 
-- Enterprise customers who need longer coverage can reach out.
-- If there is a MAJOR change (`1.x.x` → `2.x.x`), LiteLLM can support the prior stable image for up to 90 days.
+Enterprise customers who need longer coverage can reach out through their [support channel](../enterprise/support.md).

@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM Enterprise is a license key for the gateway image that you run now. The key enables the Enterprise features. You do not install a different image, and you do not migrate data.
 
-The license key carries a signature. The gateway checks that signature offline with a public key that ships in the image. If that check does not pass, for example with an older key, the gateway checks the key with the LiteLLM license server. LiteLLM gives you the key when you buy a license or start a [30-day trial](https://www.litellm.ai/enterprise#trial).
+The gateway first checks the license key's signature offline with a public key that ships in the image. A key that does not pass that check, such as an older key, is then checked with the LiteLLM license server. LiteLLM gives you the key when you buy a license or start a [30-day trial](https://www.litellm.ai/enterprise#trial).
 
 ## Set the license key
 
