@@ -3,9 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Hostinger AI Router
 
-:::info
-Available from v1.109.0.
-:::
+<SinceVersion v="1.109.0" />
 
 ## Overview
 
