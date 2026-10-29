@@ -522,7 +522,7 @@ Set the budget using the name configured in `model_list`. If you route the same 
 
 #### View current usage
 
-`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement.
+`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement. `/user/info` and `/team/info` return the same block for per-model budgets set on a user or a team.
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
@@ -534,11 +534,22 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
   "info": {
     "model_max_budget": {"{{openai_large}}": {"budget_limit": 0.0001, "time_period": "30d"}},
     "model_max_budget_usage": {
-      "{{openai_large}}": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+      "{{openai_large}}": {
+        "current_spend": 0.0002,
+        "budget_limit": 0.0001,
+        "time_period": "30d",
+        "budget_reset_at": "2026-11-14T09:30:12.418093+00:00"
+      }
     }
   }
 }
 ```
+
+From v1.107.0, each entry also has `budget_reset_at`, the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over its limit accepts requests again at this time. The value is an ISO 8601 timestamp in UTC.
+
+A window opens when the first request on the model is charged, after its response finishes, and lasts for `time_period` from that moment, not from a calendar boundary. Later requests in the same window do not move `budget_reset_at`. For example, a `1d` window ends 24 hours after it opens. A `1mo` window ends at the same time on the same day of the next month in UTC, or on the last day of that month when it is shorter.
+
+`budget_reset_at` is `null` when no window is open, which is the case before the first charged request and after a window ends with no new spend. It is also `null` when the window would end after the year 9999.
 
 If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
@@ -624,7 +635,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 }'
 ```
 
-Use `1mo` for a calendar-month budget that resets on the first day of each month. After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
+Use `1mo` for a monthly budget. The window opens with the user's first charged request on the model and resets one calendar month later, as described in [View current usage](#view-current-usage). After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
 
 ```json
 {
@@ -637,7 +648,7 @@ Use `1mo` for a calendar-month budget that resets on the first day of each month
 }
 ```
 
-`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`.
+`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`, including when each window resets in `budget_reset_at`.
 
 **Via Dashboard**
 
