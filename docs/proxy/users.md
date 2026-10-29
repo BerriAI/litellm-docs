@@ -545,13 +545,15 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
 }
 ```
 
-From v1.107.0, each entry also has `budget_reset_at`, the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over its limit accepts requests again at this time. The value is an ISO 8601 timestamp in UTC.
+From v1.107.0, each entry also has `budget_reset_at`, the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over this limit accepts requests again at this time, unless another per-model budget on the key, user, or team still blocks it. The value is an ISO 8601 timestamp in UTC.
 
 A window opens when the first request on the model is charged, after its response finishes, and lasts for `time_period` from that moment, not from a calendar boundary. Later requests in the same window do not move `budget_reset_at`. For example, a `1d` window ends 24 hours after it opens. A `1mo` window ends at the same time on the same day of the next month in UTC, or on the last day of that month when it is shorter.
 
-`budget_reset_at` is `null` when no window is open, which is the case before the first charged request and after a window ends with no new spend. It is also `null` when the window would end after the year 9999.
+`budget_reset_at` is `null` when no window is open, which is the case before the first charged request and after a window ends with no new spend. It is also `null` when the window would end after December 31, 9999 00:00 UTC.
 
-On `/team/info`, a key that has its own `budget_limit` for a model, set under that model's name, replaces the team's budget for that model on the key's requests. Those requests are not charged to the team's budget for the model, so the team's window opens only with a request from a key that has no budget of its own for the model.
+Before v1.109.0, without Redis, each proxy instance and each worker keeps its own windows. The same entry can then read `null` on one and a timestamp on another, or two different timestamps, depending on which one answers. From v1.109.0, they share each window through the database, and one that did not serve the first charged request can read `null` for up to about 20 seconds.
+
+On `/team/info`, a key that has its own `budget_limit` for a model replaces the team's entry with that same model name on the key's requests. Those requests are not charged to that team entry, so its window opens only with a request from a key that has no budget of its own for the model.
 
 If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
