@@ -18,6 +18,8 @@ OpenAI-compatible backends are `openai/` with a custom `api_base`, `custom_opena
 
 Many open-weight chat templates (Qwen3.5 and Qwen3.8 among them) accept a `system` message only at the very beginning of the conversation. Codex CLI and other agents send `developer` messages later in the conversation, for example a permissions update or an instruction added after context compaction. Translated in place, those messages reach the model as a mid-conversation `system` message, and the backend answers `400 System message must be at the beginning`.
 
+Available from v1.109.0.
+
 Declare such a model with `supports_mid_conversation_system: false` in the deployment's `model_info`:
 
 ```yaml
