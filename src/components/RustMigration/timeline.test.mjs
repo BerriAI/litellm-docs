@@ -42,10 +42,11 @@ test('crowded dates keep required labels readable without shifting dots', () => 
       const x = index => dateX(points[index].date);
       const before = points.map((point, index) => x(index));
       const goalLeft = goal.endsOn ? width - 20 - labelWidth('Goal', 'Dec 31') : width;
+      const shortDate = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'});
       const items = points.map((point, index) => ({
         key: index,
         anchor: x(index),
-        width: labelWidth(point.label ?? '1.106 rc2', point.kind === 'latest' ? 'Oct 13 · latest' : 'Oct 17'),
+        width: labelWidth(point.label ?? '1.106 rc2', `${shortDate.format(new Date(point.date))}${point.kind === 'plan' ? ' target' : point.kind === 'latest' ? ' · latest' : ''}`),
         priority: index === 0 || point.kind !== 'release' ? 2 : index % 2,
       }));
       const {labels, rowCount} = layoutTimelineLabels(items, goalLeft, width);
@@ -62,9 +63,10 @@ test('crowded dates keep required labels readable without shifting dots', () => 
           if (label.row === other.row) assert.ok(Math.abs(label.x - other.x) >= (label.width + other.width) / 2);
         });
       });
-      // Sliding labels apart before stacking them keeps the axis two rows deep
-      // on a phone and up.
-      if (width >= 368) assert.ok(rowCount <= 2);
+      // Weekly goals share a short date range. Keep desktop labels compact and
+      // let smaller charts stack them without changing the time scale.
+      if (width >= 920) assert.ok(rowCount <= 2);
+      else if (width >= 368) assert.ok(rowCount <= 4);
       assert.deepEqual(points.map((point, index) => x(index)), before);
       const values = [...layoutTimelineValues(points, x, percent => 200 - percent * 2).values()];
       values.forEach((value, index) => values.slice(index + 1).forEach(other => {

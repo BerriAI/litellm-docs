@@ -10,7 +10,7 @@ Use web search with litellm
 | Supported Endpoints | - `/chat/completions` <br/> - `/responses` <br/> - `/images/generations` (Gemini image models only) |
 | Supported Providers | `openai`, `xai`, `vertex_ai`, `anthropic`, `gemini`, `perplexity` |
 | LiteLLM Cost Tracking | ✅ Supported |
-| LiteLLM Version | `v1.71.0+` |
+| LiteLLM Version | <SinceVersion v="1.71.0" /> |
 
 ## Which Search Engine is Used?
 

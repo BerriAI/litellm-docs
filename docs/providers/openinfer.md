@@ -3,9 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # OpenInfer
 
-:::info
-Available from v1.107.0.
-:::
+<SinceVersion v="1.107.0" />
 
 ## Overview
 

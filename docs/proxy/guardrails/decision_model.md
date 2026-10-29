@@ -15,7 +15,9 @@ import TabItem from '@theme/TabItem';
 | Endpoints | `/v1/chat/completions`, `/v1/messages`, `/v1/responses` |
 | Streaming Support | Yes. A flagged answer ends the stream with an error frame. |
 
-Ships in `v1.106.0`. It landed on `main` after `v1.106.0-dev.3`.
+<SinceVersion v="1.106.0" />
+
+The guardrail landed on `main` after `v1.106.0-dev.3`.
 
 ## How it works
 

@@ -19,7 +19,7 @@ Some Enterprise functions connect to LiteLLM. [Billable request metering](../pro
 
 ## Verify the images that you run
 
-LiteLLM signs each Docker image on GHCR with cosign, from v1.83.0. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
+LiteLLM signs each Docker image on GHCR with cosign <SinceVersion v="1.83.0" />. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
 
 ## Vulnerability management
 

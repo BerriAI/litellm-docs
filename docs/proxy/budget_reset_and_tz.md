@@ -29,11 +29,7 @@ This ensures that all budget resets happen at midnight in your specified timezon
 
 ## Configuring the Reset Time of Day
 
-:::info
-
-`budget_reset_time` is available starting in the next release (after `v1.94.0`).
-
-:::
+<SinceVersion v="1.95.0" />
 
 By default day, week, and month budgets reset at midnight. Set `budget_reset_time` to pick the wall-clock time (in the configured `timezone`) that resets should land on instead, for example to align budget rollover with the start of your business day or an upstream provider's billing boundary:
 

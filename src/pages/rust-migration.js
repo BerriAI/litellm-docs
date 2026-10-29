@@ -71,7 +71,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
   const y = percent => baseline - (percent / 100) * plotHeight;
   const axisLabel = point => ({
     name: pointName(point),
-    date: point.kind === 'latest' && !compact ? `${formatDate(SHORT_DATE, point.date)} · latest` : formatDate(SHORT_DATE, point.date),
+    date: `${formatDate(SHORT_DATE, point.date)}${point.kind === 'plan' ? ' target' : point.kind === 'latest' && !compact ? ' · latest' : ''}`,
   });
   const {labels, rowCount} = layoutTimelineLabels(points.map((point, index) => {
     const {name, date} = axisLabel(point);
@@ -128,6 +128,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
           {wholePercent(points[current].percent)} percent of {goal.text} is built in {CURRENT_VERSION}.
           {points.filter(point => point.kind === 'plan').map(point => ` ${pointName(point)} is planned to reach ${wholePercent(point.percent)} percent.`)}
           {goal.endsOn && ` The goal targets 100 percent by ${goal.endsOn}.`}
+          {' '}Planned percentages are rough estimates of the broader migration.
           {' '}Horizontal distance represents elapsed time.
         </desc>
         <defs>
@@ -183,7 +184,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
               className={styles.pointButton}
               tabIndex={0}
               role="button"
-              aria-label={`${axisLabel(point).name}, ${wholePercent(point.percent)}%`}
+              aria-label={`${axisLabel(point).name}, ${pointDate(point)}, ${wholePercent(point.percent)}%`}
               onMouseEnter={() => setHovered(index)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => setHovered(index)}
@@ -396,6 +397,8 @@ function PointTooltip({goal, point, previous, anchor}) {
       <div className={styles.tooltipDate}>
         {pointDate(point)} · {changes.length === 0 ? 'no change' : changeCount(changes)}
       </div>
+      {point.kind === 'plan' && <div className={styles.tooltipDate}>{point.description}</div>}
+      {point.kind === 'plan' && <div className={styles.tooltipHint}>Rough estimate of the broader migration</div>}
       {changes.length > 0 && <div className={styles.tooltipHint}>Click the point to see what it moves</div>}
     </div>
   );
@@ -427,17 +430,29 @@ function componentCards(changes) {
 // Everything a point moved, one card per component, listing its work.
 function PointDetails({goal, point, previous, width, height}) {
   const changes = componentCards(changesBetween(goal, point, previous));
+  const summaryRef = useRef(null);
+  const summary = point.kind === 'plan' && point.description;
+  const measuredSummaryHeight = useResizeObserver({ref: summaryRef, box: 'border-box'}).height;
+  const summaryHeight = summary ? measuredSummaryHeight ?? 96 : 0;
   const compact = width < 560;
   const columns = compact ? 1 : width < 860 ? 2 : 3;
   const cardHeight = compact ? 48 : 64;
-  const rows = Math.max(1, Math.floor((height - DETAILS_PADDING + CARD_GAP) / (cardHeight + CARD_GAP)));
+  const rows = Math.max(1, Math.floor((height - summaryHeight - DETAILS_PADDING + CARD_GAP) / (cardHeight + CARD_GAP)));
   const capacity = rows * columns;
   const shown = changes.length > capacity ? changes.slice(0, capacity - 1) : changes;
   const hidden = changes.slice(shown.length);
   return (
     <section className={styles.details} style={{height}} aria-label={`What ${pointName(point)} moves`}>
+      {summary && (
+        <div className={styles.detailsSummary} ref={summaryRef}>
+          <p><strong>{pointDate(point)}: {pointName(point)}</strong> · {wholePercent(point.percent)}% estimated</p>
+          <p>{summary}</p>
+        </div>
+      )}
       {changes.length === 0 ? (
-        <p className={styles.detailsEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</p>
+        <p className={styles.detailsEmpty}>
+          {point.kind === 'plan' ? 'No additional catalog work beyond the preceding milestones.' : `No change to ${goal.text}.`}
+        </p>
       ) : (
         <ul
           className={`${styles.detailsList} ${compact ? styles.detailsCompact : ''}`}
@@ -585,11 +600,6 @@ function MigrationTracker() {
   return (
     <section className={styles.section} aria-labelledby="migration-tracker-title">
       <SectionHeading id="migration-tracker-title" kicker="Migration tracker" title="Where we are today" />
-      <p className={styles.sectionLead}>
-        This tracks released components across the broader migration, not the share of traffic served by Rust
-        or progress toward the December 1 fast path. The earlier roadmap dates are superseded by the{' '}
-        <Link to="/blog/rust-migration-rerouted">October 26 update</Link>.
-      </p>
       <div className={styles.chartCard}>
         {/* Open details swap the sentence for a back button, which holds its
             place so the card keeps its size. */}
@@ -635,6 +645,23 @@ function MigrationTracker() {
           {goal.components.map(component => <ComponentNode component={component} key={component.id} />)}
         </ul>
       </div>
+      <p className={styles.trackerNote}>
+        The solid line shows released work. The dashed line shows estimated weekly goals toward the December 1 Messages milestone.{' '}
+        <Link to="#faq-scoring">How we measure progress</Link>
+      </p>
+      <aside className={styles.milestone} aria-labelledby="next-milestone-title">
+        <div>
+          <p className={styles.kicker}>Next milestone</p>
+          <h3 id="next-milestone-title">December 1, 2026</h3>
+        </div>
+        <div>
+          <p>
+            Run the common <code>/v1/messages</code> path end to end in Rust, with routing and supported
+            callbacks. More configurations and request types will follow.
+          </p>
+          <Link to="#faq-messages-scope">What this milestone covers</Link>
+        </div>
+      </aside>
     </section>
   );
 }
@@ -675,6 +702,12 @@ function Scoring() {
   return (
     <>
       <p className={styles.sectionLead}>
+        This tracks released components across the broader migration. It does not measure the share of traffic
+        served by Rust. The December 1 projection is a rough estimate of the catalog work needed for the common
+        Messages fast path, including its shared infrastructure. The{' '}
+        <Link to="/blog/rust-migration-rerouted">October 26 update</Link> replaces the earlier roadmap dates.
+      </p>
+      <p className={styles.sectionLead}>
         Every piece of work has a size in rough engineer-weeks, and a component's points are the sizes of its work.
         A piece earns 80% of its size once it is in a release but incomplete or not yet trusted, and all of it once it
         is done. {goal.text} is {goal.size} points in all.
@@ -712,6 +745,8 @@ function Scoring() {
 }
 
 const FAQ = [
+  {id: 'faq-messages-scope', question: 'What is planned for December 1?', answer: <MessagesFastPath />},
+  {id: 'faq-request-path', question: 'How will requests reach Rust or Python?', answer: <RequestPath />},
   {id: 'faq-scoring', question: 'How is the percentage calculated?', answer: <Scoring />},
   {id: 'faq-levels', question: 'What do Partial and Done mean?', answer: <Levels />},
 ];
@@ -745,6 +780,9 @@ function syncHash(details) {
 // opens it first so the target is visible.
 function Faq() {
   const listRef = useRef(null);
+  // Custom React IDs must be registered for Docusaurus's production link check.
+  const brokenLinks = useBrokenLinks();
+  FAQ.forEach(item => brokenLinks.collectAnchor(item.id));
   const openHashTarget = () => {
     const id = hashId();
     // Only targets inside the list, which may sit deep inside an answer.
@@ -886,35 +924,43 @@ function GatewayBenchmark() {
 }
 
 function MessagesFastPath() {
+  const target = PLANS.find(plan => plan.id === 'messages-e2e');
   return (
-    <section className={styles.section} aria-labelledby="messages-fast-path-title">
-      <SectionHeading id="messages-fast-path-title" kicker="December 1, 2026 target" title="The common Messages path first" />
+    <>
       <p className={styles.sectionLead}>
         <Link to="/blog/rust-migration-rerouted">Nate's October 26 update</Link> shifts the migration from
         porting translation, then routing, then the web server to moving a common request path to Rust
         end to end. The target is about 20 times less proxy latency, around 1.5 milliseconds, for these
-        requests. This is an expected result, not a shipped performance guarantee. Updated benchmarks
-        with common proxy features are still to come.
+        requests. Updated benchmarks with common proxy features are still to come.
       </p>
-      <h3>Which requests are targeted?</h3>
       <p className={styles.sectionLead}>
         The initial scope is <code>/v1/messages</code> with simple-shuffle routing, Anthropic models on
         Anthropic, Amazon Bedrock, or Vertex AI, and supported callbacks such as S3 logs and spend logging.
         Every enabled callback must be supported. Other endpoints, routing strategies, providers, and
         unsupported callbacks stay on Python until the fast path expands to cover them.
       </p>
-      <h3>How requests reach Rust or Python</h3>
       <p className={styles.sectionLead}>
-        An Axum server will sit in front of all requests and check early whether Rust can handle them.
-        Supported requests will use the Rust fast path. Other requests will be forwarded to a Python
-        worker on the same host. Rust implementations of the router and callbacks will be shared with
-        Python through thin wrappers, and both servers will use the same Redis and Postgres protocols.
+        This path needs Rust deployment, database-backed configuration, Redis access, routing, auth,
+        response caching, and supported logging callbacks and spend tracking. We estimate that this work
+        brings the broader migration to about {wholePercent(progressAt(GOALS[0], target))}% on the chart's existing scale.
       </p>
       <p className={styles.sectionLead}>
-        December 1 is the target for this common configuration, not for every Messages request or the
-        full API surface. Coverage will expand to more configurations and request types after this path.
+        December 1 is the target for this common configuration. Coverage will expand to more configurations
+        and request types after this path. The latency target is an expected result; updated benchmarks
+        will confirm performance.
       </p>
-    </section>
+    </>
+  );
+}
+
+function RequestPath() {
+  return (
+    <p className={styles.sectionLead}>
+      An Axum server will sit in front of all requests and check early whether Rust can handle them.
+      Supported requests will use the Rust fast path. Other requests will be forwarded to a Python
+      worker on the same host. Rust implementations of the router and callbacks will be shared with
+      Python through thin wrappers, and both servers will use the same Redis and Postgres protocols.
+    </p>
   );
 }
 
@@ -950,17 +996,13 @@ function MigrationUpdates() {
 
 export default function RustMigrationPage() {
   return (
-    <Layout title="LiteLLM Rust Migration" description="Native /v1/messages requests with common proxy features are targeted to run end to end in Rust by December 1, 2026.">
+    <Layout title="LiteLLM Rust Migration" description="Track LiteLLM's migration to Rust and the December 1 target for a common Messages request path.">
       <main className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Rust Migration</p>
-          <h1 className={styles.title}>Messages end to end in Rust by December 1</h1>
-          <p className={styles.description}>
-            The next milestone is a Rust fast path for <code>/v1/messages</code> requests to providers that
-            natively support Anthropic-style APIs, with common proxy features enabled.
-          </p>
+          <h1 className={styles.title}>LiteLLM is moving to Rust</h1>
+          <p className={styles.description}>See how much of the move to Rust is built and what is next.</p>
         </header>
-        <MessagesFastPath />
         <MigrationTracker />
         <GatewayBenchmark />
         <MigrationUpdates />

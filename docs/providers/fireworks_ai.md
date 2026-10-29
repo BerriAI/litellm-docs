@@ -138,7 +138,7 @@ The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is s
 
 `auto` and `auto-instant` only use Fireworks open models, so your Fireworks API key is the only credential they need. `firerouter/auto` and `firerouter/auto-instant` behave the same way. See [Example router IDs](https://docs.fireworks.ai/nexus/firerouter#example-router-ids) for more routes
 
-The full resource path works on every LiteLLM version. The short `firerouter` IDs need v1.104.0-rc.1 or later, and the short `auto` and `auto-instant` IDs need v1.105.0 or later. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
+The full resource path works on every LiteLLM version. The short `firerouter` IDs work <SinceVersion v="1.104.0" /> (first in `v1.104.0-rc.1`), and the short `auto` and `auto-instant` IDs work <SinceVersion v="1.105.0" />. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
 
 ```yaml
 model_list:

@@ -184,6 +184,8 @@ If `rpm` or `tpm` is not provided, it randomly picks a deployment
 
 You can also set a `weight` param, to specify which model should get picked when.
 
+A deployment can also carry daily limits, `rpd` (requests per UTC day) and `tpd` (tokens per UTC day), in `litellm_params` next to `rpm` and `tpm`. An optional `daily_reset_time` (`"HH:MM"` in UTC) moves the moment the daily counts start over; without it they start over at midnight UTC. They do not change how deployments are picked. They are enforced with [`enforce_model_rate_limits`](./proxy/load_balancing#enforce-model-rate-limits), which moves a request off a deployment whose daily quota is spent and onto another deployment in the group.
+
 <Tabs>
 <TabItem value="rpm" label="RPM-based shuffling">
 
