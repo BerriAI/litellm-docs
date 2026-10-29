@@ -451,21 +451,25 @@ print(response.answers["red_square"].box)
 
 ### Box questions on other deployments
 
-LiteLLM reads the cost map to decide which models take `box` questions, and the cost map lists only TypeSafe `jev-1.14.0` and `jev-preview`. To send box questions to a deployment the cost map does not cover, such as Jev 1.14 served by vLLM or by another OpenAI-format or self-hosted server, set `supports_box_questions: true` in the deployment's `model_info`.
+LiteLLM reads the cost map to decide which models take `box` questions, and the cost map marks only TypeSafe `jev-1.14.0` and `jev-preview`. To send box questions to a deployment the cost map does not mark, such as `typesafe/jev-latest`, set `supports_box_questions: true` in the deployment's `model_info`.
 
 ```yaml showLineNumbers
 model_list:
-  - model_name: jev-selfhosted
+  - model_name: jev
     litellm_params:
-      model: hosted_vllm/jev-1.14.0
-      api_base: http://<your-vllm-host>:8000
+      model: typesafe/jev-latest
+      api_key: os.environ/TYPESAFE_API_KEY
     model_info:
       supports_box_questions: true
 ```
 
-The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. Only the proxy config sets the flag, and the proxy ignores a `model_info` field in a request body.
+TypeSafe still needs the [images header](#typesafe-images-box-questions-and-long-context) for box questions, so send it with each request as shown above. A deployment on another route that calls TypeSafe's API sets the header in its `extra_headers` instead, since the proxy forwards the client's TypeSafe headers only to `typesafe/` deployments.
 
-The flag only controls what LiteLLM sends, and the provider still has to answer. A provider that has no box questions returns its own error, such as the 400 OpenAI returns for a box question to `gpt-6-luna`. A `typesafe/` deployment with the flag on still needs the images header. Set the flag the same way on every deployment that shares a `litellm_params.model`, since a deployment that leaves it unset can pick up the value set on another deployment of the same model.
+The deployment flag wins over the cost map. `true` turns box questions on for that deployment, and `false` turns them off, even on `jev-1.14.0` and `jev-preview`, so a box question to it gets the same 400, or the same drop with `drop_params` on, as one to a model without box support. A deployment without the flag uses the cost map. The value must be a boolean, and any other value, such as the string `"true"`, counts as no flag. In the SDK, pass `model_info={"supports_box_questions": True}`. Clients of the proxy cannot set the flag, since the proxy ignores a `model_info` field in a request body.
+
+The flag only controls what LiteLLM sends, and the provider still has to answer. vLLM and OpenAI do not answer box questions, so a flagged deployment on either still fails, for example with the 400 OpenAI returns for a box question to `gpt-6-luna`.
+
+LiteLLM keeps one value per model, so set the flag the same way on every deployment that shares a `litellm_params.model`. A deployment that leaves it unset can pick up the value set on another deployment of the same model, and that value stays until the proxy restarts, even after the deployment that set it is removed.
 
 ## SDK usage
 
