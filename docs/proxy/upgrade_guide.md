@@ -29,11 +29,12 @@ docker run \
 docker.litellm.ai/berriai/litellm:X.Y.Z --check_migrations_against_existing_data
 ```
 
-It runs the real SQL of every pending migration, in order, inside one transaction, and rolls that transaction back whatever happens, so `_prisma_migrations` and the schema are left exactly as they were. Exit code 0 lists each migration with the time it took, which is the time the real upgrade will hold that migration's locks:
+It runs the real SQL of every pending migration, in order, each inside its own transaction that is rolled back before the next one starts, so `_prisma_migrations` and the schema are left exactly as they were and no lock outlives its migration, the same way the real upgrade commits one migration file at a time. A migration that depends on the one before it (an index on a column the previous migration adds) is replayed together with it. Exit code 0 lists each migration with the time it took, which is the time the real upgrade will hold that migration's locks:
 
 ```
-LiteLLM Proxy: 1 pending migration(s) applied in a dry run and rolled back, nothing changed:
+LiteLLM Proxy: 2 pending migration(s) applied one at a time in a dry run, each rolled back before the next so its locks are released, nothing changed:
   20991231000000_require_team_alias: 0.0 s
+  20991231000001_team_alias_index: 0.0 s
 ```
 
 Exit code 2 prints PostgreSQL's own error for the first migration that fails. Nothing after it runs, and the migrations before it are listed with their times:
@@ -43,7 +44,7 @@ LiteLLM Proxy: Database migration cannot proceed. Migration 20991231000000_requi
 column "team_alias" of relation "LiteLLM_TeamTable" contains null values
 ```
 
-Because the statements really run, the dry run takes the same table locks the upgrade will, for as long as each statement takes, and a `CREATE INDEX` on a large `LiteLLM_SpendLogs` holds writes off that table for minutes. Run it off-peak or against a restored copy of production. An index a migration builds `CONCURRENTLY` is built the plain way inside the transaction, since PostgreSQL does not allow the concurrent form there. The request-log indexes the proxy builds in the background after it starts serving are not part of the dry run; on v1.108.0 only, the same flag ran read-only row counts instead and the proxy refused to boot on what they found.
+Because the statements really run, the dry run takes the same table locks the upgrade will, for as long as each statement takes, and a `CREATE INDEX` on a large `LiteLLM_SpendLogs` holds writes off that table for minutes. Run it off-peak or against a restored copy of production. An index a migration builds `CONCURRENTLY` is built the plain way inside the transaction, since PostgreSQL does not allow the concurrent form there. A database that has the tables but no `_prisma_migrations` history is not replayed: the dry run compares the live schema with this build's `schema.prisma` the way the boot does before it baselines, and reports `nothing to dry-run` when they match or the `prisma migrate diff` when they do not. The request-log indexes the proxy builds in the background after it starts serving are not part of the dry run; on v1.108.0 only, the same flag ran read-only row counts instead and the proxy refused to boot on what they found.
 
 ## Upgrade with Helm or Terraform
 
