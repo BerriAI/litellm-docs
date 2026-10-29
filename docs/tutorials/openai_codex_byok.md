@@ -86,6 +86,8 @@ Send: **Reply with exactly Hello. Do not use tools.**
 
 You should receive `Hello`. In the LiteLLM dashboard, open **Logs** and find the successful request with your model, virtual key, and input/output token counts.
 
+To let LiteLLM pick the ChatGPT model for each turn, see [Auto Router with Codex and your ChatGPT subscription](./codex_chatgpt_auto_router.md).
+
 ## Step 5: Add a paid fallback (optional)
 
 To keep working when your subscription reaches its limit, add an API-backed deployment as a fallback. **API usage is billed separately.** Fallbacks can also trigger on other request failures, not only quota errors.
