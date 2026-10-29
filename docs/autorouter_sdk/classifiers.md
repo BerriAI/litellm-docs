@@ -60,72 +60,43 @@ Change the quickstart's message to `"Explain Kubernetes deployments"` and run it
 
 ## Write a classifier in Python
 
-Read the request and return a tier name. You can use message content, metadata, or an LLM to make that decision.
-
-In the [quickstart](../autorouter_sdk.md), add this after `routing_config` and before `router = Router(...)`:
+Return a tier name based on the message or metadata. Add this after `routing_config` and before `router = Router(...)` in the [quickstart](../autorouter_sdk.md):
 
 ```python
-from litellm.types.router import RoutingContext
-
-
 class TaskClassifier:
-    async def classify(self, context: RoutingContext) -> str | None:
-        if context.metadata.get("agent_step") == "review":
-            return "careful"
-
-        text = next(
-            (m.get("content") for m in reversed(context.structured_messages) if m.get("role") == "user"),
-            None,
-        )
-        if not isinstance(text, str):
-            return None
-        if text.startswith("ESCALATE") or "kubernetes" in text.lower():
-            return "careful"
-        if len(text) < 500:
+    async def classify(self, context):
+        message = context.structured_messages[-1]["content"]
+        if context.metadata.get("agent_name") == "summarizer":
             return "quick"
-
-        response = await router.acompletion(
-            model="fast",
-            messages=[
-                {"role": "system", "content": "Reply quick for routine tasks or careful for difficult reasoning. Return only the label."},
-                {"role": "user", "content": text},
-            ],
-        )
-        return response.choices[0].message.content.strip()
+        if len(message) > 1000:
+            return "careful"
+        if "kubernetes" in message.lower():
+            return "careful"
+        return "quick"
 
 
 routing_config.update({
     "classifier_type": "custom",
     "classifier_plugin": TaskClassifier(),
     "tiers": {"quick": "fast", "careful": "capable"},
-    "classifier_plugin_timeout_ms": 10000,
     "classifier_fallback": "default_model",
 })
 ```
 
-Run `python autorouter.py`. Change the quickstart's user message to try each rule:
+This example reads the last message as text. The first matching rule wins. Change the rules and tier names to suit your application.
 
-| Message | Route |
-| --- | --- |
-| `What is 2+2?` | `quick` → `fast` |
-| `Explain Kubernetes deployments` | `careful` → `capable` |
-| `ESCALATE: check this calculation` | `careful` → `capable` |
-| Any other message of 500 or more characters | Ask `fast` to choose `quick` or `careful`, then call that tier's model. |
-
-Choose your own names, rules, and threshold. Only the last branch makes an extra LLM call. It calls `fast`; calling `auto` inside the classifier would call the classifier again.
-
-To use metadata, pass it with the request. This triggers the first rule, regardless of message length:
+Pass metadata with the request when you need it:
 
 ```python
 response = await router.acompletion(
     model="auto",
-    messages=[{"role": "user", "content": "Check this deployment plan."}],
-    metadata={"agent_step": "review"},
+    messages=[{"role": "user", "content": "Summarize this document: ..."}],
+    metadata={"agent_name": "summarizer"},
 )
 ```
 
-You supply the metadata keys and values. Without `agent_step="review"`, the classifier checks the message.
+Run `python autorouter.py`. The summarizer uses `fast`. Without that metadata, long messages and Kubernetes questions use `capable`; other messages use `fast`.
 
-Return `None` when your code cannot choose a tier. Exceptions, timeouts, and unknown names also use the configured default model, `capable`. This example falls back for non-text content. If you added keyword rules earlier, remove them to let this classifier handle the request.
+If your classifier raises an error, times out, or returns an unknown tier, this configuration uses the quickstart's default model, `capable`.
 
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).
