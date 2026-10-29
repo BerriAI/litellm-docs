@@ -200,7 +200,11 @@ curl --location 'http://0.0.0.0:4000/project/update' \
 }'
 ```
 
-An update that sends `metadata`, `tags`, `guardrails`, `policies`, `model_rpm_limit`, `model_tpm_limit`, or any other field the project stores in `metadata` replaces the project's whole stored `metadata` with what that request carries, instead of merging into it. So the example above also removes the project's tags and per-model limits. Send every key you want to keep each time you update one of those fields.
+:::warning
+
+`POST /project/update` replaces the project's whole stored `metadata` instead of merging into it. The project stores `tags`, `guardrails`, `policies`, `model_rpm_limit`, and `model_tpm_limit` in `metadata` too, so an update that sends any of them or `metadata` keeps only what that request carries. So the example above also removes the project's tags and per-model limits. Send every key you want to keep each time you update one of those fields.
+
+:::
 
 ### GET /project/info
 
@@ -334,7 +338,7 @@ With `true`, `POST /project/new` and `POST /project/update` answer `400` unless 
 
 The check covers the models a project lists, so a project with an empty `models` list passes it. That project is not limited to any models either, so its keys can call every model the key and its team allow, with no project quota on any of them. Give each project a `models` list when every project has to be capped.
 
-An update is checked against the project as it will look after the change. A request that leaves out `models` keeps the stored list, but the limits are stored in the project's `metadata`, and an update that sends any field stored there replaces them, as [`POST /project/update`](#post-projectupdate) describes. So that update is checked only against the limits it sends, and it answers `400` unless it repeats every limit the project's models need, even when it only changes the tags. An update that sends no field stored in `metadata`, such as one that only changes the description, is checked against the stored limits. So once the setting is on, it answers `400` on a project that is missing a limit until an update sets that limit.
+An update is checked against the project as it will look after the change. A request that leaves out `models` keeps the stored list, but the limits are stored in the project's `metadata`, and an update that sends any field stored there replaces them, as [`POST /project/update`](#post-projectupdate) describes. So that update is checked only against the limits it sends, and it answers `400` unless it repeats every limit the project's models need, even when it only changes the tags. An update that sends no field stored in `metadata`, such as one that only changes the description, is checked against the stored limits. So once the setting is on, every update to a project that is missing a limit answers `400`, even one that only sets `blocked`, until an update sets that limit or removes that model from `models`.
 
 ### Per-provider and per-model requirements
 
@@ -356,10 +360,12 @@ general_settings:
 
 Each entry lists the limits it requires: `[rpm, tpm]`, `[rpm]`, `[tpm]`, or `[]`. An entry replaces the whole requirement, so `[]` exempts that provider or model and `[rpm]` drops the `tpm` requirement. `default` applies wherever no other entry decides, and it is `[rpm, tpm]` when left out, so a mapping that only lists exemptions still requires both limits on every other model. With the config above, a project can list a Runway model and `my-passthrough-model` with no limits, a model whose name starts with `veo-` with only `model_rpm_limit`, and a Gemini model on Vertex AI with both.
 
+A proxy older than 1.109.0 reads any mapping as `true`, so it requires both limits on every model and ignores the exemptions. Upgrade the proxy before you replace `true` with a mapping.
+
 For each model on the project, the first of these that applies decides:
 
 1. The entry under `models` with the model's exact name.
-2. The most specific `*` pattern under `models` that matches the name from its start, ranked the same way the router ranks its wildcard routes.
+2. The most specific `*` pattern under `models` that matches the start of the name, ranked the same way the router ranks its wildcard routes. A pattern does not have to reach the end of the name, so `"*-mini"` also matches `gpt-5.4-mini-high`.
 3. The entries under `providers` for the providers of the deployments the name routes to, aliases, routing groups, and the wildcard route a request would use included. A name served by more than one provider needs every limit any of them requires.
 4. `default`, which also covers a name that no deployment serves.
 
