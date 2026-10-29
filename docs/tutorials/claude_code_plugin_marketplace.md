@@ -107,7 +107,7 @@ The setting is a boolean and defaults to `false`. A quoted `"true"`, such as a v
 
 With the setting on, the endpoint reads the key only from a header, either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`, and it does not accept the `?key=` query param. A request with no key, an unknown key, or a `?key=` param gets `401` with a `WWW-Authenticate: Bearer` header, and Claude Code shows `HTTP 401` when you add the marketplace. A key whose `allowed_routes` does not include `/claude-code/marketplace.json` gets `403`. The setting also makes `GET /public/skill_hub` return an empty list, so the Skills tab of the public model hub is empty. If you also set `allow_requests_on_db_unavailable: true`, a key that the proxy cannot check during a database outage gets `401`, not the catalog.
 
-Each engineer then adds the key to the marketplace source's `headers` in `~/.claude/settings.json`, or in a project's `.claude/settings.json`:
+Each engineer then adds the key to the marketplace source's `headers` in their user `~/.claude/settings.json`. Avoid a project's `.claude/settings.json`, since that file is often committed to the repository:
 
 ```json
 {
@@ -135,7 +135,7 @@ This keeps the key in plain text in the settings file. To have a command print t
 
 #### GET `/claude-code/marketplace.json`
 
-Returns the marketplace catalog for Claude Code discovery. The endpoint is public unless `claude_code_marketplace_auth_required` is on, in which case it needs a LiteLLM key in a header, as described in [Require a key for the marketplace](#require-a-key-for-the-marketplace). While the setting is off, a request without a key lists enabled plugins, and a request with `?key=sk-...` also lists the disabled plugins granted to that key or its team.
+Returns the marketplace catalog for Claude Code discovery. The endpoint is public unless `claude_code_marketplace_auth_required` is on, in which case it needs a LiteLLM key in a header, as described in [Require a key for the marketplace](#require-a-key-for-the-marketplace). While the setting is off, a request without a key lists enabled plugins, and a request with `?key=sk-...` also lists the disabled plugins granted to that key or its team. With the setting on, the key in the header does the same.
 
 ```bash
 curl http://localhost:4000/claude-code/marketplace.json
