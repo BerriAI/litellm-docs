@@ -96,6 +96,8 @@ The plugin is now installed and ready to use:
 
 ## Require a key for the marketplace
 
+<SinceVersion v="1.109.0" />
+
 By default `GET /claude-code/marketplace.json` serves the enabled plugins to anyone who can reach the proxy. To require a LiteLLM key, turn on `claude_code_marketplace_auth_required` in your proxy config:
 
 ```yaml
@@ -105,7 +107,7 @@ general_settings:
 
 The setting is a boolean and defaults to `false`. A quoted `"true"`, such as a value from an environment variable or one saved in the database, also turns it on. In `config.yaml`, a value that is not a boolean stops the proxy at startup with a validation error that names the setting.
 
-With the setting on, the endpoint reads the key only from a header, either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`, and it does not accept the `?key=` query param. A request with no key, an unknown key, or a `?key=` param gets `401` with a `WWW-Authenticate: Bearer` header, and Claude Code shows `HTTP 401` when you add the marketplace. A key whose `allowed_routes` does not include `/claude-code/marketplace.json` gets `403`. The setting also makes `GET /public/skill_hub` return an empty list, so the Skills tab of the public model hub is empty. If you also set `allow_requests_on_db_unavailable: true`, a key that the proxy cannot check during a database outage gets `401`, not the catalog.
+With the setting on, the endpoint reads the key only from a header, either `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`, and it does not accept the `?key=` query param. A request with no key, an unknown key, or a `?key=` param gets `401` with a `WWW-Authenticate: Bearer` header, and Claude Code shows `HTTP 401` when you add the marketplace. A key whose `allowed_routes` does not include `/claude-code/marketplace.json` gets `403`. The setting also makes `GET /public/skill_hub` return an empty list, so the Skills tab of the public model hub is empty. If you also set `allow_requests_on_db_unavailable: true`, a key that the proxy cannot check during a database outage gets `503`, not the catalog.
 
 Each engineer then adds the key to the marketplace source's `headers` in their user `~/.claude/settings.json`. Avoid a project's `.claude/settings.json`, since that file is often committed to the repository:
 
@@ -125,7 +127,7 @@ Each engineer then adds the key to the marketplace source's `headers` in their u
 }
 ```
 
-Then install plugins with `/plugin install <plugin>@litellm` as before. Once the proxy requires a key, the Admin UI shows the same snippet on a skill's page, under **How to Use** and then **See one-time setup**.
+If you added the marketplace before with `/plugin marketplace add`, run `/plugin marketplace remove litellm` in Claude Code first. Then install plugins with `/plugin install <plugin>@litellm` as before. Once the proxy requires a key, the Admin UI shows the same snippet on a skill's page, under **How to Use** and then **See one-time setup**.
 
 This keeps the key in plain text in the settings file. To have a command print the header instead, set Claude Code's [`headersHelper`](https://code.claude.com/docs/en/settings-reference#marketplace-source-types) on an `https://` `url` source, which needs Claude Code v2.1.238 or later.
 
