@@ -293,6 +293,8 @@ When `vector_store_id` is omitted, LiteLLM automatically creates:
 A key that is not a proxy admin can only ingest into the proxy's own Vertex project and region. The project is `VERTEXAI_PROJECT`, and the region is `VERTEXAI_LOCATION`, else `us-central1`. A `vertex_project`, a `vertex_location`, or a full `projects/<project>/locations/<location>/ragCorpora/<id>` corpus name that points anywhere else returns `400` with `Rejected Request: vertex_project picks a Vertex project or region other than the proxy's`. If no Vertex project is set on the proxy, every caller-named project is rejected.
 
 Vector stores a proxy admin created, proxy admin keys, and `general_settings.allow_client_side_credentials: true` keep the caller's values.
+
+<SinceVersion v="1.109.0" />
 :::
 
 :::info[Vertex AI Prerequisites]

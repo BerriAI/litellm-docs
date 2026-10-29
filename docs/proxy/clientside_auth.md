@@ -278,7 +278,7 @@ When several deployments share a model name, every one of them must list the par
 
 :::info
 
-Available from v1.108.0. Earlier versions accept these params from any request body without an opt-in, so add the opt-in before you upgrade if your users send them.
+The proxy rejects these params without an opt-in <SinceVersion v="1.109.0" />. Earlier versions accept them from any request body, so add the opt-in before you upgrade if your users send them.
 
 :::
 

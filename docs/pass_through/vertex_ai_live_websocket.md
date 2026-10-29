@@ -78,7 +78,7 @@ model_list:
 const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?model=gemini-live');
 ```
 
-Available from v1.108.0.
+<SinceVersion v="1.109.0" />
 
 ### Example Connection
 
