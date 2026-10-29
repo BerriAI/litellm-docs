@@ -89,7 +89,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 :::info
 
-`audit_log_callbacks` only fires while audit logging is enabled on an enterprise license, which is the default unless `store_audit_logs` is set to `false`.
+`audit_log_callbacks` only fires while audit logging is enabled on an enterprise license, which is the default unless `store_audit_logs` or `LITELLM_STORE_AUDIT_LOGS` is set to `false`.
 
 :::
 
