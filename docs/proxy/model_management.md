@@ -86,10 +86,47 @@ The rest of the operations:
 | Operation | Route | Notes |
 | --- | --- | --- |
 | List models | `GET /model/info` | Returns the full model list with API keys masked |
-| Update a model | `POST /model/update` | Change `litellm_params` or `model_info` for an existing model |
+| Update a model | `PATCH /model/{model_id}/update` | Change `litellm_params` or `model_info` for an existing model. The older `POST /model/update` changes `litellm_params` only |
 | Delete a model | `POST /model/delete` | Body `{"id": "<model_id>"}`, admin only. This is a POST; there is no DELETE-verb route |
 
 You can attach arbitrary `model_info` fields when you create or update a model, and they pass straight through to `GET /model/info` alongside the mapped cost and context data. That is the mechanism for annotating models with your own metadata, such as an owning team, a description, or a version, and reading it back programmatically.
+
+## Reject chat calls on non-chat models
+
+<SinceVersion v="1.109.0" />
+
+`model_info.mode` and `model_info.supported_endpoints` are informational by default. To have the proxy enforce the list for chat-style requests, set `enforce_supported_endpoints: true` on the deployment next to a `supported_endpoints` list with no chat endpoint. The proxy then skips that deployment for chat-style requests without calling its provider, and the routes it does list, such as `/v1/embeddings`, work as before. Only chat-style requests are checked, so embeddings, image, audio, and other non-chat requests reach the deployment whatever its list says. The flag does nothing on its own. When `supported_endpoints` is missing or is not a list of strings, the deployment is not restricted and the proxy logs a warning naming it when the deployment is loaded.
+
+```yaml
+model_list:
+  - model_name: my-embeddings
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      mode: embedding
+      supported_endpoints: ["/v1/embeddings"]
+      enforce_supported_endpoints: true
+```
+
+The same `model_info` fields work through `POST /model/new` and `PATCH /model/{model_id}/update`, and a change applies to new requests without a restart. When no deployment behind the model name can take the request and no fallback answers, a chat call to `my-embeddings` returns:
+
+```json
+{
+  "error": {
+    "message": "/v1/chat/completions is not supported by model=my-embeddings. Supported endpoints: /v1/embeddings\n\nLiteLLM: model group 'my-embeddings' failed with the error above. No fallback was attempted.",
+    "type": "invalid_request_error",
+    "param": "model",
+    "code": "400"
+  }
+}
+```
+
+The check covers `/v1/chat/completions`, `/v1/completions`, `/v1/responses` (including its WebSocket mode and `/v1/responses/compact`), the same routes without `/v1` or under Azure-style `/openai/deployments/<name>/` paths, `/v1/messages` (answered in the Anthropic error shape), the Gemini `generateContent` and `streamGenerateContent` routes, and `/v1beta/interactions`. On the Responses WebSocket the proxy sends an `error` event and closes the socket with code 1008. A `supported_endpoints` list that contains any of those endpoints, written with or without a `/v1`, `/v1beta` or `/openai` prefix, counts as chat-capable and is never enforced. Entries match regardless of case, a trailing slash, or a full Gemini path such as `/v1beta/models/<model>:generateContent`. An Azure deployment path such as `/openai/deployments/<name>/chat/completions` in the list does not count, so list `/v1/chat/completions` instead. The check applies the same way when the request names the deployment by its `model_info.id` or `litellm_params.model`, or reaches it through an alias or a wildcard route.
+
+The flag is read per deployment. When a model name has several deployments, chat-style requests go only to the ones without the restriction, and the 400 comes only when every deployment behind the name is restricted. Without the flag, `mode` and `supported_endpoints` keep their informational behavior, and `mode` plays no part in the check either way.
+
+When the model has fallbacks, the proxy moves on to them without calling the restricted deployment's provider. This covers router `fallbacks` and `default_fallbacks`, key and team `router_settings` fallbacks, and `fallbacks` in the request body, and a chain through another restricted model is followed until a model that serves chat answers. Since `default_fallbacks` applies to every model, a proxy that sets it to a chat model answers these requests from that model instead of returning the 400. A chain that reaches only restricted models, or loops back to them, keeps the 400, and so does `disable_fallbacks: true` or `fallbacks: []` in the request.
 
 ## Require rpm and tpm on new models
 
