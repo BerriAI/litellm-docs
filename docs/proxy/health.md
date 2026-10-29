@@ -42,7 +42,7 @@ The API equivalent is [`GET /health`](#model-health-from-the-api).
 
 ## Model health from the API
 
-`GET /health` reports each deployment the calling key may see as healthy or unhealthy. Unless [background health checks](#background-health-checks) are on, every call sends a real test request to each of those deployments, so it costs a few tokens per deployment.
+`GET /health` reports each deployment the calling key may see as healthy or unhealthy. Unless [background health checks](#background-health-checks) are on, every call sends a real test request to each of those deployments, so it costs a few tokens per deployment. A targeted check of an [auto router](./auto_routing.md) deployment also sends a test request to each model it routes to.
 
 ```shell
 curl 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
@@ -61,17 +61,19 @@ curl 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
 }
 ```
 
-The endpoint scopes its result to the calling key, answers a targeted check with a status code a monitor can act on, and returns only a fixed set of diagnostic fields. The sections below describe that contract as of v1.102.0. From v1.85.0 the result is already scoped to the key's `models` list and a targeted call with no healthy deployment answers 503, but before v1.102.0 access groups in that list are not expanded, non-admin keys also see other teams' deployments, and a target outside the key's scope answers 503 or another deployment's result instead of 403.
+The endpoint scopes its result to the calling key, answers a targeted check with a status code a monitor can act on, and returns only a fixed set of diagnostic fields. The sections below describe that contract as of v1.102.0.
+
+Releases from v1.84.0 up to v1.102.0 already scope the result to the key's `models` list and answer 503 for a targeted call with no healthy deployment, but they differ in a few ways. Access groups in the key's list are not expanded, so a key that lists only a group gets empty lists, and a non-admin key also sees other teams' deployments. A `?model_id=` outside the key's scope is ignored, and the call answers with the key's own deployments instead of 403. Entries also carry other `litellm_params` values, such as `max_tokens` and `cache`, instead of only the fields listed below. Only `api_base` and `api_version` are removed for a non-admin key, so `aws_bedrock_runtime_endpoint` still shows, and the header reads `api_base and api_version are admin-only on this endpoint`. On v1.84.0 a `?model=` the key cannot call answers 401 instead of 403.
 
 ### Which deployments a key sees
 
 A proxy admin, meaning the master key or a key whose user has the `proxy_admin` or `proxy_admin_viewer` role, sees every deployment, unless the admin's key has its own `models` list, which then decides what it sees. Every other key sees only deployments that no other team owns. Within those, a key whose own `models` list is empty or contains `all-proxy-models` sees all of them, and any other key sees only the deployments whose `model_name` is in its `models` list, with access group names and `all-team-models` in that list expanded.
 
-Only the key's own `models` list narrows the result. A `models` limit on the key's team, user, organization, or project does not narrow the untargeted result or a `model_id` check, though a `?model=` that the limit forbids is refused the same way as a chat request. To scope what such a key sees, give it its own `models` list, or `all-team-models` for a team key. A wildcard entry such as `openai/*` matches only a deployment whose `model_name` is literally `openai/*`, so a key whose list holds only wildcards gets an empty result even for models it can call.
+Only the key's own `models` list narrows the result. A `models` limit on the key's team, user, organization, or project does not narrow the untargeted result or a `model_id` check yet, though a `?model=` that the limit forbids is refused the same way as a chat request. Without background health checks, such a key's untargeted call therefore sends a test request to deployments it cannot call. To scope what such a key sees, give it its own `models` list, or `all-team-models` for a team key. A wildcard entry such as `openai/*` matches only a deployment whose `model_name` is literally `openai/*`, so a key whose list holds only wildcards gets an empty result even for models it can call.
 
 ### Check one model
 
-Pass `?model=<model_name>` to check every deployment behind that public model name. When no deployment carries that name, the proxy matches it against each deployment's `litellm_params.model` instead, so an admin can pass `?model=openai/{{openai_small}}`. Pass `?model_id=<id>` to check the single deployment with that `model_info.id`, which `GET /v1/model/info` lists. When a request has both, `model_id` picks the deployment, though `model` must still pass the key's model access check. A `model_group_alias` name in `model` checks the deployments the alias routes to. A name that only a wildcard route serves, such as `anthropic/{{anthropic}}` behind an `anthropic/*` deployment, matches no deployment, so it answers 503 with empty lists to an admin and 403 to any other key even though a chat request for it succeeds. Check such a route with `?model_id=` or with the wildcard name itself, `?model=anthropic/*`.
+Pass `?model=<model_name>` to check every deployment behind that public model name. When no deployment carries that name, the proxy matches it against each deployment's `litellm_params.model` instead, so an admin can pass `?model=openai/{{openai_small}}`. Pass `?model_id=<id>` to check the single deployment with that `model_info.id`, which `GET /v1/model/info` lists. When a request has both, `model_id` picks the deployment, though `model` must still pass the key's model access check. A `model_group_alias` name in `model` checks the deployments the alias routes to when the key has no `models` list or its list holds the alias name. A key whose list holds only the target name gets 403 for the alias, even though a chat request through the alias succeeds, so check the target name instead. A name that only a wildcard route serves, such as `anthropic/{{anthropic}}` behind an `anthropic/*` deployment, matches no deployment, so it answers 503 with empty lists to an admin and 403 to any other key even though a chat request for it succeeds. Check such a route with `?model_id=` or with the wildcard name itself, `?model=anthropic/*`.
 
 ### Status codes
 
@@ -82,6 +84,7 @@ Pass `?model=<model_name>` to check every deployment behind that public model na
 | 503 | A targeted call with no healthy deployment |
 | 403 | The target is outside the key's scope |
 | 404 | No deployment has the `model_id` |
+| 401 | The key is not valid |
 
 A 503 carries the normal response body, so a monitor can alert on the status code and still read each unhealthy entry.
 
@@ -99,7 +102,7 @@ Litellm-Health-Field-Notice: api_base, api_version, aws_bedrock_runtime_endpoint
 
 Read that header instead of a hardcoded list, because the set of admin-only fields can grow.
 
-On an unhealthy entry, `error` holds the failed probe's error output and `raw_request_typed_dict` describes the request the probe sent, and both go to every key that can see the deployment. Set `health_check_details: false` when non-admin keys should see only each deployment's status.
+On an unhealthy entry, `error` holds the failed probe's full error text and `raw_request_typed_dict` describes the request the probe sent, including the URL it called, which starts with the deployment's `api_base` or Bedrock runtime endpoint. Both go to every key that can see the deployment, so removing the admin-only fields does not hide a deployment's address from a non-admin key. Set `health_check_details: false` when non-admin keys should see only each deployment's status.
 
 With `general_settings.health_check_details: false`, each entry carries only `model`, `model_id`, and `exception_status` on an unhealthy entry, with no `error`. The one exception is an [auto router](./auto_routing.md) deployment that cannot reach one of the models it routes to, which keeps an `error` that names that model. The admin-only fields are left out for proxy admins too.
 
