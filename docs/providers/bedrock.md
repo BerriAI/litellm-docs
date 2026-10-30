@@ -393,6 +393,7 @@ litellm_settings:
     - user_api_key_team_alias
     - user_api_key_alias
     - user_api_key_user_id
+    - tags
     - spend_logs_metadata
 ```
 
@@ -410,11 +411,14 @@ With that config a request made with a key on team `growth` in org `platform` re
 | `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
 | `user_api_key_request_route` | Route the client called, for example `/v1/chat/completions` |
 | `user_api_key_budget_reset_at` | ISO 8601 time the key's budget next resets |
+| `tags` | Merged request, key, team, and project tags, each sent as `tag:<name>` with the string value `"true"` |
 | `spend_logs_metadata` | Every key/value pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
 
 Only text fields are forwarded, because Bedrock accepts string values only. The numeric spend and budget fields (`user_api_key_spend`, `user_api_key_max_budget`, and the user and team variants) and `user_api_key_auth_metadata` are skipped even when listed. A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out.
 
 `spend_logs_metadata` is the way to forward your own dimensions like agent or cost center without touching agent code. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults. The same pairs then land in LiteLLM spend logs and in Bedrock.
+
+Add `tags` to the allow-list to forward the tags that LiteLLM already merges into each request. For example, `metadata: {"tags": ["proj-alpha", "env-prod"]}` adds `{"tag:proj-alpha": "true", "tag:env-prod": "true"}` to Bedrock request metadata. Tags stay off unless explicitly listed. Each unique tag uses one of Bedrock's 16 pairs, after identity and before caller metadata and `spend_logs_metadata`. Repeated tags use only one slot, and a generated tag pair wins over a caller pair with the same key. The `tag:` prefix counts toward the 256-character key limit, so tag names can be at most 252 characters. Empty, non-string, invalid, and excess tags are dropped without rewriting them or failing the request. These are request metadata dimensions, not AWS resource tags.
 
 Bedrock allows at most 16 pairs per request, keys and values of up to 256 characters, and only the characters `a-z A-Z 0-9`, whitespace, and `:_@$#=/+,.-`. Identity fields are placed first, in the order you list them, so they always get a slot. On Converse, any `requestMetadata` the caller sends comes next and `spend_logs_metadata` fills whatever is left, with the earlier value winning when both use the same key. An identity or `spend_logs_metadata` pair that breaks Bedrock's rules is dropped and the request still succeeds, so a team alias with an apostrophe in it never turns into a failed call. A malformed `requestMetadata` the caller sends gets a 400, like Bedrock would return, unless `drop_params` is on, in which case only its bad pairs are dropped. With this setting off, the `/bedrock` pass-through routes send the body exactly as you wrote it and Bedrock answers a malformed one itself, while chat completions still drops the bad pairs under `drop_params`. Keys starting with `user_api_key_` are reserved for the proxy, so a caller cannot forge identity through `requestMetadata` or `spend_logs_metadata`, and any `X-Amzn-Bedrock-Request-Metadata` header the caller sends is replaced.
 
