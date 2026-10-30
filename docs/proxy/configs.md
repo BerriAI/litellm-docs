@@ -28,13 +28,13 @@ In the config below:
 
 E.g.: 
 - `model=vllm-models` will route to `openai/facebook/opt-125m`. 
-- `model={{openai_large}}` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
+- `model={{openai_large}}` will load balance between `azure/{{openai_large}}-eu` and `azure/{{openai_large}}-ca`
 
 ```yaml
 model_list:
   - model_name: {{openai_large}} ### RECEIVED MODEL NAME ###
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
-      model: azure/gpt-4o-eu ### MODEL NAME sent to `litellm.completion()` ###
+      model: azure/{{openai_large}}-eu ### MODEL NAME sent to `litellm.completion()` ###
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
       api_key: "os.environ/AZURE_API_KEY_EU" # does os.getenv("AZURE_API_KEY_EU")
       rpm: 6      # [OPTIONAL] Rate limit for this deployment: in requests per minute (rpm)
@@ -43,7 +43,7 @@ model_list:
       model: bedrock/us.anthropic.{{anthropic}}
   - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o-ca
+      model: azure/{{openai_large}}-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: "os.environ/AZURE_API_KEY_CA"
       rpm: 6
@@ -151,7 +151,7 @@ model_list:
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
-  - model_name: openai-gpt-4o
+  - model_name: openai-{{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
       extra_headers: {"AI-Resource Group": "ishaan-resource"}

@@ -41,11 +41,11 @@ import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/{{openai_small}}",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -73,11 +73,11 @@ import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/{{openai_small}}",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -106,11 +106,11 @@ import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/{{openai_small}}",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }

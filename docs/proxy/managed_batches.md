@@ -26,17 +26,17 @@ Grant developers access to Batch models.
 
 ```yaml showLineNumbers title="litellm-config.yaml"
 model_list:
-  - model_name: "gpt-4o-batch"
+  - model_name: "{{openai_small}}-batch"
     litellm_params:
-      model: azure/gpt-4o-mini-general-deployment
+      model: azure/{{openai_small}}-general-deployment
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
     model_info:
       mode: batch # metadata, tells developers this is a batch model
 
-  - model_name: "gpt-4o-batch"
+  - model_name: "{{openai_small}}-batch"
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: batch # metadata, tells developers this is a batch model
@@ -73,7 +73,7 @@ By default, LiteLLM reads each batch input file before submission and charges it
 curl -L -X POST 'https://${PROXY_BASE_URL}/key/generate' \
 -H 'Authorization: Bearer ${PROXY_API_KEY}' \
 -H 'Content-Type: application/json' \
--d '{"models": ["gpt-4o-batch"]}'
+-d '{"models": ["{{openai_small}}-batch"]}'
 ```
 
 The returned virtual key grants access to the batch models (see [Developer Usage](#developer-usage)).
@@ -87,11 +87,11 @@ Create a LiteLLM managed file and run batch operations against it. The steps bel
 The `model` in each line must be a model name from `/model_group/info` with `mode: batch`.
 
 ```json showLineNumbers title="request.jsonl"
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
-{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
 ```
 
-LiteLLM translates the model name to the Azure deployment specific value (e.g. `gpt-4o-mini-general-deployment`).
+LiteLLM translates the model name to the Azure deployment specific value (e.g. `{{openai_small}}-general-deployment`).
 
 ### 2. Upload File
 
@@ -105,12 +105,12 @@ curl -s "${LITELLM_BASE_URL}/v1/files" \
   -H "Authorization: Bearer ${LITELLM_API_KEY}" \
   -F purpose="batch" \
   -F file="@./request.jsonl" \
-  -F target_model_names="gpt-4o-batch"
+  -F target_model_names="{{openai_small}}-batch"
 ```
 
 **Where is the file written?**
 
-The file is written to every deployment that matches `target_model_names` (here: `gpt-4o-mini-general-deployment` and `gpt-4o-mini-special-deployment`). This enables load balancing across those deployments in Step 3.
+The file is written to every deployment that matches `target_model_names` (here: `{{openai_small}}-general-deployment` and `{{openai_small}}-special-deployment`). This enables load balancing across those deployments in Step 3.
 
 ### 3. Create + Retrieve the batch
 
@@ -202,7 +202,7 @@ client = OpenAI(
 batch_input_file = client.files.create(
     file=open("./request.jsonl", "rb"),
     purpose="batch",
-    extra_body={"target_model_names": "gpt-4o-batch"},
+    extra_body={"target_model_names": "{{openai_small}}-batch"},
 )
 print(f"file id: {batch_input_file.id}")
 

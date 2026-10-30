@@ -16,13 +16,13 @@ Create a config.yaml with 2 model groups + connected postgres db
 
 ```yaml
 model_list: 
-  - model_name: gpt-4o-mini-eu # Model Group 1
+  - model_name: {{openai_small}}-eu # Model Group 1
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE_EU
       api_key: os.environ/AZURE_API_KEY_EU
       api_version: "2023-07-01-preview"
-  - model_name: gpt-4o-mini-worldwide # Model Group 2
+  - model_name: {{openai_small}}-worldwide # Model Group 2
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
@@ -49,7 +49,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data '{
   "team_alias": "my-new-team_4",
-  "model_aliases": {"{{openai_small}}": "gpt-4o-mini-eu"}
+  "model_aliases": {"{{openai_small}}": "{{openai_small}}-eu"}
 }'
 
 # Returns team_id: my-team-id

@@ -424,7 +424,7 @@ The `openinference` mapper (see the Arize tab) runs first, then the `weave` mapp
 
 | Attribute | Purpose |
 |---|---|
-| `weave.display_name` | `"{operation} {model}"` (e.g. `chat gpt-4o`) |
+| `weave.display_name` | `"{operation} {model}"` (e.g. `chat {{openai_large}}`) |
 | `weave.call_id` | Same as `litellm.call_id` |
 | `weave.output` | JSON array of choices (content capture on) |
 
