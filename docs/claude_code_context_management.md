@@ -5,22 +5,24 @@ sidebar_label: Claude Code - Context Management
 
 # Claude Code - Context Management
 
-LiteLLM supports Anthropic's `context_management` beta natively across **all providers** - not just Anthropic.
+LiteLLM supports Anthropic's `context_management` beta on Anthropic and on many other providers. Where a provider has no native support, an **in-gateway polyfill** applies the edits.
 
-When you send a request to `/v1/messages` (or via `litellm.anthropic.messages.*`) with a `context_management` spec, LiteLLM handles it in one of two ways depending on where the request is routed:
+When you send a request to `/v1/messages` (or via `litellm.anthropic.messages.*`) with a `context_management` spec, LiteLLM handles it in one of these ways depending on where the request is routed:
 
 | Routing path | How context_management is applied |
 |---|---|
-| **Anthropic API**, and Claude on Bedrock, Vertex AI, Azure AI, Databricks, and GitHub Copilot | Passed through to the provider, which applies edits natively |
+| **Anthropic API**, and Claude on Bedrock Invoke, Vertex AI, Azure AI, and Databricks | Passed through to the provider, which applies edits natively. Azure AI answers `compact_20260112` with a 400 |
 | **OpenAI Responses API** (`openai/*` models) | `compact_20260112` becomes the Responses API's native compaction. Every other edit, such as `clear_tool_uses_20250919`, runs in the **in-gateway polyfill** |
-| **Other providers that LiteLLM calls through their own `/v1/messages` endpoint** (DeepSeek, MiniMax, BigModel, Tencent, DashScope, …) | Passed through as sent. LiteLLM runs no polyfill, so the provider decides what to do with the edits |
-| **Any other provider** (OpenAI chat completions, xAI, Gemini, Azure, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
+| **Other providers that LiteLLM calls through their own `/v1/messages` endpoint** (DeepSeek, Tencent, DashScope's Anthropic endpoint, …) | Passed through as sent. LiteLLM runs no polyfill and does not check the edits, so the provider decides what to do with them |
+| **Any other provider** (OpenAI chat completions, xAI, Gemini, Azure, Bedrock Converse, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
+
+Claude on Databricks is passed through for endpoint names that start with `databricks-claude-` or `system.ai.claude-`. Any other Databricks endpoint name runs the polyfill. A deployment whose `model_info.supported_endpoints` lists `/v1/messages` is passed through as sent, whatever its provider.
 
 On `openai/*` models, `clear_tool_uses_20250919` runs in the gateway on `/v1/messages` and on `/v1/messages/count_tokens` <SinceVersion v="1.109.0" />, so the count matches the history that `/v1/messages` sends. Earlier versions drop the edit on this path without a warning.
 
 An `openai/*` request with `stop_sequences` goes through chat completions instead, where both edits run in the polyfill. So does every `openai/*` request when the proxy runs with `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true`.
 
-The polyfill means you write your Claude Code tool-loop once, pass `context_management` as you normally would, and it works regardless of which model is behind the proxy.
+Where the polyfill runs, you write your Claude Code tool loop once and pass `context_management` as you normally would, whichever model is behind the proxy.
 
 ## Supported Edit Types
 
@@ -67,8 +69,8 @@ Claude Code client
 │             └────────────┬─────────────┘                 │
 │                          │                               │
 │  2. Forward to provider  │                               │
-│     (without context_    │                               │
-│      management key)     │                               │
+│     (polyfill path drops │                               │
+│      context_management) │                               │
 └──────────────────────────┼──────────────────────────────┘
                            ▼
                     Upstream model
@@ -151,9 +153,9 @@ curl -X POST http://localhost:4000/v1/messages \
 
 ## `compact_20260112` - Conversation Compaction
 
-The `compact_20260112` edit type summarizes the conversation history when the input token count exceeds a threshold. LiteLLM's polyfill makes this work on **any provider**, not just Anthropic.
+The `compact_20260112` edit type summarizes the conversation history when the input token count exceeds a threshold. LiteLLM's polyfill makes this work on every provider where the polyfill runs, not just Anthropic.
 
-On the OpenAI Responses API path, LiteLLM sends only `trigger.value` to OpenAI, as the Responses API's `compact_threshold`, and OpenAI compacts the conversation itself. Without `trigger.value`, OpenAI uses its own default threshold instead of `150000`. LiteLLM's response on this path has no `compaction` block, so the client sends the full history again on the next request and OpenAI compacts it again. The summary model, `instructions`, the 50,000-token minimum, and the `compaction` block and `applied_edits` below apply only where the polyfill runs.
+On the OpenAI Responses API path, LiteLLM sends only `trigger.value` to OpenAI, as the Responses API's `compact_threshold`, and OpenAI compacts the conversation itself. OpenAI answers a `trigger.value` under 1,000 with a 400. Without `trigger.value`, OpenAI uses its own default threshold instead of `150000`. LiteLLM's response on this path has no `compaction` block, so the client sends the full history again on the next request and OpenAI compacts it again. The summary model, `instructions`, the 50,000-token minimum, and the `compaction` block and `applied_edits` below apply only where the polyfill runs.
 
 ### Setup - configure a summary model
 
@@ -307,12 +309,12 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `trigger` | No | `{"type": "input_tokens", "value": 100000}` | Must be an object. `null` uses the default |
-| `trigger.type` | No | `"input_tokens"` | `"input_tokens"` or `"tool_uses"`. Any other value counts input tokens |
-| `trigger.value` | No | `100000` | Threshold; edits fire when current value **exceeds** this. A value that is not an integer uses `100000` for `input_tokens` and never fires for `tool_uses` |
-| `keep` | No | `{"type": "tool_uses", "value": 3}` | Must be an object. `null` uses the default |
-| `keep.type` | No | `"tool_uses"` | Only `"tool_uses"` is read. Any other value keeps the default 3 tool results |
-| `keep.value` | No | `3` | Number of most-recent tool results to preserve. A value that is not a non-negative integer keeps 3 |
+| `trigger` | No | `{"type": "input_tokens", "value": 100000}` | Must be an object |
+| `trigger.type` | No | `"input_tokens"` | `"input_tokens"` or `"tool_uses"` |
+| `trigger.value` | No | `100000` | Threshold; edits fire when current value **exceeds** this |
+| `keep` | No | `{"type": "tool_uses", "value": 3}` | Must be an object |
+| `keep.type` | No | `"tool_uses"` | Must be `"tool_uses"` |
+| `keep.value` | No | `3` | Number of most-recent tool results to preserve |
 | `clear_at_least.type` | No | - | Must be `"input_tokens"` |
 | `clear_at_least.value` | No | - | Clear old tool uses in batches that each free at least this many tokens |
 | `exclude_tools` | No | - | Tool names whose uses are never cleared |
@@ -322,7 +324,9 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 
 `clear_at_least`, `exclude_tools` and `clear_tool_inputs` work <SinceVersion v="1.109.0" />. Earlier versions accept them and ignore them.
 
-The polyfill handles these fields the way Anthropic's API does:
+The polyfill accepts some values that Anthropic's API answers with a 400, so send only the values in the table. It treats a `null` `trigger` or `keep` as missing, and counts input tokens for any other `trigger.type`. A `trigger.value` that is not an integer uses `100000` for an `input_tokens` trigger and never fires a `tool_uses` trigger. Any other `keep.type`, or a `keep.value` that is not a non-negative integer, keeps 3 tool results. A `value` of `true` counts as 1.
+
+The polyfill handles `clear_at_least`, `exclude_tools`, small results and malformed fields like this:
 
 - **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
 - **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
@@ -436,15 +440,18 @@ On a route that runs the polyfill, a `/v1/messages` or `/v1/messages/count_token
 | Provider | `clear_tool_uses_20250919` | `compact_20260112` |
 |---|---|---|
 | `anthropic/*` | Native pass-through | Native pass-through |
-| `bedrock/anthropic.*` | Native pass-through | Native pass-through |
+| `bedrock/anthropic.*` (Invoke) | Native pass-through | Native pass-through |
+| `bedrock/converse/*` | Polyfill | Polyfill |
 | `openai/*` (Responses API, the default on `/v1/messages`) | Polyfill | OpenAI compacts, no `compaction` block returned |
 | `openai/*` (chat completions) | Polyfill | Polyfill |
 | `azure/*` | Polyfill | Polyfill |
 | `xai/*` | Polyfill | Polyfill |
 | `gemini/*` | Polyfill | Polyfill |
-| Claude on `vertex_ai/*`, `azure_ai/*`, `databricks/*`, `github_copilot/*` | Native pass-through | Native pass-through |
+| Claude on `vertex_ai/*`, and on `databricks/*` (`databricks-claude-*`, `system.ai.claude-*`) | Native pass-through | Native pass-through |
+| Claude on `azure_ai/*` | Native pass-through | Azure answers 400 |
 | `vertex_ai/*` (other models) | Polyfill | Polyfill |
-| `deepseek/*`, `minimax/*`, `bigmodel/*`, `tencent/*`, `dashscope/*` | Passed through as sent | Passed through as sent |
+| `deepseek/*`, `tencent/*`, `dashscope/*` on DashScope's Anthropic endpoint, and other providers with a native `/v1/messages` endpoint | Passed through as sent | Passed through as sent |
+| `dashscope/*` on DashScope's OpenAI-compatible endpoint | Polyfill | Polyfill |
 | All other providers | Polyfill | Polyfill |
 
 ## Notes
