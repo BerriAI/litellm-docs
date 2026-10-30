@@ -26,6 +26,8 @@ All previous versions are safe, and the impacted releases have been pulled.
 
 **Update (October 23, 21:50 UTC):** This post was written while our investigation was ongoing. Some our assumptions and beliefs reflected in our status updates and the text below were later discovered to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
 
+**Update (October 30):** The commit that rotated our cosign image signing key on October 23 now shows as verified on GitHub, and we added the new key's fingerprint to this post. See [Image signing key rotation](/blog/security-incident-oct-21-2026#image-signing-key-rotation).
+
 {/* truncate */}
 
 ---
@@ -171,6 +173,24 @@ We have already taken the following steps:
 
 - Removed compromised packages from PyPI
 - Revoked maintainer credentials to minimal necessary while we investigate the scope of compromise
+
+### Image signing key rotation
+
+We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24, and every later release uses it too.
+
+The SHA-256 fingerprint of the new public key file, `cosign.pub`, is:
+
+```
+e3fe3e08c44b16407fe0b37c43b4f8b603b3a0f4ee74c29e647bc022d762c2c0
+```
+
+Check that the key you verify with matches it:
+
+```bash
+curl -sL https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub | shasum -a 256
+```
+
+Earlier images are signed with the previous key from [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0). Trust a signature from the previous key only on an image published before the `v1.107.0` release on October 21. The compromised `v1.107.0` images also carry a valid signature from the previous key, so check their digests against the [affected versions](#confirmed-affected-versions) above. See the [Docker image security guide](/docs/proxy/docker_image_security) for the full verify commands.
 
 
 ---
