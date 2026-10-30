@@ -488,10 +488,10 @@ class myCustomGuardrail(CustomGuardrail):
         call_type: Literal[
             "completion",
             "text_completion",
-            "embeddings",
+            "embedding",
             "image_generation",
             "moderation",
-            "audio_transcription",
+            "transcription",
             "pass_through_endpoint",
             "rerank"
         ],
@@ -636,7 +636,7 @@ class myCustomGuardrail(CustomGuardrail):
         self,
         data: dict,
         user_api_key_dict: UserAPIKeyAuth,
-        call_type: Literal["completion", "embeddings", "image_generation", "moderation", "audio_transcription"],
+        call_type: Literal["completion", "embedding", "image_generation", "moderation", "transcription"],
     ):
         """
         Runs in parallel to LLM API call
