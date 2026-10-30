@@ -26,7 +26,7 @@ All previous versions are safe, and the impacted releases have been pulled.
 
 **Update (October 23, 21:50 UTC):** This post was written while our investigation was ongoing. Some our assumptions and beliefs reflected in our status updates and the text below were later discovered to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
 
-**Update (October 30):** The commit that rotated our cosign image signing key on October 23 now shows as verified on GitHub, and we added the new key's fingerprint to this post. See [Image signing key rotation](#image-signing-key-rotation).
+**Update (October 30):** The commit that rotated our cosign image signing key on October 23 now shows as verified on GitHub, and we added the new key's fingerprint to this post. See [Image signing key rotation](/blog/security-incident-oct-21-2026#image-signing-key-rotation).
 
 {/* truncate */}
 
