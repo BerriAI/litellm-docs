@@ -123,6 +123,8 @@ sequenceDiagram
 
 **Result**: One API call from Claude Code → Complete answer with search results
 
+With Claude Code in auto mode, the proxy replays the final answer as a new stream. On v1.108.0 and earlier that stream leaves out the auto mode verdicts, so one intercepted search turns server review off for the session. [PR #46096](https://github.com/BerriAI/litellm/pull/46096) fixes this from v1.109.0. See [Claude Code - Auto Mode on Non-Claude Models](../claude_code_auto_mode.md#when-you-need-it).
+
 ## Supported Providers
 
 | Provider | Native Web Search | With LiteLLM |
@@ -231,3 +233,4 @@ search_tools:
 - [Claude Code Quickstart](./claude_responses_api.md)
 - [Claude Code Cost Tracking](./claude_code_customer_tracking.md)
 - [Using Non-Anthropic Models](./claude_non_anthropic_models.md)
+- [Claude Code - Auto Mode on Non-Claude Models](../claude_code_auto_mode.md)

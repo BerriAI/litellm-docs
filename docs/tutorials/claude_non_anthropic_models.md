@@ -293,6 +293,17 @@ Claude Code applies its own default context window to a model name it does not r
 
 Set that side in Claude Code with `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, or `autoCompactWindow` in `.claude/settings.json`; see [model configuration](https://code.claude.com/docs/en/model-config). A model whose real window is smaller than what the client assumes is the case worth checking, since the client will keep filling context the provider will then reject. Routers have the same split, covered in [Auto Router with Claude Code and Claude Desktop](./claude_code_autorouter.md#context-window-shown-in-the-client).
 
+### 9. Keep Auto Mode on Server Review
+
+Claude Code's auto mode expects the gateway to return a safety verdict for each tool call, and non-Claude models do not return one. Without extra setup Claude Code shows a notice that auto mode isn't eligible because your requests go through a gateway, then sends its own billed classifier requests. From v1.107.0, set `general_settings.safeguards_classifier_model` to a `model_name` from your `model_list` and the proxy answers those checks itself:
+
+```yaml
+general_settings:
+  safeguards_classifier_model: {{openai_small}}
+```
+
+Every virtual key that runs Claude Code needs access to that model, and its calls count against the key's budget. See [Claude Code - Auto Mode on Non-Claude Models](../claude_code_auto_mode.md) for the routes that need it, the failure behavior, and how to check it with `/status`.
+
 ## How It Works
 
 LiteLLM acts as a unified interface that:

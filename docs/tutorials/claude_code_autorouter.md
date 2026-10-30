@@ -85,6 +85,10 @@ curl -X POST $LITELLM_PROXY_URL/key/generate \
 
 Model discovery lists whatever the key can reach, and Claude Desktop's **Test connection** then probes `/v1/messages` with one of the discovered models rather than with the one you selected. A broadly scoped key turns that into a connection failure on some unrelated deployment, which reads as a broken router. Scoping the key to `claude-auto` makes discovery return exactly one model and the probe hit the router itself. Wildcard route names are worth checking here too, since a literal `claude-*` entry in `model_list` is published verbatim in `/v1/models` and 404s when a client probes it.
 
+## Auto mode with non-Claude tiers
+
+Claude tiers served from the Anthropic API, Bedrock InvokeModel, Bedrock Mantle or Vertex AI answer Claude Code's auto mode safety checks themselves. A tier that picks a non-Claude model returns no verdicts, and the first reply it serves turns server review off for the rest of the session. From v1.107.0, set `general_settings.safeguards_classifier_model` to a `model_name` from `model_list` and the proxy answers for those tiers while Claude tiers keep their provider's verdicts. See [Claude Code - Auto Mode on Non-Claude Models](../claude_code_auto_mode.md#when-you-need-it).
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -94,11 +98,13 @@ Model discovery lists whatever the key can reach, and Claude Desktop's **Test co
 | Router never shows up in the picker even though `availableModels` lists it | Relying on discovery with a name that lacks `claude`/`anthropic`, so it never gets discovered in the first place | Rename it, or add it directly with `ANTHROPIC_CUSTOM_MODEL_OPTION` instead of depending on discovery |
 | Test connection fails naming a model you never selected | Key discovers models beyond the router and the probe picks one of them | Scope the virtual key to the router |
 | Router missing from `/v1/models` and the Models page after an edit | Older builds did not relink the in-memory router registry when a deployment was replaced | Restart the proxy to reload it from the database, and upgrade to a release containing [PR #34564](https://github.com/BerriAI/litellm/pull/34564) |
+| `/status` shows Auto mode server `Disabled`, or the auto mode classifier notice appears partway through a session | A tier served a non-Claude model, which returns no auto mode verdicts | Set `safeguards_classifier_model`, see [Auto mode with non-Claude tiers](#auto-mode-with-non-claude-tiers) |
 | Context window in the client looks wrong for the router | Claude Code applies its own default for a model name it does not recognize; the proxy value is advisory | Set `CLAUDE_CODE_AUTO_COMPACT_WINDOW` or `autoCompactWindow` on the client. `model_info.max_input_tokens` on the router changes only what `/v1/models` and the UI report |
 
 ## Related
 
 - [Auto Routing](../proxy/auto_routing.md)
+- [Claude Code - Auto Mode on Non-Claude Models](../claude_code_auto_mode.md)
 - [Claude Code - Cut Costs](./claude_code_cut_costs.md)
 - [Claude Desktop setup](../proxy/client_setup/claude_desktop.md)
 - [Virtual Keys](../proxy/virtual_keys.md)

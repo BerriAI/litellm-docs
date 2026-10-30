@@ -22,12 +22,20 @@ With `safeguards_classifier_model` set, the proxy asks a deployment from your `m
 | `azure_ai/` Claude | LiteLLM forwards to Foundry's own `/v1/messages` and does not classify |
 | `bedrock/converse/` models, Claude included | LiteLLM classifier |
 | Fireworks, Gemini, and other chat completions providers | LiteLLM classifier |
-| `openai/` models | LiteLLM classifier |
+| `openai/` and Azure OpenAI `azure/` models | LiteLLM classifier |
 | DeepSeek and other providers with their own `/v1/messages` | LiteLLM classifier |
 
 The LiteLLM classifier answers for every non-Claude model, whichever way the proxy reaches it: the chat completions translation, the Responses API bridge that `openai/` deployments use, or a provider's own Anthropic-compatible `/v1/messages`, such as DeepSeek's. It also answers for Claude models behind `bedrock/converse/`, since that route goes through the chat completions translation. Claude models that LiteLLM forwards to a provider's own `/v1/messages` are left to that provider, and when any provider returns its own `safeguard_results`, the proxy keeps them and skips the classifier call.
 
 Requests without `safeguards`, which is every client other than Claude Code in auto mode, are untouched.
+
+## When You Need It
+
+Claude Code checks every reply for evaluated `safeguard_results`. After one reply with a tool call comes back without them, it shows a notice that auto mode isn't eligible because your requests go through a gateway, and it sends its own billed classifier requests for the rest of the session, even when later replies come from a route that answers. So the setting matters for any session that can reach a model in a "LiteLLM classifier" row of the table above, not only for sessions that start on one.
+
+A proxy that serves Claude Code only through Claude on the Anthropic API, Bedrock InvokeModel, Bedrock Mantle or Vertex AI needs no setting, since the provider answers. Set `safeguards_classifier_model` when Claude Code can reach a `bedrock/converse/` deployment, Azure OpenAI or any other non-Claude model, an [auto router](./tutorials/claude_code_autorouter.md) with a tier that picks a non-Claude model, a fallback from a Claude deployment to a non-Claude one, or a non-Claude model a user picks with `/model`. With the setting on, each reply gets its verdicts from the side that serves it: the provider for Claude on the routes above, and the classifier for everything else.
+
+Some turns are finished by the proxy itself and replayed to Claude Code as a new stream, such as [web search interception](./tutorials/claude_code_websearch.md), MCP and advisor turns, and streams that a post-call guardrail rewrites. On v1.108.0 and earlier, the final `message_delta` of that replayed stream leaves out `safeguard_results`, so one such turn turns server review off for the session on any model, with or without the setting. [PR #46096](https://github.com/BerriAI/litellm/pull/46096) carries the verdicts into the replayed stream with no configuration from v1.109.0.
 
 ## Setup
 
@@ -82,7 +90,7 @@ Point Claude Code at the proxy with a virtual key and the open model, start the 
 ANTHROPIC_BASE_URL=http://localhost:4000 ANTHROPIC_AUTH_TOKEN=<virtual key> ANTHROPIC_MODEL=kimi-k3 claude --permission-mode auto
 ```
 
-After the reply, run `/status` inside the session. The Auto mode server row reads `Enabled`. Before the first reply the row reads `Enabled` on any proxy, so check it after a reply. On a route with no verdicts the same row reads `Disabled`.
+After the reply, run `/status` inside the session. The Auto mode server row reads `Enabled`. Before the first reply the row reads `Enabled` on any proxy, so check it after a reply. On a route with no verdicts the same row reads `Disabled`. If it reads `Disabled`, or the notice appears partway through a session, find the reply before it on the proxy Logs page and check which model served it. The usual causes are a model in a "LiteLLM classifier" row with the setting unset, and a replayed turn on an older release, both covered in [When You Need It](#when-you-need-it).
 
 To see the verdicts without Claude Code, send a request with `safeguards` to the proxy:
 

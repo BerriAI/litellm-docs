@@ -9,7 +9,7 @@ tags: [announcement, claude-code, anthropic, ai-gateway]
 hide_table_of_contents: true
 ---
 
-*Last Updated: October 9, 2026*
+*Last Updated: October 30, 2026*
 
 Anthropic is moving Claude Code auto mode's safety classifier from the client to the Claude API. Starting with Claude Code v2.1.278, released September 19, sessions on Enterprise plans and Claude API accounts ask the server to run those checks as part of their own model requests, and Anthropic does not charge for the checks when the server performs them. Anthropic told us the rollout started on September 18 and is gradual, beginning with the Claude Code CLI and VS Code extension and followed by the desktop app and Claude Code on the web over the following week, and that on September 25 auto mode becomes the default permission mode in Claude Code. Today the built-in default is auto on Pro, Max and Team plans and Manual on Enterprise plans and Claude API keys, the accounts that typically sit behind a gateway, per Anthropic's [permission modes reference](https://code.claude.com/docs/en/permission-modes).
 
@@ -49,7 +49,7 @@ Non-Claude models behind the proxy can be covered too from v1.107.0. With `safeg
 
 This fix covers LiteLLM's route to the Anthropic API. Claude Code also asks for server-side checks on Amazon Bedrock and Google Cloud's Vertex AI, and [PR #42288](https://github.com/BerriAI/litellm/pull/42288), merged on September 21, 2026, covers those too. On `/v1/messages`, Claude on Bedrock InvokeModel (for example `bedrock/us.anthropic.claude-sonnet-5`) and Claude on Vertex AI now get `safeguards` and the `dangerous-tool-use-2026-09-03` beta forwarded, and `safeguard_results` comes back unchanged. That change is in v1.99.3, v1.100.2, v1.101.1, v1.102.1, v1.103.2 and v1.104.0; v1.101.0 and v1.103.0 do not have it. Claude on Bedrock Mantle (`bedrock_mantle/anthropic.claude-sonnet-5`) is served through Mantle's native Anthropic Messages API from v1.104.0 and preserves the contract there too.
 
-Bedrock itself does not answer on the Converse route, `bedrock/converse/<model>`. LiteLLM translates it through the chat completions adapter, which drops `safeguards`, and Bedrock's ConverseStream API does not return `safeguard_results` even when they are sent, so Claude Code keeps its paid classifier there unless `safeguards_classifier_model` is set, in which case the proxy answers for Converse models, Claude included. On releases without the fix the verification request below fails on this route with a 400, `safeguards: Extra inputs are not permitted`. Without the setting, point Claude Code at a `bedrock/<inference profile>` deployment, or a `bedrock_mantle/` deployment on v1.104.0 or later, instead. Microsoft Foundry is tracked separately and not covered by this post.
+Bedrock itself does not answer on the Converse route, `bedrock/converse/<model>`. LiteLLM translates it through the chat completions adapter, which drops `safeguards`, and Bedrock's ConverseStream API does not return `safeguard_results` even when they are sent, so Claude Code keeps its paid classifier there unless `safeguards_classifier_model` is set, in which case the proxy answers for Converse models, Claude included. On releases without the fix the verification request below fails on this route with a 400, `safeguards: Extra inputs are not permitted`. Without the setting, point Claude Code at a `bedrock/<inference profile>` deployment, or a `bedrock_mantle/` deployment on v1.104.0 or later, instead. Azure OpenAI and other non-Claude models behind `/v1/messages` need the same setting, and so does an auto router or fallback that can pick one of them, since Claude Code turns server review off for the whole session after one reply without verdicts. [When you need it](https://docs.litellm.ai/docs/claude_code_auto_mode#when-you-need-it) lists which routes answer on their own and which need `safeguards_classifier_model`.
 
 It first shipped in the dev release cut from `main` on Tuesday, September 22, ahead of Anthropic's September 25 default change. Dev releases are pre-release builds published to PyPI, Docker Hub and GitHub releases as `-dev.N` tags, so this one is `v1.104.0-dev.1` by the current numbering (`litellm==1.104.0.dev1` on PyPI). The fix for the Anthropic API route is now in the v1.104.0 stable release and was backported to v1.99.3, v1.100.2, v1.101.1, v1.102.1 and v1.103.2. Claude Code sessions routed through the native `/v1/messages` endpoint on any earlier LiteLLM release see the notice and keep using the client-side classifier until you upgrade. If you would rather your users not see the notice in the meantime, Anthropic documents setting `CLAUDE_CODE_AUTO_MODE_SERVER=0` in the environment Claude Code starts from, which tells it not to ask the gateway for server-side checks. That only hides the notice: Claude Code keeps making the same paid classifier requests until you upgrade.
 
@@ -115,15 +115,19 @@ Beta header filtering still applies when the resolved provider is anything other
 
 No. Claude Code detects that the server's checks are not reaching the session and keeps using its own classifier. Users see the notice, keep the current experience, and keep being billed for classifier calls until you upgrade. Anthropic has told us new Claude Code releases keep the client-side classifier until at least October 23, 2026, and that releases after that date need the server-side classifier for auto mode, so upgrade before then.
 
+### Why do some sessions still show the classifier notice after upgrading?
+
+Claude Code turns server review off for the rest of the session after one reply without verdicts. On a proxy that also serves non-Claude models through an auto router, fallbacks or `/model`, a single reply from one of them is enough, so set `safeguards_classifier_model` to have the proxy answer for those models. Turns the proxy finishes itself, such as web search interception, lose the verdicts on v1.108.0 and earlier and keep them from v1.109.0 with [PR #46096](https://github.com/BerriAI/litellm/pull/46096). See [Claude Code auto mode on non-Claude models](https://docs.litellm.ai/docs/claude_code_auto_mode#when-you-need-it).
+
 ### Is this available in LiteLLM OSS?
 
-Yes. The fix is in LiteLLM OSS (Apache 2.0) and requires no configuration. [LiteLLM Enterprise](https://litellm.ai/enterprise) adds SSO/SCIM, air-gapped deployment, 24/7 SLA support and advanced guardrails on top.
+Yes. The fix is in LiteLLM OSS (Apache 2.0) and requires no configuration for Claude on the routes above. Covering non-Claude models takes one setting, `safeguards_classifier_model`, also in OSS. [LiteLLM Enterprise](https://litellm.ai/enterprise) adds SSO/SCIM, air-gapped deployment, 24/7 SLA support and advanced guardrails on top.
 
 ---
 
 ## Conclusion
 
-An AI Gateway in front of Claude Code has to forward provider contracts it did not exist for when they were designed. The `safeguards` field is one of those, and LiteLLM's native `/v1/messages` route now passes it through unchanged on the way to the Anthropic API, Bedrock InvokeModel, Bedrock Mantle and Vertex AI. Upgrade to a release with the fix, keep Claude Code off `bedrock/converse/` deployments, run the check above, and your users get server-side auto mode at no cost.
+An AI Gateway in front of Claude Code has to forward provider contracts it did not exist for when they were designed. The `safeguards` field is one of those, and LiteLLM's native `/v1/messages` route now passes it through unchanged on the way to the Anthropic API, Bedrock InvokeModel, Bedrock Mantle and Vertex AI. Upgrade to a release with the fix, set `safeguards_classifier_model` from v1.107.0 if Claude Code can reach `bedrock/converse/` or a non-Claude model, run the check above, and your users get server-side auto mode without Claude Code's billed classifier requests.
 
 ## Recommended Reading
 
