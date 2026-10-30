@@ -50,7 +50,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
-| Nace Drex | <SinceVersion v="1.109.0" />, first in `v1.109.0-rc.1`. Image input on `drex-max` and `provider: nace` for the Auto Router target <SinceVersion v="1.110.0" />; [PR #48426](https://github.com/BerriAI/litellm/pull/48426) is still open. |
+| Nace Drex | <SinceVersion v="1.109.0-dev.1" />. Image input on `drex-max` and `drex-max-v1.1` and `provider: nace` for the Auto Router target <SinceVersion v="1.110.0" />; [PR #48426](https://github.com/BerriAI/litellm/pull/48426) is still open. |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 
 | Feature | Supported | Notes |
@@ -76,7 +76,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Databricks `ai_decide`](./providers/databricks.md#decisions-ai_decide) | `databricks/ai_decide` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
-| [Nace Drex](./providers/nace.md) | `nace/drex-max` | `NACE_API_KEY`, optional `NACE_API_BASE` | `/v1/systemone` | `drex-max` only; see [availability](#availability-and-supported-features) |
+| [Nace Drex](./providers/nace.md) | `nace/drex-max`, `nace/drex-max-v1.1` | `NACE_API_KEY`, optional `NACE_API_BASE` | `/v1/systemone` | `drex-max` and `drex-max-v1.1` only; see [availability](#availability-and-supported-features) |
 | [Strands Decider](./providers/strands_decider.md) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |

@@ -1,19 +1,19 @@
 # Nace Drex
 
-<SinceVersion v="1.109.0" />
+<SinceVersion v="1.109.0-dev.1" />
 
-[Nace](https://nace.ai) serves the Drex decision models behind a hosted API at `console.nace.ai`. A Drex model does not generate text. It answers typed questions about an input, such as a yes or no question, a pick from a fixed list of options, or a level on a scale, and gives every answer a calibrated probability. `drex-max` also reads images. LiteLLM serves the Drex models on the [decision routes](../decisions.md), `/v1/decisions` for the OpenAI Decisions format and `/v1/systemone` for the System One format.
+[Nace](https://nace.ai) serves the Drex decision models behind a hosted API at `console.nace.ai`. A Drex model does not generate text. It answers typed questions about an input, such as a yes or no question, a pick from a fixed list of options, or a level on a scale, and gives every answer a calibrated probability. `drex-max` and `drex-max-v1.1` also read images. LiteLLM serves the Drex models on the [decision routes](../decisions.md), `/v1/decisions` for the OpenAI Decisions format and `/v1/systemone` for the System One format.
 
 | Property | Details |
 |----------|---------|
 | Provider route on LiteLLM | `nace/` |
-| Models | `nace/drex-max`, `nace/drex-v2.0`, `nace/drex-v1.5`, `nace/drex-latest` (points to `drex-v2.0`, not to `drex-max`) |
+| Models | `nace/drex-max`, `nace/drex-max-v1.1`, `nace/drex-v2.0`, `nace/drex-v1.5`, `nace/drex-latest` (points to `drex-v2.0`, not to `drex-max`) |
 | LiteLLM endpoints | `/v1/decisions`, `/v1/systemone` |
 | Question types | `predicate` or `noul`, `choice`, `score` |
-| Image input | `drex-max` only, up to 8 PNG, JPEG or WebP images per request |
-| Price in LiteLLM | $0.06 per million input tokens for `drex-max` and `drex-v2.0`, output tokens are not billed |
+| Image input | `drex-max` and `drex-max-v1.1` only, up to 8 PNG, JPEG or WebP images per request |
+| Price in LiteLLM | $0.03 per million input tokens for `drex-max` and `drex-max-v1.1`, $0.06 for `drex-v2.0`, output tokens are not billed |
 
-The provider first ships in `v1.109.0-rc.1` through [PR #46523](https://github.com/BerriAI/litellm/pull/46523). Image input, the `drex-max` cost map entry and `provider: nace` for the Auto Router target <SinceVersion v="1.110.0" /> through [PR #48426](https://github.com/BerriAI/litellm/pull/48426), which is still open. These features need a build with that PR until it ships. Nace documents the models, prices and limits in the [Drex Max guide](https://console.nace.ai/docs/drex/guides/drex-max) and the [models reference](https://console.nace.ai/docs/drex/reference/models).
+The provider first ships in [v1.109.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-dev.1) through [PR #46523](https://github.com/BerriAI/litellm/pull/46523). Image input, the `drex-max` and `drex-max-v1.1` cost map entries and `provider: nace` for the Auto Router target <SinceVersion v="1.110.0" /> through [PR #48426](https://github.com/BerriAI/litellm/pull/48426), which is still open. These features need a build with that PR until it ships. Nace documents the models, prices and limits in the [Drex Max guide](https://console.nace.ai/docs/drex/guides/drex-max) and the [models reference](https://console.nace.ai/docs/drex/reference/models).
 
 ## Environment variables
 
@@ -165,7 +165,7 @@ Nace returns the score `legend` as an array and LiteLLM normalises it to the map
 
 This feature is unreleased; see [PR #48426](https://github.com/BerriAI/litellm/pull/48426).
 
-`drex-max` reads up to 8 images per request. Send them in the `images` array of a System One request, or as `input_image` parts of a `/v1/decisions` message, and refer to them in the text as `Image 1`, `Image 2` and so on in array order. LiteLLM sends every image inline as a data URL, converts `{"content_type": ..., "base64": ...}` entries to that form, and fetches an `http(s)` image URL before sending its bytes, since Nace does not fetch remote URLs. Inline images count toward Nace's 4 MiB request body limit. The other Drex models answer 422 to a request with images.
+`drex-max` and `drex-max-v1.1` read up to 8 images per request. Send them in the `images` array of a System One request, or as `input_image` parts of a `/v1/decisions` message, and refer to them in the text as `Image 1`, `Image 2` and so on in array order. LiteLLM sends every image inline as a data URL, converts `{"content_type": ..., "base64": ...}` entries to that form, and fetches an `http(s)` image URL before sending its bytes, since Nace does not fetch remote URLs. Inline images count toward Nace's 4 MiB request body limit. The other Drex models answer 422 to a request with images.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
@@ -243,7 +243,9 @@ print(response.answers["red"].noul)
 
 ## Cost tracking
 
-The LiteLLM cost map prices `nace/drex-max` and `nace/drex-v2.0` at $0.06 per million input tokens with no output price, `nace/drex-v1.5` at $0.05 and `nace/drex-latest` at the `drex-v2.0` price. The cost is returned in the `x-litellm-response-cost` header and written to spend logs. A call to an alias is priced by the model Nace reports in the response, so `drex-latest` is billed as the version it currently points to.
+The Drex Max prices below are part of the unreleased [PR #48426](https://github.com/BerriAI/litellm/pull/48426), which targets <SinceVersion v="1.110.0" />.
+
+The LiteLLM cost map prices `nace/drex-max`, `nace/drex-max-v1.1` and `nace/drex-v1.0` (which Nace now answers with `drex-max`) at $0.03 per million input tokens with no output price, `nace/drex-v2.0` and `nace/drex-latest` at $0.06 and `nace/drex-v1.5` at $0.05. The cost is returned in the `x-litellm-response-cost` header and written to spend logs. A call to an alias is priced by the model Nace reports in the response, so `drex-latest` is billed as the version it currently points to.
 
 ## Use it as the Auto Router classifier
 

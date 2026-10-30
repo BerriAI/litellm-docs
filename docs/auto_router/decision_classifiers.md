@@ -132,7 +132,7 @@ On Ollama, Bespoke Nimble connects through [`provider: bespoke`](#nimble-self-ho
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
-| [Nace Drex](https://console.nace.ai/docs/drex/guides/drex-max) | Nace's hosted API | `drex-max` or `drex-latest` | `nace` |
+| [Nace Drex](https://console.nace.ai/docs/drex/guides/drex-max) | Nace's hosted API | `drex-max`, `drex-max-v1.1` or `drex-latest` | `nace` |
 | [Databricks `ai_decide`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | An AI Function on your Databricks workspace (Beta) | `ai_decide` | `databricks` |
 
 All five use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
