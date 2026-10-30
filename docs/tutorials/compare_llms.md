@@ -235,7 +235,7 @@ for question, group_data in grouped_by_question:
     </tr>
     <tr>
       <th>2</th>
-      <td>claude-instant-1.2</td>
+      <td>claude-haiku-4-5-20251001</td>
       <td>what is litellm?</td>
       <td>litellm is a Python library that simplifies calling various AI API endpoints like OpenAI, Azure, Cohere, Anthropic, and Huggingface. \n\nSome key things to know about litellm:\n\n- It provides a consistent interface for completing prompts and generating responses from different AI models through a single method called completion().\n\n- You specify the API (e.g. OpenAI, Cohere etc.) and model either by name or by setting environment variables before making the completion call.\n\n- This avoids having to use different SDKs or APIs for each provider and standardizes the call structure. \n\n- It handles things like setting headers, encoding inputs, parsing responses so the user doesn't have to deal with those details.\n\n- The goal is to make it easy to try different AI APIs and models without having to change code or learn different interfaces.\n\n- It's lightweight with no other dependencies required besides what's needed for each API (e.g. openai, azure SDKs etc.).\n\nSo in summary, litellm is a small library that provides a common way to interact with multiple conversational AI APIs through a single Python method, avoiding the need to directly use each provider's specific SDK.</td>
       <td>10.316488</td>
@@ -361,7 +361,7 @@ for question, group_data in grouped_by_question:
     </tr>
     <tr>
       <th>5</th>
-      <td>claude-instant-1.2</td>
+      <td>claude-haiku-4-5-20251001</td>
       <td>Here is a more concise rewrite of the user input:nnHi everyone, I'm [your name]. I'm currently [your project/role] and came across LiteLLM, which simplifies working with different LLMs through its unified API. I hope to [build an app/simplify code/test models] with LiteLLM since I previously struggled with [issues]. LiteLLM's automatic translation between providers will help me [goals] and build impactful LLM applications. Looking forward to learning more as part of this community. Let me know if you need any clarification on my plans to use LiteLLM.</td>
       <td>8.628217</td>
       <td>0.001022</td>
