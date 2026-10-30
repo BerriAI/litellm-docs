@@ -328,6 +328,8 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/vector_stores/vs_abc123/search' \
 
 Register the data store or search app as a [managed vector store](./managed_vector_stores.md) with provider `vertex_ai/search_api`. Native Discovery Engine search fields go in `extra_body`.
 
+Searches to Google use HTTP/2 by default <SinceVersion v="1.109.0" />. To keep them on HTTP/1.1, set `http2: false` under `litellm_settings`. See [Vertex AI Search vector stores](../proxy/server_tuning.md#vertex-ai-search-vector-stores).
+
 A data store that uses layout-based chunking returns whole-document snippets by default. Ask for chunk results so each hit carries the matching passage:
 
 ```bash showLineNumbers title="Search a chunked data store"

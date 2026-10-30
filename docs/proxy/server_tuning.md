@@ -136,7 +136,7 @@ docker run \
 
 <SinceVersion v="1.103.0" />
 
-The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. The one exception is [Vertex AI Search vector store search](#vertex-ai-search-vector-stores). Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
 
 ```yaml
 litellm_settings:
@@ -144,6 +144,21 @@ litellm_settings:
 ```
 
 Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2. Deployments on the `aiohttp_openai/` provider always use aiohttp and stay on HTTP/1.1; LiteLLM logs a warning if the flag is on for such a request.
+
+### Vertex AI Search vector stores
+
+<SinceVersion v="1.109.0" />
+
+Searches on a `vertex_ai/search_api` vector store negotiate HTTP/2 by default, through the proxy and through `litellm.vector_stores.asearch` in the SDK, so a burst of searches shares one Google connection per worker instead of opening one connection per search. When 100 searches are in flight on one connection, LiteLLM opens another. The synchronous `litellm.vector_stores.search` stays on HTTP/1.1 unless `http2` is true.
+
+To keep these searches on HTTP/1.1, set `http2: false` under `litellm_settings` or `LITELLM_HTTP2=False` (`0`, `no` and `off` also work). This turns HTTP/2 off for every provider, Vertex AI Search included.
+
+```yaml
+litellm_settings:
+  http2: false
+```
+
+In the SDK, a search that passes its own `ssl.SSLContext` as `ssl_verify` also stays on HTTP/1.1 while `http2` is unset, so LiteLLM never changes the ALPN protocols on a context you created.
 
 ## Granian ASGI server [Beta]
 
