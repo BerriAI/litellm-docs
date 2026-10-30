@@ -1,0 +1,653 @@
+schemaVersion: 3
+meta:
+  title: LiteLLM AI cost and ROI
+  description: Version 1.0.0. Project spend, model changes and validated business ROI. Read from existing LiteLLM
+    Postgres logs.
+  codeLanguage: PYTHON
+  timezone: UTC
+  autoRerunApp: true
+  logicQueryCacheTimeout:
+    type: disabled
+  publishedQueryCacheTimeout:
+    type: disabled
+  appTheme: LIGHT
+cells:
+- cellId: 9f2ee2c1-c9b7-5e03-853b-51ba6c25f7dc
+  cellLabel: Read me
+  cellType: MARKDOWN
+  config:
+    source: "# LiteLLM AI cost and ROI board\nTemplate v1.0.0 \xB7 Postgres spend logs. Run setup-postgres.sql,\
+      \ then select your Hex connection on the Source cell.\n\nReview the last 30 complete UTC days. Compare project\
+      \ costs, model mix and response-cache use. Add Finance-approved business value to calculate ROI. Configure\
+      \ Settings before publishing. Your administrator must enforce department access through database roles and\
+      \ Hex sharing; a project filter does not restrict access.\n"
+- cellId: 3989fc93-d6e3-5907-9e0d-e19b81b48b76
+  cellLabel: Settings
+  cellType: CODE
+  config:
+    source: "import pandas as pd\nimport numpy as np\nimport plotly.express as px\nfrom datetime import datetime,\
+      \ timezone\n\nTEMPLATE_VERSION = '1.0.0'\npx.defaults.template = 'plotly_white'\npx.defaults.color_discrete_sequence\
+      \ = ['#263cdb', '#0f766e', '#b45309', '#64748b']\n# UTC dates: end is exclusive. Leave blank to use the last\
+      \ 30 complete days.\nreport_end = pd.Timestamp(datetime.now(timezone.utc).date())\nreport_start = report_end\
+      \ - pd.Timedelta(days=30)\n# Add one row per project for this exact report window after Finance validates\
+      \ it.\n# value_usd: realized revenue or approved avoided cost; other_cost_usd: infra,\n# automation, licenses\
+      \ and labor. Avoid counting the same benefit twice.\nvalue_data = pd.DataFrame(columns=['project_id', 'value_usd',\
+      \ 'other_cost_usd',\n                                   'coverage_start', 'coverage_end'])\n"
+- cellId: bcd197b2-1412-5f82-8de6-abe118fb7c81
+  cellLabel: Source
+  cellType: SQL
+  config:
+    source: SELECT * FROM litellm_analytics.spend_daily_v1 ORDER BY day, project_id, team_id, model
+    dataFrameCell: false
+    dataConnectionId: null
+    resultVariableName: spend_daily
+- cellId: 8c3aac23-e134-5ec1-b0fa-1116428dc185
+  cellLabel: Project ID (blank = all)
+  cellType: INPUT
+  config:
+    name: project_filter
+    outputType: STRING
+    inputType: TEXT_INPUT
+    defaultValue: ''
+    options:
+      multiline: false
+- cellId: 777c6579-f9fe-5a12-afb5-ec5dcaae10c6
+  cellLabel: Entity / team ID (blank = all)
+  cellType: INPUT
+  config:
+    name: entity_filter
+    outputType: STRING
+    inputType: TEXT_INPUT
+    defaultValue: ''
+    options:
+      multiline: false
+- cellId: 4c4a2d1d-9655-5ad6-8b39-b2360056d560
+  cellLabel: Calculate board
+  cellType: CODE
+  config:
+    source: "data = spend_daily.copy()\ndata['day'] = pd.to_datetime(data['day']).dt.normalize()\n_numeric = [c\
+      \ for c in data.columns if c not in ['day', 'project_id', 'team_id', 'model']]\ndata[_numeric] = data[_numeric].apply(pd.to_numeric)\n\
+      if project_filter.strip():\n    data = data[data.project_id == project_filter.strip()]\nif entity_filter.strip():\n\
+      \    data = data[data.team_id == entity_filter.strip()]\nperiod = data[(data.day >= report_start) & (data.day\
+      \ < report_end)].copy()\nrequests = int(period.requests.sum())\nspend = period.spend_usd.sum(min_count=1)\n\
+      known_latency = period.latency_count.sum()\nknown_ttft = period.ttft_count.sum()\ncache_known = period.response_cache_known.sum()\n\
+      summary = pd.DataFrame([dict(\n    spend_usd=spend, requests=requests, tokens=period.tokens.sum(),\n    cost_per_1k_requests=1000*spend/requests\
+      \ if requests else np.nan,\n    failure_rate=period.failures.sum()/(requests-period.unknown_status_requests.sum())\n\
+      \        if requests > period.unknown_status_requests.sum() else np.nan,\n    response_cache_hit_rate=period.response_cache_hits.sum()/cache_known\
+      \ if cache_known else np.nan,\n    average_latency_seconds=period.latency_seconds_sum.sum(min_count=1)/known_latency\
+      \ if known_latency else np.nan,\n    average_ttft_seconds=period.ttft_seconds_sum.sum(min_count=1)/known_ttft\
+      \ if known_ttft else np.nan,\n    unknown_cost_requests=period.unknown_cost_requests.sum(),\n    unknown_status_requests=period.unknown_status_requests.sum(),\n\
+      \    observed_days=period.day.nunique())])\nproject_spend = period.groupby(['project_id', 'team_id'], as_index=False).agg(\n\
+      \    spend_usd=('spend_usd', lambda s: s.sum(min_count=1)), requests=('requests', 'sum'),\n    tokens=('tokens',\
+      \ 'sum'), failures=('failures', 'sum'),\n    observed_days=('day', 'nunique'))\nproject_spend['cost_per_1k_requests']\
+      \ = 1000*project_spend.spend_usd/project_spend.requests.replace(0, np.nan)\nproject_spend['spend_share_pct']\
+      \ = 100*project_spend.spend_usd/spend if pd.notna(spend) and spend > 0 else np.nan\nproject_spend = project_spend.sort_values('spend_usd',\
+      \ ascending=False)\nmodel_spend = period.groupby(['project_id', 'model'], as_index=False).agg(\n    spend_usd=('spend_usd',\
+      \ lambda s: s.sum(min_count=1)), requests=('requests', 'sum'))\n# Gaps stay unknown. A day without rows can\
+      \ mean zero traffic or lost logging.\ndaily = period.groupby(['day', 'project_id'], as_index=False).agg(\n\
+      \    spend_usd=('spend_usd', lambda s: s.sum(min_count=1)))\n_grid = pd.MultiIndex.from_product([pd.date_range(report_start,\
+      \ report_end-pd.Timedelta(days=1)),\n    sorted(period.project_id.unique())], names=['day', 'project_id'])\n\
+      daily = daily.set_index(['day','project_id']).reindex(_grid).reset_index()\n\n# Compare equal 7-day windows,\
+      \ excluding today. Require records on all 7 days.\n_recent = data[(data.day >= report_end-pd.Timedelta(days=7))\
+      \ & (data.day < report_end)]\n_previous = data[(data.day >= report_end-pd.Timedelta(days=14)) & (data.day\
+      \ < report_end-pd.Timedelta(days=7))]\ndef window_totals(frame):\n    return frame.groupby('project_id').agg(spend=('spend_usd',\
+      \ lambda s: s.sum(min_count=1)),\n        requests=('requests', 'sum'), days=('day', 'nunique'))\nchange =\
+      \ window_totals(_recent).join(window_totals(_previous), lsuffix='_recent', rsuffix='_previous', how='outer')\n\
+      change['spend_change_pct'] = 100*(change.spend_recent/change.spend_previous.replace(0,np.nan)-1)\nchange['unit_cost_change_pct']\
+      \ = 100*((change.spend_recent/change.requests_recent.replace(0,np.nan))/\n    (change.spend_previous/change.requests_previous.replace(0,np.nan))-1)\n\
+      change['review'] = np.where((change.days_recent == 7) & (change.days_previous == 7),\n    np.where((change.spend_change_pct\
+      \ > 25) & ((change.spend_recent-change.spend_previous) >= 10),\n        'Review cost increase', 'Within rule'),\
+      \ 'Insufficient coverage')\nchange = change.reset_index()\n\n# Keep ROI absent until the business-value input\
+      \ covers the selected period.\nroi = period.groupby('project_id', as_index=False).agg(\n    spend_usd=('spend_usd',\
+      \ lambda s: s.sum(min_count=1)),\n    unknown_cost_requests=('unknown_cost_requests', 'sum'), observed_days=('day','nunique'))\n\
+      roi['roi_pct'] = np.nan\nroi['net_value_usd'] = np.nan\nroi['value_status'] = 'Needs validated business value'\n\
+      roi.loc[(roi.unknown_cost_requests > 0) | (roi.observed_days < (report_end-report_start).days), 'value_status']\
+      \ = 'Incomplete spend coverage'\nif entity_filter.strip():\n    roi['value_status'] = 'ROI needs full project\
+      \ scope'\nif not value_data.empty:\n    if value_data.project_id.duplicated().any():\n        raise ValueError('Provide\
+      \ one business-value row per project and report window.')\n    values = value_data.copy()\n    values[['value_usd','other_cost_usd']]\
+      \ = values[['value_usd','other_cost_usd']].apply(pd.to_numeric, errors='raise')\n    if (values[['value_usd','other_cost_usd']]\
+      \ < 0).any().any():\n        raise ValueError('Business value and other costs must be nonnegative.')\n   \
+      \ values['coverage_start'] = pd.to_datetime(values.coverage_start)\n    values['coverage_end'] = pd.to_datetime(values.coverage_end)\n\
+      \    for index, row in roi.iterrows():\n        match = values[(values.project_id == row.project_id) &\n \
+      \                      (values.coverage_start == report_start) & (values.coverage_end == report_end)]\n  \
+      \      if (len(match) == 1 and pd.notna(row.spend_usd) and row.unknown_cost_requests == 0\n              \
+      \  and row.observed_days == (report_end-report_start).days and not entity_filter.strip()):\n            value\
+      \ = match.iloc[0]\n            if pd.notna(value.value_usd) and pd.notna(value.other_cost_usd):\n        \
+      \        total_cost = row.spend_usd + value.other_cost_usd\n                roi.loc[index, 'net_value_usd']\
+      \ = value.value_usd - total_cost\n                roi.loc[index, 'roi_pct'] = 100*(value.value_usd-total_cost)/total_cost\
+      \ if total_cost > 0 else np.nan\n                roi.loc[index, 'value_status'] = 'Validated input; excludes\
+      \ untracked costs'\n"
+- cellId: 3b0d3fac-e8eb-5e3b-a84b-1ec680eca11f
+  cellLabel: Spend (USD)
+  cellType: METRIC
+  config:
+    title: Spend (USD)
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: CURRENCY
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 2
+      abbreviateLargeNumbers: false
+    valueColumn: spend_usd
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: 84a9bca8-98c8-56ee-9312-a4a223311a5b
+  cellLabel: Requests
+  cellType: METRIC
+  config:
+    title: Requests
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: NUMBER
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 0
+      abbreviateLargeNumbers: false
+    valueColumn: requests
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: c12786ae-31ec-5573-9fc6-fdb8c2ba8e35
+  cellLabel: Cost per 1K requests
+  cellType: METRIC
+  config:
+    title: Cost per 1K requests
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: CURRENCY
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 2
+      abbreviateLargeNumbers: false
+    valueColumn: cost_per_1k_requests
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: 4430c1b1-11f5-575b-9e2a-532652592172
+  cellLabel: Response cache hit rate
+  cellType: METRIC
+  config:
+    title: Response cache hit rate
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: PERCENT
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 1
+      abbreviateLargeNumbers: false
+    valueColumn: response_cache_hit_rate
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: d700319a-d863-549c-ba1a-7eba0f047630
+  cellLabel: Failure rate (known status)
+  cellType: METRIC
+  config:
+    title: Failure rate (known status)
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: PERCENT
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 2
+      abbreviateLargeNumbers: false
+    valueColumn: failure_rate
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: a6429d20-b89d-5ac8-a3ab-e1ce488702d1
+  cellLabel: Average latency (seconds)
+  cellType: METRIC
+  config:
+    title: Average latency (seconds)
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: NUMBER
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 2
+      abbreviateLargeNumbers: false
+    valueColumn: average_latency_seconds
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: 31d92c27-a544-5ab7-87f3-0823e03ce3ce
+  cellLabel: Average TTFT (seconds)
+  cellType: METRIC
+  config:
+    title: Average TTFT (seconds)
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: NUMBER
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 2
+      abbreviateLargeNumbers: false
+    valueColumn: average_ttft_seconds
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: 87bd8b11-47f5-590c-bd17-545f0e54195b
+  cellLabel: Tokens
+  cellType: METRIC
+  config:
+    title: Tokens
+    valueVariableName: summary
+    showComparison: false
+    comparisonType: VALUE
+    comparisonVariableName: null
+    comparisonFormat: null
+    comparisonLabel: ''
+    displayFormat:
+      format: NUMBER
+      currency: USD
+      nanFormat: Unknown
+      columnType: NUMBER
+      showSeparators: true
+      numDecimalDigits: 0
+      abbreviateLargeNumbers: true
+    valueColumn: tokens
+    valueRowIndex: 0
+    valueAggregate: null
+    comparisonColumn: null
+    comparisonRowIndex: null
+    comparisonAggregate: null
+    valueResultVariable: null
+    comparisonResultVariable: null
+    outputResult: false
+- cellId: 1b51dfdc-87b6-5011-b639-ec174a2eb8e6
+  cellLabel: daily_chart
+  cellType: CODE
+  config:
+    source: 'daily_chart = px.line(daily, x=''day'', y=''spend_usd'', color=''project_id'', markers=True, title=''Daily
+      project spend (USD)'', template=''plotly_white'')
+
+      daily_chart.update_traces(connectgaps=False)
+
+      daily_chart'
+- cellId: 7017e99d-5ac2-5e12-8bdb-abad9e840384
+  cellLabel: model_chart
+  cellType: CODE
+  config:
+    source: 'model_chart = px.bar(model_spend, x=''project_id'', y=''spend_usd'', color=''model'', title=''Model
+      mix by project (USD)'', template=''plotly_white'')
+
+      model_chart'
+- cellId: 8523df68-05e4-52ad-bec2-735200f6f639
+  cellLabel: project_table
+  cellType: CODE
+  config:
+    source: "_ranked = project_spend[['project_id', 'team_id', 'spend_usd', 'spend_share_pct',\n               \
+      \          'requests', 'cost_per_1k_requests']].rename(columns={\n    'project_id': 'Project', 'team_id':\
+      \ 'Entity', 'spend_usd': 'Spend (USD)',\n    'spend_share_pct': 'Spend share (%)', 'requests': 'Requests',\n\
+      \    'cost_per_1k_requests': 'USD / 1K requests'})\n_ranked.style.format({'Spend (USD)': '${:,.2f}', 'Spend\
+      \ share (%)': '{:.1f}%',\n    'Requests': '{:,.0f}', 'USD / 1K requests': '${:.2f}'}, na_rep='Unknown', escape='html').bar(\n\
+      \    subset=['Spend share (%)'], color='#cdd4ff', vmin=0, vmax=100).hide(axis='index').set_table_styles([\n\
+      \    {'selector': 'th', 'props': [('text-align', 'left'), ('border-bottom', '1px solid #d9dee8'), ('padding',\
+      \ '10px')]},\n    {'selector': 'td', 'props': [('padding', '10px'), ('border-bottom', '1px solid #edf0f5'),\
+      \ ('font-variant-numeric', 'tabular-nums')]}])"
+- cellId: 8d61949d-0e4f-50c2-a1d2-9389f8420110
+  cellLabel: changes_table
+  cellType: CODE
+  config:
+    source: "_changes = change[['project_id','spend_previous','spend_recent','spend_change_pct',\n             \
+      \      'unit_cost_change_pct','review']].rename(columns={\n    'project_id':'Project', 'spend_previous':'Previous\
+      \ 7 days (USD)',\n    'spend_recent':'Recent 7 days (USD)', 'spend_change_pct':'Spend change (%)',\n    'unit_cost_change_pct':'Unit\
+      \ cost change (%)', 'review':'Review'})\n_changes.style.format({'Previous 7 days (USD)':'${:,.2f}', 'Recent\
+      \ 7 days (USD)':'${:,.2f}',\n    'Spend change (%)':'{:+.1f}%', 'Unit cost change (%)':'{:+.1f}%'}, na_rep='Unknown',\
+      \ escape='html').hide(axis='index')"
+- cellId: e3f8e8f9-01dd-5dae-80b8-70afa3300118
+  cellLabel: roi_table
+  cellType: CODE
+  config:
+    source: roi
+- cellId: 338acdeb-6584-5662-a310-6407fc5e3ef3
+  cellLabel: quality_table
+  cellType: CODE
+  config:
+    source: summary[['unknown_cost_requests','unknown_status_requests','observed_days']]
+- cellId: 101eab1d-0014-51d1-93e7-b698a10c91ff
+  cellLabel: Metric notes
+  cellType: MARKDOWN
+  config:
+    source: '## Read the board
+
+      Cache hit rate measures LiteLLM response-cache hits among requests with a known cache flag. Provider prompt
+      caching needs provider cache-token data and a pricing baseline. This template does not calculate cache savings.
+
+
+      TTFT covers requests with a completion-start timestamp. Missing values stay unknown. Review data coverage
+      before comparing periods. The cost-change rule flags increases above 25% and $10 across two complete 7-day
+      windows with records on each day; treat it as a review queue, not an anomaly model.
+
+
+      ROI = (validated business value - LLM spend - other costs) / (LLM spend + other costs). Leave business value
+      blank until Finance validates it. Track department ownership and business outcomes in your own governed tables.
+      You must verify logging completeness and currency before using this board for financial reporting.
+
+      '
+appLayout:
+  visibleMetadataFields:
+  - NAME
+  - DESCRIPTION
+  - AUTHOR
+  - LAST_EDITED
+  - LAST_RUN
+  - CATEGORIES
+  - STATUS
+  - TABLE_OF_CONTENTS
+  fullWidth: false
+  tabs:
+  - name: Overview
+    rows:
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 9f2ee2c1-c9b7-5e03-853b-51ba6c25f7dc
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 60
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 8c3aac23-e134-5ec1-b0fa-1116428dc185
+          sharedFilterId: null
+          height: null
+          showLabel: true
+          explorable: null
+      - start: 60
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 777c6579-f9fe-5a12-afb5-ec5dcaae10c6
+          sharedFilterId: null
+          height: null
+          showLabel: true
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 8523df68-05e4-52ad-bec2-735200f6f639
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 30
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 3b0d3fac-e8eb-5e3b-a84b-1ec680eca11f
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 30
+        end: 60
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 84a9bca8-98c8-56ee-9312-a4a223311a5b
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 60
+        end: 90
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: c12786ae-31ec-5573-9fc6-fdb8c2ba8e35
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 90
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 4430c1b1-11f5-575b-9e2a-532652592172
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 30
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: d700319a-d863-549c-ba1a-7eba0f047630
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 30
+        end: 60
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: a6429d20-b89d-5ac8-a3ab-e1ce488702d1
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 60
+        end: 90
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 31d92c27-a544-5ab7-87f3-0823e03ce3ce
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+      - start: 90
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 87bd8b11-47f5-590c-bd17-545f0e54195b
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 1b51dfdc-87b6-5011-b639-ec174a2eb8e6
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 338acdeb-6584-5662-a310-6407fc5e3ef3
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+  - name: Models and cost changes
+    rows:
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 7017e99d-5ac2-5e12-8bdb-abad9e840384
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 8d61949d-0e4f-50c2-a1d2-9389f8420110
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 101eab1d-0014-51d1-93e7-b698a10c91ff
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+  - name: Business ROI
+    rows:
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: e3f8e8f9-01dd-5dae-80b8-70afa3300118
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null
+    - columns:
+      - start: 0
+        end: 120
+        elements:
+        - showSource: false
+          hideOutput: false
+          type: CELL
+          cellId: 101eab1d-0014-51d1-93e7-b698a10c91ff
+          sharedFilterId: null
+          height: null
+          showLabel: false
+          explorable: null

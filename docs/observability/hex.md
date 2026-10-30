@@ -1,17 +1,106 @@
 ---
 title: Hex
-description: Export request-level LiteLLM spend to S3 and query it in Hex through Athena for cost analysis and dashboards.
+description: Connect Hex to existing LiteLLM spend logs and import a versioned project cost and ROI dashboard template.
 ---
 
-# Hex
+# Connect Hex to LiteLLM
+
+Connect Hex to the Postgres database where you store LiteLLM spend logs. Import our Hex template to compare project costs, model usage, latency and business ROI. You need no Hex callback or S3 bucket for this path.
+
+## Download the template
+
+| File | Use it for |
+| --- | --- |
+| [Demo Hex project](/hex/litellm_roi_demo.hex.yaml) | Preview the board with synthetic data and no credentials. |
+| [Postgres Hex project](/hex/litellm_roi_postgres.hex.yaml) | Read existing LiteLLM spend logs. |
+| [Postgres setup SQL](/hex/setup-postgres.sql) | Create an aggregate view for Hex. |
+| [Source and changelog](https://github.com/BerriAI/litellm-docs/tree/main/static/hex) | Review template changes and the data contract. |
+
+Template version: **1.0.0**. {/* keep-version-note: Hex template version, not a LiteLLM release */} You can edit your imported copy in Hex. Repository updates do not change your copy; import a new copy and review it before replacing your published board.
+
+## 1. Prepare the spend view
+
+Ask your database administrator to run [setup-postgres.sql](/hex/setup-postgres.sql) in the database that contains `public."LiteLLM_SpendLogs"`. Have them provision a dedicated reader named `hex_reader` first, or change the two grants to match the reader they provide. Keep credentials in Hex's connection settings.
+
+The SQL creates `litellm_analytics.spend_daily_v1`. Hex can read daily aggregates for the past 60 complete UTC days. The view exposes project and team identifiers, model names, spend, usage, timing and cache counts. It excludes request content, responses, IP addresses, key hashes and raw metadata. Give the Hex login access to this view; grant no access to the source table.
+
+Use a read replica for large deployments. Confirm that your deployment logs requests to Postgres and retains enough history for the comparison you need. The view cannot recover expired or unlogged requests. Earlier LiteLLM schemas may lack a field; ask your administrator to map that metric to unknown rather than inventing a value.
+
+The view reads `metadata.user_api_key_project_id`, then `metadata.project_id`, for project attribution. It preserves team ownership in a separate `team_id` column. Review your records and adapt this mapping to your deployment. Missing project attribution appears as `(unassigned)`.
+
+## 2. Add the connection in Hex
+
+In Hex, open **Settings → Data sources → + Connection → Postgres**. Enter your reader's host, port, database and authentication details. Use the network and TLS settings your administrator requires. Follow [Hex's Postgres guide](https://learn.hex.tech/docs/connect-to-data/data-connections/setup-guides/connect-to-postgres) for firewall or SSH setup.
+
+![Hex Postgres connection form with empty credential fields](/img/hex/postgres-connection.png)
+
+Refresh the connection schema. Include `litellm_analytics` in schema browsing and confirm that you can query `spend_daily_v1`.
+
+```sql
+SELECT *
+FROM litellm_analytics.spend_daily_v1
+ORDER BY day DESC
+LIMIT 20;
+```
+
+## 3. Import and run the board
+
+Download the **Postgres Hex project** above. From Hex Home, use the **+ menu → Upload project** and select the `.hex.yaml` file. Open the **Source** SQL cell and select your Postgres connection. Run all cells.
+
+In **Settings**, choose your report dates. The default covers the last 30 complete UTC days; the end date is exclusive. Use the Project and Entity inputs to inspect one scope. Leave the inputs blank to inspect all data your connection can read.
+
+![Hex project cost board with synthetic demo records](/img/hex/roi-overview.png)
+
+The board includes a ranked project and entity table, spend share, daily spend, model mix and a cost-change review queue. It compares the last seven complete days with the preceding seven and flags cost increases above 25% and $10 when both windows contain records on all seven days. Review cost per request alongside total spend to distinguish higher traffic from higher unit cost.
+
+## 4. Add business value for ROI
+
+Open **Settings** and fill `value_data` with Finance-approved values for the selected report window:
+
+```python
+value_data = pd.DataFrame([{
+    "project_id": "support-assistant",
+    "value_usd": 5000,
+    "other_cost_usd": 1000,
+    "coverage_start": report_start,
+    "coverage_end": report_end,
+}])
+```
+
+These figures illustrate the input shape. Replace them with validated project data. Include infrastructure, automation, licensing and labor in other costs. Choose realized revenue or an approved avoided-cost estimate as business value, and avoid counting the same benefit twice.
+
+The board computes `(business value - LLM spend - other costs) / (LLM spend + other costs)`. It leaves ROI unknown until you supply a matching project and report window with recorded spend on each day and no flagged unknown costs. ROI requires the full project scope, so an Entity filter leaves it unknown. Verify log completeness and include costs outside LiteLLM before using the result for financial reporting.
+
+![Hex model mix and cost-change review with synthetic records](/img/hex/roi-cost-changes.png)
+
+## 5. Publish and keep it current
+
+Publish the App to your intended audience. Configure a [Hex scheduled run](https://learn.hex.tech/docs/share-insights/scheduled-runs) to update published results. Assign a board owner to check failed runs, source retention and attribution changes. Configure notifications in Hex if you need alerts; the template's review queue does not send messages.
+
+Enforce department access through database permissions and Hex sharing. A viewer who can edit an input can change its scope; the Project and Entity filters do not provide access control. Create separate restricted connections and boards when departments must see different data.
+
+## Read the metrics
+
+| Metric | Definition and limit |
+| --- | --- |
+| Spend | Sum of recorded LiteLLM spend. Confirm the currency; the template labels it USD. Some deployments record unavailable costs as zero, so reconcile with provider billing. |
+| Failure rate | Failures divided by requests with a known success/failure status. The quality table counts requests with unknown status. |
+| Cache hit rate | LiteLLM response-cache hits divided by requests with a known cache flag. Provider prompt caching uses different fields. |
+| Latency and TTFT | Weighted means over requests with valid timestamps. TTFT coverage depends on completion-start logging. |
+| Missing days | Gaps in the daily chart. A missing row can mean no traffic or a logging gap. |
+| Cache savings | Requires provider cache-token usage and a price baseline. This template does not estimate it. |
+
+## Template maintenance
+
+We version the template files and SQL contract in the docs repository. The Hex templates check validates Hex's file schema, executes the demo, tests missing values and filters, and checks the SQL and reader grants against a disposable Postgres database. See the [template README](https://github.com/BerriAI/litellm-docs/blob/main/static/hex/README.md) for checks and the changelog.
+
+## Optional S3 and Athena export
 
 <SinceVersion v="1.110.0" />
 
-Use the `hex` callback to export request-level spend records to S3. Connect [Hex to Athena](https://learn.hex.tech/docs/connect-to-data/data-connections/setup-guides/connect-to-amazon-athena) to query those records, ask Hex AI questions, and publish dashboards. The proxy uses AWS credentials and does not need a Hex API key.
+Use this separate route if you need an S3 spend export. It requires an AWS bucket, Athena and IAM configuration. The Postgres template above needs none of these resources.
 
-If your spend data already reaches a warehouse that Hex supports, connect Hex to that warehouse instead. The callback provides an S3 path for customers who need a separate spend export.
-
-## Enable the callback
+### Enable the callback
 
 Add `hex` to your proxy configuration:
 
@@ -39,7 +128,7 @@ The bucket must already exist. Give the proxy's AWS IAM role `s3:PutObject` perm
 
 The destination is independent of an existing `s3_v2` callback.
 
-## Connect Hex
+### Connect Hex through Athena
 
 Run the [Athena table setup](https://github.com/BerriAI/litellm/blob/main/cookbook/logging_observability/hex_spend_table.sql) in your Athena database. Replace both occurrences of `YOUR_BUCKET` and the `litellm-spend` prefix with your configured values. The table uses date partition projection, so new daily folders become queryable without a crawler or `MSCK REPAIR TABLE`.
 
@@ -55,7 +144,7 @@ The template shows spend, requests, tokens, failures, unknown-cost requests, dai
 
 Hex's S3 file picker imports selected files. It does not automatically discover each new log object for a historical dashboard. Use Athena for this workflow.
 
-## Exported records
+### Exported records
 
 Each request produces one row. Successful, failed, and completed streaming requests use the same schema. The callback batches rows into newline-delimited JSON objects under `<prefix>/YYYY-MM-DD/`. If `s3_v2` is also configured as the proxy's cold-storage logger, the shared uploader uses individual JSON objects; the Athena table reads both formats.
 
@@ -69,7 +158,7 @@ Each request produces one row. Successful, failed, and completed streaming reque
 
 Prompts, responses, raw error messages, arbitrary request metadata, and API keys are excluded. Team/user identifiers and key aliases are included; scope bucket and Hex access to the people who can view that attribution data. Avoid sensitive information in model names or aliases.
 
-## Delivery and scale
+### Delivery and scale
 
 The callback uses LiteLLM's S3 upload queue and retry behavior. Records wait in memory until a flush; a process crash can lose records that have not reached S3. This is an asynchronous analytics export, with the same delivery limits as the S3 logger.
 
