@@ -170,7 +170,7 @@ Wait for `session.started` before you send audio. Send audio as base64 chunks in
 
 ### Auth and errors
 
-LiteLLM checks the virtual key when the WebSocket opens. It reads the key from the `Authorization: Bearer <key>` header, then from the `api-key` header, then from an `openai-insecure-api-key.<key>` WebSocket subprotocol for clients that cannot set headers. A missing or invalid key, or a key over its total budget (`max_budget`), gets HTTP 403 and the WebSocket never opens.
+LiteLLM checks the virtual key when the WebSocket opens. It reads the key from the `Authorization: Bearer <key>` header, then from the `api-key` header, then from an `openai-insecure-api-key.<key>` WebSocket subprotocol for clients that cannot set headers. A key sent from a browser is readable by anyone who uses the page, so give that key only the models and budget the page needs. A missing or invalid key, or a key over its total budget (`max_budget`), gets HTTP 403 and the WebSocket never opens.
 
 After `session.start`, LiteLLM runs the checks that need the model, such as model access and per-model budgets (`model_max_budget`). When a check fails, LiteLLM sends an `error` event with one of these codes and closes the session with code 1008:
 
@@ -182,11 +182,13 @@ After `session.start`, LiteLLM runs the checks that need the model, such as mode
 
 LiteLLM also sends `invalid_session_start` when no first message arrives within 30 seconds.
 
+The key's rate limits, such as `rpm_limit`, are checked after `session.start` too. A session over a limit gets an `error` event whose message starts with `429`, and the session closes with code 1011.
+
 ### Spend tracking
 
-To end a session, send `session.close` and wait for `session.closed`, which carries the final `usage`. LiteLLM bills the session from the `usage.seconds` that OpenAI reports, at the model's `input_cost_per_second`. That is the deployment's own `input_cost_per_second` when you set one in `litellm_params`, else the model cost map's. For example, a session with 6 seconds of audio costs 6 times `input_cost_per_second`. If the client drops the socket without `session.close`, LiteLLM sends `session.close` to OpenAI itself and still bills the `usage.seconds` in OpenAI's `session.closed`. Only when OpenAI sends no `session.closed` within 5 seconds does LiteLLM bill the larger of the last reported `usage.seconds` and the time the session was open.
+To end a session, send `session.close` and wait for `session.closed`, which carries the final `usage`. LiteLLM bills the session from the `usage.seconds` that OpenAI reports, at the model's `input_cost_per_second`. That is the deployment's own `input_cost_per_second` when you set one in `litellm_params`, else the model cost map's. For example, a session with 6 seconds of audio costs 6 times `input_cost_per_second`. If the client drops the socket without `session.close`, LiteLLM sends `session.close` to OpenAI itself and still bills the `usage.seconds` in OpenAI's `session.closed`. When a session ends with no `session.closed` from OpenAI, such as when the connection to OpenAI drops or OpenAI sends none within 5 seconds of a dropped client, LiteLLM bills the larger of the last reported `usage.seconds` and the time the session was open.
 
-When the session hands work to a Responses model, OpenAI sends `response.event` events, and LiteLLM adds the tokens of each finished response at that model's token prices.
+When the session hands work to a Responses model, OpenAI sends `response.event` events, and LiteLLM adds the tokens of each finished response at that model's token prices. A model that is missing from LiteLLM's model cost map adds $0 for its tokens.
 
 The whole cost goes to the session's spend log and to the key's spend, so key budgets apply the same way they do on `/v1/realtime`.
 
@@ -194,7 +196,7 @@ The whole cost goes to the session's spend log and to the key's spend, so key bu
 
 Guardrails do not run on Live sessions. When a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to the session, LiteLLM sends an `error` event that says `Guardrails are not supported on OpenAI Live sessions` and closes the session. That includes a guardrail attached to the key and one with `default_on: true`, so a `default_on` guardrail in one of these modes closes every Live session on the proxy. Guardrails in other modes, such as `during_call`, and the `guardrails` query parameter do not close the session, and the session runs without them.
 
-LiteLLM proxies the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, are not available through the proxy.
+LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards them to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions.
 
 ## Azure: GA vs beta realtime protocol
 
