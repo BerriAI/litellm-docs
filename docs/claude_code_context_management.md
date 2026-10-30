@@ -12,8 +12,10 @@ When you send a request to `/v1/messages` (or via `litellm.anthropic.messages.*`
 | Routing path | How context_management is applied |
 |---|---|
 | **Anthropic API** | Passed through to the Anthropic server, which applies edits natively |
-| **OpenAI Responses API** (e.g. `gpt-5.x-*`) | Passed through; handled by the Responses API |
-| **Any other provider** (OpenAI, xAI, Gemini, Azure, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
+| **OpenAI Responses API** (`openai/*` models) | `compact_20260112` becomes the Responses API's native compaction. Every other edit, such as `clear_tool_uses_20250919`, runs in the **in-gateway polyfill** |
+| **Any other provider** (OpenAI chat completions, xAI, Gemini, Azure, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
+
+On `openai/*` models, `clear_tool_uses_20250919` runs in the gateway on `/v1/messages` and on `/v1/messages/count_tokens` <SinceVersion v="1.109.0" />, so the count matches the history that `/v1/messages` sends. Earlier versions drop the edit on this path without a warning.
 
 The polyfill means you write your Claude Code tool-loop once, pass `context_management` as you normally would, and it works regardless of which model is behind the proxy.
 
@@ -39,8 +41,8 @@ Claude Code client
 │                                                         │
 │  ┌──────────────────────┐   ┌────────────────────────┐  │
 │  │  Anthropic / Bedrock │   │  Any other provider    │  │
-│  │  Anthropic / OpenAI  │   │  (OpenAI, xAI, Gemini, │  │
-│  │  Responses API       │   │   Azure, …)            │  │
+│  │  Anthropic           │   │  (OpenAI, xAI, Gemini, │  │
+│  │                      │   │   Azure, …)            │  │
 │  │                      │   │                        │  │
 │  │  Pass context_mgmt   │   │  In-gateway polyfill:  │  │
 │  │  spec through as-is  │   │                        │  │
@@ -80,6 +82,8 @@ Claude Code client
                            ▼
                     Claude Code client
 ```
+
+On the OpenAI Responses API path, `compact_20260112` takes the left branch and every other edit takes the right one.
 
 ## Usage
 
@@ -298,9 +302,11 @@ If the request does **not** include a `compact_20260112` edit but the message hi
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `trigger.type` | No | `"input_tokens"` | `"input_tokens"` or `"tool_uses"` |
+| `trigger` | No | `{"type": "input_tokens", "value": 100000}` | Must be an object |
+| `trigger.type` | No | `"input_tokens"` | `"input_tokens"` or `"tool_uses"`. Any other value counts input tokens |
 | `trigger.value` | No | `100000` | Threshold; edits fire when current value **exceeds** this |
-| `keep.type` | No | `"tool_uses"` | Must be `"tool_uses"` |
+| `keep` | No | `{"type": "tool_uses", "value": 3}` | Must be an object |
+| `keep.type` | No | `"tool_uses"` | Only `"tool_uses"` is read. Any other value keeps the default 3 tool results |
 | `keep.value` | No | `3` | Number of most-recent tool results to preserve |
 | `clear_at_least.type` | No | - | Must be `"input_tokens"` |
 | `clear_at_least.value` | No | - | Clear old tool uses in batches that each free at least this many tokens |
@@ -316,7 +322,7 @@ The polyfill handles these fields the way Anthropic's API does:
 - **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
 - **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
 - **Small results.** A tool use whose result is 1 to 46 bytes of text is skipped, unless `clear_tool_inputs` covers that tool.
-- **Malformed values.** A malformed field, such as `exclude_tools: "memory"`, gets an HTTP 400 that names the edit and the field. With `drop_params: true`, LiteLLM drops only that field instead and still applies the edit and the other edits.
+- **Malformed values.** A malformed field, such as `exclude_tools: "memory"` or a `trigger` or `keep` that is not an object <SinceVersion v="1.109.0" />, gets an HTTP 400 that names the edit and the field, for example `context_management.edits.0.clear_tool_uses_20250919.trigger: Input should be an object`. With `drop_params: true`, LiteLLM drops only that field instead, uses its default, and still applies the edit and the other edits.
 
 ## Responses
 
@@ -416,7 +422,9 @@ import litellm
 litellm.completion(..., additional_drop_params=["context_management"])
 ```
 
-`drop_params: true` does not disable the polyfill. `context_management` is a LiteLLM-supported parameter (native on Anthropic, polyfilled elsewhere), and `drop_params` only drops genuinely unsupported parameters.
+`drop_params: true` does not disable the polyfill. `context_management` is a LiteLLM-supported parameter (native on Anthropic, polyfilled elsewhere), so `drop_params` keeps it. Inside a `clear_tool_uses_20250919` edit, `drop_params` drops only the malformed fields, such as a `trigger` or `keep` that is not an object, and the edit runs with their defaults.
+
+A request with a `clear_tool_uses_20250919` edit and a `tool_result` text part whose `text` is not a string gets an HTTP 400. With `drop_params: true`, LiteLLM drops that text part and then clears <SinceVersion v="1.109.0" />.
 
 ## Provider Support Matrix
 
@@ -424,7 +432,7 @@ litellm.completion(..., additional_drop_params=["context_management"])
 |---|---|---|
 | `anthropic/*` | Native pass-through | Native pass-through |
 | `bedrock/anthropic.*` | Native pass-through | Native pass-through |
-| `openai/*` (Responses API) | Native pass-through | Native pass-through |
+| `openai/*` (Responses API, the default on `/v1/messages`) | Polyfill | Native (Responses API compaction) |
 | `openai/*` (chat completions) | Polyfill | Polyfill |
 | `azure/*` | Polyfill | Polyfill |
 | `xai/*` | Polyfill | Polyfill |
