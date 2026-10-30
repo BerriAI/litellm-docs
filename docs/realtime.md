@@ -14,6 +14,7 @@ Supported Providers:
 - Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
+- OpenAI Live models such as `gpt-live-1`, on their own `/v1/live/sessions` route ([see below](#openai-live-sessions-gpt-live-1))
 
 ## Proxy Usage
 
@@ -119,6 +120,72 @@ ws.on("error", function handleError(error) {
     console.error("Error: ", error);
 });
 ```
+
+## OpenAI Live sessions (`gpt-live-1`)
+
+<SinceVersion v="1.107.0" /> OpenAI Live models such as `gpt-live-1` use their own WebSocket protocol, and LiteLLM serves them on `/v1/live/sessions`, first in `v1.107.0-rc.1`. OpenAI rejects a Live model on `/v1/realtime` with `invalid_model`, so the [Test](#test) script above fails for `gpt-live-1`. Use the route below instead.
+
+### Add the model to config
+
+```yaml
+model_list:
+  - model_name: gpt-live-1
+    litellm_params:
+      model: openai/gpt-live-1
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+Live sessions support the `openai` provider only. A session on a deployment of another provider, such as `azure/gpt-live-1`, gets an `error` event that says `OpenAI Live sessions require the openai provider`, and the session closes.
+
+### Connect
+
+Open a WebSocket to `/v1/live/sessions` on the proxy with a LiteLLM virtual key. `/live/sessions` and `/openai/v1/live/sessions` work too. The first message must be `session.start`, and its `session.model` is the `model_name` from your config. LiteLLM takes the model from that message and ignores a `?model=` query parameter. It swaps in the deployment's model, connects to OpenAI's `/v1/live/sessions`, and then passes every event through unchanged in both directions.
+
+The OpenAI Python SDK does all of this when you point `base_url` at the proxy. Install it with `pip install "openai[realtime]"`:
+
+```python
+import asyncio
+import os
+
+from openai import AsyncOpenAI
+
+client = AsyncOpenAI(base_url="http://0.0.0.0:4000/v1", api_key=os.environ["LITELLM_API_KEY"])
+
+
+async def main() -> None:
+    async with client.live.connect() as connection:
+        await connection.send({"type": "session.start", "session": {"model": "gpt-live-1"}})
+        async for event in connection:
+            print(event.type)
+            if event.type == "session.started":
+                await connection.send({"type": "session.close"})
+            if event.type in ("session.closed", "error"):
+                break
+
+
+asyncio.run(main())
+```
+
+Wait for `session.started` before you send audio. Send audio as base64 chunks in `session.input_audio.append` events, and read the model's audio from `session.output_audio.delta` events. See OpenAI's [GPT-Live guide](https://developers.openai.com/api/docs/guides/live) and [WebSocket guide](https://developers.openai.com/api/docs/guides/voice-websockets?api=live) for the full list of events.
+
+### Auth and errors
+
+LiteLLM checks the virtual key when the WebSocket opens. It reads the key from the `Authorization: Bearer <key>` header, then from the `api-key` header, then from an `openai-insecure-api-key.<key>` WebSocket subprotocol for clients that cannot set headers. A missing or invalid key, or a key over its budget, gets HTTP 403 and the WebSocket never opens.
+
+After `session.start`, LiteLLM checks that the key may call the requested model. The session closes with code 1008 in these cases, after an `error` event with one of these codes:
+
+| Code | Cause |
+| --- | --- |
+| `model_not_allowed` | The key may not call the model |
+| `invalid_session_start` | First message is not `session.start` |
+
+### Spend tracking
+
+To end a session, send `session.close` and wait for `session.closed`, which carries the final `usage`. LiteLLM bills the session from the `usage.seconds` that OpenAI reports, at the model's `input_cost_per_second` in the model cost map. For example, a session with 6 seconds of audio costs 6 times `input_cost_per_second`. The cost goes to the session's spend log and to the key's spend, so key budgets apply the same way they do on `/v1/realtime`.
+
+### Limits
+
+Guardrails are not supported on Live sessions. When a guardrail applies to the session, for example one attached to the key, LiteLLM sends an `error` event that says `Guardrails are not supported on OpenAI Live sessions` and closes the session. LiteLLM proxies the WebSocket route only, so WebRTC session creation (`POST /v1/live/sessions`) is not available through the proxy.
 
 ## Azure: GA vs beta realtime protocol
 
