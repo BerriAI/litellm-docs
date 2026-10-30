@@ -183,16 +183,40 @@ function ShieldIcon() {
   );
 }
 
-function SecurityAlertsCard() {
+function RssIcon() {
   return (
-    <Link to="/security/subscribe" className={styles.securityCard}>
-      <span className={styles.securityIcon}><ShieldIcon /></span>
-      <span className={styles.securityText}>
-        <strong>Security Announcements</strong>
-        <span>Join the security mailing list</span>
-      </span>
-      <span className={styles.securityArrow} aria-hidden="true">&rarr;</span>
-    </Link>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14" />
+      <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+// The hero keeps the email box open: the form sits in one blue pill, with
+// RSS and the security list as pills beside it.
+function HeroSubscribe() {
+  return (
+    <div className={styles.via}>
+      <div className={styles.mailPill}>
+        <MailIcon />
+        <SubscribeForm />
+      </div>
+      <div className={styles.viaLinks}>
+        <a href="/blog/rss.xml" className={styles.viaBtn}><RssIcon />RSS</a>
+        <Link to="/security/subscribe" className={styles.viaBtn} title="Join the security mailing list">
+          <ShieldIcon />Security announcements
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -212,7 +236,6 @@ export default function BlogListPage(props) {
   const [activeTab, setActiveTab] = useState('all');
   const [query, setQuery] = useState('');
   const [shown, setShown] = useState(PAGE_SIZE);
-  const [searchOpen, setSearchOpen] = useState(false);
   const tokens = queryTokens(query);
   const filtered = filterItems(items, activeTab)
     .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
@@ -233,21 +256,7 @@ export default function BlogListPage(props) {
         <div className={styles.frame}>
           <header className={styles.hero}>
             <h1 className={styles.heroTitle}>Blog</h1>
-            <p className={styles.heroSub}>
-              Insights on routing, reliability, and observability from the team building the most widely used open-source AI gateway.
-            </p>
-            <div className={styles.subscribe}>
-              <div className={styles.subscribeMain}>
-              <SubscribeForm />
-              <p className={styles.subscribeNote}>
-                <span>Get new posts in your inbox, or follow the <a href="/blog/rss.xml">RSS feed</a>.</span>
-                <a href="https://jobs.ashbyhq.com/litellm" target="_blank" rel="noopener noreferrer" className={styles.hiring}>
-                  We're hiring
-                </a>
-              </p>
-              </div>
-              <SecurityAlertsCard />
-            </div>
+            <HeroSubscribe />
           </header>
 
           <div className={styles.body}>
@@ -268,32 +277,23 @@ export default function BlogListPage(props) {
                       {tab.label}
                     </button>
                   ))}
-                  {searchOpen || query ? (
-                    <label className={styles.search}>
-                      <SearchIcon />
-                      <input
-                        type="search"
-                        value={query}
-                        onChange={event => {
-                          setQuery(event.target.value);
-                          setShown(PAGE_SIZE);
-                        }}
-                        onKeyDown={event => {
-                          if (event.key === 'Escape') setQuery('');
-                        }}
-                        placeholder="Search posts"
-                        aria-label="Search posts"
-                        autoComplete="off"
-                        autoFocus
-                        onBlur={() => setSearchOpen(false)}
-                      />
-                    </label>
-                  ) : (
-                    <button type="button" className={`${styles.chip} ${styles.searchChip}`} onClick={() => setSearchOpen(true)}>
-                      <SearchIcon />
-                      Search posts
-                    </button>
-                  )}
+                  <label className={styles.search}>
+                    <SearchIcon />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={event => {
+                        setQuery(event.target.value);
+                        setShown(PAGE_SIZE);
+                      }}
+                      onKeyDown={event => {
+                        if (event.key === 'Escape') setQuery('');
+                      }}
+                      placeholder="Search posts"
+                      aria-label="Search posts"
+                      autoComplete="off"
+                    />
+                  </label>
                 </nav>
               </div>
 
