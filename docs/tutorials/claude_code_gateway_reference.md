@@ -111,7 +111,7 @@ Once the developer has approved the code in the browser (the next section shows 
   "expires_in": 86400,
   "refresh_token": "llm_srefresh_e<redacted>",
   "user_id": "<the signed-in user id>",
-  "team_id": "<the first team on the user record, or null when it has none>"
+  "team_id": "<the team the session is issued for, or null when the user has none>"
 }
 ```
 
@@ -168,6 +168,14 @@ Claude Code then shows the verification code and opens the browser on the proxy'
 The browser goes through your identity provider (a browser already signed in to the provider lands on the next page without a prompt) and then asks for the code from the terminal
 
 <Image img={require('../../img/claude_code_gateway/browser_verification_code.png')} style={{ width: '800px', height: 'auto' }} />
+
+On the same page, a developer on more than one team picks the team for the session <SinceVersion v="1.109.0" />. The **Attribute requests to team** dropdown starts on **Choose a team**, and the page does not submit until the developer picks one. Each option shows the team's alias, with the team id added in parentheses when two of the developer's teams share an alias. The session token is issued for the picked team, so the session gets that team's models and budget, its spend goes to that team, and every renewal keeps it. A developer on one team sees "Requests are attributed to team" with that team's name instead of the dropdown, and a developer on no team sees neither and gets a session with no team
+
+<Image img={require('../../img/claude_code_gateway/browser_team_choice.png')} style={{ width: '800px', height: 'auto' }} />
+
+The proxy checks the pick against the teams it read for the developer at sign-in, once when the page is submitted and again when Claude Code collects the token. A team outside them gets `400` with "Choose one of the teams you belong to" on the page. A pick that stopped being one of them before the token was collected, for example because the developer was removed from that team and signed in again on the same link, gets `400 invalid_grant` with "The team picked at sign-in is no longer one of your teams; sign in again" from the token endpoint, and the developer runs `/login` again
+
+Earlier releases show no dropdown and issue the session for the first team on the developer's user record
 
 After Continue, the browser confirms the login and the terminal picks it up on its next poll
 
@@ -264,7 +272,7 @@ A replayed refresh token is refused on its own and ends nothing else, so a copy 
 
 The refresh token is signed with the MCP gateway's session signing keys, derived from `master_key` unless `general_settings.mcp_session_token_signing` is set. On a proxy where that block cannot be loaded, sign-in still succeeds but returns no refresh token and the proxy logs the fault, so the developer is back to signing in at every expiry until it is fixed
 
-The token is scoped to the first team on the developer's user record. A developer who belongs to several teams has no team picker in this flow and gets the first team's models and budget; `lite login` offers the picker if a developer needs a token for another team
+A session stays on the team it was issued for. Every renewal keeps that team, so a developer who wants another team's models runs `/login` again and picks it
 
 Two endpoints of the protocol are not served: `GET /claude_code_gateway/v1/models` and `HEAD /claude_code_gateway/api/hello` answer `404`. Sign-in, managed settings, and inference do not depend on them. Model discovery through `/v1/models` is off in Claude Code unless `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` is set, and with the endpoint unserved the `/model` picker shows Claude Code's built-in list, which is why the proxy config keeps the `anthropic/*` wildcard. The team's model list still decides which of those models a developer may use
 
