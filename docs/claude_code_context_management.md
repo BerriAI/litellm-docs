@@ -11,12 +11,12 @@ When you send a request to `/v1/messages` (or via `litellm.anthropic.messages.*`
 
 | Routing path | How context_management is applied |
 |---|---|
-| **Anthropic API**, and Claude on Bedrock Invoke, Vertex AI, Azure AI, and Databricks | Passed through to the provider, which applies edits natively. Azure AI answers `compact_20260112` with a 400 |
+| **Anthropic API**, and Claude on Bedrock Invoke, Vertex AI, Azure AI, and Databricks | Passed through to the provider, which applies edits natively. On Azure AI, LiteLLM drops the `compact-2026-01-12` beta header, so Azure answers `compact_20260112` with a 400 |
 | **OpenAI Responses API** (`openai/*` models) | `compact_20260112` becomes the Responses API's native compaction. Every other edit, such as `clear_tool_uses_20250919`, runs in the **in-gateway polyfill** |
-| **Other providers that LiteLLM calls through their own `/v1/messages` endpoint** (DeepSeek, Tencent, DashScope's Anthropic endpoint, …) | Passed through as sent. LiteLLM runs no polyfill and does not check the edits, so the provider decides what to do with them |
+| **Other providers that LiteLLM calls through their own `/v1/messages` endpoint** (DeepSeek, Tencent, MiniMax, BigModel, EdenAI, DashScope's Anthropic endpoint, Claude on GitHub Copilot and Bedrock Mantle, …) | Passed through as sent. LiteLLM runs no polyfill and does not check the edits, so the provider decides what to do with them |
 | **Any other provider** (OpenAI chat completions, xAI, Gemini, Azure, Bedrock Converse, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
 
-Claude on Databricks is passed through for endpoint names that start with `databricks-claude-` or `system.ai.claude-`. Any other Databricks endpoint name runs the polyfill. A deployment whose `model_info.supported_endpoints` lists `/v1/messages` is passed through as sent, whatever its provider.
+Claude on Databricks <SinceVersion v="1.109.0" /> is passed through for endpoint names that start with `databricks-claude-` or `system.ai.claude-`. Any other Databricks endpoint name runs the polyfill. DashScope's Anthropic endpoint <SinceVersion v="1.109.0" /> is passed through when the deployment's `api_base` points at it. A deployment whose `model_info.supported_endpoints` lists `/v1/messages` is passed through as sent, whatever its provider.
 
 On `openai/*` models, `clear_tool_uses_20250919` runs in the gateway on `/v1/messages` and on `/v1/messages/count_tokens` <SinceVersion v="1.109.0" />, so the count matches the history that `/v1/messages` sends. Earlier versions drop the edit on this path without a warning.
 
@@ -331,7 +331,7 @@ The polyfill handles `clear_at_least`, `exclude_tools`, small results and malfor
 - **Batches.** With `clear_at_least`, old tool uses are cleared oldest first in batches. Each batch frees at least `clear_at_least.value` tokens, counting the cleared result and the cleared input with `litellm.token_counter`. An incomplete batch waits for a later request, so the requests in between send the same history and keep hitting the prompt cache.
 - **Excluded tools.** Uses of a tool in `exclude_tools` are never cleared, and they do not count toward `keep`, a `tool_uses` trigger, or a batch.
 - **Small results.** A tool use whose result is 1 to 46 bytes of text is skipped, unless `clear_tool_inputs` covers that tool.
-- **Malformed values.** A malformed field, such as `exclude_tools: "memory"` or a `trigger` or `keep` that is not an object <SinceVersion v="1.109.0" />, gets an HTTP 400 that names the edit and the field, for example `context_management.edits.0.clear_tool_uses_20250919.trigger: Input should be an object`. With `drop_params: true`, LiteLLM drops only that field instead, uses its default, and still applies the edit and the other edits.
+- **Malformed values.** A malformed field, such as `exclude_tools: "memory"` or a `trigger` or `keep` that is not an object <SinceVersion v="1.109.0" />, gets an HTTP 400 that names the edit and the field, for example `context_management.edits.0.clear_tool_uses_20250919.trigger: Input should be an object`. With `drop_params: true`, which Claude Code and Codex requests get by default, LiteLLM drops only that field instead, uses its default, and still applies the edit and the other edits.
 
 ## Responses
 
@@ -433,7 +433,9 @@ litellm.completion(..., additional_drop_params=["context_management"])
 
 `drop_params: true` does not disable the polyfill. `context_management` is a LiteLLM-supported parameter (passed through on native `/v1/messages` endpoints, polyfilled elsewhere), so `drop_params` keeps it. Inside a `clear_tool_uses_20250919` edit that the polyfill runs, `drop_params` drops only the malformed fields, such as a `trigger` or `keep` that is not an object, and the edit runs with their defaults. On pass-through routes the edit goes to the provider as sent, so Anthropic still answers a malformed field with its own 400.
 
-On a route that runs the polyfill, a `/v1/messages` or `/v1/messages/count_tokens` request with a `tool_result` text part whose `text` is not a string gets an HTTP 400 <SinceVersion v="1.109.0" />, with or without an edit. With `drop_params: true`, LiteLLM drops that text part instead, before any edit runs.
+Requests from Claude Code and Codex, found by their user agent, get `drop_params: true` by default. A request that sets `drop_params` itself, or `litellm_settings.drop_params: false` in the proxy config, turns that off. So Claude Code and Codex get the drop behavior on this page where other clients get a 400. See [Claude Code and Codex on the proxy](/docs/completion/drop_params#claude-code-and-codex-on-the-proxy).
+
+A `tool_result` text part whose `text` is not a string gets an HTTP 400 <SinceVersion v="1.109.0" />, with or without an edit, on a `/v1/messages` request that runs the polyfill and on every `/v1/messages/count_tokens` request. Where LiteLLM sends the count to Claude, as on Vertex AI and Azure AI, the 400 comes from Claude. With `drop_params: true`, LiteLLM drops that text part instead, before any edit runs.
 
 ## Provider Support Matrix
 
@@ -448,11 +450,11 @@ On a route that runs the polyfill, a `/v1/messages` or `/v1/messages/count_token
 | `xai/*` | Polyfill | Polyfill |
 | `gemini/*` | Polyfill | Polyfill |
 | Claude on `vertex_ai/*`, and on `databricks/*` (`databricks-claude-*`, `system.ai.claude-*`) | Native pass-through | Native pass-through |
-| Claude on `azure_ai/*` | Native pass-through | Azure answers 400 |
+| Claude on `azure_ai/*` | Native pass-through | Azure answers 400, since LiteLLM drops the beta header |
 | `vertex_ai/*` (other models) | Polyfill | Polyfill |
-| `deepseek/*`, `tencent/*`, `dashscope/*` on DashScope's Anthropic endpoint, and other providers with a native `/v1/messages` endpoint | Passed through as sent | Passed through as sent |
+| `deepseek/*`, `tencent/*`, `minimax/*`, `dashscope/*` on DashScope's Anthropic endpoint, and other providers with a native `/v1/messages` endpoint | Passed through as sent | Passed through as sent |
 | `dashscope/*` on DashScope's OpenAI-compatible endpoint | Polyfill | Polyfill |
-| All other providers | Polyfill | Polyfill |
+| All other providers without a native `/v1/messages` endpoint | Polyfill | Polyfill |
 
 ## Notes
 
