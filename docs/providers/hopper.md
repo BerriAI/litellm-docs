@@ -46,13 +46,13 @@ The [Hopper catalog](https://withhopper.com/mcp) and authenticated `/v1/models` 
 
 **`hopper/deepseek-v4.1-flash-1017`** has a 1,048,576-token context window. Input costs $0.09, cached input $0.007, and output $0.85. This is the standard model.
 
-**`hopper/deepseek-v4.1-flash-1017-abliterated`** has a 393,216-token context window. Input costs $0.30, cached input $0.03, and output $1.20. This variant uses abliterated weights.
+**`hopper/deepseek-v4.1-flash-1017-abliterated`** has a 1,048,576-token context window. Input costs $0.30, cached input $0.03, and output $1.20. This variant uses abliterated weights.
 
 **`hopper/gemma-4-31b`** has a 262,144-token context window. Input costs $0.30, cached input $0.12, and output $0.40.
 
 All three support text, tools, streaming, and prompt caching. Both DeepSeek variants support images and JSON-schema output. Hopper's Gemma deployment rejects images, and its JSON-schema output did not pass validation, so LiteLLM does not advertise those capabilities for Gemma.
 
-Both DeepSeek variants accept an output budget of 384,000 tokens when the prompt fits. The context limits come from the provider's catalog; verification used short requests rather than full-context generations.
+Both DeepSeek variants accept a `max_tokens` request cap of 1,048,576. Input and output share the context window, so the prompt reduces the tokens available for generation. A live abliterated request processed 1,048,053 input tokens; full-length output generation has not been tested.
 
 ## Streaming and caching
 
