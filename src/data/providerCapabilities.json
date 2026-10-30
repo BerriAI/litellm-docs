@@ -848,6 +848,12 @@
       "images"
     ]
   },
+  "providers/streamlake": {
+    "prefix": "streamlake",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/strands_decider": {
     "prefix": "strands_decider",
     "capabilities": []
