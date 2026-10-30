@@ -13,6 +13,8 @@ For example, if you send `temperature=0.2` to a model that doesn't support the `
 
 **When `drop_params=True` is set**, LiteLLM will drop the unsupported parameter instead of raising an exception. This lets your code work across different providers without having to customize parameters for each one.
 
+On the proxy, requests from Claude Code and Codex drop unsupported params by default. See [Claude Code and Codex on the proxy](#claude-code-and-codex-on-the-proxy).
+
 ## Quick Start 
 
 ```python 
@@ -47,7 +49,7 @@ litellm_settings:
 
 ### Claude Code and Codex on the proxy
 
-Requests from Claude Code and Codex, found by their user agent, drop unsupported params by default even when `drop_params` is unset, so their client-specific params do not fail on other providers. Set `drop_params: false` in `litellm_settings` to raise for them too.
+Requests from Claude Code and Codex, found by their user agent, drop unsupported params by default even when `drop_params` is unset, so their client-specific params do not fail on other providers. Set `drop_params: false` in `litellm_settings` to raise for them too. A `drop_params: false` on a single model in `model_list` does not turn this default off.
 
 ```yaml
 litellm_settings:
