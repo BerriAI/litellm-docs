@@ -211,6 +211,45 @@ curl -i http://0.0.0.0:4000/v1/messages \
 
 The response carries an `x-litellm-applied-guardrails: needlepath-selection` header so the caller can confirm the guardrail ran.
 
+## Enabling selection with guardrail policies
+
+[Guardrail policies](./guardrail_policies), a beta LiteLLM feature, attach guardrails to a team, key, tag, or model from `config.yaml`, so you can decide where selection runs without changing application code. Define the guardrail once with `default_on: false` and let policies add it where you want it. A guardrail with `default_on: true` runs on every request whatever the policies say, because a policy only adds guardrails to a request.
+
+```yaml showLineNumbers title="config.yaml"
+guardrails:
+  - guardrail_name: needlepath-selection
+    litellm_params:
+      guardrail: needlepath
+      mode: pre_call
+      api_key: os.environ/NEEDLEPATH_API_KEY
+      default_on: false
+
+policies:
+  agent-selection:
+    description: Context selection for agent traffic
+    guardrails:
+      add:
+        - needlepath-selection
+
+  gpt-4o-selection:
+    description: Context selection for one model
+    guardrails:
+      add:
+        - needlepath-selection
+    condition:
+      model: gpt-4o
+
+policy_attachments:
+  - policy: agent-selection
+    teams:
+      - agents  # team alias from /team/new
+
+  - policy: gpt-4o-selection
+    scope: "*"
+```
+
+The first attachment runs selection only for keys that belong to the team with alias `agents`. The second applies to every request, but its `condition` limits it to requests for the model name `gpt-4o`; `condition.model` also accepts a regex or a list. Use either attachment on its own, or both, in which case a request gets selection when either one matches. Attachments also accept `keys` and `tags`, and LiteLLM lists team and key attachments as an Enterprise feature. When a policy applies, the response carries `x-litellm-applied-policies` with its name next to `x-litellm-applied-guardrails: needlepath-selection`.
+
 ## The pinned operating point
 
 `operating_point` is an immutable engine label, sent as `budget.operating_point` on every selection request. The guardrail pins `np-2026-10-r8` by default instead of inheriting whatever the service currently treats as its default, so the behaviour of a given proxy build does not change underneath a deployment. Change it only deliberately, and change it in config rather than relying on a service-side default.
