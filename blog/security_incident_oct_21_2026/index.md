@@ -26,7 +26,7 @@ All previous versions are safe, and the impacted releases have been pulled.
 
 **Update (October 23, 21:50 UTC):** This post was written while our investigation was ongoing. Some our assumptions and beliefs reflected in our status updates and the text below were later discovered to be inaccurate or incomplete. We have left them in their original form as a record of our investigation, but have posted a canonical record [here](https://docs.litellm.ai/blog/security-incident-oct-21-2026-attack-chain).
 
-**Update (October 30):** We rotated the cosign key that signs our Docker images. See [Image signing key rotation](#image-signing-key-rotation) for the new key's fingerprint and which images it signs.
+**Update (October 30):** The commit that rotated our cosign image signing key on October 23 now shows as verified on GitHub, and we added the new key's fingerprint to this post. See [Image signing key rotation](#image-signing-key-rotation).
 
 {/* truncate */}
 
@@ -176,7 +176,7 @@ We have already taken the following steps:
 
 ### Image signing key rotation
 
-We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so we replaced it in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065). Images from `v1.103.8`, `v1.104.6`, `v1.105.4`, `v1.106.3` and every later release are signed with the new key.
+We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24, and every later release uses it too.
 
 The SHA-256 fingerprint of the new public key file, `cosign.pub`, is:
 
