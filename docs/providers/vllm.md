@@ -682,7 +682,7 @@ def default_pt(messages):
     return " ".join(message["content"] for message in messages)
 ```
 
-[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/llms/prompt_templates/factory.py)
+[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 
 
 #### Models we already have Prompt Templates for
