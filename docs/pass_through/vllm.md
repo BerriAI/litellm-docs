@@ -69,7 +69,7 @@ curl -X 'POST' \
 
 A vLLM server started with `vllm serve <model> --api-key <key>` only accepts `Authorization: Bearer <key>`. Give LiteLLM the same key and it sends that header upstream on `/vllm` calls.
 
-For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. With no `api_key` set, it sends `HOSTED_VLLM_API_KEY` when that is set, and no auth header otherwise. A model in your `model_list` does not fall back to `VLLM_API_KEY`.
+For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. With no `api_key` set, it sends `HOSTED_VLLM_API_KEY` when that is set, and no auth header otherwise. A model with no `api_base` (and no `HOSTED_VLLM_API_BASE` set) is forwarded to `VLLM_API_BASE`, and there it sends `VLLM_API_KEY` unless the model sets its own `api_key`.
 
 ```yaml
 model_list:
