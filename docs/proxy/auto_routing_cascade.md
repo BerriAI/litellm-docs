@@ -69,6 +69,8 @@ The caller always sees **one** request on the cascade's model group:
 
 - `usage` is the **sum** over every inner call (cheap, verifier, strong)
 - `response_cost` is the sum too, so the spend log and budgets are right
+- the request's spend-log row names the deployment that answered (`cheap_model`'s on a pass, `strong_model`'s on an escalation)
+- the verifier and strong calls are also logged, as internal sub-calls (`internal_call_origin: cascade_verifier` / `cascade_strong`), the same convention the auto-router classifier and shadow eval use: visible in traces, zeroed by spend accounting, so nothing is billed twice
 - the response's hidden params carry a `cascade` record (path, reason, served_by, per-call cost), and the proxy returns the path as headers: `x-litellm-cascade-path`, `x-litellm-cascade-reason`, `x-litellm-cascade-served-by`
 
 ## The verifier
