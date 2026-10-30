@@ -18,7 +18,7 @@ For the conceptual overview and full strategy reference, see [Routing Groups - P
 
 Navigate to **General Settings** in the sidebar and select the **Routing Groups** section.
 
-[![Open Routing Groups settings](../../../static/img/routing-groups/access-rg-settings.png)](https://scribehow.com/viewer/Accessing_Routing_Groups_in_Settings__hxNoFOtLQeSfOvcLYgzXzA)
+[![Open Routing Groups settings](/img/routing-groups/access-rg-settings.png)](https://scribehow.com/viewer/Accessing_Routing_Groups_in_Settings__hxNoFOtLQeSfOvcLYgzXzA)
 
 ### Create a Routing Group
 
@@ -31,19 +31,19 @@ Click **Add Routing Group**, then fill in:
 
 Click **Save** to create the group.
 
-[![Create a routing group](../../../static/img/routing-groups/create-rg.png)](https://scribehow.com/viewer/Create_a_New_Latency_Based_Routing_Group__y3EoV7U7QOaNdR1YrD-03w)
+[![Create a routing group](/img/routing-groups/create-rg.png)](https://scribehow.com/viewer/Create_a_New_Latency_Based_Routing_Group__y3EoV7U7QOaNdR1YrD-03w)
 
 ### Edit a Routing Group
 
 Click the group row in the table to open it, then update any field. For example, change the `ttl` under **Routing strategy args** to tune how quickly the strategy reacts to latency changes. Click **Save** to apply.
 
-[![Edit a routing group](../../../static/img/routing-groups/update-rg.png)](https://scribehow.com/viewer/How_To_Configure_Strategy_Arguments_In_Router_Settings__u98H3SRAQKK-qHOa1Tbx9g)
+[![Edit a routing group](/img/routing-groups/update-rg.png)](https://scribehow.com/viewer/How_To_Configure_Strategy_Arguments_In_Router_Settings__u98H3SRAQKK-qHOa1Tbx9g)
 
 ### Delete a Routing Group
 
 Click the **Delete** action on the group row and confirm. Models that were in the deleted group immediately fall back to the default routing strategy.
 
-[![Delete a routing group](../../../static/img/routing-groups/delete-rg.png)](https://scribehow.com/viewer/How_To_Delete_A_Router_Setting__O96ij__rQj6QjOurwOqSFA)
+[![Delete a routing group](/img/routing-groups/delete-rg.png)](https://scribehow.com/viewer/How_To_Delete_A_Router_Setting__O96ij__rQj6QjOurwOqSFA)
 
 ## Via `proxy_config.yaml`
 
@@ -94,7 +94,7 @@ curl -X POST 'http://localhost:4000/v1/chat/completions' \
   }'
 ```
 
-![Send a request](../../../static/img/routing-groups/model-request.png)
+![Send a request](/img/routing-groups/model-request.png)
 
 ### 2. Inspect the proxy logs
 
@@ -114,7 +114,7 @@ kubectl logs -n litellm -l app=litellm --tail=200 | grep routing_group=
 | line_format `{{.routing_group}} {{.model}} {{.strategy}}`
 ```
 
-![Verify the routing group in logs](../../../static/img/routing-groups/verify-rg.png)
+![Verify the routing group in logs](/img/routing-groups/verify-rg.png)
 
 A row like `anthropic-latency claude-sonnet latency-based-routing` confirms the request hit the expected group. If you instead see `default <strategy>`, the model isn't claimed by the group, so check the group's **Models** list.
 
