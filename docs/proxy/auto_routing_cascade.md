@@ -61,7 +61,7 @@ curl http://localhost:4000/v1/chat/completions \
    - **empty** answer
    - **refusal** ("I'm sorry, I can't…"), when `escalate_on_refusal` is on
    - **short**: fewer than `min_chars` characters
-   - **truncated**: `finish_reason == "length"`, when `escalate_on_truncation` is on
+   - **truncated**: `finish_reason == "length"` on the model's own limit, when `escalate_on_truncation` is on. A request that set its own `max_tokens` is never escalated for truncation: the strong model would be cut at the same point.
 3. If the heuristics pass and `verifier_model` is set, the verifier is asked one question about the answer.
 4. If everything passes, the cheap answer is returned. Otherwise the router calls `strong_model` (again through normal routing) and returns that answer.
 
@@ -69,7 +69,7 @@ The caller always sees **one** request on the cascade's model group:
 
 - `usage` is the **sum** over every inner call (cheap, verifier, strong)
 - `response_cost` is the sum too, so the spend log and budgets are right
-- the response's hidden params carry a `cascade` record (path, reason, served_by, per-call cost)
+- the response's hidden params carry a `cascade` record (path, reason, served_by, per-call cost), and the proxy returns the path as headers: `x-litellm-cascade-path`, `x-litellm-cascade-reason`, `x-litellm-cascade-served-by`
 
 ## The verifier
 
@@ -94,7 +94,7 @@ cascade_router_config:
   verifier_min_confidence: 0.0  # decision kind: a yes below this escalates
   min_chars: 20                 # shorter cheap answers escalate without a verifier call
   escalate_on_refusal: true
-  escalate_on_truncation: true  # finish_reason == length
+  escalate_on_truncation: true  # finish_reason == length on the model's limit; a caller-set max_tokens never escalates
   on_verifier_error: escalate   # escalate | accept
 ```
 
