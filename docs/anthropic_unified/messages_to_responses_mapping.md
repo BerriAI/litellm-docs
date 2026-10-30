@@ -1,6 +1,6 @@
 # v1/messages → /responses Parameter Mapping
 
-When you send a request to `/v1/messages` targeting an `openai/*` model, LiteLLM internally routes it through the OpenAI Responses API. A request with `stop_sequences`, or any request when `use_chat_completions_url_for_anthropic_messages` is on, goes through chat completions instead. This page documents exactly how every parameter gets translated in both directions.
+When you send a request to `/v1/messages` targeting an `openai/*` model, or a few Responses-only deployments of other providers such as `perplexity/perplexity/sonar`, LiteLLM internally routes it through the OpenAI Responses API. A request with `stop_sequences`, or any request when `use_chat_completions_url_for_anthropic_messages` is on, goes through chat completions instead. This page documents exactly how every parameter gets translated in both directions.
 
 The transformation lives in `litellm/llms/anthropic/messages/responses_adapters/transformation.py`.
 

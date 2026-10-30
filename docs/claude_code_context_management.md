@@ -12,7 +12,7 @@ When you send a request to `/v1/messages` (or via `litellm.anthropic.messages.*`
 | Routing path | How context_management is applied |
 |---|---|
 | **Anthropic API**, and Claude on Bedrock Invoke, Vertex AI, Azure AI, and Databricks | Passed through to the provider, which applies edits natively. On Azure AI, LiteLLM drops the `compact-2026-01-12` beta header, so Azure answers `compact_20260112` with a 400 |
-| **OpenAI Responses API** (`openai/*` models) | `compact_20260112` becomes the Responses API's native compaction. Every other edit, such as `clear_tool_uses_20250919`, runs in the **in-gateway polyfill** |
+| **OpenAI Responses API** (`openai/*` models, and a few Responses-only deployments of other providers, such as `perplexity/perplexity/sonar`) | `compact_20260112` becomes the Responses API's native compaction. Every other edit, such as `clear_tool_uses_20250919`, runs in the **in-gateway polyfill** |
 | **Other providers that LiteLLM calls through their own `/v1/messages` endpoint** (DeepSeek, Tencent, MiniMax, BigModel, EdenAI, DashScope's Anthropic endpoint, Claude on GitHub Copilot and Bedrock Mantle, …) | Passed through as sent. LiteLLM runs no polyfill and does not check the edits, so the provider decides what to do with them |
 | **Any other provider** (OpenAI chat completions, xAI, Gemini, Azure, Bedrock Converse, Bedrock non-Anthropic, …) | **In-gateway polyfill** - LiteLLM applies the edits to the message array before forwarding |
 
