@@ -65,7 +65,7 @@ curl -X 'POST' \
 
 ## Authenticate to a vLLM server started with `--api-key`
 
-<SinceVersion v="1.109.0" />
+<SinceVersion v="1.110.0" />
 
 A vLLM server started with `vllm serve <model> --api-key <key>` only accepts `Authorization: Bearer <key>`. Give LiteLLM the same key and it sends that header upstream on `/vllm` calls.
 
@@ -86,6 +86,8 @@ For requests forwarded to `VLLM_API_BASE`, set `VLLM_API_KEY`. LiteLLM sends it 
 export VLLM_API_BASE="https://my-vllm-server.com"
 export VLLM_API_KEY="<key your vLLM server was started with>"
 ```
+
+A mesh in front of the server that validates JWTs, such as Istio `RequestAuthentication`, rejects a bearer that is not a JWT. If your gateway checks `x-api-key` behind such a mesh, point the mesh's `jwtRules` `fromHeaders` at a different header so it stops reading `Authorization`.
 
 The model's `api_base` and `VLLM_API_BASE` can be the server root or end in `/v1`. With a base ending in `/v1`, both `/vllm/v1/chat/completions` and `/vllm/chat/completions` reach the server's `/v1/chat/completions`. Paths outside `/v1`, such as `/tokenize` or `/metrics`, need a base set to the server root.
 
