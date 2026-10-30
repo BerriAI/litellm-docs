@@ -45,6 +45,17 @@ litellm_settings:
     drop_params: true
 ```
 
+### Claude Code and Codex on the proxy
+
+Requests from Claude Code and Codex, found by their user agent, drop unsupported params by default even when `drop_params` is unset, so their client-specific params do not fail on other providers. Set `drop_params: false` in `litellm_settings` to raise for them too.
+
+```yaml
+litellm_settings:
+    drop_params: false
+```
+
+On v1.103.0 to v1.108.x a bug makes these requests ignore `drop_params: false` in `litellm_settings`, and v1.109.0 fixes it.
+
 ## Pass drop_params in `completion(..)`
 
 Just drop_params when calling specific models 
