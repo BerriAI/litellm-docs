@@ -136,7 +136,7 @@ docker run \
 
 <SinceVersion v="1.103.0" />
 
-The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. The one exception is [Vertex AI Search vector store search](#vertex-ai-search-vector-stores). Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. The one exception is [Vertex AI Search vector store search](#vertex-ai-search-vector-stores). This covers calls through LiteLLM's own HTTP client. Calls LiteLLM makes through a provider SDK, such as the `google-cloud-aiplatform` and Vertex AI speech clients over gRPC or the AWS CRT client for Bedrock realtime, use the protocol that SDK picks, and `http2` does not change it. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
 
 ```yaml
 litellm_settings:
@@ -149,15 +149,15 @@ Enabling this routes provider traffic through httpx instead of aiohttp, which wa
 
 <SinceVersion v="1.109.0" />
 
-Searches on a `vertex_ai/search_api` vector store negotiate HTTP/2 by default, through the proxy and through `litellm.vector_stores.asearch` in the SDK, so a burst of searches shares a few Google connections per worker instead of opening one connection per search. The synchronous `litellm.vector_stores.search` stays on HTTP/1.1 unless `http2` is true.
+Searches on a `vertex_ai/search_api` vector store negotiate HTTP/2 by default, through the proxy and through `litellm.vector_stores.asearch` in the SDK, so a burst of searches shares a few Google connections per worker instead of opening one connection per search. The synchronous `litellm.vector_stores.search` stays on HTTP/1.1 unless `http2` is true. With `http2` true, synchronous searches sent from several threads at once can fail, because two threads can get the same HTTP/2 stream id, so use `asearch` for concurrent searches.
 
-With the default settings (`http2` unset and the aiohttp transport on), these searches go through httpx but keep some of the aiohttp pool settings. LiteLLM opens one more connection for every 100 searches in flight, up to one connection per 100 of `AIOHTTP_CONNECTOR_LIMIT`, rounded up, which is 10 connections at the default of 1000. Past that cap, new searches share the open connections, so here the limit caps connections, not searches in flight. For example, a limit of 50 gives one connection that carries as many searches at once as Google allows on it. `AIOHTTP_KEEPALIVE_TIMEOUT` and `DISABLE_AIOHTTP_TRUST_ENV` also apply, while `AIOHTTP_CONNECTOR_LIMIT_PER_HOST`, `AIOHTTP_TTL_DNS_CACHE` and the `AIOHTTP_SO_KEEPALIVE` settings do not.
+With the default settings (`http2` unset and the aiohttp transport on), these searches go through httpx but keep some of the aiohttp pool settings. LiteLLM opens one more connection for every 100 searches in flight, up to one connection per 100 of `AIOHTTP_CONNECTOR_LIMIT`, rounded up, which is 10 connections at the default of 1000. Each connection runs at most 100 searches at once, and past that cap a new search waits inside LiteLLM for a free slot on an open connection. So here the limit caps connections, not searches in flight, and a limit of 50 still runs up to 100 searches at once on one connection. `AIOHTTP_KEEPALIVE_TIMEOUT` and `DISABLE_AIOHTTP_TRUST_ENV` also apply, while `AIOHTTP_CONNECTOR_LIMIT_PER_HOST`, `AIOHTTP_TTL_DNS_CACHE` and the `AIOHTTP_SO_KEEPALIVE` settings do not.
 
-With `http2` true or `DISABLE_AIOHTTP_TRANSPORT=True`, these searches use the httpx default pool limits like every other provider on httpx, so none of the `AIOHTTP_*` settings apply and the searches in a worker share one connection.
+With `http2` true or `DISABLE_AIOHTTP_TRANSPORT=True`, these searches use the httpx default pool limits like every other provider on httpx, so none of the `AIOHTTP_*` settings apply and the searches in a worker share one connection, so past 100 searches in flight the rest wait inside LiteLLM for a free slot.
 
 If Google closes a connection with an HTTP/2 GOAWAY while a search is in flight on it, LiteLLM retries that search once and logs `Vector store search connection was closed by an HTTP/2 GOAWAY, retrying once`. Google may have already run the first attempt, so that search can count as two queries.
 
-To keep these searches on HTTP/1.1, set `http2: false` under `litellm_settings`, `LITELLM_HTTP2=False` (`0`, `no` and `off` also work), or `litellm.http2 = False` in the SDK. This turns HTTP/2 off for every provider, Vertex AI Search included. A true value in the setting or the env var wins over a false one in the other, so remove `LITELLM_HTTP2=True` before you set `http2: false`.
+To keep these searches on HTTP/1.1, set `http2: false` under `litellm_settings`, `LITELLM_HTTP2=False` (`0`, `no` and `off` also work), or `litellm.http2 = False` in the SDK. This turns HTTP/2 off for every provider call through LiteLLM's HTTP client, Vertex AI Search included. A true value in the setting or the env var wins over a false one in the other, so remove `LITELLM_HTTP2=True` before you set `http2: false`.
 
 ```yaml
 litellm_settings:
