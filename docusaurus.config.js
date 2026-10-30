@@ -461,6 +461,12 @@ const config = {
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
+          {
+            href: 'https://discord.com/invite/wuPM9dRgDw',
+            position: 'right',
+            className: 'header-discord-link',
+            'aria-label': 'Discord community',
+          },
         ],
       },
       footer: {
