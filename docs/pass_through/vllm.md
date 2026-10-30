@@ -69,7 +69,7 @@ curl -X 'POST' \
 
 A vLLM server started with `vllm serve <model> --api-key <key>` only accepts `Authorization: Bearer <key>`. Give LiteLLM the same key and it sends that header upstream on `/vllm` calls.
 
-For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. With no `api_key` set, it sends `HOSTED_VLLM_API_KEY` when that is set, and no auth header otherwise. A model with no `api_base` (and no `HOSTED_VLLM_API_BASE` set) is forwarded to `VLLM_API_BASE`, and there it sends `VLLM_API_KEY` unless the model sets its own `api_key`.
+For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. A model with no `api_key` sends `HOSTED_VLLM_API_KEY` when that is set, as `/chat/completions` does. A model with no `api_base` goes to `HOSTED_VLLM_API_BASE` when that is set, and to `VLLM_API_BASE` otherwise. A model that still has no key and is sent to the `VLLM_API_BASE` server sends `VLLM_API_KEY`. In every other case it sends no auth header.
 
 ```yaml
 model_list:
@@ -168,7 +168,7 @@ Pre-requisites
 
 Use this, to avoid giving developers direct access to your VLLM server, but still letting them use VLLM endpoints.
 
-Requests whose `model` is not in your `model_list` are forwarded to the server set in `VLLM_API_BASE`. If that variable is missing, the proxy raises `VLLM_API_BASE is not set`. `HOSTED_VLLM_API_BASE` is only read by the `hosted_vllm/...` provider on the translated routes (for example `/chat/completions`), so it has no effect on `/vllm` pass-through calls.
+Requests whose `model` is not in your `model_list` are forwarded to the server set in `VLLM_API_BASE`. If that variable is missing, the proxy raises `VLLM_API_BASE is not set`. `HOSTED_VLLM_API_BASE` does not change where those requests go. It only sets the server for a `hosted_vllm/...` model in your `model_list` that has no `api_base`.
 
 ### Usage
 
