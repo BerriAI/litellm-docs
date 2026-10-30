@@ -34,7 +34,8 @@ This function is called just before a litellm completion call is made, and allow
 ```python
 from litellm.integrations.custom_logger import CustomLogger
 import litellm
-from litellm.proxy.proxy_server import UserAPIKeyAuth, DualCache
+from litellm.caching.caching import DualCache
+from litellm.proxy._types import UserAPIKeyAuth
 from litellm.types.utils import ModelResponseStream
 from typing import Any, AsyncGenerator, Optional, Literal
 
