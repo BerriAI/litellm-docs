@@ -87,8 +87,8 @@ Create a LiteLLM managed file and run batch operations against it. The steps bel
 The `model` in each line must be a model name from `/model_group/info` with `mode: batch`.
 
 ```json showLineNumbers title="request.jsonl"
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
-{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
 ```
 
 LiteLLM translates the model name to the Azure deployment specific value (e.g. `{{openai_small}}-general-deployment`).

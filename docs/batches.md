@@ -29,8 +29,8 @@ uploaded. See [Batch API Guardrails](./proxy/guardrails/batch_guardrails)
 Each line is one request in the [OpenAI batch file format](https://platform.openai.com/docs/guides/batch). `custom_id`, `method`, `url`, and `body` are required on every line:
 
 ```json showLineNumbers title="mydata.jsonl"
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_large}}", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
-{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_large}}", "messages": [{"role": "system", "content": "You are an unhelpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_large}}", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_completion_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_large}}", "messages": [{"role": "system", "content": "You are an unhelpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_completion_tokens": 1000}}
 ```
 
 <Tabs>
@@ -210,13 +210,13 @@ Route batch operations to different provider accounts using model-specific crede
 
 ```yaml keep-model-ids
 model_list:
-  - model_name: {{openai_large}}-account-1
+  - model_name: openai-account-1
     litellm_params:
       model: openai/{{openai_large}}
       api_key: sk-account-1-key
       api_base: https://api.openai.com/v1
   
-  - model_name: {{openai_large}}-account-2
+  - model_name: openai-account-2
     litellm_params:
       model: openai/{{openai_large}}
       api_key: sk-account-2-key
@@ -240,35 +240,35 @@ When you upload a file with a model parameter, LiteLLM encodes the model informa
 # Step 1: Upload file with model
 curl http://localhost:4000/v1/files \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "x-litellm-model: {{openai_large}}-account-1" \
+  -H "x-litellm-model: openai-account-1" \
   -F purpose="batch" \
   -F file="@batch.jsonl"
 
 # Response includes encoded file ID:
 # {
-#   "id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
+#   "id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsb3BlbmFpLWFjY291bnQtMQ",
 #   ...
 # }
 
-# Step 2: Create batch - automatically routes to {{openai_large}}-account-1
+# Step 2: Create batch - automatically routes to openai-account-1
 curl http://localhost:4000/v1/batches \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
+    "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsb3BlbmFpLWFjY291bnQtMQ",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h"
   }'
 
 # Batch ID is also encoded with model:
 # {
-#   "id": "batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxncHQtNG8tYWNjb3VudC0x",
-#   "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsZ3B0LTRvLWFjY291bnQtMQ",
+#   "id": "batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxvcGVuYWktYWNjb3VudC0x",
+#   "input_file_id": "file-bGl0ZWxsbTpmaWxlLUxkaUwzaVYxNGZRVlpYcU5KVEdkSjk7bW9kZWwsb3BlbmFpLWFjY291bnQtMQ",
 #   ...
 # }
 
-# Step 3: Retrieve batch - automatically routes to {{openai_large}}-account-1
-curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxncHQtNG8tYWNjb3VudC0x \
+# Step 3: Retrieve batch - automatically routes to openai-account-1
+curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4MTkwYTA3ODQ5NDY3YTFjMDJkYTttb2RlbCxvcGVuYWktYWNjb3VudC0x \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
@@ -285,7 +285,7 @@ Specify the model for each request without encoding it in the ID.
 # Create batch with model header
 curl http://localhost:4000/v1/batches \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "x-litellm-model: {{openai_large}}-account-2" \
+  -H "x-litellm-model: openai-account-2" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "file-abc123",
@@ -294,7 +294,7 @@ curl http://localhost:4000/v1/batches \
   }'
 
 # Or use query parameter
-curl "http://localhost:4000/v1/batches?model={{openai_large}}-account-2" \
+curl "http://localhost:4000/v1/batches?model=openai-account-2" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -304,7 +304,7 @@ curl "http://localhost:4000/v1/batches?model={{openai_large}}-account-2" \
   }'
 
 # List batches for specific model
-curl "http://localhost:4000/v1/batches?model={{openai_large}}-account-2" \
+curl "http://localhost:4000/v1/batches?model=openai-account-2" \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
@@ -340,13 +340,13 @@ curl http://localhost:4000/v1/batches \
 ```bash
 # Upload file to Account 1
 FILE_1=$(curl -s http://localhost:4000/v1/files \
-  -H "x-litellm-model: {{openai_large}}-account-1" \
+  -H "x-litellm-model: openai-account-1" \
   -F purpose="batch" \
   -F file="@batch1.jsonl" | jq -r '.id')
 
 # Upload file to Account 2
 FILE_2=$(curl -s http://localhost:4000/v1/files \
-  -H "x-litellm-model: {{openai_large}}-account-2" \
+  -H "x-litellm-model: openai-account-2" \
   -F purpose="batch" \
   -F file="@batch2.jsonl" | jq -r '.id')
 
@@ -363,8 +363,8 @@ curl http://localhost:4000/v1/batches/$BATCH_1
 curl http://localhost:4000/v1/batches/$BATCH_2
 
 # List batches per account
-curl "http://localhost:4000/v1/batches?model={{openai_large}}-account-1"
-curl "http://localhost:4000/v1/batches?model={{openai_large}}-account-2"
+curl "http://localhost:4000/v1/batches?model=openai-account-1"
+curl "http://localhost:4000/v1/batches?model=openai-account-2"
 ```
 
 ### SDK Usage with Model Routing
@@ -377,13 +377,13 @@ import asyncio
 file_obj = await litellm.acreate_file(
     file=open("batch.jsonl", "rb"),
     purpose="batch",
-    model="{{openai_large}}-account-1",  # Route to specific account
+    model="openai-account-1",  # Route to specific account
 )
 
 print(f"File ID: {file_obj.id}")
 # File ID is encoded with model info
 
-# Create batch - automatically uses {{openai_large}}-account-1 credentials
+# Create batch - automatically uses openai-account-1 credentials
 batch = await litellm.acreate_batch(
     completion_window="24h",
     endpoint="/v1/chat/completions",
@@ -405,7 +405,7 @@ batch2 = await litellm.acreate_batch(
     completion_window="24h",
     endpoint="/v1/chat/completions",
     input_file_id="file-regular-id",
-    model="{{openai_large}}-account-2",  # Explicit routing
+    model="openai-account-2",  # Explicit routing
 )
 ```
 
@@ -415,14 +415,14 @@ LiteLLM encodes model information into file and batch IDs using base64:
 
 ```
 Original:  file-abc123
-Encoded:   file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxncHQtNG8tdGVzdA
-           └─┬─┘ └──────────────────┬──────────────────────┘
-          prefix      base64(litellm:file-abc123;model,{{openai_large}}-test)
+Encoded:   file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxvcGVuYWktdGVzdA
+           └─┬─┘ └───────────────────────┬────────────────────────┘
+          prefix      base64(litellm:file-abc123;model,openai-test)
 
 Original:  batch_xyz789
-Encoded:   batch_bGl0ZWxsbTpiYXRjaF94eXo3ODk7bW9kZWwsZ3B0LTRvLXRlc3Q
-           └──┬──┘ └──────────────────┬──────────────────────┘
-           prefix       base64(litellm:batch_xyz789;model,{{openai_large}}-test)
+Encoded:   batch_bGl0ZWxsbTpiYXRjaF94eXo3ODk7bW9kZWwsb3BlbmFpLXRlc3Q
+           └──┬──┘ └────────────────────────┬────────────────────────┘
+           prefix       base64(litellm:batch_xyz789;model,openai-test)
 ```
 
 The encoding:

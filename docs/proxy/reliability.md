@@ -483,17 +483,17 @@ router_settings:
 model_list:
   - model_name: gpt-5.4-mini
     litellm_params:
-    model: azure/chatgpt-v-2
-    api_base: os.environ/AZURE_API_BASE
-    api_key: os.environ/AZURE_API_KEY
-    api_version: "2023-07-01-preview"
+      model: azure/chatgpt-v-2
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
   - model_name: gpt-5.4-mini
     litellm_params:
-    model: gpt-5.4-mini
-    api_key: os.environ/OPENAI_API_KEY
+      model: gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
 ```
 
 **2. Start proxy**

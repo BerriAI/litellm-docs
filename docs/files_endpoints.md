@@ -33,13 +33,13 @@ Use different OpenAI API keys for files and batches by specifying a `model` para
 ```yaml
 model_list:
   # litellm OpenAI Account
-  - model_name: "{{openai_large}}-litellm"
+  - model_name: "openai-litellm"
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_LITELLM_API_KEY
   
   # Free OpenAI Account
-  - model_name: "{{openai_large}}-free"
+  - model_name: "openai-free"
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_FREE_API_KEY
@@ -59,10 +59,10 @@ client = OpenAI(
 file_response = client.files.create(
     file=open("batch_data.jsonl", "rb"),
     purpose="batch",
-    extra_body={"model": "{{openai_large}}-litellm"}  # Routes to litellm key
+    extra_body={"model": "openai-litellm"}  # Routes to litellm key
 )
 print(f"File ID: {file_response.id}")
-# Returns encoded ID like: file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxncHQtNG8taWZvb2Q
+# Returns encoded ID like: file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxvcGVuYWktbGl0ZWxsbQ
 
 # Create batch using the encoded file ID
 # No need to specify model again - it's embedded in the file ID
@@ -80,26 +80,26 @@ print(f"Status: {batch_status.status}")
 
 # List files for a specific account
 files = client.files.list(
-    extra_body={"model": "{{openai_large}}-free"}  # List free files
+    extra_body={"model": "openai-free"}  # List free files
 )
 
 # List batches for a specific account
 batches = client.batches.list(
-    extra_query={"model": "{{openai_large}}-litellm"}  # List litellm batches
+    extra_query={"model": "openai-litellm"}  # List litellm batches
 )
 ```
 
 ### Parameter Options
 
 You can pass the `model` parameter via:
-- **Request body**: `extra_body={"model": "{{openai_large}}-litellm"}`
-- **Query parameter**: `?model={{openai_large}}-litellm`
-- **Header**: `x-litellm-model: {{openai_large}}-litellm`
+- **Request body**: `extra_body={"model": "openai-litellm"}`
+- **Query parameter**: `?model=openai-litellm`
+- **Header**: `x-litellm-model: openai-litellm`
 
 ### How Encoded IDs Work
 
 - When you create a file/batch with a `model` parameter, LiteLLM encodes the model name into the returned ID
-- The encoded ID is base64-encoded and looks like: `file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxncHQtNG8taWZvb2Q`
+- The encoded ID is base64-encoded and looks like: `file-bGl0ZWxsbTpmaWxlLWFiYzEyMzttb2RlbCxvcGVuYWktbGl0ZWxsbQ`
 - When you use this ID in subsequent operations (retrieve, delete, batch create), LiteLLM automatically:
   1. Decodes the ID
   2. Extracts the model name
@@ -133,7 +133,7 @@ client.files.retrieve(file_id, extra_headers={"custom-llm-provider": "openai"})
 **New approach (recommended):**
 ```yaml
 model_list:
-  - model_name: "{{openai_large}}-account1"
+  - model_name: "openai-account1"
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_KEY
@@ -141,7 +141,7 @@ model_list:
 
 ```python
 # Specify model once on create
-file = client.files.create(..., extra_body={"model": "{{openai_large}}-account1"})
+file = client.files.create(..., extra_body={"model": "openai-account1"})
 
 # Then just use the ID - routing is automatic
 client.files.retrieve(file.id)  # No need to specify account
