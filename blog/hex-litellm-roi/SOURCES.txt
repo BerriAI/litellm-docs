@@ -1,0 +1,4 @@
+Design references: https://docs.litellm.ai/blog/abliterated-models and https://handoff.litellm.ai/.
+Hex logo: SVG wordmark in the home navigation of https://hex.tech/, retrieved October 30, 2026. Original path preserved; fill set to white for the cobalt hero.
+Cost reporting: docs/proxy/cost_tracking.md.
+Hex screenshots: native Hex project with synthetic records; no customer data.

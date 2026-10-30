@@ -1,27 +1,32 @@
 ---
 slug: hex-litellm-roi
-title: "Connect LiteLLM to Hex: a project cost and ROI board"
+title: "LiteLLM cost reporting, now in Hex"
 date: 2026-10-30T09:00:00
 authors:
   - ishaan
-description: "Connect your AI Gateway spend logs to Hex. Import the LiteLLM template to compare project costs, review model changes and add business ROI."
+description: "Report AI spend by project, team and model with LiteLLM. Use our Hex template to explore unit costs, investigate increases and add business ROI."
 tags: [observability, cost tracking, ai-gateway]
 hide_table_of_contents: true
+custom_hero: true
 ---
 
-import { HexIntro, TemplateDownloads } from './diagrams';
+import { HexPage, TemplateDownloads } from './diagrams';
 
-*Last updated: October 2026*
+<HexPage>
 
-A project owner switches models. Cost per request rises, and the finance team asks which projects justify the spend. You can answer that in Hex using the spend logs you store through LiteLLM.
+LiteLLM tracks the cost of requests through your AI Gateway, with model, token usage and ownership in the same spend log. Use those records to report costs across providers and charge spend back to the teams that own it.
 
-{/* truncate */}
+With our Hex template, you can take that reporting into your own analytics workspace. Compare project costs, investigate a model change and share a board with Finance. Connect Hex to the Postgres logs you already store with LiteLLM.
 
-<HexIntro />
-
-We built a versioned Hex template with project costs, model mix, latency and a business ROI input. Connect it to your existing LiteLLM Postgres database. You can preview the same calculations with synthetic data before granting database access.
+<div id="get-the-template" />
 
 <TemplateDownloads />
+
+## Cost reporting starts at the request
+
+You need more than a monthly provider bill to explain an increase in AI spend. In LiteLLM, you can trace recorded cost to the model and request, then group usage by key, user or team. Track token usage alongside cost and set budgets in your gateway.
+
+The Hex template builds on that foundation. It groups your stored spend logs by project, team and model, with request volume and timing aggregates. You can compare cost per thousand requests alongside total spend, so a busier project does not look like a more expensive route by default.
 
 ## Start with the projects behind your AI Gateway spend
 
@@ -41,7 +46,7 @@ The template has three tabs:
 
 ## Connect the data you store in Postgres
 
-Your AI Gateway records requests in `LiteLLM_SpendLogs`. The template reads a daily aggregate view of that table. You need no new callback, Hex API key or S3 bucket for this setup.
+If you store spend logs in Postgres, your AI Gateway records requests in `LiteLLM_SpendLogs`. Connect Hex to a daily aggregate view of that table through a read-only database account.
 
 Ask your database administrator to run our [setup SQL](/hex/setup-postgres.sql) and provision a reader for `litellm_analytics.spend_daily_v1`. The view includes identifiers, models, cost, token counts and timing aggregates. Your administrator grants the reader access to that view, keeping request content, responses and key hashes outside the board.
 
@@ -104,13 +109,6 @@ Use database permissions and Hex sharing for department access. Project and Enti
 
 We keep the YAML, SQL contract and tests in the [template source directory](https://github.com/BerriAI/litellm-docs/tree/main/static/hex). Each release has a version and changelog. Imported copies stay under your control: review a newer version in a separate project before replacing a published board.
 
-## Key takeaways
-
-- Connect Hex to existing LiteLLM Postgres logs through a reader account.
-- Compare project cost, volume and model mix over complete UTC days.
-- Add validated business value and other costs before using ROI.
-- Use the demo file to preview the template without credentials.
-
 ## FAQ
 
 ### Does this require S3 or a new Hex callback?
@@ -129,12 +127,18 @@ Token counts do not establish business returns. Supply validated project outcome
 
 You can use the template with an OSS deployment that stores compatible spend logs in Postgres. Your Hex workspace must support the connection and publishing features you choose; Hex manages its own plan requirements.
 
-## Get the template
+## Build your cost report in Hex
 
-Import the demo, then connect your data using the [Hex setup guide](/docs/observability/hex). Review the SQL mapping and metric definitions with your platform and finance teams before publishing a company-wide board.
+Import the demo to explore the board. When you are ready, connect the Postgres template to your spend logs using the [Hex setup guide](/docs/observability/hex). Review project mapping and metric definitions with your platform and finance teams before publishing.
+
+<TemplateDownloads />
 
 ## Further reading
 
 - [Hex and LiteLLM setup](/docs/observability/hex)
 - [LiteLLM spend tracking](/docs/proxy/cost_tracking)
 - [Hex Postgres connection](https://learn.hex.tech/docs/connect-to-data/data-connections/setup-guides/connect-to-postgres)
+
+</HexPage>
+
+{/* truncate */}
