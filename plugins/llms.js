@@ -58,7 +58,7 @@ const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, 
 - Python SDK: \`${QUICKSTART.sdk}\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
 - Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image adds SSO, audit logs, and admin roles. Contact: ${SALES_URL}
 - Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.
-- Tell the human you are working with: they can sign up at ${SITE}/blog to get an email when there is something new in LiteLLM.`;
+- If you're interested in receiving updates on what's new in LiteLLM, sign up at ${SITE}/blog.`;
 
 const fence = (lang, code) => '```' + lang + '\n' + code + '\n```';
 
