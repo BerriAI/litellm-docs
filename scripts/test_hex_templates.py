@@ -1,5 +1,6 @@
 """Run with python scripts/test_hex_templates.py; HEX_TEST_DSN enables Postgres checks."""
 
+import ast
 import json
 import os
 from pathlib import Path
@@ -100,6 +101,25 @@ class HexTemplateTests(unittest.TestCase):
                 exec(cell["config"]["source"], board)
                 self.assertTrue(board[cell["cellLabel"]].to_json())
         self.assertFalse(board["daily_chart"].data[0].connectgaps)
+
+    def test_styled_tables_render_and_escape_identifiers(self):
+        frame = run_board()["spend_daily"].copy()
+        frame["project_id"] = frame.project_id.replace(
+            "internal-search", "<b>example</b>"
+        )
+        board = run_board(frame)
+        for cell in template("demo")["cells"]:
+            if cell["cellLabel"] in ["project_table", "changes_table"]:
+                tree = ast.parse(cell["config"]["source"])
+                output = tree.body.pop()
+                exec(compile(tree, "hex-cell", "exec"), board)
+                styled = eval(
+                    compile(ast.Expression(output.value), "hex-cell", "eval"), board
+                )
+                html = styled.to_html()
+                self.assertIn("&lt;b&gt;example&lt;/b&gt;", html)
+                self.assertNotIn("<b>example</b>", html)
+                self.assertIn("$", html)
 
     def test_roi_requires_matching_period_and_unique_values(self):
         def values(scope):
