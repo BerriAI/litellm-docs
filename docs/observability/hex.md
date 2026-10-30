@@ -45,6 +45,10 @@ Run the [Athena table setup](https://github.com/BerriAI/litellm/blob/main/cookbo
 
 Create an Athena data connection in Hex. Prefer IAM role authentication with the trust policy and external ID that Hex provides. Grant the role read access to the spend prefix, the Athena and Glue permissions required by Hex, and write access to a separate Athena query-results prefix. Keep query results outside the spend prefix.
 
+Schema discovery needs `athena:ListDatabases`, `athena:ListTableMetadata`, `athena:GetDatabase`, and `athena:GetTableMetadata` on your catalog, plus Glue read permissions on the catalog, database, and table. Query access alone does not make the table visible to Hex AI. Include the query and prepared-statement permissions in the [Hex Athena setup guide](https://learn.hex.tech/docs/connect-to-data/data-connections/setup-guides/connect-to-amazon-athena), and `athena:GetQueryResultsStream` when your client uses streamed results.
+
+After you create the table, refresh the connection schema and confirm that `litellm_hex_spend` appears in Hex's Data browser. Use the connection's schema filters to include only your spend database. You can then ask Hex AI to build a dashboard from that table or import the template below.
+
 Import the [Hex dashboard template](https://github.com/BerriAI/litellm/blob/main/cookbook/logging_observability/hex_spend_dashboard.hex.yaml) as a project. Select your Athena connection for its four SQL cells and use the database that contains `litellm_hex_spend`. Run all cells and publish the App.
 
 The template shows spend, requests, tokens, failures, unknown-cost requests, daily spend, model spend, and team spend for the last 30 UTC calendar days. Configure a Hex scheduled run for your desired refresh interval. Each query reads uploaded records; the dashboard refresh interval is separate from the callback's upload interval. Query-result caching is disabled in the template so a refresh queries S3 again.
