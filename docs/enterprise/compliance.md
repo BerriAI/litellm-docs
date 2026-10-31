@@ -15,7 +15,7 @@ Request the current report through the [LiteLLM Trust Center](https://trust.lite
 
 You host the LiteLLM gateway in your environment. When you self-host, LiteLLM does not store data or telemetry on LiteLLM servers. The data that the gateway processes stays in your infrastructure. Refer to [Data privacy and security](../data_security.md).
 
-Some Enterprise functions connect to LiteLLM. [Billable request metering](../proxy/billing_metrics.md) sends only a count of successful requests to the LiteLLM collector. Prompts, responses, virtual keys, and your license key do not leave the deployment. The license check uses the LiteLLM license server, or it does the check offline against a signed payload. Refer to [Licensing across regions](../proxy/multi_region.md#licensing-across-regions).
+Some Enterprise functions connect to LiteLLM. [Billable request metering](../proxy/billing_metrics.md) sends only a count of successful requests to the LiteLLM collector. Prompts, responses, and virtual keys do not leave the deployment. The gateway first checks your license key offline against its signature. Only when that check does not pass does the gateway send the license key to the LiteLLM license server. Refer to [Licensing across regions](../proxy/multi_region.md#licensing-across-regions).
 
 ## Verify the images that you run
 
