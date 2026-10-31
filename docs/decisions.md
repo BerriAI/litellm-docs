@@ -396,7 +396,7 @@ On both routes, requests that break these rules, such as no questions at all, du
 
 ## Audio and video input
 
-Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called.
+Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks only the number of clips and their form, so limits on clip length, size and media type are the provider's.
 
 ```yaml showLineNumbers
 model_list:
@@ -426,7 +426,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 -d @request.json
 ```
 
-LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI and Azure deployments refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them.
+LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. Deployments on `openai/` and `azure/` refuse clips whatever their flags say.
 
 ### Audio and video on other deployments
 
@@ -448,9 +448,9 @@ Each flag wins over the cost map for its own kind of clip. `true` turns that kin
 
 In a load-balanced group, a request with clips goes only to the deployments that take them, by their own flags or by the cost map, and requests without clips still use every deployment. A deployment with `drop_params` on stays in the pick and drops the clips it does not take. When no deployment in the group takes the clips, the request goes to the whole group and gets the 400 that names `audio` or `videos`. With `drop_params: true` in `litellm_settings`, every deployment counts as taking clips, so clip requests go to the whole group and the deployments that do not take them drop the clips.
 
-The flags only control what LiteLLM sends. Check that the provider reads the clips before you set `true` on a deployment, since LiteLLM sends them whether the provider uses them or not. OpenRouter's `cloudflare/clef-omni` route, for example, takes the clips and answers as if none were sent, so send clips to Clef-omni through `cloudflare/clef-omni`.
+The flags only control what LiteLLM sends. Check that the provider reads the clips before you set `true` on a deployment, since LiteLLM sends them whether the provider uses them or not. For example, as of October 2026 OpenRouter's `cloudflare/clef-omni` route takes the clips and answers as if none were sent, so send clips to Clef-omni through `cloudflare/clef-omni`.
 
-Before `v1.110.0`, a deployment's own flags do not win over the cost map, so `false` does not turn clips off on `cloudflare/clef-omni`, and `true` alone does not turn them on.
+Before `v1.110.0`, LiteLLM does not apply these flags per deployment, so `false` does not turn clips off on `cloudflare/clef-omni`.
 
 ## TypeSafe images, box questions and long context
 
@@ -632,7 +632,7 @@ model_list:
       mode: evaluation
 ```
 
-**API key** picks the key. **Current UI Session** uses your dashboard login, and **Virtual Key** attributes the call to a key you paste. **Load example** fills in one of four requests: **Triage a bug report**, **Route a support ticket**, **Moderate a forum comment** or **Score a sales lead**. The form starts empty, and the eraser button clears it. Type the text the model should read into **Input**, then give each question a **Name**, an **Answer type** and **Instructions**. The answer types are **Choice**, **Yes / no** and **Score** on `/v1/systemone`, and **Predicate**, **Choice** and **Score** on `/v1/decisions`, which also takes an optional **Safety identifier**. **Add question** adds a card, and the trash buttons remove questions, options and levels. The **cURL** tab shows the same request as a curl command that follows your edits, and **Copy cURL** copies it once the form has no issues. The form only takes text, so send image input on `/v1/decisions` with curl or the SDK.
+**API key** picks the key. **Current UI Session** uses your dashboard login, and **Virtual Key** attributes the call to a key you paste. **Load example** fills in one of four requests: **Triage a bug report**, **Route a support ticket**, **Moderate a forum comment** or **Score a sales lead**. The form starts empty, and the eraser button clears it. Type the text the model should read into **Input**, then give each question a **Name**, an **Answer type** and **Instructions**. The answer types are **Choice**, **Yes / no** and **Score** on `/v1/systemone`, and **Predicate**, **Choice** and **Score** on `/v1/decisions`, which also takes an optional **Safety identifier**. **Add question** adds a card, and the trash buttons remove questions, options and levels. The **cURL** tab shows the same request as a curl command that follows your edits, and **Copy cURL** copies it once the form has no issues. The form only takes text, so send image, audio and video input with curl or the SDK.
 
 Problems the form can catch, such as an empty **Input**, are listed above **Send**, which stays disabled until they are fixed. Others come back from the provider when you send, such as a `/v1/systemone` yes / no question with no instructions and no **Yes means** or **No means**. Once the call returns, each question shows its answer and probabilities, and the **Response** header shows the latency, the model name from the response and the token usage. **Raw response** opens the JSON body. An error, such as a 401 for a bad key, shows **Decisions request failed** and the error message instead of the answers.
 
