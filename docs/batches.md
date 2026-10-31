@@ -44,10 +44,19 @@ model_list:
     litellm_params:
       model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
+
+files_settings:
+  - custom_llm_provider: openai
+    api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ```bash
 $ export OPENAI_API_KEY="sk-..."
+$ export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+$ export LITELLM_API_KEY="$LITELLM_MASTER_KEY"
 
 $ litellm --config config.yaml
 

@@ -24,19 +24,21 @@ Grant developers access to Batch models.
 - Specify `mode: batch` for each model so developers can tell this is a batch model.
 - Optionally skip the pre-read of batch input files for specific batch providers or models (useful for large files on custom vLLM batch deployments).
 
-```yaml showLineNumbers title="litellm-config.yaml"
+The batch models below use gpt-5.4-mini, which both OpenAI and Azure Global Batch support.
+
+```yaml showLineNumbers title="litellm-config.yaml" keep-model-ids
 model_list:
-  - model_name: "{{openai_small}}-batch"
+  - model_name: "gpt-5.4-mini-batch"
     litellm_params:
-      model: azure/{{openai_small}}-general-deployment
+      model: azure/gpt-5.4-mini-general-deployment
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
     model_info:
       mode: batch # metadata, tells developers this is a batch model
 
-  - model_name: "{{openai_small}}-batch"
+  - model_name: "gpt-5.4-mini-batch"
     litellm_params:
-      model: openai/{{openai_small}}
+      model: openai/gpt-5.4-mini
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: batch # metadata, tells developers this is a batch model
@@ -53,6 +55,8 @@ model_list:
 
 
 general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
   # Optional: do not charge batch input files against TPM/RPM
   # disable_batch_input_file_rate_limiting: true
 
@@ -69,11 +73,11 @@ By default, LiteLLM reads each batch input file before submission and charges it
 
 ### 2. Create Virtual Key
 
-```bash
+```bash keep-model-ids
 curl -L -X POST 'https://${PROXY_BASE_URL}/key/generate' \
 -H 'Authorization: Bearer ${PROXY_API_KEY}' \
 -H 'Content-Type: application/json' \
--d '{"models": ["{{openai_small}}-batch"]}'
+-d '{"models": ["gpt-5.4-mini-batch"]}'
 ```
 
 The returned virtual key grants access to the batch models (see [Developer Usage](#developer-usage)).
@@ -86,18 +90,18 @@ Create a LiteLLM managed file and run batch operations against it. The steps bel
 
 The `model` in each line must be a model name from `/model_group/info` with `mode: batch`.
 
-```json showLineNumbers title="request.jsonl"
-{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
-{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "{{openai_small}}-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
+```json showLineNumbers title="request.jsonl" keep-model-ids
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-5.4-mini-batch", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-5.4-mini-batch", "messages": [{"role": "system", "content": "You are an unhelpful assistant."},{"role": "user", "content": "Hello world!"}],"max_completion_tokens": 1000}}
 ```
 
-LiteLLM translates the model name to the Azure deployment specific value (e.g. `{{openai_small}}-general-deployment`).
+LiteLLM translates the model name to the Azure deployment specific value (e.g. `gpt-5.4-mini-general-deployment`).
 
 ### 2. Upload File
 
 `target_model_names` enables LiteLLM managed files and request validation. It must match the `model` in request.jsonl. The upload returns a file object; its `id` is the `input_file_id` for Step 3.
 
-```bash showLineNumbers
+```bash showLineNumbers keep-model-ids
 export LITELLM_BASE_URL="http://0.0.0.0:4000"
 export LITELLM_API_KEY="sk-<your-litellm-api-key>"
 
@@ -105,12 +109,12 @@ curl -s "${LITELLM_BASE_URL}/v1/files" \
   -H "Authorization: Bearer ${LITELLM_API_KEY}" \
   -F purpose="batch" \
   -F file="@./request.jsonl" \
-  -F target_model_names="{{openai_small}}-batch"
+  -F target_model_names="gpt-5.4-mini-batch"
 ```
 
 **Where is the file written?**
 
-The file is written to every deployment that matches `target_model_names` (here: `{{openai_small}}-general-deployment` and `{{openai_small}}-special-deployment`). This enables load balancing across those deployments in Step 3.
+The file is written to every deployment that matches `target_model_names` (here: the Azure `gpt-5.4-mini-general-deployment` and OpenAI `gpt-5.4-mini`). This enables load balancing across those deployments in Step 3.
 
 ### 3. Create + Retrieve the batch
 
@@ -188,7 +192,7 @@ A batch's `status` moves through `validating` → `in_progress` → `finalizing`
 
 The script below runs the whole lifecycle with the OpenAI Python SDK: upload the input file, create the batch, poll until a terminal status, then download the output file (or the error file when there is no output).
 
-```python showLineNumbers title="create_batch.py"
+```python showLineNumbers title="create_batch.py" keep-model-ids
 import json
 import time
 from openai import OpenAI
@@ -202,7 +206,7 @@ client = OpenAI(
 batch_input_file = client.files.create(
     file=open("./request.jsonl", "rb"),
     purpose="batch",
-    extra_body={"target_model_names": "{{openai_small}}-batch"},
+    extra_body={"target_model_names": "gpt-5.4-mini-batch"},
 )
 print(f"file id: {batch_input_file.id}")
 

@@ -134,8 +134,8 @@ You can use the config to save model-specific information like api_base, api_key
 
 [**All input params**](https://docs.litellm.ai/docs/completion/input#input-params-1)
 
-**Step 1**: Create a `config.yaml` file
-```yaml
+**Step 1**: Create a `config.yaml` file. The deployments that set `temperature` use gpt-5.4-mini, since gpt-6 models only accept a temperature of 1.
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-4-team1
     litellm_params: # params for litellm.completion() - https://docs.litellm.ai/docs/completion/input#input---request-body
@@ -147,13 +147,13 @@ model_list:
       max_tokens: 20
   - model_name: gpt-4-team2
     litellm_params:
-      model: azure/{{openai_large}}
+      model: azure/gpt-5.4-mini
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
-  - model_name: openai-{{openai_large}}
+  - model_name: openai-gpt-5.4-mini
     litellm_params:
-      model: openai/{{openai_large}}
+      model: openai/gpt-5.4-mini
       extra_headers: {"AI-Resource Group": "ishaan-resource"}
       api_key: sk-123
       organization: org-ikDc4ex8NB
