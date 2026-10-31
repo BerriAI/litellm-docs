@@ -58,15 +58,15 @@ export OPENAI_API_KEY=""
 <Tabs>
 <TabItem value="config" label="config.yaml">
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
       model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-3.5-turbo-instruct
+  - model_name: gpt-5.4-mini
     litellm_params:
-      model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
+      model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
 ```
 </TabItem>

@@ -540,7 +540,7 @@ router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-3.5-turbo-small
+  - model_name: small-model
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
@@ -549,7 +549,7 @@ model_list:
     model_info:
       base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-3.5-turbo-large
+  - model_name: large-model
     litellm_params:
       model: gpt-4.1
       api_key: os.environ/OPENAI_API_KEY
@@ -560,7 +560,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  context_window_fallbacks: [{"gpt-3.5-turbo-small": ["gpt-3.5-turbo-large", "claude-opus"]}]
+  context_window_fallbacks: [{"small-model": ["large-model", "claude-opus"]}]
 ```
 
 **2. Start proxy**
@@ -584,7 +584,7 @@ text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo-small",
+    model="small-model",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -604,7 +604,7 @@ Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit conte
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -617,7 +617,7 @@ model_list:
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  content_policy_fallbacks: [{"gpt-3.5-turbo-small": ["claude-opus"]}]
+  content_policy_fallbacks: [{"small-model": ["claude-opus"]}]
 ```
 
 
@@ -629,7 +629,7 @@ You can also set default_fallbacks, in case a specific model group is misconfigu
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -647,7 +647,7 @@ litellm_settings:
 
 This will default to claude-opus in case any model fails.
 
-A model-specific fallbacks (e.g. `{"gpt-3.5-turbo-small": ["claude-opus"]}`) overrides default fallback.
+A model-specific fallbacks (e.g. `{"small-model": ["claude-opus"]}`) overrides default fallback.
 
 ### EU-Region Filtering (Pre-Call Checks)
 

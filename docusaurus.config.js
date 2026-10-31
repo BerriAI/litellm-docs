@@ -354,7 +354,9 @@ const config = {
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
-        pages: {},
+        pages: {
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
+        },
         theme: {
           customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },

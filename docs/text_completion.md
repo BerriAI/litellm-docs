@@ -20,11 +20,11 @@ import TabItem from '@theme/TabItem';
 <Tabs>
 <TabItem value="python" label="LiteLLM Python SDK">
 
-```python
+```python keep-model-ids
 from litellm import text_completion
 
 response = text_completion(
-    model="gpt-3.5-turbo-instruct",
+    model="gpt-5.4-mini",
     prompt="Say this is a test",
     max_tokens=7
 )
@@ -35,15 +35,11 @@ response = text_completion(
 
 1. Define models on config.yaml
 
-```yaml
+```yaml keep-model-ids
 model_list:
-  - model_name: gpt-3.5-turbo-instruct
+  - model_name: gpt-5.4-mini
     litellm_params:
-      model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
-      api_key: os.environ/OPENAI_API_KEY
-  - model_name: text-davinci-003
-    litellm_params:
-      model: text-completion-openai/text-davinci-003
+      model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -56,7 +52,7 @@ litellm --config config.yaml
 <Tabs>
 <TabItem value="python" label="OpenAI Python SDK">
 
-```python
+```python keep-model-ids
 from openai import OpenAI
 
 # set base_url to your proxy server
@@ -64,7 +60,7 @@ from openai import OpenAI
 client = OpenAI(api_key="<proxy-api-key>", base_url="http://0.0.0.0:4000")
 
 response = client.completions.create(
-    model="gpt-3.5-turbo-instruct",
+    model="gpt-5.4-mini",
     prompt="Say this is a test",
     max_tokens=7
 )
@@ -75,12 +71,12 @@ print(response)
 
 <TabItem value="curl" label="Curl Request">
 
-```shell
+```shell keep-model-ids
 curl --location 'http://0.0.0.0:4000/completions' \
     --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
-        "model": "gpt-3.5-turbo-instruct",
+        "model": "gpt-5.4-mini",
         "prompt": "Say this is a test",
         "max_tokens": 7
     }'
@@ -128,12 +124,12 @@ Here's the exact JSON output format you can expect from completion calls:
 
 <TabItem value="non-streaming" label="Non-Streaming Response">
 
-```python
+```python keep-model-ids
 {
   "id": "cmpl-uqkvlQyYK7bGYrRHQ0eXlWi7",
   "object": "text_completion",
   "created": 1589478378,
-  "model": "gpt-3.5-turbo-instruct",
+  "model": "gpt-5.4-mini",
   "system_fingerprint": "fp_44709d6fcb",
   "choices": [
     {
@@ -154,7 +150,7 @@ Here's the exact JSON output format you can expect from completion calls:
 </TabItem>
 <TabItem value="streaming" label="Streaming Response">
 
-```python
+```python keep-model-ids
 {
   "id": "cmpl-7iA7iJjj8V2zOkCGvWF2hAkDWBQZe",
   "object": "text_completion",
@@ -167,7 +163,7 @@ Here's the exact JSON output format you can expect from completion calls:
       "finish_reason": null
     }
   ],
-  "model": "gpt-3.5-turbo-instruct",
+  "model": "gpt-5.4-mini",
   "system_fingerprint": "fp_44709d6fcb",
 }
 

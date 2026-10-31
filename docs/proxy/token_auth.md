@@ -1099,7 +1099,7 @@ model_list:
     litellm_params:
       model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: gpt-3.5-turbo-testing
+  - model_name: {{openai_small}}-testing
     litellm_params:
       model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
@@ -1112,8 +1112,8 @@ general_settings:
     scope_mappings:
       - scope: litellm.api.consumer
         models: ["anthropic-claude"]
-      - scope: litellm.api.gpt_3_5_turbo
-        models: ["gpt-3.5-turbo-testing"]
+      - scope: litellm.api.openai
+        models: ["{{openai_small}}-testing"]
     enforce_scope_based_access: true # enforce scope-based access control
     enforce_rbac: true # enforces only a Team/User/ProxyAdmin can access the proxy.
 ```
@@ -1129,7 +1129,7 @@ Expected Token:
 
 ```bash
 {
-  "scope": ["litellm.api.consumer", "litellm.api.gpt_3_5_turbo"] # can be a list or a space-separated string
+  "scope": ["litellm.api.consumer", "litellm.api.openai"] # can be a list or a space-separated string
 }
 ```
 
@@ -1140,7 +1140,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer eyJhbGci...' \
 -d '{
-  "model": "gpt-3.5-turbo-testing",
+  "model": "{{openai_small}}-testing",
   "messages": [
     {
       "role": "user",
