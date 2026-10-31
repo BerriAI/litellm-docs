@@ -43,16 +43,6 @@ An organization owner has the ability to change almost anything in the GitHub or
 
 **The controls we introduced after the March incident are effective in defending against supply chain attacks.** Trusted Publishing and signing prove that an artifact came from our pipeline. The October incident does not call this into question: v1.107.0 did come from our pipeline - no pipeline controls can defend against an attacker who is an organization owner, because the owner owns the pipeline.
 
-## What our changes address
-
-You can read our analysis of the attack chain [here](/blog/security-incident-oct-21-2026-attack-chain). The changes in this post are organized around five conditions that we identify as important factors in the attack:
-
-1. **A leaked key remained valid.** The administrative key to the LiteLLM Agent Platform was committed to a public repository and subsequently removed. The key itself was not rotated at that time, and no process existed to track that it needed to be. Secret scanning was not enabled on that repository.
-2. **An experimental system was exposed to the Internet.** The service the key unlocked was an internal alpha, not something we would call production or enterprise-ready. Internal platforms of this kind can reasonably be given credentials to perform the actions they are developed to perform. However, internal systems not yet ready for production usage should not be reachable from the public internet.
-3. **High-privilege accounts were also day-to-day accounts.** Our organization owners were people who also write code, run tools, and use agents, which extended the exposure of those privileges to everything those activities touch. This is akin to using a device's `root` account for daily work rather than drawing on administrative capabilities through `sudo` only when needed.
-4. **Repository secrets were readable by any workflow.** On October 10 and 12, the attacker pushed workflows to short-lived branches that posted every repository secret to an external endpoint. This yielded the two further engineer tokens used to trigger and approve the release.
-5. **Monitoring and alerting had limited coverage.** The threat actor took some care to avoid actions likely to trigger alerts, but several of their actions were of a kind that alerting can detect, and at the time our GitHub alerting did not cover them. We have since significantly expanded alerting on GitHub. The current rules identify and trigger on each of the threat actor's actions from October 10.
-
 ## What we're changing
 
 The actions we are taking to address the factors above span several categories.
