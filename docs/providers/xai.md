@@ -11,6 +11,10 @@ https://docs.x.ai/docs
 
 :::
 
+## Search X posts
+
+Use [xAI X Search](../search/xai.md) through the Search API with `search_provider="xai"`, or configure it as the backend for WebSearch interception.
+
 ## Supported Models
 
 **Grok 4.5** - Frontier model for coding, agentic tasks, and knowledge work with 500K context, reasoning (low/medium/high), vision, tools, web search, and prompt caching.
