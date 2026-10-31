@@ -110,7 +110,7 @@ response = litellm.responses(
     input="Name three primary colors"
 )
 
-print(response.output[0].content[0].text)
+print(response.output_text)
 ```
 
 ### Anthropic Messages API
