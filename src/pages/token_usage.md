@@ -39,7 +39,7 @@ from litellm import completion_cost
 
 prompt = "Hey, how's it going"
 completion = "Hi, I'm gpt - I am doing well"
-cost_of_query = completion_cost(model="{{openai_small}}", prompt=prompt, completion=completion))
+cost_of_query = completion_cost(model="{{openai_small}}", prompt=prompt, completion=completion)
 
 print(cost_of_query)
 ```
