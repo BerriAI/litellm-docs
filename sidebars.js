@@ -1667,6 +1667,7 @@ const enterpriseSidebar = {
     { type: "html", value: "Support", className: "sidebar-group-label", defaultStyle: true },
     { type: "doc", id: "enterprise/support", label: "Support and SLA" },
     { type: "doc", id: "enterprise/version_support", label: "Version support" },
+    { type: "doc", id: "enterprise/lts_pilot", label: "LTS pilot" },
     { type: "link", label: "Release notes", href: "/release_notes", className: "sidebar-xlink" },
     { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
   ],
