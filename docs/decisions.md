@@ -426,30 +426,31 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 -d @request.json
 ```
 
-LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI models refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them.
+LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI and Azure deployments refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them.
 
 ### Audio and video on other deployments
 
 <SinceVersion v="1.110.0" />
 
-To send clips to a deployment the cost map does not mark, such as `openrouter/cloudflare/clef-omni`, set `supports_audio_input: true`, `supports_video_input: true` or both in the deployment's `model_info`.
+To send clips to a deployment the cost map does not mark, set `supports_audio_input: true`, `supports_video_input: true` or both in the deployment's `model_info`. To stop one kind of clip on a deployment the cost map marks, set its flag to `false`. This deployment keeps video on `cloudflare/clef-omni` and turns audio off.
 
 ```yaml showLineNumbers
 model_list:
-  - model_name: clef-omni-openrouter
+  - model_name: clef-omni-video-only
     litellm_params:
-      model: openrouter/cloudflare/clef-omni
-      api_key: os.environ/OPENROUTER_API_KEY
+      model: cloudflare/clef-omni
+      api_key: os.environ/CLOUDFLARE_API_KEY
     model_info:
-      supports_audio_input: true
-      supports_video_input: true
+      supports_audio_input: false
 ```
 
 Each flag wins over the cost map for its own kind of clip. `true` turns that kind on for the deployment, and `false` turns it off, even on `cloudflare/clef-omni`, so a clip to it gets the same 400, or the same drop with `drop_params` on, as a clip to a model without audio or video support. A deployment without a flag uses the cost map for that kind. The flags count only on a decision model. When the deployment sets `mode`, it must be `decisions` or `evaluation`. When it does not, the cost map's mode for the model must be one of those, or the cost map must not list the model. So a chat deployment's `supports_audio_input`, which describes chat input, does not turn clips on. The value must be a boolean, since any other value, such as the string `"true"`, does not turn clips on. The notes on wildcard deployments and unflagged deployments of the same provider and model under [Box questions on other deployments](#box-questions-on-other-deployments) apply to these flags too, so when one deployment of a model sets a flag, set it on every deployment of that model. In the SDK, pass `model_info={"supports_audio_input": True}`.
 
-In a load-balanced group, a request with clips goes only to the deployments that take them, by their own flags or by the cost map, and requests without clips still use every deployment. A deployment with `drop_params` on stays in the pick and drops the clips it does not take. When no deployment in the group takes the clips, the request goes to the whole group and gets the 400 that names `audio` or `videos`.
+In a load-balanced group, a request with clips goes only to the deployments that take them, by their own flags or by the cost map, and requests without clips still use every deployment. A deployment with `drop_params` on stays in the pick and drops the clips it does not take. When no deployment in the group takes the clips, the request goes to the whole group and gets the 400 that names `audio` or `videos`. With `drop_params: true` in `litellm_settings`, every deployment counts as taking clips, so clip requests go to the whole group and the deployments that do not take them drop the clips.
 
-The flags only control what LiteLLM sends. Check that the provider reads the clips before you set a flag on it, since LiteLLM sends them whether the provider uses them or not.
+The flags only control what LiteLLM sends. Check that the provider reads the clips before you set `true` on a deployment, since LiteLLM sends them whether the provider uses them or not. OpenRouter's `cloudflare/clef-omni` route, for example, takes the clips and answers as if none were sent, so send clips to Clef-omni through `cloudflare/clef-omni`.
+
+Before `v1.110.0`, a deployment's own flags do not win over the cost map. `false` does not turn clips off on `cloudflare/clef-omni`, and `true` turns them on only on a deployment that also sets `mode: decisions`.
 
 ## TypeSafe images, box questions and long context
 
