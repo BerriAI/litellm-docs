@@ -20,15 +20,14 @@ Follow our release notes [here](https://github.com/BerriAI/litellm/releases).
 
 ## Weekly schedule
 
-Starting the week of November 2, 2026, release candidates and stable releases ship on Tuesday mornings (Pacific Time) instead of Saturdays. Code for the week's release is frozen early Monday, and Monday is spent on QA.
+Starting the week of November 2, 2026, release candidates and stable releases ship on Tuesday mornings instead of Saturdays. Code for the week's release is frozen early Monday, and Monday is spent on QA.
 
 Each week runs the same loop against one version line. Nightly (`dev`) builds of the next minor version come out during the week (for example `1.86.0.dev1`, then `1.86.0.dev2`), and that base rides every build until it ships as stable. On Tuesday morning the release candidate is cut (`1.86.0rc1`) and enters a roughly week-long window for early testers and QA. The following Tuesday that `rc` is promoted to stable with the suffix dropped (`1.86.0rc1` becomes `1.86.0`), identical to that `rc` unless a fix was backported. So each Tuesday does double duty, cutting the current week's `rc` while the previous week's `rc` becomes stable.
 
 | Day | What ships |
 | --- | --- |
-| Monday | Nothing. Code freeze and QA for Tuesday's release |
+| Monday | Code freeze and QA for Tuesday's release |
 | Tuesday morning | New `rc` cut (`1.86.0rc1`), and the prior week's `rc` promoted to stable (`1.85.0`) |
-| Rest of the week | Nightly `dev` builds of the next minor (`1.87.0.dev1`, `1.87.0.dev2`) |
 
 If an `rc` fails QA it is not promoted. A fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
 
@@ -39,7 +38,7 @@ Which stable lines get patch releases is covered in [Version support](../enterpr
 
 ### Is there a release schedule for LiteLLM stable release?
 
-Stable releases come out every week on Tuesday morning (Pacific Time). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
+Stable releases come out every week on Tuesday morning. Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
 
 ### What is considered a 'minor' bump vs. 'patch' bump?
 
