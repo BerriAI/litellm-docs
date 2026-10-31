@@ -1,17 +1,21 @@
 ---
 title: Support and SLA
-description: LiteLLM Enterprise support. Each license includes a dedicated Slack or Teams channel with the LiteLLM engineers. 24/7 response SLAs and custom SLAs are available.
+description: LiteLLM Enterprise support. Each license includes a shared Slack Connect channel with the LiteLLM engineers, or support by email. 24/7 response SLAs and custom SLAs are available.
 ---
 
 # Support and SLA
 
 ## Standard support
 
-Each Enterprise license includes a dedicated Slack or Teams channel with the LiteLLM engineers. Use the channel for help with integration, deployment, and provider problems.
+Each Enterprise license includes a shared Slack Connect channel with the LiteLLM engineers. Use the channel for help with integration, deployment, and provider problems. Support does not run Microsoft Teams channels. If your company does not use Slack, use email support.
 
 The support hours are 9am to 9pm PST, Monday through Friday. Standard support does not include a guaranteed response time.
 
 You can also send an email to [support@berri.ai](mailto:support@berri.ai).
+
+### How to request your channel
+
+Send an email to [support@berri.ai](mailto:support@berri.ai) with your company name and the email address of your Slack workspace admin. Support sends the Slack Connect invite to that address. After your admin accepts the invite, the channel appears in your workspace.
 
 ## 24/7 support SLAs
 
