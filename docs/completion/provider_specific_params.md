@@ -46,7 +46,7 @@ assert len(response_2_text) > len(response_1_text)
 </TabItem>
 <TabItem value="openai-text" label="OpenAI Text Completion">
 
-```python
+```python keep-model-ids
 import litellm, os
 
 # set env variables
@@ -55,7 +55,7 @@ os.environ["OPENAI_API_KEY"] = "your-openai-key"
 
 ## SET MAX TOKENS - via completion() 
 response_1 = litellm.completion(
-            model="gpt-3.5-turbo-instruct",
+            model="text-completion-openai/gpt-5.4-mini",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
             max_tokens=10
         )
@@ -63,9 +63,9 @@ response_1 = litellm.completion(
 response_1_text = response_1.choices[0].message.content
 
 ## SET MAX TOKENS - via config
-litellm.OpenAITextCompletionConfig(max_tokens=10)
+litellm.OpenAITextCompletionConfig(max_tokens=200)
 response_2 = litellm.completion(
-            model="gpt-3.5-turbo-instruct",
+            model="text-completion-openai/gpt-5.4-mini",
             messages=[{ "content": "Hello, how are you?","role": "user"}],
         )
 
@@ -372,7 +372,7 @@ model_list:
         api_key: os.environ/PREDIBASE_API_KEY
         tenant_id: os.environ/PREDIBASE_TENANT_ID
         max_tokens: 256
-        adapter_base: <my-special_base> # 👈 PROVIDER-SPECIFIC PARAM
+        adapter_base: <my-special_base> # PROVIDER-SPECIFIC PARAM
 ```
 
 **via Request**

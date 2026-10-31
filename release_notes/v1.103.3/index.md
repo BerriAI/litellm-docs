@@ -1,5 +1,6 @@
 ---
-title: "v1.103.3 - Safer Database Migrations, Streamed Alias Spend and Dependency Updates"
+title: "LiteLLM v1.103.3 fixes streamed alias spend and bridged tool calls"
+description: "Fixes spend for streamed requests through model aliases and tool calls bridged from the Responses API. The proxy now exits when database setup fails."
 slug: "v1-103-3"
 date: 2026-10-03T23:33:00
 authors:

@@ -10,6 +10,25 @@ Lens lets you inspect agent traces, investigate failures, and save useful runs a
 
 In both cases, Lens runs as its own service and stores its data in ClickHouse. Your agent can keep its existing model provider.
 
+## How the pieces connect {#architecture}
+
+```mermaid
+flowchart LR
+  agent["Your agent"] -- "OTLP traces with a tracing key" --> lens
+  subgraph infra["Your infrastructure"]
+    lens["Lens<br/>UI, API, and investigation workers"] <--> clickhouse[("ClickHouse")]
+    litellm["LiteLLM proxy and dashboard"] -- "reads, investigations, and spend records" --> lens
+  end
+  user["Dashboard user"] --> litellm
+  lens -- "selected trace content" --> provider["Analysis model provider"]
+```
+
+Lens is one service. It serves the UI and API and runs investigations in background workers. It stores traces, LiteLLM spend records, and investigation results in ClickHouse. Every Lens replica shares that ClickHouse state, so you can run more than one.
+
+Agents send OpenTelemetry traces directly to Lens with a tracing key. Traces do not pass through LiteLLM. When you use Lens inside LiteLLM, the dashboard and the LiteLLM trace and investigation routes call Lens on the user's behalf. LiteLLM authenticates those calls with `LITELLM_LENS_SERVICE_TOKEN`, signs the user's identity with `LENS_GATEWAY_SECRET`, and sends its spend records so each run can show its cost.
+
+Investigations send only the selected trace content to the analysis model you configure. Everything else stays on your infrastructure. Standalone Lens needs only Lens and ClickHouse.
+
 ## Choose your starting point {#new-deployment}
 
 | Your starting point | Follow this guide |
@@ -31,7 +50,7 @@ Follow [Add Lens to LiteLLM](./deployment/litellm.md). If Lens already runs, use
 
 ## Use Lens on its own
 
-Start Lens and ClickHouse, then sign in at the Lens URL with its admin token. A LiteLLM gateway and PostgreSQL are not required. You can record and inspect traces before you configure an analysis model.
+One command, `./deploy/lens/start`, starts Lens and ClickHouse together. Then sign in at the Lens URL with its admin token. A LiteLLM gateway and PostgreSQL are not required. You can record and inspect traces before you configure an analysis model.
 
 Follow the [standalone quickstart](./deployment/local.md). Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
 

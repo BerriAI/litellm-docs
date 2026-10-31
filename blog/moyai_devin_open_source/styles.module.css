@@ -29,8 +29,8 @@
 .scroller {
   --p: 0;
   position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  container: moyai / inline-size;
+  width: 100%;
   height: 260vh;
   margin-top: calc(-1 * var(--ifm-navbar-height));
   color: #f4f6ff;
@@ -54,8 +54,8 @@
 .split {
   position: absolute;
   top: calc(var(--ifm-navbar-height) + 3vh + 28px);
-  left: 2.4vw;
-  right: 2.4vw;
+  left: 2.4cqw;
+  right: 2.4cqw;
   z-index: 5;
   text-shadow: 0 0 40px rgba(3, 4, 8, 0.9);
   display: flex;
@@ -63,7 +63,7 @@
   align-items: center;
   gap: 0;
   margin: 0 !important;
-  font-size: clamp(52px, min(8vw, 12vh), 120px) !important;
+  font-size: clamp(52px, min(8cqw, 12vh), 120px) !important;
   font-weight: 500 !important;
   line-height: 1 !important;
   letter-spacing: -0.04em;
@@ -151,7 +151,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: min(92vw, 1100px);
+  width: min(92cqw, 1100px);
   margin: 0 !important;
   text-align: center;
   color: #ffffff;
@@ -164,14 +164,14 @@
 }
 
 .tagline span:first-child {
-  font-size: clamp(28px, 3.6vw, 54px);
+  font-size: clamp(28px, 3.6cqw, 54px);
   font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
 
 .tagline span:not(:first-child) {
-  font-size: clamp(17px, 1.6vw, 23px);
+  font-size: clamp(17px, 1.6cqw, 23px);
   letter-spacing: -0.01em;
   color: rgba(240, 236, 228, 0.9);
 }
@@ -198,7 +198,7 @@
   transition: opacity 0.8s;
 }
 
-@media (max-width: 760px) {
+@container moyai (max-width: 760px) {
   .split {
     font-size: 64px !important;
   }
@@ -285,7 +285,7 @@
 
 .wallGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 10px;
 }
 
@@ -339,3 +339,16 @@
   letter-spacing: -0.01em;
   color: rgba(226, 234, 255, 0.86);
 }
+
+/* Fixed scenery needs the hydrated page theme; an imported post has neither. */
+.backdrop, .sky { display: none; }
+:global(html.moyai-night) .backdrop,
+:global(html.moyai-night) .sky { display: block; }
+.scroller:not([data-animated]) { height: auto; margin-top: 0; background: #05070d; }
+.scroller:not([data-animated]) .hero { position: relative; height: auto; min-height: 0; padding: 32px 16px; }
+.scroller:not([data-animated]) .date { position: static; margin-bottom: 24px; }
+.scroller:not([data-animated]) .split { position: static; font-size: clamp(36px, 14cqw, 80px) !important; }
+.scroller .split .mark { width: auto; height: .82em; max-width: 100%; }
+.scroller:not([data-animated]) .tagline { position: static; width: 100%; margin-top: 28px !important; transform: none; translate: none; opacity: 1; }
+.scroller:not([data-animated]) .tagline span:first-child { font-size: clamp(20px, 5cqw, 32px); }
+.scroller:not([data-animated]) .orbit, .scroller:not([data-animated]) .swirl { display: none; }

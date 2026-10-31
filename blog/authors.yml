@@ -111,8 +111,8 @@ moe:
 kerry:
   name: Kerry Lu
   title: Rust Engineer, LiteLLM
-  url: https://github.com/kerrylu-berri
-  image_url: https://github.com/kerrylu-berri.png
+  url: https://github.com/kerry-berri
+  image_url: https://github.com/kerry-berri.png
 
 gabriele:
   name: Gabriele Michelli
@@ -144,3 +144,9 @@ alexey-reznichenko:
   name: Alexey Reznichenko
   title: Pfizer AI Platform Engineering
   url: https://www.linkedin.com/in/raaar/
+
+nate:
+  name: Nate Armstrong
+  title: Lead Rust Engineer, LiteLLM
+  url: https://www.linkedin.com/in/naterarmstrong/
+  image_url: /img/authors/nate.jpeg

@@ -2,7 +2,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# 📈 Prometheus metrics
+# Prometheus metrics
 
 
 LiteLLM Exposes a `/metrics` endpoint for Prometheus to Poll
@@ -62,7 +62,7 @@ This directory is used by the Prometheus client library to store metric files th
 
 By default, LiteLLM renders `/metrics` on the proxy port using the same Uvicorn workers that serve inference requests. In multi-worker deployments, each scrape aggregates Prometheus data across workers. Large or high-cardinality metric sets can therefore consume CPU on a request-serving worker and increase tail latency.
 
-LiteLLM v1.101.0 and later can serve the same metric set from a dedicated process. Configure `--prometheus_metrics_port` or `PROMETHEUS_METRICS_PORT`, then update Prometheus to scrape that port. The original `/metrics` route on the proxy port remains available for backward compatibility, so you can migrate scrape targets without interrupting inference traffic.
+LiteLLM can serve the same metric set from a dedicated process <SinceVersion v="1.101.0" />. Configure `--prometheus_metrics_port` or `PROMETHEUS_METRICS_PORT`, then update Prometheus to scrape that port. The original `/metrics` route on the proxy port remains available for backward compatibility, so you can migrate scrape targets without interrupting inference traffic.
 
 The `prometheus` callback must be enabled. When the dedicated port is configured, LiteLLM creates `PROMETHEUS_MULTIPROC_DIR` if needed, binds the metrics process to the proxy `--host`, and stops the process with the proxy.
 
@@ -949,7 +949,7 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 
 
-## 🔥 LiteLLM Maintained Grafana Dashboards 
+## LiteLLM Maintained Grafana Dashboards
 
 LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 
@@ -975,7 +975,7 @@ The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm
 
 ## Authentication on `/metrics` endpoint
 
-**By default, `/metrics` requires LiteLLM API key authentication** (since v1.85.0).
+**From v1.85.0, `/metrics` requires LiteLLM API key authentication by default.**
 
 For Prometheus, add `authorization` to your scrape config:
 

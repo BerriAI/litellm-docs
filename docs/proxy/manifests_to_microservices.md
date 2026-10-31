@@ -98,9 +98,9 @@ gateway:
   config:
     proxy_config:
       model_list:
-        - model_name: gpt-4o
+        - model_name: {{openai_large}}
           litellm_params:
-            model: openai/gpt-4o
+            model: openai/{{openai_large}}
             api_key: os.environ/OPENAI_API_KEY
       router_settings:
         redis_host: os.environ/REDIS_HOST
@@ -162,7 +162,7 @@ curl -s localhost:4000/health/readiness
 curl -s localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 curl -s localhost:4000/v1/chat/completions -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"ping"}]}'
+  -d '{"model":"{{openai_large}}","messages":[{"role":"user","content":"ping"}]}'
 curl -s localhost:4001/key/info -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 curl -sI localhost:3000/ui/
 ```
@@ -187,6 +187,63 @@ kubectl delete -f old-ingress.yaml
 helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
   --version 1.90.2 -f values.yaml --wait
 ```
+
+### Separate hostname per component
+
+Use this mode when the UI, backend, and gateway each have a separate DNS hostname and the ingress cannot route requests by path. The chart creates one host rule for each component.
+
+```yaml title="values.yaml"
+ingress:
+  enabled: true
+  host: ""
+  extraPaths: []
+  componentHosts:
+    ui: ui.example.com
+    backend: backend.example.com
+    gateway: gateway.example.com
+  tls:
+    - secretName: litellm-component-tls
+      hosts:
+        - ui.example.com
+        - backend.example.com
+        - gateway.example.com
+
+ui:
+  backendUrl: https://backend.example.com
+  publicUrl: https://ui.example.com
+
+backend:
+  gatewayUrl: https://gateway.example.com
+```
+
+The chart renders these values on the following components:
+
+| Chart value | Component and rendered configuration |
+| --- | --- |
+| `ui.backendUrl` | The UI Deployment receives `LITELLM_BACKEND_URL` only when `ingress.componentHosts` is configured. The UI serves it as `backend_url` from `/ui/litellm-runtime-config.json`. |
+| `ui.publicUrl` | The backend and gateway Deployments receive `LITELLM_CORS_ORIGINS`. The backend also receives `LITELLM_CORS_ALLOW_CREDENTIALS=true`. |
+| `backend.gatewayUrl` | The backend Deployment receives `LITELLM_GATEWAY_URL`. The backend includes it as `gateway_base_url` in UI discovery configuration. |
+
+Set `ui.publicUrl` to the browser-facing UI origin, including its scheme and port if present, without a path. The backend needs an explicit allowed origin and credentials because login uses a credentialed request and sets a session cookie on the backend host. Keep the UI and backend hostnames under the same registrable domain so the browser treats them as same-site and can send that cookie on later credentialed requests. The gateway receives the UI origin for CORS, but the chart does not enable gateway credentials because Playground inference requests do not use `credentials: "include"`.
+
+If you manage ingress and DNS yourself, route each hostname to its component Service and set the corresponding environment variables:
+
+| Component | Environment variables |
+| --- | --- |
+| UI | `LITELLM_BACKEND_URL=https://backend.example.com` |
+| Backend | `LITELLM_GATEWAY_URL=https://gateway.example.com`, `LITELLM_CORS_ORIGINS=https://ui.example.com`, and `LITELLM_CORS_ALLOW_CREDENTIALS=true` |
+| Gateway | `LITELLM_CORS_ORIGINS=https://ui.example.com` |
+
+In component-host mode, the chart requires all three `ingress.componentHosts` values, an empty `ingress.host`, empty `ingress.extraPaths`, and the three URLs shown above. Rendering fails with one of these messages when the configuration is incomplete or conflicting:
+
+- `ingress.componentHosts.ui, backend, and gateway must all be set together`
+- `ingress.host must be empty when ingress.componentHosts is configured`
+- `ingress.extraPaths must be empty when ingress.componentHosts is configured`
+- `ui.backendUrl is required when ingress.componentHosts is configured`
+- `backend.gatewayUrl is required when ingress.componentHosts is configured`
+- `ui.publicUrl is required when ingress.componentHosts is configured`
+
+SSO login is not supported yet when the UI uses a separate hostname because the callback is built from the backend request URL and returns to the backend host. The Playground's "Custom Proxy Base URL" setting also continues to override the discovered gateway URL.
 
 Clients that used the in-cluster Service name (`litellm-service:4000`) must switch to `litellm-gateway:4000` for LLM calls and `litellm-backend:4001` for management calls.
 

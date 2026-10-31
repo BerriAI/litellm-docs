@@ -17,6 +17,12 @@ export const Logo = ({ src }) => (
 <NavigationCards
 columns={3}
 items={[
+  {
+    icon: <Logo src="/img/hex/hex-logo-blue.svg" />,
+    title: "Hex",
+    description: "Analyze daily team costs in Hex, then set budgets and routing in LiteLLM.",
+    to: "/blog/hex-litellm-roi",
+  },
   { icon: <Logo src="/img/integrations/langfuse.png" />, title: "Langfuse", description: "LLM observability and analytics.", to: "/docs/observability/langfuse_integration" },
   { icon: <Logo src="/img/integrations/datadog.png" />, title: "Datadog", description: "Metrics, traces, and dashboards.", to: "/docs/observability/datadog" },
   { icon: <Logo src="/img/integrations/grafana.png" />, title: "Grafana Cloud", description: "LLM traces, GenAI metrics, and dashboards.", to: "/docs/observability/grafana_cloud" },

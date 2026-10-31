@@ -74,12 +74,14 @@ HTTP/1.1 401 Unauthorized
 {"detail":"Authentication Error, Malformed API Key passed in. Ensure Key has `Bearer ` prefix."}
 ```
 
-An unknown or expired key also returns 401, with a body naming the rejected key:
+An unknown or deleted key also returns 401. Starting in v1.107.0, the body no longer names the rejected key:
 
 ```text
 HTTP/1.1 401 Unauthorized
-{"detail":"Authentication Error, Invalid proxy server token passed. Received API Key = sk-..., Key Hash (Token) =2ab06c... Unable to find token in cache or `LiteLLM_VerificationTokenTable`"}
+{"detail":"Authentication Error, Invalid API key provided."}
 ```
+
+Earlier versions answer the same request with `Invalid proxy server token passed` followed by the key's hash. An expired key returns its own `Expired Key` message.
 
 A 403 means the key authenticated but lacks MCP permissions for that server; fix the key/team [permission assignment](./mcp_control.md) rather than the credential
 
@@ -233,7 +235,7 @@ curl -sS http://localhost:4000/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "input": "List the top-level wiki pages for BerriAI/litellm",
     "tools": [{"type": "mcp", "server_label": "deepwiki", "server_url": "litellm_proxy", "require_approval": "never"}]
   }'

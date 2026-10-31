@@ -19,7 +19,7 @@
     "read-the-findings": "/docs/proxy/lens/investigations#read-the-findings",
     "give-feedback": "/docs/proxy/lens/investigations#give-feedback",
     "configure-an-existing-proxy": "/docs/proxy/lens/deployment#configure-an-existing-proxy",
-    "agent-tracing-api": "/docs/proxy/lens/api#agent-tracing-api",
+    "agent-tracing-api": "/docs/proxy/lens/api#list-runs",
     "use-the-api": "/docs/proxy/lens/api#use-the-api",
     "upgrade-litellm-and-the-worker": "/docs/proxy/lens/deployment/upgrades"
   },

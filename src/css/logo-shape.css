@@ -219,13 +219,13 @@ details > summary > :last-child {
 }
 
 /* "DOCS" beside the logo, as Stripe does. The logo file is untouched and
-   keeps its clear space: half its 25px height before the label. */
+   keeps its clear space: half its 18px height before the label. */
 .navbar__brand .navbar__title {
-  margin-left: 13px;
+  margin-left: 9px;
   font-family: var(--ifm-font-family-base);
-  font-size: 1.05rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
   color: var(--ifm-color-primary-lightest);
@@ -471,20 +471,11 @@ html[data-theme='dark'] .pagination-nav__link:hover {
   transform: none !important;
 }
 
-/* Phones: a smaller logo and DOCS label, so the product switcher fits
-   beside them. Clear space stays half the logo's height. */
+/* Phones: the DOCS label does not shrink, so the product switcher keeps
+   its place beside it. Clear space stays half the logo's height. */
 @media (max-width: 576px) {
-  .navbar__brand-col .navbar__logo,
-  .navbar__logo {
-    height: 20px;
-  }
-  .navbar__brand {
-    padding-right: 10px;
-  }
   .navbar__brand .navbar__title {
     flex: none;
-    margin-left: 9px;
-    font-size: 0.78rem;
   }
   .navbar__brand,
   .navbar__brand-col {
@@ -495,8 +486,7 @@ html[data-theme='dark'] .pagination-nav__link:hover {
 /* ---------- Navbar stays on one row ----------
    Infima lets .navbar__inner wrap, and between 997px and about 1065px the
    logo with its DOCS label, the links, and the right icons no longer fit, so
-   the icons dropped to a second line. The row never wraps now, and in that
-   range the Trust Center text link steps aside (the footer links it too). */
+   the icons dropped to a second line. The row never wraps now. */
 @media (min-width: 997px) {
   .navbar__inner {
     flex-wrap: nowrap !important;
@@ -505,8 +495,4 @@ html[data-theme='dark'] .pagination-nav__link:hover {
     min-width: 0;
   }
 }
-@media (min-width: 997px) and (max-width: 1100px) {
-  .navbar__right-col a[href^='https://trust.litellm.ai'] {
-    display: none;
-  }
-}
+

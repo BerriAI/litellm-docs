@@ -9,7 +9,7 @@ Pass-through endpoints for VLLM - call provider-specific endpoint, in native for
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://my-vllm-server.com` with `LITELLM_PROXY_BASE_URL/vllm` 🚀
+Just replace `https://my-vllm-server.com` with `LITELLM_PROXY_BASE_URL/vllm`
 
 #### **Example Usage**
 
@@ -27,11 +27,7 @@ Let's call the VLLM [`/score` endpoint](https://vllm.readthedocs.io/en/latest/ap
 
 1. Add a VLLM hosted model to your LiteLLM Proxy 
 
-:::info
-
-Works with LiteLLM v1.72.0+. 
-
-:::
+<SinceVersion v="1.72.0" />
 
 ```yaml
 model_list:
@@ -66,6 +62,34 @@ curl -X 'POST' \
 }'
 ```
 
+
+## Authenticate to a vLLM server started with `--api-key`
+
+<SinceVersion v="1.110.0" />
+
+A vLLM server started with `vllm serve <model> --api-key <key>` only accepts `Authorization: Bearer <key>`. Give LiteLLM the same key and it sends that header upstream on `/vllm` calls.
+
+For a model in your `model_list`, set `api_key` on the model. LiteLLM sends it as `Authorization: Bearer <key>`, the same header `/chat/completions` sends for that model. A model with no `api_key` sends `HOSTED_VLLM_API_KEY` when that is set, as `/chat/completions` does. A model with no `api_base` goes to `HOSTED_VLLM_API_BASE` when that is set, and to `VLLM_API_BASE` otherwise. A model that still has no key and is sent to the `VLLM_API_BASE` server sends `VLLM_API_KEY`. In every other case it sends no auth header.
+
+```yaml
+model_list:
+  - model_name: "my-vllm-model"
+    litellm_params:
+      model: hosted_vllm/vllm-1.72
+      api_base: https://my-vllm-server.com
+      api_key: os.environ/MY_VLLM_SERVER_KEY
+```
+
+For requests forwarded to `VLLM_API_BASE`, set `VLLM_API_KEY`. LiteLLM sends it as `Authorization: Bearer <key>` and as `x-api-key`.
+
+```bash
+export VLLM_API_BASE="https://my-vllm-server.com"
+export VLLM_API_KEY="<key your vLLM server was started with>"
+```
+
+A mesh in front of the server that validates JWTs, such as Istio `RequestAuthentication`, rejects a bearer that is not a JWT. If your gateway checks `x-api-key` behind such a mesh, point the mesh's `jwtRules` `fromHeaders` at a different header so it stops reading `Authorization`.
+
+The model's `api_base` and `VLLM_API_BASE` can be the server root or end in `/v1`. With a base ending in `/v1`, both `/vllm/v1/chat/completions` and `/vllm/chat/completions` reach the server's `/v1/chat/completions`. Paths outside `/v1`, such as `/tokenize` or `/metrics`, need a base set to the server root.
 
 ## Examples
 
@@ -146,7 +170,7 @@ Pre-requisites
 
 Use this, to avoid giving developers direct access to your VLLM server, but still letting them use VLLM endpoints.
 
-Requests whose `model` is not in your `model_list` are forwarded to the server set in `VLLM_API_BASE`. If that variable is missing, the proxy raises `VLLM_API_BASE is not set`. `HOSTED_VLLM_API_BASE` is only read by the `hosted_vllm/...` provider on the translated routes (for example `/chat/completions`), so it has no effect on `/vllm` pass-through calls.
+Requests whose `model` is not in your `model_list` are forwarded to the server set in `VLLM_API_BASE`. If that variable is missing, the proxy raises `VLLM_API_BASE is not set`. `HOSTED_VLLM_API_BASE` does not change where those requests go. It only sets the server for a `hosted_vllm/...` model in your `model_list` that has no `api_base`.
 
 ### Usage
 

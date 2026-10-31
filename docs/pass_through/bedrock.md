@@ -9,7 +9,7 @@ Pass-through endpoints for Bedrock - call provider-specific endpoint, in native 
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | |
 
-Just replace `https://bedrock-runtime.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/bedrock` 🚀
+Just replace `https://bedrock-runtime.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/bedrock`
 
 ## Overview
 
@@ -302,6 +302,54 @@ print(response_body['content'][0]['text'])
 
 The proxy will automatically load balance your boto3 requests across all configured deployments.
 
+### Bedrock Guardrails on config.yaml models
+
+<SinceVersion v="1.108.0" />
+
+A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
+
+```yaml showLineNumbers
+model_list:
+  - model_name: my-claude-model
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+      aws_region_name: us-west-2
+      guardrailConfig:
+        guardrailIdentifier: ff6ujrregl1q
+        guardrailVersion: DRAFT
+        trace: enabled
+```
+
+| Route | How the proxy sends the guardrail |
+|-------|-----------------------------------|
+| `/converse` | `guardrailConfig` in the request body |
+| `/converse-stream` | `guardrailConfig` in the request body, including `streamProcessingMode` if you set it |
+| `/invoke`, `/invoke-with-response-stream` | `X-Amzn-Bedrock-GuardrailIdentifier`, `X-Amzn-Bedrock-GuardrailVersion` and `X-Amzn-Bedrock-Trace` headers |
+
+The model's guardrail replaces any guardrail the caller sends in the body or headers, so callers cannot turn it off or pick a different one. With load balancing, each request gets the guardrail of the deployment that serves it.
+
+When Bedrock blocks a request, `/converse` returns `stopReason: guardrail_intervened` and `/invoke` returns `amazon-bedrock-guardrailAction: INTERVENED`, each with your blocked message and a guardrail trace when `trace` is enabled.
+
+The `/invoke` routes take only `guardrailIdentifier`, `guardrailVersion` and `trace`. A model whose `guardrailConfig` is missing `guardrailVersion`, or names a guardrail that does not exist, gets a 400 from these routes, the same as from `/v1/chat/completions`.
+
+Pass-through sends the request body to Bedrock as is, so Bedrock checks every message in it. To have Bedrock check only part of a Converse request, wrap that part in a `guardContent` block, see [Selectively evaluate content](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
+
+
+### Session ID from Bedrock request metadata
+
+<SinceVersion v="1.109.0" />
+
+Bedrock clients can tag each call with [request metadata](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html), sent as the `requestMetadata` body field on `/converse` and `/converse-stream`, or as the `X-Amzn-Bedrock-Request-Metadata` JSON header on `/invoke` and `/invoke-with-response-stream`. When that metadata has a `sessionId`, `threadId` or `conversationId` key, the proxy uses its value as that call's LiteLLM session ID, so calls that send the same value share one session in the spend logs. The keys are checked in that order, and the first non-empty string is used as sent. An `x-litellm-session-id` or `x-litellm-trace-id` header on the same request takes precedence.
+
+With the `bedrock_runtime` client from above:
+
+```python showLineNumbers
+response = bedrock_runtime.converse(
+    modelId='my-claude-model',  # Your model_name from config.yaml
+    messages=[{"role": "user", "content": [{"text": "Hello, how are you?"}]}],
+    requestMetadata={"threadId": "thread-abc-123"},
+)
+```
 
 ## Examples
 

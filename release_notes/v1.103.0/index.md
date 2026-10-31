@@ -1,5 +1,6 @@
 ---
-title: "v1.103.0 - Config File Ownership, Fuse Routing & Gateway Hardening"
+title: "LiteLLM v1.103.0 adds Fuse V2, TypeSafe Jev and config file ownership"
+description: "Adds Fuse V2 routing, per-model Fast mode and 408 models. The proxy now ignores database values for keys that config.yaml sets."
 slug: "v1-103-0"
 date: 2026-09-27T00:00:00
 authors:

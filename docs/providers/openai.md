@@ -58,17 +58,20 @@ export OPENAI_API_KEY=""
 <Tabs>
 <TabItem value="config" label="config.yaml">
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
       model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-3.5-turbo-instruct
+  - model_name: gpt-5.4-mini-completions
     litellm_params:
-      model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
+      model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
 ```
+
+The `gpt-5.4-mini-completions` group calls OpenAI's legacy `/v1/completions` endpoint, which continues the prompt instead of replying to it, and LiteLLM does not track spend on it yet. Send it a single user message, because a system message or `tools` on this route returns a 500 error. See [OpenAI (Text Completion)](./text_completion_openai.md).
+
 </TabItem>
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
@@ -222,7 +225,7 @@ Values set on a deployment take precedence over the environment variables, so di
 
 A static key always wins: when the deployment, the credential, or `OPENAI_API_KEY` carries an API key, federation is not used. Federation also only applies when the API base is `https://api.openai.com` or a regional host such as `https://eu.api.openai.com`; a custom `api_base` pointing at another OpenAI-compatible server keeps using the key.
 
-Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation; image, audio, transcription, moderation, files, batches, fine-tuning, and assistants calls still read `OPENAI_API_KEY`.
+Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation, and API-backed token counting uses it from v1.107.0. From v1.108.0, every other OpenAI route uses it too: text completions, images, audio and transcription, moderation, files, batches, fine-tuning, assistants, containers, vector stores, videos, evals, decisions, and realtime sessions and client secrets. Before v1.108.0, those routes read `OPENAI_API_KEY`.
 
 ### OpenAI Chat Completion Models
 
@@ -273,12 +276,6 @@ Only proxy admins can set these fields on a deployment or a credential, since th
 | gpt-4-turbo-preview   | `response = completion(model="gpt-4-0125-preview", messages=messages)` |
 | gpt-4-0125-preview    | `response = completion(model="gpt-4-0125-preview", messages=messages)` |
 | gpt-4-1106-preview    | `response = completion(model="gpt-4-1106-preview", messages=messages)` |
-| gpt-3.5-turbo-1106    | `response = completion(model="gpt-3.5-turbo-1106", messages=messages)` |
-| gpt-3.5-turbo         | `response = completion(model="gpt-3.5-turbo", messages=messages)` |
-| gpt-3.5-turbo-0301    | `response = completion(model="gpt-3.5-turbo-0301", messages=messages)` |
-| gpt-3.5-turbo-0613    | `response = completion(model="gpt-3.5-turbo-0613", messages=messages)` |
-| gpt-3.5-turbo-16k     | `response = completion(model="gpt-3.5-turbo-16k", messages=messages)` |
-| gpt-3.5-turbo-16k-0613| `response = completion(model="gpt-3.5-turbo-16k-0613", messages=messages)` |
 | gpt-4                 | `response = completion(model="gpt-4", messages=messages)` |
 | gpt-4-0314            | `response = completion(model="gpt-4-0314", messages=messages)` |
 | gpt-4-0613            | `response = completion(model="gpt-4-0613", messages=messages)` |
@@ -296,7 +293,7 @@ OpenAI has two ways to use web search, depending on the endpoint:
 | Approach | Endpoint | Models | How to enable |
 |----------|----------|--------|---------------|
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
-| **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
+| **Web Search Tool** | `/responses` | `{{openai_large}}`, `{{openai_small}}`, and other regular models | Pass `web_search_preview` tool |
 
 <Tabs>
 <TabItem value="sdk-completion" label="SDK - /chat/completions">
@@ -938,7 +935,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
   # Model with mode: chat (use prefix for built-in tools)
-  - model_name: gpt-4o-with-tools
+  - model_name: {{openai_large}}-with-tools
     litellm_params:
       model: openai/responses/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
@@ -957,7 +954,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4o-with-tools",
+    "model": "{{openai_large}}-with-tools",
     "messages": [
         {"role": "user", "content": "What is the weather in Paris today?"}
     ],
@@ -1288,7 +1285,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:
-    forward_openai_org_id: true # 👈 KEY CHANGE
+    forward_openai_org_id: true # KEY CHANGE
 ```
 
 2. Start Proxy

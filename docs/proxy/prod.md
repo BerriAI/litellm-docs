@@ -473,6 +473,8 @@ How LiteLLM ships migrations:
 
 3. When you upgrade to a new version of LiteLLM, the migration file is applied to the database. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/litellm-proxy-extras/litellm_proxy_extras/utils.py#L42)
 
+For how long migrations take at production scale and how to plan an upgrade around them, see the [Upgrade Guide](./upgrade_guide.md#database-migrations).
+
 ### Read-only file system
 
 Running LiteLLM with `readOnlyRootFilesystem: true` is a Kubernetes security best practice that prevents container processes from writing to the root filesystem. LiteLLM fully supports this configuration.

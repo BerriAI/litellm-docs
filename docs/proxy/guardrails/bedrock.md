@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Bedrock Guardrails
 
-:::tip[⚡️]
+:::tip[]
 If you haven't set up or authenticated your Bedrock provider yet, see the [Bedrock Provider Setup & Authentication Guide](../../providers/bedrock.md).
 :::
 
@@ -199,8 +199,11 @@ Chunks now stream to the client as they arrive, and one OUTPUT scan runs over th
 | `streaming_buffer_until_moderated` | `true` | Withhold every streamed chunk until end-of-stream moderation passes, so no flagged chunk reaches the client before a block |
 | `streaming_end_of_stream_only` | `false` | Scan streamed output once, over the assembled response, instead of per sampled chunk |
 | `streaming_sampling_rate` | `5` | When not buffering and not end-of-stream-only, scan the accumulated text every Nth chunk. Must be at least 1 |
+| `streaming_scan_in_background` | `false` | When not buffering and not end-of-stream-only, run each sampled scan while the stream keeps flowing instead of pausing it |
 
 With `streaming_buffer_until_moderated: false` alone, the guardrail scans the accumulated response every `streaming_sampling_rate` chunks while streaming. Each sampled scan is a separate ApplyGuardrail call over all text so far, so it adds mid-stream latency and repeated Bedrock text-unit charges. Pair it with `streaming_end_of_stream_only: true` unless you need mid-stream blocking.
+
+To keep mid-stream blocking without that pause, add `streaming_scan_in_background: true`. Each sampled scan then runs while chunks keep streaming, one scan at a time. A violation ends the stream with the block message before the next chunk, so text that streamed while the scan ran has already reached the client. The end of the stream (`finish_reason` or `message_delta`) waits for the last scan, so a violation found after the last chunk still ends the stream with the block message in place of the normal finish.
 
 These settings apply to `/v1/chat/completions`, native `/v1/messages` streams, and the Bedrock `/bedrock/model/<model>/converse-stream` pass-through, where a mid-stream block ends the stream with an AWS `validationException` event that the AWS SDK raises with the guardrail's message.
 
@@ -341,6 +344,8 @@ When you're chaining long conversations through Bedrock guardrails, you can opt 
 - keeps Bedrock payloads smaller, reducing latency and cost
 - applies to proxy hooks (`pre_call`, `during_call`) and the `/guardrails/apply_guardrail` testing endpoint
 
+Use it with Claude Code and other clients that send `role: system` entries inside `messages` on `/v1/messages`. `skip_system_message_in_guardrail` removes only the top-level `system` prompt there, so those entries still reach Bedrock without this flag.
+
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 guardrails:
   - guardrail_name: "bedrock-pre-guard"
@@ -353,7 +358,7 @@ guardrails:
       experimental_use_latest_role_message_only: true  # NEW
 ```
 
-> ⚠️ This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
+> This flag is currently experimental and defaults to `false` to preserve the legacy behavior (entire message history). We'll be listening to user feedback to decide if this becomes the default or rolls out more broadly.
 
 ## Disabling Exceptions on Bedrock BLOCK
 
