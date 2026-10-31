@@ -60,7 +60,7 @@ After saving, check the team's budget status. Then refresh Hex after LiteLLM upd
 
 ![Legal’s budget status after saving](/img/hex/litellm-budget-saved.png)
 
-[Auto Router setup](/docs/auto_router/setup) · [Team budgets](/docs/proxy/team_budgets) · [Share feedback](https://docs.google.com/forms/d/e/1FAIpQLSdySd34qAyNpGU3bzeYS-BSSkyIspDcXaLVsVqyWJPSdE4LfQ/viewform)
+[Auto Router setup](/docs/auto_router/setup) · [Team budgets](/docs/proxy/team_budgets)
 
 </HexPage>
 

@@ -110,8 +110,6 @@
   .downloads a + a { border-left: 0; border-top: 1px solid var(--line); }
 }
 
-.feedbackBar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 20px; margin-bottom: 22px; border-bottom: 1px solid #ffffff45; font-size: 13px; line-height: 1.5; }
-.feedbackBar a { color: #263cdb; background: #fff; padding: 10px 15px; display: flex; gap: 28px; align-items: center; font-size: 12px; white-space: nowrap; }
 .showcase { max-width: 1180px; margin: 0 auto; padding: 48px 40px 24px; }
 .showcaseLabel, .flowTitle { display: flex; justify-content: space-between; gap: 20px; color: var(--text); font: 9px/1.6 'Geist Mono', monospace; letter-spacing: .04em; }
 .root .showcase h2 { font-size: 40px; font-weight: 450; letter-spacing: -.045em; line-height: 1.2; margin: 18px 0 28px; color: var(--ink); }
@@ -159,9 +157,6 @@
   .flowTitle { font-size: 8px; }
 }
 @container (max-width: 480px) {
-  .feedbackBar { align-items: flex-start; font-size: 12px; }
-  .feedbackBar a { font-size: 10px; gap: 10px; padding: 9px; }
-  .feedbackBar > span { max-width: 180px; }
   .showcase { padding-top: 30px; }
   .showcaseLabel { font-size: 8px; }
   .root .costDemo h3 { font-size: 23px; }
