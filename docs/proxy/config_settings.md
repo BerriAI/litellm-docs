@@ -1098,6 +1098,10 @@ router_settings:
 | FOCUS_INTERVAL_SECONDS | Interval (in seconds) for Focus exports when `frequency` is `interval`.
 | FOCUS_PREFIX | Object key prefix (or folder) used when uploading Focus export files. Defaults to `focus_exports`.
 | FOCUS_S3_BUCKET_NAME | S3 bucket to upload Focus export files when using the S3 destination.
+| HEX_S3_BUCKET_NAME | <SinceVersion v="1.110.0" /> Required S3 bucket for the Hex spend callback. See [Hex](../observability/hex.md).
+| HEX_S3_PATH | <SinceVersion v="1.110.0" /> S3 object prefix for Hex spend exports. Default is `litellm-spend`.
+| HEX_S3_REGION_NAME | <SinceVersion v="1.110.0" /> Region for Hex spend exports. Falls back to `AWS_REGION`, then `us-east-1`.
+| HEX_S3_ENDPOINT_URL | <SinceVersion v="1.110.0" /> Optional custom S3-compatible endpoint for the Hex callback. Athena requires AWS S3.
 | FOCUS_S3_REGION_NAME | AWS region for the Focus export S3 bucket.
 | FOCUS_S3_ENDPOINT_URL | Custom endpoint for the Focus export S3 client (optional; useful for S3-compatible storage).
 | FOCUS_S3_ACCESS_KEY | AWS access key ID used by the Focus export S3 client.

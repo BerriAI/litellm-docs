@@ -191,6 +191,7 @@ const sidebars = {
           items: [
             "observability/azure_sentinel",
             "observability/datadog",
+            "observability/hex",
             { type: "doc", id: "observability/gcs_bucket_integration", className: "sidebar-enterprise" },
             "observability/newrelic",
             "observability/parseable",

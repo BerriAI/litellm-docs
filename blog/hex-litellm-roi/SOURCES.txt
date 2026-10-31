@@ -1,0 +1,13 @@
+Design references: https://docs.litellm.ai/blog/abliterated-models and https://handoff.litellm.ai/.
+Hex logo: SVG wordmark in the home navigation of https://hex.tech/, retrieved October 30, 2026. Original path preserved; fill set to white for the cobalt hero.
+Cost reporting: docs/proxy/cost_tracking.md.
+Hex screenshots: native Hex project with synthetic records; no customer data.
+GIF: cropped close-ups from native Hex model-mix and seven-day cost-change screens, captured October 30, 2026. Synthetic records. One automatically animated GIF, without playback controls.
+Feedback form: created in the LiteLLM Google Workspace; public response URL only. Email input is optional; response summary sharing is disabled.
+
+2026-10-30 action-loop revision
+- Public native Hex app: https://app.hex.tech/01a18e4b-6e94-7328-831c-e5ab0e2e00e7/app/LiteLLM-AI-cost-and-ROI-demo-034p688gOAllaldLw72Oat/latest
+- Verified anonymously: Log in button visible, synthetic data rendered, project filter recalculated spend to $563.42. Public demo uses the v1 synthetic project source; v2 team Postgres template intentionally omits unknown timing metrics.
+- import-project.png: actual Hex Home + > Upload project dialog. Browser file upload unavailable, so the new YAML upload was not verified in Hex.
+- litellm-budget-edit.png and litellm-budget-saved.png: actual LiteLLM UI from BerriAI/litellm main 837f36e8724d896c681054f92f9b0764f0a7d625, connected to a synthetic local gateway fixture. No production accounts, keys, data or budget changes. Saved update verified max_budget=1000 and budget_duration=30d.
+- Daily source reads reporting columns from LiteLLM_DailyTeamSpend and display names from LiteLLM_TeamTable. Disposable Postgres test denies credential-table access and preserves totals.
