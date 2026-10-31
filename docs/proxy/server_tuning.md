@@ -212,7 +212,13 @@ Monitor it with `/health/backlog` (fields `in_flight_requests`, `admitted_reques
 
 ## Keepalive timeout
 
-Defaults to 5 seconds; between requests, connections must receive new data within this period or be disconnected.
+The proxy now sets Uvicorn's keep-alive timeout to 75 seconds by default. Earlier releases used Uvicorn's 5 second default. Between requests, a connection remains open until it has received no data for the configured period.
+
+When a load balancer or reverse proxy reuses backend connections, set the proxy keep-alive timeout above the load balancer's backend idle timeout. This lets the load balancer close an idle connection before Uvicorn does. If the proxy timeout is shorter, the load balancer can reuse a connection as Uvicorn closes it. This can cause intermittent 502 or 500 responses at the load balancer, sometimes a few per thousand requests, with no matching LiteLLM log line and no `x-litellm-call-id` response header.
+
+AWS Application Load Balancer uses a 60 second idle timeout by default, so the 75 second default is enough. Nginx's upstream `keepalive_timeout` defaults to 60 seconds. Google Cloud external Application Load Balancers keep backend connections open for up to 600 seconds, so set `KEEPALIVE_TIMEOUT=620`. For any other load balancer, check its backend or server idle timeout and set LiteLLM's keep-alive timeout above it.
+
+This setting applies to the default Uvicorn server. With `--run_gunicorn`, `--keepalive_timeout` is not applied today.
 
 ```shell
 docker run docker.litellm.ai/berriai/litellm:latest \

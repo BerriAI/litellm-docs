@@ -162,6 +162,8 @@ targetCPUUtilizationPercentage: 60
 
 On Kubernetes, or anywhere else a pod-level autoscaler is reading CPU, run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler read the [CPU threshold above](#autoscaling) against a single process, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
 
+Behind a load balancer or reverse proxy that reuses backend connections, set `KEEPALIVE_TIMEOUT` above its backend idle timeout so the load balancer closes idle connections first. See [Keepalive timeout](./server_tuning#keepalive-timeout).
+
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
 ```

@@ -62,7 +62,7 @@ This page documents all command-line interface (CLI) arguments available for the
      ```
 
 ### --keepalive_timeout
-   - **Default:** `None`
+   - **Default:** `75 seconds`
    - **Type:** `int`
    - Set the uvicorn keepalive timeout in seconds (uvicorn timeout_keep_alive parameter).
    - **Usage:** 
