@@ -45,7 +45,7 @@ An organization owner has the ability to change almost anything in the GitHub or
 
 ## What we're changing
 
-The actions we are taking to address the factors above span several categories.
+You can find our analysis of the root cause of the incident [here](/blog/security-incident-oct-21-2026-attack-chain). The actions we are taking to address the primary factors that led to the incident span several categories.
 
 ### Identity and privilege
 
