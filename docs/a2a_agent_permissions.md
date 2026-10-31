@@ -210,19 +210,13 @@ curl -X POST "http://localhost:4000/a2a/agent-456" \
 
 ## Agent Access Groups
 
-Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels in the dashboard, then grant the **group** to a key or team. Adding a new agent to the group automatically makes it available to every key/team that holds the group.
+Granting individual agents to every key or team gets unwieldy as the agent catalog grows. **Agent access groups** let you tag agents with logical labels, then grant the **group** to a key or team. Adding a new agent to the group automatically makes it available to every key/team that holds the group.
+
+Two similarly named fields point in opposite directions, so keep them apart. `agent_access_groups` tags an agent; a key or team granted that group may invoke every agent carrying the tag. `access_group_ids` caps what an agent itself may reach; it limits the models, MCP servers, and other agents the agent can access on top of its key and team permissions.
 
 ### 1. Tag the agent with one or more groups
 
-In the LiteLLM dashboard:
-
-1. Go to **Agents**.
-2. Create or edit an agent.
-3. Under **Access Groups**, type a group name (e.g. `clinical-tools`) and press Enter.
-
-:::note
-Tagging an agent with access groups is currently a dashboard-only operation. The `POST /v1/agents` body schema does not expose `agent_access_groups` as a top-level field; the group tags persist via the underlying DB column and are consumed during permission resolution.
-:::
+The agent tags live on the agent record and are read during permission resolution. Neither the dashboard agent form nor the agent API exposes `agent_access_groups` as an editable field, so the form cannot be used to tag an agent. The **Access Groups** field on the agent create and edit form writes `access_group_ids`; filling it in caps what that agent can reach and does not add the agent to any grantable group.
 
 ### 2. Grant a key or team the group
 
