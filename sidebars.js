@@ -1863,6 +1863,7 @@ const providersSidebar = {
     { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
     "providers/nvidia_riva",
     "providers/oci",
+    "providers/opencheap",
     "providers/openinfer",
     "providers/ovhcloud",
     { type: "category", label: "Perplexity AI", className: "sidebar-provider", link: { type: "doc", id: "providers/perplexity" }, items: [
