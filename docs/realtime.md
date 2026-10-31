@@ -135,7 +135,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 ```
 
-Live sessions support the `openai` provider only. A session on a deployment of another provider, such as `azure/gpt-live-1`, gets an `error` event that says `OpenAI Live sessions require the openai provider`, and the session closes with code 1011.
+Live sessions support the `openai` provider only. A session on a deployment of another provider, such as `azure/gpt-live-1`, gets an `error` event that says `OpenAI Live sessions require the openai provider`, and the session closes with code 1011. LiteLLM connects to `/v1/live/sessions` on the host in `api_base` and drops any path in it, so an `api_base` behind a path prefix does not work.
 
 ### Connect
 
@@ -180,15 +180,15 @@ After `session.start`, LiteLLM runs the checks that need the model, such as whet
 | `session_not_allowed` | Another check failed, such as a used-up per-model budget |
 | `invalid_session_start` | First message is not `session.start` |
 
-LiteLLM also sends `invalid_session_start` when no first message arrives within 30 seconds.
+LiteLLM also sends `invalid_session_start` when no first message arrives within 30 seconds. If the key may call the model but no `model_name` in your config matches it, LiteLLM sends an `error` event of type `server_error` and closes the session with code 1011.
 
-The key's rate limits, such as `rpm_limit`, are checked after `session.start` too. A session over a limit gets an `error` event of type `guardrail_error` whose message starts with `429`, and the session closes with code 1011.
+The key's rate limits, such as `rpm_limit`, are checked after `session.start` too. A session over a limit gets an `error` event of type `guardrail_error` whose message starts with `429`, and the session closes with code 1011. Without Redis, each proxy worker counts on its own, so a proxy with several workers can let more sessions through than the limit.
 
 ### Spend tracking
 
 To end a session, send `session.close` and wait for `session.closed`, which carries the final `usage`. LiteLLM bills the session from the `usage.seconds` that OpenAI reports, at the model's `input_cost_per_second`. That is the deployment's own `input_cost_per_second` when you set one in `litellm_params`, else the model cost map's. For example, a session with 6 seconds of audio costs 6 times `input_cost_per_second`. If the client drops the socket without `session.close`, LiteLLM sends `session.close` to OpenAI itself and still bills the `usage.seconds` in OpenAI's `session.closed`. When a session ends with no `session.closed` from OpenAI, such as when the connection to OpenAI drops or OpenAI sends none within 5 seconds of a dropped client, LiteLLM bills the larger of the last reported `usage.seconds` and the time the session was open.
 
-When the session hands work to a Responses model, OpenAI sends `response.event` events, and LiteLLM adds the tokens of each finished response at that model's token prices. A model that is missing from LiteLLM's model cost map adds $0 for its tokens.
+When the session hands work to a Responses model, OpenAI sends `response.event` events, and LiteLLM adds the tokens of each finished response at that model's token prices. A model that is missing from LiteLLM's model cost map adds $0 for its tokens. LiteLLM adds only token costs, so fees for tools such as web search are not billed.
 
 The whole cost goes to the session's spend log and to the key's spend, so key budgets apply the same way they do on `/v1/realtime`. LiteLLM checks budgets when a session starts and adds the cost when the session ends, so one long session can spend past a budget. Later sessions on that key or model are then refused.
 
@@ -196,7 +196,7 @@ The whole cost goes to the session's spend log and to the key's spend, so key bu
 
 Guardrails do not run on Live sessions. When a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to the session, LiteLLM sends an `error` event that says `Guardrails are not supported on OpenAI Live sessions` and closes the session with code 1011. That includes a guardrail attached to the key and one with `default_on: true`, so a `default_on` guardrail in one of these modes closes every Live session on the proxy. Guardrails in other modes, such as `during_call`, and the `guardrails` query parameter do not close the session, and the session runs without them.
 
-LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards them to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions, so key budgets do not limit them. To keep a key on the Live WebSocket route, set the key's `allowed_routes` to `["/v1/live/sessions"]`.
+LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards them to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions, so their use never counts toward key spend or budgets. A proxy admin can keep a key on the Live WebSocket route by setting the key's `allowed_routes` to `["/v1/live/sessions"]`.
 
 ## Azure: GA vs beta realtime protocol
 
