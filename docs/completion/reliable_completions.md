@@ -50,7 +50,7 @@ The ids below are illustrative and kept for their context window sizes: a 272k t
 ```python keep-model-ids
 from litellm import completion
 
-fallback_dict = {"gpt-5.4-mini": "{{openai_large}}"}
+fallback_dict = {"gpt-5.4-mini": "{{openai_small}}"}
 messages = [{"content": "how does a court case get to the Supreme Court?" * 30000, "role": "user"}]
 
 completion(model="gpt-5.4-mini", messages=messages, context_window_fallback_dict=fallback_dict)
