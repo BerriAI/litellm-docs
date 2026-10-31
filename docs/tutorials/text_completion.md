@@ -2,7 +2,10 @@
 
 If your prefer interfacing with the OpenAI Text Completion format this tutorial covers how to use LiteLLM in this format
 ```python keep-model-ids
-response = openai.Completion.create(
+from openai import OpenAI
+
+client = OpenAI()
+response = client.completions.create(
     model="gpt-5.4-mini",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,

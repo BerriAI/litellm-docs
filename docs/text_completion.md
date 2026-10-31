@@ -24,7 +24,7 @@ import TabItem from '@theme/TabItem';
 from litellm import text_completion
 
 response = text_completion(
-    model="gpt-5.4-mini",
+    model="text-completion-openai/gpt-5.4-mini",
     prompt="Say this is a test",
     max_tokens=7
 )
@@ -130,7 +130,7 @@ Here's the exact JSON output format you can expect from completion calls:
   "object": "text_completion",
   "created": 1589478378,
   "model": "gpt-5.4-mini",
-  "system_fingerprint": "fp_44709d6fcb",
+  "system_fingerprint": null,
   "choices": [
     {
       "text": "\n\nThis is indeed a test",
@@ -164,7 +164,7 @@ Here's the exact JSON output format you can expect from completion calls:
     }
   ],
   "model": "gpt-5.4-mini",
-  "system_fingerprint": "fp_44709d6fcb",
+  "system_fingerprint": null,
 }
 
 ```
