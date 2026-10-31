@@ -1040,7 +1040,7 @@ In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 
 ```yaml keep-model-ids
 model_list:
-  - model_name: "batch-gpt-4o-mini"
+  - model_name: "batch-model"
     litellm_params:
       model: "azure/gpt-5.6-luna"
       api_key: os.environ/AZURE_API_KEY
@@ -1057,7 +1057,7 @@ Note: Response is in the OpenAI-format.
 
 1. Upload a file 
 
-Just set `model: batch-gpt-4o-mini` in your .jsonl.
+Just set `model: batch-model` in your .jsonl.
 
 ```bash
 curl http://localhost:4000/v1/files \
@@ -1071,9 +1071,9 @@ curl http://localhost:4000/v1/files \
 Note: `model` should be your azure deployment name.
 
 ```json
-{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
-{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
-{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
+{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
+{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
+{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
 ```
 
 Expected Response (OpenAI-compatible)
@@ -1092,7 +1092,7 @@ curl http://0.0.0.0:4000/v1/batches \
     "input_file_id": "file-f0be81f654454113a922da60acb0eea6",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h",
-    "model": "batch-gpt-4o-mini"
+    "model": "batch-model"
   }'
 ```
 

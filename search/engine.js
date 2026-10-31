@@ -22,22 +22,34 @@ const titlePairs = title => {
   return parts.slice(1).map((word, i) => [parts[i], word])
     .filter(pair => pair.every(word => normalize(word)));
 };
-const titleAliases = title => new Map(titlePairs(title).flatMap(pair => [
+// Titles and headings recur across thousands of passages. Bound the caches so
+// arbitrary public queries cannot accumulate memory for the function's lifetime.
+function memoizeText(compute) {
+  const cache = new Map();
+  return text => {
+    if (cache.has(text)) return cache.get(text);
+    const value = compute(text);
+    if (cache.size >= 20000) cache.delete(cache.keys().next().value);
+    cache.set(text, value);
+    return value;
+  };
+}
+const titleAliases = memoizeText(title => new Map(titlePairs(title).flatMap(pair => [
   [pair.join(''), pair], [pair.map(normalize).join(''), pair],
-]));
+])));
 const tokenize = (text, field) => [
   ...words(text.replace(/\b(?:set\s+up|quick\s+start)\b/gi, 'setup')).flatMap(word => word.split('_')),
   ...(field === 'title' ? titleAliases(text).keys() : []),
 ];
-const normalize = term => {
+const normalize = memoizeText(term => {
   if (stopWords.has(term)) return null;
   const canonical = /^v?\d+\.\d+\.\d+/.test(term) ? normalizeVersion(term)
     : Object.hasOwn(forms, term) ? forms[term]
     // Keep short names and typos such as "lens" and "lnes" intact for fuzzy matching.
     : term.length > 4 && /^[a-z]+$/.test(term) ? pluralize.singular(term) : term;
   return stopWords.has(canonical) ? null : canonical;
-};
-const termsOf = text => [...new Set(tokenize(text).map(normalize).filter(Boolean))];
+});
+const termsOf = memoizeText(text => [...new Set(tokenize(text).map(normalize).filter(Boolean))]);
 const indexTerm = term => {
   const canonical = normalize(term);
   return canonical && canonical !== term ? [term, canonical] : canonical;

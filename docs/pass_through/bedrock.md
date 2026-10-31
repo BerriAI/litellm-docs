@@ -295,7 +295,7 @@ The proxy will automatically load balance your boto3 requests across all configu
 
 ### Bedrock Guardrails on config.yaml models
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
 
@@ -325,6 +325,22 @@ The `/invoke` routes take only `guardrailIdentifier`, `guardrailVersion` and `tr
 
 Pass-through sends the request body to Bedrock as is, so Bedrock checks every message in it. To have Bedrock check only part of a Converse request, wrap that part in a `guardContent` block, see [Selectively evaluate content](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
 
+
+### Session ID from Bedrock request metadata
+
+<SinceVersion v="1.109.0" />
+
+Bedrock clients can tag each call with [request metadata](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html), sent as the `requestMetadata` body field on `/converse` and `/converse-stream`, or as the `X-Amzn-Bedrock-Request-Metadata` JSON header on `/invoke` and `/invoke-with-response-stream`. When that metadata has a `sessionId`, `threadId` or `conversationId` key, the proxy uses its value as that call's LiteLLM session ID, so calls that send the same value share one session in the spend logs. The keys are checked in that order, and the first non-empty string is used as sent. An `x-litellm-session-id` or `x-litellm-trace-id` header on the same request takes precedence.
+
+With the `bedrock_runtime` client from above:
+
+```python showLineNumbers
+response = bedrock_runtime.converse(
+    modelId='my-claude-model',  # Your model_name from config.yaml
+    messages=[{"role": "user", "content": [{"text": "Hello, how are you?"}]}],
+    requestMetadata={"threadId": "thread-abc-123"},
+)
+```
 
 ## Examples
 

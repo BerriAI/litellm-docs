@@ -21,7 +21,7 @@ uv add boto3>=1.28.57
 
 :::info
 
-For **Amazon Nova Models**: Bump to v1.53.5+
+**Amazon Nova** models work <SinceVersion v="1.53.5" />.
 
 :::
 
@@ -382,7 +382,9 @@ response = client.chat.completions.create(
 
 ### Forward key, team, and org identity from the proxy
 
-The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default and available in `v1.99.0` and later. List the fields to forward under `litellm_settings`:
+<SinceVersion v="1.99.0" />
+
+The proxy can fill request metadata for you from the virtual key that made the call, so Bedrock [model invocation logs](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html) carry the same key, team, and org attribution as LiteLLM spend logs without any change to your clients. It is off by default. List the fields to forward under `litellm_settings`:
 
 ```yaml
 litellm_settings:
@@ -581,7 +583,7 @@ print(f"\nResponse: {resp}")
 
 This is currently only supported for Anthropic's Claude 3.7 Sonnet + Deepseek R1 + GPT-OSS models.
 
-Works on v1.61.20+.
+<SinceVersion v="1.61.20" />
 
 Returns 2 new fields in `message` and `delta` object:
 - `reasoning_content` - string - The reasoning content of the response
@@ -1064,7 +1066,7 @@ class EventsList(BaseModel):
     events: list[CalendarEvent]
 
 response = completion(
-  model="bedrock/anthropic.{{anthropic}}", # specify invoke via `bedrock/invoke/anthropic.{{anthropic}}`
+  model="bedrock/global.anthropic.{{anthropic}}", # specify invoke via `bedrock/invoke/global.anthropic.{{anthropic}}`
   response_format=EventsList,
   messages=[
     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -1147,7 +1149,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Usage - Latency Optimized Inference
 
-Valid from v1.65.1+
+<SinceVersion v="1.65.1" />
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1286,15 +1288,34 @@ Example of using [Bedrock Guardrails with LiteLLM](https://docs.aws.amazon.com/b
 
 ### Selective Content Moderation with `guarded_text`
 
-LiteLLM supports selective content moderation using the `guarded_text` content type. This allows you to wrap only specific content that should be moderated by Bedrock Guardrails, rather than evaluating the entire conversation.
+LiteLLM supports selective content moderation using the `guarded_text` content type. It lets you mark which user content Bedrock Guardrails evaluate. LiteLLM also marks some content on its own, as described below.
 
-**How it works:**
-- Content with `type: "guarded_text"` gets automatically wrapped in `guardrailConverseContent` blocks
-- Only the wrapped content is evaluated by Bedrock Guardrails
-- Regular content with `type: "text"` bypasses guardrail evaluation
+These rules apply only when LiteLLM sends the request to the Bedrock Converse API, which most Bedrock chat models on `/v1/chat/completions` use. Do not use `guarded_text` on other Bedrock routes:
+- On the Invoke route, LiteLLM sends `guardrailConfig` as request headers. This route covers models with the `bedrock/invoke/` prefix, models that LiteLLM sends to Invoke by default (for example `bedrock/mistral.mistral-7b-instruct-v0:2`), and most `/v1/messages` requests to Claude models. Bedrock applies the guardrail to the whole prompt, except prompt attack filters. AWS runs those only on input inside [guardrail input tags](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tagging.html), and LiteLLM does not add those tags. A blocked request comes back with `finish_reason: "stop"` (`stop_reason: "end_turn"` on `/v1/messages`) and the guardrail's blocked message as the content. For `bedrock/invoke/` Claude models, LiteLLM removes `guarded_text` parts, so the model never sees that content.
+- Other routes, such as `bedrock/openai/`, `bedrock/mantle/`, and `bedrock/claude_platform/`, are not covered here.
+
+**How LiteLLM builds `guardContent` blocks:**
+- Content with `type: "guarded_text"` in a user message is sent to Bedrock as a [`guardContent`](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ContentBlock.html) block. LiteLLM does not support `guarded_text` in system or assistant messages yet. Do not use it there, because LiteLLM drops those parts or sends them as plain text.
+- When the last message is a user message, LiteLLM also sends the text parts of that message as `guardContent`, and does the same for any user messages directly before it. A user message that already has a `guarded_text` part is sent as written, so its `type: "text"` parts stay plain text. Images and documents are never wrapped.
+- A system message that comes after a user, assistant, or tool message is sent as a user message, so the rule above also applies to it. System messages at the start of the request stay system messages. <SinceVersion v="1.104.0" />
+- When the request has tool results but no `tools` parameter, LiteLLM turns each tool result into a user message and sends its text as `guardContent`, wherever the tool result is in the conversation. This happens while `litellm.bedrock_neutralize_orphaned_tool_blocks` is `True`, which is the default. <SinceVersion v="1.103.0" />
+
+**What Bedrock Guardrails evaluate:**
+- When a request has at least one `guardContent` block, Bedrock Guardrails evaluate only the `guardContent` blocks, with the exceptions AWS notes below. Plain `type: "text"` parts, images, and documents are not evaluated, so an image content filter does not see an image sent next to text in the last user message.
+- When a request has no `guardContent` blocks, Bedrock Guardrails evaluate the text of every user and assistant message.
+- In both cases, Bedrock does not evaluate system messages at the start of the request or tool results sent with the `tools` parameter.
 
 :::note
-If `guarded_text` is not used, the entire conversation history will be sent to the guardrail for evaluation, which can increase latency and costs.
+When a request has any `guardContent` blocks, Bedrock Guardrails evaluate only these:
+- your `guarded_text` parts in user messages
+- the text of the trailing user messages that have no `guarded_text` part, when the request ends with one or more user messages
+- every tool result sent without the `tools` parameter, wherever it is in the conversation
+
+Earlier turns and the `type: "text"` parts of a message with a `guarded_text` part are not evaluated. Put content in `guarded_text` parts when it must be checked, for example when your clients can edit the conversation history.
+
+Bedrock evaluates every user and assistant message only when the request has none of these blocks. This happens, for example, when a request ends with an assistant message and has no `guarded_text` parts or tool results sent without `tools`. Evaluating the whole conversation can increase latency and costs.
+
+AWS notes that content outside `guardContent` blocks can still be evaluated in some setups, such as contextual grounding checks. For details, see [Include a guardrail with the Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
 :::
 
 <Tabs>
@@ -1674,11 +1695,7 @@ print(response)
 
 ## Set 'converse' / 'invoke' route 
 
-:::info
-
-Supported from LiteLLM Version `v1.53.5`
-
-:::
+<SinceVersion v="1.53.5" />
 
 LiteLLM defaults to the `invoke` route. LiteLLM uses the `converse` route for Bedrock models that support it.
 
@@ -2328,13 +2345,16 @@ LiteLLM supports ALL Bedrock models.
 
 Here's an example of using a bedrock model with LiteLLM. For a complete list, refer to the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
 
+Recent Claude models on Bedrock, Opus 5.5 among them, take on-demand calls only through an inference profile, so call them with the `global.` prefix or a geographic one such as `us.` or `eu.` (each model's AWS model card lists the profiles it has). The bare model ID, such as `bedrock/anthropic.claude-opus-5-5`, gets a 400 from AWS unless the region serves the model in-region (for Opus 5.5, AWS lists only London). `global.` can send a request to any commercial AWS region, so if your team has data residency rules or an SCP that limits regions, read [AWS's global cross-Region inference guide](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html) or use a geographic profile instead. Geographic profiles cost 10% more than `global.` (for Opus 5.5, $4.40 instead of $4 per million input tokens), and LiteLLM tracks the cost of every Opus 5.5 profile. On older images this needs the remote cost map, which LiteLLM loads at startup unless `LITELLM_LOCAL_MODEL_COST_MAP` is set.
+
 | Model Name                 | Command                                                          |
 |----------------------------|------------------------------------------------------------------|
 | GPT-OSS 20B | `completion(model='bedrock/converse/openai.gpt-oss-20b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | GPT-OSS 120B | `completion(model='bedrock/converse/openai.gpt-oss-120b-1:0', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Deepseek R1    | `completion(model='bedrock/us.deepseek.r1-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
+| Anthropic Claude Opus 5.5    | `completion(model='bedrock/global.anthropic.claude-opus-5-5', messages=messages)` or `completion(model='bedrock/us.anthropic.claude-opus-5-5', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude Sonnet 4.5    | `completion(model='bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
-| Anthropic Claude-V3.5 Sonnet    | `completion(model='bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
+| Anthropic Claude Haiku 4.5    | `completion(model='bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude-V3  sonnet    | `completion(model='bedrock/anthropic.claude-3-sonnet-20240229-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude-V3 Haiku     | `completion(model='bedrock/anthropic.claude-3-haiku-20240307-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |
 | Anthropic Claude-V3 Opus     | `completion(model='bedrock/anthropic.claude-3-opus-20240229-v1:0', messages=messages)`   | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`           |

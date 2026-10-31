@@ -9,6 +9,7 @@ import {
   CostQualityChart,
 } from './JevRankBenchmarks';
 import RerankFlow from './RerankFlow';
+import RerankWalkthrough from './RerankWalkthrough';
 
 const money = (amount) =>
   new Intl.NumberFormat('en-US', {
@@ -210,44 +211,7 @@ function RecordedDemo() {
 
 function MethodExplanation() {
   return (
-    <section className={styles.methodSection} aria-labelledby="method-title">
-      <div>
-        <Eyebrow number="03">SCORING</Eyebrow>
-        <h2 id="method-title">How JevRank works</h2>
-        <p>
-          Send a query and documents to LiteLLM’s rerank API. LiteLLM recognizes
-          supported decision models and chooses the scoring method for the
-          model.
-        </p>
-        <p>
-          Decision models return probabilities for fixed answers. JevRank uses
-          those probabilities as relevance scores, sorts the documents and
-          preserves their original indexes.
-        </p>
-      </div>
-      <div className={styles.methodVisual}>
-        <div className={styles.methodInput}>
-          <span>INPUT</span>
-          <div>
-            <span>query</span>
-            <span>documents[]</span>
-          </div>
-        </div>
-        <span className={styles.flowArrow} aria-hidden="true">
-          ↓
-        </span>
-        <div className={styles.methodQuestion}>
-          <span>DECISION MODEL</span>
-          <strong>Probabilities for the supplied passages</strong>
-        </div>
-        <span className={styles.flowArrow} aria-hidden="true">
-          ↓
-        </span>
-        <div className={styles.methodOutput}>
-          <strong>Ranked documents</strong>
-          <span>Original index + relevance score</span>
-        </div>
-      </div>
+    <RerankWalkthrough>
       <details className={styles.methodDetails}>
         <summary>Score meaning and failures</summary>
         <p>
@@ -264,7 +228,7 @@ function MethodExplanation() {
           token usage.
         </p>
       </details>
-    </section>
+    </RerankWalkthrough>
   );
 }
 
@@ -437,7 +401,7 @@ print(result.results)`;
 
 export default function JevRankLaunch() {
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-full-width>
       <header className={styles.launchHero}>
         <div className={styles.launchInner}>
           <div className={styles.launchTop}>

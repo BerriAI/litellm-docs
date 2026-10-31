@@ -30,9 +30,11 @@ The completion model still receives the request needed to generate the answer. H
 
 ## Use a deployed decision model {#use-a-deployed-decision-model}
 
-Any `model_list` entry that serves [`/v1/decisions`](/docs/decisions) can classify requests for the router. Set `deployment_name` inside `opensource_classifier_config` to that entry's `model_name`. LiteLLM then sends the classifier call through that deployment, so the call uses the deployment's endpoint, credentials and price, and you configure the connection once for both the router and the decision routes. Every provider in the [decision provider list](/docs/decisions/providers) works this way, including Strands Decider and Cloudflare Clef.
+Any `model_list` entry that serves [`/v1/decisions`](/docs/decisions) can classify requests for the router. Set `deployment_name` inside `opensource_classifier_config` to that entry's `model_name`. LiteLLM then sends the classifier call through that deployment, so the call uses the deployment's endpoint, credentials and price, and you configure the connection once for both the router and the decision routes. Every provider in the [decision provider list](/docs/decisions#supported-providers) works this way, including Strands Decider and Cloudflare Clef.
 
-Available from v1.104.3. [LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913) added it, and backports shipped it in v1.104.3, v1.105.0 and v1.106.0. The examples on this page use the names from v1.106.0. On v1.104.x and v1.105.x releases, write `classifier_type: jev` and `jev_classifier_config` in place of `classifier_type: oss_classifier` and `opensource_classifier_config`, and give a decision model `mode: evaluation` in place of `mode: decisions`.
+<SinceVersion v="1.104.3" />
+
+[LiteLLM #45913](https://github.com/BerriAI/litellm/pull/45913) added decision classifiers, and backports shipped them in v1.104.3, v1.105.0 and v1.106.0. The examples on this page use the names from v1.106.0. On v1.104.x and v1.105.x releases, write `classifier_type: jev` and `jev_classifier_config` in place of `classifier_type: oss_classifier` and `opensource_classifier_config`, and give a decision model `mode: evaluation` in place of `mode: decisions`.
 
 For Strands Decider, run the model on a server you operate and set `STRANDS_DECIDER_API_BASE` on the gateway to that server's base URL without `/v1/systemone`. Set `STRANDS_DECIDER_API_KEY` only when the server requires a bearer token. For Cloudflare Clef, set `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`. Use `cloudflare/clef-flash` instead of `cloudflare/clef` for the lower-cost Clef Flash model.
 
@@ -92,7 +94,7 @@ The response headers show which classifier ran. A routed request returns `x-lite
 
 ### vLLM {#vllm}
 
-vLLM serves `/v1/systemone` from [v0.32.0](https://github.com/vllm-project/vllm/releases/tag/v0.32.0), added in [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). It answers `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs, on the model architectures listed in its [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them, and returns 501 for other models. The router asks for the tier as a `choice` question. `provider` does not take `hosted_vllm`, so connect vLLM through `deployment_name`. This config needs LiteLLM v1.106.0 or later:
+vLLM serves `/v1/systemone` from [v0.32.0](https://github.com/vllm-project/vllm/releases/tag/v0.32.0), added in [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299). It answers `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs, on the model architectures listed in its [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them, and returns 501 for other models. The router asks for the tier as a `choice` question. `provider` does not take `hosted_vllm`, so connect vLLM through `deployment_name`. This config works <SinceVersion v="1.106.0" />:
 
 ```yaml title="config.yaml"
 model_list:
@@ -236,7 +238,7 @@ LiteLLM posts the System One request without a `model` field to `POST /api/2.0/a
 
 ## Configure from the dashboard
 
-From v1.104.3 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions/admin_ui#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
+From v1.104.3 the dashboard picks the classifier from your deployed decision models. Add the decision model first, either under **Models + Endpoints** as in [Add a decision model](/docs/decisions#add-a-decision-model) or in `model_list` as shown in [Use a deployed decision model](#use-a-deployed-decision-model). Laya, Bespoke Nimble and Databricks `ai_decide` deployments work the same way as Strands Decider and Clef.
 
 1. Open **Models + Endpoints → Auto Router** and create or edit a router.
 2. Under **Choose your classifier**, select **Decisions Model**. Under **Decision model**, pick the deployment, for example `strands-decider` or `clef`. The list shows only deployments of decision models.
@@ -307,7 +309,7 @@ curl http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions/providers) and that your gateway runs v1.104.3 or later. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
+If a decision model is missing from the dashboard's **Decision model** list, check that its deployment uses a decision model from the [provider list](/docs/decisions#supported-providers) and that your gateway carries decision classifiers <SinceVersion v="1.104.3" />. On older builds, verify that your gateway and its dashboard include the changes listed in the availability note above. Older dashboards label the classifier **JEV Classifier**.
 
 ## Call a native decision API
 

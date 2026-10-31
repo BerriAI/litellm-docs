@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Inference APIs
 
-Available from v1.107.0.
+<SinceVersion v="1.107.0" />
 
 ## Overview
 

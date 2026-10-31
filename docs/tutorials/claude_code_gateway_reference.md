@@ -18,7 +18,7 @@ The flow works with any SSO provider LiteLLM supports (Google, Microsoft Entra I
 
 ## How it works
 
-Claude Code reads the gateway URL from a managed settings file, fetches the gateway's OAuth discovery document, and asks the developer once to trust the gateway. It then starts an [OAuth device authorization](https://www.rfc-editor.org/rfc/rfc8628) flow: the terminal shows a short code and opens the browser on LiteLLM's SSO login, the developer signs in with your identity provider and confirms the code, and Claude Code, which has been polling the token endpoint, receives a LiteLLM CLI token and a refresh token. The CLI token is a JWT scoped to the developer's user and team, valid for 24 hours by default, and Claude Code renews it with the refresh token before it expires, so a developer who keeps using Claude Code is not sent back to the browser (see [Session lifetime and sign-out](#session-lifetime-and-sign-out)). Claude Code stores both, fetches managed settings with the CLI token, and sends every inference request to `/claude_code_gateway/v1/messages` with it as the bearer token. Under the hood the gateway reuses the proxy's existing [CLI SSO device flow](../proxy/cli_sso), so anything that works for `lite login` (SSO providers, team membership, model access, budgets) works here
+Claude Code reads the gateway URL from a managed settings file, fetches the gateway's OAuth discovery document, and asks the developer once to trust the gateway. It then starts an [OAuth device authorization](https://www.rfc-editor.org/rfc/rfc8628) flow: the terminal shows a short code and opens the browser on LiteLLM's SSO login, the developer signs in with your identity provider, picks a team if they are on more than one <SinceVersion v="1.109.0" />, and confirms the code, and Claude Code, which has been polling the token endpoint, receives a LiteLLM CLI token and a refresh token. The CLI token is a JWT scoped to the developer's user and team, valid for 24 hours by default, and Claude Code renews it with the refresh token before it expires, so a developer who keeps using Claude Code is not sent back to the browser (see [Session lifetime and sign-out](#session-lifetime-and-sign-out)). Claude Code stores both, fetches managed settings with the CLI token, and sends every inference request to `/claude_code_gateway/v1/messages` with it as the bearer token. Under the hood the gateway reuses the proxy's existing [CLI SSO device flow](../proxy/cli_sso), so anything that works for `lite login` (SSO providers, team membership, model access, budgets) works here
 
 ## 1. Turn the gateway on
 
@@ -111,7 +111,7 @@ Once the developer has approved the code in the browser (the next section shows 
   "expires_in": 86400,
   "refresh_token": "llm_srefresh_e<redacted>",
   "user_id": "<the signed-in user id>",
-  "team_id": "<the first team on the user record, or null when it has none>"
+  "team_id": "<the team the session is issued for, or null when the user has none>"
 }
 ```
 
@@ -169,6 +169,14 @@ The browser goes through your identity provider (a browser already signed in to 
 
 <Image img={require('../../img/claude_code_gateway/browser_verification_code.png')} style={{ width: '800px', height: 'auto' }} />
 
+On the same page, a developer on more than one team picks the team for the session <SinceVersion v="1.109.0" />. The **Attribute requests to team** dropdown starts on **Choose a team**, and the page does not submit until the developer picks one. Each option shows the team's alias, or the team id for a team with no alias, and adds the team id in parentheses when two of the developer's teams show the same name. The session token is issued for the picked team, so the session gets that team's models and budget, its spend goes to that team, and every renewal keeps it. A developer on one team sees "Requests are attributed to team" with that team's name instead of the dropdown, and a developer on no team sees neither and gets a session with no team
+
+<Image img={require('../../img/claude_code_gateway/browser_team_choice.png')} style={{ width: '800px', height: 'auto' }} />
+
+The proxy checks the pick against the teams it read for the developer at sign-in, once when the page is submitted and again when Claude Code collects the token. A submit naming a team outside them, which the dropdown never offers, gets `400 {"detail":"Choose one of the teams you belong to"}`. A pick that is no longer one of them because the developer was removed from that team and then signed in again on the same link gets `400 invalid_grant` with "The team picked at sign-in is no longer one of your teams; sign in again" from the token endpoint, and the developer runs `/login` again
+
+Earlier releases show no dropdown and issue the session for whichever of the developer's teams the proxy reads first, which is not always the first one on their user record. During a rolling upgrade, a sign-in that a replica still on an earlier release starts, or whose page or **Continue** it serves, gets that same team whatever the developer picked. An earlier-release replica that only answers Claude Code's token poll keeps the pick. A session keeps its team when it renews, so one signed in on an earlier release stays on that team after the upgrade. Claude Code does not show which team a session got, so a developer on several teams who signed in before or during the upgrade runs `/login` again once every replica is on 1.109.0 or later
+
 After Continue, the browser confirms the login and the terminal picks it up on its next poll
 
 <Image img={require('../../img/claude_code_gateway/browser_login_complete.png')} style={{ width: '800px', height: 'auto' }} />
@@ -187,7 +195,7 @@ Every renewal re-reads the developer's user record and team membership in LiteLL
 
 `/logout` posts the session token and the refresh token to `POST /claude_code_gateway/oauth/revoke`, the `revocation_endpoint` from the discovery document, then removes the stored credential. Revoking the refresh token ends that sign-in, since every refresh token rotated from it, whoever holds one, is refused from then on. The session token itself is self-contained and is not revoked; it stays valid until it expires
 
-Renewal and revocation need LiteLLM v1.106.0 or later (first in `v1.106.0-rc.1`). Earlier releases issue no refresh token and answer every refresh with `401`, so Claude Code asks for `/login` again at every expiry, and during a rolling upgrade a renewal served by a replica still on the previous release does the same for that developer once
+Renewal and revocation work <SinceVersion v="1.106.0" />, first in `v1.106.0-rc.1`. Earlier releases issue no refresh token and answer every refresh with `401`, so Claude Code asks for `/login` again at every expiry, and during a rolling upgrade a renewal served by a replica still on the previous release does the same for that developer once
 
 ## 4. Push managed settings from the proxy
 
@@ -264,7 +272,7 @@ A replayed refresh token is refused on its own and ends nothing else, so a copy 
 
 The refresh token is signed with the MCP gateway's session signing keys, derived from `master_key` unless `general_settings.mcp_session_token_signing` is set. On a proxy where that block cannot be loaded, sign-in still succeeds but returns no refresh token and the proxy logs the fault, so the developer is back to signing in at every expiry until it is fixed
 
-The token is scoped to the first team on the developer's user record. A developer who belongs to several teams has no team picker in this flow and gets the first team's models and budget; `lite login` offers the picker if a developer needs a token for another team
+A session stays on the team it was issued for, and every renewal keeps that team. A developer who wants another team's models runs `/login` again and picks it on the sign-in page <SinceVersion v="1.109.0" />. Earlier releases have no way to pick another team in Claude Code, and `lite login` offers a team picker if a developer needs a token for another team
 
 Two endpoints of the protocol are not served: `GET /claude_code_gateway/v1/models` and `HEAD /claude_code_gateway/api/hello` answer `404`. Sign-in, managed settings, and inference do not depend on them. Model discovery through `/v1/models` is off in Claude Code unless `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` is set, and with the endpoint unserved the `/model` picker shows Claude Code's built-in list, which is why the proxy config keeps the `anthropic/*` wildcard. The team's model list still decides which of those models a developer may use
 

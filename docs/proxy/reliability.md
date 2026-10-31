@@ -146,7 +146,7 @@ The mock-testing flags are deprecated for Proxy requests. To validate Proxy fall
 
 ### Explanation
 
-Fallbacks are done in-order - ["gpt-4o-mini", "gpt-4o", "gpt-4.1"], will do 'gpt-4o-mini' first, then 'gpt-4o', etc.
+Fallbacks are done in-order - `["{{openai_small}}", "{{openai_large}}", "{{anthropic}}"]`, will do `{{openai_small}}` first, then `{{openai_large}}`, etc.
 
 You can also set [`default_fallbacks`](#default-fallbacks), in case a specific model group is misconfigured / bad.
 
@@ -329,8 +329,10 @@ litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
   fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] # fallback to {{openai_small}} if call fails num_retries 
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  cooldown_time: 30 # how long to cooldown model if fails/min > allowed_fails
+
+router_settings:
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
 ```
 
 ### Fallback to Specific Model ID
@@ -470,7 +472,7 @@ For azure deployments, set the base model. Pick the base model from [this list](
 <Tabs>
 <TabItem value="same-group" label="Same Group">
 
-Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
+Filter instances of a model (e.g. gpt-5.4-mini) with smaller context windows
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
@@ -479,24 +481,29 @@ router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: azure/chatgpt-v-2
-    api_base: os.environ/AZURE_API_BASE
-    api_key: os.environ/AZURE_API_KEY
-    api_version: "2023-07-01-preview"
+      model: azure/chatgpt-v-2
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: gpt-4o-mini
-    api_key: os.environ/OPENAI_API_KEY
+      model: gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -504,18 +511,23 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+The test prompt is about 320,000 tokens, so the Azure deployment needs a tokens-per-minute quota above that. A deployment with a lower quota is rate limited, and the proxy then reports a context window error instead of the rate limit.
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 25000
+text = "What is the meaning of 42?" * 40000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.4-mini",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -534,11 +546,14 @@ Fallback to larger models if current model is too small.
 The model ids in this example are illustrative and kept for their context window sizes.
 
 ```yaml keep-model-ids
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-3.5-turbo-small
+  - model_name: small-model
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
@@ -547,9 +562,9 @@ model_list:
     model_info:
       base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-3.5-turbo-large
+  - model_name: large-model
     litellm_params:
-      model: gpt-4.1
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
@@ -558,12 +573,14 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  context_window_fallbacks: [{"gpt-3.5-turbo-small": ["gpt-3.5-turbo-large", "claude-opus"]}]
+  context_window_fallbacks: [{"small-model": ["large-model", "claude-opus"]}]
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -571,10 +588,13 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
@@ -582,7 +602,7 @@ text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo-small",
+    model="small-model",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -602,7 +622,7 @@ Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit conte
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -615,7 +635,7 @@ model_list:
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  content_policy_fallbacks: [{"gpt-3.5-turbo-small": ["claude-opus"]}]
+  content_policy_fallbacks: [{"small-model": ["claude-opus"]}]
 ```
 
 
@@ -627,7 +647,7 @@ You can also set default_fallbacks, in case a specific model group is misconfigu
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -645,7 +665,7 @@ litellm_settings:
 
 This will default to claude-opus in case any model fails.
 
-A model-specific fallbacks (e.g. `{"gpt-3.5-turbo-small": ["claude-opus"]}`) overrides default fallback.
+A model-specific fallbacks (e.g. `{"small-model": ["claude-opus"]}`) overrides default fallback.
 
 ### EU-Region Filtering (Pre-Call Checks)
 
@@ -709,6 +729,54 @@ print(response)
 
 print(response.headers.get('x-litellm-model-api-base'))
 ```
+
+### Vision Capability Filtering (Image Requests)
+
+**Before call is made** LiteLLM removes deployments declared text-only from the candidates for a request that carries an image, meaning a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. This runs on by default under every routing strategy and does not need `enable_pre_call_checks: true`.
+
+A deployment is text-only when `model_info.supports_vision: false` is set, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the model name. A deployment with no declaration and no catalog entry stays eligible, so declare `supports_vision: false` on custom text-only deployments. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, which keeps the earlier behavior for groups that only ever served text. The `x-litellm-model-id` response header names the deployment that served, or failed, the request.
+
+**1. Set Config**
+
+The Bedrock gpt-oss deployment below needs no declaration because the model catalog already marks it text-only. The custom deployment does.
+
+```yaml
+model_list:
+  - model_name: mixed
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: mixed
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: us-east-1
+  - model_name: mixed
+    litellm_params:
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
+    model_info:
+      supports_vision: false
+
+router_settings:
+  routing_strategy: latency-based-routing
+```
+
+**2. Test it**
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mixed",
+    "messages": [{"role": "user", "content": [
+      {"type": "text", "text": "What is in this image?"},
+      {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}
+    ]}]
+  }'
+```
+
+The `x-litellm-model-id` header names the `openai/gpt-5.6` deployment every time, while a plain text request can still land on any of the three.
 
 ### Setting Fallbacks for Wildcard Models
 

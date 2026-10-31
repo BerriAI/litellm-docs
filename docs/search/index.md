@@ -13,10 +13,7 @@ LiteLLM follows the [Perplexity API request/response for the Search API](https:/
 
 :::
 
-:::info
-
-Supported from LiteLLM v1.78.7+
-:::
+<SinceVersion v="1.78.7" />
 
 ## **LiteLLM Python SDK Usage**
 ### Quick Start 
@@ -332,6 +329,12 @@ The response follows Perplexity's search format with the following structure:
 | `results[].url` | string | URL of the search result |
 | `results[].snippet` | string | Text snippet from the result |
 | `results[].date` | string | Optional publication or last updated date |
+| `results[].raw_content` | string or null | Optional full page content from providers such as Tavily |
+| `results[].score` | number | Optional provider relevance score |
+| `results[].favicon` | string or null | Optional provider favicon URL |
+| `provider_metadata` | object | Optional provider-specific response fields, such as Tavily's answer, images and request ID |
+
+Provider-specific fields depend on what the upstream returns. See [Tavily's response example](./tavily.md#response) for full page content and the response metadata envelope.
 
 ## **Supported Providers**
 

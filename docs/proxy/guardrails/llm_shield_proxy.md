@@ -131,7 +131,7 @@ litellm.callbacks.append(
 )
 
 response = await litellm.acompletion(
-    model="openai/gpt-4.1-mini",
+    model="openai/{{openai_small}}",
     messages=[{"role": "user", "content": "Email jane.doe@example.com the invoice"}],
     guardrails=["llm_shield_proxy"],
 )

@@ -6,7 +6,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "A recap of the July LiteLLM town hall: 38 security fixes, 317 bug fixes, 140 feature commits, new Rust gateway benchmarks, and the launch of Autorouter V2."
-tags: [townhall, security, reliability, product]
+tags: [townhall, reliability, product]
 hide_table_of_contents: false
 ---
 
