@@ -1,33 +1,24 @@
 # LiteLLM Hex templates
 
-Template version: 1.1.0. Default source: existing `LiteLLM_DailyTeamSpend` rows, with current project mapping from `LiteLLM_VerificationToken`. Optional request-log contract: `litellm_analytics.spend_daily_v1`.
+Team cost template version: 2.0.0. Default reporting sources: `LiteLLM_DailyTeamSpend` and `LiteLLM_TeamTable`. The query reads metrics and display names; it does not select API-key values or access the credential table.
 
-- `litellm_roi_demo.hex.yaml`: synthetic preview, no credentials or data connection.
-- `litellm_roi_postgres_daily.hex.yaml`: quick setup over `LiteLLM_DailyTeamSpend`, with current key-to-project mapping from `LiteLLM_VerificationToken`. It installs no database objects.
-- `litellm_roi_postgres.hex.yaml`: the same analysis with a native Hex SQL source.
-- `setup-postgres.sql`: an aggregate view over LiteLLM's Postgres spend logs.
+Use `litellm_team_cost_postgres.hex.yaml` with your read-only Hex connection. Use `litellm_team_cost_demo.hex.yaml` for synthetic data. From Hex Home choose **+ → Upload project → Upload**, select the YAML, choose a connection on Source and run all cells. See `/docs/observability/hex` for column grants and metric limits.
 
-Import the YAML through Hex Home → + menu → Upload project. For quick setup, import the direct Postgres template and select an existing read-only connection that can read daily team spend plus the token/project ID columns of the key table. For a restricted connection, ask your database administrator to run the SQL and provision `hex_reader`, then use the view-based Postgres template. A replica is optional; choose one when analytics load justifies it. Run all cells, review Settings, then publish with your chosen audience. See `/docs/observability/hex` for setup and metric definitions.
+The older `litellm_roi_demo.hex.yaml` and `litellm_roi_postgres.hex.yaml` remain available for project-level ROI analysis. The latter reads `litellm_analytics.spend_daily_v1`, created by `setup-postgres.sql` over request logs. Neither requires the credential-table lookup removed from the earlier daily template.
 
-## Change policy
+## Maintenance
 
-Keep all templates' analysis, cells and app layout in sync. Change the source or intro only when the variant needs it. Keep credentials and workspace-specific IDs out of all files.
-
-Bump the template version when changing metrics or layout. Introduce a new view name for a breaking contract change. Record the change below. Existing imported copies do not receive repository updates; import a new copy, reconnect its Source cell, review its results, then publish it in place of the older board.
-
-The Hex templates workflow validates the native Hex schema, executes demo calculations, checks filters and missing-data behavior, and runs the SQL against a disposable Postgres database. It also verifies that the restricted reader can query the aggregate view and cannot query the source table. Run these checks before merging changes:
+Keep each demo/live pair's calculations and layout in sync. Version changes to metrics, inputs or layout. Test the native Hex schema, synthetic calculations, filters, missing data, HTML escaping, ROI scope, SQL and restricted reader permissions. Imported copies remain under the customer's control.
 
 ```bash
 python -m pip install -r scripts/hex-template-requirements.txt
 python scripts/test_hex_templates.py
 ```
 
-Set `HEX_TEST_DSN` to a disposable local database to include the Postgres test. The test creates a source table and a database role. It does not clean them up; discard the test database and cluster afterward. Never use a real gateway database for this test.
-
-SQL contract reference: LiteLLM `schema.prisma`, `LiteLLM_SpendLogs`. Source revision checked: `33991b106449089ad10f7e148e8f917a4a124849`. Older deployments may lack `completionStartTime`, `model_group` or `status`; adapt the view to return NULL/unknown for absent metrics. Verify this mapping against the deployment you use.
+Set `HEX_TEST_DSN` only to a disposable database to include SQL and role checks. The test creates tables and roles; discard the database afterward.
 
 ## Changelog
 
-- 1.1.0: adds setup over existing daily team aggregates with current key-to-project enrichment. Latency, TTFT and response-cache rate stay unknown on this source. Existing restricted-view and demo templates keep the same metrics and layout.
-
-- 1.0.0: project and entity spend, model mix, complete-day cost comparisons, coverage checks, latency, TTFT, response-cache rate and business-value ROI input.
+- 2.0.0: adds a team-first cost template over daily team spend and team display names. Removes the credential-table dependency. Team filters and ROI inputs use team IDs.
+- 1.1.0: adds a daily aggregate variant, superseded by the team template.
+- 1.0.0: project cost, model mix, complete-day comparisons and validated business ROI inputs.

@@ -3,6 +3,7 @@ import Link from '@docusaurus/Link';
 import {PostByline} from '@theme/BlogPostPage';
 import styles from './launch.module.css';
 
+const liveDemoUrl = 'https://app.hex.tech/01a18e4b-6e94-7328-831c-e5ab0e2e00e7/app/LiteLLM-AI-cost-and-ROI-demo-034p688gOAllaldLw72Oat/latest';
 const feedbackUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdySd34qAyNpGU3bzeYS-BSSkyIspDcXaLVsVqyWJPSdE4LfQ/viewform';
 
 function ReportingArtwork() {
@@ -28,8 +29,8 @@ export function HexPage({children}) {
         <div className={styles.brands}><img src="/img/brand/litellm-logo-white.png" alt="LiteLLM" width="150" height="36"/><span aria-hidden="true">×</span><img src="/img/hex/hex-logo.svg" alt="Hex" width="94" height="36"/></div>
         <ReportingArtwork />
         <h1><span className={styles.title}>AI spend.</span><span className={styles.subtitle}>Cost reporting, now in Hex.<span aria-hidden="true">↘</span></span></h1>
-        <div className={styles.heroBottom}><p>Track costs through LiteLLM.<br/>Explore them in your own Hex board.</p><a href="#get-the-template">Get the template <span aria-hidden="true">↓</span></a></div>
-        <div className={styles.heroFoot}><span>PROJECTS / TEAMS / MODELS</span><span>OPEN TEMPLATE · V1.1.0</span></div>
+        <div className={styles.heroBottom}><p>Connect Hex to your LiteLLM Postgres data.<br/>Set budgets and routing in LiteLLM.</p><a href={liveDemoUrl} target="_blank" rel="noopener noreferrer">View live Hex demo <span aria-hidden="true">↗</span></a></div>
+        <div className={styles.heroFoot}><span>TEAMS / MODELS / BUDGETS</span><span>OPEN TEMPLATE · V2.0.0</span></div>
       </div>
     </header>
     <BoardShowcase />
@@ -42,22 +43,23 @@ export function HexPage({children}) {
 
 export function TemplateDownloads() {
   return <div className={styles.downloads} data-template-downloads>
-    <a href="/hex/litellm_roi_demo.hex.yaml" download><span className={styles.downloadMeta}>01 / SYNTHETIC DATA</span><strong>Try the demo <span aria-hidden="true">↗</span></strong><span>Explore the board before connecting a database.</span></a>
-    <a href="/hex/litellm_roi_postgres_daily.hex.yaml" download><span className={styles.downloadMeta}>02 / YOUR SPEND LOGS</span><strong>Connect Postgres <span aria-hidden="true">↗</span></strong><span>Use existing daily aggregates. No setup SQL.</span></a>
+    <a href={liveDemoUrl} target="_blank" rel="noopener noreferrer"><span className={styles.downloadMeta}>LIVE / SYNTHETIC DATA</span><strong>Open the Hex dashboard <span aria-hidden="true">↗</span></strong><span>Explore the working demo. No sign-in or download.</span></a>
+    <a href="/hex/litellm_team_cost_postgres.hex.yaml" download><span className={styles.downloadMeta}>TEMPLATE / YOUR DATABASE</span><strong>Download the template <span aria-hidden="true">↓</span></strong><span>Import this YAML project into Hex, then select your connection.</span></a>
   </div>;
 }
 
 function BoardShowcase() {
   return <section className={styles.showcase} aria-label="Hex dashboard preview">
     <div className={styles.showcaseLabel}><span>THE HEX BOARD</span><span>SYNTHETIC DEMO DATA</span></div>
-    <h2>See where your AI budget goes.</h2>
-    <img className={styles.boardPreview} src="/img/hex/roi-overview.png" alt="Hex board showing project spend, request volume, unit costs and daily trends with synthetic data" />
+    <h2>Explore the live Hex dashboard.</h2>
+    <p><a href={liveDemoUrl} target="_blank" rel="noopener noreferrer">Open the working demo ↗</a> · Synthetic data · No sign-in</p>
+    <img className={styles.boardPreview} src="/img/hex/public-demo.png" alt="Hex board showing project spend, request volume, unit costs and daily trends with synthetic data" />
     <figure id="cost-change-demo" className={styles.costDemo}>
       <h3>See a model change raise unit cost.</h3>
       <img src="/img/hex/cost-change.gif" width="1120" height="480" alt="Zoomed Hex demo alternating between project model mix and the cost-change table, where document-review shows an 80 percent unit-cost increase" />
       <figcaption>Model mix and seven-day cost changes in Hex. Synthetic demo data.</figcaption>
     </figure>
-    <p className={styles.demoNote}>The daily-aggregate template covers costs, requests and tokens. Optional request-log metrics such as latency stay unknown on that source.</p>
+    <p className={styles.demoNote}>The public demo includes synthetic timing metrics. The daily team template reports recorded costs, requests and usage; daily rows do not include latency.</p>
   </section>;
 }
 
@@ -67,18 +69,10 @@ export function SpendDataFlow() {
     <div className={styles.flowSteps}>
       <div className={styles.flowNode}><small>01 / YOUR POSTGRES</small><strong>Daily spend</strong><code>LiteLLM_DailyTeamSpend</code><dl><dt>date + team_id</dt><dd>Day and team</dd><dt>model + spend</dt><dd>Recorded costs</dd><dt>api_requests</dt><dd>Daily requests</dd><dt>prompt_tokens + completion_tokens</dt><dd>Token usage</dd></dl></div>
       <span className={styles.flowArrow} aria-hidden="true">→</span>
-      <div className={styles.flowNode}><small>02 / HEX SOURCE QUERY</small><strong>Project lookup</strong><code>LiteLLM_VerificationToken</code><p>Map each key to its current project.<br/>Return aggregates, without key values.</p><span className={styles.flowTag}>SQL included in the template</span><span className={styles.flowTag}>No database objects created</span></div>
+      <div className={styles.flowNode}><small>02 / HEX SOURCE QUERY</small><strong>Team names</strong><code>LiteLLM_TeamTable</code><p>Join daily totals to team display names.<br/>Keep ownership by stable team ID.</p><span className={styles.flowTag}>SQL included in the template</span><span className={styles.flowTag}>No database objects created</span></div>
       <span className={styles.flowArrow} aria-hidden="true">→</span>
-      <div className={styles.flowNode}><small>03 / YOUR HEX APP</small><strong>Cost reporting</strong><div className={styles.miniBars} aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div><p>Project costs. Model mix.<br/>Daily trends. Business ROI inputs.</p><span className={styles.flowTag}>Refresh with a scheduled run</span></div>
+      <div className={styles.flowNode}><small>03 / YOUR HEX APP</small><strong>Cost reporting</strong><div className={styles.miniBars} aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div><p>Team costs. Model mix.<br/>Daily trends. Cost changes.</p><span className={styles.flowTag}>Refresh with a scheduled run</span></div>
     </div>
-    <figcaption>Hex reads the existing daily team aggregates and the key table’s <code>token</code> / <code>project_id</code> columns. Reassigned keys use their current project; deleted keys stay unassigned. No request-log scan in this path.</figcaption>
+    <figcaption>LiteLLM writes the daily totals in Postgres. Hex reads reporting columns from these two existing tables. You change budgets and routing in LiteLLM; Hex does not write to the gateway.</figcaption>
   </figure>;
-}
-
-export function SetupSteps() {
-  return <ol className={styles.setupSteps}>
-    <li><strong>Import the template</strong><span>Hex Home → + → Upload project.</span></li>
-    <li><strong>Select your Postgres connection</strong><span>Choose it on the Source SQL cell.</span></li>
-    <li><strong>Run and publish</strong><span>Review the board, then choose who can view it.</span></li>
-  </ol>;
 }

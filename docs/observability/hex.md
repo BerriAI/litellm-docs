@@ -1,42 +1,56 @@
 ---
 title: Hex
-description: Connect Hex to existing LiteLLM spend logs and import a versioned project cost and ROI dashboard template.
+description: Connect Hex to LiteLLM’s existing Postgres reporting tables, import the cost dashboard, and act on findings in the LiteLLM UI.
 ---
 
-# Connect Hex to LiteLLM
+# Analyze LiteLLM costs with Hex
 
-Connect Hex to the Postgres database that holds your existing LiteLLM daily spend aggregates. Import our Hex template to compare project costs, model usage, latency and business ROI. See the [visual walkthrough and Hex board previews](/blog/hex-litellm-roi).
+LiteLLM stores daily spend totals in Postgres. Hex reads those totals through a read-only connection. Review the [three-step guide](/blog/hex-litellm-roi), or open the [public Hex demo](https://app.hex.tech/01a18e4b-6e94-7328-831c-e5ab0e2e00e7/app/LiteLLM-AI-cost-and-ROI-demo-034p688gOAllaldLw72Oat/latest). The demo uses synthetic records and works without a login.
 
-## Download the template
+## Connect Postgres
 
-| File | Use it for |
+In **Hex Settings → Data sources → + Connection → Postgres**, add your LiteLLM Postgres database. Configure network access and TLS with your database administrator. You can use an existing reader; a replica is optional.
+
+| Existing table | Reporting fields |
 | --- | --- |
-| [Demo Hex project](/hex/litellm_roi_demo.hex.yaml) | Preview the board with synthetic data and no credentials. |
-| [Quick-setup Postgres project](/hex/litellm_roi_postgres_daily.hex.yaml) | Select an existing read-only connection and run. No setup SQL. |
-| [Restricted-view Postgres project](/hex/litellm_roi_postgres.hex.yaml) | Use an aggregate view when analysts must not read the source table. |
-| [Postgres setup SQL](/hex/setup-postgres.sql) | Create an aggregate view for Hex. |
-| [Source and changelog](https://github.com/BerriAI/litellm-docs/tree/main/static/hex) | Review template changes and the data contract. |
+| `LiteLLM_DailyTeamSpend` | `date`, `team_id`, `model`, `model_group`, `spend`, request/status counts, prompt and completion token counts. |
+| `LiteLLM_TeamTable` | `team_id`, `team_alias`. The join supplies a team display name. |
 
-Template version: **1.1.0**. {/* keep-version-note: Hex template version, not a LiteLLM release */} You can edit your imported copy in Hex. Repository updates do not change your copy; import a new copy and review it before replacing your published board.
+The query does not select `api_key` or read the credential table. Scope the Hex role to the columns above. It reads 60 complete UTC days and defaults the board to 30. Confirm that daily aggregation is populated and retained for your reporting period.
 
-## Quick setup with an existing connection
+Example grants for a reader your administrator has created:
 
-Use the [quick-setup Postgres template](/hex/litellm_roi_postgres_daily.hex.yaml) if you already have a Hex Postgres connection with read-only access to `public."LiteLLM_DailyTeamSpend"` and the `token` / `project_id` columns of `public."LiteLLM_VerificationToken"`.
+```sql
+GRANT SELECT (date, team_id, model, model_group, spend, api_requests,
+  successful_requests, failed_requests, prompt_tokens, completion_tokens)
+ON public."LiteLLM_DailyTeamSpend" TO hex_reader;
+GRANT SELECT (team_id, team_alias)
+ON public."LiteLLM_TeamTable" TO hex_reader;
+```
 
-Import it from **Hex Home → + → Upload project**. Choose the connection on the **Source** SQL cell, then run all cells. Review the board and publish it to your intended audience. This path does not create or modify database objects. You can use the database you already have; a replica is optional when analytics load warrants it.
+## Import the team cost template
 
-Confirm that your daily team aggregates contain records for the reporting period. LiteLLM maintains those totals before Hex reads them; this template does not backfill missing days from request logs. The Source cell groups those daily rows into project, team and model totals, with requests, tokens and success/failure counts. It does not scan request logs or return keys. Keep credentials in Hex's connection settings. Configure network access and TLS with your database administrator if the connection does not already exist.
+Download [the Postgres template](/hex/litellm_team_cost_postgres.hex.yaml). In **Hex Home**, click the **+** next to Project and Thread, then **Upload project**. In the upload dialog, click **Upload** and select the file. You need a Hex role that can create projects.
 
-| Existing table | Fields Hex uses | Purpose |
-| --- | --- | --- |
-| `LiteLLM_DailyTeamSpend` | `date`, `api_key`, `team_id`, model fields, `spend`, request/status counters, token totals | Recorded daily costs and usage. |
-| `LiteLLM_VerificationToken` | `token`, `project_id` | Current key-to-project lookup. Key values do not appear in query results. |
+![Hex Upload project dialog](/img/hex/import-project.png)
 
-Grant the connection only the columns it needs from the key table. The template does not need key configuration, permissions or other credential fields. The query keeps deleted keys under `(unassigned)` so their cost stays in the totals. A reassigned key uses its current project, which can change historical project attribution. Review that mapping before Finance or ROI reporting.
+Open **Source**, select your Postgres connection, then **Run all**. Leave the two team filters blank for all permitted teams or enter one team ID. Publish the App to your chosen audience and add a scheduled run to refresh it.
 
-Read **one** daily aggregate family for a report. Adding daily team spend to daily user or organization spend would count overlapping traffic again. LiteLLM also maintains daily user, organization, end-user, agent and tag tables for other reporting scopes.
+Template version: **2.0.0**. {/* keep-version-note: Hex template version, not a LiteLLM release */} Imported copies do not update themselves. Review the [source and changelog](https://github.com/BerriAI/litellm-docs/tree/main/static/hex) before replacing a board.
 
-The daily template includes the last 60 complete UTC days and defaults the board to 30. It leaves latency, TTFT and response-cache hit rate unknown because those measurements are absent from daily team rows. Provider cache-token totals differ from response-cache hits. Use the request-log view below only if you need those additional metrics or project attribution from request metadata.
+The daily source includes costs, requests, tokens and known success/failure counts. Latency, TTFT and response-cache hit rate stay unknown. The demo can show those metrics because it generates synthetic request-level measurements.
+
+## Complete the loop in LiteLLM
+
+Use **Teams → your team → Settings → Edit Settings** to change a team model alias or set its budget. Use **Models + Endpoints → Auto Router** to configure tier-based routing. Confirm that applications call the configured alias or router, then compare the next complete reporting window in Hex.
+
+See the [UI walkthrough](/blog/hex-litellm-roi#3-take-an-action-in-litellm), [Auto Router setup](/docs/auto_router/setup) and [team budget guide](/docs/proxy/team_budgets).
+
+## Other templates
+
+The [team demo YAML](/hex/litellm_team_cost_demo.hex.yaml) works without a database. The live public app remains the fastest way to inspect the dashboard.
+
+The optional project ROI templates below use request-log metadata for project attribution. They need the aggregate view described below and keep business value separate from recorded LLM cost.
 
 ## Restricted-view option
 
@@ -69,7 +83,7 @@ LIMIT 20;
 
 ### Import and run the board
 
-Download the **restricted-view Postgres project** above. From Hex Home, use the **+ menu → Upload project** and select the `.hex.yaml` file. Open the **Source** SQL cell and select your Postgres connection. Run all cells.
+Download the [restricted-view Postgres project](/hex/litellm_roi_postgres.hex.yaml). From Hex Home, use **+ → Upload project → Upload** and select the `.hex.yaml` file. Open the **Source** SQL cell and select your Postgres connection. Run all cells.
 
 In **Settings**, choose your report dates. The default covers the last 30 complete UTC days; the end date is exclusive. Use the Project and Entity inputs to inspect one scope. Leave the inputs blank to inspect all data your connection can read.
 

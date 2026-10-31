@@ -16,7 +16,12 @@ ASSETS = ROOT / "static" / "hex"
 
 
 def template(mode):
-    return yaml.safe_load((ASSETS / f"litellm_roi_{mode}.hex.yaml").read_text())
+    name = (
+        f"litellm_team_cost_{mode[5:]}.hex.yaml"
+        if mode.startswith("team_")
+        else f"litellm_roi_{mode}.hex.yaml"
+    )
+    return yaml.safe_load((ASSETS / name).read_text())
 
 
 def run_board(frame=None, project_filter="", entity_filter="", values=None):
@@ -42,7 +47,7 @@ class HexTemplateTests(unittest.TestCase):
                 "https://static.hex.site/hex-file-schema.json", timeout=30
             ) as response:
                 schema = json.load(response)
-        for mode in ["demo", "postgres", "postgres_daily"]:
+        for mode in ["demo", "postgres", "team_demo", "team_postgres"]:
             document = template(mode)
             jsonschema.validate(document, schema)
             ids = [cell["cellId"] for cell in document["cells"]]
@@ -55,7 +60,7 @@ class HexTemplateTests(unittest.TestCase):
 
     def test_demo_and_postgres_use_identical_analysis(self):
         demo = {cell["cellLabel"]: cell for cell in template("demo")["cells"]}
-        for mode in ["postgres", "postgres_daily"]:
+        for mode in ["postgres"]:
             live = {cell["cellLabel"]: cell for cell in template(mode)["cells"]}
             for label in demo.keys() - {"Read me", "Source"}:
                 self.assertEqual(demo[label], live[label])
@@ -228,42 +233,40 @@ class HexTemplateTests(unittest.TestCase):
     @unittest.skipUnless(
         os.environ.get("HEX_TEST_DSN"), "Set HEX_TEST_DSN for Postgres checks"
     )
-    def test_daily_source_uses_existing_aggregates_and_retains_unmapped_keys(self):
+    def test_daily_source_reads_metrics_without_credential_access(self):
         import psycopg
 
         with psycopg.connect(os.environ["HEX_TEST_DSN"], autocommit=True) as connection:
             connection.execute("SET TIME ZONE 'UTC'")
             connection.execute(
                 """CREATE TABLE public."LiteLLM_DailyTeamSpend" (
-                date text, api_key text, team_id text, model text, model_group text,
-                api_requests bigint, spend double precision, prompt_tokens bigint,
-                completion_tokens bigint, successful_requests bigint, failed_requests bigint)"""
+                date text, team_id text, model text, model_group text, api_requests bigint,
+                spend double precision, prompt_tokens bigint, completion_tokens bigint,
+                successful_requests bigint, failed_requests bigint)"""
             )
             connection.execute(
-                """CREATE TABLE public."LiteLLM_VerificationToken" (
-                token text PRIMARY KEY, project_id text, private_config jsonb)"""
+                'CREATE TABLE public."LiteLLM_TeamTable" (team_id text PRIMARY KEY, team_alias text)'
             )
             connection.execute(
-                """INSERT INTO public."LiteLLM_VerificationToken" VALUES
-                ('synthetic-key-ref', 'example-project', '{"excluded":true}')"""
+                'CREATE TABLE public."LiteLLM_VerificationToken" (token text)'
+            )
+            connection.execute(
+                """INSERT INTO public."LiteLLM_TeamTable" VALUES ('team-a', 'Legal')"""
             )
             connection.execute(
                 """INSERT INTO public."LiteLLM_DailyTeamSpend" VALUES
-                ((CURRENT_DATE-1)::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 10, .5, 100, 50, 8, 1),
-                ((CURRENT_DATE-1)::text, 'deleted-key-ref', 'team-a', 'model-a', '', 2, .1, 20, 10, 2, 0),
-                (CURRENT_DATE::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0),
-                ((CURRENT_DATE-61)::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0)"""
+                ((CURRENT_DATE-1)::text, 'team-a', 'model-a', '', 10, .5, 100, 50, 8, 1),
+                ((CURRENT_DATE-1)::text, 'team-b', 'model-a', '', 2, .1, 20, 10, 2, 0),
+                (CURRENT_DATE::text, 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0),
+                ((CURRENT_DATE-61)::text, 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0)"""
             )
             connection.execute("CREATE ROLE hex_daily_reader NOLOGIN")
             connection.execute(
-                'GRANT SELECT ON public."LiteLLM_DailyTeamSpend" TO hex_daily_reader'
-            )
-            connection.execute(
-                'GRANT SELECT (token, project_id) ON public."LiteLLM_VerificationToken" TO hex_daily_reader'
+                'GRANT SELECT ON public."LiteLLM_DailyTeamSpend", public."LiteLLM_TeamTable" TO hex_daily_reader'
             )
             query = next(
                 c
-                for c in template("postgres_daily")["cells"]
+                for c in template("team_postgres")["cells"]
                 if c["cellLabel"] == "Source"
             )["config"]["source"]
             connection.execute("SET ROLE hex_daily_reader")
@@ -271,36 +274,34 @@ class HexTemplateTests(unittest.TestCase):
                 cursor.execute(query)
                 columns = [c.name for c in cursor.description]
                 rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            self.assertEqual(
-                {r["project_id"] for r in rows}, {"example-project", "(unassigned)"}
-            )
+            self.assertEqual({r["team_id"] for r in rows}, {"team-a", "team-b"})
+            self.assertEqual({r["team_name"] for r in rows}, {"Legal", "team-b"})
             self.assertAlmostEqual(sum(r["spend_usd"] for r in rows), 0.6)
             self.assertEqual(sum(r["requests"] for r in rows), 12)
             self.assertEqual(sum(r["tokens"] for r in rows), 180)
             self.assertEqual(sum(r["unknown_status_requests"] for r in rows), 1)
-            for name in ["api_key", "token", "private_config"]:
-                self.assertNotIn(name, columns)
-            self.assertTrue(
-                all(
-                    r["latency_seconds_sum"] is None and r["response_cache_known"] == 0
-                    for r in rows
-                )
-            )
-            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
-                connection.execute(
-                    'SELECT private_config FROM public."LiteLLM_VerificationToken"'
-                )
-            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
-                connection.execute('DELETE FROM public."LiteLLM_DailyTeamSpend"')
-            connection.execute("RESET ROLE")
-            connection.execute(
-                'UPDATE public."LiteLLM_VerificationToken" SET project_id = %s',
-                ("reassigned-project",),
-            )
-            self.assertIn(
-                "reassigned-project",
-                [r[1] for r in connection.execute(query).fetchall()],
-            )
+            self.assertNotIn("api_key", columns)
+            for statement in [
+                'SELECT * FROM public."LiteLLM_VerificationToken"',
+                'DELETE FROM public."LiteLLM_DailyTeamSpend"',
+            ]:
+                with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                    connection.execute(statement)
+
+    def test_team_templates_share_calculations_and_filter_teams(self):
+        demo = {c["cellLabel"]: c for c in template("team_demo")["cells"]}
+        live = {c["cellLabel"]: c for c in template("team_postgres")["cells"]}
+        for label in demo.keys() - {"Read me", "Source"}:
+            self.assertEqual(demo[label], live[label])
+        scope = {"team_filter": "legal", "team_name_filter": ""}
+        for label in ["Settings", "Source", "Calculate board"]:
+            exec(demo[label]["config"]["source"], scope)
+        self.assertEqual(scope["team_spend"].team_id.tolist(), ["legal"])
+        self.assertAlmostEqual(scope["summary"].spend_usd.iloc[0], 563.424)
+        self.assertEqual(
+            scope["change"].query("review == 'Review cost increase'").team_id.tolist(),
+            ["legal"],
+        )
 
 
 if __name__ == "__main__":

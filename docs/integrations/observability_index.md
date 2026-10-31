@@ -20,7 +20,7 @@ items={[
   {
     icon: <Logo src="/img/hex/hex-logo-blue.svg" />,
     title: "Hex",
-    description: "Project cost reports and ROI boards from your LiteLLM spend logs.",
+    description: "Analyze daily team costs in Hex, then set budgets and routing in LiteLLM.",
     to: "/blog/hex-litellm-roi",
   },
   { icon: <Logo src="/img/integrations/langfuse.png" />, title: "Langfuse", description: "LLM observability and analytics.", to: "/docs/observability/langfuse_integration" },
