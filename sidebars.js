@@ -1836,6 +1836,7 @@ const providersSidebar = {
     "providers/github_copilot",
     "providers/gmi",
     "providers/gradient_ai",
+    "providers/heabsy",
     "providers/heroku",
     "providers/hostinger_router",
     { type: "category", label: "HuggingFace", className: "sidebar-provider", link: { type: "doc", id: "providers/huggingface" }, items: [
