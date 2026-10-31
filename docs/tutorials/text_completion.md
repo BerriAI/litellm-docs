@@ -24,6 +24,8 @@ response = text_completion(
 ```
 
 ### With the OpenAI completions endpoint
+This sends the prompt to OpenAI's legacy `/v1/completions` endpoint as is. See [OpenAI (Text Completion)](../providers/text_completion_openai.md) for which models still answer there.
+
 ```python keep-model-ids
 response = text_completion(
     model="text-completion-openai/gpt-5.4-mini",
@@ -32,10 +34,10 @@ response = text_completion(
     max_tokens=100)
 ```
 
-### With llama2
+### With an open model on Together AI
 ```python
 response = text_completion(
-    model="together_ai/togethercomputer/llama-2-70b-chat",
+    model="together_ai/openai/gpt-oss-120b",
     prompt='Write a tagline for a traditional bavarian tavern',
     temperature=0,
     max_tokens=100)

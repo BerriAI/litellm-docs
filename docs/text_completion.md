@@ -17,6 +17,9 @@ import TabItem from '@theme/TabItem';
 | Supported Providers | All Chat Completion Providers | |
 
 ### Usage
+
+LiteLLM sends a text completion request for a chat model to that model's chat completions endpoint and returns the answer in the text completion format. To call OpenAI's legacy `/v1/completions` endpoint directly, see [OpenAI (Text Completion)](./providers/text_completion_openai.md).
+
 <Tabs>
 <TabItem value="python" label="LiteLLM Python SDK">
 
@@ -24,7 +27,7 @@ import TabItem from '@theme/TabItem';
 from litellm import text_completion
 
 response = text_completion(
-    model="text-completion-openai/gpt-5.4-mini",
+    model="gpt-5.4-mini",
     prompt="Say this is a test",
     max_tokens=7
 )
@@ -39,7 +42,7 @@ response = text_completion(
 model_list:
   - model_name: gpt-5.4-mini
     litellm_params:
-      model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
+      model: openai/gpt-5.4-mini
       api_key: os.environ/OPENAI_API_KEY
 ```
 

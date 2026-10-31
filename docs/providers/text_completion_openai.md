@@ -5,6 +5,12 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM supports OpenAI text completion models
 
+:::note
+
+OpenAI's model pages list the legacy Completions endpoint as not supported for current models. gpt-5.4, gpt-5.4-mini and gpt-5.4-nano still answer there as of October 2026, while gpt-5.5 and later answer 404. These are chat models, so the endpoint continues your prompt as plain text instead of replying to it, and LiteLLM does not track spend on this route yet. For chat-style answers and spend tracking, use the `openai/` prefix, which also serves [`/completions`](../text_completion.md) requests.
+
+:::
+
 ### Required API Keys
 
 ```python
@@ -47,7 +53,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.4-mini
+  - model_name: gpt-5.4-mini-completions
     litellm_params:
       model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
@@ -87,7 +93,7 @@ $ litellm --model text-completion-openai/gpt-5.4-mini
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-5.4-mini",
+      "model": "gpt-5.4-mini-completions",
       "messages": [
         {
           "role": "user",
@@ -108,7 +114,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-5.4-mini", messages = [
+response = client.chat.completions.create(model="gpt-5.4-mini-completions", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -132,7 +138,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-5.4-mini",
+    model = "gpt-5.4-mini-completions",
     temperature=0.1
 )
 
@@ -156,7 +162,6 @@ print(response)
 
 | Model Name          | Function Call                                      |
 |---------------------|----------------------------------------------------|
-| gpt-3.5-turbo-instruct | `response = completion(model="gpt-3.5-turbo-instruct", messages=messages)` |
-| gpt-3.5-turbo-instruct-0914 | `response = completion(model="gpt-3.5-turbo-instruct-0914", messages=messages)` |
-| babbage-002         | `response = completion(model="babbage-002", messages=messages)` |
-| davinci-002         | `response = completion(model="davinci-002", messages=messages)` |
+| gpt-5.4             | `response = completion(model="text-completion-openai/gpt-5.4", messages=messages)` |
+| gpt-5.4-mini        | `response = completion(model="text-completion-openai/gpt-5.4-mini", messages=messages)` |
+| gpt-5.4-nano        | `response = completion(model="text-completion-openai/gpt-5.4-nano", messages=messages)` |

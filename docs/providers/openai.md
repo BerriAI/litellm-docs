@@ -64,7 +64,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-5.4-mini
+  - model_name: gpt-5.4-mini-completions
     litellm_params:
       model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
@@ -273,12 +273,6 @@ Only proxy admins can set these fields on a deployment or a credential, since th
 | gpt-4-turbo-preview   | `response = completion(model="gpt-4-0125-preview", messages=messages)` |
 | gpt-4-0125-preview    | `response = completion(model="gpt-4-0125-preview", messages=messages)` |
 | gpt-4-1106-preview    | `response = completion(model="gpt-4-1106-preview", messages=messages)` |
-| gpt-3.5-turbo-1106    | `response = completion(model="gpt-3.5-turbo-1106", messages=messages)` |
-| gpt-3.5-turbo         | `response = completion(model="gpt-3.5-turbo", messages=messages)` |
-| gpt-3.5-turbo-0301    | `response = completion(model="gpt-3.5-turbo-0301", messages=messages)` |
-| gpt-3.5-turbo-0613    | `response = completion(model="gpt-3.5-turbo-0613", messages=messages)` |
-| gpt-3.5-turbo-16k     | `response = completion(model="gpt-3.5-turbo-16k", messages=messages)` |
-| gpt-3.5-turbo-16k-0613| `response = completion(model="gpt-3.5-turbo-16k-0613", messages=messages)` |
 | gpt-4                 | `response = completion(model="gpt-4", messages=messages)` |
 | gpt-4-0314            | `response = completion(model="gpt-4-0314", messages=messages)` |
 | gpt-4-0613            | `response = completion(model="gpt-4-0613", messages=messages)` |
