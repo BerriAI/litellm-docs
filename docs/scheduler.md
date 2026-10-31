@@ -71,7 +71,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
-    "model": "gpt-3.5-turbo-fake-model",
+    "model": "{{openai_small}}-fake-model",
     "messages": [
         {
         "role": "user",
@@ -200,7 +200,7 @@ except Exception as e:
 
 ```yaml
 model_list:
-    - model_name: gpt-3.5-turbo-fake-model
+    - model_name: {{openai_small}}-fake-model
       litellm_params:
         model: {{openai_small}}
         mock_response: "hello world!" 
@@ -226,7 +226,7 @@ curl -X POST 'http://localhost:4000/queue/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -D '{
-    "model": "gpt-3.5-turbo-fake-model",
+    "model": "{{openai_small}}-fake-model",
     "messages": [
         {
         "role": "user",

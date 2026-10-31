@@ -1841,8 +1841,8 @@ The model ids in this example are illustrative and kept for their context window
 
 ```python keep-model-ids
 """
-- Give a gpt-3.5-turbo model group with different context windows (4k vs. 16k)
-- Send a 5k prompt
+- Give a model group two deployments with different context windows (a 4k Azure deployment and a larger OpenAI one)
+- Send a prompt of about 40k tokens, too long for the 4k deployment
 - Assert it works
 """
 from litellm import Router
@@ -1850,7 +1850,7 @@ import os
 
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "chat-model",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
 			"model": "azure/chatgpt-v-2",
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1863,9 +1863,9 @@ model_list = [
 		}
 	},
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "chat-model",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
-			"model": "gpt-3.5-turbo-1106",
+			"model": "{{openai_small}}",
 			"api_key": os.getenv("OPENAI_API_KEY"),
 		},
 	},
@@ -1876,7 +1876,7 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 text = "What is the meaning of 42?" * 5000
 
 response = router.completion(
-	model="gpt-3.5-turbo",
+	model="chat-model",
 	messages=[
 		{"role": "system", "content": text},
 		{"role": "user", "content": "Who was Alexander?"},
