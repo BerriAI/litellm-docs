@@ -48,8 +48,9 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Provider or feature | Release |
 |---------------------|---------|
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
-| Databricks serving endpoints, image input on Cloudflare Clef, TypeSafe images and box questions | `v1.106.0` |
+| Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
+| A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values | `v1.110.0` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -58,6 +59,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| Audio and video input | Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on |
 | Streaming | No | |
 
 ## Supported providers
@@ -69,7 +71,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [OpenRouter](./providers/openrouter.md#decisions-jev) | `openrouter/typesafe/jev-1.14` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/v1/systemone` | No |
 | [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
 | [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
-| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef` or `cloudflare/clef-flash` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | Yes |
+| [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef`, `cloudflare/clef-flash` or `cloudflare/clef-omni` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | Yes |
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Databricks `ai_decide`](./providers/databricks.md#decisions-ai_decide) | `databricks/ai_decide` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
@@ -195,6 +197,8 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 | `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
 | `questions` | array | 1 to 128 questions. Answers come back in the same order |
 | `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
+| `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
+| `videos` | array, optional | Up to 2 video clips, with the rules in [Audio and video input](#audio-and-video-input) |
 
 Every question takes `instructions` and an optional `name` that is echoed in its answer
 
@@ -376,6 +380,8 @@ Changing `"model"` to `"luna"` asks OpenAI instead and still returns System One 
 | `questions` | object | 1 to 128 named questions. Each key becomes a key in `answers` |
 | `images` | array, optional | Image URLs or data URLs. OpenAI and Cloudflare Clef only, with the rules in [Image input](#image-input) |
 | `assets` | object, optional | Images keyed by a name you use in `state`, each `{"type": "image", "format": "png", "jpg" or "jpeg", "data_base64": ...}`. TypeSafe only, with the [images header](#typesafe-images-box-questions-and-long-context) |
+| `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
+| `videos` | array, optional | Up to 2 video clips, with the rules in [Audio and video input](#audio-and-video-input) |
 
 Every question has a `type` and an optional `instructions` field. Extra fields on a question are forwarded to System One providers unchanged
 
@@ -387,6 +393,63 @@ Every question has a `type` and an optional `instructions` field. Extra fields o
 | `box` | None. TypeSafe `jev-1.14.0` and `jev-preview` with the [images header](#typesafe-images-box-questions-and-long-context), or a deployment with [`supports_box_questions: true`](#box-questions-on-other-deployments) and, on TypeSafe, the same header | `box` with `top`, `bottom`, `left` and `right`, `confidence` |
 
 On both routes, requests that break these rules, such as no questions at all, duplicate choice values or a `score` question with 11 levels, are rejected by LiteLLM with a 400 before any provider is called
+
+## Audio and video input
+
+Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called.
+
+```yaml showLineNumbers
+model_list:
+  - model_name: clef-omni
+    litellm_params:
+      model: cloudflare/clef-omni
+      api_key: os.environ/CLOUDFLARE_API_KEY
+```
+
+The proxy also needs `CLOUDFLARE_ACCOUNT_ID`, or an `api_base` on the deployment, as for the other Clef models. Build the request with `jq`, so a long clip does not have to fit on the command line
+
+```bash showLineNumbers
+base64 < call.wav | tr -d '\n' > call.b64
+
+jq -n --rawfile clip call.b64 '{
+  model: "clef-omni",
+  state: "Listen to the attached call recording.",
+  audio: [{content_type: "audio/wav", base64: $clip}],
+  questions: {
+    asks_for_refund: {type: "noul", instructions: "Does the caller ask for a refund?"}
+  }
+}' > request.json
+
+curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d @request.json
+```
+
+LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI models refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them. `GET /model/info` shows `supports_audio_input` and `supports_video_input` for each model.
+
+### Audio and video on other deployments
+
+<SinceVersion v="1.110.0" />
+
+To send clips to a deployment the cost map does not mark, such as `openrouter/cloudflare/clef-omni`, set `supports_audio_input: true`, `supports_video_input: true` or both in the deployment's `model_info`.
+
+```yaml showLineNumbers
+model_list:
+  - model_name: clef-omni-openrouter
+    litellm_params:
+      model: openrouter/cloudflare/clef-omni
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      supports_audio_input: true
+      supports_video_input: true
+```
+
+Each flag wins over the cost map for its own kind of clip. `true` turns that kind on for the deployment, and `false` turns it off, even on `cloudflare/clef-omni`, so a clip to it gets the same 400, or the same drop with `drop_params` on, as a clip to a model without audio or video support. A deployment without a flag uses the cost map for that kind. The flags count only on a decision model. When the deployment sets `mode`, it must be `decisions` or `evaluation`. When it does not, the cost map's mode for the model must be one of those, or the cost map must not list the model. So a chat deployment's `supports_audio_input`, which describes chat input, does not turn clips on. The value must be a boolean, since any other value, such as the string `"true"`, does not turn clips on. The notes on wildcard deployments and unflagged deployments of the same provider and model under [Box questions on other deployments](#box-questions-on-other-deployments) apply to these flags too, so when one deployment of a model sets a flag, set it on every deployment of that model. In the SDK, pass `model_info={"supports_audio_input": True}`.
+
+In a load-balanced group, a request with clips goes only to the deployments that take them, by their own flags or by the cost map, and requests without clips still use every deployment. A deployment with `drop_params` on stays in the pick and drops the clips it does not take. When no deployment in the group takes the clips, the request goes to the whole group and gets the 400 that names `audio` or `videos`.
+
+The flags only control what LiteLLM sends. Check that the provider reads the clips before you set a flag on it, since LiteLLM sends them whether the provider uses them or not.
 
 ## TypeSafe images, box questions and long context
 
@@ -530,7 +593,7 @@ async def main():
 asyncio.run(main())
 ```
 
-All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider`, `extra_headers` and `model_info`. `litellm.systemone` and `litellm.asystemone` also take `images`, a list of image URLs or data URLs, and `assets`, the TypeSafe image map described in [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context). Passing `images` to `litellm.decisions` raises a `BadRequestError` unless `drop_params` is on, since the OpenAI format carries images as `input_image` parts. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
+All four functions also accept `safety_identifier`, `api_key`, `api_base`, `timeout`, `custom_llm_provider`, `extra_headers`, `model_info`, and the `audio` and `videos` clips described in [Audio and video input](#audio-and-video-input). `litellm.systemone` and `litellm.asystemone` also take `images`, a list of image URLs or data URLs, and `assets`, the TypeSafe image map described in [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context). Passing `images` to `litellm.decisions` raises a `BadRequestError` unless `drop_params` is on, since the OpenAI format carries images as `input_image` parts. Passing `input` to `litellm.systemone` raises a `BadRequestError` that points at `litellm.decisions`. Passing `state` to `litellm.decisions` still works for existing callers, it sends the System One format and emits a `UserWarning` that points at `litellm.systemone`. A model whose prefix is not one of the supported providers fails with a `BadRequestError` that lists the supported ones.
 
 Through the Router the same split applies: `router.decisions` and `router.adecisions` take the OpenAI shape, `router.systemone` and `router.asystemone` take the System One shape. On the proxy, `/v1/systemone` requests are logged with call type `asystemone` and `/v1/decisions` requests with `adecisions`.
 
