@@ -426,7 +426,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/systemone' \
 -d @request.json
 ```
 
-LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI models refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them. `GET /model/info` shows `supports_audio_input` and `supports_video_input` for each model.
+LiteLLM reads the cost map to decide which models take clips, and the cost map marks only `cloudflare/clef-omni`. Clips sent to another model get a 400 that names `audio` or `videos` before the provider is called. With `drop_params` on, LiteLLM drops them instead, malformed or not, and sends the rest of the request. OpenAI models refuse clips whatever their flags say, since the OpenAI Decisions format has no field for them.
 
 ### Audio and video on other deployments
 
