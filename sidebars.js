@@ -1780,6 +1780,7 @@ const providersSidebar = {
     "providers/openai_compatible",
     "providers/litellm_proxy",
     "providers/openrouter",
+    "providers/trustedrouter",
     "providers/opencode_go",
     "providers/vercel_ai_gateway",
     "providers/helicone",
