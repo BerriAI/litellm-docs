@@ -50,7 +50,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
-| A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values | `v1.110.0` |
+| A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -59,7 +59,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
-| Audio and video input | Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on |
+| Audio and video input | Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
 
 ## Supported providers
@@ -396,7 +396,7 @@ On both routes, requests that break these rules, such as no questions at all, du
 
 ## Audio and video input
 
-Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks only the number of clips and their form, so limits on clip length, size and media type are the provider's.
+Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks the number of clips, their form, and that an audio clip's media type starts with `audio/` and a video clip's with `video/`. Limits on clip length, size and exact format are the provider's.
 
 ```yaml showLineNumbers
 model_list:
@@ -444,13 +444,13 @@ model_list:
       supports_audio_input: false
 ```
 
-Each flag wins over the cost map for its own kind of clip. `true` turns that kind on for the deployment, and `false` turns it off, even on `cloudflare/clef-omni`, so a clip to it gets the same 400, or the same drop with `drop_params` on, as a clip to a model without audio or video support. A deployment without a flag uses the cost map for that kind. The flags count only on a decision model. When the deployment sets `mode`, it must be `decisions` or `evaluation`. When it does not, the cost map's mode for the model must be one of those, or the cost map must not list the model. So a chat deployment's `supports_audio_input`, which describes chat input, does not turn clips on. The value must be a boolean, since any other value, such as the string `"true"`, does not turn clips on. The notes on wildcard deployments and unflagged deployments of the same provider and model under [Box questions on other deployments](#box-questions-on-other-deployments) apply to these flags too, so when one deployment of a model sets a flag, set it on every deployment of that model. In the SDK, pass `model_info={"supports_audio_input": True}`.
+Each flag wins over the cost map for its own kind of clip. `true` turns that kind on for the deployment, and `false` turns it off, even on `cloudflare/clef-omni`, so a clip to it gets the same 400, or the same drop with `drop_params` on, as a clip to a model without audio or video support. A deployment without a flag uses the cost map for that kind. The flags count only on a decision model. When the deployment sets `mode`, it must be `decisions` or `evaluation`. When it does not, the cost map's mode for the model must be one of those, or the cost map must not list the model. So a chat deployment's `supports_audio_input`, which describes chat input, does not turn clips on. The value must be a boolean. Any other value, such as the string `"true"`, does not turn clips on and can turn them off, on that deployment and on its unflagged siblings. The notes on wildcard deployments and unflagged deployments of the same provider and model under [Box questions on other deployments](#box-questions-on-other-deployments) apply to these flags too, so when one deployment of a model sets a flag, set it on every deployment of that model. In the SDK, pass `model_info={"supports_audio_input": True}`.
 
 In a load-balanced group, a request with clips goes only to the deployments that take them, by their own flags or by the cost map, and requests without clips still use every deployment. A deployment with `drop_params` on stays in the pick and drops the clips it does not take. When no deployment in the group takes the clips, the request goes to the whole group and gets the 400 that names `audio` or `videos`. With `drop_params: true` in `litellm_settings`, every deployment counts as taking clips, so clip requests go to the whole group and the deployments that do not take them drop the clips.
 
 The flags only control what LiteLLM sends. Check that the provider reads the clips before you set `true` on a deployment, since LiteLLM sends them whether the provider uses them or not. For example, as of October 2026 OpenRouter's `cloudflare/clef-omni` route takes the clips and answers as if none were sent, so send clips to Clef-omni through `cloudflare/clef-omni`.
 
-Before `v1.110.0`, LiteLLM does not apply these flags per deployment, so `false` does not turn clips off on `cloudflare/clef-omni`.
+Before `v1.110.0`, LiteLLM does not apply these flags per deployment. The SDK ignores them. On the proxy, a flag can change clips for every deployment of the same model, or do nothing, depending on how the model name is written. A request with clips to a load-balanced group can also go to a deployment that does not take them and get the 400 that names `audio` or `videos`.
 
 ## TypeSafe images, box questions and long context
 
