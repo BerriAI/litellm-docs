@@ -114,10 +114,10 @@ Set `-b` to the benchmark you want to run. Possible values are `mt-bench`, `huma
 
 Since LiteLLM provides an OpenAI compatible proxy `-t` and `-m` don't need to change
 `-t` will remain openai
-`-m` will remain `{{openai_small}}`
+`-m` will remain `gpt-3.5-turbo`, since FastEval's `openai` type only accepts model names that start with `gpt-3.5-turbo` or `gpt-4`. The proxy answers with the model it was started with, so this name never reaches OpenAI.
 
-```shell
-./fasteval -b human-eval-plus -t openai -m {{openai_small}}
+```shell keep-model-ids
+./fasteval -b human-eval-plus -t openai -m gpt-3.5-turbo
 ```
 
 ## FLASK - Fine-grained Language Model Evaluation 

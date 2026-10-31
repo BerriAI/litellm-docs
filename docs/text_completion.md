@@ -117,6 +117,8 @@ LiteLLM accepts and translates the [OpenAI Text Completion params](https://platf
 - `top_p`: *number* - An alternative to sampling with temperature, called nucleus sampling. 
 - `user`: *string* - A unique identifier representing your end-user
 
+On OpenAI, `best_of`, `echo`, `suffix` and an integer `logprobs` only work with the `text-completion-openai/` prefix, which calls the legacy `/v1/completions` endpoint. A chat model behind the `openai/` prefix answers 400 for them. See [OpenAI (Text Completion)](./providers/text_completion_openai.md).
+
 ## Output Format
 Here's the exact JSON output format you can expect from completion calls:
 

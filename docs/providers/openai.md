@@ -69,6 +69,9 @@ model_list:
       model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
 ```
+
+The `gpt-5.4-mini-completions` group calls OpenAI's legacy `/v1/completions` endpoint, which continues the prompt instead of replying to it, and LiteLLM does not track spend on it yet. See [OpenAI (Text Completion)](./text_completion_openai.md).
+
 </TabItem>
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
 
