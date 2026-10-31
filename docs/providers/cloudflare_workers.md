@@ -8,7 +8,7 @@ Cloudflare Workers AI uses different endpoints for chat completions and decision
 | Model type | Workers AI endpoint | Request shape |
 | --- | --- | --- |
 | Chat completions | `/ai/v1/chat/completions` | OpenAI-compatible `model` and `messages` |
-| Decisions (Clef) | `/ai/run/{model}` | Native Workers AI `state`, typed `questions`, and optional `images` for supported models |
+| Decisions (Clef) | `/ai/run/{model}` | Native Workers AI `state`, typed `questions`, optional `images` for supported models, and optional [audio and video clips](../decisions.md#audio-and-video-input) for `@cf/cloudflare/clef-omni` |
 
 Both paths follow `https://api.cloudflare.com/client/v4/accounts/{account_id}`.
 
