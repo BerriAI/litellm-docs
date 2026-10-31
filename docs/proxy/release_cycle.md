@@ -32,7 +32,7 @@ Each week runs the same loop against one version line. Nightly (`dev`) builds of
 
 If an `rc` fails QA it is not promoted. A fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
 
-Which stable lines get patch releases, including the long-term support (LTS) pilot, is covered in [Version support](../enterprise/version_support.md).
+Which stable lines get patch releases is covered in [Version support](../enterprise/version_support.md). That policy is paused during the [LTS pilot](../enterprise/lts_pilot.md).
 
 
 ## FAQ

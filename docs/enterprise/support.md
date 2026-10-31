@@ -30,7 +30,7 @@ Custom SLAs are available on request. [Book a demo](https://enterprise.litellm.a
 
 Support covers the problems that LiteLLM owns, for example the behavior of documented features, stability defects, and security patches. Your team owns the environment and the custom code that you add to the gateway. Refer to the [Shared responsibility model](../shared_responsibility.md).
 
-LiteLLM supports the long-term support (LTS) line and the newest stable minor line. If you run a different line, upgrade first. Refer to [Version support](./version_support.md).
+LiteLLM supports the four most recent stable minor lines. If your version is older, upgrade first. Refer to [Version support](./version_support.md). This policy is paused during the [LTS pilot](./lts_pilot.md).
 
 ## Report a security vulnerability
 

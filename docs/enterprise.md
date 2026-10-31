@@ -96,7 +96,7 @@ Every license includes a dedicated Slack or Teams channel with the engineering t
 
 ## Version support
 
-LiteLLM is piloting a long-term support (LTS) line, starting with 1.108. The LTS line and the newest stable minor line get patch releases. See [Version support](/docs/enterprise/version_support).
+LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support). This policy is paused during the [LTS pilot](/docs/enterprise/lts_pilot).
 
 ## FAQ
 
