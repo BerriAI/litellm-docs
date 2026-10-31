@@ -618,3 +618,21 @@ Responses will be in the Anthropic messages API format.
     Number of tokens used to create a cache entry.
   - **cache_read_input_tokens** (integer or `null`):  
     Number of tokens read from the cache.
+
+## Error Format
+
+Errors use Anthropic's error shape with the status code Anthropic's own API answers with. That contract has no 503, so a deployment that cannot take the request right now (an overloaded Bedrock answering 503, a paused deployment, an exhausted fallback chain) is answered as 529 `overloaded_error`, and so is an upstream Anthropic 529 and a 503 the gateway raises itself, such as a fail-closed guardrail or rate limiter that cannot reach its backend. A client built for Anthropic's API, such as Claude Code, then takes its overload path instead of retrying a generic server error. The message still says what happened upstream.
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "overloaded_error",
+    "message": "litellm.ServiceUnavailableError: BedrockException - {\"message\": \"Bedrock is unable to process your request.\"}"
+  }
+}
+```
+
+`/v1/messages/count_tokens` answers the same 529 for a 503, with the error inside a `detail` field as its other errors are.
+
+The OpenAI-shaped routes (`/v1/chat/completions`, `/v1/responses`) keep their own status for the same failure: 503 for an unavailable deployment such as a Bedrock 503, and 500 `InternalServerError` for an upstream Anthropic 529.

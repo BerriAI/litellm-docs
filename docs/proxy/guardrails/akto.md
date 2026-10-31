@@ -156,7 +156,7 @@ Akto also receives the caller's user email, team alias and key alias as tags, an
 
 | Scenario | `fail_closed` (default) | `fail_open` |
 |----------|------------------------|-------------|
-| Akto unreachable, slow or returning an error | Blocked: `503` for LLM calls, an error frame mid-stream, and for MCP tool calls the same tool error or `400` as a block | Passes through |
+| Akto unreachable, slow or returning an error | Blocked: `503` for LLM calls (`529` `overloaded_error` on `/v1/messages`), an error frame mid-stream, and for MCP tool calls the same tool error or `400` as a block | Passes through |
 | Akto flags the traffic | Blocked (`403`) | Blocked (`403`) |
 | Akto returns a masked version that cannot be applied | Blocked (`403`) | Blocked (`403`) |
 
