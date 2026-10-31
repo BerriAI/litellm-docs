@@ -21,13 +21,13 @@ Use `model="foundry_local/<model-id>"` for chat, embedding, and transcription mo
 
 ## Quick Start
 
-Use [Foundry Local Python SDK 2.2.1](https://pypi.org/project/foundry-local-sdk/2.2.1/) to run models on-device. Foundry Local supports in-process inference, but LiteLLM uses its optional OpenAI-compatible HTTP service. Start that service and point `FOUNDRY_LOCAL_API_BASE` at its `/v1` URL.
+Use [Foundry Local Python SDK 2.3.0](https://pypi.org/project/foundry-local-sdk/2.3.0/) to run models on-device. Foundry Local supports in-process inference, but LiteLLM uses its optional OpenAI-compatible HTTP service. Start that service and point `FOUNDRY_LOCAL_API_BASE` at its `/v1` URL.
 
 <Tabs>
 <TabItem value="python" label="Python SDK">
 
 ```bash
-pip install foundry-local-sdk==2.2.1
+pip install foundry-local-sdk==2.3.0
 ```
 
 ```python
@@ -64,7 +64,7 @@ finally:
 <TabItem value="javascript" label="JavaScript SDK">
 
 ```bash
-npm install foundry-local-sdk
+npm install foundry-local-sdk@2.3.0
 ```
 
 ```javascript
@@ -94,9 +94,9 @@ Keep this process running while LiteLLM uses the service. Configure the printed 
 </TabItem>
 </Tabs>
 
-### SDK 2.2.1 requirements
+### SDK 2.3.0 requirements
 
-The unified `foundry-local-sdk` Python wheel supports Windows x64, Linux x64/ARM64, and macOS Apple silicon. The [SDK package metadata](https://pypi.org/pypi/foundry-local-sdk/2.2.1/json) requires Python `>=3.11,<3.15`. Windows wheels include the WinML runtime, so the separate `foundry-local-sdk-winml` package is no longer needed.
+The unified `foundry-local-sdk` Python wheel supports Windows x64, Linux x64/ARM64, and macOS Apple silicon. The [SDK package metadata](https://pypi.org/pypi/foundry-local-sdk/2.3.0/json) requires Python `>=3.11,<3.15`. Windows wheels include the WinML runtime, so the separate `foundry-local-sdk-winml` package is no longer needed.
 
 Call `download_and_register_eps()` before selecting and loading a model to make hardware execution providers available. Catalog access no longer waits for execution-provider downloads.
 
