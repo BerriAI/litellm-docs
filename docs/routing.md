@@ -774,7 +774,7 @@ model_list =  [
 	{
 		"model_name": "{{openai_small}}",
 		"litellm_params": {"model": "{{openai_large}}"},
-		"model_info": {"id": "openai-gpt-4o"},
+		"model_info": {"id": "openai-{{openai_large}}"},
 	},
 	{
 		"model_name": "{{openai_small}}",
@@ -1073,7 +1073,7 @@ When enabled with Redis, session selection reads the shared pin so another worke
 | `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
 | `session_affinity_repin_on_failover` | Keep a successful replacement after cooldown or removal. Default `false`, set at startup. Applies to proxy and async Router requests. See [re-pinning](#keep-the-replacement-after-failover). |
-| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
+| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"{{openai_large}}": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
 `deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
 
@@ -1967,14 +1967,14 @@ async def test_acompletion_caching_on_router_caching_groups():
 		litellm.set_verbose = True
 		model_list = [
 			{
-				"model_name": "openai-gpt-4o-mini",
+				"model_name": "openai-model",
 				"litellm_params": {
 					"model": "{{openai_small}}",
 					"api_key": os.getenv("OPENAI_API_KEY"),
 				},
 			},
 			{
-				"model_name": "azure-gpt-4o-mini",
+				"model_name": "azure-model",
 				"litellm_params": {
 					"model": "azure/chatgpt-v-2",
 					"api_key": os.getenv("AZURE_API_KEY"),
@@ -1990,11 +1990,11 @@ async def test_acompletion_caching_on_router_caching_groups():
 		start_time = time.time()
 		router = Router(model_list=model_list, 
 				cache_responses=True, 
-				caching_groups=[("openai-gpt-4o-mini", "azure-gpt-4o-mini")])
-		response1 = await router.acompletion(model="openai-gpt-4o-mini", messages=messages, temperature=1)
+				caching_groups=[("openai-model", "azure-model")])
+		response1 = await router.acompletion(model="openai-model", messages=messages, temperature=1)
 		print(f"response1: {response1}")
 		await asyncio.sleep(1) # add cache is async, async sleep for cache to get set
-		response2 = await router.acompletion(model="azure-gpt-4o-mini", messages=messages, temperature=1)
+		response2 = await router.acompletion(model="azure-model", messages=messages, temperature=1)
 		assert response1.id == response2.id
 		assert len(response1.choices[0].message.content) > 0
 		assert response1.choices[0].message.content == response2.choices[0].message.content
@@ -2131,7 +2131,7 @@ The model ids in this example are illustrative and kept for their context window
 ```python keep-model-ids
 from litellm import Router
 
-fallback_dict = {"gpt-4o-mini": "gpt-4.1"}
+fallback_dict = {"gpt-5.4-mini": "{{openai_large}}"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})
@@ -2140,7 +2140,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-4o-mini", messages=messages)
+response = router.completion(model="gpt-5.4-mini", messages=messages)
 
 print(f"response: {response}")
 ```

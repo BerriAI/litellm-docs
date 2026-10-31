@@ -72,7 +72,7 @@ curl -X POST "http://0.0.0.0:4000/model/new" \
     -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
     -H "Content-Type: application/json" \
     -d '{
-      "model_name": "azure-gpt-4o",
+      "model_name": "azure-{{openai_large}}",
       "litellm_params": {
         "model": "azure/{{openai_large}}",
         "api_key": "os.environ/AZURE_API_KEY",

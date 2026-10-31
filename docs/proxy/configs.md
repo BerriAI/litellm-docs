@@ -28,13 +28,13 @@ In the config below:
 
 E.g.: 
 - `model=vllm-models` will route to `openai/facebook/opt-125m`. 
-- `model={{openai_large}}` will load balance between `azure/gpt-4o-eu` and `azure/gpt-4o-ca`
+- `model={{openai_large}}` will load balance between `azure/{{openai_large}}-eu` and `azure/{{openai_large}}-ca`
 
 ```yaml
 model_list:
   - model_name: {{openai_large}} ### RECEIVED MODEL NAME ###
     litellm_params: # all params accepted by litellm.completion() - https://docs.litellm.ai/docs/completion/input
-      model: azure/gpt-4o-eu ### MODEL NAME sent to `litellm.completion()` ###
+      model: azure/{{openai_large}}-eu ### MODEL NAME sent to `litellm.completion()` ###
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
       api_key: "os.environ/AZURE_API_KEY_EU" # does os.getenv("AZURE_API_KEY_EU")
       rpm: 6      # [OPTIONAL] Rate limit for this deployment: in requests per minute (rpm)
@@ -43,7 +43,7 @@ model_list:
       model: bedrock/us.anthropic.{{anthropic}}
   - model_name: {{openai_large}}
     litellm_params:
-      model: azure/gpt-4o-ca
+      model: azure/{{openai_large}}-ca
       api_base: https://my-endpoint-canada-berri992.openai.azure.com/
       api_key: "os.environ/AZURE_API_KEY_CA"
       rpm: 6
@@ -134,8 +134,8 @@ You can use the config to save model-specific information like api_base, api_key
 
 [**All input params**](https://docs.litellm.ai/docs/completion/input#input-params-1)
 
-**Step 1**: Create a `config.yaml` file
-```yaml
+**Step 1**: Create a `config.yaml` file. The deployments that set `temperature` use gpt-5.4-mini, since the newer default OpenAI models only accept a temperature of 1 unless reasoning is turned off.
+```yaml keep-model-ids
 model_list:
   - model_name: gpt-4-team1
     litellm_params: # params for litellm.completion() - https://docs.litellm.ai/docs/completion/input#input---request-body
@@ -147,13 +147,13 @@ model_list:
       max_tokens: 20
   - model_name: gpt-4-team2
     litellm_params:
-      model: azure/{{openai_large}}
+      model: azure/gpt-5.4-mini
       api_key: sk-123
       api_base: https://openai-gpt-4-test-v-2.openai.azure.com/
       temperature: 0.2
-  - model_name: openai-gpt-4o
+  - model_name: openai-gpt-5.4-mini
     litellm_params:
-      model: openai/{{openai_large}}
+      model: openai/gpt-5.4-mini
       extra_headers: {"AI-Resource Group": "ishaan-resource"}
       api_key: sk-123
       organization: org-ikDc4ex8NB

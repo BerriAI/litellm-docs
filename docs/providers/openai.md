@@ -296,7 +296,7 @@ OpenAI has two ways to use web search, depending on the endpoint:
 | Approach | Endpoint | Models | How to enable |
 |----------|----------|--------|---------------|
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
-| **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
+| **Web Search Tool** | `/responses` | `{{openai_large}}`, `{{openai_small}}`, and other regular models | Pass `web_search_preview` tool |
 
 <Tabs>
 <TabItem value="sdk-completion" label="SDK - /chat/completions">
@@ -938,7 +938,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 
   # Model with mode: chat (use prefix for built-in tools)
-  - model_name: gpt-4o-with-tools
+  - model_name: {{openai_large}}-with-tools
     litellm_params:
       model: openai/responses/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
@@ -957,7 +957,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-    "model": "gpt-4o-with-tools",
+    "model": "{{openai_large}}-with-tools",
     "messages": [
         {"role": "user", "content": "What is the weather in Paris today?"}
     ],

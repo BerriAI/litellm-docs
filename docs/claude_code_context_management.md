@@ -418,9 +418,9 @@ To opt a model out of the polyfill, list `context_management` in that model's `a
 ```yaml
 # proxy_server_config.yaml
 model_list:
-  - model_name: gpt-4.1
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/{{openai_large}}
       additional_drop_params: ["context_management"]
 ```
 

@@ -146,7 +146,7 @@ The mock-testing flags are deprecated for Proxy requests. To validate Proxy fall
 
 ### Explanation
 
-Fallbacks are done in-order - ["gpt-4o-mini", "gpt-4o", "gpt-4.1"], will do 'gpt-4o-mini' first, then 'gpt-4o', etc.
+Fallbacks are done in-order - `["{{openai_small}}", "{{openai_large}}", "{{anthropic}}"]`, will do `{{openai_small}}` first, then `{{openai_large}}`, etc.
 
 You can also set [`default_fallbacks`](#default-fallbacks), in case a specific model group is misconfigured / bad.
 
@@ -472,7 +472,7 @@ For azure deployments, set the base model. Pick the base model from [this list](
 <Tabs>
 <TabItem value="same-group" label="Same Group">
 
-Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
+Filter instances of a model (e.g. gpt-5.4-mini) with smaller context windows
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
@@ -481,24 +481,29 @@ router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: azure/chatgpt-v-2
-    api_base: os.environ/AZURE_API_BASE
-    api_key: os.environ/AZURE_API_KEY
-    api_version: "2023-07-01-preview"
+      model: azure/chatgpt-v-2
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: gpt-4o-mini
-    api_key: os.environ/OPENAI_API_KEY
+      model: gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -506,18 +511,23 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+The test prompt is about 320,000 tokens, so the Azure deployment needs a tokens-per-minute quota above that. A deployment with a lower quota is rate limited, and the proxy then reports a context window error instead of the rate limit.
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 25000
+text = "What is the meaning of 42?" * 40000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.4-mini",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -536,6 +546,9 @@ Fallback to larger models if current model is too small.
 The model ids in this example are illustrative and kept for their context window sizes.
 
 ```yaml keep-model-ids
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -551,7 +564,7 @@ model_list:
 
   - model_name: gpt-3.5-turbo-large
     litellm_params:
-      model: gpt-4.1
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
@@ -566,6 +579,8 @@ litellm_settings:
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -573,10 +588,13 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 

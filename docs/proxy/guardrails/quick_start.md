@@ -807,7 +807,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
       api_base: https://api.anthropic.com/v1
       guardrails: ["azure-text-moderation"]
-  - model_name: openai-gpt-4o
+  - model_name: openai-{{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
 
