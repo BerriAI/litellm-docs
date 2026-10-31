@@ -450,7 +450,7 @@ In a load-balanced group, a request with clips goes only to the deployments that
 
 The flags only control what LiteLLM sends. Check that the provider reads the clips before you set `true` on a deployment, since LiteLLM sends them whether the provider uses them or not. OpenRouter's `cloudflare/clef-omni` route, for example, takes the clips and answers as if none were sent, so send clips to Clef-omni through `cloudflare/clef-omni`.
 
-Before `v1.110.0`, a deployment's own flags do not win over the cost map. `false` does not turn clips off on `cloudflare/clef-omni`, and `true` turns them on only on a deployment that also sets `mode: decisions`.
+Before `v1.110.0`, a deployment's own flags do not win over the cost map, so `false` does not turn clips off on `cloudflare/clef-omni`, and `true` alone does not turn them on.
 
 ## TypeSafe images, box questions and long context
 
