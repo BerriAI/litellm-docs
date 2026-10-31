@@ -15,11 +15,7 @@ hide_table_of_contents: false
 
 ## Releases move to Tuesday
 
-Release candidates and stable releases now ship on Tuesday mornings instead of Saturdays. Code for each release is frozen early Monday, and Monday is spent on QA. On Tuesday morning the new release candidate is cut and the previous week's release candidate is promoted to stable.
-
-Shipping early in the week means upgrades, and any follow-up fixes, happen during the working week instead of over a weekend.
-
-The [release cycle](/docs/proxy/release_cycle) page has the full weekly schedule.
+Release candidates and stable releases now ship on Tuesday mornings instead of Saturdays, in line with the industry-standard Patch Tuesday release day. The [release cycle](/docs/proxy/release_cycle) page has the full weekly schedule.
 
 ## An LTS pilot on 1.108
 
