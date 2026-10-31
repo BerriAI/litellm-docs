@@ -7,7 +7,7 @@ LiteLLM supports OpenAI text completion models
 
 :::note
 
-OpenAI's model pages list the legacy Completions endpoint as not supported for current models. gpt-5.4, gpt-5.4-mini and gpt-5.4-nano still answer there as of October 2026, while gpt-5.5 and later answer 404. These are chat models, so the endpoint continues your prompt as plain text instead of replying to it, and LiteLLM does not track spend on this route yet. For chat-style answers and spend tracking, use the `openai/` prefix, which also serves [`/completions`](../text_completion.md) requests.
+OpenAI's model pages list the legacy Completions endpoint as not supported for current models. gpt-5.4, gpt-5.4-mini and gpt-5.4-nano still answer there as of October 2026, while gpt-5.5 and later answer 404. These are chat models, so the endpoint continues your prompt as plain text instead of replying to it, and the text can include the model's internal formatting tokens. LiteLLM does not track spend on this route yet. For chat-style answers and spend tracking, use the `openai/` prefix, which also serves [`/completions`](../text_completion.md) requests.
 
 :::
 
@@ -128,29 +128,16 @@ print(response)
 <TabItem value="langchain" label="Langchain">
 
 ```python keep-model-ids
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import OpenAI
 
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-5.4-mini-completions",
+llm = OpenAI(
+    base_url="http://0.0.0.0:4000", # set base_url to the LiteLLM Proxy
+    api_key="anything",
+    model="gpt-5.4-mini-completions",
     temperature=0.1
 )
 
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
+response = llm.invoke("test from litellm. tell me why it's amazing in 1 sentence")
 
 print(response)
 ```
