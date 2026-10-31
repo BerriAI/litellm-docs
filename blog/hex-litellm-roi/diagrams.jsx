@@ -4,7 +4,6 @@ import {PostByline} from '@theme/BlogPostPage';
 import styles from './launch.module.css';
 
 const liveDemoUrl = 'https://app.hex.tech/01a18e4b-6e94-7328-831c-e5ab0e2e00e7/app/LiteLLM-AI-cost-and-ROI-demo-034p688gOAllaldLw72Oat/latest';
-const feedbackUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdySd34qAyNpGU3bzeYS-BSSkyIspDcXaLVsVqyWJPSdE4LfQ/viewform';
 
 function ReportingArtwork() {
   return <svg className={styles.art} viewBox="0 0 1440 640" fill="none" aria-hidden="true">
@@ -24,7 +23,6 @@ export function HexPage({children}) {
   return <div className={styles.root} data-full-width>
     <header className={styles.hero}>
       <div className={styles.heroInner}>
-        <div className={styles.feedbackBar}><span>Help shape the LiteLLM × Hex integration.</span><a href={feedbackUrl}>Share feedback <span aria-hidden="true">↗</span></a></div>
         <div className={styles.heroMeta}><Link to="/blog">← Blog</Link><span>COST REPORTING / HEX TEMPLATE</span></div>
         <div className={styles.brands}><img src="/img/brand/litellm-logo-white.png" alt="LiteLLM" width="150" height="36"/><span aria-hidden="true">×</span><img src="/img/hex/hex-logo.svg" alt="Hex" width="94" height="36"/></div>
         <ReportingArtwork />
