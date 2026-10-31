@@ -84,7 +84,7 @@ The caller always sees **one** request on the cascade's model group:
 | `decision` (default) | one `choice` question through the Router's `adecisions`: *"Does the answer actually answer the request?"* → `yes` / `no`, with a confidence | the group is a decision model (Laya, LM Studio, Azure / Databricks decisions). Cheap and fast. |
 | `chat` | a one-word YES / NO prompt (`max_tokens: 2`, `temperature: 0`, unsupported params dropped) to a chat model group | you have no decision model. Any small chat model works. |
 
-Only an answer that starts with **yes** passes. `verifier_min_confidence` (decision kind) escalates a low-confidence yes. If the verifier call fails or returns nothing usable, `on_verifier_error` decides: `escalate` (default) or `accept`; the error is recorded as `classifier_failure_reason`.
+Only an answer that starts with **yes** passes. `verifier_min_confidence` (decision kind) escalates a low-confidence yes. If the verifier call fails or returns nothing usable, `on_verifier_error` decides: `escalate` (default) or `accept`; the failure is recorded as `classifier_failure_reason: classifier_error` with the error text in `classifier_error_type`.
 
 The verifier reads the caller's prompt and the cheap answer, so a caller can steer it ("reply NO") and reach the strong group through the cascade alias. The cost stays on that caller's key; if that matters, put the strong group behind the same access controls as the alias.
 
@@ -120,7 +120,7 @@ Every request routed by a cascade carries a [`routing_decision`](./auto_routing.
 | `escalation_reason` | the check that asked for the strong model: `empty`, `refusal`, `short`, `truncated`, `verifier_no`, `verifier_error` |
 | `escalated` | `true` on the strong path |
 | `savings_baseline_model`, `savings_baseline_deployment_id` | `strong_model` and its most expensive deployment, so the [savings accounting](./auto_routing.md#reported-savings) applies |
-| `classifier_model`, `classifier_cost`, `classifier_failure_reason` | the verifier, when one ran |
+| `classifier_model`, `classifier_cost`, `classifier_failure_reason`, `classifier_error_type` | the verifier, when one ran; the last two only when it failed |
 
 The **escalation rate** (share of requests with `escalated: true`) is the number to watch. If it is high, the cheap tier is not cheap for this traffic.
 
