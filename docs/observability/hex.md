@@ -5,30 +5,54 @@ description: Connect Hex to existing LiteLLM spend logs and import a versioned p
 
 # Connect Hex to LiteLLM
 
-Connect Hex to the Postgres database where you store LiteLLM spend logs. Import our Hex template to compare project costs, model usage, latency and business ROI. You need no Hex callback or S3 bucket for this path.
+Connect Hex to the Postgres database that holds your existing LiteLLM daily spend aggregates. Import our Hex template to compare project costs, model usage, latency and business ROI. See the [visual walkthrough and Hex board previews](/blog/hex-litellm-roi).
 
 ## Download the template
 
 | File | Use it for |
 | --- | --- |
 | [Demo Hex project](/hex/litellm_roi_demo.hex.yaml) | Preview the board with synthetic data and no credentials. |
-| [Postgres Hex project](/hex/litellm_roi_postgres.hex.yaml) | Read existing LiteLLM spend logs. |
+| [Quick-setup Postgres project](/hex/litellm_roi_postgres_daily.hex.yaml) | Select an existing read-only connection and run. No setup SQL. |
+| [Restricted-view Postgres project](/hex/litellm_roi_postgres.hex.yaml) | Use an aggregate view when analysts must not read the source table. |
 | [Postgres setup SQL](/hex/setup-postgres.sql) | Create an aggregate view for Hex. |
 | [Source and changelog](https://github.com/BerriAI/litellm-docs/tree/main/static/hex) | Review template changes and the data contract. |
 
-Template version: **1.0.0**. {/* keep-version-note: Hex template version, not a LiteLLM release */} You can edit your imported copy in Hex. Repository updates do not change your copy; import a new copy and review it before replacing your published board.
+Template version: **1.1.0**. {/* keep-version-note: Hex template version, not a LiteLLM release */} You can edit your imported copy in Hex. Repository updates do not change your copy; import a new copy and review it before replacing your published board.
 
-## 1. Prepare the spend view
+## Quick setup with an existing connection
+
+Use the [quick-setup Postgres template](/hex/litellm_roi_postgres_daily.hex.yaml) if you already have a Hex Postgres connection with read-only access to `public."LiteLLM_DailyTeamSpend"` and the `token` / `project_id` columns of `public."LiteLLM_VerificationToken"`.
+
+Import it from **Hex Home → + → Upload project**. Choose the connection on the **Source** SQL cell, then run all cells. Review the board and publish it to your intended audience. This path does not create or modify database objects. You can use the database you already have; a replica is optional when analytics load warrants it.
+
+Confirm that your daily team aggregates contain records for the reporting period. LiteLLM maintains those totals before Hex reads them; this template does not backfill missing days from request logs. The Source cell groups those daily rows into project, team and model totals, with requests, tokens and success/failure counts. It does not scan request logs or return keys. Keep credentials in Hex's connection settings. Configure network access and TLS with your database administrator if the connection does not already exist.
+
+| Existing table | Fields Hex uses | Purpose |
+| --- | --- | --- |
+| `LiteLLM_DailyTeamSpend` | `date`, `api_key`, `team_id`, model fields, `spend`, request/status counters, token totals | Recorded daily costs and usage. |
+| `LiteLLM_VerificationToken` | `token`, `project_id` | Current key-to-project lookup. Key values do not appear in query results. |
+
+Grant the connection only the columns it needs from the key table. The template does not need key configuration, permissions or other credential fields. The query keeps deleted keys under `(unassigned)` so their cost stays in the totals. A reassigned key uses its current project, which can change historical project attribution. Review that mapping before Finance or ROI reporting.
+
+Read **one** daily aggregate family for a report. Adding daily team spend to daily user or organization spend would count overlapping traffic again. LiteLLM also maintains daily user, organization, end-user, agent and tag tables for other reporting scopes.
+
+The daily template includes the last 60 complete UTC days and defaults the board to 30. It leaves latency, TTFT and response-cache hit rate unknown because those measurements are absent from daily team rows. Provider cache-token totals differ from response-cache hits. Use the request-log view below only if you need those additional metrics or project attribution from request metadata.
+
+## Restricted-view option
+
+Use this optional request-log source for timing metrics and project attribution from request metadata. Its restricted reader must not read the raw spend-log table. The steps below install the aggregate view, then connect the restricted reader.
+
+### Prepare the spend view
 
 Ask your database administrator to run [setup-postgres.sql](/hex/setup-postgres.sql) in the database that contains `public."LiteLLM_SpendLogs"`. Have them provision a dedicated reader named `hex_reader` first, or change the two grants to match the reader they provide. Keep credentials in Hex's connection settings.
 
 The SQL creates `litellm_analytics.spend_daily_v1`. Hex can read daily aggregates for the past 60 complete UTC days. The view exposes project and team identifiers, model names, spend, usage, timing and cache counts. It excludes request content, responses, IP addresses, key hashes and raw metadata. Give the Hex login access to this view; grant no access to the source table.
 
-Use a read replica for large deployments. Confirm that your deployment logs requests to Postgres and retains enough history for the comparison you need. The view cannot recover expired or unlogged requests. Earlier LiteLLM schemas may lack a field; ask your administrator to map that metric to unknown rather than inventing a value.
+Consider a read replica if analytics queries add too much load. Confirm that your deployment logs requests to Postgres and retains enough history for the comparison you need. The view cannot recover expired or unlogged requests. Earlier LiteLLM schemas may lack a field; ask your administrator to map that metric to unknown rather than inventing a value.
 
 The view reads `metadata.user_api_key_project_id`, then `metadata.project_id`, for project attribution. It preserves team ownership in a separate `team_id` column. Review your records and adapt this mapping to your deployment. Missing project attribution appears as `(unassigned)`.
 
-## 2. Add the connection in Hex
+### Add the connection in Hex
 
 In Hex, open **Settings → Data sources → + Connection → Postgres**. Enter your reader's host, port, database and authentication details. Use the network and TLS settings your administrator requires. Follow [Hex's Postgres guide](https://learn.hex.tech/docs/connect-to-data/data-connections/setup-guides/connect-to-postgres) for firewall or SSH setup.
 
@@ -43,9 +67,9 @@ ORDER BY day DESC
 LIMIT 20;
 ```
 
-## 3. Import and run the board
+### Import and run the board
 
-Download the **Postgres Hex project** above. From Hex Home, use the **+ menu → Upload project** and select the `.hex.yaml` file. Open the **Source** SQL cell and select your Postgres connection. Run all cells.
+Download the **restricted-view Postgres project** above. From Hex Home, use the **+ menu → Upload project** and select the `.hex.yaml` file. Open the **Source** SQL cell and select your Postgres connection. Run all cells.
 
 In **Settings**, choose your report dates. The default covers the last 30 complete UTC days; the end date is exclusive. Use the Project and Entity inputs to inspect one scope. Leave the inputs blank to inspect all data your connection can read.
 
@@ -53,7 +77,7 @@ In **Settings**, choose your report dates. The default covers the last 30 comple
 
 The board includes a ranked project and entity table, spend share, daily spend, model mix and a cost-change review queue. It compares the last seven complete days with the preceding seven and flags cost increases above 25% and $10 when both windows contain records on all seven days. Review cost per request alongside total spend to distinguish higher traffic from higher unit cost.
 
-## 4. Add business value for ROI
+## Add business value for ROI
 
 Open **Settings** and fill `value_data` with Finance-approved values for the selected report window:
 
@@ -73,7 +97,7 @@ The board computes `(business value - LLM spend - other costs) / (LLM spend + ot
 
 ![Hex model mix and cost-change review with synthetic records](/img/hex/roi-cost-changes.png)
 
-## 5. Publish and keep it current
+## Publish and keep it current
 
 Publish the App to your intended audience. Configure a [Hex scheduled run](https://learn.hex.tech/docs/share-insights/scheduled-runs) to update published results. Assign a board owner to check failed runs, source retention and attribution changes. Configure notifications in Hex if you need alerts; the template's review queue does not send messages.
 
@@ -85,8 +109,8 @@ Enforce department access through database permissions and Hex sharing. A viewer
 | --- | --- |
 | Spend | Sum of recorded LiteLLM spend. Confirm the currency; the template labels it USD. Some deployments record unavailable costs as zero, so reconcile with provider billing. |
 | Failure rate | Failures divided by requests with a known success/failure status. The quality table counts requests with unknown status. |
-| Cache hit rate | LiteLLM response-cache hits divided by requests with a known cache flag. Provider prompt caching uses different fields. |
-| Latency and TTFT | Weighted means over requests with valid timestamps. TTFT coverage depends on completion-start logging. |
+| Cache hit rate | Unknown on the daily-aggregate source. On the request-log source, LiteLLM response-cache hits divided by requests with a known cache flag. Provider prompt caching uses different fields. |
+| Latency and TTFT | Unknown on the daily-aggregate source. On the request-log source, weighted means over requests with valid timestamps. TTFT coverage depends on completion-start logging. |
 | Missing days | Gaps in the daily chart. A missing row can mean no traffic or a logging gap. |
 | Cache savings | Requires provider cache-token usage and a price baseline. This template does not estimate it. |
 

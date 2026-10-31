@@ -2,3 +2,5 @@ Design references: https://docs.litellm.ai/blog/abliterated-models and https://h
 Hex logo: SVG wordmark in the home navigation of https://hex.tech/, retrieved October 30, 2026. Original path preserved; fill set to white for the cobalt hero.
 Cost reporting: docs/proxy/cost_tracking.md.
 Hex screenshots: native Hex project with synthetic records; no customer data.
+GIF: cropped close-ups from native Hex model-mix and seven-day cost-change screens, captured October 30, 2026. Synthetic records. One automatically animated GIF, without playback controls.
+Feedback form: created in the LiteLLM Google Workspace; public response URL only. Email input is optional; response summary sharing is disabled.

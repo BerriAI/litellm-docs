@@ -42,7 +42,7 @@ class HexTemplateTests(unittest.TestCase):
                 "https://static.hex.site/hex-file-schema.json", timeout=30
             ) as response:
                 schema = json.load(response)
-        for mode in ["demo", "postgres"]:
+        for mode in ["demo", "postgres", "postgres_daily"]:
             document = template(mode)
             jsonschema.validate(document, schema)
             ids = [cell["cellId"] for cell in document["cells"]]
@@ -55,10 +55,11 @@ class HexTemplateTests(unittest.TestCase):
 
     def test_demo_and_postgres_use_identical_analysis(self):
         demo = {cell["cellLabel"]: cell for cell in template("demo")["cells"]}
-        live = {cell["cellLabel"]: cell for cell in template("postgres")["cells"]}
-        for label in demo.keys() - {"Read me", "Source"}:
-            self.assertEqual(demo[label], live[label])
-        self.assertIsNone(live["Source"]["config"]["dataConnectionId"])
+        for mode in ["postgres", "postgres_daily"]:
+            live = {cell["cellLabel"]: cell for cell in template(mode)["cells"]}
+            for label in demo.keys() - {"Read me", "Source"}:
+                self.assertEqual(demo[label], live[label])
+            self.assertIsNone(live["Source"]["config"]["dataConnectionId"])
 
     def test_weighted_metrics_and_cost_change(self):
         board = run_board()
@@ -183,6 +184,7 @@ class HexTemplateTests(unittest.TestCase):
 
         # Use a disposable database. Never point this test at a gateway database.
         with psycopg.connect(os.environ["HEX_TEST_DSN"], autocommit=True) as connection:
+            connection.execute("SET TIME ZONE 'UTC'")
             connection.execute(
                 """CREATE TABLE public."LiteLLM_SpendLogs" (
                 request_id text, "startTime" timestamp, "endTime" timestamp,
@@ -217,10 +219,88 @@ class HexTemplateTests(unittest.TestCase):
             self.assertAlmostEqual(float(row["ttft_seconds_sum"]), 0.5)
             self.assertNotIn("api_key", columns)
             self.assertNotIn("messages", columns)
+            connection.execute("RESET ROLE")
             connection.execute("SET ROLE hex_reader")
             self.assertEqual(connection.execute(query).fetchone(), rows[0])
             with self.assertRaises(psycopg.errors.InsufficientPrivilege):
                 connection.execute('SELECT * FROM public."LiteLLM_SpendLogs"')
+
+    @unittest.skipUnless(
+        os.environ.get("HEX_TEST_DSN"), "Set HEX_TEST_DSN for Postgres checks"
+    )
+    def test_daily_source_uses_existing_aggregates_and_retains_unmapped_keys(self):
+        import psycopg
+
+        with psycopg.connect(os.environ["HEX_TEST_DSN"], autocommit=True) as connection:
+            connection.execute("SET TIME ZONE 'UTC'")
+            connection.execute(
+                """CREATE TABLE public."LiteLLM_DailyTeamSpend" (
+                date text, api_key text, team_id text, model text, model_group text,
+                api_requests bigint, spend double precision, prompt_tokens bigint,
+                completion_tokens bigint, successful_requests bigint, failed_requests bigint)"""
+            )
+            connection.execute(
+                """CREATE TABLE public."LiteLLM_VerificationToken" (
+                token text PRIMARY KEY, project_id text, private_config jsonb)"""
+            )
+            connection.execute(
+                """INSERT INTO public."LiteLLM_VerificationToken" VALUES
+                ('synthetic-key-ref', 'example-project', '{"excluded":true}')"""
+            )
+            connection.execute(
+                """INSERT INTO public."LiteLLM_DailyTeamSpend" VALUES
+                ((CURRENT_DATE-1)::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 10, .5, 100, 50, 8, 1),
+                ((CURRENT_DATE-1)::text, 'deleted-key-ref', 'team-a', 'model-a', '', 2, .1, 20, 10, 2, 0),
+                (CURRENT_DATE::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0),
+                ((CURRENT_DATE-61)::text, 'synthetic-key-ref', 'team-a', 'model-a', '', 5, 9, 10, 10, 5, 0)"""
+            )
+            connection.execute("CREATE ROLE hex_daily_reader NOLOGIN")
+            connection.execute(
+                'GRANT SELECT ON public."LiteLLM_DailyTeamSpend" TO hex_daily_reader'
+            )
+            connection.execute(
+                'GRANT SELECT (token, project_id) ON public."LiteLLM_VerificationToken" TO hex_daily_reader'
+            )
+            query = next(
+                c
+                for c in template("postgres_daily")["cells"]
+                if c["cellLabel"] == "Source"
+            )["config"]["source"]
+            connection.execute("SET ROLE hex_daily_reader")
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                columns = [c.name for c in cursor.description]
+                rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            self.assertEqual(
+                {r["project_id"] for r in rows}, {"example-project", "(unassigned)"}
+            )
+            self.assertAlmostEqual(sum(r["spend_usd"] for r in rows), 0.6)
+            self.assertEqual(sum(r["requests"] for r in rows), 12)
+            self.assertEqual(sum(r["tokens"] for r in rows), 180)
+            self.assertEqual(sum(r["unknown_status_requests"] for r in rows), 1)
+            for name in ["api_key", "token", "private_config"]:
+                self.assertNotIn(name, columns)
+            self.assertTrue(
+                all(
+                    r["latency_seconds_sum"] is None and r["response_cache_known"] == 0
+                    for r in rows
+                )
+            )
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                connection.execute(
+                    'SELECT private_config FROM public."LiteLLM_VerificationToken"'
+                )
+            with self.assertRaises(psycopg.errors.InsufficientPrivilege):
+                connection.execute('DELETE FROM public."LiteLLM_DailyTeamSpend"')
+            connection.execute("RESET ROLE")
+            connection.execute(
+                'UPDATE public."LiteLLM_VerificationToken" SET project_id = %s',
+                ("reassigned-project",),
+            )
+            self.assertIn(
+                "reassigned-project",
+                [r[1] for r in connection.execute(query).fetchall()],
+            )
 
 
 if __name__ == "__main__":

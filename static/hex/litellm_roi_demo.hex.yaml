@@ -1,7 +1,7 @@
 schemaVersion: 3
 meta:
   title: LiteLLM AI cost and ROI (demo)
-  description: Version 1.0.0. Project spend, model changes and validated business ROI. Synthetic demo.
+  description: Version 1.1.0. Project spend, model changes and validated business ROI. Synthetic demo.
   codeLanguage: PYTHON
   timezone: UTC
   autoRerunApp: true
@@ -15,7 +15,7 @@ cells:
   cellLabel: Read me
   cellType: MARKDOWN
   config:
-    source: "# LiteLLM AI cost and ROI board\nTemplate v1.0.0 \xB7 Synthetic demo data. Replace this source before\
+    source: "# LiteLLM AI cost and ROI board\nTemplate v1.1.0 \xB7 Synthetic demo data. Replace this source before\
       \ using the board for decisions.\n\nReview the last 30 complete UTC days. Compare project costs, model mix\
       \ and response-cache use. Add Finance-approved business value to calculate ROI. Configure Settings before\
       \ publishing. Your administrator must enforce department access through database roles and Hex sharing; a\
@@ -25,7 +25,7 @@ cells:
   cellType: CODE
   config:
     source: "import pandas as pd\nimport numpy as np\nimport plotly.express as px\nfrom datetime import datetime,\
-      \ timezone\n\nTEMPLATE_VERSION = '1.0.0'\npx.defaults.template = 'plotly_white'\npx.defaults.color_discrete_sequence\
+      \ timezone\n\nTEMPLATE_VERSION = '1.1.0'\npx.defaults.template = 'plotly_white'\npx.defaults.color_discrete_sequence\
       \ = ['#263cdb', '#0f766e', '#b45309', '#64748b']\n# UTC dates: end is exclusive. Leave blank to use the last\
       \ 30 complete days.\nreport_end = pd.Timestamp(datetime.now(timezone.utc).date())\nreport_start = report_end\
       \ - pd.Timedelta(days=30)\n# Add one row per project for this exact report window after Finance validates\
@@ -36,7 +36,7 @@ cells:
   cellLabel: Source
   cellType: CODE
   config:
-    source: "import pandas as pd\nfrom datetime import datetime, timezone, timedelta\n\n# Template v1.0.0. Synthetic\
+    source: "import pandas as pd\nfrom datetime import datetime, timezone, timedelta\n\n# Template v1.1.0. Synthetic\
       \ data for a reproducible preview.\n_demo_end = datetime.now(timezone.utc).date()\n_demo_rows = []\nfor _n\
       \ in range(60):\n    _day = _demo_end - timedelta(days=60-_n)\n    for _i, _project in enumerate(['support-assistant',\
       \ 'document-review', 'internal-search']):\n        _requests = 900 + _i * 300 + (_n % 7) * 40\n        _rate\

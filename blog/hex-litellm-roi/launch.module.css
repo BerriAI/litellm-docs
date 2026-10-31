@@ -38,15 +38,15 @@
 .heroMeta { display: flex; justify-content: space-between; align-items: center; font: 10px/1.5 'Geist Mono', monospace; letter-spacing: .05em; }
 .heroMeta a { color: #fff; }
 .heroMeta > span { opacity: .75; }
-.brands { display: flex; gap: 26px; align-items: center; margin-top: 48px; }
+.brands { display: flex; gap: 26px; align-items: center; margin-top: 32px; }
 .root .brands img { border: 0; border-radius: 0; object-fit: contain; margin: 0; height: 36px; width: auto; }
 .brands > span { font-size: 26px; font-weight: 200; opacity: .65; }
 .art { position: absolute; inset: 55px 0 auto; width: 100%; height: auto; z-index: -1; }
-.root .hero h1 { margin: 64px 0 0; color: #fff; letter-spacing: -.07em; font-weight: 500; line-height: .92; }
+.root .hero h1 { margin: 45px 0 0; color: #fff; letter-spacing: -.07em; font-weight: 500; line-height: .92; }
 .title { display: block; font-size: min(17.8cqw, 250px); white-space: nowrap; }
 .subtitle { display: flex; justify-content: space-between; align-items: center; font-size: min(4cqw, 56px); font-weight: 400; letter-spacing: -.045em; line-height: 1.15; margin-top: 24px; }
 .subtitle > span { font-size: 1.6em; line-height: .8; }
-.heroBottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 25px; margin: 68px 0 39px; }
+.heroBottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 25px; margin: 42px 0 25px; }
 .root .heroBottom p { margin: 0; font-size: 18px; line-height: 1.5; color: #fff; }
 .heroBottom a { color: #fff; font: 12px/1.6 'Geist Mono', monospace; padding: 14px 0 10px; border-bottom: 1px solid #ffffff80; min-width: 205px; display: flex; justify-content: space-between; }
 .heroFoot { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #ffffff40; padding: 17px 0; font: 9px/1.5 'Geist Mono', monospace; letter-spacing: .05em; color: #ffffffbb; }
@@ -108,4 +108,61 @@
   .downloads { grid-template-columns: 1fr; }
   .downloads a { padding: 22px; gap: 13px; }
   .downloads a + a { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+.feedbackBar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 20px; margin-bottom: 22px; border-bottom: 1px solid #ffffff45; font-size: 13px; line-height: 1.5; }
+.feedbackBar a { color: #263cdb; background: #fff; padding: 10px 15px; display: flex; gap: 28px; align-items: center; font-size: 12px; white-space: nowrap; }
+.showcase { max-width: 1180px; margin: 0 auto; padding: 48px 40px 24px; }
+.showcaseLabel, .flowTitle { display: flex; justify-content: space-between; gap: 20px; color: var(--text); font: 9px/1.6 'Geist Mono', monospace; letter-spacing: .04em; }
+.root .showcase h2 { font-size: 40px; font-weight: 450; letter-spacing: -.045em; line-height: 1.2; margin: 18px 0 28px; color: var(--ink); }
+.root .boardPreview { width: 100%; display: block; border: 1px solid var(--line); border-radius: 0 !important; }
+.costDemo { scroll-margin-top: 100px; margin: 32px 0 0; padding-top: 25px; border-top: 1px solid var(--line); }
+.root .costDemo h3 { color: var(--ink); font-size: 26px; font-weight: 450; line-height: 1.3; letter-spacing: -.035em; margin: 0 0 22px; }
+.root .costDemo img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0 !important; }
+.costDemo figcaption, .demoNote { font-size: 12px; line-height: 1.6; color: var(--text); margin-top: 12px; }
+.demoNote { font-family: 'Geist Mono', monospace; font-size: 10px; }
+.dataFlow { margin: 28px 0; border: 1px solid #d9dee8; background: #fff; color: #475166; font-size: 13px; padding: 22px; }
+.flowTitle { color: #64748b; border-bottom: 1px solid #d9dee8; padding-bottom: 17px; }
+.flowSteps { display: grid; grid-template-columns: minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); gap: 13px; padding: 25px 0; }
+.flowNode { min-width: 0; }
+.flowNode small { font: 8px/1.6 'Geist Mono', monospace; color: #64748b; display: block; }
+.flowNode strong { font-size: 20px; line-height: 1.25; font-weight: 500; letter-spacing: -.03em; color: #17233b !important; display: block; margin: 12px 0; }
+.flowNode code { display: block; font: 9px/1.8 'Geist Mono', monospace; background: #f7f8fa; color: #263cdb; border: 0; padding: 7px; overflow-wrap: anywhere; }
+.flowNode p { font-size: 12px; line-height: 1.7; margin: 16px 0; }
+.flowNode dl { display: grid; grid-template-columns: 1fr; margin: 14px 0 0; }
+.flowNode dt { font: 9px/1.5 'Geist Mono', monospace; color: #17233b; overflow-wrap: anywhere; }
+.flowNode dd { font-size: 10px; color: #64748b; margin: 0 0 10px; }
+.flowArrow { color: #263cdb; align-self: start; margin-top: 41px; font-size: 20px; }
+.flowTag { display: block; border-top: 1px solid #d9dee8; padding-top: 10px; margin-top: 10px; font: 9px/1.6 'Geist Mono', monospace; color: #64748b; }
+.miniBars { height: 80px; border-bottom: 1px solid #d9dee8; display: flex; align-items: flex-end; gap: 6px; padding: 8px 8px 0; }
+.miniBars i { background: #263cdb; flex: 1; height: 35%; opacity: .8; }
+.miniBars i:nth-child(2) { height: 50%; }.miniBars i:nth-child(3) { height: 40%; }.miniBars i:nth-child(4) { height: 65%; }.miniBars i:nth-child(5) { height: 55%; }.miniBars i:nth-child(6) { height: 85%; }.miniBars i:nth-child(7) { height: 75%; }
+.dataFlow figcaption { font-size: 11px; line-height: 1.7; border-top: 1px solid #d9dee8; padding-top: 15px; }
+.dataFlow figcaption code { font-size: 10px; background: #f7f8fa; color: #263cdb; border: 0; }
+.setupSteps { padding: 0 !important; margin: 28px 0 !important; list-style: none; counter-reset: setup; border-top: 1px solid var(--line); }
+.setupSteps li { position: relative; padding: 20px 0 20px 42px; border-bottom: 1px solid var(--line); margin: 0; }
+.setupSteps li::before { counter-increment: setup; content: counter(setup, decimal-leading-zero); position: absolute; left: 0; top: 24px; color: var(--blue); font: 10px/1.5 'Geist Mono', monospace; }
+.setupSteps strong { display: block; font-size: 17px; font-weight: 500; }
+.setupSteps span { font-size: 13px; }
+@container (max-width: 800px) {
+  .showcase { padding-inline: 24px; }
+  .root .showcase h2 { font-size: 32px; }
+}
+@container (max-width: 600px) {
+  .flowSteps { grid-template-columns: 1fr; gap: 12px; }
+  .flowNode { padding: 6px 0; }
+  .flowNode dl { grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+  .flowArrow { transform: rotate(90deg); width: 20px; margin: 0; }
+  .flowNode code { font-size: 11px; }
+  .flowNode small { font-size: 9px; }
+  .miniBars { max-width: 180px; }
+  .flowTitle { font-size: 8px; }
+}
+@container (max-width: 480px) {
+  .feedbackBar { align-items: flex-start; font-size: 12px; }
+  .feedbackBar a { font-size: 10px; gap: 10px; padding: 9px; }
+  .feedbackBar > span { max-width: 180px; }
+  .showcase { padding-top: 30px; }
+  .showcaseLabel { font-size: 8px; }
+  .root .costDemo h3 { font-size: 23px; }
 }
