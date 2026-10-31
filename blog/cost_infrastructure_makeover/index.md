@@ -1,72 +1,60 @@
 ---
 slug: cost-infrastructure-makeover
-title: "LiteLLM’s Cost Infrastructure Is Getting a Makeover"
+title: "Introducing LiteLLM’s Unified Cost Accounting Engine"
 date: 2026-10-31T09:00:00
 authors: [joshua]
-description: "Durable usage tracking, explainable charges, and analytics that fit your stack."
+description: "Reliable budgets. Accounting that scales. Spend you can explain. Meet LiteLLM’s new cost accounting foundation."
 tags: [engineering, reliability]
 hide_table_of_contents: true
 unlisted: true
 ---
 
-import { ReliabilityPromise, ArchitectureComparison, AccountingOwners, PricingReceipt, DestinationAdapters, RecoverySequence } from './diagrams';
+import { OutcomeCards, UnifiedArchitecture, RecoveryExample, FutureScaling, AnalyticsDestinations } from './diagrams';
 
-*More reliable spend tracking. More accurate accounting. Built for your analytics stack.*
+AI traffic is getting more complex. Your spend shouldn’t get harder to trust.
 
-Your AI spend should be easy to trust. You should be able to open a report, check a budget and understand a charge without tracing it through several systems.
+We’re building **LiteLLM’s Unified Cost Accounting Engine**: a shared foundation for usage capture, cost calculation, budget settlement, and reporting. The goal is simple: **reliable budgets, accounting that scales, and spend you can explain.**
 
-Customers have told us where that experience falls short: missing usage, totals that disagree and unexpected budget blocks. We’ve fixed individual bugs. Now we’re rebuilding the foundation to make reliable accounting part of the design.
-
-**Our commitment is simple: preserve committed usage, reuse one finalized charge, and make that charge explainable.**
-
-<ReliabilityPromise />
+<OutcomeCards />
 
 {/* truncate */}
 
-## One charge. The same answer everywhere.
+## Reliability: budgets and reporting you can trust
 
-Today’s separate reporting and budget-update paths can drift apart when one write succeeds and another fails. The new design will give both a shared source: durable metered usage and a saved charge with tracked delivery.
+Retries, provider attempts, and different call paths complicate accounting. The engine brings supported paths through a common usage-event contract, while preserving the distinction between a caller’s request and its provider attempts.
 
-<ArchitectureComparison />
+<UnifiedArchitecture />
 
-For your team, that means less time reconciling conflicting numbers. Reports and settled budgets will converge on the same charge for the same activity and time window. Outstanding budget holds stay separate from settled spend.
+**Capture durably. Price consistently. Recover unfinished work.**
 
-## A restart should not erase committed usage
+UsageMeter captures events. CostCompiler wraps the existing calculator and saves the finalized charge with its pricing context. BudgetEnforcer and CostAggregator consume that result, with independent protection against duplicate updates.
 
-Once usage is durably recorded, the system will retain the event and unfinished delivery work so processing can resume. Retrying delivery will reuse the event instead of creating another charge.
+That gives budgets and reports a shared basis for spend, and a record of what still needs to happen. Reporting can catch up asynchronously; active budget holds remain separate from settled charges.
 
-<RecoverySequence />
+<RecoveryExample />
 
-Reporting can catch up asynchronously. The durable record gives recovery something concrete to resume, while each destination protects completed updates from being applied again.
+## Scalability: accounting that grows with your traffic
 
-## Accuracy you can inspect
+A surge in requests also creates a surge in accounting work. Separating metering, compilation, settlement, and aggregation gives each responsibility a clear boundary.
 
-A total is more useful when you can explain it. The new `PricingSnapshot` will retain the usage, rates, multipliers and adjustments behind each finalized charge.
+Those boundaries open the door to **queue-backed accounting outside the proxy**. A future relay could send captured usage through Redis Streams or another message queue to compilation workers, then distribute finalized charges to settlement and aggregation workers.
 
-<PricingReceipt />
+<FutureScaling />
 
-Per-call pricing overrides will stay local to the request. Unknown pricing will be explicitly marked unpriced. Caller requests and provider attempts will have distinct records, so retry usage can be accounted for without inflating the number of customer requests.
+**Scale downstream accounting independently of request-serving replicas.** Budget admission and reservations stay on the request path. PostgreSQL remains the durable authority; the queue transports work, and consumers handle replay safely.
 
-## Four responsibilities. One accounting flow.
+The modular design creates that option. Independent workers and Redis Streams are planned extensions.
 
-<AccountingOwners />
+## Visibility and governance: make spend data actionable
 
-These are interfaces inside the existing proxy. They build on established durable metering, [transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) and idempotent-consumer patterns: persist the event and delivery work together, then make retries safe.
+The same accounting foundation can power more than budget checks. **Analytics adapters let teams take finalized charges into richer reporting and their own analytics stack without rebuilding pricing logic.**
 
-PostgreSQL reporting will commit contributions with their delivery state. Redis settlement will independently deduplicate counter and hold changes. The scheduler will retry unfinished work using the saved charge, including the original free-allowance allocation.
+<AnalyticsDestinations />
 
-## Your data. Your analytics stack.
+PostgreSQL reporting remains the initial path. Planned ClickHouse and export adapters create room for deeper cost attribution, trend analysis, and audit workflows. Saved pricing context helps explain a charge even after rates change.
 
-**CostAggregator’s destination-independent contract will separate accounting from where you analyze it.** The initial adapter will keep existing PostgreSQL reports and dashboard queries, while planned ClickHouse and export adapters will bring the same finalized data into your own analytics tools.
+The opportunity: connect the number on a dashboard to the usage and pricing behind it, then give teams better tools to understand and govern their spend.
 
-<DestinationAdapters />
+---
 
-Your team will be able to build reporting around a consistent accounting record instead of recreating LiteLLM’s pricing logic. PostgreSQL and Redis remain the core infrastructure; adapters extend the reporting destinations.
-
-## Built for confidence in your AI spend
-
-We’re bringing this architecture into LiteLLM in stages, beginning with known-cost synchronous calls and expanding across request types. The goal is a better everyday experience: recoverable accounting for operators, explainable charges for developers, and consistent spend data for finance.
-
-Durability starts at commit. Default asynchronous capture does not make responses wait for that commit; optional synchronous capture will provide that choice under an explicit failure policy. Reports may briefly lag while delivery catches up.
-
-**Which analytics destination should we support next?** Tell us where your team wants to take its LiteLLM spend data.
+**Coming soon.** We’re building the Unified Cost Accounting Engine toward more reliable budgets, scalable processing, and richer spend insights. Queue-backed workers and new analytics adapters are planned extensions. Tell us which accounting challenges you want us to tackle first.
