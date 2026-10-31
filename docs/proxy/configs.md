@@ -134,7 +134,7 @@ You can use the config to save model-specific information like api_base, api_key
 
 [**All input params**](https://docs.litellm.ai/docs/completion/input#input-params-1)
 
-**Step 1**: Create a `config.yaml` file. The deployments that set `temperature` use gpt-5.4-mini, since gpt-6 models only accept a temperature of 1.
+**Step 1**: Create a `config.yaml` file. The deployments that set `temperature` use gpt-5.4-mini, since gpt-6.1-sol only accepts a temperature of 1 and gpt-6-luna only accepts another one with `reasoning_effort: none`.
 ```yaml keep-model-ids
 model_list:
   - model_name: gpt-4-team1

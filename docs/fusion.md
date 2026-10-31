@@ -36,7 +36,7 @@ Set credentials for every provider used by the panel and judge. The same `fusion
 <Tabs>
 <TabItem value="chat" label="Chat Completions" default>
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
@@ -45,7 +45,7 @@ fusion = {
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/{{openai_small}}",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -68,7 +68,7 @@ print(response.choices[0].message.content)
 </TabItem>
 <TabItem value="messages" label="Anthropic Messages">
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
@@ -77,7 +77,7 @@ fusion = {
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/{{openai_small}}",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -101,7 +101,7 @@ print(response["content"][0]["text"])
 </TabItem>
 <TabItem value="responses" label="Responses">
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
@@ -110,7 +110,7 @@ fusion = {
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/{{openai_small}}",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }

@@ -494,11 +494,15 @@ model_list:
     litellm_params:
       model: gpt-5.4-mini
       api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -506,10 +510,13 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+The test prompt is about 320,000 tokens, so the Azure deployment needs a tokens-per-minute quota above that. A deployment with a lower quota is rate limited, and the proxy then reports a context window error instead of the rate limit.
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_MASTER_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 

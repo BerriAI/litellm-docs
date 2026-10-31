@@ -1967,14 +1967,14 @@ async def test_acompletion_caching_on_router_caching_groups():
 		litellm.set_verbose = True
 		model_list = [
 			{
-				"model_name": "openai-{{openai_small}}",
+				"model_name": "openai-model",
 				"litellm_params": {
 					"model": "{{openai_small}}",
 					"api_key": os.getenv("OPENAI_API_KEY"),
 				},
 			},
 			{
-				"model_name": "azure-{{openai_small}}",
+				"model_name": "azure-model",
 				"litellm_params": {
 					"model": "azure/chatgpt-v-2",
 					"api_key": os.getenv("AZURE_API_KEY"),
@@ -1990,11 +1990,11 @@ async def test_acompletion_caching_on_router_caching_groups():
 		start_time = time.time()
 		router = Router(model_list=model_list, 
 				cache_responses=True, 
-				caching_groups=[("openai-{{openai_small}}", "azure-{{openai_small}}")])
-		response1 = await router.acompletion(model="openai-{{openai_small}}", messages=messages, temperature=1)
+				caching_groups=[("openai-model", "azure-model")])
+		response1 = await router.acompletion(model="openai-model", messages=messages, temperature=1)
 		print(f"response1: {response1}")
 		await asyncio.sleep(1) # add cache is async, async sleep for cache to get set
-		response2 = await router.acompletion(model="azure-{{openai_small}}", messages=messages, temperature=1)
+		response2 = await router.acompletion(model="azure-model", messages=messages, temperature=1)
 		assert response1.id == response2.id
 		assert len(response1.choices[0].message.content) > 0
 		assert response1.choices[0].message.content == response2.choices[0].message.content
