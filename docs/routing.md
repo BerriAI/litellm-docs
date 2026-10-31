@@ -1842,7 +1842,7 @@ The model ids in this example are illustrative and kept for their context window
 ```python keep-model-ids
 """
 - Give a model group two deployments with different context windows (a 4k Azure deployment and a larger OpenAI one)
-- Send a 5k prompt
+- Send a prompt of about 40k tokens, too long for the 4k deployment
 - Assert it works
 """
 from litellm import Router

@@ -152,3 +152,5 @@ print(response)
 | gpt-5.4             | `response = completion(model="text-completion-openai/gpt-5.4", messages=messages)` |
 | gpt-5.4-mini        | `response = completion(model="text-completion-openai/gpt-5.4-mini", messages=messages)` |
 | gpt-5.4-nano        | `response = completion(model="text-completion-openai/gpt-5.4-nano", messages=messages)` |
+
+OpenAI shuts down gpt-5.4-nano on April 1, 2027.

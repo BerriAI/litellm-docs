@@ -70,7 +70,7 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 ```
 
-The `gpt-5.4-mini-completions` group calls OpenAI's legacy `/v1/completions` endpoint, which continues the prompt instead of replying to it, and LiteLLM does not track spend on it yet. See [OpenAI (Text Completion)](./text_completion_openai.md).
+The `gpt-5.4-mini-completions` group calls OpenAI's legacy `/v1/completions` endpoint, which continues the prompt instead of replying to it, and LiteLLM does not track spend on it yet. Send it a single user message, because a system message or `tools` on this route returns a 500 error. See [OpenAI (Text Completion)](./text_completion_openai.md).
 
 </TabItem>
 <TabItem value="config-*" label="config.yaml - proxy all OpenAI models">
