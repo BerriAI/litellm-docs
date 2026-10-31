@@ -1,6 +1,6 @@
 # Azure AI Search - Vector Store (Passthrough API)
 
-Use this to allow developers to **create** and **search** vector stores using the Azure AI Search API in the **native** Azure AI Search API format, without giving them the Azure AI credentials.
+Use this to let developers **upload documents to** and **search** Azure AI Search indexes in the **native** Azure AI Search API format, without giving them the Azure AI credentials.
 
 This is for the proxy only. 
 
@@ -59,35 +59,17 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/indexes' \
 }'
 ```
 
-This is a virtual index, which the developer can use to create and search vector stores.
+This is a virtual index. Every call on `/azure_ai/indexes/dall-e-4/...` reaches the Azure index `real-index-name-2`, so developers call the virtual name. Responses such as `@odata.context` still name `real-index-name-2`.
 
-### 4. Create a key with the vector store permissions. 
+### 4. Create the index schema.
 
-```bash
-curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "allowed_vector_store_indexes": [{"index_name": "dall-e-4", "index_permissions": ["write", "read"]}],
-    "models": ["embedding-model"]
-}'
-```
+Run this with the master key. Only a proxy admin key can create, update, or delete an index, and a developer key gets `403`.
 
-Give the key access to the virtual index and the embedding model.
+:::warning
 
-**Expected response**
+`PUT` on `/azure_ai/indexes/dall-e-4` creates or rewrites `real-index-name-2` in Azure, and `DELETE` deletes it. Several virtual indexes can map to the same Azure index, so deleting the index through one of them removes the documents every one of them serves. The script below only creates or updates the index, so running it again keeps the documents.
 
-```json
-{
-    "key": "sk-my-virtual-key"
-}
-```
-
-## Developer Flow
-
-### 1. Create a vector store with some documents. 
-
-Note: Use the '/azure_ai' endpoint for the passthrough api that uses the `azure_ai` provider in your `_new_secret_config.yaml` file. 
+:::
 
 ```python
 import requests
@@ -96,14 +78,9 @@ import json
 # ----------------------------
 # CONFIGURATION
 # ----------------------------
-# Azure OpenAI (for embeddings)
-AZURE_OPENAI_ENDPOINT = "http://0.0.0.0:4000"
-AZURE_OPENAI_KEY = "sk-my-virtual-key"
-EMBEDDING_DEPLOYMENT_NAME = "embedding-model"
-
 # Azure AI Search
 AZURE_AI_SEARCH_ENDPOINT = "http://0.0.0.0:4000/azure_ai" # IMPORTANT: Use the '/azure_ai' endpoint for the passthrough api to Azure 
-SEARCH_API_KEY = "sk-my-virtual-key"
+SEARCH_API_KEY = "sk-<your-litellm-master-key>"  # index create and update need a proxy admin key
 INDEX_NAME = "dall-e-4"
 
 
@@ -111,35 +88,10 @@ INDEX_NAME = "dall-e-4"
 # Vector dimensions (text-embedding-3-large uses 3072 dimensions)
 VECTOR_DIMENSIONS = 3072
 
-# Example docs (replace with your own)
-documents = [
-    {"id": "1", "content": "Refunds must be requested within 30 days."},
-    {"id": "2", "content": "We offer 24/7 support for all enterprise customers."},
-]
-
 
 # ----------------------------
-# STEP 0 — Create Index Schema
+# Create the index schema
 # ----------------------------
-def delete_index_if_exists():
-    """Delete the index if it exists"""
-    index_url = f"{AZURE_AI_SEARCH_ENDPOINT}/indexes/{INDEX_NAME}?api-version=2024-07-01"
-    headers = {"api-key": SEARCH_API_KEY}
-
-    response = requests.delete(index_url, headers=headers)
-
-    if response.status_code == 204:
-        print(f"Deleted existing index '{INDEX_NAME}'")
-        return True
-    elif response.status_code == 404:
-        print(f"Index '{INDEX_NAME}' does not exist yet")
-        return False
-    else:
-        print(f"Delete response: {response.status_code}")
-        print(f"    Message: {response.text}")
-        return False
-
-
 def create_index():
     """Create the Azure AI Search index with proper schema"""
     index_url = f"{AZURE_AI_SEARCH_ENDPOINT}/indexes/{INDEX_NAME}?api-version=2024-07-01"
@@ -186,23 +138,81 @@ def create_index():
     response = requests.put(index_url, headers=headers, json=index_schema)
 
     if response.status_code == 201:
-        print(f"✅ Index '{INDEX_NAME}' created successfully.")
+        print(f"Index '{INDEX_NAME}' created successfully.")
         return True
     elif response.status_code == 204:
-        print(f"✅ Index '{INDEX_NAME}' updated successfully.")
+        print(f"Index '{INDEX_NAME}' updated successfully.")
         return True
     else:
-        print(f"❌ Failed to create index: {response.status_code}")
+        print(f"Failed to create index: {response.status_code}")
         print(f"    Message: {response.text}")
         return False
 
 
-# Delete and recreate the index with correct schema
+# Create the index, or update it when it already exists
 print("Setting up Azure AI Search index...")
-delete_index_if_exists()
 if not create_index():
-    print("❌ Could not create index. Exiting.")
+    print("Could not create index. Exiting.")
     exit(1)
+
+
+```
+
+### 5. Create a key with the vector store permissions. 
+
+```bash
+curl -L -X POST 'http://0.0.0.0:4000/key/generate' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+    "allowed_vector_store_indexes": [{"index_name": "dall-e-4", "index_permissions": ["write", "read"]}],
+    "models": ["embedding-model"]
+}'
+```
+
+Give the key access to the virtual index and the embedding model.
+
+**Expected response**
+
+```json
+{
+    "key": "sk-my-virtual-key"
+}
+```
+
+## Developer Flow
+
+### 1. Upload documents to the index. 
+
+Note: Use the '/azure_ai' endpoint for the passthrough api that uses the `azure_ai` provider in your `_new_secret_config.yaml` file. 
+
+```python
+import requests
+import json
+
+# ----------------------------
+# CONFIGURATION
+# ----------------------------
+# Azure OpenAI (for embeddings)
+AZURE_OPENAI_ENDPOINT = "http://0.0.0.0:4000"
+AZURE_OPENAI_KEY = "sk-my-virtual-key"
+EMBEDDING_DEPLOYMENT_NAME = "embedding-model"
+
+# Azure AI Search
+AZURE_AI_SEARCH_ENDPOINT = "http://0.0.0.0:4000/azure_ai" # IMPORTANT: Use the '/azure_ai' endpoint for the passthrough api to Azure 
+SEARCH_API_KEY = "sk-my-virtual-key"
+INDEX_NAME = "dall-e-4"
+
+
+
+# Vector dimensions (text-embedding-3-large uses 3072 dimensions)
+VECTOR_DIMENSIONS = 3072
+
+# Example docs (replace with your own)
+documents = [
+    {"id": "1", "content": "Refunds must be requested within 30 days."},
+    {"id": "2", "content": "We offer 24/7 support for all enterprise customers."},
+]
 
 
 # ----------------------------
