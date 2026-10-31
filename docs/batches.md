@@ -56,12 +56,14 @@ general_settings:
 ```bash
 $ export OPENAI_API_KEY="sk-..."
 $ export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
-$ export LITELLM_API_KEY="$LITELLM_MASTER_KEY"
+$ printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 
 $ litellm --config config.yaml
 
 # RUNNING on http://0.0.0.0:4000
 ```
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then send the requests below.
 
 **Create File for Batch Completion**
 

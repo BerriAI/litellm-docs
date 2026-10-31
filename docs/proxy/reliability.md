@@ -503,6 +503,7 @@ general_settings:
 
 ```bash
 export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -512,11 +513,13 @@ litellm --config /path/to/config.yaml
 
 The test prompt is about 320,000 tokens, so the Azure deployment needs a tokens-per-minute quota above that. A deployment with a lower quota is rate limited, and the proxy then reports a context window error instead of the rate limit.
 
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
 import os
 import openai
 client = openai.OpenAI(
-    api_key=os.environ["LITELLM_MASTER_KEY"],
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
@@ -543,6 +546,9 @@ Fallback to larger models if current model is too small.
 The model ids in this example are illustrative and kept for their context window sizes.
 
 ```yaml keep-model-ids
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
@@ -573,6 +579,8 @@ litellm_settings:
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -580,10 +588,13 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
