@@ -2,96 +2,74 @@
 slug: cost-infrastructure-makeover
 title: "LiteLLM’s Cost Infrastructure Is Getting a Makeover"
 date: 2026-10-31T09:00:00
-authors:
-  - litellm
+authors: [joshua]
 description: "Durable usage tracking, explainable charges, and analytics that fit your stack."
 tags: [engineering, reliability]
 hide_table_of_contents: true
 unlisted: true
 ---
 
+import { ArchitectureComparison, AccountingOwners, DestinationAdapters, RecoverySequence } from './diagrams';
+
 :::note Rough draft for review
-This is a preview of work in progress. Architecture, rollout status and adapter availability remain subject to review.
+Target architecture and planned adapters. Rollout status and recovery evidence remain subject to review.
 :::
 
-*Durable usage tracking, explainable charges, and analytics that fit your stack.*
+*Durable usage. Explainable charges. Analytics that fit your stack.*
 
-You’ve told us where spend tracking falls short. Reports that disagree with exports. Usage that goes missing after an interrupted stream or a failed database write. Budget limits that block requests while the dashboard still shows room to spend. Charges that take too much work to reconcile.
+You’ve told us about missing usage, conflicting spend totals and unexpected budget blocks. We’ve fixed individual bugs. Now we’re changing the accounting foundation behind them.
 
-We’ve heard these complaints repeatedly from customers using LiteLLM to manage their AI spend. We’ve fixed individual bugs along the way. Those experiences have also shaped a broader change to the accounting underneath LiteLLM.
-
-We’re rebuilding that foundation around a simple idea: **record usage durably, finalize one charge, and use that same charge everywhere it belongs.**
-
-The goal is accounting you can recover after a failure, explain when someone asks about a charge, and analyze in the infrastructure your team already uses.
+**Record usage durably. Finalize one charge. Reuse it for reporting and budget settlement.**
 
 {/* truncate */}
 
-## Why the foundation needs to change
+## Why change the foundation?
 
-In the pre-refactor architecture, logging callbacks and asynchronous queues feed separate spend writers. Authentication checks, budget reservations and callbacks manage live budget state. Those paths can make progress independently. One write can succeed while another fails, leaving different views of the same activity out of sync.
+In the pre-refactor design, reporting and live budgets follow separate update paths. A partial failure can leave one updated and the other behind. Customers then have to reconcile the difference.
 
-For a finance team, that means reconciling conflicting totals. For an operator, it means investigating whether a budget block reflects actual spend or an outstanding reservation. For a developer, it means tracing a charge through several paths.
+<ArchitectureComparison />
 
-A shared, durable accounting record gives those paths a common basis for recovery and reconciliation.
+## What you get
 
-![Before: separate reporting and budget paths can diverge after partial failure.](architecture-before.svg)
+- **Recoverable accounting.** Committed usage survives restarts; unfinished delivery can resume.
+- **Consistent totals.** Reports and settled budgets use the same charge and reconcile after recovery for matching activity, scope and time window.
+- **Explainable spend.** Saved pricing inputs show how a charge was calculated, even after prices change.
+- **Clearer usage.** Caller requests, provider attempts and charges have distinct records.
 
-*Before: the pre-refactor baseline. Reporting and live budget state have separate update paths.*
+## Four owners. Inside the existing proxy.
 
-## One usage record. One finalized charge.
+<AccountingOwners />
 
-The new design separates four responsibilities inside the existing proxy.
+The design follows established **durable metering, [transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) and idempotent consumer** patterns: save an event with its delivery work, then make repeated delivery safe. The existing scheduler retries unfinished reporting and settlement. Neither destination independently recalculates the charge.
 
-**UsageMeter captures the activity.** It durably records usage, with identifiers that distinguish a caller’s request from each outbound provider attempt. Retrying delivery of an event must not create another copy of that event. A real provider retry remains a separate attempt, with its own usage to account for.
+**Recovery is part of the contract.** Matching event retries are no-ops; conflicting content is rejected. Reporting writes and applied delivery state commit together. Redis settlement separately deduplicates counter and hold changes, preserving outstanding reservations.
 
-**CostCompiler finalizes the charge.** It wraps the existing cost calculator and saves a `CostEvent` with a typed `PricingSnapshot`. The snapshot records the pricing basis, rates, priced usage, multipliers and adjustments behind the total. Per-call overrides stay local to that call. Unknown pricing is explicitly marked unpriced.
-
-**CostAggregator updates reporting.** It applies the saved event’s contributions through destination adapters. For the existing PostgreSQL reports, the contribution and its applied delivery state commit together. Retrying unfinished work must not add a completed contribution again.
-
-**BudgetEnforcer owns reservations and settlement.** It reserves an estimate before execution, then settles against the saved charge and releases holds as appropriate. Redis settlement has its own atomic duplicate protection. A reporting receipt in PostgreSQL cannot, by itself, protect a Redis update.
-
-![After: durable usage and a saved charge feed reporting and live budgets, with planned analytics adapters.](architecture-after.svg)
-
-*After: the target architecture. These are contracts and adapters within the proxy, not four new services. PostgreSQL and Redis remain in place. Dashed destinations are planned extensions.*
-
-This builds on established accounting and distributed-systems patterns. We capture metered usage durably, save events alongside their pending delivery work, and make consumers safe to retry. The [transactional outbox pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) describes the same principle of committing data and delivery intent together. Idempotent consumers ensure that repeated delivery does not repeat the accounting effect.
-
-The existing proxy scheduler retries unfinished delivery. Reporting and budget settlement reuse the saved charge rather than recalculating it independently.
-
-## What this means for your team
-
-**Accounting that can recover.** Once usage is committed, a restart does not erase it. Pending delivery remains available for recovery, and completed contributions are protected against duplicate application within the retained deduplication history.
-
-**Numbers you can reconcile.** Reporting and live budget settlement start from the same finalized charge. After pending work and recovery finish, the same accepted activity, scope and time window should reconcile within existing numeric precision. Outstanding holds remain separate from settled charges.
-
-**Charges you can explain.** The pricing snapshot preserves the inputs used at the time, so a later pricing change does not erase the explanation for an earlier charge. It also makes adjustments visible. Provider usage and pricing rules still need to be correct; a durable record makes them easier to inspect.
-
-**Usage you can interpret.** Caller requests, provider attempts and charges have distinct records. A request that triggers a retry should not look like two customer requests, even when both provider attempts consume billable resources.
+Pricing snapshots retain rates, priced usage, multipliers, component costs and adjustments. Per-call overrides stay local. Replay reuses free-allowance allocations; cleanup requires replay-safe and recovery-safe boundaries because deduplication depends on retained history.
 
 ## Your accounting data, in your infrastructure
 
-We’re designing `CostAggregator` to be agnostic to the enterprise’s analytics backend. The accounting contract describes what an event contributes. An adapter handles how that contribution reaches a particular destination.
+**CostAggregator is designed around a destination-independent contract.** Adapters translate event contributions into the storage and analytics systems your team uses.
 
-That makes ClickHouse a natural planned destination for teams that already use it for analytics. The same finalized events could feed ClickHouse-backed dashboards or other export formats without requiring a second implementation of LiteLLM’s pricing logic.
+<DestinationAdapters />
 
-Each adapter needs explicit delivery and duplicate-handling semantics. Adding a destination must preserve the accounting guarantees, including when data is replayed or rebuilt. Backend independence is an interface we can extend and verify, not a claim that every database is already supported.
+A planned ClickHouse adapter would let teams visualize the same finalized accounting data in their existing analytics stack, without rebuilding pricing logic. Each new destination needs verified retry and replay behavior.
 
-The initial reporting path keeps the existing PostgreSQL tables and dashboard queries. This design does not require replacing the proxy’s PostgreSQL or Redis dependencies, or redesigning the dashboard.
+The initial path keeps existing PostgreSQL reports and dashboard queries. PostgreSQL and Redis remain core dependencies; backend flexibility applies to reporting destinations.
 
-## Recover the missing update, not another charge
+## A failure should mean a retry, not another charge
 
-Consider a request whose usage and charge have been saved. Budget settlement succeeds, but the reporting write fails before it commits.
+<RecoverySequence />
 
-Under the target design, reporting remains pending. The scheduler retries that delivery using the saved charge. When reporting commits, it also records that the contribution was applied. Budget settlement is not charged again.
+This is the flow we need to prove before activation: the same event, an interrupted reporting write, recovered totals and a single settled charge. We have not yet measured the integrated result.
 
-That is a concrete recovery scenario we will verify before activation. The proof should show the same event, the failure point, the final reporting total, the settled budget and the time taken to recover. This draft does not yet claim measured results for that integrated flow.
+## Rollout and current limits
 
-## Rolling out carefully
+**Foundation → shadow comparisons → narrow activation → broader coverage.**
 
-As with the Rust migration, we’re taking this in stages. The contracts, storage foundation and early fixes described in the design are complete; capture, finalization, reporting, budget recovery and activation still need integrated verification.
+The design marks contracts, storage foundations and early fixes complete. Integrated capture, pricing, reporting and budget recovery remain to be verified. Start with fixed-rate, known-usage synchronous calls and expand after their failure cases pass.
 
-Shadow comparisons come first, without changing production totals or settling charges twice. The initial activation targets fixed-rate, known-usage synchronous calls. Broader request types follow as their failure and recovery cases pass. Activation must reconcile existing spend and active holds, and rollback must drain or reconcile pending work.
+- **Safe activation.** Shadow mode does not change production totals or reallocate allowances. Activation reconciles spend and active holds; rollback drains or reconciles pending work.
+- **Capture and consistency.** Default asynchronous capture retains a pre-commit crash window. Optional synchronous capture waits under an explicit failure policy. Reports can lag; totals reconcile within existing numeric precision, with holds tracked separately.
+- **Coverage.** Streaming and deferred calls have no final-cost header promise. This work does not prevent every concurrent budget overshoot. ClickHouse and export adapters remain planned.
 
-There are clear boundaries. Default asynchronous capture still has a crash window before durable commit; optional synchronous capture waits under an explicit failure policy. Dashboards may temporarily lag. Streaming and deferred calls do not promise a final-cost response header. This work also does not guarantee that concurrent requests can never overshoot a budget.
-
-The direction is clear: durable usage, one explainable charge, and reporting that fits your stack. We want your feedback on the reconciliation problems and analytics destinations that matter most to your team.
+**What should we prioritize next?** We want your feedback on the spend reconciliation problems and analytics destinations that matter most to your team.
