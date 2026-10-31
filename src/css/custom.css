@@ -2120,6 +2120,17 @@ article a.card:hover {
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
+
+  .blog-wrapper .markdown table td[data-label][data-inline] {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .blog-wrapper .markdown table td[data-label][data-inline]::before {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
 }
 
 /* Key column: when the first cell is just a code span (a parameter, field or
