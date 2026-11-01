@@ -1805,6 +1805,7 @@ const providersSidebar = {
     "providers/amazon_nova",
     "providers/anyscale",
     "providers/apertis",
+    "providers/apiko",
     "providers/aws_sagemaker",
     "providers/baseten",
     "providers/black_forest_labs",
