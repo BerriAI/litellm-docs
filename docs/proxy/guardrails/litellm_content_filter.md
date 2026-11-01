@@ -655,24 +655,68 @@ exceptions:
 
 #### Where to put the file
 
-Put your YAML in one of these two locations:
+Put your YAML in one of these two locations.
 
-**Option A: inside the built-in `categories/` directory (recommended)**
+**Option A: inside a `categories/` directory the loader scans (recommended)**
 
-Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml` and drop the `category_file:` field. The loader picks it up by category name
+Mount the file into the `categories/` directory of the `litellm` package that the image imports, and drop the `category_file:` field. The guardrail and the UI category list both pick it up by category name. Where that package lives depends on the image:
+
+| Image | Mount the file at |
+|-------|-------------------|
+| `ghcr.io/berriai/litellm` (Docker, `litellm-helm` chart) | `/app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml` |
+| `ghcr.io/berriai/litellm-gateway` and `ghcr.io/berriai/litellm-backend` (`litellm` chart) | `/app/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml` |
+
+Mount the single file with `subPath`. Mounting a whole ConfigMap over that `categories/` directory hides the built-in categories.
+
+<Tabs>
+<TabItem value="litellm-helm" label="litellm-helm chart">
 
 ```yaml title="values.yaml (Helm)"
-extraVolumeMounts:
+volumeMounts:
   - name: content-filter-categories
-    mountPath: /usr/local/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
+    mountPath: /app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml
     subPath: <your-category-name>.yaml
     readOnly: true
 
-extraVolumes:
+volumes:
   - name: content-filter-categories
     configMap:
       name: <your-configmap-name>
 ```
+
+Update `mountPath` if you upgrade to a litellm image built on a different Python minor version.
+
+</TabItem>
+<TabItem value="litellm" label="litellm chart (gateway and backend)">
+
+```yaml title="values.yaml (Helm)"
+gateway:
+  volumeMounts:
+    - name: content-filter-categories
+      mountPath: /app/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml
+      subPath: <your-category-name>.yaml
+      readOnly: true
+  volumes:
+    - name: content-filter-categories
+      configMap:
+        name: <your-configmap-name>
+
+backend:
+  volumeMounts:
+    - name: content-filter-categories
+      mountPath: /app/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml
+      subPath: <your-category-name>.yaml
+      readOnly: true
+  volumes:
+    - name: content-filter-categories
+      configMap:
+        name: <your-configmap-name>
+```
+
+Mount the file on both components. The backend serves the UI category list and the category editor, and the gateway runs the guardrail on requests. With the file only on the gateway, the category is missing from the UI. With the file only on the backend, the category shows in the UI but the gateway skips it at request time and logs `Category file not found`.
+
+</TabItem>
+</Tabs>
 
 ```yaml title="config.yaml"
 guardrails:
@@ -688,8 +732,6 @@ guardrails:
           severity_threshold: "high"
 ```
 
-Update `mountPath` if you upgrade to a litellm image built on a different Python minor version
-
 **Option B: any other path, with the env var opt-in**
 
 Set
@@ -698,7 +740,7 @@ Set
 LITELLM_CONTENT_FILTER_ALLOW_EXTERNAL_PATHS=true
 ```
 
-on the proxy pod, then reference the file by absolute path
+on the proxy pod (on both the gateway and backend pods for the `litellm` chart), then reference the file by absolute path
 
 ```yaml title="config.yaml"
 categories:
@@ -708,6 +750,8 @@ categories:
     severity_threshold: "high"
     category_file: "/absolute/path/to/<your-category-name>.yaml"
 ```
+
+A category loaded this way is enforced on requests but does not appear in the UI category list, which only reads the `categories/` directories inside the package.
 
 Only use this when everyone who can write `category_file` (proxy config, DB, Admin UI, team-scoped configs) is trusted; with the flag on, `category_file` can point at any YAML-parseable file on the pod
 
@@ -726,6 +770,8 @@ content_filter.py: Category <name>: invalid category_file path, skipping. ...
 ```
 
 The second line means the file was rejected and the category is running with zero rules; use one of the two options above to fix it
+
+With Option A, `Category file not found: <path>, skipping` means the file is not in a directory this image reads, so check the mount path against the table above
 
 ## Use Cases
 
