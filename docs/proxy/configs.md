@@ -690,7 +690,7 @@ To enable [LiteLLM Enterprise features](https://docs.litellm.ai/docs/enterprise)
 export LITELLM_LICENSE="eyJ..."
 ```
 
-The license key is a JWT token provided when you purchase a LiteLLM Enterprise license. Once set, LiteLLM will automatically detect and activate enterprise features.
+LiteLLM gives you the license key when you buy a LiteLLM Enterprise license (see [Activate your license](../enterprise/activate.md)). Once set, LiteLLM will automatically detect and activate enterprise features.
 
 You can also add it to your `.env` file:
 
