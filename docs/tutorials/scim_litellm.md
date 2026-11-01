@@ -116,6 +116,31 @@ litellm_settings:
 
 LiteLLM compares this setting with each group's `value` and `display` name. Members of the matching group receive the `proxy_admin` role; all other users receive the default role described above. LiteLLM evaluates this mapping on every SCIM write, so removing a user from the configured admin group changes the user's role during the next synchronization. If `scim_admin_group` is not configured, SCIM does not modify roles assigned through the Admin UI or management API.
 
+## Placing SCIM groups in organizations
+
+By default a team that SCIM creates has no organization unless `litellm_settings.default_team_params.organization_id` is set, which puts every SCIM team in the same organization. To place each team in the organization its SCIM group names, configure the group attribute LiteLLM reads:
+
+```yaml title="config.yaml"
+litellm_settings:
+  scim_settings:
+    organization_id_attribute: "org_id"
+```
+
+The attribute's value is an **organization alias** (the `organization_alias` shown on the Organizations page), not an organization ID. LiteLLM resolves the alias when the identity provider creates the group (`POST /scim/v2/Groups`), replaces it (`PUT`), or patches the attribute (`PATCH`), writes the organization onto the team, and adds the group's members to that organization the same way `/team/update` does for a proxy admin. A `PATCH` that removes the attribute clears the team's organization. Attribute names are matched case-insensitively; a value under a schema extension is addressed as `<extension URN>:<field>`, for example `urn:ietf:params:scim:schemas:extension:litellm:2.0:Group:org_id`.
+
+```json title="POST /scim/v2/Groups"
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+  "displayName": "Infrastructure Team",
+  "org_id": "engineering",
+  "members": [{"value": "alice@example.com"}]
+}
+```
+
+If the alias names no organization, the request fails with `404` and LiteLLM creates neither the team nor an organization. Create the organization first on the Organizations page or with `POST /organization/new`. A group that omits the attribute keeps today's behavior: on create the team takes `default_team_params.organization_id`, and a `PUT` without the attribute leaves the team's current organization in place. When `organization_id_attribute` is not configured, SCIM never changes a team's organization.
+
+Whether the attribute reaches LiteLLM depends on the identity provider. Microsoft Entra ID lets you add a group attribute mapping to the LiteLLM enterprise application (Provisioning, Attribute mapping, "Provision Microsoft Entra ID Groups", "Add New Mapping") with the target attribute name you configured, for example `org_id`, sourced from a group extension attribute. Okta Group Push sends only `displayName` and `members` for SCIM groups and has no custom group attributes, so this setting does not apply to groups pushed from Okta.
+
 ## Granting MCP access to SCIM groups
 
 Each SCIM group becomes a LiteLLM team, so you grant MCP servers or access groups to the team that SCIM created and members reach them with keys that belong to that team. SCIM syncs keep the grant in place. Group, role, and entitlement values that name an MCP access group do not grant MCP access by themselves; see [Grant MCP access through SCIM-provisioned teams](../mcp_grant_access#grant-mcp-access-through-scim-provisioned-teams) for the walkthrough and the reasoning.
