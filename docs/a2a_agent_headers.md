@@ -159,6 +159,20 @@ The `x-a2a-other-agent-authorization` header sent in the same request is **not**
 Both the human-readable name (e.g. `my-agent`) and the UUID (e.g. `abc123-...`) are valid. Use whichever is convenient for the client.
 :::
 
+### Blocking caller credentials
+
+Any caller allowed to invoke an agent can use the convention to set `authorization`, `cookie` and similar headers on the agent request. If the agent backend trusts those headers and the agent has no static header of the same name, set `block_convention_credential_headers: true` in the agent's `litellm_params`
+
+```yaml
+agents:
+  - agent_name: my-agent
+    agent_card_params: { ... }
+    litellm_params:
+      block_convention_credential_headers: true
+```
+
+With the setting on, convention forwarding drops `authorization`, `proxy-authorization`, `cookie` and `x-api-key` for that agent. Other convention headers such as `x-a2a-my-agent-x-request-id` are still forwarded, and static headers and `extra_headers` work as before. Agents without the setting keep forwarding every convention header
+
 ---
 
 ## Merge Precedence
