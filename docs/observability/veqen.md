@@ -5,6 +5,8 @@ description: Send LiteLLM usage to Veqen to track AI costs by customer and featu
 
 # Veqen
 
+<SinceVersion v="1.109.0" />
+
 [Veqen](https://veqen-app.com) is a cost ledger for AI inference. The integration sends completed request metadata to Veqen so you can attribute costs, compare recorded usage with provider charges and inspect budgets.
 
 ## Setup
