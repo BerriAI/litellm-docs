@@ -241,8 +241,8 @@ Specifically triggered when a context window exceeded error occurs.
 
 ```json keep-model-ids
 {
-  "model": "gpt-3.5-turbo",
-  "fallback_models": ["gpt-4-32k", "claude-3-opus"],
+  "model": "gpt-5.4-mini",
+  "fallback_models": ["{{openai_large}}", "{{anthropic_large}}"],
   "fallback_type": "context_window"
 }
 ```

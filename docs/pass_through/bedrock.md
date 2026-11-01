@@ -184,6 +184,15 @@ curl -X POST 'http://0.0.0.0:4000/bedrock/model/my-claude-model/converse-stream'
 }'
 ```
 
+#### post_call guardrails on `/converse-stream`
+
+A `post_call` guardrail on the caller's key scans `/converse-stream` output while it streams, the same way it scans `/v1/chat/completions` streams:
+
+- With `streaming_buffer_until_moderated: false` (the default for most guardrails) the proxy forwards frames as Bedrock sends them and scans the text every `streaming_sampling_rate` frames (default 5) and at the end. Text reaches the client before the guardrail's verdict, and masks are not applied. Each scan pauses the stream until the guardrail answers, so a slow guardrail stretches a long answer (a 700-word answer took about 50 s instead of 12 s with the Bedrock guardrail); add `streaming_end_of_stream_only: true` to scan once at the end instead.
+- With `streaming_buffer_until_moderated: true` (the default for the [Bedrock guardrail](../proxy/guardrails/bedrock#streaming)) the proxy holds the stream until it is scanned, then sends it with masks applied per content block.
+- A block after the first frame ends the stream with an AWS `validationException` event, which the AWS SDK raises as `EventStreamError` with the guardrail's message. A block before the first frame returns an HTTP error.
+- Guardrails that scan responses with their own hooks instead of `apply_guardrail` (for example the Noma guardrail without `use_v2: true`), guardrails with `mask_response_content: true`, a held guardrail with `streaming_buffer_release_on_scan: true`, post_call guardrails with `run_in_parallel: true`, and post_call policy pipelines still hold the whole stream and scan it once. For Noma, set `use_v2: true` to scan the stream as it arrives.
+
 ### Supported Bedrock Endpoints with config.yaml
 
 When using models from config.yaml, you can call any Bedrock endpoint:
@@ -295,7 +304,7 @@ The proxy will automatically load balance your boto3 requests across all configu
 
 ### Bedrock Guardrails on config.yaml models
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 A `guardrailConfig` on a model in `config.yaml` (or a model added in the UI) applies on these pass-through routes too, the same way it does on `/v1/chat/completions`
 
@@ -325,6 +334,22 @@ The `/invoke` routes take only `guardrailIdentifier`, `guardrailVersion` and `tr
 
 Pass-through sends the request body to Bedrock as is, so Bedrock checks every message in it. To have Bedrock check only part of a Converse request, wrap that part in a `guardContent` block, see [Selectively evaluate content](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html).
 
+
+### Session ID from Bedrock request metadata
+
+<SinceVersion v="1.109.0" />
+
+Bedrock clients can tag each call with [request metadata](https://docs.aws.amazon.com/bedrock/latest/userguide/cost-mgmt-request-metadata.html), sent as the `requestMetadata` body field on `/converse` and `/converse-stream`, or as the `X-Amzn-Bedrock-Request-Metadata` JSON header on `/invoke` and `/invoke-with-response-stream`. When that metadata has a `sessionId`, `threadId` or `conversationId` key, the proxy uses its value as that call's LiteLLM session ID, so calls that send the same value share one session in the spend logs. The keys are checked in that order, and the first non-empty string is used as sent. An `x-litellm-session-id` or `x-litellm-trace-id` header on the same request takes precedence.
+
+With the `bedrock_runtime` client from above:
+
+```python showLineNumbers
+response = bedrock_runtime.converse(
+    modelId='my-claude-model',  # Your model_name from config.yaml
+    messages=[{"role": "user", "content": [{"text": "Hello, how are you?"}]}],
+    requestMetadata={"threadId": "thread-abc-123"},
+)
+```
 
 ## Examples
 

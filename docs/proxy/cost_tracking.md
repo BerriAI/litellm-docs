@@ -304,7 +304,7 @@ By default, non-admin callers are **scoped to their own data**:
 | Caller role | `/spend/keys` | `/spend/users` |
 |-------------|---------------|----------------|
 | `proxy_admin` / `proxy_admin_viewer` | All keys | All users (or `?user_id=` for one row) |
-| `internal_user` / `internal_user_view_only` | Keys where `user_id` matches the caller | Only the caller's row |
+| `internal_user` / `internal_user_viewer` | Keys where `user_id` matches the caller | Only the caller's row |
 | Non-admin with no `user_id` on the key | Empty list `[]` | Empty list `[]` |
 
 An internal user who passes `?user_id=` for **another** user receives **HTTP 403** (not a silently filtered list).
@@ -335,7 +335,7 @@ Example Request:
 
 ```shell title="Daily Spend Breakdown API" showLineNumbers
 curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&end_date=2025-03-27' \
--H 'Authorization: Bearer sk-...'
+-H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
 ```json title="Daily Spend Breakdown API Response" showLineNumbers
@@ -353,26 +353,123 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             "breakdown": {
                 "models": {
                     "{{openai_small}}": {
-                        "spend": 1.82e-05,
-                        "prompt_tokens": 37,
-                        "completion_tokens": 9,
-                        "total_tokens": 46,
-                        "api_requests": 1
+                        "metrics": {
+                            "spend": 0.0177072,
+                            "prompt_tokens": 111,
+                            "completion_tokens": 1711,
+                            "total_tokens": 1822,
+                            "api_requests": 11
+                        },
+                        "metadata": {},
+                        "api_key_breakdown": {}
                     }
                 },
-                "providers": { "openai": { ... }, "azure_ai": { ... } },
-                "api_keys": { "3126b6eaf1...": { ... } }
+                "providers": {
+                    "openai": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": {},
+                        "api_key_breakdown": {}
+                    }
+                },
+                "api_keys": {
+                    "3126b6eaf1...": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": { "key_alias": "my-key", "key_exists": true }
+                    }
+                }
             }
         }
     ],
     "metadata": {
-        "total_spend": 0.7274667,
-        "total_prompt_tokens": 280990,
-        "total_completion_tokens": 376674,
-        "total_api_requests": 14
+        "total_spend": 0.0177072,
+        "total_prompt_tokens": 111,
+        "total_completion_tokens": 1711,
+        "total_api_requests": 11
     }
 }
 ```
+
+The example shows selected response fields. Each breakdown entry nests its values under `metrics` and its descriptive fields under `metadata`.
+
+### Missing identities and API key filters
+
+Daily reports, drilldowns and exports keep usage with missing model or key values in fallback buckets. Zero-spend requests and negative adjustments remain part of the totals.
+
+| Stored value | Reporting identity |
+| --- | --- |
+| Empty or null model | `unknown-model` |
+| Empty or null model group, with a known model | Model name |
+| Empty or null model group and model | `unknown-model-group` |
+| Empty or null API key | `unattributed` |
+| Literal API key `unattributed` | `raw:unattributed` |
+| API key starting with `raw:` | The key with one additional `raw:` prefix |
+| Other nonempty values, including whitespace | Unchanged |
+
+Literal model names that equal fallback labels share those model buckets. The `unattributed` key bucket has no clickable key details.
+
+Pass the reporting identity to the `api_key` query parameter. For example, to filter the literal stored key `unattributed`, use `raw:unattributed`. For the literal stored key `raw:example`, use `raw:raw:example`. To select missing keys instead, use `unattributed`.
+
+```bash title="Filter an escaped API key identity"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27' \
+  --data-urlencode 'api_key=raw:unattributed'
+```
+
+:::warning Export compatibility
+
+Daily activity exports, such as `/user/daily/activity/export?export_type=daily_with_keys&format=json`, replace missing model and key values with the bucket labels above and escape reserved API key IDs. Consumers that expect null values or unescaped reserved key IDs must adapt. Use the exported reporting identity unchanged when filtering daily reports.
+
+:::
+
+### Guardrail spend breakdown
+
+`GET /user/daily/activity/aggregated`, `GET /team/daily/activity/aggregated` and `GET /organization/daily/activity/aggregated` return each day's guardrail costs in `breakdown.guardrails`, keyed by guardrail ID. The breakdown follows the response's date, entity and API key filters.
+
+```bash title="Get daily guardrail spend"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27'
+```
+
+Use `/team/daily/activity/aggregated` or `/organization/daily/activity/aggregated` in the same request for those scopes. The following excerpt shows one day's guardrail breakdown.
+
+```json title="Guardrail spend response excerpt"
+{
+  "results": [
+    {
+      "date": "2025-03-27",
+      "metrics": { "spend": 0.05 },
+      "breakdown": {
+        "api_keys": {
+          "3126b6eaf1...": {
+            "metrics": { "spend": 0.05 },
+            "metadata": { "key_alias": "my-key", "key_exists": true }
+          }
+        },
+        "guardrails": {
+          "guardrail-id": {
+            "metrics": { "spend": 0.01, "untracked_units": 2 },
+            "metadata": { "guardrail_name": "content-safety" },
+            "api_key_breakdown": {
+              "3126b6eaf1...": {
+                "metrics": { "spend": 0.01, "untracked_units": 2 },
+                "metadata": { "key_alias": "my-key", "key_exists": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+Guardrail spend is already included in key and model spend. Do not add it on top of those totals. `untracked_units` counts guardrail units with no known price, so nonzero units mean the reported spend is a lower bound, not the full guardrail cost.
+
+Each guardrail's `api_key_breakdown` includes only keys in that day's `breakdown.api_keys`. The guardrail's total still covers all matching keys, even when the per-key list is truncated. A nonempty `model` filter leaves `guardrails` empty because guardrail costs are not attributed per model. If the guardrail query fails with a database error, the daily response still succeeds with an empty guardrail breakdown.
 
 ### API Reference
 
@@ -385,7 +482,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 ## Custom Tags
 
 :::tip[See Full Request Tags Documentation]
-For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page. To tag requests from the W3C `baggage` header that OpenTelemetry clients already send, see [Map Baggage Values to Tags](./tag_budgets.md#map-baggage-values-to-tags).
 :::
 
 Requirements:

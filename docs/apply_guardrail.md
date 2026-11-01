@@ -41,6 +41,30 @@ guardrails:
 
 
 ## Usage
+
+### Python SDK
+
+The source implementation in [SDK PR #49469](https://github.com/BerriAI/litellm/pull/49469), stacked on [endpoint PR #49460](https://github.com/BerriAI/litellm/pull/49460) for [issue #49217](https://github.com/BerriAI/litellm/issues/49217), adds `litellm.guardrails.apply`. Use a checkout containing both changes for the SDK and gateway until release.
+
+Configure the connection once, then call your configured guardrail:
+
+```python
+import os
+import litellm
+
+litellm.api_base = os.environ["LITELLM_API_BASE"]
+litellm.api_key = os.environ["LITELLM_API_KEY"]
+
+verdict = await litellm.guardrails.apply(
+    "answer-grounding",
+    response=answer,
+    messages=source_messages,
+)
+```
+
+Pass `response=` to check generated output or `input=` to check user input. Supply exactly one. The SDK infers `input_type` and requests native structured findings. `messages` supplies context for checks such as grounding; omit it for checks that do not need context. You can override `api_base`, `api_key`, or `timeout` on an individual call.
+
+The result follows the configured guardrail's schema, after the existing reporting sanitization removes sensitive fields. A guardrail must report structured findings through `add_standard_logging_guardrail_information_to_request_data`; the SDK does not create a verdict for guardrails that report none. For a runnable agent, custom guardrail, and chat UI, see [the grounding tutorial](/blog/grounded-agent).
 ---
 
 <Tabs>
@@ -51,7 +75,7 @@ In this example `mask_pii` is a Presidio guardrail configured on LiteLLM.
 ```bash showLineNumbers title="Example calling the endpoint"
 curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer your-api-key' \
+-H "Authorization: Bearer ${LITELLM_API_KEY}" \
 -d '{
     "guardrail_name": "mask_pii",
     "text": "My name is John Doe and my email is john@example.com",
@@ -68,7 +92,7 @@ In this example `bedrock-content-guard` is a Bedrock guardrail configured on Lit
 ```bash showLineNumbers title="Example calling the endpoint"
 curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer your-api-key' \
+-H "Authorization: Bearer ${LITELLM_API_KEY}" \
 -d '{
     "guardrail_name": "bedrock-content-guard",
     "text": "This is potentially harmful content that should be blocked",
@@ -86,7 +110,7 @@ Parameterized custom guardrails read per-request configuration from `request_dat
 ```bash showLineNumbers title="Example calling the endpoint"
 curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer your-api-key' \
+-H "Authorization: Bearer ${LITELLM_API_KEY}" \
 -d '{
     "guardrail_name": "my-topic-guardrail",
     "text": "What are tax loopholes?",
@@ -136,10 +160,14 @@ The request body should follow the ApplyGuardrailRequest format.
 - **metadata** (object):  
   Per-request configuration forwarded to the guardrail as `request_data["metadata"]`. Custom guardrails that override `apply_guardrail` are responsible for reading it. Forwarded only when present, so omitting it preserves existing behavior.
 
+The REST API also accepts `input_type` (`request` or `response`) and `response_format` (`standard` or `native`). The SDK derives the direction from `input=` or `response=` and selects `native`.
+
 ## Response Format
 ---
 
 The response will contain the processed text after applying the guardrail.
+
+With `response_format: "native"`, the response instead contains the sanitized structured findings reported by the guardrail. A single finding returns its object or array; multiple reported findings return an array. Field names depend on the guardrail. If it reports no structured findings, the endpoint returns HTTP 422 instead of a fabricated pass. Existing block and provider-error behavior still applies.
 
 #### Example Response
 

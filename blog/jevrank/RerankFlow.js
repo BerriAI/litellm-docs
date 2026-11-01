@@ -190,7 +190,7 @@ export default function RerankFlow() {
     function resize() {
       const bounds = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      scene = makeScene(window.matchMedia('(max-width: 770px)').matches);
+      scene = makeScene(canvas.closest('[data-full-width]').clientWidth <= 770);
       canvas.width = Math.round(bounds.width * dpr);
       canvas.height = Math.round(bounds.height * dpr);
       const scale = bounds.width / scene.width;

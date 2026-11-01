@@ -40,7 +40,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/decisionsLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
@@ -59,6 +59,17 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          // The decisions page was split into subpages for a few days in October 2026.
+          {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
+          {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},
+          {from: '/docs/decisions/systemone_format', to: '/docs/decisions#v1systemone'},
+          {from: '/docs/decisions/typesafe_images', to: '/docs/decisions#typesafe-images-box-questions-and-long-context'},
+          {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
+          {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
+          {from: '/docs/learn', to: '/docs/tutorials'},
+          {from: '/docs/learn/gateway_quickstart', to: '/docs/proxy/quick_start'},
+          {from: '/docs/learn/python_sdk_quickstart', to: '/docs/learn/sdk_quickstart'},
+          {from: '/docs/learn/enterprise_quickstart_learn', to: '/docs/learn/enterprise_quickstart'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
@@ -243,10 +254,13 @@ const config = {
         sortPosts: 'descending',
         include: ['**/index.{md,mdx}'],
         remarkPlugins: [require('./src/remark/raw-markdown')],
+        rehypePlugins: [require('./src/rehype/table-cell-labels')],
         onInlineAuthors: 'throw',
         onUntruncatedBlogPosts: 'throw',
         feedOptions: {
-          limit: 50,
+          // Every post, so feed readers get every post's tags. Full text is
+          // trimmed to the newest 50 in src/feed/card-categories.js.
+          limit: false,
           createFeedItems: require('./src/feed/card-categories').createFeedItems,
         },
       },
@@ -340,7 +354,9 @@ const config = {
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
-        pages: {},
+        pages: {
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
+        },
         theme: {
           customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
@@ -422,6 +438,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'providersSidebar',
+            position: 'left',
+            label: 'AI Providers',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'integrationsSidebar',
             position: 'left',
             label: 'Integrations',
@@ -432,12 +454,6 @@ const config = {
             position: 'left',
             label: 'Enterprise',
           },
-          {
-            type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
@@ -446,6 +462,12 @@ const config = {
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
+          },
+          {
+            href: 'https://discord.com/invite/wuPM9dRgDw',
+            position: 'right',
+            className: 'header-discord-link',
+            'aria-label': 'Discord community',
           },
         ],
       },

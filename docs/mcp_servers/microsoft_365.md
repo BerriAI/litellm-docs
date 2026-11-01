@@ -24,7 +24,7 @@ The server only translates MCP calls into Graph calls. Sign-in, consent, token s
 
 ## Authentication
 
-- **Method:** OAuth 2.0 authorization code with PKCE against Microsoft Entra ID. Entra does not support dynamic client registration, so you register an app and give LiteLLM its client ID and secret. LiteLLM then publishes OAuth discovery documents for the server that point MCP clients at its own sign-in endpoints in front of Entra (`per_server_oauth_discovery: true` below).
+- **Method:** OAuth 2.0 authorization code with PKCE against Microsoft Entra ID. Entra does not support dynamic client registration, so you register an app and give LiteLLM its client ID and secret. LiteLLM supports both clients that send a virtual key and keyless clients, with different OAuth discovery settings as described below.
 - **App registration:** Create one in the [Microsoft Entra admin center](https://entra.microsoft.com) under **App registrations**. You will add a Web redirect URI, a client secret, and delegated Microsoft Graph permissions.
 - **Consent:** Each user approves the delegated permissions on first sign-in. A tenant that restricts user consent needs an admin to grant consent once on the app registration's **API permissions** page.
 
@@ -33,6 +33,14 @@ The server only translates MCP calls into Graph calls. Sign-in, consent, token s
 Microsoft Graph accepts only access tokens that Entra ID issues, so neither an Okta token nor the credential from your LiteLLM single sign-on can stand in for the Graph token, and LiteLLM does not convert one into the other. What carries over is the sign-in itself. When your Microsoft 365 tenant federates authentication to Okta or another identity provider, the Entra sign-in LiteLLM starts redirects there like any other Microsoft 365 sign-in, so users see their usual SSO page, and Entra issues the Graph token once they return. Each user does this once; LiteLLM refreshes the token afterwards.
 
 Three other LiteLLM auth modes come up in this setup and none of them replaces the flow above. [On-behalf-of token exchange](../mcp_obo_auth.md) trades an Entra ID token the client already presents to LiteLLM, so it applies only when users authenticate to LiteLLM with Entra ID tokens rather than through Okta. [ID-JAG](../mcp_id_jag.md) gets tokens from an Okta authorization server, which Graph does not trust. [OAuth passthrough](../mcp_oauth_passthrough.md) forwards the client's bearer token unchanged and exchanges nothing, so the client would still have to obtain a Graph token on its own.
+
+### With or without a virtual key
+
+**With a virtual key**, set `per_server_oauth_discovery: true` and send the LiteLLM virtual key in `x-litellm-api-key` on MCP requests and the relay's token request. The per-server relay publishes discovery documents and fronts Entra's authorization and token endpoints. It needs the LiteLLM key to identify the user whose Graph token it stores. The configuration and header examples below use this mode.
+
+**Without a virtual key**, omit `per_server_oauth_discovery` or set it to `false`. Configure [proxy SSO](../proxy/admin_ui_sso.md), set a proxy `master_key`, and grant the server to the LiteLLM user or a team they belong to. Connect the MCP client without a LiteLLM key header. The server's protected-resource metadata points to the gateway's shared `/mcp` authorization server. The user signs in to LiteLLM first, then the connect page starts the upstream Entra authorization-code flow and stores that user's Graph token. The client receives a gateway session token for later MCP calls.
+
+If the connect page shows "The connection cannot continue" because the signed-in user has no server grant (`state: stale`), check the user and team permissions. Leaving the relay off does not prevent the upstream sign-in. With the default user-cache settings, a new grant can take up to a minute to appear on the connect page while the user cache expires.
 
 ## Endpoint
 
@@ -104,7 +112,7 @@ mcp_servers:
       - Sites.Read.All
 ```
 
-`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it. `per_server_oauth_discovery: true` makes LiteLLM publish the OAuth discovery documents for `/microsoft_365/mcp` itself, with its own `/microsoft_365/authorize` and `/microsoft_365/token` endpoints fronting the Entra URLs above. Without it, the server's protected-resource metadata sends MCP clients to the gateway's shared `/mcp` authorization server, which signs users in to LiteLLM rather than to Entra, so the browser ends on a "The connection cannot continue" page and no Graph token is ever stored. Storing MCP servers also needs `store_model_in_db: true`, covered in [Prerequisites](../mcp.md#prerequisites).
+`oauth2_flow: authorization_code` selects the interactive per-user flow and is required; the proxy refuses to start on an `auth_type: oauth2` server that omits it. `per_server_oauth_discovery: true` makes LiteLLM publish the OAuth discovery documents for `/microsoft_365/mcp` itself, with its own `/microsoft_365/authorize` and `/microsoft_365/token` endpoints fronting the Entra URLs above. This relay requires a LiteLLM virtual key. For keyless clients, omit this setting or set it to `false` and follow [With or without a virtual key](#with-or-without-a-virtual-key). Storing MCP servers also needs `store_model_in_db: true`, covered in [Prerequisites](../mcp.md#prerequisites).
 
 </TabItem>
 <TabItem value="ui" label="LiteLLM UI">
@@ -123,7 +131,7 @@ Navigate to **MCP Servers**, click **+ Add New MCP Server**, and set:
 | **Token URL** | `https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token` |
 | **Scopes** | The delegated permissions from Step 1 |
 
-Click **Create MCP Server**. The form has no field for `per_server_oauth_discovery` yet, so turn it on through the management API with the `server_id` shown on the server's page:
+Click **Create MCP Server**. For clients that send a virtual key, enable the per-server relay. The form has no field for `per_server_oauth_discovery` yet, so turn it on through the management API with the `server_id` shown on the server's page. Skip this for keyless clients:
 
 ```bash showLineNumbers
 curl -X PUT http://localhost:4000/v1/mcp/server \
@@ -147,11 +155,19 @@ export PROXY_BASE_URL=https://llm.example.com
 
 ### Step 5: Give users access to the server
 
-LiteLLM stores each Entra token against the LiteLLM user behind the key, so the key or its team needs the server in `object_permission.mcp_servers`, and the key needs a user behind it. A key without that completes the sign-in but has nowhere to keep the token, so the next session signs in again, and the proxy log says `OAuth credential storage not authorized`. See [MCP Permission Management](../mcp_control.md). Users who sign in to LiteLLM through SSO already have a LiteLLM user, so granting the server to the team their identity-provider group maps to is enough.
+LiteLLM stores each Entra token against a LiteLLM user. With a virtual key, the key or its team needs the server in `object_permission.mcp_servers`, and the key needs a user behind it. A key without that completes the sign-in but has nowhere to keep the token, so the next session signs in again, and the proxy log says `OAuth credential storage not authorized`. For keyless clients, grant the server directly to the signed-in user or a team they belong to, including a team their identity-provider group maps to. A new grant can take up to a minute to appear on the connect page. See [MCP Permission Management](../mcp_control.md).
 
 ### Step 6: Connect from an agent
 
 The gateway serves each server at `http://localhost:4000/{server_name}/mcp`, so `microsoft_365` is reachable at `http://localhost:4000/microsoft_365/mcp`.
+
+For keyless Claude Code clients, leave the relay off as described in [With or without a virtual key](#with-or-without-a-virtual-key), then add the server without a key header:
+
+```bash showLineNumbers
+claude mcp add --transport http microsoft_365 http://localhost:4000/microsoft_365/mcp
+```
+
+Open `/mcp` in Claude Code to start the gateway sign-in and upstream consent flow. The examples in the tabs below use the virtual-key relay instead.
 
 <Tabs>
 <TabItem value="claude-code" label="Claude Code">
@@ -163,21 +179,7 @@ claude mcp add --transport http microsoft_365 http://localhost:4000/microsoft_36
 
 `/mcp` inside Claude Code shows the server and starts the Entra sign-in. Claude Code caches the OAuth client it registered with the gateway, so if you turn on `per_server_oauth_discovery` after adding the server, remove it and add it again.
 
-Users who sign in to LiteLLM through SSO have no `sk-` key to paste. After `lite login` ([CLI authentication](../proxy/cli_sso.md)), let Claude Code fetch the header itself with `headersHelper`, a command whose output is the headers as JSON:
-
-```json title=".mcp.json" showLineNumbers
-{
-  "mcpServers": {
-    "microsoft_365": {
-      "type": "http",
-      "url": "http://localhost:4000/microsoft_365/mcp",
-      "headersHelper": "printf '{\"x-litellm-api-key\": \"Bearer %s\"}' \"$(lite auth print-token)\""
-    }
-  }
-}
-```
-
-The Microsoft sign-in that follows is stored against the LiteLLM user that SSO created, so the same person keeps their Graph token across keys and sessions.
+The Microsoft sign-in is stored against the LiteLLM user behind the key, so the same person keeps their Graph token across keys and sessions.
 
 </TabItem>
 <TabItem value="claude-desktop" label="Claude Desktop">
@@ -251,6 +253,6 @@ The server calls Graph with any unexpired bearer token it receives and serves si
 Grant the server per key or per team with `object_permission`, and cap call volume per server with `mcp_rpm_limit`, both covered in [MCP Permission Management](../mcp_control.md). Graph applies its own per-user throttling, so a runaway agent slows that user's own Outlook and Teams clients before anyone else's.
 :::
 
-:::warning[Put the LiteLLM key in `x-litellm-api-key`]
+:::warning[For virtual-key clients, put the LiteLLM key in `x-litellm-api-key`]
 Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and LiteLLM forwards your LiteLLM key to the Graph server, which passes it to Microsoft, and Graph rejects it with `InvalidAuthenticationToken`. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
 :::

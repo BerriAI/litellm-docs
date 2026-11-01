@@ -129,7 +129,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer sk-zV5HlSIm8ihj1F9C_ZbB1g' \
 -H 'x-litellm-enable-message-redaction: true' \
 -d '{
-  "model": "gpt-3.5-turbo-testing",
+  "model": "{{openai_small}}",
   "messages": [
     {
       "role": "user",

@@ -1,0 +1,614 @@
+.benchmark {
+  --cobalt: #243ce0;
+  --paper: #f2f5ff;
+  --indigo: #111c65;
+  margin: 32px 0 0;
+  overflow: hidden;
+  background: var(--cobalt);
+  color: var(--paper);
+  font-family:
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 36px;
+  border-bottom: 1px solid #d5dfff40;
+  font:
+    10px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0.06em;
+}
+
+.performance {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 40px;
+  align-items: end;
+  padding: 44px 44px 36px;
+}
+
+.speedLines {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: repeating-linear-gradient(
+    112deg,
+    transparent 0,
+    transparent 62px,
+    #e8eeff12 62px,
+    #e8eeff12 63px
+  );
+  mask-image: linear-gradient(90deg, transparent 15%, #000);
+}
+
+.primaryMetric {
+  min-width: 0;
+}
+
+.metricLabel,
+.measurementNote,
+.controlLabel,
+.recorded {
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+}
+
+.metricLabel {
+  display: block;
+  margin-bottom: 28px;
+  letter-spacing: 0.08em;
+}
+
+.latency {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  color: var(--paper);
+  line-height: 0.85;
+}
+
+.latency strong {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  font-size: clamp(120px, 18cqw, 228px);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.85;
+}
+
+.latency > span {
+  font-size: clamp(30px, 4.5cqw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+
+.measurementNote {
+  display: block;
+  margin-top: 26px;
+}
+
+.secondaryMetrics {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+  padding-bottom: 4px;
+}
+
+.secondaryMetrics > div {
+  border-top: 1px solid #d5dfff66;
+  padding-top: 13px;
+}
+
+.secondaryMetrics dt {
+  margin-bottom: 7px;
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+}
+
+.secondaryMetrics dd {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.055em;
+}
+
+.secondaryMetrics dd span {
+  display: inline-block;
+  margin-left: 6px;
+  font:
+    11px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0;
+}
+
+.secondaryMetrics > div:last-child dd span {
+  display: block;
+  margin: 6px 0 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 20px 36px;
+  border-top: 1px solid #d5dfff40;
+}
+
+.controlLabel {
+  letter-spacing: 0.04em;
+}
+
+.selections {
+  display: flex;
+  gap: 6px;
+}
+
+.benchmark .selections button {
+  min-width: 52px;
+  padding: 9px 16px;
+  border: 1px solid #d5dfff66;
+  border-radius: 0;
+  background: transparent;
+  color: var(--paper);
+  font:
+    500 18px/1.2 "Geist Mono",
+    monospace;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.benchmark .selections button:hover {
+  background: #d5dfff18;
+}
+
+.benchmark .selections button[aria-pressed="true"] {
+  background: var(--indigo);
+  border-color: var(--paper);
+  color: #a5b6ff;
+}
+
+.benchmark .selections button:focus-visible {
+  outline: 3px solid var(--paper);
+  outline-offset: 3px;
+}
+
+.recorded {
+  margin-left: auto;
+}
+
+.raceway {
+  padding: 20px 36px 24px;
+  overflow: hidden;
+  background: var(--indigo);
+  color: #f2f5ff;
+}
+
+.racewayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #c2ceff;
+  font:
+    10px/1.5 "Geist Mono",
+    monospace;
+  letter-spacing: 0.04em;
+}
+
+.route {
+  position: relative;
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+}
+
+.tracks {
+  position: absolute;
+  inset: 34px 0 auto;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.track {
+  position: relative;
+  height: 2px;
+  background: #7f95f04d;
+}
+
+.track > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    transparent 82%,
+    #a5b6ff4d 87%,
+    #a5b6ff 95%,
+    #ffffff 100%
+  );
+  transform: translateX(100%);
+}
+
+.nodes {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 0 22px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+  padding: 12px 18px;
+  border: 1px solid #677fcd;
+  background: var(--indigo);
+}
+
+.node > span {
+  color: #a8b9f2;
+  font:
+    9px/1.5 "Geist Mono",
+    monospace;
+}
+
+.node strong {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.node small {
+  color: #c2ceff;
+  font:
+    9px/1.6 "Geist Mono",
+    monospace;
+}
+
+.rustNode {
+  min-width: 170px;
+  padding: 15px 22px;
+  border-color: var(--paper);
+  background: var(--paper);
+  color: var(--cobalt);
+}
+
+.rustNode > span,
+.rustNode small {
+  color: #354a96;
+}
+
+.rustNode strong {
+  font-size: 50px;
+  letter-spacing: -0.04em;
+}
+
+.returnPath {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - 44px);
+  margin: 16px auto 0;
+  color: #a9bbee;
+  font:
+    9px/1.5 "Geist Mono",
+    monospace;
+}
+
+.returnPath > span:first-child,
+.returnPath > span:last-child {
+  flex: 1;
+  overflow: hidden;
+  background: linear-gradient(#677fcd, #677fcd) center / 100% 1px no-repeat;
+  font-size: 16px;
+}
+
+.benchmark .animationNote {
+  margin: 22px 0 0;
+  color: #bacaf2;
+  font:
+    10px/1.7 "Geist Mono",
+    monospace;
+}
+
+.caption {
+  padding: 28px 36px 32px;
+  border: 1px solid #c7d3f4;
+  border-top: 0;
+  background: #edf2ff;
+  color: #304475;
+}
+
+.scope {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 32px;
+  margin-bottom: 22px;
+}
+
+.scope > strong {
+  font:
+    500 12px/1.8 "Geist Mono",
+    monospace;
+  color: #243ce0;
+}
+
+.benchmark .caption p {
+  margin: 0 0 16px;
+  color: #43577f;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.benchmark .scope p {
+  margin: 0;
+}
+
+.benchmark .caption a {
+  color: #243ce0 !important;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.benchmark .methods {
+  margin: 0 0 22px;
+  border-top: 1px solid #b9c9ee;
+  border-bottom: 1px solid #b9c9ee;
+  padding: 15px 0;
+  background: #edf2ff !important;
+  color: #304475 !important;
+}
+
+.benchmark .methods summary {
+  cursor: pointer;
+  color: #243ce0 !important;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.methods[open] summary {
+  margin-bottom: 18px;
+}
+
+.benchmark .caption .sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  font-weight: 600;
+}
+
+.benchmark .caption a:focus-visible,
+.methods summary:focus-visible {
+  outline: 2px solid #243ce0;
+  outline-offset: 4px;
+}
+
+.entered .track > span {
+  animation: requestStreak 1.2s linear 3 both;
+  animation-delay: var(--delay);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes requestStreak {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@container tokenize (max-width: 900px) {
+  .performance {
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 24px;
+    padding: 36px 28px;
+  }
+
+  .latency strong {
+    font-size: clamp(112px, 18cqw, 168px);
+  }
+
+  .secondaryMetrics dd {
+    font-size: 34px;
+  }
+
+  .nodes {
+    gap: 24px;
+    padding: 0;
+  }
+
+  .node {
+    min-width: 108px;
+  }
+
+  .rustNode {
+    min-width: 150px;
+  }
+
+  .scope {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@container tokenize (max-width: 600px) {
+  .masthead {
+    gap: 8px;
+    padding: 18px 20px;
+    font-size: 9px;
+  }
+
+  .performance {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 32px 20px 26px;
+  }
+
+  .metricLabel {
+    margin-bottom: 24px;
+  }
+
+  .latency {
+    gap: 10px;
+  }
+
+  .latency strong {
+    font-size: clamp(82px, 23cqw, 140px);
+  }
+
+  .latency > span {
+    font-size: 34px;
+  }
+
+  .measurementNote {
+    margin-top: 20px;
+  }
+
+  .secondaryMetrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .secondaryMetrics dd {
+    font-size: 30px;
+  }
+
+  .secondaryMetrics dt,
+  .secondaryMetrics dd span {
+    font-size: 9px;
+  }
+
+  .controls {
+    gap: 12px;
+    padding: 18px 20px;
+  }
+
+  .controlLabel {
+    width: 100%;
+    font-size: 9px;
+  }
+
+  .benchmark .selections button {
+    min-width: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .recorded {
+    font-size: 9px;
+  }
+
+  .raceway {
+    padding: 18px 16px 22px;
+  }
+
+  .racewayHeader {
+    font-size: 8px;
+    gap: 14px;
+  }
+
+  .nodes {
+    gap: 18px;
+    padding: 0;
+  }
+
+  .node {
+    min-width: 0;
+    width: 27%;
+    padding: 10px 7px;
+    gap: 6px;
+  }
+
+  .node strong {
+    font-size: 24px;
+  }
+
+  .node small {
+    min-height: 26px;
+    font-size: 8px;
+    line-height: 1.6;
+  }
+
+  .rustNode {
+    width: 31%;
+    padding: 14px 8px;
+  }
+
+  .rustNode strong {
+    font-size: 33px;
+  }
+
+  .returnPath {
+    width: 100%;
+    gap: 10px;
+    font-size: 8px;
+  }
+
+  .benchmark .animationNote {
+    font-size: 9px;
+  }
+
+  .caption {
+    padding: 24px 20px;
+  }
+}
+
+@container tokenize (max-width: 400px) {
+  .nodes {
+    gap: 10px;
+  }
+  .node strong {
+    font-size: 18px;
+  }
+  .rustNode strong {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track > span,
+  .entered .track > span {
+    animation: none;
+    transform: translateX(0);
+    opacity: 0.25;
+  }
+
+  .benchmark .selections button {
+    transition: none;
+  }
+}

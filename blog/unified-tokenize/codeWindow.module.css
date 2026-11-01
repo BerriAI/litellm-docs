@@ -1,0 +1,197 @@
+.canvas {
+  min-width: 0;
+  padding: 34px;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 0 0, #edf0ff 0, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, #bbc9fc 0, transparent 65%),
+    linear-gradient(130deg, #dae3ff, #d5d5f9 62%, #cbd9ff);
+}
+
+.window {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #ffffff1f;
+  border-radius: 12px;
+  background: #1b1d27;
+  box-shadow:
+    0 20px 44px #28386b24,
+    0 4px 12px #1822441f,
+    inset 0 1px #ffffff08;
+}
+
+.titleBar {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 58px;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 18px;
+}
+
+.windowDots {
+  display: flex;
+  gap: 6px;
+}
+.windowDots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #70768e;
+  opacity: 0.65;
+}
+.windowDots i:nth-child(2) {
+  opacity: 0.47;
+}
+.windowDots i:nth-child(3) {
+  opacity: 0.32;
+}
+.filename {
+  overflow: hidden;
+  color: #939bb2;
+  font:
+    11px/1.4 "Geist Mono",
+    ui-monospace,
+    monospace;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.window .windowCode :global(.theme-code-block) {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  --ifm-pre-padding: 24px;
+}
+
+.window .windowCode pre,
+.window .windowCode pre code {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #dfe5f5 !important;
+  font:
+    14px/1.85 "Geist Mono",
+    ui-monospace,
+    monospace !important;
+  letter-spacing: -0.02em;
+  text-shadow: none !important;
+  tab-size: 2;
+  overflow-wrap: normal !important;
+}
+
+.window .windowCode pre {
+  padding: 0 !important;
+  scrollbar-width: thin;
+  scrollbar-color: #50566a transparent;
+}
+.window .windowCode pre code {
+  display: block;
+  min-width: 100%;
+  padding: 7px 24px 28px !important;
+}
+.window .windowCode :global(.token) {
+  color: #dfe5f5 !important;
+}
+.window .windowCode :global(.token.string),
+.window .windowCode :global(.token.attr-value) {
+  color: #b6dcc7 !important;
+}
+.window .windowCode :global(.token.property),
+.window .windowCode :global(.token.key),
+.window .windowCode :global(.token.atrule) {
+  color: #c3b7ef !important;
+}
+.window .windowCode :global(.token.keyword),
+.window .windowCode :global(.token.boolean),
+.window .windowCode :global(.token.null) {
+  color: #c5b7fa !important;
+}
+.window .windowCode :global(.token.function),
+.window .windowCode :global(.token.class-name) {
+  color: #a9d4f5 !important;
+}
+.window .windowCode :global(.token.number) {
+  color: #e7b8cf !important;
+}
+.window .windowCode :global(.token.punctuation),
+.window .windowCode :global(.token.operator) {
+  color: #8f9ab6 !important;
+}
+.window .windowCode :global(.token.comment) {
+  color: #7f8ba6 !important;
+}
+
+.window .windowCode :global([class*="codeBlockContent"]) {
+  position: static;
+}
+.window .windowCode :global([class*="buttonGroup"]) {
+  top: 10px;
+  right: 12px;
+}
+.window .windowCode :global([class*="buttonGroup"]) button {
+  padding: 5px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #8f9bb8 !important;
+  box-shadow: none !important;
+  opacity: 0.65;
+}
+.window .windowCode :global([class*="buttonGroup"]) button:hover {
+  background: #ffffff0a !important;
+  color: #e1e7ff !important;
+  opacity: 1;
+}
+.window .windowCode :global([class*="buttonGroup"]) button:focus-visible {
+  outline: 2px solid #b5c5ff;
+  outline-offset: 3px;
+  opacity: 1;
+}
+.window .windowCode :global([class*="copyButtonSuccessIcon"]) {
+  color: #c2ceff !important;
+}
+
+@container tokenize (max-width: 650px) {
+  .canvas {
+    padding: 12px 8px;
+    border-radius: 13px;
+  }
+  .window {
+    border-radius: 10px;
+  }
+  .titleBar {
+    padding: 0 14px;
+  }
+  .window .windowCode pre,
+  .window .windowCode pre code {
+    font-size: 12px !important;
+  }
+  .window .windowCode pre code {
+    padding: 7px 12px 20px !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window .windowCode :global([class*="buttonGroup"]) * {
+    transition: none !important;
+  }
+}
+
+@container tokenize (max-width: 360px) {
+  .titleBar {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 40px;
+  }
+  .windowDots {
+    display: none;
+  }
+  .filename {
+    text-align: left;
+  }
+}

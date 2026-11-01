@@ -63,7 +63,11 @@ These callouts cover user-facing behavior that differs from `v1.106.0`, the late
 
 **`refusal` moved from `provider_specific_fields` to `message.refusal`** on chat completion responses. See [PR #44788](https://github.com/BerriAI/litellm/pull/44788)
 
-**Token counting returns an error instead of a local estimate** when the provider's counting call fails or the deployment has no provider key, on `/v1/messages/count_tokens`, `/v1/responses/input_tokens` and Gemini `countTokens`. See [PR #46121](https://github.com/BerriAI/litellm/pull/46121), [PR #46815](https://github.com/BerriAI/litellm/pull/46815)
+**The proxy count routes return an error when they cannot use the count from the provider.** Before this release, these routes returned a 200 with a local tiktoken estimate. For some models, this estimate was very different from the correct count. The routes are `/v1/messages/count_tokens`, `/v1/responses/input_tokens`, Google `:countTokens`, and `/utils/token_counter?call_endpoint=true`. Each error uses the error format of the API that you used.
+
+If the count call to the provider fails, the route returns the status and the message from the provider. An OpenAI, Anthropic, or Azure AI deployment with no API key returns a 401 that names the missing key. A model that the count API of the provider does not include returns a 400 or a 404. Examples are GLM on Vertex AI and Amazon Nova on Bedrock. Claude Code uses `/v1/messages/count_tokens` to calculate its context window. If you use Claude Code through the proxy, do a test of this route before you upgrade.
+
+To get a local estimate for a model that the provider cannot count, set `token_count_framing` in `model_info`. As an alternative, set `token_count_model` to count with a model that the provider can count. Providers with no count API, such as Groq, Together AI, Fireworks AI, OpenRouter, and self-hosted vLLM, continue to use a local count. The SDK function `litellm.acount_tokens()` also continues to use a local count. See [Token Counting](../../docs/count_tokens#proxy-errors-instead-of-local-estimates), [PR #46121](https://github.com/BerriAI/litellm/pull/46121), [PR #46815](https://github.com/BerriAI/litellm/pull/46815), [PR #47163](https://github.com/BerriAI/litellm/pull/47163), [PR #46777](https://github.com/BerriAI/litellm/pull/46777), [PR #47209](https://github.com/BerriAI/litellm/pull/47209)
 
 **The Bedrock guardrail returns 400 for attachments it cannot scan**, such as PDFs, audio or images sent by URL. Set `skip_unscannable_attachments: true` to let them through. See [PR #43383](https://github.com/BerriAI/litellm/pull/43383)
 
@@ -93,7 +97,7 @@ These callouts cover user-facing behavior that differs from `v1.106.0`, the late
 
 | Endpoint | Method | Description |
 | --- | --- | --- |
-| `/v1/live/sessions` | POST | OpenAI Live sessions, also on `/live/sessions` and `/openai/v1/live/sessions`, billed from `usage.seconds` |
+| `/v1/live/sessions` | WebSocket | OpenAI Live sessions, also on `/live/sessions` and `/openai/v1/live/sessions`, billed from `usage.seconds` |
 
 ### Expanded provider endpoint support
 
