@@ -1255,6 +1255,8 @@ router_settings:
 | LANGSMITH_MOCK_LATENCY_MS | Mock latency in milliseconds for Langsmith API calls when mock mode is enabled. Simulates network round-trip time. Default is 100ms
 | LANGTRACE_API_HOST | Base URL of a self-hosted Langtrace server for the `langtrace` callback, e.g. `https://langtrace.example.com`; the callback posts to `<host>/api/trace`. Default is `https://app.langtrace.ai`
 | LANGTRACE_API_KEY | API key for Langtrace service, sent as the `x-api-key` header by the `langtrace` callback
+| LANGWATCH_API_KEY | API key for LangWatch, used by the `langwatch` OpenTelemetry v2 preset
+| LANGWATCH_ENDPOINT | Base URL of a self-hosted LangWatch for the `langwatch` preset. Default is `https://app.langwatch.ai`
 | LASSO_API_BASE | Base URL for Lasso API
 | LASSO_API_KEY | API key for Lasso service
 | LASSO_USER_ID | User ID for Lasso service
