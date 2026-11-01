@@ -1,6 +1,7 @@
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import SinceVersion from '@site/src/components/SinceVersion';
 
 # Config.yaml
 Set model list, `api_base`, `api_key`, `temperature` & proxy server settings (`master-key`) on the config.yaml. 
@@ -123,9 +124,31 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## config.yaml vs database settings
 
-Once `store_model_in_db` is enabled (via `general_settings.store_model_in_db: true` or `STORE_MODEL_IN_DB="True"`), the Admin UI and the `/config/update` API write settings into the `LiteLLM_Config` table, and the database becomes the source of truth for whatever they wrote. On startup and on every config refresh, the proxy loads your `config.yaml` first and then overlays the database rows for `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables`. The overlay is a deep merge in which the database value wins on any key that exists in both places, so editing that key in the YAML and restarting your pods will not change the running value. Treat the YAML as bootstrap for these four sections, and change UI-written keys in the UI (or delete the row from `LiteLLM_Config`) rather than in the file
+<SinceVersion v="1.103.0" />
 
-A few specifics are worth knowing. Database values of `null` and empty lists are treated as "no value" and do not overwrite what the YAML provides, so a key you never set in the UI still comes from the file. The overlay also applies to those four settings sections only; `model_list` is not merged this way, since models added through the UI or API are stored in `LiteLLM_ProxyModelTable` and served alongside your YAML models, meaning a database model never replaces a same-named YAML entry but becomes an additional deployment that gets load balanced with it (see [Model Management](./model_management.md)). And with `store_model_in_db` off, the database is never read for config, so your `config.yaml` is fully authoritative
+Settings in `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables` are owned key by key. A key you declare in `config.yaml` is owned by the file, and the proxy always runs with the file's value. A key the file does not declare is owned by the database. Once `store_model_in_db` is enabled (via `general_settings.store_model_in_db: true` or `STORE_MODEL_IN_DB="True"`), the Admin UI and the `/config/update` API write those keys into the `LiteLLM_Config` table, and the proxy applies them on startup and on every config refresh.
+
+Writes to a config-owned key are refused. Changing one from the Admin UI, `/config/update`, or `/config/field/update` returns a 400 that names the key, its section, whether a value already stored in the database for it is being ignored, and how to resolve it. This is the response from `/config/field/update`:
+
+```json
+{
+  "detail": {
+    "error": "general_settings key 'store_model_in_db' is set in the config file and cannot be changed here.",
+    "keys": ["store_model_in_db"],
+    "section": "general_settings",
+    "stored_database_values_ignored": [],
+    "resolution": "edit /app/config.yaml to change it, or remove it from the file to let the database own it"
+  }
+}
+```
+
+`/config/update` returns the same fields inside `error.message`. When the database already holds a value for the key, the error adds that the stored value is ignored and will never be applied, and lists the key in `stored_database_values_ignored`.
+
+A request that resends the value the file already holds is accepted, since it changes nothing. If the database still holds a value for a key the file now declares, for example one saved from the UI before you added the key to the YAML, that stored value is ignored and never applied. To change a config-owned key, edit `config.yaml` and restart or reload. To hand a key over to the UI, remove it from `config.yaml`, after which the database value (if any) takes effect.
+
+The ownership rule applies to those four settings sections only. `model_list` is not merged this way, since models added through the UI or API are stored in `LiteLLM_ProxyModelTable` and served alongside your YAML models, meaning a database model never replaces a same-named YAML entry but becomes an additional deployment that gets load balanced with it (see [Model Management](./model_management.md)). With `store_model_in_db` off, the database is never read for config, so your `config.yaml` is fully authoritative.
+
+Before v1.103.0 the precedence was the reverse. The proxy deep-merged the database rows over `config.yaml`, so the database value won on any key that existed in both places, and editing that key in the YAML and restarting did not change the running value. If you run an older version, change UI-written keys in the UI (or delete the row from `LiteLLM_Config`) rather than in the file.
 
 ## LLM configs `model_list`
 

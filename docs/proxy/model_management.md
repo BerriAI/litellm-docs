@@ -40,13 +40,13 @@ Once saved, the credential is available wherever you add or edit a model. In the
 
 ## Database vs config.yaml models
 
-Storing models in the database is what makes UI-driven management possible. Turn it on by setting `STORE_MODEL_IN_DB="True"` as an environment variable, or `general_settings.store_model_in_db: true` in your config. You can also toggle it at runtime from the **Models + Endpoints** settings in the UI, which is handy for cloud deployments where editing the config means a full release; the UI value overrides the config value.
+Storing models in the database is what makes UI-driven management possible. Turn it on by setting `STORE_MODEL_IN_DB="True"` as an environment variable, or `general_settings.store_model_in_db: true` in your config. You can also toggle it at runtime from the **Models + Endpoints** settings in the UI, which is handy for cloud deployments where editing the config means a full release. The toggle only works when `store_model_in_db` is not declared in your `config.yaml`. If the file declares it, the file value wins and saving the toggle returns a 400, so change it in the config instead (before v1.103.0 the UI value overrode the config value).
 
 With it enabled, every model you add through the UI or the API persists in the database and survives restarts and additional proxy instances. Provider credentials for those models are encrypted at rest using `LITELLM_SALT_KEY` (falling back to `LITELLM_MASTER_KEY` if the salt key is not set); keep that value secret and never change it once models exist, since credentials encrypted with the old value cannot be decrypted with a new one.
 
 Database storage does not replace your `config.yaml`. Any models defined there keep working and show up alongside your database models. The one difference is that config models are owned by the file, so they cannot be edited or deleted from the UI; change them in the config and reload. For the config format itself, see [Config.yaml](./configs.md).
 
-Settings behave differently from models here. Anything the UI writes into `general_settings`, `router_settings`, `litellm_settings`, or `environment_variables` is stored in `LiteLLM_Config` and overlaid on top of your `config.yaml` at startup, so the database value wins and editing the same key in the YAML then restarting will not take effect. See [config.yaml vs database settings](./configs.md#configyaml-vs-database-settings).
+Settings behave differently from models here. In `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables`, a key declared in your `config.yaml` is owned by the file and wins over anything stored in `LiteLLM_Config`, and the UI and `/config/update` refuse to change it with a 400. Keys the file does not declare are owned by the database, so those are the ones the UI sets. Before v1.103.0 it was the other way around, and the database value won over the YAML. See [config.yaml vs database settings](./configs.md#configyaml-vs-database-settings).
 
 ### Choose one source of truth for models
 
