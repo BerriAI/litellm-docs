@@ -29,6 +29,16 @@ Settings changed in the UI **override** the values in your config file. For exam
 
 The same options can be set in config via [general_settings](./config_settings.md#general_settings---reference) (`store_prompts_in_spend_logs`, `maximum_spend_logs_retention_period`). Values set in the UI take precedence.
 
+If your traffic comes from coding agents or other clients that resend the whole conversation on every request, each stored request repeats every earlier turn and the table grows with the square of the conversation length. Add `spend_logs_prompt_storage: latest_turn` under `general_settings` (config only, there is no UI toggle) to store only the current turn of each stateless request: the model and the latest user message, with the system prompt, tool definitions and earlier turns dropped. Responses are still stored, and `/v1/responses` calls that continue a conversation with `previous_response_id` keep their full request so session history still replays.
+
+```yaml
+general_settings:
+  store_prompts_in_spend_logs: true
+  spend_logs_prompt_storage: latest_turn
+```
+
+See [`spend_logs_prompt_storage`](./config_settings.md#general_settings---reference) for the full rules.
+
 ## How to Configure Spend Log Settings in the UI
 
 ### 1. Open the Logs page
