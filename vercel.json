@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/docs/upgrade-feedback",
+      "destination": "/api/docs/upgrade-feedback"
+    },
+    {
       "source": "/api/docs/upgrade",
       "destination": "/api/docs/upgrade"
     },
@@ -81,6 +85,11 @@
     }
   ],
   "functions": {
+    "api/docs/upgrade-feedback.js": {
+      "includeFiles": "release_notes/**/index.md",
+      "maxDuration": 15,
+      "memory": 512
+    },
     "api/docs/upgrade.js": {
       "includeFiles": "release_notes/**/index.md",
       "maxDuration": 60,

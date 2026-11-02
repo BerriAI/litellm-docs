@@ -25,6 +25,7 @@ function createHandler(options) {
     if (pathname === '/api/docs/ask') return ask(req, res);
     if (pathname === '/api/docs/search') return keywordSearch(req, res);
     if (pathname === '/api/docs/upgrade') return upgrade(req, res);
+    if (pathname === '/api/docs/upgrade-feedback') return upgrade(req, res);
     if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, {error: 'Method not allowed'});
     if (pathname.split('/').some(part => part.startsWith('.'))) return send(res, 404, {error: 'Not found'});
     const requested = path.resolve(buildDir, `.${pathname}`);

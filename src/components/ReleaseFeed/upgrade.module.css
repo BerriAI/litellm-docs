@@ -37,6 +37,10 @@
 .evidence p { margin: 0.75rem 0; }
 .fullDiff { display: inline-block; margin-top: 1rem; font-size: 0.85rem; }
 .spinner { animation: spin 1s linear infinite; }
+.feedback { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 1.25rem; font-size: 0.8rem; }
+.feedback button { display: inline-flex; padding: 0.5rem; border: 1px solid var(--ifm-color-emphasis-400); border-radius: 5px; color: var(--ifm-font-color-base); background: var(--ifm-background-color); cursor: pointer; }
+.feedback button[aria-pressed='true'] { border-color: var(--ifm-color-primary); color: var(--ifm-color-primary); }
+.feedback button:disabled { opacity: 0.5; cursor: not-allowed; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 @media (max-width: 640px) {

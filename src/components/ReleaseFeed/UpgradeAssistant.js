@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import Link from '@docusaurus/Link';
-import {ArrowRight, FileCode2, GitCompareArrows, LoaderCircle} from 'lucide-react';
+import {ArrowRight, FileCode2, GitCompareArrows, LoaderCircle, ThumbsUp, ThumbsDown} from 'lucide-react';
 import styles from './upgrade.module.css';
 
 const sections = [
@@ -16,23 +16,43 @@ export default function UpgradeAssistant({versions}) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState(null);
+  const [ratingState, setRatingState] = useState('');
   const request = useRef(null);
-  useEffect(() => () => request.current?.abort(), []);
+  const feedbackRequest = useRef(null);
+  useEffect(() => () => {request.current?.abort(); feedbackRequest.current?.abort();}, []);
 
   function change(setter, value) {
     request.current?.abort();
+    feedbackRequest.current?.abort();
     setter(value);
     setResult(null);
     setError('');
     setLoading(false);
+    setRating(null); setRatingState('');
+  }
+
+  async function rate(value) {
+    const id = result.feedbackId;
+    const controller = new AbortController();
+    feedbackRequest.current = controller;
+    setRatingState('saving');
+    try {
+      const response = await fetch('/api/docs/upgrade-feedback', {method: 'POST',
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, rating: value}),
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])});
+      if (!response.ok) throw new Error('Could not save feedback. Please retry.');
+      if (!controller.signal.aborted) {setRating(value); setRatingState('saved');}
+    } catch { if (!controller.signal.aborted) setRatingState('error'); }
   }
 
   async function compare(event) {
     event.preventDefault();
     request.current?.abort();
+    feedbackRequest.current?.abort();
     const controller = new AbortController();
     request.current = controller;
-    setLoading(true); setError(''); setResult(null);
+    setLoading(true); setError(''); setResult(null); setRating(null); setRatingState('');
     try {
       const response = await fetch('/api/docs/upgrade', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -86,6 +106,7 @@ export default function UpgradeAssistant({versions}) {
           <span>{result.migrationFiles} migration / schema files changed</span>
         </div>
         <p className={styles.notice}>AI-generated guidance. Verify the linked sources and test in staging before production. No migration or upgrade commands are executed.</p>
+        {result.warnings.map(warning => <p className={styles.notice} key={warning}>{warning}</p>)}
         {sections.map(([key, title, empty]) => <section key={key} className={key === 'breakingChanges' ? styles.breaking : styles.section}>
           <h3>{title}</h3>
           {result.guide[key].length ? <ul>{result.guide[key].map((item, i) => <li key={i}>
@@ -103,6 +124,16 @@ export default function UpgradeAssistant({versions}) {
           </li>)}</ol>
         </details>
         <Link className={styles.fullDiff} to={`https://github.com/BerriAI/litellm/compare/${encodeURIComponent(result.from)}...${encodeURIComponent(result.to)}`}>Open full GitHub comparison</Link>
+        <div className={styles.feedback}>
+          <span>Was this guide helpful?</span>
+          {[[ThumbsUp, 'good', 'Thumbs up'], [ThumbsDown, 'bad', 'Thumbs down']].map(([Icon, value, label]) =>
+            <button key={value} type="button" aria-label={label} aria-pressed={rating === value}
+              disabled={!result.feedbackId || ratingState === 'saving'} onClick={() => rate(value)}
+              title={!result.feedbackId ? 'Feedback storage is currently unavailable' : label}>
+              <Icon size={17} aria-hidden="true" />
+            </button>)}
+          <span role="status">{ratingState === 'saved' ? 'Feedback saved. It helps improve future guides.' : ratingState === 'error' ? 'Could not save feedback. Please retry.' : ratingState === 'saving' ? 'Saving...' : ''}</span>
+        </div>
       </div>}
     </section>
   );
