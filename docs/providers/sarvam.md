@@ -119,7 +119,7 @@ Most models return reasoning in `reasoning_content`. Reasoning tokens count towa
 ## Limitations
 
 - Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
-- Beta models (`deepseekv4-pro`, `kimi-k3`, `mimo-v2.6-flash`, `mimo-v2.6-pro`) require beta access and are not listed above.
+- Beta models require beta access and are not listed above.
 - The API is OpenAI-compatible; no custom transformation is required.
 
 ## Security
