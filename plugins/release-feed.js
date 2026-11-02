@@ -10,6 +10,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const matter = require('gray-matter');
+const {loadReleaseNotes} = require('../search/upgrade-sources');
 
 const DIR = path.join(__dirname, '..', 'release_notes');
 const SUMMARIES = path.join(DIR, 'summaries.json');
@@ -86,7 +87,7 @@ module.exports = function releaseFeedPlugin() {
       return loadFeed();
     },
     async contentLoaded({content, actions}) {
-      actions.setGlobalData({entries: content});
+      actions.setGlobalData({entries: content, versions: loadReleaseNotes().map(({tag}) => tag)});
     },
     // An RSS feed of the same entries, for feed readers, release trackers and agents.
     async postBuild({content, outDir, siteConfig}) {

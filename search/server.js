@@ -5,11 +5,14 @@ const {createReadStream} = require('node:fs');
 const {createAskHandler, allowAI, send} = require('./api');
 const {readConfig, loadCorpus} = require('./runtime');
 const {createKeywordSearchHandler} = require('./keyword-api');
+const {createUpgradeHandler} = require('./upgrade-api');
+const {loadReleaseNotes} = require('./upgrade-sources');
 
 function createHandler(options) {
   const ask = createAskHandler(options);
   const botAsk = createAskHandler({...options, service: true});
   const keywordSearch = createKeywordSearchHandler(options);
+  const upgrade = createUpgradeHandler({...options, notes: loadReleaseNotes()});
   const buildDir = path.resolve(options.config.buildDir || 'build');
   return async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -21,6 +24,7 @@ function createHandler(options) {
     if (pathname === '/api/docs/bot-ask') return botAsk(req, res);
     if (pathname === '/api/docs/ask') return ask(req, res);
     if (pathname === '/api/docs/search') return keywordSearch(req, res);
+    if (pathname === '/api/docs/upgrade') return upgrade(req, res);
     if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, {error: 'Method not allowed'});
     if (pathname.split('/').some(part => part.startsWith('.'))) return send(res, 404, {error: 'Not found'});
     const requested = path.resolve(buildDir, `.${pathname}`);

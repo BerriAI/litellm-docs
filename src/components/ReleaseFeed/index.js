@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {useAllDocsData} from '@docusaurus/plugin-content-docs/client';
 import styles from './styles.module.css';
+import UpgradeAssistant from './UpgradeAssistant';
 
 const anchorOf = (version) => version.replace(/\./g, '-');
 
@@ -18,7 +19,7 @@ function Inline({text}) {
 }
 
 export default function ReleaseFeed() {
-  const {entries = []} = usePluginData('release-feed') || {};
+  const {entries = [], versions = []} = usePluginData('release-feed') || {};
   const docs = useAllDocsData()['release-notes']?.versions?.[0]?.docs || [];
   const pathById = Object.fromEntries(docs.map((d) => [d.id, d.path]));
   const site = useDocusaurusContext().siteConfig.url.replace(/\/$/, '');
@@ -49,6 +50,7 @@ export default function ReleaseFeed() {
         <link rel="alternate" type="application/rss+xml" title="LiteLLM Changelog" href={`${site}/release_notes/rss.xml`} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Head>
+      <UpgradeAssistant versions={versions} />
       {entries.map((e) => {
         const versions = e.versions.filter((v) => pathById[v.id]);
         if (!versions.length) return null;

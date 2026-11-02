@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/api/docs/upgrade",
+      "destination": "/api/docs/upgrade"
+    },
+    {
       "source": "/api/docs/bot-ask",
       "destination": "/api/docs/bot-ask"
     },
@@ -77,6 +81,11 @@
     }
   ],
   "functions": {
+    "api/docs/upgrade.js": {
+      "includeFiles": "release_notes/**/index.md",
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "api/docs/search.js": {
       "includeFiles": "build/search-runtime.bin",
       "maxDuration": 20,
