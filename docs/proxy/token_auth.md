@@ -1289,7 +1289,9 @@ curl -X GET 'http://0.0.0.0:4000/user/info?user_id=user-123' \
 -H 'Authorization: Bearer <PROXY_MASTER_KEY>'
 ```
 
-## [BETA] JWT-to-Virtual-Key Mapping
+<a id="beta-jwt-to-virtual-key-mapping"></a>
+
+## JWT-to-Virtual-Key Mapping
 
 Map JWT identities to LiteLLM virtual keys so that JWT-authenticated users get per-user budgets, rate limits, model access controls, and spend tracking.
 
@@ -1410,7 +1412,7 @@ A token whose claim matches a registered agent is bound to that agent and inheri
 
 Every token that carries the configured claim is treated as an agent. Entra puts `azp` on delegated (user) tokens too, so if humans and agents obtain tokens for the same audience, `azp` will bind or reject the human callers as well. In that setup point `agent_id_jwt_field` at a claim that only agent tokens carry, such as an optional claim or a custom claim added through a claims mapping policy on the agents' app registrations, and leave `azp` for a proxy whose JWT callers are all agents.
 
-If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#beta-jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
+If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
 
 ## All JWT Params
 
