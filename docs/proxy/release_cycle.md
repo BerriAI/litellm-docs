@@ -20,23 +20,25 @@ Follow our release notes [here](https://github.com/BerriAI/litellm/releases).
 
 ## Weekly schedule
 
-Each week runs the same loop against one version line. The first nightly (`dev`) build, typically Tuesday, opens the next minor version (for example `1.86.0`), and that base rides every build until it ships as stable. A second nightly follows midweek, typically Thursday. On Saturday the release candidate is cut (`1.86.0rc1`) and enters a roughly week-long window for early testers and QA. Late the following week, on Friday or Saturday, the prior week's `rc` is promoted to stable with the suffix dropped (`1.85.0rc1` becomes `1.85.0`), identical to that `rc` unless a fix was backported. Each Saturday therefore does double duty: the current week's `rc` is cut while the previous week's `rc` becomes stable.
+Starting the week of November 2, 2026, release candidates and stable releases ship on Tuesday mornings instead of Saturdays. Code for the week's release is frozen early Monday, and Monday is spent on QA.
+
+Each week runs the same loop against one version line. Nightly (`dev`) builds of the next minor version come out during the week (for example `1.86.0.dev1`, then `1.86.0.dev2`), and that base rides every build until it ships as stable. On Tuesday morning the release candidate is cut (`1.86.0rc1`) and enters a roughly week-long window for early testers and QA. The following Tuesday that `rc` is promoted to stable with the suffix dropped (`1.86.0rc1` becomes `1.86.0`), identical to that `rc` unless a fix was backported. So each Tuesday does double duty, cutting the current week's `rc` while the previous week's `rc` becomes stable.
 
 | Day | What ships |
 | --- | --- |
-| Tuesday | First nightly `dev` build; opens the next minor (`1.86.0.dev1`) |
-| Thursday | Second nightly `dev` build, cumulative (`1.86.0.dev2`) |
-| Saturday | New `rc` cut (`1.86.0rc1`); prior week's `rc` promoted to stable |
-| Next Tuesday | Next line's first nightly opens (`1.87.0.dev1`); the loop repeats |
+| Monday | Code freeze and QA for Tuesday's release |
+| Tuesday morning | New `rc` cut (`1.86.0rc1`), and the prior week's `rc` promoted to stable (`1.85.0`) |
 
-If a Saturday `rc` fails QA it is not promoted; a fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
+If an `rc` fails QA it is not promoted. A fix lands, a follow-up `rc` may be cut, and the schedule picks up from there.
+
+Which stable lines get patch releases is covered in [Version support](../enterprise/version_support.md). That policy is paused during the [LTS pilot](../enterprise/lts_pilot.md).
 
 
 ## FAQ
 
 ### Is there a release schedule for LiteLLM stable release?
 
-Stable releases come out every week (typically Sunday). Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
+Stable releases come out every week on Tuesday morning. Each scheduled stable bumps the MINOR version: `1.84.0` → `1.85.0` → `1.86.0`. {/* keep-version-note */}
 
 ### What is considered a 'minor' bump vs. 'patch' bump?
 

@@ -676,4 +676,4 @@ For temporary limits, use a [temporary budget increase](/docs/proxy/temporary_bu
 
 ## Get help
 
-Each Enterprise license includes a dedicated Slack or Teams channel with the LiteLLM engineers. You can also send an email to `support@berri.ai`. Refer to [Support and SLA](/docs/enterprise/support).
+Each Enterprise license includes a shared Slack Connect channel with the LiteLLM engineers. You can also send an email to `support@berri.ai`. To get the channel, follow [How to request your channel](/docs/enterprise/support#how-to-request-your-channel). Refer to [Support and SLA](/docs/enterprise/support).
