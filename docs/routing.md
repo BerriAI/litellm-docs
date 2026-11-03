@@ -972,8 +972,8 @@ Pin every request of a conversation to the deployment that served its first requ
 
 Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
 
-:::warning[Proxy and async Router calls only]
-Session affinity applies to proxy requests on the LLM API routes, such as `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings`, and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. The sync Router methods, such as `completion`, `responses`, and `embedding`, skip it, so the same session id can land on a different deployment on every call. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy and every routing group included. Both rules hold for `deployment_affinity` too. To keep a session on one deployment from the SDK, call the async method under one of the top-level strategies above.
+:::warning[Where session affinity applies]
+Session affinity applies to proxy requests on the LLM API routes, such as `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings`, and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. Pass-through routes are not covered, and Vertex AI pass-through picks a deployment without it. The sync Router methods, such as `completion`, `responses`, and `embedding`, skip it, so the same session id can land on a different deployment on every call. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy and every routing group included. Both rules hold for `deployment_affinity` and for the Responses API checks `responses_api_deployment_check` and `encrypted_content_affinity` too. To keep a session on one deployment from the SDK, call the async method under one of the top-level strategies above.
 :::
 
 <Tabs>
