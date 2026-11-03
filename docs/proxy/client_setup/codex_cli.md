@@ -22,7 +22,7 @@ To keep your own ChatGPT login and send its requests through the gateway, follow
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
 | Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](./codex_cli_sso.md) |
 | `model_catalog_url` | `<LITELLM_PROXY_BASE_URL>/v1/models`, plus `api_key_model_discovery = true` under `[features]` |
-| Context window | `model_info.max_input_tokens` on every deployment ([details](#context-window)) |
+| Context window | `model_info.max_input_tokens` on every deployment ([details](#context-window)) <SinceVersion v="1.110.0" /> |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
 
@@ -104,7 +104,7 @@ env_key = "LITELLM_API_KEY"
 wire_api = "responses"
 ```
 
-On startup Codex calls `GET /v1/models?client_version=<its version>` with your virtual key, and the gateway answers in Codex's own catalog format. The `/model` picker then lists your gateway's chat models in `model_list` order, named by `model_info.display_name` when you set one and by the `model_name` otherwise. Wildcard entries such as `openai/*` and models that are not chat models (embeddings, for example) are left out. A model Codex already knows, by its `model_name` or by the upstream model in `litellm_params.model`, keeps Codex's own metadata (reasoning levels, prompt, tool support, and the context window unless you [set a larger one](#context-window)) under your name, so `my-coding-model` backed by `openai/gpt-6.1-sol` gets the same reasoning levels and prompt as Codex's own `gpt-6.1-sol`. Any other model gets the same fallback metadata Codex uses for `codex -m <unknown name>`, with the gateway's `max_input_tokens` as its context window, so it works but offers no reasoning-effort choices.
+On startup Codex calls `GET /v1/models?client_version=<its version>` with your virtual key, and the gateway answers in Codex's own catalog format. The `/model` picker then lists your gateway's chat models in `model_list` order, named by `model_info.display_name` when you set one and by the `model_name` otherwise. Wildcard entries such as `openai/*` and models that are not chat models (embeddings, for example) are left out. A model Codex already knows, by its `model_name` or by the upstream model in `litellm_params.model`, keeps Codex's own metadata (reasoning levels, prompt, tool support, and the context window unless you [set a limit on its deployments](#context-window)) under your name, so `my-coding-model` backed by `openai/gpt-6.1-sol` gets the same reasoning levels and prompt as Codex's own `gpt-6.1-sol`. Any other model gets the same fallback metadata Codex uses for `codex -m <unknown name>`, with the gateway's `max_input_tokens` as its context window, so it works but offers no reasoning-effort choices.
 
 **Prerequisites for service tiers:** Ask your gateway administrator to configure the model's [Fast and Ultrafast settings](../../providers/openai/ultrafast.md#set-up-with-configyaml). Select the gateway model in Codex, then use `/fast` or `/ultrafast` when available.
 
@@ -141,7 +141,11 @@ The catalog then gives the model the smallest `max_input_tokens` among the group
   Context window:      100% left (12.2K used / 828K)
 ```
 
-A deployment without `max_input_tokens` counts as Codex's own window, so a limit on only some deployments of a group can lower the window but never raise it, and a group where no deployment sets one keeps Codex's entry as it ships. An alias such as `my-coding-model` backed by `openai/gpt-6.1-sol` follows the same rule. To see what the gateway gives each model, read the catalog with your key:
+A deployment without `max_input_tokens` counts as Codex's own window, so a limit on only some deployments of a group can lower the window but never raise it, and a group where no deployment sets one keeps Codex's entry as it ships. Only the deployments the calling key's team can route to count, so two teams can see different windows for one model. An alias such as `my-coding-model` backed by `openai/gpt-6.1-sol` follows the same rule. On a deployment saved before v1.102 whose `model_info` still carries the cost map's `key`, a limit equal to the cost map's own value counts as unset, since the gateway cannot tell it from a copy of the cost map.
+
+A larger window can cost more. `gpt-6.1-sol` bills input above 272K tokens at a higher rate, `input_cost_per_token_above_272k_tokens` in the cost map, so a session that grows past 272K pays more for every later turn. A config that already sets `max_input_tokens` on a model Codex knows changes Codex's window when the gateway upgrades to this release. The larger window reaches only a Codex that reads the catalog through `model_catalog_url`. [`lite codex`](../management_cli.md#run-coding-agents-through-the-proxy) writes its own catalog, which never raises Codex's window this way, so its `/status` stays at `258K` for `gpt-6.1-sol`.
+
+To see what the gateway gives each model, read the catalog with your key:
 
 ```bash
 curl -s -H "Authorization: Bearer $LITELLM_API_KEY" \
