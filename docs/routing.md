@@ -184,6 +184,8 @@ If `rpm` or `tpm` is not provided, it randomly picks a deployment
 
 You can also set a `weight` param, to specify which model should get picked when.
 
+A deployment can also carry daily limits, `rpd` (requests per UTC day) and `tpd` (tokens per UTC day), in `litellm_params` next to `rpm` and `tpm`. An optional `daily_reset_time` (`"HH:MM"` in UTC) moves the moment the daily counts start over; without it they start over at midnight UTC. They do not change how deployments are picked. They are enforced with [`enforce_model_rate_limits`](./proxy/load_balancing#enforce-model-rate-limits), which moves a request off a deployment whose daily quota is spent and onto another deployment in the group.
+
 <Tabs>
 <TabItem value="rpm" label="RPM-based shuffling">
 
@@ -372,7 +374,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="simple-shuffle", # RECOMMENDED - best performance
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -454,7 +456,7 @@ model_list = [{ ... }]
 # init router
 router = Router(model_list=model_list,
 				routing_strategy="latency-based-routing",# set routing strategy
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 ## CALL 1+2
@@ -577,7 +579,7 @@ router = Router(model_list=model_list,
 				redis_password=os.environ["REDIS_PASSWORD"], 
 				redis_port=os.environ["REDIS_PORT"], 
                 routing_strategy="usage-based-routing",
-				enable_pre_call_checks=True, # enables router rate limits for concurrent calls
+				enable_pre_call_checks=True, # filters deployments by context window and region
 				)
 
 response = await router.acompletion(model="{{openai_small}}", 
@@ -772,7 +774,7 @@ model_list =  [
 	{
 		"model_name": "{{openai_small}}",
 		"litellm_params": {"model": "{{openai_large}}"},
-		"model_info": {"id": "openai-gpt-4o"},
+		"model_info": {"id": "openai-{{openai_large}}"},
 	},
 	{
 		"model_name": "{{openai_small}}",
@@ -966,9 +968,13 @@ Routing groups can be updated via `Router.update_settings(routing_groups=[...])`
 
 ## Session Affinity (Sticky Sessions)
 
-Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one. It works when the top-level `routing_strategy` is `simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, or `cost-based-routing`, and then also inside routing groups of any strategy but `priority`. It also works under `lar1`, which only supports async calls.
 
 Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+:::warning[Where session affinity applies]
+Session affinity applies to proxy requests on the LLM API routes, such as `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings`, and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. Pass-through routes that name a router model, such as `/bedrock/model/<model>/converse`, apply it too, but the relay routes `/vllm`, `/azure`, `/azure_ai`, and `/nvidia_nim` don't carry the session id, so only `deployment_affinity` applies there. Vertex AI pass-through picks a deployment without either check. The sync Router methods, such as `completion`, `responses`, and `embedding`, skip it, so the same session id can land on a different deployment on every call. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy and every routing group included. So does a custom strategy set with `router.set_custom_routing_strategy`, unless its async method picks from what `router.select(model, request_kwargs, kind="healthy")` returns, as `lar1` does. These rules hold for `deployment_affinity` and for the Responses API checks `responses_api_deployment_check` and `encrypted_content_affinity` too. Inside a `priority` routing group, `session_affinity` and `deployment_affinity` never pin, while the Responses API checks still do. To keep a session on one deployment from the SDK, call the async method under one of the top-level strategies above.
+:::
 
 <Tabs>
 <TabItem value="proxy" label="Proxy">
@@ -987,7 +993,7 @@ model_list:
       api_base: https://westus.openai.azure.com
 
 router_settings:
-  routing_strategy: simple-shuffle          # any strategy
+  routing_strategy: simple-shuffle          # any strategy but usage-based-routing (v1)
   optional_pre_call_checks: ["session_affinity"]
   deployment_affinity_ttl_seconds: 3600     # optional, default 3600
 ```
@@ -1021,7 +1027,7 @@ router = Router(
             "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
         },
     ],
-    routing_strategy="simple-shuffle",                 # any strategy
+    routing_strategy="simple-shuffle",                 # any strategy but usage-based-routing (v1)
     optional_pre_call_checks=["session_affinity"],
     deployment_affinity_ttl_seconds=3600,              # optional, default 3600
 )
@@ -1046,13 +1052,32 @@ print(response._hidden_params["model_id"])  # same deployment for every call wit
 - If the pinned deployment is in cooldown or no longer in the model group, the request falls through to the routing strategy across the remaining healthy deployments. The pin is kept, so the session returns to its deployment once it is healthy again. On versions before v1.97.0 the session is re-pinned to the deployment the strategy picked instead.
 - Load balancing happens across sessions rather than across requests: each session uses one deployment for as long as it is active.
 
+#### Keep the replacement after failover
+
+See [PR #48206](https://github.com/BerriAI/litellm/pull/48206) for this option.
+
+To keep a session on its successful replacement after the original deployment recovers, add this to the proxy configuration and restart it:
+
+```yaml
+router_settings:
+  optional_pre_call_checks: ["session_affinity"]
+  session_affinity_repin_on_failover: true
+```
+
+For async Router SDK requests, pass `session_affinity_repin_on_failover=True` to `Router()` alongside the existing session-affinity configuration. The option defaults to `false`. When disabled, it adds no re-pinning cache reads, Redis calls, or background tasks.
+
+The pin moves only if the original deployment is still in cooldown or removed from the route when the replacement's successful response is processed. Failed or incomplete responses and temporary request filters do not move the pin. The replacement remains pinned after the original recovers, subject to the existing affinity TTL. Priority routing groups retain their existing behavior.
+
+When enabled with Redis, session selection reads the shared pin so another worker's local cache cannot send the session back to the original deployment. Re-pinning runs in the existing success callback, so requests already underway can finish on different replacements before the new pin takes effect.
+
 #### Settings
 
 | Setting | Description |
 |---|---|
 | `optional_pre_call_checks` | Add `session_affinity` to pin by session id. Add `deployment_affinity` to pin by caller instead of, or as well as, session id (a session pin takes priority). On the proxy the caller is the virtual key, or the authenticated user id when the request carries no key (JWT auth). `responses_api_deployment_check` and `encrypted_content_affinity` are covered in [Responses API session continuity](./response_api.md#load-balancing-with-session-continuity). |
 | `deployment_affinity_ttl_seconds` | Idle TTL of a pin, in seconds. Default `3600`. |
-| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"gpt-4.1": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
+| `session_affinity_repin_on_failover` | Keep a successful replacement after cooldown or removal. Default `false`, set at startup. Applies to proxy and async Router requests. See [re-pinning](#keep-the-replacement-after-failover). |
+| `model_group_affinity_config` | Enable affinity on some model groups only, for example `{"{{openai_large}}": ["session_affinity"]}`. Groups not listed use the global `optional_pre_call_checks`. |
 
 `deployment_affinity_ttl_seconds` and `model_group_affinity_config` are read at startup: set them in `config.yaml` (or on `Router()`) and restart the proxy. `optional_pre_call_checks` can also be changed on a running proxy with `POST /config/update` and a body of `{"router_settings": {"optional_pre_call_checks": [...]}}`, as long as the key is not set in `config.yaml` (a value there wins, and sending a different one returns a 400). The call needs an admin key, a database, and `STORE_MODEL_IN_DB=True`. The list replaces the previous one and is stored in the database, so every instance polling the database applies it. Names in the new list are turned on right away. A name left out is turned off right away for `prompt_caching`, `enforce_model_rate_limits`, and `encrypted_content_affinity` (the last from v1.104.0), while `session_affinity`, `deployment_affinity`, `responses_api_deployment_check`, and `router_budget_limiting` stay on until a restart. `GET /router/settings` shows the stored list, the config file merged with the database
 
@@ -1073,6 +1098,8 @@ Traffic mirroring allows you to "mimic" production traffic to a secondary (silen
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
+
+Context window errors use a matching `context_window_fallbacks` rule before later orders. When no rule matches the requested group, later orders and then generic fallbacks remain available, even if another group has a context window rule. Content policy errors keep their separate fallback handling. See [context error fallback precedence](./proxy/reliability.md#context-error-fallback-precedence) for the decision table and a complete configuration.
 
 A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./proxy/reliability.md#explanation)
 
@@ -1369,13 +1396,15 @@ print(f"response: {response}")
 
 ```yaml
 router_settings:
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
+  allowed_fails: 3 # cool a deployment down once it fails more than 3 calls
   cooldown_time: 30 # (in seconds) how long to cooldown model if fails/min > allowed_fails
 ```
 
 Defaults:
-- allowed_fails: 3
+- allowed_fails: not set
 - cooldown_time: 5s (`DEFAULT_COOLDOWN_TIME_SECONDS` in constants.py)
+
+With no `allowed_fails`, the router uses the rules in [When are deployments cooled down?](#when-are-deployments-cooled-down). Setting any value in `router_settings` of your config.yaml or in `Router(...)`, 3 included, makes the router count failures instead. A deployment then cools down once it fails more than that many calls within `cooldown_time`, and a 429, 401 or 404 counts toward that limit instead of cooling the deployment down at once. A value saved from the Admin UI or `/config/update` counts only when it is not 3, since the Admin UI saves the default back with every change. Before v1.109.0, the router treated an explicit 3 as unset and kept using those rules.
 
 **Set Per Model**
 
@@ -1463,7 +1492,7 @@ Each deployment gets a unique `model_id` (e.g., `1234567890`, `9129922`, `498292
 
 #### When are deployments cooled down?
 
-The router automatically cools down deployments based on the following conditions:
+When `allowed_fails` and `allowed_fails_policy` are not set, the router cools down deployments based on the following conditions:
 
 | Condition | Trigger | Cooldown Duration |
 |-----------|---------|-------------------|
@@ -1818,8 +1847,8 @@ The model ids in this example are illustrative and kept for their context window
 
 ```python keep-model-ids
 """
-- Give a gpt-3.5-turbo model group with different context windows (4k vs. 16k)
-- Send a 5k prompt
+- Give a model group two deployments with different context windows (a 4k Azure deployment and a larger OpenAI one)
+- Send a prompt of about 40k tokens, too long for the 4k deployment
 - Assert it works
 """
 from litellm import Router
@@ -1827,7 +1856,7 @@ import os
 
 model_list = [
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "chat-model",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
 			"model": "azure/chatgpt-v-2",
 			"api_key": os.getenv("AZURE_API_KEY"),
@@ -1840,9 +1869,9 @@ model_list = [
 		}
 	},
 	{
-		"model_name": "gpt-3.5-turbo",  # model group name
+		"model_name": "chat-model",  # model group name
 		"litellm_params": {  # params for litellm completion/embedding call
-			"model": "gpt-3.5-turbo-1106",
+			"model": "{{openai_small}}",
 			"api_key": os.getenv("OPENAI_API_KEY"),
 		},
 	},
@@ -1853,7 +1882,7 @@ router = Router(model_list=model_list, enable_pre_call_checks=True)
 text = "What is the meaning of 42?" * 5000
 
 response = router.completion(
-	model="gpt-3.5-turbo",
+	model="chat-model",
 	messages=[
 		{"role": "system", "content": text},
 		{"role": "user", "content": "Who was Alexander?"},
@@ -1944,14 +1973,14 @@ async def test_acompletion_caching_on_router_caching_groups():
 		litellm.set_verbose = True
 		model_list = [
 			{
-				"model_name": "openai-gpt-4o-mini",
+				"model_name": "openai-model",
 				"litellm_params": {
 					"model": "{{openai_small}}",
 					"api_key": os.getenv("OPENAI_API_KEY"),
 				},
 			},
 			{
-				"model_name": "azure-gpt-4o-mini",
+				"model_name": "azure-model",
 				"litellm_params": {
 					"model": "azure/chatgpt-v-2",
 					"api_key": os.getenv("AZURE_API_KEY"),
@@ -1967,11 +1996,11 @@ async def test_acompletion_caching_on_router_caching_groups():
 		start_time = time.time()
 		router = Router(model_list=model_list, 
 				cache_responses=True, 
-				caching_groups=[("openai-gpt-4o-mini", "azure-gpt-4o-mini")])
-		response1 = await router.acompletion(model="openai-gpt-4o-mini", messages=messages, temperature=1)
+				caching_groups=[("openai-model", "azure-model")])
+		response1 = await router.acompletion(model="openai-model", messages=messages, temperature=1)
 		print(f"response1: {response1}")
 		await asyncio.sleep(1) # add cache is async, async sleep for cache to get set
-		response2 = await router.acompletion(model="azure-gpt-4o-mini", messages=messages, temperature=1)
+		response2 = await router.acompletion(model="azure-model", messages=messages, temperature=1)
 		assert response1.id == response2.id
 		assert len(response1.choices[0].message.content) > 0
 		assert response1.choices[0].message.content == response2.choices[0].message.content
@@ -2108,7 +2137,7 @@ The model ids in this example are illustrative and kept for their context window
 ```python keep-model-ids
 from litellm import Router
 
-fallback_dict = {"gpt-4o-mini": "gpt-4.1"}
+fallback_dict = {"gpt-5.4-mini": "{{openai_large}}"}
 
 router = Router(model_list=model_list, 
                 default_litellm_params={"context_window_fallback_dict": fallback_dict})
@@ -2117,7 +2146,7 @@ user_message = "Hello, whats the weather in San Francisco??"
 messages = [{"content": user_message, "role": "user"}]
 
 # normal call 
-response = router.completion(model="gpt-4o-mini", messages=messages)
+response = router.completion(model="gpt-5.4-mini", messages=messages)
 
 print(f"response: {response}")
 ```

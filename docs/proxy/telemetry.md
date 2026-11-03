@@ -2,7 +2,7 @@
 
 The LiteLLM proxy can count how requests to it go, which providers it calls, and which Admin UI pages people open, then hand those counts to an HTTP endpoint you set or keep them in its own database. Every group is **off unless you turn it on**, nothing is recorded until you also pick a destination, and nothing leaves your deployment unless that destination is `http`. There is no default endpoint, so reports only ever go to the URL you set in `LITELLM_TELEMETRY_ENDPOINT`.
 
-Available from v1.107.0.
+<SinceVersion v="1.107.0" />
 
 Telemetry never contains prompts, completions, API keys, user ids, team ids, model names, IP addresses, header values or request bodies. Every field it can produce is listed on this page; a field that is not declared in the record schema cannot be exported. Token counts are only ever summed per row, never kept per request.
 

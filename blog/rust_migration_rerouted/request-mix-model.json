@@ -1,0 +1,64 @@
+{
+  "kind": "illustrative",
+  "mix_assumption": "Cumulative eligibility, not independent option weights or production telemetry.",
+  "blue_meaning": "Eligible so far; only the final remaining blue stream meets all conditions.",
+  "show_numbers": false,
+  "initial_eligible_share": "3/5",
+  "stages": [
+    {
+      "label": "Endpoint",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "12/25",
+      "supported": [
+        "/v1/messages"
+      ],
+      "other": [
+        "Chat completions",
+        "Responses \u00b7 Other APIs"
+      ]
+    },
+    {
+      "label": "Routing strategy",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "9/25",
+      "supported": [
+        "Simple shuffle"
+      ],
+      "other": [
+        "Least busy \u00b7 Usage-based",
+        "Latency-based \u00b7 Cost-based"
+      ]
+    },
+    {
+      "label": "Callbacks",
+      "selection_mode": "many",
+      "eligible_share_of_all_requests": "27/100",
+      "supported": [
+        "S3 logs",
+        "Spend logging"
+      ],
+      "other": [
+        "Any unsupported callback",
+        "Prometheus \u00b7 Langfuse",
+        "Datadog"
+      ]
+    },
+    {
+      "label": "Provider",
+      "selection_mode": "one",
+      "eligible_share_of_all_requests": "1/5",
+      "supported": [
+        "Anthropic",
+        "Amazon Bedrock",
+        "Vertex AI"
+      ],
+      "other": [
+        "OpenAI \u00b7 Gemini",
+        "Azure OpenAI \u00b7 Cohere"
+      ],
+      "scope": "Anthropic models"
+    }
+  ],
+  "author_direction": "Start around 60% eligible and end around 20%, with additional departures between endpoint and routing. Intermediate widths are illustrative design choices.",
+  "layout": "One input splits above the aligned option rows. Later fallback branches join the left edge of the Python lane, whose right edge stays fixed."
+}

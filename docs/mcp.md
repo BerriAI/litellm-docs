@@ -1117,14 +1117,16 @@ This video demonstrates how you can onboard an MCP server to LiteLLM Proxy, use 
 LiteLLM Python SDK acts as a MCP bridge to use MCP tools with all LiteLLM supported models. LiteLLM offers the following features for using MCP
 
 - **List** Available MCP Tools: OpenAI clients can view all available MCP tools
-  - `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools
+  - `litellm.mcp_client.load_mcp_tools` to list all available MCP tools
 - **Call** MCP Tools: OpenAI clients can call MCP tools
-  - `litellm.experimental_mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+  - `litellm.mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+
+`litellm.experimental_mcp_client` is a deprecated alias of `litellm.mcp_client`. It still works and emits a `DeprecationWarning` on import, so update imports to the new name.
 
 
 ### 1. List Available MCP Tools
 
-In this example we'll use `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server. This method can be used in two ways:
+In this example we'll use `litellm.mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server. This method can be used in two ways:
 
 - `format="mcp"` - (default) Return MCP tools 
   - Returns: `mcp.types.Tool`
@@ -1140,7 +1142,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 import litellm
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 
 server_params = StdioServerParameters(
@@ -1155,7 +1157,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
@@ -1180,7 +1182,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 from openai import OpenAI
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 server_params = StdioServerParameters(
     command="python3",
@@ -1194,7 +1196,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools using litellm mcp client
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         # Use OpenAI SDK pointed to LiteLLM proxy
@@ -1218,12 +1220,12 @@ async with stdio_client(server_params) as (read, write):
 ### 2. List and Call MCP Tools
 
 In this example we'll use 
-- `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server
-- `litellm.experimental_mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+- `litellm.mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server
+- `litellm.mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
 
-The first llm response returns a list of OpenAI tools. We take the first tool call from the LLM response and pass it to `litellm.experimental_mcp_client.call_openai_tool` to call the tool on the MCP server.
+The first llm response returns a list of OpenAI tools. We take the first tool call from the LLM response and pass it to `litellm.mcp_client.call_openai_tool` to call the tool on the MCP server.
 
-#### How `litellm.experimental_mcp_client.call_openai_tool` works
+#### How `litellm.mcp_client.call_openai_tool` works
 
 - Accepts an OpenAI Tool Call from the LLM response
 - Converts the OpenAI Tool Call to an MCP Tool
@@ -1239,7 +1241,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 import litellm
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 
 server_params = StdioServerParameters(
@@ -1254,7 +1256,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
@@ -1268,7 +1270,7 @@ async with stdio_client(server_params) as (read, write):
 
         openai_tool = llm_response["choices"][0]["message"]["tool_calls"][0]
         # Call the tool using MCP client
-        call_result = await experimental_mcp_client.call_openai_tool(
+        call_result = await mcp_client.call_openai_tool(
             session=session,
             openai_tool=openai_tool,
         )
@@ -1306,7 +1308,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 from openai import OpenAI
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 server_params = StdioServerParameters(
     command="python3",
@@ -1320,7 +1322,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools using litellm mcp client
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         # Use OpenAI SDK pointed to LiteLLM proxy
@@ -1341,7 +1343,7 @@ async with stdio_client(server_params) as (read, write):
         tool_call = llm_response.choices[0].message.tool_calls[0]
         
         # Call the tool using MCP client
-        call_result = await experimental_mcp_client.call_openai_tool(
+        call_result = await mcp_client.call_openai_tool(
             session=session,
             openai_tool=tool_call.model_dump(),
         )

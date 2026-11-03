@@ -24,7 +24,7 @@ assert litellm.supports_parallel_function_calling(model="gpt-4") == False
 ## Parallel Function calling
 Parallel function calling is the model's ability to perform multiple function calls together, allowing the effects and results of these function calls to be resolved in parallel
 
-## Quick Start - gpt-3.5-turbo-1106
+## Quick Start
 <a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/Parallel_function_calling.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
@@ -36,7 +36,7 @@ In this example we define a single function `get_current_weather`.
 - Step 3: Send the model the output from running the `get_current_weather` function
 
 
-### Full Code - Parallel function calling with `gpt-3.5-turbo-1106`
+### Full Code - Parallel function calling
 
 ```python
 import litellm
@@ -134,7 +134,7 @@ test_parallel_function_call()
 ```
 
 ### Explanation - Parallel function calling
-Below is an explanation of what is happening in the code snippet above for Parallel function calling with `gpt-3.5-turbo-1106`
+Below is an explanation of what is happening in the code snippet above for Parallel function calling with `{{openai_small}}`
 ### Step1: litellm.completion() with `tools` set to `get_current_weather`
 ```python
 import litellm

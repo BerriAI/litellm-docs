@@ -11,7 +11,7 @@ Claude Code's auto mode runs tool calls without asking the user first. When `ANT
 
 With `safeguards_classifier_model` set, the proxy asks a deployment from your `model_list` to judge each tool call and returns the verdicts the same way the Anthropic API does, so auto mode stays on server review when Claude Code is pointed at an open model.
 
-Available from v1.107.0.
+<SinceVersion v="1.107.0" />
 
 | Model behind `/v1/messages` | Who answers `safeguards` |
 |---|---|

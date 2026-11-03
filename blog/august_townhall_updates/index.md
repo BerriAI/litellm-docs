@@ -6,7 +6,7 @@ authors:
   - krrish
   - ishaan-alt
 description: "A recap of the August LiteLLM town hall: 79 security fixes, 375 bug fixes, 142 feature commits, a new Director of Security, the public status dashboard, and Auto-Router results from production."
-tags: [townhall, security, reliability, product]
+tags: [townhall, reliability, product]
 hide_table_of_contents: false
 ---
 

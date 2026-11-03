@@ -307,6 +307,8 @@ litellm.enable_gemini_default_thinking_level_low = True
 
 ### Thinking without thought summaries
 
+<SinceVersion v="1.107.0" />
+
 Gemini returns a summary of its thinking in `reasoning_content` whenever thinking is on. To keep the thinking but drop the summary text on every Gemini request, turn the summaries off.
 
 <Tabs>
@@ -337,8 +339,6 @@ The model still thinks and `usage.completion_tokens_details.reasoning_tokens` is
 
 `"display": "omitted"` is not an ask, so the setting decides. On `/v1/messages` this setting also wins over `reasoning_auto_summary`, since that summary is added by the gateway, not asked for by the request. A text value such as `"false"` is read as `false`, and a value that reads as neither keeps the summaries on.
 
-Available from v1.107.0.
-
 ## Usage - `service_tier`
 
 LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extracts it from the response headers (`x-gemini-service-tier`) into `model_response.service_tier`.
@@ -359,6 +359,8 @@ On the response, LiteLLM maps `"standard"` back to `"default"` for the Gemini AP
 On a model that ends a request with a `continuationToken`, such as Gemini 4 Argon, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent, so `max_tokens` can go above Google's per-request cap. [Long outputs](/blog/gemini-4-argon#long-outputs) covers how it works, the usage it reports and the timeouts it needs.
 
 A request that sends no output limit is sent once and stops at Google's own per-request limit. From v1.108.0, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer to give those requests a budget. It applies to chat completion, text completion and Responses API requests through the proxy or the Python SDK, and never to `/v1/messages`, which requires `max_tokens`. LiteLLM caps the budget at the model's `max_output_tokens` in the cost map, and any output limit the request already carries wins. It is not applied to a model the cost map does not list as a chat model, such as an image model, to a model whose cost map `supported_output_modalities` leaves out text, such as a Lyria music model, to a request whose `modalities` asks for anything besides text, to a request that resumes with a `continuation_token`, or to the native `:generateContent` route. A large value makes a non-streamed request run as long as the answer, so stream long answers or raise the client's timeout. The [env var reference](/docs/proxy/config_settings#environment-variables---reference) lists every case.
+
+`supports_continuation: true` in the cost map marks a model that can end a request with a `continuationToken` <SinceVersion v="1.110.0" />. It is set on `gemini/gemini-4-argon`, `vertex_ai/gemini-4-argon` and `vertex_ai/gemini-4-argon-cyber-permissive`. Read it before sending a request with `litellm.supports_continuation("gemini/gemini-4-argon")` or `litellm.get_model_info("gemini/gemini-4-argon")["supports_continuation"]`, or through the proxy at `GET /model/info` and `GET /v1/model/info`, where each deployment carries it in `model_info`, and at `GET /model_group/info`, where a model group reports `true` when any of its deployments supports it. `get_model_info` and `/model/info` return `None` (`null`) for a model the cost map leaves unflagged, so check for `true` instead of `false`. A deployment's own `model_info` in `config.yaml` or the Admin UI overrides the cost map value for that deployment only, so set `supports_continuation: true` there for a model the cost map does not flag yet. The flag only says what the model can do and does not turn continuation on or off. LiteLLM sends the request again only when it has an output limit, from `max_tokens` or `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS`, and asks for one choice (`n` of 1), whatever the flag says. Whether a given answer was cut short still comes from the response. On `/chat/completions` that answer ends with `finish_reason: "length"` and carries `provider_specific_fields.continuation_token`, and [Long outputs](/blog/gemini-4-argon#long-outputs) shows how to send it back to continue the answer.
 
 ## Text-to-Speech (TTS) Audio Output
 
@@ -387,7 +389,7 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 
 `audio.voice` takes any Gemini prebuilt voice name (`Kore`, `Puck`, `Zephyr`, ...) and sends it through unchanged. OpenAI voice names map to the nearest Gemini prebuilt voice, so OpenAI-shaped clients and the proxy's default `audio_speech` health check (`alloy`) work without a config change. The lookup is case-insensitive, and any other name is sent through as-is, so a typo still fails at Google with its `No matching speaker voice found` error.
 
-The mapping is available from v1.107.0 (first in `v1.107.0-rc.1`). Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
+The mapping works <SinceVersion v="1.107.0" />, first in `v1.107.0-rc.1`. Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
 
 | OpenAI voice | Gemini voice |
 |--------------|--------------|

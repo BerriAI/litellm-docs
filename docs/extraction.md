@@ -2,7 +2,7 @@
 
 Extraction models read a text, and optionally images, and fill in the typed fields you name: a piece of text, a date, a number with a unit, a list, or an estimate with percentiles. Answers come with confidence scores or percentiles, and an answer's `value` is null when the input does not determine it. LiteLLM serves them on `POST /v1/extraction`, with `/extraction` as an alias.
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|

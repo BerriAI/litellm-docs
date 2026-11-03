@@ -198,9 +198,9 @@ curl http://localhost:4000/v1/messages \
 ## Real Example
 
 Check out the full Anthropic adapter:
-- [transformation.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/transformation.py)
-- [handler.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/handler.py)
-- [streaming_iterator.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/streaming_iterator.py)
+- [transformation.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/transformation.py)
+- [handler.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/handler.py)
+- [streaming_iterator.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/streaming_iterator.py)
 
 ## That's it
 
