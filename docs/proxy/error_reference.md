@@ -134,7 +134,7 @@ The gateway returns the status code of the underlying failure rather than collap
 | 499 | Client | The client disconnected and the upstream call was cancelled | N/A |
 | 500 | Either | Gateway: an unhandled internal error. Provider: a provider-side error, including a network failure reaching the provider, which surfaces as `InternalServerError ... Connection error.` | Yes, with backoff |
 | 503 | Provider | The provider reported itself unavailable or overloaded | Yes, with backoff |
-| 529 | Provider | Only on the Anthropic-shaped routes (`/v1/messages`, `/v1/messages/count_tokens`): the 503 above or an upstream Anthropic 529, answered as Anthropic's `overloaded_error` because that contract has no 503 | Yes, with backoff |
+| 529 | Provider | Only on the Anthropic-shaped routes (`/v1/messages`, `/v1/messages/count_tokens`): an upstream Anthropic 529, answered as Anthropic's `overloaded_error`. A 503 on those routes stays 503 | Yes, with backoff |
 
 A note on 500 versus 503. A connection that never reaches the provider (DNS failure, refused connection, wrong `api_base`) is reported as 500 with `Connection error.` in the message, not as 502 or 503. A 503 means the provider answered and told you it was unavailable
 
