@@ -91,7 +91,7 @@ With `auto_register`, the first request carrying a new claim value provisions a 
 
 <SinceVersion v="1.109.0" />
 
-`link_only` and `virtual_key_mapping_skip_allowed_routes_check` are unreleased additions in [LiteLLM PR #49956](https://github.com/BerriAI/litellm/pull/49956). Use a build that includes that change.
+`link_only` and route-independent existing-key selection are unreleased changes in [LiteLLM PR #49956](https://github.com/BerriAI/litellm/pull/49956). Use a build that includes that change.
 
 Use `link_only` when administrators provision keys in advance. Configure `virtual_key_claim_field` to match `user_id_jwt_field` or `user_email_jwt_field`, so the claim identifies the JWT-resolved user. For example, map both the user and the key lookup to `sub`:
 
@@ -105,7 +105,6 @@ general_settings:
     virtual_key_claim_field: sub
     user_id_upsert: false
     unregistered_jwt_client_behavior: link_only
-    virtual_key_mapping_skip_allowed_routes_check: false
 ```
 
 After JWT policy checks, an unmapped identity links to its newest eligible key. If none exists, the request returns 403 with `JWT Key Mapping: No eligible existing virtual key for this identity. Access denied.` No key or mapping is created. Both automatic modes require a database connection.
@@ -118,13 +117,13 @@ Existing-key selection applies to `link_only`, or to `auto_register` with `auto_
 
 The key must belong to the JWT-resolved user and the JWT-resolved team, or have no team if the JWT resolves none. It must never expire, must not be blocked, must not be an Admin UI session key, and must not have `metadata.auto_registered: true`. The newest eligible key by `created_at` wins. Reuse requires `virtual_key_claim_field` to match the configured user ID or email claim field.
 
-By default, the key must also have an empty `allowed_routes` list or include the route group `llm_api_routes`. A key with only specific routes, such as `["/v1/chat/completions"]`, fails this selection check even though it can serve that endpoint.
+`allowed_routes` does not affect selection. A key with only specific routes, such as `["/v1/chat/completions"]`, can be linked. Request-time route, model, budget, and rate-limit checks still apply to the selected key.
 
-Set `virtual_key_mapping_skip_allowed_routes_check: true` to remove this route eligibility check entirely in either automatic mode. Other eligibility checks still apply. This flag changes selection only; request-time route, model, budget, and rate-limit checks still apply to the selected key.
+:::caution Existing-key selection changes on upgrade
 
-:::caution JWTs inherit the selected key's permissions
+Previously, `auto_register_map_existing_key: true` selected only keys with an empty `allowed_routes` list or the `llm_api_routes` group. Selection now includes keys with custom or management routes. For an unmapped identity, a newer route-restricted key can be selected instead of an older unrestricted key, or instead of creating a key. Existing mappings stay unchanged.
 
-The bypass also permits selection of keys with management routes. The JWT can use those existing key permissions, including management routes outside the user's normal role permissions. Enable it only when eligible user-assigned keys are intended to be accessible through JWT authentication.
+JWTs inherit the selected key's existing permissions, including management routes outside the user's normal role permissions. Review eligible user-assigned keys before upgrading, since those permissions become accessible through JWT authentication. A key that excludes inference routes still rejects inference requests after it is linked.
 
 :::
 
