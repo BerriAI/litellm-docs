@@ -247,7 +247,7 @@ function Setup({ provider, onProviderChange }) {
 export default function TokenizeLaunch() {
   const [provider, setProvider] = useState("vllm");
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-full-width>
       <header className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroTop}>

@@ -1,6 +1,31 @@
 # Cloudflare Workers AI
 https://developers.cloudflare.com/workers-ai/models/text-generation/
 
+## Chat and decision model endpoints
+
+Cloudflare Workers AI uses different endpoints for chat completions and decision models:
+
+| Model type | Workers AI endpoint | Request shape |
+| --- | --- | --- |
+| Chat completions | `/ai/v1/chat/completions` | OpenAI-compatible `model` and `messages` |
+| Decisions (Clef) | `/ai/run/{model}` | Native Workers AI `state`, typed `questions`, optional `images` for supported models, and optional [audio and video clips](../decisions.md#audio-and-video-input) for `@cf/cloudflare/clef-omni` |
+
+Both paths follow `https://api.cloudflare.com/client/v4/accounts/{account_id}`.
+
+For chat completions, LiteLLM defaults to an `api_base` ending in `/ai/v1`.
+If you supply a chat `api_base` ending in `/ai/run`, LiteLLM logs a warning and
+rewrites it to `/ai/v1`.
+
+For decision models such as `@cf/cloudflare/clef`, `@cf/cloudflare/clef-flash`,
+and `@cf/cloudflare/clef-omni`, LiteLLM uses the native `/ai/run/{model}` endpoint.
+The `/ai/run` path remains required for these models. Keep a separate
+`api_base` ending in `/ai/run` for decision deployments when configuring it
+explicitly; do not change it to `/ai/v1` to match a chat deployment.
+
+Clef models do not accept chat `messages` through `/ai/v1/chat/completions`.
+Use LiteLLM's decisions API for these models; LiteLLM translates the decision
+request into Cloudflare's native format.
+
 ## API Key
 ```python
 # env variable
@@ -57,4 +82,4 @@ All models listed here https://developers.cloudflare.com/workers-ai/models/text-
 
 ## Clairic extraction
 
-[Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) is Cloudflare's typed extraction model. Call it as `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` with the same `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, on the proxy's `/v1/extraction` route or with `litellm.extraction`. See [/v1/extraction](../extraction.md) for the request and response format, errors and pricing. Available from v1.108.0.
+[Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) is Cloudflare's typed extraction model. Call it as `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` with the same `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, on the proxy's `/v1/extraction` route or with `litellm.extraction`. See [/v1/extraction](../extraction.md) for the request and response format, errors and pricing. <SinceVersion v="1.108.0" />

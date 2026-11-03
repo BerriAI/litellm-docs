@@ -110,6 +110,8 @@ general_settings:
       - cost_breakdown
 ```
 
+An `include` list drops every key it does not name, including keys that only some rows carry, such as `is_silent_experiment` on [mirrored calls](../traffic_mirroring#find-mirrored-calls-in-logs).
+
 When the setting is unset, every key is written, which is the default. Setting both lists, setting neither, naming a key that is not a `LiteLLM_SpendLogs.metadata` field, or using a dotted path such as `usage_object.cache_read_input_tokens` stops the proxy at startup. `status` and `cold_storage_object_key` are always written and cannot be excluded. The setting can also be changed without a restart through `POST /config/field/update` with `config_type: general_settings`, which rejects the same invalid values with a 400
 
 Only the stored row is filtered. Daily spend tables, budgets and logging callbacks still receive every key. The `proxy_server_request` and `response` columns are not affected; `store_prompts_in_spend_logs` keeps controlling those. Rows written before the change keep their metadata until [retention](#automatically-deleting-old-spend-logs) deletes them, and Postgres only returns the disk space after `VACUUM FULL` or `pg_repack`

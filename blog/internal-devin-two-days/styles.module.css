@@ -4,9 +4,9 @@
   --muted: #6b6f8c;
   --line: rgba(18, 20, 43, 0.12);
   position: relative;
-  width: 100vw;
+  container: workstation / inline-size;
+  width: 100%;
   min-height: calc(100svh - var(--ifm-navbar-height));
-  margin-left: calc(50% - 50vw);
   padding: 42px 0 16px;
   color: var(--ink);
 }
@@ -19,8 +19,8 @@
 
 .heading { max-width: 1080px; margin: 0 auto; padding: 0 24px; text-align: center; }
 .date { display: block; margin-bottom: 14px; color: var(--muted); font: 12px/1.4 var(--ifm-font-family-monospace); letter-spacing: 0.18em; text-transform: uppercase; }
-.heading .title { margin: 0 auto !important; max-width: 1040px; color: var(--ink) !important; font-size: clamp(38px, 4.7vw, 76px) !important; line-height: 1.08 !important; font-weight: 500 !important; letter-spacing: -0.035em; text-wrap: balance; }
-.heading .subtitle { margin: 24px 0 0; color: var(--muted); font-size: clamp(15px, 1.7vw, 20px); line-height: 1.5; }
+.heading .title { margin: 0 auto !important; max-width: 1040px; color: var(--ink) !important; font-size: clamp(30px, 4.7cqw, 76px) !important; line-height: 1.08 !important; font-weight: 500 !important; letter-spacing: -0.035em; text-wrap: balance; }
+.heading .subtitle { margin: 24px 0 0; color: var(--muted); font-size: clamp(15px, 1.7cqw, 20px); line-height: 1.5; }
 
 .cloudHero { width: 100%; max-width: none; margin: 32px 0 0; display: flex; flex-direction: column; scroll-margin-top: calc(var(--ifm-navbar-height) + 16px); }
 .cloudStage { width: 100%; height: clamp(470px, 65svh, 740px); overflow: hidden; }
@@ -36,7 +36,7 @@
 .contents a:hover { color: var(--ifm-color-primary); }
 .dots { flex: 1; border-bottom: 2px dotted var(--ifm-color-emphasis-400); transform: translateY(-5px); }
 
-@media (max-width: 640px) {
+@container workstation (max-width: 640px) {
   .hero { padding: 32px 0 16px; }
   .heading { padding: 0 20px; }
   .date { font-size: 10px; }

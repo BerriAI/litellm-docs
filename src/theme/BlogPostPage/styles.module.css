@@ -51,11 +51,27 @@
   padding: 6rem 5% 96px;
 }
 
+/* The post is a closed box: top and bottom edges join the side rails, so the
+   rails no longer start and stop in empty space, and a small accent square
+   marks each corner, as on the litellm.ai grid. */
 .post {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
-  border-left: 1px solid var(--lb-line);
-  border-right: 1px solid var(--lb-line);
+  border: 1px solid var(--lb-line);
+}
+
+.post::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--lb-accent), var(--lb-accent)) top left / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) top right / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) bottom left / 5px 5px no-repeat,
+    linear-gradient(var(--lb-accent), var(--lb-accent)) bottom right / 5px 5px no-repeat;
 }
 
 .row {
@@ -377,11 +393,24 @@
 }
 
 .immersive > :global(.markdown) {
-  max-width: 760px;
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0;
   font-size: 18px;
   line-height: 1.8;
+}
+
+/* Reading-width content and explicitly full-width components stay in normal flow.
+   The marketing blog also imports these components into a narrow column. */
+.immersive > :global(.markdown) > :not([aria-hidden='true']) {
+  max-width: min(712px, calc(100% - 48px));
+  margin-inline: auto !important;
+}
+
+.immersive > :global(.markdown) > [data-full-width] {
+  width: 100%;
+  max-width: none;
 }
 
 .immersive > :global(.markdown) h2 {
@@ -402,12 +431,10 @@
 
 .page.immersiveByline {
   position: relative;
-  left: 50%;
-  width: max-content;
-  max-width: calc(100vw - 48px);
-  margin: 0 0 2.5rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 2.5rem;
   padding: 0;
-  transform: translateX(-50%);
   background: transparent;
 }
 
@@ -429,17 +456,22 @@
 }
 
 .immersiveByline .authors {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 24px;
 }
 
 .immersiveByline .author {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
+
+.immersiveByline .author > span { min-width: 0; }
+.immersiveByline .avatar { flex-shrink: 0; }
 
 .immersiveByline .author b,
 .immersiveByline .author small {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .page.horizontalByline {

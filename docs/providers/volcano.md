@@ -152,7 +152,7 @@ curl --location 'http://localhost:4000/embeddings' \
 
 ## Video Generation
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 Doubao-Seedance models run as async tasks on Ark's content generation API. `video_generation` returns a queued video id right away, `video_status` reports `queued`, `in_progress`, `completed`, `failed` or `cancelled`, and `video_content` downloads the mp4 from the signed URL Ark returns once the task succeeds. Downloading before then answers 400.
 

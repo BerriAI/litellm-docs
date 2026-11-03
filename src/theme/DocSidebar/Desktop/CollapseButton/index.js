@@ -4,7 +4,7 @@ import {translate} from '@docusaurus/Translate';
 import SidebarToggleIcon from '@site/src/components/SidebarToggleIcon';
 import styles from './styles.module.css';
 
-// A chevron at the bottom of the sidebar.
+// A chevron above the independently scrolling sidebar menu.
 export default function CollapseButton({onClick, className}) {
   const label = translate({
     id: 'theme.docs.sidebar.collapseButtonTitle',

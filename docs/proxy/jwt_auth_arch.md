@@ -60,7 +60,7 @@ model_list:
     - model_name: anthropic-claude
       litellm_params:
         model: {{anthropic}}
-    - model_name: openai-gpt-4o
+    - model_name: openai-{{openai_large}}
       litellm_params:
         model: {{openai_large}}
 ```
@@ -84,7 +84,7 @@ model_list:
     - model_name: anthropic-claude
       litellm_params:
         model: {{anthropic}}
-    - model_name: openai-gpt-4o
+    - model_name: openai-{{openai_large}}
       litellm_params:
         model: {{openai_large}}
 ```

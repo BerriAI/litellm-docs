@@ -151,6 +151,12 @@ test('rendered docs preserve actual heading anchors, code, and exclude page furn
   assert.doesNotMatch(JSON.stringify(sections), /Secret nav|Footer noise|Copy/);
   assert.deepEqual(extractSections('<meta name="robots" content="noindex">' + html, '/docs/private'), []);
 });
+test('version badges reach the index once, standalone or inside prose', () => {
+  const badge = (v) => `<span class="badge_x" data-since-version="${v}" title="Available in LiteLLM v${v} and later">Since v${v}</span>`;
+  const html = `<div class="theme-doc-markdown"><h1>Reasoning</h1>${badge('1.63.0')}<p>Set it to keep IDs out. ${badge('1.87.0')}</p><div role="tabpanel">${badge('1.70.1')}</div></div>`;
+  const [section] = extractSections(html, '/docs/reasoning_content');
+  assert.equal(section.text, 'Available in LiteLLM v1.63.0 and later\n\nSet it to keep IDs out. Since v1.87.0\n\nAvailable in LiteLLM v1.70.1 and later');
+});
 test('rendered Prism line breaks preserve runnable code in retrieved passages', () => {
   const html = '<div class="theme-doc-markdown"><h1>Setup</h1><pre><code><span>general_settings:<br></span><span>  tracing:<br></span><span>    store: clickhouse<br></span></code></pre></div>';
   assert.equal(extractSections(html, '/docs/setup')[0].text, 'general_settings:\n  tracing:\n    store: clickhouse');

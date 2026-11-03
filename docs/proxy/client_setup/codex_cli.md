@@ -8,6 +8,12 @@ import Image from '@theme/IdealImage';
 
 [Codex](https://github.com/openai/codex) reads all of its configuration from `~/.codex/config.toml`. You define LiteLLM as a custom model provider there and register the [MCP gateway](../../mcp.md) in the same file. This is the same config the [Codex surface inside ChatGPT Desktop](./codex_chatgpt_desktop.md) uses, so setting it up once covers both.
 
+:::tip Use your ChatGPT subscription
+
+To keep your own ChatGPT login and send its requests through the gateway, follow [ChatGPT subscription setup](../../tutorials/openai_codex_byok.md). That flow sends a separate LiteLLM key and keeps subscription authentication in Codex.
+
+:::
+
 ## Quick reference
 
 | Setting | Value |

@@ -1099,7 +1099,7 @@ model_list:
     litellm_params:
       model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: gpt-3.5-turbo-testing
+  - model_name: {{openai_small}}-testing
     litellm_params:
       model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
@@ -1112,8 +1112,8 @@ general_settings:
     scope_mappings:
       - scope: litellm.api.consumer
         models: ["anthropic-claude"]
-      - scope: litellm.api.gpt_3_5_turbo
-        models: ["gpt-3.5-turbo-testing"]
+      - scope: litellm.api.openai
+        models: ["{{openai_small}}-testing"]
     enforce_scope_based_access: true # enforce scope-based access control
     enforce_rbac: true # enforces only a Team/User/ProxyAdmin can access the proxy.
 ```
@@ -1129,7 +1129,7 @@ Expected Token:
 
 ```bash
 {
-  "scope": ["litellm.api.consumer", "litellm.api.gpt_3_5_turbo"] # can be a list or a space-separated string
+  "scope": ["litellm.api.consumer", "litellm.api.openai"] # can be a list or a space-separated string
 }
 ```
 
@@ -1140,7 +1140,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer eyJhbGci...' \
 -d '{
-  "model": "gpt-3.5-turbo-testing",
+  "model": "{{openai_small}}-testing",
   "messages": [
     {
       "role": "user",
@@ -1194,7 +1194,7 @@ general_settings:
 **Supported LiteLLM Roles:**
 - `proxy_admin`: Full administrative access
 - `internal_user`: Standard user access
-- `internal_user_view_only`: Read-only access
+- `internal_user_viewer`: Read-only access
 
 #### 3. Example JWT Token
 
@@ -1289,7 +1289,9 @@ curl -X GET 'http://0.0.0.0:4000/user/info?user_id=user-123' \
 -H 'Authorization: Bearer <PROXY_MASTER_KEY>'
 ```
 
-## [BETA] JWT-to-Virtual-Key Mapping
+<a id="beta-jwt-to-virtual-key-mapping"></a>
+
+## JWT-to-Virtual-Key Mapping
 
 Map JWT identities to LiteLLM virtual keys so that JWT-authenticated users get per-user budgets, rate limits, model access controls, and spend tracking.
 
@@ -1410,7 +1412,7 @@ A token whose claim matches a registered agent is bound to that agent and inheri
 
 Every token that carries the configured claim is treated as an agent. Entra puts `azp` on delegated (user) tokens too, so if humans and agents obtain tokens for the same audience, `azp` will bind or reject the human callers as well. In that setup point `agent_id_jwt_field` at a claim that only agent tokens carry, such as an optional claim or a custom claim added through a claims mapping policy on the agents' app registrations, and leave `azp` for a proxy whose JWT callers are all agents.
 
-If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#beta-jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
+If the token also maps to a virtual key through [JWT-to-Virtual-Key Mapping](#jwt-to-virtual-key-mapping), the mapped key's own `agent_id` is used and `agent_id_jwt_field` is not consulted for that request.
 
 ## All JWT Params
 

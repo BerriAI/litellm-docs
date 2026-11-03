@@ -371,11 +371,7 @@ client = openai.OpenAI(
 
 ### Overwrite outgoing `user` with the key hash
 
-:::info
-
-Available in `v1.95.0` and later.
-
-:::
+<SinceVersion v="1.95.0" />
 
 Many providers use the request's end-user identifier (the `user` field) to monitor and detect abuse and to trace activity back to an individual end user, so that one user's misuse is less likely to disrupt access for your whole organization. Because that field is set by the caller, a client can change it to dissociate its activity from a given identity. Turn on `overwrite_user_with_key_hash` when you want the `user` the provider sees to be a stable, tamper-proof identifier tied to the LiteLLM key that made the call, so any provider-side handling keyed on `user` maps back to exactly one key no matter what the client sent.
 
@@ -838,7 +834,7 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 
 ### Let key owners edit their own key budgets
 
-By default any change to `max_budget` or `budget_limits` on `/key/update` needs a proxy admin, team admin, or org admin, and anyone else gets a 403. Set `general_settings.self_serve_budget_policy` to let the person who created a key, and still owns it, change its budget themselves. It applies to `/key/update` from the API and from the Admin UI key edit form, which calls the same route. There is no Admin UI toggle for the setting itself, so set it in `config.yaml` or through `/config/update`.
+By default any change to `max_budget` or `budget_limits` on `/key/update`, or to `budget_duration` on a key with a `max_budget`, needs a proxy admin, team admin, or org admin, and anyone else gets a 403. `budget_duration` counts because a new period moves the key's next spend reset. Set `general_settings.self_serve_budget_policy` to let the person who created a key, and still owns it, change its budget themselves. It applies to `/key/update` from the API and from the Admin UI key edit form, which calls the same route. There is no Admin UI toggle for the setting itself, so set it in `config.yaml` or through `/config/update`.
 
 ```yaml
 general_settings:
@@ -848,11 +844,11 @@ general_settings:
 
 | Value | What the key's owner can change without an admin |
 |-------|---------------------------------------------------|
-| `disabled` (default) | Nothing. Every `max_budget` or `budget_limits` change needs an admin. |
-| `lower_only` | Add budget windows or lower caps. Raising a cap, removing `max_budget`, and dropping or renaming a window still need an admin. |
-| `ceiling` | Everything in `lower_only`, plus raising or removing `max_budget` or `budget_limits`, as long as the owner could have created the key with that budget through `/key/generate`. The `key_generation_settings` role gates apply, a non-admin team member needs the `/key/generate` team member permission, the new budget cannot exceed the caller's own `max_budget` (or `user_max_budget` for a UI session), and the key cannot be left uncapped while `upperbound_key_generate_params.max_budget` is set. |
+| `disabled` (default) | Nothing. Every budget change needs an admin. |
+| `lower_only` | Add budget windows, lower caps, or clear `budget_duration`. Raising a cap, removing `max_budget`, dropping or renaming a window, and setting or changing `budget_duration` still need an admin. |
+| `ceiling` | Everything in `lower_only`, plus raising or removing `max_budget` or `budget_limits`, or setting a new `budget_duration`, as long as the owner could have created the key with that budget through `/key/generate`. The `key_generation_settings` role gates apply, a non-admin team member needs the `/key/generate` team member permission, the new budget cannot exceed the caller's own `max_budget` (or `user_max_budget` for a UI session), and the key cannot be left uncapped while `upperbound_key_generate_params.max_budget` is set. |
 
-The owner is the caller whose `user_id` matches both the key's `user_id` and its `created_by`. A team member still needs the `/key/update` team member permission to edit a team key at all. Whatever the policy, `spend`, `soft_budget`, `max_budget` on a key with a linked `budget_id`, and any key the caller did not create stay admin-only. A value other than the three above logs a warning and behaves as `disabled`.
+The owner is the caller whose `user_id` matches both the key's `user_id` and its `created_by`. A team member still needs the `/key/update` team member permission to edit a team key at all. Whatever the policy, `spend`, `soft_budget`, `budget_id`, `max_budget` or `budget_duration` on a key with a linked `budget_id`, and any key the caller did not create stay admin-only. A value other than the three above logs a warning and behaves as `disabled`.
 
 With `lower_only` on, a key owner can add a tighter 24h window under their existing 7d one:
 

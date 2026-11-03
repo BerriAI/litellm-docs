@@ -152,7 +152,7 @@
 .takeaway p:last-child {
   margin-bottom: 0;
 }
-@media (max-width: 850px) {
+@container tokenize (max-width: 850px) {
   .diagram {
     grid-template-columns: 1fr;
   }
@@ -164,7 +164,7 @@
     margin-top: 18px;
   }
 }
-@media (max-width: 480px) {
+@container tokenize (max-width: 480px) {
   .heading,
   .takeaway {
     padding: 24px 20px;
@@ -180,5 +180,24 @@
   }
   .step {
     padding: 20px;
+  }
+}
+
+@container tokenize (max-width: 360px) {
+  .explainer .vocabulary th,
+  .explainer .vocabulary td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  .explainer .vocabulary th {
+    white-space: normal;
+    letter-spacing: normal;
+  }
+  .ids {
+    font-size: 20px;
+    gap: 2px;
+  }
+  .ids > span[data-selected] {
+    padding: 3px;
   }
 }

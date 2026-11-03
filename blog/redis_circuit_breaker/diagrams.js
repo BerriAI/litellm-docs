@@ -1,12 +1,13 @@
 import React from 'react';
+import styles from './diagrams.module.css';
 
 const s = {
   fig: {margin: '2.5rem 0', fontFamily: 'inherit'},
-  box: {borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', padding: '2rem 2.5rem'},
+  box: {borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', padding: 'clamp(12px, 4%, 40px)', color: '#374151'},
   label: {fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', textAlign: 'center', marginBottom: '1.5rem'},
   caption: {textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12},
   node: (border='#d1d5db', bg='#f9fafb') => ({
-    border: `1px solid ${border}`, borderRadius: 6, padding: '8px 20px',
+    border: `1px solid ${border}`, borderRadius: 6, padding: '8px 16px', maxWidth: '100%', overflowWrap: 'anywhere',
     fontSize: 13, background: bg, display: 'inline-block',
   }),
   arrow: {display: 'flex', flexDirection: 'column', alignItems: 'center'},
@@ -30,7 +31,7 @@ export function CascadeFailure() {
           <div style={s.node()}>Rate limit / cache check</div>
           <div style={{position:'relative', display:'flex', flexDirection:'column', alignItems:'center'}}>
             <SmallArrow color="#f87171"/>
-            <span style={{position:'absolute', left:8, top:4, fontSize:11, color:'#f87171', whiteSpace:'nowrap'}}>hangs 30s per request</span>
+            <span style={{fontSize:11, color:'#b91c1c', textAlign:'center'}}>hangs 30s per request</span>
           </div>
           <div style={s.node('#fca5a5','#fef2f2')}><span style={{color:'#b91c1c', fontWeight:600}}>Redis — degraded, timing out</span></div>
           <SmallArrow color="#fb923c"/>
@@ -67,6 +68,7 @@ export function CircuitBreakerStates() {
     <figure style={s.fig}>
       <div style={s.box}>
         <p style={s.label}>Circuit breaker state machine</p>
+        <div className={styles.scroll} role="region" aria-label="Circuit breaker states, scroll horizontally" tabIndex={0}><div style={{minWidth: 540}}>
         <div style={{display:'flex', justifyContent:'center', alignItems:'flex-start'}}>
           {circle('#1f2937','#111827','CLOSED','normal')}
           {arrow('5 failures')}
@@ -90,6 +92,7 @@ export function CircuitBreakerStates() {
             <span style={{fontSize:10, color:'#ef4444'}}>probe failure → OPEN again</span>
           </div>
         </div>
+        </div></div>
       </div>
     </figure>
   );
@@ -104,7 +107,7 @@ export function CircuitBreakerFlow() {
           <div style={s.node()}>Incoming request</div>
           <SmallArrow />
           <div style={{...s.node('#111827'), border:'2px solid #111827', fontWeight:600}}>Circuit Breaker</div>
-          <div style={{display:'flex', gap:80, marginTop:20, alignItems:'flex-start'}}>
+          <div style={{display:'flex', flexWrap:'wrap', justifyContent:'center', gap:24, marginTop:20, alignItems:'flex-start'}}>
             <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:8}}>
               <SmallArrow />
               <span style={{fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#6b7280', border:'1px solid #e5e7eb', borderRadius:4, padding:'2px 8px'}}>Closed</span>
@@ -137,7 +140,7 @@ export function IncidentTimeline() {
     <figure style={s.fig}>
       <div style={s.box}>
         <p style={s.label}>Redis degrades — before vs. after</p>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:20}}>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap:20}}>
           <div style={{border:'1px solid #e5e7eb', borderRadius:8, padding:20}}>
             <p style={{fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'#9ca3af', marginBottom:16}}>Without circuit breaker</p>
             {row('#f87171','All 100 pods hang for 30s on each auth check')}
