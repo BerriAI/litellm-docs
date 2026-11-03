@@ -1,5 +1,6 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import SinceVersion from '@site/src/components/SinceVersion';
 
 # /v1/messages
 
@@ -452,6 +453,47 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 
 </TabItem>
 </Tabs>
+
+## Message threads (beta)
+
+Anthropic [message threads](https://platform.claude.com/docs/en/build-with-claude/message-threads) keep the conversation on Anthropic's servers between turns. The first request creates the thread with the full prompt, and each later request sends only the new messages plus the `id` of the previous response, so the model starts answering sooner and you stop paying to resend history. <SinceVersion v="1.109.0" />
+
+LiteLLM forwards the `thread` body field on native Anthropic deployments (`anthropic/` and Microsoft Foundry `azure_ai/` Claude deployments), adds the `message-threads-2026-08-12` beta header for you, and returns the response `id` unchanged, so the id a client gets from the proxy is the one it continues from. Streaming works the same way.
+
+Create the thread with the full prompt:
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/messages \
+  -H "x-api-key: sk-1234" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "anthropic/claude-sonnet-4-5",
+    "max_tokens": 1024,
+    "system": "You are a terse assistant.",
+    "messages": [{"role": "user", "content": "My name is Ada."}],
+    "thread": {"type": "create"}
+  }'
+```
+
+Continue it with only the new messages and the `id` of the response you just got. A continue request must not carry `system` or `tools`, since the thread already stores them:
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/messages \
+  -H "x-api-key: sk-1234" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "anthropic/claude-sonnet-4-5",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "What is my name?"}],
+    "thread": {"type": "continue", "previous_message_id": "msg_01XFDUDYJgAACzvnptvVoYEL"}
+  }'
+```
+
+The Anthropic SDK thread helpers (`client.beta.messages.threads` in the Python and TypeScript SDKs) work through the proxy as they do against Anthropic directly. When Anthropic cannot continue a thread it answers a 404 with `error.details.error_code` set to `thread_not_found`, and the proxy relays that status and code, so the helper's replay of the full conversation keeps working.
+
+A deployment without native thread support, which is every translated provider such as `openai/`, Bedrock and Vertex AI, answers a request that carries `thread` with a 400 `thread: message threads are not supported for provider <provider>` before any upstream call. LiteLLM does not drop the field silently, since a continue turn without the stored conversation would answer from the new messages alone.
+
+The set of `anthropic-beta` values is one of the fixed fields of a thread, and Anthropic rejects a turn whose set differs from the create request with `thread_fingerprint_mismatch`. LiteLLM adds some beta headers from the request content, such as tool search and the advisor tool from `tools` and per-turn control from a message's `output_config`, and a continue turn omits `tools`, so when a thread uses one of those features, send its beta header explicitly on every turn.
 
 ## Request Format
 ---
