@@ -363,74 +363,75 @@ html[data-theme='dark'] .lite-footer form [type='submit'] {
   background: #1c31d1;
 }
 
-/* ---------- Dark mode: the palette from before the restyle ----------
-   Light mode keeps the new look. Dark mode goes back to the earlier docs
-   palette: teal accents on the GitHub-style near-black, no blue glow. The
-   restyle's dark variables are remapped here, so every component that reads
-   them follows; the few dark rules with fixed blues are reset below. */
+/* ---------- Dark mode: the logo blue, turned down ----------
+   #0117be is unreadable on a dark page, so text, links and active states use
+   a soft periwinkle from the same hue at low saturation, on a near-black with
+   a faint blue cast. The logo blue itself only appears as one dim glow at the
+   top of the page. The restyle's dark variables are remapped here, so every
+   component that reads them follows; fixed colors are reset below. */
 html[data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --ifm-background-color: #0d1117;
-  --ifm-background-surface-color: #161b22;
+  --ifm-color-primary: #8a98f0;
+  --ifm-color-primary-dark: #7887ea;
+  --ifm-color-primary-darker: #6d7de6;
+  --ifm-color-primary-darkest: #5566dc;
+  --ifm-color-primary-light: #9eaaf3;
+  --ifm-color-primary-lighter: #aeb8f5;
+  --ifm-color-primary-lightest: #bcc5f7;
+  --ifm-background-color: #0b0e17;
+  --ifm-background-surface-color: #131826;
   --ifm-font-color-base: #e3e3e3;
   --ifm-heading-color: #f0f0f0;
   --ifm-toc-border-color: #262c36;
   --ifm-menu-color: #c3c6cc;
   --ifm-menu-color-background-hover: rgba(255, 255, 255, 0.05);
-  --ifm-navbar-background-color: #0d1117;
+  --ifm-navbar-background-color: #0b0e17;
   --docusaurus-highlighted-code-line-bg: rgb(66 66 66 / 35%);
 
-  --aurora-mesh: none;
-  --aurora-nav-bg: rgba(13, 17, 23, 0.85);
+  --aurora-mesh: radial-gradient(46% 520px at 0% -10%, rgba(1, 23, 190, 0.16) 0%, rgba(1, 23, 190, 0) 70%);
+  --aurora-nav-bg: rgba(11, 14, 23, 0.85);
   --aurora-line: rgba(255, 255, 255, 0.08);
   --aurora-line-strong: rgba(255, 255, 255, 0.14);
   --aurora-muted: #a8adb5;
   --aurora-soft: #8b939e;
-  --aurora-tint: rgba(37, 194, 160, 0.1);
-  --aurora-accent-line: rgba(37, 194, 160, 0.35);
-  --aurora-accent-ink: #4fddbf;
-  --aurora-active-bg: rgba(37, 194, 160, 0.1);
-  --aurora-pill-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.25);
-  --aurora-code-bg: #161b22;
-  --aurora-surface: #0d1117;
+  --aurora-tint: rgba(138, 152, 240, 0.1);
+  --aurora-accent-line: rgba(138, 152, 240, 0.35);
+  --aurora-accent-ink: #bcc5f7;
+  --aurora-active-bg: rgba(138, 152, 240, 0.1);
+  --aurora-pill-shadow: inset 0 0 0 1px rgba(138, 152, 240, 0.25);
+  --aurora-code-bg: #131826;
+  --aurora-surface: #0b0e17;
   --aurora-scroll: rgba(255, 255, 255, 0.18);
   --aurora-inline-code-bg: rgba(255, 255, 255, 0.08);
-  --aurora-grad-border: linear-gradient(135deg, rgba(37, 194, 160, 0.3), rgba(37, 194, 160, 0.15));
+  --aurora-grad-border: linear-gradient(135deg, rgba(138, 152, 240, 0.3), rgba(138, 152, 240, 0.15));
   --aurora-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 
-  /* Text on the teal primary */
-  --lite-on-primary: #0d1117;
+  /* Text on the periwinkle primary */
+  --lite-on-primary: #0b0e17;
 }
 html[data-theme='dark'] .theme-admonition.alert--info {
-  --co-bg: rgba(37, 194, 160, 0.07);
-  --co-border: rgba(37, 194, 160, 0.2);
-  --co-title: #4fddbf;
-  --co-accent: #25c2a0;
+  --co-bg: rgba(138, 152, 240, 0.07);
+  --co-border: rgba(138, 152, 240, 0.2);
+  --co-title: #bcc5f7;
+  --co-accent: #8a98f0;
 }
 html[data-theme='dark'] .enterprise-compare-head span:last-child,
 html[data-theme='dark'] .enterprise-compare span:last-child {
-  color: #4fddbf;
+  color: #bcc5f7;
 }
 html[data-theme='dark'] .footer,
 html[data-theme='dark'] .lite-footer {
-  background: #161b22;
+  background: #131826;
 }
 html[data-theme='dark'] .lite-footer form [type='submit'] {
-  background: #25c2a0;
-  color: #0d1117 !important;
+  background: #8a98f0;
+  color: #0b0e17 !important;
 }
 html[data-theme='dark'] .lite-footer form [type='submit']:hover:not(:disabled) {
-  background: #29d5b0;
+  background: #9eaaf3;
 }
 html[data-theme='dark'] [class*='promoButton_'] {
   background: var(--ifm-color-primary) !important;
-  color: #0d1117 !important;
+  color: #0b0e17 !important;
 }
 
 /* ---------- Dark mode: calm and clearly bounded ----------
@@ -438,12 +439,12 @@ html[data-theme='dark'] [class*='promoButton_'] {
    so sections separate from the page. The navbar is solid rather than a
    blurred glass over the content, and cards no longer lift on hover. */
 html[data-theme='dark'] {
-  --aurora-code-bg: #161b22;
+  --aurora-code-bg: #131826;
   --aurora-line: rgba(255, 255, 255, 0.13);
   --aurora-line-strong: rgba(255, 255, 255, 0.2);
-  --ifm-toc-border-color: #30363d;
-  --ifm-color-emphasis-200: #30363d;
-  --ifm-color-emphasis-300: #3d444d;
+  --ifm-toc-border-color: #272d42;
+  --ifm-color-emphasis-200: #272d42;
+  --ifm-color-emphasis-300: #343b55;
 }
 html[data-theme='dark'] .lite-cardgrid,
 html[data-theme='dark'] [class*='grid_']:has(> a[class*='card_']),
@@ -451,19 +452,19 @@ html[data-theme='dark'] section.row:has(> article > a.card),
 html[data-theme='dark'] details,
 html[data-theme='dark'] .tabs-container > div,
 html[data-theme='dark'] [class*='promoCard_'] {
-  background-color: #161b22 !important;
+  background-color: #131826 !important;
 }
 html[data-theme='dark'] .theme-admonition.alert {
   border: 1px solid var(--co-border, rgba(255, 255, 255, 0.13));
 }
 html[data-theme='dark'] :is(.markdown, [class*='mdxPageWrapper'] article) table {
-  background: #161b22;
+  background: #131826;
 }
 html[data-theme='dark'] .navbar {
-  background-color: #0d1117 !important;
+  background-color: #0b0e17 !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
-  border-bottom-color: #30363d;
+  border-bottom-color: #272d42;
 }
 html[data-theme='dark'] .contact-card:hover,
 html[data-theme='dark'] article a.card:hover,
