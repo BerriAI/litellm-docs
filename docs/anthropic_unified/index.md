@@ -464,7 +464,7 @@ Create the thread with the full prompt:
 
 ```bash
 curl -X POST http://0.0.0.0:4000/v1/messages \
-  -H "x-api-key: sk-1234" \
+  -H "x-api-key: $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
     "model": "anthropic/claude-sonnet-4-5",
@@ -479,7 +479,7 @@ Continue it with only the new messages and the `id` of the response you just got
 
 ```bash
 curl -X POST http://0.0.0.0:4000/v1/messages \
-  -H "x-api-key: sk-1234" \
+  -H "x-api-key: $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
     "model": "anthropic/claude-sonnet-4-5",
