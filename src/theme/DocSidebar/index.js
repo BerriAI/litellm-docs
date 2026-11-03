@@ -1,9 +1,9 @@
 import React from 'react';
+import clsx from 'clsx';
 import {useThemeConfig} from '@docusaurus/theme-common';
 import DocSidebarDesktop from '@theme/DocSidebar/Desktop';
 import DocSidebarMobile from '@theme/DocSidebar/Mobile';
 import CollapseButton from '@theme/DocSidebar/Desktop/CollapseButton';
-import SearchBar from '@theme/SearchBar';
 import styles from './styles.module.css';
 
 export default function DocSidebar({onCollapse, ...props}) {
@@ -16,16 +16,11 @@ export default function DocSidebar({onCollapse, ...props}) {
   return (
     <>
       <div className={styles.sidebarDesktop}>
-        <div className={styles.sidebarContainer}>
-          <div className={styles.searchBarSection}>
-            <div className={styles.searchBarInner}>
-              <SearchBar />
-            </div>
-          </div>
+        <div className={clsx(styles.sidebarContainer, props.isHidden && styles.sidebarContainerHidden)}>
+          {hideable && <CollapseButton onClick={onCollapse} />}
           <div className={styles.sidebarScroll}>
             <DocSidebarDesktop {...props} />
           </div>
-          {hideable && <CollapseButton onClick={onCollapse} />}
         </div>
       </div>
       <div className={styles.sidebarMobile}>

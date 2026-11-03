@@ -135,31 +135,26 @@ Need more provider examples? See the main [Getting Started](/docs/#quick-start) 
 columns={3}
 items={[
 {
-icon: "⚡",
 title: "Stream Responses",
 description: "Receive tokens incrementally with stream=True.",
 to: "/docs/completion/stream",
 },
 {
-icon: "🧰",
 title: "Use Tools",
 description: "Add function calling in a provider-agnostic way.",
 to: "/docs/completion/function_call",
 },
 {
-icon: "📦",
 title: "Return JSON",
 description: "Constrain responses to structured JSON output.",
 to: "/docs/completion/json_mode",
 },
 {
-icon: "🔀",
 title: "Add Routing",
 description: "Use retries, fallbacks, and load balancing in app code.",
 to: "/docs/routing",
 },
 {
-icon: "🌐",
 title: "Choose A Provider",
 description: "Find provider-specific auth, model naming, and params.",
 to: "/docs/providers",
@@ -171,4 +166,4 @@ to: "/docs/providers",
 
 Use LiteLLM Gateway if you need centralized auth, virtual keys, spend tracking, shared logging, or one OpenAI-compatible endpoint for multiple apps.
 
-[Go to Gateway Quickstart →](/docs/learn/gateway_quickstart)
+[Go to Gateway Quickstart →](/docs/proxy/docker_quick_start)

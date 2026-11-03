@@ -34,7 +34,7 @@ A workspace or unified URL without a `model` answers 400 before any call is made
 
 ## Authentication
 
-The agent's own credential wins over a client `Authorization` header. The order is the minted OAuth token, then the agent's `api_key` (a personal access token), then the `DATABRICKS_API_KEY` environment variable, then an OAuth M2M token minted from `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`. A client `Authorization` header is used only when the agent has none of these.
+The agent's own credential wins over a client `Authorization` header. The order is the minted OAuth token, then the agent's `api_key` (a personal access token), then an OAuth M2M token minted from the `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` environment variables, then the `DATABRICKS_API_KEY` environment variable. A client `Authorization` header is used only when the agent has none of these.
 
 ### OAuth M2M (recommended)
 
@@ -48,7 +48,7 @@ Set `api_key` to a PAT, or set `DATABRICKS_API_KEY` in the proxy's environment. 
 
 ### Environment service principal
 
-When the proxy's environment sets `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`, a `databricks_agent` with no `api_key` mints an OAuth M2M token from them on each call, the same way the `databricks` model provider does. The token endpoint is the `DATABRICKS_HOST` workspace when set, else the `api_base` origin. An App `api_base` with no `DATABRICKS_HOST` answers 400 naming `DATABRICKS_HOST`.
+When the proxy's environment sets `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`, a `databricks_agent` with no `api_key` mints an OAuth M2M token from them, the same way the `databricks` model provider does, even when `DATABRICKS_API_KEY` is also set. The token is cached per workspace until shortly before it expires. The token endpoint is the `DATABRICKS_HOST` workspace when set, else the `api_base` origin. An App `api_base` with no `DATABRICKS_HOST` answers 400 naming `DATABRICKS_HOST`.
 
 ## Register the agent
 
@@ -155,7 +155,9 @@ curl http://localhost:4000/a2a/dbx-serving \
 
 ## Request parameters
 
-`custom_inputs`, `context`, and `databricks_options` pass through to the agent as sent. Other OpenAI parameters such as `temperature` answer 400 unless `drop_params` is set, in which case they are dropped.
+`custom_inputs`, `context`, `databricks_options`, `temperature`, `top_p`, and `user` pass through to the agent as sent, and `max_tokens` or `max_completion_tokens` is sent as `max_output_tokens`. Other OpenAI parameters answer 400 unless `drop_params` is set, in which case they are dropped.
+
+When the agent itself sets `custom_inputs` or `extra_body`, the agent's keys win over the caller's key by key, and the caller's other keys still reach the agent. A caller's `extra_body` cannot set `model` or `input`, which answer 400 unless `drop_params` is set. Client `X-LiteLLM-*` headers are never forwarded to the agent.
 
 Messages are sent as text. Image, file, and audio content parts, assistant `tool_calls`, and `tool` or `function` messages answer 400 naming them. Under `drop_params` they are dropped, and a message with nothing left is left out of the request.
 

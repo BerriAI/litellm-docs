@@ -1,5 +1,6 @@
 ---
-title: "v1.86.4 - Azure AD, Batch Auth & Passthrough Backports"
+title: "LiteLLM v1.86.4 - Azure AD, Batch Auth & Passthrough Backports"
+description: "Fixes Azure AD token refresh, batch and video model routing and org-scoped team key creation. Strips effort settings for Vertex Claude models."
 slug: "v1-86-4"
 date: 2026-06-03T20:10:47
 authors:

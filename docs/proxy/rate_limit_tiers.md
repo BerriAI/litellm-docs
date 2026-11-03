@@ -1,4 +1,4 @@
-# ✨ Budget / Rate Limit Tiers
+# Budget / Rate Limit Tiers
 
 Define tiers with rate limits. Assign them to keys. 
 
@@ -45,7 +45,7 @@ Expected Response:
 ## 3. Check if budget is enforced on key 
 
 ```bash
-# Authorization: 👈 KEY from step 2.
+# Authorization: KEY from step 2.
 curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer sk-...' \

@@ -1,5 +1,6 @@
 ---
-title: "v1.83.3-stable - MCP Toolsets & Skills Marketplace"
+title: "LiteLLM v1.83.3-stable - MCP Toolsets & Skills Marketplace"
+description: "Adds MCP Toolsets, a Skills Marketplace for Claude Code skills and guardrail fallbacks through on_error settings."
 slug: "v1-83-3-stable"
 date: 2026-04-04T00:00:00
 authors:

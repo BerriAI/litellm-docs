@@ -1,3 +1,7 @@
+---
+sidebar_label: "Custom Formats (Adapters)"
+---
+
 # Call any LiteLLM model in your custom format
 
 Use this to call any LiteLLM supported `.completion()` model, in your custom format. Useful if you have a custom API and want to support any LiteLLM supported model.
@@ -194,9 +198,9 @@ curl http://localhost:4000/v1/messages \
 ## Real Example
 
 Check out the full Anthropic adapter:
-- [transformation.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/transformation.py)
-- [handler.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/handler.py)
-- [streaming_iterator.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/experimental_pass_through/adapters/streaming_iterator.py)
+- [transformation.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/transformation.py)
+- [handler.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/handler.py)
+- [streaming_iterator.py](https://github.com/BerriAI/litellm/blob/main/litellm/llms/anthropic/messages/adapters/streaming_iterator.py)
 
 ## That's it
 

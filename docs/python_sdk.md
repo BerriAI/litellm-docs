@@ -47,6 +47,7 @@ To use a different provider, change the model name and the API key. The code for
 - **One interface.** Each provider uses the same `completion()` function and the same parameters.
 - **One output format.** Each response has the OpenAI format, for all providers.
 - **Exception mapping.** The SDK changes provider errors into the OpenAI exception types. Your code that catches OpenAI exceptions also catches the errors of each provider.
+- **Auto routing.** Build an [Autorouter in Python](/docs/autorouter_sdk) to choose a model for each request based on its complexity.
 - **Routing.** The [Router](/docs/routing) gives you retries, fallbacks, and load balancing across deployments.
 - **Callbacks.** Send logs and costs to Langfuse, MLflow, Helicone, and other tools with one line of code.
 
@@ -78,6 +79,14 @@ For all the endpoints that LiteLLM supports, refer to [Supported Endpoints](/doc
 | Add retries, fallbacks, and load balancing | [Router](/docs/routing) |
 | Cache responses | [Caching](/docs/caching/all_caches) |
 | Run coding agents from Python | [Agent harnesses](/docs/harness) |
+
+## Threads and concurrency
+
+The SDK is not thread-safe. Settings such as `litellm.api_key`, `litellm.callbacks`, `litellm.cache`, and the logging setup are global to the process, and the SDK does not lock them.
+
+Free-threaded (no-GIL) Python builds are not supported.
+
+To send many requests at the same time, use the async functions, such as `acompletion()`, on one event loop. You can also send the requests to an [AI Gateway](/docs/simple_proxy).
 
 ## SDK or AI Gateway
 

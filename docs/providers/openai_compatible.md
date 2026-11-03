@@ -149,5 +149,5 @@ model_list:
       model: openai/google/gemma
       api_base: http://my-custom-base
       api_key: "" 
-      supports_system_message: False # 👈 KEY CHANGE
+      supports_system_message: False # KEY CHANGE
 ```

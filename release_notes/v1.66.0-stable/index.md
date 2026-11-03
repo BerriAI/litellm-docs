@@ -1,5 +1,6 @@
 ---
-title: v1.66.0-stable - Realtime API Cost Tracking
+title: "LiteLLM v1.66.0-stable - Realtime API Cost Tracking"
+description: "Adds cost tracking for the Realtime API, Microsoft Entra ID group auto-sync and xai/grok-3 support. Also fixes two CVE security issues."
 slug: v1.66.0-stable
 date: 2025-04-12T10:00:00
 authors:

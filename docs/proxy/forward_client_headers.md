@@ -63,7 +63,9 @@ general_settings:
 
 ## Forward LLM Provider Authentication Headers
 
-**New in v1.82+**: By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
+<SinceVersion v="1.82.0" />
+
+By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
 
 ### Configuration
 
@@ -72,7 +74,7 @@ Add `forward_llm_provider_auth_headers: true` to your `general_settings`:
 ```yaml
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Enable BYOK
+  forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
 ### Which Headers Are Forwarded
@@ -218,7 +220,7 @@ general_settings:
 # BYOK enabled - auth headers ARE forwarded
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Opt-in required
+  forward_llm_provider_auth_headers: true  # Opt-in required
 ```
 
 ## Enable for a Model Group
@@ -285,7 +287,7 @@ When `add_user_information_to_llm_headers` is enabled, LiteLLM adds:
 
 ## Security Considerations
 
-⚠️ **Important Security Notes:**
+**Important Security Notes:**
 
 1. **Sensitive Data**: Only enable header forwarding for trusted model groups, as headers may contain sensitive information
 2. **API Keys**: Never include API keys or secrets in forwarded headers
@@ -340,7 +342,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
 ```yaml
 model_list:
   # Fixed model with header forwarding
-  - model_name: byok-fixed-gpt-4o-mini
+  - model_name: byok-fixed-{{openai_small}}
     litellm_params:
       model: openai/{{openai_small}}
       api_base: "https://your-openai-endpoint.com"
@@ -354,7 +356,7 @@ model_list:
       api_key: "your-api-key"
       
   # Standard model without header forwarding
-  - model_name: standard-gpt-4o
+  - model_name: standard-{{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
       api_key: "your-api-key"
@@ -365,9 +367,9 @@ litellm_settings:
   
   model_group_settings:
     forward_client_headers_to_llm_api:
-      - byok-fixed-gpt-4o-mini
+      - byok-fixed-{{openai_small}}
       - byok-wildcard/*
-      # Note: standard-gpt-4o is NOT included, so no headers forwarded
+      # Note: standard-{{openai_large}} is NOT included, so no headers forwarded
 
 general_settings:
   # Enable OpenAI organization header forwarding (optional)
@@ -389,6 +391,10 @@ To test if headers are being forwarded:
 1. **Check Model Name**: Ensure the model name in your request matches the configuration
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### Provider Errors
 

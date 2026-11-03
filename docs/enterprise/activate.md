@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM Enterprise is a license key for the gateway image that you run now. The key enables the Enterprise features. You do not install a different image, and you do not migrate data.
 
-The license key is a JWT. LiteLLM gives you the key when you buy a license or start a [30-day trial](https://www.litellm.ai/enterprise#trial).
+The gateway first checks the license key's signature offline with a public key that ships in the image. A key that does not pass that check, such as an older key, is then checked with the LiteLLM license server. LiteLLM gives you the key when you buy a license or start a [30-day trial](https://www.litellm.ai/enterprise#trial).
 
 ## Set the license key
 
@@ -87,7 +87,7 @@ The [full feature list](../enterprise.md#full-feature-list) on the Overview page
 Some features have special conditions:
 
 - SSO for the Admin UI is free for up to 5 users. For more users, you must have a license. Refer to [SSO for the Admin UI](../proxy/admin_ui_sso.md).
-- Audit logs are on by default when the gateway has a license. Refer to [Audit logs](../proxy/multiple_admins.md).
+- Audit logs are on by default when the gateway has a license. Refer to [Audit logs](../proxy/audit_logs.md).
 - Some guardrail integrations need a license. Refer to [Which guardrails need a license?](../enterprise.md#guardrails-oss-vs-enterprise).
 - Pages with a **Free Enterprise feature** note do not need a license. Examples are [managed files](../proxy/litellm_managed_files.md) and [managed batches](../proxy/managed_batches.md).
 - [Billable request metering](../proxy/billing_metrics.md) needs the license key and the metering credentials from your LiteLLM onboarding.

@@ -12,7 +12,7 @@
 .hero { margin-bottom: 30px; }
 .hero h1 { margin: 0 0 8px; font-size: 44px !important; font-weight: 650 !important; letter-spacing: -0.04em; }
 .hero .tagline { margin: 0 0 26px; color: var(--ifm-color-emphasis-700); font-size: 20px; line-height: 1.5; }
-.workflow { container-type: inline-size; margin: 0; border: 1px solid var(--ifm-color-emphasis-300); border-radius: 16px; overflow: hidden; }
+.workflow { container-type: inline-size; width: 100%; max-width: 760px; margin: 0 auto; border: 1px solid var(--ifm-color-emphasis-300); border-radius: 16px; overflow: hidden; }
 .heroFrame { display: block; width: 100%; aspect-ratio: 1200 / 620; border: 0; background: #fbf9f5; }
 .heroCaption { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-top: 1px solid var(--ifm-color-emphasis-200); color: var(--ifm-color-emphasis-700); font-size: 12px; }
 .motionToggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; padding: 5px 8px; color: var(--ifm-font-color-base); font: inherit; background: var(--ifm-background-color); border: 1px solid var(--ifm-color-emphasis-300); border-radius: 6px; cursor: pointer; }
@@ -77,7 +77,7 @@
   .setupCallout { flex-direction: column; align-items: flex-start; padding: 24px; }
 }
 @container (max-width: 599px) {
-  .heroFrame { aspect-ratio: auto; height: 560px; }
+  .heroFrame { aspect-ratio: auto; height: 480px; }
   .heroCaption { align-items: flex-start; font-size: 11px; padding: 12px; gap: 8px; }
 }
 @media (max-width: 600px) {

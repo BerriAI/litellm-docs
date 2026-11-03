@@ -1,5 +1,6 @@
 ---
-title: "v1.101.2 - Bedrock Invoke Streaming & End-User Budget Resets"
+title: "LiteLLM v1.101.2 fixes Bedrock Invoke streams and end-user budget resets"
+description: "Fixes silent Bedrock Invoke /v1/messages streams in Claude Code and end-user budget resets for shared budgets with more than 32,700 customers."
 slug: "v1-101-2"
 date: 2026-09-24T00:17:20
 authors:

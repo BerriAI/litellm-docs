@@ -32,11 +32,17 @@ If you observe gradual memory growth under sustained load, recycle each worker a
 
 ```shell
 # CLI
-CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1", "--max_requests_before_restart", "10000"]
+CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "2", "--max_requests_before_restart", "10000", "--max_requests_before_restart_jitter", "1000"]
 
 # or ENV (for deployment manifests / containers)
 export MAX_REQUESTS_BEFORE_RESTART=10000
 ```
+
+:::warning
+
+Only use `--max_requests_before_restart` with two or more workers. With `--num_workers 1` there is no other worker to keep serving, so hitting the limit takes the whole pod out of service: Uvicorn exits the process with code 0 and the container restarts, and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup when the flag is set with a single worker. Every HTTP request counts toward the limit, health probes included, so two probes every 15 seconds use up 11,520 requests a day on their own. With one worker per pod, rely on Kubernetes replacing pods instead.
+
+:::
 
 :::tip
 
@@ -60,7 +66,7 @@ CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers"
 
 A restart is "hitless" when in-flight requests finish before the process exits, so no client sees a dropped connection. Two cases matter in production:
 
-**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). With one worker per pod, recycling briefly reduces that pod's capacity, which is why we recommend scaling horizontally so the load balancer can route around it.
+**Worker recycling (from `--max_requests_before_restart`).** Both servers stop accepting new connections on the recycled worker and let outstanding requests drain before it exits, then a replacement worker starts. Gunicorn additionally guarantees in-flight requests up to its [`graceful_timeout`](https://gunicorn.org/reference/settings/#graceful_timeout) (30s by default) on [`SIGTERM`](https://gunicorn.org/signals/). This only holds with two or more workers, where the other workers keep serving while one is replaced. With one worker per pod, recycling takes the pod out of service instead of reducing its capacity, so do not use `--max_requests_before_restart` there (see [Recycle workers](#recycle-workers)).
 
 **Rolling deploys and pod restarts (Kubernetes).** Make restarts hitless at the orchestration layer rather than relying on the server alone:
 
@@ -128,16 +134,37 @@ docker run \
 
 ## Outbound HTTP/2 to providers
 
-Available from v1.103.0.
+<SinceVersion v="1.103.0" />
 
-The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
+The server flags above only affect the hop from your clients to LiteLLM. Calls from LiteLLM to LLM providers use HTTP/1.1 by default because the default aiohttp transport has no HTTP/2 client. The one exception is [Vertex AI Search vector store search](#vertex-ai-search-vector-stores). This covers calls through LiteLLM's own HTTP client. Calls LiteLLM makes through a provider SDK, such as the `google-cloud-aiplatform` and Vertex AI speech clients over gRPC or the AWS CRT client for Bedrock realtime, use the protocol that SDK picks, and `http2` does not change it. Set `http2: true` under `litellm_settings` (or the `LITELLM_HTTP2` environment variable) to have LiteLLM negotiate HTTP/2 with providers over TLS; upstreams that do not offer `h2` via ALPN fall back to HTTP/1.1 automatically, and plain `http://` upstreams stay on HTTP/1.1.
 
 ```yaml
 litellm_settings:
   http2: true
 ```
 
-Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2. Deployments on the `aiohttp_openai/` provider always use aiohttp and stay on HTTP/1.1; LiteLLM logs a warning if the flag is on for such a request.
+Enabling this routes provider traffic through httpx instead of aiohttp, which was chosen as the default for its higher HTTP/1.1 throughput. Load test with the flag on before enabling it fleet-wide. Clients you pass in yourself through `litellm.client_session` or `litellm.aclient_session` are used as is and are not switched to HTTP/2. Deployments on the `aiohttp_openai/` provider always use aiohttp and stay on HTTP/1.1; LiteLLM logs a warning if the flag is on for such a request. With `http2` true, synchronous calls through LiteLLM's HTTP client that run in several threads at once share one HTTP/2 connection and can fail, so use the async methods for concurrent calls.
+
+### Vertex AI Search vector stores
+
+<SinceVersion v="1.109.0" />
+
+Searches on a `vertex_ai/search_api` vector store negotiate HTTP/2 by default, through the proxy and through `litellm.vector_stores.asearch` in the SDK, so a burst of searches shares a few Google connections per worker instead of opening one connection per search. The synchronous `litellm.vector_stores.search` stays on HTTP/1.1 unless `http2` is true. With `http2` true, synchronous searches sent from several threads at once can fail like any other synchronous call, so use `asearch` for concurrent searches.
+
+With the default settings (`http2` unset and the aiohttp transport on), these searches go through httpx but keep some of the aiohttp pool settings. LiteLLM opens one more connection for every 100 searches in flight, up to one connection per 100 of `AIOHTTP_CONNECTOR_LIMIT`, rounded up, which is 10 connections at the default of 1000, and `AIOHTTP_CONNECTOR_LIMIT=0` removes the cap. Each connection runs at most 100 searches at once, and past that cap a new search waits inside LiteLLM for a free slot on an open connection. That wait has no timeout, and the search's own `timeout` does not count it. So here the limit caps connections, not searches in flight, and a limit of 50 still runs up to 100 searches at once on one connection. `AIOHTTP_KEEPALIVE_TIMEOUT` and `DISABLE_AIOHTTP_TRUST_ENV` also apply, while `AIOHTTP_CONNECTOR_LIMIT_PER_HOST`, `AIOHTTP_TTL_DNS_CACHE` and the `AIOHTTP_SO_KEEPALIVE` settings do not.
+
+With `http2` true or `DISABLE_AIOHTTP_TRANSPORT=True`, these searches use the httpx default pool limits like every other provider on httpx, so none of the `AIOHTTP_*` settings apply and the searches in a worker share one connection, so past 100 searches in flight the rest wait inside LiteLLM for a free slot, with no timeout on that wait.
+
+If Google closes a connection with an HTTP/2 GOAWAY while a search is in flight on it, LiteLLM retries that search once and logs `Vector store search connection was closed by an HTTP/2 GOAWAY, retrying once`. Google may have already run the first attempt, so that search can count as two queries.
+
+To keep these searches on HTTP/1.1, set `http2: false` under `litellm_settings`, `LITELLM_HTTP2=False` (`0`, `no` and `off` also work), or `litellm.http2 = False` in the SDK. This turns HTTP/2 off for every provider call through LiteLLM's HTTP client, Vertex AI Search included. A true value in the setting or the env var wins over a false one in the other, so remove `LITELLM_HTTP2=True` before you set `http2: false`.
+
+```yaml
+litellm_settings:
+  http2: false
+```
+
+In the SDK, a search that passes its own `ssl.SSLContext` as `ssl_verify` stays on HTTP/1.1 while `http2` is unset, so LiteLLM leaves the ALPN protocols on that context alone. With `http2` true, LiteLLM sets that context to offer `h2`.
 
 ## Granian ASGI server [Beta]
 

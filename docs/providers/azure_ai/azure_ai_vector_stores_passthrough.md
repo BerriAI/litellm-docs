@@ -94,7 +94,7 @@ import requests
 import json
 
 # ----------------------------
-# 🔐 CONFIGURATION
+# CONFIGURATION
 # ----------------------------
 # Azure OpenAI (for embeddings)
 AZURE_OPENAI_ENDPOINT = "http://0.0.0.0:4000"
@@ -119,7 +119,7 @@ documents = [
 
 
 # ----------------------------
-# 📋 STEP 0 — Create Index Schema
+# STEP 0 — Create Index Schema
 # ----------------------------
 def delete_index_if_exists():
     """Delete the index if it exists"""
@@ -129,13 +129,13 @@ def delete_index_if_exists():
     response = requests.delete(index_url, headers=headers)
 
     if response.status_code == 204:
-        print(f"🗑️  Deleted existing index '{INDEX_NAME}'")
+        print(f"Deleted existing index '{INDEX_NAME}'")
         return True
     elif response.status_code == 404:
-        print(f"ℹ️  Index '{INDEX_NAME}' does not exist yet")
+        print(f"Index '{INDEX_NAME}' does not exist yet")
         return False
     else:
-        print(f"⚠️  Delete response: {response.status_code}")
+        print(f"Delete response: {response.status_code}")
         print(f"    Message: {response.text}")
         return False
 
@@ -198,7 +198,7 @@ def create_index():
 
 
 # Delete and recreate the index with correct schema
-print("🔄 Setting up Azure AI Search index...")
+print("Setting up Azure AI Search index...")
 delete_index_if_exists()
 if not create_index():
     print("❌ Could not create index. Exiting.")
@@ -206,7 +206,7 @@ if not create_index():
 
 
 # ----------------------------
-# 🧠 STEP 1 — Generate Embeddings
+# STEP 1 — Generate Embeddings
 # ----------------------------
 def get_embedding(text: str):
     url = f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/{EMBEDDING_DEPLOYMENT_NAME}/embeddings?api-version=2024-10-21"
@@ -225,7 +225,7 @@ for doc in documents:
     print(f"✅ Embedded doc {doc['id']} (vector length: {len(doc['contentVector'])})")
 
 # ----------------------------
-# 📤 STEP 2 — Upload to Azure AI Search
+# STEP 2 — Upload to Azure AI Search
 # ----------------------------
 upload_url = f"{AZURE_AI_SEARCH_ENDPOINT}/indexes/{INDEX_NAME}/docs/index?api-version=2024-07-01"
 headers = {"Content-Type": "application/json", "api-key": SEARCH_API_KEY}
@@ -245,7 +245,7 @@ payload = {
 response = requests.post(upload_url, headers=headers, data=json.dumps(payload))
 
 # ----------------------------
-# 🧾 RESULT
+# RESULT
 # ----------------------------
 if response.status_code == 200:
     print("✅ Documents uploaded successfully.")
@@ -264,7 +264,7 @@ import requests
 import json
 
 # ----------------------------
-# 🔐 CONFIGURATION
+# CONFIGURATION
 # ----------------------------
 # Azure OpenAI (for embeddings)
 AZURE_OPENAI_ENDPOINT = "http://0.0.0.0:4000"
@@ -278,7 +278,7 @@ INDEX_NAME = "dall-e-4"
 
 
 # ----------------------------
-# 🧠 Generate Query Embedding
+# Generate Query Embedding
 # ----------------------------
 def get_embedding(text: str):
     """Generate embedding for the query text"""
@@ -293,7 +293,7 @@ def get_embedding(text: str):
 
 
 # ----------------------------
-# 🔍 Vector Search Function
+# Vector Search Function
 # ----------------------------
 def search_knowledge_base(query: str, top_k: int = 3):
     """
@@ -306,7 +306,7 @@ def search_knowledge_base(query: str, top_k: int = 3):
     Returns:
         List of search results with content and scores
     """
-    print(f"🔍 Searching for: '{query}'")
+    print(f"Searching for: '{query}'")
 
     # Step 1: Generate embedding for the query
     print("   Generating query embedding...")
@@ -343,7 +343,7 @@ def search_knowledge_base(query: str, top_k: int = 3):
 
 
 # ----------------------------
-# 📊 Display Results
+# Display Results
 # ----------------------------
 def display_results(results):
     """Pretty print the search results"""
@@ -355,7 +355,7 @@ def display_results(results):
     print("=" * 80)
 
     for i, result in enumerate(results, 1):
-        print(f"\n📄 Result #{i}")
+        print(f"\n Result #{i}")
         print(f"   ID: {result.get('id', 'N/A')}")
         print(f"   Score: {result.get('@search.score', 'N/A')}")
         print(f"   Content: {result.get('content', 'N/A')}")
@@ -363,7 +363,7 @@ def display_results(results):
 
 
 # ----------------------------
-# 🎯 MAIN - Example Queries
+# MAIN - Example Queries
 # ----------------------------
 if __name__ == "__main__":
     # Example 1: Search for refund policy

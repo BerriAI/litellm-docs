@@ -21,6 +21,12 @@ Track, debug, and analyze LLM calls with observability platforms.
 columns={3}
 items={[
   {
+    icon: <Logo src="/img/hex/hex-logo-blue.svg" />,
+    title: "Hex",
+    description: "Analyze daily team costs in Hex, then set budgets and routing in LiteLLM.",
+    to: "/blog/hex-litellm-roi",
+  },
+  {
     icon: <Logo src="/img/integrations/langfuse.png" />,
     title: "Langfuse",
     description: "LLM observability and analytics.",

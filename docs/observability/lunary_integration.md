@@ -41,7 +41,7 @@ litellm.failure_callback = ["lunary"]
 
 response = completion(
   model="{{openai_large}}",
-  messages=[{"role": "user", "content": "Hi there 👋"}],
+  messages=[{"role": "user", "content": "Hi there "}],
   user="ishaan_litellm"
 )
 ```
@@ -175,6 +175,6 @@ You can find more details about the different ways of making requests to the Lit
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

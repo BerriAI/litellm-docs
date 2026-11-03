@@ -1,5 +1,6 @@
 ---
-title: "v1.85.7 - Stream Cost Recovery & Cache-Control Cap"
+title: "LiteLLM v1.85.7 - Stream Cost Recovery & Cache-Control Cap"
+description: "Recovers cost for interrupted Anthropic streams and caps cache_control injection at 4 blocks. Updates dependencies with known CVEs."
 slug: "v1-85-7"
 date: 2026-06-24T04:58:06
 authors:

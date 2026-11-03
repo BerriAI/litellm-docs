@@ -135,7 +135,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 </Tabs>
 
-## 5. ✨ Control Guardrails per Project (API Key)
+## 5. Control Guardrails per Project (API Key)
 
 <EnterpriseFeature />
 

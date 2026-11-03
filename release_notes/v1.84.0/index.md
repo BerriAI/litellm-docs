@@ -1,5 +1,6 @@
 ---
-title: "v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+title: "LiteLLM v1.84.0 - Reliability hardening + multi-pod budget accuracy"
+description: "Makes pass-through endpoints require auth by default and adds Routing Groups for per-model strategies. Also improves multi-pod budget accuracy."
 slug: "v1-84-0"
 date: 2026-05-14T00:00:00
 authors:

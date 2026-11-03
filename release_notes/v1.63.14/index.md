@@ -1,5 +1,6 @@
 ---
-title: v1.63.14-stable
+title: "LiteLLM v1.63.14-stable"
+description: "Adds Bedrock application inference profiles, Ollama calls on /v1/completions and streaming guardrails over websockets. Also speeds up routing."
 slug: v1.63.14-stable
 date: 2025-03-22T10:00:00
 authors:

@@ -19,7 +19,7 @@ If you don't want to call a real LLM API endpoint, you can setup a fake openai s
 
 Let's hit the router with 600 requests per minute. 
 
-Copy this script 👇. Save it as `test_loadtest_router.py` AND run it with `python3 test_loadtest_router.py`
+Copy this script. Save it as `test_loadtest_router.py` AND run it with `python3 test_loadtest_router.py`
 
 
 ```python
@@ -139,7 +139,7 @@ model_list:
 router_settings:
   num_retries: 0
   enable_pre_call_checks: true
-  redis_host: os.environ/REDIS_HOST ## 👈 IMPORTANT! Setup the proxy w/ redis
+  redis_host: os.environ/REDIS_HOST ## IMPORTANT! Setup the proxy w/ redis
   redis_password: os.environ/REDIS_PASSWORD
   redis_port: os.environ/REDIS_PORT
   routing_strategy: simple-shuffle # recommended for best performance
@@ -165,7 +165,7 @@ litellm --config /path/to/config.yaml --port 4001
 
 Let's hit the proxy with 600 requests per minute. 
 
-Copy this script 👇. Save it as `test_loadtest_proxy.py` AND run it with `python3 test_loadtest_proxy.py`
+Copy this script. Save it as `test_loadtest_proxy.py` AND run it with `python3 test_loadtest_proxy.py`
 
 ```python
 from openai import AsyncOpenAI, AsyncAzureOpenAI

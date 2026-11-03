@@ -3,7 +3,7 @@
 | Feature | Description | Comments |
 | --- | --- | --- |
 | Proxy | ✅ |  |
-| SDK | ⌛️ | Experimental access via `litellm._arealtime`. |
+| SDK | | Experimental access via `litellm._arealtime`. |
 
 
 ## Proxy Usage

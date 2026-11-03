@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# ✨ SSO for Admin UI
+# SSO for Admin UI
 
 <EnterpriseFeature feature="SSO">From v1.76.0, SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
@@ -554,6 +554,8 @@ PROXY_BASE_URL=https://mydomain.com
 ### Fallback Login
 
 If you need to access the UI via username/password when SSO is on navigate to `/fallback/login`. This route will allow you to sign in with your username/password credentials.
+
+This also works when `disable_env_credential_login` is on, for any database user with a password. To keep a shared admin account for SSO outages, see [Keep a break-glass admin account for SSO outages](./ui.md#keep-a-break-glass-admin-account-for-sso-outages).
 
 <Image img={require('../../img/fallback_login.png')} />
 

@@ -1,5 +1,6 @@
 ---
-title: "v1.88.1 - Dependency Bumps"
+title: "LiteLLM v1.88.1 - Dependency Bumps"
+description: "Bumps PyJWT to 2.13.0 and the ws override to 8.20.1 to clear dependency advisories on the 1.88 line. The release contains no other code changes."
 slug: "v1-88-1"
 date: 2026-06-08T17:23:56
 authors:

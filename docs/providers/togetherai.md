@@ -97,7 +97,7 @@ completion(model="together_ai/togethercomputer/Llama-2-7B-32K-Instruct", message
 
 ### Using another model
 
-You can create a custom prompt template on LiteLLM (and we [welcome PRs](https://github.com/BerriAI/litellm) to add them to the main repo 🤗)
+You can create a custom prompt template on LiteLLM (and we [welcome PRs](https://github.com/BerriAI/litellm) to add them to the main repo)
 
 Let's make one for `OpenAssistant/llama2-70b-oasst-sft-v10`!
 

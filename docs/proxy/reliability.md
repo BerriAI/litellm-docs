@@ -14,6 +14,7 @@ keywords:
     backup model,
     cross-provider failover,
   ]
+sidebar_label: "Fallbacks"
 ---
 
 import Image from '@theme/IdealImage';
@@ -25,7 +26,7 @@ import TabItem from '@theme/TabItem';
 Fallbacks are how LiteLLM does automatic **failover**. If a call fails after num_retries, LiteLLM falls back to another model group, so a failing model or provider automatically fails over to a healthy backup. If you are looking for "provider failover" or "model failover", this is the page. 
 
 - Quick Start [load balancing](./load_balancing.md)
-- Quick Start [client side fallbacks](#client-side-fallbacks)
+- Quick Start [client side fallbacks](./client_side_fallbacks.md)
 
 
 Fallbacks are typically done from one `model_name` to another `model_name`. 
@@ -66,7 +67,7 @@ router = Router(
       }
     }
   ],
-  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # 👈 KEY CHANGE
+  fallbacks=[{"{{openai_small}}": ["{{openai_large}}"]}] # KEY CHANGE
 )
 
 ```
@@ -145,7 +146,7 @@ The mock-testing flags are deprecated for Proxy requests. To validate Proxy fall
 
 ### Explanation
 
-Fallbacks are done in-order - ["gpt-4o-mini", "gpt-4o", "gpt-4.1"], will do 'gpt-4o-mini' first, then 'gpt-4o', etc.
+Fallbacks are done in-order - `["{{openai_small}}", "{{openai_large}}", "{{anthropic}}"]`, will do `{{openai_small}}` first, then `{{openai_large}}`, etc.
 
 You can also set [`default_fallbacks`](#default-fallbacks), in case a specific model group is misconfigured / bad.
 
@@ -158,270 +159,7 @@ A fallback to a deployment on another provider, or on another API key, cannot de
 
 ## Client Side Fallbacks
 
-Set fallbacks in the `.completion()` call for SDK and client-side for proxy. 
-
-In this request the following will occur:
-1. The request to `model="zephyr-beta"` will fail
-2. litellm proxy will loop through all the model_groups specified in `fallbacks=["{{openai_small}}"]`
-3. The request to `model="{{openai_small}}"` will succeed and the client making the request will get a response from gpt-5.6-luna 
-
-👉 Key Change: `"fallbacks": ["{{openai_small}}"]`
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```shell
-curl --location 'http://0.0.0.0:4000/chat/completions' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "model": "zephyr-beta",
-    "messages": [
-        {
-        "role": "user",
-        "content": "what llm are you"
-        }
-    ],
-    "fallbacks": ["{{openai_small}}"]
-}'
-```
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-        "fallbacks": ["{{openai_small}}"]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-</TabItem>
-
-</Tabs>
-
-### Control Fallback Prompts  
-
-Pass in messages/temperature/etc. per model in fallback (works for embedding/image generation/etc. as well).
-
-Key Change:
-
-```
-fallbacks = [
-  {
-    "model": <model_name>,
-    "messages": <model-specific-messages>
-    ... # any other model-specific parameters
-  }
-]
-```
-
-<Tabs>
-<TabItem value="sdk" label="SDK">
-
-```python
-from litellm import Router
-
-router = Router(model_list=[...]) # defined in Step 1.
-
-resp = router.completion(
-    model="{{openai_small}}",
-    messages=[{"role": "user", "content": "Hey, how's it going?"}],
-    mock_testing_fallbacks=True, # 👈 trigger fallbacks
-    fallbacks=[
-        {
-            "model": "{{anthropic}}",
-            "messages": [{"role": "user", "content": "What is LiteLLM?"}],
-        }
-    ],
-)
-
-print(resp)
-```
-
-</TabItem>
-<TabItem value="proxy" label="PROXY">
-
-<Tabs>
-<TabItem value="openai" label="OpenAI Python v1.0.0+">
-
-```python
-import openai
-client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
-)
-
-response = client.chat.completions.create(
-    model="zephyr-beta",
-    messages = [
-        {
-            "role": "user",
-            "content": "this is a test request, write a short poem"
-        }
-    ],
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-print(response)
-```
-</TabItem>
-
-<TabItem value="Curl" label="Curl Request">
-
-```bash
-curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "model": "{{openai_small}}",
-    "messages": [
-      {
-        "role": "user",
-        "content": [
-          {
-            "type": "text",
-            "text": "Hi, how are you ?"
-          }
-        ]
-      }
-    ],
-    "fallbacks": [{
-        "model": "{{anthropic}}",
-        "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-    }]
-}'
-```
-
-</TabItem>
-<TabItem value="langchain" label="Langchain">
-
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-import os 
-
-os.environ["OPENAI_API_KEY"] = "anything"
-
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000",
-    model="zephyr-beta",
-    extra_body={
-      "fallbacks": [{
-          "model": "{{anthropic}}",
-          "messages": [{"role": "user", "content": "What is LiteLLM?"}]
-      }]
-    }
-)
-
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
-
-print(response)
-```
-
-</TabItem>
-
-</Tabs>
-
-</TabItem>
-</Tabs>
+To set fallbacks per request from the client or the Python SDK, see [Client-Side Fallbacks](./client_side_fallbacks.md).
 
 ## Content Policy Violation Fallback
 
@@ -456,7 +194,7 @@ router = Router(
       },
     },
   ],
-  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  content_policy_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # context_window_fallbacks=[..], # [OPTIONAL]
 )
@@ -469,7 +207,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -520,7 +258,7 @@ router = Router(
       },
     },
   ],
-  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # 👈 KEY CHANGE
+  context_window_fallbacks=[{"{{anthropic}}": ["my-fallback-model"]}], # KEY CHANGE
   # fallbacks=[..], # [OPTIONAL]
   # content_policy_fallbacks=[..], # [OPTIONAL]
 )
@@ -533,7 +271,7 @@ response = router.completion(
 </TabItem>
 <TabItem value="proxy" label="PROXY">
 
-In your proxy config.yaml just add this line 👇
+In your proxy config.yaml just add this line
 
 ```yaml
 router_settings:
@@ -591,8 +329,10 @@ litellm_settings:
   num_retries: 3 # retry call 3 times on each model_name (e.g. zephyr-beta)
   request_timeout: 10 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
   fallbacks: [{"zephyr-beta": ["{{openai_small}}"]}] # fallback to {{openai_small}} if call fails num_retries 
-  allowed_fails: 3 # cooldown model if it fails > 1 call in a minute. 
-  cooldown_time: 30 # how long to cooldown model if fails/min > allowed_fails
+
+router_settings:
+  allowed_fails: 3 # cooldown a deployment once it fails more than 3 calls within cooldown_time
+  cooldown_time: 30 # (in seconds) how long a deployment stays in cooldown
 ```
 
 ### Fallback to Specific Model ID
@@ -608,7 +348,7 @@ model_list:
     litellm_params:
       model: openai/{{openai_large}}
     model_info:
-      id: my-specific-model-id # 👈 KEY CHANGE
+      id: my-specific-model-id # KEY CHANGE
   - model_name: {{openai_large}}
     litellm_params:
       model: azure/chatgpt-v-2
@@ -690,6 +430,52 @@ FROM "LiteLLM_SpendLogs";
 
 Both keys are set by the proxy and overwrite any client-supplied values of the same name. Rows written before this feature read `null` for both keys.
 
+### Context error fallback precedence
+
+After retry handling, a `ContextWindowExceededError` uses the `context_window_fallbacks` chain that matches the requested model group. A matching chain takes priority over later `order` levels and generic `fallbacks`. The same lookup supports wildcard fallback keys.
+
+If no context window rule matches, the router tries the remaining `order` levels in the group, then its generic `fallbacks`. A context window rule for another group does not disable these routes. If a matching context window chain is exhausted, the request returns an error rather than continuing through the original group's order or generic fallback chain. Include every desired backup in the matching context chain.
+
+| Configuration for the requested group | Recovery after a context error |
+| --- | --- |
+| Matching `context_window_fallbacks` rule | Use that chain before later orders or generic fallbacks |
+| No matching rule, with later `order` levels | Try later orders, then generic fallbacks |
+| No matching rule or later orders | Try generic fallbacks |
+| Context window rule for another group only | Follow this group's order and generic fallback settings |
+
+For example, both deployments named `chat` belong to one group. The second deployment is an ordered backup. The `other` group has its own context fallback, which does not affect requests to `chat`.
+
+```yaml
+model_list:
+  - model_name: chat
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      order: 1
+  - model_name: chat
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+      order: 2
+  - model_name: other
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: large-context
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+router_settings:
+  context_window_fallbacks:
+    - other: [large-context]
+```
+
+If the first `chat` deployment returns a context window error, the router tries its `order: 2` deployment. Adding `- chat: [large-context]` under `context_window_fallbacks` instead sends that error directly to `large-context` after retry handling.
+
+Sibling retries, order failover, and cross-group fallbacks are separate operations. A sibling retry selects another eligible deployment in the current group and order level within the retry budget. Setting `num_retries: 0` disables those retries without disabling order or cross-group failover. Order failover advances to a later order. A context window fallback changes groups. `enable_weighted_failover` remains excluded for context window errors and content policy errors.
+
+These rules apply to errors LiteLLM classifies as `ContextWindowExceededError`, including provider refusals. `enable_pre_call_checks` additionally checks declared input limits before contacting the provider. The existing `max_fallbacks` limit still bounds the chain. A fallback deployment must still accept the prompt and pass access, health, and other routing checks.
+
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
 **Before call is made** check if a call is within model context window with  **`enable_pre_call_checks: true`**.
@@ -732,7 +518,7 @@ For azure deployments, set the base model. Pick the base model from [this list](
 <Tabs>
 <TabItem value="same-group" label="Same Group">
 
-Filter instances of a model (e.g. gpt-4o-mini) with smaller context windows
+Filter instances of a model (e.g. gpt-5.4-mini) with smaller context windows
 
 The model ids in this example are illustrative and kept for their context window sizes.
 
@@ -741,24 +527,29 @@ router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: azure/chatgpt-v-2
-    api_base: os.environ/AZURE_API_BASE
-    api_key: os.environ/AZURE_API_KEY
-    api_version: "2023-07-01-preview"
+      model: azure/chatgpt-v-2
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2023-07-01-preview"
     model_info:
-    base_model: azure/gpt-4.1 # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4.1 # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-4o-mini
+  - model_name: gpt-5.4-mini
     litellm_params:
-    model: gpt-4o-mini
-    api_key: os.environ/OPENAI_API_KEY
+      model: gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -766,18 +557,23 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+The test prompt is about 320,000 tokens, so the Azure deployment needs a tokens-per-minute quota above that. A deployment with a lower quota is rate limited, and the proxy then reports a context window error instead of the rate limit.
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
-text = "What is the meaning of 42?" * 25000
+text = "What is the meaning of 42?" * 40000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-5.4-mini",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -796,22 +592,25 @@ Fallback to larger models if current model is too small.
 The model ids in this example are illustrative and kept for their context window sizes.
 
 ```yaml keep-model-ids
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
 router_settings:
   enable_pre_call_checks: true # 1. Enable pre-call checks
 
 model_list:
-  - model_name: gpt-3.5-turbo-small
+  - model_name: small-model
     litellm_params:
       model: azure/chatgpt-v-2
       api_base: os.environ/AZURE_API_BASE
       api_key: os.environ/AZURE_API_KEY
       api_version: "2023-07-01-preview"
     model_info:
-      base_model: azure/gpt-4o # 2. 👈 (azure-only) SET BASE MODEL
+      base_model: azure/gpt-4o # 2. (azure-only) SET BASE MODEL
 
-  - model_name: gpt-3.5-turbo-large
+  - model_name: large-model
     litellm_params:
-      model: gpt-4.1
+      model: {{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
 
   - model_name: claude-opus
@@ -820,12 +619,14 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  context_window_fallbacks: [{"gpt-3.5-turbo-small": ["gpt-3.5-turbo-large", "claude-opus"]}]
+  context_window_fallbacks: [{"small-model": ["large-model", "claude-opus"]}]
 ```
 
 **2. Start proxy**
 
 ```bash
+export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 litellm --config /path/to/config.yaml
 
 # RUNNING on http://0.0.0.0:4000
@@ -833,10 +634,13 @@ litellm --config /path/to/config.yaml
 
 **3. Test it!**
 
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then run:
+
 ```python keep-model-ids
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key=os.environ["LITELLM_API_KEY"],
     base_url="http://0.0.0.0:4000"
 )
 
@@ -844,7 +648,7 @@ text = "What is the meaning of 42?" * 25000
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="gpt-3.5-turbo-small",
+    model="small-model",
     messages = [
       {"role": "system", "content": text},
       {"role": "user", "content": "Who was Alexander?"},
@@ -864,7 +668,7 @@ Fallback across providers (e.g. from Azure OpenAI to Anthropic) if you hit conte
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -877,7 +681,7 @@ model_list:
         api_key: os.environ/ANTHROPIC_API_KEY
 
 litellm_settings:
-  content_policy_fallbacks: [{"gpt-3.5-turbo-small": ["claude-opus"]}]
+  content_policy_fallbacks: [{"small-model": ["claude-opus"]}]
 ```
 
 
@@ -889,7 +693,7 @@ You can also set default_fallbacks, in case a specific model group is misconfigu
 
 ```yaml keep-model-ids
 model_list:
-    - model_name: gpt-3.5-turbo-small
+    - model_name: small-model
       litellm_params:
         model: azure/chatgpt-v-2
         api_base: os.environ/AZURE_API_BASE
@@ -907,7 +711,7 @@ litellm_settings:
 
 This will default to claude-opus in case any model fails.
 
-A model-specific fallbacks (e.g. `{"gpt-3.5-turbo-small": ["claude-opus"]}`) overrides default fallback.
+A model-specific fallbacks (e.g. `{"small-model": ["claude-opus"]}`) overrides default fallback.
 
 ### EU-Region Filtering (Pre-Call Checks)
 
@@ -930,7 +734,7 @@ model_list:
     api_base: os.environ/AZURE_API_BASE
     api_key: os.environ/AZURE_API_KEY
     api_version: "2023-07-01-preview"
-    region_name: "eu" # 👈 SET EU-REGION
+    region_name: "eu" # SET EU-REGION
 
 - model_name: {{openai_small}}
   litellm_params:
@@ -941,7 +745,7 @@ model_list:
   litellm_params:
     model: vertex_ai/{{gemini_flash}}
     vertex_project: adroit-crow-1234
-    vertex_location: us-east1 # 👈 AUTOMATICALLY INFERS 'region_name'
+    vertex_location: us-east1 # AUTOMATICALLY INFERS 'region_name'
 ```
 
 **2. Start proxy**
@@ -971,6 +775,54 @@ print(response)
 
 print(response.headers.get('x-litellm-model-api-base'))
 ```
+
+### Vision Capability Filtering (Image Requests)
+
+**Before call is made** LiteLLM removes deployments declared text-only from the candidates for a request that carries an image, meaning a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. This runs on by default under every routing strategy and does not need `enable_pre_call_checks: true`.
+
+A deployment is text-only when `model_info.supports_vision: false` is set, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the model name. A deployment with no declaration and no catalog entry stays eligible, so declare `supports_vision: false` on custom text-only deployments. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, which keeps the earlier behavior for groups that only ever served text. The `x-litellm-model-id` response header names the deployment that served, or failed, the request.
+
+**1. Set Config**
+
+The Bedrock gpt-oss deployment below needs no declaration because the model catalog already marks it text-only. The custom deployment does.
+
+```yaml
+model_list:
+  - model_name: mixed
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: mixed
+    litellm_params:
+      model: bedrock/openai.gpt-oss-120b-1:0
+      aws_region_name: us-east-1
+  - model_name: mixed
+    litellm_params:
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
+    model_info:
+      supports_vision: false
+
+router_settings:
+  routing_strategy: latency-based-routing
+```
+
+**2. Test it**
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mixed",
+    "messages": [{"role": "user", "content": [
+      {"type": "text", "text": "What is in this image?"},
+      {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}
+    ]}]
+  }'
+```
+
+The `x-litellm-model-id` header names the `openai/gpt-5.6` deployment every time, while a plain text request can still land on any of the three.
 
 ### Setting Fallbacks for Wildcard Models
 
@@ -1050,9 +902,7 @@ A request for `{{anthropic}}` that fails on `anthropic/*` is retried on `openai/
 
 ### Enforce Key Model Access on Fallbacks
 
-By default a fallback configured in `router_settings` runs for every request, even when the calling key is not allowed to call the fallback model directly. A key limited to the access group of `gpt-5.6` still gets a response from `{{anthropic}}` whenever `gpt-5.6` fails and `{{anthropic}}` is its fallback.
-
-Set `general_settings.enforce_fallback_model_access: true` to apply the same key, team and project model access checks to every fallback target before it is tried. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+The proxy applies the calling key's, team's and project's model access checks to every fallback target before it is tried, so a fallback never serves a model the caller could not call directly. Targets the caller may not use are skipped. When no authorized target remains, the caller gets the primary model's own error. Keys that are allowed to call the fallback model keep falling back as before, and the check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
 
 ```yaml keep-model-ids
 model_list:
@@ -1073,12 +923,24 @@ router_settings:
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  enforce_fallback_model_access: true
 ```
 
-A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. With the flag on, a failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
+A key created with `"models": ["openai-only"]` can call `gpt-5.6` but not `{{anthropic}}`. A failing `gpt-5.6` request from that key returns the OpenAI error instead of a `{{anthropic}}` completion, and the response carries no `x-litellm-attempted-fallbacks` header. A key created with `"models": ["openai-only", "{{anthropic}}"]` still falls back.
 
 Requests that carry no virtual key, such as the proxy's own health checks, are never restricted. If the access lookup itself fails, the fallback is skipped rather than allowed.
+
+Set `general_settings.enforce_fallback_model_access: false` to skip this check, so every configured fallback runs whatever the caller's model access. Fallbacks of a search request are still checked against the key's, team's and user's search tool grants.
+
+```yaml
+general_settings:
+  enforce_fallback_model_access: false
+```
+
+:::warning
+
+Earlier releases ran a fallback even when the caller could not call the fallback model. If your deployment relies on that, grant the callers access to the fallback models or set `enforce_fallback_model_access: false`. Otherwise those requests return the primary model's error after you upgrade.
+
+:::
 
 ### Enforce Budget on Fallbacks
 

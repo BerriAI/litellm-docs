@@ -16,22 +16,137 @@ const sidebars = {
   // // By default, Docusaurus generates a sidebar from the docs folder structure
   integrationsSidebar: [
     { type: "doc", id: "integrations/index" },
-    { type: "doc", id: "integrations/community" },
+    {
+      type: "category",
+      label: "Coding Agents & AI Tools",
+      link: {
+        type: "generated-index",
+        title: "AI Tools",
+        description: "Integrate LiteLLM with AI tools like OpenWebUI, Claude Code, and more",
+        slug: "/ai_tools"
+      },
+      items: [
+        { type: "ref", id: "subscriptions", className: "sidebar-xlink" },
+        {
+          type: "doc",
+          id: "tutorials/openweb_ui",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/openwebui_org_rollout",
+          customProps: { icon: "/img/integrations/openwebui.png" },
+        },
+        {
+          type: "category",
+          label: "Claude Code",
+          customProps: { icon: "/img/integrations/anthropic.png" },
+          items: [
+            "claude_code_compatibility",
+            "tutorials/claude_code_cut_costs",
+            "tutorials/claude_code_autorouter",
+            "tutorials/claude_responses_api",
+            "tutorials/claude_code_okta_sso",
+            { type: "ref", id: "tutorials/claude_code_gateway", className: "sidebar-xlink" },
+            "tutorials/claude_code_max_subscription",
+            "tutorials/claude_code_byok",
+            "tutorials/claude_code_customer_tracking",
+            "tutorials/claude_code_budget_statusline",
+            "tutorials/claude_code_prompt_cache_routing",
+            "tutorials/claude_code_websearch",
+            "tutorials/claude_mcp",
+            "tutorials/claude_non_anthropic_models",
+            "tutorials/claude_code_plugin_marketplace",
+            "tutorials/claude_code_beta_headers",
+            "claude_code_context_management",
+            "claude_code_auto_mode",
+          ]
+        },
+        {
+          type: "ref",
+          id: "tutorials/claude_desktop_cowork",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/anthropic.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/opencode_integration",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/opencode.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/openclaw_integration",
+          label: "OpenClaw",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/openclaw.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/cursor_integration",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/cursor.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/github_copilot_integration",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/github-copilot.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/litellm_gemini_cli",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/google.png" },
+        },
+        {
+          type: "ref",
+          id: "tutorials/litellm_qwen_code_cli",
+          className: "sidebar-xlink",
+          customProps: { icon: "/img/integrations/qwen.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/retool_assist",
+          customProps: { icon: "/img/integrations/retool.png" },
+        },
+        {
+          type: "doc",
+          id: "tutorials/cost_tracking_coding",
+          customProps: { icon: "/img/integrations/litellm.png" },
+        },
+        { type: "doc", id: "tutorials/claude_code_skills", label: "Manage LiteLLM with AI Agents", customProps: { icon: "/img/integrations/litellm.png" } },
+      ]
+    },
+    {
+      type: "category",
+      label: "Agent Frameworks & SDKs",
+      link: {
+        type: "generated-index",
+        title: "Agent SDKs",
+        description: "Use LiteLLM with agent frameworks and SDKs",
+        slug: "/agent_sdks"
+      },
+      items: [
+        { type: "doc", id: "tutorials/openai_agents_sdk", customProps: { icon: "/img/integrations/openai.png" } },
+        { type: "doc", id: "tutorials/claude_agent_sdk", customProps: { icon: "/img/integrations/anthropic.png" } },
+        { type: "doc", id: "tutorials/copilotkit_sdk", customProps: { icon: "/img/integrations/copilotkit.png" } },
+        { type: "doc", id: "tutorials/google_adk", customProps: { icon: "/img/integrations/google.png" } },
+        { type: "doc", id: "tutorials/google_genai_sdk", customProps: { icon: "/img/integrations/google.png" } },
+        { type: "doc", id: "tutorials/livekit_xai_realtime", customProps: { icon: "/img/integrations/livekit.png" } },
+        { type: "doc", id: "integrations/letta", customProps: { icon: "/img/integrations/letta.png" } },
+        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM", customProps: { icon: "/img/integrations/scalekit.png" } },
+        { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
+        { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
+        { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
+        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness", className: "sidebar-xlink" },
+      ]
+    },
     {
       type: "category",
       label: "Observability",
       link: { type: "doc", id: "integrations/observability_index" },
       items: [
-        {
-          type: "category",
-          label: "Contributing to Integrations",
-          items: [
-            {
-              type: "autogenerated",
-              dirName: "contribute_integration"
-            }
-          ],
-        },
         {
           type: "category",
           label: "OpenTelemetry",
@@ -76,6 +191,7 @@ const sidebars = {
           items: [
             "observability/azure_sentinel",
             "observability/datadog",
+            "observability/hex",
             { type: "doc", id: "observability/gcs_bucket_integration", className: "sidebar-enterprise" },
             "observability/newrelic",
             "observability/parseable",
@@ -86,21 +202,6 @@ const sidebars = {
             "observability/sumologic_integration",
             "observability/supabase_integration",
             "observability/zerobus",
-          ],
-        },
-        {
-          type: "category",
-          label: "Cost, billing, and usage",
-          items: [
-            "observability/cloudzero",
-            "observability/focus",
-            "observability/greenscale_integration",
-            "observability/lago",
-            "observability/mavvrik",
-            "observability/openmeter",
-            "observability/pointfive",
-            "observability/ramp_integration",
-            "observability/vantage",
           ],
         },
         {
@@ -118,7 +219,31 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "Guardrail Providers",
+      label: "Cost & Billing",
+      items: [
+            "observability/cloudzero",
+            "observability/focus",
+            "observability/greenscale_integration",
+            "observability/lago",
+            "observability/mavvrik",
+            "observability/openmeter",
+            "observability/pointfive",
+            "observability/ramp_integration",
+            "observability/ternary",
+            "observability/vantage",
+        {
+          type: "link",
+          label: "Prompt Compression",
+          href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
+          className: "sidebar-xlink",
+        },
+        { type: "ref", id: "proxy/headroom" },
+      
+      ],
+    },
+    {
+      type: "category",
+      label: "Guardrails",
       link: {
         type: "generated-index",
         title: "Guardrail Providers",
@@ -126,15 +251,6 @@ const sidebars = {
         slug: "/guardrail_providers"
       },
       items: [
-        {
-          type: "category",
-          label: "Contributing to Guardrails",
-          items: [
-            { type: "ref", id: "adding_provider/generic_guardrail_api" },
-            { type: "ref", id: "adding_provider/simple_guardrail_tutorial" },
-            { type: "ref", id: "adding_provider/adding_guardrail_support" },
-          ]
-        },
         {
           type: "ref",
           id: "proxy/guardrails/team_based_guardrails",
@@ -144,7 +260,9 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/qohash_qostodian_nexus", customProps: { icon: "/img/integrations/qohash.png" } },
           "proxy/guardrails/qualifire",
           { type: "doc", id: "proxy/guardrails/aim_security", customProps: { icon: "/img/integrations/aim-security.png" } },
+          "proxy/guardrails/airia",
           "proxy/guardrails/onyx_security",
+          "proxy/guardrails/ovalix",
           { type: "doc", id: "proxy/guardrails/aporia_api", customProps: { icon: "/img/integrations/aporia.png" } },
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
           { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
@@ -183,6 +301,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/javelin", customProps: { icon: "/img/integrations/javelin.png" } },
           { type: "doc", id: "proxy/guardrails/akto", customProps: { icon: "/img/integrations/akto.png" } },
           "proxy/guardrails/vigil_guard",
+          "proxy/guardrails/wingback",
           { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
@@ -203,27 +322,8 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "Cost Optimization",
+      label: "Prompt Management (Beta)",
       items: [
-        {
-          type: "link",
-          label: "Prompt Compression",
-          href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
-        },
-        { type: "ref", id: "proxy/headroom" },
-      ]
-    },
-    {
-      type: "category",
-      label: "[Beta] Prompt Management",
-      items: [
-        {
-          type: "category",
-          label: "Contributing to Prompt Management",
-          items: [
-            "adding_provider/generic_prompt_management_api",
-          ]
-        },
         "proxy/litellm_prompt_management",
         "proxy/custom_prompt_management",
         "proxy/native_litellm_prompt",
@@ -233,144 +333,48 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "AI Tools",
-      link: {
-        type: "generated-index",
-        title: "AI Tools",
-        description: "Integrate LiteLLM with AI tools like OpenWebUI, Claude Code, and more",
-        slug: "/ai_tools"
-      },
+      label: "Build an Integration",
       items: [
+        { type: "doc", id: "integrations/community", label: "Community integrations" },
         {
-          type: "doc",
-          id: "tutorials/openweb_ui",
-          customProps: { icon: "/img/integrations/openwebui.png" },
+          type: "category",
+          label: "Contributing to Integrations",
+          items: [
+            {
+              type: "autogenerated",
+              dirName: "contribute_integration"
+            }
+          ],
         },
         {
           type: "category",
-          label: "Claude Code",
-          customProps: { icon: "/img/integrations/anthropic.png" },
+          label: "Contributing to Guardrails",
           items: [
-            "claude_code_compatibility",
-            "tutorials/claude_code_cut_costs",
-            "tutorials/claude_code_autorouter",
-            "tutorials/claude_responses_api",
-            "tutorials/claude_code_okta_sso",
-            "tutorials/claude_code_gateway",
-            "tutorials/claude_code_max_subscription",
-            "tutorials/claude_code_byok",
-            "tutorials/claude_code_customer_tracking",
-            "tutorials/claude_code_budget_statusline",
-            "tutorials/claude_code_prompt_cache_routing",
-            "tutorials/claude_code_websearch",
-            "tutorials/claude_mcp",
-            "tutorials/claude_non_anthropic_models",
-            "tutorials/claude_code_plugin_marketplace",
-            "tutorials/claude_code_beta_headers",
-            "claude_code_context_management",
+            { type: "ref", id: "adding_provider/generic_guardrail_api" },
+            { type: "ref", id: "adding_provider/simple_guardrail_tutorial" },
+            { type: "ref", id: "adding_provider/adding_guardrail_support" },
           ]
         },
         {
-          type: "doc",
-          id: "tutorials/claude_desktop_cowork",
-          customProps: { icon: "/img/integrations/anthropic.png" },
+          type: "category",
+          label: "Contributing to Prompt Management",
+          items: [
+            "adding_provider/generic_prompt_management_api",
+          ]
         },
-        {
-          type: "doc",
-          id: "tutorials/opencode_integration",
-          customProps: { icon: "/img/integrations/opencode.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/openclaw_integration",
-          customProps: { icon: "/img/integrations/openclaw.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/cursor_integration",
-          customProps: { icon: "/img/integrations/cursor.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/github_copilot_integration",
-          customProps: { icon: "/img/integrations/github-copilot.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/litellm_gemini_cli",
-          customProps: { icon: "/img/integrations/google.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/litellm_qwen_code_cli",
-          customProps: { icon: "/img/integrations/qwen.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/retool_assist",
-          customProps: { icon: "/img/integrations/retool.png" },
-        },
-        {
-          type: "doc",
-          id: "tutorials/cost_tracking_coding",
-          customProps: { icon: "/img/integrations/litellm.png" },
-        }
-      ]
+      ],
     },
-    {
-      type: "category",
-      label: "Agent SDKs",
-      link: {
-        type: "generated-index",
-        title: "Agent SDKs",
-        description: "Use LiteLLM with agent frameworks and SDKs",
-        slug: "/agent_sdks"
-      },
-      items: [
-        { type: "doc", id: "tutorials/openai_agents_sdk", customProps: { icon: "/img/integrations/openai.png" } },
-        { type: "doc", id: "tutorials/claude_agent_sdk", customProps: { icon: "/img/integrations/anthropic.png" } },
-        { type: "doc", id: "tutorials/copilotkit_sdk", customProps: { icon: "/img/integrations/copilotkit.png" } },
-        { type: "doc", id: "tutorials/google_adk", customProps: { icon: "/img/integrations/google.png" } },
-        { type: "doc", id: "tutorials/google_genai_sdk", customProps: { icon: "/img/integrations/google.png" } },
-        { type: "doc", id: "tutorials/livekit_xai_realtime", customProps: { icon: "/img/integrations/livekit.png" } },
-        { type: "doc", id: "integrations/letta", customProps: { icon: "/img/integrations/letta.png" } },
-        { type: "doc", id: "tutorials/scalekit_agentkit", label: "Scalekit with LiteLLM", customProps: { icon: "/img/integrations/scalekit.png" } },
-        { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
-        { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
-        { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness" },
-      ]
-    },
-    {
-      type: "category",
-      label: "Manage with AI Agents",
-      link: {
-        type: "generated-index",
-        title: "Manage with AI Agents",
-        description: "Use AI agents to manage your LiteLLM deployment — create users, teams, keys, models, and more via natural language.",
-        slug: "/manage_with_ai_agents"
-      },
-      items: [
-        { type: "doc", id: "tutorials/claude_code_skills", customProps: { icon: "/img/integrations/litellm.png" } },
-      ]
-    },
-
+    { type: "link", label: "Model Providers", href: "/docs/providers", className: "sidebar-xlink" },
   ],
   // But you can create a sidebar manually
   tutorialSidebar: [
     // ════════════════════════════════════════════════════════════
     // GET STARTED
     // ════════════════════════════════════════════════════════════
-    {
-      type: "category",
-      label: "Get Started",
-      collapsible: false,
-      collapsed: false,
-      items: [
-        { type: "doc", id: "index", label: "Quickstart" },
-        { type: "doc", id: "agent_resources", label: "Agent resources" },
-      ],
-    },
+    { type: "html", value: "Get started", className: "sidebar-caption", defaultStyle: true },
+    { type: "doc", id: "index", label: "Quickstart" },
+    { type: "doc", id: "agent_resources", label: "Agent resources" },
+    { type: "link", label: "LiteLLM Academy", href: "https://www.litellm.ai/course" },
 
     // ════════════════════════════════════════════════════════════
     // AI GATEWAY
@@ -378,20 +382,26 @@ const sidebars = {
     // Deploy → Configuration → Models & Providers → Client Setup → Authentication → Spend & Budgets.
     // Add new pages inside one of these groups, or in the groups after them.
     // ════════════════════════════════════════════════════════════
+    { type: "html", value: "Products", className: "sidebar-caption", defaultStyle: true },
+    // LiteLLM Gateway: the gateway overview heads the four parts of the
+    // gateway, which sit on a rail ("sidebar-rail") below it.
+    { type: "doc", id: "gateway_overview", className: "top-level-doc-item" },
     {
       type: "category",
       label: "AI Gateway",
-      link: { type: "doc", id: "gateway_overview" },
+      className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
+        { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
           label: "Deploy",
           items: [
             "proxy/deploy",
             "proxy/prod",
+            "proxy/upgrade_guide",
             "proxy/health",
             {
               type: "category",
@@ -424,6 +434,7 @@ const sidebars = {
               ],
             },
             "proxy/security_best_practices",
+            "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
             "proxy/rust_gateway",
           ],
@@ -436,6 +447,7 @@ const sidebars = {
             "proxy/config_settings",
             "proxy/config_management",
             "proxy/cli",
+            "guides/security_settings",
           ],
         },
         {
@@ -449,7 +461,6 @@ const sidebars = {
             "proxy/access_groups",
             { type: "doc", id: "proxy/team_model_add", className: "sidebar-enterprise" },
             "proxy/credential_routing",
-            { type: "link", label: "All Providers", href: "/docs/providers" },
           ],
         },
         {
@@ -457,26 +468,116 @@ const sidebars = {
           label: "Client Setup",
           items: [
             "proxy/client_setup/overview",
-            "proxy/client_setup/claude_code",
-            "proxy/client_setup/claude_desktop",
-            "proxy/client_setup/codex_chatgpt_desktop",
-            "proxy/client_setup/codex_cli",
-            "proxy/user_keys",
-            "proxy/request_headers",
-            "proxy/response_headers",
-            "proxy/forward_client_headers",
-            "proxy/clientside_auth",
-            "proxy/model_discovery",
             {
               type: "category",
-              label: "Enterprise sign-in and billing",
+              label: "Claude",
               items: [
-                { type: "ref", id: "tutorials/claude_code_gateway", label: "Claude Code Gateway" },
-                { type: "ref", id: "tutorials/claude_desktop_cowork", label: "Claude Desktop Cowork" },
-                { type: "ref", id: "proxy/cli_sso", label: "CLI SSO" },
-                { type: "ref", id: "tutorials/claude_code_okta_sso", label: "Claude Code Okta SSO" },
-                { type: "ref", id: "tutorials/claude_code_byok", label: "Claude Code BYOK" },
-                { type: "ref", id: "tutorials/claude_code_max_subscription", label: "Claude Code Max Subscription" },
+                {
+                  type: "category",
+                  label: "Desktop & Cowork",
+                  items: [
+                    { type: "doc", id: "tutorials/claude_desktop_cowork", label: "SSO", className: "sidebar-enterprise" },
+                    { type: "doc", id: "proxy/client_setup/claude_desktop", label: "Virtual keys" },
+                  ],
+                },
+                {
+                  type: "category",
+                  label: "Code",
+                  items: [
+                    { type: "doc", id: "tutorials/claude_code_gateway", label: "SSO", className: "sidebar-enterprise" },
+                    { type: "doc", id: "proxy/client_setup/claude_code", label: "Virtual keys" },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "category",
+              label: "Codex",
+              items: [
+                {
+                  type: "category",
+                  label: "Desktop",
+                  items: [
+                    { type: "doc", id: "proxy/client_setup/codex_chatgpt_desktop_sso", label: "SSO", className: "sidebar-enterprise" },
+                    { type: "doc", id: "proxy/client_setup/codex_chatgpt_desktop", label: "Virtual keys" },
+                  ],
+                },
+                {
+                  type: "category",
+                  label: "CLI",
+                  items: [
+                    { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO", className: "sidebar-enterprise" },
+                    { type: "doc", id: "proxy/client_setup/codex_cli", label: "Virtual keys" },
+                    { type: "doc", id: "tutorials/openai_codex_byok", label: "ChatGPT subscription" },
+                    { type: "doc", id: "tutorials/codex_chatgpt_auto_router", label: "ChatGPT subscription with Auto Router" },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "category",
+              label: "Hermes",
+              items: [
+                {
+                  type: "category",
+                  label: "CLI",
+                  items: [
+                    { type: "doc", id: "proxy/client_setup/hermes_sso", label: "SSO", className: "sidebar-enterprise" },
+                    { type: "doc", id: "proxy/client_setup/hermes", label: "Virtual keys" },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "category",
+              label: "Cursor",
+              items: [{ type: "doc", id: "tutorials/cursor_integration", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "Gemini CLI",
+              items: [{ type: "doc", id: "tutorials/litellm_gemini_cli", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "GitHub Copilot",
+              items: [{ type: "doc", id: "tutorials/github_copilot_integration", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "OpenClaw",
+              items: [{ type: "doc", id: "tutorials/openclaw_integration", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "OpenCode",
+              items: [{ type: "doc", id: "tutorials/opencode_integration", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "Qwen Code",
+              items: [{ type: "doc", id: "tutorials/litellm_qwen_code_cli", label: "Setup" }],
+            },
+            {
+              type: "category",
+              label: "Shared configuration",
+              items: [
+                "proxy/user_keys",
+                "proxy/request_headers",
+                "proxy/response_headers",
+                "proxy/forward_client_headers",
+                "proxy/clientside_auth",
+                "proxy/model_discovery",
+              ],
+            },
+            {
+              type: "category",
+              label: "Additional sign-in and billing",
+              items: [
+                { type: "ref", id: "proxy/cli_sso", label: "CLI SSO", className: "sidebar-xlink" },
+                { type: "ref", id: "tutorials/claude_code_okta_sso", label: "Claude Code Okta SSO", className: "sidebar-xlink" },
+                { type: "ref", id: "tutorials/claude_code_byok", label: "Claude Code BYOK", className: "sidebar-xlink" },
+                { type: "ref", id: "tutorials/claude_code_max_subscription", label: "Claude Code Max Subscription", className: "sidebar-xlink" },
               ],
             },
           ],
@@ -485,6 +586,7 @@ const sidebars = {
           type: "category",
           label: "Authentication & Access",
           items: [
+            { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
             "proxy/virtual_keys",
             "proxy/access_control",
             {
@@ -498,11 +600,21 @@ const sidebars = {
                 "proxy/cli_sso",
               ],
             },
+            { type: "html", value: "Advanced", className: "sidebar-group-label", defaultStyle: true },
             { type: "doc", id: "proxy/token_auth", className: "sidebar-enterprise" },
             { type: "doc", id: "proxy/jwt_key_mapping", className: "sidebar-enterprise" },
             { type: "doc", id: "proxy/oauth2", label: "OAuth 2.0 Authentication", className: "sidebar-enterprise" },
             "proxy/jwt_auth_arch",
             "oidc",
+            {
+              type: "category",
+              label: "ID-JAG",
+              items: [
+                { type: "doc", id: "proxy/id_jag/overview", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/id_jag/resource_app", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/id_jag/requesting_app", className: "sidebar-enterprise" },
+              ],
+            },
             {
               type: "doc",
               id: "proxy/identity_provisioning",
@@ -513,19 +625,22 @@ const sidebars = {
             { type: "doc", id: "proxy/ip_address", className: "sidebar-enterprise" },
             { type: "doc", id: "proxy/public_routes", className: "sidebar-enterprise" },
             "proxy/master_key_rotations",
-            { type: "ref", id: "proxy/multiple_admins", label: "Audit Logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
           ],
         },
         {
           type: "category",
           label: "Spend Tracking",
           items: [
+            { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
             "proxy/cost_tracking",
+            "proxy/model_cost_map",
             "proxy/request_tags",
-            "proxy/spend_capture_rate",
             "proxy/billing",
-            { type: "doc", id: "proxy/billing_metrics", className: "sidebar-enterprise" },
             "proxy/custom_pricing",
+            { type: "html", value: "Advanced", className: "sidebar-group-label", defaultStyle: true },
+            "proxy/spend_capture_rate",
+            { type: "doc", id: "proxy/billing_metrics", className: "sidebar-enterprise" },
             "proxy/custom_model_cost_map",
             "proxy/ptu_flat_cost",
             "proxy/pricing_calculator",
@@ -541,10 +656,13 @@ const sidebars = {
           type: "category",
           label: "Budgets & Rate Limits",
           items: [
+            { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
             "proxy/users",
             "proxy/team_budgets",
             { type: "doc", id: "proxy/project_management", className: "sidebar-enterprise" },
             "proxy/customers",
+            { type: "html", value: "Advanced", className: "sidebar-group-label", defaultStyle: true },
+
             { type: "doc", id: "proxy/ui_team_soft_budget_alerts", className: "sidebar-enterprise" },
             "proxy/tag_budgets",
             "proxy/model_access_group_budgets",
@@ -558,12 +676,7 @@ const sidebars = {
         },
         // Enterprise pages live in enterpriseSidebar (the Enterprise tab). This ref is a door into it.
         { type: "ref", id: "enterprise", label: "Enterprise" },
-        {
-          type: "link",
-          label: "Load Balancing, Routing, Fallbacks (Failover)",
-          href: "/docs/routing-load-balancing",
-        },
-        "traffic_mirroring",
+        { type: "html", value: "Cost & performance", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
           label: "Caching",
@@ -581,6 +694,21 @@ const sidebars = {
         },
         {
           type: "category",
+          label: "Cost Optimization",
+          items: [
+            {
+              type: "link",
+              label: "Prompt Compression",
+              href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
+              className: "sidebar-xlink",
+            },
+            "proxy/headroom",
+          ],
+        },
+        "traffic_mirroring",
+        { type: "html", value: "Safety", className: "sidebar-group-label", defaultStyle: true },
+        {
+          type: "category",
           label: "Guardrails",
           items: [
             "proxy/guardrails/quick_start",
@@ -592,8 +720,9 @@ const sidebars = {
             "proxy/guardrails/batch_guardrails",
             {
               type: "link",
-              label: "Providers →",
+              label: "Guardrail Providers",
               href: "/docs/guardrail_providers",
+              className: "sidebar-xlink",
             },
             {
               type: "category",
@@ -616,6 +745,7 @@ const sidebars = {
             "proxy/guardrails/policy_tags",
           ],
         },
+        { type: "html", value: "Observability", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
           label: "Logging, Alerting, Metrics",
@@ -627,23 +757,7 @@ const sidebars = {
             "proxy/email",
           ],
         },
-        {
-          type: "category",
-          label: "Cost Optimization",
-          items: [
-            "proxy/auto_routing",
-            "proxy/auto_routing_semantic",
-            "proxy/auto_routing_benchmark",
-            "adaptive_router",
-            {
-              type: "link",
-              label: "Prompt Compression",
-              href: "/docs/completion/prompt_compression#server-side-callback-loop-v1messages",
-            },
-            "proxy/headroom",
-          ],
-        },
-        "proxy/memory",
+        { type: "html", value: "Manage", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
           label: "Admin UI",
@@ -670,7 +784,7 @@ const sidebars = {
               type: "category",
               label: "Teams & Organizations",
               items: [
-                { type: "ref", id: "proxy/access_control", label: "Role-based Access Controls (RBAC)" },
+                { type: "ref", id: "proxy/access_control", label: "Role-based Access Controls (RBAC)", className: "sidebar-xlink" },
                 "proxy/self_serve",
                 "proxy/public_teams",
                 "proxy/ui_project_management",
@@ -709,7 +823,6 @@ const sidebars = {
             "proxy/liteadmin_slack",
           ],
         },
-        "proxy/management_cli",
         {
           type: "category",
           label: "Create Custom Plugins",
@@ -719,8 +832,11 @@ const sidebars = {
             "proxy/agentic_loop_hook",
             "proxy/rules",
             "proxy/worker_startup_hooks",
+            "extras/creating_adapters",
           ]
         },
+        "proxy/memory",
+        { type: "html", value: "Architecture & help", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
           label: "Architecture",
@@ -742,7 +858,120 @@ const sidebars = {
           label: "Troubleshooting",
           items: ["proxy/debugging", "proxy/error_reference", "proxy/error_diagnosis"],
         },
-      ]
+      ],
+    },
+    {
+      type: "category",
+      label: "MCP Gateway",
+      // Part of the LiteLLM Gateway: the rail ties it to the LiteLLM Gateway item above
+      className: "sidebar-rail",
+      link: { type: "doc", id: "mcp" },
+      items: [
+        { type: "doc", id: "mcp_usage", label: "Quickstart" },
+        { type: "doc", id: "mcp_deployment", label: "Deployment" },
+        {
+          type: "category",
+          label: "MCP Servers",
+          items: [
+            "mcp_servers/index",
+            "mcp_servers/slack",
+            "mcp_servers/atlassian",
+            "mcp_servers/linear",
+            "mcp_servers/microsoft_365",
+            "mcp_openapi",
+            "mcp_toolsets",
+            "mcp_server_submissions",
+          ],
+        },
+        {
+          type: "category",
+          label: "Authentication",
+          items: [
+            "mcp_authentication",
+            "mcp_oauth",
+            "mcp_per_user_auth",
+            "mcp_oauth_passthrough",
+            "mcp_obo_auth",
+            "mcp_id_jag",
+            "mcp_aws_sigv4",
+            "mcp_zero_trust",
+            { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Access Control",
+          items: [
+            "mcp_control",
+            "mcp_grant_access",
+            "mcp_client_allowlist",
+            "mcp_public_internet",
+            "proxy/tool_policies",
+          ],
+        },
+        {
+          type: "category",
+          label: "Features",
+          items: [
+            { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
+            "mcp_cost",
+            "mcp_guardrail",
+            "mcp_tool_search",
+            "mcp_rest_api",
+            { type: "html", value: "Advanced", className: "sidebar-group-label", defaultStyle: true },
+            "mcp_semantic_filter",
+          ],
+        },
+        { type: "doc", id: "mcp_config_reference", label: "Configuration Reference" },
+        { type: "doc", id: "mcp_troubleshoot", label: "Troubleshooting & FAQ" },
+      ],
+    },
+    {
+      type: "category",
+      label: "Agent Gateway",
+      // Part of the LiteLLM Gateway: the rail ties it to the LiteLLM Gateway item above
+      className: "sidebar-rail",
+      link: { type: "doc", id: "a2a" },
+      items: [
+        { type: "doc", id: "a2a_invoking_agents", label: "Quickstart" },
+        { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
+        "a2a_agent_card",
+        "a2a_databricks_agent",
+        "a2a_agent_headers",
+        "a2a_agent_permissions",
+        "a2a_cost_tracking",
+        { type: "html", value: "Advanced", className: "sidebar-group-label", defaultStyle: true },
+        "a2a_iteration_budgets",
+        "a2a_kill_switch",
+        "skills_gateway",
+      ],
+    },
+    {
+      type: "category",
+      label: "Auto Router",
+      // Part of the LiteLLM Gateway: the rail ties it to the LiteLLM Gateway item above
+      className: "sidebar-rail",
+      link: { type: "doc", id: "auto_router/index" },
+      items: [
+        "auto_router/setup",
+        "auto_router/optimize_classifier",
+        "auto_router/decision_classifiers",
+        "auto_router/user_setup",
+        "auto_router/recommended_configurations",
+        "auto_router/benchmarks",
+        "auto_router/prompt_caching",
+        "auto_router/evaluate",
+        "auto_router/telemetry",
+        "auto_router/feature_history",
+        { type: "html", value: "Configuration", className: "sidebar-group-label", defaultStyle: true },
+        "proxy/auto_routing",
+        "proxy/auto_routing_semantic",
+        "proxy/auto_routing_benchmark",
+        "adaptive_router",
+        { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter", className: "sidebar-xlink" },
+        { type: "link", label: "Codex with a ChatGPT subscription", href: "/docs/tutorials/codex_chatgpt_auto_router", className: "sidebar-xlink" },
+        { type: "link", label: "Prompt Cache Routing", href: "/docs/tutorials/claude_code_prompt_cache_routing", className: "sidebar-xlink" },
+      ],
     },
     {
       type: "category",
@@ -781,7 +1010,7 @@ const sidebars = {
               label: "image_generation()",
             },
             {
-              type: "ref",
+              type: "doc",
               id: "completion/prompt_compression",
               label: "compress()",
             },
@@ -796,14 +1025,15 @@ const sidebars = {
               label: "speech()",
             },
             {
-              type: "ref",
+              type: "doc",
               id: "sandbox",
               label: "acode_interpreter_tool()",
             },
             {
               type: "link",
-              label: "All Supported Endpoints →",
+              label: "All Supported Endpoints",
               href: "/docs/supported_endpoints",
+              className: "sidebar-xlink",
             },
           ],
         },
@@ -873,70 +1103,148 @@ const sidebars = {
           ],
         },
         "completion/token_usage",
+        { type: "html", value: "Utilities", className: "sidebar-group-label", defaultStyle: true },
+        {
+          type: "category",
+          label: "Autorouter SDK",
+          link: { type: "doc", id: "autorouter_sdk" },
+          items: [
+            "autorouter_sdk/classifiers",
+            "autorouter_sdk/routing",
+            "autorouter_sdk/evaluation",
+          ],
+        },
+        "completion/message_trimming",
+        "completion/model_alias",
+        "completion/prompt_formatting",
+        "completion/developer_role",
+        { type: "html", value: "Reliability & testing", className: "sidebar-group-label", defaultStyle: true },
+        "completion/reliable_completions",
+        "completion/mock_requests",
         "exception_mapping",
       ],
     },
-    {
-      type: "category",
-      label: "MCP Gateway",
-      link: { type: "doc", id: "mcp" },
-      items: [
-        "mcp_usage",
-        "mcp_config_reference",
-        {
-          type: "category",
-          label: "MCP Server Usage",
-          items: [
-            "mcp_servers/index",
-            "mcp_servers/slack",
-            "mcp_servers/atlassian",
-            "mcp_servers/linear",
-            "mcp_servers/microsoft_365",
-          ],
-        },
-        "mcp_rest_api",
-        "mcp_openapi",
-        "mcp_authentication",
-        "mcp_per_user_auth",
-        "mcp_oauth",
-        "mcp_oauth_passthrough",
-        "mcp_obo_auth",
-        "mcp_id_jag",
-        "mcp_aws_sigv4",
-        "mcp_zero_trust",
-        "mcp_public_internet",
-        "mcp_client_allowlist",
-        "mcp_deployment",
-        "mcp_semantic_filter",
-        "mcp_tool_search",
-        "mcp_control",
-        "mcp_grant_access",
-        "mcp_cost",
-        "mcp_guardrail",
-        "mcp_server_submissions",
-        "mcp_toolsets",
-        "proxy/tool_policies",
-        { type: "doc", id: "auth_overview", label: "Gateway Auth Reference" },
-        "mcp_troubleshoot",
-      ],
-    },
-    {
-      type: "category",
-      label: "Agent Gateway",
-      link: { type: "doc", id: "a2a" },
-      items: [
-        "a2a_agent_card",
-        "a2a_invoking_agents",
-        "a2a_databricks_agent",
-        "a2a_agent_headers",
-        "a2a_cost_tracking",
-        "a2a_agent_permissions",
-        "a2a_iteration_budgets",
-        "a2a_kill_switch",
-        "skills_gateway",
-      ],
-    },
     require('./docs/proxy/lens/sidebar'),
+    { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
+    { type: "doc", id: "guides/index", className: "top-level-doc-item" },
+    { type: "doc", id: "subscriptions", className: "top-level-doc-item" },
+    {
+      type: "category",
+      label: "Routing & Reliability",
+      link: { type: "doc", id: "proxy/load_balancing" },
+      items: [
+        { type: "html", value: "Load balancing", className: "sidebar-group-label", defaultStyle: true },
+        "routing",
+        "proxy/cache_aware_routing",
+        "wildcard_routing",
+        "proxy/health_check_routing",
+        "scheduler",
+        { type: "html", value: "Fallbacks & timeouts", className: "sidebar-group-label", defaultStyle: true },
+        "proxy/reliability",
+        "proxy/client_side_fallbacks",
+        "proxy/timeout",
+        "proxy/fallback_management",
+        { type: "html", value: "Routing rules", className: "sidebar-group-label", defaultStyle: true },
+        "proxy/tag_routing",
+        "proxy/provider_budget_routing",
+        "proxy/keys_teams_router_settings",
+        "proxy/ui/routing_groups",
+        "routing_plugins",
+        "fusion",
+      ],
+    },
+    {
+      type: "category",
+      label: "Requests & Responses",
+      link: {
+        type: "generated-index",
+        title: "Requests & Responses",
+        description: "Streaming, batching, structured outputs, and reasoning.",
+        slug: "/guides/core_request_response_patterns",
+      },
+      items: [
+        "completion/stream",
+        "completion/batching",
+        "completion/json_mode",
+        "reasoning_content",
+      ],
+    },
+    {
+      type: "category",
+      label: "Tool Calling",
+      link: {
+        type: "generated-index",
+        title: "Tool Calling",
+        description: "Function calling, web search and fetch, computer use, code interpreter, and knowledge bases.",
+        slug: "/guides/tools_integrations",
+      },
+      items: [
+        "completion/function_call",
+        "completion/web_search",
+        "integrations/websearch_interception",
+        "completion/web_fetch",
+        "completion/computer_use",
+        "guides/code_interpreter",
+        "completion/anthropic_advisor_tool",
+        "completion/knowledgebase",
+      ],
+    },
+    {
+      type: "category",
+      label: "Multimodal",
+      link: {
+        type: "generated-index",
+        title: "Multimodal",
+        description: "Vision, audio, PDF input, and image generation in chat.",
+        slug: "/guides/multimodal_io",
+      },
+      items: [
+        "completion/vision",
+        "completion/audio",
+        "completion/document_understanding",
+        "completion/image_generation_chat",
+      ],
+    },
+    {
+      type: "category",
+      label: "Prompts & Context",
+      link: {
+        type: "generated-index",
+        title: "Prompts & Context",
+        description: "Prompt caching, assistant prefill, and predicted outputs.",
+        slug: "/guides/prompts_context",
+      },
+      items: [
+        "completion/prompt_caching",
+        "completion/prefix",
+        "completion/predict_outputs",
+      ],
+    },
+    {
+      type: "category",
+      label: "Compatibility",
+      link: {
+        type: "generated-index",
+        title: "Compatibility",
+        description: "Provider-specific params, unsupported params, and message sanitization.",
+        slug: "/guides/compatibility_extensibility",
+      },
+      items: [
+        "completion/provider_specific_params",
+        "completion/drop_params",
+        "completion/message_sanitization",
+      ],
+    },
+    { type: "html", value: "Developer Tools", className: "sidebar-caption", defaultStyle: true },
+    { type: "doc", id: "liteagents", label: "liteagents SDK", className: "top-level-doc-item sidebar-beta" },
+    {
+      type: "category",
+      label: "lite CLI",
+      link: { type: "doc", id: "proxy/management_cli" },
+      items: [
+        { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute", className: "sidebar-preview" },
+      ],
+    },
     {
       type: "category",
       label: "Self-Hosted Coding Agents",
@@ -958,6 +1266,7 @@ const sidebars = {
         },
       ]
     },
+    { type: "html", value: "Reference", className: "sidebar-caption", defaultStyle: true },
     {
       type: "category",
       label: "Supported Endpoints",
@@ -1029,6 +1338,7 @@ const sidebars = {
         { type: "ref", id: "image_generation" },
         "image_variations",
         "videos",
+        "proxy/veo_video_generation",
         {
           type: "category",
           label: "/vector_stores - Vector Stores",
@@ -1054,7 +1364,16 @@ const sidebars = {
         },
         "count_tokens",
         "anthropic_count_tokens",
-        "decisions",
+        "tokenize",
+        {
+          type: "category",
+          label: "/v1/decisions",
+          items: [
+            "decisions",
+            "decisions/benchmark",
+          ]
+        },
+        "extraction",
         "moderation",
         "ocr",
         {
@@ -1071,6 +1390,7 @@ const sidebars = {
             "pass_through/comprehend_medical",
             "pass_through/cursor",
             "pass_through/deepgram_listen_websocket",
+            "pass_through/eu_jev",
             "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
@@ -1101,6 +1421,7 @@ const sidebars = {
         { type: "ref", id: "response_api" },
         "prompt_management",
         "response_api_compact",
+        "response_api_native_passthrough",
         {
           type: "category",
           label: "/search",
@@ -1122,342 +1443,93 @@ const sidebars = {
             "search/agentcore",
             "search/nimble",
             "search/bing_grounding",
+            "search/deepseek",
           ]
         },
         "skills",
 
       ],
     },
-    {
-      type: "category",
-      label: "Providers",
-      link: {
-        type: "generated-index",
-        title: "Providers",
-        description:
-          "Learn how to deploy + call models from different providers on LiteLLM",
-        slug: "/providers",
-      },
-      items: [
-        { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
-        {
-          type: "doc",
-          id: "provider_registration/index",
-          label: "Integrate as a Model Provider",
-        },
-        {
-          type: "doc",
-          id: "contributing/adding_openai_compatible_providers",
-          label: "Add OpenAI-Compatible Provider (JSON)",
-        },
-        {
-          type: "doc",
-          id: "provider_registration/add_model_pricing",
-          label: "Add Model Pricing & Context Window",
-        },
-        {
-          type: "category",
-          label: "OpenAI",
-          items: [
-            "providers/openai",
-            "providers/openai/responses_api",
-            "providers/openai/text_to_speech",
-            "providers/openai/videos",
-            "providers/openai/ultrafast",
-          ]
-        },
-        "providers/text_completion_openai",
-        "providers/openai_compatible",
-        {
-          type: "category",
-          label: "Azure OpenAI",
-          items: [
-            "providers/azure/azure",
-            "providers/azure/azure_responses",
-            "providers/azure/azure_embedding",
-            "providers/azure/azure_speech",
-            "providers/azure/videos",
-          ]
-        },
-        {
-          type: "category",
-          label: "Azure AI",
-          items: [
-            "providers/azure_ai",
-            "providers/azure_ai/azure_model_router",
-            "providers/azure_ai_agents",
-            "providers/azure_ocr",
-            "providers/azure_document_intelligence",
-            "providers/azure_ai_speech",
-            "providers/azure_ai_img",
-            "providers/azure_ai_vector_stores",
-            "providers/azure_ai/azure_ai_vector_stores_passthrough",
-          ]
-        },
-        {
-          type: "category",
-          label: "Vertex AI",
-          items: [
-            "providers/vertex",
-            "providers/vertex_ai/videos",
-            "providers/vertex_partner",
-            "providers/vertex_self_deployed",
-            "providers/vertex_embedding",
-            "providers/vertex_image",
-            "providers/vertex_speech",
-            "providers/vertex_transcription",
-            "providers/vertex_batch",
-            "providers/vertex_ocr",
-            "providers/vertex_ai_agent_engine",
-            "providers/vertex_realtime",
-          ]
-        },
-        {
-          type: "category",
-          label: "Google AI Studio",
-          items: [
-            "providers/gemini",
-            "providers/gemini/videos",
-            "providers/gemini/music",
-            "providers/gemini_file_search",
-            "providers/google_ai_studio/files",
-            "providers/google_ai_studio/image_gen",
-            "providers/google_ai_studio/realtime",
-          ]
-        },
-        "providers/anthropic",
-        "providers/anthropic_tool_search",
-        "providers/anthropic_preserved_thinking",
-        "providers/aws_sagemaker",
-        {
-          type: "category",
-          label: "Bedrock",
-          items: [
-            "providers/bedrock",
-            "providers/bedrock_embedding",
-            "providers/bedrock_imported",
-            "providers/bedrock_image_gen",
-            "providers/bedrock_rerank",
-            "providers/bedrock_agentcore",
-            "providers/bedrock_agents",
-            "providers/bedrock_writer",
-            "providers/bedrock_batches",
-            "providers/bedrock_realtime_with_audio",
-            "providers/aws_polly",
-            "providers/bedrock_vector_store",
-            "providers/bedrock_mantle",
-          ]
-        },
-        "providers/litellm_proxy",
-        "providers/abliteration",
-        "providers/ai21",
-        "providers/aiml",
-        "providers/aleph_alpha",
-        "providers/amazon_nova",
-        "providers/anyscale",
-        "providers/apertis",
-        "providers/baseten",
-        "providers/black_forest_labs",
-        "providers/black_forest_labs_img_edit",
-        "providers/bytez",
-        "providers/cerebras",
-        "providers/chutes",
-        "providers/clarifai",
-        "providers/clf_ai_gateway",
-        "providers/cloudflare_workers",
-        "providers/codestral",
-        "providers/cognition",
-        "providers/cohere",
-        "providers/cometapi",
-        "providers/compactifai",
-        "providers/coralbricks",
-        "providers/crusoe",
-        "providers/custom_llm_server",
-        "providers/dashscope",
-        "providers/databricks",
-        "providers/datarobot",
-        "providers/deepgram",
-        "providers/deepinfra",
-        "providers/deepseek",
-        "providers/docker_model_runner",
-        "providers/edenai",
-        "providers/elevenlabs",
-        "providers/empiriolabs",
-        "providers/fal_ai",
-        "providers/featherless_ai",
-        "providers/fireworks_ai",
-        "providers/friendliai",
-        "providers/galadriel",
-        "providers/github",
-        "providers/github_copilot",
-        "providers/gmi",
-        "providers/chatgpt",
-        "providers/gradient_ai",
-        "providers/groq",
-        "providers/helicone",
-        "providers/heroku",
-        {
-          type: "category",
-          label: "HuggingFace",
-          items: [
-            "providers/huggingface",
-            "providers/huggingface_rerank",
-          ]
-        },
-        "providers/hyperbolic",
-        "providers/inception",
-        "providers/infinity",
-        "providers/jina_ai",
-        "providers/lambda_ai",
-        "providers/langgraph",
-        "providers/lemonade",
-        "providers/llamafile",
-        "providers/llamagate",
-        "providers/lm_studio",
-        "providers/manus",
-        "providers/meta",
-        "providers/meta_llama",
-        "providers/microsoft_365_copilot",
-        "providers/milvus_vector_stores",
-        {
-          type: "category",
-          label: "Mistral AI",
-          items: [
-            "providers/mistral",
-            "providers/mistral_batches",
-          ]
-        },
-        "providers/minimax",
-        "providers/mongodb_vector_stores",
-        "providers/moonshot",
-        "providers/morph",
-        "providers/nadir",
-        "providers/nebius",
-        "providers/nlp_cloud",
-        "providers/nano-gpt",
-        "providers/novita",
-        { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
-        {
-          type: "category",
-          label: "Nvidia NIM",
-          items: [
-            "providers/nvidia_nim",
-            "providers/nvidia_nim_rerank",
-          ]
-        },
-        "providers/nvidia_riva",
-        "providers/oci",
-        "providers/ollama",
-        "providers/openrouter",
-        "providers/sarvam",
-        "providers/ovhcloud",
-        {
-          type: "category",
-          label: "Perplexity AI",
-          items: [
-            "providers/perplexity",
-            "providers/perplexity_embedding",
-          ]
-        },
-        "providers/petals",
-        "providers/poe",
-        "providers/publicai",
-        "providers/predibase",
-        "providers/prism",
-        "providers/pydantic_ai_agent",
-        "providers/qwencloud",
-        "providers/ragflow",
-        "providers/ragflow_vector_store",
-        "providers/recraft",
-        "providers/reka",
-        "providers/replicate",
-        {
-          type: "category",
-          label: "RunwayML",
-          items: [
-            "providers/runwayml/images",
-            "providers/runwayml/videos",
-          ]
-        },
-        "providers/s3_vectors",
-        "providers/sambanova",
-        "providers/sap",
-        "providers/scaledown",
-        "providers/scaleway",
-        "providers/scx_ai",
-        "providers/stability",
-        "providers/synthetic",
-        "providers/snowflake",
-        "providers/tencent",
-        "providers/tensormesh",
-        "providers/togetherai",
-        "providers/topaz",
-        "providers/triton-inference-server",
-        "providers/v0",
-        "providers/valkey_vector_stores",
-        "providers/vercel_ai_gateway",
-        {
-          type: "category",
-          label: "vLLM",
-          items: [
-            "providers/vllm",
-            "providers/vllm_batches",
-          ]
-        },
-        "providers/volcano",
-        "providers/voyage",
-        "providers/wandb_inference",
-        {
-          type: "category",
-          label: "WatsonX",
-          items: [
-            "providers/watsonx/index",
-            "providers/watsonx/audio_transcription",
-          ]
-        },
-        {
-          type: "category",
-          label: "xAI",
-          items: [
-            "providers/xai",
-            "providers/xai_realtime",
-            "providers/xai_batches",
-          ]
-        },
-        "providers/xiaomi_mimo",
-        "providers/xinference",
-        "providers/zai",
-      ],
-    },
+    { type: "link", label: "Model Providers", href: "/docs/providers", className: "sidebar-xlink" },
 
 
+    { type: "html", value: "More", className: "sidebar-caption", defaultStyle: true },
     {
       type: "category",
-      label: "Routing & Load Balancing",
-      link: {
-        type: "generated-index",
-        title: "Routing & Load Balancing",
-        description: "Learn how to load balance, route, and set fallbacks (provider failover) for your LLM requests",
-        slug: "/routing-load-balancing",
-      },
+      label: "Cookbook",
+      link: { type: "doc", id: "tutorials/index" },
       items: [
-        "routing",
-        "fusion",
-        "routing_plugins",
-        { type: "ref", id: "adaptive_router" },
-        "scheduler",
-        { type: "ref", id: "proxy/auto_routing" },
-        { type: "ref", id: "proxy/auto_routing_semantic" },
-        { type: "ref", id: "proxy/auto_routing_benchmark" },
-        "proxy/load_balancing",
-        "proxy/keys_teams_router_settings",
-        "proxy/provider_budget_routing",
-        "proxy/reliability",
-        "proxy/fallback_management",
-        "proxy/tag_routing",
-        "proxy/timeout",
-        "wildcard_routing",
-        "proxy/health_check_routing"
+        {
+          type: "category",
+          label: "Connect apps and providers",
+          link: { type: "generated-index", title: "Connect apps and providers", description: "Install the SDK, set provider keys, and send requests to models from different providers.", slug: "/learn/call-any-model" },
+          items: [
+            "tutorials/installation",
+            "tutorials/first_playground",
+            "tutorials/text_completion",
+            "tutorials/mock_completion",
+            "tutorials/provider_specific_params",
+            "tutorials/gradio_integration",
+            "tutorials/azure_openai",
+            "tutorials/TogetherAI_liteLLM",
+            "tutorials/huggingface_tutorial",
+            "tutorials/huggingface_codellama",
+            "tutorials/finetuned_chat_gpt",
+            "tutorials/oobabooga",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control access",
+          link: { type: "generated-index", title: "Control access", description: "Give access to teams and users, and connect your identity provider.", slug: "/learn/run-the-gateway" },
+          items: [
+            "tutorials/default_team_self_serve",
+            "tutorials/msft_sso",
+            "tutorials/tag_management",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control cost and capacity",
+          link: { type: "generated-index", title: "Control cost and capacity", description: "Add fallbacks, use prompt caching, and send each request to the most suitable model.", slug: "/learn/cost-and-reliability" },
+          items: [
+            "tutorials/model_fallbacks",
+            "tutorials/fallbacks",
+            "tutorials/prompt_caching",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control content",
+          link: { type: "generated-index", title: "Control content", description: "Add guardrails that examine requests and mask personal data before the model receives it.", slug: "/learn/add-safety" },
+          items: [
+            "tutorials/litellm_proxy_aporia",
+            "tutorials/presidio_pii_masking",
+          ],
+        },
+        {
+          type: "category",
+          label: "Connect tools and agents",
+          link: { type: "generated-index", title: "Connect tools and agents", description: "Use LiteLLM with agent frameworks, coding tools, files, and vector stores.", slug: "/learn/agents-and-tools" },
+          items: [
+            "tutorials/file_search_responses_api",
+            "tutorials/mongodb_vector_search",
+            "tutorials/anthropic_file_usage",
+            "tutorials/gemini_realtime_with_audio",
+          ],
+        },
+        {
+          type: "category",
+          label: "See what happened",
+          link: { type: "generated-index", title: "See what happened", description: "Send logs to observability tools and compare models on your own prompts.", slug: "/learn/observe-and-evaluate" },
+          items: [
+            "tutorials/elasticsearch_logging",
+            "tutorials/compare_llms",
+            "tutorials/litellm_Test_Multiple_Providers",
+            "tutorials/eval_suites",
+            "tutorials/lm_evaluation_harness",
+          ],
+        },
       ],
     },
     {
@@ -1491,6 +1563,7 @@ const sidebars = {
         "sdk_custom_pricing",
         "migration",
         { type: "ref", id: "data_security" },
+        "proxy/telemetry",
         { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",
         "migration_policy",
@@ -1502,7 +1575,7 @@ const sidebars = {
         "load_test_rpm",
         {
           type: "category",
-          label: "❤️ 🚅 Projects built on LiteLLM",
+          label: "Projects built on LiteLLM",
           link: {
             type: "generated-index",
             title: "Projects built on LiteLLM",
@@ -1586,7 +1659,7 @@ const enterpriseSidebar = {
     { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
     { type: "html", value: "Features", className: "sidebar-group-label", defaultStyle: true },
     { type: "link", label: "All Enterprise features", href: "/docs/enterprise#full-feature-list" },
-    { type: "doc", id: "proxy/multiple_admins", label: "Audit logs" },
+    { type: "doc", id: "proxy/audit_logs", label: "Audit logs" },
     { type: "html", value: "Security review", className: "sidebar-group-label", defaultStyle: true },
     { type: "doc", id: "enterprise/compliance", label: "Compliance and SOC 2 Type II" },
     { type: "doc", id: "data_security", label: "Data privacy and security" },
@@ -1596,336 +1669,252 @@ const enterpriseSidebar = {
     { type: "html", value: "Support", className: "sidebar-group-label", defaultStyle: true },
     { type: "doc", id: "enterprise/support", label: "Support and SLA" },
     { type: "doc", id: "enterprise/version_support", label: "Version support" },
+    { type: "doc", id: "enterprise/lts_pilot", label: "LTS pilot" },
     { type: "link", label: "Release notes", href: "/release_notes", className: "sidebar-xlink" },
     { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
   ],
 };
 
-const learnSidebar = {
-  learnSidebar: [
-    // ── Landing page ──────────────────────────────────────────────────
-    { type: "doc", id: "learn/index", label: "Learn" },
-    { type: "link", label: "LiteLLM Academy", href: "https://litellm.ai/course" },
-    {
-      type: "category",
-      label: "Start Here",
-      collapsible: true,
-      collapsed: false,
-      items: [
-        { type: "ref", id: "learn/sdk_quickstart" },
-        "learn/gateway_quickstart",
-        { type: "ref", id: "learn/enterprise_quickstart", label: "Enterprise production rollout" },
-      ],
-    },
-    { type: "doc", id: "learn/autorouter_cli", label: "lite autoroute" },
 
-    // ── Guides ────────────────────────────────────────────────────────
-    {
-      type: "category",
-      label: "Guides",
-      collapsible: true,
-      collapsed: false,
-      link: { type: "doc", id: "guides/index" },
-      items: [
-        {
-          type: "category",
-          label: "Core Requests",
-          collapsible: true,
-          collapsed: false,
-          link: {
-            type: "generated-index",
-            title: "Core Requests",
-            description: "Streaming, batching, structured outputs, and reasoning behavior",
-            slug: "/guides/core_request_response_patterns"
-          },
-          items: [
-            "completion/stream",
-            "completion/batching",
-            "completion/json_mode",
-            "reasoning_content",
-          ],
-        },
-        {
-          type: "category",
-          label: "Tool Calling",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Tool Calling",
-            description: "Function calling, web tools, interception patterns, computer use, code interpreter, and tool-call hygiene",
-            slug: "/guides/tools_integrations"
-          },
-          items: [
-            "completion/function_call",
-            "completion/web_search",
-            {
-              type: "doc",
-              id: "integrations/websearch_interception",
-              label: "Web Search Interception",
-            },
-            "completion/web_fetch",
-            "completion/computer_use",
-            "guides/code_interpreter",
-            {
-              type: "doc",
-              id: "sandbox",
-              label: "Code Interpreter Sandbox Interception",
-            },
-            "completion/anthropic_advisor_tool",
-            "completion/message_sanitization",
-          ],
-        },
-        {
-          type: "category",
-          label: "Multimodal I/O",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Multimodal I/O",
-            description: "Vision, audio, PDFs, image generation, and video generation",
-            slug: "/guides/multimodal_io"
-          },
-          items: [
-            "completion/vision",
-            "completion/audio",
-            "completion/document_understanding",
-            "completion/image_generation_chat",
-            "proxy/veo_video_generation",
-          ],
-        },
-        {
-          type: "category",
-          label: "Retrieval & Knowledge",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Retrieval & Knowledge",
-            description: "Vector stores, file search, citations, and knowledge-base routing",
-            slug: "/guides/retrieval_knowledge"
-          },
-          items: [
-            "completion/knowledgebase",
-          ],
-        },
-        {
-          type: "category",
-          label: "Prompts & Context",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Prompts & Context",
-            description: "Prompt caching, trimming, formatting, assistant prefill, and predicted outputs",
-            slug: "/guides/prompts_context"
-          },
-          items: [
-            "completion/prefix",
-            "completion/predict_outputs",
-            "completion/prompt_compression",
-            "completion/message_trimming",
-            "completion/prompt_caching",
-            "completion/prompt_formatting",
-          ],
-        },
-        {
-          type: "category",
-          label: "Compatibility & Extensibility",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Compatibility & Extensibility",
-            description: "Provider-specific params, model aliases, fine-tuned models, and adapters",
-            slug: "/guides/compatibility_extensibility"
-          },
-          items: [
-            "completion/provider_specific_params",
-            "completion/drop_params",
-            "completion/model_alias",
-            "guides/finetuned_models",
-            "extras/creating_adapters",
-          ],
-        },
-        {
-          type: "category",
-          label: "Reliability, Testing & Spend",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Reliability, Testing & Spend",
-            description: "Retries, fallbacks (failover), mock responses, and budget controls",
-            slug: "/guides/reliability_testing_spend"
-          },
-          items: [
-            "completion/mock_requests",
-            "completion/reliable_completions",
-          ],
-        },
-        {
-          type: "category",
-          label: "Security & Network",
-          collapsible: true,
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Security & Network",
-            description: "SSL, custom CA bundles, HTTP proxy settings, and per-service verification",
-            slug: "/guides/security_network"
-          },
-          items: [
-            "guides/security_settings",
-          ],
-        },
-      ],
-    },
 
-    // ── Tutorials ─────────────────────────────────────────────────────
-    {
-      type: "category",
-      label: "Tutorials",
-      collapsible: true,
-      collapsed: false,
-      link: { type: "doc", id: "tutorials/index" },
-      items: [
-        "tutorials/installation",
-        "tutorials/first_playground",
-        "tutorials/text_completion",
-        "tutorials/mock_completion",
-        {
-          type: "link",
-          label: "Agent SDKs & Frameworks",
-          href: "/docs/agent_sdks",
-        },
-        {
-          type: "link",
-          label: "AI Coding Tools",
-          href: "/docs/ai_tools",
-        },
-        {
-          type: "category",
-          label: "Python SDK",
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Python SDK",
-            description: "Tutorials using only the Python SDK — no proxy server required",
-            slug: "/tutorials/python_sdk"
-          },
-          items: [
-            "tutorials/gradio_integration",
-            "tutorials/provider_specific_params",
-            "tutorials/model_fallbacks",
-            "tutorials/fallbacks",
-          ],
-        },
-        {
-          type: "category",
-          label: "Provider Setup",
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Provider Setup",
-            description: "Connect LiteLLM to Azure OpenAI, HuggingFace, TogetherAI, local models, and more",
-            slug: "/tutorials/provider_tutorials"
-          },
-          items: [
-            "tutorials/azure_openai",
-            "tutorials/TogetherAI_liteLLM",
-            "tutorials/huggingface_tutorial",
-            "tutorials/huggingface_codellama",
-            "tutorials/finetuned_chat_gpt",
-            "tutorials/oobabooga",
-          ],
-        },
-        {
-          type: "category",
-          label: "Proxy: Admin & Access",
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Proxy: Admin & Access",
-            description: "User and team management, SSO, SCIM, and routing rules",
-            slug: "/tutorials/proxy_admin_access"
-          },
-          items: [
-            "tutorials/default_team_self_serve",
-            "tutorials/msft_sso",
-            { type: "ref", id: "tutorials/scim_litellm" },
-            "tutorials/tag_management",
-          ],
-        },
-        {
-          type: "category",
-          label: "Proxy: Features & Safety",
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Proxy: Features & Safety",
-            description: "Prompt caching, passthrough APIs, realtime, guardrails, and PII masking",
-            slug: "/tutorials/proxy_features_safety"
-          },
-          items: [
-            "tutorials/prompt_caching",
-            "tutorials/file_search_responses_api",
-            "tutorials/mongodb_vector_search",
-            "tutorials/anthropic_file_usage",
-            "tutorials/gemini_realtime_with_audio",
-            "tutorials/litellm_proxy_aporia",
-            "tutorials/presidio_pii_masking",
-          ],
-        },
-        {
-          type: "category",
-          label: "Observability & Evaluation",
-          collapsed: true,
-          link: {
-            type: "generated-index",
-            title: "Observability & Evaluation",
-            description: "Logging, monitoring, benchmarking, and evaluation suites",
-            slug: "/tutorials/observability_evaluation"
-          },
-          items: [
-            "tutorials/elasticsearch_logging",
-            "tutorials/compare_llms",
-            "tutorials/litellm_Test_Multiple_Providers",
-            "tutorials/eval_suites",
-            "tutorials/lm_evaluation_harness",
-          ],
-        },
-      ],
-    },
+
+// ════════════════════════════════════════════════════════════
+// AI PROVIDERS (the AI Providers tab in the navbar)
+// Every provider page lives here, so a reader who opens a provider stays in
+// this tab with a sidebar of provider names. The landing page
+// (docs/providers/index.mdx) builds its card grid from this sidebar, so a new
+// provider added here also gets a card. A multi-page provider is a category
+// whose link is its main page. "sidebar-group-label" heads each cluster.
+// ════════════════════════════════════════════════════════════
+const providersSidebar = {
+  providersSidebar: [
+    { type: "doc", id: "providers/index", label: "All providers" },
+    { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
+    { type: "html", value: "Popular", className: "sidebar-group-label", defaultStyle: true },
+    { type: "category", label: "OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/openai" }, items: [
+      "providers/openai/responses_api",
+      "providers/openai/text_to_speech",
+      "providers/openai/videos",
+      "providers/openai/ultrafast",
+      "providers/text_completion_openai",
+    ] },
+    { type: "category", label: "Anthropic", className: "sidebar-provider", link: { type: "doc", id: "providers/anthropic" }, items: [
+      "providers/anthropic_tool_search",
+      "providers/anthropic_preserved_thinking",
+    ] },
+    { type: "category", label: "Google AI Studio", className: "sidebar-provider", link: { type: "doc", id: "providers/gemini" }, items: [
+      "providers/gemini/videos",
+      "providers/gemini/music",
+      "providers/gemini_file_search",
+      "providers/google_ai_studio/files",
+      "providers/google_ai_studio/image_gen",
+      "providers/google_ai_studio/realtime",
+    ] },
+    { type: "category", label: "Gemini Enterprise Agent Platform", className: "sidebar-provider", link: { type: "doc", id: "providers/vertex" }, items: [
+      "providers/vertex_ai/videos",
+      "providers/vertex_partner",
+      "providers/vertex_self_deployed",
+      "providers/vertex_embedding",
+      "providers/vertex_image",
+      "providers/vertex_speech",
+      "providers/vertex_transcription",
+      "providers/vertex_batch",
+      "providers/vertex_ocr",
+      "providers/vertex_ai_agent_engine",
+      "providers/vertex_realtime",
+    ] },
+    { type: "category", label: "Azure OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/azure/azure" }, items: [
+      "providers/azure/azure_responses",
+      "providers/azure/azure_embedding",
+      "providers/azure/azure_speech",
+      "providers/azure/videos",
+    ] },
+    { type: "category", label: "Azure AI", className: "sidebar-provider", link: { type: "doc", id: "providers/azure_ai" }, items: [
+      "providers/azure_ai/azure_model_router",
+      "providers/azure_ai_agents",
+      "providers/azure_ocr",
+      "providers/azure_document_intelligence",
+      "providers/azure_ai_speech",
+      "providers/azure_ai_img",
+      "providers/azure_ai_vector_stores",
+      "providers/azure_ai/azure_ai_vector_stores_passthrough",
+    ] },
+    { type: "category", label: "Bedrock", className: "sidebar-provider", link: { type: "doc", id: "providers/bedrock" }, items: [
+      "providers/bedrock_embedding",
+      "providers/bedrock_imported",
+      "providers/bedrock_image_gen",
+      "providers/bedrock_rerank",
+      "providers/bedrock_agentcore",
+      "providers/bedrock_agents",
+      "providers/bedrock_writer",
+      "providers/bedrock_batches",
+      "providers/bedrock_realtime_with_audio",
+      "providers/aws_polly",
+      "providers/bedrock_vector_store",
+      "providers/bedrock_mantle",
+    ] },
+    { type: "category", label: "Mistral AI", className: "sidebar-provider", link: { type: "doc", id: "providers/mistral" }, items: [
+      "providers/mistral_batches",
+    ] },
+    { type: "category", label: "xAI", className: "sidebar-provider", link: { type: "doc", id: "providers/xai" }, items: [
+      "providers/xai_realtime",
+      "providers/xai_batches",
+    ] },
+    "providers/deepseek",
+    "providers/groq",
+    { type: "html", value: "Self-Hosted & Local", className: "sidebar-group-label", defaultStyle: true },
+    "providers/ollama",
+    { type: "category", label: "vLLM", className: "sidebar-provider", link: { type: "doc", id: "providers/vllm" }, items: [
+      "providers/vllm_batches",
+    ] },
+    "providers/lm_studio",
+    "providers/llamafile",
+    "providers/docker_model_runner",
+    "providers/lemonade",
+    "providers/triton-inference-server",
+    "providers/xinference",
+    "providers/infinity",
+    { type: "category", label: "Nvidia NIM", className: "sidebar-provider", link: { type: "doc", id: "providers/nvidia_nim" }, items: [
+      "providers/nvidia_nim_rerank",
+    ] },
+    "providers/petals",
+    "providers/custom_llm_server",
+    { type: "html", value: "Gateways & OpenAI-Compatible", className: "sidebar-group-label", defaultStyle: true },
+    "providers/openai_compatible",
+    "providers/litellm_proxy",
+    "providers/openrouter",
+    "providers/opencode_go",
+    "providers/vercel_ai_gateway",
+    "providers/helicone",
+    "providers/cometapi",
+    "providers/clf_ai_gateway",
+    "providers/poe",
+    { type: "html", value: "Vector Stores", className: "sidebar-group-label", defaultStyle: true },
+    "providers/milvus_vector_stores",
+    "providers/mongodb_vector_stores",
+    "providers/s3_vectors",
+    "providers/valkey_vector_stores",
+    "providers/ragflow_vector_store",
+    { type: "html", value: "Agent Providers", className: "sidebar-group-label", defaultStyle: true },
+    "providers/langgraph",
+    "providers/pydantic_ai_agent",
+    { type: "html", value: "More Providers A-Z", className: "sidebar-group-label", defaultStyle: true },
+    "providers/abliteration",
+    "providers/ai21",
+    "providers/aiml",
+    "providers/aleph_alpha",
+    "providers/amazon_nova",
+    "providers/anyscale",
+    "providers/apertis",
+    "providers/aws_sagemaker",
+    "providers/baseten",
+    "providers/black_forest_labs",
+    "providers/black_forest_labs_img_edit",
+    "providers/bytez",
+    "providers/cerebras",
+    "providers/chatgpt",
+    "providers/chutes",
+    "providers/clarifai",
+    "providers/cloudflare_workers",
+    "providers/codestral",
+    "providers/cognition",
+    "providers/cohere",
+    "providers/compactifai",
+    "providers/coralbricks",
+    "providers/crusoe",
+    "providers/dashscope",
+    "providers/databricks",
+    "providers/datarobot",
+    "providers/deepgram",
+    "providers/deepinfra",
+    "providers/edenai",
+    "providers/elevenlabs",
+    "providers/empiriolabs",
+    "providers/fal_ai",
+    "providers/featherless_ai",
+    "providers/fireworks_ai",
+    "providers/friendliai",
+    "providers/galadriel",
+    "providers/github",
+    "providers/github_copilot",
+    "providers/gmi",
+    "providers/gradient_ai",
+    "providers/heroku",
+    "providers/hostinger_router",
+    { type: "category", label: "HuggingFace", className: "sidebar-provider", link: { type: "doc", id: "providers/huggingface" }, items: [
+      "providers/huggingface_rerank",
+    ] },
+    "providers/hyperbolic",
+    "providers/inception",
+    "providers/inferenceapis",
+    "providers/jina_ai",
+    "providers/lambda_ai",
+    "providers/llamagate",
+    "providers/manus",
+    "providers/meta",
+    "providers/meta_llama",
+    "providers/microsoft_365_copilot",
+    "providers/minimax",
+    "providers/moonshot",
+    "providers/morph",
+    "providers/nadir",
+    "providers/nano-gpt",
+    "providers/nebius",
+    "providers/neosantara",
+    "providers/nlp_cloud",
+    "providers/novita",
+    { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
+    "providers/nvidia_riva",
+    "providers/oci",
+    "providers/openinfer",
+    "providers/ovhcloud",
+    { type: "category", label: "Perplexity AI", className: "sidebar-provider", link: { type: "doc", id: "providers/perplexity" }, items: [
+      "providers/perplexity_embedding",
+    ] },
+    "providers/predibase",
+    "providers/prism",
+    "providers/publicai",
+    "providers/qwencloud",
+    "providers/ragflow",
+    "providers/recraft",
+    "providers/refuseless",
+    "providers/reka",
+    "providers/replicate",
+    { type: "category", label: "RunwayML", className: "sidebar-provider", link: { type: "doc", id: "providers/runwayml/images" }, items: [
+      "providers/runwayml/videos",
+    ] },
+    "providers/sambanova",
+    "providers/sap",
+    "providers/sarvam",
+    "providers/scaledown",
+    "providers/scaleway",
+    "providers/scx_ai",
+    "providers/snowflake",
+    "providers/stability",
+    "providers/streamlake",
+    "providers/strands_decider",
+    "providers/synthetic",
+    "providers/tencent",
+    "providers/tensormesh",
+    "providers/togetherai",
+    "providers/topaz",
+    "providers/v0",
+    "providers/volcano",
+    "providers/voyage",
+    "providers/wandb_inference",
+    { type: "category", label: "WatsonX", className: "sidebar-provider", link: { type: "doc", id: "providers/watsonx/index" }, items: [
+      "providers/watsonx/audio_transcription",
+    ] },
+    "providers/xiaomi_mimo",
+    "providers/zai",
+    "providers/zerogpu",
+    { type: "html", value: "Guides", className: "sidebar-group-label", defaultStyle: true },
+    "guides/finetuned_models",
+    { type: "doc", id: "provider_registration/index", label: "Integrate as a Model Provider" },
+    { type: "doc", id: "contributing/adding_openai_compatible_providers", label: "Add OpenAI-Compatible Provider (JSON)" },
+    { type: "doc", id: "provider_registration/add_model_pricing", label: "Add Model Pricing & Context Window" },
   ],
 };
 
-const autoRouterSidebar = {
-  autoRouterSidebar: [
-    { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/optimize_classifier", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/decision_classifiers", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/user_setup", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/evaluate", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/telemetry", className: "autorouter-nav-item" },
-    { type: "doc", id: "auto_router/feature_history", className: "autorouter-nav-item" },
-    {
-      type: "category",
-      label: "Reference",
-      collapsed: false,
-      items: [
-        { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
-        { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
-        { type: "link", label: "lite autoroute", href: "/docs/learn/autorouter_cli" },
-        { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
-      ],
-    },
-  ],
-};
 
-module.exports = { ...sidebars, ...enterpriseSidebar, ...learnSidebar, ...autoRouterSidebar };
+module.exports = { ...sidebars, ...enterpriseSidebar, ...providersSidebar };

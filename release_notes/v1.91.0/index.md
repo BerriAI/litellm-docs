@@ -1,5 +1,6 @@
 ---
-title: "v1.91.0 - MCP OAuth v2, Rust OCR Gateway & Realtime Performance"
+title: "LiteLLM v1.91.0 - MCP OAuth v2, Rust OCR Gateway & Realtime Performance"
+description: "Adds MCP Gateway OAuth 2.0 v2, a Rust Mistral OCR bridge and about 48 new models. Speeds up Realtime API session setup."
 slug: "v1-91-0"
 date: 2026-07-04T17:55:59
 authors:

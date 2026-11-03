@@ -75,7 +75,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass in any provider-specific param, if not supported by openai, https://docs.litellm.ai/docs/completion/input#provider-specific-params
-        "metadata": { # 👈 use for logging additional params (e.g. to langfuse)
+        "metadata": { # use for logging additional params (e.g. to langfuse)
             "generation_name": "ishaan-generation-openai-client",
             "generation_id": "openai-client-gen-id22",
             "trace_id": "openai-client-trace-id22",
@@ -89,7 +89,7 @@ print(response)
 </TabItem>
 <TabItem value="litellm_sdk" label="LiteLLM Python SDK">
 
-[**👉 Go Here**](../providers/litellm_proxy#send-all-sdk-requests-to-litellm-proxy)
+[** Go Here**](../providers/litellm_proxy#send-all-sdk-requests-to-litellm-proxy)
 
 </TabItem>
 <TabItem value="azureopenai" label="AzureOpenAI Python">
@@ -113,7 +113,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass in any provider-specific param, if not supported by openai, https://docs.litellm.ai/docs/completion/input#provider-specific-params
-        "metadata": { # 👈 use for logging additional params (e.g. to langfuse)
+        "metadata": { # use for logging additional params (e.g. to langfuse)
             "generation_name": "ishaan-generation-openai-client",
             "generation_id": "openai-client-gen-id22",
             "trace_id": "openai-client-trace-id22",
@@ -236,7 +236,7 @@ import { ChatOpenAI } from "@langchain/openai";
 const model = new ChatOpenAI({
   modelName: "{{openai_large}}",
   openAIApiKey: "sk-<your-litellm-api-key>",
-  modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
+  modelKwargs: {"metadata": "hello world"} // PASS Additional params here
 }, {
   basePath: "http://0.0.0.0:4000",
 });
@@ -962,7 +962,7 @@ print(result)
 
 ## Using with Vertex, Boto3, Anthropic SDK (Native format)
 
-👉 **[Here's how to use litellm proxy with Vertex, boto3, Anthropic SDK - in the native format](../pass_through/vertex_ai.md)**
+**[Here's how to use litellm proxy with Vertex, boto3, Anthropic SDK - in the native format](../pass_through/vertex_ai.md)**
 
 ## Advanced
 

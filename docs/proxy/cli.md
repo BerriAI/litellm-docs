@@ -94,7 +94,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --max_requests_before_restart
    - **Default:** `None`
    - **Type:** `int`
-   - Restart worker after this many requests. This is useful for mitigating memory growth over time.
+   - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
+   - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
@@ -440,6 +441,15 @@ A read replica takes the same key under `database.reader`, and it requires the w
    - **Usage:** 
      ```shell
      litellm --use_prisma_db_push
+     ```
+
+### --check_migrations_against_existing_data
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Dry-run this version's pending migrations on `DATABASE_URL`: the real SQL runs inside one transaction that is rolled back, so PostgreSQL reports the row or schema that would make the upgrade fail, then exit. Exit code 0 lists each migration with its duration, 2 prints PostgreSQL's error. Holds the same locks the upgrade will, so run it off-peak. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#dry-run-the-migrations-before-the-upgrade).
+   - **Usage:**
+     ```shell
+     litellm --check_migrations_against_existing_data
      ```
 
 ## Debugging

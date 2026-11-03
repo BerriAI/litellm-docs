@@ -1,5 +1,6 @@
 ---
-title: "v1.101.0 - Heuristic Auto Router, Semantic MCP Tool Search & Off-Peak Pricing"
+title: "LiteLLM v1.101.0 - Heuristic Auto Router, Semantic MCP Tool Search & Off-Peak Pricing"
+description: "Adds heuristic auto-router classifiers, semantic MCP tool search and off-peak pricing. Also adds 411 models, such as claude-fable-5-1 and gpt-6-astra."
 slug: "v1-101-0"
 date: 2026-09-14T00:00:00
 authors:

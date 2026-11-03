@@ -1,5 +1,6 @@
 ---
-title: "v1.85.6 - Database Resilience Backport"
+title: "LiteLLM v1.85.6 - Database Resilience Backport"
+description: "Fixes Prisma reconnects on cached-plan errors and returns 5xx on database errors during auth. Adds a toggle for prepared statements."
 slug: "v1-85-6"
 date: 2026-06-13T17:14:49
 authors:

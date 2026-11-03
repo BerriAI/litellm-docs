@@ -1,7 +1,3 @@
----
-sidebar_label: "GitHub Copilot / VS Code"
----
-
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

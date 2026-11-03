@@ -7,6 +7,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for Claude Opus 5.5 on the LiteLLM AI Gateway. Use it across Anthropic, Bedrock, Gemini Enterprise Agent Platform, and Azure."
+card_title: "Claude Opus 5.5"
+card_summary: "20% cheaper than Opus 5 at $4 / $20 per 1M, 30% faster output, Terminal-Bench 4.0 66.4%, thinking always on."
 image: /img/litellm_claude_opus_5_5_announcement.png
 tags: [anthropic, claude, opus 5.5, day 0 support]
 hide_table_of_contents: false
@@ -77,11 +79,15 @@ docker run -d \
 model_list:
   - model_name: claude-opus-5-5
     litellm_params:
-      model: bedrock/anthropic.claude-opus-5-5
+      model: bedrock/global.anthropic.claude-opus-5-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 ```
+
+:::note
+`global.` can serve a request from any commercial AWS region. To keep requests inside one geography, swap in a geographic inference profile such as `bedrock/us.anthropic.claude-opus-5-5` (the model's AWS model card lists the profiles it has), which costs 10% more. LiteLLM tracks the cost of both. On older images this needs the remote cost map, which LiteLLM loads at startup unless `LITELLM_LOCAL_MODEL_COST_MAP` is set.
+:::
 
 **2. Start the proxy**
 

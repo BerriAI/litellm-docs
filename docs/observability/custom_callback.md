@@ -39,7 +39,7 @@ customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
 ## sync 
-response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -49,7 +49,7 @@ for chunk in response:
 import asyncio 
 
 async def completion():
-    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -158,7 +158,7 @@ response = completion(
     messages=[
         {
             "role": "user",
-            "content": "Hi 👋 - i'm openai"
+            "content": "Hi - i'm openai"
         }
     ]
 )
@@ -192,7 +192,7 @@ customHandler = MyCustomHandler()
 litellm.callbacks = [customHandler]
 
 async def completion():
-    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue
@@ -218,7 +218,7 @@ async def test_chat_openai():
         response = await litellm.acompletion(model="{{openai_small}}",
                               messages=[{
                                   "role": "user",
-                                  "content": "Hi 👋 - i'm openai"
+                                  "content": "Hi - i'm openai"
                               }],
                               stream=True)
         async for chunk in response: 

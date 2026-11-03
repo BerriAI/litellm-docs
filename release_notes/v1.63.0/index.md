@@ -1,5 +1,6 @@
 ---
-title: v1.63.0 - Anthropic 'thinking' response update
+title: "LiteLLM v1.63.0 - Anthropic 'thinking' response update"
+description: "Fixes Anthropic thinking responses on streaming so they return the signature block. Moves the field from signature_delta to signature to match Anthropic."
 slug: v1.63.0
 date: 2025-03-05T10:00:00
 authors:

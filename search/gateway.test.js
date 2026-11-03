@@ -50,6 +50,13 @@ test('large successful completions have no answer character or response byte cap
   assert.equal(await call('Instructions', {}, 25000), answer);
 });
 
+test('provider context-limit codes become safe errors without exposing the provider message', async () => {
+  for (const error of [{code: 'context_length_exceeded'}, {type: 'ContextWindowExceededError'}]) {
+    const call = createModelCaller({config, fetchImpl: async () => Response.json({error: {...error, message: config.apiKey}}, {status: 400})});
+    await assert.rejects(call('Instructions', {}, 25000), {name: 'GatewayContextWindowExceeded', message: 'Conversation exceeds the model context window'});
+  }
+});
+
 test('reasoning-only truncation remains a diagnosed error', async () => {
   const call = createModelCaller({config, fetchImpl: async () => completion('length', null)});
   await assert.rejects(call('Instructions', {}, 10000), {name: 'GatewayResponseTruncated'});

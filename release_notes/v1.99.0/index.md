@@ -1,5 +1,6 @@
 ---
-title: "v1.99.0 - Dark Mode, CLI OAuth Login & Batch Billing"
+title: "LiteLLM v1.99.0 - Dark Mode, CLI OAuth Login & Batch Billing"
+description: "Adds dark mode, lite login with OAuth and PKCE, and batch spend accounting. Audit logs now default to on with an Enterprise license."
 slug: "v1-99-0"
 date: 2026-09-01T00:00:00
 authors:

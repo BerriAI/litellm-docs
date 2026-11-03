@@ -1,0 +1,39 @@
+.figure {
+  width: 100%;
+  max-width: 640px;
+  margin: 1.25rem 0;
+}
+
+.frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+}
+
+.frame:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 4px;
+}
+
+.image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 640px;
+  object-fit: contain;
+}
+
+.caption {
+  margin-top: 0.5rem;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}

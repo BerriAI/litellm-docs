@@ -1,5 +1,9 @@
 # MCP ID-JAG Auth (Okta)
 
+:::tip Full guide
+See the [ID-JAG overview](./proxy/id_jag/overview.md) and the [requesting app setup guide](./proxy/id_jag/requesting_app.md) for configuration, SSO options, and troubleshooting.
+:::
+
 ID-JAG (Identity Assertion Authorization Grant, [draft-ietf-oauth-identity-assertion-authz-grant](https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/)) lets LiteLLM obtain an access token for an MCP server whose authorization server is different from the user's identity provider. Okta ships this as [AI agent token exchange](https://developer.okta.com/docs/guides/ai-agent-token-exchange/-/main/).
 
 Use ID-JAG when:
@@ -9,6 +13,8 @@ Use ID-JAG when:
 - You want the access the gateway receives to be user scoped, auditable, and revocable from the identity provider.
 
 ID-JAG differs from [OBO token exchange](./mcp_obo_auth): OBO is a single RFC 8693 exchange against one authorization server, while ID-JAG is two legs across two authorization servers.
+
+This page covers LiteLLM obtaining an access token from a resource authorization server with an ID-JAG. For the other direction, where an agent redeems an ID-JAG at LiteLLM's own token endpoint for a proxy credential, see [LiteLLM as resource app](./proxy/id_jag/resource_app.md) and the [grant rules](./proxy/cli_sso#redeem-an-identity-assertion-rfc-7523).
 
 ## How It Works
 
@@ -101,6 +107,7 @@ mcp_servers:
 | `client_secret` | Optional | Used as a fallback only when `client_private_key` is not set. |
 | `audience` | Recommended | Resource authorization server identifier. LiteLLM sends this as the leg-1 `audience`. |
 | `id_jag_resource` | Optional | RFC 8707 resource indicator sent on leg 1. |
+| `id_jag_subject_source` | Optional | `login_assertion` (default) presents the assertion captured at SSO login on leg 1. `refresh_token` exchanges it for a refresh token at login and presents that instead, see [SAML SSO as the requesting app](#saml-sso-as-the-requesting-app) and the [requesting app guide](./proxy/id_jag/requesting_app.md#okta-configure-sso). |
 | `scopes` | Optional | Scopes LiteLLM requests. Joined into the OAuth `scope` parameter. |
 | `subject_token_type` | Optional | Subject token type for leg 1. Defaults to `urn:ietf:params:oauth:token-type:id_token` for ID-JAG. |
 
@@ -199,6 +206,32 @@ curl -X POST "https://litellm.example.com/internal_tools/mcp" \
 
 Assertion reads are cached per process for `MCP_SSO_ASSERTION_CACHE_TTL_SECONDS` (default 60), so a fresh SSO login on one pod becomes visible to the others within one TTL.
 
+### Which SSO logins capture the assertion
+
+The assertion is the `id_token` in the IdP token response at UI or CLI sign-in, so every login that goes through an OIDC token endpoint captures one: Microsoft Entra (`MICROSOFT_CLIENT_ID`), Google (`GOOGLE_CLIENT_ID`) and generic OIDC (`GENERIC_CLIENT_ID`). The gateway only keeps it while at least one MCP server with `auth_type: oauth2_id_jag` is registered. SAML has no `id_token`, so a SAML-only deployment cannot use the store-sourced subject and every store-sourced call answers `412`; the proxy logs that gap once at startup and once per login.
+
+The stored `id_token` expires on the IdP's schedule, about an hour on Entra and Google. LiteLLM renews it with the refresh token captured beside it, redeemed against the same client the login used (the Microsoft, Google or generic client and its token endpoint). A refresh token is only issued when the login asked for one. While at least one `oauth2_id_jag` server is registered, the Microsoft login adds the `offline_access` scope and the Google login sends `access_type=offline` with `prompt=consent`, so the IdP returns a refresh token and the user sees an offline-access consent once. A user who signed in before the server was registered holds an assertion without a refresh token and has to sign in again after it expires. Generic OIDC asks only when `GENERIC_SCOPE` carries `offline_access`.
+
+### SAML SSO as the requesting app
+
+When LiteLLM SSO runs through SAML, the login has no `id_token`. LiteLLM keeps the signed `<saml:Assertion>` from the validated response, base64url encoded, and presents it on leg 1 as `subject_token_type=urn:ietf:params:oauth:token-type:saml2` (RFC 8693). The MCP server config does not change for this. `subject_token_type` stays at its default because the stored assertion carries its own type, and leg 1 authenticates with the same `client_id` and `client_private_key` as the OIDC case:
+
+```text title="Leg 1 with a SAML subject" showLineNumbers
+POST /oauth2/v1/token
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+requested_token_type=urn:ietf:params:oauth:token-type:id-jag
+subject_token=<base64url saml:Assertion>
+subject_token_type=urn:ietf:params:oauth:token-type:saml2
+audience=<resource authorization server identifier>
+scope=<scopes>
+client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
+client_assertion=<private_key_jwt>
+```
+
+A SAML assertion is only usable until its `NotOnOrAfter`, which most IdPs set to a few minutes, and SAML has no refresh token of its own. With the default `id_jag_subject_source: login_assertion`, a call after that point returns the same `412` as an expired OIDC assertion and the user signs in through LiteLLM SSO again.
+
+IdPs that do not accept a `saml2` subject on the ID-JAG exchange itself, Okta among them, take a two-step route. With `id_jag_subject_source: refresh_token`, LiteLLM exchanges the assertion for a refresh token at SSO login while it is still valid (`requested_token_type=urn:ietf:params:oauth:token-type:refresh_token`, `scope=openid offline_access`), stores that token encrypted next to the assertion with the lifetime the IdP returned, and presents it on leg 1 as `subject_token_type=urn:ietf:params:oauth:token-type:refresh_token`. The login exchange authenticates as the server's IdP client, so every server in this mode shares one `client_id` and `token_exchange_endpoint`. The Okta walkthrough in [LiteLLM as requesting app](./proxy/id_jag/requesting_app.md#okta-configure-sso) shows the full config, and its [troubleshooting table](./proxy/id_jag/requesting_app.md#troubleshooting) covers `invalid_grant` on a SAML subject and the multiple-client warning.
+
 ## Credential Errors at Connect Time
 
 On a single-server route such as `/internal_tools/mcp` or `/mcp/internal_tools`, LiteLLM resolves the ID-JAG credential before it opens the MCP session, so a failure comes back as an HTTP status the client can act on rather than as a session that appears to have no tools. This runs for the store-sourced flow (no `Authorization` header), which is exactly where the failures below are decided before any authorization server is called.
@@ -245,6 +278,7 @@ LiteLLM caches the leg-2 access token by subject token and MCP server ID, so two
 | MCP server receives the LiteLLM key | Move the LiteLLM key to `x-litellm-api-key` and use `Authorization` for the user `id_token`. |
 | `412 Precondition Failed` on connect | No stored SSO assertion for this user, or it has expired. Have the user sign in through LiteLLM SSO, then retry. See [Credential Errors at Connect Time](#credential-errors-at-connect-time). |
 | `503 Service Unavailable` on connect | The assertion store is unreachable. Check the LiteLLM database connection. |
+| `412 Precondition Failed` minutes after a SAML login | The SAML assertion passed its `NotOnOrAfter`, and SAML has no refresh token. The user signs in through LiteLLM SSO again. |
 | `tools/list` returns no tools and `_meta` shows `http_status: 412` | You are on the aggregate `/mcp` route. Call the single-server route to get the status and message directly. |
 | Leg 1 returns 400 or 403 | Confirm the cross-app access policy authorizes the gateway app for the resource and scopes, and that `audience` matches the resource authorization server identifier. |
 | Leg 1 returns 401 | Confirm `client_id`, `client_private_key`, and `client_private_key_id` match the gateway app's registered JWKS. |

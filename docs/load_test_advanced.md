@@ -12,7 +12,7 @@ Tutorial on how to get to 1K+ RPS with LiteLLM Proxy on locust
     - [litellm docker containers](https://github.com/BerriAI/litellm/pkgs/container/litellm)
 - [ ] Ensure you're following **ALL** [best practices for production](./proxy/prod.md)
 - [ ] Locust - Ensure you're Locust instance can create 1K+ requests per second
-    - 👉 You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**
+    - You can use our **[maintained locust instance here](https://locust-load-tester-production.up.railway.app/)**
     - If you're self hosting locust
         - [here's the spec used for our locust machine](#machine-specifications-for-running-locust)
         - [here  is the locustfile.py used for our tests](#locust-file-used-for-testing)
@@ -185,7 +185,7 @@ Use the following [prometheus metrics to debug your load tests / failures](./pro
 
 ## Machine Specifications for Running LiteLLM Proxy
 
-👉 **Number of Replicas of LiteLLM Proxy=4** for getting 1K+ RPS
+**Number of Replicas of LiteLLM Proxy=4** for getting 1K+ RPS
 
 | Service | Spec | CPUs | Memory | Architecture | Version|
 | --- | --- | --- | --- | --- | --- | 

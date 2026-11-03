@@ -149,7 +149,7 @@ Use names and limits that match your intended change. The gateway enforces the c
 
 Your gateway needs a database, `STORE_MODEL_IN_DB=True`, and provider authentication for [model management](./model_management.md). Include the public model name, exact provider/model ID, and a stored credential name or gateway environment-variable reference in your request. For example:
 
-> Add a model named support-chat using openai/gpt-4.1 and the existing gateway credential openai-production.
+> Add a model named support-chat using openai/{{openai_large}} and the existing gateway credential openai-production.
 
 Use a provider/model ID and credential that exist in your deployment. Keep provider API keys out of chat. Adding a gateway deployment does not provision provider access or test inference.
 

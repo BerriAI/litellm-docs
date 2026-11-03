@@ -1,7 +1,7 @@
 ---
 id: gateway_overview
 title: LiteLLM AI Gateway
-sidebar_label: Overview
+sidebar_label: LiteLLM Gateway
 slug: /simple_proxy
 description: The LiteLLM AI Gateway is a self-hosted server that gives your applications one OpenAI-compatible endpoint for 100+ LLM providers, MCP tools, and A2A agents.
 ---

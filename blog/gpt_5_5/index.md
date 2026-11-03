@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for GPT-5.5 and GPT-5.5 Pro on LiteLLM."
+card_title: "GPT-5.5 and GPT-5.5 Pro"
+card_summary: "GPT-5.5 and GPT-5.5 Pro on the existing GPT-5 config, so any recent LiteLLM version works out of the box."
 tags: [openai, gpt-5.5, gpt-5.5-pro, completion, day 0 support]
 hide_table_of_contents: false
 ---

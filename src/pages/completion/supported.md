@@ -4,9 +4,6 @@
 
 | Model Name       | Function Call                          | Required OS Variables                |
 |------------------|----------------------------------------|--------------------------------------|
-| gpt-3.5-turbo    | `completion('gpt-3.5-turbo', messages)` | `os.environ['OPENAI_API_KEY']`       |
-| gpt-3.5-turbo-16k    | `completion('gpt-3.5-turbo-16k', messages)` | `os.environ['OPENAI_API_KEY']`       |
-| gpt-3.5-turbo-16k-0613    | `completion('gpt-3.5-turbo-16k-0613', messages)` | `os.environ['OPENAI_API_KEY']`       |
 | gpt-4            | `completion('gpt-4', messages)`         | `os.environ['OPENAI_API_KEY']`       |
 | gpt-5-pro        | `completion('gpt-5-pro', messages)`    | `os.environ['OPENAI_API_KEY']`       |
 
@@ -22,7 +19,7 @@ For Azure calls add the `azure/` prefix to `model`. If your azure deployment nam
 
 | Model Name       | Function Call                              | Required OS Variables                |
 |------------------|--------------------------------------------|--------------------------------------|
-| text-davinci-003 | `completion('text-davinci-003', messages)` | `os.environ['OPENAI_API_KEY']`       |
+| gpt-5.4-mini | `completion('text-completion-openai/gpt-5.4-mini', messages)` | `os.environ['OPENAI_API_KEY']`       |
 
 ### Cohere Models
 
@@ -75,7 +72,7 @@ All the text models from [OpenRouter](https://openrouter.ai/docs) are supported 
 
 ## Novita AI Completion Models
 
-🚨 LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
+LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
 
 | Model Name       | Function Call                              | Required OS Variables                |
 |------------------|--------------------------------------------|--------------------------------------|

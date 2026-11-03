@@ -1,0 +1,43 @@
+{
+  "audit": "passed",
+  "queries": 300,
+  "document_judgments": 6000,
+  "saved_decision_responses": 6000,
+  "errors": 0,
+  "resolved_models": [
+    "jev-1.13.0"
+  ],
+  "metrics_independently_recomputed": {
+    "ndcg_at_10": 0.7676260618846087,
+    "hit_at_1": 0.68,
+    "hit_at_3": 0.8033333333333333,
+    "hit_at_20": 0.87,
+    "recall_at_20": 0.8569444444444444
+  },
+  "bm25_metrics_independently_recomputed": {
+    "ndcg_at_10": 0.6863002612489066,
+    "hit_at_1": 0.55,
+    "hit_at_3": 0.7266666666666667,
+    "hit_at_20": 0.87,
+    "recall_at_20": 0.8569444444444444
+  },
+  "input_tokens": 4109959,
+  "output_tokens": 132000,
+  "estimated_total_usd": "0.172618278",
+  "estimated_usd_per_1000_queries": "0.57539426000",
+  "cost_rate_usd_per_input_token": "0.000000042",
+  "output_cost_rate": 0,
+  "pricing_is_estimate_not_invoice": true,
+  "maximum_per_query_metric_difference": 0,
+  "source_checksums_verified": true,
+  "full_qrels_test_split_verified": true,
+  "candidate_texts_queries_and_qrels_verified_against_dataset": true,
+  "all_saved_rankings_verified_against_raw_predicate_probabilities": true,
+  "sdk_head": "5aa0a8304cd5bfa095bbd07e77f6f8c367084595",
+  "sdk_head_tracked_changes_recorded": false,
+  "notes": [
+    "6000 saved successful document judgments; no separate raw HTTP request log in full-run artifact. Runner disables local caching/retries and sends each pointwise document separately.",
+    "Cost is recomputed from returned input tokens and the configured gateway model rate, not from 6000 independently recorded billing headers. Separate live smoke reconciled that rate against actual gateway headers.",
+    "Single dataset and one run; no Perplexity or Cohere benchmark was measured in this artifact."
+  ]
+}

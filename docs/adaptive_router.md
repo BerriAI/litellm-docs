@@ -1,3 +1,7 @@
+---
+sidebar_label: Adaptive Router (Beta)
+---
+
 # [BETA] Adaptive Router
 
 :::info

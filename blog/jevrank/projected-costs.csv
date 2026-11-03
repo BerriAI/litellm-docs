@@ -1,0 +1,8 @@
+model,method,ndcg_at_10,projected_usd_per_million_queries,cost_source,measurement_origin,litellm_reproduction
+Perplexity Decider v1.2,Multiple choice,0.777,146,Table 8,external_reference_via_openrouter,pending
+TypeSafe Jev 1.14,Per-document,0.776,580,"Table 2, rounded cost × 1,000",external_reference_via_openrouter,pending
+Perplexity Decider Flash v1.2,Multiple choice,0.775,73,Table 8,external_reference_via_openrouter,pending
+Cohere Rerank 4 Pro,Rerank API,0.775,2500,Tables 2 and 8,external_reference_via_openrouter,pending
+Cohere Rerank 4 Fast,Rerank API,0.761,2000,"Table 2, rounded cost × 1,000",external_reference_via_openrouter,pending
+Cohere Rerank 3.5,Rerank API,0.754,1000,Tables 2 and 8,external_reference_via_openrouter,pending
+BM25,No reranking,0.686,0,Table 2,external_reference_via_openrouter,pending

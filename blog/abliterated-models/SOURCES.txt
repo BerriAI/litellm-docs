@@ -1,0 +1,21 @@
+Editorial and artwork sources
+
+Research: https://arxiv.org/abs/2406.11717
+Provider rates: https://refuseless.com/pricing and https://abliteration.ai/pricing
+Caching: https://docs.abliteration.ai/capabilities/prompt-caching
+Reasoning: https://docs.abliteration.ai/capabilities/thinking
+Model identifiers, rates and examples: docs/providers/refuseless.md and
+docs/providers/abliteration.md, checked against the merged provider guides.
+Rates are dated October 26, 2026 in the article.
+
+Artwork is original code: a shaded parametric surface with ordered Bayer
+dithering in artwork.js. It is decorative, not a model architecture diagram.
+The page follows Docusaurus's theme setting; no separate preference is stored.
+Geist and the LiteLLM mark use the repository's existing official assets.
+
+To reproduce the cover, serve the repository root with a static file server,
+open blog/abliterated-models/cover.html at 1200 x 630, wait for fonts, and export
+a PNG screenshot. Add ?theme=light for the light edition. Optimize both PNGs
+before replacing static/img/blog/abliterated-models/cover.png and cover-light.png.
+The image and optional image_light frontmatter supply the theme-aware listing.
+The dark edition remains the social preview, whose viewers do not supply a theme.

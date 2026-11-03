@@ -71,7 +71,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
                     "type": "file",
                     "file": {
                         "file_id": "file-1234",
-                        "format": "text/csv" # 👈 IMPORTANT: This is the format of the file you want to analyze
+                        "format": "text/csv" # IMPORTANT: This is the format of the file you want to analyze
                     }
                 }
             ]

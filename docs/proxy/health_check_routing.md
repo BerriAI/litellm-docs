@@ -1,3 +1,7 @@
+---
+sidebar_label: "Health Check Routing"
+---
+
 # Health Check Driven Routing
 
 Route traffic away from unhealthy deployments before users hit errors. Background health checks run on a configurable interval, and any deployment that fails gets removed from the routing pool proactively, not after a user request already failed.
@@ -27,7 +31,7 @@ Route traffic away from unhealthy deployments before users hit errors. Backgroun
   {/* Deployment C */}
   <rect x="40" y="214" width="200" height="50" fill="white" rx="8" stroke="#fde68a" strokeWidth="1.5"/>
   <text x="140" y="234" textAnchor="middle" fill="#92400e" fontSize="12" fontWeight="500">Deployment C</text>
-  <text x="140" y="252" textAnchor="middle" fill="#64748b" fontSize="11">ahealth_check() → 429 ⚡</text>
+  <text x="140" y="252" textAnchor="middle" fill="#64748b" fontSize="11">ahealth_check() → 429</text>
 
   {/* ignore_transient box */}
   <rect x="40" y="282" width="200" height="68" fill="#fefce8" rx="8" stroke="#fde047" strokeWidth="1.5"/>
