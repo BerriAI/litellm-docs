@@ -1901,6 +1901,7 @@ const providersSidebar = {
     "providers/v0",
     "providers/volcano",
     "providers/voyage",
+    "providers/wally",
     "providers/wandb_inference",
     { type: "category", label: "WatsonX", className: "sidebar-provider", link: { type: "doc", id: "providers/watsonx/index" }, items: [
       "providers/watsonx/audio_transcription",
