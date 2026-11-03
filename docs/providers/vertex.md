@@ -994,6 +994,22 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </Tabs>
 
 
+#### Thought signatures and tool call ids
+
+Gemini on Vertex AI returns a thought signature with its tool calls, and LiteLLM handles it as it does for the Gemini API. By default, the id of a tool call that carries a signature holds the whole signature, as `call_123__thought__<thought-signature>`, which is often hundreds of characters long. For a client that limits the id length, set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> on the deployment or per request. Ids are then short, such as `call_467312`, and the signature is only in `provider_specific_fields.thought_signature` of that tool call.
+
+```yaml
+model_list:
+  - model_name: {{gemini_flash}}
+    litellm_params:
+      model: vertex_ai/{{gemini_flash}}
+      vertex_project: "project-id"
+      vertex_location: "global"
+      thought_signature_in_tool_call_id: false
+```
+
+[Keep tool call ids short](/docs/providers/gemini#keep-tool-call-ids-short) covers the per-request setting, what a bad value does, and how the signature goes back to the model on the next turn.
+
 ### **Long outputs**
 
 On a model that ends a request with a `continuationToken`, such as Gemini 4 Argon, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent, so `max_tokens` can go above Google's per-request cap. [Long outputs](/blog/gemini-4-argon#long-outputs) covers how it works, the usage it reports and the timeouts it needs.
