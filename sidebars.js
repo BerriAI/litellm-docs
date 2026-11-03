@@ -374,6 +374,7 @@ const sidebars = {
     { type: "html", value: "Get started", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "index", label: "Quickstart" },
     { type: "doc", id: "agent_resources", label: "Agent resources" },
+    { type: "link", label: "LiteLLM Academy", href: "https://www.litellm.ai/course" },
 
     // ════════════════════════════════════════════════════════════
     // AI GATEWAY
