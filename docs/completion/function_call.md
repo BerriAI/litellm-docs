@@ -7,7 +7,7 @@ Use `litellm.supports_function_calling(model="")` -> returns `True` if model sup
 ```python
 assert litellm.supports_function_calling(model="{{openai_small}}") == True
 assert litellm.supports_function_calling(model="azure/{{openai_large}}") == True
-assert litellm.supports_function_calling(model="palm/chat-bison") == False
+assert litellm.supports_function_calling(model="ollama/llama2") == False
 assert litellm.supports_function_calling(model="xai/grok-2-latest") == True
 assert litellm.supports_function_calling(model="ollama/llama2") == False
 ```
