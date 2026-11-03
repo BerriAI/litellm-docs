@@ -470,9 +470,7 @@ response = await asyncio.gather(*tasks)
 if response is not None:
 	## CALL 3 
 	await asyncio.sleep(1)  # let the cache update happen
-	picked_deployment = router.lowestlatency_logger.get_available_deployments(
-		model_group=model, healthy_deployments=router.healthy_deployments
-	)
+	picked_deployment = await router.select(model, messages=messages)
 	final_response = await router.acompletion(model=model, messages=messages)
 	print(f"min deployment id: {picked_deployment}")
 	print(f"model id: {final_response._hidden_params['model_id']}")
@@ -670,11 +668,11 @@ class CustomRoutingStrategy(CustomRoutingStrategyBase):
             request_kwargs (Optional[Dict], optional): Additional request keyword arguments. Defaults to None.
 
         Returns:
-            Returns an element from litellm.router.model_list
+            Returns an element from router.registry().all()
 
         """
         print("In CUSTOM async get available deployment")
-        model_list = router.model_list
+        model_list = router.registry().all()
         print("router model list=", model_list)
         for model in model_list:
             if isinstance(model, dict):
@@ -701,7 +699,7 @@ class CustomRoutingStrategy(CustomRoutingStrategyBase):
             request_kwargs (Optional[Dict], optional): Additional request keyword arguments. Defaults to None.
 
         Returns:
-            Returns an element from litellm.router.model_list
+            Returns an element from router.registry().all()
 
         """
         pass
@@ -737,7 +735,7 @@ router = Router(
     timeout=1,
 )  # type: ignore
 
-router.set_custom_routing_strategy(CustomRoutingStrategy()) # Set your routing strategy here
+router.register_plugin(CustomRoutingStrategy()) # Set your routing strategy here
 ```
 
 Step 3. Test your routing strategy. Expect your custom routing strategy to be called when running `router.acompletion` requests
@@ -964,7 +962,7 @@ router_settings:
 
 #### Updating at runtime
 
-Routing groups can be updated via `Router.update_settings(routing_groups=[...])` or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
+Routing groups can be updated via `router.apply(ChangeSet(settings={"routing_groups": [...]}))` (`from litellm.router_api import ChangeSet`) or the proxy's `/config/update` endpoint. Per-group state is rebuilt on update.
 
 ## Session Affinity (Sticky Sessions)
 
@@ -2040,7 +2038,7 @@ router = Router(
 
 async def main():
 	print(f"\n=== Configuration ===")
-	print(f"Slack logger exists: {router.slack_alerting_logger is not None}")
+	print(f"Slack logger exists: {router.observe().slack_alerting_logger is not None}")
 	
 	try:
 		await router.acompletion(
