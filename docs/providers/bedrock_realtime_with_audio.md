@@ -18,6 +18,9 @@ model_list:
       aws_region_name: us-east-1  # or your preferred region
     model_info:
       mode: realtime
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 `amazon.nova-sonic-v1:0` has reached end of life on Bedrock, and requests to it fail with `The provided model identifier is invalid`. Use `amazon.nova-2-sonic-v1:0`.
@@ -28,8 +31,11 @@ Nova Sonic needs AWS's bidirectional streaming SDK, which ships in the `bedrock-
 
 ```bash
 pip install 'litellm[proxy,bedrock-realtime]'
+export LITELLM_MASTER_KEY=sk-<your-litellm-api-key>
 litellm --config config.yaml
 ```
+
+The proxy does not start without a master key. Use the same key as `LITELLM_API_KEY` in the scripts below.
 
 ## Basic Text Interaction
 
@@ -215,6 +221,8 @@ if __name__ == "__main__":
 
 ## Using Tools/Function Calling
 
+Tool calling with Nova Sonic requires LiteLLM v1.107.0 or later. Earlier versions never send the `response.function_call_arguments.done` event, so the model answers without calling the tool.
+
 After the client sends a tool result, Nova Sonic answers in a new response, so keep listening past the `response.done` that ends the tool call turn.
 
 ```python
@@ -347,7 +355,7 @@ LiteLLM versions before v1.103.0 closed the websocket with code 1000 and no erro
 ## Requirements
 
 ```bash
-uv add websockets pyaudio
+pip install websockets pyaudio
 ```
 
 ## AWS Configuration
