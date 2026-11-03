@@ -1158,7 +1158,7 @@ Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7
 When using the Responses API with multiple deployments of the same model (e.g., multiple Azure OpenAI endpoints), LiteLLM provides session continuity. This ensures that follow-up requests using a `previous_response_id` are routed to the same deployment that generated the original response.
 
 :::warning[Where these checks apply]
-`responses_api_deployment_check`, `encrypted_content_affinity`, `session_affinity`, and `deployment_affinity` apply to proxy requests on `/v1/responses` and to `router.aresponses`. The sync `router.responses` skips them, so a follow-up can land on a deployment that did not serve the first turn. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips them on every call, the proxy included. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
+`responses_api_deployment_check`, `encrypted_content_affinity`, `session_affinity`, and `deployment_affinity` apply to proxy requests on `/v1/responses` and to `router.aresponses`. The sync `router.responses` skips them, so a follow-up can land on a deployment that did not serve the first turn. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips them on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
 :::
 
 
@@ -1322,7 +1322,7 @@ This error occurs when:
 The `encrypted_content_affinity` pre-call check routes follow-up requests containing encrypted items to the originating deployment **only when necessary**
 
 :::warning[Where this check applies]
-`encrypted_content_affinity` applies to proxy requests on the LLM API routes, such as `/v1/responses`, and to async Router methods such as `router.aresponses`. The sync `router.responses` skips it, so a follow-up carrying encrypted items can land on a deployment that did not create them. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included.
+`encrypted_content_affinity` applies to proxy requests on the LLM API routes, such as `/v1/responses`, and to async Router methods such as `router.aresponses`. The sync `router.responses` skips it, so a follow-up carrying encrypted items can land on a deployment that did not create them. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
 :::
 
 **Key Benefits:**
