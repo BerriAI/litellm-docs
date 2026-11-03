@@ -1095,6 +1095,8 @@ Set `order` in `litellm_params` to prioritize deployments. Lower values = higher
 
 When a request to an `order=1` deployment fails (connection error, 404, 429, etc.), the router automatically tries `order=2` deployments, then `order=3`, and so on. Each order level gets its own set of retries before escalating to the next. If all order levels are exhausted, the router falls through to any configured fallbacks.
 
+Context window errors use a matching `context_window_fallbacks` rule before later orders. When no rule matches the requested group, later orders and then generic fallbacks remain available, even if another group has a context window rule. Content policy errors keep their separate fallback handling. See [context error fallback precedence](./proxy/reliability.md#context-error-fallback-precedence) for the decision table and a complete configuration.
+
 A hop to a deployment that cannot decrypt the failed deployment's encrypted reasoning (another provider, or another API key) drops those reasoning items and keeps their summaries, so the hop answers instead of failing with `invalid_encrypted_content`; see [fallbacks](./proxy/reliability.md#explanation)
 
 <Tabs>
