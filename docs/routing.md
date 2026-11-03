@@ -968,9 +968,13 @@ Routing groups can be updated via `Router.update_settings(routing_groups=[...])`
 
 ## Session Affinity (Sticky Sessions)
 
-Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one. It works with `simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`, and routing groups.
 
 Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+:::warning[Proxy and async Router calls only]
+Session affinity applies to proxy requests and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. The sync Router methods, such as `completion` and `embedding`, skip it and pick a deployment by the routing strategy alone, so the same session id can land on a different deployment on every call. A `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included. The same holds for `deployment_affinity`. To keep a session on one deployment from the SDK, call the async method with one of the strategies above.
+:::
 
 <Tabs>
 <TabItem value="proxy" label="Proxy">
