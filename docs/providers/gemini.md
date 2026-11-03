@@ -1775,9 +1775,9 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 
 ### Keep tool call ids short
 
-By default, each tool call id that LiteLLM returns holds the whole thought signature, as `call_123__thought__<thought-signature>`. A signature is often hundreds of characters long, so a client that limits the id length rejects the tool call. For example, the AWS Bedrock AgentCore harness allows at most 128 characters.
+By default, when a tool call carries a thought signature, the tool call id that LiteLLM returns holds the whole signature, as `call_123__thought__<thought-signature>`. Gemini signs only the first call of a parallel batch, so the other ids are already short. A signature is often hundreds of characters long, so a client that limits the id length rejects the tool call. For example, the AWS Bedrock AgentCore harness allows at most 128 characters.
 
-Set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> to get short ids such as `call_436686`. LiteLLM then returns the signature only in `provider_specific_fields.thought_signature` of each tool call. The setting applies to `gemini/` and `vertex_ai/` models on `/chat/completions` and `/responses`, with and without streaming. When it is not set, ids hold the signature as before.
+Set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> to get short ids such as `call_436686`. LiteLLM then returns the signature only in `provider_specific_fields.thought_signature` of the tool call that carries it. The setting applies to Gemini models called through `gemini/` and `vertex_ai/` on `/chat/completions` and `/responses`, with and without streaming. When it is not set, ids hold the signature as before.
 
 Set it on a deployment in your `config.yaml`:
 
