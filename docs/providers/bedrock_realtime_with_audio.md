@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
 ## Audio Streaming with Voice Conversation
 
-Nova Sonic sends answer audio much faster than it plays, often tens of seconds ahead. Keep reading the websocket while audio plays: put received audio on a queue and play it from a separate thread. A client that plays each chunk inside its receive loop stops reading the socket, misses the proxy's keepalive pings, and gets disconnected with `1011 (internal error) keepalive ping timeout` on long answers.
+Nova Sonic sends answer audio much faster than it plays, often tens of seconds ahead. Keep reading the websocket while audio plays: put received audio on a queue and play it from a separate thread. A client that plays each chunk inside its receive loop stops reading the socket, misses the proxy's keepalive pings, and gets disconnected on long answers, with either `1011 (internal error) keepalive ping timeout` or, if the client is blocked writing audio when the proxy drops the connection, `ConnectionClosedError: no close frame received or sent`.
 
 ```python
 import asyncio
@@ -380,7 +380,7 @@ aws configure
 - Ensure LiteLLM proxy is running on the correct port
 - Verify AWS credentials are properly configured
 - Check that the Bedrock model is available in your region
-- `ConnectionClosedError: received 1011 (internal error) keepalive ping timeout` means the client stopped reading the websocket for about 20 seconds or more, usually because it plays audio inside its receive loop. Play audio from a queue on a separate thread as shown above. Setting `ping_interval=None` on the client does not help, because the proxy sends the pings
+- `ConnectionClosedError: received 1011 (internal error) keepalive ping timeout`, or `ConnectionClosedError: no close frame received or sent` after a `BrokenPipeError`, means the client stopped reading the websocket for about 20 seconds or more, usually because it plays audio inside its receive loop. Play audio from a queue on a separate thread as shown above. Setting `ping_interval=None` on the client does not help, because the proxy sends the pings
 - A close with an `error` event about timing out or a model timeout is one of Bedrock's [session limits](#session-limits)
 
 ### Audio Issues
