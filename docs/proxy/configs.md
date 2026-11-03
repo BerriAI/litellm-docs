@@ -592,6 +592,8 @@ custom_tokenizer:
   auth_token: Optional[str] # huggingface auth token 
 ```
 
+To count a model with one of the tokenizers that LiteLLM names, such as `openai` or `llama3`, and skip the count API of the provider, set `token_count_tokenizer` instead. Refer to [Count with a named local tokenizer](../count_tokens.md#count-with-a-named-local-tokenizer).
+
 ## General Settings `general_settings` (DB Connection, etc)
 
 ### Configure DB Pool Limits + Connection Timeouts 
