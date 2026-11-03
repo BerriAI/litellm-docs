@@ -116,7 +116,8 @@ Implement `POST /beta/litellm_basic_guardrail_api`
   "blocked_reason": "why content was blocked",  // required if action=BLOCKED
   "texts": ["modified text"],  // optional array of modified text strings
   "images": ["modified_base64_image"],  // optional array of modified images
-  "structured_messages": [{"role": "user", "content": "modified message"}]  // optional array of rewritten chat messages
+  "structured_messages": [{"role": "user", "content": "modified message"}],  // optional array of rewritten chat messages
+  "tool_calls": [{"id": "call_abc123", "type": "function", "function": {"name": "get_weather", "arguments": "{\"location\": \"[REDACTED]\"}"}}]  // optional array of rewritten tool calls
 }
 ```
 
@@ -197,6 +198,8 @@ The `tool_calls` parameter contains actual function/tool invocations being made 
 **Availability:**
 - **Both input and output:** Tool calls can be present in both `input_type="request"` (assistant messages requesting tool calls) and `input_type="response"` (LLM responses with tool calls).
 - **Supported endpoints:** The `tool_calls` parameter is supported on: `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`.
+
+**Rewriting tool calls:** To change what a tool is called with, return `tool_calls` in the response with one entry per entry you received, in the same order, changing only `function.arguments` (and `function.name` if needed). LiteLLM writes the rewritten calls back onto the request or response on every supported endpoint; on `/v1/messages` the rewritten `arguments` become the `tool_use` block's `input`, so they must stay a JSON object, and a rewrite that is not one is rejected with a 500 naming the guardrail rather than sent unrewritten. A returned array whose length differs from the one you received is ignored and the original tool calls are kept.
 
 **Use cases:**
 - Validate tool call arguments before execution
@@ -420,6 +423,7 @@ class GuardrailResponse(BaseModel):
     texts: Optional[List[str]] = None
     images: Optional[List[str]] = None
     structured_messages: Optional[List[Dict[str, Any]]] = None  # rewritten OpenAI messages, one per row received
+    tool_calls: Optional[List[Dict[str, Any]]] = None  # rewritten tool calls, one per tool call received
 
 @app.post("/beta/litellm_basic_guardrail_api")
 async def apply_guardrail(request: GuardrailRequest):
