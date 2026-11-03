@@ -37,8 +37,17 @@ sequenceDiagram
     else No mapping — reject
         Proxy-->>Client: 403 Forbidden
     else No mapping — auto_register
-        Proxy->>DB: Create new virtual key + mapping
+        Proxy->>DB: Reuse an eligible key if configured,<br/>otherwise create a key. Create mapping
         Proxy-->>Client: 200 OK
+    else No mapping — link_only
+        Proxy->>DB: Find an eligible existing user key
+        alt Eligible key found
+            Proxy->>DB: Create mapping to existing key
+            Proxy->>Proxy: Enforce selected key permissions
+            Proxy-->>Client: Allow or deny under key permissions
+        else No eligible key
+            Proxy-->>Client: 403 Forbidden, no key or mapping created
+        end
     end
 ```
 
@@ -73,13 +82,59 @@ general_settings:
 |-------|----------|
 | `fallback_team_mapping` | Fall through to team-based JWT auth (default — backward compatible) |
 | `reject` | Return 403 if no mapping found |
-| `auto_register` | Auto-create a virtual key + mapping on first encounter |
+| `auto_register` | Create a virtual key + mapping, or reuse an eligible key when `auto_register_map_existing_key: true` |
+| `link_only` | Link an eligible existing user key, or return 403 without creating a key. Ignores `auto_register_map_existing_key` |
 
 With `auto_register`, the first request carrying a new claim value provisions a virtual key and mapping on the fly, with no admin call. The key is created only after the JWT clears full policy (signature, RBAC/scope, `custom_validate`, and `user_allowed_email_domain`); if the token fails any check the request is rejected and nothing is created. The new key inherits the team, user, and org resolved from the validated JWT, so make sure those claims are configured. A token that resolves to a proxy admin is not auto-registered, since admins already have full access. `auto_register` requires a database connection
+
+### Link to existing keys without creating keys
+
+<SinceVersion v="1.109.0" />
+
+`link_only` and `virtual_key_mapping_skip_allowed_routes_check` are unreleased additions in [LiteLLM PR #49956](https://github.com/BerriAI/litellm/pull/49956). Use a build that includes that change.
+
+Use `link_only` when administrators provision keys in advance. Configure `virtual_key_claim_field` to match `user_id_jwt_field` or `user_email_jwt_field`, so the claim identifies the JWT-resolved user. For example, map both the user and the key lookup to `sub`:
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: sub
+    virtual_key_claim_field: sub
+    user_id_upsert: false
+    unregistered_jwt_client_behavior: link_only
+    virtual_key_mapping_skip_allowed_routes_check: false
+```
+
+After JWT policy checks, an unmapped identity links to its newest eligible key. If none exists, the request returns 403 with `JWT Key Mapping: No eligible existing virtual key for this identity. Access denied.` No key or mapping is created. Both automatic modes require a database connection.
+
+User provisioning is separate. `link_only` never creates a key, but `user_id_upsert: true` can still create a user during JWT authentication. Keep it `false` when users must already exist. JWTs that authenticate as proxy admins remain exempt from automatic key mapping in `auto_register` and `link_only`; the configured mapping claim must still be present.
+
+### Which existing key is selected?
+
+Existing-key selection applies to `link_only`, or to `auto_register` with `auto_register_map_existing_key: true` (default `false`). In the latter case, no eligible key means a new key is created. In `link_only`, it means 403.
+
+The key must belong to the JWT-resolved user and the JWT-resolved team, or have no team if the JWT resolves none. It must never expire, must not be blocked, must not be an Admin UI session key, and must not have `metadata.auto_registered: true`. The newest eligible key by `created_at` wins. Reuse requires `virtual_key_claim_field` to match the configured user ID or email claim field.
+
+By default, the key must also have an empty `allowed_routes` list or include the route group `llm_api_routes`. A key with only specific routes, such as `["/v1/chat/completions"]`, fails this selection check even though it can serve that endpoint.
+
+Set `virtual_key_mapping_skip_allowed_routes_check: true` to remove this route eligibility check entirely in either automatic mode. Other eligibility checks still apply. This flag changes selection only; request-time route, model, budget, and rate-limit checks still apply to the selected key.
+
+:::caution JWTs inherit the selected key's permissions
+
+The bypass also permits selection of keys with management routes. The JWT can use those existing key permissions, including management routes outside the user's normal role permissions. Enable it only when eligible user-assigned keys are intended to be accessible through JWT authentication.
+
+:::
+
+These settings apply when no mapping exists. A mapped key that fails authorization is rejected rather than silently replaced with another key. Once linked, later requests use that mapping rather than selecting the newest key again.
 
 ### Step 2. Register a JWT client → virtual key mapping
 
 **Recommended: let `auto_register` do it.** Set `unregistered_jwt_client_behavior: "auto_register"` in Step 1 and the first request from each new claim value provisions its own key automatically, with no admin call. Use this when every client should start from the same defaults.
+
+If keys are already provisioned, use [`link_only`](#link-to-existing-keys-without-creating-keys) to create the mapping automatically while rejecting clients without an eligible key.
 
 **Manual: register a key with specific limits.** When a client needs its own budget or model set, create the virtual key first, then map a claim value to it. There is no single atomic endpoint; it is two calls.
 
