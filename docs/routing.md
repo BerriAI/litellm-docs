@@ -968,9 +968,13 @@ Routing groups can be updated via `Router.update_settings(routing_groups=[...])`
 
 ## Session Affinity (Sticky Sessions)
 
-Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one, so it works with every strategy on this page (`simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`) and with routing groups.
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one. It works when the top-level `routing_strategy` is `simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, or `cost-based-routing`, and then also inside routing groups of any strategy but `priority`. It also works under `lar1`, which only supports async calls.
 
 Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
+
+:::warning[Where session affinity applies]
+Session affinity applies to proxy requests on the LLM API routes, such as `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings`, and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. Pass-through routes that name a router model, such as `/bedrock/model/<model>/converse`, apply it too, but the relay routes `/vllm`, `/azure`, `/azure_ai`, and `/nvidia_nim` don't carry the session id, so only `deployment_affinity` applies there. Vertex AI pass-through picks a deployment without either check. The sync Router methods, such as `completion`, `responses`, and `embedding`, skip it, so the same session id can land on a different deployment on every call. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy and every routing group included. So does a custom strategy set with `router.set_custom_routing_strategy`, unless its async method picks from what `router.select(model, request_kwargs, kind="healthy")` returns, as `lar1` does. These rules hold for `deployment_affinity` and for the Responses API checks `responses_api_deployment_check` and `encrypted_content_affinity` too. Inside a `priority` routing group, `session_affinity` and `deployment_affinity` never pin, while the Responses API checks still do. To keep a session on one deployment from the SDK, call the async method under one of the top-level strategies above.
+:::
 
 <Tabs>
 <TabItem value="proxy" label="Proxy">
@@ -989,7 +993,7 @@ model_list:
       api_base: https://westus.openai.azure.com
 
 router_settings:
-  routing_strategy: simple-shuffle          # any strategy
+  routing_strategy: simple-shuffle          # any strategy but usage-based-routing (v1)
   optional_pre_call_checks: ["session_affinity"]
   deployment_affinity_ttl_seconds: 3600     # optional, default 3600
 ```
@@ -1023,7 +1027,7 @@ router = Router(
             "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
         },
     ],
-    routing_strategy="simple-shuffle",                 # any strategy
+    routing_strategy="simple-shuffle",                 # any strategy but usage-based-routing (v1)
     optional_pre_call_checks=["session_affinity"],
     deployment_affinity_ttl_seconds=3600,              # optional, default 3600
 )
