@@ -205,7 +205,7 @@ Each error uses the error format of the API that you used: Anthropic, OpenAI, or
 | A non-Claude Bedrock model, such as Amazon Nova, has no count API | The 400 or 404 from AWS |
 | `litellm.disable_token_counter` is set, and the provider has no count API | A 503 |
 
-If the deployment sets `token_count_framing`, the proxy returns a local estimate in place of a 400 or a 404 from the provider. Refer to [Local estimates for models without a count API](#local-estimates-for-models-without-a-count-api). A Vertex AI partner model with `custom_tokenizer` in `model_info` continues to use a local count and does not return the 400.
+If the deployment sets `token_count_framing`, the proxy returns a local estimate in place of a 400 or a 404 from the provider. Refer to [Local estimates for models without a count API](#local-estimates-for-models-without-a-count-api). A Vertex AI partner model with `custom_tokenizer` in `model_info` continues to use a local count and does not return the 400. If the deployment sets `token_count_tokenizer`, the proxy does not call the provider and counts with that tokenizer. Refer to [Count with a named local tokenizer](#count-with-a-named-local-tokenizer).
 
 This change does not apply to providers with no count API, such as Groq. They continue to use a local count. The SDK function `litellm.acount_tokens()` also continues to use a local count.
 
@@ -241,6 +241,52 @@ The `/v1/messages/count_tokens`, `/v1/responses/input_tokens`, and `:countTokens
 - `provider`: the count API of the provider for the deployment
 - `token_count_model`: the count API for the model in `token_count_model`. The field `litellm_count_model` gives the name of this model.
 - `local_estimate`: a local count
+
+### Count with a named local tokenizer
+
+To count a model that the provider cannot count, set `token_count_tokenizer` in the `model_info` of the deployment. The proxy then never calls the count API of the provider for that deployment. It counts locally with the tokenizer that you name on `/v1/messages/count_tokens`, `/v1/responses/input_tokens`, and `/utils/token_counter`. Use it for Bedrock models that the AWS CountTokens API cannot count, such as Amazon Nova, Llama, and Mistral.
+
+```yaml
+model_list:
+  - model_name: nova-lite
+    litellm_params:
+      model: bedrock/us.amazon.nova-2-lite-v1:0
+      aws_region_name: us-east-1
+    model_info:
+      token_count_tokenizer: openai
+```
+
+```bash
+curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "nova-lite",
+    "messages": [
+      {"role": "user", "content": "Hello, how are you?"}
+    ]
+  }'
+```
+
+```json
+{"input_tokens": 16, "litellm_count_source": "local_estimate", "litellm_count_tokenizer": "openai"}
+```
+
+The response sets `litellm_count_source` to `local_estimate` and names the tokenizer in `litellm_count_tokenizer`. On `/utils/token_counter`, the field is `count_tokenizer`. The count is an estimate and can differ from the number that the provider bills. If the deployment also sets `token_count_framing`, the proxy adds that number to the count. The proxy does not use `token_count_model` or `custom_tokenizer` for a deployment that sets `token_count_tokenizer`.
+
+| Value | Counts with | Use for | Download |
+|-------|-------------|---------|----------|
+| `openai` | OpenAI tiktoken, with the encoding for the model name. A model that OpenAI does not list gets `o200k_base` | Models with no public tokenizer, such as Amazon Nova | None, ships with LiteLLM |
+| `llama3` | The Llama 3 tokenizer, Hugging Face `Xenova/llama-3-tokenizer` | Llama 3.x models, such as Llama 3.3 on Bedrock | From Hugging Face on first use |
+| `deepseek` | The DeepSeek tokenizer | DeepSeek models | None, ships with LiteLLM |
+| `cohere` | The Cohere Command R tokenizer, Hugging Face `Xenova/c4ai-command-r-v01-tokenizer` | Cohere Command models | From Hugging Face on first use |
+| `kimi_k3` | The Kimi K3 tokenizer, Hugging Face `moonshotai/Kimi-K3` at a pinned revision | Kimi K3 | From Hugging Face on first use |
+
+The proxy never falls back to a different tokenizer. A value that is not in the table returns a 400 that lists the allowed values. A tokenizer that cannot be loaded, for example on a proxy with no internet access or with `disable_hf_tokenizer_download` set, returns a 400 that says it could not be loaded. A request that the tokenizer cannot read also returns a 400, and so does a `/v1/responses/input_tokens` request with a `previous_response_id` whose earlier turns only the provider stores.
+
+Without `token_count_tokenizer`, nothing changes. A provider that cannot count the model continues to return its error, for example the 400 from AWS Bedrock CountTokens for a model that is not Claude.
+
+`custom_tokenizer` is a different setting. It points at any Hugging Face tokenizer by its identifier and revision. Refer to [Set custom tokenizer](./proxy/configs.md#set-custom-tokenizer). `token_count_tokenizer` takes one of the names in the table and also skips the count API of the provider.
 
 ## Proxy Configuration
 
