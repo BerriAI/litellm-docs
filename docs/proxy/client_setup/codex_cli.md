@@ -1,5 +1,6 @@
 ---
 title: Codex (CLI)
+toc_max_heading_level: 4
 ---
 
 import Image from '@theme/IdealImage';
@@ -88,7 +89,7 @@ The row carries no end user yet, since Codex has no setting that puts one in the
 
 For an OpenAI deployment with UI screenshots, configuration, and request examples, see [Fast & Ultrafast mode](../../providers/openai/ultrafast.md). The guide also explains when to set a default `service_tier` and when to let Codex choose it per request.
 
-Codex never asks a custom provider which models it serves unless you tell it to, so its `/model` picker shows Codex's built-in OpenAI models and a gateway-only name such as `my-coding-model` never appears in it. Codex CLI 0.159 or newer can fetch the catalog from the gateway instead. Two settings are needed together: `model_catalog_url` on the provider block, pointed at `<LITELLM_PROXY_BASE_URL>/v1/models`, and the `api_key_model_discovery` feature under `[features]`. Either one alone changes nothing, so `codex --enable api_key_model_discovery` without the URL never calls the gateway. Older releases such as 0.159 also show a startup warning about the feature, which `suppress_unstable_features_warning = true` at the top level of the file silences. Under `[features]` Codex ignores that key and warns about an unrecognized setting instead.
+Codex never asks a custom provider which models it serves unless you tell it to, so its `/model` picker shows Codex's built-in OpenAI models and a gateway-only name such as `my-coding-model` never appears in it. Codex CLI 0.159 or newer can fetch the catalog from the gateway instead. Two settings are needed together: `model_catalog_url` on the provider block, pointed at `<LITELLM_PROXY_BASE_URL>/v1/models`, and the `api_key_model_discovery` feature under `[features]`. Either one alone changes nothing, so `codex --enable api_key_model_discovery` without the URL never calls the gateway. Older releases such as 0.159 also show a startup warning about the feature, which `suppress_unstable_features_warning = true` at the top level of the file, before the first table, silences. Under `[features]` Codex ignores that key and warns about an unrecognized setting instead.
 
 ```toml title="~/.codex/config.toml"
 suppress_unstable_features_warning = true
@@ -108,7 +109,7 @@ On startup Codex calls `GET /v1/models?client_version=<its version>` with your v
 
 **Prerequisites for service tiers:** Ask your gateway administrator to configure the model's [Fast and Ultrafast settings](../../providers/openai/ultrafast.md#set-up-with-configyaml). Select the gateway model in Codex, then use `/fast` or `/ultrafast` when available.
 
-Codex caches the catalog for five minutes in `models_cache.json` under its home directory. Gateway model or service-tier changes appear on a launch after that cache expires.
+Codex caches the catalog for five minutes in `models_cache.json` under its home directory. Gateway model, service-tier, or context-window changes appear on a launch after that cache expires.
 
 Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway keeps only the entries that fit: models that list a service tier are kept first, then the rest in `model_list` order, an entry too large for the bytes left is passed over while smaller ones after it are still kept, and the models left out are logged. Each entry is 20 to 65 KB, so roughly 20 to 45 models fit, and a model without a tier that was left out still works by name with Codex's fallback metadata.
 
@@ -141,9 +142,11 @@ The catalog then gives the model the smallest `max_input_tokens` among the group
   Context window:      100% left (12.2K used / 828K)
 ```
 
-A deployment without `max_input_tokens` counts as Codex's own window, so a limit on only some deployments of a group can lower the window but never raise it, and a group where no deployment sets one keeps Codex's entry as it ships. Only the deployments the calling key's team can route to count, so two teams can see different windows for one model. An alias such as `my-coding-model` backed by `openai/gpt-6.1-sol` follows the same rule. On a deployment saved before v1.102 whose `model_info` still carries the cost map's `key`, a limit equal to the cost map's own value counts as unset, since the gateway cannot tell it from a copy of the cost map.
+A deployment without `max_input_tokens` counts as Codex's own window, so a limit on only some deployments of a group can lower the window but never raise it, and a group where no deployment sets one keeps Codex's entry as it ships. Only the deployments the calling key's team can route to count, so two teams can see different windows for one model. An alias such as `my-coding-model` backed by `openai/gpt-6.1-sol` follows the same rule. The upstream match reads the first deployment the key can route to, and a Bedrock id such as `bedrock/us.openai.gpt-6.1-sol` matches no Codex entry, so an alias whose first deployment is on Bedrock gets the fallback metadata instead. Put an `openai/` deployment first, or name the group `gpt-6.1-sol`.
 
-A larger window can cost more. `gpt-6.1-sol` bills input above 272K tokens at a higher rate, `input_cost_per_token_above_272k_tokens` in the cost map, so a session that grows past 272K pays more for every later turn. A config that already sets `max_input_tokens` on a model Codex knows changes Codex's window once the gateway runs v1.110.0 {/* keep-version-note */} or later. The larger window reaches only a Codex that reads the catalog through `model_catalog_url`. [`lite codex`](../management_cli.md#run-coding-agents-through-the-proxy) writes its own catalog, which never raises Codex's window this way, so its `/status` stays at `258K` for `gpt-6.1-sol`.
+On a deployment saved before v1.102 whose `model_info` still carries the cost map's `key`, a limit equal to the current cost map's value counts as unset, since the gateway cannot tell it from a copy of the cost map. A limit copied from an older cost map, or from another deployment, still counts, so before upgrading check `/model/info` for a `max_input_tokens` nobody set on purpose.
+
+A larger window can cost more. Once a request's prompt passes 272K tokens, `gpt-6.1-sol` bills every token of that request, input, cached input, and output, at its higher `_above_272k_tokens` rates in the cost map, so every turn after a session grows past 272K costs more. A config that already sets `max_input_tokens` on a model Codex knows changes Codex's window once the gateway runs v1.110.0 {/* keep-version-note */} or later. The larger window reaches only a Codex that reads the catalog through `model_catalog_url`. [`lite codex`](../management_cli.md#run-coding-agents-through-the-proxy) writes its own catalog, which never raises Codex's window this way, so its `/status` stays at `258K` for `gpt-6.1-sol`.
 
 To see what the gateway gives each model, read the catalog with your key:
 
