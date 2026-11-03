@@ -221,7 +221,9 @@ if __name__ == "__main__":
 
 ## Using Tools/Function Calling
 
-Tool calling with Nova Sonic requires LiteLLM v1.107.0 or later. Earlier versions never send the `response.function_call_arguments.done` event, so the model answers without calling the tool.
+<SinceVersion v="1.108.0" />
+
+Earlier versions never send the `response.function_call_arguments.done` event, so the model answers without calling the tool.
 
 After the client sends a tool result, Nova Sonic answers in a new response, so keep listening past the `response.done` that ends the tool call turn.
 
