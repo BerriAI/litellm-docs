@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.106.6",
+      "v1.105.7"
+    ],
+    "title": "LiteLLM v1.106.6 and v1.105.7 fix the gzip performance regression",
+    "points": [
+      "The proxy gzips only dashboard analytics responses and compresses them on a worker thread, so `Accept-Encoding: gzip` no longer slows down other requests.",
+      "Inference and other endpoints outside the dashboard analytics routes return uncompressed responses, and no setting restores the old gzip behavior."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.5",
       "v1.105.6",
       "v1.104.8",
@@ -217,17 +228,6 @@
     "points": [
       "The locked Python dependencies update `urllib3` to 2.8.0, `pypdf` to 6.19.0 and `pyjwt` to 2.15.0.",
       "The Admin UI updates `next` to 16.3.6, and the wolfi-base image digest picks up glibc 2.44-r6."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.3"
-    ],
-    "title": "LiteLLM v1.103.3 fixes streamed alias spend and bridged tool calls",
-    "points": [
-      "The proxy exits at startup when database setup fails, unless you set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior.",
-      "Streamed requests through an alias such as `claude-opus-4.6` now record spend from the deployment model instead of $0.",
-      "Chat replies bridged from the Responses API now put tool calls in `choices[0]`, so clients that read only the first choice run the tool."
     ]
   }
 ]

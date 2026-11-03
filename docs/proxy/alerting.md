@@ -288,7 +288,9 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ### MS Teams Webhooks
 
-LiteLLM sends alerts to Microsoft Teams natively through the `ms_teams` alerting destination, available from v1.100.0. Each alert is posted as an Adaptive Card, which both Teams Workflows webhooks and legacy incoming webhook connectors accept
+<SinceVersion v="1.100.0" />
+
+LiteLLM sends alerts to Microsoft Teams natively through the `ms_teams` alerting destination. Each alert is posted as an Adaptive Card, which both Teams Workflows webhooks and legacy incoming webhook connectors accept
 
 ##### Quick Start
 

@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
 const {substitute} = require('../src/remark/docs-models');
+const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
 const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
@@ -38,7 +39,6 @@ const START_HERE = [
 // The main sidebar is split by its top-level categories; the others are small
 // enough to list under one heading each.
 const SIDEBAR_TITLES = {
-  learnSidebar: 'Learn: guides and tutorials',
   integrationsSidebar: 'Integrations',
   autoRouterSidebar: 'Auto Router',
   providersSidebar: 'Providers',
@@ -57,7 +57,8 @@ const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, 
 - Start the gateway: \`${QUICKSTART.gateway.mac}\` (macOS, Linux) or \`${QUICKSTART.gateway.windows}\` (Windows PowerShell). See "Start the AI Gateway" below.
 - Python SDK: \`${QUICKSTART.sdk}\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
 - Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image adds SSO, audit logs, and admin roles. Contact: ${SALES_URL}
-- Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.`;
+- Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.
+- If you're interested in receiving updates on what's new in LiteLLM, sign up at ${SITE}/blog.`;
 
 const fence = (lang, code) => '```' + lang + '\n' + code + '\n```';
 
@@ -403,6 +404,7 @@ function mdxToMarkdown(raw) {
   text = substitute(text);
   // Inline figures, e.g. a <Stat id="stars" /> inside a table cell
   text = text.replace(/<Stat\s+id="([a-zA-Z]+)"\s*\/>/g, (_, id) => STATS[id] ?? '');
+  text = sinceVersionAsText(text);
 
   const out = [];
   let fence = null;
@@ -716,7 +718,7 @@ module.exports = function llmsPlugin(context) {
         }
         for (const id of ids) listed.add(id);
       };
-      const order = ['tutorialSidebar', 'learnSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
+      const order = ['tutorialSidebar', 'integrationsSidebar', 'autoRouterSidebar'];
       const sidebarNames = [...order.filter((n) => sidebars[n]), ...Object.keys(sidebars).filter((n) => !order.includes(n))];
       for (const name of sidebarNames) {
         if (SIDEBAR_TITLES[name]) {

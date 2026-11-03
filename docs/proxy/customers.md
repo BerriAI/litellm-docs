@@ -210,7 +210,7 @@ Every distinct customer ID LiteLLM sees is upserted into the customer table, whi
 
 Each session then lands in Usage -> Customer Usage as its own customer, and if you have a [default customer budget](#default-budget-for-all-customers) configured, each session gets its own copy of that budget, so a monthly cap meant for real customers turns into a per-session cap on that traffic.
 
-Set `validate_end_user_id_in_db` to keep those IDs out. Available in v1.87.0 and above.
+Set `validate_end_user_id_in_db` to keep those IDs out. <SinceVersion v="1.87.0" />
 
 ```yaml showLineNumbers title="config.yaml"
 litellm_settings:

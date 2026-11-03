@@ -97,7 +97,7 @@ To get a local estimate for a model that the provider cannot count, set `token_c
 
 | Endpoint | Method | Description |
 | --- | --- | --- |
-| `/v1/live/sessions` | POST | OpenAI Live sessions, also on `/live/sessions` and `/openai/v1/live/sessions`, billed from `usage.seconds` |
+| `/v1/live/sessions` | WebSocket | OpenAI Live sessions, also on `/live/sessions` and `/openai/v1/live/sessions`, billed from `usage.seconds` |
 
 ### Expanded provider endpoint support
 

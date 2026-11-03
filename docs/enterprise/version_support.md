@@ -5,13 +5,19 @@ description: LiteLLM supports the four most recent stable minor lines with patch
 
 # Version support
 
+:::info[Paused during the LTS pilot]
+
+Starting the week of November 2, 2026, this policy is paused while LiteLLM pilots a long-term support (LTS) line for one month. Refer to the [LTS pilot](./lts_pilot.md) for details.
+
+:::
+
 LiteLLM supports the four most recent stable minor lines. Each of these lines gets patch releases. Older lines are at end of life and do not get updates.
 
 Enterprise and open source use one image and one version number. The license key enables the Enterprise features. Thus this policy applies to Enterprise and to open source in the same way.
 
 ## How the window moves
 
-LiteLLM releases a new stable minor line approximately each week. When a new line comes out, the oldest line goes out of the window and does not get more releases. There is no separate long-term support track.
+LiteLLM releases a new stable minor line approximately each week. When a new line comes out, the oldest line goes out of the window and does not get more releases. There is no separate long-term support track. Enterprise customers who need longer coverage can reach out through their [support channel](./support.md).
 
 This policy started on Monday, June 29, 2026. For example, in mid-June 2026 the supported lines were 1.86, 1.87, 1.88, and 1.89.
 

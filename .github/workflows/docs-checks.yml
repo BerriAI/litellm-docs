@@ -35,6 +35,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run test:social-cards
       - run: npm run test:optimize-images
+      - run: npm run test:llms
       - run: npm run test:lens
       - run: node --test scripts/docs-models.test.cjs
   writing-style:
@@ -65,5 +66,13 @@ jobs:
           python-version: "3.13"
       - run: pip install pyyaml
       - run: python3 scripts/test_docs_models.py
+      - run: python3 scripts/test_check_docs_version_note.py
       - run: python3 scripts/check-docs.py docs
+      - name: Require a version badge on new pages and config settings
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          python3 scripts/check-docs.py docs --base="$BASE_SHA" --only=version-missing
       - run: python3 scripts/check-docs.py blog --only=card-missing,card-too-long

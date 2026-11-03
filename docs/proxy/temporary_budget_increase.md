@@ -11,7 +11,7 @@ Set a temporary budget increase for a LiteLLM Virtual Key or a team member. Use 
 | Team | ❌ |
 | Organization | ❌ |
 
-For a team member, send `temp_budget_increase` and `temp_budget_expiry` on `/team/member_update` or fill in the two fields when editing the member in the Admin UI (`v1.103.0` and later). See [Update a team member's budget](./users#update-a-team-members-budget). The steps below cover virtual keys.
+For a team member, send `temp_budget_increase` and `temp_budget_expiry` on `/team/member_update` or fill in the two fields when editing the member in the Admin UI <SinceVersion v="1.103.0" />. See [Update a team member's budget](./users#update-a-team-members-budget). The steps below cover virtual keys.
 
 <EnterpriseFeature feature="Temporary Budget Increase" />
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
 import {ArrowRight} from 'lucide-react';
+import SinceVersion from '@site/src/components/SinceVersion';
 import styles from './styles.module.css';
 
 export default function SubscriptionCards({items}) {
@@ -18,7 +19,7 @@ export default function SubscriptionCards({items}) {
               ))}
             </ul>
             <div className={styles.footer}>
-              <span className={styles.version}>{item.version}</span>
+              <span className={styles.version}><SinceVersion v={item.since} /></span>
               <span className={styles.action}>
                 {item.ctaLabel}<ArrowRight size={18} aria-hidden="true" />
               </span>

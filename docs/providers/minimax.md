@@ -640,9 +640,11 @@ Pass these via `extra_body`:
 
 ## MiniMax - Video Generation
 
+<SinceVersion v="1.107.0" />
+
 MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`. Calling `video_content` before then returns a 400 that says the video is still processing.
 
-MiniMax video is available from v1.107.0. Earlier releases return a 500 that says video generation is not supported for minimax.
+Earlier releases return a 500 that says video generation is not supported for minimax.
 
 ```python showLineNumbers title="MiniMax Video Generation"
 import os

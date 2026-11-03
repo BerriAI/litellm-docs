@@ -57,8 +57,19 @@ test('each goal has one latest release, then plans in date order, all as days', 
       assert.match(point.date, DAY);
       if (index > latest) assert.ok(point.date > points[index - 1].date);
     });
-    assert.ok(goal.endsOn > points.at(-1).date);
+    if (goal.endsOn !== undefined) assert.ok(goal.endsOn > points.at(-1).date);
   }
+});
+
+test('goals can track released work without a completion date', () => {
+  const catalog = {...CATALOG, plans: [], goals: CATALOG.goals.map(({endsOn, ...goal}) => goal)};
+  const {goals} = buildModel(catalog);
+  assert.equal(goals[0].endsOn, undefined);
+  assert.equal(progressAt(goals[0], CURRENT_VERSION), progressAt(GOALS[0], CURRENT_VERSION));
+  const withDate = endsOn => buildModel({...catalog, goals: catalog.goals.map(goal => ({...goal, endsOn}))});
+  assert.doesNotThrow(() => withDate(afterLatest(7)));
+  assert.throws(() => withDate(latestDay), /needs to end after/);
+  assert.throws(() => withDate('invalid'), /invalid date/);
 });
 
 test('progress weighs each piece of work by its size, at 0.8 when partial and 1 when done', () => {
@@ -129,11 +140,30 @@ test('plans need unique ids, labels, later days and known work', () => {
   assert.throws(() => withPlans([{...valid, id: ' '}]), /unique nonempty ids/);
   assert.throws(() => withPlans([valid, {...valid, date: afterLatest(14)}]), /unique nonempty ids/);
   assert.throws(() => withPlans([{...valid, label: []}]), /needs a label/);
+  assert.throws(() => withPlans([{...valid, label: '   '}]), /needs a label/);
   assert.throws(() => withPlans([{...valid, date: latestDay}]), /needs a day after/);
   assert.throws(() => withPlans([valid, {...valid, id: 'second'}]), /needs a day after/);
   assert.throws(() => withPlans([{...valid, date: 'invalid'}]), /invalid date/);
   assert.throws(() => withPlans([{...valid, partial: {deploy: ['unknown']}}]), /unknown work/);
   assert.throws(() => withPlans([{...valid, done: {deploy: ['image']}}]), /appears twice/);
+});
+
+test('weekly goals keep their names, descriptions and cumulative progress', () => {
+  const {goals, plans} = withPlans([
+    {...plan('foundation', 7, {partial: {deploy: ['dispatch']}}), label: 'Foundation', description: 'Establish the dispatch API.'},
+    {...plan('cutover', 14, {done: {deploy: ['dispatch']}}), label: 'Cutover'},
+    {...plan('target', 21, {}), label: ['e2e', 'simple'], route: 'messages'},
+  ]);
+  assert.equal(plans[0].label, 'Foundation');
+  assert.equal(plans[0].description, 'Establish the dispatch API.');
+  assert.deepEqual(plans[0].terms, []);
+  assert.equal(plans[2].label, 'e2e, simple');
+  assert.deepEqual(plans[2].terms, ['e2e', 'simple']);
+  const dispatch = goals[0].work.find(work => work.id === 'deploy/dispatch');
+  assert.equal(levelAt(dispatch, plans[0]), 1);
+  assert.equal(levelAt(dispatch, plans[1]), 2);
+  assert.equal(levelAt(dispatch, plans[2]), 2);
+  assert.equal(progressAt(goals[0], plans[1]), progressAt(goals[0], plans[2]));
 });
 
 test('work needs a name, a positive size, and partial no later than done', () => {

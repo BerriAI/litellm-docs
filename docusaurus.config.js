@@ -66,6 +66,10 @@ const config = {
           {from: '/docs/decisions/typesafe_images', to: '/docs/decisions#typesafe-images-box-questions-and-long-context'},
           {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
           {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
+          {from: '/docs/learn', to: '/docs/tutorials'},
+          {from: '/docs/learn/gateway_quickstart', to: '/docs/proxy/quick_start'},
+          {from: '/docs/learn/python_sdk_quickstart', to: '/docs/learn/sdk_quickstart'},
+          {from: '/docs/learn/enterprise_quickstart_learn', to: '/docs/learn/enterprise_quickstart'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/provider_tutorials', to: '/docs/learn/call-any-model'},
           {from: '/docs/tutorials/proxy_admin_access', to: '/docs/learn/run-the-gateway'},
@@ -350,7 +354,9 @@ const config = {
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
-        pages: {},
+        pages: {
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
+        },
         theme: {
           customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
@@ -448,12 +454,6 @@ const config = {
             position: 'left',
             label: 'Enterprise',
           },
-          {
-            type: 'docSidebar',
-            sidebarId: 'learnSidebar',
-            position: 'left',
-            label: 'Learn',
-          },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
@@ -462,6 +462,12 @@ const config = {
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
+          },
+          {
+            href: 'https://discord.com/invite/wuPM9dRgDw',
+            position: 'right',
+            className: 'header-discord-link',
+            'aria-label': 'Discord community',
           },
         ],
       },

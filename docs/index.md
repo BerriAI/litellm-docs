@@ -9,6 +9,7 @@ import TabItem from '@theme/TabItem';
 import NavigationCards from '@site/src/components/NavigationCards';
 import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
 import QuickStartBox from '@site/src/components/QuickStartBox';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 
 <LiteLLMFlow copyCommand={false} agentPrompt={false} />
 
@@ -40,7 +41,15 @@ Install `litellm-core` in a fresh environment instead of installing `litellm`. A
 
 See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, package selection, and optional dependencies. Existing `litellm` installations retain their current dependency defaults
 
-To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [Gateway Quickstart](./learn/gateway_quickstart.md).
+To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [CLI Quickstart](./proxy/quick_start.md).
+
+To have Claude Code set up the Gateway for you, install the LiteLLM setup skill and then type `/litellm-setup` in Claude Code:
+
+```shell
+npx skills add BerriAI/litellm -g
+```
+
+The skill asks which providers and models you want, installs the Gateway with uv or Docker, writes the config and keys, starts it, and finishes with a test chat completion.
 
 ---
 
@@ -336,7 +345,13 @@ litellm.completion(
 
 The proxy is a self-hosted OpenAI-compatible gateway. Any client that works with OpenAI works with the proxy, with no code changes.
 
-![LiteLLM Proxy Dashboard](https://github.com/BerriAI/litellm/assets/29436595/47c97d5e-b9be-4839-b28c-43d7f4f10033)
+<ThemedVideo
+  src={require('../img/gateway_dashboard_loop.mp4')}
+  dark={require('../img/gateway_dashboard_loop_dark.mp4')}
+  poster={require('../img/gateway_dashboard_loop_poster.png')}
+  darkPoster={require('../img/gateway_dashboard_loop_poster_dark.png')}
+  title="LiteLLM Admin UI: virtual keys with budgets, daily spend by model, and request logs with cost"
+/>
 
 #### Step 1: Start the proxy
 

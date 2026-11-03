@@ -164,7 +164,7 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
             models=[],                                      # models user has access to
             user_id=userIDPInfo.id,                         # user id to use in the LiteLLM DB
             user_email=userIDPInfo.email,                   # user email to use in the LiteLLM DB
-            user_role=LitellmUserRoles.INTERNAL_USER.value, # role to use for the user 
+            user_role=None,                                 # None keeps the role stored in LiteLLM (new users default to internal_user_viewer); a value here overrides the stored role on every login
             max_budget=0.01,                                # Max budget for this UI login Session
             budget_duration="1d",                           # Duration of the budget for this UI login Session, 1d, 2d, 30d ...
         )

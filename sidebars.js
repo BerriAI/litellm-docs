@@ -192,6 +192,7 @@ const sidebars = {
           items: [
             "observability/azure_sentinel",
             "observability/datadog",
+            "observability/hex",
             { type: "doc", id: "observability/gcs_bucket_integration", className: "sidebar-enterprise" },
             "observability/newrelic",
             "observability/parseable",
@@ -262,6 +263,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/aim_security", customProps: { icon: "/img/integrations/aim-security.png" } },
           "proxy/guardrails/airia",
           "proxy/guardrails/onyx_security",
+          "proxy/guardrails/ovalix",
           { type: "doc", id: "proxy/guardrails/aporia_api", customProps: { icon: "/img/integrations/aporia.png" } },
           { type: "doc", id: "proxy/guardrails/azure_content_guardrail", customProps: { icon: "/img/integrations/azure.png" } },
           { type: "doc", id: "proxy/guardrails/bedrock", customProps: { icon: "/img/integrations/aws.png" } },
@@ -373,6 +375,7 @@ const sidebars = {
     { type: "html", value: "Get started", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "index", label: "Quickstart" },
     { type: "doc", id: "agent_resources", label: "Agent resources" },
+    { type: "link", label: "LiteLLM Academy", href: "https://www.litellm.ai/course" },
 
     // ════════════════════════════════════════════════════════════
     // AI GATEWAY
@@ -507,6 +510,7 @@ const sidebars = {
                     { type: "doc", id: "proxy/client_setup/codex_cli_sso", label: "SSO", className: "sidebar-enterprise" },
                     { type: "doc", id: "proxy/client_setup/codex_cli", label: "Virtual keys" },
                     { type: "doc", id: "tutorials/openai_codex_byok", label: "ChatGPT subscription" },
+                    { type: "doc", id: "tutorials/codex_chatgpt_auto_router", label: "ChatGPT subscription with Auto Router" },
                   ],
                 },
               ],
@@ -966,6 +970,7 @@ const sidebars = {
         "proxy/auto_routing_benchmark",
         "adaptive_router",
         { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter", className: "sidebar-xlink" },
+        { type: "link", label: "Codex with a ChatGPT subscription", href: "/docs/tutorials/codex_chatgpt_auto_router", className: "sidebar-xlink" },
         { type: "link", label: "Prompt Cache Routing", href: "/docs/tutorials/claude_code_prompt_cache_routing", className: "sidebar-xlink" },
       ],
     },
@@ -1100,9 +1105,20 @@ const sidebars = {
         },
         "completion/token_usage",
         { type: "html", value: "Utilities", className: "sidebar-group-label", defaultStyle: true },
+        {
+          type: "category",
+          label: "Autorouter SDK",
+          link: { type: "doc", id: "autorouter_sdk" },
+          items: [
+            "autorouter_sdk/classifiers",
+            "autorouter_sdk/routing",
+            "autorouter_sdk/evaluation",
+          ],
+        },
         "completion/message_trimming",
         "completion/model_alias",
         "completion/prompt_formatting",
+        "completion/developer_role",
         { type: "html", value: "Reliability & testing", className: "sidebar-group-label", defaultStyle: true },
         "completion/reliable_completions",
         "completion/mock_requests",
@@ -1375,6 +1391,7 @@ const sidebars = {
             "pass_through/comprehend_medical",
             "pass_through/cursor",
             "pass_through/deepgram_listen_websocket",
+            "pass_through/eu_jev",
             "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
@@ -1438,6 +1455,84 @@ const sidebars = {
 
 
     { type: "html", value: "More", className: "sidebar-caption", defaultStyle: true },
+    {
+      type: "category",
+      label: "Cookbook",
+      link: { type: "doc", id: "tutorials/index" },
+      items: [
+        {
+          type: "category",
+          label: "Connect apps and providers",
+          link: { type: "generated-index", title: "Connect apps and providers", description: "Install the SDK, set provider keys, and send requests to models from different providers.", slug: "/learn/call-any-model" },
+          items: [
+            "tutorials/installation",
+            "tutorials/first_playground",
+            "tutorials/text_completion",
+            "tutorials/mock_completion",
+            "tutorials/provider_specific_params",
+            "tutorials/gradio_integration",
+            "tutorials/azure_openai",
+            "tutorials/TogetherAI_liteLLM",
+            "tutorials/huggingface_tutorial",
+            "tutorials/huggingface_codellama",
+            "tutorials/finetuned_chat_gpt",
+            "tutorials/oobabooga",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control access",
+          link: { type: "generated-index", title: "Control access", description: "Give access to teams and users, and connect your identity provider.", slug: "/learn/run-the-gateway" },
+          items: [
+            "tutorials/default_team_self_serve",
+            "tutorials/msft_sso",
+            "tutorials/tag_management",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control cost and capacity",
+          link: { type: "generated-index", title: "Control cost and capacity", description: "Add fallbacks, use prompt caching, and send each request to the most suitable model.", slug: "/learn/cost-and-reliability" },
+          items: [
+            "tutorials/model_fallbacks",
+            "tutorials/fallbacks",
+            "tutorials/prompt_caching",
+          ],
+        },
+        {
+          type: "category",
+          label: "Control content",
+          link: { type: "generated-index", title: "Control content", description: "Add guardrails that examine requests and mask personal data before the model receives it.", slug: "/learn/add-safety" },
+          items: [
+            "tutorials/litellm_proxy_aporia",
+            "tutorials/presidio_pii_masking",
+          ],
+        },
+        {
+          type: "category",
+          label: "Connect tools and agents",
+          link: { type: "generated-index", title: "Connect tools and agents", description: "Use LiteLLM with agent frameworks, coding tools, files, and vector stores.", slug: "/learn/agents-and-tools" },
+          items: [
+            "tutorials/file_search_responses_api",
+            "tutorials/mongodb_vector_search",
+            "tutorials/anthropic_file_usage",
+            "tutorials/gemini_realtime_with_audio",
+          ],
+        },
+        {
+          type: "category",
+          label: "See what happened",
+          link: { type: "generated-index", title: "See what happened", description: "Send logs to observability tools and compare models on your own prompts.", slug: "/learn/observe-and-evaluate" },
+          items: [
+            "tutorials/elasticsearch_logging",
+            "tutorials/compare_llms",
+            "tutorials/litellm_Test_Multiple_Providers",
+            "tutorials/eval_suites",
+            "tutorials/lm_evaluation_harness",
+          ],
+        },
+      ],
+    },
     {
       type: "category",
       label: "Troubleshooting",
@@ -1575,94 +1670,13 @@ const enterpriseSidebar = {
     { type: "html", value: "Support", className: "sidebar-group-label", defaultStyle: true },
     { type: "doc", id: "enterprise/support", label: "Support and SLA" },
     { type: "doc", id: "enterprise/version_support", label: "Version support" },
+    { type: "doc", id: "enterprise/lts_pilot", label: "LTS pilot" },
     { type: "link", label: "Release notes", href: "/release_notes", className: "sidebar-xlink" },
     { type: "link", label: "Book a demo", href: "https://enterprise.litellm.ai/demo" },
   ],
 };
 
 
-const learnSidebar = {
-  learnSidebar: [
-    { type: "doc", id: "learn/index", label: "Overview" },
-    { type: "html", value: "Quickstarts", className: "sidebar-caption", defaultStyle: true },
-    "learn/gateway_quickstart",
-    "learn/python_sdk_quickstart",
-    "learn/enterprise_quickstart_learn",
-    { type: "html", value: "Cookbook", className: "sidebar-caption", defaultStyle: true },
-    {
-      type: "category",
-      label: "Connect apps and providers",
-      link: { type: "generated-index", title: "Connect apps and providers", description: "Install the SDK, set provider keys, and send requests to models from different providers.", slug: "/learn/call-any-model" },
-      items: [
-        "tutorials/installation",
-        "tutorials/first_playground",
-        "tutorials/text_completion",
-        "tutorials/mock_completion",
-        "tutorials/provider_specific_params",
-        "tutorials/gradio_integration",
-        "tutorials/azure_openai",
-        "tutorials/TogetherAI_liteLLM",
-        "tutorials/huggingface_tutorial",
-        "tutorials/huggingface_codellama",
-        "tutorials/finetuned_chat_gpt",
-        "tutorials/oobabooga",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control access",
-      link: { type: "generated-index", title: "Control access", description: "Give access to teams and users, and connect your identity provider.", slug: "/learn/run-the-gateway" },
-      items: [
-        "tutorials/default_team_self_serve",
-        "tutorials/msft_sso",
-        "tutorials/tag_management",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control cost and capacity",
-      link: { type: "generated-index", title: "Control cost and capacity", description: "Add fallbacks, use prompt caching, and send each request to the most suitable model.", slug: "/learn/cost-and-reliability" },
-      items: [
-        "tutorials/model_fallbacks",
-        "tutorials/fallbacks",
-        "tutorials/prompt_caching",
-      ],
-    },
-    {
-      type: "category",
-      label: "Control content",
-      link: { type: "generated-index", title: "Control content", description: "Add guardrails that examine requests and mask personal data before the model receives it.", slug: "/learn/add-safety" },
-      items: [
-        "tutorials/litellm_proxy_aporia",
-        "tutorials/presidio_pii_masking",
-      ],
-    },
-    {
-      type: "category",
-      label: "Connect tools and agents",
-      link: { type: "generated-index", title: "Connect tools and agents", description: "Use LiteLLM with agent frameworks, coding tools, files, and vector stores.", slug: "/learn/agents-and-tools" },
-      items: [
-        "tutorials/file_search_responses_api",
-        "tutorials/mongodb_vector_search",
-        "tutorials/anthropic_file_usage",
-        "tutorials/gemini_realtime_with_audio",
-      ],
-    },
-    {
-      type: "category",
-      label: "See what happened",
-      link: { type: "generated-index", title: "See what happened", description: "Send logs to observability tools and compare models on your own prompts.", slug: "/learn/observe-and-evaluate" },
-      items: [
-        "tutorials/elasticsearch_logging",
-        "tutorials/compare_llms",
-        "tutorials/litellm_Test_Multiple_Providers",
-        "tutorials/eval_suites",
-        "tutorials/lm_evaluation_harness",
-      ],
-    },
-    "tutorials/index",
-  ],
-};
 
 
 // ════════════════════════════════════════════════════════════
@@ -1827,6 +1841,7 @@ const providersSidebar = {
     "providers/gmi",
     "providers/gradient_ai",
     "providers/heroku",
+    "providers/hostinger_router",
     { type: "category", label: "HuggingFace", className: "sidebar-provider", link: { type: "doc", id: "providers/huggingface" }, items: [
       "providers/huggingface_rerank",
     ] },
@@ -1877,6 +1892,7 @@ const providersSidebar = {
     "providers/scx_ai",
     "providers/snowflake",
     "providers/stability",
+    "providers/streamlake",
     "providers/strands_decider",
     "providers/synthetic",
     "providers/tencent",
@@ -1892,6 +1908,7 @@ const providersSidebar = {
     ] },
     "providers/xiaomi_mimo",
     "providers/zai",
+    "providers/zerogpu",
     { type: "html", value: "Guides", className: "sidebar-group-label", defaultStyle: true },
     "guides/finetuned_models",
     { type: "doc", id: "provider_registration/index", label: "Integrate as a Model Provider" },
@@ -1901,4 +1918,4 @@ const providersSidebar = {
 };
 
 
-module.exports = { ...sidebars, ...enterpriseSidebar, ...learnSidebar, ...providersSidebar };
+module.exports = { ...sidebars, ...enterpriseSidebar, ...providersSidebar };

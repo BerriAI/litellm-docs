@@ -6,17 +6,13 @@
   .toggle {
     display: flex;
     flex-shrink: 0;
-    /* Stays in view while the announcement bar still pushes the sidebar down */
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
     align-items: center;
     width: 100%;
     height: 40px;
     margin: 0;
     padding: 0 16px;
     border: 0;
-    border-top: 1px solid var(--ifm-toc-border-color);
+    border-bottom: 1px solid var(--ifm-toc-border-color);
     background: var(--ifm-background-surface-color, transparent);
     color: var(--ifm-menu-color);
     cursor: pointer;

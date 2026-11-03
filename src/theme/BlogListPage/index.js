@@ -174,6 +174,52 @@ function Pagination({metadata}) {
   );
 }
 
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function RssIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14" />
+      <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+// The hero keeps the email box open: the form sits in one blue pill, with
+// RSS and the security list as pills beside it.
+function HeroSubscribe() {
+  return (
+    <div className={styles.via}>
+      <div className={styles.mailPill}>
+        <MailIcon />
+        <SubscribeForm />
+      </div>
+      <div className={styles.viaLinks}>
+        <a href="/blog/rss.xml" className={styles.viaBtn}><RssIcon />RSS</a>
+        <Link to="/security/subscribe" className={styles.viaBtn} title="Join the security mailing list">
+          <ShieldIcon />Security announcements
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -210,40 +256,12 @@ export default function BlogListPage(props) {
         <div className={styles.frame}>
           <header className={styles.hero}>
             <h1 className={styles.heroTitle}>Blog</h1>
-            <p className={styles.heroSub}>
-              Insights on routing, reliability, and observability from the team building the most widely used open-source AI gateway.
-            </p>
-            <div className={styles.subscribe}>
-              <SubscribeForm />
-              <p className={styles.subscribeNote}>
-                <span>Get new posts in your inbox, or follow the <a href="/blog/rss.xml">RSS feed</a>.</span>
-                <a href="https://jobs.ashbyhq.com/litellm" target="_blank" rel="noopener noreferrer" className={styles.hiring}>
-                  We're hiring
-                </a>
-              </p>
-            </div>
+            <HeroSubscribe />
           </header>
 
           <div className={styles.body}>
             <div className={styles.inner}>
               <div className={styles.bar}>
-                <label className={styles.search}>
-                  <SearchIcon />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={event => {
-                      setQuery(event.target.value);
-                      setShown(PAGE_SIZE);
-                    }}
-                    onKeyDown={event => {
-                      if (event.key === 'Escape') setQuery('');
-                    }}
-                    placeholder="Search posts"
-                    aria-label="Search posts"
-                    autoComplete="off"
-                  />
-                </label>
                 <nav className={styles.chips} aria-label="Filter posts by category">
                   {TABS.map(tab => (
                     <button
@@ -259,6 +277,23 @@ export default function BlogListPage(props) {
                       {tab.label}
                     </button>
                   ))}
+                  <label className={styles.search}>
+                    <SearchIcon />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={event => {
+                        setQuery(event.target.value);
+                        setShown(PAGE_SIZE);
+                      }}
+                      onKeyDown={event => {
+                        if (event.key === 'Escape') setQuery('');
+                      }}
+                      placeholder="Search posts"
+                      aria-label="Search posts"
+                      autoComplete="off"
+                    />
+                  </label>
                 </nav>
               </div>
 
