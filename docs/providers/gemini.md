@@ -1826,11 +1826,11 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
-The value is a boolean. LiteLLM also accepts a value that converts to a boolean, such as `"false"` or `0`. Any other value, such as `"maybe"`, gets an HTTP 400 error that names `thought_signature_in_tool_call_id`. With `drop_params: true`, LiteLLM drops the bad value instead and uses the value on the deployment.
+The value is a boolean. LiteLLM also accepts a value that converts to a boolean, such as `"false"` or `0`. Any other value, such as `"maybe"`, gets an HTTP 400 error that names `thought_signature_in_tool_call_id`. With `drop_params: true`, LiteLLM drops the bad value instead and uses the value on the deployment, or the default when the deployment does not set one.
 
-On the next turn, send back the assistant message with its tool calls as you received them, `provider_specific_fields` included. LiteLLM reads the signature from `provider_specific_fields` and sends it to Gemini with the tool call. With the OpenAI client, `messages.append(response.choices[0].message)` does this, as in the [multi-turn example](#multi-turn-function-calling-with-thought-signatures) above. On `/responses`, the setting adds the same `provider_specific_fields` to each `function_call` output item, so send the item back unchanged in the next `input`.
+On the next turn, send back the assistant message with its tool calls as you received them, `provider_specific_fields` included. LiteLLM reads the signature from `provider_specific_fields` and sends it to Gemini with the tool call. With the OpenAI client, `messages.append(response.choices[0].message)` does this, as in the [multi-turn example](#multi-turn-function-calling-with-thought-signatures) above. On `/responses`, each `function_call` output item carries the same `provider_specific_fields`, so send the item back unchanged in the next `input`. LiteLLM reads those fields from an input item only when the setting is `false` for that request too, so if you set it per request, send it on every turn, or set it on the deployment instead.
 
-If your client sends back only the short id and drops `provider_specific_fields`, LiteLLM has no signature to send. For Gemini 3 and newer models, it then puts a placeholder signature on the first tool call of the turn, so the request still succeeds, but the model loses the reasoning that the real signature carried. So if your client accepts long ids but drops `provider_specific_fields`, keep the default.
+If your client sends back only the short id and drops `provider_specific_fields`, LiteLLM has no signature to send. For Gemini 3 and newer models, it then puts a placeholder signature on the first tool call of each assistant message, so the request still succeeds, but the model loses the reasoning that the real signature carried. So if your client accepts long ids but drops `provider_specific_fields`, keep the default.
 
 ## JSON Mode
 
