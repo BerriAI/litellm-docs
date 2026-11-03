@@ -1361,7 +1361,7 @@ With the config above, four requests sent at the same time to `{{openai_large}}`
 
 ### Cooldowns
 
-Set the limit for how many calls a model is allowed to fail in a minute, before being cooled down for a minute. 
+Set how many failed calls a deployment is allowed before it is cooled down (`allowed_fails`), and for how many seconds it then stays out of rotation (`cooldown_time`).
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1415,11 +1415,13 @@ model_list:
     tenant_id: os.environ/PREDIBASE_TENANT_ID
     max_new_tokens: 256
   model_info:
-    allowed_fails: 1 # cool this deployment down after 1 fail, instead of the router default
+    allowed_fails: 1 # cool this deployment down once it fails more than once, instead of the router default
     cooldown_time: 0 # disable cooldowns for this deployment
 ```
 
 `allowed_fails` must be set under `model_info`, not `litellm_params`: unlike `model_info`, `litellm_params` is copied into the actual request sent to the LLM provider, so a router-only setting placed there would leak into that request. `cooldown_time` can be set under either location (`model_info` takes priority if both are set), matching its pre-existing behavior on the router's primary failure path.
+
+On the only deployment in a model group, a deployment-level `allowed_fails` takes effect only when the group has a fallback; see [Single-deployment model groups](#single-deployment-model-groups).
 
 </TabItem>
 </Tabs>
@@ -1492,11 +1494,29 @@ When `allowed_fails` and `allowed_fails_policy` are not set, the router cools do
 
 | Condition | Trigger | Cooldown Duration |
 |-----------|---------|-------------------|
-| **Rate Limiting (429)** | Immediate on 429 response | 5 seconds (default) |
-| **High Failure Rate** | >50% failures in current minute | 5 seconds (default) |
-| **Non-Retryable Errors** | 401 (Auth), 404 (Not Found), 408 (Timeout) | 5 seconds (default) |
+| **Rate Limiting (429)** | Immediate on a 429 response, when the model group has another deployment to route to | 5 seconds (default) |
+| **High Failure Rate** | More than 50% of the deployment's calls failed in the current minute, after at least 5 calls, when the model group has more than one deployment | 5 seconds (default) |
+| **Non-Retryable Errors** | 401 (Auth) and 404 (Not Found), plus 402 (Payment Required) when the model group has another deployment | 5 seconds (default) |
+
+A timeout (408) is retryable, so it counts toward the failure rate instead of cooling the deployment down on its own. Other 4XX errors, such as 400, don't cool a deployment down.
 
 During cooldown, the specific deployment is temporarily removed from the available pool, while other healthy deployments continue serving requests.
+
+#### Single-deployment model groups
+
+A model group with one deployment has nothing else to route to, so by default the router avoids cooling that deployment down. A 429 doesn't cool it down, and the failure-rate condition applies only when every call in the current minute failed and there were at least 1,000 of them (`SINGLE_DEPLOYMENT_TRAFFIC_FAILURE_THRESHOLD`). 401 and 404 still cool it down.
+
+This matters when the group has a fallback. During an outage, every request first spends 1 + `num_retries` attempts, with backoff, on the failing deployment before the fallback answers. To take the deployment out of rotation once it fails, set `allowed_fails` and `cooldown_time`:
+
+```yaml
+router_settings:
+  num_retries: 2
+  allowed_fails: 1
+  cooldown_time: 30
+  fallbacks: [{"primary": ["backup"]}]
+```
+
+The deployment is then cooled down on its second failure, and requests go straight to the fallback until `cooldown_time` expires. Without a fallback, the only deployment in a group stays in rotation under `allowed_fails`, set on the router or on the deployment, unless an `allowed_fails_policy` entry names the error type, such as `ServiceUnavailableErrorAllowedFails`. Before v1.109.0, a router-level `allowed_fails` cooled down a lone deployment with or without a fallback, and a deployment-level `allowed_fails` never cooled down the only deployment in a group.
 
 #### Cooldown Recovery
 
