@@ -1798,13 +1798,29 @@ Or set it per request. A value in the request takes precedence over the value on
 ```python
 from litellm import completion
 
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_temperature",
+            "description": "Gets the current weather temperature for a given location.",
+            "parameters": {
+                "type": "object",
+                "properties": {"location": {"type": "string"}},
+                "required": ["location"],
+            },
+        },
+    }
+]
+
 response = completion(
     model="gemini/{{gemini_flash}}",
     messages=[{"role": "user", "content": "What's the temperature in London?"}],
-    tools=[...],
+    tools=tools,
     reasoning_effort="low",
     thought_signature_in_tool_call_id=False,
 )
+print(response.choices[0].message.tool_calls[0].id)
 ```
 
 </TabItem>
@@ -1817,7 +1833,18 @@ curl http://localhost:4000/v1/chat/completions \
   -d '{
     "model": "{{gemini_flash}}",
     "messages": [{"role": "user", "content": "What'\''s the temperature in London?"}],
-    "tools": [...],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Gets the current weather temperature for a given location.",
+        "parameters": {
+          "type": "object",
+          "properties": {"location": {"type": "string"}},
+          "required": ["location"]
+        }
+      }
+    }],
     "reasoning_effort": "low",
     "thought_signature_in_tool_call_id": false
   }'
