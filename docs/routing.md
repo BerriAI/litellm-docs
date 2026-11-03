@@ -968,12 +968,12 @@ Routing groups can be updated via `Router.update_settings(routing_groups=[...])`
 
 ## Session Affinity (Sticky Sessions)
 
-Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one. It works with `simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, `cost-based-routing`, and routing groups.
+Pin every request of a conversation to the deployment that served its first request. Session affinity is a router pre-call check: it runs before the routing strategy picks a deployment and narrows the candidates to the pinned one. It works when the top-level `routing_strategy` is `simple-shuffle`, `least-busy`, `usage-based-routing-v2`, `latency-based-routing`, or `cost-based-routing`, and then also inside routing groups, whatever strategy a group uses.
 
 Use it when the deployments behind a model group do not share state, for example provider-side prompt caching, or when a conversation has to stay in one region.
 
 :::warning[Proxy and async Router calls only]
-Session affinity applies to proxy requests and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. The sync Router methods, such as `completion` and `embedding`, skip it and pick a deployment by the routing strategy alone, so the same session id can land on a different deployment on every call. A `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included. The same holds for `deployment_affinity`. To keep a session on one deployment from the SDK, call the async method with one of the strategies above.
+Session affinity applies to proxy requests on the LLM API routes, such as `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings`, and to the async Router methods, such as `acompletion`, `aresponses`, and `aembedding`. The sync Router methods, such as `completion`, `responses`, and `embedding`, skip it, so the same session id can land on a different deployment on every call. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy and every routing group included. Both rules hold for `deployment_affinity` too. To keep a session on one deployment from the SDK, call the async method under one of the top-level strategies above.
 :::
 
 <Tabs>
@@ -993,7 +993,7 @@ model_list:
       api_base: https://westus.openai.azure.com
 
 router_settings:
-  routing_strategy: simple-shuffle          # any strategy
+  routing_strategy: simple-shuffle          # any strategy but usage-based-routing (v1)
   optional_pre_call_checks: ["session_affinity"]
   deployment_affinity_ttl_seconds: 3600     # optional, default 3600
 ```
@@ -1027,7 +1027,7 @@ router = Router(
             "litellm_params": {"model": "azure/{{openai_large}}", "api_key": "...", "api_base": "https://westus.openai.azure.com"},
         },
     ],
-    routing_strategy="simple-shuffle",                 # any strategy
+    routing_strategy="simple-shuffle",                 # any strategy but usage-based-routing (v1)
     optional_pre_call_checks=["session_affinity"],
     deployment_affinity_ttl_seconds=3600,              # optional, default 3600
 )
