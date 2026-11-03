@@ -87,7 +87,7 @@ litellm --config config.yaml --max_request_header_size 131072
 MAX_REQUEST_HEADER_SIZE=131072 litellm --config config.yaml --run_gunicorn
 ```
 
-Applies to the default Uvicorn server and the Uvicorn workers under `--run_gunicorn`. Explicitly setting the CLI flag or environment variable selects `http="h11"`, including when httptools is installed, so the value takes effect consistently. When neither is set, Uvicorn keeps its automatic parser selection. The default h11 buffer is 16 KiB, but httptools does not use that buffer limit. Set `MAX_REQUEST_HEADER_SIZE=16384` explicitly to enforce the h11 limit in either environment. Ignored under `--run_hypercorn` and `--run_granian`.
+Applies when the default Uvicorn server or the Uvicorn workers under `--run_gunicorn` use h11. Setting the CLI flag or environment variable preserves Uvicorn's automatic parser selection. When httptools is installed, Uvicorn normally selects it and ignores this setting. When h11 is selected, its default buffer is 16 KiB and this setting changes that buffer. Ignored under `--run_hypercorn` and `--run_granian`.
 
 This sets Uvicorn's `h11_max_incomplete_event_size`, the number of bytes buffered for an incomplete HTTP event. [Uvicorn documents its default as 16384 bytes](https://uvicorn.dev/settings/#implementation). It is not a strict limit on the total size of every complete header block. A large header block can pass when it arrives in one read but return `400 Invalid HTTP request received.` when it arrives in segments or TLS records. Raise this value if an upstream gateway adds large identity headers. It does not change limits enforced by that gateway.
 

@@ -218,7 +218,7 @@ When Uvicorn selects h11, the default server and `--run_gunicorn` use a 16 KiB b
 litellm --config config.yaml --max_request_header_size 131072
 ```
 
-This allows up to 128 KiB to accumulate while a header block is incomplete. Explicitly setting the value selects Uvicorn's h11 parser even if httptools is installed. Omitting it preserves automatic parser selection, and httptools does not use the h11 buffer limit. The setting does not apply to Hypercorn or Granian. With h11's default buffer, large headers can intermittently return `400 Invalid HTTP request received.` depending on how they are split across reads. See [Uvicorn's incomplete-event buffer setting and its 16384-byte default](https://uvicorn.dev/settings/#implementation).
+This allows up to 128 KiB to accumulate while a header block is incomplete. Setting the value preserves Uvicorn's automatic parser selection. Uvicorn normally selects httptools when it is installed, and httptools ignores this setting. The configured buffer applies when h11 is selected. The setting does not apply to Hypercorn or Granian. With h11's default buffer, large headers can intermittently return `400 Invalid HTTP request received.` depending on how they are split across reads. See [Uvicorn's incomplete-event buffer setting and its 16384-byte default](https://uvicorn.dev/settings/#implementation).
 
 ## Keepalive timeout
 
