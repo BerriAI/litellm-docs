@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # Mixpanel
 
+<SinceVersion v="1.110.0" />
+
 Send LiteLLM OpenTelemetry v2 traces to [Mixpanel](https://mixpanel.com) with the `mixpanel` callback. The preset exports canonical OpenTelemetry `gen_ai.*` span attributes to Mixpanel's regional `/v1/ai/otel/traces` ingestion endpoint using HTTP Basic authentication (`Authorization: Basic <base64(project_token:)>`) and stamps `user.id` across the trace so Mixpanel maps every span to `distinct_id`.
 
 ## Prerequisites
