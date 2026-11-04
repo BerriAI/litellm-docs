@@ -1417,6 +1417,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
         "prompt_management",

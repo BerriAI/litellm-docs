@@ -518,6 +518,10 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Azure Realtime Translation
+
+For live speech-to-speech translation, add `azure/gpt-realtime-translate` with your `api_base` and `api_key`, then connect to `/v1/realtime/translations` on the proxy. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
+
 ## Azure Instruct Models
 
 Use `model="azure_text/<your-deployment>"`
