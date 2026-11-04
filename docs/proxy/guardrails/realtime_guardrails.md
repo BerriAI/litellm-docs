@@ -5,10 +5,6 @@ import TabItem from '@theme/TabItem';
 
 Guard voice conversations in the [Realtime API](/docs/realtime) by intercepting speech transcriptions **before** the LLM responds.
 
-:::note
-These guardrails cannot inspect [realtime translation](/docs/realtime_translation#guardrails) sessions. When a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to a translation session, LiteLLM refuses the session instead of running it unchecked.
-:::
-
 ## How it works
 
 The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns, and each one needs to be checked individually.
