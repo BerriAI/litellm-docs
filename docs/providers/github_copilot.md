@@ -23,7 +23,7 @@ An admin adds the model and a **Per-user GitHub OAuth** credential once. Each us
 
 Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, which is the only auth type the gateway supports for GitHub Copilot. Click **Add Credential**
 
-Leave **GitHub host** empty if your users sign in on github.com. If your enterprise uses GitHub Enterprise Cloud with data residency, enter your `SUBDOMAIN.ghe.com` host, for example `octocorp.ghe.com`. LiteLLM then sends sign-in to `https://SUBDOMAIN.ghe.com`, the token exchange and user lookup to `https://api.SUBDOMAIN.ghe.com`, and model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. Each credential keeps its own host, so one gateway can serve a github.com credential and a GHE.com credential side by side. GitHub Enterprise Server hosts are rejected because GitHub does not offer Copilot on GitHub Enterprise Server. Changing the host of a credential removes every user connection on it, so users connect again on the new host.
+Leave **GitHub host** empty if your users sign in on github.com. If your enterprise uses GitHub Enterprise Cloud with data residency, enter your `SUBDOMAIN.ghe.com` host, for example `octocorp.ghe.com`. LiteLLM then sends sign-in to `https://SUBDOMAIN.ghe.com`, the user lookup to `https://api.SUBDOMAIN.ghe.com`, and model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. Each credential keeps its own host, so one gateway can serve a github.com credential and a GHE.com credential side by side. GitHub Enterprise Server hosts are rejected because GitHub does not offer Copilot on GitHub Enterprise Server. Changing the host of a credential removes every user connection on it, so users connect again on the new host.
 
 <div className="docs-screenshot">
   <Image img={require('../../img/github_copilot_credential.png')} dark={require('../../img/github_copilot_credential_dark.png')} alt="Create a per-user GitHub OAuth credential in LiteLLM" width={656} height={585} />
@@ -212,17 +212,17 @@ print(response)
 
 ## Environment variables
 
-The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`. On the gateway, `GITHUB_COPILOT_DEVICE_CODE_URL`, `GITHUB_COPILOT_ACCESS_TOKEN_URL`, and `GITHUB_COPILOT_API_KEY_URL` apply only to credentials without a **GitHub host** or with `github.com`. A credential with a GHE.com host always uses the URLs derived from that host
+The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`. On the gateway, `GITHUB_COPILOT_DEVICE_CODE_URL` and `GITHUB_COPILOT_ACCESS_TOKEN_URL` apply only to credentials without a **GitHub host** or with `github.com`. A credential with a GHE.com host always uses the URLs derived from that host.
+
+LiteLLM sends the GitHub OAuth token directly to the Copilot API as a Bearer token. Set `GITHUB_COPILOT_CLIENT_ID` to the client ID of your own GitHub App when needed. Enable device flow for that app.
 
 | Variable | Default | Purpose |
 |-------|-------|-------|
-| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token and Copilot API token cache |
+| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token |
 | `GITHUB_COPILOT_ACCESS_TOKEN_FILE` | `access-token` | SDK only. Access-token file name in the token directory |
-| `GITHUB_COPILOT_API_KEY_FILE` | `api-key.json` | SDK only. Copilot API token cache file name in the token directory |
-| `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in |
+| `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in. Your own GitHub App must have device flow enabled |
 | `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
 | `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
-| `GITHUB_COPILOT_API_KEY_URL` | `https://api.github.com/copilot_internal/v2/token` | Endpoint that exchanges a GitHub token for a Copilot API token |
 | `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | SDK only. Fallback API base for Chat Completions, Responses, and Embeddings |
 
 ## Authentication details
@@ -234,9 +234,9 @@ On the gateway, LiteLLM encrypts each user's GitHub access token and stores it i
 
 With Redis, LiteLLM caches the encrypted credential or a record of no connection for 60 seconds. Without Redis, requests read the database.
 
-Each worker caches the short-lived Copilot token in memory until 60 seconds before its expiry. If GitHub returns 401, 403, or 404 during token exchange, LiteLLM clears the cached session and asks the user to reconnect.
+Each worker caches the user's GitHub token and validated Copilot API base for 30 minutes. During connection, LiteLLM checks access to the Copilot `/models` endpoint. If GitHub returns 401, 403, or 404, LiteLLM clears the cached session and asks the user to reconnect.
 
-Direct SDK calls read the GitHub access token from disk and exchange it for a Copilot API token, cached in `api-key.json` until it expires
+Direct SDK calls read the GitHub access token from disk and send it to the Copilot API as a Bearer token. LiteLLM does not exchange it for a separate Copilot API token.
 
 </details>
 
