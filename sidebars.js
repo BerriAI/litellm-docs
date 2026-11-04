@@ -171,6 +171,7 @@ const sidebars = {
             "observability/opik_integration",
             "observability/deepeval_integration",
             "observability/helicone_integration",
+            "observability/honeyhive",
             "observability/humanloop",
             "observability/langfuse_integration",
             "observability/langsmith_integration",
