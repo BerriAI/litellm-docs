@@ -22,6 +22,7 @@ Every check here is deterministic and fails the build:
   version-missing     with --base, a docs page or docs/proxy/config_settings.md row added since that ref without the badge
   card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
   card-too-long       card_title over 40 characters or card_summary over 120, which the Home card cannot show in full
+  author-person       a blog post or release note with no authors, an author key missing from its authors.yml, or an authors.yml entry named for a team or for LiteLLM instead of a person
 
 Usage:
   python3 scripts/check-docs.py [paths...]      defaults to docs/
@@ -337,6 +338,112 @@ def strip_inline_code(text):
 
 DAY_ZERO_TAG = "day 0 support"
 CARD_FIELD_MAX = {"card_title": 40, "card_summary": 120}
+AUTHOR_ROOTS = {"blog", "release_notes"}
+TEAM_AUTHOR_NAME_RE = re.compile(r"\bteam\b", re.IGNORECASE)
+
+
+def is_team_author_name(name):
+    stripped = name.strip()
+    return TEAM_AUTHOR_NAME_RE.search(stripped) is not None or stripped.casefold() == "litellm"
+
+
+def author_category(path, repo_root):
+    rel = os.path.relpath(os.path.abspath(path), os.path.abspath(repo_root)).replace(os.sep, "/")
+    parts = rel.split("/")
+    if len(parts) < 2 or parts[0] not in AUTHOR_ROOTS or os.path.basename(path) == "authors.yml":
+        return None
+    if len(parts) == 2 and parts[1] in ("index.md", "index.mdx"):
+        return None
+    if parts[0] == "blog" and len(parts) > 2 and not (
+        len(parts) == 3 and parts[-1] in ("index.md", "index.mdx")
+    ):
+        return None
+    return parts[0]
+
+
+def load_yaml_file(path):
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f.read())
+
+
+def load_page_frontmatter(path):
+    with open(path, encoding="utf-8") as f:
+        lines = f.read().splitlines()
+    if not lines or lines[0].strip() != FRONTMATTER_DELIM:
+        return {}
+    try:
+        end = lines.index(FRONTMATTER_DELIM, 1)
+    except ValueError:
+        return {}
+    data = yaml.safe_load("\n".join(lines[1:end]))
+    return data if isinstance(data, dict) else {}
+
+
+def author_person_errors(paths, repo_root=REPO_ROOT):
+    errors = []
+    categories = {}
+    for path in paths:
+        category = author_category(path, repo_root)
+        if category:
+            categories.setdefault(category, None)
+
+    for category in sorted(categories):
+        authors_path = os.path.join(repo_root, category, "authors.yml")
+        rel_authors_path = os.path.relpath(authors_path, repo_root)
+        try:
+            authors = load_yaml_file(authors_path)
+        except (OSError, yaml.YAMLError) as exc:
+            errors.append(("author-person", rel_authors_path, 1, f"cannot read authors.yml: {summarize_yaml_error(exc)}"))
+            categories[category] = {}
+            continue
+        if not isinstance(authors, dict):
+            errors.append(("author-person", rel_authors_path, 1, "authors.yml must contain a mapping of author keys"))
+            categories[category] = {}
+            continue
+        categories[category] = authors
+        for key, author in authors.items():
+            name = author.get("name") if isinstance(author, dict) else None
+            if isinstance(name, str) and is_team_author_name(name):
+                errors.append(
+                    ("author-person", rel_authors_path, 1, f"author key `{key}` has team or company byline `{name.strip()}`")
+                )
+
+    for path in paths:
+        category = author_category(path, repo_root)
+        if not category:
+            continue
+        rel_path = os.path.relpath(path, repo_root)
+        try:
+            frontmatter = load_page_frontmatter(path)
+        except yaml.YAMLError as exc:
+            errors.append(("author-person", rel_path, 1, f"invalid YAML frontmatter: {summarize_yaml_error(exc)}"))
+            continue
+        authors = frontmatter.get("authors")
+        if not authors:
+            errors.append(("author-person", rel_path, 1, "post or release note has no authors"))
+            continue
+        if not isinstance(authors, list):
+            errors.append(("author-person", rel_path, 1, "`authors` must be a non-empty list"))
+            continue
+        registry = categories.get(category) or {}
+        for author in authors:
+            if isinstance(author, str):
+                if author not in registry:
+                    errors.append(("author-person", rel_path, 1, f"author key `{author}` is missing from `{category}/authors.yml`"))
+                    continue
+                metadata = registry[author]
+                name = metadata.get("name") if isinstance(metadata, dict) else None
+                if isinstance(name, str) and is_team_author_name(name):
+                    errors.append(
+                        ("author-person", rel_path, 1, f"author key `{author}` resolves to team or company byline `{name.strip()}`")
+                    )
+            elif isinstance(author, dict):
+                name = author.get("name")
+                if not isinstance(name, str) or not name.strip():
+                    errors.append(("author-person", rel_path, 1, "inline authors must have a non-empty `name`"))
+            else:
+                errors.append(("author-person", rel_path, 1, "author entries must be keys or inline authors with a name"))
+    return errors
 
 
 def check_launch_card(page, err):
@@ -899,6 +1006,8 @@ def main(argv):
         page = page_cache.get(path) or Page(path)
         page_cache[path] = page
         all_errors.extend(e for e in check_page(page, site, page_cache) if not only or e[0] in only)
+    if not only or "author-person" in only:
+        all_errors.extend(author_person_errors(files))
     if base_ref:
         all_errors.extend(e for e in version_missing_errors(base_ref) if not only or e[0] in only)
 
