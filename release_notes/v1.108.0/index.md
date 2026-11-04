@@ -22,6 +22,12 @@ hide_table_of_contents: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
+:::info
+
+`v1.108.0` was promoted to stable from `v1.107.0rc1`.
+
+:::
+
 ## Deploy this version
 
 <Tabs>
