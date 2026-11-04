@@ -83,8 +83,6 @@ With `auto_register`, the first request carrying a new claim value provisions a 
 
 ### Link to existing keys
 
-<SinceVersion v="1.109.0" />
-
 Use `link_only` when admins create keys ahead of time. The first request from an unmapped identity maps it to that user's newest eligible key. If there is none, the request gets a 403 with `JWT Key Mapping: No eligible existing virtual key for this identity. Access denied.` and nothing is created. `virtual_key_claim_field` must be the same claim as `user_id_jwt_field` or `user_email_jwt_field`, and a database connection is required.
 
 ```yaml
