@@ -1297,7 +1297,7 @@ Map JWT identities to LiteLLM virtual keys so that JWT-authenticated users get p
 
 When a JWT comes in, LiteLLM looks up a configured claim (e.g. `email`, `sub`) in a mapping table. If a mapping exists, the request is treated as if it arrived with the corresponding virtual key, and all virtual key features apply.
 
-For unmapped identities, `unregistered_jwt_client_behavior` controls whether to fall back to team auth, reject, auto-register, or link only to an existing key. See [link-only setup and existing-key eligibility](./jwt_key_mapping.md#link-to-existing-keys-without-creating-keys), including the route-independent selection behavior and its permission implications. User creation remains controlled separately by `user_id_upsert`.
+For identities with no mapping, `unregistered_jwt_client_behavior` decides whether to fall back to team auth, reject, auto-register a key, or [link to an existing key](./jwt_key_mapping.md#link-to-existing-keys).
 
 ### Setup
 
