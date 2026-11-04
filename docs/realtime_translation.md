@@ -37,6 +37,8 @@ import RealtimeTranslationFlow from '@site/src/components/RealtimeTranslationFlo
 
 # Realtime translation
 
+<SinceVersion v="1.110.0" />
+
 Realtime translation changes speech from one language to a different language while the person speaks. Your app sends the audio as the person talks. The model `gpt-realtime-translate` sends back the translation as audio and as text, with a short delay. LiteLLM serves it on `/v1/realtime/translations` for OpenAI, Azure, and `azure_ai`.
 
 ## What it is
@@ -111,7 +113,7 @@ Use this to try the model, or to translate a recorded file. Use the script [`coo
 
 ```bash
 pip install websockets
-export LITELLM_API_KEY=sk-1234        # a LiteLLM virtual key
+export LITELLM_API_KEY=sk-<your-litellm-api-key>   # a LiteLLM virtual key
 curl -sO https://raw.githubusercontent.com/BerriAI/litellm/main/cookbook/gpt_realtime_translate.py
 
 python gpt_realtime_translate.py speech.wav \
@@ -188,7 +190,7 @@ Use WebRTC when the audio comes from a microphone in a browser or a mobile app. 
 
 ```bash
 curl -X POST http://localhost:4000/v1/realtime/translations/client_secrets \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer sk-<your-litellm-api-key>" \
   -H "Content-Type: application/json" \
   -d '{"model": "translation", "session": {"audio": {"output": {"language": "fr"}}}}'
 ```
