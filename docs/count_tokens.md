@@ -213,7 +213,7 @@ This change does not apply to providers with no count API, such as Groq. They co
 
 To get a local estimate for a model that the provider cannot count, set `token_count_framing` in the `model_info` of the deployment. The value is a number of tokens. The proxy adds this number to the local estimate for the chat template tokens that the local tokenizer does not see. The proxy also adds it to each local estimate for providers that have no count API.
 
-A framing key changes only a 400 or a 404 from the provider into a local estimate. The framing keys are `token_count_framing` and the three keys in [Framing for tool requests and the Responses API](#framing-for-tool-requests-and-the-responses-api). Any one of them turns on the local estimate for every request to the deployment, also for a request that the key does not apply to. For example, with only `token_count_tool_framing` set, a request with no function tool gets a local estimate with no framing added. So set `token_count_framing` too. For a 401, 403, 429, or 5xx error, the proxy returns the error. Set the framing keys on each deployment of the model group. A deployment without them continues to return the 400.
+A framing key changes only a 400 or a 404 from the provider into a local estimate. The framing keys are `token_count_framing` and the three keys in [Framing for tool requests and the Responses API](#framing-for-tool-requests-and-the-responses-api). Any one of them turns on the local estimate for every request to the deployment, also for a request that the key does not apply to. Before v1.110.0, only `token_count_framing` turns it on. For example, with only `token_count_tool_framing` set, a request with no function tool gets a local estimate with no framing added. So set `token_count_framing` too. For a 401, 403, 429, or 5xx error, the proxy returns the error. Set the framing keys on each deployment of the model group. A deployment without them continues to return the 400.
 
 As an alternative, set `token_count_model` to count with a different model that the provider can count. Use the keys `model` and `region`. The key `region` is optional. If you set `token_count_model`, the proxy does not use any framing key. If the count with `token_count_model` fails, the proxy returns the error.
 
@@ -253,7 +253,7 @@ Some hosts add a different hidden prompt when a request has tools, or when it go
 | `token_count_responses_framing` | A native Responses request with no function tool |
 | `token_count_responses_tool_framing` | A native Responses request with a function tool |
 
-The proxy adds one framing value to each local estimate. A count from the count API of the provider gets no framing. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451.
+The proxy adds one framing value to each local estimate. A count from the count API of the provider gets no framing, and neither does a `/utils/token_counter` request with only a `prompt`. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451.
 
 A function tool is a tool with a name, other than the Anthropic `web_search` tool. This includes OpenAI function tools, Anthropic custom tools, and Anthropic built-in tools such as `web_fetch` and `code_execution`. A request whose only tools are the Anthropic `web_search` tool or tools with no name, such as the Responses `web_search` and `file_search` tools, uses the keys for a request with no function tool.
 
@@ -270,7 +270,7 @@ When a key is not set, the proxy uses the next key in the list for the request. 
 
 If `model_info` sets one or more keys from the list for a request, the proxy uses only the `model_info` keys for that request. If not, it uses the built-in values from the cost map. So `token_count_framing` alone in `model_info` applies to every request and replaces all the built-in values. `token_count_tool_framing` alone applies to tool requests on both APIs, and requests with no function tool keep the built-in values. Each value is a whole number of tokens, zero or more. The proxy ignores any other value.
 
-The local estimate renders tools the way the chat template of the model does, for example for Grok 4.1, Grok 4.3, and DeepSeek V4.1. The proxy finds the model from `base_model` when the deployment sets it in `model_info` or `litellm_params`, and from `litellm_params.model` if not. The built-in framing values come from the cost map entry with the same name, so write `base_model` with its provider prefix, such as `azure_ai/grok-4-1-fast-reasoning`. With `base_model: grok-4-1-fast-reasoning`, the proxy still renders the tools the way Grok 4.1 does, but it finds no cost map entry and adds no framing. So a deployment with a custom name needs `base_model` with the prefix to get the correct count:
+The local estimate renders tools the way the chat template of the model does, for example for Grok 4.1, Grok 4.3, and DeepSeek V4.1. The proxy finds the model from `base_model` when the deployment sets it in `model_info` or `litellm_params`, and from `litellm_params.model` if not. The built-in framing values come from the cost map entry with the same name, so write `base_model` with its provider prefix, such as `azure_ai/grok-4-1-fast-reasoning`. With `base_model: grok-4-1-fast-reasoning`, the proxy still renders the tools the way Grok 4.1 does, but it finds no cost map entry and adds no framing. So a deployment with a custom name needs `base_model` with the prefix to get the built-in framing values:
 
 ```yaml
 model_list:
@@ -299,7 +299,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
 # {"input_tokens": 352, "litellm_count_source": "local_estimate"}
 ```
 
-Without `base_model`, the same request counts 54 tokens, because the proxy uses the generic tool rendering and no framing. An xAI deployment that still uses a deprecated `grok-4-1` name has no cost map entry, because xAI serves Grok 4.3 for these names. To count it like Grok 4.3, set `base_model: xai/grok-4.3`.
+Without `base_model`, the same request counts 54 tokens, because the proxy uses the generic tool rendering and no framing. An xAI deployment that still uses a deprecated `grok-4-1` name has no cost map entry, because xAI serves Grok 4.3 for these names. To count it like Grok 4.3, set `base_model: xai/grok-4.3`. `base_model` also sets the prices that spend tracking uses for the deployment. Refer to [Custom pricing](./proxy/custom_pricing.md).
 
 The cost map has measured framing values for these entries and for others:
 
@@ -311,6 +311,8 @@ The cost map has measured framing values for these entries and for others:
 | `deepseek/deepseek-v4-pro` | `token_count_framing`, `token_count_tool_framing` |
 | `fireworks_ai/deepseek-v4p1-flash` | `token_count_framing` |
 | `fireworks_ai/accounts/fireworks/models/deepseek-v4p1-flash` | `token_count_framing` |
+
+The proxy loads the cost map from GitHub when it starts and on `/reload/model_cost_map`, so these values also reach a proxy older than v1.110.0. Such a proxy adds the `token_count_framing` value of the entry to every local estimate, tool requests included, and does not read the three newer keys. To keep the cost map of the installed version, set [`LITELLM_LOCAL_MODEL_COST_MAP=True`](./proxy/config_settings.md).
 
 ## Proxy Configuration
 
