@@ -141,7 +141,7 @@ general_settings:
   enforce_rpm_tpm_on_model_add: boolean  # or a {default, providers, models} mapping; new models must set a positive rpm and tpm
   enforce_project_model_quota: boolean  # or a {default, providers, models} mapping; project models must have a positive model_rpm_limit and model_tpm_limit
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
-  request_tag_mappings: [{"key": "entrypoint", "tag_prefix": "usecase:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
+  request_tag_mappings: [{"key": "service", "tag_prefix": "app:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
   missing_session_id: generate  # or "reject". What to do with LLM API requests that carry no session id; unset keeps the legacy behavior
   disable_batch_input_file_rate_limiting: boolean  # skip TPM/RPM accounting for batch input files
   skip_batch_input_file_rate_limiting_for_providers: ["hosted_vllm"]  # apply the batch accounting skip only to these providers
