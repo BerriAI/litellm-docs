@@ -441,6 +441,43 @@ From v1.84.0, the proxy rejects `os.environ/...` references inside API-supplied 
 
 Help us improve this feature, by filing a [ticket here](https://github.com/BerriAI/litellm/issues)
 
+### Reference a callback definition from `config.yaml`
+
+A key can point at a callback that the proxy admin defined once in `config.yaml`, instead of carrying the credentials itself. This keeps secrets out of key metadata and lets a secret manager hold them, which matters when the keys that need a callback live on different teams.
+
+Define the callback under `callback_settings`. The `callback_type` names the backend, and every other field is a callback variable for it. Unlike the rest of `config.yaml`, these definitions keep their `os.environ/...` references past startup. The proxy resolves them through the configured secret manager when a request uses the key and caches the values in memory per worker for `CALLBACK_SETTINGS_SECRET_CACHE_TTL_SECONDS` seconds (default `60`, set `0` to read on every request), so a rotated secret takes effect within that window and without a restart. A read that fails is not cached, so a secret created later is picked up on the next request.
+
+```yaml
+callback_settings:
+  arize_space_a:
+    callback_type: arize
+    arize_api_key: os.environ/ARIZE_SPACE_A_API_KEY
+    arize_space_id: os.environ/ARIZE_SPACE_A_SPACE_ID
+    excluded_services: postgres,redis
+```
+
+Then create or update the key with the definition name as `callback_name`. The key may add variables the definition does not set, such as `turn_off_message_logging` or `excluded_services`, and they are validated against the definition's backend (`arize` here), but it cannot override one the definition sets. Only a proxy admin can write such a reference; a team admin or internal user gets a `403`.
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+    -H 'Authorization: Bearer sk-<your-master-key>' \
+    -H 'Content-Type: application/json' \
+    -d '{
+        "team_id": "team-a",
+        "metadata": {
+            "logging": [{
+                "callback_name": "arize_space_a",
+                "callback_type": "success",
+                "callback_vars": {}
+            }]
+        }
+    }'
+```
+
+`/key/info` returns the reference name and an empty `callback_vars`, never the resolved secrets. Requests made with this key log to Arize with the credentials from the secret manager, while other keys on the same team keep the proxy's default callbacks. If a definition names a secret the proxy cannot read, requests with that key skip the callback and `/key/health` reports the key as unhealthy with the field that failed, for example `callback_settings.arize_space_a.arize_api_key could not be resolved from the secret manager`.
+
+Team-level `logging` entries do not resolve these definitions.
+
 ### Check if key callbacks are configured correctly `/key/health`
 
 Call `/key/health` with the key to check if the callback settings are configured correctly
