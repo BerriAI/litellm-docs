@@ -246,9 +246,22 @@ GENERIC_USER_EXTRA_ATTRIBUTES = "department,employee_id,manager" # comma-separat
 GENERIC_CLIENT_STATE = "some-state" # if the provider needs a state parameter
 GENERIC_INCLUDE_CLIENT_ID = "false" # some providers enforce that the client_id is not in the body
 GENERIC_SCOPE = "openid profile email" # default scope openid is sometimes not enough to retrieve basic user info like first_name and last_name located in profile scope
+GENERIC_AUTHORIZATION_PARAMS = "resource=https://your-api-identifier" # optional, extra query parameters for the authorization request in query-string form
 ```
 
 Set `GENERIC_INCLUDE_TOKEN_CLAIMS = "true"` to also read user claims from the ID token and access token when the UserInfo response is incomplete. UserInfo claims take precedence
+
+**AD FS: sending the `resource` parameter**
+
+AD FS only runs the issuance transform rules of a Web API (the claim mappings for `email`, `first_name`, `last_name`, `display_name`, groups) when the authorization request names that Web API. Without a `resource` parameter AD FS issues the access token for its default `urn:microsoft:userinfo` resource, whose claims cannot be customized, and its UserInfo endpoint returns only `sub`, so LiteLLM sees no email or name for the user even though login succeeds. Set `GENERIC_AUTHORIZATION_PARAMS` to the Web API identifier of the LiteLLM application group and add `allatclaims` to the scope so the claims are copied into the ID token as well:
+
+```shell
+GENERIC_AUTHORIZATION_PARAMS = "resource=https://your-litellm-web-api-identifier"
+GENERIC_SCOPE = "openid profile email allatclaims"
+GENERIC_INCLUDE_TOKEN_CLAIMS = "true"
+```
+
+`GENERIC_AUTHORIZATION_PARAMS` accepts several parameters joined with `&` (`resource=...&prompt=login`). Parameters the OAuth flow sets itself (`client_id`, `redirect_uri`, `response_type`, `scope`, `state`, `code_challenge`, `code_challenge_method`) are ignored. Use `/sso/debug/login` to confirm which claims arrive after the change
 
 **Choosing `GENERIC_USER_ID_ATTRIBUTE`**
 
