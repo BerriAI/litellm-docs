@@ -74,7 +74,7 @@ npm run build
 After building, copy the output to the proxy:
 
 ```bash
-cp -r out/* ../../litellm/proxy/_experimental/out/
+cp -r out/* ../../litellm/proxy/ui/out/
 ```
 
 Then restart the proxy and access the UI at `http://localhost:4000/ui`
