@@ -165,6 +165,7 @@ const sidebars = {
             "observability/argilla",
             "observability/arize_integration",
             "observability/phoenix_integration",
+            "observability/asqav_integration",
             "observability/athina_integration",
             "observability/braintrust",
             "observability/grafana_cloud",
