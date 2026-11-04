@@ -60,13 +60,7 @@ These callouts cover user-facing behavior that differs from [`v1.108.0`](/releas
 
 **A proxy config with a string fallback target no longer starts.** Those targets never routed, so write the target in list form as the startup error shows. See [PR #48943](https://github.com/BerriAI/litellm/pull/48943)
 
-**Both Helm charts no longer deploy Lens, and an enabled `lensWorker` value fails the render.** Deploy Lens from its own chart and set `lens.*`. A bare `helm install` of `litellm-helm` also no longer ships the `gpt-3.5-turbo` and `fake-openai-endpoint` placeholder models, so add models under `proxy_config.model_list` or from the Admin UI. See [PR #49169](https://github.com/BerriAI/litellm/pull/49169), [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
-
-**Sourcing the Terraform module from a git ref of the monorepo now requires `image_tag`, or all four `*_image` URIs, and Terraform 1.9.0 or newer.** Registry versions keep working with no input. See [PR #46960](https://github.com/BerriAI/litellm/pull/46960)
-
-**`import litellm` raises `ImportError` when the native extension `_native.abi3.so` is missing.** Every wheel and Docker image ships it, so only installs from source need to build it. See [PR #48852](https://github.com/BerriAI/litellm/pull/48852)
-
-**The final usage chunk of a stream with `include_usage` now has an empty `choices` array, like OpenAI.** Code that reads `chunk.choices[0]` on every chunk should guard it with `if chunk.choices:`. Streamed `/v1/completions` responses also leave out `usage` unless the request asks for it. See [PR #47109](https://github.com/BerriAI/litellm/pull/47109), [Commit e14d2fd](https://github.com/BerriAI/litellm/commit/e14d2fdc38f7272b5b50c67c0bdefa2830aff268)
+**A bare `helm install` of `litellm-helm` no longer ships the `gpt-3.5-turbo` and `fake-openai-endpoint` placeholder models.** Add models under `proxy_config.model_list` or from the Admin UI. See [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
 
 **Streams that fail partway now fail visibly.** A stalled stream answers 408 `litellm.Timeout` instead of 500 `APIConnectionError`, a stream that ends with an `abort` finish reason answers 500 instead of a clean stop, and a stream that sends content but never a finish reason reaches the client as an error and is logged as a failure. Retries, cooldowns, alerts and fallbacks now apply to these streams. See [PR #47198](https://github.com/BerriAI/litellm/pull/47198), [PR #48328](https://github.com/BerriAI/litellm/pull/48328), [PR #47665](https://github.com/BerriAI/litellm/pull/47665)
 
@@ -74,17 +68,9 @@ These callouts cover user-facing behavior that differs from [`v1.108.0`](/releas
 
 **Claude requests that send no `max_tokens` now ask for much more output.** Anthropic models missing from the cost map get `max_tokens: 128000` instead of 4096. Set `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS=4096` to keep the old value. Bedrock Invoke and Mantle Claude send the deployment's `model_info.max_output_tokens` or the model's mapped limit instead of 4096, which holds more of the Bedrock tokens-per-minute quota, so busy accounts can see more 429s. Send `max_tokens` to keep the old footprint. See [PR #48502](https://github.com/BerriAI/litellm/pull/48502), [PR #49692](https://github.com/BerriAI/litellm/pull/49692)
 
-**Gemini 3.6 Flash, Gemini 3.5 Flash-Lite and newer Gemini models answer 400 for `temperature`, `top_p` or `top_k`** instead of a 200 where Google ignored them. Set `drop_params`, or list `temperature` and `top_p` in `allowed_openai_params` to force them through. See [PR #47645](https://github.com/BerriAI/litellm/pull/47645)
-
 **With `drop_params: false` under `litellm_settings`, Claude Code and Codex requests that carry unsupported settings now answer 400 like other clients.** Set `drop_params: true` to keep dropping them. See [PR #49058](https://github.com/BerriAI/litellm/pull/49058)
 
 **`enable_pre_call_checks: true` no longer stops picking a deployment once its minute count reaches `rpm`.** Add `optional_pre_call_checks: ["enforce_model_rate_limits"]` to `router_settings` to keep a hard cap. See [PR #48873](https://github.com/BerriAI/litellm/pull/48873)
-
-**The customer list routes now return 50 customers per page by default** instead of the whole directory. Pass a page size from 1 to 100 and page through the results. See [PR #48700](https://github.com/BerriAI/litellm/pull/48700)
-
-**More `model_max_budget` caps are enforced.** An end user's per-model cap from their linked budget now refuses requests once it is passed, master-key calls that send `user` included, and end users already over a cap get 422 right after the upgrade. Pattern and access group entries in `model_max_budget`, saved but ignored on `v1.108.0`, are enforced too. Review these caps before upgrading. See [PR #48815](https://github.com/BerriAI/litellm/pull/48815), [PR #47722](https://github.com/BerriAI/litellm/pull/47722)
-
-**`lakera_v2` with `on_flagged: block`, which is the default, now returns 400 when Lakera flags only PII.** Set `on_flagged: mask` to keep masking the PII and allowing the request. See [PR #48944](https://github.com/BerriAI/litellm/pull/48944)
 
 **MCP access is narrower in two cases.** A `none` or `bearer_token` MCP server with `Authorization` in `extra_headers` no longer receives the caller's LiteLLM key, so send LiteLLM auth in `x-litellm-api-key` to keep forwarding a separate upstream `Authorization`. Admin credentials on a team, such as an admin's team key, CLI login or JWT, now get only that team's MCP servers and toolsets, while the dashboard and master key still see everything. See [PR #46932](https://github.com/BerriAI/litellm/pull/46932), [PR #49161](https://github.com/BerriAI/litellm/pull/49161)
 
@@ -1412,7 +1398,6 @@ Counts represent new catalog identifiers compared with `v1.108.0`, including ali
 
 - Stop the `litellm-helm` chart from adding placeholder `gpt-3.5-turbo` and `fake-openai-endpoint` models by default, so DB-managed installs no longer list fake models or get 401s on a same-named model - [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
 - Route extra ingress paths to custom Services in the Helm chart, with explicit Service names and numeric or named ports, while keeping component aliases and the built-in routes - [PR #48674](https://github.com/BerriAI/litellm/pull/48674)
-- Stop bundling Lens in the `helm/litellm` and `helm/litellm-helm` charts and connect to a separately deployed Lens through a connection-only `lens:` block, off by default - [PR #49169](https://github.com/BerriAI/litellm/pull/49169)
 
 ### Dependency updates
 
@@ -1722,13 +1707,13 @@ These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime 
 
 ### PR roll-up by ownership area
 
-Customer-facing changes: **701**. Tests, CI and internal changes: **231**. Total: **932**
+Customer-facing changes: **700**. Tests, CI and internal changes: **231**. Total: **931**
 
 - Other (tests, CI, internal): 231
 - Models & Providers: 185
 - LLM API Endpoints: 162
 - Spend / Budgets / Rate Limits: 82
-- Performance: 77
+- Performance: 76
 - UI: 62
 - Auth & Management: 52
 - Logging & Tracing: 32

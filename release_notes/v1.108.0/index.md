@@ -78,11 +78,9 @@ To get a local estimate for a model that the provider cannot count, set `token_c
 
 **The Bedrock guardrail returns 400 for attachments it cannot scan**, such as PDFs, audio or images sent by URL. Set `skip_unscannable_attachments: true` to let them through. See [PR #43383](https://github.com/BerriAI/litellm/pull/43383)
 
-**The Lens beta now runs as its own deployment.** Both Helm charts connect to a separately deployed Lens through the `lens` values block instead of bundling it. If your Helm values enable `lensWorker`, remove it before upgrading so the chart renders. See [Commit a979952](https://github.com/BerriAI/litellm/commit/a979952bb68363167aa30e512349197b618321de)
+**If your Helm values enable `lensWorker`, remove it before upgrading so the chart renders.** We are readjusting how beta features work alongside LiteLLM, our core product. Starting with this release, the Helm charts no longer bundle the Lens beta and connect to a Lens deployed on its own through the `lens` values block. See [Commit a979952](https://github.com/BerriAI/litellm/commit/a979952bb68363167aa30e512349197b618321de)
 
 **Failure logs for requests the proxy rejects keep only core request fields.** They carry `model`, `messages`, `input`, `prompt`, `user`, `stream`, `litellm_call_id`, `tags` and guardrail details. The GCS logger uses the bucket and credentials configured on the proxy instead of request-time `gcs_bucket_name` and `gcs_path_service_account`. See [PR #48599](https://github.com/BerriAI/litellm/pull/48599)
-
-**Cross-provider aliases such as `azure_ai/claude-sonnet-4-5-20250929` no longer inherit another provider's cache prices.** Set `cache_read_input_token_cost` and `cache_creation_input_token_cost` in `model_info` to keep a cache price. See [PR #41523](https://github.com/BerriAI/litellm/pull/41523)
 
 :::
 
@@ -206,7 +204,7 @@ To get a local estimate for a model that the provider cannot count, set `token_c
 - Update Python dependencies including the OpenTelemetry SDK, and keep OTLP JSON export, AgentOps authentication and FastAPI instrumentation working with the new versions - [PR #48055](https://github.com/BerriAI/litellm/pull/48055)
 - Update `mlflow`, `pypdf` and `setuptools` - [PR #48110](https://github.com/BerriAI/litellm/pull/48110)
 - Update `webpki-roots` and `webpki-root-certs` to 1.0.11 - [PR #48301](https://github.com/BerriAI/litellm/pull/48301)
-- Connect both Helm charts to a separately deployed Lens through a connection-only `lens` block, since neither chart bundles Lens anymore and an enabled `lensWorker` value now fails the render - [Commit a979952](https://github.com/BerriAI/litellm/commit/a979952bb68363167aa30e512349197b618321de)
+- Move the Lens beta out of both Helm charts, which now connect to a Lens deployed on its own through a connection-only `lens` block - [Commit a979952](https://github.com/BerriAI/litellm/commit/a979952bb68363167aa30e512349197b618321de)
 - Update `certifi`, the Rust trust roots and the Docker CA bundle to drop the revoked `emSign ECC Root CA - G3`, and keep `libssl3` in Docker runtimes for Prisma - [PR #47670](https://github.com/BerriAI/litellm/pull/47670)
 - Update `grpcio` to 1.84.1 and `boto3` to 1.43.117 so their bundled CA files reject the revoked eMudhra roots, and install `libssl3` in image builders so Prisma engines start - [PR #47969](https://github.com/BerriAI/litellm/pull/47969)
 - Update the CA roots and `aiohttp` in the LiteAdmin environment bundled in the Docker image, so it no longer trusts the revoked `emSign ECC Root CA - G3` - [PR #48139](https://github.com/BerriAI/litellm/pull/48139)
