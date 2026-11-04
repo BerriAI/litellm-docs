@@ -66,7 +66,7 @@ const COLUMNS = [
     {
       featured: [
         {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route and control LLM traffic', to: '/docs/simple_proxy'},
-        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Best model for each request', to: '/docs/auto_router'},
+        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Best model for each request', to: '/docs/autorouter_sdk'},
         {id: 'subscriptions', icon: 'subscriptions', title: 'Claude, Codex & Copilot', desc: 'Use your existing subscriptions', to: '/docs/subscriptions'},
       ],
       items: [
@@ -113,7 +113,7 @@ const SECTION_MATCHERS = [
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
   ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
   ['sdk', ({pathname, hash}) => pathname.startsWith('/docs/python_sdk') || hash === '#litellm-python-sdk'],
-  ['router', ({pathname}) => pathname.startsWith('/docs/auto_router')],
+  ['router', ({pathname}) => pathname.startsWith('/docs/auto_router') || pathname.startsWith('/docs/autorouter_sdk')],
   ['gateway', ({pathname}) => pathname.startsWith('/docs/proxy') || pathname.startsWith('/docs/simple_proxy')],
 ];
 

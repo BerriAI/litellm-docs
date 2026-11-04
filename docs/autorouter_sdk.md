@@ -6,6 +6,8 @@ description: Build an auto router in Python that chooses a model for each reques
 
 Choose a model for each prompt with `litellm.Router`. You define the models and routing rules in Python. No proxy server or Enterprise license is required.
 
+For dashboard setup and routing through the LiteLLM Gateway, see the [Auto Router Gateway add-on](/docs/auto_router/).
+
 This example routes between two OpenAI models using a local heuristic classifier. You need Python and an OpenAI API key; you pay for the model responses.
 
 ## 1. Install and set your API key
