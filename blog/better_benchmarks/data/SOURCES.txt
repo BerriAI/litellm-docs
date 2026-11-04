@@ -1,0 +1,22 @@
+Data behind each graph in this post. One CSV per graph.
+
+headline.csv      img/headline.png      Rate sweep at 50 rps (5 min, full features; Portkey has none), minus a
+                                        direct-to-mock run at the same rate and percentile. OpenRouter is a separate
+                                        test (Azure eastus, 8 rps, 20 min, single run).
+sweep.csv         img/sweep-linear.png  Rate sweep at 10/25/50/75/100 rps, 5 min each. Raw overhead = observed time
+                                        minus the mock's planned time; gateway overhead subtracts the direct-to-mock
+                                        floor (same rate, same percentile). The floor came from a separate run; runs
+                                        drift about +/-0.7 ms. Python at 75 and 100 rps was overloaded (see ok_pct).
+big-bodies.csv    img/big-bodies.png    870k to 1M token requests (~4 MB), every request streamed, basic features,
+                                        3 min per rate. No direct-to-mock floor at this size, so first byte includes
+                                        moving 4 MB over two hops.
+request-bars.csv  img/request-bars.png  One non-streamed /v1/chat/completions request, local machine, one pinned core
+                                        per gateway, all callbacks on. Python phases are VizTracer times scaled to the
+                                        untraced client time of the same request; Rust from in-gateway span timers.
+memory.csv        img/memory.png        Heap held per open stream with 500k-token (2.45 MB) streamed requests: memray
+                                        (Python), pprof (Bifrost), heaptrack (Rust), one core per gateway. Rust + S3:
+                                        the s3_v2 request log on, which keeps one copy of the body for the stream's
+                                        life.
+
+Hardware for the rate sweep and 1M runs: Kubernetes on AWS m7i.4xlarge, one pod per gateway with 4 dedicated
+cores and 16 GiB. Single run of each configuration.

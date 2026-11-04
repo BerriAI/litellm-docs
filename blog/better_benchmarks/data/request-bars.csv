@@ -1,0 +1,5 @@
+request,auth_ms,limits_and_hooks_ms,build_request_and_call_provider_ms,everything_else_ms,total_ms
+"LiteLLM Python, cached key",7.483,2.768,18.662,4.78,33.693
+"LiteLLM Python, uncached key",19.989,5.592,18.841,7.118,51.538
+"LiteLLM Rust, cached key",0.143,0.712,0.789,0.083,1.727
+"LiteLLM Rust, uncached key",2.72,0.592,0.785,0.08,4.176
