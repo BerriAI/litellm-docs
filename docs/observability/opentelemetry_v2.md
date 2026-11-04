@@ -552,7 +552,7 @@ Open Mixpanel; spans arrive at Mixpanel's regional OTLP traces endpoint (`/v1/ai
 #### Setup notes
 
 - Auth is HTTP Basic (`Authorization: Basic <base64(project_token:)>`), built automatically from `MIXPANEL_PROJECT_TOKEN`.
-- Mixpanel requires a non-empty `user.id` attribute on every span and drops spans without one. The `mixpanel` preset promotes `user.id` into OpenTelemetry Baggage and stamps it across the request span tree from request `user`, `metadata.user.id`, `metadata.user_id`, `metadata.trace_user_id`, `x-litellm-customer-id`, or inbound OTel Baggage (`user.id`).
+- Mixpanel requires a non-empty `user.id` attribute on every span and drops spans without one. LiteLLM adds `user.id` to the spans it sends to Mixpanel, and to no other backend, from the sources listed in [Setting `user.id`](./mixpanel#setting-userid).
 - Set `MIXPANEL_REGION` to `us` (default), `eu`, or `in` to select `https://ingestion-<region>.mixpanel.com/v1/ai/otel/traces`.
 - Per-team and per-key routing is supported via `mixpanel_project_token` and `mixpanel_region`. See [Mixpanel](./mixpanel).
 
@@ -877,7 +877,7 @@ Excluding a route drops its server span only. `/health/liveliness` and `/health/
 
 ## Per-key / per-team credentials (multi-tenant)
 
-One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, or SigNoz account instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
+One proxy can serve many tenants: a team or a virtual key carries its own backend credentials, so its traces land in that tenant's own Langfuse project, Arize space, Weave project, New Relic account, SigNoz account, or Mixpanel project instead of the proxy-wide one. The credentials come from the key and the team the proxy resolved at auth, never from the request body, so a caller cannot pick another tenant's backend.
 
 This is the same key/team callback mechanism described in [Team/Key based logging](../proxy/team_logging); v2 applies it to the OTel presets. There is no separate admin-owned "destination" object, and `/credentials` holds LLM provider credentials, not logging ones.
 
@@ -1005,7 +1005,7 @@ Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that 
 
 ### Choose prompt capture per tenant
 
-A team or key can choose whether its own destination receives prompts and responses, independent of what the proxy captures globally. Set `capture_message_content` in a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback next to its credentials:
+A team or key can choose whether its own destination receives prompts and responses, independent of what the proxy captures globally. Set `capture_message_content` in a `langfuse_otel`, `arize`, `weave_otel`, `newrelic` or `mixpanel` callback next to its credentials:
 
 ```shell
 curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
@@ -1055,13 +1055,13 @@ LITELLM_OTEL_EXCLUDED_SERVICES=redis,postgres
 
 The config value wins over the env var when both are set. The accepted service names are `redis`, `postgres`, `batch_write_to_db` and `redis_*` names (`postgresql` works too), in any case. A span is dropped when its `db.system.name`, or the older `db.system`, is one of the listed systems. An unknown name such as `auth` is logged as an error and ignored; the valid names next to it still apply and the proxy starts normally. With neither set, nothing is dropped
 
-The global setting narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback set on a team or key as in [Set it on a team](#set-it-on-a-team). Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. Configure the global setting in proxy YAML or the environment.
+The global setting narrows key and team destinations, meaning a `langfuse_otel`, `arize`, `weave_otel`, `newrelic` or `mixpanel` callback set on a team or key as in [Set it on a team](#set-it-on-a-team). Your own exporters, the `otel` collector and any preset listed in `litellm_settings.callbacks` (a proxy-wide `langfuse_otel` included), keep receiving every span. Configure the global setting in proxy YAML or the environment.
 
 ### Override exclusions for one team or key
 
 Set `excluded_services` in the destination's `callback_vars` to replace the global exclusion set. The accepted values are the same datastore names as the global setting, supplied as a comma-separated string. For example, `"redis,postgres"` excludes Redis and PostgreSQL spans from that destination, even when the global setting is empty. `"none"` excludes no database spans, even when the global setting excludes them. Omitting the variable follows the global setting. Values replace the global set rather than merging with it.
 
-The override requires `LITELLM_OTEL_V2=true` and a destination-capable callback: `langfuse_otel`, `arize`, `weave_otel` or `newrelic`. It is available on `success` and `success_and_failure` entries, not failure-only entries. For example, register it on a team's New Relic destination:
+The override requires `LITELLM_OTEL_V2=true` and a destination-capable callback: `langfuse_otel`, `arize`, `weave_otel`, `newrelic` or `mixpanel`. It is available on `success` and `success_and_failure` entries, not failure-only entries. For example, register it on a team's New Relic destination:
 
 ```shell
 curl -X POST 'http://localhost:4000/team/<team-id>/callback' \

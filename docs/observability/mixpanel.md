@@ -7,7 +7,7 @@ Send LiteLLM OpenTelemetry v2 traces to [Mixpanel](https://mixpanel.com) with th
 
 ## Prerequisites
 
-You need `LITELLM_OTEL_V2=true` enabled on your LiteLLM Proxy or SDK environment, your Mixpanel Project Token (`MIXPANEL_PROJECT_TOKEN`), and an end-user identifier on requests (`user`, `metadata.user.id`, `metadata.user_id`, `metadata.trace_user_id`, `x-litellm-customer-id`, or OpenTelemetry Baggage `user.id`). Mixpanel drops spans without a non-empty `user.id`. No extra Python packages are required; the callback uses the OTLP HTTP exporter that ships with `litellm[proxy]`.
+You need `LITELLM_OTEL_V2=true` enabled on your LiteLLM Proxy or SDK environment, your Mixpanel Project Token (`MIXPANEL_PROJECT_TOKEN`), and a user identifier on requests (see [Setting `user.id`](#setting-userid)). Mixpanel drops spans without a non-empty `user.id`. The project token can come from a team or key instead of the environment, see [Per-team and per-key routing](#per-team-and-per-key-routing). No extra Python packages are required; the callback uses the OTLP HTTP exporter that ships with `litellm[proxy]`.
 
 ## Quick start
 
@@ -70,11 +70,29 @@ You can also enable the callback from the Admin UI under **Settings > Logging & 
 
 ## Setting `user.id`
 
-Mixpanel requires a non-empty `user.id` attribute on every span and maps `user.id` to `distinct_id`. The `mixpanel` preset resolves `user.id` from request `metadata["user.id"]` or `metadata["user_id"]`, `metadata["trace_user_id"]`, the top-level `user` parameter, the proxy `x-litellm-customer-id` header (or virtual key `end_user_id`), or inbound OpenTelemetry Baggage (`baggage.set_baggage("user.id", "...")`), and promotes it across every span in the trace.
+Mixpanel requires a non-empty `user.id` attribute on every span and maps `user.id` to `distinct_id`. LiteLLM uses the first of these that holds a usable value:
+
+| Order | Source | Also sets the proxy's end user? |
+|---|---|---|
+| 1 | `metadata["user.id"]` (also read from `litellm_metadata`, and as nested `metadata["user"]["id"]`) | No |
+| 2 | `metadata["user_id"]` | Yes |
+| 3 | `metadata["trace_user_id"]` | No |
+| 4 | W3C `baggage` request header or in-process Baggage, key `user.id` | No |
+| 5 | The proxy's end user: `x-litellm-customer-id` and the other customer headers, the `user` parameter, `litellm_metadata.user`, `safety_identifier`, or the virtual key's `end_user_id` | Yes |
+
+A blank value, a boolean, a value over 1024 characters or one with a control character is skipped, and the next source is used. A number is sent as a string.
+
+`metadata["user.id"]` only labels spans. It never creates a customer, never applies a customer's budget or rate limit, and never appears as the end user on a spend log. To label spans and also enforce customer limits, send `user` or `x-litellm-customer-id`, as you do without Mixpanel. Because the two are read separately, a request with both `metadata["user.id"]` and `user` shows one id in Mixpanel and the other on its spend log.
+
+Clients that fill `metadata.user_id` themselves take that value as the `distinct_id`. Claude Code sends a session-scoped value there on `/v1/messages`, so each session appears as its own user. Send `metadata["user.id"]` from those clients if you can set it.
+
+The id reaches every span of a request from the end of authentication on: the request root, the `auth` span, guardrails, the LLM call and the database and cache work after auth. Four kinds of span carry no id, because LiteLLM has no caller to name yet or no caller at all: reads inside the `auth` phase that run before the key resolves, the `POST /mcp` transport span and the lookups that run before MCP authentication, requests rejected during authentication, and background jobs that do not belong to a request. These still export to a project set with `MIXPANEL_PROJECT_TOKEN`, and Mixpanel drops them. A team's or key's project does not receive them. `baggage` is read only after a request passes authentication, so a caller without a valid key cannot name a user.
 
 ## Per-team and per-key routing
 
 Under OpenTelemetry v2 (`LITELLM_OTEL_V2=true`), a team or virtual key can route its traces to its own Mixpanel project and data residency region (`us`, `eu`, or `in`). This uses the same key and team callback mechanism as [Team/Key based logging](../proxy/team_logging), and the general behavior (override versus additive mode, what the tenant receives, key beating team) is covered in [Per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
+
+`MIXPANEL_PROJECT_TOKEN` is not needed for this. It works with `mixpanel` listed in `callbacks` or not, and alongside other callbacks. `user.id` goes only to Mixpanel, so other backends the request exports to do not receive it. The exception is a Langfuse project set on a key or team, which also reads `user.id` from the LLM call span as its Langfuse user.
 
 Register the callback on a team:
 
@@ -112,11 +130,19 @@ curl -X POST 'http://localhost:4000/key/generate' \
   }'
 ```
 
-The Admin UI exposes the same two fields on a team's or key's logging settings under the Mixpanel tile. The project token is stored encrypted and reads back masked.
+The Admin UI exposes the same two fields on a team's or key's logging settings under the Mixpanel tile.
+
+`mixpanel_project_token` is required whenever a `mixpanel_*` variable is set. LiteLLM refuses an empty token and the masked `***REDACTED***` value with a 400, so send the real token again when you update the callback.
+
+`mixpanel_region` defaults to `us` and does not inherit `MIXPANEL_REGION`, which applies only to the proxy's own project. Set it on every team or key whose data belongs in another region.
+
+Use `callback_type` `success` or `success_and_failure`. A `failure` entry on its own does not route a team's or key's traces to Mixpanel.
+
+The token is stored encrypted. `GET /team/{team_id}/callback` returns it masked, while `/team/info` and `/key/info` return the encrypted value and `/get/config/callbacks` shows the proxy's `MIXPANEL_PROJECT_TOKEN` to proxy admins.
 
 ## Prompt and completion content
 
-By default the Mixpanel callback exports request metadata only (model, token usage, cost, latency and `user.id`). Prompts and completions are not sent. To include them, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only`, which adds `gen_ai.input.messages` and `gen_ai.output.messages` to the `chat` span.
+By default prompts and completions are not sent. Spans still carry what OpenTelemetry v2 records for every backend: model, token usage, cost, latency and `user.id`, along with the caller's IP address and user agent, the request URL, the API key hash and key owner id, and on database spans the database system and table names. A project token from the environment also receives the database host, port and name, which a team's or key's project does not. To include them, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only`, which adds `gen_ai.input.messages` and `gen_ai.output.messages` to the `chat` span.
 
 If only some traffic is safe to record, keep capture on but redact every request by default, then let trusted callers opt in per request. Turn on redaction in the proxy config, and spans carry `redacted-by-litellm` in place of message content:
 
@@ -128,12 +154,16 @@ litellm_settings:
 
 Add `allow_client_message_redaction_opt_out: true` to the metadata of each key or team that may opt out, and have those callers send `LiteLLM-Disable-Message-Redaction: true` on requests whose content can be recorded. The proxy drops the header on any other key, so content is only exported when both the key and the request opt in. See [Disable Message Redaction](../proxy/logging#disable-message-redaction) for the key setup.
 
+## Using Mixpanel with other callbacks
+
+The first OpenTelemetry v2 callback in `callbacks` owns the request's whole trace, and each later one exports only its own LLM call span. List `mixpanel` first, as in `callbacks: ["mixpanel", "otel"]`, if the project set with `MIXPANEL_PROJECT_TOKEN` should get every span. With `callbacks: ["otel", "mixpanel"]` that project gets only the LLM call span. A team's or key's project gets the whole trace in either order.
+
 ## Environment variables
 
 | Variable | Required | Description |
 |---|---|---|
 | `LITELLM_OTEL_V2` | Yes | Must be `true` to enable OpenTelemetry v2 |
 | `MIXPANEL_PROJECT_TOKEN` | Yes (unless using per-team/key routing only) | Mixpanel project token, encoded as HTTP Basic auth (`<token>:`) |
-| `MIXPANEL_REGION` | No | `us` (default), `eu`, or `in` |
+| `MIXPANEL_REGION` | No | `us` (default), `eu`, or `in`. Applies to the proxy's own project only |
 | `MIXPANEL_ENDPOINT` | No | Optional full OTLP traces endpoint override |
 | `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | No | Set to `span_only` to include `gen_ai.input.messages` and `gen_ai.output.messages` (defaults to `no_content`) |
