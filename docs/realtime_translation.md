@@ -26,7 +26,7 @@ faq:
   - question: How is realtime translation different from the Realtime API?
     answer: The Realtime API on /v1/realtime is a conversation, and the model gives an answer to each question. Realtime translation on /v1/realtime/translations is a live interpreter. It has no turns, prompts, or tools.
   - question: Can I use guardrails with realtime translation?
-    answer: No. Guardrails cannot read translated audio. LiteLLM stops a translation session when a pre_call, post_call, or realtime_input_transcription guardrail applies to it. Create the key with disable_global_guardrails set to true to let it use translation.
+    answer: No. Guardrails cannot read translated audio. LiteLLM stops a translation session when a pre_call, post_call, or realtime_input_transcription guardrail applies to it. If the guardrail has default_on set to true, create the key with disable_global_guardrails set to true to let it use translation. This setting is an Enterprise feature.
   - question: Why does my translation session close after the audio stops?
     answer: Azure closes a translation session approximately 10 seconds after it gets no input. Send session.close when your audio ends.
 ---
@@ -270,7 +270,7 @@ model_list:
 
 Guardrails cannot read translated audio. Thus, LiteLLM stops a translation session when a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to it. The WebSocket closes with code 1008, and the WebRTC routes return 400.
 
-A guardrail of these modes with `default_on: true` stops translation for all keys on the proxy. To let a key use translation, create the key with `disable_global_guardrails: true`. Guardrails in `during_call` mode, and `post_call` guardrails with the scope `non_streaming`, do not stop translation.
+A guardrail of these modes with `default_on: true` stops translation for all keys on the proxy. To let a key use translation, create the key or its team with `disable_global_guardrails: true`. This setting is an [Enterprise](/docs/enterprise) feature, and it turns off only `default_on` guardrails. A guardrail that the key or the team attaches, or that the request names, continues to stop translation. Guardrails in `during_call` mode, and `post_call` guardrails with [`stream_scope: non_streaming`](/docs/proxy/guardrails/quick_start#run-on-streaming-or-non-streaming-requests-only-with-stream_scope), do not stop translation.
 
 For guardrails on other realtime sessions, see [realtime guardrails](/docs/proxy/guardrails/realtime_guardrails).
 
@@ -310,7 +310,7 @@ The Realtime API on `/v1/realtime` is a conversation, and the model gives an ans
 
 ### Can I use guardrails with realtime translation?
 
-No. Guardrails cannot read translated audio. LiteLLM stops a translation session when a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to it. Create the key with `disable_global_guardrails` set to `true` to let it use translation.
+No. Guardrails cannot read translated audio. LiteLLM stops a translation session when a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to it. If the guardrail has `default_on` set to `true`, create the key with `disable_global_guardrails` set to `true` to let it use translation. This setting is an Enterprise feature.
 
 ### Why does my translation session close after the audio stops?
 
