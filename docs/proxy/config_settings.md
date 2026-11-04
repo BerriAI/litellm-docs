@@ -413,6 +413,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
+| litellm_jwtauth.unregistered_jwt_client_behavior | string | `fallback_team_mapping` | What to do when a JWT has no key mapping: `fallback_team_mapping`, `reject`, `auto_register`, or `link_only` <SinceVersion v="1.109.0" />. [Docs](./jwt_key_mapping.md#step-1-configure-the-jwt-claim-to-map-on) |
+| litellm_jwtauth.auto_register_map_existing_key | boolean | `false` | With `auto_register`, reuse the user's newest eligible key instead of creating one. [Docs](./jwt_key_mapping.md#which-existing-key-is-selected) {/* keep-version-note */} |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |

@@ -37,8 +37,11 @@ sequenceDiagram
     else No mapping — reject
         Proxy-->>Client: 403 Forbidden
     else No mapping — auto_register
-        Proxy->>DB: Create new virtual key + mapping
+        Proxy->>DB: Create virtual key + mapping<br/>(or reuse an existing key if configured)
         Proxy-->>Client: 200 OK
+    else No mapping — link_only
+        Proxy->>DB: Map to newest eligible user key
+        Proxy-->>Client: Key permissions apply, or 403 if no eligible key
     end
 ```
 
@@ -73,13 +76,42 @@ general_settings:
 |-------|----------|
 | `fallback_team_mapping` | Fall through to team-based JWT auth (default — backward compatible) |
 | `reject` | Return 403 if no mapping found |
-| `auto_register` | Auto-create a virtual key + mapping on first encounter |
+| `auto_register` | Auto-create a virtual key + mapping on first encounter, or reuse an existing key first with `auto_register_map_existing_key: true` |
+| `link_only` | Map to an existing key, or return 403 if there is none. Never creates a key |
 
 With `auto_register`, the first request carrying a new claim value provisions a virtual key and mapping on the fly, with no admin call. The key is created only after the JWT clears full policy (signature, RBAC/scope, `custom_validate`, and `user_allowed_email_domain`); if the token fails any check the request is rejected and nothing is created. The new key inherits the team, user, and org resolved from the validated JWT, so make sure those claims are configured. A token that resolves to a proxy admin is not auto-registered, since admins already have full access. `auto_register` requires a database connection
+
+### Link to existing keys
+
+<SinceVersion v="1.109.0" />
+
+Use `link_only` when admins create keys ahead of time. The first request from an unmapped identity maps it to that user's newest eligible key. If there is none, the request gets a 403 with `JWT Key Mapping: No eligible existing virtual key for this identity. Access denied.` and nothing is created. `virtual_key_claim_field` must be the same claim as `user_id_jwt_field` or `user_email_jwt_field`, and a database connection is required.
+
+```yaml
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: sub
+    virtual_key_claim_field: sub
+    user_id_upsert: false
+    unregistered_jwt_client_behavior: link_only
+```
+
+`link_only` never creates keys, but `user_id_upsert: true` can still create users. Keep it `false` if users must already exist.
+
+### Which existing key is selected
+
+This applies to `link_only` and to `auto_register` with `auto_register_map_existing_key: true`. A key is eligible if it belongs to the JWT's user and team (or has no team when the JWT has none), never expires, is not blocked, and is not an Admin UI session key or an auto-registered key. The newest eligible key wins, and later requests keep using that mapping. Proxy admin JWTs are never mapped automatically.
+
+`allowed_routes` does not affect which key is selected, but the key's routes, models, budget, and rate limits still apply to every request.
 
 ### Step 2. Register a JWT client → virtual key mapping
 
 **Recommended: let `auto_register` do it.** Set `unregistered_jwt_client_behavior: "auto_register"` in Step 1 and the first request from each new claim value provisions its own key automatically, with no admin call. Use this when every client should start from the same defaults.
+
+If admins already created the keys, use [`link_only`](#link-to-existing-keys) instead.
 
 **Manual: register a key with specific limits.** When a client needs its own budget or model set, create the virtual key first, then map a claim value to it. There is no single atomic endpoint; it is two calls.
 
