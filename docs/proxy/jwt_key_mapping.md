@@ -107,12 +107,6 @@ This applies to `link_only` and to `auto_register` with `auto_register_map_exist
 
 `allowed_routes` does not affect which key is selected, but the key's routes, models, budget, and rate limits still apply to every request.
 
-:::caution Upgrade note
-
-Existing-key reuse used to pick only keys with no `allowed_routes` or with `llm_api_routes`. It can now pick any eligible key, including one with management routes, and the JWT gets that key's permissions. Review your users' keys before upgrading. Existing mappings are not changed.
-
-:::
-
 ### Step 2. Register a JWT client → virtual key mapping
 
 **Recommended: let `auto_register` do it.** Set `unregistered_jwt_client_behavior: "auto_register"` in Step 1 and the first request from each new claim value provisions its own key automatically, with no admin call. Use this when every client should start from the same defaults.
