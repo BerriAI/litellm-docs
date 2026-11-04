@@ -33,7 +33,7 @@ cachecanary lint litellm-requests/first.json --model us.anthropic.{{anthropic}}
 cachecanary diff litellm-requests/first.json litellm-requests/second.json
 ```
 
-The [LiteLLM guide](https://cachecanary.com/litellm/) shows what `cache_control_injection_points` sends to Bedrock, the cases where the cache is lost (a `role: "user"` injection point, many parallel tool calls, a cache point on an assistant tool-call message, a dropped 1-hour lifetime), and a setup that keeps it. Each case was checked against live Bedrock.
+The [LiteLLM guide](https://cachecanary.com/litellm/) shows what `cache_control_injection_points` sends to Bedrock, the cases where the cache is lost (a `role: "user"` injection point, a cache point on an assistant tool-call message, a dropped 1-hour lifetime), and a setup that keeps it. Each case was checked against live Bedrock.
 
 - [GitHub](https://github.com/Haarris/cachecanary)
 - [LiteLLM guide](https://cachecanary.com/litellm/)
