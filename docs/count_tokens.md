@@ -253,7 +253,7 @@ Some hosts add a different hidden prompt when a request has tools, or when it go
 | `token_count_responses_framing` | A native Responses request with no function tool |
 | `token_count_responses_tool_framing` | A native Responses request with a function tool |
 
-The proxy adds one framing value to each count. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451. A request whose only tools are built-in tools, such as `web_search`, counts as a request with no tools.
+The proxy adds one framing value to each count. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451. A request whose only tools are built-in tools, such as `web_search`, uses the keys for a request with no function tool.
 
 A native Responses request is a `/v1/responses/input_tokens` request to a deployment for which the proxy calls the provider's own Responses API. When the proxy bridges the deployment to chat completions, the host adds its chat prompt, so the count uses the chat keys. For example, an Azure AI deployment uses the bridge when its `api_base` is not on `.services.ai.azure.com` or `.openai.azure.com`, or when the deployment or the request sets `use_chat_completions_api: true`. `/v1/messages/count_tokens` and `/utils/token_counter` always use the chat keys.
 
