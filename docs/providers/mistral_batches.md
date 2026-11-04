@@ -7,7 +7,7 @@ LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to 
 | Upload, retrieve, list, delete files | ✅ |
 | Download file content | ✅ |
 | Create and retrieve batches | ✅ |
-| List and cancel batches | Not yet |
+| List and cancel batches | ✅ |
 | Cost tracking for batch OCR | ✅ per page, see [Batch OCR cost tracking](#batch-ocr-cost-tracking) |
 
 ## 1. Add a Mistral model to config.yaml
@@ -85,6 +85,35 @@ curl "http://0.0.0.0:4000/v1/files?provider=mistral&purpose=batch" \
 ```
 
 OCR files read back with `purpose=user_data`, and files created by other Mistral products with a purpose the upload endpoint does not accept (`playground`, `audio`, and similar) also read back as `user_data`, so an unfiltered list never fails on them.
+
+## Listing batches
+
+A plain list has no id to route on, so name the provider or the deployment on the request:
+
+```bash
+curl "http://0.0.0.0:4000/v1/batches?provider=mistral&limit=3" \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+Mistral pages its jobs by page number instead of by the last id, so the response carries a `next_page_token` next to `has_more`. Pass it back as `after` to read the next page:
+
+```bash
+curl "http://0.0.0.0:4000/v1/batches?provider=mistral&limit=3&after=1" \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+An id passed as `after` is rejected with a 400 that names `next_page_token`. The OpenAI SDK's auto-pagination (`client.batches.list().auto_paging_iter()`) sends the last id, so page by hand against Mistral, the same as with xAI
+
+`?model=mistral-ocr` lists with that deployment's credentials and encodes the model into every returned id, so later retrieve and cancel calls on those ids route on their own. Mistral has no per-model filter, so the list holds every job on the key
+
+## Cancelling a batch
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/batches/batch_bGl0ZWxsbTo1YzU4.../cancel \
+  -H "Authorization: Bearer $LITELLM_API_KEY"
+```
+
+The response comes back with `status: cancelling` and the job settles to `cancelled` within a second or two. A raw Mistral job id works too once the provider is named: `POST /v1/batches/<job id>/cancel?provider=mistral`
 
 ## Batch OCR cost tracking
 
