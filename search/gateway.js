@@ -16,7 +16,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
     throw new Error('Invalid gateway configuration');
   }
   const tracing = getTracing(config);
-  const secrets = [config.apiKey, config.tracing?.key].filter(Boolean);
+  const secrets = [config.apiKey, config.oidcToken, config.vercelOidcToken, config.tracing?.key].filter(Boolean);
   const assertSafe = text => {
     if (secrets.some(secret => text.includes(secret))) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
   };
@@ -32,7 +32,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       requestSignal.throwIfAborted();
       const response = await fetchImpl(endpoint.href, {
         method: 'POST', redirect: 'error', signal: requestSignal,
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
+        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.oidcToken || config.apiKey}`},
         body: JSON.stringify({model: MODEL, fallbacks: [
           {model: FALLBACKS[0], reasoning_effort: 'none'},
           {model: FALLBACKS[1], reasoning_effort: 'none'},

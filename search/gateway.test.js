@@ -50,6 +50,27 @@ test('large successful completions have no answer character or response byte cap
   assert.equal(await call('Instructions', {}, 25000), answer);
 });
 
+test('OIDC credentials are rejected in gateway responses and redacted from trace attributes', async t => {
+  const spans = [];
+  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
+  const traced = {...config, oidcToken: 'request-oidc-secret', vercelOidcToken: 'environment-oidc-secret',
+    tracing: {key: 'oidc-tracing-secret', endpoint: 'https://tracing.example.com/v1/traces'}};
+  const tracing = getTracing(traced);
+  try {
+    for (const secret of [traced.oidcToken, traced.vercelOidcToken, traced.apiKey, traced.tracing.key]) {
+      const call = createModelCaller({config: traced, fetchImpl: async () => completion('stop', secret)});
+      await assert.rejects(call('Instructions', {question: secret}, 25000), {name: 'GatewayInvalidResponse'});
+    }
+    await tracing.flush();
+    assert.equal(spans.length, 4);
+    const attributes = JSON.stringify(spans.map(span => span.attributes));
+    assert.ok(attributes.includes('[REDACTED]'));
+    for (const secret of [traced.oidcToken, traced.vercelOidcToken, traced.apiKey, traced.tracing.key]) {
+      assert.ok(!attributes.includes(secret));
+    }
+  } finally { await tracing.shutdown(); }
+});
+
 test('provider context-limit codes become safe errors without exposing the provider message', async () => {
   for (const error of [{code: 'context_length_exceeded'}, {type: 'ContextWindowExceededError'}]) {
     const call = createModelCaller({config, fetchImpl: async () => Response.json({error: {...error, message: config.apiKey}}, {status: 400})});
