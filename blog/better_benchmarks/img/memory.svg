@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="792pt" height="720pt" viewBox="0 0 792 720" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-04T22:17:02.214164</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 720 
+L 792 720 
+L 792 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 43.56 194.76 
+L 231.6402 194.76 
+L 231.6402 168.84 
+L 43.56 168.84 
+z
+" clip-path="url(#p16f156a591)" style="fill: #aeb8ca; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 231.6402 194.76 
+L 398.1087 194.76 
+L 398.1087 168.84 
+L 231.6402 168.84 
+z
+" clip-path="url(#p16f156a591)" style="fill: #d4dce7; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 398.1087 194.76 
+L 541.2132 194.76 
+L 541.2132 168.84 
+L 398.1087 168.84 
+z
+" clip-path="url(#p16f156a591)" style="fill: #aeb8ca; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 541.2132 194.76 
+L 683.1495 194.76 
+L 683.1495 168.84 
+L 541.2132 168.84 
+z
+" clip-path="url(#p16f156a591)" style="fill: #d4dce7; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_6">
+    <path d="M 43.56 317.16 
+L 253.2519 317.16 
+L 253.2519 291.24 
+L 43.56 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #aeb8ca; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 253.2519 317.16 
+L 364.2309 317.16 
+L 364.2309 291.24 
+L 253.2519 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #d4dce7; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 364.2309 317.16 
+L 474.6258 317.16 
+L 474.6258 291.24 
+L 364.2309 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #aeb8ca; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 474.6258 317.16 
+L 584.4366 317.16 
+L 584.4366 291.24 
+L 474.6258 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #d4dce7; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 584.4366 317.16 
+L 672.0516 317.16 
+L 672.0516 291.24 
+L 584.4366 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #aeb8ca; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 672.0516 317.16 
+L 695.4156 317.16 
+L 695.4156 291.24 
+L 672.0516 291.24 
+z
+" clip-path="url(#p090a35d447)" style="fill: #d4dce7; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+  </g>
+  <g id="axes_3">
+   <g id="patch_12">
+    <path d="M 43.56 439.56 
+L 71.0127 439.56 
+L 71.0127 413.64 
+L 43.56 413.64 
+z
+" clip-path="url(#p745c3de719)" style="fill: #3455ec; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+  </g>
+  <g id="axes_4">
+   <g id="patch_13">
+    <path d="M 43.56 561.96 
+L 186.6645 561.96 
+L 186.6645 536.04 
+L 43.56 536.04 
+z
+" clip-path="url(#pb38a7b033f)" style="fill: #3455ec; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 186.6645 561.96 
+L 214.1172 561.96 
+L 214.1172 536.04 
+L 186.6645 536.04 
+z
+" clip-path="url(#pb38a7b033f)" style="fill: #8b9ff0; stroke: #ffffff; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+  </g>
+  <g id="text_1">
+   <text style="font-weight: 700; font-size: 23px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #17212f" x="43.56" y="46.276406" transform="rotate(-0 43.56 46.276406)">Heap held per open stream</text>
+  </g>
+  <g id="text_2">
+   <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #677487" x="43.56" y="73.158281" transform="rotate(-0 43.56 73.158281)">500k-token request · 2.45 MB body · same linear scale for every gateway</text>
+  </g>
+  <g id="text_3">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #17212f" x="43.56" y="151.2" transform="rotate(-0 43.56 151.2)">LiteLLM Python</text>
+  </g>
+  <g id="text_4">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #17212f" x="744.48" y="151.2" transform="rotate(-0 744.48 151.2)">10.95 MB</text>
+  </g>
+  <g id="text_5">
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #677487" x="43.56" y="219.238594" transform="rotate(-0 43.56 219.238594)">parsed request: 3.22 MB · raw body: 2.85 MB · json.dumps for logging: 2.45 MB · outbound bytes: 2.43 MB</text>
+  </g>
+  <g id="text_6">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #17212f" x="43.56" y="273.6" transform="rotate(-0 43.56 273.6)">Bifrost</text>
+  </g>
+  <g id="text_7">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #17212f" x="744.48" y="273.6" transform="rotate(-0 744.48 273.6)">11.16 MB</text>
+  </g>
+  <g id="text_8">
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #677487" transform="translate(43.56 341.638594)">parsed request: 3.59 MB · re-encoded messages: 1.9 MB · trace text: 1.89 MB · trace summary: 1.88 MB ·</text>
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #677487" transform="translate(43.56 353.768203)">outbound (SetBody): 1.5 MB · inbound read: 0.4 MB</text>
+  </g>
+  <g id="text_9">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #3455ec" x="43.56" y="396" transform="rotate(-0 43.56 396)">LiteLLM Rust</text>
+  </g>
+  <g id="text_10">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #3455ec" x="744.48" y="396" transform="rotate(-0 744.48 396)">0.47 MB</text>
+  </g>
+  <g id="text_11">
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #677487" x="43.56" y="464.038594" transform="rotate(-0 43.56 464.038594)">connection read buffers and per-call state: 0.47 MB</text>
+  </g>
+  <g id="text_12">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #3455ec" x="43.56" y="518.4" transform="rotate(-0 43.56 518.4)">LiteLLM Rust + S3 logs</text>
+  </g>
+  <g id="text_13">
+   <text style="font-weight: 700; font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #3455ec" x="744.48" y="518.4" transform="rotate(-0 744.48 518.4)">2.92 MB</text>
+  </g>
+  <g id="text_14">
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #677487" x="43.56" y="586.438594" transform="rotate(-0 43.56 586.438594)">body kept for the S3 log: 2.45 MB · connection read buffers and per-call state: 0.47 MB</text>
+  </g>
+  <g id="text_15">
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #677487" transform="translate(43.56 680.114812)">Profiled heap allocations, not process RSS. Python: memray; Bifrost: pprof; Rust: heaptrack.</text>
+   <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #677487" transform="translate(43.56 692.928281)">Rust with S3 logs retains one body copy for the lifetime of the stream.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p16f156a591">
+   <rect x="43.56" y="165.6" width="700.92" height="32.4"/>
+  </clipPath>
+  <clipPath id="p090a35d447">
+   <rect x="43.56" y="288" width="700.92" height="32.4"/>
+  </clipPath>
+  <clipPath id="p745c3de719">
+   <rect x="43.56" y="410.4" width="700.92" height="32.4"/>
+  </clipPath>
+  <clipPath id="pb38a7b033f">
+   <rect x="43.56" y="532.8" width="700.92" height="32.4"/>
+  </clipPath>
+ </defs>
+</svg>

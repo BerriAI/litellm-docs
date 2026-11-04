@@ -20,3 +20,8 @@ memory.csv        img/memory.png        Heap held per open stream with 500k-toke
 
 Hardware for the rate sweep and 1M runs: Kubernetes on AWS m7i.4xlarge, one pod per gateway with 4 dedicated
 cores and 16 GiB. Single run of each configuration.
+
+Render the charts with matplotlib 3.10.8:
+  MPLCONFIGDIR=/tmp/matplotlib python3 scripts/render-better-benchmarks.py
+The article uses the generated SVGs; PNG copies are also generated for sharing.
+Latency axes in headline and sweep charts are logarithmic, with no capped bars.
