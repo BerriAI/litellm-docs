@@ -242,6 +242,74 @@ The `/v1/messages/count_tokens`, `/v1/responses/input_tokens`, and `:countTokens
 - `token_count_model`: the count API for the model in `token_count_model`. The field `litellm_count_model` gives the name of this model.
 - `local_estimate`: a local count
 
+### Framing for tool requests and the Responses API
+
+Some hosts add a different hidden prompt when a request has tools, or when it goes to their own Responses API. Three more `model_info` keys set the framing for these requests. <SinceVersion v="1.110.0" />
+
+| Key | Applies to |
+|-----|------------|
+| `token_count_framing` | Every request that a narrower key does not cover |
+| `token_count_tool_framing` | A request with a function tool |
+| `token_count_responses_framing` | A native Responses request with no function tool |
+| `token_count_responses_tool_framing` | A native Responses request with a function tool |
+
+The proxy adds one framing value to each count. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451. A request whose only tools are built-in tools, such as `web_search`, counts as a request with no tools.
+
+A native Responses request is a `/v1/responses/input_tokens` request to a deployment for which the proxy calls the provider's own Responses API. When the proxy bridges the deployment to chat completions, the host adds its chat prompt, so the count uses the chat keys. For example, an Azure AI deployment uses the bridge when its `api_base` is not on `.services.ai.azure.com` or `.openai.azure.com`, or when the deployment or the request sets `use_chat_completions_api: true`. `/v1/messages/count_tokens` and `/utils/token_counter` always use the chat keys.
+
+When a key is not set, the proxy uses the next key in the list for the request. A chat request is every count request that is not a native Responses request:
+
+| Request | Keys, in order |
+|---------|----------------|
+| Chat, no function tool | `token_count_framing` |
+| Chat, function tool | `token_count_tool_framing`, `token_count_framing` |
+| Native Responses, no function tool | `token_count_responses_framing`, `token_count_framing` |
+| Native Responses, function tool | `token_count_responses_tool_framing`, `token_count_responses_framing`, `token_count_tool_framing`, `token_count_framing` |
+
+If `model_info` sets one or more keys from the list for a request, the proxy uses only the `model_info` keys for that request. If not, it uses the built-in values from the cost map. So `token_count_framing` alone in `model_info` applies to every request and replaces all the built-in values. `token_count_tool_framing` alone applies to tool requests on both APIs, and requests with no function tool keep the built-in values. Each value is a whole number of tokens, zero or more. The proxy ignores any other value.
+
+The local estimate renders tools the way the chat template of the model does, for example for Grok 4.1, Grok 4.3, and DeepSeek V4.1. The proxy finds the model from `base_model` when the deployment sets it in `model_info` or `litellm_params`, and from `litellm_params.model` if not. The built-in framing values come from the cost map entry of the same model. So a deployment with a custom name needs `base_model` to get the correct count:
+
+```yaml
+model_list:
+  - model_name: prod-grok
+    litellm_params:
+      model: azure_ai/prod-grok
+      api_base: https://my-resource.services.ai.azure.com
+      api_key: os.environ/AZURE_AI_API_KEY
+    model_info:
+      base_model: azure_ai/grok-4-1-fast-reasoning
+```
+
+```bash
+curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "prod-grok",
+    "messages": [{"role": "user", "content": "What is the weather in Paris?"}],
+    "tools": [{
+      "name": "get_weather",
+      "description": "Get the current weather for a city",
+      "input_schema": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+    }]
+  }'
+# {"input_tokens": 352, "litellm_count_source": "local_estimate"}
+```
+
+Without `base_model`, the same request counts 54 tokens, because the proxy uses the generic tool rendering and no framing. An xAI deployment that still uses a deprecated `grok-4-1` name has no cost map entry, because xAI serves Grok 4.3 for these names. To count it like Grok 4.3, set `base_model: xai/grok-4.3`.
+
+The cost map has measured framing values for these entries:
+
+| Cost map entry | Keys set |
+|----------------|----------|
+| `azure_ai/grok-4-1-fast-reasoning` | All four keys |
+| `xai/grok-4.3` | `token_count_framing`, `token_count_tool_framing` |
+| `deepseek/deepseek-v4-flash` | `token_count_framing`, `token_count_tool_framing` |
+| `deepseek/deepseek-v4-pro` | `token_count_framing`, `token_count_tool_framing` |
+| `fireworks_ai/deepseek-v4p1-flash` | `token_count_framing` |
+| `fireworks_ai/accounts/fireworks/models/deepseek-v4p1-flash` | `token_count_framing` |
+
 ## Proxy Configuration
 
 ```yaml
