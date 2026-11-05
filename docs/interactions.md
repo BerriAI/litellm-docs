@@ -208,23 +208,29 @@ for chunk in client.interactions.create_stream(
 
 ## **Long decode (answers past Google's per-request output cap)**
 
-A foreground Interactions request to a model that supports long decode (for example `gemini/gemini-4-argon`) stops at Google's per-request cap, 32,768 output tokens when not streaming and 65,536 when streaming, with `status: "requires_continuation"` and a `continuation_token`. LiteLLM continues the decode for you: it re-sends the request with `previous_interaction_id` and `continuation_token` until the status leaves `requires_continuation` or `generation_config.max_output_tokens` is spent, and returns one interaction.
+A foreground Interactions request to a model that supports long decode (for example `gemini/gemini-4-argon`) stops at Google's per-request cap, 32,768 output tokens when not streaming and 65,536 when streaming, with `status: "requires_continuation"` and a `continuation_token`. LiteLLM passes both through unchanged, exactly as Google returns them, and does not continue the decode for you. To get the rest of the answer, send the request again with `previous_interaction_id` set to that interaction's `id` and `continuation_token` set to that token, and repeat until the status is no longer `requires_continuation`. Each hop is its own request, with its own spend log, budget check and rate limit.
 
 ```python
 import litellm
 
-response = litellm.interactions.create(
-    model="gemini/gemini-4-argon",
-    input="Write a complete, rigorous proof of the prime number theorem.",
-    generation_config={"max_output_tokens": 262144, "thinking_level": "high"},
-)
-print(response.status)  # "completed", not "requires_continuation"
-print("".join(c["text"] for step in response.steps for c in step.get("content", []) if c.get("type") == "text"))
+request = {
+    "model": "gemini/gemini-4-argon",
+    "generation_config": {"max_output_tokens": 262144, "thinking_level": "high"},
+}
+response = litellm.interactions.create(input="Write a complete, rigorous proof of the prime number theorem.", **request)
+steps = list(response.steps or [])
+while response.status == "requires_continuation":
+    response = litellm.interactions.create(
+        previous_interaction_id=response.id,
+        continuation_token=response.continuation_token,
+        **request,
+    )
+    steps.extend(response.steps or [])
+print(response.status)  # "completed"
+print("".join(c["text"] for step in steps for c in step.get("content", []) if c.get("type") == "text"))
 ```
 
-The merged interaction carries the last hop's `id` (pass it as `previous_interaction_id` on the next turn), the `steps` of every hop in order, and a `usage` summed over the hops. Every hop re-sends the answer so far as input, so `usage.total_input_tokens` is the sum of each hop's input; `usage.initial_input_tokens` is the size of your prompt. In streaming mode the hops arrive as one stream: the `interaction.completed` event is sent once, for the last hop, with the summed `usage`. With `store: false` the hops resend `input` instead of `previous_interaction_id`.
-
-If a continuation request fails, LiteLLM returns the answer so far with `status: "requires_continuation"` and its `continuation_token`. Resume it yourself by sending the same request again with `previous_interaction_id` set to that interaction's `id` and `continuation_token` set to that token.
+Every hop re-reads the answer so far as input, so each hop's `usage.total_input_tokens` grows while `usage.initial_input_tokens` stays the size of your prompt. With `store: false` nothing is stored on Google's side, so resend `input` instead of `previous_interaction_id`. In streaming mode the `interaction.completed` event carries the same `status` and `continuation_token`.
 
 Background requests (`background: true`) are continued by Google on its side and need no client hops.
 
