@@ -1,7 +1,16 @@
+---
+title: apimodels.app
+description: Call apimodels.app language models through LiteLLM with the Python SDK or proxy, including the Responses and Anthropic Messages APIs. Configure your API key, model name, and optional API base.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # apimodels.app
+
+<SinceVersion v="1.110.0" />
+
+Provider support was added in [PR #40013](https://github.com/BerriAI/litellm/pull/40013). Use this version or a later build that includes the provider.
 
 ## Overview
 
@@ -9,7 +18,7 @@ import TabItem from '@theme/TabItem';
 |-------|-------|
 | Description | apimodels.app is a multi-model API gateway: one API key and OpenAI- and Anthropic-compatible endpoints for about 150 image, video, audio and language models. |
 | Provider Route on LiteLLM | `apimodels/` |
-| Link to Provider Doc | [apimodels.app Documentation ↗](https://apimodels.app/docs) |
+| Link to Provider Doc | [apimodels.app documentation](https://apimodels.app/docs) |
 | Base URL | `https://api.apimodels.app/v1` |
 | Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#anthropic-messages-api) |
 
@@ -31,7 +40,7 @@ import TabItem from '@theme/TabItem';
 | `apimodels/deepseek-v4.1-flash` | DeepSeek V4.1 Flash |
 | `apimodels/grok-4.6` | Grok 4.6 |
 
-LiteLLM does not ship apimodels.app pricing, so for spend tracking pass `input_cost_per_token` and `output_cost_per_token` in `litellm_params`. Current prices are on each model page at [apimodels.app/models](https://apimodels.app/models).
+LiteLLM's model cost map has `apimodels/` rows for apimodels.app chat models, so spend tracking uses apimodels.app list prices, including cache reads, long-prompt rates and off-peak windows where a model has them. For a model without a row, set `input_cost_per_token` and `output_cost_per_token` in `litellm_params`. Current prices are on each model page at [apimodels.app/models](https://apimodels.app/models).
 
 ## Required Variables
 
@@ -117,7 +126,7 @@ asyncio.run(main())
 
 ## Usage - LiteLLM Proxy Server
 
-```yaml showLineNumbers title="config.yaml"
+```yaml showLineNumbers keep-model-ids title="config.yaml"
 model_list:
   - model_name: claude-opus-5-5
     litellm_params:
