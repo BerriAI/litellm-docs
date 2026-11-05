@@ -4,6 +4,8 @@ Connect to the Realtime API via WebRTC from browser/mobile clients. LiteLLM hand
 
 **Providers:** OpenAI · Azure
 
+For live speech translation with `gpt-realtime-translate`, use the translation routes instead; see [Realtime translation](/docs/realtime_translation#translate-microphone-audio-in-a-browser-or-mobile-app).
+
 :::info[**WebRTC vs WebSocket**]
 - **WebSocket** (`/v1/realtime`): server-to-server
 - **WebRTC** (`/v1/realtime/client_secrets` + `/v1/realtime/calls`): browser/mobile, lower latency

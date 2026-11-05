@@ -1034,7 +1034,9 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 </TabItem>
 </Tabs>
 
+## OpenAI Realtime Translation
 
+For live speech-to-speech translation, add `openai/gpt-realtime-translate` and connect to `/v1/realtime/translations` on the proxy. The model sends back translated audio and text while the person speaks. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
 
 ## Advanced
 

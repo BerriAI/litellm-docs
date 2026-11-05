@@ -3,7 +3,7 @@ slug: guardrail-logging-secret-exposure-incident
 title: "Incident Report: Guardrail logging exposed secret headers in spend logs and traces"
 date: 2026-03-18T10:00:00
 authors:
-  - litellm
+  - ishaan
 tags: [incident-report, security, guardrails]
 hide_table_of_contents: false
 ---

@@ -371,6 +371,27 @@ curl -s http://localhost:4000/v1/mcp/server \
 
 If `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` is enabled, changing the id also changes the server's tool prefix. Servers added through the UI or `/v1/mcp/server` already have stable ids.
 
+### Skipping Tool Output Validation
+
+<SinceVersion v="1.110.0" />
+
+When a tool declares an `outputSchema`, the MCP client library checks each result against it. To find the schema, the client needs the server's tool list. A caller that does not send an `Mcp-Session-Id` header gets a fresh upstream session for every call, so the client has nothing cached and downloads the full `tools/list` before every `tools/call`. For a server with hundreds of tools this can be hundreds of kilobytes per call.
+
+Set `skip_tool_output_validation` in the server's `mcp_info` to skip the check and the extra list request:
+
+```yaml
+mcp_servers:
+  internal_docs:
+    url: "https://docs.internal.example/mcp"
+    transport: "http"
+    mcp_info:
+      skip_tool_output_validation: true
+```
+
+The value must be a boolean and defaults to `false`. The same key works in `mcp_info` on `POST /v1/mcp/server` and `PUT /v1/mcp/server`.
+
+With the setting on, LiteLLM returns the upstream's result as is, even if its structured content does not match the declared `outputSchema`. Callers that need that guarantee should leave it off. Servers pinned to `protocol_version: "2026-07-28"` ignore the setting, because that revision lists tools before every call anyway.
+
 ### MCP Walkthroughs
 
 - **Strands (STDIO)** – [watch tutorial](https://screen.studio/share/ruv4D73F)
