@@ -1,0 +1,110 @@
+// Starting configs. Each preset is a proxy config.yaml fragment, the model to send, and the
+// outages the over-time view schedules by default.
+
+const TUTORIAL = `# The model list from "Route your first requests".
+# A mock_response that names an exception makes every attempt raise it.
+model_list:
+  - model_name: chat
+    litellm_params:
+      model: openai/gpt-4o-mini
+      mock_response: hi from a
+    model_info:
+      id: a
+  - model_name: chat
+    litellm_params:
+      model: openai/gpt-4o-mini
+      mock_response: hi from b
+    model_info:
+      id: b
+  - model_name: backup
+    litellm_params:
+      model: openai/gpt-4o-mini
+      mock_response: hi from backup
+    model_info:
+      id: c
+
+router_settings:
+  num_retries: 1
+  fallbacks:
+    - chat: [backup]
+`;
+
+const WEIGHTS = `# simple-shuffle picks by weight, then rpm, then tpm.
+# Send 100 requests and compare the split with the weights.
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      weight: 3
+    model_info:
+      id: azure-eastus
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      weight: 1
+    model_info:
+      id: openai
+
+router_settings:
+  num_retries: 2
+`;
+
+const ORDER = `# order: 1 serves every request while it is healthy.
+# Break primary and the router moves down to order 2.
+model_list:
+  - model_name: claude
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      order: 1
+    model_info:
+      id: primary
+  - model_name: claude
+    litellm_params:
+      model: bedrock/anthropic.claude-sonnet-4-5
+      order: 2
+    model_info:
+      id: secondary
+
+router_settings:
+  num_retries: 2
+  cooldown_time: 30
+  allowed_fails: 1
+`;
+
+export const PRESETS = [
+  {
+    id: 'tutorial',
+    label: 'Tutorial',
+    config: TUTORIAL,
+    model: 'chat',
+    outages: [
+      {id: 'a', fail: 'RateLimitError', from: 20, to: 50},
+      {id: 'b', fail: 'RateLimitError', from: 35, to: 80},
+    ],
+  },
+  {
+    id: 'weights',
+    label: 'Weighted load balancing',
+    config: WEIGHTS,
+    model: 'gpt-4o',
+    outages: [{id: 'azure-eastus', fail: 'RateLimitError', from: 30, to: 70}],
+  },
+  {
+    id: 'order',
+    label: 'Priority with order',
+    config: ORDER,
+    model: 'claude',
+    outages: [{id: 'primary', fail: 'InternalServerError', from: 20, to: 75}],
+  },
+];
+
+export const FAILURES = [
+  'RateLimitError',
+  'InternalServerError',
+  'ServiceUnavailableError',
+  'Timeout',
+  'ContextWindowExceededError',
+  'ContentPolicyViolationError',
+  'AuthenticationError',
+  'BadRequestError',
+];
