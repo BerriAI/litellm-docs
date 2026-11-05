@@ -256,14 +256,30 @@ LiteLLM stores this attribute's value as the user's identity and looks the user 
 
 **Assigning User Roles via SSO**
 
-Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token contains the user's role. The role value must be one of the following supported LiteLLM roles:
+LiteLLM has four user roles:
 
 - `proxy_admin` - Admin over the platform
 - `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
 - `internal_user` - Can login, view/create/delete their own keys, view their spend
 - `internal_user_viewer` - Can login, view their own keys, view their own spend
 
-Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
+If your IdP can send one of these exact values, set `GENERIC_USER_ROLE_ATTRIBUTE` to the attribute that holds it. Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`). If your IdP sends its own group or entitlement names instead, use role mappings as described in the next section; the group names don't need to match LiteLLM's role names.
+
+**Mapping IdP Groups to LiteLLM Roles**
+
+Role mappings tell LiteLLM which claim holds the user's groups and which groups grant each role:
+
+```shell
+GENERIC_ROLE_MAPPINGS_GROUP_CLAIM="groups"
+GENERIC_ROLE_MAPPINGS_ROLES='{"proxy_admin": ["llm-platform-admins"], "proxy_admin_viewer": ["llm-auditors"], "internal_user": ["llm-developers"], "internal_user_viewer": ["llm-readers"]}'
+GENERIC_ROLE_MAPPINGS_DEFAULT_ROLE="internal_user_viewer"
+```
+
+`GENERIC_ROLE_MAPPINGS_GROUP_CLAIM` is required whenever `GENERIC_ROLE_MAPPINGS_ROLES` is set. It accepts nested paths such as `realm_access.roles`, and the claim can hold a list, a comma-separated string, or a single value. If your IdP only puts groups in the ID or access token, also set `GENERIC_INCLUDE_TOKEN_CLAIMS="true"`. `GENERIC_ROLE_MAPPINGS_ROLES` is parsed as a Python literal, so write it as a JSON object whose keys are the LiteLLM role names above and whose values are lists of your IdP's group names. You only need to include the roles you use.
+
+When a user's groups match more than one role, the highest-privilege role wins, in the order the roles are listed above. A user whose groups match nothing gets `GENERIC_ROLE_MAPPINGS_DEFAULT_ROLE`; if that's unset too, LiteLLM falls back to `GENERIC_USER_ROLE_ATTRIBUTE`. The mapped role is written to the user's LiteLLM record on every login, so moving someone between groups in your IdP changes their LiteLLM role the next time they sign in.
+
+You can also configure this in the Admin UI. Go to **Admin Settings -> SSO Settings**, choose **Generic SSO** or **Okta / Auth0 SSO** as the provider, and turn on **Use Role Mappings**. Then fill in the **Group Claim**, the **Default Role**, and the IdP group names for each role in the **Proxy Admin Teams**, **Admin Viewer Teams**, **Internal User Teams**, and **Internal Viewer Teams** fields. If the `GENERIC_ROLE_MAPPINGS_*` environment variables are set, they take precedence over the mappings saved in the UI. Like any other environment variable, they can also go under `environment_variables` in your `config.yaml`.
 
 **Capturing Additional SSO Fields**
 
