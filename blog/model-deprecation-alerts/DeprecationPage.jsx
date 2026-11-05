@@ -1,27 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "@docusaurus/Link";
 import { PostByline } from "@theme/BlogPostPage";
 import styles from "./launch.module.css";
-
-const cases = [
-  "Customer support",
-  "Research assistant",
-  "Document search",
-  "Invoice extraction",
-  "Weekly reports",
-];
-const phases = [
-  { label: "New alert", remaining: [0, 1, 2, 3, 4] },
-  { label: "Migrating", remaining: [0, 2] },
-  { label: "Ready to resolve", remaining: [] },
-];
-const links = [
-  ["See the alert", "#get-model-deprecation-alerts-in-the-litellm-ui"],
-  ["Find the use cases", "#see-which-use-cases-need-to-move"],
-  ["Choose a replacement", "#choose-a-replacement-model"],
-  ["Set up emails", "#send-email-reminders"],
-  ["Mark resolved", "#mark-the-alert-resolved"],
-];
 
 function Arrow() {
   return (
@@ -88,7 +68,7 @@ function dialArc(radius, start, end) {
   return `M${x1},${y1} A${radius},${radius} 0 0 1 ${x2},${y2}`;
 }
 
-function LifecycleDial({ remaining, selected }) {
+function LifecycleDial() {
   return (
     <svg
       className={styles.lifecycleDial}
@@ -98,9 +78,8 @@ function LifecycleDial({ remaining, selected }) {
     >
       <title>Model deprecation management in LiteLLM</title>
       <desc>
-        {remaining.length
-          ? `${remaining.length} use cases still need to move to a replacement model.`
-          : "All five use cases have moved. Confirm the migration, then resolve the alert."}
+        Provider deprecation notice, an alert in the LiteLLM UI, migration, and
+        resolution. Model providers: OpenAI, Anthropic, Google, Azure, and AWS.
       </desc>
       <g transform="translate(330 330)">
         {[158, 165, 176, 290, 302, 312].map((radius) => (
@@ -121,7 +100,7 @@ function LifecycleDial({ remaining, selected }) {
           <g
             key={stage.title}
             className={styles.dialSector}
-            data-active={index === selected + 1}
+            data-active={index === 1}
           >
             {Array.from({ length: 19 }, (_, ring) => (
               <path
@@ -178,26 +157,36 @@ function LifecycleDial({ remaining, selected }) {
             </text>
           </g>
         ))}
-        <rect x="-13" y="-112" width="26" height="26" rx="4" fill="white" />
-        <image
-          href="/img/model-deprecation-alerts/google.png"
-          x="-9"
-          y="-108"
-          width="18"
-          height="18"
-        />
+        <g transform="translate(0 -102)" aria-label="Model providers">
+          {providers.map((provider, index) => (
+            <g
+              key={provider.name}
+              transform={`translate(${(index - 2) * 40} 0)`}
+            >
+              <title>{provider.name}</title>
+              <circle r="18" fill="white" />
+              <image
+                href={provider.logo}
+                x="-14"
+                y="-14"
+                width="28"
+                height="28"
+              />
+            </g>
+          ))}
+        </g>
         <text y="-51" textAnchor="middle" className={styles.dialEyebrow}>
           MODEL LIFECYCLE
         </text>
         <text y="-8" textAnchor="middle" className={styles.dialTitle}>
-          {["Deprecation", "Migration", "Ready to"][selected]}
+          Deprecation
         </text>
         <text y="31" textAnchor="middle" className={styles.dialTitle}>
-          {["alert", "in progress", "resolve"][selected]}
+          alert
         </text>
         <circle cx="-102" cy="76" r="3" fill="#ffd59b" />
         <text x="10" y="81" textAnchor="middle" className={styles.dialStatus}>
-          {remaining.length} use cases to update
+          Review affected keys
         </text>
       </g>
     </svg>
@@ -205,8 +194,6 @@ function LifecycleDial({ remaining, selected }) {
 }
 
 function DeprecationHero() {
-  const [selected, setSelected] = useState(0);
-  const phase = phases[selected];
   return (
     <header className={styles.hero}>
       <div className={styles.heroInner}>
@@ -236,70 +223,16 @@ function DeprecationHero() {
             </h1>
             <p className={styles.heroIntro}>
               The LiteLLM UI now has alerts
-              <br className={styles.desktopBreak} /> for model deprecations.
+              <br /> for model deprecations.
             </p>
-            <div
-              className={styles.providerRow}
-              role="group"
-              aria-label="Model providers"
-            >
-              {providers.map((provider) => (
-                <div key={provider.name} className={styles.provider}>
-                  <span className={styles.providerLogo}>
-                    <img
-                      src={provider.logo}
-                      alt={provider.name}
-                      width="28"
-                      height="28"
-                    />
-                  </span>
-                  <span aria-hidden="true">{provider.name}</span>
-                </div>
-              ))}
-            </div>
             <a
               className={styles.heroCta}
-              href="#get-model-deprecation-alerts-in-the-litellm-ui"
+              href="#alerts-around-model-deprecations"
             >
               See how it works <Arrow />
             </a>
           </div>
-          <LifecycleDial remaining={phase.remaining} selected={selected} />
-        </div>
-        <div
-          className={styles.useCaseProgress}
-          role="status"
-          aria-live="polite"
-        >
-          <div>
-            <span>Use cases left to update</span>
-            <strong>{phase.remaining.length}</strong>
-          </div>
-          <p>
-            {phase.remaining.length
-              ? phase.remaining.map((index) => cases[index]).join(" · ")
-              : "All five use cases have moved. Confirm the migration, then mark the alert resolved."}
-          </p>
-        </div>
-        <div className={styles.heroFoot}>
-          <div
-            className={styles.phaseControls}
-            role="group"
-            aria-label="Example migration stages"
-          >
-            {phases.map((item, index) => (
-              <button
-                key={item.label}
-                type="button"
-                aria-pressed={selected === index}
-                onClick={() => setSelected(index)}
-              >
-                {item.label}
-                <span aria-hidden="true">↗</span>
-              </button>
-            ))}
-          </div>
-          <span>ILLUSTRATIVE EXAMPLE / FIVE USE CASES</span>
+          <LifecycleDial />
         </div>
       </div>
     </header>
@@ -326,15 +259,6 @@ export default function DeprecationPage({ children }) {
   return (
     <div className={styles.root} data-full-width>
       <DeprecationHero />
-      <nav className={styles.workflow} aria-label="Model deprecation workflow">
-        {links.map(([label, href], index) => (
-          <a href={href} key={href}>
-            <span>0{index + 1}</span>
-            {label}
-            <span aria-hidden="true">↗</span>
-          </a>
-        ))}
-      </nav>
       <div className={styles.article}>
         <div className={styles.byline}>
           <PostByline horizontal />
