@@ -2,9 +2,13 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# SSO for Admin UI
+# OpenID Connect (OIDC) SSO
+
+Configure Admin UI sign-in with OpenID Connect (OIDC), the identity layer built on OAuth 2.0. For SAML providers, use [SAML SSO](./saml_sso.md). To sign in from a terminal, see [CLI SSO](./cli_sso.md).
 
 <EnterpriseFeature feature="SSO">From v1.76.0, SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
+
+Configure your identity provider below. For sign-in restrictions, role assignment, team membership, and key-creation controls, see [SSO permissions](./access_management/sso_permissions.md).
 
 ### Usage (Google, Microsoft, Okta, etc.)
 
@@ -161,22 +165,7 @@ If these are not set, the default Microsoft endpoints are used based on your ten
     http://localhost:4000/sso/callback
     ```
 
-**Using App Roles for User Permissions**
-
-You can assign user roles directly from Entra ID using App Roles. LiteLLM will automatically read the app roles from the JWT token and assign the corresponding role to the user.
-
-Supported roles:
-- `proxy_admin` - Admin over the platform
-- `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
-- `internal_user` - Normal user. Can login, view spend and depending on team-member permissions - view/create/delete their own keys.
-
-
-To set up app roles:
-1. Navigate to your App Registration on https://portal.azure.com/
-2. Go to "App roles" and create a new app role
-3. Use one of the supported role names above (e.g., `proxy_admin`)
-4. Assign users to these roles in your Enterprise Application
-5. When users sign in via SSO, LiteLLM will automatically assign them the corresponding role
+To assign LiteLLM roles from Entra ID, follow [Assign roles through Microsoft Entra ID](./access_management/sso_permissions.md#manage-user-roles-via-azure-app-roles).
 
 **Advanced: Custom User Attribute Mapping**
 
@@ -256,14 +245,7 @@ LiteLLM stores this attribute's value as the user's identity and looks the user 
 
 **Assigning User Roles via SSO**
 
-Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token contains the user's role. The role value must be one of the following supported LiteLLM roles:
-
-- `proxy_admin` - Admin over the platform
-- `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
-- `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_viewer` - Can login, view their own keys, view their own spend
-
-Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
+Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token contains the user's role. Supported values are `proxy_admin`, `proxy_admin_viewer`, `internal_user`, and `internal_user_viewer`. Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`). See [roles and team member permissions](./access_control.md) for what each role permits.
 
 **Capturing Additional SSO Fields**
 
@@ -333,130 +315,13 @@ PROXY_BASE_URL=https://your-proxy-domain.com
 #### Step 4. Test flow
 <Image img={require('../../img/litellm_ui_3.gif')} />
 
-### Restrict Email Subdomains w/ SSO
+### Manage SSO permissions
 
-If you're using SSO and want to only allow users with a specific subdomain - e.g. (@berri.ai email accounts) to access the UI, do this:
-
-```bash
-export ALLOWED_EMAIL_DOMAINS="berri.ai"
-```
-
-This will check if the user email we receive from SSO contains this domain, before allowing access.
-
-### Set Proxy Admin
-
-Set a Proxy Admin when SSO is enabled. Once SSO is enabled, the `user_id` for users is retrieved from the SSO provider. To set a Proxy Admin, you need to copy the `user_id` from the UI and set it in your `.env` as `PROXY_ADMIN_ID`.
-
-#### Step 1: Copy your ID from the UI 
-
-<Image img={require('../../img/litellm_ui_copy_id.png')} />
-
-#### Step 2: Set it in your .env as the PROXY_ADMIN_ID 
-
-```env
-export PROXY_ADMIN_ID="116544810872468347480"
-```
-
-This will update the user role in the `LiteLLM_UserTable` to `proxy_admin`. 
-
-If you plan to change this ID, please update the user role via API `/user/update` or UI (Internal Users page). 
-
-#### Step 3: See all proxy keys
-
-<Image img={require('../../img/litellm_ui_admin.png')} />
-
-:::info
-
-If you don't see all your keys this could be due to a cached token. So just re-login and it should work.
-
-:::
-
-### Auto-add SSO users to teams (OIDC)
-
-For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the token returned by your identity provider into the user's `team_ids`. On every SSO login, LiteLLM reads that claim and adds the user as a member of each matching team.
-
-#### Step 1: Point LiteLLM at the claim containing the team ids
-
-```yaml showLineNumbers title="config.yaml"
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  litellm_jwtauth:
-    team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
-```
-
-This assumes the token from your provider looks like this:
-
-```json
-{
-  ...,
-  "groups": ["team_id_1", "team_id_2"]
-}
-```
-
-If you're unsure what your provider sends, inspect the received claims with the [SSO debug flow](#debugging-sso-jwt-fields).
-
-#### Step 2: Create the teams on LiteLLM
-
-The claim values must match the `team_id` of teams that already exist on LiteLLM. Teams are not auto-created from OIDC claims, and a claim value with no matching team is skipped.
-
-```bash showLineNumbers title="Create team with team_id matching the SSO group value"
-curl -X POST '<PROXY_BASE_URL>/team/new' \
--H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
--H 'Content-Type: application/json' \
--d '{
-    "team_alias": "team_1",
-    "team_id": "team_id_1"
-}'
-```
-
-#### Step 3: Test the SSO flow
-
-Log in via SSO and verify the user's team memberships on the UI (Internal Users page). Here's a [video walkthrough](https://www.loom.com/share/8959be458edf41fd85937452c29a33f3?sid=7ebd6d37-569a-4023-866e-e0cde67cb23e).
-
-Some providers only include the groups claim in the access token, not in the userinfo response. In that case, configure the claim via `ui_access_mode`, which also decodes the access token. Note this form additionally restricts UI login to members of the given group:
-
-```yaml showLineNumbers title="config.yaml"
-general_settings:
-  ui_access_mode:
-    type: "restricted_sso_group"
-    restricted_sso_group: "<group required for UI access>"
-    sso_group_jwt_field: "groups"
-```
-
-For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](./saml_sso.md).
-
-### Restrict Personal Key Creation
-
-Use this if you want to stop users from creating personal keys (keys with no team). This is enforced on `/key/generate`, so it applies to both the Admin UI and direct API calls
-
-Set `key_generation_settings` on your litellm config.yaml
-
-```yaml
-litellm_settings:
-  key_generation_settings:
-    personal_key_generation:
-      allowed_user_roles: ["proxy_admin"]
-```
-
-See [Restricting Key Generation](./virtual_keys.md#restricting-key-generation) for all options
+Set [email-domain restrictions](./access_management/sso_permissions.md#restrict-email-subdomains-w-sso), [UI restrictions](./access_management/sso_permissions.md#restrict-ui-access), or a [proxy admin](./access_management/sso_permissions.md#set-proxy-admin) in Access Management. You can also [add users to teams from OIDC claims](./access_management/sso_permissions.md#auto-add-sso-users-to-teams-oidc) and [restrict personal key creation](./access_management/sso_permissions.md#restrict-personal-key-creation).
 
 ### Use Username, Password when SSO is on
 
 If you need to access the UI via username/password when SSO is on navigate to `/fallback/login`. This route will allow you to sign in with your username/password credentials.
-
-### Restrict UI Access
-
-You can restrict UI Access to just admins - includes you (proxy_admin) and people you give view only access to (proxy_admin_viewer) for seeing global spend.
-
-**Step 1. Set 'admin_only' access**
-```yaml
-general_settings:
-    ui_access_mode: "admin_only"
-```
-
-**Step 2. Invite view-only users**
-
-<Image img={require('../../img/admin_ui_viewer.png')} />
 
 ### Custom Branding Admin UI
 
@@ -599,55 +464,3 @@ If you need to inspect the JWT fields received from your SSO provider by LiteLLM
 4. View the JWT fields 
 
 Once redirected, you should see a page called "SSO Debug Information". This page displays the JWT fields received from your SSO provider (as shown in the image above)
-
-
-## Advanced
-
-### Manage User Roles via Azure App Roles
-
-Centralize role management by defining user permissions in Azure Entra ID. LiteLLM will automatically assign roles based on your Azure configuration when users sign in, with no need to manually manage roles in LiteLLM.
-
-#### Step 1: Create App Roles on Azure App Registration
-
-1. Navigate to your App Registration on https://portal.azure.com/
-2. Go to **App roles** > **Create app role**
-3. Configure the app role using one of the [supported LiteLLM roles](./access_control.md#global-proxy-roles):
-   - **Display name**: Admin Viewer (or your preferred display name)
-   - **Value**: `proxy_admin_viewer` (must match one of the LiteLLM role values exactly)
-4. Click **Apply** to save the role
-5. Repeat for each LiteLLM role you want to use
-
-
-**Supported LiteLLM role values** (see [full role documentation](./access_control.md#global-proxy-roles)):
-- `proxy_admin` - Full admin access
-- `proxy_admin_viewer` - Read-only admin access
-- `internal_user` - Can create/view/delete own keys
-- `internal_user_viewer` - Can view own keys (read-only)
-
-<Image img={require('../../img/app_roles.png')} style={{ width: '900px', height: 'auto' }} />
-
----
-
-#### Step 2: Assign Users to App Roles
-
-1. Navigate to **Enterprise Applications** on https://portal.azure.com/
-2. Select your LiteLLM application
-3. Go to **Users and groups** > **Add user/group**
-4. Select the user
-5. Under **Select a role**, choose the app role you created (e.g., `proxy_admin_viewer`)
-6. Click **Assign** to save
-
-<Image img={require('../../img/app_role2.png')} style={{ width: '900px', height: 'auto' }} />
-
----
-
-#### Step 3: Sign in and verify
-
-1. Sign in to the LiteLLM UI via SSO
-2. LiteLLM will automatically extract the app role from the JWT token
-3. The user will be assigned the corresponding role (you can verify this in the UI by checking the user profile dropdown)
-
-<Image img={require('../../img/app_role3.png')} style={{ width: '900px', height: 'auto' }} />
-
-**Note:** The role from Entra ID will take precedence over any existing role in the LiteLLM database. This ensures your SSO provider is the authoritative source for user roles.
-

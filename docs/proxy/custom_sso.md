@@ -116,7 +116,7 @@ Use this if you want to run your own code **after** a user signs on to the LiteL
 
 #### 1. Create a custom SSO handler file
 
-Make sure the response type follows the `SSOUserDefinedValues` pydantic object. This is used for logging the user into the Admin UI:
+Return an `SSOUserDefinedValues` object to sign the user into the Admin UI. See [SSO permissions](./access_management/sso_permissions.md) for role assignment, team membership, and sign-in restrictions:
 
 ```python
 from fastapi_sso.sso.base import OpenID
@@ -161,12 +161,9 @@ async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
         #################################################
 
         return SSOUserDefinedValues(
-            models=[],                                      # models user has access to
             user_id=userIDPInfo.id,                         # user id to use in the LiteLLM DB
             user_email=userIDPInfo.email,                   # user email to use in the LiteLLM DB
             user_role=None,                                 # None keeps the role stored in LiteLLM (new users default to internal_user_viewer); a value here overrides the stored role on every login
-            max_budget=0.01,                                # Max budget for this UI login Session
-            budget_duration="1d",                           # Duration of the budget for this UI login Session, 1d, 2d, 30d ...
         )
     except Exception as e:
         raise Exception("Failed custom auth")
