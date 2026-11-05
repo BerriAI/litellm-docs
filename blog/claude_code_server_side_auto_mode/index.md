@@ -4,7 +4,6 @@ title: "Claude Code server-side auto mode through LiteLLM"
 date: 2026-09-21T12:00:00
 authors:
   - mateo
-  - moe
 description: "Anthropic is moving Claude Code auto mode's safety classifier to server side. LiteLLM's native /v1/messages route now passes the safety contract through to the Anthropic API, Bedrock InvokeModel, Bedrock Mantle and Vertex AI. Here's the contract, what's changed, which releases have it, and how to verify it."
 tags: [announcement, claude-code, anthropic, ai-gateway]
 hide_table_of_contents: true
