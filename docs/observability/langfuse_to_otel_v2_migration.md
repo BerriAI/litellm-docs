@@ -1,5 +1,7 @@
 # Migrate the Langfuse SDK callback to OpenTelemetry v2
 
+{/* keep-version-note */}
+
 ## Risks to review before migration
 
 :::danger Ingestion volume and compatibility change
