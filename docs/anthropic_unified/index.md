@@ -458,7 +458,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/messages' \
 
 Anthropic [message threads](https://platform.claude.com/docs/en/build-with-claude/message-threads) keep the conversation on Anthropic's servers between turns. The first request creates the thread with the full prompt, and each later request sends only the new messages plus the `id` of the previous response, so the model starts answering sooner and you stop paying to resend history. <SinceVersion v="1.109.0" />
 
-LiteLLM forwards the `thread` body field on native Anthropic deployments (`anthropic/` and Microsoft Foundry `azure_ai/` Claude deployments), adds the `message-threads-2026-08-12` beta header for you, and returns the response `id` unchanged, so the id a client gets from the proxy is the one it continues from. Streaming works the same way.
+LiteLLM forwards the `thread` body field on native Anthropic deployments (`anthropic/`, Microsoft Foundry `azure_ai/` Claude deployments, and Claude Platform on AWS `bedrock/claude_platform/` deployments), adds the `message-threads-2026-08-12` beta header for you, and returns the response `id` unchanged, so the id a client gets from the proxy is the one it continues from. Streaming works the same way.
 
 Create the thread with the full prompt:
 
@@ -491,9 +491,16 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 
 The Anthropic SDK thread helpers (`client.beta.messages.threads` in the Python and TypeScript SDKs) work through the proxy as they do against Anthropic directly. When Anthropic cannot continue a thread it answers a 404 with `error.details.error_code` set to `thread_not_found`, and the proxy relays that status and code, so the helper's replay of the full conversation keeps working.
 
-On a deployment without native thread support, which is every translated provider such as `openai/`, Bedrock and Vertex AI, a create request is served without the thread and LiteLLM logs a warning. A continue request there gets the same 404 `thread_not_found` before any upstream call, so the SDK thread helpers replay the full conversation instead of getting an answer that ignores the earlier turns.
+On a deployment without native thread support, which is every translated provider such as `openai/`, Bedrock and Vertex AI, and any deployment whose `model_info.supported_endpoints` forwards `/v1/messages` to an OpenAI-compatible server, a create request gets a 400 with `error.details.error_code` set to `thread_unsupported_request` before any upstream call, the same answer Anthropic gives a request it cannot thread. The SDK thread helpers created with `unsupported_request_behavior="continue_unthreaded"` then send the conversation without a thread. With `drop_params` on, LiteLLM instead serves the create without the thread and logs a warning:
 
-Every key on the proxy shares the deployment's Anthropic credential, so LiteLLM binds each thread response `id` to the virtual key that received it, or to the signed-in user, team, end user and org when the request has no key. A continue from another key, or one naming an `id` this proxy never returned in a thread, gets the 404 `thread_not_found`, and the SDK helper starts a new thread with the full conversation. The first key to receive an `id` keeps it, so a response cache hit that returns the same `id` to another key does not hand the thread over. A binding lasts one hour, longer than Anthropic keeps an idle thread.
+```yaml
+litellm_settings:
+  drop_params: true
+```
+
+A continue request on such a deployment always gets the 404 `thread_not_found` before any upstream call, so the SDK thread helpers replay the full conversation instead of getting an answer that ignores the earlier turns.
+
+Every key on the proxy shares the deployment's Anthropic credential, so LiteLLM binds each thread response `id` to the virtual key that received it, or to the signed-in user, team, end user and org when the request has no key. A continue from another key, or one naming an `id` this proxy never returned in a thread, gets the 404 `thread_not_found` on every route that carries a `thread` field, `/v1/messages`, `/v1/chat/completions` and `/v1/responses` included, and the SDK helper starts a new thread with the full conversation. Pass-through routes such as `/anthropic/v1/messages` forward requests with the deployment's credential as they are, so they do not check the binding. The first key to receive an `id` keeps it, so a response cache hit that returns the same `id` to another key does not hand the thread over. A binding lasts one hour, longer than Anthropic keeps an idle thread.
 
 With several proxy workers or pods, configure Redis for the proxy so every worker sees the bindings. Without it, a continue that reaches another worker gets the 404 and the SDK helper replays the conversation. Setting the Redis environment variables is enough:
 
@@ -504,7 +511,14 @@ export REDIS_PASSWORD=<your-redis-password>
 litellm --config config.yaml --num_workers 4
 ```
 
-The set of `anthropic-beta` values is one of the fixed fields of a thread, and Anthropic rejects a turn whose set differs from the create request with `thread_fingerprint_mismatch`. LiteLLM adds some beta headers from the request content, such as tool search and the advisor tool from `tools` and per-turn control from a message's `output_config`, and a continue turn omits `tools`, so when a thread uses one of those features, send its beta header explicitly on every turn.
+A model group with several deployments can send a continue to a deployment whose Anthropic credential cannot see the thread, which answers the 404 `thread_not_found` and makes the SDK helper replay the conversation. Turn on deployment affinity so each key keeps reaching the deployment that created its threads:
+
+```yaml
+router_settings:
+  optional_pre_call_checks: ["deployment_affinity"]
+```
+
+The set of `anthropic-beta` values is one of the fixed fields of a thread, and Anthropic rejects a turn whose set differs from the create request with `thread_fingerprint_mismatch`. A continue turn omits `tools` and carries different messages, so on a request with a `thread` LiteLLM adds no beta header based on `tools` or `messages`, and forwards only the beta headers you send plus `message-threads-2026-08-12`. When a thread uses tool search, the advisor tool, or per-turn control, send its beta header yourself on every turn.
 
 ## Request Format
 ---
