@@ -1280,9 +1280,8 @@ div[class*='announcementBar'] button {
 /* =========================================================================
    SOFT AURORA RESTYLE
    CSS only: same markup, same behavior, same layout as before. The logo
-   blue replaces green, Geist replaces Inter, a pale blue mesh sits
-   behind the top of every page (header included), and components pick up
-   Aurora's shapes at low volume. Everything below overrides earlier rules.
+   blue replaces green, Geist replaces Inter, the page stays a flat
+   surface, and components pick up Aurora's shapes at low volume. Everything below overrides earlier rules.
    ========================================================================= */
 
 :root {
@@ -1310,11 +1309,6 @@ div[class*='announcementBar'] button {
   --ifm-navbar-background-color: #ffffff;
   --docusaurus-highlighted-code-line-bg: rgba(1, 23, 190, 0.06);
 
-  --aurora-mesh:
-    radial-gradient(48% 540px at 4% -6%, rgba(1, 23, 190, 0.07) 0%, rgba(1, 23, 190, 0) 64%),
-    radial-gradient(42% 500px at 98% -4%, rgba(56, 170, 240, 0.12) 0%, rgba(56, 170, 240, 0) 66%),
-    radial-gradient(38% 400px at 52% -18%, rgba(110, 130, 255, 0.07) 0%, rgba(110, 130, 255, 0) 72%),
-    linear-gradient(180deg, rgba(246, 247, 253, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
   --aurora-nav-bg: rgba(255, 255, 255, 0.72);
   --aurora-line: rgba(39, 43, 55, 0.08);
   --aurora-line-strong: #e3e5ee;
@@ -1356,10 +1350,6 @@ html[data-theme='dark'] {
   --ifm-navbar-background-color: #080b26;
   --docusaurus-highlighted-code-line-bg: rgba(159, 171, 255, 0.1);
 
-  --aurora-mesh:
-    radial-gradient(48% 560px at 2% -8%, rgba(20, 45, 220, 0.3) 0%, rgba(20, 45, 220, 0) 64%),
-    radial-gradient(42% 500px at 100% -6%, rgba(56, 170, 240, 0.12) 0%, rgba(56, 170, 240, 0) 66%),
-    radial-gradient(36% 380px at 52% -20%, rgba(110, 130, 255, 0.1) 0%, rgba(110, 130, 255, 0) 72%);
   --aurora-nav-bg: rgba(8, 11, 38, 0.72);
   --aurora-line: rgba(255, 255, 255, 0.08);
   --aurora-line-strong: rgba(159, 171, 255, 0.16);
@@ -1381,13 +1371,15 @@ html[data-theme='dark'] {
 
 /* ---------- Page background: the mesh scrolls away with the page ---------- */
 /* Infima leaves the light background transparent, so paint an opaque
-   surface under the mesh or the browser's own canvas shows through. */
+   surface or the browser's own canvas shows through. The page is a flat
+   color: a gradient behind the header broke wherever the sidebar's solid
+   top row sat over it. */
 html {
   background-color: var(--aurora-surface);
 }
 
 body {
-  background: var(--aurora-mesh) no-repeat 0 0 / 100% 620px, var(--aurora-surface);
+  background: var(--aurora-surface);
   -webkit-font-smoothing: antialiased;
 }
 
