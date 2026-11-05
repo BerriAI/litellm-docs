@@ -231,6 +231,10 @@ PromptGuard protects against:
 
 Topic filters and entity blocklists are policies you create on your PromptGuard project, and they apply to every guardrail call made with that project's API key. See [custom rules](https://docs.promptguard.co/security/custom-rules) for how to define them.
 
+### What the guardrail scans
+
+On a chat completion the guardrail sends PromptGuard the whole conversation, including assistant tool calls and tool results, so an instruction planted in a tool result is caught as well as one the user typed. The text inside images in the request is scanned too, so an instruction that exists only in an image is blocked. A conversation longer than one scan can read (100,000 characters) is not refused: PromptGuard scans the newest messages that fit, and the older turns were scanned when each was the newest turn of an earlier call.
+
 ### Actions
 
 The guardrail takes one of three actions:
