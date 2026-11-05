@@ -68,7 +68,7 @@ curl -sSLX POST 'http://0.0.0.0:4000/v1/chat/completions' \
 }'
 ```
 
-The model's reply is returned unchanged. The request detail in the Admin UI shows **Pre-call guardrail: CollieAi** as flagged, and the spend log has `"guardrail_status": "guardrail_flagged"` for `pre_call`.
+The model's reply is returned unchanged. The request detail in the Admin UI shows **Pre-call guardrail: collieai** as flagged, and the spend log has `"guardrail_status": "guardrail_flagged"` for `pre_call`.
 
 </TabItem>
 <TabItem label="Block mode" value="block">
@@ -131,6 +131,7 @@ Block mode needs both modes, `default_on: true` and the package's readiness chec
 | The policy blocks the model's reply | `400`, `Response blocked by the CollieAi policy (response_blocked)`; the reply is not returned |
 | CollieAi can't be reached or doesn't answer within the deadline | `503`, `CollieAi guardrail unavailable (guardrail_unavailable)` |
 | A call the guardrail doesn't check, see [Supported calls](#supported-calls) | `400`, `Request outside what the CollieAi guardrail checks (unsupported_request)` |
+| A reply the guardrail doesn't check, such as one with reasoning content | `400`, `Response outside what the CollieAi guardrail checks (unsupported_response)`; the model has already run |
 
 The refusal text never names the rule. The rule types that fired are in the guardrail record's `violation_categories`, and CollieAi's Logs show the check with its findings.
 
@@ -138,7 +139,7 @@ The refusal text never names the rule. The rule types that fired are in the guar
 
 | Parameter | Default | Description |
 |---|---|---|
-| `api_key` | required | The CollieAi project's API key, `clai_...` |
+| `api_key` | `COLLIEAI_API_KEY` | The CollieAi project's API key, `clai_...`; without it the guardrail reads the `COLLIEAI_API_KEY` environment variable |
 | `api_base` | `https://app.collieai.io/v1/integrations/litellm` | CollieAi's LiteLLM integration base URL; point it at your deployment for a self-hosted CollieAi |
 | `enforcement_mode` | `monitor` | `monitor` observes; `block` refuses the calls the policy blocks |
 | `deadline_ms` | `2500` | Each check's whole deadline in milliseconds: connection, send, reply and parse |
@@ -148,7 +149,7 @@ A setting the guardrail can't run with, such as a key that isn't `clai_...`, sto
 
 ## Supported calls
 
-The guardrail checks foreground, non-streaming `/v1/chat/completions` text with one choice. In Monitor, any other call goes through unchanged and is recorded as `not_run`: streaming, `/v1/responses`, `/v1/messages`, tools, non-text content, more than one choice. In block mode such a call is refused before the model with a 400, except embeddings, rerank and moderation, which pass unchecked.
+The guardrail checks foreground, non-streaming `/v1/chat/completions` text with one choice. In Monitor, any other call goes through unchanged and is recorded as `not_run`: streaming, `/v1/responses`, `/v1/messages`, tools, non-text content, more than one choice. In block mode such a call, or a request body over 448 KiB, is refused before the model with a 400, except embeddings, rerank and moderation, which pass unchecked. A reply the guardrail can't check, one with reasoning content, audio or images, is recorded as `not_run` in Monitor and refused with a 400 in block mode after the model has run.
 
 ## Further reading
 
