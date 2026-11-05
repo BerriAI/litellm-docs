@@ -122,6 +122,8 @@ curl -X POST 'http://localhost:4000/guardrails/apply_guardrail' \
 
 `metadata` is only forwarded when the client sends it, so guardrails that do not depend on per-request configuration keep working unchanged when it is omitted.
 
+The fields that say who is calling are not read from the body. The proxy resolves them from the key the request authenticated with and overwrites whatever `metadata` carried for `user_api_key`, every `user_api_key_*` field including the end user id, `headers`, `requester_ip_address`, `user_agent`, `agent_id`, `actor_agent_id`, `target_agent_id`, `billing_agent_id`, `verified_human_user_id` and `agent_execution_mode`. This matches what a guardrail sees on `/chat/completions`, and it means a caller cannot have its text evaluated under another key's identity. The guardrail receives that identity even when the request sends no `metadata` at all. A caller-set `user_api_key_request_route` is dropped rather than replaced, since a route present in the metadata tells the tool policy guardrail to read the request being made instead of the tools replayed to it.
+
 </TabItem>
 </Tabs>
 
@@ -158,7 +160,7 @@ The request body should follow the ApplyGuardrailRequest format.
 - **entities** (array of strings):  
   Specific entities to process or filter (e.g., ["NAME", "EMAIL"]).
 - **metadata** (object):  
-  Per-request configuration forwarded to the guardrail as `request_data["metadata"]`. Custom guardrails that override `apply_guardrail` are responsible for reading it. Forwarded only when present, so omitting it preserves existing behavior.
+  Per-request configuration forwarded to the guardrail as `request_data["metadata"]`. Custom guardrails that override `apply_guardrail` are responsible for reading it. Forwarded only when present, so omitting it preserves existing behavior. The identity fields listed above are an exception: they always come from the authenticated key, so a value sent for them is ignored.
 
 The REST API also accepts `input_type` (`request` or `response`) and `response_format` (`standard` or `native`). The SDK derives the direction from `input=` or `response=` and selects `native`.
 
