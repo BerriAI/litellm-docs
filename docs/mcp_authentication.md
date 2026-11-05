@@ -27,6 +27,7 @@ For a fixed, non-OAuth credential, choose the type that matches the header requi
 | `basic` | Raw `username:password` | `Authorization: Basic <base64(username:password)>` | HTTP Basic authentication |
 | `token` | Token only | `Authorization: token <auth_value>` | An upstream that explicitly uses the GitHub-style `token` scheme |
 | `authorization` | Complete header value, including its scheme | `Authorization: <auth_value>` | A custom authorization scheme; available in config and API |
+| `secret_headers` | Header names and values | Each header exactly as you name it | An upstream that needs several secret headers; available in the dashboard and API |
 | `aws_sigv4` | AWS credentials or an IAM role | A new AWS SigV4 signature for each request | AWS Bedrock AgentCore MCP servers |
 
 ## What the client sends
@@ -191,6 +192,39 @@ mcp_servers:
 Authorization: Custom <CUSTOM_AUTH_TOKEN>
 ```
 
+### Secret headers
+
+`auth_type: secret_headers` sends several named secret headers on every upstream request. <SinceVersion v="1.110.0" />
+
+LiteLLM stores the values the way it stores an API key. They are encrypted at rest, and the dashboard and the API never return them after you save. Enter them in the dashboard, or send `credentials.headers`, a map from header name to value. To change one header, send the complete set again. Header names are hidden along with the values.
+
+Use this type for an upstream that needs more than one secret header. Datadog is one example, because it expects `DD-API-KEY` and `DD-APPLICATION-KEY` together. Config file servers and OpenAPI-backed servers do not support this type; config file servers keep using `static_headers`.
+
+```bash title="Create the server"
+curl -X POST 'https://<litellm-host>/v1/mcp/server' \
+  -H 'Authorization: Bearer <litellm-admin-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "server_name": "datadog",
+    "url": "https://<upstream-mcp-host>/mcp",
+    "transport": "http",
+    "auth_type": "secret_headers",
+    "credentials": {
+      "headers": {
+        "DD-API-KEY": "<datadog-api-key>",
+        "DD-APPLICATION-KEY": "<datadog-application-key>"
+      }
+    }
+  }'
+```
+
+```http title="LiteLLM to upstream"
+DD-API-KEY: <datadog-api-key>
+DD-APPLICATION-KEY: <datadog-application-key>
+```
+
+LiteLLM rejects a request with a 400 when a header name is not valid in HTTP, a value is blank, padded with spaces or contains anything other than printable ASCII, a name is one the gateway or HTTP client manages, such as `Accept`, `Content-Type`, `Cookie`, a hop-by-hop header or any `Mcp-` header, or a name also appears in `static_headers`.
+
 ### AWS SigV4
 
 `auth_type: aws_sigv4` signs every request with AWS Signature Version 4 instead of attaching one fixed token.
@@ -216,7 +250,7 @@ See [MCP AWS SigV4 Auth](./mcp_aws_sigv4.md) for setup and troubleshooting.
 
 Some upstreams require a custom header name or more than one fixed header. These settings are separate from `auth_type`:
 
-- **`static_headers`:** LiteLLM adds the configured values to every upstream request. Use this for a custom static credential, tenant identifier, or secondary gateway credential.
+- **`static_headers`:** LiteLLM adds the configured values to every upstream request. Use this for a tenant identifier or other value that is not a secret. The dashboard shows these values to admins, so put credentials in [`secret_headers`](#secret-headers) instead.
 - **`extra_headers`:** LiteLLM copies only the named headers from the current client request to the upstream. Use this for request-specific context that the client owns.
 
 ```yaml title="config.yaml"
