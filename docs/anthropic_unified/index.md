@@ -467,7 +467,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
   -H "x-api-key: $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
-    "model": "anthropic/claude-sonnet-4-5",
+    "model": "anthropic/claude-sonnet-5-5",
     "max_tokens": 1024,
     "system": "You are a terse assistant.",
     "messages": [{"role": "user", "content": "My name is Ada."}],
@@ -482,7 +482,7 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
   -H "x-api-key: $LITELLM_API_KEY" \
   -H "content-type: application/json" \
   -d '{
-    "model": "anthropic/claude-sonnet-4-5",
+    "model": "anthropic/claude-sonnet-5-5",
     "max_tokens": 1024,
     "messages": [{"role": "user", "content": "What is my name?"}],
     "thread": {"type": "continue", "previous_message_id": "msg_01XFDUDYJgAACzvnptvVoYEL"}
@@ -491,7 +491,18 @@ curl -X POST http://0.0.0.0:4000/v1/messages \
 
 The Anthropic SDK thread helpers (`client.beta.messages.threads` in the Python and TypeScript SDKs) work through the proxy as they do against Anthropic directly. When Anthropic cannot continue a thread it answers a 404 with `error.details.error_code` set to `thread_not_found`, and the proxy relays that status and code, so the helper's replay of the full conversation keeps working.
 
-A deployment without native thread support, which is every translated provider such as `openai/`, Bedrock and Vertex AI, answers a request that carries `thread` with a 400 `thread: message threads are not supported for provider <provider>` before any upstream call. LiteLLM does not drop the field silently, since a continue turn without the stored conversation would answer from the new messages alone.
+On a deployment without native thread support, which is every translated provider such as `openai/`, Bedrock and Vertex AI, a create request is served without the thread and LiteLLM logs a warning. A continue request there gets the same 404 `thread_not_found` before any upstream call, so the SDK thread helpers replay the full conversation instead of getting an answer that ignores the earlier turns.
+
+Every key on the proxy shares the deployment's Anthropic credential, so LiteLLM binds each thread response `id` to the virtual key that received it, or to the signed-in user, team, end user and org when the request has no key. A continue from another key, or one naming an `id` this proxy never returned in a thread, gets the 404 `thread_not_found`, and the SDK helper starts a new thread with the full conversation. The first key to receive an `id` keeps it, so a response cache hit that returns the same `id` to another key does not hand the thread over. A binding lasts one hour, longer than Anthropic keeps an idle thread.
+
+With several proxy workers or pods, configure Redis for the proxy so every worker sees the bindings. Without it, a continue that reaches another worker gets the 404 and the SDK helper replays the conversation. Setting the Redis environment variables is enough:
+
+```bash
+export REDIS_HOST=redis.internal
+export REDIS_PORT=6379
+export REDIS_PASSWORD=<your-redis-password>
+litellm --config config.yaml --num_workers 4
+```
 
 The set of `anthropic-beta` values is one of the fixed fields of a thread, and Anthropic rejects a turn whose set differs from the create request with `thread_fingerprint_mismatch`. LiteLLM adds some beta headers from the request content, such as tool search and the advisor tool from `tools` and per-turn control from a message's `output_config`, and a continue turn omits `tools`, so when a thread uses one of those features, send its beta header explicitly on every turn.
 
