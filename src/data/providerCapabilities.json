@@ -294,6 +294,12 @@
       "chat"
     ]
   },
+  "providers/agentgates": {
+    "prefix": "agentgates",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/ai21": {
     "prefix": "ai21",
     "capabilities": [
