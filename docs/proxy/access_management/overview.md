@@ -12,6 +12,7 @@ Control access to models, MCP servers, and agents in LiteLLM.
 
 - [LLM Access](./llm.md)
 - [MCP Access](./mcp.md)
+- [Agent Access](./agents.md)
 
 ## Users, teams, and virtual keys
 
