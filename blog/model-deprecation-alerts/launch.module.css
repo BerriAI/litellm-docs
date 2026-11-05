@@ -58,8 +58,7 @@
   margin: 0;
 }
 .brand span,
-.heroMeta,
-.heroFoot > span {
+.heroMeta {
   font:
     10px/1.5 "Geist Mono",
     ui-monospace,
@@ -118,43 +117,6 @@
   color: #e0e6ff;
   margin: 27px 0 0;
   letter-spacing: -0.01em;
-}
-.providerRow {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 23px 0 0;
-}
-.provider {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 40px;
-  font:
-    9px "Geist",
-    sans-serif;
-  color: #d7e0ff;
-}
-.providerLogo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: white;
-  border-radius: 50%;
-}
-.root .providerLogo img {
-  display: block;
-  object-fit: contain;
-  width: 24px;
-  height: 24px;
-  max-width: none;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  padding: 1px;
 }
 .root .heroCta {
   display: inline-flex;
@@ -252,102 +214,6 @@
     sans-serif;
 }
 
-.useCaseProgress {
-  display: grid;
-  grid-template-columns: 225px minmax(0, 1fr);
-  align-items: center;
-  gap: 35px;
-  border-top: 1px solid #ffffff38;
-  padding: 20px 0;
-}
-.useCaseProgress > div {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-}
-.useCaseProgress span {
-  font-size: 12px;
-  color: #d7dfff;
-}
-.useCaseProgress strong {
-  font-size: 34px;
-  color: white !important;
-  font-weight: 300;
-  line-height: 1;
-}
-.root .useCaseProgress p {
-  font-size: 13px;
-  line-height: 1.8;
-  color: #e0e5ff;
-  margin: 0;
-}
-.heroFoot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  border-top: 1px solid #ffffff38;
-  padding: 17px 0 22px;
-}
-.phaseControls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
-.phaseControls button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border: 1px solid #ffffff60;
-  color: white;
-  padding: 8px 12px;
-  background: transparent;
-  font:
-    11px "Geist",
-    sans-serif;
-  cursor: pointer;
-}
-.phaseControls button[aria-pressed="true"] {
-  background: white;
-  color: var(--blue);
-  border-color: white;
-}
-.heroFoot > span {
-  color: #d1d9ff;
-  font-size: 8px;
-}
-.workflow {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 28px 4% 0;
-}
-.workflow a {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  border: 1px solid var(--line);
-  border-right: 0;
-  padding: 16px;
-  font-size: 11px;
-  line-height: 1.5;
-  background: white;
-  text-decoration: none;
-}
-.workflow a:last-child {
-  border-right: 1px solid var(--line);
-}
-.workflow a > span:first-child {
-  font:
-    9px ui-monospace,
-    monospace;
-}
-.workflow a > span:last-child {
-  margin-left: auto;
-  color: #b9c2d7;
-}
 .article {
   max-width: 1260px;
   margin: auto;
@@ -453,20 +319,6 @@
   .heroInner {
     padding-inline: 24px;
   }
-  .heroFoot {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .workflow {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding-inline: 24px;
-  }
-  .workflow a {
-    border: 1px solid var(--line);
-    padding: 13px 11px;
-    font-size: 10px;
-    gap: 8px;
-  }
   .article {
     padding-inline: 24px;
   }
@@ -523,13 +375,6 @@
     font-size: 18px;
     margin-top: 23px;
   }
-  .providerRow {
-    gap: 20px;
-    margin-top: 22px;
-  }
-  .provider {
-    min-width: 37px;
-  }
   .root .heroCta {
     margin-top: 22px;
   }
@@ -551,40 +396,6 @@
   }
   .dialStatus {
     font-size: 15px;
-  }
-  .useCaseProgress {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 18px 0;
-  }
-  .useCaseProgress > div {
-    justify-content: space-between;
-  }
-  .root .useCaseProgress p {
-    font-size: 12px;
-  }
-  .heroFoot {
-    padding-top: 15px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .phaseControls {
-    gap: 6px;
-  }
-  .phaseControls button {
-    font-size: 9px;
-    gap: 15px;
-    padding: 7px 9px;
-  }
-  .heroFoot > span {
-    font-size: 7px;
-  }
-  .workflow {
-    padding: 22px 16px 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .workflow a:last-child {
-    grid-column: 1/-1;
   }
   .article {
     padding-inline: 20px;
