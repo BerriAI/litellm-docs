@@ -1,0 +1,565 @@
+.root {
+  --paper: #f7f8fa;
+  --ink: #17233b;
+  --text: #475166;
+  --line: #d9dee8;
+  --blue: #263cdb;
+  background: var(--paper);
+  color: var(--text);
+  font:
+    17px/1.75 "Geist",
+    ui-sans-serif,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  container-type: inline-size;
+  --ifm-link-color: var(--blue);
+  --ifm-heading-color: var(--ink);
+  --ifm-font-color-base: var(--text);
+}
+.root a {
+  color: var(--blue);
+  text-underline-offset: 4px;
+}
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+.hero {
+  background: var(--blue);
+  color: white;
+  overflow: hidden;
+}
+.heroInner {
+  max-width: 1480px;
+  margin: auto;
+  padding: 22px 4% 0;
+}
+.heroNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ffffff38;
+  padding-bottom: 19px;
+  gap: 20px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.root .brand img {
+  display: block;
+  width: 126px;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+.brand span,
+.heroMeta,
+.heroFoot > span {
+  font:
+    10px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.06em;
+}
+.brand span {
+  color: #d1d9ff;
+}
+.root .heroNav > a {
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  text-decoration: none !important;
+  font-size: 11px;
+}
+.heroNav > a > span {
+  font-size: 22px;
+}
+.heroMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 24px 0;
+  color: #d1d9ff;
+}
+.root .heroTitle {
+  margin: 0 !important;
+  color: white !important;
+  font:
+    400 clamp(54px, 7.8cqw, 112px) / 1.02 "Geist",
+    ui-sans-serif,
+    sans-serif !important;
+  letter-spacing: -0.065em;
+}
+.heroTitle > span {
+  display: block;
+}
+
+.useCaseProgress {
+  display: grid;
+  grid-template-columns: 225px minmax(0, 1fr);
+  align-items: center;
+  gap: 35px;
+  border-top: 1px solid #ffffff38;
+  padding: 20px 0;
+}
+.useCaseProgress > div {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.useCaseProgress span {
+  font-size: 12px;
+  color: #d7dfff;
+}
+.useCaseProgress strong {
+  font-size: 34px;
+  color: white !important;
+  font-weight: 300;
+  line-height: 1;
+}
+.root .useCaseProgress p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #e0e5ff;
+  margin: 0;
+}
+.heroFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid #ffffff38;
+  padding: 17px 0 22px;
+}
+.phaseControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.phaseControls button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border: 1px solid #ffffff60;
+  color: white;
+  padding: 8px 12px;
+  background: transparent;
+  font:
+    11px "Geist",
+    sans-serif;
+  cursor: pointer;
+}
+.phaseControls button[aria-pressed="true"] {
+  background: white;
+  color: var(--blue);
+  border-color: white;
+}
+.heroFoot > span {
+  color: #d1d9ff;
+  font-size: 8px;
+}
+.workflow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 4% 0;
+}
+.workflow a {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  padding: 16px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: white;
+  text-decoration: none;
+}
+.workflow a:last-child {
+  border-right: 1px solid var(--line);
+}
+.workflow a > span:first-child {
+  font:
+    9px ui-monospace,
+    monospace;
+}
+.workflow a > span:last-child {
+  margin-left: auto;
+  color: #b9c2d7;
+}
+.article {
+  max-width: 1260px;
+  margin: auto;
+  padding: 32px 40px 88px;
+}
+.byline {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 36px;
+  padding-bottom: 26px;
+}
+.content {
+  padding-left: 112px;
+  counter-reset: section;
+}
+.content > p:first-child {
+  font-size: 28px;
+  line-height: 1.5;
+  letter-spacing: -0.035em;
+  color: #26334d;
+  margin: 0 0 20px;
+}
+.content p {
+  margin: 20px 0;
+}
+.root .content h2 {
+  position: relative;
+  counter-increment: section;
+  color: var(--ink);
+  font-size: 33px !important;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  margin: 70px 0 20px !important;
+  border-top: 1px solid var(--line);
+  padding-top: 27px;
+}
+.content h2::before {
+  content: counter(section, decimal-leading-zero) " /";
+  position: absolute;
+  left: -112px;
+  top: 35px;
+  font:
+    10px/1.5 ui-monospace,
+    monospace;
+  color: var(--blue);
+  letter-spacing: 0.06em;
+}
+.root .content h3 {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 600;
+  margin: 30px 0 9px;
+}
+.content h3 + p {
+  margin-top: 0;
+}
+.root .content code {
+  background: #eef0ff;
+  border: 0;
+  border-radius: 2px;
+  color: var(--blue);
+  font-size: 0.82em;
+  padding: 3px 5px;
+  white-space: normal;
+}
+.screenshot {
+  margin: 32px 0 36px -112px;
+  width: calc(100% + 112px);
+}
+.root .screenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  margin: 0;
+  box-shadow: none;
+}
+.screenshot > a {
+  cursor: zoom-in;
+  display: block;
+}
+.screenshot figcaption {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #67738b;
+}
+.content :global(.admonition) {
+  margin: 28px 0;
+  box-shadow: none;
+  background: #f0f2f8;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.content :global(.admonition) p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .heroInner {
+    padding-inline: 24px;
+  }
+  .heroFoot {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .workflow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-inline: 24px;
+  }
+  .workflow a {
+    border: 1px solid var(--line);
+    padding: 13px 11px;
+    font-size: 10px;
+    gap: 8px;
+  }
+  .article {
+    padding-inline: 24px;
+  }
+  .content {
+    padding: 0;
+  }
+  .content h2::before {
+    position: static;
+    display: block;
+    margin-bottom: 14px;
+  }
+  .screenshot {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+.heroIntro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  margin: 27px 0 0;
+}
+.root .heroIntro p {
+  font-size: 20px;
+  line-height: 1.5;
+  color: white;
+  margin: 0 0 9px;
+}
+.root .heroIntro p + p {
+  font-size: 14px;
+  color: #d7dfff;
+  margin: 0;
+}
+.root .heroCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 55px;
+  color: var(--blue) !important;
+  text-decoration: none !important;
+  background: #f5f7ff;
+  padding: 15px 22px;
+  min-width: 225px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+.heroCta svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  stroke-width: 1.1;
+}
+.lifecycleIllustration {
+  margin: 6px 0 0;
+}
+.desktopCircle {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mobileCircle {
+  display: none;
+}
+.circleGuide {
+  fill: none;
+  stroke: #ffffff21;
+  stroke-width: 0.7;
+}
+.circleTrack {
+  fill: none;
+  stroke: #ffffffa8;
+  stroke-width: 1;
+}
+.circleArrow {
+  fill: none;
+  stroke: white;
+  stroke-width: 1;
+}
+.circleLeader {
+  fill: none;
+  stroke: #ffffff70;
+  stroke-width: 1;
+}
+.circleHalo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.7;
+}
+.circleStageTitle {
+  fill: white;
+  font:
+    20px "Geist",
+    sans-serif;
+  letter-spacing: -0.025em;
+}
+.circleStageDetail {
+  fill: #d7dfff;
+  font:
+    13px "Geist",
+    sans-serif;
+}
+.circleStage[data-active="true"] .circleStageTitle {
+  font-weight: 600;
+}
+.circleEyebrow {
+  fill: #d7dfff;
+  font:
+    10px "Geist Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.08em;
+}
+.circleTitle {
+  fill: white;
+  font:
+    25px "Geist",
+    sans-serif;
+  letter-spacing: -0.035em;
+}
+.circleModel {
+  fill: #e3e8ff;
+  font:
+    11px "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+.circleCount {
+  fill: white;
+  font:
+    300 54px "Geist",
+    sans-serif;
+  letter-spacing: -0.04em;
+}
+@media (max-width: 600px) {
+  .root {
+    font-size: 16px;
+  }
+  .heroInner {
+    padding: 18px 24px 0;
+  }
+  .root .brand img {
+    width: 112px;
+  }
+  .brand {
+    gap: 12px;
+  }
+  .brand span {
+    font-size: 8px;
+  }
+  .root .heroNav > a {
+    font-size: 9px;
+    gap: 12px;
+  }
+  .heroMeta {
+    font-size: 8px;
+    margin: 20px 0;
+  }
+  .root .heroTitle {
+    font-size: clamp(38px, 9.5cqw, 56px) !important;
+    line-height: 1.05 !important;
+  }
+  .heroIntro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
+    margin: 23px 0 10px;
+  }
+  .root .heroIntro p {
+    font-size: 17px;
+  }
+  .root .heroIntro p + p {
+    font-size: 13px;
+  }
+  .root .heroCta {
+    min-width: 0;
+  }
+  .desktopCircle {
+    display: none;
+  }
+  .mobileCircle {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .circleStageTitle {
+    font-size: 17px;
+  }
+  .circleTitle {
+    font-size: 23px;
+  }
+  .circleStageDetail {
+    font-size: 13px;
+  }
+  .circleCount {
+    font-size: 48px;
+  }
+  .circleModel {
+    font-size: 10px;
+  }
+  .useCaseProgress {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px 0;
+  }
+  .useCaseProgress > div {
+    justify-content: space-between;
+  }
+  .root .useCaseProgress p {
+    font-size: 12px;
+  }
+  .heroFoot {
+    padding-top: 15px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .phaseControls {
+    gap: 6px;
+  }
+  .phaseControls button {
+    font-size: 9px;
+    gap: 15px;
+    padding: 7px 9px;
+  }
+  .heroFoot > span {
+    font-size: 7px;
+  }
+  .workflow {
+    padding: 22px 16px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workflow a:last-child {
+    grid-column: 1/-1;
+  }
+  .article {
+    padding-inline: 20px;
+  }
+  .content > p:first-child {
+    font-size: 24px;
+  }
+  .root .content h2 {
+    font-size: 27px !important;
+    margin-top: 50px !important;
+  }
+  .screenshot figcaption {
+    font-size: 11px;
+  }
+}
