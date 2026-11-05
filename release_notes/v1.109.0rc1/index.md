@@ -1,7 +1,8 @@
 ---
-title: "1.109.0rc1 - 11 New Providers, Kubernetes Pod Routing, Mid-Stream Fallback & Daily Deployment Limits"
+title: "LiteLLM v1.109.0rc1 adds 11 providers, Codex tool search and daily limits"
+description: "Release candidate for LiteLLM 1.109.0 with 11 new providers, a redesigned Playground, Codex tool search and daily deployment limits."
 slug: "v1-109-0-rc-1"
-date: 2026-11-03T16:00:00
+date: 2026-11-04T02:17:12
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -20,7 +21,6 @@ hide_table_of_contents: false
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-
 
 ## Deploy this version
 
@@ -46,56 +46,48 @@ pip install litellm==1.109.0rc1
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.109.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases).
+This release is published as [`ghcr.io/berriai/litellm:v1.109.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases)
 
-The published GitHub tag is `v1.109.0-rc.1`. These notes compare it with [`v1.108.0`](https://github.com/BerriAI/litellm/releases/tag/v1.108.0), the latest stable release. Changes that already shipped in `v1.108.0` are omitted.
+The published GitHub tag is `v1.109.0-rc.1`. These notes compare it with `v1.108.0-rc.1`, the previous release candidate. Changes backported onto `rc/1.108.0` and already shipped in `v1.108.0` are omitted
 
-Customer-facing changes come first. Test, CI and internal changes are listed at the bottom.
+Customer-facing changes come first. Test, CI and internal changes are listed at the bottom
 
 :::danger Breaking Changes
 
-These callouts cover behavior that differs from `v1.108.0`, the latest stable release. If you upgrade from `v1.106.x`, also read the breaking changes in the [1.107.0rc1 notes](/release_notes/v1.107.0rc1/v1-107-0-rc-1), which shipped in `v1.108.0`.
+These callouts cover user-facing behavior that differs from [`v1.108.0`](/release_notes/v1.108.0/v1-108-0), the latest stable release
+
+**The disk cache backend is removed.** A config with `cache_params.type: disk` now stops the proxy at startup. Switch to `local` or `redis`, and expect a cold cache. See [PR #48114](https://github.com/BerriAI/litellm/pull/48114)
+
+**A proxy config with a string fallback target no longer starts.** Those targets never routed, so write the target in list form as the startup error shows. See [PR #48943](https://github.com/BerriAI/litellm/pull/48943)
+
+**A bare `helm install` of `litellm-helm` no longer ships the `gpt-3.5-turbo` and `fake-openai-endpoint` placeholder models.** Add models under `proxy_config.model_list` or from the Admin UI. See [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
+
+**Streams that fail partway now fail visibly.** A stalled stream answers 408 `litellm.Timeout` instead of 500 `APIConnectionError`, a stream that ends with an `abort` finish reason answers 500 instead of a clean stop, and a stream that sends content but never a finish reason reaches the client as an error and is logged as a failure. Retries, cooldowns, alerts and fallbacks now apply to these streams. See [PR #47198](https://github.com/BerriAI/litellm/pull/47198), [PR #48328](https://github.com/BerriAI/litellm/pull/48328), [PR #47665](https://github.com/BerriAI/litellm/pull/47665)
 
 **Streaming responses requested with `stream_options.include_usage` now end with a usage chunk whose `choices` is an empty list, matching OpenAI.** The final chunk used to carry `"choices": [{"index": 0, "delta": {}}]`. Code or a custom `async_post_call_streaming_iterator_hook` that reads `chunk.choices[0]` on every chunk will raise an `IndexError` on that chunk, so check `if chunk.choices:` first, the same as with the OpenAI SDK. Usage that LiteLLM adds on its own, through proxy injection, `always_include_stream_usage` or deployment and router `stream_options`, keeps the previous shape. See [PR #47109](https://github.com/BerriAI/litellm/pull/47109)
 
-**A chat stream from OpenAI, Azure or an OpenAI-compatible provider that closes before any chunk carries a `finish_reason` now fails instead of ending as if it had finished.** The caller gets an error saying the stream ended before a finish_reason was received, router fallbacks can catch it, and the usage already streamed is billed on the failure log. A stream that sent no chunks at all still ends with a normal stop. There is no setting to restore the old behavior, so if you serve a self-hosted or custom OpenAI-compatible backend, check that its streams end with a `finish_reason` before you upgrade. See [PR #47665](https://github.com/BerriAI/litellm/pull/47665)
+**OpenAI-compatible 401 and 404 answers with an `invalid_request_error` body now raise `AuthenticationError` and `NotFoundError` instead of `BadRequestError`.** Update code and retry policies that catch `BadRequestError` for these errors. See [PR #32537](https://github.com/BerriAI/litellm/pull/32537)
 
-**Sending `temperature`, `top_p` or `top_k` to Gemini 3.5 Flash-Lite, Gemini 3.6 Flash or a later Gemini Flash model now returns a 400 unless `drop_params` is on.** Google ignores these parameters on those models, and LiteLLM used to forward them and return a 200. The model map now sets `supports_sampling_params: false` on those `gemini/` and `vertex_ai/` rows, and Vertex batch rows follow the same rule. Set `drop_params: true` to drop the parameters, or list them in `allowed_openai_params` to forward them as before. See [PR #47645](https://github.com/BerriAI/litellm/pull/47645)
+**Claude requests that send no `max_tokens` now ask for much more output.** Anthropic models missing from the cost map get `max_tokens: 128000` instead of 4096. Set `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS=4096` to keep the old value. Bedrock Invoke and Mantle Claude send the deployment's `model_info.max_output_tokens` or the model's mapped limit instead of 4096, which holds more of the Bedrock tokens-per-minute quota, so busy accounts can see more 429s. Send `max_tokens` to keep the old footprint. See [PR #48502](https://github.com/BerriAI/litellm/pull/48502), [PR #49692](https://github.com/BerriAI/litellm/pull/49692)
 
-**OpenAI and OpenAI-compatible 401 and 404 errors typed `invalid_request_error` now raise `AuthenticationError` and `NotFoundError` instead of `BadRequestError`.** Proxy clients get a 401 or a 404 instead of a 400, and the router applies its retry, cooldown and fallback rules for those classes. Code that catches `BadRequestError` for an invalid API key or a missing resource, such as a deleted vector store, must catch the new classes. Every other status keeps raising `BadRequestError`. See [PR #32537](https://github.com/BerriAI/litellm/pull/32537)
+**With `drop_params: false` under `litellm_settings`, Claude Code and Codex requests that carry unsupported settings now answer 400 like other clients.** Set `drop_params: true` to keep dropping them. See [PR #49058](https://github.com/BerriAI/litellm/pull/49058)
 
-**The disk cache backend was removed.** `cache_params` with `type: disk` and the `litellm[caching]` install extra are gone, so a proxy configured with the disk cache now refuses to start, and `litellm.Cache(type="disk")` raises a `ValueError` that lists the supported types. Switch to `type: local` or `type: redis`. A leftover `disk_cache_dir` is ignored with a warning. See [PR #48114](https://github.com/BerriAI/litellm/pull/48114)
+**`enable_pre_call_checks: true` no longer stops picking a deployment once its minute count reaches `rpm`.** Add `optional_pre_call_checks: ["enforce_model_rate_limits"]` to `router_settings` to keep a hard cap. See [PR #48873](https://github.com/BerriAI/litellm/pull/48873)
 
-**Image generation without a model no longer falls back to `dall-e-2`.** OpenAI shut down `dall-e-2` and `dall-e-3` on 2026-05-12, so their image generation and edit configs and the Azure `dall-e-2` create-and-poll flow were removed. `litellm.image_generation()` with no model or provider now fails locally with "model is required", so pass a model such as `gpt-image-2`. `image_edit` and `image_variation` with no model leave `model` out of the provider request instead of sending `dall-e-2`. See [PR #48703](https://github.com/BerriAI/litellm/pull/48703)
+**MCP access is narrower in two cases.** A `none` or `bearer_token` MCP server with `Authorization` in `extra_headers` no longer receives the caller's LiteLLM key, so send LiteLLM auth in `x-litellm-api-key` to keep forwarding a separate upstream `Authorization`. Admin credentials on a team, such as an admin's team key, CLI login or JWT, now get only that team's MCP servers and toolsets, while the dashboard and master key still see everything. See [PR #46932](https://github.com/BerriAI/litellm/pull/46932), [PR #49161](https://github.com/BerriAI/litellm/pull/49161)
 
-**The `lakera_v2` guardrail with `on_flagged: block`, the default, now returns a 400 when Lakera flags only PII.** Before, a PII-only detection was masked and the request was forwarded whatever `on_flagged` said. Set `on_flagged: mask` to keep the old behavior, which masks PII-only detections and blocks anything else. `mask` needs `payload` and `breakdown`, which are on by default. See [PR #48944](https://github.com/BerriAI/litellm/pull/48944)
-
-**A team virtual key owned by a proxy admin or admin viewer now reaches only the MCP servers and toolsets its team grants.** Such a key with no MCP list of its own used to reach every MCP server in the registry and any toolset. Grant the servers or toolsets to the team, or use a key with no team. The master key and the admin dashboard session keep the whole registry. A `litellm_proxy` MCP tool on `/v1/responses`, `/v1/chat/completions` or `/v1/messages` that names a toolset the team was never granted now gets a 403. See [PR #49161](https://github.com/BerriAI/litellm/pull/49161)
-
-**A `model_id` in the request body no longer overrides a deployment's own `model_id`.** Clients could use it to move SageMaker chat and embedding calls to another inference component. The router now drops the request's value when the deployment sets one, and SageMaker chat drops a client `X-Amzn-SageMaker-Inference-Component` header in the same case. To let clients choose again, list `model_id` in the deployment's `configurable_clientside_auth_params`. See [PR #49045](https://github.com/BerriAI/litellm/pull/49045)
-
-**Key owners and team members can no longer change `budget_duration` or `budget_id` on `/key/update` without the authorization that a `max_budget` change needs.** Before, they could shorten the reset window to clear spend on a capped key, or move the key to a larger budget tier. Make these changes with a user who can change the key's `max_budget`. See [PR #47681](https://github.com/BerriAI/litellm/pull/47681)
-
-**`GET /customer/list` now returns one page of customers, 50 by default and at most 100, ordered by `user_id`.** It used to return every customer, so a script that reads the whole list now gets only the first 50. Pass `page` and `page_size` to walk the pages, or `search` to filter by customer ID or alias. The `/end_user/list` alias behaves the same way. See [PR #48700](https://github.com/BerriAI/litellm/pull/48700)
-
-**A `fallbacks`, `content_policy_fallbacks` or `default_fallbacks` target written as a string now raises a `TypeError` when the router starts.** A config such as `fallbacks: [{"gpt-4": "gpt-3.5"}]` or `default_fallbacks: "gpt-3.5"` used to start, but its fallback never ran, because the router read the string one character at a time. The proxy now fails at startup with this config. Put each target in a list, such as `{"gpt-4": ["gpt-3.5"]}`. See [PR #48943](https://github.com/BerriAI/litellm/pull/48943)
-
-**With `router_settings.tag_routing_prefix` set, only request tags that carry the prefix drive tag routing.** Unprefixed request tags used to route too, so a spend tag such as `user_id:234` could refuse a model group whose deployments are untagged. Tags inherited from the key, team or project still route with or without the prefix. If you route on unprefixed request tags, add the prefix to them or unset `tag_routing_prefix`. See [PR #47428](https://github.com/BerriAI/litellm/pull/47428)
-
-**The AWS and GCP Terraform modules no longer default to the `v1.86.0-dev` images.** A module version from the Terraform Registry sets `image_tag` to its own release, so bumping the module bumps all four images. A module sourced from a git ref of the repo has no default and fails validation until you set `image_tag` to a published LiteLLM release or set all four `*_image` URIs. Both modules now require Terraform 1.9.0 or later. See [PR #46960](https://github.com/BerriAI/litellm/pull/46960)
+**Custom cost maps in the old rule format lose fallback info for unmapped Claude ids.** Nothing changes on the default remote map or the bundled backup, but if you pin or overwrite a map from before July 2026, move to a current copy before upgrading. See [PR #48737](https://github.com/BerriAI/litellm/pull/48737)
 
 :::
 
 ## Key Highlights
 
-- **New providers**: Hostinger Router, CLF AI Gateway, Kyma API, BigModel (Zhipu AI), StreamLake, ZeroGPU, ai&, Refuseless, OpenCode Go and OpenInfer, plus Nace as a decisions provider
-- **New endpoints**: `/v1/extraction` served by Cloudflare Clairic, Deepgram streaming text-to-speech on `/deepgram/v1/speak`, and the eu/jev decision pass-through on `/eu_jev/v1/systemone`
-- **Native structured output on Bedrock Claude**: `json_schema` goes out natively on Haiku 5.5, Sonnet 5.5, Opus 4.8 and Sonnet 5 so adaptive thinking comes back, with a json tool retry when Bedrock rejects a schema
-- **Codex on every provider**: Codex client `tool_search` works on Anthropic and other providers bridged through Responses, repeated Codex tool lists are deduplicated, and ChatGPT subscription logins pass through the gateway per user
-- **Kubernetes pod routing**: set `kubernetes_pod_discovery: true` on a deployment whose `api_base` is a headless service and the router discovers the pods behind it, keeps a session on one pod, and shows the pods on the model page
-- **Mid-stream fallback for chat completions**: with `enable_mid_stream_fallback_continuation`, a chat stream that breaks after text continues on the fallback model from where it stopped
-- **Daily deployment limits**: `rpd` and `tpd` limits per deployment, with `daily_reset_time` to line up with a provider's own quota reset
-- **Spend log storage cap**: `maximum_spend_logs_size` keeps `LiteLLM_SpendLogs` under a size on disk, deleting the oldest rows or dropping the oldest partitions first down to a target
+- **New providers**: ai&, CLF AI Gateway, StreamLake, OpenInfer, ZeroGPU, Hostinger Router, OpenCode Go, Refuseless, BigModel and Kyma API, plus Nace Drex and LM Studio decision models, among 311 new catalog entries
+- **New endpoints and media**: `/v1/extraction` with Cloudflare Clairic, Deepgram streaming text to speech on `/deepgram/v1/speak`, A2A `message/stream`, Amazon OpenSearch k-NN vector stores, Doubao-Seedance video and DashScope image edits and speech
+- **Admin UI and Chat**: a redesigned Playground with a per-request routing, guardrail and cost inspector, file attachments and Deep research in Chat, shareable Usage links and a two-model Auto Router setup
+- **Coding agents**: Codex discovers MCP tools through tool search, the Claude Code gateway lists models and lets you pick a team at CLI login, and Codex and Pi can keep their own ChatGPT subscription through the gateway
+- **Limits and budgets**: deployment `rpd` and `tpd` daily limits, Responses WebSocket turns counted toward deployment and key limits, and W3C `baggage` values mapped to spend tags
+- **Reliability**: streams that stall, abort or end without a finish reason now fail visibly, spend rollups and callbacks drain on shutdown, and `/model/new` applies on every worker right away when Redis is on
 
 ## New Providers and Endpoints
 
@@ -103,1638 +95,1634 @@ These callouts cover behavior that differs from `v1.108.0`, the latest stable re
 
 | Provider | Supported LiteLLM Endpoints | Description |
 | --- | --- | --- |
-| Hostinger Router | `/v1/chat/completions`, `/v1/embeddings`, `/v1/responses`, `/v1/messages` | OpenAI-compatible router under `hostinger_router/`, reading `HOSTINGER_ROUTER_API_KEY` |
-| CLF AI Gateway | `/v1/chat/completions` | OpenAI-compatible gateway for open-weight GLM, Kimi, DeepSeek and Qwen models under `clf_ai_gateway/`, reading `CLF_AI_GATEWAY_API_KEY` |
-| Kyma API | `/v1/chat/completions` | OpenAI-compatible provider under `kyma/`, reading `KYMA_API_KEY` and billed from Kyma's reported `usage.cost` |
-| BigModel (Zhipu AI) | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | Native GLM provider under `bigmodel/`, reading `BIGMODEL_API_KEY` |
-| StreamLake | `/v1/chat/completions` | OpenAI-compatible provider under `streamlake/`, reading `STREAMLAKE_API_KEY` |
-| ZeroGPU | `/v1/chat/completions`, `/v1/responses` | OpenAI-compatible provider under `zerogpu/`, reading `ZEROGPU_API_KEY` |
 | ai& | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | OpenAI-compatible provider under `aiand/`, reading `AIAND_API_KEY` |
-| Refuseless | `/v1/chat/completions`, `/v1/responses` | OpenAI-compatible provider under `refuseless/`, reading `REFUSELESS_API_KEY` |
-| OpenCode Go | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | OpenCode Go subscription models under `opencode_go/`, reading `OPENCODE_API_KEY` |
-| OpenInfer | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | OpenAI-compatible provider under `openinfer/`, reading `OPENINFER_API_KEY` |
-| Nace | `/v1/decisions`, `/v1/systemone` | Drex decisions provider under `nace/`, reading `NACE_API_KEY` |
+| CLF AI Gateway | `/v1/chat/completions` | OpenAI-compatible provider under `clf_ai_gateway/`, reading `CLF_AI_GATEWAY_API_KEY` |
+| StreamLake | `/v1/chat/completions` | OpenAI-compatible provider under `streamlake/` |
+| OpenInfer | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | OpenAI-compatible provider under `openinfer/` |
+| ZeroGPU | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | OpenAI-compatible provider under `zerogpu/` |
+| Hostinger Router | `/v1/chat/completions`, `/v1/responses`, `/v1/messages`, `/v1/embeddings` | OpenAI-compatible provider under `hostinger_router/` |
+| Nace | `/v1/decisions` | Decisions provider for Drex models, listed in the Add Model form |
+| OpenCode Go | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | Provider that picks the upstream API per model from catalog metadata, with published Go prices |
+| Refuseless | `/v1/chat/completions`, `/v1/responses` | OpenAI-compatible provider under `refuseless/`, with five priced models |
+| BigModel | `/v1/chat/completions`, `/v1/responses`, `/v1/messages` | Z.AI-family provider under `bigmodel/`, reading `BIGMODEL_API_KEY` |
+| Kyma API | `/v1/chat/completions` | OpenAI-compatible provider under `kyma/`, billed from the `usage.cost` Kyma reports |
 
 ### New LLM API Endpoints (3 new endpoints)
 
 | Endpoint | Method | Description |
 | --- | --- | --- |
-| `/v1/extraction` | POST | Structured extraction, also on `/extraction`, served by Cloudflare Clairic with guardrail scanning and spend tracking |
-| `/deepgram/v1/speak` | WebSocket | Deepgram streaming text-to-speech pass-through, also on `/deepgram/speak` |
-| `/eu_jev/v1/systemone` | POST | Pass-through to the EU-hosted eu/jev decision API, reading `EU_JEV_API_KEY`, with spend tracking |
+| `/v1/extraction` | POST | Extract typed `fields` from input with Cloudflare Clairic through `cloudflare/clairic`, also available as `/extraction`, `litellm.extraction` and `litellm.aextraction` |
+| `/deepgram/v1/speak` | WebSocket | Streams Deepgram text to speech with a LiteLLM key, billed per character, also served at `/deepgram/speak` |
+| `/a2a/{agent_id}/message/stream` | POST | Streams an A2A agent's `message/stream` response, also served at `/v1/a2a/{agent_id}/message/stream` |
 
-### Expanded provider endpoint support
-
-| Provider | Endpoint | What you can do |
-| --- | --- | --- |
-| xAI | `/v1/search` | Run native X Search |
-| DeepSeek | `/v1/search` | Run DeepSeek web search, priced per query |
-| Amazon OpenSearch | `/v1/vector_stores/{id}/search` | Search an OpenSearch k-NN index as a vector store |
-| Soniox | `/v1/realtime` | Stream realtime speech-to-text with server VAD and translation sessions |
-| DashScope | `/v1/images/edits`, `/v1/audio/speech`, `/v1/messages` | Edit images, generate speech and call the native Anthropic Messages route from one DashScope deployment |
-| Tencent TokenHub | `/v1/images/generations`, `/v1/images/edits` | Generate and edit images with Seedream |
-| VolcEngine | `/v1/videos` | Generate, edit and extend Doubao-Seedance videos |
-| Vertex AI | `/v1/audio/speech` | Generate speech with Gemini 3.1 Flash TTS |
-| Azure AI Foundry | `/v1/responses` | Call Foundry agents through the project Responses API |
 ## New Models / Updated Models
 
 #### New Model Support (311 new models)
 
-Counts represent new catalog identifiers compared with `v1.108.0`, including aliases and regional variants. Prices are the values bundled in this release, in USD, and runtime pricing-map reloads can update them. No catalog entries were removed.
+Counts represent new catalog identifiers compared with `v1.108.0`, including aliases and regional variants. Prices are the values bundled in this release, in USD, and runtime pricing-map reloads can update them. No rows were removed
 
 <details>
 <summary>All 311 new catalog entries</summary>
 
 | Provider | Model | Context Window | Input ($/1M tokens) | Output ($/1M tokens) | Features / special pricing |
 | --- | --- | --- | --- | --- | --- |
-| Abliteration | `abliteration/abliterated-model` | 262,144 | $1 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1/1M |
-| Abliteration | `abliteration/abliterated-model-large` | 1,000,000 | $3 | $5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.3/1M |
-| Abliteration | `abliteration/abliterated-model-large-flash` | 1,048,576 | $1 | $2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1/1M |
-| Abliteration | `abliteration/abliterated-model-large-v2` | 1,000,000 | $3 | $5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.3/1M |
-| ai& | `aiand/deepseek-ai/deepseek-v4-flash` | 1,048,576 | $0.15 | $0.25 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.08/1M |
-| ai& | `aiand/deepseek-ai/deepseek-v4-pro` | 1,048,576 | $1 | $2.5 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.25/1M |
-| ai& | `aiand/deepseek-ai/deepseek-v4.1-flash` | 1,048,576 | $0.3 | $0.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.02/1M |
-| ai& | `aiand/deepseek-ai/deepseek-v4.1-flash-1017` | 1,048,576 | $0.3 | $0.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.02/1M |
-| ai& | `aiand/google/gemma-4-31b-it` | 262,144 | $0.2 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.05/1M |
-| ai& | `aiand/meta/muse-spark-open` | 1,048,576 | $1.25 | $4.25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.15/1M |
-| ai& | `aiand/moonshotai/kimi-k2.7-code` | 262,144 | $0.75 | $3.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.2/1M |
-| ai& | `aiand/moonshotai/kimi-k3` | 1,048,576 | $3 | $12.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.5/1M |
-| ai& | `aiand/motif-technologies/motif-3` | 262,144 | $0.5 | $2 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.2/1M |
-| ai& | `aiand/openai/gpt-oss-120b` | 131,072 | $0.15 | $0.6 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.08/1M |
-| ai& | `aiand/qwen/qwen3.6-27b` | 262,144 | $0.32 | $3.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.2/1M |
-| ai& | `aiand/qwen/qwen3.8-27b` | 262,144 | $0.4 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.2/1M |
-| ai& | `aiand/zai-org/glm-5.2` | 1,048,576 | $1 | $4 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.3/1M |
-| ai& | `aiand/zai-org/glm-5.3` | 1,048,576 | $1 | $4 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.3/1M |
-| ai& | `aiand/zai-org/glm-5.3-flash` | 1,048,550 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.03/1M |
-| Amazon Bedrock | `bedrock/ap-northeast-1/mistral.voxtral-mini-3b-2507` | 32,768 | $0.05 | $0.05 | Chat; Audio input; `input_cost_per_token_batches`: $0.03/1M; `input_cost_per_token_flex`: $0.03/1M; `input_cost_per_token_priority`: $0.09/1M; `output_cost_per_token_batches`: $0.03/1M; `output_cost_per_token_flex`: $0.03/1M; `output_cost_per_token_priority`: $0.09/1M |
-| Amazon Bedrock | `bedrock/ap-northeast-1/mistral.voxtral-small-24b-2507` | 32,768 | $0.12 | $0.36 | Chat; Audio input; `input_cost_per_token_batches`: $0.06/1M; `input_cost_per_token_flex`: $0.06/1M; `input_cost_per_token_priority`: $0.21/1M; `output_cost_per_token_batches`: $0.18/1M; `output_cost_per_token_flex`: $0.18/1M; `output_cost_per_token_priority`: $0.63/1M |
-| Amazon Bedrock | `bedrock/ap-southeast-2/mistral.voxtral-mini-3b-2507` | 32,768 | $0.0412 | $0.0412 | Chat; Audio input; `input_cost_per_token_batches`: $0.0206/1M; `input_cost_per_token_flex`: $0.0206/1M; `input_cost_per_token_priority`: $0.0721/1M; `output_cost_per_token_batches`: $0.0206/1M; `output_cost_per_token_flex`: $0.0206/1M; `output_cost_per_token_priority`: $0.0721/1M |
-| Amazon Bedrock | `bedrock/ap-southeast-2/mistral.voxtral-small-24b-2507` | 32,768 | $0.103 | $0.309 | Chat; Audio input; `input_cost_per_token_batches`: $0.0515/1M; `input_cost_per_token_flex`: $0.0515/1M; `input_cost_per_token_priority`: $0.18025/1M; `output_cost_per_token_batches`: $0.1545/1M; `output_cost_per_token_flex`: $0.1545/1M; `output_cost_per_token_priority`: $0.54075/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-fable-5` | 1,000,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $12.5/1M; `cache_creation_input_token_cost_above_1hr`: $20/1M; `cache_creation_input_token_cost_batches`: $6.25/1M; `cache_read_input_token_cost`: $1/1M; `cache_read_input_token_cost_batches`: $0.5/1M; `input_cost_per_token_batches`: $5/1M; `output_cost_per_token_batches`: $25/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-fable-5-1` | 1,000,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $12.5/1M; `cache_creation_input_token_cost_above_1hr`: $20/1M; `cache_creation_input_token_cost_batches`: $6.25/1M; `cache_read_input_token_cost`: $0.25/1M; `cache_read_input_token_cost_batches`: $0.125/1M; `input_cost_per_token_batches`: $5/1M; `output_cost_per_token_batches`: $25/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-haiku-4-5` | 200,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_1hr`: $2/1M; `cache_creation_input_token_cost_batches`: $0.625/1M; `cache_read_input_token_cost`: $0.1/1M; `cache_read_input_token_cost_batches`: $0.05/1M; `input_cost_per_token_batches`: $0.5/1M; `output_cost_per_token_batches`: $2.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-haiku-5-5` | 1,000,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $0.125/1M; `cache_creation_input_token_cost_above_100k_tokens`: $0.625/1M; `cache_creation_input_token_cost_above_100k_tokens_batches`: $0.3125/1M; `cache_creation_input_token_cost_above_1hr`: $0.2/1M; `cache_creation_input_token_cost_above_1hr_above_100k_tokens`: $1/1M; `cache_creation_input_token_cost_batches`: $0.0625/1M; `cache_read_input_token_cost`: $0.01/1M; `cache_read_input_token_cost_above_100k_tokens`: $0.05/1M; `cache_read_input_token_cost_above_100k_tokens_batches`: $0.025/1M; `cache_read_input_token_cost_batches`: $0.005/1M; `input_cost_per_token_above_100k_tokens`: $0.5/1M; `input_cost_per_token_above_100k_tokens_batches`: $0.25/1M; `input_cost_per_token_batches`: $0.05/1M; `output_cost_per_token_above_100k_tokens`: $2.5/1M; `output_cost_per_token_above_100k_tokens_batches`: $1.25/1M; `output_cost_per_token_batches`: $0.25/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-5` | 200,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_creation_input_token_cost`: $6.25/1M; `cache_creation_input_token_cost_above_1hr`: $10/1M; `cache_creation_input_token_cost_batches`: $3.125/1M; `cache_read_input_token_cost`: $0.5/1M; `cache_read_input_token_cost_batches`: $0.25/1M; `input_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_batches`: $12.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-6` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $6.25/1M; `cache_creation_input_token_cost_above_1hr`: $10/1M; `cache_creation_input_token_cost_batches`: $3.125/1M; `cache_read_input_token_cost`: $0.5/1M; `cache_read_input_token_cost_batches`: $0.25/1M; `input_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_batches`: $12.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-7` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $6.25/1M; `cache_creation_input_token_cost_above_1hr`: $10/1M; `cache_creation_input_token_cost_batches`: $3.125/1M; `cache_read_input_token_cost`: $0.5/1M; `cache_read_input_token_cost_batches`: $0.25/1M; `input_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_batches`: $12.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-8` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $6.25/1M; `cache_creation_input_token_cost_above_1hr`: $10/1M; `cache_creation_input_token_cost_batches`: $3.125/1M; `cache_read_input_token_cost`: $0.5/1M; `cache_read_input_token_cost_batches`: $0.25/1M; `input_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_batches`: $12.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-5` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $6.25/1M; `cache_creation_input_token_cost_above_1hr`: $10/1M; `cache_creation_input_token_cost_batches`: $3.125/1M; `cache_read_input_token_cost`: $0.5/1M; `cache_read_input_token_cost_batches`: $0.25/1M; `input_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_batches`: $12.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-opus-5-5` | 1,000,000 | $4 | $20 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $5/1M; `cache_creation_input_token_cost_above_1hr`: $8/1M; `cache_creation_input_token_cost_batches`: $2.5/1M; `cache_read_input_token_cost`: $0.2/1M; `cache_read_input_token_cost_batches`: $0.1/1M; `input_cost_per_token_batches`: $2/1M; `output_cost_per_token_batches`: $10/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-4-5` | 200,000 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_creation_input_token_cost`: $3.75/1M; `cache_creation_input_token_cost_above_1hr`: $6/1M; `cache_creation_input_token_cost_batches`: $1.875/1M; `cache_read_input_token_cost`: $0.3/1M; `cache_read_input_token_cost_batches`: $0.15/1M; `input_cost_per_token_batches`: $1.5/1M; `output_cost_per_token_batches`: $7.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-4-6` | 1,000,000 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $3.75/1M; `cache_creation_input_token_cost_above_1hr`: $6/1M; `cache_creation_input_token_cost_batches`: $1.875/1M; `cache_read_input_token_cost`: $0.3/1M; `cache_read_input_token_cost_batches`: $0.15/1M; `input_cost_per_token_batches`: $1.5/1M; `output_cost_per_token_batches`: $7.5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-5` | 1,000,000 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $2.5/1M; `cache_creation_input_token_cost_above_1hr`: $4/1M; `cache_creation_input_token_cost_batches`: $1.25/1M; `cache_read_input_token_cost`: $0.2/1M; `cache_read_input_token_cost_batches`: $0.1/1M; `input_cost_per_token_batches`: $1/1M; `output_cost_per_token_batches`: $5/1M |
-| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-5-5` | 1,000,000 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $2.5/1M; `cache_creation_input_token_cost_above_1hr`: $4/1M; `cache_creation_input_token_cost_batches`: $1.25/1M; `cache_read_input_token_cost`: $0.1/1M; `cache_read_input_token_cost_batches`: $0.05/1M; `input_cost_per_token_batches`: $1/1M; `output_cost_per_token_batches`: $5/1M |
-| Amazon Bedrock | `bedrock/eu-west-2/mistral.voxtral-mini-3b-2507` | 32,768 | $0.06 | $0.06 | Chat; Audio input; `input_cost_per_token_batches`: $0.03/1M; `input_cost_per_token_flex`: $0.03/1M; `input_cost_per_token_priority`: $0.11/1M; `output_cost_per_token_batches`: $0.03/1M; `output_cost_per_token_flex`: $0.03/1M; `output_cost_per_token_priority`: $0.11/1M |
-| Amazon Bedrock | `bedrock/eu-west-2/mistral.voxtral-small-24b-2507` | 32,768 | $0.16 | $0.47 | Chat; Audio input; `input_cost_per_token_batches`: $0.08/1M; `input_cost_per_token_flex`: $0.08/1M; `input_cost_per_token_priority`: $0.28/1M; `output_cost_per_token_batches`: $0.23/1M; `output_cost_per_token_flex`: $0.23/1M; `output_cost_per_token_priority`: $0.82/1M |
-| Amazon Bedrock | `bedrock_mantle/openai.gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Responses; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_creation_input_token_cost`: $1.375/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.75/1M; `cache_read_input_token_cost`: $0.055/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.11/1M; `input_cost_per_token_above_272k_tokens`: $2.2/1M; `output_cost_per_token_above_272k_tokens`: $8.25/1M |
-| Amazon Bedrock | `global.openai.gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.5/1M; `cache_read_input_token_cost`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.1/1M; `input_cost_per_token_above_272k_tokens`: $2/1M; `output_cost_per_token_above_272k_tokens`: $7.5/1M |
-| Amazon Bedrock | `us.openai.gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $1.375/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.75/1M; `cache_read_input_token_cost`: $0.055/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.11/1M; `input_cost_per_token_above_272k_tokens`: $2.2/1M; `output_cost_per_token_above_272k_tokens`: $8.25/1M |
-| Azure | `azure/apac/gpt-6.1-terra` | 922,000 | $1.2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.5/1M; `cache_creation_input_token_cost_above_272k_tokens`: $3/1M; `cache_read_input_token_cost`: $0.06/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.12/1M; `input_cost_per_token_above_272k_tokens`: $2.4/1M; `output_cost_per_token_above_272k_tokens`: $9/1M |
-| Azure | `azure/eu/gpt-6.1-terra` | 922,000 | $1.2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.5/1M; `cache_creation_input_token_cost_above_272k_tokens`: $3/1M; `cache_read_input_token_cost`: $0.06/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.12/1M; `input_cost_per_token_above_272k_tokens`: $2.4/1M; `output_cost_per_token_above_272k_tokens`: $9/1M |
-| Azure | `azure/gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.5/1M; `cache_read_input_token_cost`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.1/1M; `input_cost_per_token_above_272k_tokens`: $2/1M; `output_cost_per_token_above_272k_tokens`: $7.5/1M |
-| Azure | `azure/us/gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.375/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.75/1M; `cache_read_input_token_cost`: $0.055/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.11/1M; `input_cost_per_token_above_272k_tokens`: $2.2/1M; `output_cost_per_token_above_272k_tokens`: $8.25/1M |
-| Azure AI | `azure_ai/gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.5/1M; `cache_read_input_token_cost`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.1/1M; `input_cost_per_token_above_272k_tokens`: $2/1M; `output_cost_per_token_above_272k_tokens`: $7.5/1M |
-| Azure AI | `azure_ai/MAI-Code-1.1-Flash` | 256,000 | $0.2 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.02/1M |
-| Baseten | `baseten/decision-models/baseten-elephant-9b-latest` | 16,384 | $0.035 | $0 | Vision |
-| Baseten | `baseten/decision-models/baseten-joey-2b-latest` | 16,384 | $0.01 | $0 | Vision |
-| Baseten | `baseten/decision-models/baseten-mammoth-27b-latest` | 16,384 | $0.1 | $0 | Vision |
-| BigModel | `bigmodel/glm-5.3` | 1,000,000 | $1.142857 | $4 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.285714/1M |
-| BigModel | `bigmodel/glm-5.3-flash` | 1,000,000 | $0.114286 | $0.4 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Video input; `cache_read_input_token_cost`: $0.032857/1M |
-| BigModel | `bigmodel/glm-5.3-flashx` | 1,000,000 | $0.285714 | $1 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Video input; `cache_read_input_token_cost`: $0.081429/1M |
+| Abliteration | `abliteration/abliterated-model` | 262,144 | $1 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Abliteration | `abliteration/abliterated-model-large` | 1,000,000 | $3 | $5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Abliteration | `abliteration/abliterated-model-large-flash` | 1,048,576 | $1 | $2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Abliteration | `abliteration/abliterated-model-large-v2` | 1,000,000 | $3 | $5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| AIAND | `aiand/deepseek-ai/deepseek-v4-flash` | 1,048,576 | $0.15 | $0.25 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/deepseek-ai/deepseek-v4-pro` | 1,048,576 | $1 | $2.5 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/deepseek-ai/deepseek-v4.1-flash` | 1,048,576 | $0.3 | $0.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/deepseek-ai/deepseek-v4.1-flash-1017` | 1,048,576 | $0.3 | $0.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/google/gemma-4-31b-it` | 262,144 | $0.2 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/meta/muse-spark-open` | 1,048,576 | $1.25 | $4.25 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/moonshotai/kimi-k2.7-code` | 262,144 | $0.75 | $3.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/moonshotai/kimi-k3` | 1,048,576 | $3 | $12.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/motif-technologies/motif-3` | 262,144 | $0.5 | $2 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/openai/gpt-oss-120b` | 131,072 | $0.15 | $0.6 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/qwen/qwen3.6-27b` | 262,144 | $0.32 | $3.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/qwen/qwen3.8-27b` | 262,144 | $0.4 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| AIAND | `aiand/zai-org/glm-5.2` | 1,048,576 | $1 | $4 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/zai-org/glm-5.3` | 1,048,576 | $1 | $4 | Chat; Reasoning; Tool calling; Prompt caching |
+| AIAND | `aiand/zai-org/glm-5.3-flash` | 1,048,550 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Amazon Bedrock | `bedrock/ap-northeast-1/mistral.voxtral-mini-3b-2507` | 32,768 | $0.05 | $0.05 | Chat; Audio input |
+| Amazon Bedrock | `bedrock/ap-northeast-1/mistral.voxtral-small-24b-2507` | 32,768 | $0.12 | $0.36 | Chat; Audio input |
+| Amazon Bedrock | `bedrock/ap-southeast-2/mistral.voxtral-mini-3b-2507` | 32,768 | $0.0412 | $0.0412 | Chat; Audio input |
+| Amazon Bedrock | `bedrock/ap-southeast-2/mistral.voxtral-small-24b-2507` | 32,768 | $0.103 | $0.309 | Chat; Audio input |
+| Amazon Bedrock | `bedrock/claude_platform/claude-fable-5` | 1,000,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-fable-5-1` | 1,000,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-haiku-4-5` | 200,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-haiku-5-5` | 1,000,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-5` | 200,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-6` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-7` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-4-8` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-5` | 1,000,000 | $5 | $25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-opus-5-5` | 1,000,000 | $4 | $20 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-4-5` | 200,000 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-4-6` | 1,000,000 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-5` | 1,000,000 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/claude_platform/claude-sonnet-5-5` | 1,000,000 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Amazon Bedrock | `bedrock/eu-west-2/mistral.voxtral-mini-3b-2507` | 32,768 | $0.06 | $0.06 | Chat; Audio input |
+| Amazon Bedrock | `bedrock/eu-west-2/mistral.voxtral-small-24b-2507` | 32,768 | $0.16 | $0.47 | Chat; Audio input |
+| Amazon Bedrock | `global.openai.gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Amazon Bedrock | `us.openai.gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Amazon Bedrock Mantle | `bedrock_mantle/openai.gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Responses; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Azure | `azure/apac/gpt-6.1-terra` | 922,000 | $1.2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Azure | `azure/eu/gpt-6.1-terra` | 922,000 | $1.2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Azure | `azure/gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Azure | `azure/us/gpt-6.1-terra` | 922,000 | $1.1 | $5.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Azure AI | `azure_ai/gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| Azure AI | `azure_ai/MAI-Code-1.1-Flash` | 256,000 | $0.2 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Baseten | `baseten/decision-models/baseten-elephant-9b-latest` | 16,384 | $0.035 | $0 | Decisions; Vision |
+| Baseten | `baseten/decision-models/baseten-joey-2b-latest` | 16,384 | $0.01 | $0 | Decisions; Vision |
+| Baseten | `baseten/decision-models/baseten-mammoth-27b-latest` | 16,384 | $0.1 | $0 | Decisions; Vision |
+| BigModel | `bigmodel/glm-5.3` | 1,000,000 | $1.142857 | $4 | Chat; Reasoning; Tool calling; Prompt caching |
+| BigModel | `bigmodel/glm-5.3-flash` | 1,000,000 | $0.114286 | $0.4 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Video input |
+| BigModel | `bigmodel/glm-5.3-flashx` | 1,000,000 | $0.285714 | $1 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Video input |
 | Cerebras | `cerebras/llama-3.1-70b` | 128,000 | $0.6 | $0.6 | Chat; Tool calling |
 | Cerebras | `cerebras/llama-3.1-8b` | 128,000 | $0.1 | $0.1 | Chat; Tool calling |
 | ChatGPT | `chatgpt/gpt-6-astra-law` | 922,000 | - | - | Responses; Reasoning; Vision; Tool calling; Structured output |
 | ChatGPT | `chatgpt/gpt-6-rosalind` | 922,000 | - | - | Responses; Reasoning; Vision; Tool calling; Structured output |
 | ChatGPT | `chatgpt/gpt-6.1-terra` | 922,000 | - | - | Responses; Reasoning; Vision; Tool calling; Structured output |
-| CLF AI Gateway | `clf_ai_gateway/deepseek-v4-flash` | 1,048,576 | $0.176 | $0.528 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.005/1M |
-| CLF AI Gateway | `clf_ai_gateway/deepseek-v4-pro` | 1,048,576 | $0.528 | $1.584 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.017/1M |
-| CLF AI Gateway | `clf_ai_gateway/deepseek-v4.1-flash` | 1,048,576 | $0.12 | $0.48 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.002/1M |
+| CLF AI Gateway | `clf_ai_gateway/deepseek-v4-flash` | 1,048,576 | $0.176 | $0.528 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/deepseek-v4-pro` | 1,048,576 | $0.528 | $1.584 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/deepseek-v4.1-flash` | 1,048,576 | $0.12 | $0.48 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
 | CLF AI Gateway | `clf_ai_gateway/glm-4.7-flash` | 131,072 | $0.024 | $0.16 | Chat; Reasoning; Tool calling; Structured output |
-| CLF AI Gateway | `clf_ai_gateway/glm-5.2` | 262,144 | $0.56 | $1.76 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.104/1M |
-| CLF AI Gateway | `clf_ai_gateway/glm-5.3` | 1,048,576 | $0.56 | $1.76 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.104/1M |
-| CLF AI Gateway | `clf_ai_gateway/glm-5.3-flash` | 1,048,576 | $0.06 | $0.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.012/1M |
-| CLF AI Gateway | `clf_ai_gateway/kimi-k2.6` | 262,144 | $0.38 | $1.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.064/1M |
-| CLF AI Gateway | `clf_ai_gateway/kimi-k2.7-code` | 262,144 | $0.38 | $1.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.076/1M |
-| CLF AI Gateway | `clf_ai_gateway/qwen3.8-27b` | 262,144 | $0.18 | $1.28 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.02/1M |
+| CLF AI Gateway | `clf_ai_gateway/glm-5.2` | 262,144 | $0.56 | $1.76 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/glm-5.3` | 1,048,576 | $0.56 | $1.76 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/glm-5.3-flash` | 1,048,576 | $0.06 | $0.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/kimi-k2.6` | 262,144 | $0.38 | $1.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/kimi-k2.7-code` | 262,144 | $0.38 | $1.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| CLF AI Gateway | `clf_ai_gateway/qwen3.8-27b` | 262,144 | $0.18 | $1.28 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
 | Cohere | `rerank-v5.0-fast` | 32,768 | $0.02 | $0 | Rerank |
 | Cohere | `rerank-v5.0-pro` | 32,768 | $0.05 | $0 | Rerank |
-| DashScope | `dashscope/qwen-audio-3.0-tts-flash` | - | - | - | Speech; `input_cost_per_character`: $0.000015 |
-| DashScope | `dashscope/qwen-audio-3.0-tts-plus` | - | - | - | Speech; `input_cost_per_character`: $0.00002 |
-| DashScope | `dashscope/qwen-audio-3.1-tts-flash` | - | $0.23 | $1.87 | Speech |
-| DashScope | `dashscope/qwen-audio-3.1-tts-plus` | - | - | - | Speech; `input_cost_per_character`: $0.00003 |
-| DashScope | `dashscope/qwen3-tts-flash` | - | - | - | Speech; `input_cost_per_character`: $0.00001 |
-| Databricks | `databricks/databricks-claude-haiku-5-5` | 1,000,000 | $0.10003 | $0.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.12502/1M; `cache_creation_input_token_cost_above_100k_tokens`: $0.62503/1M; `cache_creation_input_token_cost_above_1hr`: $0.19999/1M; `cache_creation_input_token_cost_above_1hr_above_100k_tokens`: $1.00002/1M; `cache_read_input_token_cost`: $0.01001/1M; `cache_read_input_token_cost_above_100k_tokens`: $0.04998/1M; `input_cost_per_token_above_100k_tokens`: $0.50001/1M; `input_dbu_cost_per_token`: $1.429/1M; `output_cost_per_token_above_100k_tokens`: $2.49998/1M; `output_dbu_cost_per_token`: $7.143/1M |
-| Databricks | `databricks/databricks-claude-sonnet-5-5` | 1,000,000 | $1.99997 | $9.99999 | Chat; Reasoning; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $2.49998/1M; `cache_creation_input_token_cost_above_1hr`: $4.00001/1M; `cache_read_input_token_cost`: $0.10003/1M; `input_dbu_cost_per_token`: $28.571/1M; `output_dbu_cost_per_token`: $142.86/1M |
-| Databricks | `databricks/databricks-deepseek-v4-1-flash` | 1,000,000 | $0.30002 | $1.20001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.30002/1M; `cache_creation_input_token_cost_priority`: $0.525/1M; `cache_read_input_token_cost`: $0.03003/1M; `cache_read_input_token_cost_priority`: $0.0525/1M; `input_cost_per_token_priority`: $0.525/1M; `input_dbu_cost_per_token`: $4.286/1M; `output_cost_per_token_priority`: $2.1/1M; `output_dbu_cost_per_token`: $17.143/1M |
-| Databricks | `databricks/databricks-deepseek-v4-1-flash-1017` | 1,000,000 | $0.30002 | $1.20001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.30002/1M; `cache_read_input_token_cost`: $0.007/1M; `input_dbu_cost_per_token`: $4.286/1M; `output_dbu_cost_per_token`: $17.143/1M |
-| Databricks | `databricks/databricks-gemini-2-5-flash-lite` | 1,048,576 | $0.12502 | $0.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Audio input; Video input; `cache_creation_input_token_cost`: $0.12502/1M; `cache_read_input_audio_token_cost`: $0.03752/1M; `cache_read_input_token_cost`: $0.01253/1M; `input_cost_per_audio_token`: $0.37499/1M; `input_cost_per_image_token`: $0.12502/1M; `input_dbu_cost_per_token`: $1.786/1M; `output_dbu_cost_per_token`: $7.143/1M |
-| Databricks | `databricks/databricks-gemini-3-1-flash-lite-image` | 65,536 | $0.31248 | $1.87502 | Chat; Vision; `cache_creation_input_token_cost`: $0.31248/1M; `cache_read_input_token_cost`: $0.31248/1M; `input_cost_per_image_token`: $0.31248/1M; `input_dbu_cost_per_token`: $4.464/1M; `output_cost_per_image_token`: $37.49998/1M; `output_dbu_cost_per_token`: $26.786/1M |
-| Databricks | `databricks/databricks-gemini-4-argon` | 1,048,576 | $2.49998 | $12.49997 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Audio input; Video input; `cache_creation_input_token_cost`: $2.49998/1M; `cache_creation_input_token_cost_priority`: $4.50002/1M; `cache_read_input_token_cost`: $0.12502/1M; `cache_read_input_token_cost_priority`: $0.22498/1M; `input_cost_per_token_priority`: $4.50002/1M; `input_dbu_cost_per_token`: $35.714/1M; `output_cost_per_token_priority`: $22.50003/1M; `output_dbu_cost_per_token`: $178.57/1M |
-| Databricks | `databricks/databricks-gpt-5-4-pro` | 922,000 | $29.99997 | $180.0001 | Responses; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $29.99997/1M; `cache_read_input_token_cost`: $29.99997/1M; `input_cost_per_token_above_272k_tokens`: $60/1M; `input_dbu_cost_per_token`: $428.57/1M; `output_cost_per_token_above_272k_tokens`: $270/1M; `output_dbu_cost_per_token`: $2571.4/1M |
-| Databricks | `databricks/databricks-gpt-6-1-sol` | 922,000 | $1.99997 | $9.99999 | Responses; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $2.49998/1M; `cache_creation_input_token_cost_above_272k_tokens`: $5.00003/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $9.99999/1M; `cache_creation_input_token_cost_priority`: $5.00003/1M; `cache_read_input_token_cost`: $0.10003/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.19999/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $0.39998/1M; `cache_read_input_token_cost_priority`: $0.19999/1M; `input_cost_per_token_above_272k_tokens`: $4.00001/1M; `input_cost_per_token_above_272k_tokens_priority`: $8.00002/1M; `input_cost_per_token_priority`: $4.00001/1M; `input_dbu_cost_per_token`: $28.571/1M; `output_cost_per_token_above_272k_tokens`: $15/1M; `output_cost_per_token_above_272k_tokens_priority`: $29.9999/1M; `output_cost_per_token_priority`: $19.9997/1M; `output_dbu_cost_per_token`: $142.86/1M |
-| Databricks | `databricks/databricks-gpt-6-1-terra` | 922,000 | $1.00002 | $5.00003 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $1.24999/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.49998/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $5.00003/1M; `cache_creation_input_token_cost_priority`: $2.49998/1M; `cache_read_input_token_cost`: $0.04998/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.10003/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $0.19999/1M; `cache_read_input_token_cost_priority`: $0.10003/1M; `input_cost_per_token_above_272k_tokens`: $1.99997/1M; `input_cost_per_token_above_272k_tokens_priority`: $4.00001/1M; `input_cost_per_token_priority`: $1.99997/1M; `input_dbu_cost_per_token`: $14.286/1M; `output_cost_per_token_above_272k_tokens`: $7.50001/1M; `output_cost_per_token_above_272k_tokens_priority`: $15.00002/1M; `output_cost_per_token_priority`: $9.99999/1M; `output_dbu_cost_per_token`: $71.429/1M |
-| Databricks | `databricks/databricks-gpt-6-astra` | 922,000 | $9.99999 | $50.00002 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $12.49997/1M; `cache_creation_input_token_cost_above_272k_tokens`: $25/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $50.00002/1M; `cache_creation_input_token_cost_priority`: $25.00001/1M; `cache_read_input_token_cost`: $1.00002/1M; `cache_read_input_token_cost_above_272k_tokens`: $1.99997/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $4.00001/1M; `cache_read_input_token_cost_priority`: $1.99997/1M; `input_cost_per_token_above_272k_tokens`: $20/1M; `input_cost_per_token_above_272k_tokens_priority`: $40.00003/1M; `input_cost_per_token_priority`: $19.99998/1M; `input_dbu_cost_per_token`: $142.86/1M; `output_cost_per_token_above_272k_tokens`: $75.0001/1M; `output_cost_per_token_above_272k_tokens_priority`: $150.0002/1M; `output_cost_per_token_priority`: $99.9999/1M; `output_dbu_cost_per_token`: $714.29/1M |
-| Databricks | `databricks/databricks-gpt-6-luna` | 922,000 | $0.10003 | $0.50001 | Responses; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.12502/1M; `cache_creation_input_token_cost_above_272k_tokens`: $0.24997/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $0.50001/1M; `cache_creation_input_token_cost_priority`: $0.24997/1M; `cache_read_input_token_cost`: $0.01001/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.02002/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $0.03997/1M; `cache_read_input_token_cost_priority`: $0.02002/1M; `input_cost_per_token_above_272k_tokens`: $0.19999/1M; `input_cost_per_token_above_272k_tokens_priority`: $0.39998/1M; `input_cost_per_token_priority`: $0.19999/1M; `input_dbu_cost_per_token`: $1.429/1M; `output_cost_per_token_above_272k_tokens`: $0.7497/1M; `output_cost_per_token_above_272k_tokens_priority`: $1.5001/1M; `output_cost_per_token_priority`: $1.0003/1M; `output_dbu_cost_per_token`: $7.143/1M |
-| Databricks | `databricks/databricks-gpt-6-sol` | 922,000 | $1.99997 | $9.99999 | Responses; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $2.49998/1M; `cache_creation_input_token_cost_above_272k_tokens`: $5.00003/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $9.99999/1M; `cache_creation_input_token_cost_priority`: $5.00003/1M; `cache_read_input_token_cost`: $0.19999/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.39998/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $0.80003/1M; `cache_read_input_token_cost_priority`: $0.39998/1M; `input_cost_per_token_above_272k_tokens`: $4.00001/1M; `input_cost_per_token_above_272k_tokens_priority`: $8.00002/1M; `input_cost_per_token_priority`: $4.00001/1M; `input_dbu_cost_per_token`: $28.571/1M; `output_cost_per_token_above_272k_tokens`: $15.0003/1M; `output_cost_per_token_above_272k_tokens_priority`: $29.9999/1M; `output_cost_per_token_priority`: $19.9997/1M; `output_dbu_cost_per_token`: $142.86/1M |
-| Databricks | `databricks/databricks-gpt-image-1` | - | $5.00003 | - | Image generation; `cache_creation_input_token_cost`: $5.00003/1M; `cache_read_input_token_cost`: $1.24999/1M; `input_cost_per_image_token`: $9.99999/1M; `input_dbu_cost_per_token`: $71.429/1M; `output_cost_per_image_token`: $40.00003/1M |
-| Databricks | `databricks/databricks-gpt-image-1-5` | - | $5.00003 | $9.99999 | Image generation; Vision; PDF input; `cache_creation_input_token_cost`: $5.00003/1M; `cache_read_input_token_cost`: $1.24999/1M; `input_cost_per_image_token`: $8.00002/1M; `input_dbu_cost_per_token`: $71.429/1M; `output_cost_per_image_token`: $32.00001/1M; `output_dbu_cost_per_token`: $142.86/1M |
-| Databricks | `databricks/databricks-gpt-image-1-mini` | - | $1.99997 | - | Image generation; `cache_creation_input_token_cost`: $1.99997/1M; `cache_read_input_token_cost`: $0.19999/1M; `input_cost_per_image_token`: $2.49998/1M; `input_dbu_cost_per_token`: $28.571/1M; `output_cost_per_image_token`: $8.00002/1M |
-| Databricks | `databricks/databricks-gpt-image-2` | - | $5.00003 | - | Image generation; Vision; PDF input; `cache_creation_input_token_cost`: $5.00003/1M; `cache_read_input_token_cost`: $1.24999/1M; `input_cost_per_image_token`: $8.00002/1M; `input_dbu_cost_per_token`: $71.429/1M; `output_cost_per_image_token`: $29.99997/1M |
-| Databricks | `databricks/databricks-grok-4-7` | 500,000 | $2.49998 | $7.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $2.49998/1M; `cache_read_input_token_cost`: $0.62503/1M; `input_dbu_cost_per_token`: $35.714/1M; `output_dbu_cost_per_token`: $107.14/1M |
-| Databricks | `databricks/databricks-kimi-k2-7` | 262,144 | $0.94997 | $4.00001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.94997/1M; `cache_read_input_token_cost`: $0.18998/1M; `input_dbu_cost_per_token`: $13.571/1M; `output_dbu_cost_per_token`: $57.143/1M |
-| Databricks | `databricks/databricks-typesafeai-jev-1-14-0` | - | $0.042 | $0 | Vision; `cache_creation_input_token_cost`: $0.042/1M; `cache_read_input_token_cost`: $0.042/1M; `input_dbu_cost_per_token`: $0.6/1M |
+| DashScope | `dashscope/qwen-audio-3.0-tts-flash` | - | - | - | Text to speech; `input_cost_per_character`: $0.000015 |
+| DashScope | `dashscope/qwen-audio-3.0-tts-plus` | - | - | - | Text to speech; `input_cost_per_character`: $0.00002 |
+| DashScope | `dashscope/qwen-audio-3.1-tts-flash` | - | $0.23 | $1.87 | Text to speech |
+| DashScope | `dashscope/qwen-audio-3.1-tts-plus` | - | - | - | Text to speech; `input_cost_per_character`: $0.00003 |
+| DashScope | `dashscope/qwen3-tts-flash` | - | - | - | Text to speech; `input_cost_per_character`: $0.00001 |
+| Databricks | `databricks/databricks-claude-haiku-5-5` | 1,000,000 | $0.10003 | $0.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-claude-sonnet-5-5` | 1,000,000 | $1.99997 | $9.99999 | Chat; Reasoning; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-deepseek-v4-1-flash` | 1,000,000 | $0.30002 | $1.20001 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-deepseek-v4-1-flash-1017` | 1,000,000 | $0.30002 | $1.20001 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gemini-2-5-flash-lite` | 1,048,576 | $0.12502 | $0.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Audio input; Video input; `input_cost_per_audio_token`: $0.00000037 |
+| Databricks | `databricks/databricks-gemini-3-1-flash-lite-image` | 65,536 | $0.31248 | $1.87502 | Chat; Vision |
+| Databricks | `databricks/databricks-gemini-4-argon` | 1,048,576 | $2.49998 | $12.49997 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Audio input; Video input |
+| Databricks | `databricks/databricks-gpt-5-4-pro` | 922,000 | $29.99997 | $180.0001 | Responses; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-6-1-sol` | 922,000 | $1.99997 | $9.99999 | Responses; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-6-1-terra` | 922,000 | $1.00002 | $5.00003 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-6-astra` | 922,000 | $9.99999 | $50.00002 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-6-luna` | 922,000 | $0.10003 | $0.50001 | Responses; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-6-sol` | 922,000 | $1.99997 | $9.99999 | Responses; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-gpt-image-1` | - | $5.00003 | - | Image generation |
+| Databricks | `databricks/databricks-gpt-image-1-5` | - | $5.00003 | $9.99999 | Image generation; Vision; PDF input |
+| Databricks | `databricks/databricks-gpt-image-1-mini` | - | $1.99997 | - | Image generation |
+| Databricks | `databricks/databricks-gpt-image-2` | - | $5.00003 | - | Image generation; Vision; PDF input |
+| Databricks | `databricks/databricks-grok-4-7` | 500,000 | $2.49998 | $7.50001 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-kimi-k2-7` | 262,144 | $0.94997 | $4.00001 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Databricks | `databricks/databricks-typesafeai-jev-1-14-0` | - | $0.042 | $0 | Evaluation; Vision |
 | Deepgram | `deepgram/aura` | - | - | - | `input_cost_per_character`: $0.000015 |
 | Deepgram | `deepgram/aura-2` | - | - | - | `input_cost_per_character`: $0.00003 |
-| ElevenLabs | `elevenlabs/eleven_flash_v2` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| ElevenLabs | `elevenlabs/eleven_flash_v2_5` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| ElevenLabs | `elevenlabs/eleven_turbo_v2` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| ElevenLabs | `elevenlabs/eleven_turbo_v2_5` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| ElevenLabs | `elevenlabs/eleven_v3_conversational` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| ElevenLabs | `elevenlabs/eleven_v4` | - | - | - | Speech; `input_cost_per_character`: $0.00008 |
-| ElevenLabs | `elevenlabs/eleven_v4_turbo` | - | - | - | Speech; `input_cost_per_character`: $0.00004 |
-| EU JEV | `eu_jev/eu-jeff-1.0.0` | 32,768 | $0.0415 | $0 | - |
-| EU JEV | `eu_jev/eu-jeff-latest` | 32,768 | $0.0415 | $0 | - |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/models/rune` | 262,144 | $0.042 | $0 | `cache_read_input_token_cost`: $0.0084/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/models/ultramarine-1-flash-us` | 1,048,576 | $0.225 | $0.75 | Chat; Vision; Structured output; `cache_read_input_token_cost`: $0.045/1M; `cache_read_input_token_cost_priority`: $0.05625/1M; `input_cost_per_token_priority`: $0.28125/1M; `output_cost_per_token_priority`: $0.9375/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/deepseek-v4p1-flash-1017-spot` | 1,048,576 | $0.21 | $0.84 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0042/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/deepseek-v4p1-flash-spot` | 1,048,576 | $0.21 | $0.84 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0042/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/glm-5p3-spot` | 1,048,576 | $0.98 | $3.08 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.182/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/kimi-k3-spot` | 1,048,576 | $2.1 | $10.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.21/1M |
-| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/spot-deepseek-v4-flash` | 1,048,576 | $0.105 | $0.21 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.021/1M |
-| GitHub Copilot | `github_copilot/gpt-6.1-terra` | 922,000 | $1 | $5 | Responses; Reasoning; Vision; Tool calling; Structured output; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.5/1M; `cache_read_input_token_cost`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.1/1M; `input_cost_per_token_above_272k_tokens`: $2/1M; `output_cost_per_token_above_272k_tokens`: $7.5/1M |
-| Hostinger Router | `hostinger_router/claude-sonnet-5` | 1,000,000 | $2.64 | $13.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_creation_input_token_cost`: $3.3/1M; `cache_creation_input_token_cost_above_1hr`: $5.28/1M; `cache_read_input_token_cost`: $0.264/1M |
-| Hostinger Router | `hostinger_router/gpt-5.2` | 272,000 | $2.1 | $16.8 | Chat; Reasoning; Vision; Tool calling; Structured output; `cache_read_input_token_cost`: $0.21/1M |
+| ElevenLabs | `elevenlabs/eleven_flash_v2` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| ElevenLabs | `elevenlabs/eleven_flash_v2_5` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| ElevenLabs | `elevenlabs/eleven_turbo_v2` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| ElevenLabs | `elevenlabs/eleven_turbo_v2_5` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| ElevenLabs | `elevenlabs/eleven_v3_conversational` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| ElevenLabs | `elevenlabs/eleven_v4` | - | - | - | Text to speech; `input_cost_per_character`: $0.00008 |
+| ElevenLabs | `elevenlabs/eleven_v4_turbo` | - | - | - | Text to speech; `input_cost_per_character`: $0.00004 |
+| EU JEV | `eu_jev/eu-jeff-1.0.0` | 32,768 | $0.0415 | $0 | Evaluation |
+| EU JEV | `eu_jev/eu-jeff-latest` | 32,768 | $0.0415 | $0 | Evaluation |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/models/rune` | 262,144 | $0.042 | $0 | Decisions |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/models/ultramarine-1-flash-us` | 1,048,576 | $0.225 | $0.75 | Chat; Vision; Structured output |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/deepseek-v4p1-flash-1017-spot` | 1,048,576 | $0.21 | $0.84 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/deepseek-v4p1-flash-spot` | 1,048,576 | $0.21 | $0.84 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/glm-5p3-spot` | 1,048,576 | $0.98 | $3.08 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/kimi-k3-spot` | 1,048,576 | $2.1 | $10.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Fireworks AI | `fireworks_ai/accounts/fireworks/routers/spot-deepseek-v4-flash` | 1,048,576 | $0.105 | $0.21 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| GitHub Copilot | `github_copilot/gpt-6.1-terra` | 922,000 | $1 | $5 | Responses; Reasoning; Vision; Tool calling; Structured output |
+| Hostinger Router | `hostinger_router/claude-sonnet-5` | 1,000,000 | $2.64 | $13.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Hostinger Router | `hostinger_router/gpt-5.2` | 272,000 | $2.1 | $16.8 | Chat; Reasoning; Vision; Tool calling; Structured output |
 | Hostinger Router | `hostinger_router/text-embedding-3-large` | 8,191 | $0.1716 | $0 | Embedding |
 | Hostinger Router | `hostinger_router/text-embedding-3-small` | 8,191 | $0.03 | $0 | Embedding |
-| Kyma API | `kyma/claude-fable-5` | 1,000,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/claude-fable-5.1` | 1,000,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/claude-haiku-4-5` | 200,000 | $1.35 | $6.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.135/1M |
-| Kyma API | `kyma/claude-haiku-5.5` | 1,000,000 | $0.135 | $0.675 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.0135/1M |
-| Kyma API | `kyma/claude-opus-4-7` | 1,000,000 | $6.75 | $33.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.675/1M |
-| Kyma API | `kyma/claude-opus-5` | 1,000,000 | $6.75 | $33.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.675/1M |
-| Kyma API | `kyma/claude-opus-5.5` | 1,000,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/claude-sonnet-4-6` | 1,000,000 | $4.05 | $20.25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.405/1M |
-| Kyma API | `kyma/claude-sonnet-5` | 1,000,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/claude-sonnet-5.5` | 1,000,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.135/1M |
-| Kyma API | `kyma/deepseek-r1` | 64,000 | $0.7425 | $2.957 | Chat; Reasoning; Tool calling; Structured output |
-| Kyma API | `kyma/deepseek-v3` | 160,000 | $0.518 | $0.7571 | Chat; Reasoning; Tool calling; Structured output |
-| Kyma API | `kyma/deepseek-v4-flash` | 1,000,000 | $0.123 | $0.2458 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0243/1M |
-| Kyma API | `kyma/deepseek-v4-flash-vision-exp` | 1,048,576 | $0.3892 | $1.168 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/deepseek-v4.1-flash` | 1,048,576 | $0.27 | $0.81 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/gemini-3-flash` | 1,048,576 | $0.675 | $4.05 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0675/1M |
-| Kyma API | `kyma/gemini-3.1-pro` | 1,048,576 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/gemini-3.5-flash` | 1,048,576 | $2.025 | $12.15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.2025/1M |
-| Kyma API | `kyma/gemini-3.5-flash-lite` | 1,048,576 | $0.405 | $3.375 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0405/1M |
-| Kyma API | `kyma/gemini-3.6-flash` | 1,048,576 | $1.013 | $5.063 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.10125/1M |
-| Kyma API | `kyma/gemini-3.7-flash` | 1,048,576 | $2.026 | $10.126 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.10125/1M |
-| Kyma API | `kyma/gemini-3.8-flash` | 1,048,576 | $2.026 | $10.126 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
-| Kyma API | `kyma/gemini-4-argon` | 1,048,576 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/gemma-4-31b` | 128,000 | $0.1642 | $0.4689 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1642/1M |
-| Kyma API | `kyma/glm-4.5-air` | 131,072 | $0.1797 | $1.175 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.03375/1M |
-| Kyma API | `kyma/glm-4.7-flash` | 203,000 | $0.081 | $0.54 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0135/1M |
-| Kyma API | `kyma/glm-5.1` | 203,000 | $1.89 | $5.94 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.27675/1M |
-| Kyma API | `kyma/glm-5.2` | 1,000,000 | $0.9029 | $3.083 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.29835/1M |
-| Kyma API | `kyma/glm-5.3` | 1,310,720 | $1.178 | $3.702 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/glm-5.3-flash` | 1,310,720 | $0.172 | $0.5733 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/gpt-5.6-luna` | 1,050,000 | $0.2944 | $1.767 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.027/1M |
-| Kyma API | `kyma/gpt-5.6-luna-pro` | 1,050,000 | $0.2703 | $1.621 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.027/1M |
-| Kyma API | `kyma/gpt-5.6-sol` | 1,050,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.675/1M |
-| Kyma API | `kyma/gpt-5.6-sol-pro` | 1,050,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.675/1M |
-| Kyma API | `kyma/gpt-5.6-terra` | 1,050,000 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.27/1M; `input_cost_per_token_above_272k_tokens`: $5.4/1M; `output_cost_per_token_above_272k_tokens`: $24.3/1M |
-| Kyma API | `kyma/gpt-5.6-terra-pro` | 1,050,000 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/gpt-6-astra` | 1,050,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $1.35/1M |
-| Kyma API | `kyma/gpt-6-luna` | 1,050,000 | $0.1639 | $0.8195 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.0135/1M; `input_cost_per_token_above_272k_tokens`: $0.27/1M; `output_cost_per_token_above_272k_tokens`: $1.0125/1M |
-| Kyma API | `kyma/gpt-6.1-sol` | 1,050,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.135/1M; `input_cost_per_token_above_272k_tokens`: $5.4/1M; `output_cost_per_token_above_272k_tokens`: $20.25/1M |
-| Kyma API | `kyma/gpt-oss-120b` | 128,000 | $0.0473 | $0.2303 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/grok-4.20` | 2,000,000 | $1.763 | $3.528 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/grok-4.20-multi-agent` | 2,000,000 | $1.767 | $3.534 | Chat; Reasoning; Vision; Structured output; PDF input |
-| Kyma API | `kyma/grok-4.3` | 1,000,000 | $1.92 | $3.838 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.27/1M; `input_cost_per_token_above_200k_tokens`: $3.375/1M; `output_cost_per_token_above_200k_tokens`: $6.75/1M |
-| Kyma API | `kyma/grok-4.5` | 500,000 | $2.73 | $8.189 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/grok-4.6` | 500,000 | $2.758 | $8.274 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/grok-4.7` | 500,000 | $2.16 | $6.48 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; `cache_read_input_token_cost`: $0.54/1M |
-| Kyma API | `kyma/grok-build` | 256,000 | $1.389 | $2.777 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.27/1M; `input_cost_per_token_above_200k_tokens`: $2.7/1M; `output_cost_per_token_above_200k_tokens`: $5.4/1M |
-| Kyma API | `kyma/hy3` | 262,144 | $0.1594 | $0.6576 | Chat; Reasoning; Tool calling; Structured output |
-| Kyma API | `kyma/hy4-preview` | 1,048,576 | $1.1259 | $3.3764 | Chat; Reasoning; Tool calling; Structured output |
-| Kyma API | `kyma/kimi-k2.6` | 262,144 | $0.5909 | $2.758 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/kimi-k2.7-code` | 262,144 | $1.009 | $4.774 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/kimi-k3` | 1,048,576 | $3.052 | $15.258 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.405/1M |
-| Kyma API | `kyma/kimi-k3.1-pro` | 1,048,576 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.27/1M |
-| Kyma API | `kyma/llama-3.3-70b` | 128,000 | $0.135 | $0.432 | Chat; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/llama-4-maverick` | 1,048,576 | $0.3344 | $1.337 | Chat; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/mimo-v2.5` | 1,050,000 | $0.1859 | $0.3718 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/mimo-v2.6-flash` | 1,050,000 | $0.189 | $0.378 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/mimo-v2.6-pro` | 1,050,000 | $0.5805 | $1.1745 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/minimax-m2.5` | 196,608 | $0.4188 | $1.675 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/minimax-m2.7` | 204,800 | $0.405 | $1.62 | Chat; Reasoning; Tool calling; Structured output |
-| Kyma API | `kyma/minimax-m3` | 1,048,576 | $0.3956 | $1.582 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0756/1M |
-| Kyma API | `kyma/minimax-m3.1-flash` | 1,048,576 | $0.2025 | $0.81 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.02025/1M |
-| Kyma API | `kyma/muse-glimmer-30b` | 131,072 | $0.4554 | $1.821 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/muse-spark-1.1` | 1,048,576 | $1.542 | $5.243 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/muse-spark-1.2` | 1,048,576 | $1.773 | $6.025 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/muse-spark-1.3` | 1,048,576 | $1.688 | $5.738 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/muse-spark-open` | 1,048,576 | $1.688 | $5.738 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/muse-wonder` | 1,048,576 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
-| Kyma API | `kyma/nemotron-3-ultra-550b` | 1,000,000 | $0.675 | $3.375 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.135/1M |
-| Kyma API | `kyma/nemotron-3.5-super-vl` | 1,048,576 | $0.081 | $0.4725 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0135/1M |
-| Kyma API | `kyma/qwen-3-32b` | 32,768 | $0.108 | $0.378 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/qwen-3-coder` | 131,072 | $0.3546 | $1.612 | Chat; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.135/1M |
-| Kyma API | `kyma/qwen-3.6-plus` | 1,000,000 | $0.4388 | $2.633 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `input_cost_per_token_above_256k_tokens`: $1.755/1M; `output_cost_per_token_above_256k_tokens`: $5.265/1M |
-| Kyma API | `kyma/qwen-3.7-max` | 1,000,000 | $2.071 | $6.207 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.16875/1M |
-| Kyma API | `kyma/qwen-3.7-plus` | 1,000,000 | $0.4325 | $1.731 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0864/1M; `input_cost_per_token_above_256k_tokens`: $1.296/1M; `output_cost_per_token_above_256k_tokens`: $5.184/1M |
-| Kyma API | `kyma/qwen-3.8-max` | 1,000,000 | $2.228 | $6.684 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.2781/1M |
-| Kyma API | `kyma/qwen3.7-flash` | 1,000,000 | $0.0435 | $0.1886 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.0081/1M; `input_cost_per_token_above_256k_tokens`: $0.27/1M; `input_cost_per_token_above_32k_tokens`: $0.135/1M; `output_cost_per_token_above_256k_tokens`: $1.08/1M; `output_cost_per_token_above_32k_tokens`: $0.54/1M |
-| Kyma API | `kyma/qwen3.8-27b` | 1,000,000 | $0.3826 | $2.732 | Chat; Reasoning; Vision; Tool calling; Structured output |
-| Kyma API | `kyma/qwen3.8-flash` | 1,000,000 | $0.2045 | $0.641 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
-| Kyma API | `kyma/sonar` | 127,072 | $1.35 | $1.35 | Chat; Vision; Prompt caching |
-| Kyma API | `kyma/sonar-pro` | 200,000 | $4.05 | $20.25 | Chat; Vision; Prompt caching |
-| Kyma API | `kyma/step-3.7-flash` | 256,000 | $0.2229 | $1.282 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.054/1M |
-| Kyma API | `kyma/step-5-preview` | 1,048,576 | $1.35 | $3.645 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.135/1M |
-| Mistral | `mistral/deepseek-v4-1-flash-1017` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.007/1M |
-| Mistral | `mistral/voxtral-mini-transcribe-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000058 |
-| Mistral | `mistral/voxtral-mini-transcribe-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000058 |
-| Mistral | `mistral/voxtral-mini-transcribe-realtime-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000133 |
-| Mistral | `mistral/voxtral-mini-transcribe-realtime-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000133 |
-| Mistral | `mistral/voxtral-mini-tts-3` | - | - | - | Speech; Audio output; `input_cost_per_character`: $0.000013 |
-| Mistral | `mistral/voxtral-mini-tts-3-0` | - | - | - | Speech; Audio output; `input_cost_per_character`: $0.000013 |
-| Mistral | `mistral/voxtral-small-transcribe-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000067 |
-| Mistral | `mistral/voxtral-small-transcribe-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000067 |
-| Mistral | `mistral/zai-glm-5-3-flash` | 1,048,576 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.03/1M |
-| Moonshot AI | `moonshot/kimi-k3.1-pro` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_creation_input_token_cost`: $2/1M; `cache_creation_input_token_cost_above_1hr`: $4/1M; `cache_read_input_token_cost`: $0.2/1M |
-| Morph | `morph/morph-dsv41flash` | 1,048,576 | $0.12 | $0.8 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.008/1M |
-| Morph | `morph/morph-dsv41flash-1017` | 1,048,576 | $0.12 | $0.8 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.008/1M |
-| Morph | `morph/morph-dsv41flash-abliterated` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.03/1M |
-| Morph | `morph/morph-dsv4flash` | 1,048,576 | $0.141953 | $0.399625 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.035937/1M |
-| Morph | `morph/morph-glm53-744b` | 1,048,576 | $1.19 | $6 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1955/1M |
-| Morph | `morph/morph-glm53flash` | 1,048,576 | $0.2 | $0.7 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.04/1M |
-| Morph | `morph/morph-kimik3` | 1,048,576 | $2.5 | $14 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.29/1M |
-| Morph | `morph/morph-kimik3-fast` | 1,048,576 | $6 | $22.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.6/1M |
-| OpenAI | `gpt-6-astra-law` | 922,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_read_input_token_cost`: $1/1M |
-| OpenAI | `gpt-6-rosalind` | 922,000 | $15 | $75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $18.75/1M; `cache_creation_input_token_cost_above_12hr`: $37.5/1M; `cache_creation_input_token_cost_above_12hr_above_272k_tokens`: $75/1M; `cache_creation_input_token_cost_above_272k_tokens`: $37.5/1M; `cache_read_input_token_cost`: $1.5/1M; `cache_read_input_token_cost_above_272k_tokens`: $3/1M; `input_cost_per_token_above_272k_tokens`: $30/1M; `output_cost_per_token_above_272k_tokens`: $112.5/1M |
-| OpenAI | `gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; `cache_creation_input_token_cost`: $1.25/1M; `cache_creation_input_token_cost_above_12hr`: $2.5/1M; `cache_creation_input_token_cost_above_12hr_above_272k_tokens`: $5/1M; `cache_creation_input_token_cost_above_12hr_above_272k_tokens_batches`: $2.5/1M; `cache_creation_input_token_cost_above_12hr_above_272k_tokens_flex`: $2.5/1M; `cache_creation_input_token_cost_above_12hr_above_272k_tokens_priority`: $10/1M; `cache_creation_input_token_cost_above_12hr_batches`: $1.25/1M; `cache_creation_input_token_cost_above_12hr_flex`: $1.25/1M; `cache_creation_input_token_cost_above_12hr_priority`: $5/1M; `cache_creation_input_token_cost_above_272k_tokens`: $2.5/1M; `cache_creation_input_token_cost_above_272k_tokens_batches`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens_flex`: $1.25/1M; `cache_creation_input_token_cost_above_272k_tokens_priority`: $5/1M; `cache_creation_input_token_cost_batches`: $0.625/1M; `cache_creation_input_token_cost_flex`: $0.625/1M; `cache_creation_input_token_cost_priority`: $2.5/1M; `cache_read_input_token_cost`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens`: $0.1/1M; `cache_read_input_token_cost_above_272k_tokens_batches`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens_flex`: $0.05/1M; `cache_read_input_token_cost_above_272k_tokens_priority`: $0.2/1M; `cache_read_input_token_cost_batches`: $0.025/1M; `cache_read_input_token_cost_flex`: $0.025/1M; `cache_read_input_token_cost_priority`: $0.1/1M; `input_cost_per_token_above_272k_tokens`: $2/1M; `input_cost_per_token_above_272k_tokens_batches`: $1/1M; `input_cost_per_token_above_272k_tokens_flex`: $1/1M; `input_cost_per_token_above_272k_tokens_priority`: $4/1M; `input_cost_per_token_batches`: $0.5/1M; `input_cost_per_token_flex`: $0.5/1M; `input_cost_per_token_priority`: $2/1M; `output_cost_per_token_above_272k_tokens`: $7.5/1M; `output_cost_per_token_above_272k_tokens_batches`: $3.75/1M; `output_cost_per_token_above_272k_tokens_flex`: $3.75/1M; `output_cost_per_token_above_272k_tokens_priority`: $15/1M; `output_cost_per_token_batches`: $2.5/1M; `output_cost_per_token_flex`: $2.5/1M; `output_cost_per_token_priority`: $10/1M |
+| Kyma | `kyma/claude-fable-5` | 1,000,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/claude-fable-5.1` | 1,000,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/claude-haiku-4-5` | 200,000 | $1.35 | $6.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/claude-haiku-5.5` | 1,000,000 | $0.135 | $0.675 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/claude-opus-4-7` | 1,000,000 | $6.75 | $33.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/claude-opus-5` | 1,000,000 | $6.75 | $33.75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/claude-opus-5.5` | 1,000,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/claude-sonnet-4-6` | 1,000,000 | $4.05 | $20.25 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/claude-sonnet-5` | 1,000,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/claude-sonnet-5.5` | 1,000,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/deepseek-r1` | 64,000 | $0.7425 | $2.957 | Chat; Reasoning; Tool calling; Structured output |
+| Kyma | `kyma/deepseek-v3` | 160,000 | $0.518 | $0.7571 | Chat; Reasoning; Tool calling; Structured output |
+| Kyma | `kyma/deepseek-v4-flash` | 1,000,000 | $0.123 | $0.2458 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/deepseek-v4-flash-vision-exp` | 1,048,576 | $0.3892 | $1.168 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/deepseek-v4.1-flash` | 1,048,576 | $0.27 | $0.81 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/gemini-3-flash` | 1,048,576 | $0.675 | $4.05 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gemini-3.1-pro` | 1,048,576 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gemini-3.5-flash` | 1,048,576 | $2.025 | $12.15 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gemini-3.5-flash-lite` | 1,048,576 | $0.405 | $3.375 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gemini-3.6-flash` | 1,048,576 | $1.013 | $5.063 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Kyma | `kyma/gemini-3.7-flash` | 1,048,576 | $2.026 | $10.126 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gemini-3.8-flash` | 1,048,576 | $2.026 | $10.126 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gemini-4-argon` | 1,048,576 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gemma-4-31b` | 128,000 | $0.1642 | $0.4689 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-4.5-air` | 131,072 | $0.1797 | $1.175 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-4.7-flash` | 203,000 | $0.081 | $0.54 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-5.1` | 203,000 | $1.89 | $5.94 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-5.2` | 1,000,000 | $0.9029 | $3.083 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-5.3` | 1,310,720 | $1.178 | $3.702 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/glm-5.3-flash` | 1,310,720 | $0.172 | $0.5733 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gpt-5.6-luna` | 1,050,000 | $0.2944 | $1.767 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-5.6-luna-pro` | 1,050,000 | $0.2703 | $1.621 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-5.6-sol` | 1,050,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-5.6-sol-pro` | 1,050,000 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-5.6-terra` | 1,050,000 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gpt-5.6-terra-pro` | 1,050,000 | $2.7 | $16.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-6-astra` | 1,050,000 | $13.5 | $67.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/gpt-6-luna` | 1,050,000 | $0.1639 | $0.8195 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-6.1-sol` | 1,050,000 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/gpt-oss-120b` | 128,000 | $0.0473 | $0.2303 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/grok-4.20` | 2,000,000 | $1.763 | $3.528 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/grok-4.20-multi-agent` | 2,000,000 | $1.767 | $3.534 | Chat; Reasoning; Vision; Structured output; PDF input |
+| Kyma | `kyma/grok-4.3` | 1,000,000 | $1.92 | $3.838 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/grok-4.5` | 500,000 | $2.73 | $8.189 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/grok-4.6` | 500,000 | $2.758 | $8.274 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/grok-4.7` | 500,000 | $2.16 | $6.48 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input |
+| Kyma | `kyma/grok-build` | 256,000 | $1.389 | $2.777 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/hy3` | 262,144 | $0.1594 | $0.6576 | Chat; Reasoning; Tool calling; Structured output |
+| Kyma | `kyma/hy4-preview` | 1,048,576 | $1.1259 | $3.3764 | Chat; Reasoning; Tool calling; Structured output |
+| Kyma | `kyma/kimi-k2.6` | 262,144 | $0.5909 | $2.758 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/kimi-k2.7-code` | 262,144 | $1.009 | $4.774 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/kimi-k3` | 1,048,576 | $3.052 | $15.258 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/kimi-k3.1-pro` | 1,048,576 | $2.7 | $13.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/llama-3.3-70b` | 128,000 | $0.135 | $0.432 | Chat; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/llama-4-maverick` | 1,048,576 | $0.3344 | $1.337 | Chat; Vision; Tool calling; Structured output |
+| Kyma | `kyma/mimo-v2.5` | 1,050,000 | $0.1859 | $0.3718 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/mimo-v2.6-flash` | 1,050,000 | $0.189 | $0.378 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/mimo-v2.6-pro` | 1,050,000 | $0.5805 | $1.1745 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/minimax-m2.5` | 196,608 | $0.4188 | $1.675 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/minimax-m2.7` | 204,800 | $0.405 | $1.62 | Chat; Reasoning; Tool calling; Structured output |
+| Kyma | `kyma/minimax-m3` | 1,048,576 | $0.3956 | $1.582 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/minimax-m3.1-flash` | 1,048,576 | $0.2025 | $0.81 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/muse-glimmer-30b` | 131,072 | $0.4554 | $1.821 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/muse-spark-1.1` | 1,048,576 | $1.542 | $5.243 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/muse-spark-1.2` | 1,048,576 | $1.773 | $6.025 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/muse-spark-1.3` | 1,048,576 | $1.688 | $5.738 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/muse-spark-open` | 1,048,576 | $1.688 | $5.738 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/muse-wonder` | 1,048,576 | $5.4 | $27 | Chat; Reasoning; Vision; Tool calling; Structured output; PDF input |
+| Kyma | `kyma/nemotron-3-ultra-550b` | 1,000,000 | $0.675 | $3.375 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/nemotron-3.5-super-vl` | 1,048,576 | $0.081 | $0.4725 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3-32b` | 32,768 | $0.108 | $0.378 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3-coder` | 131,072 | $0.3546 | $1.612 | Chat; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3.6-plus` | 1,000,000 | $0.4388 | $2.633 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3.7-max` | 1,000,000 | $2.071 | $6.207 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3.7-plus` | 1,000,000 | $0.4325 | $1.731 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen-3.8-max` | 1,000,000 | $2.228 | $6.684 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen3.7-flash` | 1,000,000 | $0.0435 | $0.1886 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/qwen3.8-27b` | 1,000,000 | $0.3826 | $2.732 | Chat; Reasoning; Vision; Tool calling; Structured output |
+| Kyma | `kyma/qwen3.8-flash` | 1,000,000 | $0.2045 | $0.641 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/sonar` | 127,072 | $1.35 | $1.35 | Chat; Vision; Prompt caching |
+| Kyma | `kyma/sonar-pro` | 200,000 | $4.05 | $20.25 | Chat; Vision; Prompt caching |
+| Kyma | `kyma/step-3.7-flash` | 256,000 | $0.2229 | $1.282 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Kyma | `kyma/step-5-preview` | 1,048,576 | $1.35 | $3.645 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Mistral | `mistral/deepseek-v4-1-flash-1017` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Mistral | `mistral/voxtral-mini-transcribe-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00005833 |
+| Mistral | `mistral/voxtral-mini-transcribe-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00005833 |
+| Mistral | `mistral/voxtral-mini-transcribe-realtime-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00013333 |
+| Mistral | `mistral/voxtral-mini-transcribe-realtime-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00013333 |
+| Mistral | `mistral/voxtral-mini-tts-3` | - | - | - | Text to speech; `input_cost_per_character`: $0.000013 |
+| Mistral | `mistral/voxtral-mini-tts-3-0` | - | - | - | Text to speech; `input_cost_per_character`: $0.000013 |
+| Mistral | `mistral/voxtral-small-transcribe-3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00006667 |
+| Mistral | `mistral/voxtral-small-transcribe-3-0` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00006667 |
+| Mistral | `mistral/zai-glm-5-3-flash` | 1,048,576 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Moonshot | `moonshot/kimi-k3.1-pro` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-dsv41flash` | 1,048,576 | $0.12 | $0.8 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-dsv41flash-1017` | 1,048,576 | $0.12 | $0.8 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-dsv41flash-abliterated` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-dsv4flash` | 1,048,576 | $0.141953 | $0.399625 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-glm53-744b` | 1,048,576 | $1.19 | $6 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-glm53flash` | 1,048,576 | $0.2 | $0.7 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-kimik3` | 1,048,576 | $2.5 | $14 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| Morph | `morph/morph-kimik3-fast` | 1,048,576 | $6 | $22.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| OpenAI | `gpt-6-astra-law` | 922,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| OpenAI | `gpt-6-rosalind` | 922,000 | $15 | $75 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
+| OpenAI | `gpt-6.1-terra` | 922,000 | $1 | $5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Web search; Computer use |
 | OpenCode Go | `opencode_go/beam-free` | 1,048,576 | $0 | $0 | Chat; Reasoning; Tool calling |
-| OpenCode Go | `opencode_go/claude-haiku-5-5` | 1,000,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $0.125/1M; `cache_read_input_token_cost`: $0.01/1M |
-| OpenCode Go | `opencode_go/deepseek-v4-pro` | 1,000,000 | $1.32 | $3.96 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.044/1M |
-| OpenCode Go | `opencode_go/deepseek-v4.1-flash` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.006/1M |
-| OpenCode Go | `opencode_go/gemini-4-argon` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.1/1M |
-| OpenCode Go | `opencode_go/glm-5.2` | 1,000,000 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.26/1M |
-| OpenCode Go | `opencode_go/glm-5.3` | 1,000,000 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.26/1M |
-| OpenCode Go | `opencode_go/glm-5.3-flash` | 1,000,000 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.03/1M |
-| OpenCode Go | `opencode_go/gpt-5.6-luna` | 922,000 | $0.2 | $1.2 | Responses; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $0.25/1M; `cache_read_input_token_cost`: $0.02/1M |
-| OpenCode Go | `opencode_go/gpt-6-luna` | 922,000 | $0.1 | $0.5 | Responses; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $0.125/1M; `cache_read_input_token_cost`: $0.01/1M |
-| OpenCode Go | `opencode_go/grok-4.7` | 500,000 | $2 | $6 | Responses; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.5/1M |
-| OpenCode Go | `opencode_go/hy3` | 192,000 | $0.14 | $0.58 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.035/1M |
-| OpenCode Go | `opencode_go/hy4-preview` | 1,024,000 | $0.834 | $2.501 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.042/1M |
-| OpenCode Go | `opencode_go/kimi-k2.7-code` | 262,144 | $0.95 | $4 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.19/1M |
-| OpenCode Go | `opencode_go/kimi-k3` | 1,048,576 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $3/1M; `cache_read_input_token_cost`: $0.3/1M |
-| OpenCode Go | `opencode_go/kimi-k3.1-pro` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $2/1M; `cache_read_input_token_cost`: $0.2/1M |
-| OpenCode Go | `opencode_go/longcat-2.0` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.006/1M |
+| OpenCode Go | `opencode_go/claude-haiku-5-5` | 1,000,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/deepseek-v4-pro` | 1,000,000 | $1.32 | $3.96 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/deepseek-v4.1-flash` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/gemini-4-argon` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/glm-5.2` | 1,000,000 | $1.4 | $4.4 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/glm-5.3` | 1,000,000 | $1.4 | $4.4 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/glm-5.3-flash` | 1,000,000 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/gpt-5.6-luna` | 922,000 | $0.2 | $1.2 | Responses; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/gpt-6-luna` | 922,000 | $0.1 | $0.5 | Responses; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/grok-4.7` | 500,000 | $2 | $6 | Responses; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/hy3` | 192,000 | $0.14 | $0.58 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/hy4-preview` | 1,024,000 | $0.834 | $2.501 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/kimi-k2.7-code` | 262,144 | $0.95 | $4 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/kimi-k3` | 1,048,576 | $3 | $15 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/kimi-k3.1-pro` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/longcat-2.0` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Tool calling |
 | OpenCode Go | `opencode_go/longcat-2.5-preview-free` | 1,000,000 | $0 | $0 | Chat; Reasoning; Vision; Tool calling |
-| OpenCode Go | `opencode_go/mimo-v2.5` | 1,000,000 | $0.14 | $0.28 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.0028/1M |
-| OpenCode Go | `opencode_go/mimo-v2.5-pro` | 1,048,576 | $0.435 | $0.87 | Chat; Reasoning; Tool calling; `cache_read_input_token_cost`: $0.003625/1M |
-| OpenCode Go | `opencode_go/mimo-v2.6-flash` | 1,048,576 | $0.14 | $0.28 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.0028/1M |
-| OpenCode Go | `opencode_go/mimo-v2.6-pro` | 1,048,576 | $0.435 | $0.87 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.003625/1M |
-| OpenCode Go | `opencode_go/minimax-m3` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.06/1M |
-| OpenCode Go | `opencode_go/minimax-m3.1-flash` | 1,000,000 | $0.15 | $0.6 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.015/1M |
-| OpenCode Go | `opencode_go/muse-spark-1.2-contributor` | 1,048,576 | $0.1 | $0.2 | Responses; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.002/1M |
-| OpenCode Go | `opencode_go/muse-spark-1.3-contributor` | 1,048,576 | $0.1 | $0.2 | Responses; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.002/1M |
-| OpenCode Go | `opencode_go/qwen3.7-plus` | 1,000,000 | $0.4 | $1.6 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $0.5/1M; `cache_read_input_token_cost`: $0.04/1M |
-| OpenCode Go | `opencode_go/qwen3.8-flash` | 1,000,000 | $0.15 | $0.47 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $0.2/1M; `cache_read_input_token_cost`: $0.016/1M |
-| OpenCode Go | `opencode_go/qwen3.8-max` | 1,000,000 | $2 | $6 | Chat; Reasoning; Vision; Tool calling; `cache_creation_input_token_cost`: $2.5/1M; `cache_read_input_token_cost`: $0.25/1M |
-| OpenCode Go | `opencode_go/step-5-preview` | 1,000,000 | $1 | $2.7 | Chat; Reasoning; Vision; Tool calling; `cache_read_input_token_cost`: $0.1/1M |
-| Refuseless | `refuseless/deepseek-v4.1-flash-abliterated` | 1,048,576 | $0.14 | $0.5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.035/1M |
-| Refuseless | `refuseless/deepseek-v4.1-flash-fast` | 1,048,576 | $0.05 | $0.15 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.003/1M |
-| Refuseless | `refuseless/glm-5.3-abliterated` | 1,048,576 | $1 | $2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.15/1M |
-| Refuseless | `refuseless/glm-5.3-flash-abliterated` | 1,048,576 | $0.12 | $0.5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.04/1M |
-| Refuseless | `refuseless/minimax-m3.1-flash` | 1,048,576 | $0.05 | $0.25 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.002/1M |
-| Soniox | `soniox/stt-rt-preview` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| Soniox | `soniox/stt-rt-preview-v2` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| Soniox | `soniox/stt-rt-v3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| Soniox | `soniox/stt-rt-v3-preview` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| Soniox | `soniox/stt-rt-v4` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| Soniox | `soniox/stt-rt-v5` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.000033 |
-| StreamLake | `streamlake/deepseek-r1` | 98,304 | $0.571 | $2.286 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.229/1M |
-| StreamLake | `streamlake/DeepSeek-V3` | 56,000 | $0.286 | $1.143 | Chat; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.114/1M |
-| StreamLake | `streamlake/deepseek-v3.1` | 98,304 | $0.571 | $1.714 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.229/1M |
-| StreamLake | `streamlake/deepseek-v4-flash` | 1,048,576 | $0.14 | $0.28 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.028/1M |
-| StreamLake | `streamlake/deepseek-v4-flash-0731` | 1,048,576 | $0.44 | $1.32 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.014/1M |
-| StreamLake | `streamlake/deepseek-v4-pro` | 1,048,576 | $1.74 | $3.48 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.145/1M |
-| StreamLake | `streamlake/DeepSeek-V4-Pro-0813` | 1,048,566 | $1.32 | $3.96 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.044/1M |
-| StreamLake | `streamlake/deepseek-v4.1-flash-1017` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.006/1M |
-| StreamLake | `streamlake/deepseek-v4.1-flash-260910` | 1,048,568 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.006/1M |
-| StreamLake | `streamlake/glm-5` | 202,752 | $1 | $3.2 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.2/1M |
-| StreamLake | `streamlake/glm-5.1` | 202,752 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.26/1M |
-| StreamLake | `streamlake/glm-5.2` | 1,048,566 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.26/1M |
-| StreamLake | `streamlake/GLM-5.3` | 1,048,576 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.26/1M |
-| StreamLake | `streamlake/GLM-5.3-Flash` | 1,048,576 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.03/1M |
-| StreamLake | `streamlake/Kimi-K2-Instruct-0905` | 224,000 | $0.571 | $2.286 | Chat; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.143/1M |
-| StreamLake | `streamlake/kimi-k2.6` | 262,144 | $0.95 | $4 | Chat; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.16/1M |
-| StreamLake | `streamlake/kimi-k2.7-code` | 262,144 | $0.95 | $4 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.19/1M |
-| StreamLake | `streamlake/mimo-v2.6-flash` | - | $0.14 | $0.28 | Chat; Vision; Prompt caching; `cache_read_input_token_cost`: $0.0028/1M |
-| StreamLake | `streamlake/mimo-v2.6-pro` | - | $0.435 | $0.87 | Chat; Vision; Prompt caching; `cache_read_input_token_cost`: $0.0036/1M |
-| StreamLake | `streamlake/minimax-m2.5` | 196,608 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.375/1M; `cache_read_input_token_cost`: $0.03/1M |
-| StreamLake | `streamlake/minimax-m3` | 1,000,000 | $0.6 | $2.4 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.12/1M; `cache_read_input_token_cost_above_512k_tokens`: $0.24/1M; `input_cost_per_token_above_512k_tokens`: $1.2/1M; `output_cost_per_token_above_512k_tokens`: $4.8/1M |
-| StreamLake | `streamlake/qwen3.5-397b-a17b` | 258,048 | $0.6 | $3.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.12/1M |
+| OpenCode Go | `opencode_go/mimo-v2.5` | 1,000,000 | $0.14 | $0.28 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/mimo-v2.5-pro` | 1,048,576 | $0.435 | $0.87 | Chat; Reasoning; Tool calling |
+| OpenCode Go | `opencode_go/mimo-v2.6-flash` | 1,048,576 | $0.14 | $0.28 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/mimo-v2.6-pro` | 1,048,576 | $0.435 | $0.87 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/minimax-m3` | 1,000,000 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/minimax-m3.1-flash` | 1,000,000 | $0.15 | $0.6 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/muse-spark-1.2-contributor` | 1,048,576 | $0.1 | $0.2 | Responses; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/muse-spark-1.3-contributor` | 1,048,576 | $0.1 | $0.2 | Responses; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/qwen3.7-plus` | 1,000,000 | $0.4 | $1.6 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/qwen3.8-flash` | 1,000,000 | $0.15 | $0.47 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/qwen3.8-max` | 1,000,000 | $2 | $6 | Chat; Reasoning; Vision; Tool calling |
+| OpenCode Go | `opencode_go/step-5-preview` | 1,000,000 | $1 | $2.7 | Chat; Reasoning; Vision; Tool calling |
+| Refuseless | `refuseless/deepseek-v4.1-flash-abliterated` | 1,048,576 | $0.14 | $0.5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Refuseless | `refuseless/deepseek-v4.1-flash-fast` | 1,048,576 | $0.05 | $0.15 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Refuseless | `refuseless/glm-5.3-abliterated` | 1,048,576 | $1 | $2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Refuseless | `refuseless/glm-5.3-flash-abliterated` | 1,048,576 | $0.12 | $0.5 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Refuseless | `refuseless/minimax-m3.1-flash` | 1,048,576 | $0.05 | $0.25 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Soniox | `soniox/stt-rt-preview` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| Soniox | `soniox/stt-rt-preview-v2` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| Soniox | `soniox/stt-rt-v3` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| Soniox | `soniox/stt-rt-v3-preview` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| Soniox | `soniox/stt-rt-v4` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| Soniox | `soniox/stt-rt-v5` | - | - | - | Transcription; Audio input; `input_cost_per_second`: $0.00003333 |
+| StreamLake | `streamlake/deepseek-r1` | 98,304 | $0.571 | $2.286 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/DeepSeek-V3` | 56,000 | $0.286 | $1.143 | Chat; Tool calling; Prompt caching |
+| StreamLake | `streamlake/deepseek-v3.1` | 98,304 | $0.571 | $1.714 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/deepseek-v4-flash` | 1,048,576 | $0.14 | $0.28 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/deepseek-v4-flash-0731` | 1,048,576 | $0.44 | $1.32 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| StreamLake | `streamlake/deepseek-v4-pro` | 1,048,576 | $1.74 | $3.48 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/DeepSeek-V4-Pro-0813` | 1,048,566 | $1.32 | $3.96 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| StreamLake | `streamlake/deepseek-v4.1-flash-1017` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/deepseek-v4.1-flash-260910` | 1,048,568 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/glm-5` | 202,752 | $1 | $3.2 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/glm-5.1` | 202,752 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/glm-5.2` | 1,048,566 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/GLM-5.3` | 1,048,576 | $1.4 | $4.4 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| StreamLake | `streamlake/GLM-5.3-Flash` | 1,048,576 | $0.15 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| StreamLake | `streamlake/Kimi-K2-Instruct-0905` | 224,000 | $0.571 | $2.286 | Chat; Tool calling; Prompt caching |
+| StreamLake | `streamlake/kimi-k2.6` | 262,144 | $0.95 | $4 | Chat; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/kimi-k2.7-code` | 262,144 | $0.95 | $4 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/mimo-v2.6-flash` | - | $0.14 | $0.28 | Chat; Vision; Prompt caching |
+| StreamLake | `streamlake/mimo-v2.6-pro` | - | $0.435 | $0.87 | Chat; Vision; Prompt caching |
+| StreamLake | `streamlake/minimax-m2.5` | 196,608 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching |
+| StreamLake | `streamlake/minimax-m3` | 1,000,000 | $0.6 | $2.4 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/qwen3.5-397b-a17b` | 258,048 | $0.6 | $3.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
 | StreamLake | `streamlake/qwen3.6-27b` | 229,376 | $0.6 | $3.6 | Chat; Vision; Tool calling |
 | StreamLake | `streamlake/qwen3.6-35b-a3b` | 229,376 | $0.375 | $2.25 | Chat; Vision; Tool calling |
-| StreamLake | `streamlake/qwen3.8-2.4t-a95b` | 983,616 | $2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $2.5/1M; `cache_read_input_token_cost`: $0.25/1M; `explicit_cache_read_input_token_cost`: $0.17/1M |
-| StreamLake | `streamlake/qwen3.8-27b` | 983,616 | $0.5 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_creation_input_token_cost`: $0.625/1M; `cache_read_input_token_cost`: $0.1/1M; `explicit_cache_read_input_token_cost`: $0.05/1M |
-| Tencent | `tencent/seedream-image-v5.0-flash` | - | - | - | Image generation; `output_cost_per_image`: $0.018; `output_cost_per_image_token`: $1.6/1M |
-| Tencent | `tencent/seedream-image-v5.0-lite` | - | - | - | Image generation; `output_cost_per_image`: $0.035; `output_cost_per_image_token`: $1.6/1M |
-| Tencent | `tencent/seedream-image-v5.0-pro` | - | - | - | Image generation; `output_cost_per_image`: $0.09; `output_cost_per_image_token`: $1.6/1M |
-| Together AI | `together_ai/MiniMaxAI/MiniMax-M3.1-Flash` | 1,048,576 | $0.15 | $0.6 | Chat; Prompt caching; `cache_read_input_token_cost`: $0.015/1M |
-| Weights & Biases | `wandb/reflection/Beam-1.0-501B-A23B` | 1,049,000 | $1 | $3 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1/1M |
-| Weights & Biases | `wandb/zai-org/GLM-5.3` | 1,049,000 | $1.2 | $4 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.19/1M |
-| Z.AI | `zai/glm-5v-turbo` | 200,000 | $1.2 | $4 | Chat; Reasoning; Vision; Tool calling; Prompt caching; `cache_read_input_token_cost`: $0.24/1M |
-| ZeroGPU | `zerogpu/deepseek-v4.1-flash` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.003/1M |
-| ZeroGPU | `zerogpu/glm-5.3-flash` | 1,048,576 | $0.1 | $0.35 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.015/1M |
-| ZeroGPU | `zerogpu/gpt-4.1-mini` | 1,047,576 | $0.4 | $1.6 | Chat; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.1/1M |
-| ZeroGPU | `zerogpu/gpt-5.4-nano` | 272,000 | $0.2 | $1.25 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.02/1M |
-| ZeroGPU | `zerogpu/gpt-5.6-luna` | 272,000 | $0.2 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.2/1M |
-| ZeroGPU | `zerogpu/gpt-6-luna` | 272,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; `cache_read_input_token_cost`: $0.01/1M |
-| ZeroGPU | `zerogpu/gpt-oss-120b` | 128,000 | $0.15 | $0.6 | Chat; Reasoning; Tool calling; Structured output; `cache_read_input_token_cost`: $0.03/1M |
+| StreamLake | `streamlake/qwen3.8-2.4t-a95b` | 983,616 | $2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| StreamLake | `streamlake/qwen3.8-27b` | 983,616 | $0.5 | $3 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| Tencent TokenHub | `tencent/seedream-image-v5.0-flash` | - | - | - | Image generation; `output_cost_per_image`: $0.018 |
+| Tencent TokenHub | `tencent/seedream-image-v5.0-lite` | - | - | - | Image generation; `output_cost_per_image`: $0.035 |
+| Tencent TokenHub | `tencent/seedream-image-v5.0-pro` | - | - | - | Image generation; `output_cost_per_image`: $0.09 |
+| Together AI | `together_ai/MiniMaxAI/MiniMax-M3.1-Flash` | 1,048,576 | $0.15 | $0.6 | Chat; Prompt caching |
+| Weights and Biases | `wandb/reflection/Beam-1.0-501B-A23B` | 1,049,000 | $1 | $3 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Weights and Biases | `wandb/zai-org/GLM-5.3` | 1,049,000 | $1.2 | $4 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| Z.AI | `zai/glm-5v-turbo` | 200,000 | $1.2 | $4 | Chat; Reasoning; Vision; Tool calling; Prompt caching |
+| ZeroGPU | `zerogpu/deepseek-v4.1-flash` | 1,048,576 | $0.3 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/glm-5.3-flash` | 1,048,576 | $0.1 | $0.35 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/gpt-4.1-mini` | 1,047,576 | $0.4 | $1.6 | Chat; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/gpt-5.4-nano` | 272,000 | $0.2 | $1.25 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/gpt-5.6-luna` | 272,000 | $0.2 | $1.2 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/gpt-6-luna` | 272,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
+| ZeroGPU | `zerogpu/gpt-oss-120b` | 128,000 | $0.15 | $0.6 | Chat; Reasoning; Tool calling; Structured output |
 | ZeroGPU | `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | $0.02 | $0.05 | Chat |
 | ZeroGPU | `zerogpu/LFM2.5-1.2B-Thinking` | 32,768 | $0.02 | $0.05 | Chat |
-| ZeroGPU | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | Chat; Tool calling; Structured output; `cache_read_input_token_cost`: $0.025/1M |
-| ZeroGPU | `zerogpu/llama-3.2-3b-instruct-fast` | 131,072 | $0.05 | $0.3 | Chat; `cache_read_input_token_cost`: $0.025/1M |
-| ZeroGPU | `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.1 | $0.45 | Chat; Reasoning; Tool calling; Structured output; `cache_read_input_token_cost`: $0.05/1M |
-| ZeroGPU | `zerogpu/qwen3.6-35b-a3b` | 262,144 | $0.2 | $1.5 | Chat; Reasoning; Vision; Tool calling; Structured output; `cache_read_input_token_cost`: $0.2/1M |
+| ZeroGPU | `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | $0.15 | $0.28 | Chat; Tool calling; Structured output |
+| ZeroGPU | `zerogpu/llama-3.2-3b-instruct-fast` | 131,072 | $0.05 | $0.3 | Chat |
+| ZeroGPU | `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | $0.1 | $0.45 | Chat; Reasoning; Tool calling; Structured output |
+| ZeroGPU | `zerogpu/qwen3.6-35b-a3b` | 262,144 | $0.2 | $1.5 | Chat; Reasoning; Vision; Tool calling; Structured output |
 
 </details>
 
 ### New providers
 
-- Add ai& under the `aiand/` prefix, reading `AIAND_API_KEY`, with native `/v1/messages`, model pricing, `aiand/*` wildcard listing and an Add Model entry - [PR #38958](https://github.com/BerriAI/litellm/pull/38958)
-- Add CLF AI Gateway as an OpenAI-compatible provider under the `clf_ai_gateway/` prefix, reading `CLF_AI_GATEWAY_API_KEY`, with ten priced GLM, Kimi, DeepSeek and Qwen models and the `reasoning_effort` levels each one accepts - [PR #39324](https://github.com/BerriAI/litellm/pull/39324)
-- Add StreamLake under the `streamlake/` prefix, reading `STREAMLAKE_API_KEY`, with tools and `reasoning_effort` accepted on endpoint ids, `streamlake/*` wildcard listing and rows from StreamLake's current price page - [PR #41006](https://github.com/BerriAI/litellm/pull/41006)
-- Add OpenInfer as an OpenAI-compatible provider under the `openinfer/` prefix, reading `OPENINFER_API_KEY`, with native `/v1/responses` and `/v1/messages`, tool calls on unpriced models and priced `@oi/GLM-5.3-Flash`, `@oi/Qwen3.5-27B` and `@oi/Qwen3.5-9B` - [PR #41034](https://github.com/BerriAI/litellm/pull/41034)
-- Add ZeroGPU as an OpenAI-compatible provider under the `zerogpu/` prefix, reading `ZEROGPU_API_KEY`, with ten priced text generation models and an Add Model entry - [PR #43874](https://github.com/BerriAI/litellm/pull/43874)
-- Add Hostinger Router as an OpenAI-compatible provider under the `hostinger_router/` prefix, reading `HOSTINGER_ROUTER_API_KEY`, with chat completions and embeddings, `/v1/responses` for `gpt-5.2`, `/v1/messages` for `claude-sonnet-5`, credit-based pricing and an Add Model entry - [PR #44863](https://github.com/BerriAI/litellm/pull/44863)
-- Add Nace as a Drex decisions provider under the `nace/` prefix, reading `NACE_API_KEY`, with an Add Model entry - [PR #46523](https://github.com/BerriAI/litellm/pull/46523)
-- Add OpenCode Go under the `opencode_go/` prefix with model discovery, Chat Completions, Responses, Messages and Gemini routing, session affinity and published pricing - [PR #48140](https://github.com/BerriAI/litellm/pull/48140)
-- Add Refuseless as an OpenAI-compatible provider under the `refuseless/` prefix, reading `REFUSELESS_API_KEY`, with model pricing and an Add Model entry - [PR #48497](https://github.com/BerriAI/litellm/pull/48497)
-- Add BigModel (Zhipu AI) under the `bigmodel/` prefix with native Chat Completions, Responses and Messages APIs, reading `BIGMODEL_API_KEY` and keeping a GLM Coding Plan `api_base` on chat - [PR #48563](https://github.com/BerriAI/litellm/pull/48563)
-- Add Kyma API as an OpenAI-compatible provider under the `kyma/` prefix, reading `KYMA_API_KEY`, billed from the `usage.cost` Kyma reports with 83 catalog rows as the fallback price - [PR #48756](https://github.com/BerriAI/litellm/pull/48756)
+- Add ai& as an OpenAI-compatible provider under the `aiand/` prefix, reading `AIAND_API_KEY`, listed in the Add Model form, with priced models and native `/v1/responses` and `/v1/messages` - [PR #38958](https://github.com/BerriAI/litellm/pull/38958)
+- Add CLF AI Gateway as an OpenAI-compatible provider under the `clf_ai_gateway/` prefix, reading `CLF_AI_GATEWAY_API_KEY`, listed in the Add Model form, with ten priced models - [PR #39324](https://github.com/BerriAI/litellm/pull/39324)
+- Add StreamLake as an OpenAI-compatible provider under the `streamlake/` prefix with 26 priced models, addable from the config or the Add Model page - [PR #41006](https://github.com/BerriAI/litellm/pull/41006)
+- Add OpenInfer as an OpenAI-compatible provider under the `openinfer/` prefix with priced models and native `/v1/responses` and `/v1/messages` - [PR #41034](https://github.com/BerriAI/litellm/pull/41034)
+- Add ZeroGPU as an OpenAI-compatible provider under the `zerogpu/` prefix with 13 priced models, native `/v1/responses` and an Add Model entry - [PR #43874](https://github.com/BerriAI/litellm/pull/43874)
+- Add Hostinger Router as an OpenAI-compatible provider under the `hostinger_router/` prefix for chat, responses, messages and embeddings, with prices from Hostinger's public catalog - [PR #44863](https://github.com/BerriAI/litellm/pull/44863)
+- Add an eu/jev decision API pass-through with spend tracking, so calls use the virtual key under model access checks and request-per-minute limits and are logged and priced - [PR #46875](https://github.com/BerriAI/litellm/pull/46875)
+- Add OpenCode Go as a provider that selects the right upstream API per model across chat completions, Responses and Messages, with published Go prices and live model discovery - [PR #48140](https://github.com/BerriAI/litellm/pull/48140)
+- Add Refuseless as an OpenAI-compatible provider under the `refuseless/` prefix with Chat Completions and native `/v1/responses` routes and five priced models - [PR #48497](https://github.com/BerriAI/litellm/pull/48497)
+- Add BigModel under the `bigmodel/` prefix for Chat Completions, Responses and Anthropic Messages, reading `BIGMODEL_API_KEY`, with GLM-5.3, Flash and FlashX pricing and an Admin UI credential form - [PR #48563](https://github.com/BerriAI/litellm/pull/48563)
+- Add Kyma API as an OpenAI-compatible provider under the `kyma/` prefix, billed from the `usage.cost` Kyma reports with 83 catalog rows as the fallback price, and refuse image and audio routes before calling Kyma - [Commit cd42694](https://github.com/BerriAI/litellm/commit/cd42694b48e30ab74ba6e24e83aabf4b40c041b5)
 
 ### Decisions providers
 
-- Support Entra ID auth for `Microsoft-Decision-1` on `/v1/decisions` and `/v1/systemone`, with deployment credentials taking priority over the env key - [PR #46539](https://github.com/BerriAI/litellm/pull/46539)
-- Bill an unpriced returned TypeSafe version at the requested model's rates, and answer a malformed upstream reply, such as a missing `answers` field, with a 500 naming the field - [PR #47508](https://github.com/BerriAI/litellm/pull/47508)
-- Let `typesafe/*` allowlists on keys, teams and projects cover bare Jev ids on `/typesafe` calls, and list TypeSafe Jev models in the admin model picker - [PR #47697](https://github.com/BerriAI/litellm/pull/47697)
-- Remove the 128 question cap on System One requests - [PR #47985](https://github.com/BerriAI/litellm/pull/47985)
-- Keep Decisions usage empty when the provider reports none, instead of billing a made-up zero - [PR #48261](https://github.com/BerriAI/litellm/pull/48261)
-- Explain in the warning that Cloudflare chat completions need the OpenAI-compatible `/ai/v1` endpoint when an `api_base` ending in `/ai/run` is rewritten, while decision models keep their own endpoint - [PR #48265](https://github.com/BerriAI/litellm/pull/48265)
-- Set `azure_ai/Microsoft-Decision-1` `max_input_tokens` to 32,768 - [PR #48434](https://github.com/BerriAI/litellm/pull/48434)
-- Support LM Studio decision models - [PR #48448](https://github.com/BerriAI/litellm/pull/48448)
-- Add the Baseten `baseten-elephant-9b-latest` and `baseten-mammoth-27b-latest` decision models - [PR #48453](https://github.com/BerriAI/litellm/pull/48453)
-- Honor the `base_url` alias for custom Decisions backends - [PR #48505](https://github.com/BerriAI/litellm/pull/48505)
-- Leave out probabilities the provider omitted instead of reporting them as 0 - [PR #48524](https://github.com/BerriAI/litellm/pull/48524)
-- Reuse the Databricks base OAuth token cache for Decisions calls instead of a separate one - [PR #48527](https://github.com/BerriAI/litellm/pull/48527)
-- Add keyless Microsoft Entra authentication for Azure Decisions deployments, reusing the base Azure auth path - [PR #48529](https://github.com/BerriAI/litellm/pull/48529)
-- Accept images on `hosted_vllm` decision deployments - [PR #48621](https://github.com/BerriAI/litellm/pull/48621)
-- Catch a `ValidationError` from a malformed Decisions provider body instead of letting it escape - [PR #48662](https://github.com/BerriAI/litellm/pull/48662)
-- Price the Databricks `openjev` decision model at its published 0.6 DBU per 1M input tokens - [PR #48694](https://github.com/BerriAI/litellm/pull/48694)
-- Price the two Baseten decision models at their published input rates - [PR #48849](https://github.com/BerriAI/litellm/pull/48849)
-- Support Ollama decision models - [PR #48871](https://github.com/BerriAI/litellm/pull/48871)
-- Add the Baseten `baseten-joey-2b-latest` decision model - [PR #49123](https://github.com/BerriAI/litellm/pull/49123)
-- Honor a Decisions deployment's own `supports_audio_input` and `supports_video_input` flags over the cost map, per media kind, the way `supports_box_questions` already works - [PR #49207](https://github.com/BerriAI/litellm/pull/49207)
-
-### Amazon Bedrock
-
-- Omit the system prompt from Bedrock audio transcription and report Converse token usage, so transcriptions are no longer billed at $0 - [PR #41565](https://github.com/BerriAI/litellm/pull/41565)
-- Route Bedrock model ids from families with no Invoke transformation (MiniMax, NVIDIA, Writer, Z.AI, Google, xAI) to Converse when they are newer than the cost map, instead of failing with `BedrockError` - [PR #43290](https://github.com/BerriAI/litellm/pull/43290)
-- Apply the 16 token `maxTokens` floor to Kimi K3 on Converse - [PR #43875](https://github.com/BerriAI/litellm/pull/43875)
-- Drop the `dangerous-tool-use` beta on Invoke requests that carry structured outputs or a strict tool without safeguards, which Bedrock rejects as an invalid beta flag on Claude models before Opus 4.7 - [PR #44471](https://github.com/BerriAI/litellm/pull/44471)
-- Stop a chat-mode Bedrock Mantle deployment from rewriting the shared Responses routing row, which moved other deployments and SDK calls onto Chat Completions until restart - [PR #46263](https://github.com/BerriAI/litellm/pull/46263)
-- Keep `reasoning_content`, signed `thinking_blocks`, reasoning token counts and the `json_mode` finish reason on Converse fake streams for `json_schema` requests - [PR #46863](https://github.com/BerriAI/litellm/pull/46863)
-- Send `json_schema` as native structured output on Bedrock Claude models whose profiles accept it, Haiku 5.5 and Sonnet 5.5 included, under the new `supports_bedrock_native_structured_output` key, so adaptive thinking comes back; Fable 5 and schemas native output cannot hold, such as recursive `$ref`, keep the json tool - [PR #46870](https://github.com/BerriAI/litellm/pull/46870)
-- Backfill Priority and Batch prices on Bedrock rows from the AWS offer index - [PR #46987](https://github.com/BerriAI/litellm/pull/46987)
-- Set `supports_none_reasoning_effort` on the Bedrock `gpt-6-sol` and `gpt-6-luna` rows - [PR #47000](https://github.com/BerriAI/litellm/pull/47000)
-- Apply `bedrock_request_metadata_fields` on the `/bedrock` pass-through routes and answer malformed caller metadata with Bedrock's `ValidationException` 400 - [PR #47040](https://github.com/BerriAI/litellm/pull/47040)
-- Send native structured output first on Claude Opus 4.8 and Sonnet 5, and retry with the json tool when Bedrock rejects it, including schemas Bedrock cannot compile - [PR #47100](https://github.com/BerriAI/litellm/pull/47100)
-- Add the July 7, 2026 end-of-life date to the Llama 3.1 405B and Llama 3.2 rows - [PR #47196](https://github.com/BerriAI/litellm/pull/47196)
-- Take the 200K context window for Claude Sonnet 4 from the Bedrock model card - [PR #47202](https://github.com/BerriAI/litellm/pull/47202)
-- Take the 1,050,000 token context window from the Daybreak Mantle model cards - [PR #47211](https://github.com/BerriAI/litellm/pull/47211)
-- Take the Grok 4.7 and Pegasus v1.5 context windows from the Bedrock model cards - [PR #47226](https://github.com/BerriAI/litellm/pull/47226)
-- Add the `aws_bedrock_control_plane_endpoint` deployment setting so batch create, retrieve and cancel can go through a VPC endpoint or compatible gateway - [PR #47260](https://github.com/BerriAI/litellm/pull/47260)
-- Take the 256K context window for Qwen3 Coder 480B from the Bedrock model card - [PR #47283](https://github.com/BerriAI/litellm/pull/47283)
-- Resolve AWS region, endpoint and bearer token lookups off the event loop, so a slow secret manager read no longer stalls other requests on the worker - [PR #47331](https://github.com/BerriAI/litellm/pull/47331)
-- Apply the deployment's `guardrailConfig` on the `/bedrock` pass-through Converse and Invoke routes, in the body for Converse and as `X-Amzn-Bedrock-Guardrail*` headers for Invoke, replacing any guardrail the caller sent - [PR #47429](https://github.com/BerriAI/litellm/pull/47429)
-- Add model end-of-life dates for Writer Palmyra X4 and X5 and TwelveLabs Pegasus v1.2 - [PR #47462](https://github.com/BerriAI/litellm/pull/47462)
-- Declare the Bedrock `gpt-oss` rows text-only, so modality routing sends image requests elsewhere - [PR #48149](https://github.com/BerriAI/litellm/pull/48149)
-- Price `bedrock/claude_platform/*` calls from their own cost map rows and apply the 1.1x `inference_geo` multiplier to US-only inference - [PR #48150](https://github.com/BerriAI/litellm/pull/48150)
-- Take Nova Sonic context and output limits from the Bedrock model cards - [PR #48247](https://github.com/BerriAI/litellm/pull/48247)
-- Price native `guardrailConfig` trace usage into spend and `x-litellm-response-cost` on chat, Responses and pass-through, and apply `guardrailConfig` on `/v1/messages` - [PR #48278](https://github.com/BerriAI/litellm/pull/48278)
-- Add the `global.` and `us.` `openai.gpt-6.1-terra` rows - [PR #48441](https://github.com/BerriAI/litellm/pull/48441)
-- Set Bedrock `gpt-6.1-terra` `max_input_tokens` to 1,050,000, set the gpt-5.x and gpt-6 rows to the card context window minus max output, and add a Mantle `token_count_model` to the `bedrock_mantle` `claude-opus-5-5` rows - [PR #48479](https://github.com/BerriAI/litellm/pull/48479)
-- Add `token_count_model` to three Mantle-native Claude rows - [PR #48682](https://github.com/BerriAI/litellm/pull/48682)
-- Retry once without `strict` when Bedrock rejects strict tool schemas under `drop_params` - [PR #48733](https://github.com/BerriAI/litellm/pull/48733)
-- Send region-prefixed embedding model ids and model ARNs to that region without the prefix and bill the region's price - [PR #49072](https://github.com/BerriAI/litellm/pull/49072)
-- Backfill the published regional service tier prices on Bedrock rows - [PR #49113](https://github.com/BerriAI/litellm/pull/49113)
-- Set `gpt-5.6-cyber` Mantle `max_input_tokens` to 922,000 and list `/v1/chat/completions` for it, matching the model card - [PR #49350](https://github.com/BerriAI/litellm/pull/49350)
-- Restore the `eu.anthropic.claude-haiku-4-5-20251001-v1:0` row, so EU profile calls bill at the regional price instead of falling back to the base Haiku 4.5 row - [PR #49375](https://github.com/BerriAI/litellm/pull/49375)
-- Raise the GovCloud West Llama 3 max output tokens to the model card's 8K - [PR #49543](https://github.com/BerriAI/litellm/pull/49543)
-- Default `max_tokens` on Bedrock Invoke and Mantle Claude to the model's own output cap, read from the deployment's `model_info.max_output_tokens`, the ARN `base_model` or the Mantle row, instead of a fixed 128k that smaller models reject; `litellm.AnthropicConfig(max_tokens)` still applies, bounded by the deployment's cap - [PR #49692](https://github.com/BerriAI/litellm/pull/49692)
-
-### Anthropic
-
-- Stop inserting the empty-content placeholder text into assistant turns that carry only tool calls - [PR #34822](https://github.com/BerriAI/litellm/pull/34822)
-- Send PDF `image_url` content to Claude as document blocks - [PR #46984](https://github.com/BerriAI/litellm/pull/46984)
-- Handle `json_schema` envelope edge cases on the Claude json tool path, including non-ASCII text, cut Bedrock Invoke streams and a non-object `output_format` under `drop_params` - [PR #47478](https://github.com/BerriAI/litellm/pull/47478)
-- Keep a `redacted_thinking` content item on every Claude route, Bedrock included, and replay each thinking block once in its original position - [PR #47489](https://github.com/BerriAI/litellm/pull/47489)
-- Raise `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS` from 4,096 to 128,000 - [PR #48502](https://github.com/BerriAI/litellm/pull/48502)
-- Let `drop_params` drop `speed` on `claude-opus-4-7`, since Anthropic removed its fast mode - [PR #48764](https://github.com/BerriAI/litellm/pull/48764)
-- Drop beta-gated body fields such as `thinking.block_binding`, `thinking.display`, `output_config` and tool addition or removal blocks when a provider leg drops their `anthropic-beta` value, so the request degrades instead of failing with a 400 - [PR #48793](https://github.com/BerriAI/litellm/pull/48793)
-- Map the `model_context_window_exceeded` stop reason to finish reason `length` on chat and Responses - [PR #48874](https://github.com/BerriAI/litellm/pull/48874)
-- Map `pause_turn` to finish reason `length` with the raw `stop_reason` kept in `provider_specific_fields`, report a paused Responses turn as incomplete, and return a refusal's `stop_details.explanation` in `message.refusal` - [PR #49192](https://github.com/BerriAI/litellm/pull/49192)
-- Answer 400 naming a non-string `role` or `tool_call_id` instead of a 500 from the Claude chat conversion - [PR #49237](https://github.com/BerriAI/litellm/pull/49237)
-
-### Azure
-
-- Keep OpenAI `prompt_cache_breakpoint` marks on the Azure AI Foundry chat completions path - [PR #45299](https://github.com/BerriAI/litellm/pull/45299)
-- Add `responses_api_version` so Azure Responses calls stop using a deployment's dated chat `api_version`, refresh provider model sets after `register_model`, and align the Azure `gpt-6.1-sol` reasoning effort flags with OpenAI - [PR #46377](https://github.com/BerriAI/litellm/pull/46377)
-- Reuse the cached Entra token provider on the Azure Responses path instead of building a new credential per request when `enable_azure_ad_token_refresh` is on - [PR #46421](https://github.com/BerriAI/litellm/pull/46421)
-- Count Grok reasoning tokens in `completion_tokens` on `azure_ai/grok-*`, streaming and non-streaming - [PR #46969](https://github.com/BerriAI/litellm/pull/46969)
-- Set the `azure/container` code interpreter session price from the Azure OpenAI pricing page - [PR #47292](https://github.com/BerriAI/litellm/pull/47292)
-- Cache the remaining per-request Entra credentials and keep token refresh off the event loop - [PR #47348](https://github.com/BerriAI/litellm/pull/47348)
-- Reach Azure AI Foundry agents through the project Responses API, keeping project-endpoint auth, system prompts and `agent_reference` checks on follow-up turns - [PR #47717](https://github.com/BerriAI/litellm/pull/47717)
-- Add `azure_ai/MAI-Code-1.1-Flash` - [PR #47779](https://github.com/BerriAI/litellm/pull/47779)
-- Drop `tool_reference` parts from tool messages on Azure AI chat - [PR #48032](https://github.com/BerriAI/litellm/pull/48032)
-- Forward the `thinking-binding-controls-2026-08-01` beta header to Azure AI Foundry - [PR #48033](https://github.com/BerriAI/litellm/pull/48033)
-- Accept explicit `/openai/v1` and `/openai/v1/responses` `api_base` values for Azure Responses calls - [PR #48118](https://github.com/BerriAI/litellm/pull/48118)
-- Set Azure `gpt-chat-latest` `max_input_tokens` to 128,000 - [PR #48252](https://github.com/BerriAI/litellm/pull/48252)
-- Declare audio input and output support on the Azure audio snapshot rows - [PR #48475](https://github.com/BerriAI/litellm/pull/48475)
-- Map Azure's `context_length_exceeded` error code to `ContextWindowExceededError` - [PR #48616](https://github.com/BerriAI/litellm/pull/48616)
-- Share one Entra token request per worker when concurrent cold requests hit a cached Azure token provider - [PR #48769](https://github.com/BerriAI/litellm/pull/48769)
-- Add batch prices to the unversioned Azure `o3`, `o4-mini`, `o3-mini`, `gpt-4o` and `gpt-4o-mini` rows - [PR #49182](https://github.com/BerriAI/litellm/pull/49182)
-
-### Baseten
-
-- Forward `reasoning_effort` to the Baseten Model API instead of dropping it or raising `UnsupportedParamsError` - [PR #40152](https://github.com/BerriAI/litellm/pull/40152)
-- List current Baseten Model APIs for `baseten/*` and `/v1/models` instead of three retired 2023 deployment ids - [PR #46945](https://github.com/BerriAI/litellm/pull/46945)
-- Add Baseten and Nebius rows for Reflection `Beam-1.0` - [PR #46991](https://github.com/BerriAI/litellm/pull/46991)
-- Add the Baseten `DeepSeek-V4.1-Flash-1017` models - [PR #47252](https://github.com/BerriAI/litellm/pull/47252)
-- Update `reflection/Beam-1.0` prices from the Baseten models API - [PR #47784](https://github.com/BerriAI/litellm/pull/47784)
-
-### ChatGPT
-
-- Forward each Codex user's own ChatGPT OAuth login through the proxy, with per-model `chatgpt_auth_file` for multiple ChatGPT accounts - [PR #41522](https://github.com/BerriAI/litellm/pull/41522)
-- Derive the upstream session id from `prompt_cache_key`, so repeat Codex turns hit ChatGPT's prompt cache - [PR #42014](https://github.com/BerriAI/litellm/pull/42014)
-- Route ChatGPT models missing from the cost map through the Responses API - [PR #48244](https://github.com/BerriAI/litellm/pull/48244)
-- Forward client credentials for ChatGPT image generation - [PR #48522](https://github.com/BerriAI/litellm/pull/48522)
-- Send system input items to Codex as `developer`, which the backend accepts, instead of answering 400 - [PR #48668](https://github.com/BerriAI/litellm/pull/48668)
-
-### Cohere
-
-- Send a string `stop` as a one-item `stop_sequences` list - [PR #47091](https://github.com/BerriAI/litellm/pull/47091)
-- Emit streamed tool calls from Cohere v2 `tool-call-start` and `tool-call-delta` chunks and map `TOOL_CALL` to finish reason `tool_calls` - [PR #47794](https://github.com/BerriAI/litellm/pull/47794)
-- Price native Cohere v2 embed calls on Azure AI Foundry relays and the Cohere pass-through from `meta.billed_units` - [PR #48978](https://github.com/BerriAI/litellm/pull/48978)
-
-### Databricks
-
-- Call the workspace's native Anthropic route for Claude on `/v1/messages`, forwarding `anthropic-beta`, `anthropic-version` and `safeguards`, and route Unity Catalog Claude names to the AI Gateway messages route - [PR #46091](https://github.com/BerriAI/litellm/pull/46091)
-- Stream Claude `json_schema` answers as text on every Databricks streaming path, ending with finish reason `stop` - [PR #47424](https://github.com/BerriAI/litellm/pull/47424)
-- Sync Databricks model prices - [PR #48884](https://github.com/BerriAI/litellm/pull/48884)
-- Add Databricks priority pay-per-token prices - [PR #48891](https://github.com/BerriAI/litellm/pull/48891)
-- Add retirement dates for Databricks DeepSeek V4 Flash (0731), V4 Pro (0813) and Inkling - [PR #49124](https://github.com/BerriAI/litellm/pull/49124)
-
-### DashScope
-
-- Price explicit Qwen cache hits through `explicit_cache_read_input_token_cost`, keeping `cache_read_input_token_cost` as the implicit cache rate - [PR #45567](https://github.com/BerriAI/litellm/pull/45567)
-- Derive every DashScope surface from one domain, base or `/api/v1` value, and add a native Anthropic Messages config at `/apps/anthropic` - [PR #47812](https://github.com/BerriAI/litellm/pull/47812)
-- Add DashScope image edits and text-to-speech, billing reported speech characters and input images - [PR #48998](https://github.com/BerriAI/litellm/pull/48998)
-
-### DeepSeek
-
-- Pass `reasoning_effort` through to the DeepSeek API instead of collapsing it to a thinking on or off toggle - [PR #38736](https://github.com/BerriAI/litellm/pull/38736)
-
-### Gemini and Vertex AI
-
-- Support Gemini 3.1 Flash TTS on Vertex AI speech, keeping existing Gemini TTS models and voice mappings - [PR #31915](https://github.com/BerriAI/litellm/pull/31915)
-- Log the Gemini 3 sampling deprecation once per model per worker - [PR #40868](https://github.com/BerriAI/litellm/pull/40868)
-- Call Gemini once per TTS request and log the speech bridge's token usage and spend - [PR #44551](https://github.com/BerriAI/litellm/pull/44551)
-- Forward and auto-add the compaction, thinking display and tool change betas on Claude routes for Vertex AI and Azure AI - [PR #44747](https://github.com/BerriAI/litellm/pull/44747)
-- Build the `cachedContents` collection URL under a custom `api_base`, keeping gateway prefixes and the publisher model's location - [PR #44783](https://github.com/BerriAI/litellm/pull/44783)
-- Price streamed Vertex pass-through calls with the regional uplift instead of the global rate - [PR #44795](https://github.com/BerriAI/litellm/pull/44795)
-- Send integer enums to Gemini as `INTEGER` with `format: enum` instead of dropping them - [PR #44908](https://github.com/BerriAI/litellm/pull/44908)
-- Remember created and found context caches until shortly before they expire instead of listing `cachedContents` on every request, rebuilding once when generation rejects a remembered cache - [PR #46857](https://github.com/BerriAI/litellm/pull/46857)
-- Match only standalone 403 status tokens when mapping Vertex errors, instead of any substring - [PR #47134](https://github.com/BerriAI/litellm/pull/47134)
-- Drop the placeholder `deprecation_date` from `gemini-3.8-flash` - [PR #47294](https://github.com/BerriAI/litellm/pull/47294)
-- Drop the placeholder `deprecation_date` from `gemini-4-argon` - [PR #47404](https://github.com/BerriAI/litellm/pull/47404)
-- Drop the placeholder `deprecation_date` from `gemini-3.8-live` - [PR #47447](https://github.com/BerriAI/litellm/pull/47447)
-- Add `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to set the output budget for Gemini text requests that send no limit - [PR #47542](https://github.com/BerriAI/litellm/pull/47542)
-- Honor `supports_sampling_params` on the Gemini and Vertex path and set it to false on Gemini 3.6 Flash, 3.5 Flash-Lite and later, dropping `temperature`, `top_p` and `top_k` under `drop_params` - [PR #47645](https://github.com/BerriAI/litellm/pull/47645)
-- Drop the flex prices from `gemini-nano-banana-2.1` - [PR #47666](https://github.com/BerriAI/litellm/pull/47666)
-- Add `thought_signature_in_tool_call_id` to keep tool call ids short for clients that cap them, and pair a tool result with its call when the client re-adds the signature - [PR #47692](https://github.com/BerriAI/litellm/pull/47692)
-- Add a `deprecation_date` to the retired `veo-2.0-generate-001` - [PR #47847](https://github.com/BerriAI/litellm/pull/47847)
-- Add Vertex batch rates for the Llama 4 MaaS models - [PR #48085](https://github.com/BerriAI/litellm/pull/48085)
-- Bill `gemini-2.5-flash-native-audio` video input at the audio and video rate - [PR #48248](https://github.com/BerriAI/litellm/pull/48248)
-- Send tool result media beside the function response for Gemini models older than Gemini 3 - [PR #48428](https://github.com/BerriAI/litellm/pull/48428)
-- Reuse the Vertex credential cache on rerank - [PR #48430](https://github.com/BerriAI/litellm/pull/48430)
-- Bound how long the shared Vertex credential cache keeps entries - [PR #48442](https://github.com/BerriAI/litellm/pull/48442)
-- Keep requested image aspect ratios and pick each Gemini image model's supported size tier - [PR #48463](https://github.com/BerriAI/litellm/pull/48463)
-- Keep images and files with their MIME type in tool results and history across Responses, chat and Gemini conversions, and answer malformed media with a sanitized 400 - [PR #48484](https://github.com/BerriAI/litellm/pull/48484)
-- Resolve Vertex `/v1/messages` authentication off the event loop - [PR #48523](https://github.com/BerriAI/litellm/pull/48523)
-- Drop the placeholder retirement date from `gemini-3.1-flash-lite-image` - [PR #48587](https://github.com/BerriAI/litellm/pull/48587)
-- Forward request timeouts on Gemini and Vertex embeddings - [PR #48690](https://github.com/BerriAI/litellm/pull/48690)
-- Keep every grounding web source in annotations instead of only the first chunk's URL - [PR #48745](https://github.com/BerriAI/litellm/pull/48745)
-- Accept Google's current Managed Agents fields on create, get, delete and `list_versions`, and forward `agent_config` on interactions - [PR #48750](https://github.com/BerriAI/litellm/pull/48750)
-- Send Vertex Claude labels as the `X-Vertex-AI-Labels` header instead of the request body - [PR #48753](https://github.com/BerriAI/litellm/pull/48753)
-- Split Gemini and Vertex SSE lines only on CR and LF, so text holding U+2028 no longer breaks the stream, and keep merged think tags balanced - [PR #48755](https://github.com/BerriAI/litellm/pull/48755)
-- Send the caller's `anthropic-version` in the Vertex Claude `/v1/messages` body instead of the header, which Vertex rejected with a 400 - [PR #48814](https://github.com/BerriAI/litellm/pull/48814)
-- Add batch above 200K and image output batch prices for Gemini models - [PR #48945](https://github.com/BerriAI/litellm/pull/48945)
-- Bill Claude web search per request on Vertex deployments priced in `model_info`, instead of the Gemini grounding calculator - [PR #49160](https://github.com/BerriAI/litellm/pull/49160)
-- Flag `supports_computer_use` on the four models Google's computer use docs list - [PR #49252](https://github.com/BerriAI/litellm/pull/49252)
-- Flag `supports_computer_use` on the Gemini 3 Flash preview, 3.5, 3.6, 3.7 and 3.8 Flash, 3.5 Flash-Lite, Robotics ER 2 preview and `gemini/gemini-4-argon` rows - [PR #49297](https://github.com/BerriAI/litellm/pull/49297)
-- Add the batch image output price to `gemini-nano-banana-2.1` and `gemini-3.1-flash-lite-image` - [PR #49317](https://github.com/BerriAI/litellm/pull/49317)
-- Add batch, flex and priority text output prices to `gemini-2.5-flash-image` - [PR #49358](https://github.com/BerriAI/litellm/pull/49358)
-
-### GitHub Copilot
-
-- Treat a malformed or non-UTF-8 `api-key.json` like a missing one, so the request refreshes or prints the login hint - [PR #44723](https://github.com/BerriAI/litellm/pull/44723)
-- Backfill `github_copilot` prices from the Copilot pricing table - [PR #47085](https://github.com/BerriAI/litellm/pull/47085)
-- Refresh the `github_copilot` cost map rows - [PR #47254](https://github.com/BerriAI/litellm/pull/47254)
-- Add a 2026-11-16 `deprecation_date` to `github_copilot/claude-opus-4.8` - [PR #47370](https://github.com/BerriAI/litellm/pull/47370)
-- Add 2026-10-19 deprecation dates to the GitHub Copilot models retired that day, including `gpt-5-mini`, `gpt-5.4`, `gpt-5.5` and `grok-4.5` - [PR #47487](https://github.com/BerriAI/litellm/pull/47487)
-- Add a 2026-06-01 `deprecation_date` to `github_copilot/gpt-4.1` - [PR #47492](https://github.com/BerriAI/litellm/pull/47492)
-- Support a GHE.com host on per-user Copilot credentials through `github_copilot_host` - [PR #47610](https://github.com/BerriAI/litellm/pull/47610)
-- Add a 2026-11-16 `deprecation_date` to `github_copilot/claude-opus-4.8-fast` - [PR #48251](https://github.com/BerriAI/litellm/pull/48251)
-- Add `github_copilot/gpt-6.1-terra` and raise the GitHub Copilot gpt-6 `max_input_tokens` to 922,000 - [PR #48450](https://github.com/BerriAI/litellm/pull/48450)
-
-### Mistral
-
-- Forward `prompt_cache_key` to the Mistral API and accept `reasoning_effort` on devstral and code-agent models - [PR #47432](https://github.com/BerriAI/litellm/pull/47432)
-- Add `mistral/zai-glm-5-3-flash` to the cost map - [PR #48270](https://github.com/BerriAI/litellm/pull/48270)
-- Replay earlier assistant reasoning to Mistral as a thinking chunk inside `content`, only for models that accept it - [PR #48778](https://github.com/BerriAI/litellm/pull/48778)
-- Price `mistral-large-4` at its list price now that the launch sale has ended, since calls were billed at about half the real cost - [PR #48825](https://github.com/BerriAI/litellm/pull/48825)
-- Add `mistral/deepseek-v4-1-flash-1017` - [PR #48879](https://github.com/BerriAI/litellm/pull/48879)
-
-### Ollama
-
-- Forward `api_key`, headers and timeout on native Ollama embeddings - [PR #48707](https://github.com/BerriAI/litellm/pull/48707)
-- Forward assistant tool call ids in `ollama_chat` requests - [PR #49278](https://github.com/BerriAI/litellm/pull/49278)
-- Price `ollama/` and `ollama_chat/` calls from the local cost map, free when unmapped, instead of querying the Ollama server during cost calculation - [Commit 322457c](https://github.com/BerriAI/litellm/commit/322457c62b76e839e100d385e96cb341cd763d3f)
-
-### OpenAI
-
-- Honor per-deployment workload identity on non-chat OpenAI routes - [PR #39966](https://github.com/BerriAI/litellm/pull/39966)
-- Route `gpt-transcribe` to the GPT audio transcription config and bill it from `usage.seconds` when no duration is known - [PR #44021](https://github.com/BerriAI/litellm/pull/44021)
-- Return provider response headers on non-streaming OpenAI-compatible chat completions, leaving out header values HTTP cannot carry - [PR #46928](https://github.com/BerriAI/litellm/pull/46928)
-- Send chat completions through the OpenAI client's `post`, so the SDK's per-message param transform no longer holds the event loop on large prompts - [PR #46967](https://github.com/BerriAI/litellm/pull/46967)
-- Return the served `service_tier` on `aiohttp_openai` responses - [PR #47263](https://github.com/BerriAI/litellm/pull/47263)
-- Log a warning naming the model, the level and the fix when the GPT-5 reasoning effort gate drops `reasoning_effort` under `drop_params` - [PR #47761](https://github.com/BerriAI/litellm/pull/47761)
-- Update `gpt-6-luna` Decisions cache rates from the Decisions guide - [PR #48066](https://github.com/BerriAI/litellm/pull/48066)
-- Add the 12-hour cache write rate for `gpt-5.6-cyber` - [PR #48246](https://github.com/BerriAI/litellm/pull/48246)
-- Add OpenAI batch and ultrafast 12-hour cache write rates for the GPT-6 and GPT-5.6 families - [PR #48433](https://github.com/BerriAI/litellm/pull/48433)
-- Remove the `dall-e-2` and `dall-e-3` code paths after OpenAI's shutdown; `image_generation` without a model now fails locally with `model is required`, and image edits and variations no longer send `dall-e-2` - [PR #48703](https://github.com/BerriAI/litellm/pull/48703)
-- Drop the `gpt-5-nano` priority input price OpenAI does not sell, which showed 50x the standard rate in `/model/info` and SDK estimates - [PR #48763](https://github.com/BerriAI/litellm/pull/48763)
-
-### OpenCode Go
-
-- Forward caller-supplied stable session metadata to OpenCode across Chat Completions, Responses and Messages - [PR #48121](https://github.com/BerriAI/litellm/pull/48121)
-- Bill OpenCode Go requests from the reported `usage.opencode.list_cost`, keeping static rows as the fallback - [PR #48254](https://github.com/BerriAI/litellm/pull/48254)
-
-### Abliteration
-
-- Add Abliteration model pricing and capabilities and list the provider in the Add Model form - [PR #48498](https://github.com/BerriAI/litellm/pull/48498)
+- Add Nace Drex as a Decisions provider, listed in the Add Model form with Drex models and the decision-model connection test - [PR #46523](https://github.com/BerriAI/litellm/pull/46523)
+- Support Entra ID auth for `azure_ai` Microsoft-Decision-1 on `/v1/decisions` and `/v1/systemone`, so an API key is no longer required - [PR #46539](https://github.com/BerriAI/litellm/pull/46539)
+- Bill an unpriced returned TypeSafe version at the requested model's rates instead of $0, and name the missing or null `answers` field in malformed System One replies with a 500 - [PR #47508](https://github.com/BerriAI/litellm/pull/47508)
+- Remove the cap on how many questions one System One request can carry - [Commit 1e6dc81](https://github.com/BerriAI/litellm/commit/1e6dc8176929b065fbb77dcbbf3416c3068fad04)
+- Set `gpt-6-luna` Decisions cache rates to the standard cached and 30m write rates, so cached reads bill at 0.01 USD per 1M tokens - [PR #48066](https://github.com/BerriAI/litellm/pull/48066)
+- Keep missing token usage and SDK cost unknown on native Decisions calls instead of reporting zero tokens and a $0 cost - [PR #48261](https://github.com/BerriAI/litellm/pull/48261)
+- Add LM Studio decision models on the Decisions routes and SDK calls through LM Studio's native System One endpoint, with optional bearer authentication - [PR #48448](https://github.com/BerriAI/litellm/pull/48448)
+- Send `/v1/decisions` and `/v1/systemone` requests to a custom backend's `base_url` instead of returning a misleading authentication error - [PR #48505](https://github.com/BerriAI/litellm/pull/48505)
+- Keep missing choice and score probabilities absent in Decisions responses while preserving explicit `0.0` values - [PR #48524](https://github.com/BerriAI/litellm/pull/48524)
+- Handle an invalid JSON body from a Decisions provider in `transform_decisions_response` instead of raising an unhandled `ValidationError` - [PR #48662](https://github.com/BerriAI/litellm/pull/48662)
+- Support Ollama decision models on the Decisions endpoints and the Python SDK without the hosted-vLLM workaround, keeping both Ollama prefixes as the provider in spend logs - [PR #48871](https://github.com/BerriAI/litellm/pull/48871)
 
 ### ai&
 
-- Show ai&'s name and logo in the dashboard and retire `deepseek-v4-flash`, `glm-5.2` and `kimi-k2.7-code` from its model list - [PR #49158](https://github.com/BerriAI/litellm/pull/49158)
+- Show ai& by its name and logo in the Admin UI, drop retired ai& models from `aiand/*` listings and health checks on their date, and price `deepseek-v4.1-flash-1017` and `meta/muse-spark-open` - [PR #49158](https://github.com/BerriAI/litellm/pull/49158)
 
-### AWS Polly
+### Amazon Bedrock
 
-- Read the Polly engine from the bare model name, so `standard` and other engines are no longer sent as `neural` - [PR #47963](https://github.com/BerriAI/litellm/pull/47963)
+- Omit the system prompt from Bedrock Voxtral transcription and report its token usage, so `/v1/audio/transcriptions` stops returning 400 and spend is no longer $0 - [PR #41565](https://github.com/BerriAI/litellm/pull/41565)
+- Route a Bedrock model id with no Invoke provider to Converse, so a model missing from the cost map no longer answers 404 `Unknown provider=None` - [PR #43290](https://github.com/BerriAI/litellm/pull/43290)
+- Raise `maxTokens` to Bedrock's minimum of 16 for Kimi K3 on Converse, so Claude Code's `/model` check with `max_tokens: 1` no longer returns 400 - [PR #43875](https://github.com/BerriAI/litellm/pull/43875)
+- Drop the `dangerous-tool-use-2026-09-03` beta from Bedrock Invoke requests without `safeguards`, so Claude Code auto mode no longer gets 400 `invalid beta flag` - [PR #44471](https://github.com/BerriAI/litellm/pull/44471)
+- Return a 400 that names the bad line for malformed Bedrock batch JSONL input instead of a 500 with a raw Python error - [PR #45992](https://github.com/BerriAI/litellm/pull/45992)
+- Stop a `mode: chat` or `mode: responses` Mantle deployment from rewriting its siblings' routing, so each deployment's own `model_info.mode` decides between Chat Completions and the Responses API - [PR #46263](https://github.com/BerriAI/litellm/pull/46263)
+- Keep reasoning, thinking blocks and `reasoning_tokens` on fake streams, and end JSON-mode fake streams on `stop` instead of `finish_reason="tool_calls"` with no tool calls - [PR #46863](https://github.com/BerriAI/litellm/pull/46863)
+- Use native structured output on Bedrock Haiku 5.5 and Sonnet 5.5 and stop the 400s on JSON schema requests for Fable 5 and `minimum`-style limits on Sonnet 4.6 - [PR #46870](https://github.com/BerriAI/litellm/pull/46870)
+- Send native structured output first on Bedrock Opus 4.8 and Sonnet 5 so `json_schema` requests keep their reasoning, and retry once with the json tool when Bedrock rejects the native request - [PR #47100](https://github.com/BerriAI/litellm/pull/47100)
+- Mark the Bedrock, us-gov and Bedrock Mantle gpt-oss rows `supports_vision: false`, so auto router `modality_routing` sends image requests to a vision tier instead of a Bedrock 400 - [PR #48149](https://github.com/BerriAI/litellm/pull/48149)
+- Price `bedrock/claude_platform/<model>` calls from their own cost map rows at Claude API rates, so Claude Platform on AWS requests no longer log $0 spend - [PR #48150](https://github.com/BerriAI/litellm/pull/48150)
+- Set context window and max output limits for `amazon.nova-2-5-sonic` and `amazon.nova-2-sonic-v1:0` from the Bedrock model cards - [PR #48247](https://github.com/BerriAI/litellm/pull/48247)
+- Add the `global.openai.gpt-6.1-terra` and `us.openai.gpt-6.1-terra` Bedrock inference profiles to the cost map - [PR #48441](https://github.com/BerriAI/litellm/pull/48441)
+- Correct `max_input_tokens` to 922000 on Bedrock OpenAI GPT rows and add a `token_count_model` to the two `bedrock_mantle` `claude-opus-5-5` rows - [PR #48479](https://github.com/BerriAI/litellm/pull/48479)
+- Add `token_count_model` to three Mantle-native Claude models, so token counting for them runs in an allowed region - [PR #48682](https://github.com/BerriAI/litellm/pull/48682)
+- Retry without `strict` when Bedrock rejects strict tool schemas and `drop_params` is on, instead of returning the 400 - [Commit a0c490e](https://github.com/BerriAI/litellm/commit/a0c490ea5471c8ef2c09b26e0ea744fe1de9961a)
+- Route `bedrock/<region>/<embedding model>` to that region with the bare model id and bill that region's price, so AWS no longer rejects it with `The provided model identifier is invalid` - [PR #49072](https://github.com/BerriAI/litellm/pull/49072)
+- Add the published Priority, Batch and Flex prices missing from Bedrock regional rows, so tiered requests bill AWS's rates instead of falling back to Standard - [PR #49113](https://github.com/BerriAI/litellm/pull/49113)
+- Align the limits and supported endpoints of `bedrock_mantle/openai.gpt-5.6-cyber` with its Bedrock model card - [PR #49350](https://github.com/BerriAI/litellm/pull/49350)
+- Restore the `eu.anthropic.claude-haiku-4-5-20251001-v1:0` cost map row, so EU Bedrock calls are billed at the EU price and exact-name lookups work again - [PR #49375](https://github.com/BerriAI/litellm/pull/49375)
+- Raise max output tokens on two GovCloud West Llama 3 rows to the 8K on their model card - [PR #49543](https://github.com/BerriAI/litellm/pull/49543)
+- Default `max_tokens` on Bedrock Invoke and Mantle Claude to the deployment's `model_info.max_output_tokens`, then the mapped model limit, so long answers are not cut at 4096 and Haiku 4.5 stops answering 400 - [PR #49692](https://github.com/BerriAI/litellm/pull/49692)
+
+### Anthropic
+
+- Stop adding the `[System: ...]` placeholder to Claude assistant turns that carry tool calls or non-text blocks, so the model no longer echoes it back - [PR #34822](https://github.com/BerriAI/litellm/pull/34822)
+- Add the compaction, thinking display and tool change betas for Claude on `vertex_ai` and `azure_ai` when a request uses them, so those requests stop returning 400 - [PR #44747](https://github.com/BerriAI/litellm/pull/44747)
+- Send PDF `image_url` content on `/v1/chat/completions` to Claude as document blocks, including PDFs served with extra content type parameters, instead of an image block that Anthropic and Vertex AI reject with a 400 - [PR #46984](https://github.com/BerriAI/litellm/pull/46984)
+- Fix Claude `json_schema` answers that dropped keys listed only in `required`, came back half unwrapped, escaped non-ASCII text, or lost the closing brace on a cut stream - [PR #47478](https://github.com/BerriAI/litellm/pull/47478)
+- Keep a `redacted_thinking` content item in assistant messages on every Claude route, so Claude receives it and Bedrock Converse stops answering 400 on a doubled block - [PR #47489](https://github.com/BerriAI/litellm/pull/47489)
+- Raise the fallback `max_tokens` for Anthropic models missing from the cost map from 4096 to 128000, with `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS` still overriding it - [PR #48502](https://github.com/BerriAI/litellm/pull/48502)
+- Remove `supports_speed` from `claude-opus-4-7`, so `drop_params` drops `speed` and the request goes through instead of getting Anthropic's 400 after fast mode was removed - [PR #48764](https://github.com/BerriAI/litellm/pull/48764)
+- Add the thinking betas when `thinking.block_binding` or `display` set to `updates` is sent, and drop other beta-gated body fields such as `clear_at` under `drop_params`, so calls no longer get Anthropic's 400 - [PR #48793](https://github.com/BerriAI/litellm/pull/48793)
+- Map Anthropic's `model_context_window_exceeded` stop reason to `length` on chat and `incomplete` on Responses instead of reporting a normal `stop` - [PR #48874](https://github.com/BerriAI/litellm/pull/48874)
+- Map Claude's `pause_turn` to `length` on chat, return a refusal's explanation in `message.refusal`, `delta.refusal` and a Responses `refusal` part, and let a paused turn be resent - [PR #49192](https://github.com/BerriAI/litellm/pull/49192)
+- Return a 400 naming the bad field when a `role` or tool call id sent to Claude is not a string, instead of a 500 `unhashable type` error - [PR #49237](https://github.com/BerriAI/litellm/pull/49237)
+
+### Azure
+
+- Keep OpenAI prompt cache breakpoints on Foundry chat completions by sending text parts instead of one flattened string, so explicit cache mode caches repeats - [PR #45299](https://github.com/BerriAI/litellm/pull/45299)
+- Route Azure `/v1/responses` past dated `api_version` pins, count Grok reasoning tokens on `azure_ai`, refresh provider sets after `register_model`, and stop advertising `reasoning_effort: none` on `gpt-6.1-sol` - [PR #46377](https://github.com/BerriAI/litellm/pull/46377)
+- Reuse the cached Entra token provider on the Responses path, so Azure Responses calls stop fetching a new token on every request and blocking the proxy's event loop - [PR #46421](https://github.com/BerriAI/litellm/pull/46421)
+- Bill Grok reasoning tokens on non-streaming `azure_ai` calls whatever the deployment is named, instead of under-billing when the name lacks grok - [PR #46969](https://github.com/BerriAI/litellm/pull/46969)
+- Cache Azure Entra username and password, Bing grounding and OIDC fallback token providers, and fetch tokens off the event loop, so calls stop paying a blocking AAD round trip each - [PR #47348](https://github.com/BerriAI/litellm/pull/47348)
+- Add `azure_ai/MAI-Code-1.1-Flash` to the cost map with input, cached input and output prices from Azure - [PR #47779](https://github.com/BerriAI/litellm/pull/47779)
+- Drop `tool_reference` parts from tool messages on `azure_ai` chat, so Claude Code sessions routed to non-Claude models on Foundry stop failing with a 400 after ToolSearch runs - [PR #48032](https://github.com/BerriAI/litellm/pull/48032)
+- Forward the `thinking-binding-controls-2026-08-01` beta header to Claude on Azure AI Foundry, so `thinking.block_binding` on `/v1/messages` stops returning 400 - [PR #48033](https://github.com/BerriAI/litellm/pull/48033)
+- Accept explicit v1 base URLs for Azure `/v1/responses` deployments - [Commit 96abce8](https://github.com/BerriAI/litellm/commit/96abce842b9e90a51c1c7e44f297379d9f9f072d)
+- Set `max_input_tokens` to 128000 for `azure/gpt-chat-latest`, `azure/us/gpt-chat-latest` and `azure_ai/gpt-chat-latest`, down from 272000, to match the Azure model page - [PR #48252](https://github.com/BerriAI/litellm/pull/48252)
+- Set `max_input_tokens` to 32768 for `azure_ai/Microsoft-Decision-1` - [PR #48434](https://github.com/BerriAI/litellm/pull/48434)
+- Declare audio input and output support on both dated Azure audio models, so model metadata no longer returns null audio capabilities - [PR #48475](https://github.com/BerriAI/litellm/pull/48475)
+- Add `azure/` Decisions support at `/openai/v1/decisions` that uses Entra credentials with a refreshable token provider when no API key is set, and keep Azure API keys working - [PR #48529](https://github.com/BerriAI/litellm/pull/48529)
+- Map Azure's `context_length_exceeded` error code to `ContextWindowExceededError`, so `context_window_fallbacks` run for chat completions, Responses and embeddings - [PR #48616](https://github.com/BerriAI/litellm/pull/48616)
+- Share one Entra token request per worker across a burst of Azure requests, instead of one token fetch per request on a cold start and in a token's last five minutes - [PR #48769](https://github.com/BerriAI/litellm/pull/48769)
+- Add Batch API prices to the unversioned `azure/o3`, `azure/o4-mini`, `azure/o3-mini`, `azure/gpt-4o` and `azure/gpt-4o-mini` rows, so batch calls on those aliases no longer bill at the standard rate - [PR #49182](https://github.com/BerriAI/litellm/pull/49182)
+
+### Baseten
+
+- Forward `reasoning_effort` to the Baseten Model API instead of dropping it or raising, so callers control thinking effort on Kimi K3, DeepSeek V4, GLM and gpt-oss - [PR #40152](https://github.com/BerriAI/litellm/pull/40152)
+- List current Baseten Model APIs for `baseten/*` from the cost map and honor `check_provider_endpoint: true`, instead of three retired 2023 deployment ids - [PR #46945](https://github.com/BerriAI/litellm/pull/46945)
+- Lower the `baseten/reflection/Beam-1.0` prices to 0.40 USD input, 1.20 USD output and 0.04 USD cached input per 1M tokens, matching the Baseten models API - [PR #47784](https://github.com/BerriAI/litellm/pull/47784)
+- Add the `baseten/decision-models/baseten-elephant-9b-latest` and `baseten/decision-models/baseten-mammoth-27b-latest` Decisions models at $0 input - [PR #48453](https://github.com/BerriAI/litellm/pull/48453)
+- Price `baseten-elephant-9b-latest` and `baseten-mammoth-27b-latest` decision models at their published input rates instead of $0 - [PR #48849](https://github.com/BerriAI/litellm/pull/48849)
+- Add `baseten/decision-models/baseten-joey-2b-latest` in `decisions` mode with 16384 input tokens, vision support, 0.01 USD per 1M input tokens and no output charge - [PR #49123](https://github.com/BerriAI/litellm/pull/49123)
 
 ### Cerebras
 
-- Add the `cerebras/llama-3.1-8b` and `cerebras/llama-3.1-70b` hyphenated aliases - [PR #48158](https://github.com/BerriAI/litellm/pull/48158)
+- Add `cerebras/llama-3.1-8b` and `cerebras/llama-3.1-70b` hyphenated model names, so either spelling gets cost tracking - [PR #48158](https://github.com/BerriAI/litellm/pull/48158)
 
-### DeepInfra
+### ChatGPT
 
-- Add DeepInfra `DeepSeek-V4.1-Flash` and `DeepSeek-V4.1-Flash-1017` at the current promo rate - [PR #47132](https://github.com/BerriAI/litellm/pull/47132)
+- Forward a client's own ChatGPT subscription through the gateway, so Codex and Pi keep their ChatGPT login while using a separate gateway key, with accounts isolated and tokens never saved - [PR #41522](https://github.com/BerriAI/litellm/pull/41522)
+- Use a stable `prompt_cache_key` as the upstream ChatGPT session id, so repeat turns reuse one session and its prompt cache - [PR #42014](https://github.com/BerriAI/litellm/pull/42014)
+- Forward the caller's ChatGPT login and workspace for image generation, so Codex image requests stop asking for interactive authentication when the caller already supplied credentials - [PR #48522](https://github.com/BerriAI/litellm/pull/48522)
+- Send typed `system` input items to the Codex backend as `developer`, so ChatGPT-subscription models stop failing with `400 System messages are not allowed` - [PR #48668](https://github.com/BerriAI/litellm/pull/48668)
 
-### ElevenLabs
+### Cloudflare
 
-- Map `wav` and `pcm` TTS formats to ElevenLabs' 24kHz output formats - [PR #48455](https://github.com/BerriAI/litellm/pull/48455)
+- Clarify the Cloudflare chat endpoint warning to say the chat rewrite targets `/ai/v1`, while Decisions models still use `/ai/run/{model}` - [PR #48265](https://github.com/BerriAI/litellm/pull/48265)
+
+### Cohere
+
+- Send a string `stop` to Cohere chat and v2 chat as a one item `stop_sequences` list, as the Cohere API expects, instead of forwarding the bare string - [PR #47091](https://github.com/BerriAI/litellm/pull/47091)
+- Emit streamed tool calls from Cohere v2 `tool-call-start` and `tool-call-delta` chunks with id, name and arguments, so agents on models like `cohere/command-a-plus-05-2026` can use tools with `stream` on - [PR #47794](https://github.com/BerriAI/litellm/pull/47794)
+
+### DashScope
+
+- Bill explicit Qwen cache hits at their own `explicit_cache_read_input_token_cost` and explicit cache writes at 125% for `qwen3.7-max`, instead of pricing every hit at the implicit rate - [PR #45567](https://github.com/BerriAI/litellm/pull/45567)
+- Derive the OpenAI, Anthropic and native DashScope bases from one domain credential, and send `/v1/messages` to the native API for a DashScope root or `/apps/anthropic` base instead of returning 404 - [PR #47812](https://github.com/BerriAI/litellm/pull/47812)
+- Add DashScope image edits on `/v1/images/edits` and text-to-speech on `/v1/audio/speech` with Qwen image and TTS pricing, and bill image edits on every provider at a deployment's own image price - [PR #48998](https://github.com/BerriAI/litellm/pull/48998)
+
+### Databricks
+
+- Call the workspace's native Messages route for Databricks Claude on `/v1/messages`, so `safeguard_results` reach auto mode and platforms that reject `safeguards` no longer answer 400 under `drop_params` - [PR #46091](https://github.com/BerriAI/litellm/pull/46091)
+- Stream Databricks Claude `json_schema` answers as text instead of an internal `json_tool_call` tool call, with valid JSON and `stop` as the finish reason - [PR #47424](https://github.com/BerriAI/litellm/pull/47424)
+- Reuse the Databricks OAuth M2M token exchange for decisions requests, so `/v1/decisions` with OAuth credentials and no static key no longer returns 401 - [PR #48527](https://github.com/BerriAI/litellm/pull/48527)
+- Price `databricks/databricks-openjev-qwen35-4b` at 0.6 DBU per 1M input tokens, so `/v1/decisions` and `/v1/systemone` calls stop logging $0 spend - [PR #48694](https://github.com/BerriAI/litellm/pull/48694)
+- Sync Databricks cost map rows with the pricing pages, adding 19 missing endpoints, long-context rates and `databricks-typesafeai-jev-1-14-0`, and fixing 21 stale prices - [PR #48884](https://github.com/BerriAI/litellm/pull/48884)
+- Add priority pay-per-token prices to 31 Databricks cost map rows, so priority requests are no longer billed at the standard rate - [PR #48891](https://github.com/BerriAI/litellm/pull/48891)
+- Add retirement dates for `databricks-deepseek-v4-flash-0731` (2026-11-05), `databricks-deepseek-v4-pro-0813` (2026-10-30) and `databricks-inkling` to the cost map - [PR #49124](https://github.com/BerriAI/litellm/pull/49124)
+
+### DeepSeek
+
+- Pass `reasoning_effort` through to DeepSeek instead of silently using the provider default, with explicit `thinking` settings still taking precedence - [PR #38736](https://github.com/BerriAI/litellm/pull/38736)
+- Forward Anthropic headers to DeepSeek on `/v1/messages`, so uploaded-image requests no longer fail with a missing-header error - [PR #46959](https://github.com/BerriAI/litellm/pull/46959)
+- Add DeepSeek as a `/v1/search` provider with `search_provider: deepseek`, reading `DEEPSEEK_API_KEY`, priced at 0.00075 USD per query, with a 400 for a composed query over DeepSeek's 128 character cap - [PR #47401](https://github.com/BerriAI/litellm/pull/47401)
 
 ### Fireworks AI
 
-- Mark `fireworks_ai/minimax-m3` as vision capable, so image requests are no longer refused with a 400 before the call - [PR #43390](https://github.com/BerriAI/litellm/pull/43390)
-- Enable function calling and tool choice for `fireworks_ai` `deepseek-v4p1-flash-1017` - [PR #47326](https://github.com/BerriAI/litellm/pull/47326)
-- Add standard prices to `fireworks_ai` `minimax-m3p1-flash` - [PR #47371](https://github.com/BerriAI/litellm/pull/47371)
-- Add 2026-11-07 deprecation dates to Fireworks `gpt-oss-120b`, Nemotron and Inkling rows from the prices API - [PR #47518](https://github.com/BerriAI/litellm/pull/47518)
-- Add the 2026-11-07 `deprecation_date` to `fireworks_ai` `glm-5p3-flash-us` - [PR #47591](https://github.com/BerriAI/litellm/pull/47591)
-- Add `fireworks_ai` `deepseek-v4p1-flash-1017-us` at the US-only premium - [PR #47667](https://github.com/BerriAI/litellm/pull/47667)
-- Add priority prices for Muse Spark Open on Fireworks AI - [PR #47785](https://github.com/BerriAI/litellm/pull/47785)
-- Add a 2026-08-14 `deprecation_date` to `fireworks_ai` `deepseek-v4-flash` - [PR #49146](https://github.com/BerriAI/litellm/pull/49146)
+- Mark `fireworks_ai/minimax-m3` as a vision model again, so image requests stop returning 400 - [PR #43390](https://github.com/BerriAI/litellm/pull/43390)
+- Add priority tier prices and the reasoning flag to `fireworks_ai/accounts/fireworks/models/muse-spark-open` - [PR #47785](https://github.com/BerriAI/litellm/pull/47785)
+- Fill in `max_output_tokens`, reasoning, response schema and tool choice support and `deprecation_date` on the five Fireworks spot router rows from their base models - [PR #48858](https://github.com/BerriAI/litellm/pull/48858)
+- Add `fireworks_ai/accounts/fireworks/models/ultramarine-1-flash-us` at 0.225 USD input and 0.75 USD output per 1M tokens with a 1048576 token context, and date the DeepSeek V4 Flash standard rows - [PR #49146](https://github.com/BerriAI/litellm/pull/49146)
 
 ### FriendliAI
 
-- Drop LiteLLM-internal assistant fields before sending to FriendliAI, so multi-turn Claude Code sessions no longer fail after the first tool call - [PR #45092](https://github.com/BerriAI/litellm/pull/45092)
+- Drop `thinking_blocks`, `reasoning_items` and `provider_specific_fields` from messages sent to FriendliAI, so Claude Code turns after a tool call stop failing - [PR #45092](https://github.com/BerriAI/litellm/pull/45092)
+
+### Gemini and Vertex AI
+
+- Add Gemini 3.1 Flash TTS on Vertex AI and AI Studio with two-speaker voices, and send mp3, opus, alaw and mulaw speech from Vertex through Google Cloud Text-to-Speech - [PR #31915](https://github.com/BerriAI/litellm/pull/31915)
+- Log the Gemini 3 sampling deprecation notice once per model per worker instead of at WARNING on every request - [PR #40868](https://github.com/BerriAI/litellm/pull/40868)
+- Call Google once per Gemini TTS `/v1/audio/speech` request and log its tokens and cost, so spend logs no longer show 0 tokens and callbacks stop firing twice - [PR #44551](https://github.com/BerriAI/litellm/pull/44551)
+- Send context cache list and create calls to the `cachedContents` collection under a custom `api_base`, so Gemini and Vertex AI caching works through a gateway - [PR #44783](https://github.com/BerriAI/litellm/pull/44783)
+- Send integer enums to Gemini 3 and newer as INTEGER with string values instead of dropping them, so tool parameters stay within the listed values - [PR #44908](https://github.com/BerriAI/litellm/pull/44908)
+- Reuse known Vertex AI and Gemini context caches until shortly before `expireTime`, instead of listing all `cachedContents` on every request or creating duplicates for concurrent requests - [PR #46857](https://github.com/BerriAI/litellm/pull/46857)
+- Map Vertex errors to 403 only when the text has a standalone `403`, so a 429 whose request id contains `4039` stays a rate limit and retries keep working - [PR #47134](https://github.com/BerriAI/litellm/pull/47134)
+- Add `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to set the output budget for text requests with no limit, capped at the cost map's `max_output_tokens` - [PR #47542](https://github.com/BerriAI/litellm/pull/47542)
+- Honor `supports_sampling_params` on Gemini and Vertex AI and flag Gemini 3.6 Flash, 3.5 Flash-Lite and later, so `temperature`, `top_p` and `top_k` answer 400 unless `drop_params` is set - [PR #47645](https://github.com/BerriAI/litellm/pull/47645)
+- Add opt-in `thought_signature_in_tool_call_id: false` to keep Gemini tool call ids short and move the thought signature to `provider_specific_fields`, for clients that cap id length - [PR #47692](https://github.com/BerriAI/litellm/pull/47692)
+- Add `deprecation_date` 2026-06-30 to the retired `vertex_ai/veo-2.0-generate-001` - [PR #47847](https://github.com/BerriAI/litellm/pull/47847)
+- Add Batch rates to `vertex_ai/meta/llama-4-scout-17b-128e-instruct-maas` and `vertex_ai/meta/llama-4-maverick-17b-16e-instruct-maas`, so Vertex batch jobs no longer bill at on-demand rates - [PR #48085](https://github.com/BerriAI/litellm/pull/48085)
+- Bill video input for `gemini-2.5-flash-native-audio-preview-12-2025` at the audio and video rate of $3 per 1M tokens instead of the text rate - [PR #48248](https://github.com/BerriAI/litellm/pull/48248)
+- Send image tool results to Gemini 2.5 in the older supported format so they are no longer rejected, while keeping nested media for Gemini 3 and later - [PR #48428](https://github.com/BerriAI/litellm/pull/48428)
+- Reuse Google credentials across Vertex AI rerank requests instead of reloading and refreshing them on every call - [PR #48430](https://github.com/BerriAI/litellm/pull/48430)
+- Cap the shared Vertex AI credential cache at the existing LRU size limit instead of keeping every credential and project pair indefinitely - [PR #48442](https://github.com/BerriAI/litellm/pull/48442)
+- Map requested image sizes to a supported aspect ratio on Vertex AI generation and editing, and send Gemini the matching resolution, instead of silently producing square images - [PR #48463](https://github.com/BerriAI/litellm/pull/48463)
+- Keep Vertex AI Claude `/v1/messages` authentication off the event loop, so slow Google credential requests no longer stall health checks and neighboring requests - [PR #48523](https://github.com/BerriAI/litellm/pull/48523)
+- Keep every web source Gemini attaches to a grounded passage as annotations, including when a non-web source comes first, instead of only the first one - [PR #48745](https://github.com/BerriAI/litellm/pull/48745)
+- Send `labels` for Vertex AI Claude in the `X-Vertex-AI-Labels` header instead of the request body, so calls with `labels` no longer fail with a 400 - [PR #48753](https://github.com/BerriAI/litellm/pull/48753)
+- Read one-object, `null` and null-item spellings of repeated fields in Google `countTokens` and `generateContent`, so bodies Vertex AI accepts no longer answer 400 - [PR #48771](https://github.com/BerriAI/litellm/pull/48771)
+- Add Vertex AI Batch prices above 200k tokens for `gemini-2.5-pro` and `gemini-3.1-pro-preview`, and Batch image output token prices for the Gemini image models - [PR #48945](https://github.com/BerriAI/litellm/pull/48945)
+- Flag `supports_computer_use` on `gemini/gemini-4-argon`, `gemini/gemini-3.8-flash`, `gemini/gemini-3.5-flash-lite` and `gemini/gemini-3-flash-preview`, the models the Gemini computer use docs list - [PR #49252](https://github.com/BerriAI/litellm/pull/49252)
+- Add the Batch image output price (`output_cost_per_image_token_batches`) to `gemini/gemini-nano-banana-2.1` and `gemini/gemini-3.1-flash-lite-image`, so batch image generation is no longer billed at the Standard rate - [PR #49317](https://github.com/BerriAI/litellm/pull/49317)
+- Add Batch, Flex and Priority text output prices to `gemini/gemini-2.5-flash-image`, so text and thinking output on those tiers is no longer billed at the Standard rate - [PR #49358](https://github.com/BerriAI/litellm/pull/49358)
+
+### GitHub Copilot
+
+- Treat a malformed `api-key.json` like a missing one, so a login saves a fresh key instead of every Copilot request failing with a parser error - [PR #44723](https://github.com/BerriAI/litellm/pull/44723)
+- Add an optional `github_copilot_host` on per-user Copilot credentials, so GHE.com users can connect through device flow and token exchange - [PR #47610](https://github.com/BerriAI/litellm/pull/47610)
+- Add the 2026-11-16 deprecation date to `github_copilot/claude-opus-4.8-fast` - [PR #48251](https://github.com/BerriAI/litellm/pull/48251)
+- Add `github_copilot/gpt-6.1-terra` and raise `max_input_tokens` to 922000 on the Copilot gpt-6 rows - [PR #48450](https://github.com/BerriAI/litellm/pull/48450)
 
 ### Groq
 
-- Accept streamed reasoning replies in Groq chat history - [PR #48268](https://github.com/BerriAI/litellm/pull/48268)
+- Remove response-only reasoning from outgoing history, so replaying a streamed Groq reasoning reply no longer returns HTTP 400 on the next turn - [PR #48268](https://github.com/BerriAI/litellm/pull/48268)
 
-### Hosted vLLM
+### Mistral
 
-- Accept the vLLM production-stack router's file and batch objects, which omit `object` and report `pending` and `running` statuses, instead of answering 500 - [PR #49068](https://github.com/BerriAI/litellm/pull/49068)
-
-### Hugging Face
-
-- Stop forcing `truncate=false` on TEI rerank and pass truncate params through - [PR #48706](https://github.com/BerriAI/litellm/pull/48706)
+- Forward `prompt_cache_key` to `*.mistral.ai` hosts and send a `reasoning_effort` object as its level, instead of answering 400 and 500 - [PR #47432](https://github.com/BerriAI/litellm/pull/47432)
+- Add `mistral/zai-glm-5-3-flash` to the cost map, so calls are billed instead of logged at $0 and `reasoning_effort` is no longer rejected with a 400 - [PR #48270](https://github.com/BerriAI/litellm/pull/48270)
+- Replay an earlier assistant turn's reasoning to Mistral as a thinking chunk in `content` for models with reasoning support, and keep dropping it for the rest - [Commit 7abff3d](https://github.com/BerriAI/litellm/commit/7abff3dd63893f372818bcc91d5e1e48fae6afa5)
+- Price Mistral Large 4 at its list price of $1.36 in, $0.14 cached in and $4.18 out per million tokens now that the launch sale ended - [PR #48825](https://github.com/BerriAI/litellm/pull/48825)
+- Add the `mistral/deepseek-v4-1-flash-1017` cost map row so LiteLLM can price DeepSeek V4.1 Flash 1017 served by Mistral - [PR #48879](https://github.com/BerriAI/litellm/pull/48879)
 
 ### Morph
 
-- Support Morph open-weight chat models and cached input pricing - [PR #48676](https://github.com/BerriAI/litellm/pull/48676)
+- Accept tools, structured output and reasoning controls on Morph open-weight chat models, and add eight Morph models with cached-input pricing - [PR #48676](https://github.com/BerriAI/litellm/pull/48676)
 
 ### NVIDIA Riva
 
-- Add `riva_offline` mode for offline-only ASR models, answering 413 for audio over the server's message limit - [PR #41021](https://github.com/BerriAI/litellm/pull/41021)
+- Add admin-only `riva_offline: true` for Riva deployments, which sends the whole buffer through `offline_recognize` so offline-only models like Parakeet TDT and Whisper stop failing with `INVALID_ARGUMENT` - [PR #41021](https://github.com/BerriAI/litellm/pull/41021)
 
 ### OCI
 
-- Keep every system instruction for Gemini models on OCI by merging them into one leading system message - [PR #49458](https://github.com/BerriAI/litellm/pull/49458)
+- Merge system messages at the start of OCI Gemini requests, so earlier system instructions are no longer dropped when an app adds a later summary or memory message - [PR #49458](https://github.com/BerriAI/litellm/pull/49458)
+
+### Ollama
+
+- Forward assistant `tool_calls[].id` in `ollama_chat` requests, so MiniMax on Ollama Cloud matches tool results to their calls instead of reporting the tool returned nothing - [PR #49278](https://github.com/BerriAI/litellm/pull/49278)
+- Keep Ollama capability and pricing lookups local, so they stop contacting an unrelated server set in the environment - [PR #49727](https://github.com/BerriAI/litellm/pull/49727)
+
+### OpenAI
+
+- Honor per-deployment workload identity on every `openai/` route, including batches, assistants and realtime, so keyless federated deployments no longer demand a static key - [PR #39966](https://github.com/BerriAI/litellm/pull/39966)
+- Route `gpt-*transcribe` models to the GPT audio transcription config, so `gpt-transcribe` works without `response_format` and bills OpenAI's `usage.seconds` - [PR #44021](https://github.com/BerriAI/litellm/pull/44021)
+- Forward the provider's `service_tier` on non-streamed `aiohttp_openai` responses instead of dropping it - [PR #47263](https://github.com/BerriAI/litellm/pull/47263)
+- Log a warning naming the model, level and fix when `drop_params` drops a GPT-5 reasoning effort the model map does not enable, on chat, `/v1/messages`, `/v1/responses` and Bedrock - [PR #47761](https://github.com/BerriAI/litellm/pull/47761)
+- Map OpenAI `context_length_exceeded` errors to `ContextWindowExceededError` instead of `BadRequestError` - [PR #47954](https://github.com/BerriAI/litellm/pull/47954)
+- Add the 12-hour cache write rate for `gpt-5.6-cyber` from the OpenAI pricing page - [PR #48246](https://github.com/BerriAI/litellm/pull/48246)
+- Add `gpt-6.1-terra` to the cost map with prices from the OpenAI pricing page, including the 12-hour batch cache write rates - [PR #48429](https://github.com/BerriAI/litellm/pull/48429)
+- Add OpenAI Batch and Ultrafast 12-hour cache write rates to the cost map from the OpenAI pricing page - [PR #48433](https://github.com/BerriAI/litellm/pull/48433)
+- Drop the `input_cost_per_token_priority` price from `gpt-5-nano` and `gpt-5-nano-2025-08-07`, so `/model/info` no longer shows a priority input price 50x the standard one - [PR #48763](https://github.com/BerriAI/litellm/pull/48763)
+- Add `gpt-6-rosalind` to the cost map with prices from the OpenAI pricing page - [PR #49268](https://github.com/BerriAI/litellm/pull/49268)
+- Add `gpt-6-astra-law` to the cost map with prices from the OpenAI pricing page - [PR #49444](https://github.com/BerriAI/litellm/pull/49444)
+
+### OpenCode
+
+- Send `x-opencode-session` automatically to OpenCode Go on chat completions, Responses and native Messages when the caller supplies a stable conversation ID - [PR #48121](https://github.com/BerriAI/litellm/pull/48121)
 
 ### OpenRouter
 
-- List OpenRouter's live catalog for `openrouter/*` when `check_provider_endpoint` is on, keeping only chat-callable ids and fetching off the event loop - [PR #48820](https://github.com/BerriAI/litellm/pull/48820)
-- Record the upstream provider OpenRouter served in the logging payload and spend logs as `upstream_provider` - [PR #49287](https://github.com/BerriAI/litellm/pull/49287)
-- Report the model OpenRouter served on streamed responses, cached replays included - [PR #49498](https://github.com/BerriAI/litellm/pull/49498)
+- List OpenRouter's live chat catalog on `/v1/models` for `openrouter/*` when `check_provider_endpoint` is on, so `lite pi` no longer refuses to start on an empty list - [PR #48820](https://github.com/BerriAI/litellm/pull/48820)
 
-### Refuseless
+### Perplexity
 
-- Update Refuseless GLM 5.3 and DeepSeek V4.1 Flash prices - [PR #48844](https://github.com/BerriAI/litellm/pull/48844)
+- Forward Perplexity search options like recency, date and language filters instead of dropping them, and return provider validation errors to the caller - [PR #49344](https://github.com/BerriAI/litellm/pull/49344)
 
 ### SageMaker
 
-- Parse every streamed SageMaker record however the payload parts are cut, so split events no longer drop the rest of the answer - [PR #47495](https://github.com/BerriAI/litellm/pull/47495)
+- Parse every streamed SageMaker record however the payload parts are cut, and raise container errors instead of ending a failed stream as a normal 200 stop - [PR #47495](https://github.com/BerriAI/litellm/pull/47495)
+- Keep a deployment's pinned `model_id`, such as a SageMaker inference component, over the request body's and a router default, and let `configurable_clientside_auth_params` opt in to client choice - [PR #49045](https://github.com/BerriAI/litellm/pull/49045)
 
 ### Tencent
 
-- Add Seedream image generation and editing through TokenHub, priced from TokenHub usage - [PR #48735](https://github.com/BerriAI/litellm/pull/48735)
+- Add Seedream 5.0 pro, flash and lite image generation and editing to the Tencent provider through TokenHub's own image endpoint, with spend from TokenHub's token counts - [PR #48735](https://github.com/BerriAI/litellm/pull/48735)
 
 ### Together AI
 
-- Add `together_ai/reflection/Beam-1.0-501B-A23B` - [PR #46964](https://github.com/BerriAI/litellm/pull/46964)
-- Add `together_ai/deepseek-ai/DeepSeek-V4.1-Flash-1017` - [PR #47291](https://github.com/BerriAI/litellm/pull/47291)
-- Add a 2026-11-06 `deprecation_date` to two `together_ai` rows - [PR #48651](https://github.com/BerriAI/litellm/pull/48651)
-- Set `together_ai/Qwen/Qwen3.7-Max` back to the published 1.50 USD input and 4.50 USD output per 1M tokens - [PR #49125](https://github.com/BerriAI/litellm/pull/49125)
-- Add a 2026-11-04 `deprecation_date` to `together_ai` `Qwen3.8-2.4T-A95B` - [PR #49542](https://github.com/BerriAI/litellm/pull/49542)
+- Price Together AI Qwen3.7-Max at 1.50 USD input, 0.30 USD cached input and 4.50 USD output per 1M tokens, so it is no longer billed 67% above Together's published price - [PR #49125](https://github.com/BerriAI/litellm/pull/49125)
+- List a Together AI id on `/v1/models` for a wildcard alias like `together_ai/*` only when it resolves to a real Together model, and read Together's model list from the cost map - [PR #49152](https://github.com/BerriAI/litellm/pull/49152)
+- Add the 2026-11-04 `deprecation_date` to `together_ai/Qwen/Qwen3.8-2.4T-A95B`, from Together's scheduled deprecations table - [PR #49542](https://github.com/BerriAI/litellm/pull/49542)
 
-### VolcEngine
+### vLLM
 
-- Add Doubao-Seedance video generation on `/v1/videos`, with status, content, list, delete, edit and extension mapped to the Ark task API - [PR #46156](https://github.com/BerriAI/litellm/pull/46156)
+- Send the pass-through key as `Authorization: Bearer` on both `/vllm` routes and stop a `/v1` base from calling `/v1/v1/...`, so servers started with `--api-key` stop answering 401 - [PR #46861](https://github.com/BerriAI/litellm/pull/46861)
+- Accept images on `hosted_vllm` decision deployments and pass them to vLLM's `/v1/systemone` `images` field, instead of refusing them with a 400 - [PR #48621](https://github.com/BerriAI/litellm/pull/48621)
+- Accept the vLLM production-stack router's file and batch objects on `hosted_vllm`, filling the missing `object` field and mapping `pending` and `running` to `validating` and `in_progress`, so uploads and batches no longer answer 500 - [PR #49068](https://github.com/BerriAI/litellm/pull/49068)
 
-### Weights and Biases
+### xAI
 
-- Add W&B `reflection/Beam-1.0-501B-A23B` and `GLM-5.3` to the cost map - [PR #47690](https://github.com/BerriAI/litellm/pull/47690)
-- Set the W&B `GLM-5.2` `max_input_tokens` to 262,000 from the CoreWeave Forge page - [PR #49148](https://github.com/BerriAI/litellm/pull/49148)
-- Set the W&B `DeepSeek-V3.1` and `Llama-3.1-8B` `max_input_tokens` to 128,000 from the CoreWeave Forge page - [PR #49616](https://github.com/BerriAI/litellm/pull/49616)
+- Add native xAI X Search to the Search API and WebSearch interception, returning citation URLs as search results and recording xAI's reported bill including tokens and tool usage - [PR #48677](https://github.com/BerriAI/litellm/pull/48677)
 
 ### Z.AI
 
-- Support `response_format` and `max_completion_tokens` on Z.AI, add `zai/GLM-5.3` and `zai/GLM-5.3-Flash` aliases and price `glm-5v-turbo` - [PR #48335](https://github.com/BerriAI/litellm/pull/48335)
+- Accept `response_format` and `max_completion_tokens` on `zai/*` models and add `zai/glm-5v-turbo` pricing, cached input included - [PR #48335](https://github.com/BerriAI/litellm/pull/48335)
 
 ### Model catalog and pricing
 
-- Add Perplexity `pplx-decider` v1.2 and flash v1.2 rows with latest aliases, and add Azure Mistral and Vertex Gemini deprecation dates - [PR #47114](https://github.com/BerriAI/litellm/pull/47114)
-- Add VolcEngine `doubao-seed-2-1-pro-260915` and `doubao-seed-2-1-lite-260915`, and undated `azure/eu` and `azure/us` rows for `o1`, `o3`, `o3-mini`, `o4-mini`, `gpt-4o` and `gpt-4o-mini` - [PR #47561](https://github.com/BerriAI/litellm/pull/47561)
-- Add ElevenLabs v4 and Flash/Turbo TTS rows at API rates, Together `minimax-m3.1-flash`, Mistral Voxtral 3 transcription and TTS rows, and Azure AI Phi-4 retirement dates - [PR #47623](https://github.com/BerriAI/litellm/pull/47623)
-- Add provider retirement dates, fix Azure AI Sonnet 5.5 prices, add Fireworks spot routers and Azure `gpt-6.1-terra` rows, update the Azure AI `mistral-small-2503` retirement date, and absorb GPT-5.6 Terra and Luna price fields and Groq caching prices from the rolling audit - [PR #48188](https://github.com/BerriAI/litellm/pull/48188)
-- Drop the legacy `max_tokens` field from the cost map in favor of `max_input_tokens` and `max_output_tokens` - [PR #48471](https://github.com/BerriAI/litellm/pull/48471)
-- Skip cost map rules in the old `extends` or mixed format with a warning, since every shipped cost map now uses the split routing and capability rule format - [PR #48737](https://github.com/BerriAI/litellm/pull/48737)
-- Add Gemini long-prompt batch rates and Azure GPT-6 Astra long-context flex rates from the rolling registry audit - [PR #49114](https://github.com/BerriAI/litellm/pull/49114)
+- Read `s3://` URIs for `LITELLM_MODEL_COST_MAP_URL` at startup, on `POST /reload/model_cost_map` and on scheduled reloads, instead of failing with `UnsupportedProtocol` and pricing from the bundled map - [PR #46972](https://github.com/BerriAI/litellm/pull/46972)
+- Add Mistral Voxtral 3, ElevenLabs speech and Together `MiniMaxAI/MiniMax-M3.1-Flash` rows, set ElevenLabs v3 and Multilingual v2 to 0.08 USD per 1K characters, and date `azure_ai/Phi-4*` retirement - [PR #47623](https://github.com/BerriAI/litellm/pull/47623)
+- Add `wandb/reflection/Beam-1.0-501B-A23B` and `wandb/zai-org/GLM-5.3` to the cost map, priced from the CoreWeave Forge Serverless Inference page - [PR #47690](https://github.com/BerriAI/litellm/pull/47690)
+- Add provider retirement dates, fix the Azure AI Claude Sonnet 5.5 cache read price, bill Azure web search at the Bing rate, and add Fireworks spot routers in a rolling cost map audit - [PR #48188](https://github.com/BerriAI/litellm/pull/48188)
+- Drop the legacy `max_tokens` field from the cost map in favor of `max_input_tokens` and `max_output_tokens`, while `/model/info` still returns `max_tokens` - [PR #48471](https://github.com/BerriAI/litellm/pull/48471)
+- Price four `abliteration/` chat models with cache read rates and capabilities, and keep `reasoning_effort` instead of dropping it - [PR #48498](https://github.com/BerriAI/litellm/pull/48498)
+- Remove the `2027-06-28` `deprecation_date` from `gemini-3.1-flash-lite-image` and `vertex_ai/gemini-3.1-flash-lite-image`, since Google publishes only a floor date - [PR #48587](https://github.com/BerriAI/litellm/pull/48587)
+- Generate `provider_endpoints_support.json` from the cost map, so `/public/endpoints` and models.litellm.ai/providers show an endpoint only when a usable model exists for it - [PR #48619](https://github.com/BerriAI/litellm/pull/48619)
+- Add a `2026-11-06` `deprecation_date` to two `together_ai` models that Together lists for removal from serverless on that date - [PR #48651](https://github.com/BerriAI/litellm/pull/48651)
+- Stop reading the legacy `extends` and mixed-rule cost map format in fallback rules, so unmapped Claude ids on an old-format custom map lose fallback routing and model info - [PR #48737](https://github.com/BerriAI/litellm/pull/48737)
+- Lower the input, output and cache read prices of three Refuseless models, including `refuseless/glm-5.3-abliterated`, to the provider's new list prices - [PR #48844](https://github.com/BerriAI/litellm/pull/48844)
+- Add Gemini long-prompt Batch rates and Azure GPT-6 Astra long-context Flex rates to the cost map, so those requests stop falling back to the wrong rate - [PR #49114](https://github.com/BerriAI/litellm/pull/49114)
+- Set `max_input_tokens` for `wandb/zai-org/GLM-5.2` to 262000, the context CoreWeave lists, instead of 1049000 - [PR #49148](https://github.com/BerriAI/litellm/pull/49148)
+- Add Deepgram text-to-speech prices for `deepgram/aura` at 0.015 USD and `deepgram/aura-2` at 0.030 USD per 1,000 characters - [PR #49280](https://github.com/BerriAI/litellm/pull/49280)
+- Flag `supports_computer_use` on 15 Vertex AI and Gemini rows and add Cohere `rerank-v5.0-pro` and `rerank-v5.0-fast` rows so lookups stop failing for them - [PR #49297](https://github.com/BerriAI/litellm/pull/49297)
+- Set `max_input_tokens` to 128K for the W&B DeepSeek V3.1 and Llama 3.1 8B rows, matching the CoreWeave Forge serverless inference page - [PR #49616](https://github.com/BerriAI/litellm/pull/49616)
 
 ## LLM API Endpoints
 
 ### Responses API
 
-- Log and bill every round of a non-streaming MCP auto-execute on the outer call - [PR #43667](https://github.com/BerriAI/litellm/pull/43667)
-- Report the requested model in the nested `response.model` of streamed Responses events, background `response.queued` and guardrail block frames included - [PR #46662](https://github.com/BerriAI/litellm/pull/46662)
-- Round-trip Anthropic compaction blocks as Responses `compaction` items, so the next turn reuses the summary instead of compacting again - [PR #46754](https://github.com/BerriAI/litellm/pull/46754)
-- Bill every round of a streamed MCP auto-execute on one spend row, bridged providers included - [PR #47445](https://github.com/BerriAI/litellm/pull/47445)
-- Bill the partial usage of a Responses stream that fails mid-way, end it with an error, honor `stream_timeout` between chunks, and report bridged `/v1/messages` failures to the proxy's failure hooks - [PR #47537](https://github.com/BerriAI/litellm/pull/47537)
-- Honor `max_agentic_loops` as the round cap for streamed MCP auto-execute - [PR #47688](https://github.com/BerriAI/litellm/pull/47688)
-- Keep every MCP tool round in the follow-up input of a streamed Responses MCP auto-execute - [PR #47698](https://github.com/BerriAI/litellm/pull/47698)
-- Honor per-call custom pricing on the native Responses API path, bound to the request instead of registered globally - [PR #48119](https://github.com/BerriAI/litellm/pull/48119)
-- Replay `web_search_call` input items that have no `action` - [PR #48417](https://github.com/BerriAI/litellm/pull/48417)
-- Skip failed spend-log turns when rebuilding a session from `previous_response_id` - [PR #48647](https://github.com/BerriAI/litellm/pull/48647)
-- Reject, or drop under `drop_params`, Responses params the chat completions bridge cannot translate - [PR #48655](https://github.com/BerriAI/litellm/pull/48655)
-- Keep typed output parts when the provider omits `logprobs` - [PR #48686](https://github.com/BerriAI/litellm/pull/48686)
-- Forward the top-level `moderation` param to OpenAI - [PR #48708](https://github.com/BerriAI/litellm/pull/48708)
-- Stream every citation batch before completion, holding citations until reasoning closes - [PR #48747](https://github.com/BerriAI/litellm/pull/48747)
-- Drop the null `created_by` OpenAI rejects when output items are replayed as input - [PR #48783](https://github.com/BerriAI/litellm/pull/48783)
-- Resume background response streams from OpenAI and Azure with `stream` and `starting_after` on `GET /v1/responses/{id}` and `aget_responses` - [PR #48819](https://github.com/BerriAI/litellm/pull/48819)
-- Normalize an empty `function_call_output` to an empty tool result - [PR #48845](https://github.com/BerriAI/litellm/pull/48845)
-- Drop params the compact endpoint rejects for OpenAI and Azure, and send Azure compaction to the v1 route - [PR #48876](https://github.com/BerriAI/litellm/pull/48876)
-- Replay the original Responses item order, `phase` and message boundaries on the next chat turn - [PR #48912](https://github.com/BerriAI/litellm/pull/48912)
-- Support Codex client `tool_search` on Anthropic and other bridged providers, keeping tools loaded by earlier searches across `previous_response_id` - [PR #48972](https://github.com/BerriAI/litellm/pull/48972)
-- Keep each Codex tool once when its tool list repeats across turns on the Bedrock chat bridge and Mantle - [PR #49006](https://github.com/BerriAI/litellm/pull/49006)
-- Send `text.verbosity` as chat `verbosity` when a Responses request is bridged to chat completions, including client tool search follow-up turns - [PR #49049](https://github.com/BerriAI/litellm/pull/49049)
-- Keep the proxy's decoded error body, code and type on `litellm.responses()` errors from `litellm_proxy/` models, matching chat completions - [PR #49073](https://github.com/BerriAI/litellm/pull/49073)
-- Send a dict `reasoning_effort` the same way on every Responses bridge, so Azure and ChatGPT keep `mode` and `context`, and drop or reject reasoning fields xAI, Fireworks and Perplexity ignore - [PR #49082](https://github.com/BerriAI/litellm/pull/49082)
-- Merge repeated Codex tools from `additional_tools` input items only when `drop_params` is on, and forward every copy otherwise - [PR #49112](https://github.com/BerriAI/litellm/pull/49112)
+- Log and bill Responses-style bodies sent to `/cursor/chat/completions`, and stop sending the proxy's key hash, alias and caller IP to OpenAI in `metadata` - [PR #30277](https://github.com/BerriAI/litellm/pull/30277)
+- Report the requested model in the nested `response.model` of streamed `/v1/responses` events instead of the backend deployment name - [PR #46662](https://github.com/BerriAI/litellm/pull/46662)
+- Round-trip Anthropic compaction blocks as `compaction` output items on `/v1/responses`, streamed too, and send a replayed `compaction` item back to Claude so long sessions keep their summary - [PR #46754](https://github.com/BerriAI/litellm/pull/46754)
+- Run `pre_call` guardrails on every Responses WebSocket turn and bill each turn its own guardrail cost, instead of checking the first frame once and re-billing its records on later turns - [PR #47013](https://github.com/BerriAI/litellm/pull/47013)
+- Count `/v1/responses/input_tokens` the way inference sends the request, through the bridge for Claude and with the caller's body forwarded to OpenAI, so function tools no longer fail and OpenAI errors come back unchanged - [PR #47363](https://github.com/BerriAI/litellm/pull/47363)
+- Honor `max_agentic_loops` as the round cap for streamed MCP auto-execute on `/v1/responses`, keeping 5 as the default and still ignoring any value sent in the request body - [PR #47688](https://github.com/BerriAI/litellm/pull/47688)
+- Keep every earlier MCP tool call and result in the follow-up input of streamed `/v1/responses` calls, so multi-step tool chains stop repeating tools and hitting the round cap - [PR #47698](https://github.com/BerriAI/litellm/pull/47698)
+- Replay `web_search_call` input items that have no `action` as sent on `/v1/responses`, so later turns in Codex and Azure conversations no longer fail with 500 - [PR #48417](https://github.com/BerriAI/litellm/pull/48417)
+- Preserve audio, PDF and image content in tool results and assistant history across Responses and Gemini conversions instead of dropping it - [PR #48484](https://github.com/BerriAI/litellm/pull/48484)
+- Skip failed spend-log turns when rebuilding a session from `previous_response_id`, so one failed retry no longer makes every later retry answer 400 on Bedrock - [PR #48647](https://github.com/BerriAI/litellm/pull/48647)
+- Preserve typed text parts in Responses streaming when a provider omits `logprobs`, so reading `event.part.text` no longer raises `AttributeError` - [PR #48686](https://github.com/BerriAI/litellm/pull/48686)
+- Forward the top-level `moderation` param on `/v1/responses` to OpenAI instead of dropping it, so moderation results or OpenAI's 400 reach the caller - [PR #48708](https://github.com/BerriAI/litellm/pull/48708)
+- Run the guardrails and policies a Responses WebSocket frame selects on top of the key's and team's, and fix a 500 when a guardrail with settings meets another guardrail list - [PR #48725](https://github.com/BerriAI/litellm/pull/48725)
+- Stream every citation batch before completion on `/v1/responses` with continuous annotation indices, so streaming clients no longer miss citations that appear in the final answer - [PR #48747](https://github.com/BerriAI/litellm/pull/48747)
+- Drop a null `created_by` from Responses output and `input` items, so replaying a `/v1/responses/compact` result no longer gets OpenAI's 400 `Unknown parameter: 'input[1].created_by'` - [PR #48783](https://github.com/BerriAI/litellm/pull/48783)
+- Pass `response.created`, `queued` and `in_progress` through on background OpenAI `/v1/responses` streams as soon as OpenAI sends them, so a client that stops reading early can still cancel or retrieve the run - [PR #48817](https://github.com/BerriAI/litellm/pull/48817)
+- Forward `stream` and `starting_after` when retrieving a background response on OpenAI, Azure and Azure AI Foundry, so clients can resume a lost event stream and get the events they missed - [PR #48819](https://github.com/BerriAI/litellm/pull/48819)
+- Send an empty `function_call_output` to Anthropic and Gemini as an empty tool result instead of serialized JSON the model read as the result - [PR #48845](https://github.com/BerriAI/litellm/pull/48845)
+- Keep `metadata` and `user` out of `/v1/responses/compact` upstream requests for OpenAI, Azure and Azure AI, and send Azure compaction to the v1 route, so calls no longer get a 400 or 500 - [PR #48876](https://github.com/BerriAI/litellm/pull/48876)
+- Advertise tool search for Claude routes in the Codex model list and translate Codex's client `tool_search` requests and results, so Codex discovers MCP tools instead of loading every schema up front - [PR #48972](https://github.com/BerriAI/litellm/pull/48972)
+- Send each Codex tool once, using the newest copy, when its tool list repeats across turns, so a Codex session that switches to GPT on Bedrock no longer fails on the duplicate-tool error - [PR #49006](https://github.com/BerriAI/litellm/pull/49006)
+- Keep the proxy's error body, code and type on `litellm.responses()` errors from `litellm_proxy/` models, and pass a downstream proxy's redacted `provider_specific_fields` through chained proxies on chat and Responses - [PR #49073](https://github.com/BerriAI/litellm/pull/49073)
+- Merge a tool list that Codex repeats across turns only when `drop_params` is on, and otherwise send the request as sent, so deliberate duplicate tool definitions are no longer dropped - [PR #49112](https://github.com/BerriAI/litellm/pull/49112)
 
 ### Chat Completions over the Responses API bridge
 
-- Send the whole `reasoning_effort` dict when chat is bridged to Responses, dropping only a `mode` or `context` the model does not take under `drop_params` - [PR #48807](https://github.com/BerriAI/litellm/pull/48807)
+- Route `chatgpt/` models missing from the catalog through the Responses bridge, so they no longer return 404 on Chat Completions - [PR #48244](https://github.com/BerriAI/litellm/pull/48244)
+- Reject or drop Responses params the chat completions bridge cannot translate, such as `max_tool_calls`, so Bedrock Claude no longer answers 400 and `drop_params` works - [PR #48655](https://github.com/BerriAI/litellm/pull/48655)
+- Send the whole `reasoning_effort` dict when chat completions are bridged to the Responses API, and drop only a refused effort under `drop_params` - [Commit 9675c13](https://github.com/BerriAI/litellm/commit/9675c13cb02b2e183deb04b0ae912ed85b20f1e2)
+- Replay the original Responses items in order with their `phase` and boundaries on the next chat turn for the `openai` provider, instead of one merged message - [PR #48912](https://github.com/BerriAI/litellm/pull/48912)
+- Forward text `verbosity` when bridging Responses requests to chat completions, stored tool-search follow-ups included, instead of silently dropping it - [PR #49049](https://github.com/BerriAI/litellm/pull/49049)
+- Send a dict `reasoning_effort` with its `mode` and `context` the same way on the Azure, ChatGPT, Azure AI and GitHub Copilot Responses bridges, so pro reasoning on Azure no longer runs and bills as standard - [PR #49082](https://github.com/BerriAI/litellm/pull/49082)
 
 ### Anthropic Messages API
 
-- Carry `safeguard_results` and `stop_details` in synthesized `message_delta` events, so Claude Code auto mode keeps the classifier verdict - [PR #46096](https://github.com/BerriAI/litellm/pull/46096)
-- Send `/v1/messages` PDF documents to OpenAI-shaped providers as file parts, and answer 400 or drop them for models that cannot read PDFs - [PR #47166](https://github.com/BerriAI/litellm/pull/47166)
-- Answer 400 naming the block for a malformed `tool_result` text on `/v1/messages` and `/v1/messages/count_tokens` for OpenAI and Azure models, or drop it under `drop_params` - [PR #47347](https://github.com/BerriAI/litellm/pull/47347)
-- Keep tool names over 64 characters when a guardrail rewrites a `/v1/messages` request, so Bedrock no longer rejects mismatched `tool_reference` and `tool_choice` names - [PR #47434](https://github.com/BerriAI/litellm/pull/47434)
-- Include a null `stop_sequence` in native `/v1/messages` responses - [PR #47987](https://github.com/BerriAI/litellm/pull/47987)
-- Release the upstream `/v1/messages` stream when the client disconnects - [PR #48220](https://github.com/BerriAI/litellm/pull/48220)
-- Keep `/v1/messages` requests with `stop_sequences` off the OpenAI Responses bridge so the stop sequences apply - [PR #48534](https://github.com/BerriAI/litellm/pull/48534)
-- Merge deployment and client `anthropic-beta` values instead of letting the client's overwrite the deployment's - [PR #48594](https://github.com/BerriAI/litellm/pull/48594)
-- Estimate initial input tokens on `message_start` for bridged `/v1/messages` streams without fetching images - [PR #48618](https://github.com/BerriAI/litellm/pull/48618)
-- Make opening usage estimates on bridged streams opt-in through `anthropic_messages_estimate_initial_input_tokens` - [PR #48633](https://github.com/BerriAI/litellm/pull/48633)
-- Drop the non-spec `custom` object from `/v1/messages` tool definitions, which Anthropic and Vertex reject, hoisting `custom.defer_loading` to `defer_loading` on Claude routes - [PR #48893](https://github.com/BerriAI/litellm/pull/48893)
-- Keep Mistral thinking text on streaming `/v1/messages` - [PR #49059](https://github.com/BerriAI/litellm/pull/49059)
-- Retry `/v1/messages` once without `strict` when Claude rejects strict tools under `drop_params` - [PR #49102](https://github.com/BerriAI/litellm/pull/49102)
-- Price a native `/v1/messages` body as served unless its provider reports its own cost, billing the requested `speed` when the body reports none - [PR #49356](https://github.com/BerriAI/litellm/pull/49356)
-
-### Web search interception
-
-- Keep the provider prefix on the agentic follow-up model, so routes such as `bedrock/mantle/` no longer fail with `LLM Provider NOT provided` - [PR #38885](https://github.com/BerriAI/litellm/pull/38885)
-- Stream the native `server_tool_use` and `web_search_tool_result` blocks to Anthropic SDK, Claude Desktop and Claude Code clients, so citation panels and result counts fill in - [PR #40967](https://github.com/BerriAI/litellm/pull/40967)
-- Search only the query inside Claude Code's web search prompt in the short-circuit search - [PR #43458](https://github.com/BerriAI/litellm/pull/43458)
+- Stream native `server_tool_use` and `web_search_tool_result` blocks for web search interception, so Claude Code counts its searches, and keep `caller`, redacted thinking `data` and citations on re-streamed replies - [PR #40967](https://github.com/BerriAI/litellm/pull/40967)
+- Strip Claude Code's `Perform a web search for the query:` prefix before the short-circuit web search, so search providers get the user's actual query - [PR #43458](https://github.com/BerriAI/litellm/pull/43458)
+- Carry `safeguard_results` and `stop_details` in synthesized `message_delta` events, so Claude Code in auto mode keeps its server verdict when a post-call guardrail rewrites a streamed `/v1/messages` reply - [PR #46096](https://github.com/BerriAI/litellm/pull/46096)
+- Honor `clear_at_least`, `exclude_tools` and `clear_tool_inputs` in the `clear_tool_uses_20250919` polyfill on `/v1/messages` to non-Anthropic models, and answer 400 for a malformed field like the Anthropic API - [PR #47123](https://github.com/BerriAI/litellm/pull/47123)
+- Send `/v1/messages` PDF documents to OpenAI-shaped providers as chat `file` parts, so Azure OpenAI no longer answers 400, and handle them on `azure_ai/`, Vertex partner models, OCI, GigaChat, SAP and OpenRouter - [PR #47166](https://github.com/BerriAI/litellm/pull/47166)
+- Answer 400 naming the bad field for a null or numeric `tool_result` text on `/v1/messages` and count_tokens, instead of a 500 on OpenAI models, and drop that block under `drop_params` - [PR #47347](https://github.com/BerriAI/litellm/pull/47347)
+- Keep tool names over 64 characters when a guardrail rewrites a `/v1/messages` request, so Bedrock no longer answers 400 `Tool reference '<name>' not found in available tools` - [PR #47434](https://github.com/BerriAI/litellm/pull/47434)
+- Count the system prompt toward the `clear_tool_uses_20250919` `input_tokens` trigger on `/v1/messages` routes where LiteLLM fills in context management, as Anthropic's API does, and stop a 500 when it is listed before `compact_20260112` - [PR #47857](https://github.com/BerriAI/litellm/pull/47857)
+- Run `clear_tool_uses_20250919` edits in the gateway for OpenAI models on `/v1/messages` and count tokens, so old tool results are cleared instead of silently dropped - [PR #47861](https://github.com/BerriAI/litellm/pull/47861)
+- Include a null `stop_sequence` in native Anthropic Messages responses, streaming included - [Commit e5cedbb](https://github.com/BerriAI/litellm/commit/e5cedbb861e6023e992a927de8b838b32156e918)
+- Close the upstream request when a `/v1/messages` stream is canceled before the first token, instead of leaving it open - [PR #48220](https://github.com/BerriAI/litellm/pull/48220)
+- Add the missing model listing route under `/claude_code_gateway`, so Claude clients using it as their base URL no longer get a 404 on model discovery - [PR #48221](https://github.com/BerriAI/litellm/pull/48221)
+- Honor `stop_sequences` sent to `/v1/messages` for OpenAI chat models by routing requests with a nonempty stop list through Chat Completions, which forwards `stop` - [PR #48534](https://github.com/BerriAI/litellm/pull/48534)
+- Merge a Claude deployment's `anthropic-beta` with the client's on `/v1/messages` instead of replacing it, so admin-enabled betas such as 1M context reach Claude Code users - [PR #48594](https://github.com/BerriAI/litellm/pull/48594)
+- Estimate the prompt size in the first `message_start` of `/v1/messages` streams served through a Chat Completions backend such as `hosted_vllm`, instead of always sending 0 - [PR #48618](https://github.com/BerriAI/litellm/pull/48618)
+- Make the opening prompt usage estimate on `/v1/messages` streams through a Chat Completions backend opt-in, so the default stays 0 until the provider's real usage arrives - [PR #48633](https://github.com/BerriAI/litellm/pull/48633)
+- Send the caller's `anthropic-version` in the Vertex AI Claude `/v1/messages` body instead of the header, so the anthropic Python SDK 2.x no longer gets a 400 - [PR #48814](https://github.com/BerriAI/litellm/pull/48814)
+- Drop the non-spec `custom` object from `/v1/messages` and `count_tokens` tool definitions under `drop_params`, and move a boolean `custom.defer_loading` to the top-level `defer_loading` flag for Claude - [PR #48893](https://github.com/BerriAI/litellm/pull/48893)
+- Stream a guardrail block on `/v1/messages` as the normal Anthropic event sequence, so the Anthropic SDK shows the guardrail's message instead of crashing, and add `x-litellm-call-id` to blocked responses - [PR #49010](https://github.com/BerriAI/litellm/pull/49010)
+- Stream each signed Mistral thinking chunk on `/v1/messages` as a `thinking_delta` and send the signature once when the block ends, so Claude Code shows the full thought instead of only its first word - [PR #49059](https://github.com/BerriAI/litellm/pull/49059)
+- Retry `/v1/messages` once without `strict` under `drop_params` when Claude rejects strict tool limits on Bedrock invoke, Bedrock mantle and Anthropic, with a warning, instead of answering 400 - [PR #49102](https://github.com/BerriAI/litellm/pull/49102)
+- Return the upstream 200 on `/v1/messages` for a plain Anthropic deployment when the body has null or missing `content`, instead of a 500 - [PR #49356](https://github.com/BerriAI/litellm/pull/49356)
 
 ### Count tokens
 
-- Count a message history that carries an Anthropic compaction block by adding the compaction beta on Anthropic and Vertex count calls, instead of answering 500 - [PR #44784](https://github.com/BerriAI/litellm/pull/44784)
-- Count tools the way DeepSeek V4 and Qwen3.5 chat templates render them - [PR #47173](https://github.com/BerriAI/litellm/pull/47173)
-- Count DeepSeek V3 and V4 text with DeepSeek's bundled tokenizer instead of `cl100k_base` - [PR #47353](https://github.com/BerriAI/litellm/pull/47353)
-- Count Responses and chat input tokens for Claude the way inference sends the request, translating tool use first and answering 400 on translation errors - [PR #47363](https://github.com/BerriAI/litellm/pull/47363)
-- Price PDF pages for OpenAI and Azure models the way they bill, counting only drawn images - [PR #47554](https://github.com/BerriAI/litellm/pull/47554)
-- Stop re-downloading a Hugging Face tokenizer after a failed download until the retry window passes - [PR #47586](https://github.com/BerriAI/litellm/pull/47586)
-- Count inline `auto` detail image tiles from bounded data URLs without fetching caller URLs - [PR #48526](https://github.com/BerriAI/litellm/pull/48526)
-- Count an Anthropic-format `tool_choice` without a `KeyError` - [PR #48624](https://github.com/BerriAI/litellm/pull/48624)
-- Count search result blocks and reject unsupported blocks on Anthropic token counts - [PR #48699](https://github.com/BerriAI/litellm/pull/48699)
-- Count OpenAI models newer than tiktoken's table with `o200k_base` - [PR #48728](https://github.com/BerriAI/litellm/pull/48728)
-- Read one-object, null and list spellings of repeated fields in Google `countTokens` and `generateContent`, matching Vertex - [PR #48771](https://github.com/BerriAI/litellm/pull/48771)
-- Answer 400 before counting a Responses request whose only tool is a built-in tool with no Claude equivalent - [PR #48798](https://github.com/BerriAI/litellm/pull/48798)
-- Keep the framed local estimate when a cost-map `token_count_model` for Bedrock cannot count, while an admin-set one keeps its error - [PR #48805](https://github.com/BerriAI/litellm/pull/48805)
-- Keep a loaded Hugging Face tokenizer when a slower download fails, retrying once per `HUGGINGFACE_TOKENIZER_LOAD_RETRY_SECONDS` window - [PR #48916](https://github.com/BerriAI/litellm/pull/48916)
+- Count tokens for Anthropic histories that carry a compaction block and forward `context_management` edits, so `/v1/messages/count_tokens` no longer answers 400 - [PR #44784](https://github.com/BerriAI/litellm/pull/44784)
+- Count tools for DeepSeek V4 and Qwen3.5 on `/v1/messages/count_tokens` the way their chat templates render them, instead of counting 6 to 80 percent below the billed input tokens - [PR #47173](https://github.com/BerriAI/litellm/pull/47173)
+- Count DeepSeek V3 and V4 text with DeepSeek's own tokenizer, so `/v1/messages/count_tokens` lands within 2.5 percent of the billed tokens instead of missing by 3 to 98 percent - [PR #47353](https://github.com/BerriAI/litellm/pull/47353)
+- Count PDF pages for OpenAI and Azure models the way they bill, so `count_tokens` no longer overcounts PDFs about 12x and Azure-only chat models use `o200k_base` - [PR #47554](https://github.com/BerriAI/litellm/pull/47554)
+- Log one INFO line per token count call with `litellm_call_id`, `request_model`, `input_tokens` and `status_code`, on success and on failure - [PR #47657](https://github.com/BerriAI/litellm/pull/47657)
+- Count readable inline `auto` images in `token_counter` with the high-detail tile calculation, including images under 768 pixels, without making HTTP requests - [PR #48526](https://github.com/BerriAI/litellm/pull/48526)
+- Count Anthropic search results, including those inside tool results, on locally counted models, and return a 400 instead of a 500 for unsupported content blocks - [PR #48699](https://github.com/BerriAI/litellm/pull/48699)
+- Count OpenAI models newer than tiktoken's table with `o200k_base`, and strip `openai/` and `azure/` prefixes before picking the encoding - [Commit 5eb1042](https://github.com/BerriAI/litellm/commit/5eb1042bbf57f19d0d698b5c7b67b133000fbf5f)
+- Count tokens with a Claude subscription caller's forwarded token when the deployment has no configured key, instead of answering 401 - [Commit e2d78b6](https://github.com/BerriAI/litellm/commit/e2d78b69cd8b8e51569c9334eda6dd2aa491b002)
+- Answer 400 before counting a Claude request whose only tool is an OpenAI Responses built-in such as `mcp`, and translate `tool_search` and `namespace` tools in `/utils/token_counter` - [PR #48798](https://github.com/BerriAI/litellm/pull/48798)
+- Keep the framed local estimate when a Bedrock count model from the cost map answers 400, 404, 401 or 403, while an admin-set `token_count_model` keeps its error - [Commit ff5bf48](https://github.com/BerriAI/litellm/commit/ff5bf4826dab9ee145de96966488cbd195a1063a)
+- Keep a loaded Hugging Face tokenizer when a later download fails and retry in the background every 60 seconds, set by `HUGGINGFACE_TOKENIZER_LOAD_RETRY_SECONDS`, so token counts answer at once - [PR #48916](https://github.com/BerriAI/litellm/pull/48916)
 
 ### Prompt caching
 
-- Stop stripping `cache_control` from the caller's own messages and tools on OpenAI, Fireworks AI and other providers, so a fallback keeps the hints, and trim extra Claude cache hints under `drop_params` - [PR #35602](https://github.com/BerriAI/litellm/pull/35602)
-- Pick the chat-path `cache_control` dialect from the deployment's provider prefix, so chat and `/v1/messages` send the same cache format on an `azure_ai` deployment - [PR #45295](https://github.com/BerriAI/litellm/pull/45295)
-- Drop a malformed `prompt_cache_breakpoint` under `drop_params` on the direct `/v1/responses` path - [PR #45330](https://github.com/BerriAI/litellm/pull/45330)
-- Send `prompt_cache_retention` to OpenAI from `completion()`, `Router.completion()` and `/v1/chat/completions` instead of silently dropping it - [PR #47480](https://github.com/BerriAI/litellm/pull/47480)
-- Stop counting the cache mark on a server tool call that never ran, so the cache control hook keeps within Anthropic's breakpoint limit - [PR #49468](https://github.com/BerriAI/litellm/pull/49468)
-
-### Context management
-
-- Honor `clear_at_least`, `exclude_tools` and `clear_tool_inputs` in the `clear_tool_uses` polyfill, matching the Anthropic API - [PR #47123](https://github.com/BerriAI/litellm/pull/47123)
-- Count the system prompt toward the `clear_tool_uses` `input_tokens` trigger, matching Anthropic - [PR #47857](https://github.com/BerriAI/litellm/pull/47857)
-- Run `clear_tool_uses_20250919` in the gateway when `/v1/messages` goes to OpenAI models through the Responses API, returning `applied_edits`, instead of dropping it without a warning - [PR #47861](https://github.com/BerriAI/litellm/pull/47861)
+- Strip `cache_control` from a copy for OpenAI-compatible providers instead of editing the caller's request, so a Claude fallback keeps its caching hints, trimmed to the newest 4 under `drop_params` - [PR #35602](https://github.com/BerriAI/litellm/pull/35602)
+- Pick the chat prompt cache format from the deployment's provider prefix, so an `azure_ai/` deployment no longer loses `prompt_cache_options` because of `AZURE_AI_API_BASE` - [PR #45295](https://github.com/BerriAI/litellm/pull/45295)
+- Drop a malformed `prompt_cache_breakpoint` under `drop_params` on `/v1/responses`, `/v1/messages` and `/v1/responses/compact`, so OpenAI no longer answers 400 - [PR #45330](https://github.com/BerriAI/litellm/pull/45330)
+- Key prompt caching affinity on tools and the `/v1/messages` system prompt, so cache breakpoints on a tool or a list system prompt write a pin that the lookup finds - [PR #46411](https://github.com/BerriAI/litellm/pull/46411)
+- Send `prompt_cache_retention` to OpenAI instead of silently dropping it, so 24 hour prompt caching applies - [PR #47480](https://github.com/BerriAI/litellm/pull/47480)
+- Skip non-dict `tools` entries in the `prompt_caching` affinity key, so the provider's 400 comes back instead of a proxy 500 or a Python error message - [PR #47565](https://github.com/BerriAI/litellm/pull/47565)
+- Stop counting the cache mark on a dropped unanswered server tool call, so the system prompt keeps its `cache_control` breakpoint when a slot is free - [PR #49468](https://github.com/BerriAI/litellm/pull/49468)
 
 ### Realtime
 
-- Send the Gemini Live setup on the client's first message, so a `session.update` with `output_modalities` or `modalities` applies instead of every answer coming back as audio - [PR #39864](https://github.com/BerriAI/litellm/pull/39864)
-- Add Soniox realtime speech-to-text on `/v1/realtime` with server VAD, manual finalize, translation sessions and cost from processed audio duration - [PR #44822](https://github.com/BerriAI/litellm/pull/44822)
-- Keep `turn_detection.type` when a transcript guardrail turns off auto-response - [PR #44939](https://github.com/BerriAI/litellm/pull/44939)
-- Route Azure WebRTC `client_secrets` and `calls` to the GA `/openai/v1/realtime` API with the ephemeral key as a bearer, since the preview surface returns 404 - [PR #47316](https://github.com/BerriAI/litellm/pull/47316)
+- Send the Gemini and Vertex Live setup with the first content, built from every earlier `session.update`, so instructions and tools reach the model on `/v1/realtime` - [PR #39864](https://github.com/BerriAI/litellm/pull/39864)
+- Read the first event in the OpenAI realtime health check, so a deployment with a wrong or missing API key reports unhealthy instead of healthy - [PR #41233](https://github.com/BerriAI/litellm/pull/41233)
+- Add Soniox live speech-to-text on `/v1/realtime` with OpenAI transcription events, tracked against keys, budgets and spend - [PR #44822](https://github.com/BerriAI/litellm/pull/44822)
+- Keep `turn_detection.type` when a transcript guardrail disables auto-response, so OpenAI GA no longer rejects the session or answers before the guardrail runs - [PR #44939](https://github.com/BerriAI/litellm/pull/44939)
+- Route Azure WebRTC `/v1/realtime/client_secrets` and calls to the GA `/openai/v1/realtime` API without `api-version`, so token mint stops answering 404 and the SDP exchange stops failing with "Invalid or expired token" - [PR #47316](https://github.com/BerriAI/litellm/pull/47316)
 
 ### Batches and files
 
-- Let proxy admin keys read raw `gs://` and `s3://` file ids on `GET /files/{id}/content`, fixing the last step of the unmanaged Vertex batch flow; other keys get 403, and the id is fully decoded before the check - [PR #40621](https://github.com/BerriAI/litellm/pull/40621)
-- Stop forwarding `api_version` to the OpenAI fine-tuning client, which failed every call with an unexpected keyword argument - [PR #44995](https://github.com/BerriAI/litellm/pull/44995)
-- Batch Vertex AI Claude models under `publishers/anthropic/models/` in Anthropic's native row shape instead of failing with 404 - [PR #45715](https://github.com/BerriAI/litellm/pull/45715)
-- Return a 400 that names the line for malformed Bedrock batch JSONL lines instead of a 500 - [PR #45992](https://github.com/BerriAI/litellm/pull/45992)
-- Send provider file ids for `training_file` and `validation_file` when creating a fine-tuning job from managed files - [PR #46552](https://github.com/BerriAI/litellm/pull/46552)
-- Scope provider and model file lists to the caller's managed files under `require_managed_files`, paged with `after_id` and `before_id` - [PR #47682](https://github.com/BerriAI/litellm/pull/47682)
-- Return real batch token counts next to OpenAI's batch usage fields from retrieve and the cost poller - [PR #47740](https://github.com/BerriAI/litellm/pull/47740)
-- Stop unbillable batches from blocking file deletes and new-batch polling - [PR #48752](https://github.com/BerriAI/litellm/pull/48752)
-- Cost an unmanaged `gs://` batch through the deployment that created it - [PR #49301](https://github.com/BerriAI/litellm/pull/49301)
+- Let proxy admin keys read raw `gs://` and `s3://` file ids on `GET /files/{id}/content` again, and answer 403 for other keys, so the unmanaged Vertex batch flow works - [PR #40621](https://github.com/BerriAI/litellm/pull/40621)
+- Run Claude on Vertex AI through the managed batch route as Anthropic Messages rows and return priced OpenAI batch rows, instead of a 404 at batch create - [PR #45715](https://github.com/BerriAI/litellm/pull/45715)
+- Send the routed deployment's own file ids when creating a fine-tuning job from files uploaded with `target_model_names`, instead of the gateway's file id that OpenAI rejects with a 400 - [PR #46552](https://github.com/BerriAI/litellm/pull/46552)
+- Send Bedrock batch create, retrieve and cancel to the deployment setting `aws_bedrock_control_plane_endpoint` when set, so private endpoint and locked-down VPC setups can run batches - [PR #47260](https://github.com/BerriAI/litellm/pull/47260)
+- Route batch creates to `mode: batch` deployments in a mixed Azure model group, so they stop answering 400 `invalid_deployment_type`, and list `supported_endpoints` on `/model_group/info` - [PR #47376](https://github.com/BerriAI/litellm/pull/47376)
+- Scope provider and model file lists to the caller's own and team managed files for non-admins under `require_managed_files`, and support `limit`, `after`, `after_id` and `before_id` paging - [PR #47682](https://github.com/BerriAI/litellm/pull/47682)
+- Return real prompt and completion token counts next to OpenAI's batch usage fields on batch create, retrieve and stored rows, so responses-endpoint batches no longer show zero tokens - [PR #47740](https://github.com/BerriAI/litellm/pull/47740)
+- Free the input files of batches that never bill after 7 days, split each poll between old and new batches, and stop polling unfinished batches after 14 days, so file deletes and new-batch polling no longer stall - [PR #48752](https://github.com/BerriAI/litellm/pull/48752)
 
 ### Vector Stores
 
-- Use an HTTP/2 httpx client for the Vertex AI `search_api` vector store, with `litellm.http2` or `LITELLM_HTTP2=False` as the opt-out - [PR #40631](https://github.com/BerriAI/litellm/pull/40631)
-- Route a team key's model-less vector store calls to a team deployment of the store's provider instead of the team's first deployment - [PR #46894](https://github.com/BerriAI/litellm/pull/46894)
-- Add Amazon OpenSearch k-NN search as a vector store provider, signing `on.aws` and FIPS hosts, with an entry in the vector store provider dropdown - [PR #47759](https://github.com/BerriAI/litellm/pull/47759)
-- Put the Azure vector store id before the `api-version` query on retrieve, update and delete, which returned 404 - [PR #48224](https://github.com/BerriAI/litellm/pull/48224)
-
-### Search
-
-- Add DeepSeek as a `/v1/search` provider at 0.00075 USD per query, rejecting queries over 128 characters before the call - [PR #47401](https://github.com/BerriAI/litellm/pull/47401)
-- Price Tavily advanced and Linkup deep searches at their own cost map entries - [PR #47411](https://github.com/BerriAI/litellm/pull/47411)
-- Return highlights, highlight scores, score and the response envelope from Exa search - [PR #47423](https://github.com/BerriAI/litellm/pull/47423)
-- Add native xAI X Search on `/v1/search` - [PR #48677](https://github.com/BerriAI/litellm/pull/48677)
-- Return `raw_content`, `score`, `favicon` and the response envelope from Tavily search - [PR #48684](https://github.com/BerriAI/litellm/pull/48684)
-- Forward every Perplexity search filter unchanged instead of a fixed subset - [PR #49344](https://github.com/BerriAI/litellm/pull/49344)
-
-### Images, audio and video
-
-- Keep `model_id` in proxy video ids, so per-model keys resolve on `GET /v1/videos/{id}` and `/content` - [PR #44614](https://github.com/BerriAI/litellm/pull/44614)
-- Answer 400 with `UnsupportedEndpointError` for providers that do not support audio transcription - [PR #47971](https://github.com/BerriAI/litellm/pull/47971)
-- Forward `max_retries` to the OpenAI-compatible image client and pin it to 0 for routed calls, so the Router is the only retry owner - [PR #48705](https://github.com/BerriAI/litellm/pull/48705)
-- Treat an absent `image` as an empty list in async image edits - [PR #48872](https://github.com/BerriAI/litellm/pull/48872)
-- Support `outputContentFormat=markdown` for Azure Document Intelligence OCR, in any casing, reporting `stringIndexType` on the response - [PR #48926](https://github.com/BerriAI/litellm/pull/48926)
-- Stop the router image check from answering 500 on a list input to `/v1/moderations` - [PR #49454](https://github.com/BerriAI/litellm/pull/49454)
-
-### Extraction
-
-- Add `/v1/extraction` with Cloudflare Clairic support, guardrail scanning, Clairic billing and a 400 for `stream=true` unless `drop_params` drops it - [PR #47473](https://github.com/BerriAI/litellm/pull/47473)
-
-### Interactions
-
-- Keep background interaction bills through worker crashes and late restarts, polling with the serving deployment's credentials and keeping the request's tags and metadata - [PR #45743](https://github.com/BerriAI/litellm/pull/45743)
+- Use an HTTP/2 client and a cached OAuth token for Vertex AI Search vector store searches, so a burst of searches shares one Google connection per worker - [PR #40631](https://github.com/BerriAI/litellm/pull/40631)
+- Use the team's own OpenAI deployment on `/rag/ingest` and `/rag/query`, let viewers and team JWTs use /rag routes, and return the real status for a failed ingest instead of 200 - [PR #45497](https://github.com/BerriAI/litellm/pull/45497)
+- Route team key vector store search to a team model of the store's provider, instead of the team's first model and a `Vector store search is not supported` error - [PR #46894](https://github.com/BerriAI/litellm/pull/46894)
+- Add Amazon OpenSearch k-NN indexes as a vector store provider, registered from config or the Admin UI, so search and `file_search` answer from them with SigV4-signed queries instead of a 500 - [PR #47759](https://github.com/BerriAI/litellm/pull/47759)
+- Put the Azure vector store id before the `api-version` query on retrieve, update and delete, so these calls no longer return 404 - [PR #48224](https://github.com/BerriAI/litellm/pull/48224)
+- Enforce team and key Allowed Vector Stores on Responses, chat, messages, pass-through and direct store routes when no vector store registry is loaded, answering 401 for other stores - [PR #48915](https://github.com/BerriAI/litellm/pull/48915)
 
 ### Pass-through endpoints
 
-- Send the deployment `api_key` or `VLLM_API_KEY` as a bearer on both `/vllm` pass-through routes - [PR #46861](https://github.com/BerriAI/litellm/pull/46861)
-- Add the `/eu_jev/v1/systemone` pass-through for the EU-hosted eu/jev decision API, reading `EU_JEV_API_KEY`, with spend tracking and `eu_jev/eu-jeff-1.0.0` pricing - [PR #46875](https://github.com/BerriAI/litellm/pull/46875)
-- Add `general_settings.vertex_ai_pass_through_drop_anthropic_betas` to drop chosen `anthropic-beta` values on the Vertex AI pass-through routes, including values sent through `x-pass-anthropic-beta` - [PR #47185](https://github.com/BerriAI/litellm/pull/47185)
-- Let pass-through upstreams report the model name in `x-litellm-upstream-model`, recorded on success and failure rows - [PR #48275](https://github.com/BerriAI/litellm/pull/48275)
-- Forward the client's `OpenAI-Beta` header on the OpenAI pass-through and default `agents=v1` on `/v1/agents` and `/v1/vaults` paths - [PR #49009](https://github.com/BerriAI/litellm/pull/49009)
-- Log the URL model and the declared provider on Gemini and Vertex pass-through failures, so failure rows and Prometheus counters no longer show an empty model - [PR #49075](https://github.com/BerriAI/litellm/pull/49075)
-- Let a WebSocket pass-through relay bill a session from the client text frames it delivers, for upstreams that report no usage - [PR #49281](https://github.com/BerriAI/litellm/pull/49281)
-- Add Deepgram streaming text-to-speech WebSocket routes on `/deepgram/v1/speak` and `/deepgram/speak` - [PR #49282](https://github.com/BerriAI/litellm/pull/49282)
-- Forward a valid client `metadata.user_id` to Anthropic Messages on pass-through routes, only for Messages create on the Anthropic base and only when no guardrail scans the request - [PR #49333](https://github.com/BerriAI/litellm/pull/49333)
-- Read `/watsonx` pass-through credentials from the deployment flagged `use_in_pass_through`, falling back to `WATSONX_API_KEY` and `WATSONX_API_BASE` - [PR #49462](https://github.com/BerriAI/litellm/pull/49462)
-- Fit the Deepgram listen unpriced-model refusal within a WebSocket close frame - [PR #49502](https://github.com/BerriAI/litellm/pull/49502)
+- Apply `bedrock_request_metadata_fields` on the `/bedrock` pass-through routes, so AWS SDK traffic logs the key, team and org and ignores `user_api_key_*` values sent in the request body - [PR #47040](https://github.com/BerriAI/litellm/pull/47040)
+- Add `general_settings.vertex_ai_pass_through_drop_anthropic_betas` to remove chosen `anthropic-beta` values on `/vertex_ai/*` and `/vertex-ai/*`, so Vertex Claude calls stop answering 400 for a beta it rejects - [PR #47185](https://github.com/BerriAI/litellm/pull/47185)
+- Apply a Bedrock model's `guardrailConfig` on `/bedrock` pass-through converse and invoke routes, so callers can no longer skip or swap the admin's guardrail - [PR #47429](https://github.com/BerriAI/litellm/pull/47429)
+- Let pass-through upstreams name a request's model with the `x-litellm-upstream-model` response header, so spend without a body `model` no longer lands under `unknown` - [PR #48275](https://github.com/BerriAI/litellm/pull/48275)
+- Forward the client's `OpenAI-Beta` header on agents, vaults and ChatKit paths of `/openai` and `/openai_passthrough`, defaulting to `agents=v1` on the first two, so the Agents API no longer fails with 400 `invalid_beta` - [PR #49009](https://github.com/BerriAI/litellm/pull/49009)
+- Log the URL's model and the declared provider on failed Gemini and Vertex pass-through calls, so spend logs and metrics no longer show an empty model or a missing provider - [PR #49075](https://github.com/BerriAI/litellm/pull/49075)
+- Use `sessionId`, `threadId` or `conversationId` from Bedrock request metadata as the session id on Bedrock pass-through routes, so tagged turns share one session instead of each getting its own - [PR #49193](https://github.com/BerriAI/litellm/pull/49193)
+- Add `/deepgram/v1/speak` and `/deepgram/speak` WebSocket routes for Deepgram streaming text to speech, billed per character at the voice generation's rate, and refuse a voice with no cost map price - [PR #49282](https://github.com/BerriAI/litellm/pull/49282)
+- Forward a valid `metadata.user_id` (up to 255 characters) to Anthropic Messages on `/anthropic/v1/messages` and custom pass-through routes, so Claude Code's session and device ids reach Anthropic - [PR #49333](https://github.com/BerriAI/litellm/pull/49333)
+- Log token counts and cost for OpenAI Decisions calls on the `/openai` pass-through route, so key and team budgets move instead of recording $0 - [PR #49392](https://github.com/BerriAI/litellm/pull/49392)
+- Read `api_key` and `api_base` for `/watsonx/{endpoint}` from a watsonx deployment with `use_in_pass_through: true`, instead of only `WATSONX_API_KEY` and `WATSONX_API_BASE` - [PR #49462](https://github.com/BerriAI/litellm/pull/49462)
+- Fit the Deepgram `/listen` unpriced model refusal in the WebSocket close frame, so callers get the reason instead of a 1006 close with no reason - [PR #49502](https://github.com/BerriAI/litellm/pull/49502)
 
-### Agents
+### Agents and Agent-to-Agent
 
-- Add `Harness.PI`, which runs the pi coding agent CLI for `litellm.agent()` against the per-session model endpoint without reading the user's own pi settings - [PR #45467](https://github.com/BerriAI/litellm/pull/45467)
-- Set `PWD` to the sandbox working directory for local sandbox commands, so OpenCode turns in `litellm.agent()` work inside the sandbox - [PR #47530](https://github.com/BerriAI/litellm/pull/47530)
-- Serve the `/a2a/{agent_id}/message/stream` routes - [PR #49471](https://github.com/BerriAI/litellm/pull/49471)
-- Send an agent's `litellm_params.api_key` as bearer auth on the A2A hop - [PR #49474](https://github.com/BerriAI/litellm/pull/49474)
-- Answer proxy refusals on `/a2a` POST routes as JSON-RPC errors - [PR #49476](https://github.com/BerriAI/litellm/pull/49476)
-- Show non-admin callers the proxy URL in agent cards instead of the backend agent URL, and drop alternate backend interfaces from their cards - [PR #49483](https://github.com/BerriAI/litellm/pull/49483)
-- Log authenticated A2A calls that the proxy rejects before dispatch - [PR #49492](https://github.com/BerriAI/litellm/pull/49492)
+- Reach Microsoft Foundry agents by name through the project Responses API with `agent_reference` on `azure_ai/agents/<name>`, for chat completions, Messages and A2A, while classic `asst_...` ids keep the old route - [PR #47717](https://github.com/BerriAI/litellm/pull/47717)
+- Accept Google's current Managed Agents fields `id`, `system_instruction` and `agent_config` on create and interactions, and keep `name` and `instructions` as aliases - [PR #48750](https://github.com/BerriAI/litellm/pull/48750)
+- Bill completion-bridge agents such as LangGraph and Databricks at their own prices under `a2a_agent/<agent name>` on `/a2a` send and stream, instead of $0 on sends and no row on streams - [PR #49150](https://github.com/BerriAI/litellm/pull/49150)
+- Serve `POST /a2a/{agent_id}/message/stream` and its `/v1` alias instead of returning 404, with guardrails scanning the streamed chunks - [PR #49471](https://github.com/BerriAI/litellm/pull/49471)
+- Send an A2A agent's `litellm_params.api_key` as `Authorization: Bearer <key>` on every hop, instead of silently calling the agent unauthenticated - [PR #49474](https://github.com/BerriAI/litellm/pull/49474)
+- Answer proxy refusals on `/a2a/{agent}` POST routes as JSON-RPC errors with `error.code` `-32000`, so strict A2A clients can read the reason, with HTTP status codes unchanged - [PR #49476](https://github.com/BerriAI/litellm/pull/49476)
+- Show non-admin callers the proxy URL instead of the stored backend URL in agent cards from `GET /v1/agents` and `GET /v1/agents/{agent_id}` - [PR #49483](https://github.com/BerriAI/litellm/pull/49483)
+- Treat an empty `agent_search_embedding_model` or `skill_search_embedding_model` as not configured, so search returns the 400 "not configured" error instead of a confusing 503 - [PR #49485](https://github.com/BerriAI/litellm/pull/49485)
+
+### Images, audio and video
+
+- Keep the model in proxy video ids, so status, content, remix, edit and extension calls resolve per-model keys and reach the deployment that created the video - [PR #44614](https://github.com/BerriAI/litellm/pull/44614)
+- Add Doubao-Seedance video generation for `volcengine/` models on `/v1/videos` with per-resolution pricing, instead of answering that video is not supported - [PR #46156](https://github.com/BerriAI/litellm/pull/46156)
+- Read the Polly engine from the bare model name, so `aws_polly/standard`, `aws_polly/long-form` and `aws_polly/generative` stop going out as `neural` - [PR #47963](https://github.com/BerriAI/litellm/pull/47963)
+- Return 400 with the provider and model name instead of 500 when a provider cannot transcribe audio, while the router still tries another deployment or fallback - [PR #47971](https://github.com/BerriAI/litellm/pull/47971)
+- Map ElevenLabs text-to-speech `response_format` values `wav` and `pcm` to the 24kHz `wav_24000` and `pcm_24000` formats, so they work on every account tier instead of returning 403 - [PR #48455](https://github.com/BerriAI/litellm/pull/48455)
+- Remove the dall-e-2 and dall-e-3 code paths, so `litellm.image_generation(prompt=...)` with no model raises a 400 locally instead of calling OpenAI with dall-e-2 - [PR #48703](https://github.com/BerriAI/litellm/pull/48703)
+- Honor an explicit `max_retries` for image generation on OpenAI-compatible providers and leave retries to the Router on the proxy, so one request stops multiplying upstream generations - [PR #48705](https://github.com/BerriAI/litellm/pull/48705)
+- Return HTTP 400 `No image provided` for async BFL image edits without an image instead of HTTP 500 - [PR #48872](https://github.com/BerriAI/litellm/pull/48872)
+- Apply key and team `router_settings` (fallbacks, retries, timeouts, `model_group_alias`) on `/v1/images/generations`, so a failing primary image model uses the key's configured fallback - [PR #49286](https://github.com/BerriAI/litellm/pull/49286)
+
+### Embeddings and rerank
+
+- Add optional `model_info.max_embedding_batch_size` to cap the inputs per `/v1/embeddings` request, routing to a deployment that admits the batch and answering 400 when none does - [PR #44574](https://github.com/BerriAI/litellm/pull/44574)
+- Forward the requested timeout for Gemini and Vertex AI embed-content embeddings in sync and async calls, instead of always using the 300-second default - [PR #48690](https://github.com/BerriAI/litellm/pull/48690)
+- Stop forcing `truncate=false` on Hugging Face TEI rerank and pass `truncate` through, so servers started with `--auto-truncate` stop failing long documents with a 413 - [PR #48706](https://github.com/BerriAI/litellm/pull/48706)
+- Forward configured credentials, custom headers and the requested timeout on Ollama embeddings, so protected Ollama servers stop returning 401 - [PR #48707](https://github.com/BerriAI/litellm/pull/48707)
 
 ### SDK
 
-- Treat `initial_prompt_value` and `final_prompt_value` as optional in custom prompt templates - [PR #39762](https://github.com/BerriAI/litellm/pull/39762)
-- Decide MCP gateway routing without importing the proxy handler, so a base SDK install no longer fails with `ModuleNotFoundError` on function-tool calls and every `responses()` call - [PR #45961](https://github.com/BerriAI/litellm/pull/45961)
-- Hand out bytes buffered before an aiohttp connection drops, so a cut stream bills its partial usage - [PR #47838](https://github.com/BerriAI/litellm/pull/47838)
-- Name the timeout phase and the limit that fired in `litellm.Timeout` messages instead of `after None seconds` - [PR #48250](https://github.com/BerriAI/litellm/pull/48250)
-- Honor an empty `mock_response` - [PR #48266](https://github.com/BerriAI/litellm/pull/48266)
-- Support Python 3.15 - [PR #48359](https://github.com/BerriAI/litellm/pull/48359)
-- Close an owned aiohttp session when its transport is garbage collected - [PR #48650](https://github.com/BerriAI/litellm/pull/48650)
-- Keep the owned aiohttp session open while a response stream is still being read - [PR #48920](https://github.com/BerriAI/litellm/pull/48920)
-- Log a warning naming the pool limits when a request waits more than a second for a pooled aiohttp connection - [PR #49499](https://github.com/BerriAI/litellm/pull/49499)
+- Treat `initial_prompt_value` and `final_prompt_value` as optional in prompt templates, so a template that omits them no longer fails every request with a 500 - [PR #39762](https://github.com/BerriAI/litellm/pull/39762)
+- Add a pi harness to `litellm.agent()` through `Harness.PI` and `PiOptions`, so pi routes its model calls through the AI Gateway - [PR #45467](https://github.com/BerriAI/litellm/pull/45467)
+- Decide MCP gateway routing without importing the proxy handler, so `responses()`, `completion()`, Anthropic `messages` with a tool and `chatgpt/` models stop failing with `No module named 'mcp'` on a base SDK install - [PR #45961](https://github.com/BerriAI/litellm/pull/45961)
+- Fix the misspelling of decommissioned in the Palm decommission error message - [PR #46171](https://github.com/BerriAI/litellm/pull/46171)
+- Set `PWD` to the working directory of local sandbox commands, so OpenCode through `litellm.agent()` works in the sandbox folder and resumes a session in another folder - [PR #47530](https://github.com/BerriAI/litellm/pull/47530)
+- Honor `mock_response=""` in sync, async and streaming completion calls instead of sending a request to the provider - [PR #48266](https://github.com/BerriAI/litellm/pull/48266)
+- Keep the upstream status, headers and body on `e.response` for OpenAI and Azure errors, so `e.response.text` and `e.response.json()` work on `openai/`, `azure/`, `azure_text/` and `litellm_proxy/` models - [PR #49079](https://github.com/BerriAI/litellm/pull/49079)
+- Add `litellm.guardrails.apply` to invoke a configured gateway guardrail from the SDK and get its native findings, without generating a completion - [PR #49469](https://github.com/BerriAI/litellm/pull/49469)
 
 ### General
 
-- Honor the status code when mapping OpenAI `invalid_request_error` exceptions, so 401 and 404 bodies no longer become `BadRequestError` - [PR #32537](https://github.com/BerriAI/litellm/pull/32537)
-- Convert upstream logprobs on streamed chunks so streams with `logprobs` end with their finish chunk - [PR #33549](https://github.com/BerriAI/litellm/pull/33549)
-- Keep `prompt_tokens_details` and `completion_tokens_details` when a streamed chunk carries dict usage - [PR #36678](https://github.com/BerriAI/litellm/pull/36678)
-- Restore the tokenizer estimate for streams that send no usage, instead of logging them at 0 tokens and $0 - [PR #44230](https://github.com/BerriAI/litellm/pull/44230)
-- Keep `finish_reason` and provider usage when rebuilding streamed text completions - [PR #44349](https://github.com/BerriAI/litellm/pull/44349)
-- Answer 400 before the call when an embedding request carries more inputs than the deployment's `max_embedding_batch_size`, counting `extra_body.input` too - [PR #44574](https://github.com/BerriAI/litellm/pull/44574)
-- Cut per-chunk pydantic round trips on OpenAI-compatible streams - [PR #47030](https://github.com/BerriAI/litellm/pull/47030)
-- Report the deployment's configured `api_base` when a chat or native Responses stream fails mid-way, without adding the prompt to the error - [PR #47045](https://github.com/BerriAI/litellm/pull/47045)
-- Send the `include_usage` chunk with an empty `choices` array when the caller set `stream_options.include_usage` - [PR #47109](https://github.com/BerriAI/litellm/pull/47109)
-- Map stream read timeouts to `litellm.Timeout` on chat, `/v1/messages` and `/v1/responses`, keeping mid-stream fallback on a stall - [PR #47198](https://github.com/BerriAI/litellm/pull/47198)
-- Join `api_base` and route with one shared helper, so trailing slashes no longer produce `//` URLs on Perplexity search, Ollama embeddings, DashScope, VolcEngine, GigaChat and other providers - [PR #47535](https://github.com/BerriAI/litellm/pull/47535)
-- Fail a stream that ends without a finish reason instead of treating it as complete - [PR #47665](https://github.com/BerriAI/litellm/pull/47665)
-- Match the SSE `[DONE]` marker exactly, so text or errors that mention `[DONE]` no longer end a stream - [PR #47832](https://github.com/BerriAI/litellm/pull/47832)
-- Recognize OpenAI `context_length_exceeded` errors as `ContextWindowExceededError` - [PR #47954](https://github.com/BerriAI/litellm/pull/47954)
-- Omit stream usage on `/v1/completions` unless the caller asked for it - [PR #48052](https://github.com/BerriAI/litellm/pull/48052)
-- Surface upstream abort finish reasons as server errors - [PR #48328](https://github.com/BerriAI/litellm/pull/48328)
-- Map SGLang context window overflow errors to `ContextWindowExceededError` - [PR #48837](https://github.com/BerriAI/litellm/pull/48837)
-- Move later developer messages into the leading system message for models whose cost map sets `supports_mid_conversation_system` to false, and merge consecutive system messages in linear time - [PR #48897](https://github.com/BerriAI/litellm/pull/48897)
-- Warn when `drop_params` drops a requested reasoning level on the remaining provider paths, including Gemini non-integer thinking budgets, logging one warning per request - [PR #48933](https://github.com/BerriAI/litellm/pull/48933)
-- Put LiteLLM's bill in `usage.cost` on the last streamed usage frame - [PR #48955](https://github.com/BerriAI/litellm/pull/48955)
-- Rebuild each choice of an `n>1` chat stream on its own, so guardrails, spend logs and callbacks see every choice - [PR #49002](https://github.com/BerriAI/litellm/pull/49002)
-- Keep the upstream error body and headers on `e.response` for OpenAI and Azure errors, 429 and 5xx included - [PR #49079](https://github.com/BerriAI/litellm/pull/49079)
-- Stop raising and catching AttributeErrors inside pydantic on every streamed OpenAI and Azure chunk - [PR #49166](https://github.com/BerriAI/litellm/pull/49166)
-- Keep rerank token usage from Bedrock, hosted vLLM and Together AI in spend logs - [PR #49308](https://github.com/BerriAI/litellm/pull/49308)
-- Report finish reason `tool_calls` instead of `stop` after streamed OpenAI-compatible tool calls - [PR #49388](https://github.com/BerriAI/litellm/pull/49388)
+- Raise `AuthenticationError` for 401 and `NotFoundError` for 404 when an OpenAI-compatible provider answers with an `invalid_request_error` body, instead of `BadRequestError` - [PR #32537](https://github.com/BerriAI/litellm/pull/32537)
+- Convert upstream `logprobs` to LiteLLM's own type, so streams with `logprobs` through OpenAI-compatible providers end with their finish chunk instead of a 500 error frame - [PR #33549](https://github.com/BerriAI/litellm/pull/33549)
+- Keep the provider prefix on web search follow-up requests, so Bedrock Mantle and OpenRouter org models no longer fail with `LLM Provider NOT provided` or reach the wrong provider - [PR #38885](https://github.com/BerriAI/litellm/pull/38885)
+- Keep `finish_reason` and provider usage when rebuilding streamed text completions, so `prompt_tokens` no longer reads 0 and a usage trailer with empty `choices` no longer raises `IndexError` - [PR #44349](https://github.com/BerriAI/litellm/pull/44349)
+- Apply each deployment's `reasoning_effort_levels` on every provider and route, rounding efforts and thinking budgets onto declared levels and letting `azure_ai` accept a declared `reasoning_effort` - [PR #46601](https://github.com/BerriAI/litellm/pull/46601)
+- Return upstream response headers on non-streaming chat for `bedrock_mantle/` and other OpenAI-like providers, including `llm_provider-x-amzn-requestid`, the way streaming already does - [PR #46928](https://github.com/BerriAI/litellm/pull/46928)
+- Record a missing or null choice index as choice zero in streamed chat output, so progress chunks from llama-swap style backends no longer end the stream with a proxy error - [PR #46947](https://github.com/BerriAI/litellm/pull/46947)
+- End a chat completions stream with an error event and `data: [DONE]` when a guardrail blocks mid-stream, and end a `/v1/responses` stream with `response.failed`, instead of cutting the connection - [PR #46953](https://github.com/BerriAI/litellm/pull/46953)
+- Send the streamed `include_usage` chunk with `choices: []` like OpenAI when the caller set `include_usage`, so strict clients such as LangChain.js stop counting usage twice - [PR #47109](https://github.com/BerriAI/litellm/pull/47109)
+- Map httpx stream read timeouts to `litellm.Timeout` (408) on chat, messages and responses, and fail a stalled `/v1/responses` stream with code `request_timeout` instead of an empty `server_error` - [PR #47198](https://github.com/BerriAI/litellm/pull/47198)
+- Decode `zstd` and `gzip` request bodies before auth reads them, so compressed requests no longer fail with 400 `Invalid JSON`, with 413 past the size limit and 503 under load - [PR #47418](https://github.com/BerriAI/litellm/pull/47418)
+- Return `highlights`, `highlight_scores` and `score` on Exa search results and Exa's response envelope as `provider_metadata`, so `costDollars` and `requestId` reach callers - [PR #47423](https://github.com/BerriAI/litellm/pull/47423)
+- Add `/v1/extraction` and `litellm.extraction` with Cloudflare Clairic support, which takes typed `fields` and bills input tokens only at 0.10 USD per 1M - [PR #47473](https://github.com/BerriAI/litellm/pull/47473)
+- Join `api_base` and the route with one slash, so an `api_base` ending in `/` no longer sends `//` and gets 404 from Envoy and Mistral - [PR #47535](https://github.com/BerriAI/litellm/pull/47535)
+- Fail a stream that ends without a finish reason instead of reporting a normal completion, and log it as a failure instead of a success - [PR #47665](https://github.com/BerriAI/litellm/pull/47665)
+- Carry `litellm_received_at` to a planted `litellm_metadata` bucket, so `x-litellm-overhead-duration-ms` on chat requests with a guardrail counts auth and pre-call work - [PR #47790](https://github.com/BerriAI/litellm/pull/47790)
+- Match the SSE `[DONE]` marker exactly, so a streamed tool call with `[DONE]` in its arguments is no longer dropped and clients get `tool_calls` instead of a plain stop - [PR #47832](https://github.com/BerriAI/litellm/pull/47832)
+- Omit usage from streamed text completions unless the caller requests it - [Commit e14d2fd](https://github.com/BerriAI/litellm/commit/e14d2fdc38f7272b5b50c67c0bdefa2830aff268)
+- Name the timeout phase and the exact limit that fired in provider timeout errors instead of reporting `after None seconds` and always blaming the connection - [PR #48250](https://github.com/BerriAI/litellm/pull/48250)
+- Raise a 500 when a streamed chat completion reports an `abort` finish reason instead of ending as a clean stop, so existing retry and fallback handling runs - [PR #48328](https://github.com/BerriAI/litellm/pull/48328)
+- Return a clear 400 for non-object JSON bodies on object-only API routes instead of crashing request parsing or auth error handling - [PR #48438](https://github.com/BerriAI/litellm/pull/48438)
+- Return Tavily's `raw_content`, `score`, `favicon`, `answer`, `images` and `request_id` from `/v1/search` instead of only each result's title, url and excerpt - [PR #48684](https://github.com/BerriAI/litellm/pull/48684)
+- Split streamed SSE lines only on CR and LF and keep merged `<think>` tags balanced, so text containing U+2028 no longer cuts a Gemini or Vertex AI stream short with no more content or usage - [Commit d06b889](https://github.com/BerriAI/litellm/commit/d06b889d413237881e3dc27486e4345dd7aa18f9)
+- Raise `ContextWindowExceededError` for SGLang's total token overflow 400, so `context_window_fallbacks` fire for SGLang deployments - [PR #48837](https://github.com/BerriAI/litellm/pull/48837)
+- Move later developer messages into the leading system message for models with `supports_mid_conversation_system: false`, so Qwen3.5 and Qwen3.8 no longer answer 400 `System message must be at the beginning` - [PR #48897](https://github.com/BerriAI/litellm/pull/48897)
+- Support `outputContentFormat=markdown` on `/ocr` for Azure Document Intelligence and fill `pages[].markdown` with each page's slice, instead of always returning plain text - [PR #48926](https://github.com/BerriAI/litellm/pull/48926)
+- Log one WARNING with the param, value, model and reason when `drop_params` drops a requested reasoning level, and make fal honor the global `drop_params` instead of answering 400 - [PR #48933](https://github.com/BerriAI/litellm/pull/48933)
+- Rebuild each choice of an `n` greater than 1 chat stream from its own chunks, so `tool_permission` checks each choice and spend logs keep every choice instead of only the first - [PR #49002](https://github.com/BerriAI/litellm/pull/49002)
+- Honor a Decisions deployment's own `supports_audio_input` and `supports_video_input` flags over the cost map, so unlisted models stop answering 400 on every clip and load-balanced groups skip deployments that would refuse a clip - [PR #49207](https://github.com/BerriAI/litellm/pull/49207)
+- End OpenAI-compatible tool call streams with `finish_reason` `tool_calls` when the upstream reports `stop`, matching non-streaming responses so clients run the tools - [PR #49388](https://github.com/BerriAI/litellm/pull/49388)
+- Stop `POST /v1/moderations` with a list `input` from returning a 500 `'str' object has no attribute 'get'` - [PR #49454](https://github.com/BerriAI/litellm/pull/49454)
+- Report the model that answered instead of `auto` in OpenRouter routed streams, including final usage chunks and cached replays - [PR #49498](https://github.com/BerriAI/litellm/pull/49498)
 
 ## Management Endpoints / UI
 
 ### Admin UI
 
-#### Aria
+#### Guardrails and policies
 
-- Merge the gateway assistant and the Usage assistant into one Aria Agent that opens in a floating popup with suggested questions, and prompt it from Usage - [PR #48082](https://github.com/BerriAI/litellm/pull/48082)
-- Add usage charts to Aria answers and export an answer, charts included, as a PDF - [PR #48094](https://github.com/BerriAI/litellm/pull/48094)
-- Move Aria's empty model state into the model picker - [PR #48223](https://github.com/BerriAI/litellm/pull/48223)
-- Keep Aria reachable from the dashboard header - [PR #48454](https://github.com/BerriAI/litellm/pull/48454)
-- Bundle the Aria avatar image so it loads on the dashboard dev server and the split-chart nginx image instead of showing a broken image - [PR #48890](https://github.com/BerriAI/litellm/pull/48890)
+- Add a Delete button to the guardrail detail page that shares the table row's delete flow, now with a typed-name confirmation and a warning about what still uses the guardrail - [PR #45893](https://github.com/BerriAI/litellm/pull/45893)
+- Keep the Guardrail Garden wizard's Next, Previous and Cancel buttons inside the dialog when topics are selected, so guardrail creation can finish - [PR #48688](https://github.com/BerriAI/litellm/pull/48688)
 
-#### Auto-Routers
+#### Home and LiteAdmin
 
-- Simplify auto router setup with defaults picked from deployed models, classify each user turn by default, and allow custom models in the simple setup - [PR #48451](https://github.com/BerriAI/litellm/pull/48451)
-- Offer the same model groups in the simple auto router setup as in the advanced setup, leaving out only embedding models - [PR #48851](https://github.com/BerriAI/litellm/pull/48851)
-- Resolve auto router template suggestions through the ids a `*` catch-all lists, crediting each id to the wildcard and provider the router actually sends it to - [PR #49331](https://github.com/BerriAI/litellm/pull/49331)
-
-#### Chat
-
-- Redesign the Chat page with the Moyai UI, a Models sidebar with an embedded Model Hub, and image generation - [PR #48108](https://github.com/BerriAI/litellm/pull/48108)
-- Keep MCP tool results in the conversation across follow-up Chat requests - [PR #48124](https://github.com/BerriAI/litellm/pull/48124)
-- Attach PDF, text, Word and Excel documents in Chat - [PR #48137](https://github.com/BerriAI/litellm/pull/48137)
-- Let Chat replies, including MCP runs, finish in the background after the browser disconnects and resume when it returns, with a Continue chats in the background setting - [PR #49461](https://github.com/BerriAI/litellm/pull/49461)
-- Add a deep research mode to Chat that keeps its web citations with the conversation - [PR #49508](https://github.com/BerriAI/litellm/pull/49508)
-
-#### General
-
-- Show the Chat page by default by changing the `enable_chat_ui` default to `true` - [PR #46918](https://github.com/BerriAI/litellm/pull/46918)
-- Count every stable release of the minor line in the upgrade notice for a patch release, so v1.105.1 no longer reads as 0 new features - [PR #46942](https://github.com/BerriAI/litellm/pull/46942)
-- Add `LITELLM_UI_USE_SI_TERMINOLOGY=true` to make the Admin UI say SI instead of AI in its own copy, leaving third-party product, provider and law names and user data unchanged - [PR #47440](https://github.com/BerriAI/litellm/pull/47440)
-- Show a failed state with a Retry button on the Logs table, Usage spend totals and Caching activity chart when their fetch fails, instead of an empty view - [PR #47671](https://github.com/BerriAI/litellm/pull/47671)
-- Take the upgrade notice from the newest stable release in the docs changelog feed and link to its changelog page, instead of GitHub's latest release - [PR #47998](https://github.com/BerriAI/litellm/pull/47998)
-- Make headers optional in the pass-through endpoint form, turn authentication on by default and show its switch without the Enterprise badge - [PR #48081](https://github.com/BerriAI/litellm/pull/48081)
-- Restore clipboard copy buttons in key details, log details and the audit log drawer - [PR #48425](https://github.com/BerriAI/litellm/pull/48425)
-- Render string-valued settings as text inputs on the General Settings page - [PR #48431](https://github.com/BerriAI/litellm/pull/48431)
-- Show the search tool tester's error instead of an empty result list when a query fails - [PR #48478](https://github.com/BerriAI/litellm/pull/48478)
-- Honor the dark mode and locally uploaded logos from UI theme settings in Connect and Chat - [PR #48532](https://github.com/BerriAI/litellm/pull/48532)
-- Keep vendor names such as XecGuard AI and Airia AI, and the copyable Claude Code and Codex agent instructions, in AI wording under `LITELLM_UI_USE_SI_TERMINOLOGY` - [PR #48670](https://github.com/BerriAI/litellm/pull/48670)
-
-#### Guardrails
-
-- Add Delete to the guardrail detail page and share one delete dialog with the table row, which asks for the typed name and warns when a policy pipeline step uses the guardrail - [PR #45893](https://github.com/BerriAI/litellm/pull/45893)
-- Keep the Add Guardrail wizard's step navigation inside the dialog - [PR #48688](https://github.com/BerriAI/litellm/pull/48688)
+- Unify the gateway and usage assistants as Aria Agent, opened in a floating popup with suggested questions and reachable from the Usage page - [Commit f0f1540](https://github.com/BerriAI/litellm/commit/f0f15404d5d29334d658a65d7dbb1d29183291bf)
+- Add usage charts and PDF export of answers to Aria - [Commit e476697](https://github.com/BerriAI/litellm/commit/e4766973a0466e2cdb99ad243aac0081d2bce83b)
+- Show No available models inside the Aria model picker instead of a separate banner above the composer - [PR #48223](https://github.com/BerriAI/litellm/pull/48223)
+- Move the Aria launcher from a floating bottom-right button to the dashboard header beside Docs, so it no longer covers Logs pagination - [PR #48454](https://github.com/BerriAI/litellm/pull/48454)
+- Bundle the Aria Agent avatar with the Admin UI, so it no longer shows a broken image where the UI is not served from the proxy's `/ui` mount - [PR #48890](https://github.com/BerriAI/litellm/pull/48890)
 
 #### Logs
 
-- Percent-encode the request id when opening a spend log's details, so ids with URL special characters load - [PR #48630](https://github.com/BerriAI/litellm/pull/48630)
+- Show a failed state with Retry on the Logs table, Usage totals and Caching chart when their fetch errors, instead of an empty page - [PR #47671](https://github.com/BerriAI/litellm/pull/47671)
+- Make the copy icons in virtual key and log details work when the browser Clipboard API is unavailable, and show a success or error toast instead of failing silently - [PR #48425](https://github.com/BerriAI/litellm/pull/48425)
+- Percent-encode the request id in the spend log detail URL, so Logs rows with `#`, `?` or `%` in the id show their request and response, and fix `lite debug claude` the same way - [PR #48630](https://github.com/BerriAI/litellm/pull/48630)
 
 #### Models + Endpoints
 
-- Show the Kubernetes pods discovered behind a deployment on the model page for admins - [PR #44666](https://github.com/BerriAI/litellm/pull/44666)
-- Show admin-defined `custom_tags` and `custom_metadata` from `model_info` in the Model Hub table and model details, including on `model_group_alias` rows - [PR #46064](https://github.com/BerriAI/litellm/pull/46064)
-- Add the 1 hour cache write cost to the Add Model and model edit forms - [PR #46830](https://github.com/BerriAI/litellm/pull/46830)
-- Show a field error for negative or non-numeric prices in the model edit form instead of saving them - [PR #46978](https://github.com/BerriAI/litellm/pull/46978)
-- Keep model parameter deletions after a page refresh - [PR #48456](https://github.com/BerriAI/litellm/pull/48456)
-- Persist the display order of model group aliases - [PR #48500](https://github.com/BerriAI/litellm/pull/48500)
-- Add Meta Model API to the Add Model provider dropdown - [PR #49314](https://github.com/BerriAI/litellm/pull/49314)
-- Restore the Z.AI credential fields in the Add Model provider catalog - [PR #49325](https://github.com/BerriAI/litellm/pull/49325)
+- Show a Kubernetes pods card on the model page, backed by the new `GET /model/{model_id}/kubernetes_pods`, listing the service host, ready pod count and pod IPs - [PR #44666](https://github.com/BerriAI/litellm/pull/44666)
+- Add a 1 hour cache write cost field to the Add Model and model edit forms, so UI-priced Claude deployments bill 1 hour cache writes at the admin's rate instead of the cost map default - [PR #46830](https://github.com/BerriAI/litellm/pull/46830)
+- Reject negative prices on the model edit form with "Enter a price of 0 or more" instead of saving them as negative per-token costs - [PR #46978](https://github.com/BerriAI/litellm/pull/46978)
+- Show the newest health check per model group on the model hub, on `/public/v1/model_hub` and `/public/model_hub`, instead of whichever stored check sorts last - [PR #47552](https://github.com/BerriAI/litellm/pull/47552)
+- Make pass-through headers optional in the endpoint form, and show the authentication switch on by default and from saved values for all users - [PR #48081](https://github.com/BerriAI/litellm/pull/48081)
+- Simplify Auto Router creation to two suggested models from the latest deployed families, with Cheapest and Best quality alternatives and classifier settings moved under Advanced - [PR #48451](https://github.com/BerriAI/litellm/pull/48451)
+- Delete keys removed in the LiteLLM Params JSON editor so they stay gone after refresh, and stop unsaved defaults from putting deleted flags back into storage - [PR #48456](https://github.com/BerriAI/litellm/pull/48456)
+- Add sortable Alias Name and Target Model Group headers to the Model Group Alias table, with pinned aliases and a persistent display order kept per user in the browser - [PR #48500](https://github.com/BerriAI/litellm/pull/48500)
+- Offer the same deployed models in Simple Auto Router setup as in Advanced configuration, so ChatGPT Responses models no longer disappear from the Everyday and Hard tasks selectors - [PR #48851](https://github.com/BerriAI/litellm/pull/48851)
+- Add Meta Model API to the Add Model provider dropdown, so models like `meta/muse-spark-1.1` can be onboarded from the UI - [PR #49314](https://github.com/BerriAI/litellm/pull/49314)
+- Restore the Z.AI API Key and API Base fields in Add Credential and make Z.AI selectable in Add Model - [PR #49325](https://github.com/BerriAI/litellm/pull/49325)
+- Suggest Auto Router templates for Claude models listed by an `anthropic/claude-*` wildcard in the Add Auto Router dialog, instead of calling every Claude model missing - [PR #49331](https://github.com/BerriAI/litellm/pull/49331)
 
 #### Playground and Decisions
 
-- Redesign the Playground chat around one composer and an inspector panel - [PR #46934](https://github.com/BerriAI/litellm/pull/46934)
-- Include endpoint-qualified models in the Decisions Playground model list - [PR #48504](https://github.com/BerriAI/litellm/pull/48504)
-- Show reasoning in the Playground for `/v1/responses` from the current Responses API reasoning events - [PR #48850](https://github.com/BerriAI/litellm/pull/48850)
+- Turn the Chat UI on by default with `enable_chat_ui` defaulting to `true`, so Chat shows in the view switcher without an admin finding the toggle first - [PR #46918](https://github.com/BerriAI/litellm/pull/46918)
+- Redesign the Playground chat around a single composer and an inspector panel showing routing, guardrails, speed and cost per reply, with other options moved into a Settings popover - [PR #46934](https://github.com/BerriAI/litellm/pull/46934)
+- Show models that serve both chat and decisions in the Decisions Playground picker when their endpoint capabilities are declared - [PR #48504](https://github.com/BerriAI/litellm/pull/48504)
+- Show reasoning in the Playground for `/v1/responses` by handling `response.reasoning_text.delta` and `response.reasoning_summary_text.delta`, instead of only the removed `response.reasoning.delta` event - [PR #48850](https://github.com/BerriAI/litellm/pull/48850)
+- Resume Chat replies after the browser closes, for text chats and MCP tool runs, when Redis-backed background responses are on, with a `Continue chats in the background` toggle in UI Settings - [PR #49461](https://github.com/BerriAI/litellm/pull/49461)
+- Add Deep research to the Chat Tools menu, which researches the web in the background and returns a report with clickable citations and saved sources - [PR #49508](https://github.com/BerriAI/litellm/pull/49508)
+- Change the Chat home heading and composer placeholder to describe general chat, with research wording when Deep research is on - [PR #49531](https://github.com/BerriAI/litellm/pull/49531)
 
-#### Teams, users and organizations
+#### Settings
 
-- Show the caller's own member spend, budget and reset date as My Spend on Your Teams - [PR #45674](https://github.com/BerriAI/litellm/pull/45674)
-- Show Never resets instead of n/a for an unset budget reset period, with a single Never resets option in Create Team when no default is set - [PR #47065](https://github.com/BerriAI/litellm/pull/47065)
-- Offer access group models and expanded wildcards in the team per-model rate limit and budget pickers, and drop the `no-default-models` sentinel that never matched a request - [PR #47630](https://github.com/BerriAI/litellm/pull/47630)
-- Sort every users table data column, with unlimited budgets ordered as infinity - [PR #48105](https://github.com/BerriAI/litellm/pull/48105)
-- Sort every organizations table data column - [PR #48106](https://github.com/BerriAI/litellm/pull/48106)
-- Sort every teams table data column, with unlimited limits ordered as infinity - [PR #48109](https://github.com/BerriAI/litellm/pull/48109)
-- Make the Download CSV Template button in bulk invite download the template - [PR #48199](https://github.com/BerriAI/litellm/pull/48199)
-- Add a budget period tooltip with the period dates, max budget, reset interval and spend to the key, team, user and organization spend tiles, and schedule `budget_reset_at` when an organization is created - [PR #48487](https://github.com/BerriAI/litellm/pull/48487)
-- Show the budget period date range instead of "cycle" on team member spend - [PR #48488](https://github.com/BerriAI/litellm/pull/48488)
-- Keep a team's model grants, including All Proxy Models, when saving unrelated team settings - [PR #49258](https://github.com/BerriAI/litellm/pull/49258)
+- Add a General Settings toggle that includes wildcard routes in model listings, which clients can still override per request - [PR #47979](https://github.com/BerriAI/litellm/pull/47979)
+- Show text inputs for String settings in Router Settings general settings, including saved retention periods and cleanup timeouts, instead of empty value cells - [PR #48431](https://github.com/BerriAI/litellm/pull/48431)
 
-#### Budgets
+#### Teams, users and access groups
 
-- Show the spend limit and rate limits in the create and edit budget dialogs without a collapsed section, and send only changed fields on edit - [PR #47662](https://github.com/BerriAI/litellm/pull/47662)
-- Sort budgets by reset duration, with unlimited limits ordered as infinity - [PR #48107](https://github.com/BerriAI/litellm/pull/48107)
+- Show the caller's own spend and member budget per team on Your Teams, with `/v2/team/list` returning `caller_membership`, so a user in several teams no longer opens each My User tab - [PR #45674](https://github.com/BerriAI/litellm/pull/45674)
+- Show `Never resets` instead of `n/a` for an unset budget reset period, and label the blank option `Keep current` or `No change` where an empty period leaves the stored value as is - [PR #47065](https://github.com/BerriAI/litellm/pull/47065)
+- Offer access-group models in the team per-model rate limit and budget pickers, and every model for a team with an empty model list, instead of only `no-default-models` - [PR #47630](https://github.com/BerriAI/litellm/pull/47630)
+- Sort every Users table data column, including alias, budget, updated date, SSO, status and key count, across all matching users before pagination - [PR #48105](https://github.com/BerriAI/litellm/pull/48105)
+- Sort every Organizations table data column, including budget, members, models and separate TPM and RPM limits - [PR #48106](https://github.com/BerriAI/litellm/pull/48106)
+- Sort every Teams table data column, including budgets, rate limits, organization names and member, model and key counts, across all matching teams before pagination - [PR #48109](https://github.com/BerriAI/litellm/pull/48109)
+- Make the Download CSV Template button in Bulk Invite Users download `bulk_users_template.csv` with an example row, instead of doing nothing - [PR #48199](https://github.com/BerriAI/litellm/pull/48199)
+- Show the budget period date range, such as Oct 1 - Nov 1, 2026, instead of Current Cycle Spend on the team Members table and My User tab - [PR #48488](https://github.com/BerriAI/litellm/pull/48488)
+- Keep a team's model access when saving unrelated settings like its budget, and show unrestricted teams as All Proxy Models in the team editor - [PR #49258](https://github.com/BerriAI/litellm/pull/49258)
 
 #### Usage
 
-- Keep the Usage view, tab, date range and filters in the URL so links can be bookmarked and shared, add a View usage action on Internal Users rows and a Copy Share Link button - [PR #43425](https://github.com/BerriAI/litellm/pull/43425)
-- Add a Claude Code and Claude Desktop client usage panel to Usage, scoped to all users, one user or a team's members - [PR #47974](https://github.com/BerriAI/litellm/pull/47974)
-- Add a `usage_default_time_range` UI setting (`today`, `last_7_days`, `last_30_days`, `month_to_date` or `year_to_date`) for the range Usage opens with - [PR #48207](https://github.com/BerriAI/litellm/pull/48207)
-- Remove the deprecated Old Usage page - [PR #49284](https://github.com/BerriAI/litellm/pull/49284)
+- Keep Usage view, tab, dates and filters in the URL, add a View usage action on Internal Users, and add a Copy Share Link button - [PR #43425](https://github.com/BerriAI/litellm/pull/43425)
+- Mark ChatGPT subscription requests as Included in subscription on Usage, and add a card to record each account's monthly fee apart from metered spend - [PR #44772](https://github.com/BerriAI/litellm/pull/44772)
+- Inspect client usage for users and team members on the Usage page - [Commit e41d375](https://github.com/BerriAI/litellm/commit/e41d3751692f9564676c279afa098cba34c534d0)
+- Let admins choose the default time range for the Usage page in UI Settings, keeping the seven day default when unset and honoring ranges in shared links - [PR #48207](https://github.com/BerriAI/litellm/pull/48207)
+- Remove the deprecated Old Usage page and its Experimental sidebar entry, and send old `?page=usage` bookmarks to the current Usage page at `/ui/usage` - [PR #49284](https://github.com/BerriAI/litellm/pull/49284)
 
 #### Virtual Keys
 
-- Prefill the Organization picker in key edit from the `org_id` that `/key/list` returns - [PR #39535](https://github.com/BerriAI/litellm/pull/39535)
-- Show the gateway URL and optional Claude Code and Codex setup instructions after creating a key - [PR #47199](https://github.com/BerriAI/litellm/pull/47199)
-- Sort virtual keys by expiry, last activity, spend and limits - [PR #48074](https://github.com/BerriAI/litellm/pull/48074)
-- Leave a blank expiry out of key edit and regenerate requests - [PR #48634](https://github.com/BerriAI/litellm/pull/48634)
+- Prefill the Organization picker in the key edit form from `org_id`, so keys opened from the Virtual Keys list or an agent's page no longer show All Organizations - [PR #39535](https://github.com/BerriAI/litellm/pull/39535)
+- Show the gateway URL with a Copy URL button and a collapsible Agent instructions card for Claude Code and Codex in the Save your Key modal - [PR #47199](https://github.com/BerriAI/litellm/pull/47199)
+- Sort virtual keys by expiry, last activity, budget reset, lifetime spend and token or request limits across all matching keys before pagination - [PR #48074](https://github.com/BerriAI/litellm/pull/48074)
+- Leave `duration` out of key edit and regenerate requests when the expiry field is blank, so proxies with an upperbound `duration` stop rejecting them with `Invalid duration format` - [PR #48634](https://github.com/BerriAI/litellm/pull/48634)
+
+#### General
+
+- Count the whole minor line in the upgrade notice for patch releases, so v1.105.1 no longer reads as 0 new features and admins on older patches see everything upgrading brings - [PR #46942](https://github.com/BerriAI/litellm/pull/46942)
+- Add `LITELLM_UI_USE_SI_TERMINOLOGY` to show SI instead of AI in the Admin UI, exposed on `/.well-known/litellm-ui-config`, with prompts sent to models keeping AI - [PR #47440](https://github.com/BerriAI/litellm/pull/47440)
+- Rebuild the dashboard bundle to remove the retired example master key from its compiled files, so copied snippets no longer carry it - [PR #47612](https://github.com/BerriAI/litellm/pull/47612)
+- Take the upgrade notice's version and link from the docs changelog instead of GitHub's latest release, so the bell only offers releases with a published changelog page - [PR #47998](https://github.com/BerriAI/litellm/pull/47998)
+- Add the Moyai Chat workspace with an embedded Model Hub, images and usage metrics - [Commit ca64a3b](https://github.com/BerriAI/litellm/commit/ca64a3bef2ee0c6430f338c6967288d998ed7f7e)
+- Keep MCP tool results across follow-up requests in Chat - [Commit 6292f21](https://github.com/BerriAI/litellm/commit/6292f217a31d3e4a1841f70dc6b848ba6b8e6d02)
+- Let Chat attach PDF, text and code, Word and Excel files, up to four per message and 10 MB each, and keep them after reload - [PR #48137](https://github.com/BerriAI/litellm/pull/48137)
+- Stop sending a separate telemetry request to a hosted service when a Chat message is submitted in the Admin UI - [PR #48225](https://github.com/BerriAI/litellm/pull/48225)
+- Show the proxy's error message in a toast when a search from the search tools tester is rejected, instead of showing 0 results and No results found - [PR #48478](https://github.com/BerriAI/litellm/pull/48478)
+- Add a tooltip to the key, team, user and organization Spend tiles showing the budget period, max budget, reset interval and spend so far, and schedule resets for organizations created with a budget duration - [PR #48487](https://github.com/BerriAI/litellm/pull/48487)
+- Show the configured dark logo in Connect and Chat in dark mode, support private server images, and show organization branding in the Chat sidebar and mobile drawer - [PR #48532](https://github.com/BerriAI/litellm/pull/48532)
+- Keep XecGuard and Airia vendor names and copied agent instructions in AI wording when SI terminology is on, instead of showing "XecGuard SI" and "SI gateway" - [PR #48670](https://github.com/BerriAI/litellm/pull/48670)
+- Render keyboard shortcut hints across the Admin UI through the shared shadcn `Kbd` component, so the chips look the same on every page - [PR #48885](https://github.com/BerriAI/litellm/pull/48885)
 
 ### Keys, teams and authentication
 
-- Refresh the cached team on `/team/block` and `/team/unblock`, so a block or unblock takes effect at once instead of after the cache entry expires - [PR #35643](https://github.com/BerriAI/litellm/pull/35643)
-- Apply `default_key_generate_params.allowed_routes` on key generation and to the key type presets it covers, while Full Access and service account keys keep their routes and owners cannot change routes the default set - [PR #41236](https://github.com/BerriAI/litellm/pull/41236)
-- Let `/key/update` assign a project to a key that has none - [PR #41700](https://github.com/BerriAI/litellm/pull/41700)
-- Use the team's own OpenAI deployment credentials for RAG ingest and query on OpenAI vector stores, and allow viewer and JWT team access to the RAG routes - [PR #45497](https://github.com/BerriAI/litellm/pull/45497)
-- Evict a key deleted with `/key/delete` from every worker's auth cache and the Redis copy, instead of only the worker that served the call - [PR #47609](https://github.com/BerriAI/litellm/pull/47609)
-- Require the same budget permission for `budget_duration` and `budget_id` changes on `/key/update` as for `max_budget`, so a key owner can no longer reset or lift a capped key's budget - [PR #47681](https://github.com/BerriAI/litellm/pull/47681)
-- Scope search tool access in non-admin Admin UI sessions to the user's own grants - [PR #48464](https://github.com/BerriAI/litellm/pull/48464)
-- Return a 403 naming the Enterprise license when a key or user is created with `get_spend_routes` permissions on a proxy without a license - [PR #48623](https://github.com/BerriAI/litellm/pull/48623)
-- Page `/customer/list` with `page`, `page_size` (default 50, max 100) and a `search` on customer ID or alias, and page the customer filters on Usage - [PR #48700](https://github.com/BerriAI/litellm/pull/48700)
-- Enforce team and key Allowed Vector Stores when no vector store registry is loaded, and answer 400 on a malformed `vector_store_ids` - [PR #48915](https://github.com/BerriAI/litellm/pull/48915)
+- Refresh the cached team on `/team/block` and `/team/unblock` and tell other proxies over Redis, so blocked team keys stop working and unblocked ones resume without waiting for the cache to expire - [PR #35643](https://github.com/BerriAI/litellm/pull/35643)
+- Send the status's error `type` and a missing `param` as JSON `null` instead of the string "None" on proxy server, auth, spend and key health errors - [PR #39540](https://github.com/BerriAI/litellm/pull/39540)
+- Label errors from shared-handler routes such as `/key/generate` and `/v1/batches` as `invalid_request_error` for a 4xx and `auth_error` for a proxy 401 or 403, instead of `internal_server_error` - [PR #39555](https://github.com/BerriAI/litellm/pull/39555)
+- Apply `default_key_generate_params.allowed_routes` to newly generated keys, including UI AI APIs keys - [PR #41236](https://github.com/BerriAI/litellm/pull/41236)
+- Allow `/key/update` to assign a project to a key that has none, instead of answering 400 `Project reassignment is not supported` - [PR #41700](https://github.com/BerriAI/litellm/pull/41700)
+- List every priced Vertex family under a `vertex_ai/*` grant and keep publisher segments like `meta/` in listed ids, so each listed id is callable - [PR #41959](https://github.com/BerriAI/litellm/pull/41959)
+- Return a generic error from `/key/info` on unexpected database failures instead of raw database-driver details in the 500 body, and log the full exception on the server - [PR #46190](https://github.com/BerriAI/litellm/pull/46190)
+- Let personal keys inherit MCP server, MCP tool and agent access from the owner's teams when `personal_key_model_access_from_teams` is on, instead of listing no MCP servers while reaching every agent - [PR #46293](https://github.com/BerriAI/litellm/pull/46293)
+- Evict a deleted key from every worker's auth cache over coordination Redis, so `/key/delete` stops other workers serving the key until the TTL - [PR #47609](https://github.com/BerriAI/litellm/pull/47609)
+- Gate `budget_duration` and `budget_id` changes on `/key/update` like `max_budget`, so key owners and team members get a 403 instead of shortening the reset period or moving to a bigger budget tier - [PR #47681](https://github.com/BerriAI/litellm/pull/47681)
+- Let `typesafe/*` allowlists cover `/typesafe` calls with the priced Jev model ids so `jev-latest` no longer gets a 403, and list `typesafe/*` and Jev models in the Admin UI model pickers when a TypeSafe key is set - [PR #47697](https://github.com/BerriAI/litellm/pull/47697)
+- Align LiteAdmin MCP route checks with the gateway's existing access rules - [PR #48080](https://github.com/BerriAI/litellm/pull/48080)
+- Stop looking up the placeholder dashboard team for Admin UI search so searches no longer 404, and scope non-admin dashboard users to their granted tools under `search_tool_deny_by_default` - [PR #48464](https://github.com/BerriAI/litellm/pull/48464)
+- Log routine proxy auth 401 rejections as one WARNING without a traceback, so ERROR logs only show real crashes inside auth - [PR #48613](https://github.com/BerriAI/litellm/pull/48613)
+- Return a 403 naming the Enterprise licence when `/key/generate` or `/user/new` sets `get_spend_routes` without one, instead of a bare 500 - [PR #48623](https://github.com/BerriAI/litellm/pull/48623)
+- Label 400 and 404 rejections from management and health routes `invalid_request_error` instead of `auth_error`, and answer 503 for database outages and failovers - [PR #48739](https://github.com/BerriAI/litellm/pull/48739)
+- Keep the stored secret when `PATCH /credentials/{name}` receives the masked read-back of a secret, instead of saving the mask as the key and breaking every model on that credential - [PR #48950](https://github.com/BerriAI/litellm/pull/48950)
+- Show a team dropdown on the Claude Code gateway's Complete CLI Login page and issue the session for the picked team, refusing a team the developer is not on with a 400 - [PR #49001](https://github.com/BerriAI/litellm/pull/49001)
+- Keep the team lists for `lite login`, the `--pkce` preselect and the Claude Code gateway dropdown in the user record's order, and add teams in the order sent on user create, group sync, SCIM and JWT sync - [PR #49033](https://github.com/BerriAI/litellm/pull/49033)
+- Scope `/health` with the same model checks as chat, so wildcard keys see models they can call and team keys no longer see or probe models their team forbids - [PR #49155](https://github.com/BerriAI/litellm/pull/49155)
 
 ### SSO and SCIM
 
-- Store SCIM `PATCH` enterprise extension attributes, such as manager, in `metadata.scim_enterprise`, merging sub-attributes into what is already stored - [PR #46738](https://github.com/BerriAI/litellm/pull/46738)
-- Delete a SCIM group through the team delete's bulk path instead of removing one member at a time - [PR #47544](https://github.com/BerriAI/litellm/pull/47544)
-- Refuse only new SSO users past the free 5-user limit with a 403, so existing users can still sign in without an Enterprise license - [PR #48097](https://github.com/BerriAI/litellm/pull/48097)
-- Keep a user's teams in record order through SCIM and JWT team sync, so CLI SSO and Claude Code gateway sign-ins bind the same first team, and look up SSO claim groups once per sign-in - [PR #49033](https://github.com/BerriAI/litellm/pull/49033)
-- Create the `team_id_jwt_field` team on Admin UI SSO login when `team_id_upsert` is set and JWT auth is on - [PR #49256](https://github.com/BerriAI/litellm/pull/49256)
+- Store SCIM PATCH enterprise extension attributes like `department` and `costCenter` in `metadata.scim_enterprise` instead of silently dropping them, and answer 400 for a wrong-typed enterprise value - [PR #46738](https://github.com/BerriAI/litellm/pull/46738)
+- Delete a SCIM group through the team delete's bulk path, so its memberships and members' team keys are removed instead of staying active - [PR #47544](https://github.com/BerriAI/litellm/pull/47544)
+- Refuse a sixth billable user before creating their account on free SSO, while existing users can still sign in instead of being locked out - [PR #48097](https://github.com/BerriAI/litellm/pull/48097)
+- Create the `team_id_jwt_field` team on UI SSO login when `team_id_upsert` and `enable_jwt_auth` are set, then add the user to it, matching what the API JWT path already does - [PR #49256](https://github.com/BerriAI/litellm/pull/49256)
 
 ### Model management
 
-- List every priced Gemini Enterprise Agent Platform (formerly Vertex AI) family, including Mistral, Llama, Qwen, AI21, OpenAI, image, video and embedding rows, under a `vertex_ai/*` grant - [PR #41959](https://github.com/BerriAI/litellm/pull/41959)
-- Add `general_settings.return_wildcard_routes` so `/v1/models` lists wildcard routes like `openai/*` by default, while the request's `return_wildcard_routes` still wins - [PR #43624](https://github.com/BerriAI/litellm/pull/43624)
-- Match partial wildcards against prefix-stripped model ids on model listings, and list alias wildcards as routable ids instead of raw catalog ids - [PR #46390](https://github.com/BerriAI/litellm/pull/46390)
-- Persist the `model_info` fields sent on `POST /model/update`, such as `base_model` and `mode`, so clients like the Terraform provider can change them in place - [PR #46902](https://github.com/BerriAI/litellm/pull/46902)
-- Show `return_wildcard_routes` on the Admin UI General Settings page - [PR #47979](https://github.com/BerriAI/litellm/pull/47979)
-- Keep the stored secret when `PATCH /credentials` sends back the masked value a read returned - [PR #48950](https://github.com/BerriAI/litellm/pull/48950)
-- Load the model rows a create, update or upsert wrote on every worker as soon as the write returns, instead of after the debounced resync - [PR #49034](https://github.com/BerriAI/litellm/pull/49034)
-- List only routable models for a wildcard alias over a provider org, such as `together_ai/*` over `together_ai/<org>/*`, on `/v1/models` and `/model/info` - [PR #49152](https://github.com/BerriAI/litellm/pull/49152)
-- Keep a model's `access_windows` when it is edited - [PR #49316](https://github.com/BerriAI/litellm/pull/49316)
-
-### Health checks
-
-- Report an OpenAI realtime deployment with a missing or invalid API key as unhealthy, and time out a silent handshake under `model_info.health_check_timeout` - [PR #41233](https://github.com/BerriAI/litellm/pull/41233)
-- Show the newest health check per model group on the Model Hub - [PR #47552](https://github.com/BerriAI/litellm/pull/47552)
-- Ask OpenAI and Azure audio chat models for audio output in the health check probe, and judge the probed model when `health_check_model` is set - [PR #47730](https://github.com/BerriAI/litellm/pull/47730)
-- Probe the cheapest cost-map chat models a partial wildcard serves, skip retired models, and fall back to the provider's cheapest chat models when none match - [PR #49060](https://github.com/BerriAI/litellm/pull/49060)
-- Scope `/health` results for wildcard keys, team model allowlists and aliases with the same model access check auth runs on a request - [PR #49155](https://github.com/BerriAI/litellm/pull/49155)
+- Show admin-defined `model_info.custom_tags` and `model_info.custom_metadata` on Model Hub, merged across a model group's deployments, so lifecycle and capacity info no longer gets dropped - [PR #46064](https://github.com/BerriAI/litellm/pull/46064)
+- Match partial wildcards like `cloudflare/@cf/*` against prefix-stripped model ids, so `/v1/models` and `/model/info` list the real models and alias ids over a wildcard can be called - [PR #46390](https://github.com/BerriAI/litellm/pull/46390)
+- Save the `model_info` fields sent to `POST /model/update` instead of discarding them, so a Terraform `base_model` change no longer returns 200 and does nothing - [PR #46902](https://github.com/BerriAI/litellm/pull/46902)
+- Ask OpenAI and Azure audio chat models for audio output in the `/health` probe, so `gpt-audio` deployments no longer show unhealthy from a 400 - [PR #47730](https://github.com/BerriAI/litellm/pull/47730)
+- Apply a model added with `/model/new` on every worker as soon as it is written when Redis is on, instead of after up to 16 seconds, and rewrite only the deployments that change on access group edits - [PR #49034](https://github.com/BerriAI/litellm/pull/49034)
+- Probe the two cheapest cost map chat models a partial wildcard like `databricks/databricks-claude-*` serves before the provider-wide models, so its health row reports on a model the deployment serves - [PR #49060](https://github.com/BerriAI/litellm/pull/49060)
+- Let models with saved access windows be edited without an HTTP 500, keeping the windows unless an admin replaces or clears them - [PR #49316](https://github.com/BerriAI/litellm/pull/49316)
 
 ### Usage and analytics
 
-- Show subscription-covered providers, such as ChatGPT subscription deployments, and their account fees separately in Usage, managed through `/subscription_accounts/usage`, `/subscription_accounts/new`, `/subscription_accounts/update` and `/subscription_accounts/delete` - [PR #44772](https://github.com/BerriAI/litellm/pull/44772)
-- Add a per-guardrail spend breakdown with per-key spend under `breakdown.guardrails` to user, team and organization daily activity - [PR #48702](https://github.com/BerriAI/litellm/pull/48702)
-- Keep daily activity rows with no key, model or model group in reports and exports under `unattributed`, `unknown-model-group` and unknown-model buckets instead of dropping them, reporting a real key named like a bucket with a `raw:` prefix - [PR #48925](https://github.com/BerriAI/litellm/pull/48925)
-
-### Error responses
-
-- Return a status-derived `type` and a JSON `null` `param` instead of the literal string `None` in errors from the proxy server, auth, spend, management and key health routes - [PR #39540](https://github.com/BerriAI/litellm/pull/39540)
-- Label errors from the shared management handler by the status they answer, so a 400 no longer carries `internal_server_error`, while provider 5xx and timeouts keep it and internal hosts are redacted - [PR #39555](https://github.com/BerriAI/litellm/pull/39555)
-- Answer unexpected `/key/info` database failures with a generic 500 that points to the server logs instead of the raw exception - [PR #46190](https://github.com/BerriAI/litellm/pull/46190)
-- Reject a request body that parses as JSON but is not an object with a 400 after authentication, instead of failing inside request handling - [PR #48438](https://github.com/BerriAI/litellm/pull/48438)
-- Log routine 401 rejections, such as a missing header, a blocked key or a non-admin key on an admin route, as one WARNING line without a traceback - [PR #48613](https://github.com/BerriAI/litellm/pull/48613)
-- Name management and health route errors by their status instead of `auth_error`, keep `auth_error` for 401 and 403, and answer a database outage with 503 - [PR #48739](https://github.com/BerriAI/litellm/pull/48739)
+- Paginate the customer list routes, defaulting to 50 customers per page with sizes from 1 to 100, and let the Usage customer filter search and load more customers - [PR #48700](https://github.com/BerriAI/litellm/pull/48700)
 
 ### Proxy configuration
 
-- Delete callbacks configured under `callbacks` or `failure_callback` with `POST /config/callback/delete`, so the Admin UI Delete no longer returns 404 for those rows - [PR #42740](https://github.com/BerriAI/litellm/pull/42740)
-- Support `--reload` with multiple workers on uvicorn 0.50.0 or later, stopping the worker pool on a broken edit until the next save; older uvicorn and Windows keep single-worker reload with a warning - [PR #45909](https://github.com/BerriAI/litellm/pull/45909)
-- Unset environment variables removed from the database row on every worker, tracked by row revision - [PR #46709](https://github.com/BerriAI/litellm/pull/46709)
-- Accept `s3://` URIs in `LITELLM_MODEL_COST_MAP_URL` - [PR #46972](https://github.com/BerriAI/litellm/pull/46972)
-- Fall back to the bundled cost map when `LITELLM_MODEL_COST_MAP_URL` cannot be parsed as a URL - [PR #47133](https://github.com/BerriAI/litellm/pull/47133)
-- Warn at boot when a config `environment_variables` key replaces a value already set in the process environment - [PR #47165](https://github.com/BerriAI/litellm/pull/47165)
-- Resolve `oidc/file/<path>` and `oidc/env/<VAR>` references in an admin-configured `api_key` on each request instead of sending them upstream as literal text - [PR #47341](https://github.com/BerriAI/litellm/pull/47341)
-- Decode `zstd` and `gzip` request bodies before auth reads them, bounded by `max_request_size_mb` and a per-worker in-flight limit - [PR #47418](https://github.com/BerriAI/litellm/pull/47418)
-- Resolve an admin-set `oidc/google/<audience>` `api_key` to a GCE metadata server ID token on each request, cached until a minute before it expires - [PR #47703](https://github.com/BerriAI/litellm/pull/47703)
-- Add `LITELLM_SUPPRESS_STARTUP_OUTPUT` and `litellm_settings.suppress_startup_output` to turn off the startup prints, while boot warnings are still written - [PR #47708](https://github.com/BerriAI/litellm/pull/47708)
-- Add `LITELLM_DISABLE_LATEST_RELEASE_CHECK=true` to stop the proxy fetching the latest release for the upgrade notice - [PR #48065](https://github.com/BerriAI/litellm/pull/48065)
-- Add `LITELLM_OFFLINE_MODE`, one switch that stops the outbound fetches LiteLLM makes on its own, such as the remote cost map, the release check and non-bundled tokenizers - [PR #48096](https://github.com/BerriAI/litellm/pull/48096)
-- Store boolean settings as JSON booleans on `/config/field/update` - [PR #48595](https://github.com/BerriAI/litellm/pull/48595)
-- Read stored `router_settings` from the writer database on `POST /fallback` and `DELETE /fallback/{model}`, so a stale Redis copy no longer drops earlier rules and config file settings stay out of the database row - [PR #48999](https://github.com/BerriAI/litellm/pull/48999)
-- Treat an empty agent or skill search embedding model setting as not configured - [PR #49485](https://github.com/BerriAI/litellm/pull/49485)
+- Add a `general_settings.return_wildcard_routes` setting that shows wildcard routes in `/v1/models` by default, with request parameters still overriding it - [PR #43624](https://github.com/BerriAI/litellm/pull/43624)
+- Run every worker with `--reload` when `--num_workers`, `NUM_WORKERS` or `DEFAULT_NUM_WORKERS_LITELLM_PROXY` is above 1 on uvicorn 0.50.0 or newer, restarting the whole pool on each save instead of falling back to one worker - [PR #45909](https://github.com/BerriAI/litellm/pull/45909)
+- Unset a removed stored environment variable on every worker by row revision, so a removed provider key stops serving traffic without restarting every pod - [PR #46709](https://github.com/BerriAI/litellm/pull/46709)
+- Log one boot WARNING naming each config `environment_variables` key that replaces a value already set in the process environment, without printing the value - [PR #47165](https://github.com/BerriAI/litellm/pull/47165)
+- Let `enforce_project_model_quota` take `default`, `providers` and `models` entries naming which `rpm` and `tpm` limits each provider or model needs, with `[]` exempting it, and name each model's missing limits in the 400 - [PR #47693](https://github.com/BerriAI/litellm/pull/47693)
+- Add `suppress_startup_output`, or `LITELLM_SUPPRESS_STARTUP_OUTPUT=true`, to turn off the startup banner, model list and Search Tools list, and drop color codes when stdout is not a color terminal - [PR #47708](https://github.com/BerriAI/litellm/pull/47708)
+- Add `LITELLM_DISABLE_LATEST_RELEASE_CHECK=true` to make `/get/latest_release_info` return `null` without any outbound request, for locked-down networks - [PR #48065](https://github.com/BerriAI/litellm/pull/48065)
+- Add `LITELLM_OFFLINE_MODE=true` to stop the catalog, release, breached-password and tokenizer fetches LiteLLM makes on its own and use the bundled copy instead - [PR #48096](https://github.com/BerriAI/litellm/pull/48096)
+- Store boolean settings sent to `/config/field/update` as real `true` or `false` instead of text such as "true" or "yes", so the proxy no longer treats a switch shown as on as off - [PR #48595](https://github.com/BerriAI/litellm/pull/48595)
 
 ### CLI and coding agents
 
-- Start `lite` without initializing the litellm SDK and load only the subcommand being run, so commands start in a fraction of a second - [PR #46803](https://github.com/BerriAI/litellm/pull/46803)
-- Add `lite claude --subscription` to keep Claude Code on its claude.ai login and send the LiteLLM key in `x-litellm-api-key`, with `claude_subscription` and `pkce` as `lite config` keys - [PR #47385](https://github.com/BerriAI/litellm/pull/47385)
-- Send pi's session id from `lite pi` so its sessions group and stick - [PR #47700](https://github.com/BerriAI/litellm/pull/47700)
-- Let the proxy decide whether a classic `lite login` token has expired in `print-token` and `whoami`, bounded to 3 seconds - [PR #47712](https://github.com/BerriAI/litellm/pull/47712)
-- Add a `litellm-setup` agent skill under `skills/` that walks a coding agent through a Docker plus Postgres or uv install of the proxy - [PR #47731](https://github.com/BerriAI/litellm/pull/47731)
-- Restore model discovery on the Claude Code gateway by serving `/claude_code_gateway/v1/models` as a model list route - [PR #48221](https://github.com/BerriAI/litellm/pull/48221)
-- Add `lite codex --subscription` to keep Codex on its ChatGPT login and send the LiteLLM key only in `x-litellm-api-key`, with a `codex_subscription` `lite config` key - [PR #48741](https://github.com/BerriAI/litellm/pull/48741)
-- Give `lite codex` aliases of a Codex-known model that model's catalog entry from `/v1/model/info`, so Codex stops sending every MCP and app tool inline - [PR #48894](https://github.com/BerriAI/litellm/pull/48894)
-- Write each model group's `supported_reasoning_efforts` from `/model_group/info` into the client config for `lite pi`, `lite opencode` and `lite codex`, and offer the same levels in the proxy's Codex catalog, limited to the six every release parses for Codex before 0.138.0 - [PR #48949](https://github.com/BerriAI/litellm/pull/48949)
-- Add `general_settings.claude_code_marketplace_auth_required` so `GET /claude-code/marketplace.json` needs a LiteLLM key and `/public/skill_hub` returns an empty list without one - [PR #48980](https://github.com/BerriAI/litellm/pull/48980)
-- Let a Claude Code gateway user pick the session team on the browser verification page - [PR #49001](https://github.com/BerriAI/litellm/pull/49001)
-- Honor `litellm_settings.drop_params: false` for Claude Code and Codex requests, and keep their drop_params default otherwise - [PR #49058](https://github.com/BerriAI/litellm/pull/49058)
+- Start `lite` and `litellm-proxy` from a small `litellm_cli` package without initializing the litellm SDK, so each command no longer pays about 4.6 s of imports on a 1 vCPU VM - [PR #46803](https://github.com/BerriAI/litellm/pull/46803)
+- Add `lite claude --subscription` and `--no-subscription`, which keep Claude Code's claude.ai login in `Authorization` and send the LiteLLM key in `x-litellm-api-key` - [PR #47385](https://github.com/BerriAI/litellm/pull/47385)
+- Send pi's `x-session-id` header from `lite pi`, so a pi session groups in the logs and sticks to one deployment with session affinity - [PR #47700](https://github.com/BerriAI/litellm/pull/47700)
+- Let the proxy decide when a `lite login` token has expired, so `lite auth print-token` and `lite whoami` no longer treat it as expired after 24 hours and Claude Code keeps working - [PR #47712](https://github.com/BerriAI/litellm/pull/47712)
+- Add a `litellm-setup` agent skill that takes coding agents like Claude Code from nothing to a running proxy on uv or Docker, and hide the repo's contributor skills from end-user installs - [PR #47731](https://github.com/BerriAI/litellm/pull/47731)
+- Keep the ChatGPT login with `lite codex --subscription`, send the LiteLLM key only in the `x-litellm-api-key` header, and add a `codex_subscription` `lite config` key to turn it on by default - [Commit 295d79f](https://github.com/BerriAI/litellm/commit/295d79fc7d9f935165e07c66e150a8579d511d4c)
+- Give `lite codex` aliases of a Codex-known model that model's catalog entry, so Codex keeps tool search and stops sending every MCP tool definition on every turn - [PR #48894](https://github.com/BerriAI/litellm/pull/48894)
+- Offer each model group's reasoning levels from `/model_group/info` in `lite pi`, `lite opencode` and `lite codex`, and add the same levels to the Codex catalog at `/v1/models?client_version=...` - [PR #48949](https://github.com/BerriAI/litellm/pull/48949)
+- Add `general_settings.claude_code_marketplace_auth_required` to put the Claude Code marketplace behind a LiteLLM key header and empty the public skill hub, and return a fixed message on 500s from both routes - [PR #48980](https://github.com/BerriAI/litellm/pull/48980)
+- Honor `litellm_settings.drop_params: false` for Claude Code and Codex requests, so unsupported settings answer 400 like other clients instead of being dropped silently with a 200 - [PR #49058](https://github.com/BerriAI/litellm/pull/49058)
 
 ### Terraform
 
-- Default the AWS Terraform module's component images to `ghcr.io/berriai/litellm-<component>:${image_tag}`, with each published module version stamping `image_tag` to its own release tag - [PR #46960](https://github.com/BerriAI/litellm/pull/46960)
+- Default the AWS Terraform module's component images to the module release tag through `image_tag`, instead of deploying stale `v1.86.0-dev` images for every module version - [PR #46960](https://github.com/BerriAI/litellm/pull/46960)
 
 ## AI Integrations
 
-### Lens and Agent Traces
-
-
 ### Guardrails
 
-- Add opt-in `include_masked_response_on_block` to the PANW Prisma AIRS guardrail, returning `response_masked_data` on a block - [PR #46219](https://github.com/BerriAI/litellm/pull/46219)
-- Accept Gemini native tools and Anthropic content blocks in `generic_guardrail_api`, add opt-in `forward_messages_as_sent`, and name the error type when a check fails open - [PR #46338](https://github.com/BerriAI/litellm/pull/46338)
-- End a chat completions stream with an error event and `[DONE]` when a guardrail blocks after the first chunk, instead of cutting the body off - [PR #46953](https://github.com/BerriAI/litellm/pull/46953)
-- Add `num_retries` (up to 5) to `generic_guardrail_api` to retry checks lost after connect - [PR #46965](https://github.com/BerriAI/litellm/pull/46965)
-- Run `pre_call` guardrails on every Responses WebSocket turn and bill each turn its own guardrail cost, booking a rejected frame as a failed request - [PR #47013](https://github.com/BerriAI/litellm/pull/47013)
-- Resolve overlapping Presidio entity spans by the outermost detection in numbered PII tokens, so restored values are no longer corrupted - [PR #47024](https://github.com/BerriAI/litellm/pull/47024)
-- Redact secrets in tool calls, tool results and Anthropic system prompts with the secret detection guardrail - [PR #47122](https://github.com/BerriAI/litellm/pull/47122)
-- Allow `pre_mcp_call`, `during_mcp_call` and `post_mcp_call` modes on the generic guardrail API, so it attaches to MCP tool calls instead of being skipped at startup - [PR #48060](https://github.com/BerriAI/litellm/pull/48060)
-- Add a native `reco` guardrail (`pre_call`) with `reco_tenant_id`, failing closed by default with configurable `unreachable_fallback` and `fail_on_error` - [PR #48243](https://github.com/BerriAI/litellm/pull/48243)
-- Leave `litellm_metadata` out of the scan text pass-through guardrails build from the request body - [PR #48276](https://github.com/BerriAI/litellm/pull/48276)
-- Make the hide-secrets guardrail honor `skip_tool_message_in_guardrail`, leaving tool messages and Anthropic `tool_result` blocks as sent while still masking tool call arguments - [PR #48689](https://github.com/BerriAI/litellm/pull/48689)
-- Run the guardrails a Responses WebSocket frame selects through `guardrails`, `guardrail_config` or policies, including `during_call` guardrails, and name the malformed field in an error event - [PR #48725](https://github.com/BerriAI/litellm/pull/48725)
-- Scan Responses API tool results in texts-mode guardrails - [PR #48827](https://github.com/BerriAI/litellm/pull/48827)
-- Skip embeddings input in `google_text_moderation`, so documents indexed by subject are no longer blocked - [PR #48934](https://github.com/BerriAI/litellm/pull/48934)
-- Make `lakera_v2` `on_flagged: block` reject PII-only detections with a 400, and add `on_flagged: mask` for the old mask-and-forward behavior - [PR #48944](https://github.com/BerriAI/litellm/pull/48944)
-- Add `streaming_scan_in_background` to run sampled `post_call` stream scans as background tasks so the stream keeps flowing, ending it before the next chunk on a block - [PR #48952](https://github.com/BerriAI/litellm/pull/48952)
-- Stream a guardrail block on `/v1/messages` as Anthropic stream events instead of a bare data line - [PR #49010](https://github.com/BerriAI/litellm/pull/49010)
-- Scan and rewrite streamed `/v1/completions` under `post_call` guardrails - [PR #49035](https://github.com/BerriAI/litellm/pull/49035)
-- Keep the upstream error when a `/v1/messages` stream ends in one under stream guardrails, instead of a 400 that hides it - [PR #49088](https://github.com/BerriAI/litellm/pull/49088)
-- Send the Headroom guardrail an `x-headroom-affinity` header built from the tenant and the caller's own session id - [PR #49255](https://github.com/BerriAI/litellm/pull/49255)
-- Scan files, tool calls and tool results with the Ovalix guardrail, discover the app from the key alias, and inspect requests whose key has no user as `unknown` - [PR #49309](https://github.com/BerriAI/litellm/pull/49309)
-- Add `response_format: native` to `POST /guardrails/apply_guardrail` to return a configured guardrail's native findings - [PR #49460](https://github.com/BerriAI/litellm/pull/49460)
-- Add `litellm.guardrails.apply()` to run a configured gateway guardrail on an input or response and get its native findings without a completion - [PR #49469](https://github.com/BerriAI/litellm/pull/49469)
-- Add `outputScope` (`INTERVENTIONS` or `FULL`) to the Bedrock guardrail to return full ApplyGuardrail assessments, including findings that did not intervene - [PR #49470](https://github.com/BerriAI/litellm/pull/49470)
+- Add an opt-in `include_masked_response_on_block` setting to the PANW Prisma AIRS guardrail that returns AIRS `response_masked_data` in the 400 body of a blocked response - [PR #46219](https://github.com/BerriAI/litellm/pull/46219)
+- Accept Gemini native tools in `generic_guardrail_api`, add an opt-in `forward_messages_as_sent`, and name the error type in the fail-open log line so a timeout no longer reads like a refused connection - [PR #46338](https://github.com/BerriAI/litellm/pull/46338)
+- Add an opt-in `num_retries` setting, from 0 to 5, to `generic_guardrail_api` guardrails so a check lost after connect retries on a fresh connection instead of failing the request - [PR #46965](https://github.com/BerriAI/litellm/pull/46965)
+- Merge overlapping Presidio entity spans so `output_parse_pii: true` no longer corrupts numbered PII tokens like `<PHONE_NUMBER_3>` and returns the user's original value - [PR #47024](https://github.com/BerriAI/litellm/pull/47024)
+- Mask secrets in tool results, tool inputs, tool call arguments, `system` and `instructions` with the `hide-secrets` guardrail, which used to scan only message text, and remember clean text so resent tool history is scanned once - [PR #47122](https://github.com/BerriAI/litellm/pull/47122)
+- Allow `pre_mcp_call`, `during_mcp_call` and `post_mcp_call` modes on the generic guardrail API, so a guardrail set that way is attached to MCP tool calls instead of being dropped at startup - [PR #48060](https://github.com/BerriAI/litellm/pull/48060)
+- Add Reco as a native `pre_call` guardrail with `reco_tenant_id` validation at startup, failing closed by default through `fail_on_error: true` - [PR #48243](https://github.com/BerriAI/litellm/pull/48243)
+- Exclude LiteLLM's injected `litellm_metadata` from the text guardrails scan on pass-through routes, so key hash, user email, team and spend fields are no longer sent as prompt text - [PR #48276](https://github.com/BerriAI/litellm/pull/48276)
+- Make `hide-secrets` honor `skip_tool_message_in_guardrail`, so tool results reach the model as sent when the flag is on, while tool call arguments, user text and system prompts are still masked - [PR #48689](https://github.com/BerriAI/litellm/pull/48689)
+- Scan `/v1/responses` tool results in guardrails that read `texts` and write edits back into `output`, as chat completions already does - [PR #48827](https://github.com/BerriAI/litellm/pull/48827)
+- Skip `/v1/embeddings` input in `google_text_moderation`, so embedding requests are no longer blocked with a 400 on benign words like `stocks` or `mortgage` - [PR #48934](https://github.com/BerriAI/litellm/pull/48934)
+- Make `on_flagged: block` on `lakera_v2` return 400 for PII-only detections instead of masking and allowing them, and add `on_flagged: mask` to keep the mask-and-allow behavior - [PR #48944](https://github.com/BerriAI/litellm/pull/48944)
+- Add opt-in `streaming_scan_in_background` for Bedrock guardrails so sampled stream scans run while chunks keep flowing, and a flagged scan ends the stream before the next chunk - [PR #48952](https://github.com/BerriAI/litellm/pull/48952)
+- Scan and rewrite streamed `/v1/completions` under `post_call` guardrails when the stream ends, so masked words come back masked and blocked words no longer return 200 - [PR #49035](https://github.com/BerriAI/litellm/pull/49035)
+- Keep the upstream error when a `/v1/messages` stream ends in one, so `tool_permission` no longer replaces it with its own 400 and Presidio masks these streams too - [PR #49088](https://github.com/BerriAI/litellm/pull/49088)
+- Send an opaque tenant-scoped `x-headroom-affinity` header on Headroom compression and retrieval requests, so both reach the same pod and retrieval stops missing its local cache - [PR #49255](https://github.com/BerriAI/litellm/pull/49255)
+- Scan attached files, tool calls and tool results with the Ovalix guardrail, and send requests with no user as actor `unknown` so they keep Ovalix enforcement - [PR #49309](https://github.com/BerriAI/litellm/pull/49309)
+- Add a `response_format` option to `/guardrails/apply_guardrail` that returns a configured guardrail's native structured findings, keeping the `response_text` response when it is omitted - [PR #49460](https://github.com/BerriAI/litellm/pull/49460)
+- Add Bedrock guardrail `outputScope` configuration, so `FULL` returns non-detected assessments such as a positive grounding score - [PR #49470](https://github.com/BerriAI/litellm/pull/49470)
 
 ### Logging and observability
 
 #### Arize
 
-- Decide per-team Arize sampling per request from the trace id, so every pod reaches the same verdict - [PR #47468](https://github.com/BerriAI/litellm/pull/47468)
-
-#### General
-
-- Keep strong references to Responses stream and WebSocket logging tasks, so garbage collection no longer drops their success logs - [PR #31074](https://github.com/BerriAI/litellm/pull/31074)
-- Redact Responses API `instructions` and callback output when message redaction is on, in logged params, spend log bodies and each opted-out callback's own copy - [PR #43315](https://github.com/BerriAI/litellm/pull/43315)
-- Record streamed output whose chunks have no choice index, so partial output is kept when the client disconnects - [PR #46947](https://github.com/BerriAI/litellm/pull/46947)
-- Emit every startup line as JSON when `json_logs` is on, including the banner and the first records of spawned workers - [PR #47035](https://github.com/BerriAI/litellm/pull/47035)
-- Fire one CustomLogger hook per async speech, transcription, image, OCR and search call instead of both the sync and async hooks - [PR #47124](https://github.com/BerriAI/litellm/pull/47124)
-- Keep root logger INFO lines when `json_logs` is on and `LITELLM_LOG` is set - [PR #47175](https://github.com/BerriAI/litellm/pull/47175)
-- Deliver configured success callbacks for completed batches during reconciliation, once per callback - [PR #47192](https://github.com/BerriAI/litellm/pull/47192)
-- Log one INFO line per token count call on `/v1/messages/count_tokens`, `/utils/token_counter`, `/v1/responses/input_tokens` and the Gemini and Bedrock count routes, with the call id, models, count and status - [PR #47657](https://github.com/BerriAI/litellm/pull/47657)
-- Keep `x-litellm-overhead-duration-ms` anchored at receive time when a guardrail adds `litellm_metadata` to a chat completions request - [PR #47790](https://github.com/BerriAI/litellm/pull/47790)
-- Stop log lines from leaving terminal colors on - [PR #48966](https://github.com/BerriAI/litellm/pull/48966)
-- Log the inbound request and the outgoing provider request once under `--detailed_debug`, summarizing large values, instead of dumping the body at every layer - [PR #48973](https://github.com/BerriAI/litellm/pull/48973)
-- Skip the `llm_exceptions` alert for `BudgetExceededError` - [PR #49290](https://github.com/BerriAI/litellm/pull/49290)
+- Decide per-team Arize sampling from a SHA-256 of the trace id, so every pod and worker keeps or drops the same traces - [PR #47468](https://github.com/BerriAI/litellm/pull/47468)
 
 #### Langfuse
 
-- Emit request metadata under `langfuse.observation.metadata` and `langfuse.trace.metadata` keys on the OTel v2 Langfuse mapper - [PR #42697](https://github.com/BerriAI/litellm/pull/42697)
-- Derive trace-level name, input, output and tags on Langfuse OTel traces LiteLLM starts, leaving joined traces' own fields alone - [PR #42705](https://github.com/BerriAI/litellm/pull/42705)
-- Send `langfuse.observation.completion_start_time` from `langfuse_otel` and the OTel v2 Langfuse mapper, so Langfuse shows time to first token - [PR #45597](https://github.com/BerriAI/litellm/pull/45597)
-- Keep a credential-less `langfuse_otel` on OTel v2, so key and team Langfuse destinations get user, tags, session and cost without global Langfuse keys - [PR #48718](https://github.com/BerriAI/litellm/pull/48718)
+- Send key, user, end user, team and org identity as `langfuse.observation.metadata` and `langfuse.trace.metadata` on OTEL v2, so Langfuse can filter generations by them - [PR #42697](https://github.com/BerriAI/litellm/pull/42697)
+- Set trace-level name, input, output and tags on `langfuse_otel` traces that LiteLLM starts, named `litellm-{call_type}` unless the caller set a name - [PR #42705](https://github.com/BerriAI/litellm/pull/42705)
+- Send LiteLLM's completion start time as `langfuse.observation.completion_start_time` from `langfuse_otel` so Langfuse shows time to first token, including for streamed `/v1/messages`, native Gemini, Interactions and A2A calls - [PR #45597](https://github.com/BerriAI/litellm/pull/45597)
+- Send user, tags and session to key and team Langfuse destinations on OTel v2 without global Langfuse keys, and stop the duplicate generation or orphaned span - [PR #48718](https://github.com/BerriAI/litellm/pull/48718)
 
 #### OpenTelemetry
 
-- Report response cache hits at zero cost with a cache-hit flag on OTel v1 and v2 spans - [PR #43604](https://github.com/BerriAI/litellm/pull/43604)
-- Put the error message on every failed span's status, so backends such as Langfuse show it - [PR #44185](https://github.com/BerriAI/litellm/pull/44185)
-- Leave out span cost when the price lookup failed instead of reporting the call as free, while cache hits stay at zero - [PR #44187](https://github.com/BerriAI/litellm/pull/44187)
-- Label configured pass-through routes with the `litellm.passthrough` operation and read the operation from the upstream - [PR #48675](https://github.com/BerriAI/litellm/pull/48675)
-- Suppress every span of a request whose URL matches `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS`, not only the server span - [PR #48720](https://github.com/BerriAI/litellm/pull/48720)
-- Print OTel v2 spans to stdout only when `OTEL_EXPORTER=console` asks for it, instead of next to a vendor exporter such as `langfuse_otel` or `arize` - [PR #48723](https://github.com/BerriAI/litellm/pull/48723)
-- Close the `/v1/models` server span and parent it to the caller's `traceparent`, without attaching the model list payload - [PR #49141](https://github.com/BerriAI/litellm/pull/49141)
+- Report cache hits at zero cost with a `litellm.cache_hit` flag on OTel V1 and V2 spans, and emit an LLM-call span for V2 cache hits - [PR #43604](https://github.com/BerriAI/litellm/pull/43604)
+- Put the error text on the status of every failed OTel span, so Langfuse and Phoenix show it instead of an empty ERROR message - [PR #44185](https://github.com/BerriAI/litellm/pull/44185)
+- Leave the span cost out when the price lookup failed instead of sending 0, so Arize and Langfuse can tell an unpriced call from a free one - [PR #44187](https://github.com/BerriAI/litellm/pull/44187)
+- Label spans and duration metrics for configured `pass_through_endpoints` routes `litellm.passthrough` instead of `chat` under OTel GenAI semconv or OTel v2, so they leave the chat charts - [PR #48675](https://github.com/BerriAI/litellm/pull/48675)
+- Suppress auth and database spans for excluded requests such as `/model/info` on OTel v2, instead of exporting orphan traces - [PR #48720](https://github.com/BerriAI/litellm/pull/48720)
+- Print OTel v2 spans to stdout only when `OTEL_EXPORTER=console` is set, so prompts stop appearing in container logs next to Langfuse, Arize or key and team destinations - [PR #48723](https://github.com/BerriAI/litellm/pull/48723)
+- End the request span for `/v1/models` and `GET /v1/models/{model_id}`, so model list calls show up in the caller's trace by `traceparent` - [PR #49141](https://github.com/BerriAI/litellm/pull/49141)
 
 #### Prometheus
 
-- Keep the requested model label on Prometheus metrics after a fallback - [PR #45555](https://github.com/BerriAI/litellm/pull/45555)
-- Count a provider 401 for a deployment's own credential in `litellm_llm_api_failed_requests_metric` and the deployment failure metrics, while a caller's own failing credential stays out - [PR #46668](https://github.com/BerriAI/litellm/pull/46668)
-- Emit the spend update queue size after aggregations and flushes too, so the queue size metric drops when the queue drains - [PR #46956](https://github.com/BerriAI/litellm/pull/46956)
-- Read decimal values in the remaining rate-limit headers again for the remaining requests and tokens gauges - [PR #47039](https://github.com/BerriAI/litellm/pull/47039)
-- Serve `/metrics` from the split backend service when Prometheus is enabled - [PR #47129](https://github.com/BerriAI/litellm/pull/47129)
-- Label deployment failures with the deployment's provider instead of `None` - [PR #47384](https://github.com/BerriAI/litellm/pull/47384)
+- Count successful fallback requests under the model the caller requested in Prometheus, so filtering by the original model finds them - [PR #45555](https://github.com/BerriAI/litellm/pull/45555)
+- Count provider-side 401s in `litellm_deployment_failure_responses` and `litellm_deployment_state` again, so a deployment with a rotated or revoked provider key no longer looks healthy - [PR #46668](https://github.com/BerriAI/litellm/pull/46668)
+- Report the in-memory spend update queue size as a numeric Prometheus sample after enqueueing, aggregation and database flushes - [PR #46956](https://github.com/BerriAI/litellm/pull/46956)
+- Set the remaining rate-limit gauges from decimal headers like `12.0` and `856.5` again, and skip only the gauge whose header value cannot be read as a number - [PR #47039](https://github.com/BerriAI/litellm/pull/47039)
+- Keep `/metrics` on the backend after startup when Prometheus is enabled instead of answering 404 - [PR #47129](https://github.com/BerriAI/litellm/pull/47129)
+- Label deployment failure metrics with the provider of the deployment the request was routed to instead of `api_provider=None`, on embeddings, native `/v1/responses`, native `/v1/messages`, rate limit and unsupported param failures - [PR #47384](https://github.com/BerriAI/litellm/pull/47384)
 
 #### S3
 
-- Run the legacy `s3` callback for streamed `/v1/messages` calls - [PR #47156](https://github.com/BerriAI/litellm/pull/47156)
+- Run the legacy `success_callback: ["s3"]` for streamed `/v1/messages` calls, so each streamed call writes an object to the bucket like non-streamed calls do - [PR #47156](https://github.com/BerriAI/litellm/pull/47156)
+
+#### General
+
+- Delete callbacks configured under `callbacks` or `failure_callback` from the Logging Callbacks page, instead of answering 404 for anything outside `success_callback` - [PR #42740](https://github.com/BerriAI/litellm/pull/42740)
+- Redact Responses `instructions` in request and response logs, spend log request bodies and callback payloads when message logging is off - [PR #43315](https://github.com/BerriAI/litellm/pull/43315)
+- Emit every proxy startup line as a JSON log record when `json_logs` is on, including the banner, model list and notices from workers spawned by uvicorn or granian - [PR #47035](https://github.com/BerriAI/litellm/pull/47035)
+- Report the deployment's configured `api_base`, model group, key name and team in the alert for a stream that fails mid-way, instead of `https://api.openai.com` with no context - [PR #47045](https://github.com/BerriAI/litellm/pull/47045)
+- Fire one `CustomLogger` failure hook per async call for failed speech, transcription, image, OCR and search calls and proxy-rejected requests, instead of both the sync and async hooks - [PR #47124](https://github.com/BerriAI/litellm/pull/47124)
+- Keep root logger INFO lines when `json_logs` is on and `LITELLM_LOG` is set, so INFO logs from custom callbacks and third-party libraries are no longer dropped - [PR #47175](https://github.com/BerriAI/litellm/pull/47175)
+- Deliver configured success callbacks for completed batches, and keep the response id, model, usage and cost when redaction is on - [PR #47192](https://github.com/BerriAI/litellm/pull/47192)
+- Send the billed background Responses cost to the creating key's and team's loggers, redaction included - [PR #47506](https://github.com/BerriAI/litellm/pull/47506)
+- Mark mirrored `silent_model` calls with `is_silent_experiment` in spend logs and callback payloads, set only by the router so a flag a client sends in metadata no longer marks a row - [PR #48888](https://github.com/BerriAI/litellm/pull/48888)
+- Stop the `--detailed_debug` error log line from switching the terminal to bold red without resetting it, so later log lines no longer stay red - [PR #48966](https://github.com/BerriAI/litellm/pull/48966)
+- Print the request body under `--detailed_debug` only where it enters the proxy and where it leaves for the provider, and drop per-request log lines with nothing to say - [PR #48973](https://github.com/BerriAI/litellm/pull/48973)
+- Log image generation requests the router refuses, so deployment limits no longer leave a gap in failure logging - [PR #49349](https://github.com/BerriAI/litellm/pull/49349)
+- Log A2A calls rejected before dispatch, such as forbidden or unknown agents, with the caller and target agent - [PR #49492](https://github.com/BerriAI/litellm/pull/49492)
+
+### Secret Managers
+
+- Resolve `oidc/file/` and `oidc/env/` references in an admin-configured `api_key` on every call, so rotated tokens work and the model stops answering 401 `Invalid API Key` - [PR #47341](https://github.com/BerriAI/litellm/pull/47341)
+- Resolve `api_key: oidc/google/<audience>` per request into that audience's Google ID token, so `hosted_vllm` and other OpenAI-compatible models no longer answer 401 - [PR #47703](https://github.com/BerriAI/litellm/pull/47703)
 
 ## Spend Tracking, Budgets and Rate Limiting
 
 ### Cost tracking
 
-- Bill a deployment's per-second rates on chat completions, `/v1/responses` and native Anthropic `/v1/messages` instead of $0 - [PR #42417](https://github.com/BerriAI/litellm/pull/42417)
-- Bill streamed `/v1/completions` without `stream_options` like chat, and drop Azure's empty prompt-filter frame - [PR #45366](https://github.com/BerriAI/litellm/pull/45366)
-- Bill only the OpenAI pass-through `/responses` calls OpenAI bills, leaving `input_tokens`, `input_items`, delete and non-background retrieve or cancel unbilled, and give billed background reads their own spend log row - [PR #47171](https://github.com/BerriAI/litellm/pull/47171)
-- Bill both model calls of a chat completions MCP auto-execute on one spend row, and log each auto-executed tool call under its own spend log id - [PR #47422](https://github.com/BerriAI/litellm/pull/47422)
-- Price `base_model` deployments past rule-only cost map entries - [PR #47497](https://github.com/BerriAI/litellm/pull/47497)
-- Send the billed cost of a background Responses call to the creating key's and team's loggers, following their message logging settings - [PR #47506](https://github.com/BerriAI/litellm/pull/47506)
-- Register one spend logger across callback registries and deduplicate equivalent success callbacks, so a completed request is billed once - [PR #47510](https://github.com/BerriAI/litellm/pull/47510)
-- Add `model_info.pricing_provider` to name the provider whose cost map rows price a deployment, and price a deployment from its own entry when its id matches another provider's cost map key - [PR #47620](https://github.com/BerriAI/litellm/pull/47620)
-- Bill Gemini audio input and cached audio at the flex, priority and batch rates - [PR #48086](https://github.com/BerriAI/litellm/pull/48086)
-- Bill OpenAI 12-hour prompt cache writes at their own rate, with a long-context rate above the token threshold - [PR #48088](https://github.com/BerriAI/litellm/pull/48088)
-- Parse 12-hour cache write rates for the batch and ultrafast tiers - [PR #48259](https://github.com/BerriAI/litellm/pull/48259)
-- Keep custom pricing on database-only deployments across price data reloads - [PR #48486](https://github.com/BerriAI/litellm/pull/48486)
-- Include Claude web search fees in streamed usage cost - [PR #48528](https://github.com/BerriAI/litellm/pull/48528)
-- Bill both rounds of a streamed chat completions MCP auto-execute on one success row, and show their summed usage on the final usage chunk - [PR #48899](https://github.com/BerriAI/litellm/pull/48899)
-- Bill the requested model's rates when the response names an unpriced model, such as a Fireworks display name, instead of $0 - [PR #48900](https://github.com/BerriAI/litellm/pull/48900)
-- Bill each SDK call its own native Bedrock guardrail trace when calls share one metadata dict - [PR #48923](https://github.com/BerriAI/litellm/pull/48923)
-- Bill a provider-reported `usage.cost` on every path unless the deployment carries its own prices - [PR #48953](https://github.com/BerriAI/litellm/pull/48953)
-- Finalize a synchronous response's cost once for the `x-litellm-response-cost` header, the spend log and the daily rollups - [PR #48993](https://github.com/BerriAI/litellm/pull/48993)
-- Bill completion-bridge agents such as LangGraph and `databricks_agent` at their own prices on `/a2a` `message/send` and `message/stream`, instead of a $0 row or no row - [PR #49150](https://github.com/BerriAI/litellm/pull/49150)
-- Bill the margin once on rebuilt streams and on streamed Responses through the chat bridge - [PR #49254](https://github.com/BerriAI/litellm/pull/49254)
-- Keep zero prices for batch cache writes, speech and Perplexity search instead of replacing them with defaults - [PR #49294](https://github.com/BerriAI/litellm/pull/49294)
-- Split a provider-reported total cost between input and output by the cost map rate ratio - [PR #49357](https://github.com/BerriAI/litellm/pull/49357)
-- Price `POST /v1/decisions` through the OpenAI pass-through with the Decisions cost map rates instead of logging $0 and no tokens - [PR #49392](https://github.com/BerriAI/litellm/pull/49392)
+- Keep cached and reasoning token counts when a stream's last chunk carries usage as a plain dict, so those streams are no longer priced as if every input token were fresh - [PR #36678](https://github.com/BerriAI/litellm/pull/36678)
+- Bill a deployment's per-second rates on native Anthropic `/v1/messages` instead of the per-token price - [PR #42417](https://github.com/BerriAI/litellm/pull/42417)
+- Log and bill both model calls of a non-stream MCP auto-execute on `/v1/responses` under the client's response id, and answer 200 instead of 400 for bridged providers like Anthropic - [PR #43667](https://github.com/BerriAI/litellm/pull/43667)
+- Restore the token estimate for streams whose backend sends no usage, so spend logs, budgets and TPM limits no longer record 0 tokens and $0 - [PR #44230](https://github.com/BerriAI/litellm/pull/44230)
+- Price streamed Vertex AI pass-through calls with the regional 10% uplift and the deployment's location, so they bill the same as non-streamed calls - [PR #44795](https://github.com/BerriAI/litellm/pull/44795)
+- Ask for usage on streamed `/v1/completions` without `stream_options`, so spend follows the provider's counts instead of counted text - [PR #45366](https://github.com/BerriAI/litellm/pull/45366)
+- Keep background interaction bills through crashes, late restarts and per-model `api_key` or Vertex AI project deployments, and keep a request's tags on bills written by another replica - [PR #45743](https://github.com/BerriAI/litellm/pull/45743)
+- Stop billing `GET /responses/{id}`, `input_tokens`, `input_items` and `DELETE /responses/{id}` on the OpenAI pass-through as Responses calls, and stop their ERROR log lines - [PR #47171](https://github.com/BerriAI/litellm/pull/47171)
+- Bill Tavily `search_depth: "advanced"` and Linkup `depth: "deep"` searches at their own `tavily/search-advanced` and `linkup/search-deep` prices instead of the basic rate - [PR #47411](https://github.com/BerriAI/litellm/pull/47411)
+- Bill both model calls of a chat completions MCP auto-execute on one spend row, so the row matches `usage` and `x-litellm-response-cost` - [PR #47422](https://github.com/BerriAI/litellm/pull/47422)
+- Bill every round of a streamed `/v1/responses` MCP auto-execute on one spend row, and sum all model calls in the final `response.completed` usage - [PR #47445](https://github.com/BerriAI/litellm/pull/47445)
+- Bill `base_model` deployments such as `azure/eu/o3` and `azure/eu/o4-mini` from the response model's price row instead of $0 - [PR #47497](https://github.com/BerriAI/litellm/pull/47497)
+- Register one shared billing logger in both callback registries, so a request is no longer counted twice - [PR #47510](https://github.com/BerriAI/litellm/pull/47510)
+- Bill partial usage from the prompt and streamed text when a Responses stream fails mid-way, and report failed bridged `/v1/messages` streams to the proxy - [PR #47537](https://github.com/BerriAI/litellm/pull/47537)
+- Add `model_info.pricing_provider` to price a deployment from another provider's cost map rows, so it no longer bills $0 under `custom_llm_provider: openai` - [PR #47620](https://github.com/BerriAI/litellm/pull/47620)
+- Bill the usage a stream sent before its connection dropped by handing out buffered aiohttp bytes first, so a cut `/v1/messages` attempt records its `message_start` tokens instead of 0 - [PR #47838](https://github.com/BerriAI/litellm/pull/47838)
+- Bill Gemini audio input and cached audio at the Flex, Priority and Batch rates instead of the Standard rate - [PR #48086](https://github.com/BerriAI/litellm/pull/48086)
+- Bill OpenAI 12-hour prompt cache writes on the Responses API at their own `cache_creation_input_token_cost_above_12hr` rate instead of the 30-minute write rate - [PR #48088](https://github.com/BerriAI/litellm/pull/48088)
+- Bill `litellm.responses()` and `litellm.aresponses()` at the `input_cost_per_token` and `output_cost_per_token` set on the call, instead of cost map prices or no cost - [PR #48119](https://github.com/BerriAI/litellm/pull/48119)
+- Bill `opencode_go/*` requests from the cost OpenCode reports on the response, streamed and native `/v1/messages` included, instead of $0 or static price rows - [PR #48254](https://github.com/BerriAI/litellm/pull/48254)
+- Bill OpenAI batch requests that report 12-hour cache writes at the batch 12-hour rate, and accept the 12-hour batch and ultrafast cache write fields in the cost map - [PR #48259](https://github.com/BerriAI/litellm/pull/48259)
+- Bill Bedrock native `guardrailConfig` trace usage as guardrail cost in spend and `x-litellm-response-cost`, and apply the deployment `guardrailConfig` on `/v1/messages` - [PR #48278](https://github.com/BerriAI/litellm/pull/48278)
+- Keep custom pricing for DB-only deployments across Price Data Reload, so native `/v1/messages` requests stop logging $0 spend until a restart - [PR #48486](https://github.com/BerriAI/litellm/pull/48486)
+- Include native Claude web search fees in the cost of streamed responses when the proxy rebuilds usage from an OpenAI-format stream - [PR #48528](https://github.com/BerriAI/litellm/pull/48528)
+- Bill a NaN or infinite provider cost at its token price and record any other non-finite cost as $0, so one bad cost no longer blocks daily spend writes or answers 500 - [PR #48829](https://github.com/BerriAI/litellm/pull/48829)
+- Bill both model calls of a streamed chat completions request that auto-executes an MCP tool on one spend row, with the last usage chunk matching it, instead of billing only one call - [PR #48899](https://github.com/BerriAI/litellm/pull/48899)
+- Bill the requested model's rates when the response names an unpriced model, so Fireworks calls that answer with a display name no longer log $0 - [PR #48900](https://github.com/BerriAI/litellm/pull/48900)
+- Bill each SDK call only its own native Bedrock guardrail trace when calls share one `metadata=` dict, instead of adding the guardrail units of all earlier calls - [PR #48923](https://github.com/BerriAI/litellm/pull/48923)
+- Bill a numeric `usage.cost` from OpenAI-compatible gateways on plain and streamed chat and Responses calls, unless the deployment sets its own `input_cost_per_token`, `output_cost_per_token` or `base_model` - [PR #48953](https://github.com/BerriAI/litellm/pull/48953)
+- Put LiteLLM's bill in `usage.cost` on the last usage frame of chat and Responses streams, so it matches the spend row and `x-litellm-response-cost` instead of the upstream's number - [PR #48955](https://github.com/BerriAI/litellm/pull/48955)
+- Price native Cohere embed calls on the Foundry `/v1/embed` and `/v2/embed` relays and `/cohere/v2/embed` from `billed_units`, and bill direct Cohere image embeds at the cost map's image price instead of $0 - [PR #48978](https://github.com/BerriAI/litellm/pull/48978)
+- Finalize a synchronous request's cost once before response headers are sent, so headers, spend logs, rollups and budget counters agree and completed provider usage survives failed post-call hooks and cancellation - [PR #48993](https://github.com/BerriAI/litellm/pull/48993)
+- Bill Claude web search per request on Vertex AI deployments priced in `model_info`, and bill token-only Claude deployments at the cost map search price, with 0.01 USD rows for Vertex Sonnet 4.5 and Haiku 4.5 - [PR #49160](https://github.com/BerriAI/litellm/pull/49160)
+- Apply the configured margin once, not twice, to `completion_cost(stream_chunk_builder(chunks))` and to the `usage.cost` of streamed `/v1/responses` calls served through the chat bridge - [PR #49254](https://github.com/BerriAI/litellm/pull/49254)
+- Keep explicit zero prices in batch cache, speech and Perplexity search cost calculation and fall back only when a price is unset, while unpriced speech still raises - [PR #49294](https://github.com/BerriAI/litellm/pull/49294)
+- Cost an unmanaged `gs://` Vertex batch through the deployment that created it, so batches on a second deployment sharing a base model get a spend row instead of none - [PR #49301](https://github.com/BerriAI/litellm/pull/49301)
+- Split a provider-reported `usage.cost` total between input and output by the cost map rate ratio, instead of booking all of it as output cost with input at 0 - [PR #49357](https://github.com/BerriAI/litellm/pull/49357)
+- Price streamed `/v1/messages` requests served through the Responses bridge per token, with any margin or discount applied once, instead of booking input cost 0 and the whole amount as output cost - [PR #49365](https://github.com/BerriAI/litellm/pull/49365)
 
 ### Spend logs and daily rollups
 
-- Log and bill Responses-style bodies sent to `/cursor/chat/completions` against the calling key - [PR #30277](https://github.com/BerriAI/litellm/pull/30277)
-- Store the user email in spend log metadata so it shows in Admin UI request logs - [PR #41150](https://github.com/BerriAI/litellm/pull/41150)
-- Use the caller's `litellm_session_id` as the spend log `session_id` and scope session history replay to the owning key, user and team - [PR #44199](https://github.com/BerriAI/litellm/pull/44199)
-- Log each dropped `/v1/messages` attempt through its own logging copy and open the retry without its usage - [PR #45194](https://github.com/BerriAI/litellm/pull/45194)
-- Put daily tag spend back on the in-memory queue when the Redis `RPUSH` fails - [PR #47307](https://github.com/BerriAI/litellm/pull/47307)
-- Add size-triggered spend log cleanup with `general_settings.maximum_spend_logs_size`, `maximum_spend_logs_cleanup_target_size` and `maximum_spend_logs_size_check_interval`, deleting oldest rows first and reporting the `litellm_spend_log_storage_bytes` gauge - [PR #47450](https://github.com/BerriAI/litellm/pull/47450)
-- Drop fully elapsed `LiteLLM_SpendLogs` partitions oldest first in the size cleanup pass, never the current or default partition - [PR #47451](https://github.com/BerriAI/litellm/pull/47451)
-- Record `spend_logs_metadata` on `/interactions` calls - [PR #47848](https://github.com/BerriAI/litellm/pull/47848)
-- Track the per-request rollup enqueues so shutdown drains them, and log each rollup failure with the request id - [PR #48131](https://github.com/BerriAI/litellm/pull/48131)
-- Add `general_settings.disable_pre_routing_error_logs` to skip spend rows for requests rejected before routing - [PR #48239](https://github.com/BerriAI/litellm/pull/48239)
-- Floor team member `total_spend` at the current cycle spend for rows written before `total_spend` existed, so a budget reset keeps their history - [PR #48260](https://github.com/BerriAI/litellm/pull/48260)
-- Match `extra_spend_tag_headers` case-insensitively - [PR #48620](https://github.com/BerriAI/litellm/pull/48620)
-- Treat a NaN or infinite reported cost as unreported and record any other non-finite cost as 0, so it no longer wedges daily spend writes - [PR #48829](https://github.com/BerriAI/litellm/pull/48829)
-- Add opt-in durable usage capture with `general_settings.accounting_capture`, writing usage to the new `LiteLLM_AccountingEvent` and `LiteLLM_AccountingDelivery` ledger tables beside the existing spend updates, with `accounting_sync_ack` to wait for the commit on foreground requests and `accounting_sync_ack_failure_policy` (`fail_closed` returns 503, or `log`) - [PR #48862](https://github.com/BerriAI/litellm/pull/48862), [PR #49133](https://github.com/BerriAI/litellm/pull/49133)
-- Mark mirrored `silent_model` calls with `is_silent_experiment` in spend logs and logging payloads from a router-only key clients cannot set - [PR #48888](https://github.com/BerriAI/litellm/pull/48888)
-- Use the `sessionId`, `threadId` or `conversationId` from Bedrock `requestMetadata` or the `X-Amzn-Bedrock-Request-Metadata` header as the session id on Bedrock pass-through routes - [PR #49193](https://github.com/BerriAI/litellm/pull/49193)
-- Log `/v1/images/generations` requests the router refuses before picking a deployment - [PR #49349](https://github.com/BerriAI/litellm/pull/49349)
+- Keep `user_api_key_user_email` in spend log metadata by default, so request logs show the internal user's email instead of an opaque SSO id - [PR #41150](https://github.com/BerriAI/litellm/pull/41150)
+- Use the caller's `litellm_session_id` or `metadata.session_id` as the spend log `session_id` when `request_correlation_in_logs` is on, on every route - [PR #44199](https://github.com/BerriAI/litellm/pull/44199)
+- List the cooled deployments, each with its `model_id` and `api_base`, in `error_cooldown_deployments` on the failure row when the router answers 429 because every deployment is cooling - [PR #47120](https://github.com/BerriAI/litellm/pull/47120)
+- Put drained daily tag spend back on the in-memory queue when the Redis `RPUSH` fails, so the next tick retries it instead of losing that tick's tag spend - [PR #47307](https://github.com/BerriAI/litellm/pull/47307)
+- Read deployment pricing for savings calculations from the router's cached model info instead of deep-copying it for every daily rollup row - [PR #47400](https://github.com/BerriAI/litellm/pull/47400)
+- Add `maximum_spend_logs_size`, `maximum_spend_logs_cleanup_target_size` and `maximum_spend_logs_size_check_interval` to delete the oldest spend log rows once the table passes a size limit - [PR #47450](https://github.com/BerriAI/litellm/pull/47450)
+- Drop the oldest day partitions first when size-based spend log cleanup runs with `use_spend_logs_partitioning`, so disk space comes back at once, and report `partitions_dropped` in the run summary - [PR #47451](https://github.com/BerriAI/litellm/pull/47451)
+- Run one spend log cleanup pass at a time per pod, with or without Redis, so the age job and the size job no longer delete at once - [PR #47500](https://github.com/BerriAI/litellm/pull/47500)
+- Run `ANALYZE` when spend log size cleanup finds reset table statistics and keep its reclaimable count, so the pass runs instead of skipping or over-deleting - [PR #47501](https://github.com/BerriAI/litellm/pull/47501)
+- Ignore a first-token time left over from a failed attempt, so retried requests stop logging a negative completion time that made latency-based routing drop the group - [PR #47541](https://github.com/BerriAI/litellm/pull/47541)
+- Record `spend_logs_metadata` on `/v1beta/interactions` instead of leaving it `null` in the spend log - [PR #47848](https://github.com/BerriAI/litellm/pull/47848)
+- Drain the per-request key, team, user and daily rollups on shutdown and log their failures with the request id, so a pod recycle no longer drops rollups for a request whose spend log landed - [PR #48131](https://github.com/BerriAI/litellm/pull/48131)
+- Add opt-in `general_settings.disable_pre_routing_error_logs` to skip zero-spend failure rows for requests rejected before routing, such as invalid keys or exceeded budgets - [PR #48239](https://github.com/BerriAI/litellm/pull/48239)
+- Match `extra_spend_tag_headers` case-insensitively, so entries such as `X-Org-Id` produce spend tags instead of being silently missing from spend logs - [PR #48620](https://github.com/BerriAI/litellm/pull/48620)
+- Return each day's guardrail cost per guardrail and per API key from the user, team and organization daily activity endpoints, next to the model and provider breakdowns - [PR #48702](https://github.com/BerriAI/litellm/pull/48702)
+- Include spend and request counts with no model or key in daily activity reports, drilldowns and exports under fallback bucket labels, so breakdowns add up to the totals - [PR #48925](https://github.com/BerriAI/litellm/pull/48925)
+- Flush the tag spend queue and wait for queued success callbacks within the shutdown budget on SIGTERM, so restarts no longer lose tag rows and SpendLogs rows for in-flight requests - [PR #48988](https://github.com/BerriAI/litellm/pull/48988)
+- Add opt-in durable usage capture that batches usage events and delivery manifests, bounds buffered work and drains within the shutdown deadline, with optional commit acknowledgements on non-stream foreground requests - [PR #49133](https://github.com/BerriAI/litellm/pull/49133)
+- Record OpenRouter's top-level `provider` as `upstream_provider` in the logging payload hidden params and spend log metadata, for streaming and non-streaming chat completions - [PR #49287](https://github.com/BerriAI/litellm/pull/49287)
+- Keep rerank token usage in spend logs, including provider-reported totals and zero counts, instead of dropping it - [PR #49308](https://github.com/BerriAI/litellm/pull/49308)
 
 ### Budgets
 
-- Add opt-in `general_settings.self_serve_budget_policy` (`lower_only` or `ceiling`) so key owners can change `max_budget` or `budget_limits` on their own keys through `/key/update` - [PR #44763](https://github.com/BerriAI/litellm/pull/44763)
-- Track per-model budget spend locally instead of queueing increments for Redis when no Redis is configured - [PR #46831](https://github.com/BerriAI/litellm/pull/46831)
-- Add `general_settings.request_tag_mappings` to map W3C `baggage` values to request tags for tag spend and budgets, with exact value rules ahead of `tag_prefix` fallbacks - [PR #47358](https://github.com/BerriAI/litellm/pull/47358)
-- Count billed background Responses calls toward the creator's project and per-model budgets, under the model name the client sent - [PR #47504](https://github.com/BerriAI/litellm/pull/47504)
-- Let `model_max_budget` entries name a model family pattern or an access group, sharing each budget window across replicas - [PR #47722](https://github.com/BerriAI/litellm/pull/47722)
-- Raise the live budget counters for failure spend rows that carry a cost, such as a stream that breaks mid-flight, so an over-budget key stops passing - [PR #47741](https://github.com/BerriAI/litellm/pull/47741)
-- Keep the team's budget reset schedule when a temporary budget increase is set on a member who inherits the team default - [PR #48495](https://github.com/BerriAI/litellm/pull/48495)
-- Apply `max_end_user_budget_id` to end users without a row on cached keys - [PR #48704](https://github.com/BerriAI/litellm/pull/48704)
-- Enforce an end user's per-model `model_max_budget` from their linked or default budget for virtual keys, the master key and JWT auth - [PR #48815](https://github.com/BerriAI/litellm/pull/48815)
-- Keep model discovery routes available to over-budget keys while custom pass-through routes keep their budget checks - [PR #49463](https://github.com/BerriAI/litellm/pull/49463)
+- Add opt-in `general_settings.self_serve_budget_policy`, so key owners can change `max_budget` and `budget_limits` on their own keys through `/key/update` in `lower_only` or `ceiling` mode - [PR #44763](https://github.com/BerriAI/litellm/pull/44763)
+- Map W3C `baggage` values to tags with `general_settings.request_tag_mappings`, so spend and budgets track per entrypoint and an exhausted tag budget rejects the request before the provider call - [PR #47358](https://github.com/BerriAI/litellm/pull/47358)
+- Count billed background Responses spend toward the creating key's project and its per-model budgets on the key, tier, team and user - [PR #47504](https://github.com/BerriAI/litellm/pull/47504)
+- Show the spend limit and rate limits in the Create and Edit budget dialogs without a collapsed section, so every field entered is saved - [PR #47662](https://github.com/BerriAI/litellm/pull/47662)
+- Enforce model family patterns such as `claude-opus*` and access group entries in `model_max_budget` with one shared counter per entry, and show the family total on `/key/info` - [PR #47722](https://github.com/BerriAI/litellm/pull/47722)
+- Raise the live budget counters for failure spend rows that carry a cost, so a key whose stream broke partway is refused right away instead of after the next counter repair - [PR #47741](https://github.com/BerriAI/litellm/pull/47741)
+- Sort budgets by reset duration, comparing elapsed time so `1h`, `7d` and `30d` order correctly across all matching budgets before pagination - [PR #48107](https://github.com/BerriAI/litellm/pull/48107)
+- Report team member `total_spend` as at least their current cycle spend on the Members tab and team APIs, and show the next reset time in the Budget Reset column - [PR #48260](https://github.com/BerriAI/litellm/pull/48260)
+- Keep the team reset schedule when `/team/member_update` sets a temporary budget increase on a member inheriting the team default, so their spend keeps resetting and clearing the increase leaves them a budget - [PR #48495](https://github.com/BerriAI/litellm/pull/48495)
+- Count Anthropic-style `tool_choice` on `/v1/messages` without a `KeyError`, so budget reservations stop charging the full input context and small end-user budgets stop failing concurrent requests - [PR #48624](https://github.com/BerriAI/litellm/pull/48624)
+- Apply `max_end_user_budget_id` to end users without a row on cached keys, so a new end user gets the default budget's limits on every request and not only the first - [PR #48704](https://github.com/BerriAI/litellm/pull/48704)
+- Enforce an end user's per-model budget `model_max_budget` from their linked budget on virtual keys, the master key and JWTs, so they can no longer spend past it - [PR #48815](https://github.com/BerriAI/litellm/pull/48815)
+- Stop sending `llm_exceptions` alerts for `BudgetExceededError`, so over-budget keys that get a 422 no longer raise high-severity LLM failure alerts on every request - [PR #49290](https://github.com/BerriAI/litellm/pull/49290)
+- Keep model discovery and the caller's key and user info working after a key or team-member budget is exhausted - [PR #49463](https://github.com/BerriAI/litellm/pull/49463)
 
 ### Rate limiting
 
-- Count native Responses WebSocket turns toward deployment limits and budgets, write one spend log row per turn, and refund unsettled reservations on disconnect - [PR #45727](https://github.com/BerriAI/litellm/pull/45727)
-- Let `general_settings.enforce_project_model_quota` require RPM and TPM limits per provider or per model, checked on model adds and team model writes too - [PR #47693](https://github.com/BerriAI/litellm/pull/47693)
-- Reject negative `rpm_limit` and `tpm_limit` values on key, user and budget requests - [PR #48444](https://github.com/BerriAI/litellm/pull/48444)
-- Preserve the rate limiter's admission state across SSE keepalive tasks so stream cleanup releases the request's slot - [PR #48452](https://github.com/BerriAI/litellm/pull/48452)
-- Release the `max_parallel_requests` slot when a synthetic stream completes - [PR #48628](https://github.com/BerriAI/litellm/pull/48628)
-- Estimate audio and other media tokens in combined TPM reservations - [PR #48865](https://github.com/BerriAI/litellm/pull/48865)
-- Stop `enable_pre_call_checks` from filtering deployments by their in-memory `rpm` count, so deployment `rpm` and `tpm` only limit traffic when `optional_pre_call_checks` includes `enforce_model_rate_limits` - [PR #48873](https://github.com/BerriAI/litellm/pull/48873)
-- Add deployment `rpd` and `tpd` daily limits in `litellm_params`, enforced under `enforce_model_rate_limits` after the minute checks - [PR #48875](https://github.com/BerriAI/litellm/pull/48875)
-- Add `daily_reset_time` (`HH:MM` in UTC) next to `rpd` and `tpd` to pick when daily limits start over, with the 429 retry-after counting to that reset - [PR #48957](https://github.com/BerriAI/litellm/pull/48957)
-- Cap the default OTPM reservation for requests without `max_tokens`, configurable with `NO_MAX_TOKENS_TPM_RESERVATION_FRACTION`, reconcile ITPM and OTPM reservations after every call, and refund a failed attempt's reservation - [PR #49054](https://github.com/BerriAI/litellm/pull/49054)
-- Check and count deployment `itpm` and `otpm` on every Responses WebSocket turn, refusing a turn with a 429 frame once a counter is at its limit - [PR #49069](https://github.com/BerriAI/litellm/pull/49069)
-- Count native Responses WebSocket turn tokens toward key, team, user, end user and tag TPM limits, refusing a turn with no tokens left with a 429 frame while the socket stays open - [PR #49257](https://github.com/BerriAI/litellm/pull/49257)
+- Count every `response.create` turn on a native Responses WebSocket toward its deployment's budget, TPM and RPM and refuse over-limit turns with a 429 frame, instead of only checking the first turn - [PR #45727](https://github.com/BerriAI/litellm/pull/45727)
+- Reject negative RPM and TPM limits with a 422 when creating keys, users, teams, budgets and customers, instead of saving limits that make every request return 429 - [PR #48444](https://github.com/BerriAI/litellm/pull/48444)
+- Release `max_parallel_requests` slots after completed streams when SSE keepalive is on, so a limit-3 key no longer returns 429 on its fourth sequential request - [PR #48452](https://github.com/BerriAI/litellm/pull/48452)
+- Release virtual key concurrency slots when synthetic streams such as streamed web search complete, so sequential requests stop exhausting the limit - [PR #48628](https://github.com/BerriAI/litellm/pull/48628)
+- Count images and audio in combined TPM reservations across Chat, Responses and Anthropic content shapes, and stop counting encoded Responses tool images as text - [PR #48865](https://github.com/BerriAI/litellm/pull/48865)
+- Add deployment `rpd` and `tpd` daily limits enforced by `enforce_model_rate_limits`, so a deployment that spent its daily quota falls over to the next one in the group until midnight UTC - [PR #48875](https://github.com/BerriAI/litellm/pull/48875)
+- Add `daily_reset_time` (`HH:MM` in UTC) to `litellm_params` to choose when a deployment's `rpd` and `tpd` daily limits start over, instead of always resetting at midnight UTC - [PR #48957](https://github.com/BerriAI/litellm/pull/48957)
+- Reserve at most a quarter of `otpm` for a request without `max_tokens` and reconcile token counters to real usage after each call, so a deployment whose model max exceeds its `otpm` no longer answers 429 to every such request - [PR #49054](https://github.com/BerriAI/litellm/pull/49054)
+- Check and count a deployment's `itpm` and `otpm` on every Responses WebSocket turn, with a 429 error frame at the limit, and keep the limiter's keys out of provider metadata - [PR #49069](https://github.com/BerriAI/litellm/pull/49069)
+- Count each native `/v1/responses` WebSocket turn toward key and tag `tpm_limit`s and return a 429 for a turn with no tokens left, so Codex sessions stop spending past the limit - [PR #49257](https://github.com/BerriAI/litellm/pull/49257)
 
 ## MCP Gateway
 
 ### Auth and OAuth
 
-- Never forward the LiteLLM key used for admission to an upstream MCP server, for any auth type - [PR #46932](https://github.com/BerriAI/litellm/pull/46932)
-- Let `proxy_admin_viewer` store and delete its own per-user MCP credentials - [PR #46994](https://github.com/BerriAI/litellm/pull/46994)
-- Seal the `litellm_cp_return_to` cookie so edge firewalls stop blocking the MCP OAuth sign-in for Codex and Claude Code loopback redirects - [PR #47595](https://github.com/BerriAI/litellm/pull/47595)
-- List tools of `authorization` auth MCP servers without a shared token - [PR #47677](https://github.com/BerriAI/litellm/pull/47677)
-- Keep the toolset scope when refreshing an MCP caller's catalog authority - [PR #48095](https://github.com/BerriAI/litellm/pull/48095)
-- Advertise the toolset's own OAuth protected resource on toolset URLs instead of the aggregate `/mcp` resource - [PR #48474](https://github.com/BerriAI/litellm/pull/48474)
-- Reject revoked Admin UI browser sessions during gateway authorization - [PR #48494](https://github.com/BerriAI/litellm/pull/48494)
+- Stop forwarding the caller's LiteLLM virtual key to MCP servers upstream for every auth type, instead of only OAuth pass-through, when `Authorization` is in `extra_headers` - [PR #46932](https://github.com/BerriAI/litellm/pull/46932)
+- Let `proxy_admin_viewer` store its own MCP OAuth token, BYOK key, env vars and OAuth client registration, instead of a 403 on every self-scoped MCP credential write - [PR #46994](https://github.com/BerriAI/litellm/pull/46994)
+- Seal the `litellm_cp_return_to` cookie, so edge firewalls such as AWS WAF stop answering 403 on the MCP OAuth sign-in callback for local coding agents - [PR #47595](https://github.com/BerriAI/litellm/pull/47595)
+- List tools for per-user auth MCP servers without a shared token on `/mcp-rest/tools/list` and `/mcp` tools/list, so users no longer see an empty catalog while tool calls still need their own token - [PR #47677](https://github.com/BerriAI/litellm/pull/47677)
+- Advertise valid OAuth resource metadata for MCP toolset URLs, so Codex and Claude Code can sign in to them - [PR #48474](https://github.com/BerriAI/litellm/pull/48474)
+- Require a live browser session when MCP gateway authorization starts, when the connect flow is read and when consent completes, so a UI cookie from a logged-out session can no longer mint gateway tokens - [PR #48494](https://github.com/BerriAI/litellm/pull/48494)
+- Limit an admin's team key with no MCP servers picked, and an admin's CLI login or JWT on a team, to that team's MCP servers and toolsets, and answer 403 for LLM requests naming only denied toolsets - [PR #49161](https://github.com/BerriAI/litellm/pull/49161)
 
-### Access and tool permissions
+### Rate limits and guardrails
 
-- Let personal keys under `personal_key_model_access_from_teams` inherit MCP server, MCP tool and agent access from their owner's teams - [PR #46293](https://github.com/BerriAI/litellm/pull/46293)
-- Let `disallowed_tools` win over `allowed_tools` on every MCP path, with a warning when a server lists a tool in both - [PR #48625](https://github.com/BerriAI/litellm/pull/48625)
-- Refuse calls to MCP tools a guardrail hides from the tool listing - [PR #48669](https://github.com/BerriAI/litellm/pull/48669)
-- Bind a team key owned by a `proxy_admin` or `proxy_admin_viewer` to its team's MCP servers and toolsets, while the master key, teamless admin keys and the admin dashboard keep the whole registry - [PR #49161](https://github.com/BerriAI/litellm/pull/49161)
+- Refuse calls to MCP tools hidden by discovery guardrails before upstream execution, including calls made without a prior listing - [PR #48669](https://github.com/BerriAI/litellm/pull/48669)
 
 ### Protocol and catalog
 
-- Log the upstream exchange when an MCP health check fails - [PR #44125](https://github.com/BerriAI/litellm/pull/44125)
-- Bound paginated `tools/list` by `LITELLM_MCP_TOOL_LISTING_TIMEOUT` while keeping explicit per-server timeouts - [PR #46513](https://github.com/BerriAI/litellm/pull/46513)
-- Retry upstream 429s on `tools/list` up to `LITELLM_MCP_UPSTREAM_RATE_LIMIT_MAX_RETRIES` times (default 3), and return an error when every server fails - [PR #46649](https://github.com/BerriAI/litellm/pull/46649)
-- Upgrade to MCP SDK 2.3.0 and raise the per-event SSE size cap to 64 MiB, configurable with `LITELLM_MCP_MAX_SSE_EVENT_SIZE_BYTES`, so large `tools/call` results no longer fail - [PR #47034](https://github.com/BerriAI/litellm/pull/47034)
-- Surface the upstream HTTP status when a failed POST closes the MCP session - [PR #47569](https://github.com/BerriAI/litellm/pull/47569)
-- Send `tools/call` stream headers as soon as the call is authorized instead of waiting for the next body message - [PR #47897](https://github.com/BerriAI/litellm/pull/47897)
-- Report an upstream SSE event over the size limit with a message that says to paginate `tools/list` - [PR #48424](https://github.com/BerriAI/litellm/pull/48424)
-- Move `litellm.proxy._experimental.mcp_server` to `litellm.proxy.mcp_server` and `litellm.experimental_mcp_client` to `litellm.mcp_client`, keeping the old paths as shims that warn with `DeprecationWarning` - [PR #48513](https://github.com/BerriAI/litellm/pull/48513)
-- Accept YAML OpenAPI documents for OpenAPI-backed MCP servers - [PR #48622](https://github.com/BerriAI/litellm/pull/48622)
-- Log MCP requests the SDK rejects - [PR #49184](https://github.com/BerriAI/litellm/pull/49184)
+- Apply `LITELLM_MCP_TOOL_LISTING_TIMEOUT` to paginated `tools/list` per upstream server, so one hung MCP server no longer delays the unified `/mcp` listing by about 70 seconds - [PR #46513](https://github.com/BerriAI/litellm/pull/46513)
+- Retry upstream 429 on `tools/list` up to 3 times and return JSON-RPC error `-32603` when every in-scope server fails, instead of a 200 with an empty tool list - [PR #46649](https://github.com/BerriAI/litellm/pull/46649)
+- Upgrade to MCP SDK 2.3.0 and raise the per-event SSE size cap to 64 MiB, so large MCP tool results stop failing through the gateway - [PR #47034](https://github.com/BerriAI/litellm/pull/47034)
+- Surface the upstream HTTP status when a failed POST closes an MCP session, so a rate limited handshake gets the 429 retry instead of an `internal` failure - [PR #47569](https://github.com/BerriAI/litellm/pull/47569)
+- Send MCP tool-call response headers as soon as authorization completes instead of waiting about 15 seconds for the first SSE event - [PR #47897](https://github.com/BerriAI/litellm/pull/47897)
+- Keep the selected toolset on `/toolset/{name}/mcp` when the catalog refreshes, so a key granted several toolsets no longer sees the tools of all of them - [PR #48095](https://github.com/BerriAI/litellm/pull/48095)
+- Return HTTP 502 with the per-event byte limit and a hint to paginate `tools/list` for oversized MCP tool catalogs, and keep healthy servers' tools in aggregate listings - [PR #48424](https://github.com/BerriAI/litellm/pull/48424)
+- Load deprecated MCP helper package aliases on demand, so legacy imports work without the optional MCP gateway dependencies installed - [PR #48615](https://github.com/BerriAI/litellm/pull/48615)
+- Accept YAML OpenAPI documents when generating MCP tools from URLs and local files, instead of failing with a JSON parsing error - [PR #48622](https://github.com/BerriAI/litellm/pull/48622)
+- Refuse calls to an MCP tool listed in both `allowed_tools` and `disallowed_tools`, matching its absence from discovery, and warn at startup about overlapping YAML entries - [PR #48625](https://github.com/BerriAI/litellm/pull/48625)
+- Record MCP SDK request rejections such as unknown methods and invalid parameters as zero-cost failures under `MCP: request_rejected` with the caller's attribution, and keep persistent HTTP sessions alive after initialization - [PR #49184](https://github.com/BerriAI/litellm/pull/49184)
 
 ### Admin MCP and UI
 
-- Enforce route permissions on LiteAdmin's admin MCP credential tools, matching the HTTP routes they call - [PR #48080](https://github.com/BerriAI/litellm/pull/48080)
-- Search tool names and descriptions and multi-select tools per server in the MCP toolset editor - [PR #48601](https://github.com/BerriAI/litellm/pull/48601)
-- Offer the `authorization` MCP auth type in the create and edit forms - [PR #48629](https://github.com/BerriAI/litellm/pull/48629)
+- Log the sanitized upstream exchange when an MCP health check fails on an HTTP error, so `/v1/mcp/server/health` failures show the upstream status and body - [PR #44125](https://github.com/BerriAI/litellm/pull/44125)
+- Flush the tool discovery queue on every pod when `use_redis_transaction_buffer` is on, so the Tool Policies page and `GET /v1/tool/list` show discovered tools - [PR #47653](https://github.com/BerriAI/litellm/pull/47653)
+- Search tools across servers in the MCP toolset editor and add or remove many at once, keeping saved tools from servers that are down or deleted - [PR #48601](https://github.com/BerriAI/litellm/pull/48601)
+- Offer the `Authorization (raw header)` auth type in the MCP server create and edit forms, for upstreams that need a scheme such as `ApiKey <key>` - [PR #48629](https://github.com/BerriAI/litellm/pull/48629)
 
 ## Performance / Loadbalancing / Reliability improvements
 
 ### Auto Router and model routing
 
-- Keep the held `user_turn` tier for Codex compaction requests in the complexity router - [PR #48627](https://github.com/BerriAI/litellm/pull/48627)
-- Add `max_tokens_from_tier_model` (`true`, `"clamp"` or `false`) under `complexity_router_config` to pick how a routed request's output limit is set - [PR #48632](https://github.com/BerriAI/litellm/pull/48632)
-- Read complexity router session tier pins from Redis and refresh their TTL without writing a stale value back, so every worker sees the same pin - [PR #48645](https://github.com/BerriAI/litellm/pull/48645)
-- Let a child request carrying `x-parent-session-id` in `classification_mode: user_turn` store its own tier without replacing the parent's - [PR #48701](https://github.com/BerriAI/litellm/pull/48701)
-- Allow `os.environ/` references in complexity router Jev connection settings only from proxy admins, and refuse them from other callers with `environment_reference_denied` - [PR #48717](https://github.com/BerriAI/litellm/pull/48717)
-- Infer custom classifier tiers from the model mappings, and keep custom tier floors on classifier fallback - [PR #48987](https://github.com/BerriAI/litellm/pull/48987)
-- Budget the complexity router's classifier input by the decision provider's request limits, and record `classifier_input_*` fields on the routing span - [PR #49306](https://github.com/BerriAI/litellm/pull/49306)
-
-### Routing, fallbacks and cooldowns
-
-- Let session and API key affinity pins yield to deployments that already failed the request, while `previous_response_id` pins still win - [PR #32309](https://github.com/BerriAI/litellm/pull/32309)
-- Add opt-in `enable_mid_stream_fallback_continuation` so a chat completions stream that breaks after plain text continues on the fallback with the partial text as an assistant prefill - [PR #41127](https://github.com/BerriAI/litellm/pull/41127)
-- Discover Kubernetes pods behind a headless service `api_base` with `litellm_params.kubernetes_pod_discovery: true` - [PR #44342](https://github.com/BerriAI/litellm/pull/44342)
-- Keep requests with an explicit session id on one discovered Kubernetes pod by rendezvous hashing, and record the pod in logs, spend logs and traces - [PR #44393](https://github.com/BerriAI/litellm/pull/44393)
-- Apply `content_policy_fallbacks` when router settings update at runtime, layered over the `litellm_settings` rules and validated on `/config/update` - [PR #45428](https://github.com/BerriAI/litellm/pull/45428)
-- Unregister a discarded router's strategy selectors from every litellm callback list - [PR #45795](https://github.com/BerriAI/litellm/pull/45795)
-- Count an explicit `allowed_fails` of 3 as set, and keep the fallback deployment out of cooldown when every deployment of the requested model is cooling - [PR #46183](https://github.com/BerriAI/litellm/pull/46183)
-- Add opt-in `model_info.enforce_supported_endpoints` so chat routes on a model declared non-chat by `supported_endpoints` answer 400 before any provider call, unless a fallback can answer - [PR #46257](https://github.com/BerriAI/litellm/pull/46257)
-- Key prompt caching affinity on tools and the `/v1/messages` system prompt - [PR #46411](https://github.com/BerriAI/litellm/pull/46411)
-- Apply each deployment's declared `reasoning_effort_levels` on every provider and on `/v1/chat/completions`, `/v1/messages` and `/v1/responses`, rounding up by default with `reasoning_effort_rounding` to switch to down - [PR #46601](https://github.com/BerriAI/litellm/pull/46601)
-- Record the cooled deployments, with masked `api_base`, in `error_information.error_cooldown_deployments` on the all-cooled failure row - [PR #47120](https://github.com/BerriAI/litellm/pull/47120)
-- Bound fake-streamed calls by the request timeout instead of `stream_timeout` - [PR #47162](https://github.com/BerriAI/litellm/pull/47162)
-- Drop `router_settings_override` before routing and apply the key and team overrides on every branch, so it no longer reaches the provider - [PR #47257](https://github.com/BerriAI/litellm/pull/47257)
-- Route batch creates to `mode: batch` deployments in mixed model groups and expose `supported_endpoints` on `/model_group/info` - [PR #47376](https://github.com/BerriAI/litellm/pull/47376)
-- Route only on prefixed caller tags once `router_settings.tag_routing_prefix` is set, while key, team and project tags keep applying - [PR #47428](https://github.com/BerriAI/litellm/pull/47428)
-- Schedule `default_priority` requests once, and answer a non-integer `priority` with a 400 or drop it under `drop_params` - [PR #47498](https://github.com/BerriAI/litellm/pull/47498)
-- Ignore a first-token time left over from a previous attempt, so a negative time to first token no longer reaches spend logs or empties the latency routing window - [PR #47541](https://github.com/BerriAI/litellm/pull/47541)
-- Skip non-dict tool entries in the prompt caching affinity key instead of raising - [PR #47565](https://github.com/BerriAI/litellm/pull/47565)
-- Accept request priority from the `x-litellm-priority` header on router-served chat and text completions and `/queue/chat/completions` - [PR #47618](https://github.com/BerriAI/litellm/pull/47618)
-- Continue Responses mid-stream fallbacks on models without assistant prefill, and skip continuation for constrained output - [PR #47672](https://github.com/BerriAI/litellm/pull/47672)
-- Stop concurrent deployment deletes from crashing deployment lookups or returning a neighbouring deployment's credentials - [PR #47680](https://github.com/BerriAI/litellm/pull/47680)
-- Normalize native Responses latency per output token for latency routing - [PR #47727](https://github.com/BerriAI/litellm/pull/47727)
-- Keep image requests off deployments declared `supports_vision: false` in pre-call checks - [PR #48152](https://github.com/BerriAI/litellm/pull/48152)
-- Route Decisions calls only to deployments whose provider supports Decisions - [PR #48175](https://github.com/BerriAI/litellm/pull/48175)
-- Add opt-in `session_affinity_repin_on_failover` to move a session pin to the deployment that answered after a successful failover - [PR #48206](https://github.com/BerriAI/litellm/pull/48206)
-- Drop negative or NaN latency samples before ranking, so latency-based routing no longer turns every request to the group into a 500 - [PR #48216](https://github.com/BerriAI/litellm/pull/48216)
-- Skip declared text-only deployments for image requests on every routing strategy - [PR #48241](https://github.com/BerriAI/litellm/pull/48241)
-- Honor a deployment's `model_info.allow_fail_open` for tag routing even when affinity or cooldown filtered it out - [PR #48470](https://github.com/BerriAI/litellm/pull/48470)
-- Isolate cooldowns of forwarded Anthropic subscription credentials per credential - [PR #48485](https://github.com/BerriAI/litellm/pull/48485)
-- Serve a team's wildcard deployment before a proxy-wide wildcard - [PR #48490](https://github.com/BerriAI/litellm/pull/48490)
-- Keep a lone deployment warm under router `allowed_fails` unless the cooldown policy names the exception - [PR #48644](https://github.com/BerriAI/litellm/pull/48644)
-- Pass `response.created`, `response.queued` and `response.in_progress` through as they arrive on background OpenAI Responses streams that cannot fall back - [PR #48817](https://github.com/BerriAI/litellm/pull/48817)
-- Cool down failing deployments when fallbacks use string targets - [PR #48913](https://github.com/BerriAI/litellm/pull/48913)
-- Raise a `TypeError` at `Router` init, and so at proxy startup, when `fallbacks`, `content_policy_fallbacks` or `default_fallbacks` give a target as a string, such as `{"gpt-4": "gpt-3.5"}`, instead of a list; these configs started before but the router walked the string one character at a time, so the named fallback never ran. Write `{"gpt-4": ["gpt-3.5"]}` instead - [PR #48943](https://github.com/BerriAI/litellm/pull/48943)
-- Keep a deployment's own `model_id` over the request body's, unless the deployment lists `model_id` in `configurable_clientside_auth_params` - [PR #49045](https://github.com/BerriAI/litellm/pull/49045)
-- Apply key and team `router_settings` to `/v1/images/generations` - [PR #49286](https://github.com/BerriAI/litellm/pull/49286)
-- Recover a streamed context window error raised before any output through the context window fallbacks - [PR #49293](https://github.com/BerriAI/litellm/pull/49293)
-- Detect image content, including Responses `computer_screenshot` parts, without translating the routed request - [PR #49371](https://github.com/BerriAI/litellm/pull/49371)
-- Read the shared priority queue from Redis, so expired entries left by a dead replica stop blocking waiting requests - [PR #49387](https://github.com/BerriAI/litellm/pull/49387)
+- Let affinity pins skip a deployment that already failed this request, so weighted failover and retries use a healthy deployment in the same group instead of the cross-group fallback - [PR #32309](https://github.com/BerriAI/litellm/pull/32309)
+- Add opt-in `router_settings.enable_mid_stream_fallback_continuation`, so a chat stream cut mid-answer continues on a prefill-capable fallback with the partial answer instead of ending truncated - [PR #41127](https://github.com/BerriAI/litellm/pull/41127)
+- Add opt-in `kubernetes_pod_discovery: true`, so the Router resolves a headless service `api_base` to ready pod IPs and round-robins across them - [PR #44342](https://github.com/BerriAI/litellm/pull/44342)
+- Pin requests that carry a session ID to one discovered Kubernetes pod, so vLLM's per-pod prefix cache is reused across a multi-turn session - [PR #44393](https://github.com/BerriAI/litellm/pull/44393)
+- Log each failed streamed `/v1/messages` attempt through its own logging copy, so retries and fallbacks record the right usage, cost and deployment instead of mixing attempts - [PR #45194](https://github.com/BerriAI/litellm/pull/45194)
+- Apply `content_policy_fallbacks` on every worker when router settings update at runtime through `POST /fallback` or `/config/update` - [PR #45428](https://github.com/BerriAI/litellm/pull/45428)
+- Count failures when `allowed_fails` is explicitly set to 3 and stop fallback traffic that found no deployment from cooling down healthy fallback deployments - [PR #46183](https://github.com/BerriAI/litellm/pull/46183)
+- Let admins set `model_info.enforce_supported_endpoints: true` on a non-chat deployment so chat requests skip it before any provider call and fall back or answer 400 - [PR #46257](https://github.com/BerriAI/litellm/pull/46257)
+- Bound fake-streamed calls by the request timeout instead of `stream_timeout`, so slow Bedrock answers served without streaming are no longer cut off while live streams keep `stream_timeout` - [PR #47162](https://github.com/BerriAI/litellm/pull/47162)
+- Apply key and team `router_settings` to hook, client-credential, comma-batch and `user_config` requests, and stop sending `router_settings_override` to the provider, so those requests keep retries, fallbacks and timeouts - [PR #47257](https://github.com/BerriAI/litellm/pull/47257)
+- Resolve whether a deployment tracks usage limits once per deployment instead of on every request, saving about 0.2 ms of CPU per routed request - [PR #47393](https://github.com/BerriAI/litellm/pull/47393)
+- Route only on prefixed caller tags once `tag_routing_prefix` is set, while key, team and project tags keep routing, so a spend tag like `user_id:234` no longer gets a 401 - [PR #47428](https://github.com/BerriAI/litellm/pull/47428)
+- Queue `router_settings.default_priority` requests once, treat `priority` 0 as a real priority and answer 400 for a non-integer `priority`, instead of a 500 on every chat request - [PR #47498](https://github.com/BerriAI/litellm/pull/47498)
+- Accept request priority from the `x-litellm-priority` header on router-served chat and text completions and `/queue/chat/completions`, ahead of a body `priority` - [PR #47618](https://github.com/BerriAI/litellm/pull/47618)
+- Continue a cut `/v1/responses` stream on a fallback model without assistant prefill, by sending the partial reply as history plus a user turn, instead of returning the primary's `server_error` - [PR #47672](https://github.com/BerriAI/litellm/pull/47672)
+- Make `Router` deployment lookups wait for a concurrent delete, upsert or add, so a shared `Router` no longer raises `IndexError` or returns a neighbouring deployment - [PR #47680](https://github.com/BerriAI/litellm/pull/47680)
+- Normalize native Responses latency to seconds per output token, so latency-based routing compares native and bridged deployments in the same unit - [PR #47727](https://github.com/BerriAI/litellm/pull/47727)
+- Skip deployments declared `supports_vision: false` for image requests on chat and `/v1/responses` when `enable_pre_call_checks` is on, so mixed groups stop returning provider 400s - [PR #48152](https://github.com/BerriAI/litellm/pull/48152)
+- Route `/v1/decisions` calls only to deployments whose provider supports Decisions, so a mixed OpenAI and Bedrock group no longer sends calls to Bedrock and answers 400 - [PR #48175](https://github.com/BerriAI/litellm/pull/48175)
+- Add an opt-in router setting that keeps a session on its replacement deployment after a successful failover, instead of staying pinned to the original - [PR #48206](https://github.com/BerriAI/litellm/pull/48206)
+- Ignore negative and NaN latency samples in latency-based routing, so one bad sample no longer returns 500 for the whole model group - [PR #48216](https://github.com/BerriAI/litellm/pull/48216)
+- Skip deployments declared `supports_vision: false` for image requests on every routing strategy by default, and add `x-litellm-model-id` to chat completion errors - [PR #48241](https://github.com/BerriAI/litellm/pull/48241)
+- Keep a model group's tag fail-open opt-in through affinity and cooldown filtering, so Responses API continuations pinned to a deployment without its own flag no longer fail tag authorization - [PR #48470](https://github.com/BerriAI/litellm/pull/48470)
+- Stop an exhausted forwarded Claude subscription from putting the shared model into cooldown and blocking other callers - [PR #48485](https://github.com/BerriAI/litellm/pull/48485)
+- Serve a team's own wildcard deployment, such as a BYOK `openrouter/*`, before a proxy-wide wildcard of the same pattern, so team credentials are used and spend stops landing on the shared key - [PR #48490](https://github.com/BerriAI/litellm/pull/48490)
+- Keep the held `user_turn` route for Codex compaction requests, so a synthetic summarize turn no longer re-runs the classifier and moves the session to another model - [PR #48627](https://github.com/BerriAI/litellm/pull/48627)
+- Add an opt-in Respect caller budget mode to complexity routing that keeps a caller's smaller output limit instead of the routed model's ceiling, through rerouting and cache-aware cost estimates - [PR #48632](https://github.com/BerriAI/litellm/pull/48632)
+- Keep a lone deployment with no fallback in rotation under router `allowed_fails`, so calls reach the provider instead of answering 429 "No deployments available" for `cooldown_time` - [PR #48644](https://github.com/BerriAI/litellm/pull/48644)
+- Keep session tier pins coherent across proxy workers, so identical tool continuations keep the latest session tier when requests move between workers - [PR #48645](https://github.com/BerriAI/litellm/pull/48645)
+- Give child agents their own tier pin in `user_turn` mode, so a child's new ask no longer replaces the parent's tier - [PR #48701](https://github.com/BerriAI/litellm/pull/48701)
+- Resolve environment-backed credentials and URLs in JEV auto router connections instead of silently falling back to heuristic routing, and require proxy-admin privileges for new references - [PR #48717](https://github.com/BerriAI/litellm/pull/48717)
+- Remove the deployment `rpm` filter from `enable_pre_call_checks`, so `rpm` and `tpm` are routing weights unless `enforce_model_rate_limits` is set - [PR #48873](https://github.com/BerriAI/litellm/pull/48873)
+- Cool down failing deployments again when `fallbacks` or `default_fallbacks` use string targets, instead of silently skipping the cooldown - [PR #48913](https://github.com/BerriAI/litellm/pull/48913)
+- Reject a bare string fallback target such as `fallbacks: [{gpt-4: gpt-3.5}]` or `default_fallbacks: gpt-3.5` at `Router` init with a `TypeError` showing the list form, instead of silently never routing to it - [PR #48943](https://github.com/BerriAI/litellm/pull/48943)
+- Infer route names for custom Python classifiers from their tier-to-model mapping, and respect plan-mode floors when the default-model fallback runs for those names - [PR #48987](https://github.com/BerriAI/litellm/pull/48987)
+- Read stored router settings from the database on `POST /fallback` and `DELETE /fallback/{model}`, so a stale cache no longer drops an earlier fallback rule and config-file settings stop being copied into the stored row - [PR #48999](https://github.com/BerriAI/litellm/pull/48999)
+- Try the configured context window fallback when a streamed request hits a context window error before any output reaches the client, instead of returning the error - [PR #49293](https://github.com/BerriAI/litellm/pull/49293)
+- Budget the full Decisions classifier request against the provider's input limits and trim oversized input head and tail, instead of silently falling back to heuristic routing, and record the trimming and fallback reason - [PR #49306](https://github.com/BerriAI/litellm/pull/49306)
+- Stop routed moderation and embedding requests from failing with a 500 during image detection, and let malformed Messages requests reach the provider's existing 400 - [PR #49371](https://github.com/BerriAI/litellm/pull/49371)
 
 ### Caching, database and runtime
 
-- Keep reasoning, citations, audio, images and tool calls on streamed cache hits, replayed in a live stream's order - [PR #32096](https://github.com/BerriAI/litellm/pull/32096)
-- Resync configuration after a Redis reconnect - [PR #43313](https://github.com/BerriAI/litellm/pull/43313)
-- Keep the `litellm` command light so spawned workers answer uvicorn's first health ping, default the worker healthcheck timeout to 60 seconds and warn on uvicorn below 0.37 - [PR #45039](https://github.com/BerriAI/litellm/pull/45039)
-- Hand the event loop back once a streaming response has held it for 50 ms, instead of holding it for the whole buffered stream - [PR #46925](https://github.com/BerriAI/litellm/pull/46925)
-- Freeze the startup heap with `gc.freeze()` once the proxy is up, so full garbage collection passes stop re-walking it - [PR #47137](https://github.com/BerriAI/litellm/pull/47137)
-- Build the OpenAPI schema off the event loop and reuse the rendered `/openapi.json`, so a cold request no longer stalls the worker - [PR #47352](https://github.com/BerriAI/litellm/pull/47352)
-- Resolve whether a deployment has usage limits once per deployment instead of on every request - [PR #47393](https://github.com/BerriAI/litellm/pull/47393)
-- Price deployments for savings reporting from the router's cached model info instead of deep-copying cost map entries on every call - [PR #47400](https://github.com/BerriAI/litellm/pull/47400)
-- Flush the tool discovery queue to `LiteLLM_ToolTable` when `use_redis_transaction_buffer` is on - [PR #47653](https://github.com/BerriAI/litellm/pull/47653)
-- Buffer tool discoveries in Redis and write `LiteLLM_ToolTable` in one statement per drain, on its own lock and scheduler job - [PR #48089](https://github.com/BerriAI/litellm/pull/48089)
-- Let the Rust gateway connect to Redis with the Redis settings in `config.yaml` - [PR #48284](https://github.com/BerriAI/litellm/pull/48284)
-- Refuse migrations that existing rows would make fail before the first one runs, and add `litellm --check_migrations_against_existing_data`, which dry-runs the pending migrations' real SQL in rolled-back transactions so Postgres reports the row or schema that would block the upgrade, exiting 2 when one fails - [PR #48493](https://github.com/BerriAI/litellm/pull/48493), [PR #48961](https://github.com/BerriAI/litellm/pull/48961)
-- Abort a request with a 499 when the client disconnects during the body upload, so a half-uploaded body never reaches the provider - [PR #48640](https://github.com/BerriAI/litellm/pull/48640)
-- Key cached async clients by a per-loop token instead of `id(loop)`, so a reused loop address no longer hands out a client bound to a dead loop - [PR #48877](https://github.com/BerriAI/litellm/pull/48877)
-- Key the response cache by the model group in the router's metadata for the call, so a caller's own `caching_groups` can no longer fill another group's entry - [PR #48917](https://github.com/BerriAI/litellm/pull/48917)
-- Persist pending tag spend and drain success callbacks within the shutdown budget - [PR #48988](https://github.com/BerriAI/litellm/pull/48988)
-- Skip the base64 data URI scan on plain text and copy a few large strings inline when building logging payloads - [PR #49228](https://github.com/BerriAI/litellm/pull/49228)
+- Keep streamed `/v1/responses` and WebSocket logging tasks alive and wait up to 5 seconds for them on shutdown, so a restart no longer drops a log your callback was still writing - [PR #31074](https://github.com/BerriAI/litellm/pull/31074)
+- Replay reasoning, citations and audio on streamed cache hits, and send reasoning, then text, then tool calls like a live stream - [PR #32096](https://github.com/BerriAI/litellm/pull/32096)
+- Resync proxy configuration right after a Redis subscription reconnects, so workers no longer stay stale until the next poll - [PR #43313](https://github.com/BerriAI/litellm/pull/43313)
+- Load LiteLLM inside each spawned worker after uvicorn's ping thread starts, so multi-worker proxies on slow hosts no longer crash-loop on `Child process died` - [PR #45039](https://github.com/BerriAI/litellm/pull/45039)
+- Remove a discarded Router's strategy selectors and pre-call checks from the global callback lists, so later requests no longer copy handlers from routers that are gone - [PR #45795](https://github.com/BerriAI/litellm/pull/45795)
+- Queue Redis budget increments only when a Redis cache is configured, so Redis-less pods stop growing memory by about 185 bytes per budgeted request - [PR #46831](https://github.com/BerriAI/litellm/pull/46831)
+- Hand the event loop back every 50 ms while streaming buffered responses, so one long stream no longer stalls other requests on the worker for up to 0.6 s - [PR #46925](https://github.com/BerriAI/litellm/pull/46925)
+- Send OpenAI chat completions through `client.post` so the SDK's per-message param walk stops holding the event loop, about 300 ms at 1M tokens - [PR #46967](https://github.com/BerriAI/litellm/pull/46967)
+- Cut per-chunk pydantic round trips on OpenAI-compatible streams by building each plain chunk's delta once - [PR #47030](https://github.com/BerriAI/litellm/pull/47030)
+- Fall back to the bundled cost map when `LITELLM_MODEL_COST_MAP_URL` is not a parseable URL, instead of crashing `import litellm` and proxy boot with `ValueError` - [PR #47133](https://github.com/BerriAI/litellm/pull/47133)
+- Run `gc.freeze()` once the proxy is up, so gen-2 garbage collection passes stop re-walking startup objects and pausing every in-flight request for 0.6 to 0.8 s - [PR #47137](https://github.com/BerriAI/litellm/pull/47137)
+- Resolve Bedrock AWS region and secret lookups off the event loop on `/v1/messages`, `/v1/responses`, files, batches, vector stores and realtime, so a remote Vault no longer stalls other requests on the worker - [PR #47331](https://github.com/BerriAI/litellm/pull/47331)
+- Build the OpenAPI schema on a worker thread and reuse the rendered body, so a cold `/openapi.json` no longer stalls health checks and admin calls on the worker for about 6 s - [PR #47352](https://github.com/BerriAI/litellm/pull/47352)
+- Remember a failed HuggingFace tokenizer download for 5 minutes, so llama-3, llama-2 and cohere token counts stop retrying it and adding about 23s to each request - [PR #47586](https://github.com/BerriAI/litellm/pull/47586)
+- Forward `dispatched_call_type` in the proxy failure handler, so a bad key, failed custom auth or provider error returns its real 401, 4xx or 5xx instead of a generic `TypeError` - [PR #47815](https://github.com/BerriAI/litellm/pull/47815)
+- Buffer tool discoveries in Redis and write `LiteLLM_ToolTable` in one statement per drain on its own lock, so `call_count` counts real tool calls instead of flush cycles - [PR #48089](https://github.com/BerriAI/litellm/pull/48089)
+- Remove the disk cache backend and the `diskcache` dependency, so a `cache_params.type: disk` config stops at startup with an error listing the supported cache types - [PR #48114](https://github.com/BerriAI/litellm/pull/48114)
+- Check pending migrations against existing rows before the first one runs and refuse with a named report, and add `litellm --check_migrations_against_existing_data` to run the same checks without applying anything - [PR #48493](https://github.com/BerriAI/litellm/pull/48493)
+- Abort a request with a 499 when the client disconnects during the body upload, instead of treating the body as `{}` and logging a missing `messages` failure - [PR #48640](https://github.com/BerriAI/litellm/pull/48640)
+- Close the aiohttp session of an evicted OpenAI or Azure SDK client when the client is garbage collected, so aiohttp stops logging `Unclosed client session` - [PR #48650](https://github.com/BerriAI/litellm/pull/48650)
+- Require the compiled `_native` extension at `import litellm`, so a broken install fails at import instead of running with fork safety and exception mapping off - [PR #48852](https://github.com/BerriAI/litellm/pull/48852)
+- Key cached async clients by a per-loop token instead of `id(loop)`, so a new event loop no longer gets a collected loop's client - [PR #48877](https://github.com/BerriAI/litellm/pull/48877)
+- Size btree entries by the bytes Postgres stores in the pre-migration index check, so a repetitive `api_key` over 2704 bytes no longer blocks startup - [PR #48911](https://github.com/BerriAI/litellm/pull/48911)
+- Read the response cache key's `model_group` and `caching_groups` from the router's metadata for the call instead of the caller's `metadata`, so a request can no longer fill another model group's cache entry - [PR #48917](https://github.com/BerriAI/litellm/pull/48917)
+- Keep the aiohttp session open until a response stream finishes reading, so a client dropped mid-stream no longer ends it with `httpx.ReadError: Connection closed` - [PR #48920](https://github.com/BerriAI/litellm/pull/48920)
+- Stop counting rows at boot before pending migrations and make `litellm --check_migrations_against_existing_data` a rolled-back dry run of each pending migration that reports Postgres's own error or the time taken - [PR #48961](https://github.com/BerriAI/litellm/pull/48961)
+- Stop raising and catching about a dozen AttributeErrors in pydantic on every plain OpenAI or Azure streamed chunk, cutting proxy CPU per chunk by about 5% on Azure streams - [PR #49166](https://github.com/BerriAI/litellm/pull/49166)
+- Skip the base64 image scan on log message text that has no data URI markers and copy small payloads inline, so requests without images spend less time in logging - [PR #49228](https://github.com/BerriAI/litellm/pull/49228)
+- Read the priority scheduler's shared queue from Redis on each poll, so an expired dead-replica entry stops blocking waiters until they time out with a 408 - [PR #49387](https://github.com/BerriAI/litellm/pull/49387)
+- Warn with the destination, wait time and connector limits when an aiohttp request queues for a connection slot, so a pool timeout is distinguishable from a slow upstream - [PR #49499](https://github.com/BerriAI/litellm/pull/49499)
 
 ### Docker and Helm
 
-- Stop the `litellm-helm` chart from adding placeholder models to every install, shipping `proxy_config.model_list: []` instead - [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
-- Route `ingress.extraPaths` entries to another Service in the namespace with `serviceName` and `servicePort` in the `helm/litellm` chart - [PR #48674](https://github.com/BerriAI/litellm/pull/48674)
+- Stop the `litellm-helm` chart from adding placeholder `gpt-3.5-turbo` and `fake-openai-endpoint` models by default, so DB-managed installs no longer list fake models or get 401s on a same-named model - [PR #47056](https://github.com/BerriAI/litellm/pull/47056)
+- Route extra ingress paths to custom Services in the Helm chart, with explicit Service names and numeric or named ports, while keeping component aliases and the built-in routes - [PR #48674](https://github.com/BerriAI/litellm/pull/48674)
 
 ### Dependency updates
 
-- Bump aiohttp to 3.14.5 in the lockfile, and so the Docker image, to clear osv-scan - [PR #47369](https://github.com/BerriAI/litellm/pull/47369)
-- Require `anyio>=4.14.0`, ruling out a lock-waiter deadlock in the httpx and Prisma clients on pip and uv installs that kept an older anyio - [PR #47378](https://github.com/BerriAI/litellm/pull/47378)
-- Bump langgraph, tornado (6.6 on Python 3.11+), ddtrace, msgpack and pylint, with dated scan ignores, to clear osv-scan and image-scan - [PR #48302](https://github.com/BerriAI/litellm/pull/48302)
-- Allow `filelock` 4.x (`<5`), so installs on Python 3.11+ can take the 4.2.1+ releases that fix three CVEs while Python 3.10 keeps 3.x - [PR #49137](https://github.com/BerriAI/litellm/pull/49137)
-- Bump pyasn1 to 0.6.5, pypdf to 6.21.4 and minimatch to 11.0.2 to clear osv-scan - [PR #49362](https://github.com/BerriAI/litellm/pull/49362)
+- Bump aiohttp from 3.14.3 to 3.14.5 and yarl from 1.23.0 to 1.25.1 in the lock file - [PR #47369](https://github.com/BerriAI/litellm/pull/47369)
+- Require `anyio>=4.14.0,<5.0` so installs no longer keep an older anyio that can hang the next caller on a lock nobody holds - [PR #47378](https://github.com/BerriAI/litellm/pull/47378)
+- Allow installing LiteLLM on Python 3.15 - [PR #48359](https://github.com/BerriAI/litellm/pull/48359)
+- Allow `filelock` 4.x in both package manifests, so projects using LiteLLM can install newer filelock releases without a dependency conflict - [PR #49137](https://github.com/BerriAI/litellm/pull/49137)
+- Bump `pyasn1` to 0.6.5 and `pypdf` to 6.21.4 in the proxy image lockfile, and the dev-only `minimatch` to 11.0.2 in the dashboard and VS Code extension - [PR #49362](https://github.com/BerriAI/litellm/pull/49362)
 
 ## Documentation Updates
 
-- Rename `security.md` to `SECURITY.md` and change the security contact to security@berri.ai - [PR #47581](https://github.com/BerriAI/litellm/pull/47581)
-- Describe the guardrail spend fields and reporting key IDs of `/user/daily/activity` in the OpenAPI schema - [PR #49236](https://github.com/BerriAI/litellm/pull/49236)
-- Replace stale `docs/proxy/enterprise` links in the proxy and Admin UI with the current docs pages - [PR #49491](https://github.com/BerriAI/litellm/pull/49491)
+- Clarify which complexity router settings apply to the weighted heuristic and which apply to heuristic v2 - [PR #48666](https://github.com/BerriAI/litellm/pull/48666)
+- Link the LiteLLM OSS Champions program from the Contributing section of the README - [PR #48734](https://github.com/BerriAI/litellm/pull/48734)
+- Link the README to the Python SDK page and add a collapsible Auto Routing section with Python and gateway examples - [PR #48986](https://github.com/BerriAI/litellm/pull/48986)
+- Describe the daily activity guardrail spend fields and the `api_key` filter, including `unattributed` and the `raw:` prefix, in the OpenAPI reference - [PR #49236](https://github.com/BerriAI/litellm/pull/49236)
+- Replace stale `docs/proxy/enterprise` links that returned 404 with the current docs pages - [PR #49491](https://github.com/BerriAI/litellm/pull/49491)
 
 ## Tests, CI and Internal Changes
 
-These 167 changes touch tests, CI, contributor tooling, repo docs, build and packaging, and dependency housekeeping. They do not change proxy or SDK behavior on their own. Changes listed as commits have no public PR.
+These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime scaffolding that is not yet wired into a user-facing path, or release bookkeeping. They do not change proxy or SDK behavior on their own. Changes listed as commits have no public PR
+
 
 <details>
-<summary>Integration and e2e tests (38)</summary>
+<summary>Integration and e2e tests (94)</summary>
 
-- Defer the empty-count Gemini cases in the integration tests on rc/1.109.0 - [Commit b09a68b](https://github.com/BerriAI/litellm/commit/b09a68b03895ef2bedf46c690e92d299437d25fa)
-- Scope offline resolution to the restricted integration runner - [Commit 4eb5e1e](https://github.com/BerriAI/litellm/commit/4eb5e1e326283c815b57b2fc9d9392fd3fb66784)
-- Align the remaining release qualification checks in the integration tests - [Commit 5133050](https://github.com/BerriAI/litellm/commit/5133050db60b2c1393aeb3bda79507f95e4218b5)
-- Repair stale contract fixtures in the integration tests - [Commit d77199e](https://github.com/BerriAI/litellm/commit/d77199e03af95392ac9e9322e639e566bb4d03c2)
-- Scope the migration lock checks in the integration tests on rc/1.109.0 - [Commit db495be](https://github.com/BerriAI/litellm/commit/db495be5024f9292e410bb9d19d7ad4cf2d33e61)
-- Replace the third-party agent A2A e2e test with an integration test - [PR #49541](https://github.com/BerriAI/litellm/pull/49541)
-- Move the Sail, Weave and Presidio e2e tests to integration tests - [PR #49533](https://github.com/BerriAI/litellm/pull/49533)
-- Match Databricks classifier budget telemetry in an integration test - [PR #49382](https://github.com/BerriAI/litellm/pull/49382)
-- Fix integration tests that fail on test order, races and intended changes - [PR #49310](https://github.com/BerriAI/litellm/pull/49310)
-- Update integration tests left stale by recent product changes - [PR #49143](https://github.com/BerriAI/litellm/pull/49143)
-- Give the Langfuse destination tests the otel callback's stdout exporter - [PR #49129](https://github.com/BerriAI/litellm/pull/49129)
-- Scope the signoz, otel conversation id and series cap proxy fixtures to their module - [PR #48965](https://github.com/BerriAI/litellm/pull/48965)
-- Update stale integration and guardrail e2e tests to intended behavior - [PR #48665](https://github.com/BerriAI/litellm/pull/48665)
-- Repair seven stale integration tests on main - [PR #47600](https://github.com/BerriAI/litellm/pull/47600)
-- Remove the BUG skip for 1 test that passes on main - [PR #47603](https://github.com/BerriAI/litellm/pull/47603)
-- Call the renamed metadata deployment helper in the Mantle `count_tokens` wire tests - [PR #47592](https://github.com/BerriAI/litellm/pull/47592)
-- Call `_fallback_deployment` in the `count_tokens` wire tests added by an earlier change - [PR #47593](https://github.com/BerriAI/litellm/pull/47593)
-- Expect the Exa search envelope's `provider_metadata` in the integration tests - [PR #47572](https://github.com/BerriAI/litellm/pull/47572)
-- Remove the BUG skips for 3 tests that pass on main - [PR #47364](https://github.com/BerriAI/litellm/pull/47364)
-- Read router cooldown failure rows from the proxy that served them - [PR #47457](https://github.com/BerriAI/litellm/pull/47457)
-- Wait for every worker to report the websocket session cap instead of sleeping - [PR #47412](https://github.com/BerriAI/litellm/pull/47412)
-- Read stream stall spend rows from the proxy that served them - [PR #47410](https://github.com/BerriAI/litellm/pull/47410)
-- Read the virtual key from its own `pre` in the Save your Key dialog in the UI e2e test - [PR #47408](https://github.com/BerriAI/litellm/pull/47408)
-- Expect the requested model in streamed Responses events on the arize v2 rig - [PR #47407](https://github.com/BerriAI/litellm/pull/47407)
-- Check SSO sign-in removal without reaching the public internet - [PR #47409](https://github.com/BerriAI/litellm/pull/47409)
-- Wait for every worker in `Scenario.model` - [PR #47277](https://github.com/BerriAI/litellm/pull/47277)
-- Look up owned cache keys and clean up sweep models - [PR #47255](https://github.com/BerriAI/litellm/pull/47255)
-- Stop `GET /__observations` from draining the upstream log - [PR #47256](https://github.com/BerriAI/litellm/pull/47256)
-- Give each owned proxy a private database and Redis by default - [PR #47213](https://github.com/BerriAI/litellm/pull/47213)
-- Replace the live Linear MCP OAuth e2e tests with integration coverage - [PR #47154](https://github.com/BerriAI/litellm/pull/47154)
-- Report uncollected shard files as collection errors instead of crashing xdist - [PR #47075](https://github.com/BerriAI/litellm/pull/47075)
-- Let `get_text_external` accept JSON next to text so a pod-log error reads as the Kubernetes Status, not a 406 - [PR #47150](https://github.com/BerriAI/litellm/pull/47150)
-- Remove the BUG skips for 2 tests that pass on main - [PR #47142](https://github.com/BerriAI/litellm/pull/47142)
-- Remove the BUG skip for 1 test that passes on main - [PR #46937](https://github.com/BerriAI/litellm/pull/46937)
-
-</details>
-
-<details>
-<summary>Performance tests (26)</summary>
-
-- Ramp the load cases until the pod stops keeping up and floor `sustained_rps` - [PR #47758](https://github.com/BerriAI/litellm/pull/47758)
-- Emit per-location seconds, offending locations and the ten longest holds as `event_loop_stalls` breakdowns - [PR #47757](https://github.com/BerriAI/litellm/pull/47757)
-- Add `chat_completions_2rps`, `responses_2rps` and `messages_2rps` direct vs bridge cases - [PR #47752](https://github.com/BerriAI/litellm/pull/47752)
-- Allowlist anyio `TaskHandle._run_coro` in `event_loop_stalls` - [PR #47746](https://github.com/BerriAI/litellm/pull/47746)
-- Emit `event_loop_stalls` hold counts as `perf_` JUnit properties - [PR #47706](https://github.com/BerriAI/litellm/pull/47706)
-- Emit the database upgrade run's perf rows and upgrade timings as JUnit properties - [PR #47696](https://github.com/BerriAI/litellm/pull/47696)
-- Record the row count and size of each table the Admin UI journeys query - [PR #47683](https://github.com/BerriAI/litellm/pull/47683)
-- Tag a UI journey sample with its API response, not a Next.js prefetch under `/ui/` - [PR #47650](https://github.com/BerriAI/litellm/pull/47650)
-- Emit a top-contributors breakdown property per perf metric - [PR #47632](https://github.com/BerriAI/litellm/pull/47632)
-- Let the UI journey fixture run on a restore upgraded by a released migrations image - [PR #47628](https://github.com/BerriAI/litellm/pull/47628)
-- Record the data request status per UI journey sample and bound each journey with a wall clock - [PR #47622](https://github.com/BerriAI/litellm/pull/47622)
-- Set the small case's `postgres_max_background_statement_per_request` ceiling to 0.9 - [PR #47616](https://github.com/BerriAI/litellm/pull/47616)
-- Set every perf ceiling to 1.2x the lane median - [PR #47590](https://github.com/BerriAI/litellm/pull/47590)
-- Measure Admin UI journey latency in a browser on the 1TB SpendLogs restore - [PR #47486](https://github.com/BerriAI/litellm/pull/47486)
+- Qualify database upgrades with shared 5 RPS traffic in the perf suite - [PR #46802](https://github.com/BerriAI/litellm/pull/46802)
+- Add Sonnet 5.5 and Gemini Vertex AI rows to the cross-model mid tier translation tests - [PR #46896](https://github.com/BerriAI/litellm/pull/46896)
+- Remove the BUG skip from an integration test that passes on main - [PR #46937](https://github.com/BerriAI/litellm/pull/46937)
+- Cap every awaited Postgres statement at 0.5 calls per request in the perf cases - [PR #46944](https://github.com/BerriAI/litellm/pull/46944)
+- Measure SpendLog-backed Admin UI query latency in the perf suite - [PR #46955](https://github.com/BerriAI/litellm/pull/46955)
+- Cap every background Postgres statement at 0.9 calls per request in the perf cases - [PR #46957](https://github.com/BerriAI/litellm/pull/46957)
+- Fail the event_loop_stalls perf case on a gateway event-loop hold over 100 ms that is not allowlisted - [PR #46974](https://github.com/BerriAI/litellm/pull/46974)
+- Report integration shard test files that collect nothing as pytest collection errors instead of crashing xdist - [PR #47075](https://github.com/BerriAI/litellm/pull/47075)
+- Charge each event loop hold to the longest gc pass that fits it in the `event_loop_stalls` e2e case - [PR #47089](https://github.com/BerriAI/litellm/pull/47089)
+- Recapture Anthropic Claude translation test bases after the `usage.speed` field - [PR #47116](https://github.com/BerriAI/litellm/pull/47116)
+- Recapture Azure AI Claude translation test bases after the `usage.speed` field - [PR #47117](https://github.com/BerriAI/litellm/pull/47117)
+- Cap the request handler bucket in the `event_loop_stalls` e2e case at 2 holds - [PR #47128](https://github.com/BerriAI/litellm/pull/47128)
+- Allow `speed` in the Anthropic usage contract of the cross-model translation tests - [PR #47130](https://github.com/BerriAI/litellm/pull/47130)
+- Add `claude-haiku-5-5` Vertex AI cases to the translation integration tests - [PR #47136](https://github.com/BerriAI/litellm/pull/47136)
+- Remove stale BUG skips from 2 integration tests that now pass - [PR #47142](https://github.com/BerriAI/litellm/pull/47142)
+- Accept JSON next to text in the e2e `get_text_external` helper so pod log errors read as the Kubernetes Status - [PR #47150](https://github.com/BerriAI/litellm/pull/47150)
+- Replace the live MCP OAuth e2e tests with an integration test - [PR #47154](https://github.com/BerriAI/litellm/pull/47154)
+- Give each owned integration proxy a private database and Redis by default - [PR #47213](https://github.com/BerriAI/litellm/pull/47213)
+- Align the perf read-API cases with the requests the dashboard sends today - [PR #47243](https://github.com/BerriAI/litellm/pull/47243)
+- Look up owned cache keys by value and clean up sweep models in integration tests - [PR #47255](https://github.com/BerriAI/litellm/pull/47255)
+- Stop `GET /__observations` on the scripted upstream from draining its request log - [PR #47256](https://github.com/BerriAI/litellm/pull/47256)
+- Wait for every worker to list a new model in `Scenario.model` on multi-worker owned proxies - [PR #47277](https://github.com/BerriAI/litellm/pull/47277)
+- Add Sonnet 5.5 Bedrock Converse and Gemini direct rows to the cross-model translation tests - [PR #47328](https://github.com/BerriAI/litellm/pull/47328)
+- Read owned proxy spend and agent rows from the owned proxy's own database in integration tests - [PR #47333](https://github.com/BerriAI/litellm/pull/47333)
+- Remove stale BUG skips from 3 integration tests that now pass - [PR #47364](https://github.com/BerriAI/litellm/pull/47364)
+- Expect the requested model in streamed Responses events in the arize v2 integration tests - [PR #47407](https://github.com/BerriAI/litellm/pull/47407)
+- Read the virtual key from its own `pre` in the Save your Key dialog in the UI e2e specs - [PR #47408](https://github.com/BerriAI/litellm/pull/47408)
+- Check SSO sign-in removal with Microsoft sign-in so the integration test needs no public internet access - [PR #47409](https://github.com/BerriAI/litellm/pull/47409)
+- Read stream stall spend rows from the proxy that served them in the hosted vLLM wire test - [PR #47410](https://github.com/BerriAI/litellm/pull/47410)
+- Wait for every worker to report the websocket session cap in the integration test instead of sleeping - [PR #47412](https://github.com/BerriAI/litellm/pull/47412)
+- Compare gateway pods instead of worker pids in the database upgrade perf test, so it stops failing with Gateway workers restarted - [PR #47425](https://github.com/BerriAI/litellm/pull/47425)
+- Read the perf memory baseline after a one minute warm-up so light cases stop reporting negative growth - [PR #47455](https://github.com/BerriAI/litellm/pull/47455)
+- Read router cooldown failure rows from the proxy that served them in the integration tests - [PR #47457](https://github.com/BerriAI/litellm/pull/47457)
+- Gate the gateway overhead header, Redis latency and Postgres load in the perf cases - [PR #47472](https://github.com/BerriAI/litellm/pull/47472)
+- Measure Admin UI journey latency in a headless browser on the 1TB SpendLogs restore perf lane - [PR #47486](https://github.com/BerriAI/litellm/pull/47486)
 - Set the seven new perf ceilings from 124 lane runs across v1.103.0 to v1.106.0 - [PR #47527](https://github.com/BerriAI/litellm/pull/47527)
-- Gate the gateway's own overhead header, Redis latency and Postgres load in the perf cases - [PR #47472](https://github.com/BerriAI/litellm/pull/47472)
-- Read the memory baseline after a one minute warm-up - [PR #47455](https://github.com/BerriAI/litellm/pull/47455)
-- Stop flagging load-balanced worker reads as restarts in the database upgrade test - [PR #47425](https://github.com/BerriAI/litellm/pull/47425)
-- Align perf read queries with current dashboard calls - [PR #47243](https://github.com/BerriAI/litellm/pull/47243)
-- Measure SpendLog-backed UI query latency - [PR #46955](https://github.com/BerriAI/litellm/pull/46955)
-- Qualify database upgrades with shared 5 RPS traffic - [PR #46802](https://github.com/BerriAI/litellm/pull/46802)
-- Cap the request-handler bucket in `event_loop_stalls` at 2, twice the gc-aware maximum - [PR #47128](https://github.com/BerriAI/litellm/pull/47128)
-- Charge an `event_loop_stalls` hold to the longest gc pass that fits it, not to the sum of every pass since the last hold - [PR #47089](https://github.com/BerriAI/litellm/pull/47089)
-- Fail the `event_loop_stalls` perf case on a gateway event-loop hold over 100 ms that is not on its allowlist - [PR #46974](https://github.com/BerriAI/litellm/pull/46974)
-- Cap every background Postgres statement at 0.9 calls per request - [PR #46957](https://github.com/BerriAI/litellm/pull/46957)
-- Cap every awaited Postgres statement at 0.5 calls per request - [PR #46944](https://github.com/BerriAI/litellm/pull/46944)
+- Expect the Exa search envelope's `provider_metadata` in three search integration tests - [PR #47572](https://github.com/BerriAI/litellm/pull/47572)
+- Set every perf ceiling to 1.2x the lane median so small regressions turn the lane red - [PR #47590](https://github.com/BerriAI/litellm/pull/47590)
+- Build the Mantle count_tokens wire test deployments with `_metadata_deployment` - [PR #47592](https://github.com/BerriAI/litellm/pull/47592)
+- Call `_fallback_deployment` in the Mantle count_tokens wire tests to clear three undefined name lint errors - [PR #47593](https://github.com/BerriAI/litellm/pull/47593)
+- Remove the BUG skip from the audio transcription input rate billing test, which passes on main - [PR #47603](https://github.com/BerriAI/litellm/pull/47603)
+- Lower the small perf case's `postgres_max_background_statement_per_request` ceiling to 0.9 - [PR #47616](https://github.com/BerriAI/litellm/pull/47616)
+- Record the data request status per UI journey perf sample and cap each journey with a wall clock budget - [PR #47622](https://github.com/BerriAI/litellm/pull/47622)
+- Let the UI journey perf fixture run on a restore upgraded by a released migrations image - [PR #47628](https://github.com/BerriAI/litellm/pull/47628)
+- Emit a top-contributors breakdown property for each perf metric - [PR #47632](https://github.com/BerriAI/litellm/pull/47632)
+- Tag a UI journey perf sample with its API response instead of a Next.js prefetch under `/ui/` - [PR #47650](https://github.com/BerriAI/litellm/pull/47650)
+- Record the row count and size of each table the Admin UI perf journeys query - [PR #47683](https://github.com/BerriAI/litellm/pull/47683)
+- Emit the database upgrade run's perf rows and upgrade timings as JUnit properties - [PR #47696](https://github.com/BerriAI/litellm/pull/47696)
+- Emit `event_loop_stalls` hold counts as `perf_` JUnit properties - [PR #47706](https://github.com/BerriAI/litellm/pull/47706)
+- Allowlist anyio `TaskHandle._run_coro` in the `event_loop_stalls` perf case - [PR #47746](https://github.com/BerriAI/litellm/pull/47746)
+- Add direct vs bridge perf cases for chat completions, Responses and Messages at 2 rps - [PR #47752](https://github.com/BerriAI/litellm/pull/47752)
+- Emit per-location seconds, offending locations and the longest holds as `event_loop_stalls` breakdowns - [PR #47757](https://github.com/BerriAI/litellm/pull/47757)
+- Ramp the perf load cases until the pod stops keeping up and floor `sustained_rps` - [PR #47758](https://github.com/BerriAI/litellm/pull/47758)
+- Add an integration test that a team's wildcard deployment serves its keys before a proxy-wide wildcard - [PR #48501](https://github.com/BerriAI/litellm/pull/48501)
+- Remove four flaky Admin UI e2e checks that pinned implementation details and add a shadcn testing rule - [PR #48663](https://github.com/BerriAI/litellm/pull/48663)
+- Add an integration test that cancels a real local sandbox run and checks its child process is gone - [PR #48751](https://github.com/BerriAI/litellm/pull/48751)
+- Cover the Gemini default output budget and long decode request bodies with proxy integration tests - [PR #48758](https://github.com/BerriAI/litellm/pull/48758)
+- Cover gzip and zstd compressed request bodies with real proxy integration tests - [PR #48766](https://github.com/BerriAI/litellm/pull/48766)
+- Cover SageMaker streams that fail after their first chunks with integration tests - [Commit 000d4f6](https://github.com/BerriAI/litellm/commit/000d4f6bb3c8d3cf0e2bb9540a61ccd77ffcd5b9)
+- Cover the failure spend row token count of a Responses request with a compaction item - [PR #48774](https://github.com/BerriAI/litellm/pull/48774)
+- Cover Decisions malformed replies and returned-version pricing with integration tests - [PR #48777](https://github.com/BerriAI/litellm/pull/48777)
+- Cover replayed Claude thinking blocks on Anthropic, Bedrock, Vertex AI and Azure AI routes with integration tests - [PR #48782](https://github.com/BerriAI/litellm/pull/48782)
+- Cover baggage tag mappings on pass-through routes and UI saves with integration tests - [PR #48784](https://github.com/BerriAI/litellm/pull/48784)
+- Cover token estimation for a DeepSeek V4 stream with no usage block in a spend row test - [Commit 6ba77b7](https://github.com/BerriAI/litellm/commit/6ba77b7013666c5b16ddc369c88f926b6318f486)
+- Cover the shared api_base URL join on Azure, Vertex and Bedrock with integration tests - [PR #48786](https://github.com/BerriAI/litellm/pull/48786)
+- Cover per-model budgets for background responses with an integration test - [PR #48787](https://github.com/BerriAI/litellm/pull/48787)
+- Cover file id access checks for `s3://` and `gs://` ids with integration tests - [PR #48788](https://github.com/BerriAI/litellm/pull/48788)
+- Cover SCIM group delete and concurrent team delete with integration tests - [PR #48791](https://github.com/BerriAI/litellm/pull/48791)
+- Cover batch routing and endpoint listing on mixed model groups with integration tests - [PR #48792](https://github.com/BerriAI/litellm/pull/48792)
+- Cover `silent_model` shadow traffic through the proxy and SDK with integration tests - [PR #48794](https://github.com/BerriAI/litellm/pull/48794)
+- Cover the priority queue route with streaming, refusal and error integration tests - [PR #48799](https://github.com/BerriAI/litellm/pull/48799)
+- Cover remembered HuggingFace tokenizer download failures with a real proxy test - [PR #48800](https://github.com/BerriAI/litellm/pull/48800)
+- Cover the Nvidia Riva provider with integration tests against an owned gRPC server - [PR #48801](https://github.com/BerriAI/litellm/pull/48801)
+- Cover Anthropic `json_schema` edge cases with integration tests - [PR #48803](https://github.com/BerriAI/litellm/pull/48803)
+- Cover cold `/openapi.json` builds with real proxy integration tests - [PR #48804](https://github.com/BerriAI/litellm/pull/48804)
+- Cover MCP auto-execute billing when the follow-up call fails on every retry with an integration test - [PR #48821](https://github.com/BerriAI/litellm/pull/48821)
+- Cover every web source for a grounded Gemini passage with unit and wire tests - [PR #48861](https://github.com/BerriAI/litellm/pull/48861)
+- Cover the Cloudflare Clairic extraction endpoint with real proxy integration tests - [PR #48898](https://github.com/BerriAI/litellm/pull/48898)
+- Cover streamed Responses MCP auto-execute billing with integration tests - [PR #48902](https://github.com/BerriAI/litellm/pull/48902)
+- Cover `reasoning_effort_levels` rounding across routes with integration tests - [PR #48910](https://github.com/BerriAI/litellm/pull/48910)
+- Add integration tests for the global proxy spend counter and key budget enforcement - [PR #48918](https://github.com/BerriAI/litellm/pull/48918)
+- Add integration cells for background response billing sent to the creator's Langfuse project - [PR #48919](https://github.com/BerriAI/litellm/pull/48919)
+- Set string fallback targets after Router init in the SDK cooldown integration cases - [PR #48954](https://github.com/BerriAI/litellm/pull/48954)
+- Scope the signoz, otel conversation id and series cap proxy fixtures to their module in integration tests - [Commit 42d2909](https://github.com/BerriAI/litellm/commit/42d29092105f3f1b618a2375e15743a703b3d077)
+- Update 149 integration tests left stale by recent product changes - [PR #49143](https://github.com/BerriAI/litellm/pull/49143)
+- Cover Bedrock Claude prompt caching on `/v1/messages` with an integration test - [PR #49265](https://github.com/BerriAI/litellm/pull/49265)
+- Fix integration tests that failed on test order, races and intentionally changed behavior - [PR #49310](https://github.com/BerriAI/litellm/pull/49310)
+- Update the Databricks auto-router integration test for the classifier budget fields - [PR #49382](https://github.com/BerriAI/litellm/pull/49382)
+- Cancel disconnected HTTP tool handlers in the MCP integration test peers - [PR #49436](https://github.com/BerriAI/litellm/pull/49436)
+- Trace the deployment index lock in the file that owns it in the router concurrency integration test - [PR #49520](https://github.com/BerriAI/litellm/pull/49520)
+- Expect the EOF error frame when an Anthropic `json_schema` stream is cut in the translation integration test - [PR #49521](https://github.com/BerriAI/litellm/pull/49521)
+- Move the Sail, Weave and Presidio e2e tests to integration tests - [PR #49533](https://github.com/BerriAI/litellm/pull/49533)
+- Drop the unused `arize_phoenix` callback from the e2e stage mirror config - [PR #49538](https://github.com/BerriAI/litellm/pull/49538)
+- Replace the third-party agent A2A e2e test with an integration test against a scripted agent - [PR #49541](https://github.com/BerriAI/litellm/pull/49541)
 
 </details>
 
 <details>
-<summary>Cost calculation and translation tests (18)</summary>
+<summary>Rust core (35)</summary>
 
-- Use explicit prices in cost calculation checks - [Commit 0c466b0](https://github.com/BerriAI/litellm/commit/0c466b05ce26f6526dc49bb0c3598ebcda9b8685)
-- Expect the EOF error frame when an Anthropic `json_schema` stream is cut - [PR #49521](https://github.com/BerriAI/litellm/pull/49521)
-- Expect Cohere rerank-v4 `prompt_tokens` from `billed_units.total_tokens` in cost tests - [PR #49455](https://github.com/BerriAI/litellm/pull/49455)
-- Test that Bedrock Claude prompt caching on `/v1/messages` reports and charges cache tokens - [PR #49265](https://github.com/BerriAI/litellm/pull/49265)
-- Cover unpriced provider slugs and explicit zero rates in cost tests - [PR #42467](https://github.com/BerriAI/litellm/pull/42467)
-- Run Azure AI Claude bridge pairs, add Anthropic usage speed and a Vertex Gemini audio priority price to cost tests - [PR #47582](https://github.com/BerriAI/litellm/pull/47582)
-- Add a Sonnet 5.5 Anthropic direct cross-model mid row to the translation matrix - [PR #47566](https://github.com/BerriAI/litellm/pull/47566)
-- Add Sonnet 5.5 Converse and Gemini direct cross-model mid rows to the translation matrix - [PR #47328](https://github.com/BerriAI/litellm/pull/47328)
-- Add tier 1 cost tracking cases and wire bridge legs for 2026-10-19 - [PR #47342](https://github.com/BerriAI/litellm/pull/47342)
-- Add tier 1 cost tracking cells and sync usage shapes for 2026-10-17 - [PR #47141](https://github.com/BerriAI/litellm/pull/47141)
-- Add `claude-haiku-5-5` Vertex AI translation cases - [PR #47136](https://github.com/BerriAI/litellm/pull/47136)
-- Allow Anthropic usage speed in the cross-model contract - [PR #47130](https://github.com/BerriAI/litellm/pull/47130)
-- Add Sonnet 5.5 and Gemini Vertex rows to the cross-model mid tier - [PR #46896](https://github.com/BerriAI/litellm/pull/46896)
-- Recapture Azure AI Claude bases after the usage speed field - [PR #47117](https://github.com/BerriAI/litellm/pull/47117)
-- Recapture Anthropic Claude bases after the usage speed field - [PR #47116](https://github.com/BerriAI/litellm/pull/47116)
-- Rekey Vertex Gemini cost cases, add Bedrock Mantle GPT and `claude-opus-5-5`, and drop suite-only price fields - [PR #46962](https://github.com/BerriAI/litellm/pull/46962)
-- Bill Vertex `gemini-3.8-flash` reasoning tokens at the reasoning price in cost tests - [PR #46939](https://github.com/BerriAI/litellm/pull/46939)
-- Add tier 1 cost tracking cases for `gpt-5.6-terra`, `gemini-4-argon` and `gemini-3.1-pro-preview` - [PR #46931](https://github.com/BerriAI/litellm/pull/46931)
-
-</details>
-
-<details>
-<summary>Test audits (27)</summary>
-
-- Audit the responses tests added in #47445 - [PR #48902](https://github.com/BerriAI/litellm/pull/48902)
-- Audit the proxy tests added in #46997 - [PR #48918](https://github.com/BerriAI/litellm/pull/48918)
-- Audit the extraction tests added in #47473 - [PR #48898](https://github.com/BerriAI/litellm/pull/48898)
-- Audit the spend tests added in #47506 for billed background cost reaching the creator's loggers - [PR #48919](https://github.com/BerriAI/litellm/pull/48919)
-- Audit the routing tests added in #46601 - [PR #48910](https://github.com/BerriAI/litellm/pull/48910)
-- Audit the scim tests added in #47544 - [PR #48791](https://github.com/BerriAI/litellm/pull/48791)
-- Audit the mcp tests added in #47422 - [PR #48821](https://github.com/BerriAI/litellm/pull/48821)
-- Audit the proxy tests added in #47352 - [PR #48804](https://github.com/BerriAI/litellm/pull/48804)
-- Audit the nvidia_riva tests added in #41021 - [PR #48801](https://github.com/BerriAI/litellm/pull/48801)
-- Audit the router tests added in #41368 - [PR #48794](https://github.com/BerriAI/litellm/pull/48794)
-- Audit the proxy tests added in #47358 - [PR #48784](https://github.com/BerriAI/litellm/pull/48784)
-- Audit the router tests added in #47376 - [PR #48792](https://github.com/BerriAI/litellm/pull/48792)
-- Audit the decisions tests added in #47508 - [PR #48777](https://github.com/BerriAI/litellm/pull/48777)
-- Audit the router tests added in #47498 - [PR #48799](https://github.com/BerriAI/litellm/pull/48799)
-- Audit the anthropic tests added in #47478 - [PR #48803](https://github.com/BerriAI/litellm/pull/48803)
-- Audit the token_counter tests added in #47586 - [PR #48800](https://github.com/BerriAI/litellm/pull/48800)
-- Audit the anthropic and bedrock tests added in #47489 - [PR #48782](https://github.com/BerriAI/litellm/pull/48782)
-- Audit the files tests added in #40621 - [PR #48788](https://github.com/BerriAI/litellm/pull/48788)
-- Audit the proxy tests added in #46815 - [PR #48768](https://github.com/BerriAI/litellm/pull/48768)
-- Audit the spend tests added in #47353 - [PR #48785](https://github.com/BerriAI/litellm/pull/48785)
-- Audit the responses tests added in #47504 - [PR #48787](https://github.com/BerriAI/litellm/pull/48787)
-- Audit the llms tests added in #47535 - [PR #48786](https://github.com/BerriAI/litellm/pull/48786)
-- Audit the proxy tests added in #47418 - [PR #48766](https://github.com/BerriAI/litellm/pull/48766)
-- Audit the spend tests added in #47815 - [PR #48774](https://github.com/BerriAI/litellm/pull/48774)
-- Audit the gemini tests added in #47542 - [PR #48758](https://github.com/BerriAI/litellm/pull/48758)
-- Audit the sagemaker tests added in #47495 - [PR #48767](https://github.com/BerriAI/litellm/pull/48767)
-- Audit the harness tests added in #47530 - [PR #48751](https://github.com/BerriAI/litellm/pull/48751)
-
-</details>
-
-<details>
-<summary>Unit tests (24)</summary>
-
-- Cancel disconnected MCP HTTP tool handlers in tests - [PR #49436](https://github.com/BerriAI/litellm/pull/49436)
-- Trace the router deployment index lock in the file that owns it - [PR #49520](https://github.com/BerriAI/litellm/pull/49520)
-- Deflake the JSON accumulator drain test and the armed routing prefetch test - [PR #49505](https://github.com/BerriAI/litellm/pull/49505)
-- Keep foreign asyncio task noise out of the budget limiter caplog asserts - [PR #43375](https://github.com/BerriAI/litellm/pull/43375)
-- Fix flaky spend-log cleanup budget, login lockout and wedged Redis tests - [PR #47108](https://github.com/BerriAI/litellm/pull/47108)
-- Assert peak allocation instead of a drain timing ratio in the `json_fragment_accumulator` test - [PR #43370](https://github.com/BerriAI/litellm/pull/43370)
-- Keep unix socket paths in unit tests under the macOS `AF_UNIX` limit - [PR #45040](https://github.com/BerriAI/litellm/pull/45040)
-- Set string fallback targets after `Router` init in the SDK cooldown cases - [PR #48954](https://github.com/BerriAI/litellm/pull/48954)
-- Cover every web source for a grounded Gemini passage - [PR #48861](https://github.com/BerriAI/litellm/pull/48861)
-- Pin the `max_parallel_requests` slot release when a streamed `/v1/messages` MCP auto-execute ends - [PR #47788](https://github.com/BerriAI/litellm/pull/47788)
-- Remove checks that pin implementation details and add a shadcn testing rule - [PR #48663](https://github.com/BerriAI/litellm/pull/48663)
-- Test that a team's wildcard serves its keys before a proxy-wide wildcard of the same pattern - [PR #48501](https://github.com/BerriAI/litellm/pull/48501)
-- Make the tokenizer offload check deterministic - [PR #48458](https://github.com/BerriAI/litellm/pull/48458)
-- Pin that a stream stuck on one chunk closes its provider stream and logs one failure - [PR #38753](https://github.com/BerriAI/litellm/pull/38753)
-- Read the Interactions spec from a vendored snapshot and canary the live one daily - [PR #48002](https://github.com/BerriAI/litellm/pull/48002)
-- Fix flaky team delete, refusal sink, loop-blocking, Moyai tamper and model-cost leak tests - [PR #47135](https://github.com/BerriAI/litellm/pull/47135)
-- Detect Vault reads on the event-loop thread in Bedrock tests - [PR #47597](https://github.com/BerriAI/litellm/pull/47597)
-- Isolate model cost maps in runtime registration tests - [PR #47559](https://github.com/BerriAI/litellm/pull/47559)
-- Stop writing image edit responses to disk in tests - [PR #47463](https://github.com/BerriAI/litellm/pull/47463)
-- Catch regressions in the validation lines added by an earlier change - [PR #47420](https://github.com/BerriAI/litellm/pull/47420)
-- Add a native vs Python parity harness for Responses - [PR #46567](https://github.com/BerriAI/litellm/pull/46567)
-- Annotate Baseten test locals with `Final` - [PR #47205](https://github.com/BerriAI/litellm/pull/47205)
-- Relocate rust-bridge dispatch tests before routing changes - [PR #46926](https://github.com/BerriAI/litellm/pull/46926)
-
-</details>
-
-<details>
-<summary>CI and workflows (14)</summary>
-
-- Cut the weekly rc branch on Monday 3am PT instead of Friday - [PR #49472](https://github.com/BerriAI/litellm/pull/49472)
-- Clone the public repo over HTTPS in CircleCI so main jobs stop failing at checkout - [PR #49394](https://github.com/BerriAI/litellm/pull/49394)
-- Cache Rust compilation with sccache - [PR #49117](https://github.com/BerriAI/litellm/pull/49117)
-- Check the cost map by loading it through model-catalog - [PR #48908](https://github.com/BerriAI/litellm/pull/48908)
-- Run the dashboard API types and Terraform endpoint checks on every change that can alter the spec - [PR #49022](https://github.com/BerriAI/litellm/pull/49022)
-- Run zizmor with `--no-ignores` and move the spend logs and cost map guards to `pull_request` - [PR #48947](https://github.com/BerriAI/litellm/pull/48947)
-- Run `spend-logs-guard` only on `pull_request_target` and re-run it by hand after approval - [PR #48941](https://github.com/BerriAI/litellm/pull/48941)
-- Run `spend-logs-guard` and `cost-map-guard` without installing the litellm project - [PR #48683](https://github.com/BerriAI/litellm/pull/48683)
-- Require a code owner approval in `spend-logs-guard` for `LiteLLM_SpendLogs` schema and migration changes - [PR #48518](https://github.com/BerriAI/litellm/pull/48518)
-- Remove the Together AI and weekly cost map sync workflows - [PR #48473](https://github.com/BerriAI/litellm/pull/48473)
-- Keep the MCP SDK1 peer on mcp 1.x and turn autovacuum off for the size cleanup test - [PR #47651](https://github.com/BerriAI/litellm/pull/47651)
-- Delete the unused model prices JSON schema file - [PR #47079](https://github.com/BerriAI/litellm/pull/47079)
-
-</details>
-
-<details>
-<summary>Build and packaging (5)</summary>
-
+- Add a parity test that runs native and Python Responses calls and compares them - [PR #46567](https://github.com/BerriAI/litellm/pull/46567)
+- Add a Rust codec for LiteLLM response ids used by native Responses - [PR #46572](https://github.com/BerriAI/litellm/pull/46572)
+- Detect Python-only features in the Rust bridge catalog instead of ad hoc Rust declines - [PR #46714](https://github.com/BerriAI/litellm/pull/46714)
+- Decide native routing in the Rust bridge catalog and drop the old routing predicates - [PR #46750](https://github.com/BerriAI/litellm/pull/46750)
+- Move dispatch tests into the Rust test suite and update the Rust workflow path filters - [PR #46926](https://github.com/BerriAI/litellm/pull/46926)
+- Fold the `inference-transcription` prepare stage into its handler - [PR #47214](https://github.com/BerriAI/litellm/pull/47214)
+- Fold the `inference-responses` prepare stage into its handler - [PR #47215](https://github.com/BerriAI/litellm/pull/47215)
+- Fold the `inference-ocr` prepare stage into its handler - [PR #47216](https://github.com/BerriAI/litellm/pull/47216)
+- Fold the `inference-messages` prepare stage into its handler - [PR #47217](https://github.com/BerriAI/litellm/pull/47217)
+- Fold the `inference-chat` prepare stage into its handler - [PR #47218](https://github.com/BerriAI/litellm/pull/47218)
+- Rename the Rust inference crate's `RouteError` to `Error` - [PR #47771](https://github.com/BerriAI/litellm/pull/47771)
+- Carry one typed decline from Rust core to each host, so declined SDK calls fall back to Python - [PR #47772](https://github.com/BerriAI/litellm/pull/47772)
+- Honor SSL verification, CA bundles, client certificates and proxies for Rust WebSocket connections - [PR #47968](https://github.com/BerriAI/litellm/pull/47968)
+- Upgrade Rust reqwest to 0.13 and give MCP a client from the shared outbound pool - [PR #48039](https://github.com/BerriAI/litellm/pull/48039)
+- Build Rust outbound requests as plain `reqwest::Request` - [PR #48041](https://github.com/BerriAI/litellm/pull/48041)
+- Adopt one error discipline across litellm-rust with source chains and a shared `Report` - [PR #48042](https://github.com/BerriAI/litellm/pull/48042)
+- Add typed `find_end_user` database query foundation to the Rust db crate - [PR #48214](https://github.com/BerriAI/litellm/pull/48214)
+- Add typed key spend update query to the Rust db crate - [PR #48217](https://github.com/BerriAI/litellm/pull/48217)
+- Add typed user spend update query to the Rust db crate - [PR #48229](https://github.com/BerriAI/litellm/pull/48229)
+- Add typed team spend update query to the Rust db crate - [PR #48230](https://github.com/BerriAI/litellm/pull/48230)
+- Add typed end-user spend upsert query to the Rust db crate - [PR #48231](https://github.com/BerriAI/litellm/pull/48231)
+- Add transaction-scoped team lock query to the Rust db crate - [PR #48232](https://github.com/BerriAI/litellm/pull/48232)
+- Add typed team-member spend upsert query to the Rust db crate - [PR #48233](https://github.com/BerriAI/litellm/pull/48233)
+- Add typed spend-log insert query to the Rust db crate - [PR #48234](https://github.com/BerriAI/litellm/pull/48234)
+- Add typed daily user spend upsert query to the Rust db crate - [PR #48235](https://github.com/BerriAI/litellm/pull/48235)
+- Add typed daily team spend upsert query to the Rust db crate - [PR #48236](https://github.com/BerriAI/litellm/pull/48236)
+- Add typed daily end-user spend upsert query to the Rust db crate - [PR #48237](https://github.com/BerriAI/litellm/pull/48237)
+- Add the standalone Redis client and Redis test fixture crates to the Rust workspace - [PR #48269](https://github.com/BerriAI/litellm/pull/48269)
+- Support Redis Cluster in the Rust Redis client - [PR #48271](https://github.com/BerriAI/litellm/pull/48271)
+- Run Lua scripts and pipelines with per-op errors in the Rust Redis client - [PR #48273](https://github.com/BerriAI/litellm/pull/48273)
+- Add a circuit breaker crate and guard the Rust Redis client with it - [PR #48277](https://github.com/BerriAI/litellm/pull/48277)
+- Build Rust gateway Redis clients from config.yaml and environment settings - [PR #48284](https://github.com/BerriAI/litellm/pull/48284)
+- Add a Rust model catalog that parses, lowers and validates the cost map into typed prices - [PR #48853](https://github.com/BerriAI/litellm/pull/48853)
 - Ship the cost map inside the native extension - [PR #48907](https://github.com/BerriAI/litellm/pull/48907)
-- Upgrade `reqwest` to 0.13 and move MCP out of `litellm-http` - [PR #48039](https://github.com/BerriAI/litellm/pull/48039)
-- Bump litellm-enterprise from 0.1.79 to 0.1.80 and litellm from 1.108.0 to 1.109.0 - [PR #48673](https://github.com/BerriAI/litellm/pull/48673)
-- Update the Next.js build artifacts - [PR #48692](https://github.com/BerriAI/litellm/pull/48692)
-- Cache the Rust extension build in its own Docker stage - [PR #47033](https://github.com/BerriAI/litellm/pull/47033)
+- Extract `SecretValue` into its own crate and wrap Redis credentials with it - [PR #49186](https://github.com/BerriAI/litellm/pull/49186)
 
 </details>
 
 <details>
-<summary>Dependencies (3)</summary>
+<summary>CI and release tooling (26)</summary>
 
-- Drop expired `exclude-newer` pins for certifi, mlflow and pypdf - [PR #48461](https://github.com/BerriAI/litellm/pull/48461)
-- Remove expired boto3, botocore and grpcio overrides - [PR #48447](https://github.com/BerriAI/litellm/pull/48447)
-- Bump vite from 8.3.0 to 8.3.4 in the VS Code extension - [PR #47627](https://github.com/BerriAI/litellm/pull/47627)
+- Cache the Rust extension build in its own Docker stage so Python-only changes skip the recompile - [PR #47033](https://github.com/BerriAI/litellm/pull/47033)
+- Delete the model prices JSON schema file and its cost map guard allowance - [PR #47079](https://github.com/BerriAI/litellm/pull/47079)
+- Bump litellm-enterprise to 0.1.78 and litellm-proxy-extras to 0.4.110 - [PR #47228](https://github.com/BerriAI/litellm/pull/47228)
+- Keep the MCP SDK1 peer on mcp 1.x and turn autovacuum off for the size cleanup test tables in CI - [PR #47651](https://github.com/BerriAI/litellm/pull/47651)
+- Bump litellm to 1.108.0, litellm-enterprise to 0.1.79 and litellm-proxy-extras to 0.4.111 - [PR #47668](https://github.com/BerriAI/litellm/pull/47668)
+- Bump langgraph and tornado and add dated scan ignores to clear osv-scan and image-scan - [PR #48302](https://github.com/BerriAI/litellm/pull/48302)
+- Remove expired boto3, botocore and grpcio release cutoffs from the uv config - [PR #48447](https://github.com/BerriAI/litellm/pull/48447)
+- Drop expired certifi, mlflow and pypdf release cutoffs from the uv config - [PR #48461](https://github.com/BerriAI/litellm/pull/48461)
+- Remove the Together AI and weekly cost map sync workflows, their scripts and tests - [PR #48473](https://github.com/BerriAI/litellm/pull/48473)
+- Add a Spend logs guard CI check that needs owner approval on `LiteLLM_SpendLogs` schema and migration changes - [PR #48518](https://github.com/BerriAI/litellm/pull/48518)
+- Bump `litellm` to 1.109.0 and `litellm-enterprise` to 0.1.80 on main - [PR #48673](https://github.com/BerriAI/litellm/pull/48673)
+- Run the spend-logs and cost-map guard checks without installing the litellm project, cutting each from minutes to seconds - [PR #48683](https://github.com/BerriAI/litellm/pull/48683)
+- Rebuild the committed Admin UI bundle from current main for 1.109.0 - [PR #48692](https://github.com/BerriAI/litellm/pull/48692)
+- Keep the spend logs guard approval through a later COMMENTED review - [PR #48901](https://github.com/BerriAI/litellm/pull/48901)
+- Require the spend logs guard approval to cover the head's spend-log lines - [PR #48904](https://github.com/BerriAI/litellm/pull/48904)
+- Flag any schema.prisma change inside model LiteLLM_SpendLogs in the spend logs guard - [PR #48905](https://github.com/BerriAI/litellm/pull/48905)
+- Check the cost map in CI by loading it through the Rust model catalog - [PR #48908](https://github.com/BerriAI/litellm/pull/48908)
+- Run the spend logs guard only on pull_request_target events and re-run it by hand after approval - [PR #48941](https://github.com/BerriAI/litellm/pull/48941)
+- Run zizmor with `--no-ignores` and move the spend logs and cost map guards to the pull_request trigger - [PR #48947](https://github.com/BerriAI/litellm/pull/48947)
+- Run the dashboard API types and Terraform endpoint checks on every change that can alter the OpenAPI spec - [PR #49022](https://github.com/BerriAI/litellm/pull/49022)
+- Measure the lint, unit test and guard PR checks from the target branch's current tip instead of a stale `base.sha` - [PR #49078](https://github.com/BerriAI/litellm/pull/49078)
+- Cache Rust compilation in CI with sccache - [PR #49117](https://github.com/BerriAI/litellm/pull/49117)
+- Build the base checkout's native extension before the OpenAPI docs gate imports its proxy - [PR #49136](https://github.com/BerriAI/litellm/pull/49136)
+- Bump litellm-enterprise to 0.1.81 and litellm-proxy-extras to 0.4.112 - [PR #49149](https://github.com/BerriAI/litellm/pull/49149)
+- Clone the public repo over HTTPS in CircleCI jobs so main jobs stop failing at checkout - [PR #49394](https://github.com/BerriAI/litellm/pull/49394)
+- Cut the weekly rc branch on Monday 3am PT instead of Friday - [PR #49472](https://github.com/BerriAI/litellm/pull/49472)
 
 </details>
 
 <details>
-<summary>Docs in the repo (14)</summary>
+<summary>Refactors and typing (25)</summary>
 
-- Wrap the agent-drafted summary in the PR template in make-me-human-readable tags - [PR #49494](https://github.com/BerriAI/litellm/pull/49494)
+- Replace `Any` with proven types in 6 files - [PR #47268](https://github.com/BerriAI/litellm/pull/47268)
+- Replace `Any` with proven types in 15 files and validate untyped JSON with strict pydantic adapters - [PR #47509](https://github.com/BerriAI/litellm/pull/47509)
+- Clear 1181 basedpyright `Any` errors across 431 files - [PR #47789](https://github.com/BerriAI/litellm/pull/47789)
+- Replace `Any` with proven types in 50 files - [PR #47818](https://github.com/BerriAI/litellm/pull/47818)
+- Widen `delete_nested_value` to `Mapping` and drop two unused `Span` aliases - [PR #48001](https://github.com/BerriAI/litellm/pull/48001)
+- Give the proxy one lifespan owner for database connections and background work, closed on failed startup and shutdown - [PR #48506](https://github.com/BerriAI/litellm/pull/48506)
+- Inject database repositories through per-repository dependencies, starting with the banner routes - [PR #48507](https://github.com/BerriAI/litellm/pull/48507)
+- Rename model-version transformation files to family names without changing class or function names - [PR #48509](https://github.com/BerriAI/litellm/pull/48509)
+- Rename `llms/anthropic/pass_through` to `llms/anthropic/messages` and keep import shims for the old paths - [PR #48510](https://github.com/BerriAI/litellm/pull/48510)
+- Move the MCP server and client out of experimental paths and keep deprecated shims for the old imports - [PR #48513](https://github.com/BerriAI/litellm/pull/48513)
+- Inject deployment warning snooze storage through its own repository dependency - [PR #48592](https://github.com/BerriAI/litellm/pull/48592)
+- Drop the spend-log `api_key` special case from the pre-migration row check remedy - [PR #48636](https://github.com/BerriAI/litellm/pull/48636)
+- Fence the `Router` surface and document the router-core boundary - [PR #48839](https://github.com/BerriAI/litellm/pull/48839)
+- Add router entry points and keep the old members as a deprecated mixin - [PR #48840](https://github.com/BerriAI/litellm/pull/48840)
+- Move router callers onto the entry points and invert the proxy imports - [PR #48847](https://github.com/BerriAI/litellm/pull/48847)
+- Replace `Any` with proven types in 28 files - [Commit f89b9c6](https://github.com/BerriAI/litellm/commit/f89b9c61504801fcc99e40e37af532bb38bbfa30)
+- Replace `Any` with proven types in 21 files - [PR #48921](https://github.com/BerriAI/litellm/pull/48921)
+- Replace `Any` with proven types in 14 files across caching, proxy routes, integrations and types - [PR #48928](https://github.com/BerriAI/litellm/pull/48928)
+- Inject gateway activity through a typed repository instead of the global Prisma client - [PR #49116](https://github.com/BerriAI/litellm/pull/49116)
+- Route the router family through `RoutingContext` and close the surface used outside the router - [PR #49118](https://github.com/BerriAI/litellm/pull/49118)
+- Extract `PythonCore` behind `RouterCore` and pass the router its config - [PR #49119](https://github.com/BerriAI/litellm/pull/49119)
+- Add i18next plumbing to the Admin UI and move the Workflows page onto it with no visible change - [PR #49144](https://github.com/BerriAI/litellm/pull/49144)
+- Move the Policies, Tool Policies and Guardrails Monitor page text onto i18n messages with no change on screen - [PR #49343](https://github.com/BerriAI/litellm/pull/49343)
+- Restore four router helper behaviors the RoutingContext refactor changed for direct callers - [PR #49395](https://github.com/BerriAI/litellm/pull/49395)
+- Remove 17 unused API calls from `networking.tsx` in the Admin UI - [PR #49507](https://github.com/BerriAI/litellm/pull/49507)
+
+</details>
+
+<details>
+<summary>Unit tests (16)</summary>
+
+- Cover streams stuck on one repeated chunk with tests for early close and a single failure log - [PR #38753](https://github.com/BerriAI/litellm/pull/38753)
+- Bound peak allocation in the streaming JSON drain test instead of a timing ratio - [PR #43370](https://github.com/BerriAI/litellm/pull/43370)
+- Keep foreign asyncio task noise out of the budget limiter log capture tests - [PR #43375](https://github.com/BerriAI/litellm/pull/43375)
+- Pin that `api_version` never reaches the OpenAI client on fine-tuning calls - [PR #44995](https://github.com/BerriAI/litellm/pull/44995)
+- Keep unix socket paths in unit tests under the macOS AF_UNIX limit - [PR #45040](https://github.com/BerriAI/litellm/pull/45040)
+- Annotate the Baseten unit test locals with `Final` - [PR #47205](https://github.com/BerriAI/litellm/pull/47205)
+- Add unit cases that fail when the validation checks added in an earlier change are weakened - [PR #47420](https://github.com/BerriAI/litellm/pull/47420)
+- Stop the image edit unit tests from writing response images to disk - [PR #47463](https://github.com/BerriAI/litellm/pull/47463)
+- Isolate model cost maps in runtime registration unit tests and restore them after each test - [PR #47559](https://github.com/BerriAI/litellm/pull/47559)
+- Add the Sonnet 5.5 Anthropic direct row to the cross-model translation tests - [PR #47566](https://github.com/BerriAI/litellm/pull/47566)
+- Remove the two-second timing dependency from the Bedrock Vault lookup regression tests - [PR #47597](https://github.com/BerriAI/litellm/pull/47597)
+- Pin the `max_parallel_requests` slot release after a streamed `/v1/messages` MCP auto-execute - [PR #47788](https://github.com/BerriAI/litellm/pull/47788)
+- Read the Interactions spec from a vendored snapshot and canary the live one daily - [PR #48002](https://github.com/BerriAI/litellm/pull/48002)
+- Make the custom tokenizer offload test check the loader thread instead of relying on timing - [PR #48458](https://github.com/BerriAI/litellm/pull/48458)
+- Fix the six OTel Langfuse destination tests by building the provider with `console_default=True` - [PR #49129](https://github.com/BerriAI/litellm/pull/49129)
+- Deflake the JSON accumulator drain test and the armed routing prefetch test - [PR #49505](https://github.com/BerriAI/litellm/pull/49505)
+
+</details>
+
+<details>
+<summary>Contributor tooling (14)</summary>
+
+- Add ADRs for the Python SDK and proxy and a provider section in `CONTRIBUTING.md` - [PR #36668](https://github.com/BerriAI/litellm/pull/36668)
+- Drop the Conventional Branches pre-push hook in favor of the `litellm_` branch prefix - [PR #44951](https://github.com/BerriAI/litellm/pull/44951)
+- Keep directory rules in nested `AGENTS.md` and state that CircleCI owns `tests/integration` - [PR #46796](https://github.com/BerriAI/litellm/pull/46796)
+- Add a code owner for `helm/` and `terraform/` in `.github/CODEOWNERS` - [PR #47452](https://github.com/BerriAI/litellm/pull/47452)
+- Lead the PR template with a short plain description and collapse the other sections - [PR #47594](https://github.com/BerriAI/litellm/pull/47594)
+- Clarify the unit test clock rule to allow incidental production clock reads - [PR #47604](https://github.com/BerriAI/litellm/pull/47604)
+- Remove the Description heading from the PR template - [PR #47631](https://github.com/BerriAI/litellm/pull/47631)
+- Add a code owner for the model cost map files - [PR #48101](https://github.com/BerriAI/litellm/pull/48101)
+- Add Google-convention docstring rules to the strict ruff gate - [PR #48245](https://github.com/BerriAI/litellm/pull/48245)
+- Document the incremental database access migration in a repository agent skill - [PR #48476](https://github.com/BerriAI/litellm/pull/48476)
+- Allow focused proof instead of live e2e testing for mechanical PRs in the PR template and AGENTS.md - [PR #49031](https://github.com/BerriAI/litellm/pull/49031)
+- Explain meter, band, channel and When in the Rust model catalog docs - [PR #49447](https://github.com/BerriAI/litellm/pull/49447)
 - Add a handwritten 1-3 sentence description section to the PR template - [PR #49475](https://github.com/BerriAI/litellm/pull/49475)
-- Explain meter, band, channel and When in the model-catalog agent docs - [PR #49447](https://github.com/BerriAI/litellm/pull/49447)
-- Link the README to the Python SDK and autorouter guides - [PR #48986](https://github.com/BerriAI/litellm/pull/48986)
-- Allow focused proof for mechanical PRs in the QA guide - [PR #49031](https://github.com/BerriAI/litellm/pull/49031)
-- Add ADRs for the Python SDK and proxy, starting with provider usage extras - [PR #36668](https://github.com/BerriAI/litellm/pull/36668)
-- Link the LiteLLM OSS Champions program from the README Contributing section - [PR #48734](https://github.com/BerriAI/litellm/pull/48734)
-- Clarify the heuristic v2 keyword settings in the complexity router README - [PR #48666](https://github.com/BerriAI/litellm/pull/48666)
-- Document the incremental database access migration - [PR #48476](https://github.com/BerriAI/litellm/pull/48476)
-- Remove the description heading from the PR template - [PR #47631](https://github.com/BerriAI/litellm/pull/47631)
-- Clarify the unit test clock rule - [PR #47604](https://github.com/BerriAI/litellm/pull/47604)
-- Lead the PR template with a short plain description and collapse the rest - [PR #47594](https://github.com/BerriAI/litellm/pull/47594)
-- Rewrite the stale `completion_cost` docstring - [PR #47022](https://github.com/BerriAI/litellm/pull/47022)
-- Keep directory rules in nested AGENTS.md files and pin integration tests to CircleCI - [PR #46796](https://github.com/BerriAI/litellm/pull/46796)
+- Wrap the agent-drafted PR summary placeholder in `<make-me-human-readable>` tags in the PR template - [PR #49494](https://github.com/BerriAI/litellm/pull/49494)
 
 </details>
 
 <details>
-<summary>Chores (5)</summary>
+<summary>Other internal (11)</summary>
 
-- Remove the unused `arize_phoenix` callback from the e2e stage mirror config - [PR #49538](https://github.com/BerriAI/litellm/pull/49538)
-- Add google-convention docstring rules to the strict ruff gate - [PR #48245](https://github.com/BerriAI/litellm/pull/48245)
-- Add a code owner for the model cost map - [PR #48101](https://github.com/BerriAI/litellm/pull/48101)
-- Add a code owner for `helm/` and `terraform/` - [PR #47452](https://github.com/BerriAI/litellm/pull/47452)
-- Drop the Conventional Branches pre-push hook in favor of a `litellm_` prefix - [PR #44951](https://github.com/BerriAI/litellm/pull/44951)
+- Rewrite the stale `completion_cost` docstring and fix a typo in its unmapped-model error - [PR #47022](https://github.com/BerriAI/litellm/pull/47022)
+- Add the spend log storage probe and reclaimable-bytes count that later size-based cleanup builds on, with no callers yet - [PR #47449](https://github.com/BerriAI/litellm/pull/47449)
+- Rename the lowercase policy file to the conventional upper case name that OSS tooling looks for, and use the project contact address - [PR #47581](https://github.com/BerriAI/litellm/pull/47581)
+- Bump `vite` from 8.3.0 to 8.3.4 in `vscode-extension`, which only the test runner uses - [PR #47627](https://github.com/BerriAI/litellm/pull/47627)
+- Recognize the development preview workspace in the Chat view switcher - [Commit f6b2086](https://github.com/BerriAI/litellm/commit/f6b20865020026612e05fb51ba8e993fc91d9486)
+- Add accounting contracts, pricing snapshots and two ledger tables, not yet used by the proxy - [PR #48862](https://github.com/BerriAI/litellm/pull/48862)
+- Add a durable accounting event ledger writer that commits events with their pending deliveries - [PR #48883](https://github.com/BerriAI/litellm/pull/48883)
+- Call the renamed `drops_params` helper on the OpenAI Responses compact path - [PR #49030](https://github.com/BerriAI/litellm/pull/49030)
+- Add bounded transactional persistence for durable usage capture - [PR #49190](https://github.com/BerriAI/litellm/pull/49190)
+- Let the WebSocket pass-through relay bill a session from client text through an optional meter - [PR #49281](https://github.com/BerriAI/litellm/pull/49281)
+- Remove the wrong 10 minutes comment on `DEFAULT_A2A_AGENT_TIMEOUT` - [PR #49465](https://github.com/BerriAI/litellm/pull/49465)
+
+</details>
+
+<details>
+<summary>Cost calculation tests (8)</summary>
+
+- Cover unpriced provider slugs and explicit zero rates in cost calculation tests - [PR #42467](https://github.com/BerriAI/litellm/pull/42467)
+- Add tier 1 cost tracking cases for gpt-5.6-terra, gemini-4-argon and gemini-3.1-pro-preview - [PR #46931](https://github.com/BerriAI/litellm/pull/46931)
+- Bill vertex gemini-3.8-flash reasoning tokens at the reasoning price in the cost test suite - [PR #46939](https://github.com/BerriAI/litellm/pull/46939)
+- Rekey Vertex Gemini cost cases, add Bedrock Mantle GPT and Claude Opus 5.5 cases, and drop suite-only price fields - [PR #46962](https://github.com/BerriAI/litellm/pull/46962)
+- Add tier 1 cost tracking cases and sync stored usage shapes with live replies - [PR #47141](https://github.com/BerriAI/litellm/pull/47141)
+- Add Vertex Claude Haiku 5.5 long context cases and GPT and Gemini 3.8 Flash bridge legs to the cost tests - [PR #47342](https://github.com/BerriAI/litellm/pull/47342)
+- Run the azure_ai Claude bridge cost pairs and add Anthropic usage speed and Vertex Gemini audio priority price cases - [PR #47582](https://github.com/BerriAI/litellm/pull/47582)
+- Expect Cohere rerank-v4 `prompt_tokens` from `billed_units.total_tokens` in the cost integration case - [PR #49455](https://github.com/BerriAI/litellm/pull/49455)
+
+</details>
+
+<details>
+<summary>Superseded within this release (2)</summary>
+
+- Keep JSON integers outside the 64-bit range exact in request bodies, including requests that use key or team model aliases, instead of rounding them to floats - [PR #48213](https://github.com/BerriAI/litellm/pull/48213)
+- Revert large-integer request parsing, so large JSON integers may round again - [PR #48289](https://github.com/BerriAI/litellm/pull/48289)
 
 </details>
 
 ### PR roll-up by ownership area
 
-Customer-facing changes: **711**. Tests, CI and internal changes: **167**. Total: **878**
+Customer-facing changes: **700**. Tests, CI and internal changes: **231**. Total: **931**
 
-- New Models / Updated Models: 225
-- Tests, CI and internal: 167
-- LLM API Endpoints: 148
-- Management Endpoints / UI: 124
-- Performance / Loadbalancing / Reliability improvements: 70
-- Spend Tracking, Budgets and Rate Limiting: 62
-- AI Integrations: 55
-- MCP Gateway: 24
-- Documentation Updates: 3
+- Other (tests, CI, internal): 231
+- Models & Providers: 185
+- LLM API Endpoints: 162
+- Spend / Budgets / Rate Limits: 82
+- Performance: 76
+- UI: 62
+- Auth & Management: 52
+- Logging & Tracing: 32
+- MCP: 23
+- Guardrails: 19
+- Docs: 5
+- Secret Managers: 2
 
 ## New Contributors
 
@@ -1770,9 +1758,9 @@ Customer-facing changes: **711**. Tests, CI and internal changes: **167**. Total
 - [@ishaan-j-berri](https://github.com/ishaan-j-berri) made their first contribution in [PR #48137](https://github.com/BerriAI/litellm/pull/48137)
 - [@islomjon-aiand](https://github.com/islomjon-aiand) made their first contribution in [PR #38958](https://github.com/BerriAI/litellm/pull/38958)
 - [@jeevan1098](https://github.com/jeevan1098) made their first contribution in [PR #48213](https://github.com/BerriAI/litellm/pull/48213)
+- [@jesus-berri](https://github.com/jesus-berri) made their first contribution in [PR #43425](https://github.com/BerriAI/litellm/pull/43425)
 - [@jhoblitt](https://github.com/jhoblitt) made their first contribution in [PR #48060](https://github.com/BerriAI/litellm/pull/48060)
 - [@jodok](https://github.com/jodok) made their first contribution in [PR #48448](https://github.com/BerriAI/litellm/pull/48448)
-- [@jonvarley-fw](https://github.com/jonvarley-fw) made their first contribution in [PR #47326](https://github.com/BerriAI/litellm/pull/47326)
 - [@jorik](https://github.com/jorik) made their first contribution in [PR #46421](https://github.com/BerriAI/litellm/pull/46421)
 - [@joshdabosh](https://github.com/joshdabosh) made their first contribution in [PR #45092](https://github.com/BerriAI/litellm/pull/45092)
 - [@justinfx](https://github.com/justinfx) made their first contribution in [PR #44763](https://github.com/BerriAI/litellm/pull/44763)
@@ -1782,8 +1770,9 @@ Customer-facing changes: **711**. Tests, CI and internal changes: **167**. Total
 - [@mdevhurt1](https://github.com/mdevhurt1) made their first contribution in [PR #39762](https://github.com/BerriAI/litellm/pull/39762)
 - [@MFJG-dev](https://github.com/MFJG-dev) made their first contribution in [PR #45961](https://github.com/BerriAI/litellm/pull/45961)
 - [@mika-lt](https://github.com/mika-lt) made their first contribution in [PR #48799](https://github.com/BerriAI/litellm/pull/48799)
+- [@Mrun25](https://github.com/Mrun25) made their first contribution in [PR #46390](https://github.com/BerriAI/litellm/pull/46390)
 - [@ninglinLiu](https://github.com/ninglinLiu) made their first contribution in [PR #46171](https://github.com/BerriAI/litellm/pull/46171)
-- [@norkelbyte](https://github.com/norkelbyte) made their first contribution in [PR #48751](https://github.com/BerriAI/litellm/pull/48751)
+- [@norkelbyte](https://github.com/norkelbyte) made their first contribution in [PR #48737](https://github.com/BerriAI/litellm/pull/48737)
 - [@occ](https://github.com/occ) made their first contribution in [PR #42014](https://github.com/BerriAI/litellm/pull/42014)
 - [@ondraz](https://github.com/ondraz) made their first contribution in [PR #46857](https://github.com/BerriAI/litellm/pull/46857)
 - [@otiscuilei](https://github.com/otiscuilei) made their first contribution in [PR #32537](https://github.com/BerriAI/litellm/pull/32537)
@@ -1799,10 +1788,10 @@ Customer-facing changes: **711**. Tests, CI and internal changes: **167**. Total
 - [@sidhunt](https://github.com/sidhunt) made their first contribution in [PR #43290](https://github.com/BerriAI/litellm/pull/43290)
 - [@SilverMarcs](https://github.com/SilverMarcs) made their first contribution in [PR #48745](https://github.com/BerriAI/litellm/pull/48745)
 - [@simonp9](https://github.com/simonp9) made their first contribution in [PR #48800](https://github.com/BerriAI/litellm/pull/48800)
-- [@tavren27](https://github.com/tavren27) made their first contribution in [PR #48766](https://github.com/BerriAI/litellm/pull/48766)
+- [@tavren27](https://github.com/tavren27) made their first contribution in [PR #48725](https://github.com/BerriAI/litellm/pull/48725)
 - [@tbartik](https://github.com/tbartik) made their first contribution in [PR #34822](https://github.com/BerriAI/litellm/pull/34822)
 - [@TemoSulava](https://github.com/TemoSulava) made their first contribution in [PR #47263](https://github.com/BerriAI/litellm/pull/47263)
-- [@tessellark](https://github.com/tessellark) made their first contribution in [PR #48763](https://github.com/BerriAI/litellm/pull/48763)
+- [@tessellark](https://github.com/tessellark) made their first contribution in [PR #48735](https://github.com/BerriAI/litellm/pull/48735)
 - [@ucfjoe](https://github.com/ucfjoe) made their first contribution in [PR #40152](https://github.com/BerriAI/litellm/pull/40152)
 - [@vanrajsinh650](https://github.com/vanrajsinh650) made their first contribution in [PR #46190](https://github.com/BerriAI/litellm/pull/46190)
 - [@vanshsingh3711-wq](https://github.com/vanshsingh3711-wq) made their first contribution in [PR #44551](https://github.com/BerriAI/litellm/pull/44551)
@@ -1813,4 +1802,4 @@ Customer-facing changes: **711**. Tests, CI and internal changes: **167**. Total
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.108.0...v1.109.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.108.0-rc.1...v1.109.0-rc.1

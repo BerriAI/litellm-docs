@@ -210,6 +210,16 @@ The cap is per worker process and works the same on uvicorn and Granian. A pod s
 
 Monitor it with `/health/backlog` (fields `in_flight_requests`, `admitted_requests`, `queued_requests`, `rejected_requests`) or the Prometheus metrics `litellm_admission_admitted_requests`, `litellm_admission_queued_requests`, and `litellm_admission_rejected_requests_total{reason="queue_full"|"queue_timeout"}`; see [Pod health metrics](/docs/proxy/prometheus#pod-health-metrics). A steady stream of `queue_timeout` rejections means the worker is at capacity and needs more replicas; `queue_full` rejections mean spikes are arriving faster than the queue can absorb, so raise the queue size or add capacity.
 
+## Request header buffer size
+
+When Uvicorn selects h11, the default server and `--run_gunicorn` use a 16 KiB buffer for incomplete HTTP headers. Set [`--max_request_header_size`](./cli#--max_request_header_size) or `MAX_REQUEST_HEADER_SIZE` in bytes to allow larger headers added by an upstream gateway.
+
+```shell
+litellm --config config.yaml --max_request_header_size 131072
+```
+
+This allows up to 128 KiB to accumulate while a header block is incomplete. Setting the value preserves Uvicorn's automatic parser selection. Uvicorn normally selects httptools when it is installed, and httptools ignores this setting. The configured buffer applies when h11 is selected. The setting does not apply to Hypercorn or Granian. With h11's default buffer, large headers can intermittently return `400 Invalid HTTP request received.` depending on how they are split across reads. See [Uvicorn's incomplete-event buffer setting and its 16384-byte default](https://uvicorn.dev/settings/#implementation).
+
 ## Keepalive timeout
 
 Defaults to 5 seconds; between requests, connections must receive new data within this period or be disconnected.

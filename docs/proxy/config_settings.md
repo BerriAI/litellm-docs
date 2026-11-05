@@ -141,7 +141,7 @@ general_settings:
   enforce_rpm_tpm_on_model_add: boolean  # or a {default, providers, models} mapping; new models must set a positive rpm and tpm
   enforce_project_model_quota: boolean  # or a {default, providers, models} mapping; project models must have a positive model_rpm_limit and model_tpm_limit
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
-  request_tag_mappings: [{"key": "entrypoint", "tag_prefix": "usecase:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
+  request_tag_mappings: [{"key": "service", "tag_prefix": "app:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
   missing_session_id: generate  # or "reject". What to do with LLM API requests that carry no session id; unset keeps the legacy behavior
   disable_batch_input_file_rate_limiting: boolean  # skip TPM/RPM accounting for batch input files
   skip_batch_input_file_rate_limiting_for_providers: ["hosted_vllm"]  # apply the batch accounting skip only to these providers
@@ -283,7 +283,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | max_internal_user_budget | float | `null` | Default max budget (USD) applied to every internal user. `null` means no per-user cap. [Further docs](./self_serve#set-default-max-budget-for-internal-users) |
 | default_max_internal_user_budget | float | `null` | Fallback max budget (USD) for internal users when `max_internal_user_budget` is unset. `null` means no cap. |
 | max_ui_session_budget | float | `1.0` | Max spend (USD) per Admin UI login session (playground, test connection). `null` disables the cap. |
-| store_audit_logs | boolean | `null` | If true, writes audit logs for create/update/delete actions on keys, teams, and users. When unset, reads the `LITELLM_STORE_AUDIT_LOGS` env var; if that is also unset, audit logging is on for enterprise deployments and off otherwise. |
+| store_audit_logs | boolean | `null` | If true, writes audit logs for create/update/delete actions on keys, teams, and users. Needs an enterprise license, without which no audit logs are written. When unset, reads the `LITELLM_STORE_AUDIT_LOGS` env var; if that is also unset, audit logging is on for enterprise deployments and off otherwise. |
 | default_key_generate_params | object | `null` | Default params applied to `/key/generate` requests when the caller omits them. [Further docs](./virtual_keys#default-keygenerate-params) |
 | upperbound_key_generate_params | object | `null` | Hard upper bounds enforced on `/key/generate` params (e.g. max `max_budget`, `duration`); requests exceeding them are rejected. [Further docs](./virtual_keys#upperbound-keygenerate-params) |
 | default_internal_user_params | object | `null` | Default params (role, models, budgets) applied to internal users auto-created on first SSO login. [Further docs](./self_serve) |
@@ -413,6 +413,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
+| litellm_jwtauth.unregistered_jwt_client_behavior | string | `fallback_team_mapping` | What to do when a JWT has no key mapping: `fallback_team_mapping`, `reject`, `auto_register`, or `link_only` <SinceVersion v="1.109.0" />. [Docs](./jwt_key_mapping.md#step-1-configure-the-jwt-claim-to-map-on) |
+| litellm_jwtauth.auto_register_map_existing_key | boolean | `false` | With `auto_register`, reuse the user's newest eligible key instead of creating one. [Docs](./jwt_key_mapping.md#which-existing-key-is-selected) {/* keep-version-note */} |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
@@ -1394,6 +1396,7 @@ router_settings:
 | MAX_DECOMPRESSED_REQUEST_BODY_SIZE_MB | <SinceVersion v="1.108.0" /> Maximum size in MB of a request body sent with `Content-Encoding: gzip` or `zstd`, checked both before and after the proxy decodes it. When `max_request_size_mb` is set on a proxy with an enterprise license, the smaller of the two applies. A larger body gets a 413 before it reaches auth or the route. Set to 0 to reject every compressed body. Default is 50
 | MAX_EXCEPTION_MESSAGE_LENGTH | Maximum length for exception messages. Default is 2000
 | MAX_ITERATIONS_TO_CLEAR_QUEUE | Maximum number of iterations to attempt when clearing the logging worker queue during shutdown. Default is 200
+| MAX_REQUEST_HEADER_SIZE | {/* keep-version-note: unversioned reference requested by maintainer */} Positive integer byte size for Uvicorn's h11 incomplete HTTP header buffer. **Default is 16384** (16 KiB). For example, set `MAX_REQUEST_HEADER_SIZE=131072` for 128 KiB. Applies to the default server and `--run_gunicorn` when h11 is used. Preserves automatic parser selection and is ignored by httptools, Hypercorn, and Granian. `--max_request_header_size` takes precedence. Export this variable before starting the proxy. This is not a strict total-header limit. [Further docs](./cli#--max_request_header_size). |
 | MAX_TIME_TO_CLEAR_QUEUE | Maximum time in seconds to spend clearing the logging worker queue during shutdown. Default is 5.0
 | LOGGING_WORKER_AGGRESSIVE_CLEAR_COOLDOWN_SECONDS | Cooldown time in seconds before allowing another aggressive clear operation when the queue is full. Default is 0.5 
 | MAX_STRING_LENGTH_PROMPT_IN_DB | Maximum length for strings in spend logs when sanitizing request bodies. Strings longer than this will be truncated. Default is 1000

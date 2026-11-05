@@ -1771,7 +1771,93 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 
 5. **Format**: Thought signatures are stored in `provider_specific_fields.thought_signature` of tool calls in the response, and are automatically included when you append the assistant message to your conversation history.
 
-6. **Chat Completions Clients**: With chat completions clients where you cannot control whether or not the previous assistant message is included as-is (ex langchain's ChatOpenAI), LiteLLM also preserves the thought signature by appending it to the tool call id (`call_123__thought__<thought-signature>`) and extracting it back out before sending the outbound request to Gemini. 
+6. **Chat Completions Clients**: With chat completions clients where you cannot control whether or not the previous assistant message is included as-is (ex langchain's ChatOpenAI), LiteLLM also preserves the thought signature by appending it to the tool call id (`call_123__thought__<thought-signature>`) and extracting it back out before sending the outbound request to Gemini. For a client that limits the id length, see [Keep tool call ids short](#keep-tool-call-ids-short).
+
+### Keep tool call ids short
+
+By default, when a tool call carries a thought signature, the tool call id that LiteLLM returns holds the whole signature, as `call_123__thought__<thought-signature>`. Gemini signs only the first call of a parallel batch, so the other ids are already short. A signature is often hundreds of characters long, so a client that limits the id length rejects the tool call. For example, the AWS Bedrock AgentCore harness allows at most 128 characters.
+
+Set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> to get short ids such as `call_436686`. LiteLLM then returns the signature only in `provider_specific_fields.thought_signature` of the tool call that carries it. The setting applies to Gemini models called through `gemini/` and `vertex_ai/` on `/chat/completions` and `/responses`, with and without streaming. When it is not set, ids hold the signature as before.
+
+Set it on a deployment in your `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: {{gemini_flash}}
+    litellm_params:
+      model: gemini/{{gemini_flash}}
+      api_key: os.environ/GEMINI_API_KEY
+      thought_signature_in_tool_call_id: false
+```
+
+Or set it per request. A value in the request takes precedence over the value on the deployment.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_temperature",
+            "description": "Gets the current weather temperature for a given location.",
+            "parameters": {
+                "type": "object",
+                "properties": {"location": {"type": "string"}},
+                "required": ["location"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="gemini/{{gemini_flash}}",
+    messages=[{"role": "user", "content": "What's the temperature in London?"}],
+    tools=tools,
+    reasoning_effort="low",
+    thought_signature_in_tool_call_id=False,
+)
+print(response.choices[0].message.tool_calls[0].id)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "{{gemini_flash}}",
+    "messages": [{"role": "user", "content": "What'\''s the temperature in London?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Gets the current weather temperature for a given location.",
+        "parameters": {
+          "type": "object",
+          "properties": {"location": {"type": "string"}},
+          "required": ["location"]
+        }
+      }
+    }],
+    "reasoning_effort": "low",
+    "thought_signature_in_tool_call_id": false
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+The value is a boolean. LiteLLM also accepts a value that converts to a boolean, such as `"false"` or `0`. Any other value, such as `"maybe"`, gets an HTTP 400 error that names `thought_signature_in_tool_call_id`. With `drop_params: true`, LiteLLM drops the bad value instead and uses the value on the deployment, or the default when the deployment does not set one.
+
+On the next turn, send back the assistant message with its tool calls as you received them, `provider_specific_fields` included. LiteLLM reads the signature from `provider_specific_fields` and sends it to Gemini with the tool call. With the OpenAI client, `messages.append(response.choices[0].message)` does this, as in the [multi-turn example](#multi-turn-function-calling-with-thought-signatures) above. On `/responses`, each `function_call` output item carries the same `provider_specific_fields`, so send the item back unchanged in the next `input`. LiteLLM reads those fields from an input item only when the setting is `false` for that request too, so if you set it per request, send it on every turn, or set it on the deployment instead.
+
+If your client sends back only the short id and drops `provider_specific_fields`, LiteLLM has no signature to send. For Gemini 3 and newer models, it then puts a placeholder signature on the first tool call of each assistant message, so the request still succeeds, but the model loses the reasoning that the real signature carried. So if your client accepts long ids but drops `provider_specific_fields`, keep the default.
 
 ## JSON Mode
 

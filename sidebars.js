@@ -374,6 +374,7 @@ const sidebars = {
     { type: "html", value: "Get started", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "index", label: "Quickstart" },
     { type: "doc", id: "agent_resources", label: "Agent resources" },
+    { type: "link", label: "LiteLLM Academy", href: "https://www.litellm.ai/course" },
 
     // ════════════════════════════════════════════════════════════
     // AI GATEWAY
@@ -1416,6 +1417,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
         "prompt_management",
@@ -1900,6 +1902,7 @@ const providersSidebar = {
     "providers/v0",
     "providers/volcano",
     "providers/voyage",
+    "providers/wally",
     "providers/wandb_inference",
     { type: "category", label: "WatsonX", className: "sidebar-provider", link: { type: "doc", id: "providers/watsonx/index" }, items: [
       "providers/watsonx/audio_transcription",

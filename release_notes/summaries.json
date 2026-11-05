@@ -1,6 +1,26 @@
 [
   {
     "folders": [
+      "v1.106.7"
+    ],
+    "title": "LiteLLM v1.106.7 supports custom video providers on /v1/videos",
+    "points": [
+      "`/v1/videos` serves providers that `custom_provider_map` registers.",
+      "The proxy and its Helm charts no longer package the Lens beta, so remove `lensWorker.enabled` from your Helm values before you upgrade."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.0"
+    ],
+    "title": "LiteLLM v1.108.0 adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live",
+    "points": [
+      "LiteLLM adds Gemini 4 Argon, the Microsoft 365 Copilot provider, OpenAI Live sessions on `/v1/live/sessions` and Azure PTU capacity that teams share.",
+      "The proxy count routes return the provider's error instead of a local estimate, and `token_count_framing` in `model_info` restores a local estimate."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.6",
       "v1.105.7"
     ],
@@ -204,30 +224,6 @@
       "Codex CLI tools now reach models behind the Responses to Chat Completions bridge, such as Bedrock Converse models.",
       "The bridge moves `additional_tools` input items into `tools` for every bridged provider.",
       "The model call returns to Codex as a `custom_tool_call` in both streaming and non-streaming responses."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.1",
-      "v1.103.4",
-      "v1.102.3"
-    ],
-    "title": "LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0",
-    "points": [
-      "Wolfi's `openssl-dev` package now installs OpenSSL 4.0, so the Docker images bundle pgbouncer 1.26.0 to build again.",
-      "The locked Python dependencies update `langgraph-sdk` to 0.4.4, `mako` to 1.4.2 and `werkzeug` to 3.1.9.",
-      "The Admin UI updates `next` to 16.3.6 and `moment` to 2.31.0."
-    ]
-  },
-  {
-    "folders": [
-      "v1.100.5",
-      "v1.101.5"
-    ],
-    "title": "LiteLLM v1.100.5 and v1.101.5 update next to 16.3.6 and urllib3 to 2.8.0",
-    "points": [
-      "The locked Python dependencies update `urllib3` to 2.8.0, `pypdf` to 6.19.0 and `pyjwt` to 2.15.0.",
-      "The Admin UI updates `next` to 16.3.6, and the wolfi-base image digest picks up glibc 2.44-r6."
     ]
   }
 ]
