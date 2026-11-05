@@ -1,215 +1,180 @@
 # Custom Auth
 
-Override the default API key authentication with your own handler.
+Authenticate API requests with a Python handler that validates your application's credentials and returns the caller's LiteLLM identity.
+
+## How it works
+
+LiteLLM passes the FastAPI `Request` and bearer credential to your async handler. Return `UserAPIKeyAuth` after validating the credential, or raise an exception to reject it. The returned identity supplies usage attribution and any configured authorization checks.
 
 :::warning[Enforcement with custom auth]
 
-Returning `UserAPIKeyAuth` identifies the caller but does not enable every authorization check. Rate limits set on the object apply directly; budgets and model access require additional flags. Configure them using [Custom auth permissions](./access_management/custom_auth_permissions.md).
+Returning `UserAPIKeyAuth` does not enable every authorization check. Rate limits set on the object apply directly; budgets and model access require additional flags. Configure them using [Custom auth permissions](./access_management/custom_auth_permissions.md).
 
 :::
 
-## Usage
+## Prerequisites
 
-#### 1. Create a custom auth file. 
+Start with a working proxy and a configured model; the examples use `my-model`. Make your Python module available beside `config.yaml` or on the proxy's Python import path. Store the credential used by the example in the proxy's `CUSTOM_AUTH_TOKEN` environment variable.
 
-Make sure the response type follows the `UserAPIKeyAuth` pydantic object. This is used by for logging usage specific to that user key.
+For an existing authentication service, replace the example's credential comparison with that service's validation and return its verified identity.
 
-```python
+<a id="usage"></a>
+
+## Setup
+
+### 1. Write the handler {#1-create-a-custom-auth-file}
+
+Save this as `custom_auth.py`. The example validates one application's credential and identifies it as `integration-client`.
+
+```python title="custom_auth.py"
+import os
+from secrets import compare_digest
+
 from fastapi import Request
-from litellm.proxy._types import UserAPIKeyAuth
+from litellm.proxy._types import ProxyException, UserAPIKeyAuth
 
-async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth: 
-    try: 
-        modified_master_key = "sk-my-master-key"
-        if api_key == modified_master_key:
-            return UserAPIKeyAuth(api_key=api_key)
-        raise Exception
-    except: 
-        raise Exception
+
+async def user_api_key_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
+    expected_token = os.environ["CUSTOM_AUTH_TOKEN"]
+    if not expected_token or not api_key or not compare_digest(api_key, expected_token):
+        raise ProxyException(
+            message="Invalid credential",
+            type="authentication_error",
+            param="api_key",
+            code=401,
+        )
+    return UserAPIKeyAuth(api_key=api_key, user_id="integration-client")
 ```
 
-#### 2. Pass the filepath (relative to the config.yaml)
+### 2. Configure the proxy {#2-pass-the-filepath-relative-to-the-configyaml}
 
-Pass the filepath to the config.yaml 
+Add the module and function name to your existing configuration. Keep your model and database settings.
 
-e.g. if they're both in the same dir - `./config.yaml` and `./custom_auth.py`, this is what it looks like:
-```yaml 
-model_list: 
-  - model_name: "openai-model"
-    litellm_params: 
-      model: "{{openai_small}}"
-
-litellm_settings:
-  drop_params: True
-  set_verbose: True
-
+```yaml title="config.yaml"
 general_settings:
   custom_auth: custom_auth.user_api_key_auth
 ```
 
-[**Implementation Code**](https://github.com/BerriAI/litellm/blob/caf2a6b279ddbe89ebd1d8f4499f65715d684851/litellm/proxy/utils.py#L122)
+### 3. Start the proxy {#3-start-the-proxy}
 
-#### 3. Start the proxy
-```shell
-$ litellm --config /path/to/config.yaml 
+```bash
+litellm --config config.yaml
 ```
 
-## UserAPIKeyAuth Fields Reference
+## Test authentication
 
-Return the identity fields LiteLLM should use for usage attribution. For permissions, rate limits, and budgets, see [Custom auth permissions](./access_management/custom_auth_permissions.md).
+Set `CUSTOM_AUTH_TOKEN` in your client environment to the same credential, then send it as the bearer token:
 
-### Identity
-
-Who the request belongs to. The `*_id` fields also tell LiteLLM which DB records to load when `custom_auth_run_common_checks: true`.
-
-```python
-def UserAPIKeyAuth(
-    api_key: Optional[str] = None,                    # The API key (will be hashed automatically)
-    token: Optional[str] = None,                      # Hashed token for internal use
-    key_alias: Optional[str] = None,                  # Key alias for identification
-    user_id: Optional[str] = None,                    # User identifier (also used to load the user record)
-    user_email: Optional[str] = None,                 # User email address
-    user_role: Optional[LitellmUserRoles] = None,     # User role (PROXY_ADMIN, INTERNAL_USER, etc.)
-    team_id: Optional[str] = None,                    # Team identifier (also used to load the team record)
-    org_id: Optional[str] = None,                     # Organization identifier (also used to load the org record)
-    end_user_id: Optional[str] = None,                # End-user identifier (also used to load the end-user record)
-): ...
+```bash
+curl 'http://localhost:4000/v1/chat/completions' \
+  -H "Authorization: Bearer $CUSTOM_AUTH_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"my-model","messages":[{"role":"user","content":"Hello"}]}'
 ```
+
+A valid credential passes authentication. Repeat with an incorrect credential; the example returns `401`. If the valid caller is denied a model or exceeds a limit, check [authorization separately](./access_management/custom_auth_permissions.md).
+
+## Configuration reference
+
+### Caller identity {#userapikeyauth-fields-reference}
+
+<a id="identity"></a>
+
+Return the identity fields LiteLLM uses for usage attribution. The `*_id` fields also identify the database records loaded when `custom_auth_run_common_checks: true`.
+
+| Field | Meaning |
+| --- | --- |
+| `api_key` | Caller credential; LiteLLM hashes it for internal use. |
+| `token` | Hashed token for internal use. |
+| `key_alias` | A display name for the credential. |
+| `user_id`, `user_email` | Verified caller identity. |
+| `user_role` | LiteLLM role; see [roles and permissions](./access_management/custom_auth_permissions.md). |
+| `team_id`, `org_id`, `end_user_id` | Team, organization, and end-user identities for the request. |
+
+For model permissions, budgets, and rate-limit fields, use [Custom auth permissions](./access_management/custom_auth_permissions.md).
 
 ### Token expiration
 
-Set `expires` on the returned object and enable `enable_post_custom_auth_checks` to reject an expired token:
+Return the credential's original expiration time as `expires`, and enable the expiry check:
 
 ```yaml
 litellm_settings:
   enable_post_custom_auth_checks: true
 ```
 
-```python
-from datetime import datetime, timedelta, timezone
+This helper accepts the expiration time obtained from your credential validator:
 
-return UserAPIKeyAuth(
-    api_key=api_key,
-    expires=datetime.now(timezone.utc) + timedelta(days=30),
-)
+```python
+from datetime import datetime
+from litellm.proxy._types import UserAPIKeyAuth
+
+
+def authentication_result(api_key: str, expires_at: datetime) -> UserAPIKeyAuth:
+    return UserAPIKeyAuth(api_key=api_key, expires=expires_at)
 ```
 
-This example returns an expiry time 30 days from now. For an existing credential, return its actual expiration time.
+Use a timezone-aware expiration time. Recomputing it from the current time on each request would keep extending the credential's lifetime.
 
-## Support LiteLLM Virtual Keys + Custom Auth
+### Accept Virtual Keys alongside custom credentials {#support-litellm-virtual-keys--custom-auth}
+
+<a id="usage-1"></a>
 
 <SinceVersion v="1.72.2" />
 
 <EnterpriseFeature feature="Using Custom Auth with LiteLLM Virtual Keys" />
 
-### Usage
+Set `mode: auto` to try the custom handler first and fall back to normal Virtual Key authentication when it raises an ordinary exception. A `ProxyException` is an explicit rejection and does not trigger fallback.
 
-1. Setup custom auth file
+A handler can also return an existing Virtual Key string after validating an external credential. LiteLLM then authenticates that key through its normal path:
 
-```python
-"""
-Example custom auth function.
-
-This will allow all keys starting with "my-custom-key" to pass through.
-"""
-from typing import Union
+```python title="custom_auth_auto.py"
+import os
+from secrets import compare_digest
 
 from fastapi import Request
 
-from litellm.proxy._types import UserAPIKeyAuth
 
-
-async def user_api_key_auth(
-    request: Request, api_key: str
-) -> Union[UserAPIKeyAuth, str]:
-    try:
-        if api_key.startswith("my-custom-key"):
-            return "sk-P1zJMdsqCPNN54alZd_ETw"
-        else:
-            raise Exception("Invalid API key")
-    except Exception:
-        raise Exception("Invalid API key")
-
+async def user_api_key_auth(request: Request, api_key: str) -> str:
+    expected_token = os.environ["CUSTOM_AUTH_TOKEN"]
+    if not expected_token:
+        raise ValueError("Custom credential is not configured")
+    if api_key and compare_digest(api_key, expected_token):
+        return os.environ["LITELLM_VIRTUAL_KEY"]
+    raise ValueError("Credential not handled by custom auth")
 ```
 
-2. Setup config.yaml
-
-Key change set `mode: auto`. This will check both litellm api key auth + custom auth.
+Set `LITELLM_VIRTUAL_KEY` on the proxy to an existing key, then configure the handler:
 
 ```yaml
-model_list: 
-  - model_name: "openai-model"
-    litellm_params: 
-      model: "{{openai_small}}"
-      api_key: os.environ/OPENAI_API_KEY
-
 general_settings:
   custom_auth: custom_auth_auto.user_api_key_auth
   custom_auth_settings:
-    mode: "auto" # can be 'on', 'off', 'auto' - 'auto' checks both litellm api key auth + custom auth
+    mode: auto
 ```
 
-Flow:
-1. Checks custom auth first
-2. If custom auth fails, checks litellm api key auth
-3. If both fail, returns 401
+Test with the external credential and with an existing Virtual Key. Both should authenticate. A credential accepted by neither path is rejected.
 
+| Mode | Behavior |
+| --- | --- |
+| `on` | Run the custom handler. This is also the behavior when custom auth is configured without `custom_auth_settings`. |
+| `off` | Skip the custom handler and use normal authentication. |
+| `auto` | Try the custom handler; ordinary exceptions fall back to normal authentication. `ProxyException` is propagated. |
 
-3. Test it! 
+### Return a specific error {#bubble-up-custom-exceptions}
 
-```bash
-curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer sk-P1zJMdsqCPNN54alZd_ETw' \
--d '{
-    "model": "openai-model",
-    "messages": [
-          {
-            "role": "user",
-            "content": "Hey! My name is John"
-          }
-        ]
-}'
-```
+Raise `ProxyException` with the response message and HTTP code, as in the setup example. Let it propagate from the handler. Catching it and raising a generic exception discards the intended response and can enable fallback in `auto` mode.
 
+## Troubleshooting
 
+| Symptom | Check |
+| --- | --- |
+| Handler cannot be imported | Confirm the filename, function name, import path, and mounted file match `general_settings.custom_auth`. |
+| Every credential is rejected | Confirm the validator's configuration and secret are present in the proxy process. |
+| A Virtual Key is rejected before fallback | In `auto` mode, raise an ordinary exception for credentials the custom handler does not handle. Reserve `ProxyException` for explicit denials. |
+| Custom error details disappear | Remove blanket exception handlers that replace `ProxyException`. |
+| An expired credential still works | Return its original `expires` value and enable `enable_post_custom_auth_checks`. |
+| Budget or model restrictions do not apply | Check [custom auth enforcement flags](./access_management/custom_auth_permissions.md#what-gets-enforced). |
 
+## Related guides
 
-#### Bubble up custom exceptions
-
-If you want to bubble up custom exceptions, you can do so by raising a `ProxyException`.
-
-```python
-"""
-Example custom auth function.
-
-This will allow all keys starting with "my-custom-key" to pass through.
-"""
-
-from typing import Union
-
-from fastapi import Request
-
-from litellm.proxy._types import UserAPIKeyAuth, ProxyException
-
-
-async def user_api_key_auth(
-    request: Request, api_key: str
-) -> Union[UserAPIKeyAuth, str]:
-    try:
-        if api_key.startswith("my-custom-key"):
-            return "sk-P1zJMdsqCPNN54alZd_ETw"
-        if api_key == "invalid-api-key":
-            # raise a custom exception back to the client
-            raise ProxyException(
-                message="Invalid API key",
-                type="invalid_request_error",
-                param="api_key",
-                code=401,
-            )
-        else:
-            raise Exception("Invalid API key")
-    except Exception:
-        raise Exception("Invalid API key")
-
-```
+Use [Custom auth permissions](./access_management/custom_auth_permissions.md) for authorization, [Virtual Keys](./virtual_keys.md) for credential management, or [custom SSO hooks](./custom_sso.md) for browser sign-in callbacks.

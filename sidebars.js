@@ -576,7 +576,7 @@ const sidebars = {
               type: "category",
               label: "Additional sign-in and billing",
               items: [
-                { type: "ref", id: "proxy/cli_sso", label: "CLI SSO", className: "sidebar-xlink" },
+                { type: "doc", id: "proxy/cli_sso", label: "CLI sign-in" },
                 { type: "ref", id: "tutorials/claude_code_okta_sso", label: "Claude Code Okta SSO", className: "sidebar-xlink" },
                 { type: "ref", id: "tutorials/claude_code_byok", label: "Claude Code BYOK", className: "sidebar-xlink" },
                 { type: "ref", id: "tutorials/claude_code_max_subscription", label: "Claude Code Max Subscription", className: "sidebar-xlink" },
@@ -597,7 +597,6 @@ const sidebars = {
                 { type: "doc", id: "proxy/admin_ui_sso", label: "OpenID Connect (OIDC)", className: "sidebar-enterprise" },
                 { type: "doc", id: "proxy/saml_sso", label: "SAML 2.0", className: "sidebar-enterprise" },
                 { type: "doc", id: "proxy/custom_sso", className: "sidebar-enterprise" },
-                { type: "doc", id: "proxy/cli_sso", label: "CLI sign-in" },
               ],
             },
             {

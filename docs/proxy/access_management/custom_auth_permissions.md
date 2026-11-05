@@ -80,6 +80,7 @@ def UserAPIKeyAuth(
 ### Object permissions {#object-permission-mcp-agents-etc}
 
 ```python
+from litellm.proxy._types import LiteLLM_ObjectPermissionTable, UserAPIKeyAuth
 from litellm.proxy.mcp_server.mcp_server_manager import (
     global_mcp_server_manager,
 )
@@ -115,8 +116,8 @@ Your handler returns the IDs; the budgets and allowlists live on the matching DB
 For example, a team with a budget and model allowlist:
 
 ```bash
-curl -X POST 'http://0.0.0.0:4000/team/new' \
-  -H 'Authorization: Bearer sk-master-key' \
+curl -X POST 'http://localhost:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "team_id": "eng-team",
@@ -170,14 +171,11 @@ litellm_settings:
 ```
 
 ```python
-from datetime import datetime, timedelta, timezone
-
 return UserAPIKeyAuth(
     api_key=api_key,
     models=["{{openai_small}}"],                                   # key model allowlist (needs both flags)
     model_max_budget={"{{openai_large}}": {"budget_limit": 100, "time_period": "30d"}},  # key per-model budget
-    expires=datetime.now(timezone.utc) + timedelta(days=30),  # key expiry
 )
 ```
 
-This path also enforces end-user budgets and per-model end-user budgets when `end_user_id` is set.
+This path also enforces end-user budgets and per-model end-user budgets when `end_user_id` is set. To reject expired credentials, return their original expiration time as described in [token expiration](../custom_auth.md#token-expiration).

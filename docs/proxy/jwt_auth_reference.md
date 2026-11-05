@@ -2,7 +2,7 @@
 
 {/* keep-version-note */}
 
-Use this reference after [setting up JWT validation](./token_auth.md). Map the verified claims to [users and teams](./jwt_user_team_auth.md) or an [existing virtual key](./jwt_key_mapping.md). Configure resource and route permissions in [Access Management](./access_management/jwt_permissions.md).
+Use this reference after [connecting your identity provider](./token_auth.md). Map the verified claims to [users and teams](./jwt_user_team_auth.md) or an [existing Virtual Key](./jwt_key_mapping.md). Configure resource and route permissions in [Access Management](./access_management/jwt_permissions.md).
 
 <EnterpriseFeature feature="JWT-based Auth" />
 

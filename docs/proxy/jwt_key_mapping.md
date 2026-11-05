@@ -12,11 +12,9 @@ Let a client authenticate with an identity-provider JWT in place of a static Lit
 
 LiteLLM validates the JWT using your configured signing keys, issuer, and audience, then looks up the configured claim. A matching mapping identifies the virtual key used for authorization and usage tracking. Configure that key's permissions through [Access Management](./access_management/overview.md).
 
-If no mapping exists, the setting below determines whether to reject the request, use standard JWT authorization, create a key, or link an existing one.
+If no mapping exists, `unregistered_jwt_client_behavior` determines whether to reject the request, use standard JWT authorization, create a key, or link an existing one.
 
-## Setup
-
-### Prerequisites
+## Prerequisites
 
 Complete [identity provider setup](./token_auth.md) and connect your proxy to a database. Have an existing virtual key ready with the caller's required [LLM](./access_management/llm.md), [MCP](./access_management/mcp.md), or [agent](./access_management/agents.md) access. See [Virtual Keys](./virtual_keys.md) for key creation and settings.
 
@@ -24,9 +22,13 @@ The test request below uses a configured model named `my-model` that the key can
 
 Choose a stable claim that identifies the caller. Use `sub` for a person or a provider's application identifier for a workload. A shared application `client_id` does not distinguish individual users.
 
+Mapping administration requires a [proxy admin or admin viewer, depending on the operation](./access_management/jwt_permissions.md#virtual-key-mappings).
+
+## Setup
+
 <a id="step-1-configure-the-jwt-claim-to-map-on"></a>
 
-### Step 1. Configure the claim and unmapped-client policy
+### 1. Configure the mapping claim {#step-1-configure-the-claim-and-unmapped-client-policy}
 
 Add these settings to your existing proxy configuration. This example requires an administrator to register each mapping.
 
@@ -39,21 +41,9 @@ general_settings:
     user_id_jwt_field: sub
     virtual_key_claim_field: sub
     unregistered_jwt_client_behavior: reject
-    virtual_key_mapping_cache_ttl: 300
 ```
 
-`virtual_key_claim_field` supports nested claims such as `user.sub`. Its previous name, `jwt_client_id_field`, remains an alias. The mapping cache TTL defaults to 300 seconds.
-
-| `unregistered_jwt_client_behavior` | When no mapping exists |
-| --- | --- |
-| `fallback_team_mapping` | Use standard JWT authorization. This is the default. |
-| `reject` | Return 403. |
-| `auto_register` | Create a virtual key and mapping after JWT authorization. Optionally try an existing key first. |
-| `link_only` | Link an eligible existing user key, or return 403. Never create a key. |
-
-A missing claim also returns 403 in `reject`, `auto_register`, and `link_only` modes.
-
-### Step 2. Register a mapping
+### 2. Register a mapping {#step-2-register-a-mapping}
 
 Register the existing key against the caller's claim value. The claim name must match `virtual_key_claim_field`, and the value must match the caller's JWT.
 
@@ -71,7 +61,9 @@ curl -X POST 'http://localhost:4000/jwt/key/mapping/new' \
 
 Pass either the plaintext `key` or its SHA-256 hash as `token`, never both. Creating a mapping does not create or change the key.
 
-### Step 3. Test it
+## Test authentication
+
+<a id="step-3-test-it"></a>
 
 Obtain a JWT from your identity provider with `sub: user-123`, and send it as the bearer token.
 
@@ -89,7 +81,22 @@ curl 'http://localhost:4000/v1/chat/completions' \
 
 The request uses the linked key's existing permissions. View its usage in the dashboard or through `/key/info`.
 
-## Create mappings automatically
+## Configuration reference
+
+### Mapping claim and cache
+
+`virtual_key_claim_field` supports nested claims such as `user.sub`. Its previous name, `jwt_client_id_field`, remains an alias. `virtual_key_mapping_cache_ttl` sets the mapping cache lifetime in seconds and defaults to `300`.
+
+| `unregistered_jwt_client_behavior` | When no mapping exists |
+| --- | --- |
+| `fallback_team_mapping` | Use standard JWT authorization. This is the default. |
+| `reject` | Return 403. |
+| `auto_register` | Create a virtual key and mapping after JWT authorization. Optionally try an existing key first. |
+| `link_only` | Link an eligible existing user key, or return 403. Never create a key. |
+
+A missing claim also returns 403 in `reject`, `auto_register`, and `link_only` modes.
+
+### Create mappings automatically {#create-mappings-automatically}
 
 Set `unregistered_jwt_client_behavior: auto_register` to create a key and mapping on the first request from an unmapped identity. Configure the user, team, and organization claims you want the new key to inherit using the [identity claim settings](./jwt_auth_reference.md#tracking-end-users--internal-users--team--org).
 
@@ -97,7 +104,7 @@ Before creating anything, LiteLLM runs JWT authorization, including configured r
 
 Set `auto_register_map_existing_key: true` to reuse an eligible user key first and create a new one only if none exists. For reuse, `virtual_key_claim_field` must match `user_id_jwt_field` or `user_email_jwt_field`. A database connection is required. Unmapped proxy-admin JWTs authenticate directly without creating a mapping.
 
-## Link to existing keys
+### Link to existing keys {#link-to-existing-keys}
 
 <SinceVersion v="1.109.0" />
 
@@ -117,24 +124,28 @@ general_settings:
 
 The mapping claim must match `user_id_jwt_field` or `user_email_jwt_field`, and the database must be connected. This mode never creates keys. `user_id_upsert: true` can still create users, so keep it `false` if users must already exist. Unmapped proxy-admin JWTs authenticate directly without linking a key.
 
-### Which existing key is selected
+#### Which existing key is selected {#which-existing-key-is-selected}
 
 For `link_only` and `auto_register_map_existing_key`, the key must belong to the resolved user and team, or have no team when the JWT resolves none. It must never expire, must not be blocked, and must not be an Admin UI session key or an auto-registered key. The newest eligible key wins. Later requests keep that mapping even if a newer key is created.
 
 `allowed_routes` does not affect selection. Review the existing key's permissions before enabling automatic linking, including any management-route permissions it grants.
 
-## Use with Claude Code
+### Multiple identity providers {#multiple-identity-providers}
 
-After registering the developer's identity, configure Claude Code to send that developer's JWT to LiteLLM.
+Configure issuer-bound validation with `litellm_jwtauth.issuers` in the [per-issuer configuration](./jwt_auth_reference.md#per-issuer-claim-mapping), then set `jwt_issuer` on each mapping to the corresponding configured issuer. Issuer-specific `virtual_key_claim_field` and `unregistered_jwt_client_behavior` settings can override the global values.
 
-```bash
-export ANTHROPIC_BASE_URL="http://localhost:4000"
-export ANTHROPIC_API_KEY="<identity-provider-jwt>"
+```json
+{
+  "jwt_issuer": "https://idp.example.com",
+  "jwt_claim_name": "sub",
+  "jwt_claim_value": "user-123",
+  "key": "<existing-virtual-key>"
+}
 ```
 
-Your identity-provider integration must obtain and refresh the JWT. Setting these variables does not initiate SSO. For browser sign-in that issues a LiteLLM credential, use [CLI authentication](./cli_sso.md).
+LiteLLM first looks for an issuer-scoped mapping, then falls back to a global mapping without `jwt_issuer`. Global mappings share the same claim namespace across providers. Use issuer-scoped mappings to distinguish identical claim values from different providers.
 
-## Managing mappings
+### Manage mappings {#managing-mappings}
 
 Mapping responses include an `id`, claim name and value, issuer, description, active flag, and audit metadata. They never return the linked key or its hash. Manage the key itself through [Virtual Keys](./virtual_keys.md).
 
@@ -157,7 +168,11 @@ curl -X POST 'http://localhost:4000/jwt/key/mapping/update' \
   -d '{"id": "<mapping-id>", "key": "<replacement-key>"}'
 ```
 
-### Error codes
+See [mapping-management permissions](./access_management/jwt_permissions.md#virtual-key-mappings) for the roles allowed to perform each operation.
+
+## Troubleshooting
+
+<a id="error-codes"></a>
 
 | Code | Meaning |
 | --- | --- |
@@ -166,23 +181,10 @@ curl -X POST 'http://localhost:4000/jwt/key/mapping/update' \
 | 404 | Mapping not found. |
 | 409 | A mapping already exists for that issuer, claim name, and claim value. |
 
-## Security
+For signature, issuer, audience, or signing-key errors, see [JWT troubleshooting](./jwt_auth_reference.md#troubleshooting). If a mapped credential is accepted but its resource request is denied, check the linked key's permissions in [Access Management](./access_management/overview.md).
 
-Only proxy admins can create, update, or delete mappings. Proxy admins and admin viewers can list and inspect them.
+## Related guides
 
-Once a mapping exists, LiteLLM validates the JWT and uses the linked key's permissions. Standard JWT role, scope, custom-validation, and email-domain policies run when using the fallback path or before automatically creating a mapping. Maintain ongoing permissions through [Access Management](./access_management/overview.md).
+Use [identity provider setup](./token_auth.md) to configure token verification, or [map identities to users and teams](./jwt_user_team_auth.md) to resolve the caller directly. See [Virtual Keys](./virtual_keys.md) to manage the linked credential and [JWT permissions](./access_management/jwt_permissions.md#virtual-key-mappings) for mapping-management roles and policy behavior.
 
-## Multiple identity providers
-
-Configure issuer-bound validation with `litellm_jwtauth.issuers` in the [per-issuer configuration](./jwt_auth_reference.md#per-issuer-claim-mapping), then set `jwt_issuer` on each mapping to the corresponding configured issuer. Issuer-specific `virtual_key_claim_field` and `unregistered_jwt_client_behavior` settings can override the global values.
-
-```json
-{
-  "jwt_issuer": "https://idp.example.com",
-  "jwt_claim_name": "sub",
-  "jwt_claim_value": "user-123",
-  "key": "<existing-virtual-key>"
-}
-```
-
-LiteLLM first looks for an issuer-scoped mapping, then falls back to a global mapping without `jwt_issuer`. Global mappings share the same claim namespace across providers. Use issuer-scoped mappings to distinguish identical claim values from different providers.
+For Claude Code client configuration, see [Use an identity-provider token](./client_setup/claude_code.md#use-an-identity-provider-token).

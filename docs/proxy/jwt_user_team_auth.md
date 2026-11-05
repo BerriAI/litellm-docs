@@ -6,7 +6,17 @@ Use verified JWT claims to identify a user and their LiteLLM teams. LiteLLM attr
 
 <EnterpriseFeature feature="JWT-based Auth" />
 
+## How it works
+
+LiteLLM verifies the JWT, reads the configured identity claims, and resolves them to LiteLLM user and team records. The claim value must match the record's ID unless you configure alias mapping. LiteLLM uses the resolved identities for usage attribution and permission checks.
+
+## Prerequisites
+
 Before you start, [connect your identity provider](./token_auth.md#usage) and connect the proxy to its database. [Provision the teams and their model access](./access_management/llm.md#give-a-team-access), then configure [JWT team permissions](./access_management/jwt_permissions.md#control-model-access-with-teams) before testing. The request below uses a configured model named `my-model`.
+
+## Setup
+
+### 1. Match the team identities {#control-model-access-with-teams}
 
 The example expects your identity provider to issue these claims:
 
@@ -22,11 +32,9 @@ The example expects your identity provider to issue these claims:
 
 This is an example payload, not a signed token. Obtain the actual access token from your provider.
 
-## 1. Match the team identities {#control-model-access-with-teams}
-
 The `engineering` value in the token's `groups` claim must match an existing LiteLLM `team_id`. Check each team that your provider can assign; displaying the same name in both systems is not sufficient. If your provider emits team names, use [alias mapping](#resolve-by-name-alias-instead-of-id).
 
-## 2. Map the claims
+### 2. Map the claims {#2-map-the-claims}
 
 Merge these settings into your existing proxy configuration:
 
@@ -45,9 +53,15 @@ general_settings:
 
 For a token containing one team ID, use `team_id_jwt_field: "team_id"` instead of `team_ids_jwt_field`. There is no default team claim; configure the field your provider actually emits.
 
-## 3. Make a request
+## Test authentication
+
+<a id="3-make-a-request"></a>
+
+Obtain an access token with the claims shown above and send it to the gateway:
 
 ```bash
+export ACCESS_TOKEN="<identity-provider-access-token>"
+
 curl 'http://localhost:4000/v1/chat/completions' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
@@ -59,7 +73,9 @@ curl 'http://localhost:4000/v1/chat/completions' \
 
 LiteLLM verifies the token and resolves the user and teams. With the [team permissions](./access_management/jwt_permissions.md#control-model-access-with-teams) configured above, it selects a team for `my-model` and checks that team's access.
 
-## Select a team for a request {#select-team-via-request-header}
+## Configuration reference
+
+### Select a team for a request {#select-team-via-request-header}
 
 When a user belongs to several teams, send `x-litellm-team-id` to choose which team's permissions and usage attribution apply:
 
@@ -75,7 +91,7 @@ The header accepts a team ID or a unique `team_alias`. By default, it must ident
 
 With `fallback_to_db_teams: true`, the header can also select any team the user belongs to in the database, even when the JWT carries team claims. See [database team fallback](#use-database-team-memberships) before enabling this behavior.
 
-## Use team or organization names {#resolve-by-name-alias-instead-of-id}
+### Use team or organization names {#resolve-by-name-alias-instead-of-id}
 
 If your provider emits names instead of database IDs, map an alias claim:
 
@@ -93,7 +109,7 @@ LiteLLM looks up `team_name` against the team's `team_alias` and `organization.n
 
 All claim paths support dot notation for nested objects. Escape a literal dot in a claim name with `\.`; for example, `'kubernetes\.io.namespace'` reads `namespace` inside the `kubernetes.io` claim.
 
-## Use database team memberships
+### Use database team memberships {#use-database-team-memberships}
 
 Choose the setting that matches the source of your team assignments:
 
@@ -116,6 +132,15 @@ general_settings:
 <a id="fall-back-to-db-team-when-jwt-claims-dont-resolve"></a>
 
 Use `team_claim_fallback` only when identity-provider team claims are advisory. Keep it disabled when those claims are the authority for team access.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Signature, issuer, audience, or signing-key error | Check [JWT token validation](./jwt_auth_reference.md#troubleshooting). |
+| The user or team does not resolve | Match the configured claim paths and values to the database records. Use the alias settings only when the provider emits names instead of IDs. |
+| The team-selection header returns `403` | Select a team granted by the token, or an existing database membership when database fallback is enabled. |
+| The token is accepted but the model request is denied | Check the resolved team's grants and route policy in [JWT permissions](./access_management/jwt_permissions.md#troubleshooting). |
 
 ## Related guides
 

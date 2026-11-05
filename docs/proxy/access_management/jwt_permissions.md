@@ -213,6 +213,14 @@ A JWT whose configured agent claim resolves to `research-agent-client-id` must s
 
 To control which registered agents a caller can invoke, use [Agent Access](./agents.md).
 
+## Virtual Key mappings {#virtual-key-mappings}
+
+Only proxy admins can create, update, or delete mappings. Proxy admins and admin viewers can list and inspect them.
+
+Once a mapping exists, LiteLLM validates the JWT and uses the linked key's permissions. Standard JWT role, scope, custom-validation, and email-domain policies run when using the fallback path or before automatically creating a mapping. Maintain ongoing permissions through [Access Management](./overview.md).
+
+Manage the identity-to-key relationship through [mapping lifecycle operations](../jwt_key_mapping.md#managing-mappings).
+
 ## Troubleshooting
 
 For a team or model access denial, check the claim mapping, existing team IDs or aliases, the selected team's model grants, and any `x-litellm-team-id` selection. A valid token still needs permission for the requested resource and route.

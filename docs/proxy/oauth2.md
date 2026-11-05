@@ -6,11 +6,23 @@ sidebar_label: OAuth 2.0 provider setup
 
 <EnterpriseFeature feature="OAuth 2.0 authentication" />
 
-Connect your identity provider's token-info or introspection endpoint to LiteLLM, then map its response to a LiteLLM user and team. Clients send the provider's access token as a bearer token; LiteLLM calls the configured endpoint to check it and identify the caller.
+Connect your identity provider's token-info or introspection endpoint to LiteLLM, then map its response to a LiteLLM user and team.
+
+## How it works
+
+Clients send the provider's access token as a bearer token. LiteLLM calls the configured endpoint to check it and identify the caller.
 
 The token can be JWT or opaque and can represent a user or an application. For providers that expose signing keys, see [Identity provider setup](./token_auth.md). For Admin UI sign-in, see [OpenID Connect (OIDC) SSO](./admin_ui_sso.md) or [SAML SSO](./saml_sso.md).
 
-## Usage
+Provider validation applies to LLM API, info, and Lens routes. It does not replace administrative authentication on management routes.
+
+## Prerequisites
+
+Use a working proxy with a configured model; the test below uses `my-model`. Obtain a token-info or introspection endpoint that the proxy can reach. For introspection, also obtain client credentials that allow LiteLLM to call that endpoint.
+
+Choose how the provider's response maps to LiteLLM users and teams. Configure their resource permissions through [Access Management](./access_management/overview.md).
+
+## Setup {#usage}
 
 ### Step 1. Configure the validation endpoint
 
@@ -53,7 +65,7 @@ For example, a successful response can contain the following fields. Introspecti
 
 These fields are read directly, without nested-claim or role-name conversion. Configure the provider to return the LiteLLM IDs and roles you intend to use.
 
-### Step 3. Enable OAuth2 and make a request
+### Step 3. Enable provider validation {#step-3-enable-oauth2-and-make-a-request}
 
 Add OAuth2 authentication to your existing proxy configuration. Keep your configured `model_list`.
 
@@ -62,6 +74,8 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   enable_oauth2_auth: true
 ```
+
+## Test authentication
 
 Obtain an access token from your provider, then call a model configured on your proxy. Replace `my-model` with its `model_name`.
 
@@ -77,9 +91,11 @@ curl 'http://localhost:4000/v1/chat/completions' \
   }'
 ```
 
-OAuth2 validation applies to LLM API, info, and Lens routes. It does not replace administrative authentication on management routes.
+Confirm the request succeeds with a valid token and the intended identity. Provider HTTP errors and inactive introspection responses reject the request.
 
-## Using OAuth2 + JWT Together
+## Configuration reference
+
+### Combine provider and JWT validation {#using-oauth2--jwt-together}
 
 | Configuration | Tokens sent to provider validation |
 | --- | --- |
@@ -87,7 +103,7 @@ OAuth2 validation applies to LLM API, info, and Lens routes. It does not replace
 | OAuth2 and JWT auth enabled | Non-JWT tokens, plus JWTs matching a routing override. Other JWTs use JWT authentication. |
 | JWT auth enabled, OAuth2 disabled | Only JWTs matching a routing override. Other JWTs use JWT authentication. |
 
-### Route JWT-Shaped Machine Tokens to OAuth2
+### Route selected JWTs to your provider {#route-jwt-shaped-machine-tokens-to-oauth2}
 
 Use `routing_overrides` to send selected JWT-shaped tokens to the OAuth2 endpoint. Configure the endpoint and response fields from the steps above, alongside your [JWT provider settings](./token_auth.md).
 
@@ -129,8 +145,14 @@ routing_overrides:
 
 Place `routing_overrides` under `general_settings.litellm_jwtauth`. Routing reads unverified claims only to choose a validator. A matching rule does not authenticate the caller. The configured provider must still validate the token.
 
-## Debugging
+<a id="debugging"></a>
+
+## Troubleshooting
 
 Check the endpoint URL, its required HTTP method, client credentials, and the configured response-field names. Provider HTTP errors and inactive introspection responses reject the request. With both authentication methods enabled, also check whether the JWT matches a routing override.
 
 For additional diagnostics, start the proxy with [`--detailed_debug`](./cli.md#--detailed_debug).
+
+## Related guides
+
+Use [Identity provider setup](./token_auth.md) for JWT verification with signing keys. Configure browser sign-in with [OpenID Connect](./admin_ui_sso.md) or [SAML](./saml_sso.md), and resource permissions through [Access Management](./access_management/overview.md).

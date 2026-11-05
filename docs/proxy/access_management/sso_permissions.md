@@ -108,6 +108,35 @@ Supported values are `proxy_admin`, `proxy_admin_viewer`, `internal_user`, and `
 
 **Note:** The role from Entra ID will take precedence over any existing role in the LiteLLM database. This ensures your SSO provider is the authoritative source for user roles.
 
+## Assign roles through a generic OIDC provider
+
+Set `GENERIC_USER_ROLE_ATTRIBUTE` to the attribute containing the user's LiteLLM role. Nested paths such as `claims.role` or `attributes.litellm_role` are supported.
+
+```bash
+GENERIC_USER_ROLE_ATTRIBUTE="claims.role"
+```
+
+Supported values are `proxy_admin`, `proxy_admin_viewer`, `internal_user`, and `internal_user_viewer`. See [role permissions](../access_control.md#global-proxy-roles) before assigning a role.
+
+## Assign roles and teams through SAML
+
+After [configuring SAML sign-in](../saml_sso.md), include the LiteLLM role and team IDs in the SAML assertion. LiteLLM recognizes these common attribute names; override them if your IdP uses another name:
+
+| Environment variable | Default candidates | Meaning |
+| --- | --- | --- |
+| `SAML_ATTRIBUTE_ROLE` | `role`, `roles`, `litellm_role` | Attribute mapped to the LiteLLM user role. |
+| `SAML_ATTRIBUTE_TEAM_IDS` | `teams`, `team_ids`, `groups` | Attribute mapped to LiteLLM team IDs. |
+
+```bash
+SAML_ATTRIBUTE_ROLE="role"
+SAML_ATTRIBUTE_TEAM_IDS="teams"
+```
+
+The role value must be `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_viewer`.
+
+- **Okta:** Add a custom attribute or Group Attribute Statement named `role` with a supported LiteLLM role value.
+- **Microsoft Entra ID:** Add a custom claim named `role` sourced from an App Role or directory attribute.
+
 ## Assign roles with a custom SSO handler
 
 For custom role assignment after sign-in, use a [custom SSO handler](../custom_sso.md#option-2-custom-sso-handler-post-authentication). Returning `user_role=None` preserves the stored LiteLLM role; an explicit role overrides it on every login.
@@ -163,7 +192,7 @@ general_settings:
     sso_group_jwt_field: "groups"
 ```
 
-For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](../saml_sso.md).
+For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../../tutorials/msft_sso.md). For SAML, team IDs come from assertion attributes; see [SAML roles and teams](#assign-roles-and-teams-through-saml).
 
 ## Restrict personal key creation {#restrict-personal-key-creation}
 
