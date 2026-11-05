@@ -11,6 +11,7 @@ description: Give teams and applications access to the resources they need in Li
 Control access to models, MCP servers, and agents in LiteLLM.
 
 - [LLM Access](./llm.md)
+- [MCP Access](./mcp.md)
 
 ## Users, teams, and virtual keys
 
