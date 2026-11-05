@@ -142,6 +142,24 @@ curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
   }'
 ```
 
+#### Map with the key's hash instead of the plaintext key
+
+<SinceVersion v="1.104.0" />
+
+If you no longer hold a key's plaintext `sk-...` value, pass its hash as `token` instead of `key`. The hash is the `token` value that `/key/generate` returns, and the value `/key/list` returns for each key. Pass exactly one of `key` or `token`. A hash sent as `key` is hashed again and fails with `The provided key does not match an existing virtual key.`
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/new' \
+  -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jwt_claim_name": "client_id",
+    "jwt_claim_value": "dev-alice",
+    "token": "<64-character key hash>",
+    "description": "dev-alice"
+  }'
+```
+
 ### Step 3. Test it
 
 ```bash
@@ -261,7 +279,7 @@ The response is the mapping's own metadata: claim name and value, description, `
 
 **Update a mapping**
 
-`update` changes the mapping itself: point it at a different key, edit the description, or toggle `is_active`. To change budgets or model access, update the underlying key with `/key/update`; the mapping only stores the claim, the linked key, a description, and an active flag.
+`update` changes the mapping itself: point it at a different key by its plaintext (`key`) or its hash (`token`), edit the description, or toggle `is_active`. To change budgets or model access, update the underlying key with `/key/update`; the mapping only stores the claim, the linked key, a description, and an active flag.
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/jwt/key/mapping/update' \
