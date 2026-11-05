@@ -122,7 +122,7 @@ These mappings are for the V2 `langfuse_otel` preset, not for the older callback
 
 ### Trace and generation names
 
-`metadata.trace_name` exports as `langfuse.trace.name`. The `langfuse_trace_name` proxy header takes precedence. Full request roots default to `litellm-{call_type}`. Under `llm_only` the generation name becomes the trace name if no custom name is supplied.
+`metadata.trace_name` exports as `langfuse.trace.name`. The `langfuse_trace_name` proxy header takes precedence. Full request roots default to `litellm-{call_type}` when no `traceparent` comes in. Under `llm_only` the generation name becomes the trace name if no custom name is supplied.
 
 Legacy `generation_name` has no custom name equivalent. The V2 model span uses `{operation} {model}`. Legacy defaults to `litellm:{key_alias}` if present, otherwise `litellm-{call_type}`. Update the name filters.
 
