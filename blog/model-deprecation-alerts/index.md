@@ -15,9 +15,15 @@ import DeprecationPage, {ProductScreenshot} from './DeprecationPage';
 
 <DeprecationPage>
 
-The LiteLLM UI now has alerts for model deprecations. Open an alert to find the affected keys and owners, review a replacement model, and track traffic to the old model.
+This blog post is about how you can do model lifecycle management with LiteLLM AI Gateway. We are giving you the following primitives to better manage model deprecations.
 
-Model lifecycle management helps production teams coordinate these migrations across the use cases behind their AI Gateway. Keep the alert open while owners move, then confirm that traffic has reached zero before marking it resolved.
+We heard from a lot of our production gateway users that model deprecation was a problem: for production use cases, it's hard to figure out how to prevent outages.
+
+This helps prevent outages with:
+
+1. Alerting around model deprecations.
+2. Emails around model deprecations.
+3. Usage tracking for different models that are getting deprecated, so you can validate that traffic is going down once you migrate, and a recommended model to use.
 
 :::note Sample walkthrough
 
@@ -25,7 +31,7 @@ The screenshots show a local gateway with five sample use cases. The traffic ill
 
 :::
 
-## Get model deprecation alerts in the LiteLLM UI
+## Alerts around model deprecations
 
 Check the notification bell for model deprecations that need attention. Open **Alerts** under **Observability**, then select **Model deprecations**. You can see the provider, the model, its deprecation date, requests in the last 30 days, and when LiteLLM last saw traffic to it.
 
@@ -35,29 +41,7 @@ Open the alert to investigate the migration across teams. You can keep the alert
 The Model deprecations inbox in the LiteLLM UI. Sample usage; the provider deadline and recommendation come from model metadata.
 </ProductScreenshot>
 
-## See which use cases need to move
-
-Click **Review impact** to open the model. The **Daily requests** chart shows requests to that model over time, with a separate stack for each key. Compare the total bar height to check whether usage is falling, then inspect the colored stacks to find the keys that still send traffic.
-
-Below the chart, inspect the affected keys, teams, owners, and tags used with that model. Filter by team when you need to coordinate one part of the migration. Use the key and owner list to follow up with the people responsible for each production use case.
-
-<ProductScreenshot src="/img/model-deprecation-alerts/model-traffic-five-use-cases.png" alt="Model deprecation detail with daily requests stacked by key falling to zero, and five use-case keys across two teams">
-Actual LiteLLM UI with a seeded migration example: five use cases across two teams. Daily requests decline as the example keys move off the model. The final complete days show zero requests; the current day is partial.
-</ProductScreenshot>
-
-You do not need to wait for the 30-day total to reach zero. That total includes historical requests. Compare the recent daily bars instead, and check a period that covers your use case. A weekly batch job needs a longer verification window than a service that sends requests every minute.
-
-In this example, customer support, research, document search, invoice extraction, and weekly reports each have a key. As an owner migrates a use case, its color drops out of the daily bars. The key stays in the 30-day history so you can verify what changed.
-
-## Choose a replacement model
-
-The alert shows the model to replace and the **Recommended new model**. LiteLLM reads the recommendation from its model cost map, or from the deployment's configured replacement. The UI identifies which source supplied it and links to the upstream provider's deprecation notice when one is recorded.
-
-Use the provider notice to check the upstream deadline and migration guidance. The cost map records the recommendation; it does not establish that the new model meets your application's quality, latency, or cost requirements. Test the replacement with the workload behind each affected key before switching production traffic.
-
-You can use **Model routing** to open the relevant model configuration. If your application chooses the model, update that application. Keep the alert open while owners make these changes.
-
-## Send email reminders
+## Emails around model deprecations
 
 From the alert, click **Set up email reminders**, then **Open Email Settings**. This opens **Logging & Alerts → Email Alerts**.
 
@@ -75,6 +59,28 @@ The 30-day email template with sample usage. Owners can see what changes, when t
 
 Keep the gateway running on the reminder dates. The scheduler does not send a missed reminder later if the gateway is offline for the entire UTC date.
 
+## Track usage as you migrate
+
+Click **Review impact** to open the model. The **Daily requests** chart shows requests to that model over time, with a separate stack for each key. Compare the total bar height to check whether usage is falling, then inspect the colored stacks to find the keys that still send traffic.
+
+Below the chart, inspect the affected keys, teams, owners, and tags used with that model. Filter by team when you need to coordinate one part of the migration. Use the key and owner list to follow up with the people responsible for each production use case.
+
+<ProductScreenshot src="/img/model-deprecation-alerts/model-traffic-five-use-cases.png" alt="Model deprecation detail with daily requests stacked by key falling to zero, and five use-case keys across two teams">
+Actual LiteLLM UI with a seeded migration example: five use cases across two teams. Daily requests decline as the example keys move off the model. The final complete days show zero requests; the current day is partial.
+</ProductScreenshot>
+
+You do not need to wait for the 30-day total to reach zero. That total includes historical requests. Compare the recent daily bars instead, and check a period that covers your use case. A weekly batch job needs a longer verification window than a service that sends requests every minute.
+
+In this example, customer support, research, document search, invoice extraction, and weekly reports each have a key. As an owner migrates a use case, its color drops out of the daily bars. The key stays in the 30-day history so you can verify what changed.
+
+## Recommended models
+
+The alert shows the model to replace and the **Recommended new model**. LiteLLM reads the recommendation from its model cost map, or from the deployment's configured replacement. The UI identifies which source supplied it and links to the upstream provider's deprecation notice when one is recorded.
+
+Use the provider notice to check the upstream deadline and migration guidance. The cost map records the recommendation; it does not establish that the new model meets your application's quality, latency, or cost requirements. Test the replacement with the workload behind each affected key before switching production traffic.
+
+You can use **Model routing** to open the relevant model configuration. If your application chooses the model, update that application. Keep the alert open while owners make these changes.
+
 ## Mark the alert resolved
 
 Return to **Daily requests** after the owners switch their applications or routing. Check that traffic to the old model reaches zero across the affected keys. Confirm the migration with owners of infrequent jobs before closing it.
@@ -85,37 +91,7 @@ Click **Mark resolved** when that work is complete. LiteLLM moves the alert to *
 The same example migration after marking it resolved. Closing the alert records the team's decision; it does not change model routing.
 </ProductScreenshot>
 
-## An AI Gateway for production teams
-
-LiteLLM is an AI Gateway built for production teams and the use cases they operate. When a provider deprecates a model, platform teams need to trace that change through real applications, keys, owners, and request history.
-
-Production teams can use model lifecycle management to coordinate that work. Notice the provider's change, identify the dependencies, help owners choose and test a replacement, and use traffic to verify the migration before closing the alert.
-
-## Key takeaways
-
-Use the model alert to coordinate the migration across keys and teams. Check the recommendation and its source, notify the affected owners, and track daily requests to the old model. Mark the alert resolved after the owners confirm the switch and the relevant traffic reaches zero.
-
-## Frequently asked questions
-
-### Does marking an alert resolved switch the model?
-
-No. You or the use-case owner change the application or gateway routing. **Mark resolved** records the migration status. New requests reopen the alert.
-
-### Does a recommended model always come from the provider?
-
-The UI shows whether LiteLLM read it from the model cost map or deployment configuration. Follow the upstream provider notice to check its recommendation and migration guidance. Evaluate the replacement on your own workload.
-
-### Is this part of LiteLLM OSS?
-
-The model deprecation inbox, usage view, and resolution workflow are in the open-source gateway. The owner-email workflow merged in [PR #50172](https://github.com/BerriAI/litellm/pull/50172); use a gateway build that includes it. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) adds controls and support for production deployments.
-
-## Try model deprecation alerts
-
-Open **Alerts → Model deprecations** in your gateway and review the keys behind each open model alert. For help operating LiteLLM across production teams and use cases, [talk to us](https://www.litellm.ai/contact).
-
-## Read more
-
-Read about [gateway alerting](/docs/proxy/alerting), [email notifications](/docs/proxy/email), and [model routing](/docs/routing).
+For help operating LiteLLM across production teams and use cases, [talk to us](https://www.litellm.ai/contact). Read more about [gateway alerting](/docs/proxy/alerting), [email notifications](/docs/proxy/email), and [model routing](/docs/routing).
 
 </DeprecationPage>
 
