@@ -25,12 +25,6 @@ This helps prevent outages with:
 2. Emails around model deprecations.
 3. Usage tracking for different models that are getting deprecated, so you can validate that traffic is going down once you migrate, and a recommended model to use.
 
-:::note Sample walkthrough
-
-The screenshots show a local gateway with five sample use cases. The traffic illustrates a migration; it is not customer production data.
-
-:::
-
 ## Alerts around model deprecations
 
 Check the notification bell for model deprecations that need attention. Open **Alerts** under **Observability**, then select **Model deprecations**. You can see the provider, the model, its deprecation date, requests in the last 30 days, and when LiteLLM last saw traffic to it.
