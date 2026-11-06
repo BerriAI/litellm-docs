@@ -136,12 +136,113 @@ export class Playground {
         }
     }
     /**
-     * Run steady traffic with many calls in flight on simulated time. `spec` is JSON:
-     * `{"model": "gpt-4o", "rate": 3, "duration": 300, "trace": false,
+     * Run the simulation `seconds` of simulated time forward. Returns `{now, completed,
+     * in_flight, deployments, marks}`.
+     * @param {number} seconds
+     * @returns {string}
+     */
+    simAdvance(seconds) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.playground_simAdvance(retptr, this.__wbg_ptr, seconds);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+            var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+            var ptr1 = r0;
+            var len1 = r1;
+            if (r3) {
+                ptr1 = 0; len1 = 0;
+                throw takeObject(r2);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export2(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Change the running simulation from now on: `{"rate"?, "profiles"?: {"<id>": profile or
+     * null}, "incidents_add"?: [incident], "incidents_end"?: ["<key>"]}`. Profiles merge by id.
+     * @param {string} change
+     */
+    simSet(change) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passStringToWasm0(change, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.playground_simSet(retptr, this.__wbg_ptr, ptr0, len0);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            if (r1) {
+                throw takeObject(r0);
+            }
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+     * Start an incremental simulation on this router: the same spec as `simulate`, without an
+     * end unless it gives a `duration`, keeping the last `trace_last` (2000) requests' traces.
+     * @param {string} spec
+     */
+    simStart(spec) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passStringToWasm0(spec, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.playground_simStart(retptr, this.__wbg_ptr, ptr0, len0);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            if (r1) {
+                throw takeObject(r0);
+            }
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+     * End the incremental simulation. Calls still in flight are dropped; the cache and clock stay
+     * as they are, and the kept traces stay readable.
+     */
+    simStop() {
+        wasm.playground_simStop(this.__wbg_ptr);
+    }
+    /**
+     * One simulated request's trace in the shape `send` returns, plus its `id`, `model`,
+     * `start` and `end`; `null` once it has left the last `trace_last`.
+     * @param {number} id
+     * @returns {string}
+     */
+    simTrace(id) {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.playground_simTrace(retptr, this.__wbg_ptr, id);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export2(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * Run steady traffic with many calls in flight on simulated time, start to finish. `spec`
+     * is JSON: `{"model": "gpt-4o", "rate": 3, "duration": 300, "trace": false,
      *   "profiles": {"<id>": {"p50_ms": 800, "p95_ms": 2400, "error_rate": 0.04,
-     *                         "error": "InternalServerError", "rpm_cap": 120}},
-     *   "incidents": [{"id": "<id>", "from": 40, "to": 70, "latency_factor": 10}]}`.
-     * Arrivals are Poisson at `rate` per second. Returns every request's start, end and outcome.
+     *                         "errors": {"InternalServerError": 3, "RateLimitError": 1},
+     *                         "rpm_cap": 120, "tpm_cap": 200000, "tokens": 1000}},
+     *   "incidents": [{"key": "slow", "id": "<id>", "from": 40, "to": 70, "latency_factor": 10}]}`.
+     * Arrivals are Poisson at `rate` per second. Returns every request's start, end, outcome and
+     * attempts.
      * @param {string} spec
      * @returns {string}
      */

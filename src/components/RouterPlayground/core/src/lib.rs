@@ -6,10 +6,11 @@
 mod sim;
 
 use std::{
-    collections::{BTreeMap, HashMap},
+    cell::RefCell,
+    collections::{BTreeMap, HashMap, VecDeque},
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
+        atomic::{AtomicU64, Ordering},
         Arc,
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -20,11 +21,11 @@ use litellm_router_core::{
     health::{cooldown_key, Clock},
     Attempt, AttemptError, Deployment, Error, FailureKind, Host, Op, Output, Payload, Randomness,
     Router, RouterCache, RouterConfig, RouterDynamicConfig, RouterEvent, RouterRequest,
-    RoutingContext, RoutingStrategy, SeededRandomness, SelectStage,
+    RouterResponse, RoutingContext, RoutingStrategy, SeededRandomness, SelectStage,
 };
 use parking_lot::Mutex;
 use serde_json::{json, Map, Value};
-use sim::{Delay, Sched, Task};
+use sim::{mark_incidents, Delay, Kept, Run, Sched};
 use wasm_bindgen::prelude::*;
 
 /// 2026-01-01T12:00:00Z: where simulated time starts.
@@ -53,11 +54,30 @@ struct Entry {
     expires: Option<Duration>,
 }
 
-/// The routing cache on the virtual clock.
+/// The routing cache on the virtual clock. `version` moves on every write, so a simulation can
+/// share one snapshot between the steps logged while the cache stood still.
 #[derive(Clone)]
 struct VirtualCache {
     clock: VirtualClock,
-    entries: Arc<Mutex<BTreeMap<String, Entry>>>,
+    entries: Arc<Mutex<BTreeMap<Arc<str>, Entry>>>,
+    version: Arc<AtomicU64>,
+}
+
+/// The cache's entries as they stood at one write: key, value and absolute expiry.
+type Snap = Vec<(Arc<str>, Value, Option<Duration>)>;
+
+/// A snapshot as the diagram reads it at simulated time `now`: live entries with their ttl.
+fn render_snap(snap: &Snap, now: Duration) -> Value {
+    snap.iter()
+        .filter(|(_, _, expires)| expires.is_none_or(|at| at > now))
+        .map(|(key, value, expires)| {
+            json!({
+                "key": &**key,
+                "value": value,
+                "ttl": expires.map(|at| (at - now).as_secs_f64()),
+            })
+        })
+        .collect()
 }
 
 impl VirtualCache {
@@ -73,6 +93,13 @@ impl VirtualCache {
         entries.get(key).map(|entry| entry.value.clone())
     }
 
+    /// Seconds until `key` expires, if it is live and has a ttl.
+    fn ttl(&self, key: &str) -> Option<f64> {
+        let now = self.clock.elapsed();
+        let expires = self.entries.lock().get(key)?.expires?;
+        (expires > now).then(|| (expires - now).as_secs_f64())
+    }
+
     fn snapshot(&self) -> Vec<Value> {
         let now = self.clock.elapsed();
         let mut entries = self.entries.lock();
@@ -81,12 +108,24 @@ impl VirtualCache {
             .iter()
             .map(|(key, entry)| {
                 json!({
-                    "key": key,
+                    "key": &**key,
                     "value": entry.value,
                     "ttl": entry.expires.map(|at| (at - now).as_secs_f64()),
                 })
             })
             .collect()
+    }
+
+    fn raw(&self) -> Snap {
+        self.entries
+            .lock()
+            .iter()
+            .map(|(key, entry)| (key.clone(), entry.value.clone(), entry.expires))
+            .collect()
+    }
+
+    fn touch(&self) {
+        self.version.fetch_add(1, Ordering::Relaxed);
     }
 }
 
@@ -107,7 +146,8 @@ impl RouterCache for VirtualCache {
         let expires = ttl.map(|ttl| self.clock.elapsed() + ttl);
         self.entries
             .lock()
-            .insert(key.to_owned(), Entry { value, expires });
+            .insert(key.into(), Entry { value, expires });
+        self.touch();
         Ok(())
     }
 
@@ -130,7 +170,8 @@ impl RouterCache for VirtualCache {
         } else {
             json!(next)
         };
-        entries.insert(key.to_owned(), Entry { value, expires });
+        entries.insert(key.into(), Entry { value, expires });
+        self.touch();
         Ok(next)
     }
 
@@ -140,6 +181,7 @@ impl RouterCache for VirtualCache {
 
     async fn async_delete_cache(&self, key: &str) -> CacheResult<()> {
         self.entries.lock().remove(key);
+        self.touch();
         Ok(())
     }
 }
@@ -162,56 +204,123 @@ struct ScriptedHost {
     sched: Arc<Sched>,
     /// The simulated request whose future is being polled, tagged onto every step it logs.
     current: AtomicU64,
-    /// During a simulation, steps skip the cache snapshot.
-    light: AtomicBool,
     profiles: Mutex<HashMap<String, Profile>>,
     incidents: Mutex<Vec<Incident>>,
-    /// Requests each deployment's provider took in the current minute, for `rpm_cap`.
-    taken: Mutex<HashMap<String, (u64, u32)>>,
+    /// Requests and tokens each deployment's provider took in the current minute, for its caps.
+    taken: Mutex<HashMap<String, (u64, u32, u64)>>,
+    /// What a simulation records besides the outcomes: steps, attempts, marks.
+    sim: Mutex<SimLog>,
     /// Draws for latency, errors and arrivals, apart from the router's own randomness.
     rng: SeededRandomness,
 }
 
 /// How a deployment behaves during a simulation: lognormal latency from its median and p95,
-/// a share of attempts that fail with `error`, and the provider's own requests-per-minute cap.
+/// a share of attempts that fail with a class drawn from `errors` by weight, and the provider's
+/// own requests- and tokens-per-minute caps. Every request costs `tokens`.
 #[derive(Clone)]
 struct Profile {
     p50: f64,
     p95: f64,
     error_rate: f64,
-    error: FailureKind,
+    errors: Vec<(FailureKind, f64)>,
     rpm_cap: Option<u32>,
+    tpm_cap: Option<u64>,
+    tokens: u64,
 }
 
 /// A stretch of simulated time in which one deployment behaves worse.
 #[derive(Clone)]
 struct Incident {
+    key: String,
     id: String,
     from: f64,
     to: f64,
     latency_factor: f64,
     error_rate: Option<f64>,
     rpm_cap: Option<u32>,
+    tpm_cap: Option<u64>,
     outage: bool,
+    /// Whether its start and end marks went out.
+    marked: (bool, bool),
+}
+
+/// Which steps a simulation keeps: none, every step flat and tagged with its request (for
+/// `simulate`'s `trace`), or each request's own steps with the cache as it stood (for `simTrace`).
+#[derive(Clone, Copy, Default, PartialEq)]
+enum Capture {
+    #[default]
+    Off,
+    Flat,
+    Steps,
+}
+
+#[derive(Default)]
+struct SimLog {
+    capture: Capture,
+    steps: u64,
+    requests: HashMap<u64, RequestLog>,
+    marks: Vec<Value>,
+    in_flight: HashMap<String, u32>,
+    snap: Option<(u64, Arc<Snap>)>,
+}
+
+#[derive(Default)]
+struct RequestLog {
+    steps: Vec<(Value, Duration, Arc<Snap>)>,
+    attempts: Vec<Value>,
+    retries: u32,
+    fallbacks: u32,
 }
 
 impl ScriptedHost {
+    fn simulating(&self) -> bool {
+        self.sched.active.load(Ordering::Relaxed)
+    }
+
     /// Every step carries the routing cache as it stands after it, so the diagram can show each
     /// deployment's cooldown, allowed-fails counter and usage at that step.
     fn log(&self, step: Value) {
         let mut step = step;
-        step["t"] = json!(self.clock.elapsed().as_secs_f64());
-        if self.light.load(Ordering::Relaxed) {
-            step["req"] = json!(self.current.load(Ordering::Relaxed));
-        } else {
+        let now = self.clock.elapsed();
+        if !self.simulating() {
+            step["t"] = json!(now.as_secs_f64());
             step["cache"] = Value::Array(self.cache.snapshot());
+            self.trace.lock().push(step);
+            return;
         }
-        self.trace.lock().push(step);
+        let req = self.current.load(Ordering::Relaxed);
+        let mut sim = self.sim.lock();
+        sim.steps += 1;
+        match sim.capture {
+            Capture::Off => {}
+            Capture::Flat => {
+                step["t"] = json!(now.as_secs_f64());
+                step["req"] = json!(req);
+                self.trace.lock().push(step);
+            }
+            Capture::Steps => {
+                step["t"] = json!(now.as_secs_f64());
+                let version = self.cache.version.load(Ordering::Relaxed);
+                let snap = match &sim.snap {
+                    Some((at, snap)) if *at == version => snap.clone(),
+                    _ => {
+                        let snap = Arc::new(self.cache.raw());
+                        sim.snap = Some((version, snap.clone()));
+                        snap
+                    }
+                };
+                sim.requests
+                    .entry(req)
+                    .or_default()
+                    .steps
+                    .push((step, now, snap));
+            }
+        }
     }
 
     /// Wait `duration` of simulated time: a timer while a simulation runs, else a clock jump.
     async fn wait(&self, duration: Duration) {
-        if self.sched.active.load(Ordering::Relaxed) {
+        if self.simulating() {
             let at = self.clock.elapsed() + duration;
             Delay {
                 sched: self.sched.clone(),
@@ -235,42 +344,43 @@ impl ScriptedHost {
         p50 * (sigma * z).exp()
     }
 
-    /// One attempt against a deployment with a profile, on simulated time.
-    async fn simulated(&self, attempt: &Attempt, profile: Profile) -> Result<Output, AttemptError> {
+    /// One attempt against a deployment with a profile, on simulated time. Also returns how the
+    /// provider answered, for the request's attempt list.
+    async fn simulated(
+        &self,
+        attempt: &Attempt,
+        profile: Profile,
+    ) -> (Result<Output, AttemptError>, String) {
         let id = attempt.deployment.id.clone();
         let now = self.clock.elapsed().as_secs_f64();
         let mut profile = profile;
         let (mut factor, mut outage) = (1.0, false);
-        let incidents = self.incidents.lock().clone();
-        for incident in incidents {
+        for incident in self.incidents.lock().iter() {
             if incident.id == id && now >= incident.from && now < incident.to {
                 factor *= incident.latency_factor;
                 outage |= incident.outage;
                 profile.error_rate = incident.error_rate.unwrap_or(profile.error_rate);
                 profile.rpm_cap = incident.rpm_cap.or(profile.rpm_cap);
+                profile.tpm_cap = incident.tpm_cap.or(profile.tpm_cap);
             }
         }
-        let fail = |kind: FailureKind, ms: f64, why: &str| {
+        let fail = |kind: FailureKind, ms: f64, why: String| {
             self.log(json!({"kind": "host", "call": "invoke", "deployment": id, "answer": why, "ms": ms}));
-            Err(AttemptError::new(kind, default_status(kind)))
+            (Err(AttemptError::new(kind, default_status(kind))), why)
         };
-        let over_capacity = profile.rpm_cap.is_some_and(|cap| {
-            let minute = now as u64 / 60;
-            let mut taken = self.taken.lock();
-            let entry = taken.entry(id.clone()).or_insert((minute, 0));
-            if entry.0 != minute {
-                *entry = (minute, 0);
-            }
-            entry.1 += 1;
-            entry.1 > cap
-        });
-        if over_capacity {
+        let (over_rpm, over_tpm) = self.take(&id, profile.tokens, profile.rpm_cap, profile.tpm_cap);
+        if over_rpm || over_tpm {
             self.wait(Duration::from_millis(20)).await;
-            return fail(FailureKind::RateLimit, 20.0, "429 over provider capacity");
+            let why = if over_rpm { "rpm" } else { "tpm" };
+            return fail(
+                FailureKind::RateLimit,
+                20.0,
+                format!("429 over provider {why} capacity"),
+            );
         }
         if outage {
             self.wait(Duration::from_millis(50)).await;
-            return fail(FailureKind::ServiceUnavailable, 50.0, "503 outage");
+            return fail(FailureKind::ServiceUnavailable, 50.0, "503 outage".into());
         }
         let latency = self.lognormal(profile.p50, profile.p95) * factor;
         if let Some(timeout) = attempt
@@ -281,35 +391,71 @@ impl ScriptedHost {
             return fail(
                 FailureKind::Timeout,
                 timeout.as_secs_f64() * 1000.0,
-                "timed out",
+                "timed out".into(),
             );
         }
         self.wait(Duration::from_secs_f64(latency / 1000.0)).await;
         if self.uniform() < profile.error_rate {
-            let class: &'static str = profile.error.into();
-            return fail(profile.error, latency, &format!("raises {class}"));
+            let total: f64 = profile.errors.iter().map(|(_, weight)| weight).sum();
+            let mut roll = self.uniform() * total;
+            let mut kind = profile.errors[0].0;
+            for (class, weight) in &profile.errors {
+                kind = *class;
+                if roll < *weight {
+                    break;
+                }
+                roll -= weight;
+            }
+            let class: &'static str = kind.into();
+            return fail(kind, latency, format!("raises {class}"));
         }
         self.log(json!({"kind": "host", "call": "invoke", "deployment": id, "answer": "200 OK", "ms": latency}));
-        Ok(Output {
+        let output = Output {
             value: Payload(Arc::new(id)),
-            total_tokens: 10,
+            total_tokens: profile.tokens,
             blocked: None,
             deferred: false,
             tracks_usage: None,
-        })
+        };
+        (Ok(output), "200 OK".into())
     }
-}
 
-#[async_trait]
-impl Host for ScriptedHost {
-    async fn invoke(&self, attempt: &Attempt) -> Result<Output, AttemptError> {
-        let id = attempt.deployment.id.clone();
-        if self.sched.active.load(Ordering::Relaxed) {
-            let profile = self.profiles.lock().get(&id).cloned();
-            if let Some(profile) = profile {
-                return self.simulated(attempt, profile).await;
-            }
+    /// Count a request against the provider's minute and say whether it is over either cap. A
+    /// request over a cap still counts towards rpm, but its tokens do not.
+    fn take(
+        &self,
+        id: &str,
+        tokens: u64,
+        rpm_cap: Option<u32>,
+        tpm_cap: Option<u64>,
+    ) -> (bool, bool) {
+        let minute = self.clock.elapsed().as_secs() / 60;
+        let mut taken = self.taken.lock();
+        let entry = taken.entry(id.to_owned()).or_insert((minute, 0, 0));
+        if entry.0 != minute {
+            *entry = (minute, 0, 0);
         }
+        entry.1 += 1;
+        let over_rpm = rpm_cap.is_some_and(|cap| entry.1 > cap);
+        let over_tpm = !over_rpm && tpm_cap.is_some_and(|cap| entry.2 + tokens > cap);
+        if !over_rpm && !over_tpm {
+            entry.2 += tokens;
+        }
+        (over_rpm, over_tpm)
+    }
+
+    /// This minute's requests and tokens the provider took for a deployment.
+    fn taken_now(&self, id: &str) -> (u32, u64) {
+        let minute = self.clock.elapsed().as_secs() / 60;
+        match self.taken.lock().get(id) {
+            Some((at, requests, tokens)) if *at == minute => (*requests, *tokens),
+            _ => (0, 0),
+        }
+    }
+
+    /// One attempt that follows the deployment's script or `mock_response`.
+    async fn scripted(&self, attempt: &Attempt) -> (Result<Output, AttemptError>, String) {
+        let id = attempt.deployment.id.clone();
         let behaviour = {
             let mut all = self.behaviour.lock();
             let entry = all
@@ -327,26 +473,65 @@ impl Host for ScriptedHost {
             }
             now
         };
+        if self.simulating() {
+            self.take(&id, behaviour.tokens, None, None);
+        }
         self.wait(Duration::from_millis(behaviour.latency_ms)).await;
         match behaviour.fail {
             Some((kind, status)) => {
                 let class: &'static str = kind.into();
-                self.log(json!({"kind": "host", "call": "invoke", "deployment": id, "answer": format!("raises {class}"), "status": status}));
-                Err(AttemptError::new(kind, status))
+                let answer = format!("raises {class}");
+                self.log(json!({"kind": "host", "call": "invoke", "deployment": id, "answer": answer, "status": status}));
+                (Err(AttemptError::new(kind, status)), answer)
             }
             None => {
                 self.log(
                     json!({"kind": "host", "call": "invoke", "deployment": id, "answer": "200 OK"}),
                 );
-                Ok(Output {
+                let output = Output {
                     value: Payload(Arc::new(id)),
                     total_tokens: behaviour.tokens,
                     blocked: None,
                     deferred: false,
                     tracks_usage: None,
-                })
+                };
+                (Ok(output), "200 OK".into())
             }
         }
+    }
+}
+
+#[async_trait]
+impl Host for ScriptedHost {
+    async fn invoke(&self, attempt: &Attempt) -> Result<Output, AttemptError> {
+        if !self.simulating() {
+            return self.scripted(attempt).await.0;
+        }
+        let id = attempt.deployment.id.clone();
+        let req = self.current.load(Ordering::Relaxed);
+        let start = self.clock.elapsed().as_secs_f64();
+        *self.sim.lock().in_flight.entry(id.clone()).or_default() += 1;
+        let profile = self.profiles.lock().get(&id).cloned();
+        let (outcome, answer) = match profile {
+            Some(profile) => self.simulated(attempt, profile).await,
+            None => self.scripted(attempt).await,
+        };
+        let status = match &outcome {
+            Ok(_) => Some(200),
+            Err(error) => error.status,
+        };
+        let mut sim = self.sim.lock();
+        if let Some(count) = sim.in_flight.get_mut(&id) {
+            *count = count.saturating_sub(1);
+        }
+        sim.requests.entry(req).or_default().attempts.push(json!({
+            "deployment": id,
+            "start": start,
+            "end": self.clock.elapsed().as_secs_f64(),
+            "answer": answer,
+            "status": status,
+        }));
+        outcome
     }
 
     async fn select(
@@ -383,6 +568,27 @@ impl Host for ScriptedHost {
             .unwrap_or_default()
             .to_owned();
         self.log(json!({"kind": "event", "event": name, "detail": text}));
+        if !self.simulating() {
+            return;
+        }
+        let req = self.current.load(Ordering::Relaxed);
+        let t = self.clock.elapsed().as_secs_f64();
+        let mut sim = self.sim.lock();
+        match event {
+            RouterEvent::CooldownSet {
+                deployment_id,
+                cooldown,
+            } => sim.marks.push(json!({"t": t, "kind": "cooldown", "deployment": deployment_id, "request": req, "seconds": cooldown.as_secs_f64()})),
+            RouterEvent::Retry { .. } => sim.requests.entry(req).or_default().retries += 1,
+            RouterEvent::Fallback { from, to, .. } => {
+                let log = sim.requests.entry(req).or_default();
+                log.fallbacks += 1;
+                if log.fallbacks == 1 {
+                    sim.marks.push(json!({"t": t, "kind": "fallback", "request": req, "from": from, "to": to}));
+                }
+            }
+            _ => {}
+        }
     }
 
     fn cache(&self) -> Arc<dyn RouterCache> {
@@ -501,14 +707,239 @@ fn parse_request(value: &Value) -> RouterRequest {
     }
 }
 
+/// `send`'s result for one call.
+fn outcome(outcome: Result<RouterResponse, Error>) -> Value {
+    match outcome {
+        Ok(response) => json!({
+            "ok": true,
+            "deployment": response.deployment_id,
+            "model_group": response.model_group,
+            "retries": response.attempted_retries,
+            "fallbacks": response.attempted_fallbacks,
+        }),
+        Err(error) => {
+            json!({"ok": false, "error": error.to_string(), "detail": format!("{error:?}")})
+        }
+    }
+}
+
+fn num(value: &Value, key: &str) -> Option<f64> {
+    value.get(key).and_then(Value::as_f64)
+}
+
+fn failure_kind(class: &str) -> Result<FailureKind, String> {
+    FailureKind::from_str(class).map_err(|_| format!("unknown exception class `{class}`"))
+}
+
+/// `{"p50_ms", "p95_ms", "error_rate", "errors": {"<class>": weight}, "rpm_cap", "tpm_cap",
+/// "tokens"}`. `error` names a single class when `errors` is absent.
+fn parse_profile(value: &Value, tokens: u64) -> Result<Profile, String> {
+    let p50 = num(value, "p50_ms").unwrap_or(500.0);
+    let mut errors = Vec::new();
+    if let Some(Value::Object(weights)) = value.get("errors") {
+        for (class, weight) in weights {
+            let weight = weight.as_f64().unwrap_or(0.0);
+            if weight > 0.0 {
+                errors.push((failure_kind(class)?, weight));
+            }
+        }
+    }
+    if errors.is_empty() {
+        let class = value
+            .get("error")
+            .and_then(Value::as_str)
+            .unwrap_or("InternalServerError");
+        errors.push((failure_kind(class)?, 1.0));
+    }
+    Ok(Profile {
+        p50,
+        p95: num(value, "p95_ms").unwrap_or(p50 * 2.0),
+        error_rate: num(value, "error_rate").unwrap_or(0.0),
+        errors,
+        rpm_cap: num(value, "rpm_cap").map(|n| n as u32),
+        tpm_cap: num(value, "tpm_cap").map(|n| n as u64),
+        tokens: num(value, "tokens").map_or(tokens, |n| n as u64),
+    })
+}
+
+fn parse_profiles(
+    value: Option<&Value>,
+    tokens: u64,
+) -> Result<Vec<(String, Option<Profile>)>, String> {
+    let mut profiles = Vec::new();
+    if let Some(Value::Object(map)) = value {
+        for (id, value) in map {
+            let profile = (!value.is_null())
+                .then(|| parse_profile(value, tokens))
+                .transpose()?;
+            profiles.push((id.clone(), profile));
+        }
+    }
+    Ok(profiles)
+}
+
+/// An incident starts at `now` unless it says when.
+fn parse_incident(item: &Value, now: f64) -> Incident {
+    let id = item
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
+    let from = num(item, "from").unwrap_or(now);
+    Incident {
+        key: item
+            .get("key")
+            .and_then(Value::as_str)
+            .map_or_else(|| format!("{id}@{from}"), str::to_owned),
+        id,
+        from,
+        to: num(item, "to").unwrap_or(f64::MAX),
+        latency_factor: num(item, "latency_factor").unwrap_or(1.0),
+        error_rate: num(item, "error_rate"),
+        rpm_cap: num(item, "rpm_cap").map(|n| n as u32),
+        tpm_cap: num(item, "tpm_cap").map(|n| n as u64),
+        outage: item.get("outage").and_then(Value::as_bool).unwrap_or(false),
+        marked: (false, false),
+    }
+}
+
+fn parse_incidents(value: Option<&Value>, now: f64) -> Vec<Incident> {
+    value
+        .and_then(Value::as_array)
+        .map(|items| items.iter().map(|item| parse_incident(item, now)).collect())
+        .unwrap_or_default()
+}
+
+/// What `simulate` and `simStart` share: `{"model", "rate", "duration"?, "tokens"?, "profiles",
+/// "incidents", "trace_last"?, "trace"?}`.
+struct Spec {
+    model: String,
+    rate: f64,
+    duration: Option<f64>,
+    profiles: Vec<(String, Option<Profile>)>,
+    incidents: Vec<Incident>,
+    trace_last: usize,
+    keep_trace: bool,
+}
+
+/// Each request costs this many tokens unless its profile or the spec says otherwise.
+const TOKENS: u64 = 1000;
+
+fn parse_spec(spec: &str, now: f64) -> Result<Spec, String> {
+    let spec: Value = serde_json::from_str(spec).map_err(|e| e.to_string())?;
+    let tokens = num(&spec, "tokens").map_or(TOKENS, |n| n as u64);
+    Ok(Spec {
+        model: spec
+            .get("model")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned(),
+        rate: num(&spec, "rate").unwrap_or(1.0).max(0.0),
+        duration: num(&spec, "duration"),
+        profiles: parse_profiles(spec.get("profiles"), tokens)?,
+        incidents: parse_incidents(spec.get("incidents"), now),
+        trace_last: num(&spec, "trace_last").map_or(2000, |n| n as usize),
+        keep_trace: spec.get("trace").and_then(Value::as_bool).unwrap_or(false),
+    })
+}
+
+fn by_time(marks: &mut [Value]) {
+    marks.sort_by(|a, b| a["t"].as_f64().partial_cmp(&b["t"].as_f64()).unwrap());
+}
+
 /// A router built from one config, with its own clock, cache and scripted host.
 #[wasm_bindgen]
 pub struct Playground {
-    router: Router,
+    router: Arc<Router>,
     host: Arc<ScriptedHost>,
     seed: u64,
     /// The router settings as given, for the fallback maps the diagram draws.
     settings: Value,
+    /// The incremental simulation, while one runs.
+    run: RefCell<Option<Run>>,
+    /// The last `trace_last` simulated requests' traces, kept past `simStop`.
+    kept: RefCell<VecDeque<Kept>>,
+}
+
+impl Playground {
+    /// Set the host up for a simulation from `spec` and draw the first arrival.
+    fn begin(&self, spec: Spec, capture: Capture) -> Run {
+        let now = self.host.clock.elapsed();
+        *self.host.profiles.lock() = spec
+            .profiles
+            .into_iter()
+            .filter_map(|(id, profile)| Some((id, profile?)))
+            .collect();
+        *self.host.incidents.lock() = spec.incidents;
+        self.host.taken.lock().clear();
+        *self.host.sim.lock() = SimLog {
+            capture,
+            ..SimLog::default()
+        };
+        self.host.trace.lock().clear();
+        self.host.sched.clear();
+        self.host.sched.active.store(true, Ordering::Relaxed);
+        let end = spec
+            .duration
+            .map(|duration| now + Duration::from_secs_f64(duration.max(0.0)));
+        let trace_last = if capture == Capture::Steps {
+            spec.trace_last
+        } else {
+            0
+        };
+        let mut run = Run::new(spec.model, spec.rate, end, trace_last);
+        run.schedule(&self.host, now);
+        run
+    }
+
+    /// Back to single calls: drop what a simulation left behind, except the cache and the clock.
+    fn end(&self) {
+        self.host.sched.active.store(false, Ordering::Relaxed);
+        self.host.sched.clear();
+        self.host.profiles.lock().clear();
+        self.host.incidents.lock().clear();
+        self.host.taken.lock().clear();
+        *self.host.sim.lock() = SimLog::default();
+    }
+
+    fn take_marks(&self) -> Vec<Value> {
+        let mut marks = std::mem::take(&mut self.host.sim.lock().marks);
+        by_time(&mut marks);
+        marks
+    }
+
+    /// Every deployment's cooldown, this minute's usage and attempts in flight.
+    fn deployment_states(&self) -> Vec<Value> {
+        let health = self.router.health();
+        let sim = self.host.sim.lock();
+        self.router
+            .registry()
+            .deployments_from(0)
+            .iter()
+            .map(|deployment| {
+                let (tpm, rpm) = pollster::block_on(health.usage(deployment)).unwrap_or_default();
+                let sent = self.host.taken_now(&deployment.id);
+                let key = cooldown_key(&deployment.id);
+                let cooling = self.host.cache.live(&key).map(|value| {
+                    let status = &value["status_code"];
+                    let status = status
+                        .as_str()
+                        .and_then(|text| text.parse::<u16>().ok())
+                        .map_or_else(|| status.clone(), |code| json!(code));
+                    json!({"status": status, "remaining": self.host.cache.ttl(&key)})
+                });
+                json!({
+                    "id": deployment.id,
+                    "model_name": deployment.model_name,
+                    "cooling": cooling,
+                    "rpm": rpm,
+                    "tpm": tpm,
+                    "provider": {"rpm": sent.0, "tpm": sent.1},
+                    "in_flight": sim.in_flight.get(&deployment.id).copied().unwrap_or(0),
+                })
+            })
+            .collect()
+    }
 }
 
 #[wasm_bindgen]
@@ -552,16 +983,17 @@ impl Playground {
             cache: VirtualCache {
                 clock: clock.clone(),
                 entries: Default::default(),
+                version: Default::default(),
             },
             clock: clock.clone(),
             behaviour: Mutex::new(HashMap::new()),
             trace: Mutex::new(Vec::new()),
             sched: Arc::new(Sched::default()),
             current: AtomicU64::new(0),
-            light: AtomicBool::new(false),
             profiles: Mutex::new(HashMap::new()),
             incidents: Mutex::new(Vec::new()),
             taken: Mutex::new(HashMap::new()),
+            sim: Mutex::new(SimLog::default()),
             rng: SeededRandomness::new(seed ^ 0x5eed_5eed),
         });
         let router = Router::builder(config, dynamic, host.clone())
@@ -573,10 +1005,12 @@ impl Playground {
             .build()
             .map_err(|e| JsError::new(&format!("{e}")))?;
         Ok(Playground {
-            router,
+            router: Arc::new(router),
             host,
             seed,
             settings,
+            run: RefCell::new(None),
+            kept: RefCell::new(VecDeque::new()),
         })
     }
 
@@ -598,182 +1032,162 @@ impl Playground {
 
     /// Send one `acompletion` through the router and return `{result, trace}` as JSON.
     pub fn send(&self, request: &str) -> Result<String, JsError> {
+        if self.run.borrow().is_some() {
+            return Err(JsError::new("a simulation is running; call simStop first"));
+        }
         let request = parse_request(&serde_json::from_str(request)?);
         self.host.trace.lock().clear();
         let started = self.host.clock.elapsed();
-        let outcome = pollster::block_on(self.router.call(Op::from("acompletion"), request));
-        let result = match outcome {
-            Ok(response) => json!({
-                "ok": true,
-                "deployment": response.deployment_id,
-                "model_group": response.model_group,
-                "retries": response.attempted_retries,
-                "fallbacks": response.attempted_fallbacks,
-            }),
-            Err(error) => {
-                json!({"ok": false, "error": error.to_string(), "detail": format!("{error:?}")})
-            }
-        };
+        let result = outcome(pollster::block_on(
+            self.router.call(Op::from("acompletion"), request),
+        ));
         let took = (self.host.clock.elapsed() - started).as_secs_f64();
         let trace = std::mem::take(&mut *self.host.trace.lock());
         Ok(json!({"result": result, "trace": trace, "took": took}).to_string())
     }
 
-    /// Run steady traffic with many calls in flight on simulated time. `spec` is JSON:
-    /// `{"model": "gpt-4o", "rate": 3, "duration": 300, "trace": false,
+    /// Run steady traffic with many calls in flight on simulated time, start to finish. `spec`
+    /// is JSON: `{"model": "gpt-4o", "rate": 3, "duration": 300, "trace": false,
     ///   "profiles": {"<id>": {"p50_ms": 800, "p95_ms": 2400, "error_rate": 0.04,
-    ///                         "error": "InternalServerError", "rpm_cap": 120}},
-    ///   "incidents": [{"id": "<id>", "from": 40, "to": 70, "latency_factor": 10}]}`.
-    /// Arrivals are Poisson at `rate` per second. Returns every request's start, end and outcome.
+    ///                         "errors": {"InternalServerError": 3, "RateLimitError": 1},
+    ///                         "rpm_cap": 120, "tpm_cap": 200000, "tokens": 1000}},
+    ///   "incidents": [{"key": "slow", "id": "<id>", "from": 40, "to": 70, "latency_factor": 10}]}`.
+    /// Arrivals are Poisson at `rate` per second. Returns every request's start, end, outcome and
+    /// attempts.
     pub fn simulate(&self, spec: &str) -> Result<String, JsError> {
-        let spec: Value = serde_json::from_str(spec)?;
-        let num = |value: &Value, key: &str| value.get(key).and_then(Value::as_f64);
-        let model = spec
-            .get("model")
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_owned();
-        let rate = num(&spec, "rate").unwrap_or(1.0).max(1e-6);
-        let duration = num(&spec, "duration").unwrap_or(60.0);
-        let keep_trace = spec.get("trace").and_then(Value::as_bool).unwrap_or(false);
-        let mut profiles = HashMap::new();
-        if let Some(Value::Object(map)) = spec.get("profiles") {
-            for (id, value) in map {
-                let p50 = num(value, "p50_ms").unwrap_or(500.0);
-                let error = value
-                    .get("error")
-                    .and_then(Value::as_str)
-                    .unwrap_or("InternalServerError");
-                profiles.insert(
-                    id.clone(),
-                    Profile {
-                        p50,
-                        p95: num(value, "p95_ms").unwrap_or(p50 * 2.0),
-                        error_rate: num(value, "error_rate").unwrap_or(0.0),
-                        error: FailureKind::from_str(error).map_err(|_| {
-                            JsError::new(&format!("unknown exception class `{error}`"))
-                        })?,
-                        rpm_cap: num(value, "rpm_cap").map(|n| n as u32),
-                    },
-                );
-            }
+        if self.run.borrow().is_some() {
+            return Err(JsError::new("a simulation is running; call simStop first"));
         }
-        let incidents = spec
-            .get("incidents")
-            .and_then(Value::as_array)
-            .map(|items| {
-                items
-                    .iter()
-                    .map(|item| Incident {
-                        id: item
-                            .get("id")
-                            .and_then(Value::as_str)
-                            .unwrap_or_default()
-                            .to_owned(),
-                        from: num(item, "from").unwrap_or(0.0),
-                        to: num(item, "to").unwrap_or(f64::MAX),
-                        latency_factor: num(item, "latency_factor").unwrap_or(1.0),
-                        error_rate: num(item, "error_rate"),
-                        rpm_cap: num(item, "rpm_cap").map(|n| n as u32),
-                        outage: item.get("outage").and_then(Value::as_bool).unwrap_or(false),
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        *self.host.profiles.lock() = profiles;
-        *self.host.incidents.lock() = incidents;
-        self.host.trace.lock().clear();
-        self.host.sched.active.store(true, Ordering::Relaxed);
-        self.host.light.store(true, Ordering::Relaxed);
-
-        let clock = self.host.clock.clone();
-        let origin = clock.elapsed();
-        let end = origin + Duration::from_secs_f64(duration);
-        let gap =
-            |host: &ScriptedHost| Duration::from_secs_f64(-(1.0 - host.uniform()).ln() / rate);
-        let mut next_arrival = Some(origin + gap(&self.host)).filter(|at| *at < end);
-        let mut tasks: Vec<Task<'_, Value>> = Vec::new();
-        let mut requests = Vec::new();
-        let mut started = Vec::new();
-        let (mut max_in_flight, mut polls) = (0usize, 0u64);
-        loop {
-            while let Some(at) = next_arrival.filter(|at| *at <= clock.elapsed()) {
-                let id = started.len();
-                started.push(at.as_secs_f64());
-                let request = parse_request(&json!({"model": model}));
-                let router = &self.router;
-                tasks.push(Task::new(id, async move {
-                    match router.call(Op::from("acompletion"), request).await {
-                        Ok(response) => json!({
-                            "ok": true,
-                            "deployment": response.deployment_id,
-                            "model_group": response.model_group,
-                            "retries": response.attempted_retries,
-                            "fallbacks": response.attempted_fallbacks,
-                        }),
-                        Err(error) => json!({"ok": false, "error": error.to_string()}),
-                    }
-                }));
-                next_arrival = Some(at + gap(&self.host)).filter(|at| *at < end);
-            }
-            max_in_flight = max_in_flight.max(tasks.len());
-            loop {
-                let mut progressed = false;
-                let mut index = 0;
-                while index < tasks.len() {
-                    self.host
-                        .current
-                        .store(tasks[index].id as u64, Ordering::Relaxed);
-                    match tasks[index].poll_if_woken() {
-                        None => index += 1,
-                        Some(None) => {
-                            progressed = true;
-                            polls += 1;
-                            index += 1;
-                        }
-                        Some(Some(mut outcome)) => {
-                            progressed = true;
-                            polls += 1;
-                            let task = tasks.swap_remove(index);
-                            outcome["id"] = json!(task.id);
-                            outcome["start"] = json!(started[task.id]);
-                            outcome["end"] = json!(clock.elapsed().as_secs_f64());
-                            requests.push(outcome);
-                        }
-                    }
-                }
-                if !progressed {
-                    break;
-                }
-            }
-            let next = match (self.host.sched.next_due(), next_arrival) {
-                (Some(a), Some(b)) => a.min(b),
-                (a, b) => match a.or(b) {
-                    Some(next) => next,
-                    None => break,
-                },
-            };
-            let now = clock.elapsed();
-            if next > now {
-                clock.advance(next - now);
-            }
-            self.host.sched.fire(clock.elapsed());
-        }
-        self.host.sched.active.store(false, Ordering::Relaxed);
-        self.host.light.store(false, Ordering::Relaxed);
-        let stuck = tasks.len();
+        let mut spec = parse_spec(spec, self.now()).map_err(|e| JsError::new(&e))?;
+        spec.duration = Some(spec.duration.unwrap_or(60.0));
+        let capture = if spec.keep_trace {
+            Capture::Flat
+        } else {
+            Capture::Off
+        };
+        let mut run = self.begin(spec, capture);
+        let (mut requests, mut kept) = (Vec::new(), VecDeque::new());
+        run.advance(&self.router, &self.host, None, &mut requests, &mut kept);
+        let (stuck, max_in_flight, polls) = (run.in_flight(), run.max_in_flight, run.polls);
+        let steps = self.host.sim.lock().steps;
+        let marks = self.take_marks();
+        drop(run);
+        self.end();
         requests.sort_by_key(|request| request["id"].as_u64());
         let trace = std::mem::take(&mut *self.host.trace.lock());
         Ok(json!({
             "requests": requests,
+            "marks": marks,
             "stuck": stuck,
             "max_in_flight": max_in_flight,
             "polls": polls,
-            "steps": trace.len(),
-            "trace": if keep_trace { Value::Array(trace) } else { Value::Null },
-            "end": clock.elapsed().as_secs_f64(),
+            "steps": steps,
+            "trace": if capture == Capture::Flat { Value::Array(trace) } else { Value::Null },
+            "end": self.now(),
         })
         .to_string())
+    }
+
+    /// Start an incremental simulation on this router: the same spec as `simulate`, without an
+    /// end unless it gives a `duration`, keeping the last `trace_last` (2000) requests' traces.
+    #[wasm_bindgen(js_name = simStart)]
+    pub fn sim_start(&self, spec: &str) -> Result<(), JsError> {
+        self.sim_stop();
+        let spec = parse_spec(spec, self.now()).map_err(|e| JsError::new(&e))?;
+        self.kept.borrow_mut().clear();
+        let capture = if spec.trace_last > 0 {
+            Capture::Steps
+        } else {
+            Capture::Off
+        };
+        let run = self.begin(spec, capture);
+        *self.run.borrow_mut() = Some(run);
+        Ok(())
+    }
+
+    /// Run the simulation `seconds` of simulated time forward. Returns `{now, completed,
+    /// in_flight, deployments, marks}`.
+    #[wasm_bindgen(js_name = simAdvance)]
+    pub fn sim_advance(&self, seconds: f64) -> Result<String, JsError> {
+        let mut run = self.run.borrow_mut();
+        let run = run
+            .as_mut()
+            .ok_or_else(|| JsError::new("no simulation is running; call simStart first"))?;
+        let limit = self.host.clock.elapsed() + Duration::from_secs_f64(seconds.max(0.0));
+        let mut completed = Vec::new();
+        run.advance(
+            &self.router,
+            &self.host,
+            Some(limit),
+            &mut completed,
+            &mut self.kept.borrow_mut(),
+        );
+        Ok(json!({
+            "now": self.now(),
+            "completed": completed,
+            "in_flight": run.in_flight(),
+            "deployments": self.deployment_states(),
+            "marks": self.take_marks(),
+        })
+        .to_string())
+    }
+
+    /// Change the running simulation from now on: `{"rate"?, "profiles"?: {"<id>": profile or
+    /// null}, "incidents_add"?: [incident], "incidents_end"?: ["<key>"]}`. Profiles merge by id.
+    #[wasm_bindgen(js_name = simSet)]
+    pub fn sim_set(&self, change: &str) -> Result<(), JsError> {
+        let change: Value = serde_json::from_str(change)?;
+        let mut run = self.run.borrow_mut();
+        let run = run
+            .as_mut()
+            .ok_or_else(|| JsError::new("no simulation is running; call simStart first"))?;
+        let now = self.now();
+        let profiles =
+            parse_profiles(change.get("profiles"), TOKENS).map_err(|e| JsError::new(&e))?;
+        {
+            let mut all = self.host.profiles.lock();
+            for (id, profile) in profiles {
+                match profile {
+                    Some(profile) => all.insert(id, profile),
+                    None => all.remove(&id),
+                };
+            }
+        }
+        {
+            let mut incidents = self.host.incidents.lock();
+            incidents.extend(parse_incidents(change.get("incidents_add"), now));
+            for key in text_list(change.get("incidents_end")) {
+                for incident in incidents.iter_mut().filter(|incident| incident.key == key) {
+                    incident.to = incident.to.min(now);
+                }
+            }
+        }
+        mark_incidents(&self.host);
+        if let Some(rate) = num(&change, "rate") {
+            run.set_rate(&self.host, rate);
+        }
+        Ok(())
+    }
+
+    /// One simulated request's trace in the shape `send` returns, plus its `id`, `model`,
+    /// `start` and `end`; `null` once it has left the last `trace_last`.
+    #[wasm_bindgen(js_name = simTrace)]
+    pub fn sim_trace(&self, id: u32) -> String {
+        self.kept
+            .borrow()
+            .iter()
+            .find(|kept| kept.id == u64::from(id))
+            .map_or(Value::Null, Kept::render)
+            .to_string()
+    }
+
+    /// End the incremental simulation. Calls still in flight are dropped; the cache and clock stay
+    /// as they are, and the kept traces stay readable.
+    #[wasm_bindgen(js_name = simStop)]
+    pub fn sim_stop(&self) {
+        if self.run.borrow_mut().take().is_some() {
+            self.end();
+        }
     }
 
     /// Move the virtual clock forward.
