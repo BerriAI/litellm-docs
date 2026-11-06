@@ -7,7 +7,12 @@ description: "Keep the same model name as newer versions arrive. Use -latest ali
 tags: [models]
 hide_table_of_contents: true
 image: ./hero.png
+custom_hero: true
 ---
+
+import LatestAliasesHeader from './LatestAliasesHeader';
+
+<LatestAliasesHeader />
 
 As providers release smarter, faster, cheaper models, you shouldn't have to update every app by hand.
 

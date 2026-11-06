@@ -1,0 +1,33 @@
+.header {
+  margin-bottom: 0;
+}
+
+.header .artwork .cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+}
+
+.heading {
+  max-width: min(712px, calc(100% - 48px));
+  margin: 0 auto;
+  padding-top: clamp(32px, 5vw, 64px);
+}
+
+.header .heading h1 {
+  margin: 0 0 28px;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+:global(.blog-wrapper) article:has(.header) > :global(.markdown) {
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.alias {
+  white-space: nowrap;
+}
