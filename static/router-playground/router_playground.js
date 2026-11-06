@@ -136,6 +136,42 @@ export class Playground {
         }
     }
     /**
+     * Run steady traffic with many calls in flight on simulated time. `spec` is JSON:
+     * `{"model": "gpt-4o", "rate": 3, "duration": 300, "trace": false,
+     *   "profiles": {"<id>": {"p50_ms": 800, "p95_ms": 2400, "error_rate": 0.04,
+     *                         "error": "InternalServerError", "rpm_cap": 120}},
+     *   "incidents": [{"id": "<id>", "from": 40, "to": 70, "latency_factor": 10}]}`.
+     * Arrivals are Poisson at `rate` per second. Returns every request's start, end and outcome.
+     * @param {string} spec
+     * @returns {string}
+     */
+    simulate(spec) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passStringToWasm0(spec, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.playground_simulate(retptr, this.__wbg_ptr, ptr0, len0);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+            var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+            var ptr2 = r0;
+            var len2 = r1;
+            if (r3) {
+                ptr2 = 0; len2 = 0;
+                throw takeObject(r2);
+            }
+            deferred3_0 = ptr2;
+            deferred3_1 = len2;
+            return getStringFromWasm0(ptr2, len2);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export2(deferred3_0, deferred3_1, 1);
+        }
+    }
+    /**
      * Every deployment with its cooldown, this minute's usage and the raw routing cache.
      * @returns {string}
      */
