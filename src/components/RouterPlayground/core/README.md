@@ -13,7 +13,11 @@ simulated time. Each deployment gets a profile: lognormal latency from `p50_ms` 
 `error_rate` whose failures take a class drawn from `errors` (`{"RateLimitError": 3,
 "InternalServerError": 1}`), and the provider's own `rpm_cap` and `tpm_cap` (each request costs
 `tokens`, 1000 by default). Incidents (`{key, id, from, to, latency_factor, error_rate, rpm_cap,
-tpm_cap, outage}`) make one deployment worse for a stretch of time.
+tpm_cap, outage}`) make one deployment worse for a stretch of time. A spec's `requests` is the
+traffic mix (`[{label, weight, body, sessions, tokens}]`): each arrival draws a kind by weight and
+sends its body (`team_id`, `num_retries`, `disable_fallbacks`, `mock_testing_*`, `metadata`), with
+a session id drawn from `sessions` ids when set, and each completed request names its kind and
+session.
 
 `simulate(spec)` runs a whole scenario at once. `simStart(spec)`, `simAdvance(seconds)`,
 `simSet(change)` and `simStop()` run one step by step: each advance returns the requests that

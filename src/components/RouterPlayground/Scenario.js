@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {parseConfig} from './core';
+import {coreRequests, expectedRpm, groupRate, mixModels} from './requests';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession, strengthLabel} from './simSession';
 import styles from './Simulator.module.css';
 
@@ -59,17 +60,16 @@ export function readScenarioLink() {
   }
 }
 
-export function runScenario(core, configJson, seed, {model, rate, duration, profiles, incidents}) {
+export function runScenario(core, configJson, seed, {model, kinds, rate, duration, profiles, incidents}) {
   const session = openSession(core, configJson, seed);
   const probe = new core.Playground(configJson, BigInt(seed));
   const info = JSON.parse(probe.describe());
   probe.free();
-  const group = info.deployments.filter(item => item.model_name === model);
-  const total = group.reduce((sum, item) => sum + (item.weight ?? 1), 0) || 1;
   const rpmOf = id => {
     const deployment = info.deployments.find(item => item.id === id);
-    return rate * 60 * (deployment && deployment.model_name === model ? (deployment.weight ?? 1) / total : 1);
+    return expectedRpm(info, id, groupRate(kinds, model, deployment?.model_name, rate));
   };
+  const served = new Set(mixModels(kinds, model));
   const surges = incidents.filter(item => item.row === 'traffic');
   const rateAt = t =>
     surges.reduce((value, item) => (t >= item.from && t < item.to ? value * (item.strength ?? 5) : value), rate);
@@ -80,6 +80,7 @@ export function runScenario(core, configJson, seed, {model, rate, duration, prof
       model,
       rate,
       duration,
+      requests: coreRequests(kinds, model),
       profiles: coreProfiles(profiles),
       incidents: incidents
         .filter(item => item.row !== 'traffic' && info.deployments.some(deployment => deployment.id === item.row))
@@ -95,7 +96,7 @@ export function runScenario(core, configJson, seed, {model, rate, duration, prof
       }
       const frame = session.advance(1);
       requests.push(...frame.completed.filter(request => request.start < duration));
-      const mine = frame.deployments.filter(item => item.model_name === model);
+      const mine = frame.deployments.filter(item => served.has(item.model_name));
       if (t < duration && mine.length && mine.every(item => item.cooling)) unhealthy += 1;
     }
   } finally {
@@ -232,6 +233,7 @@ export default function Scenario({
   config,
   seed,
   model,
+  kinds,
   info,
   profiles,
   defaultIncidents,
@@ -308,11 +310,12 @@ export default function Scenario({
 
   const incidentsKey = JSON.stringify(incidents);
   const profilesKey = JSON.stringify(profiles);
+  const kindsKey = JSON.stringify(coreRequests(kinds, model));
   useEffect(() => {
     if (!core || !configJson) return undefined;
     setRunning(true);
     const timer = setTimeout(() => {
-      const spec = {model, rate, duration, profiles, incidents};
+      const spec = {model, kinds, rate, duration, profiles, incidents};
       const one = json => {
         try {
           return runScenario(core, json, seed, spec);
@@ -327,13 +330,14 @@ export default function Scenario({
     }, 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [core, configJson, parsedB, seed, model, rate, duration, incidentsKey, profilesKey]);
+  }, [core, configJson, parsedB, seed, model, rate, duration, incidentsKey, profilesKey, kindsKey]);
 
   const copy = async () => {
     const url = scenarioLink({
       config: configText,
       configB: textB,
       model,
+      kinds,
       seed,
       profiles,
       duration,

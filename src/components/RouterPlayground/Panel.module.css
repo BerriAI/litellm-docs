@@ -1,0 +1,73 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.headFolded {
+  margin-bottom: 0 !important;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 auto 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.chevron {
+  flex: none;
+  color: var(--ifm-color-emphasis-600);
+  transition: transform 0.15s ease;
+}
+
+.toggle[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.subTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.folded {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.78rem;
+}
+
+.sub {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.sub > .head {
+  margin-bottom: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

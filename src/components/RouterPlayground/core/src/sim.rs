@@ -150,15 +150,37 @@ impl Kept {
     }
 }
 
+/// One kind of request in the traffic mix: its share of arrivals, the body it sends (merged over
+/// `{"model": <the run's model>}`), how many distinct session ids it spreads over, and the tokens
+/// each one costs when not its profile's.
+#[derive(Clone)]
+pub(crate) struct Kind {
+    pub(crate) label: String,
+    pub(crate) weight: f64,
+    pub(crate) body: Value,
+    pub(crate) sessions: u32,
+    pub(crate) tokens: Option<u64>,
+}
+
+/// Who a simulated request is: its kind, session and requested model, for the outcome list.
+#[derive(Clone, Default)]
+struct Who {
+    kind: Option<String>,
+    session: Option<String>,
+    model: String,
+    start: f64,
+}
+
 /// One run of Poisson traffic on the virtual clock: the calls in flight and the next arrival.
 pub(crate) struct Run {
     pub(crate) model: String,
+    pub(crate) kinds: Vec<Kind>,
     rate: f64,
     /// Arrivals stop here, when the run has a duration.
     end: Option<Duration>,
     next_arrival: Option<Duration>,
     tasks: Vec<Task<'static, Value>>,
-    starts: HashMap<usize, f64>,
+    starts: HashMap<usize, Who>,
     next_id: usize,
     pub(crate) trace_last: usize,
     pub(crate) max_in_flight: usize,
@@ -166,9 +188,16 @@ pub(crate) struct Run {
 }
 
 impl Run {
-    pub(crate) fn new(model: String, rate: f64, end: Option<Duration>, trace_last: usize) -> Self {
+    pub(crate) fn new(
+        model: String,
+        kinds: Vec<Kind>,
+        rate: f64,
+        end: Option<Duration>,
+        trace_last: usize,
+    ) -> Self {
         Run {
             model,
+            kinds,
             rate,
             end,
             next_arrival: None,
@@ -197,6 +226,68 @@ impl Run {
         self.schedule(host, host.clock.elapsed());
     }
 
+    /// The next arrival's body: a kind drawn by weight, its session drawn from its pool.
+    fn draw(&self, host: &ScriptedHost, start: f64, id: u64) -> (Value, Who) {
+        let total: f64 = self.kinds.iter().map(|kind| kind.weight).sum();
+        let mut roll = if total > 0.0 {
+            host.uniform() * total
+        } else {
+            0.0
+        };
+        let kind = self.kinds.iter().find(|kind| {
+            if roll < kind.weight {
+                return true;
+            }
+            roll -= kind.weight;
+            false
+        });
+        let Some(kind) = kind.or(self.kinds.last()) else {
+            return (
+                json!({"model": self.model}),
+                Who {
+                    model: self.model.clone(),
+                    start,
+                    ..Who::default()
+                },
+            );
+        };
+        let mut body = match &kind.body {
+            Value::Object(map) => Value::Object(map.clone()),
+            _ => json!({}),
+        };
+        if body
+            .get("model")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+        {
+            body["model"] = json!(self.model);
+        }
+        let session = (kind.sessions > 0).then(|| {
+            let n = ((host.uniform() * f64::from(kind.sessions)) as u32).min(kind.sessions - 1);
+            format!("{}-{}", kind.label, n + 1)
+        });
+        if let Some(session) = &session {
+            if !body["metadata"].is_object() {
+                body["metadata"] = json!({});
+            }
+            body["metadata"]["session_id"] = json!(session);
+            body["litellm_session_id"] = json!(session);
+        }
+        if let Some(tokens) = kind.tokens {
+            host.sim.lock().tokens.insert(id, tokens);
+        }
+        let model = body["model"].as_str().unwrap_or_default().to_owned();
+        (
+            body,
+            Who {
+                kind: Some(kind.label.clone()),
+                session,
+                model,
+                start,
+            },
+        )
+    }
+
     /// Run until the clock reaches `limit`, or with no limit until nothing is left to do.
     /// Completed requests go to `completed`, their traces to `kept`.
     pub(crate) fn advance(
@@ -212,8 +303,9 @@ impl Run {
             while let Some(at) = self.next_arrival.filter(|at| *at <= clock.elapsed()) {
                 let id = self.next_id;
                 self.next_id += 1;
-                self.starts.insert(id, at.as_secs_f64());
-                let request = parse_request(&json!({"model": self.model}));
+                let (body, who) = self.draw(host, at.as_secs_f64(), id as u64);
+                self.starts.insert(id, who);
+                let request = parse_request(&body);
                 let router = router.clone();
                 self.tasks.push(Task::new(id, async move {
                     outcome(router.call(Op::from("acompletion"), request).await)
@@ -282,8 +374,13 @@ impl Run {
         completed: &mut Vec<Value>,
         kept: &mut VecDeque<Kept>,
     ) {
-        let log: RequestLog = host.sim.lock().requests.remove(&id).unwrap_or_default();
-        let start = self.starts.remove(&(id as usize)).unwrap_or_default();
+        let log: RequestLog = {
+            let mut sim = host.sim.lock();
+            sim.tokens.remove(&id);
+            sim.requests.remove(&id).unwrap_or_default()
+        };
+        let who = self.starts.remove(&(id as usize)).unwrap_or_default();
+        let start = who.start;
         let end = host.clock.elapsed().as_secs_f64();
         let ok = result["ok"] == true;
         let pick = |key: &str| if ok { result[key].clone() } else { Value::Null };
@@ -298,11 +395,14 @@ impl Run {
             "fallbacks": if ok { result["fallbacks"].clone() } else { json!(log.fallbacks) },
             "error": if ok { Value::Null } else { result["error"].clone() },
             "attempts": log.attempts,
+            "kind": who.kind,
+            "session": who.session,
+            "model": who.model,
         }));
         if self.trace_last > 0 {
             kept.push_back(Kept {
                 id,
-                model: self.model.clone(),
+                model: who.model.clone(),
                 start,
                 end,
                 result,

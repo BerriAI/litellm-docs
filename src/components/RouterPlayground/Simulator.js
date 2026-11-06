@@ -1,6 +1,8 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import Panel from './Panel';
 import ProfileEditor from './ProfileEditor';
 import {defaultProfile, profileLabel, profileSummary} from './profiles';
+import {MOCKS, coreRequests, expectedRpm, groupRate, metadataOf, mixModels, newKind} from './requests';
 import Scenario from './Scenario';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
@@ -30,15 +32,6 @@ export function timeoutsOf(config, deployments) {
     byId[id] = item.litellm_params?.timeout ?? fallback;
   });
   return byId;
-}
-
-// Requests per minute a deployment normally gets, for "capacity to a fifth" when it has no cap.
-export function expectedRpm(info, id, rate) {
-  const deployment = info.deployments.find(item => item.id === id);
-  const group = info.deployments.filter(item => item.model_name === deployment?.model_name);
-  const weight = item => item.weight ?? 1;
-  const total = group.reduce((sum, item) => sum + weight(item), 0) || 1;
-  return rate * 60 * (deployment ? weight(deployment) / total : 1);
 }
 
 function useWidth(fallback) {
@@ -74,7 +67,38 @@ function emptyStore() {
     totals: {requests: 0, ok: 0, attempts: 0, fallbacks: 0, maxInFlight: 0, inFlight: 0},
     durations: [],
     deployments: [],
+    kinds: {},
+    sessions: new Map(),
   };
+}
+
+const SESSIONS_KEPT = 400;
+
+// Per kind of request and per session, for the tables under the mix.
+function absorbMix(store, request) {
+  const label = request.kind ?? 'request';
+  const kind = (store.kinds[label] ??= {requests: 0, ok: 0, attempts: 0, fallbacks: 0, durations: []});
+  kind.requests += 1;
+  if (request.ok) kind.ok += 1;
+  kind.attempts += request.attempts?.length || 1 + (request.retries ?? 0);
+  kind.fallbacks += request.fallbacks ?? 0;
+  kind.durations.push(request.end - request.start);
+  if (kind.durations.length > 1000) kind.durations.shift();
+  if (!request.session) return;
+  let session = store.sessions.get(request.session);
+  if (!session) {
+    session = {kind: label, requests: 0, failed: 0, moves: 0, last: null, served: {}};
+    store.sessions.set(request.session, session);
+    if (store.sessions.size > SESSIONS_KEPT) store.sessions.delete(store.sessions.keys().next().value);
+  }
+  session.requests += 1;
+  if (!request.ok || !request.deployment) {
+    session.failed += 1;
+    return;
+  }
+  if (session.last && session.last !== request.deployment) session.moves += 1;
+  session.last = request.deployment;
+  session.served[request.deployment] = (session.served[request.deployment] ?? 0) + 1;
 }
 
 function binOf(store, id, t) {
@@ -97,6 +121,7 @@ function absorb(store, frame, dt) {
     totals.attempts += request.attempts?.length || 1 + (request.retries ?? 0);
     totals.fallbacks += request.fallbacks ?? 0;
     if (request.ok) totals.ok += 1;
+    absorbMix(store, request);
     store.durations.push(request.end - request.start);
     if (store.durations.length > 2000) store.durations.splice(0, store.durations.length - 2000);
     for (const attempt of request.attempts ?? []) {
@@ -449,18 +474,261 @@ function Kpis({store, timeout, compact}) {
   );
 }
 
-function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeouts, onSelect, handle}) {
+function NumberField({value, onChange, placeholder, min = 0, step = 1, label, width}) {
+  return (
+    <input
+      type="number"
+      className={styles.mixNum}
+      style={width ? {width} : undefined}
+      aria-label={label}
+      min={min}
+      step={step}
+      placeholder={placeholder}
+      value={value ?? ''}
+      onChange={event => onChange(event.target.value === '' ? null : Number(event.target.value))}
+    />
+  );
+}
+
+// The kinds of request the run sends, each with its share of arrivals and the fields the router
+// core reads. Sessions draw a session id per request from a pool of that size.
+function RequestMix({kinds, onKinds, model, info}) {
+  const groups = [...new Set(info.deployments.map(item => item.model_name))];
+  const total = kinds.reduce((sum, kind) => sum + (Number(kind.share) || 0), 0) || 1;
+  const change = (key, fields) => onKinds(kinds.map(kind => (kind.key === key ? {...kind, ...fields} : kind)));
+  return (
+    <div className={styles.requestMix}>
+      <div className={styles.mixGrid}>
+        <span className={styles.muted}>kind</span>
+        <span className={styles.muted}>share</span>
+        <span className={styles.muted}>model</span>
+        <span className={styles.muted}>sessions</span>
+        <span className={styles.muted}>team</span>
+        <span className={styles.muted}>tokens</span>
+        <span className={styles.muted}>num_retries</span>
+        <span className={styles.muted}>mock_testing</span>
+        <span className={styles.muted}>fallbacks</span>
+        <span />
+        {kinds.map(kind => {
+          const metadata = metadataOf(kind);
+          return (
+            <React.Fragment key={kind.key}>
+              <input
+                className={styles.mixText}
+                aria-label="Kind name"
+                value={kind.label}
+                onChange={event => change(kind.key, {label: event.target.value.replace(/\s+/g, '-')})}
+              />
+              <span className={styles.mixShare}>
+                <NumberField
+                  label={`Share of ${kind.label}`}
+                  value={kind.share}
+                  step={0.5}
+                  width="4rem"
+                  onChange={value => change(kind.key, {share: value ?? 0})}
+                />
+                <span className={styles.muted}>{Math.round((100 * (Number(kind.share) || 0)) / total)}%</span>
+              </span>
+              <select
+                aria-label={`Model of ${kind.label}`}
+                value={kind.model}
+                onChange={event => change(kind.key, {model: event.target.value})}>
+                <option value="">{model} (top)</option>
+                {groups
+                  .filter(group => group !== model)
+                  .map(group => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+              </select>
+              <NumberField
+                label={`Sessions of ${kind.label}`}
+                value={kind.sessions || null}
+                placeholder="none"
+                width="4.5rem"
+                onChange={value => change(kind.key, {sessions: value ?? 0})}
+              />
+              <input
+                className={styles.mixText}
+                aria-label={`Team of ${kind.label}`}
+                placeholder="none"
+                value={kind.team_id}
+                onChange={event => change(kind.key, {team_id: event.target.value.trim()})}
+              />
+              <NumberField
+                label={`Tokens of ${kind.label}`}
+                value={kind.tokens}
+                placeholder="profile"
+                step={100}
+                width="5.5rem"
+                onChange={value => change(kind.key, {tokens: value})}
+              />
+              <NumberField
+                label={`num_retries of ${kind.label}`}
+                value={kind.num_retries}
+                placeholder="router's"
+                width="5.5rem"
+                onChange={value => change(kind.key, {num_retries: value})}
+              />
+              <select
+                aria-label={`mock_testing flag of ${kind.label}`}
+                value={kind.mock}
+                onChange={event => change(kind.key, {mock: event.target.value})}>
+                {MOCKS.map(mock => (
+                  <option key={mock.value} value={mock.value}>
+                    {mock.label}
+                  </option>
+                ))}
+              </select>
+              <label className={styles.mixCheck}>
+                <input
+                  type="checkbox"
+                  checked={!kind.disable_fallbacks}
+                  onChange={event => change(kind.key, {disable_fallbacks: !event.target.checked})}
+                />
+                {kind.disable_fallbacks ? 'off' : 'on'}
+              </label>
+              <button
+                type="button"
+                className={styles.small}
+                disabled={kinds.length === 1}
+                onClick={() => onKinds(kinds.filter(item => item.key !== kind.key))}
+                aria-label={`Remove ${kind.label}`}>
+                Remove
+              </button>
+              <label className={styles.mixMeta}>
+                <span className={styles.muted}>metadata</span>
+                <input
+                  className={metadata.ok ? styles.mixText : `${styles.mixText} ${styles.mixBad}`}
+                  aria-label={`Metadata of ${kind.label}`}
+                  placeholder='none, or a JSON object such as {"tags": ["x"]}'
+                  value={kind.metadata}
+                  onChange={event => change(kind.key, {metadata: event.target.value})}
+                />
+                {!metadata.ok && <span className={styles.mixError}>{metadata.error}; not sent until it parses</span>}
+              </label>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      <div className={styles.mixFoot}>
+        <button
+          type="button"
+          className={styles.small}
+          onClick={() => onKinds([...kinds, newKind({label: `kind${kinds.length + 1}`})])}>
+          Add a kind of request
+        </button>
+        <span className={styles.muted}>
+          With sessions set, each request carries <code>metadata.session_id</code> and <code>litellm_session_id</code>{' '}
+          drawn from that many ids. Session affinity is not in the Rust router yet, so a session's requests are picked
+          independently; the sessions table shows how often one moves. Extra metadata goes in the body as is and shows
+          in the trace.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MixResults({store}) {
+  const kinds = Object.entries(store.kinds);
+  const sessions = [...store.sessions.entries()].sort((a, b) => b[1].requests - a[1].requests).slice(0, 8);
+  const moved = [...store.sessions.values()].filter(session => session.moves > 0).length;
+  if (!kinds.length) return <p className={styles.muted}>Play the run to see each kind of request and session.</p>;
+  return (
+    <div className={styles.mixResults}>
+      <table className={styles.mixTable}>
+        <thead>
+          <tr>
+            <th>kind</th>
+            <th>requests</th>
+            <th>success</th>
+            <th>p95</th>
+            <th>attempts each</th>
+            <th>fallbacks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {kinds.map(([label, kind]) => {
+            const p95 = quantile(kind.durations, 0.95);
+            return (
+              <tr key={label}>
+                <td className={styles.mono}>{label}</td>
+                <td>{kind.requests}</td>
+                <td>{((100 * kind.ok) / kind.requests).toFixed(1)}%</td>
+                <td>{p95 == null ? '' : secs(p95)}</td>
+                <td>{(kind.attempts / kind.requests).toFixed(2)}</td>
+                <td>{kind.fallbacks}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      {sessions.length > 0 && (
+        <div>
+          <table className={styles.mixTable}>
+            <thead>
+              <tr>
+                <th>busiest sessions</th>
+                <th>requests</th>
+                <th>served by</th>
+                <th>moves</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.map(([id, session]) => (
+                <tr key={id}>
+                  <td className={styles.mono}>{id}</td>
+                  <td>
+                    {session.requests}
+                    {session.failed ? <span className={styles.muted}> ({session.failed} failed)</span> : null}
+                  </td>
+                  <td className={styles.mono}>
+                    {Object.entries(session.served)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([deployment, count]) => `${deployment} ${count}`)
+                      .join(' · ')}
+                  </td>
+                  <td>{session.moves}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className={styles.muted}>
+            {moved} of {store.sessions.size} sessions seen so far moved between deployments at least once.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LiveRun({
+  core,
+  configJson,
+  seed,
+  onSeed,
+  model,
+  initialRate,
+  kinds,
+  onKinds,
+  info,
+  profiles,
+  timeouts,
+  onSelect,
+  handle,
+}) {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [rate, setRate] = useState(3);
+  const [rate, setRate] = useState(initialRate ?? 3);
   const [, setFrame] = useState(0);
   const [picked, setPicked] = useState(null);
   const [error, setError] = useState(null);
   const [generation, setGeneration] = useState(0);
   const session = useRef(null);
   const store = useRef(emptyStore());
-  const latest = useRef({profiles, rate, speed, info});
-  latest.current = {profiles, rate, speed, info};
+  const latest = useRef({profiles, rate, speed, info, kinds});
+  latest.current = {profiles, rate, speed, info, kinds};
 
   useEffect(() => {
     if (!core || !configJson || !info) return undefined;
@@ -471,6 +739,7 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
       next.start({
         model,
         rate: latest.current.rate,
+        requests: coreRequests(latest.current.kinds, model),
         profiles: coreProfiles(latest.current.profiles),
         incidents: [],
         trace_last: 2000,
@@ -493,6 +762,17 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
     if (session.current) session.current.set({profiles: coreProfiles(profiles)});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profilesKey]);
+
+  // A preset brings its own traffic rate.
+  useEffect(() => {
+    if (initialRate) changeRate(initialRate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRate]);
+
+  const requestsKey = JSON.stringify(coreRequests(kinds, model));
+  useEffect(() => {
+    if (session.current) session.current.set({requests: JSON.parse(requestsKey)});
+  }, [requestsKey]);
 
   const step = useCallback(seconds => {
     const current = session.current;
@@ -561,7 +841,13 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
       to: data.now + (duration ?? kindInfo.duration),
     };
     session.current.set({
-      incidents_add: [coreIncident(incident, profiles[id], expectedRpm(info, id, rate))],
+      incidents_add: [
+        coreIncident(
+          incident,
+          profiles[id],
+          expectedRpm(info, id, groupRate(kinds, model, info.deployments.find(item => item.id === id)?.model_name, rate)),
+        ),
+      ],
     });
     data.incidents.push(incident);
     data.numbered += 1;
@@ -629,13 +915,23 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
         </button>
       </div>
 
+      <Panel
+        id="sim-requests"
+        sub
+        title="Requests"
+        folded={`${kinds.length} kind${kinds.length === 1 ? '' : 's'}: ${kinds.map(kind => kind.label).join(', ')}`}>
+        <RequestMix kinds={kinds} onKinds={onKinds} model={model} info={info} />
+      </Panel>
+
       <Kpis store={data} timeout={groupTimeout} />
-      {!info.deployments.some(item => item.model_name === model) && (
-        <p className={styles.error}>
-          No deployment serves the model <code>{model}</code>, so every request fails. Set the model above to one of{' '}
-          {[...new Set(info.deployments.map(item => item.model_name))].join(', ')}.
-        </p>
-      )}
+      {mixModels(kinds, model)
+        .filter(name => !info.deployments.some(item => item.model_name === name))
+        .map(name => (
+          <p key={name} className={styles.error}>
+            No deployment serves the model <code>{name}</code>, so its requests fail. Pick one of{' '}
+            {[...new Set(info.deployments.map(item => item.model_name))].join(', ')}.
+          </p>
+        ))}
       {error && <p className={styles.error}>{error}</p>}
       <Lanes
         store={data}
@@ -675,9 +971,13 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
         </div>
       </div>
 
+      <Panel id="sim-by-kind" sub title="By kind and session">
+        <MixResults store={data} />
+      </Panel>
+
       {marks.length > 0 && (
+        <Panel id="sim-happened" sub title="What happened" folded={`${data.marks.length} marks`}>
         <div className={styles.happened}>
-          <span className={styles.cap}>WHAT HAPPENED</span>
           {marks.map(mark => (
             <button
               key={mark.n}
@@ -691,6 +991,7 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
             </button>
           ))}
         </div>
+        </Panel>
       )}
 
       {picked?.missing && (
@@ -702,7 +1003,13 @@ function LiveRun({core, configJson, seed, onSeed, model, info, profiles, timeout
         <div className={styles.picked}>
           <RunCard
             key={picked.id}
-            run={{kind: 'single', n: `${picked.id} at ${clock(picked.run.trace[0]?.t ?? 0)}`, model, ...picked.run}}
+            run={{
+              kind: 'single',
+              n: `${picked.id} at ${clock(picked.run.trace[0]?.t ?? 0)}`,
+              model,
+              ...picked.run,
+              model: picked.run.model ?? model,
+            }}
             info={info}
           />
         </div>
@@ -792,6 +1099,9 @@ export default function Simulator({
   seed,
   onSeed,
   model,
+  rate,
+  kinds,
+  onKinds,
   info,
   profiles,
   onProfiles,
@@ -804,9 +1114,11 @@ export default function Simulator({
   const config = useMemo(() => (configJson ? JSON.parse(configJson) : null), [configJson]);
   const timeouts = useMemo(() => timeoutsOf(config, info?.deployments), [config, info]);
   const behaviourRef = useRef(null);
+  const [reveal, setReveal] = useState(0);
 
   const select = id => {
     setSelected(id);
+    if (id) setReveal(n => n + 1);
     if (id) behaviourRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
   };
 
@@ -814,14 +1126,20 @@ export default function Simulator({
 
   return (
     <>
-      <section className={styles.panel} ref={behaviourRef}>
-        <div className={styles.panelHead}>
-          <h2>Deployment behaviour</h2>
+      <div ref={behaviourRef} />
+      <Panel
+        id="sim-behaviour"
+        reveal={reveal}
+        className={styles.panel}
+        headClassName={styles.panelHead}
+        title="Deployment behaviour"
+        folded={`${info.deployments.length} deployments`}
+        extra={
           <span className={styles.muted}>
             How each deployment answers in the simulator. The router never sees the profile, only the answers it
             produces.
           </span>
-        </div>
+        }>
         <Behaviour
           info={info}
           profiles={profiles}
@@ -831,11 +1149,15 @@ export default function Simulator({
           timeouts={timeouts}
           onIncident={tab === 'live' ? (id, kind, duration) => liveIncident.current?.(id, kind, duration) : null}
         />
-      </section>
+      </Panel>
 
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <h2>Simulator</h2>
+      <Panel
+        id="sim-run"
+        className={styles.panel}
+        headClassName={styles.panelHead}
+        title="Simulator"
+        folded={tab === 'live' ? 'live run keeps running while folded' : 'scenario and compare'}
+        extra={
           <div className={styles.tabs} role="tablist">
             <button type="button" role="tab" aria-selected={tab === 'live'} onClick={() => setTab('live')}>
               Live run
@@ -844,7 +1166,7 @@ export default function Simulator({
               Scenario and compare
             </button>
           </div>
-        </div>
+        }>
         {tab === 'live' ? (
           <LiveRun
             handle={liveIncident}
@@ -853,6 +1175,9 @@ export default function Simulator({
             seed={seed}
             onSeed={onSeed}
             model={model}
+            initialRate={rate}
+            kinds={kinds}
+            onKinds={onKinds}
             info={info}
             profiles={profiles}
             timeouts={timeouts}
@@ -866,13 +1191,14 @@ export default function Simulator({
             config={config}
             seed={seed}
             model={model}
+            kinds={kinds}
             info={info}
             profiles={profiles}
             defaultIncidents={defaultIncidents}
             initialScenario={initialScenario}
           />
         )}
-      </section>
+      </Panel>
     </>
   );
 }

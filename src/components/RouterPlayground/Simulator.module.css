@@ -1356,3 +1356,143 @@
   flex-direction: column;
   gap: 0.6rem;
 }
+
+/* Request mix */
+
+.requestMix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.mixGrid {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1.2fr) auto minmax(7rem, 1.2fr) auto minmax(5rem, 1fr) auto auto minmax(8rem, 1.3fr) auto auto;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+}
+
+.mixGrid input,
+.mixGrid select {
+  height: 28px;
+  min-width: 0;
+  padding: 0 0.4rem;
+  border: 1px solid var(--sim-line);
+  border-radius: 4px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-family: inherit;
+  font-size: 0.78rem;
+}
+
+.mixText {
+  width: 100%;
+}
+
+.mixNum {
+  width: 5rem;
+  font-family: var(--ifm-font-family-monospace) !important;
+}
+
+.mixShare {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mixCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.mixCheck input {
+  height: auto;
+}
+
+.mixMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  grid-column: 1 / -1;
+  gap: 0.25rem 0.5rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px dashed var(--sim-soft);
+}
+
+.mixMeta input {
+  flex: 1 1 16rem;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.mixBad {
+  border-color: var(--sim-bad) !important;
+}
+
+.mixError {
+  color: var(--sim-bad);
+  font-size: 0.75rem;
+}
+
+.mixFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+}
+
+.mixFoot .muted {
+  flex: 1 1 24rem;
+}
+
+.mixResults {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  align-items: start;
+}
+
+.mixTable {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.mixTable th,
+.mixTable td {
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--sim-soft);
+  text-align: left;
+  font-weight: normal;
+}
+
+.mixTable th {
+  color: var(--sim-muted);
+}
+
+.mixTable tr {
+  background: none !important;
+  border: 0;
+}
+
+.requestMix button {
+  height: 28px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--sim-line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font-size: 0.74rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.requestMix button:hover:not(:disabled) {
+  border-color: var(--ifm-color-primary);
+}

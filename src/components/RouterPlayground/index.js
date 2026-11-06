@@ -4,7 +4,9 @@ import ConfigEditor from './ConfigEditor';
 import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
 import {FAILURES, PRESETS} from './presets';
+import Panel from './Panel';
 import {defaultProfile} from './profiles';
+import {defaultKinds} from './requests';
 import {readScenarioLink} from './Scenario';
 import Simulator from './Simulator';
 import {RunCard} from './Trace';
@@ -25,6 +27,7 @@ export default function Playground() {
   const [teamId, setTeamId] = useState('');
   const [behaviour, setBehaviour] = useState({});
   const [profiles, setProfiles] = useState({});
+  const [kinds, setKinds] = useState(defaultKinds);
   const [runs, setRuns] = useState([]);
   const [state, setState] = useState(null);
   const [configError, setConfigError] = useState(null);
@@ -43,6 +46,7 @@ export default function Playground() {
     if (scenario.model) setModel(scenario.model);
     if (scenario.seed != null) setSeed(scenario.seed);
     if (scenario.profiles) setProfiles(scenario.profiles);
+    if (scenario.kinds?.length) setKinds(scenario.kinds);
   }, []);
 
   // Every deployment has a behaviour profile in the simulator; new ones start healthy.
@@ -147,6 +151,8 @@ export default function Playground() {
     setPreset(next);
     setConfigText(next.config);
     setModel(next.model);
+    setProfiles(next.profiles ? structuredClone(next.profiles) : {});
+    setKinds(next.requests ? next.requests() : defaultKinds());
   };
 
   if (loadError) return <p className={styles.error}>The router core failed to load: {loadError}</p>;
@@ -167,14 +173,18 @@ export default function Playground() {
         ))}
       </div>
 
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <h2>Config</h2>
+      <Panel
+        id="config"
+        className={styles.panel}
+        headClassName={styles.panelHead}
+        title="Config"
+        folded={info ? `${info.deployments.length} deployments` : null}
+        extra={
           <label className={styles.inline}>
             seed
             <input type="number" value={seed} min={0} onChange={event => setSeed(Number(event.target.value) || 0)} />
           </label>
-        </div>
+        }>
         <ConfigEditor
           text={configText}
           onChange={setConfigText}
@@ -183,14 +193,16 @@ export default function Playground() {
           profiles={profiles}
           onProfilesChange={setProfiles}
         />
-      </section>
+      </Panel>
 
       <div>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <h2>Deployments</h2>
-            <span className={styles.clock}>t = {state ? seconds(state.now) : '…'}</span>
-          </div>
+        <Panel
+          id="deployments"
+          className={styles.panel}
+          headClassName={styles.panelHead}
+          title="Deployments"
+          folded="send single requests on their own clock"
+          extra={<span className={styles.clock}>t = {state ? seconds(state.now) : '…'}</span>}>
           {!core && <p className={styles.muted}>Loading the router core…</p>}
           {state && (
             <table className={styles.table}>
@@ -287,7 +299,7 @@ export default function Playground() {
               Reset
             </button>
           </div>
-        </section>
+        </Panel>
       </div>
 
       {state && (
@@ -298,6 +310,9 @@ export default function Playground() {
           seed={seed}
           onSeed={setSeed}
           model={model}
+          rate={preset.rate}
+          kinds={kinds}
+          onKinds={setKinds}
           info={info}
           profiles={allProfiles}
           onProfiles={next => setProfiles({...profiles, ...next})}
@@ -306,21 +321,27 @@ export default function Playground() {
         />
       )}
 
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <h2>Trace</h2>
-          <span className={styles.muted}>newest first; click a request to fold it</span>
-        </div>
+      <Panel
+        id="trace"
+        className={styles.panel}
+        headClassName={styles.panelHead}
+        title="Trace"
+        folded={runs.length ? `${runs.length} requests` : null}
+        extra={<span className={styles.muted}>newest first; click a request to fold it</span>}>
         {runs.length === 0 ? (
           <p className={styles.muted}>Send a request to see every routing decision and host call it makes.</p>
         ) : (
           runs.map((run, index) => <RunCard key={runs.length - index} run={run} info={info} />)
         )}
-      </section>
+      </Panel>
 
       {state && state.cache.length > 0 && (
-        <details className={styles.panel}>
-          <summary>Routing cache ({state.cache.length} keys)</summary>
+        <Panel
+          id="cache"
+          className={styles.panel}
+          headClassName={styles.panelHead}
+          title={`Routing cache (${state.cache.length} keys)`}
+          defaultOpen={false}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -343,7 +364,7 @@ export default function Playground() {
               ))}
             </tbody>
           </table>
-        </details>
+        </Panel>
       )}
     </>
   );

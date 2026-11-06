@@ -19,13 +19,14 @@ use std::{
 use async_trait::async_trait;
 use litellm_router_core::{
     health::{cooldown_key, Clock},
+    mock::MockFailure,
     Attempt, AttemptError, Deployment, Error, FailureKind, Host, Op, Output, Payload, Randomness,
     Router, RouterCache, RouterConfig, RouterDynamicConfig, RouterEvent, RouterRequest,
     RouterResponse, RoutingContext, RoutingStrategy, SeededRandomness, SelectStage,
 };
 use parking_lot::Mutex;
 use serde_json::{json, Map, Value};
-use sim::{mark_incidents, Delay, Kept, Run, Sched};
+use sim::{mark_incidents, Delay, Kept, Kind, Run, Sched};
 use wasm_bindgen::prelude::*;
 
 /// 2026-01-01T12:00:00Z: where simulated time starts.
@@ -262,6 +263,8 @@ struct SimLog {
     marks: Vec<Value>,
     in_flight: HashMap<String, u32>,
     snap: Option<(u64, Arc<Snap>)>,
+    /// Tokens a request costs when its kind says, in place of its deployment's profile.
+    tokens: HashMap<u64, u64>,
 }
 
 #[derive(Default)]
@@ -354,6 +357,10 @@ impl ScriptedHost {
         let id = attempt.deployment.id.clone();
         let now = self.clock.elapsed().as_secs_f64();
         let mut profile = profile;
+        let req = self.current.load(Ordering::Relaxed);
+        if let Some(tokens) = self.sim.lock().tokens.get(&req) {
+            profile.tokens = *tokens;
+        }
         let (mut factor, mut outage) = (1.0, false);
         for incident in self.incidents.lock().iter() {
             if incident.id == id && now >= incident.from && now < incident.to {
@@ -681,11 +688,31 @@ fn text_list(value: Option<&Value>) -> Vec<String> {
 
 fn parse_request(value: &Value) -> RouterRequest {
     let text = |key: &str| value.get(key).and_then(Value::as_str).map(str::to_owned);
+    let team_id = text("team_id").or_else(|| {
+        value
+            .pointer("/metadata/user_api_key_team_id")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+    });
+    let flag = |key: &str| value.get(key).and_then(Value::as_bool).unwrap_or(false);
+    let mock_failure = [
+        ("mock_testing_fallbacks", MockFailure::Fallbacks),
+        ("mock_testing_context_fallbacks", MockFailure::ContextWindow),
+        (
+            "mock_testing_content_policy_fallbacks",
+            MockFailure::ContentPolicy,
+        ),
+        ("mock_testing_rate_limit_error", MockFailure::RateLimit),
+    ]
+    .into_iter()
+    .find(|(key, _)| flag(key))
+    .map(|(_, mock)| mock);
     RouterRequest {
         model: text("model").unwrap_or_default(),
         body: value.clone(),
-        team_id: text("team_id"),
-        listing_team_id: text("team_id"),
+        team_id: team_id.clone(),
+        listing_team_id: team_id,
+        mock_failure,
         proxy_admin: value
             .get("proxy_admin")
             .and_then(Value::as_bool)
@@ -810,7 +837,7 @@ fn parse_incidents(value: Option<&Value>, now: f64) -> Vec<Incident> {
         .unwrap_or_default()
 }
 
-/// What `simulate` and `simStart` share: `{"model", "rate", "duration"?, "tokens"?, "profiles",
+/// What `simulate` and `simStart` share: `{"model", "rate", "duration"?, "tokens"?, "requests"?, "profiles",
 /// "incidents", "trace_last"?, "trace"?}`.
 struct Spec {
     model: String,
@@ -818,6 +845,7 @@ struct Spec {
     duration: Option<f64>,
     profiles: Vec<(String, Option<Profile>)>,
     incidents: Vec<Incident>,
+    kinds: Vec<Kind>,
     trace_last: usize,
     keep_trace: bool,
 }
@@ -838,9 +866,31 @@ fn parse_spec(spec: &str, now: f64) -> Result<Spec, String> {
         duration: num(&spec, "duration"),
         profiles: parse_profiles(spec.get("profiles"), tokens)?,
         incidents: parse_incidents(spec.get("incidents"), now),
+        kinds: parse_kinds(spec.get("requests")),
         trace_last: num(&spec, "trace_last").map_or(2000, |n| n as usize),
         keep_trace: spec.get("trace").and_then(Value::as_bool).unwrap_or(false),
     })
+}
+
+/// The traffic mix: `[{"label", "weight"?, "body"?, "sessions"?, "tokens"?}]`. Absent or empty, every
+/// request is `{"model": <the run's model>}`.
+fn parse_kinds(value: Option<&Value>) -> Vec<Kind> {
+    value
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .enumerate()
+        .map(|(index, kind)| Kind {
+            label: kind
+                .get("label")
+                .and_then(Value::as_str)
+                .map_or_else(|| format!("kind{}", index + 1), str::to_owned),
+            weight: num(kind, "weight").unwrap_or(1.0).max(0.0),
+            body: kind.get("body").cloned().unwrap_or_else(|| json!({})),
+            sessions: num(kind, "sessions").map_or(0, |n| n.max(0.0) as u32),
+            tokens: num(kind, "tokens").map(|n| n.max(0.0) as u64),
+        })
+        .collect()
 }
 
 fn by_time(marks: &mut [Value]) {
@@ -887,7 +937,7 @@ impl Playground {
         } else {
             0
         };
-        let mut run = Run::new(spec.model, spec.rate, end, trace_last);
+        let mut run = Run::new(spec.model, spec.kinds, spec.rate, end, trace_last);
         run.schedule(&self.host, now);
         run
     }
@@ -1165,6 +1215,9 @@ impl Playground {
         mark_incidents(&self.host);
         if let Some(rate) = num(&change, "rate") {
             run.set_rate(&self.host, rate);
+        }
+        if change.get("requests").is_some() {
+            run.kinds = parse_kinds(change.get("requests"));
         }
         Ok(())
     }
