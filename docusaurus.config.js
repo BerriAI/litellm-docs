@@ -20,6 +20,8 @@ const config = {
   favicon: '/img/brand/litellm-favicon.svg',
   headTags: [
     {tagName: 'link', attributes: {rel: 'alternate icon', type: 'image/png', href: '/img/brand/litellm-monogram-blue-192.png'}},
+    // Google Search Console ownership token. Public by design; keep it so the property stays verified.
+    {tagName: 'meta', attributes: {name: 'google-site-verification', content: '2ECVUxrDhV_G5feehdJNQuTA4dEJbE9R918TbGTwJI8'}},
   ],
 
   // Set the production url of your site here
