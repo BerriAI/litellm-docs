@@ -1,8 +1,13 @@
+---
+title: AWS SigV4
+description: Sign LiteLLM requests to AWS Bedrock AgentCore MCP servers with AWS Signature Version 4.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# MCP - AWS SigV4 Auth
+# AWS SigV4 {#mcp---aws-sigv4-auth}
 
 Use AWS SigV4 authentication to connect LiteLLM to MCP servers hosted on [AWS Bedrock AgentCore](https://docs.aws.amazon.com/bedrock/latest/userguide/agentcore.html).
 

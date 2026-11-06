@@ -44,4 +44,8 @@ Check the returned tools, then [connect your MCP client](../../mcp_usage).
 
 Open the key's **Settings → Edit Settings**, update **MCP Servers / Access Groups** and its tool selection, then save. To block all MCP access for the key, choose **No MCP Servers**. Clearing the selection can restore inherited access.
 
-[API examples](../../mcp_grant_access) · [MCP permission rules](../../mcp_control)
+To restrict which applications can connect, configure the [MCP client allowlist](../../mcp_client_allowlist.md). To hide internal servers from external callers, configure [public internet access](../../mcp_public_internet.md).
+
+For detailed configuration, see [API examples](../../mcp_grant_access), [MCP permission rules](../../mcp_control), and [Tool Policies](../tool_policies.md).
+
+Configure the credentials LiteLLM sends to each server in [Upstream Authentication](../../mcp_upstream_auth.md).

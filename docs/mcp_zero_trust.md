@@ -1,13 +1,18 @@
+---
+title: JWT signing
+description: Sign LiteLLM tool calls with short-lived JWTs so MCP servers can verify the gateway and user identity.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# MCP Zero Trust Auth (JWT Signer)
+# JWT signing {#mcp-zero-trust-auth-jwt-signer}
 
 ![Zero Trust MCP Gateway](/img/mcp_zero_trust_gateway.png)
 
-MCP servers have no built-in way to verify that a request actually came through LiteLLM. Without this guardrail, any client that can reach your MCP server directly can call tools, bypassing your access controls entirely.
+Use JWT signing so your MCP server can verify requests from LiteLLM. The `MCPJWTSigner` guardrail adds a short-lived RS256 JWT to every outbound tool call.
 
-`MCPJWTSigner` fixes this. It signs every outbound tool call with a short-lived RS256 JWT. Your MCP server verifies the signature against LiteLLM's public key. Requests that didn't go through LiteLLM have no valid signature and are rejected.
+Configure the MCP server to verify the JWT against LiteLLM's public key and reject requests without a valid signature. This prevents clients from bypassing LiteLLM by calling the server directly.
 
 ---
 
@@ -290,5 +295,5 @@ Check that `kid` matches what the MCP server fetched from JWKS, `iss`/`aud` matc
 ## Related
 
 - [MCP Guardrails](./mcp_guardrail) — PII masking and blocking for MCP calls
-- [MCP OAuth](./mcp_oauth) — upstream OAuth2 for MCP server access
+- [OAuth 2.0](./mcp_oauth) — upstream OAuth2 for MCP server access
 - [MCP AWS SigV4](./mcp_aws_sigv4) — AWS-signed requests to MCP servers

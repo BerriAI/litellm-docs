@@ -1,16 +1,21 @@
-# MCP OAuth
+---
+title: OAuth 2.0
+description: Configure OAuth authorization code or client credentials flows for LiteLLM connections to MCP servers.
+---
 
-LiteLLM supports several OAuth 2.0 patterns for MCP servers. Every `auth_type: oauth2` server in `config.yaml` must declare its flow via `oauth2_flow`; the passthrough modes are their own `auth_type` values, documented in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md):
+# OAuth 2.0 {#mcp-oauth}
+
+LiteLLM uses OAuth 2.0 access tokens to authenticate to MCP servers. Use the authorization code flow when each user signs in, or the client credentials flow when LiteLLM connects as a service account. Every `auth_type: oauth2` server in `config.yaml` must set `oauth2_flow` explicitly. Token exchange and passthrough use separate `auth_type` values:
 
 | Flow | `oauth2_flow` | Use Case | How It Works |
 |------|---------------|----------|--------------|
 | **Interactive (PKCE)** | `authorization_code` | User-facing apps (Claude Code, Cursor) | Browser-based consent, per-user tokens |
 | **Machine-to-Machine (M2M)** | `client_credentials` | Backend services, CI/CD, automated agents | `client_credentials` grant, proxy-managed tokens |
-| **On-Behalf-Of (OBO)** | n/a (uses `auth_type: oauth2_token_exchange`) | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [MCP OBO Auth](./mcp_obo_auth.md). |
-| **Passthrough (transparent)** | n/a (uses `auth_type: true_passthrough`) | Client already holds the upstream token; LiteLLM adds no auth of its own | Forwards the client's `Authorization` verbatim, no LiteLLM admission. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
-| **Delegated upstream OAuth** | n/a (uses `auth_type: oauth_delegate`) | LiteLLM admits the caller; the upstream owns tool authorization | LiteLLM admission plus a separate forwarded upstream bearer, keeps spend and rate limits. [See MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
+| **On-Behalf-Of (OBO)** | n/a (uses `auth_type: oauth2_token_exchange`) | User-context tool calls to protected MCP servers | LiteLLM exchanges the caller token for a scoped MCP token. See [Token exchange (OBO)](./mcp_obo_auth.md). |
+| **Passthrough (transparent)** | n/a (uses `auth_type: true_passthrough`) | Client already holds the MCP server's token; LiteLLM does not authenticate the client | Forwards the client's `Authorization` unchanged. [See OAuth token passthrough](./mcp_oauth_passthrough.md) |
+| **Delegated upstream OAuth** | n/a (uses `auth_type: oauth_delegate`) | LiteLLM authenticates the client; the MCP server controls tool access | Authenticates the client to LiteLLM and forwards a separate MCP server token; preserves spend tracking and rate limits. [See OAuth token passthrough](./mcp_oauth_passthrough.md) |
 
-Per-user tokens from the interactive flow are stored under the calling key's `user_id`. For how that interacts with service-account keys, and for the non-OAuth per-user options (per-request headers, BYOK keys, per-user env vars), see [Per-User and Per-Key Upstream Credentials](./mcp_per_user_auth.md).
+Per-user tokens from the interactive flow are stored under the calling key's `user_id`. For how that interacts with service-account keys, and for the non-OAuth per-user options (per-request headers, BYOK keys, per-user env vars), see [Per-user credentials](./mcp_per_user_auth.md).
 
 ## Interactive OAuth (PKCE)
 
@@ -70,7 +75,7 @@ sequenceDiagram
     LiteLLM->>Client: Return tokens
 
     Note over Client,MCP: Step 6 – Authenticated MCP call
-    Client->>LiteLLM: MCP request with access token + LiteLLM API key
+    Client->>LiteLLM: MCP request with access token + LiteLLM Virtual Key
     LiteLLM->>MCP: MCP request with Bearer token
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: Return MCP response
@@ -91,7 +96,7 @@ sequenceDiagram
 3. **Dynamic Client Registration**: The client registers through LiteLLM, which forwards the request to the authorization server (RFC 7591). If the provider doesn't support dynamic registration, you can pre-store `client_id`/`client_secret` in LiteLLM (e.g., GitHub MCP) and the flow proceeds the same way.
 4. **User Authorization**: The client launches a browser session (with code challenge and resource hints). The user approves access, the authorization server sends the code through LiteLLM back to the client.
 5. **Token Exchange**: The client calls LiteLLM with the authorization code, code verifier, and resource. LiteLLM exchanges them with the authorization server and returns the issued access/refresh tokens.
-6. **MCP Invocation**: With a valid token, the client sends the MCP JSON-RPC request (plus LiteLLM API key) to LiteLLM, which forwards it to the MCP server and relays the tool response.
+6. **MCP Invocation**: With a valid token, the client sends the MCP JSON-RPC request (plus LiteLLM Virtual Key) to LiteLLM, which forwards it to the MCP server and relays the tool response.
 
 See the official [MCP Authorization Flow](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization#authorization-flow-steps) for additional reference.
 
@@ -137,9 +142,9 @@ mcp_servers:
 
 Replace the example server URL, OAuth endpoints, and scopes with the values for your provider. `authorization_url` and `token_url` are optional when the upstream MCP server publishes OAuth metadata that LiteLLM can discover. Explicitly configured endpoints take precedence over conflicting discovered endpoints.
 
-For clients that send a LiteLLM virtual key, enable `per_server_oauth_discovery: true` when the upstream server publishes no OAuth metadata (Microsoft Graph behind [ms-365-mcp-server](./mcp_servers/microsoft_365.md), for example). LiteLLM then publishes discovery documents for `/{mcp_server_name}/mcp`, with its own `/{mcp_server_name}/authorize` and `/{mcp_server_name}/token` endpoints fronting the provider URLs above. It is accepted only with `auth_type: oauth2`, `oauth2_flow: authorization_code`, and no `delegate_auth_to_upstream`.
+For clients that send a LiteLLM Virtual Key, enable `per_server_oauth_discovery: true` when the upstream server publishes no OAuth metadata (Microsoft Graph behind [ms-365-mcp-server](./mcp_servers/microsoft_365.md), for example). LiteLLM then publishes discovery documents for `/{mcp_server_name}/mcp`, with its own `/{mcp_server_name}/authorize` and `/{mcp_server_name}/token` endpoints fronting the provider URLs above. It is accepted only with `auth_type: oauth2`, `oauth2_flow: authorization_code`, and no `delegate_auth_to_upstream`.
 
-This relay requires a LiteLLM virtual key in `x-litellm-api-key`, including on its token request. Keyless clients must leave `per_server_oauth_discovery` off and use the gateway's shared `/mcp` authorization server, with proxy SSO, a `master_key`, and a user or team grant on the server. That flow signs the user in to LiteLLM, then runs upstream consent and stores the user's upstream token. With the default user-cache settings, a new grant can take up to a minute to appear on the connect page. See [With or without a virtual key](./mcp_servers/microsoft_365.md#with-or-without-a-virtual-key).
+This relay requires a LiteLLM Virtual Key in `x-litellm-api-key`, including on its token request. Keyless clients must leave `per_server_oauth_discovery` off and use the gateway's shared `/mcp` authorization server, with proxy SSO, a `master_key`, and a user or team grant on the server. That flow signs the user in to LiteLLM, then runs upstream consent and stores the user's upstream token. With the default user-cache settings, a new grant can take up to a minute to appear on the connect page. See [With or without a Virtual Key](./mcp_servers/microsoft_365.md#with-or-without-a-virtual-key).
 
 For static clients, LiteLLM handles `POST /{mcp_server_name}/register` locally. It returns the MCP server name as `client_id`, `dummy` as `client_secret`, and the client's submitted `redirect_uris`. LiteLLM uses the configured upstream credentials for authorization and token exchange.
 
@@ -457,7 +462,7 @@ sequenceDiagram
     participant Auth as Authorization Server
     participant MCP as MCP Server
 
-    Client->>LiteLLM: MCP request + LiteLLM API key
+    Client->>LiteLLM: MCP request + LiteLLM Virtual Key
     LiteLLM->>Auth: POST /oauth/token (client_credentials)
     Auth->>LiteLLM: access_token (expires_in: 3600)
     LiteLLM->>MCP: MCP request + Bearer token
@@ -514,7 +519,7 @@ curl http://localhost:4000/mcp-rest/tools/call \
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `auth_type` | Yes | Must be `oauth2`. For RFC 8693 On-Behalf-Of, use `oauth2_token_exchange` instead — see [MCP OBO Auth](./mcp_obo_auth.md). |
+| `auth_type` | Yes | Must be `oauth2`. For RFC 8693 On-Behalf-Of, use `oauth2_token_exchange` instead — see [Token exchange (OBO)](./mcp_obo_auth.md). |
 | `oauth2_flow` | Yes | Flow selector. One of `"client_credentials"` (M2M) or `"authorization_code"` (interactive PKCE, including `delegate_auth_to_upstream`). Required for every `auth_type: oauth2` server in `config.yaml`; the proxy refuses to start if it is missing or invalid. Servers created through the UI get it from the OAuth flow type selector. Only legacy database rows created before this field existed fall back to inference from field shape at request time; config entries are never inferred. |
 | `client_id` | Yes for M2M, optional for interactive | OAuth2 client ID. Required for `client_credentials`. For interactive flows, can be obtained via Dynamic Client Registration (RFC 7591) at `POST /{server_name}/register` if the upstream supports it. Supports `os.environ/VAR_NAME`. |
 | `client_secret` | Yes for M2M, optional for interactive | OAuth2 client secret. Same applicability as `client_id`. Supports `os.environ/VAR_NAME`. |
@@ -585,11 +590,11 @@ x-mcp-debug-server-auth-type: oauth2
 
 ### Common Issues
 
-#### LiteLLM API key leaking to the MCP server
+#### Virtual Key sent to the MCP server {#litellm-api-key-leaking-to-the-mcp-server}
 
 **Symptom:** `x-mcp-debug-oauth2-token` shows `SAME_AS_LITELLM_KEY`.
 
-The `Authorization` header carries the LiteLLM API key instead of an OAuth2 token. The OAuth2 flow never ran because the client already had an `Authorization` header set.
+The `Authorization` header carries the LiteLLM Virtual Key instead of an OAuth2 token. The OAuth2 flow never ran because the client already had an `Authorization` header set.
 
 **Fix:** Move the LiteLLM key to `x-litellm-api-key`:
 
@@ -620,4 +625,4 @@ The server has `client_id`/`client_secret`/`token_url` configured so LiteLLM is 
 
 ## Passthrough and Delegated Upstream OAuth
 
-For servers where the client already authenticates directly against the upstream's own OAuth issuer, LiteLLM can forward the client's upstream token instead of managing tokens itself. The transparent `auth_type: true_passthrough` mode, the admission-gated `auth_type: oauth_delegate` mode, and the legacy `delegate_auth_to_upstream` flag are covered in [MCP OAuth Passthrough](./mcp_oauth_passthrough.md). That page also documents the `dcr_bridge` flag for OAuth-only clients such as OpenCode, Claude Code, Cursor, and Claude Desktop, where the gateway hosts registration and sign-in so the client can connect with a single OAuth flow.
+When a client obtains its own MCP server token, LiteLLM can forward that token without managing it. See [OAuth token passthrough](./mcp_oauth_passthrough.md) for `true_passthrough`, which skips LiteLLM client authentication; `oauth_delegate`, which requires it; and the deprecated `delegate_auth_to_upstream` flag. That page also covers `dcr_bridge`, which lets LiteLLM host registration and sign-in for OAuth-only clients such as OpenCode, Claude Code, Cursor, and Claude Desktop.

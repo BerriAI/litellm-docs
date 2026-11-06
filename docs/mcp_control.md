@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # MCP Permission Management
 
-Control which MCP servers and tools can be accessed by specific keys, teams, or organizations in LiteLLM. When a client attempts to list or call tools, LiteLLM enforces access controls based on configured permissions.
+Start with [MCP Access](./proxy/access_management/mcp.md) to configure team and Virtual Key permissions. This page covers the permission settings, API fields, and server configuration in detail. For how permissions combine, see [Access inheritance](./proxy/access_management/inheritance.md).
 
 ## Overview
 
