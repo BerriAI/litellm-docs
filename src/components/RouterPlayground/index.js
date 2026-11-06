@@ -30,7 +30,6 @@ export default function Playground() {
   const [configError, setConfigError] = useState(null);
   const [configJson, setConfigJson] = useState(null);
   const [info, setInfo] = useState(null);
-  const [profiles, setProfiles] = useState({});
   const [linked, setLinked] = useState(null);
   const playground = useRef(null);
   const counter = useRef(0);

@@ -12,37 +12,13 @@ import {
   settingValue,
 } from './configDoc';
 import FallbackGraph from './FallbackGraph';
+import ProfileEditor from './ProfileEditor';
 import {PROFILE_PRESETS, profileSummary} from './profiles';
 import {FALLBACK_MAPS, PYTHON_STRATEGIES, fallbackTargets, groupsOf, shares, validate} from './validate';
 import styles from './ConfigEditor.module.css';
 
 // The router config as a form over the YAML, which stays the source of truth: every form edit
 // patches one node of the YAML document. Behaviour profiles live beside it, keyed by deployment id.
-
-// Stands in for the simulator's ProfileEditor until that lands on this branch; swap this line for
-// `import ProfileEditor from './ProfileEditor';`.
-const ProfileEditor = PresetPicker;
-
-function PresetPicker({value, onChange}) {
-  return (
-    <div className={styles.chips}>
-      {Object.entries(PROFILE_PRESETS).map(([key, preset]) => (
-        <button
-          key={key}
-          type="button"
-          className={value?.preset === key ? styles.chipOn : styles.chip}
-          onClick={() => onChange({preset: key, ...preset, label: undefined})}>
-          {preset.label}
-        </button>
-      ))}
-      {value && (
-        <button type="button" className={styles.link} onClick={() => onChange(null)}>
-          clear
-        </button>
-      )}
-    </div>
-  );
-}
 
 const RETRY_KINDS = [
   'RateLimitErrorRetries',
