@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {seconds} from './format';
 import {FAILURES} from './presets';
-import {RunCard, cooling} from './Trace';
+import {RunCard} from './Trace';
 import styles from './styles.module.css';
 
 // Runs a steady stream of requests through a fresh router on its own simulated clock, with
@@ -37,7 +37,6 @@ function simulate(core, configJson, seed, model, teamId, {rate, duration, outage
         playground.setBehaviour(key);
         active = key;
       }
-      const before = cooling(playground);
       const run = JSON.parse(playground.send(JSON.stringify({model, team_id: teamId || undefined})));
       const attempts = run.trace
         .filter(item => item.kind === 'host' && item.call === 'invoke')
@@ -46,7 +45,7 @@ function simulate(core, configJson, seed, model, teamId, {rate, duration, outage
           ok: item.answer === '200 OK',
           t: item.t,
         }));
-      requests.push({t, attempts, before, ...run});
+      requests.push({t, attempts, ...run});
       for (const deployment of JSON.parse(playground.state()).deployments) {
         if (!deployment.cooldown) continue;
         const after = playground.now();
@@ -314,7 +313,7 @@ function Chart({sim, deployments, outages, onPick, picked}) {
   );
 }
 
-export default function Timeline({core, configJson, seed, model, teamId, deployments, defaultOutages}) {
+export default function Timeline({core, configJson, seed, model, teamId, deployments, info, defaultOutages}) {
   const [rate, setRate] = useState(2);
   const [duration, setDuration] = useState(120);
   const [outages, setOutages] = useState(defaultOutages);
@@ -492,7 +491,7 @@ export default function Timeline({core, configJson, seed, model, teamId, deploym
             model,
             ...picked,
           }}
-          deployments={deployments}
+          info={info}
         />
       )}
     </section>

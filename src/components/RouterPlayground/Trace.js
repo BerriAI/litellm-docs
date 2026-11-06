@@ -45,16 +45,7 @@ function Step({step}) {
   );
 }
 
-// The deployments in cooldown right now, with what is left of it, for the diagram's first state.
-export function cooling(playground) {
-  const before = {};
-  for (const deployment of JSON.parse(playground.state()).deployments) {
-    if (deployment.cooldown) before[deployment.id] = `${Math.round(deployment.cooldown.remaining ?? 0)}s left`;
-  }
-  return before;
-}
-
-export function RunCard({run, deployments}) {
+export function RunCard({run, info}) {
   const [open, setOpen] = useState(run.kind === 'single');
   const [view, setView] = useState('diagram');
   if (run.kind === 'burst') {
@@ -114,8 +105,8 @@ export function RunCard({run, deployments}) {
               Event list
             </button>
           </div>
-          {view === 'diagram' && deployments ? (
-            <StateDiagram run={run} deployments={deployments} />
+          {view === 'diagram' && info ? (
+            <StateDiagram run={run} info={info} />
           ) : (
             <ol className={styles.trace}>
               {trace.map((step, index) => (

@@ -15,16 +15,16 @@ export default function RouterPlaygroundPage() {
           <p className={styles.eyebrow}>Proof of concept</p>
           <h1 className={styles.title}>Router playground</h1>
           <p className={styles.description}>
-            This page runs the router core that <code>litellm.Router</code> uses, compiled to WebAssembly, in your browser.
-            Paste a <code>model_list</code> and <code>router_settings</code>, choose how each deployment answers, and send
-            requests. No request leaves the page: the playground answers each attempt from its script, and retry waits
-            move a simulated clock forward instead of waiting.
+            This page runs the router core that <code>litellm.Router</code> uses, compiled to WebAssembly, in your
+            browser. Paste a <code>model_list</code> and <code>router_settings</code>, choose how each deployment
+            answers, and send requests. No request leaves the page: the playground answers each attempt from its script,
+            and retry waits move a simulated clock forward instead of waiting.
           </p>
           <p className={styles.description}>
             It covers <code>simple-shuffle</code> with weights and <code>order</code>, retries, fallbacks, cooldowns and
-            allowed fails. Strategies and filters that still run in Python, such as <code>least-busy</code>,{' '}
-            <code>usage-based-routing-v2</code>, <code>latency-based-routing</code> and tag routing, show up in the trace as
-            a <code>host.select</code> step that leaves the candidates unchanged.
+            allowed fails. Strategies that still run in Python, such as <code>least-busy</code>,{' '}
+            <code>usage-based-routing-v2</code> and <code>latency-based-routing</code>, are not offered until they run
+            in the Rust core.
           </p>
         </header>
         <RouterPlayground />

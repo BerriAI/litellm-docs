@@ -4,7 +4,7 @@ import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
 import {FAILURES, PRESETS} from './presets';
 import Timeline from './Timeline';
-import {RunCard, cooling} from './Trace';
+import {RunCard} from './Trace';
 import styles from './styles.module.css';
 
 // The router playground: a config editor, the deployments with how each one answers, request
@@ -25,6 +25,7 @@ export default function Playground() {
   const [state, setState] = useState(null);
   const [configError, setConfigError] = useState(null);
   const [configJson, setConfigJson] = useState(null);
+  const [info, setInfo] = useState(null);
   const playground = useRef(null);
   const counter = useRef(0);
 
@@ -47,12 +48,14 @@ export default function Playground() {
       const json = JSON.stringify(parseConfig(configText));
       playground.current = new core.Playground(json, BigInt(seed));
       setConfigJson(json);
+      setInfo(JSON.parse(playground.current.describe()));
       setConfigError(null);
       setBehaviour({});
       refresh();
     } catch (error) {
       setConfigError(String(error.message ?? error));
       setConfigJson(null);
+      setInfo(null);
       setState(null);
     }
   }, [core, configText, seed, refresh]);
@@ -78,10 +81,14 @@ export default function Playground() {
   const send = count => {
     if (!playground.current) return;
     if (count === 1) {
-      const before = cooling(playground.current);
       const run = JSON.parse(playground.current.send(request()));
       counter.current += 1;
-      setRuns(previous => [{kind: 'single', n: counter.current, model, before, ...run}, ...previous].slice(0, 50));
+      setRuns(previous =>
+        [
+          {kind: 'single', n: counter.current, model, request: {team_id: teamId || undefined}, ...run},
+          ...previous,
+        ].slice(0, 50),
+      );
     } else {
       const summary = {kind: 'burst', model, count, picked: {}, failed: 0, retries: 0, fallbacks: 0};
       for (let i = 0; i < count; i += 1) {
@@ -260,6 +267,7 @@ export default function Playground() {
           model={model}
           teamId={teamId}
           deployments={state.deployments}
+          info={info}
           defaultOutages={preset.outages}
         />
       )}
@@ -272,7 +280,7 @@ export default function Playground() {
         {runs.length === 0 ? (
           <p className={styles.muted}>Send a request to see every routing decision and host call it makes.</p>
         ) : (
-          runs.map((run, index) => <RunCard key={runs.length - index} run={run} deployments={state?.deployments} />)
+          runs.map((run, index) => <RunCard key={runs.length - index} run={run} info={info} />)
         )}
       </section>
 

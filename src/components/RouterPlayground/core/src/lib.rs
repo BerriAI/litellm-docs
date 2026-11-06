@@ -13,9 +13,9 @@ use std::{
 use async_trait::async_trait;
 use litellm_router_core::{
     health::{cooldown_key, Clock},
-    Attempt, AttemptError, Deployment, Error, FailureKind, Host, Op, Output, Payload, Router,
-    RouterCache, RouterConfig, RouterDynamicConfig, RouterEvent, RouterRequest, RoutingContext,
-    SeededRandomness, SelectStage,
+    Attempt, AttemptError, Deployment, Error, FailureKind, Host, Op, Output, Payload, Randomness,
+    Router, RouterCache, RouterConfig, RouterDynamicConfig, RouterEvent, RouterRequest,
+    RoutingContext, RoutingStrategy, SeededRandomness, SelectStage,
 };
 use parking_lot::Mutex;
 use serde_json::{json, Map, Value};
@@ -156,9 +156,12 @@ struct ScriptedHost {
 }
 
 impl ScriptedHost {
+    /// Every step carries the routing cache as it stands after it, so the diagram can show each
+    /// deployment's cooldown, allowed-fails counter and usage at that step.
     fn log(&self, step: Value) {
         let mut step = step;
         step["t"] = json!(self.clock.elapsed().as_secs_f64());
+        step["cache"] = Value::Array(self.cache.snapshot());
         self.trace.lock().push(step);
     }
 }
@@ -245,6 +248,21 @@ impl Host for ScriptedHost {
 
     fn cache(&self) -> Arc<dyn RouterCache> {
         Arc::new(self.cache.clone())
+    }
+}
+
+/// The seeded randomness the core draws from, with every draw logged, so the diagram can show
+/// where simple-shuffle's roll landed.
+struct RecordingRandomness {
+    inner: SeededRandomness,
+    host: Arc<ScriptedHost>,
+}
+
+impl Randomness for RecordingRandomness {
+    fn next_f64(&self) -> f64 {
+        let value = self.inner.next_f64();
+        self.host.log(json!({"kind": "random", "value": value}));
+        value
     }
 }
 
@@ -349,6 +367,9 @@ fn parse_request(value: &Value) -> RouterRequest {
 pub struct Playground {
     router: Router,
     host: Arc<ScriptedHost>,
+    seed: u64,
+    /// The router settings as given, for the fallback maps the diagram draws.
+    settings: Value,
 }
 
 #[wasm_bindgen]
@@ -375,10 +396,18 @@ impl Playground {
             }
         }
         let merged = Value::Object(merged);
+        let settings = merged.clone();
         let config: RouterConfig = serde_json::from_value(merged.clone())
             .map_err(|e| JsError::new(&format!("router config: {e}")))?;
         let dynamic: RouterDynamicConfig = serde_json::from_value(merged)
             .map_err(|e| JsError::new(&format!("router settings: {e}")))?;
+        if config.routing_strategy != RoutingStrategy::SimpleShuffle {
+            return Err(JsError::new(&format!(
+                "routing_strategy `{}` still runs in Python, so the playground does not offer it yet. \
+                 Use simple-shuffle (the default).",
+                config.routing_strategy
+            )));
+        }
         let clock = VirtualClock::default();
         let host = Arc::new(ScriptedHost {
             cache: VirtualCache {
@@ -390,11 +419,19 @@ impl Playground {
             trace: Mutex::new(Vec::new()),
         });
         let router = Router::builder(config, dynamic, host.clone())
-            .randomness(Arc::new(SeededRandomness::new(seed)))
+            .randomness(Arc::new(RecordingRandomness {
+                inner: SeededRandomness::new(seed),
+                host: host.clone(),
+            }))
             .clock(Arc::new(clock))
             .build()
             .map_err(|e| JsError::new(&format!("{e}")))?;
-        Ok(Playground { router, host })
+        Ok(Playground {
+            router,
+            host,
+            seed,
+            settings,
+        })
     }
 
     /// Replace every deployment's behaviour: `{"<deployment id>": {"fail": "RateLimitError",
@@ -446,6 +483,49 @@ impl Playground {
     /// Seconds of simulated time since the router was built.
     pub fn now(&self) -> f64 {
         self.host.clock.elapsed().as_secs_f64()
+    }
+
+    /// The router's effective settings and every deployment's routing parameters, as JSON: what
+    /// the diagram's globals band and deployment objects show.
+    pub fn describe(&self) -> Result<String, JsError> {
+        let settings = self.router.settings();
+        let given = |key: &str| self.settings.get(key).cloned().unwrap_or(Value::Null);
+        let registry = self.router.registry();
+        let deployments: Vec<Value> = registry
+            .deployments_from(0)
+            .iter()
+            .map(|deployment| {
+                json!({
+                    "id": deployment.id,
+                    "model_name": deployment.model_name,
+                    "model": deployment.params.model,
+                    "weight": deployment.raw_params.get("weight").and_then(Value::as_f64),
+                    "rpm": deployment.metric("rpm"),
+                    "tpm": deployment.metric("tpm"),
+                    "order": deployment.order(),
+                    "tags": deployment.raw_params.get("tags"),
+                })
+            })
+            .collect();
+        Ok(json!({
+            "seed": self.seed,
+            "settings": {
+                "routing_strategy": settings.routing_strategy.to_string(),
+                "num_retries": settings.num_retries,
+                "allowed_fails": settings.allowed_fails_set().then(|| settings.effective_allowed_fails()),
+                "cooldown_time": settings.cooldown_time.as_secs_f64(),
+                "disable_cooldowns": settings.disable_cooldowns,
+                "max_fallbacks": settings.max_fallbacks,
+                "retry_after": settings.retry_after.as_secs_f64(),
+                "retry_policy": settings.retry_policy.is_some(),
+                "fallbacks": given("fallbacks"),
+                "context_window_fallbacks": given("context_window_fallbacks"),
+                "content_policy_fallbacks": given("content_policy_fallbacks"),
+                "default_fallbacks": given("default_fallbacks"),
+            },
+            "deployments": deployments,
+        })
+        .to_string())
     }
 
     /// Every deployment with its cooldown, this minute's usage and the raw routing cache.
