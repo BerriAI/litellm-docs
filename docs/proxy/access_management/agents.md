@@ -35,6 +35,64 @@ flowchart LR
 
 To require explicit agent permissions for non-admin keys, set `general_settings.agent_access_default_deny: true` in the proxy configuration. <SinceVersion v="1.108.0" />
 
+## Let an agent act for the caller {#act-for-the-caller}
+
+Permission to invoke an agent is separate from permission for that agent to call models, MCP servers, or other agents. Give the agent its own Virtual Key, then forward the caller's context on its downstream requests.
+
+Create the key with the registered agent's `agent_id`. Replace the example IDs with your agent and its team; choose a model that team permits:
+
+```bash
+curl "$LITELLM_BASE_URL/key/generate" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key_alias": "support-agent",
+    "agent_id": "registered-agent-id",
+    "team_id": "agent-team-id",
+    "models": ["gpt-4o"]
+  }'
+```
+
+Store the returned key as `AGENT_API_KEY`. Configure its [MCP](./mcp.md) and downstream agent grants as needed. A key without `agent_id` does not apply the caller restrictions described here.
+
+The caller invokes `POST /a2a/{agent_id}` with their own credential. LiteLLM forwards the resolved identity to the agent backend as `X-LiteLLM-User-Id` and `X-LiteLLM-Team-Id`, when present. Accept this context only from authenticated gateway requests.
+
+In your agent's request handler, forward those headers with the agent's own key. For example, using FastAPI and the OpenAI Python SDK:
+
+```python
+import os
+
+from fastapi import Request
+from openai import AsyncOpenAI
+
+client = AsyncOpenAI(
+    api_key=os.environ["AGENT_API_KEY"],
+    base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
+)
+
+async def call_model(request: Request):
+    caller_headers = {
+        name: request.headers[name]
+        for name in ("X-LiteLLM-User-Id", "X-LiteLLM-Team-Id")
+        if request.headers.get(name)
+    }
+    return await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Summarize this support request."}],
+        extra_headers=caller_headers,
+    )
+```
+
+Forward the same headers on MCP and agent-to-agent requests. LiteLLM further restricts the agent's own permissions:
+
+- **Models:** the caller team's model access and per-member restrictions apply; without a caller team, the caller user's model list applies.
+- **MCP:** caller team and user permissions can narrow servers and tools.
+- **Other agents:** the caller team's agent grants apply.
+
+These headers cannot expand the agent's grants. They do not carry the caller's Virtual Key restrictions or select the caller's upstream OAuth credentials. Missing headers leave the agent's own permissions in effect. The model request's `user` field is separate attribution and customer-budget context.
+
+Test with a resource the agent can access but the caller cannot; the downstream request should be denied. See [access inheritance](./inheritance.md) and the [shared-agent walkthrough](/blog/ai-gateway-identity-and-finops) for the broader setup.
+
 ## Manage access through your IdP
 
 [Sync users and teams](../identity_provisioning.md), then assign agent permissions to those teams. Applications can authenticate with IdP tokens through [JWT key mapping](../jwt_key_mapping.md).

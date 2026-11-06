@@ -82,6 +82,8 @@ const config = {
           {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
+          {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
+          {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
