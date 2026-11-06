@@ -6,7 +6,7 @@ This guide is about the transition from the SDK based `langfuse` callback to the
 
 ## Turn it on
 
-Replace `langfuse` with `langfuse_otel`, set `LITELLM_OTEL_V2=true`, set the scope for either Path A (LLM only logging) or Path B (full tracing) and restart the proxy. Have a look at the changes below before you choose. Without a scope setting the proxy runs at `full`. The flag also moves your other OTel callbacks to V2, see the [general V2 migration guide](./opentelemetry_v2_migration).
+Replace `langfuse` with `langfuse_otel`, set `LITELLM_OTEL_V2=true`, set the scope for either Path A (LLM only logging) or Path B (full tracing) and restart the proxy. Have a look at the changes below before you choose. Without a scope setting the proxy runs at `full`. The flag also moves your other OTel callbacks except `logfire` to V2, see the [general V2 migration guide](./opentelemetry_v2_migration).
 
 ## What changes
 
@@ -36,7 +36,7 @@ The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom
 
 ### Key and team destinations
 
-The stored key/team callback `langfuse` is still the SDK callback. Change it to `langfuse_otel`, same credentials, explicitly set its scope and content policy. The global scope variable does not restrict tenant destinations. V2 defaults to `override` routing so a tenant's Langfuse destination will take over your global Langfuse exporter for that request. Under `full` the database reads that resolve the key during auth still go to your exporter in both modes. `additive` will keep both. A custom `langfuse_host` will require its key pair and an entry in `general_settings.provider_url_destination_allowed_hosts`. An unreachable tenant destination will not fall back to your project, but a tenant host missing from the allowlist or a destination missing its key pair sends that request to your project with no error. See [tenant routing](./opentelemetry_v2#what-the-tenant-receives).
+The stored key/team callback `langfuse` is still the SDK callback. Change it to `langfuse_otel`, same credentials, explicitly set its scope and content policy. The global scope variable does not restrict tenant destinations. V2 defaults to `override` routing so a tenant's Langfuse destination will take over your global Langfuse exporter for that request. Under `full` the database reads that resolve the key during auth still go to your exporter in both modes. `additive` will keep both. A custom `langfuse_host` will require its key pair and an entry in `general_settings.provider_url_destination_allowed_hosts`. An unreachable tenant destination will not fall back to your project. A destination missing its key pair sends that request to your project with no error. A tenant host missing from the allowlist is skipped with a warning, so the model call goes to your Langfuse host as its own trace signed with the tenant's keys and the rest of the request goes to your project. See [tenant routing](./opentelemetry_v2#what-the-tenant-receives).
 
 ### Duplicate callbacks
 
@@ -44,7 +44,7 @@ Don't leave both callbacks enabled for the same traffic and project. `langfuse` 
 
 ### Redaction and capture
 
-Redaction and capture are separate controls. A successful call passes through LiteLLM's shared `turn_off_message_logging` redaction prior to V2 even having a look at the logging payload. Under `llm_only` a capture opt-in in no way undoes the redaction that has already occurred in that first stage. Under the default `full` scope it does, because the request root observation (`POST /v1/chat/completions`) still carries the raw prompt and response with `turn_off_message_logging` on, while the generation shows `redacted-by-litellm`. If you redact messages and turn capture on, use `llm_only` on the operator and on every key and team destination, since a destination without `langfuse_span_scope` runs at `full`. Don't assume that this proves redaction on the failure paths. You need to test redaction on the failure paths separately and you must use `no_content` on any destination where it is absolutely critical that the message content doesn't get to that destination. The request metadata that V2 exports for the `user_api_key_*` fields is using the same `redact_user_api_key_info` helper as the SDK callback. It doesn't redact the `litellm.metadata.*` identity attributes V2 puts on every span (`user_api_key_alias`, `user_api_key_user_id`, `user_api_key_org_id` and `user_api_key_end_user_id`, plus `requester_ip_address` on the model call span), team identity or the key hash, and it's not a general purpose anonymisation switch. V2 ignores the per-request `mask_input` and `mask_output` metadata and the `langfuse_masking_function` parameter, so a caller that relies on them sends its prompts once capture is on. You need to test your actual redaction policy with capture enabled prior to rollout.
+Redaction and capture are separate controls. A successful call passes through LiteLLM's shared `turn_off_message_logging` redaction prior to V2 even having a look at the logging payload. Under `llm_only` a capture opt-in in no way undoes the redaction that has already occurred in that first stage. Under the default `full` scope it does, because the request root observation (`POST /v1/chat/completions`) still carries the raw prompt and response with `turn_off_message_logging` on, while the generation shows `redacted-by-litellm`. The root also carries them for `no-log` requests, which the SDK callback skipped, and `full` sends MCP tool arguments and results and guardrail responses without message redaction. If you redact messages and turn capture on, use `llm_only` on the operator and on every key and team destination, since a destination without `langfuse_span_scope` runs at `full`. Don't assume that this proves redaction on the failure paths. You need to test redaction on the failure paths separately and you must use `no_content` on any destination where it is absolutely critical that the message content doesn't get to that destination. The request metadata that V2 exports for the `user_api_key_*` fields is using the same `redact_user_api_key_info` helper as the SDK callback. It doesn't redact the `litellm.metadata.*` identity attributes V2 puts on every span (`user_api_key_alias`, `user_api_key_user_id`, `user_api_key_org_id` and `user_api_key_end_user_id`, plus `requester_ip_address` on model call and MCP spans), team identity, the key hash or the client address and user agent on the `full` root span, and it's not a general purpose anonymisation switch. V2 ignores the per-request `mask_input` and `mask_output` metadata and the `langfuse_masking_function` parameter, so a caller that relies on them sends its prompts once capture is on. You need to test your actual redaction policy with capture enabled prior to rollout.
 
 ## Choose a migration path
 
@@ -59,7 +59,7 @@ litellm_settings:
   callbacks: ["langfuse_otel"]
 ```
 
-Set the environment and restart the proxy. Use the host for your Langfuse region or for your self hosted deployment. A misspelled scope value makes the proxy fall back to the older OTel integration, so use `llm_only` exactly.
+Set the environment and restart the proxy. Use the host for your Langfuse region or for your self hosted deployment. A misspelled scope value breaks every V2 callback, not only Langfuse. The preset falls back to the older OTel integration and key and team destinations get nothing, so use `llm_only` exactly.
 
 ```shell
 export LITELLM_OTEL_V2=true
@@ -90,7 +90,7 @@ curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
   }'
 ```
 
-For a key, put the same callback object in `metadata.logging` on `/key/generate` or `/key/update`. A `success` entry also receives failed requests, because V2 picks the destination before the request has an outcome. A failure only entry gets no destination and cannot take `capture_message_content`. See [key and team destination setup](./opentelemetry_v2#set-it-on-a-key). Tenant capture can override the global setting so you do need to explicitly set `no_content` for any destinations which are absolutely not to receive prompts. An omitted capture policy will inherit the matching operator exporter policy rather than the policy of another OTel callback.
+For a key, put the same callback object in `metadata.logging` on `/key/generate` or `/key/update`. A `success` entry also receives failed requests, because V2 picks the destination before the request has an outcome. A failure only entry gets no destination and cannot take `capture_message_content`. See [key and team destination setup](./opentelemetry_v2#set-it-on-a-key). Tenant capture can override the global setting so you do need to explicitly set `no_content` for any destinations which are absolutely not to receive prompts. An omitted capture policy inherits your own Langfuse exporter's policy, or the generic `otel` callback's policy when you have no Langfuse exporter of your own.
 
 ### Stage and verify the cutover
 
@@ -128,7 +128,7 @@ Legacy `generation_name` has no custom name equivalent. The V2 model span uses `
 
 ### User, session and tags
 
-`metadata.trace_user_id` maps to `user.id` with the `langfuse_trace_user_id` header taking precedence. V2 doesn't make use of the old fallback from the completion `user` argument. `metadata.session_id` maps to `session.id` with the `langfuse_session_id` header taking precedence.
+`metadata.trace_user_id` maps to `user.id` with the `langfuse_trace_user_id` header taking precedence. V2 doesn't make use of the old fallback to the end user ID. `metadata.session_id` maps to `session.id` with the `langfuse_session_id` header taking precedence.
 
 `metadata.tags` maps to `langfuse.trace.tags` and retains non-empty strings. The tags are taken from the request metadata, which also holds the key and team tags and the `x-litellm-tags` header, rather than a `langfuse_tags` header.
 
@@ -136,13 +136,13 @@ Legacy `generation_name` has no custom name equivalent. The V2 model span uses `
 
 Use standard OTel trace context propagation to link up the distributed traces rather than `trace_id`/`existing_trace_id` metadata. V2 doesn't implement the SDK's arbitrary-ID normalisation or the existing trace mutation semantics.
 
-`generation_id` and `parent_observation_id` make use of the OTel span identity and parent context, with no equivalent caller override in the V2 mapper. `langfuse.observation.id` has the LiteLLM call ID.
+`generation_id` and `parent_observation_id` make use of the OTel span identity and parent context, with no equivalent caller override in the V2 mapper. `langfuse.observation.id` has the LiteLLM call ID, which a caller can set with the `x-litellm-call-id` header.
 
 ### Metadata and identity fields
 
 `trace_metadata` and arbitrary generation metadata have no wholesale passthrough equivalent. V2 does emit the identity fields in `langfuse.observation.metadata` and `langfuse.trace.metadata.*` <SinceVersion v="1.109.0" />. Custom metadata requires an explicit [baggage allowlist](./opentelemetry_v2#request-identity-on-every-span) (which is not SDK trace metadata).
 
-Fields `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id`, `user_api_key_team_id`, `user_api_key_team_alias` and `user_api_key_org_id` are in the observation metadata and the trace metadata attributes. They must be non-empty strings. `redact_user_api_key_info` removes them from the observation and trace metadata, but `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id` and `user_api_key_org_id` still go out as `litellm.metadata.*` attributes on every span. There are also team ID and team alias identity mappings.
+Fields `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id`, `user_api_key_team_id`, `user_api_key_team_alias` and `user_api_key_org_id` are in the observation metadata and the trace metadata attributes. They must be non-empty strings. `redact_user_api_key_info` removes them from the observation and trace metadata, except the trace metadata `team_id` and `team_alias`, but `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id` and `user_api_key_org_id` still go out as `litellm.metadata.*` attributes on every span. There are also team ID and team alias identity mappings.
 
 ### Model, usage and cost
 
@@ -154,13 +154,13 @@ Response cost maps to `langfuse.observation.cost_details` with `total`. It uses 
 
 ### Content and redaction
 
-Prompt and response logging requires `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only` (default is no content). Tenant `capture_message_content` can override the global policy. Shared `turn_off_message_logging` and `redact_user_api_key_info` controls still apply, except that under `full` the request root observation is not message redacted and the `litellm.metadata.*` identity attributes are never removed. Test message redaction and identity exposure separately as per [Redaction and capture](#redaction-and-capture). Content capture is not an anonymisation policy.
+Prompt and response logging requires `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only` (default is no content). Tenant `capture_message_content` can override the global policy. Shared `turn_off_message_logging` and `redact_user_api_key_info` controls still apply, except that under `full` the request root observation, MCP tool spans and guardrail responses are not message redacted, and the `litellm.metadata.*` identity attributes are never removed. Test message redaction and identity exposure separately as per [Redaction and capture](#redaction-and-capture). Content capture is not an anonymisation policy.
 
 ### Credentials
 
 Global `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_HOST` are still the preset environment credentials. V2 is exporting via Langfuse's OTLP endpoint rather than creating the generations via the SDK callback. With no `LANGFUSE_HOST` the preset sends to the US cloud (`https://us.cloud.langfuse.com`), while the SDK callback defaulted to the EU cloud (`https://cloud.langfuse.com`). `LANGFUSE_OTEL_HOST` takes precedence over `LANGFUSE_HOST`.
 
-Per-key and per-team credentials use `langfuse_public_key`, `langfuse_secret_key` and `langfuse_host` on a `langfuse_otel` destination in the key or team `metadata.logging`. They route to an OTel destination rather than an SDK client. The proxy rejects dynamic per-request `langfuse_public_key` and `langfuse_secret_key` with a 400 unless `general_settings.allow_client_side_credentials` is on. When they are allowed they only send the model call observation to that project, as its own trace linked to the request trace, while the rest of the tree stays in your project, and a per-request `langfuse_host` is ignored. Re-register the stored callbacks and test the routing. Set `langfuse_span_scope` and capture policy separately for each destination.
+Per-key and per-team credentials use `langfuse_public_key`, `langfuse_secret_key` and `langfuse_host` on a `langfuse_otel` destination in the key or team `metadata.logging`. They route to an OTel destination rather than an SDK client. The proxy rejects dynamic per-request `langfuse_public_key` and `langfuse_secret_key` with a 401 unless `general_settings.allow_client_side_credentials` is on. When they are allowed they only send the model call observation to that project, as its own trace linked to the request trace, while the rest of the tree stays in your project, and a per-request `langfuse_host` is ignored. Re-register the stored callbacks and test the routing. Set `langfuse_span_scope` and capture policy separately for each destination.
 
 ### Fields with no equivalent
 
