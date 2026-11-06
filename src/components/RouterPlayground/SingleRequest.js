@@ -17,16 +17,18 @@ export default function SingleRequest({value, onChange, model, onModel, kinds, i
         </label>
         <label className={styles.inline}>
           send to
-          <select value={value.model} onChange={event => set({model: event.target.value})}>
-            <option value="">{model || 'the model'}</option>
-            {groups
-              .filter(group => group !== model)
-              .map(group => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-          </select>
+          <input
+            list="single-models"
+            value={value.model}
+            placeholder={model || 'the model'}
+            size={16}
+            onChange={event => set({model: event.target.value.trim()})}
+          />
+          <datalist id="single-models">
+            {groups.map(group => (
+              <option key={group} value={group} />
+            ))}
+          </datalist>
         </label>
         <label
           className={styles.inline}

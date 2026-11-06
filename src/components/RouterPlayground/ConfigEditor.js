@@ -336,7 +336,15 @@ function GroupCard({name, members, info, data, issues, profiles, openRow, action
   const fallbacks = fallbackTargets(data, 'fallbacks').find(entry => entry.from === name)?.to ?? [];
   const target = FALLBACK_MAPS.some(map => fallbackTargets(data, map.key).some(entry => entry.to.includes(name)));
   const picks = members.length === 1 ? null : ordered ? 'order tiers' : metric ? `picks by ${metric}` : 'even split';
-  const meta = [`${members.length} deployment${members.length === 1 ? '' : 's'}`, picks, target && 'fallback target'];
+  const teamOf = ({entry}) => entry?.model_info?.team_id;
+  const publicOf = ({entry}) => entry?.model_info?.team_public_model_name;
+  const team = members.length && members.every(member => teamOf(member) && publicOf(member)) ? members[0] : null;
+  const meta = [
+    `${members.length} deployment${members.length === 1 ? '' : 's'}`,
+    picks,
+    target && 'fallback target',
+    team && `team ${teamOf(team)}'s ${publicOf(team)}`,
+  ];
   return (
     <div className={styles.card}>
       <div className={styles.groupHead}>
@@ -419,6 +427,12 @@ function SettingsColumn({data, info, issues, error, actions}) {
   const policy = value('retry_policy');
   const groups = groupsOf(data);
   const seconds = (key, fallback) => `${effective[key] ?? fallback} s`;
+  const teams = (Array.isArray(data?.teams) ? data.teams : [])
+    .filter(team => team && typeof team === 'object' && team.team_id != null)
+    .map(team => ({
+      id: String(team.team_id),
+      keys: team.router_settings && typeof team.router_settings === 'object' ? Object.keys(team.router_settings) : [],
+    }));
   return (
     <div className={styles.settings}>
       <span className={styles.cap}>Router settings · router_settings</span>
@@ -532,6 +546,22 @@ function SettingsColumn({data, info, issues, error, actions}) {
           />
         </Setting>
       </div>
+
+      {teams.length > 0 && (
+        <div className={styles.card}>
+          <span className={styles.cardTitle}>Teams</span>
+          {teams.map(team => (
+            <div key={team.id} className={styles.mapRow}>
+              <span className={styles.mapLabel}>{team.id}</span>
+              <span className={styles.muted}>{team.keys.length ? team.keys.join(', ') : 'no router_settings'}</span>
+            </div>
+          ))}
+          <span className={styles.hint}>
+            <code>teams:</code> stands in for the team records a proxy keeps in its database. A request with that{' '}
+            <code>team_id</code> gets the team's router_settings, as the proxy forwards them. Edit them in the YAML view.
+          </span>
+        </div>
+      )}
 
       <div className={styles.card}>
         <div className={styles.cardTitleRow}>

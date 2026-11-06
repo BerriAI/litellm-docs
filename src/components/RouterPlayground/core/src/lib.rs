@@ -216,6 +216,8 @@ struct ScriptedHost {
     rng: SeededRandomness,
     /// Tokens the single call in progress costs, when its request names them.
     single_tokens: Mutex<Option<u64>>,
+    /// Each team's `router_settings`, from the config's `teams:`.
+    teams: Map<String, Value>,
 }
 
 /// How a deployment behaves during a simulation: lognormal latency from its median and p95,
@@ -702,6 +704,11 @@ fn parse_request(value: &Value) -> RouterRequest {
             .map(str::to_owned)
     });
     let flag = |key: &str| value.get(key).and_then(Value::as_bool).unwrap_or(false);
+    let fallbacks = |key: &str| {
+        value
+            .get(key)
+            .map(|list| serde_json::from_value(list.clone()).ok())
+    };
     let mock_failure = [
         ("mock_testing_fallbacks", MockFailure::Fallbacks),
         ("mock_testing_context_fallbacks", MockFailure::ContextWindow),
@@ -737,7 +744,104 @@ fn parse_request(value: &Value) -> RouterRequest {
             .get("specific_deployment")
             .and_then(Value::as_bool)
             .unwrap_or(false),
+        fallbacks: fallbacks("fallbacks"),
+        context_window_fallbacks: fallbacks("context_window_fallbacks"),
+        content_policy_fallbacks: fallbacks("content_policy_fallbacks"),
+        max_fallbacks: value
+            .get("max_fallbacks")
+            .and_then(Value::as_u64)
+            .map(|n| n as u32),
+        cooldown_time: num(value, "cooldown_time"),
+        model_group_retry_policy: value
+            .get("model_group_retry_policy")
+            .and_then(|policy| serde_json::from_value(policy.clone()).ok()),
+        router_weights: value.get("_router_weights").cloned(),
         ..RouterRequest::default()
+    }
+}
+
+/// The `router_settings` keys a proxy forwards from the caller's team into each request
+/// (`_PER_REQUEST_ROUTER_SETTINGS`), where the request does not set them itself.
+const TEAM_REQUEST_SETTINGS: [&str; 5] = [
+    "fallbacks",
+    "context_window_fallbacks",
+    "content_policy_fallbacks",
+    "num_retries",
+    "model_group_retry_policy",
+];
+
+/// What the proxy does with a team's `router_settings` before the router sees the call: the
+/// per-request keys go into the body, `model_group_alias` rewrites the model, and `weights`
+/// becomes `_router_weights`. Returns the keys it applied, for the trace.
+fn apply_team_settings(teams: &Map<String, Value>, body: &mut Value) -> Vec<String> {
+    let team = body
+        .get("team_id")
+        .or_else(|| body.pointer("/metadata/user_api_key_team_id"))
+        .and_then(Value::as_str)
+        .map(str::to_owned);
+    let Some(settings) = team
+        .and_then(|team| teams.get(&team))
+        .and_then(Value::as_object)
+    else {
+        return Vec::new();
+    };
+    let Some(map) = body.as_object_mut() else {
+        return Vec::new();
+    };
+    let mut applied = Vec::new();
+    for key in TEAM_REQUEST_SETTINGS {
+        if let Some(setting) = settings.get(key).filter(|v| !v.is_null()) {
+            if !map.contains_key(key) {
+                map.insert(key.to_owned(), setting.clone());
+                applied.push(key.to_owned());
+            }
+        }
+    }
+    let model = map.get("model").and_then(Value::as_str).map(str::to_owned);
+    let target = model.and_then(|model| {
+        let alias = settings.get("model_group_alias")?.get(&model)?;
+        alias
+            .as_str()
+            .or_else(|| alias.get("model").and_then(Value::as_str))
+            .map(str::to_owned)
+    });
+    if let Some(target) = target {
+        map.insert("model".to_owned(), Value::String(target));
+        applied.push("model_group_alias".to_owned());
+    }
+    if let Some(weights) = settings.get("weights").filter(|v| !v.is_null()) {
+        map.insert("_router_weights".to_owned(), weights.clone());
+        applied.push("weights".to_owned());
+    }
+    applied
+}
+
+/// `teams:` in the playground config stands in for the team records a proxy keeps in its
+/// database: `[{team_id, router_settings}]`, or a map from team id to its `router_settings`.
+fn parse_teams(config: &Value) -> Map<String, Value> {
+    match config.get("teams") {
+        Some(Value::Array(list)) => list
+            .iter()
+            .filter_map(|team| {
+                let id = team.get("team_id")?.as_str()?.to_owned();
+                Some((
+                    id,
+                    team.get("router_settings").cloned().unwrap_or(Value::Null),
+                ))
+            })
+            .collect(),
+        Some(Value::Object(map)) => map
+            .iter()
+            .map(|(id, team)| {
+                (
+                    id.clone(),
+                    team.get("router_settings")
+                        .cloned()
+                        .unwrap_or_else(|| team.clone()),
+                )
+            })
+            .collect(),
+        _ => Map::new(),
     }
 }
 
@@ -1012,6 +1116,7 @@ impl Playground {
                 if key != "router_settings"
                     && key != "litellm_settings"
                     && key != "general_settings"
+                    && key != "teams"
                 {
                     merged.insert(key.clone(), value.clone());
                 }
@@ -1053,6 +1158,7 @@ impl Playground {
             sim: Mutex::new(SimLog::default()),
             rng: SeededRandomness::new(seed ^ 0x5eed_5eed),
             single_tokens: Mutex::new(None),
+            teams: parse_teams(&parsed),
         });
         let router = Router::builder(config, dynamic, host.clone())
             .randomness(Arc::new(RecordingRandomness {
@@ -1106,8 +1212,12 @@ impl Playground {
             .and_then(|map| map.remove("playground_tokens"))
             .and_then(|tokens| tokens.as_u64());
         *self.host.single_tokens.lock() = tokens;
-        let request = parse_request(&body);
         self.host.trace.lock().clear();
+        let applied = apply_team_settings(&self.host.teams, &mut body);
+        if !applied.is_empty() {
+            self.host.log(json!({"kind": "host", "call": "team_settings", "stage": "team router_settings", "answer": format!("applied {}", applied.join(", "))}));
+        }
+        let request = parse_request(&body);
         let started = self.host.clock.elapsed();
         let result = outcome(pollster::block_on(
             self.router.call(Op::from("acompletion"), request),

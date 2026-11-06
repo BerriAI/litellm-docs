@@ -143,6 +143,128 @@ router_settings:
     - claude-sonnet: [gpt-4o]
 `;
 
+const TEAMS = `# Teams share gpt-4o, and team acme brings its own deployment: a deployment
+# with model_info.team_id and team_public_model_name serves that team when it
+# asks for the public name, and nobody else.
+# teams: stands in for the team records the proxy keeps in its database. The
+# proxy forwards a team's router_settings into each of its requests, so they
+# replace the router's for that team only.
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+    model_info:
+      id: shared-openai
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+    model_info:
+      id: shared-azure
+  - model_name: acme-gpt-4o
+    litellm_params:
+      model: azure/acme-gpt-4o
+    model_info:
+      id: acme-azure
+      team_id: acme
+      team_public_model_name: gpt-4o
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+    model_info:
+      id: anthropic
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+    model_info:
+      id: openai-mini
+
+router_settings:
+  num_retries: 2
+  fallbacks:
+    - gpt-4o: [gpt-4o-mini]
+
+teams:
+  # acme fails fast to Claude instead of the router's gpt-4o-mini fallback.
+  - team_id: acme
+    router_settings:
+      num_retries: 0
+      fallbacks:
+        - gpt-4o: [claude-sonnet]
+  # research retries harder, calls "fast" for gpt-4o-mini, and sends
+  # nearly all of its gpt-4o traffic to Azure.
+  - team_id: research
+    router_settings:
+      num_retries: 4
+      model_group_alias:
+        fast: gpt-4o-mini
+      weights:
+        gpt-4o:
+          shared-azure: 9
+          shared-openai: 1
+`;
+
+const ALIASES = `# Names that resolve to model groups. model_group_alias maps a public
+# name onto a group, and a wildcard model_name catches every model a
+# provider serves, so "anthropic/claude-haiku-4-5" needs no entry of its own.
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+    model_info:
+      id: openai-gpt-4o
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+    model_info:
+      id: azure-gpt-4o
+  - model_name: anthropic/*
+    litellm_params:
+      model: anthropic/*
+    model_info:
+      id: anthropic-any
+  - model_name: openai/*
+    litellm_params:
+      model: openai/*
+    model_info:
+      id: openai-any
+
+router_settings:
+  num_retries: 1
+  model_group_alias:
+    smart: gpt-4o
+    cheap: openai/gpt-4o-mini
+  fallbacks:
+    - gpt-4o: [anthropic/claude-sonnet-4-5]
+`;
+
+const POLICIES = `# Not every error deserves the same treatment. retry_policy sets retries
+# per exception class, and allowed_fails_policy sets how many failures of
+# each class a deployment takes in a minute before it cools down.
+# model_info.cooldown_time gives one deployment a longer cooldown.
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+    model_info:
+      id: azure
+      cooldown_time: 30
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+    model_info:
+      id: openai
+
+router_settings:
+  num_retries: 2
+  retry_policy:
+    RateLimitErrorRetries: 4
+    InternalServerErrorRetries: 1
+    ContentPolicyViolationErrorRetries: 0
+  allowed_fails_policy:
+    RateLimitErrorAllowedFails: 10
+    InternalServerErrorAllowedFails: 1
+`;
+
 const tuned = (name, fields) => ({...presetProfile(name), ...fields, preset: 'custom'});
 
 export const PRESETS = [
@@ -204,6 +326,45 @@ export const PRESETS = [
         disable_fallbacks: true,
         metadata: '{"tags": ["batch"]}',
       }),
+    ],
+  },
+  {
+    id: 'teams',
+    label: 'Teams',
+    config: TEAMS,
+    model: 'gpt-4o',
+    outages: [
+      {id: 'shared-openai', fail: 'InternalServerError', from: 30, to: 90},
+      {id: 'shared-azure', fail: 'InternalServerError', from: 30, to: 90},
+    ],
+    rate: 4,
+    requests: () => [
+      newKind({label: 'no-team', share: 2, model: 'gpt-4o'}),
+      newKind({label: 'acme', share: 2, model: 'gpt-4o', team_id: 'acme'}),
+      newKind({label: 'research', share: 2, model: 'gpt-4o', team_id: 'research'}),
+      newKind({label: 'research-fast', share: 1, model: 'fast', team_id: 'research'}),
+    ],
+  },
+  {
+    id: 'aliases',
+    label: 'Aliases and wildcards',
+    config: ALIASES,
+    model: 'smart',
+    outages: [{id: 'openai-gpt-4o', fail: 'RateLimitError', from: 30, to: 90}],
+    requests: () => [
+      newKind({label: 'smart', share: 3, model: 'smart'}),
+      newKind({label: 'cheap', share: 2, model: 'cheap'}),
+      newKind({label: 'haiku', share: 1, model: 'anthropic/claude-haiku-4-5'}),
+    ],
+  },
+  {
+    id: 'policies',
+    label: 'Retry and cooldown policies',
+    config: POLICIES,
+    model: 'gpt-4o',
+    outages: [
+      {id: 'azure', fail: 'RateLimitError', from: 20, to: 60},
+      {id: 'openai', fail: 'InternalServerError', from: 70, to: 110},
     ],
   },
   {

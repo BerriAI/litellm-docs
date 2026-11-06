@@ -19,7 +19,10 @@ use litellm_router_core::{Op, Router};
 use parking_lot::Mutex;
 use serde_json::{json, Value};
 
-use crate::{outcome, parse_request, render_snap, RequestLog, ScriptedHost, Snap, VirtualClock};
+use crate::{
+    apply_team_settings, outcome, parse_request, render_snap, RequestLog, ScriptedHost, Snap,
+    VirtualClock,
+};
 
 /// Timers keyed by (due time, registration order), so equal due times fire in a fixed order.
 #[derive(Default)]
@@ -303,7 +306,8 @@ impl Run {
             while let Some(at) = self.next_arrival.filter(|at| *at <= clock.elapsed()) {
                 let id = self.next_id;
                 self.next_id += 1;
-                let (body, who) = self.draw(host, at.as_secs_f64(), id as u64);
+                let (mut body, who) = self.draw(host, at.as_secs_f64(), id as u64);
+                apply_team_settings(&host.teams, &mut body);
                 self.starts.insert(id, who);
                 let request = parse_request(&body);
                 let router = router.clone();

@@ -548,19 +548,14 @@ function RequestMix({kinds, onKinds, model, info}) {
                 />
                 <span className={styles.muted}>{Math.round((100 * (Number(kind.share) || 0)) / total)}%</span>
               </span>
-              <select
+              <input
+                className={styles.mixText}
                 aria-label={`Model of ${kind.label}`}
+                list="mix-models"
                 value={kind.model}
-                onChange={event => change(kind.key, {model: event.target.value})}>
-                <option value="">{model} (top)</option>
-                {groups
-                  .filter(group => group !== model)
-                  .map(group => (
-                    <option key={group} value={group}>
-                      {group}
-                    </option>
-                  ))}
-              </select>
+                placeholder={`${model} (top)`}
+                onChange={event => change(kind.key, {model: event.target.value.trim()})}
+              />
               <span className={SESSIONS_READY ? undefined : styles.soon} title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
                 <NumberField
                   label={`Sessions of ${kind.label}`}
@@ -634,6 +629,11 @@ function RequestMix({kinds, onKinds, model, info}) {
           );
         })}
       </div>
+      <datalist id="mix-models">
+        {groups.map(group => (
+          <option key={group} value={group} />
+        ))}
+      </datalist>
       <div className={styles.mixFoot}>
         <button
           type="button"

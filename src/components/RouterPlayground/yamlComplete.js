@@ -7,7 +7,8 @@ import {FALLBACK_MAPS} from './validate';
 // core reads. Deployment keys are the ones LitellmParams and ModelInfo name in the core; serde's
 // flatten hides those from the same trick, so they are listed here.
 
-const TOP = ['model_list', 'router_settings', 'litellm_settings', 'general_settings'];
+const TOP = ['model_list', 'router_settings', 'litellm_settings', 'general_settings', 'teams'];
+const TEAM = ['team_id', 'router_settings'];
 const ENTRY = ['model_name', 'litellm_params', 'model_info'];
 const LITELLM_PARAMS = [
   'model',
@@ -53,6 +54,7 @@ const BOOLEAN = new Set([
 ]);
 const NESTED = new Set([
   'model_list',
+  'teams',
   'router_settings',
   'litellm_settings',
   'general_settings',
@@ -65,7 +67,7 @@ const NESTED = new Set([
   'model_group_alias',
   ...FALLBACK_MAPS.map(map => map.key),
 ]);
-const LISTS = new Set(['model_list', ...FALLBACK_MAPS.map(map => map.key)]);
+const LISTS = new Set(['model_list', 'teams', ...FALLBACK_MAPS.map(map => map.key)]);
 const RETRY_KEYS = [
   'BadRequestErrorRetries',
   'AuthenticationErrorRetries',
@@ -99,6 +101,7 @@ function keysFor(path, ctx) {
   if (!path.length) return TOP;
   if (last === 'router_settings') return ctx.settings;
   if (last === 'model_list') return ENTRY;
+  if (last === 'teams') return TEAM;
   if (last === 'litellm_params') return LITELLM_PARAMS;
   if (last === 'model_info') return MODEL_INFO;
   if (last === 'retry_policy' || path.at(-2) === 'model_group_retry_policy') return RETRY_KEYS;
