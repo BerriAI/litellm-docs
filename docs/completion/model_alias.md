@@ -1,99 +1,59 @@
 ---
-sidebar_label: "Model aliases"
-description: "Use -latest model aliases in the LiteLLM SDK and AI Gateway, or define your own model names."
+sidebar_label: "Model Aliases"
 ---
 
-# Model aliases
+# Model Alias
 
-Use a `-latest` alias to follow a model family, or [define your own name](#custom-aliases) for a specific model.
+To follow a model family without maintaining your own mapping, use a [latest model alias](../model_latest_aliases.md).
 
-## Latest model aliases
+The model name you show an end-user might be different from the one you pass to LiteLLM - e.g. Displaying `GPT-5.6` while calling `{{openai_small}}` on the backend.
 
-An alias such as `openai/gpt-luna-latest` points to a model in that family. LiteLLM maintains the target. As LiteLLM moves the alias to a newer model, your application keeps the same model string.
+LiteLLM simplifies this by letting you pass in a model alias mapping.
 
-Use the full `provider/model-latest` name from the table below. You do not need to create an alias mapping.
-
-### Python SDK
-
-Install `litellm` with `pip install litellm` and set `OPENAI_API_KEY` to your [OpenAI API key](../providers/openai.md#required-api-keys).
+## expected format
 
 ```python
-from litellm import completion
-
-response = completion(
-    model="openai/gpt-luna-latest",
-    messages=[{"role": "user", "content": "Say hello."}],
-)
-print(response.choices[0].message.content)
+litellm.model_alias_map = {
+    # a dictionary containing a mapping of the alias string to the actual litellm model name string
+    "model_alias": "litellm_model_name"
+}
 ```
 
-A successful call prints a greeting from the model behind the alias.
+## usage
 
-### AI Gateway
-
-For an [existing gateway](../proxy/docker_quick_start.md), set `OPENAI_API_KEY` in the gateway environment. Add this entry to your `config.yaml` under `model_list`, then restart the gateway with that configuration.
-
-```yaml
-model_list:
-  - model_name: openai/gpt-luna-latest
-    litellm_params:
-      model: openai/gpt-luna-latest
-      api_key: os.environ/OPENAI_API_KEY
-```
-
-If your gateway already routes `openai/*` through a wildcard deployment, you can use this alias without adding a model entry.
-
-Set `LITELLM_PROXY_API_BASE` to your gateway's base URL, such as `http://localhost:4000`, and `LITELLM_PROXY_API_KEY` to a LiteLLM key with access to this model. Send a request from your client machine.
-
-```bash
-curl "$LITELLM_PROXY_API_BASE/chat/completions" \
-  -H "Authorization: Bearer $LITELLM_PROXY_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-luna-latest","messages":[{"role":"user","content":"Say hello."}]}'
-```
-
-A successful response contains a greeting in `choices[0].message.content`. The gateway's response `model` field can show the alias. LiteLLM calculates cost using the model that served the request.
-
-### Supported aliases
-
-These aliases call each provider's own API.
-
-| Provider | Model names |
-| --- | --- |
-| OpenAI | `openai/gpt-luna-latest`, `openai/gpt-sol-latest`, `openai/gpt-terra-latest`, `openai/gpt-astra-latest`, `openai/gpt-mini-latest` |
-| Anthropic | `anthropic/claude-opus-latest`, `anthropic/claude-sonnet-latest`, `anthropic/claude-haiku-latest`, `anthropic/claude-fable-latest` |
-| xAI | `xai/grok-latest` |
-| Moonshot | `moonshot/kimi-latest` |
-| Z.AI | `zai/glm-latest`, `zai/glm-flash-latest` |
-| DeepSeek | `deepseek/deepseek-pro-latest`, `deepseek/deepseek-flash-latest` |
-| DashScope | `dashscope/qwen-max-latest`, `dashscope/qwen-flash-latest` |
-| MiniMax | `minimax/minimax-latest` |
-
-Gemini, Mistral, and DashScope's `qwen-plus-latest` already have provider-managed latest names. LiteLLM passes those through. The aliases above do not extend to Azure, Bedrock, or other hosting providers.
-
-See the [alias table](https://github.com/BerriAI/litellm/blob/main/litellm/model_latest_aliases.json) for targets. To control when you change models, use a specific model ID instead. A newer target can change pricing and model behavior.
-
-## Custom aliases
-
-Use `litellm.model_alias_map` to choose your own SDK model names. You control these mappings.
-
-### Expected format
-
+### Relevant Code
 ```python
-litellm.model_alias_map = {"my-model": "openai/{{openai_small}}"}
+model_alias_map = {
+    "GPT-5.6": "{{openai_small}}",
+    "llama2": "replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf"
+}
+
+litellm.model_alias_map = model_alias_map
 ```
 
-### Usage
-
-With `litellm` installed and `OPENAI_API_KEY` set, run:
-
+### Complete Code
 ```python
 import litellm
+from litellm import completion
 
-litellm.model_alias_map = {"my-model": "openai/{{openai_small}}"}
-response = litellm.completion(
-    model="my-model",
-    messages=[{"role": "user", "content": "Say hello."}],
-)
-print(response.choices[0].message.content)
+
+## set ENV variables
+os.environ["OPENAI_API_KEY"] = "openai key"
+os.environ["REPLICATE_API_KEY"] = "cohere key"
+
+## set model alias map
+model_alias_map = {
+    "GPT-5.6": "{{openai_small}}",
+    "llama2": "replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf"
+}
+
+litellm.model_alias_map = model_alias_map
+
+messages = [{ "content": "Hello, how are you?","role": "user"}]
+
+# call "{{openai_small}}"
+response = completion(model="GPT-5.6", messages=messages)
+
+# call replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca1...
+response = completion("llama2", messages)
 ```

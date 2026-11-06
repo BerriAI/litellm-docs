@@ -457,7 +457,6 @@ const sidebars = {
           label: "Models & Providers",
           items: [
             "proxy/model_management",
-            { type: "link", label: "Latest model aliases", href: "/docs/completion/model_alias#latest-model-aliases" },
             "proxy/model_access_guide",
             "proxy/model_access",
             "proxy/model_access_groups",
@@ -1144,6 +1143,7 @@ const sidebars = {
         "routing",
         "proxy/cache_aware_routing",
         "wildcard_routing",
+        "model_latest_aliases",
         "proxy/health_check_routing",
         "scheduler",
         { type: "html", value: "Fallbacks & timeouts", className: "sidebar-group-label", defaultStyle: true },
