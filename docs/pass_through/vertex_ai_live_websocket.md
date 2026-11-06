@@ -50,7 +50,35 @@ default_vertex_config:
 
 - `vertex_project` (optional): Google Cloud project ID (can be set in config)
 - `vertex_location` (optional): Vertex AI location (can be set in config, default: us-central1)
-- `model` (optional): model name, used to determine the Vertex region for global models
+- `model` (optional): model name, used to determine the Vertex region for global models and to pick a `use_in_pass_through` deployment
+
+### Pinned deployments
+
+When `model` names a `use_in_pass_through` Vertex AI deployment and the proxy has no `default_vertex_config` or `DEFAULT_VERTEXAI_PROJECT`, the session uses that deployment's project and region. A `vertex_project` or `vertex_location` query param that differs from the deployment's value closes the connection with code `1008` and the reason `Rejected Request: vertex_location is pinned by the deployment, see configurable_clientside_auth_params`. A `vertex_project` and `vertex_location` pair that matches another `use_in_pass_through` deployment connects through that deployment instead.
+
+To let callers pick the region or project, list the param in the deployment's `configurable_clientside_auth_params`, or set `general_settings.allow_client_side_credentials: true` proxy-wide.
+
+When the proxy sets `default_vertex_config`, each field it sets pins the session the same way. A `vertex_project` or `vertex_location` query param that differs from it closes the connection with code `1008` and the reason `Rejected Request: vertex_location is pinned by default_vertex_config, see allow_client_side_credentials`. A field that `default_vertex_config` leaves unset is still the caller's choice. `default_vertex_config` has no per-field opt-in, so only `general_settings.allow_client_side_credentials: true` lifts its pin.
+
+Google's SDKs send the setup message's `model` as a full `projects/<project>/locations/<location>/publishers/google/models/<model>` path. The proxy moves the project and region in that path onto the session's own before it forwards the message, so the session stays on the project and region the admin chose. With `allow_client_side_credentials: true` the path is forwarded as sent.
+
+```yaml
+model_list:
+  - model_name: gemini-live
+    litellm_params:
+      model: vertex_ai/gemini-3.8-live
+      vertex_project: my-project
+      vertex_location: us-central1
+      vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
+      use_in_pass_through: true
+      configurable_clientside_auth_params: ["vertex_location"] # optional, lets callers pick the region
+```
+
+```javascript
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?model=gemini-live');
+```
+
+<SinceVersion v="1.109.0" />
 
 ### Example Connection
 
@@ -173,7 +201,9 @@ import websockets
 async def chat_with_gemini():
     uri = "ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id"
     
-    async with websockets.connect(uri) as websocket:
+    headers = {"Authorization": "Bearer sk-<your-litellm-api-key>"}
+
+    async with websockets.connect(uri, additional_headers=headers) as websocket:
         # Setup
         setup = {
             "setup": {
@@ -248,6 +278,8 @@ If the proxy cannot resolve Vertex AI credentials or a project ID (no `use_in_pa
 ```
 Vertex AI auth failed: set a use_in_pass_through vertex model, default_vertex_config, or DEFAULT_VERTEXAI_* env
 ```
+
+A `vertex_project` or `vertex_location` query param that moves a pinned deployment or a field `default_vertex_config` sets closes the connection with code `1008` before any call to Vertex AI. See [Pinned deployments](#pinned-deployments).
 
 ## Authentication
 
