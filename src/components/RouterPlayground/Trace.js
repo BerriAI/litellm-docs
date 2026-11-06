@@ -35,12 +35,21 @@ function Step({step}) {
       </li>
     );
   }
+  if (step.kind === 'random') {
+    return (
+      <li className={styles.step}>
+        <span className={styles.time}>{seconds(step.t)}</span>
+        <span className={styles.badge}>random</span>
+        <span className={styles.detail}>shuffle roll {Number(step.value).toFixed(3)}</span>
+      </li>
+    );
+  }
   const tone = TONE[step.event];
   return (
     <li className={`${styles.step} ${tone ? styles[tone] : ''}`}>
       <span className={styles.time}>{seconds(step.t)}</span>
       <span className={styles.badge}>{step.event}</span>
-      <span className={styles.detail}>{step.detail.replace(/^\w+\s*\{?\s*/, '').replace(/\s*\}$/, '')}</span>
+      <span className={styles.detail}>{String(step.detail ?? '').replace(/^\w+\s*\{?\s*/, '').replace(/\s*\}$/, '')}</span>
     </li>
   );
 }
