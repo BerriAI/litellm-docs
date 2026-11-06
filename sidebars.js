@@ -1847,6 +1847,7 @@ const providersSidebar = {
     "providers/baseten",
     "providers/black_forest_labs",
     "providers/black_forest_labs_img_edit",
+    "providers/butler",
     "providers/bytez",
     "providers/cerebras",
     "providers/chatgpt",
