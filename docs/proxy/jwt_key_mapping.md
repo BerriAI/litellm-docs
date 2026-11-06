@@ -59,7 +59,25 @@ curl -X POST 'http://localhost:4000/jwt/key/mapping/new' \
   }'
 ```
 
-Pass either the plaintext `key` or its SHA-256 hash as `token`, never both. Creating a mapping does not create or change the key.
+Creating a mapping does not create or change the key.
+
+#### Map with the key's hash instead of the plaintext key {#map-with-the-keys-hash-instead-of-the-plaintext-key}
+
+<SinceVersion v="1.104.0" />
+
+If you no longer have the plaintext key, pass its SHA-256 hash as `token`. Use the `token` returned by `/key/generate`, or the key hash returned by `/key/list`. Send exactly one of `key` or `token`; sending a hash as `key` hashes it again and returns `The provided key does not match an existing virtual key.`
+
+```bash
+curl -X POST 'http://localhost:4000/jwt/key/mapping/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jwt_claim_name": "sub",
+    "jwt_claim_value": "user-123",
+    "token": "<64-character lowercase hex key hash>",
+    "description": "user-123"
+  }'
+```
 
 ## Test authentication
 
