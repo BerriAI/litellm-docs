@@ -622,6 +622,7 @@ const sidebars = {
               id: "proxy/identity_provisioning",
               label: "Provisioning & Keys",
             },
+            { type: "doc", id: "proxy/ldap_sync", label: "LDAP Team Sync" },
             "proxy/service_accounts",
             "proxy/custom_auth",
             { type: "doc", id: "proxy/ip_address", className: "sidebar-enterprise" },

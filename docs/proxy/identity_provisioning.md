@@ -4,6 +4,8 @@ A question that comes up with SSO deployments is whether a user provisioned thro
 
 If you only need the reference for one feature, its dedicated page goes deeper: [SCIM provisioning](../tutorials/scim_litellm.md), [OIDC JWT auth](./token_auth.md), [JWT to virtual key mapping](./jwt_key_mapping.md), and [CLI authentication](./cli_sso.md).
 
+If users already exist and you only need directory groups to manage their team memberships, use [LDAP team sync](./ldap_sync.md). It creates missing teams and reconciles memberships on a schedule, without creating or deleting user accounts or changing your login flow. The SCIM-based walkthrough below also covers user provisioning.
+
 ---
 
 ## What you are building

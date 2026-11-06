@@ -8,6 +8,8 @@ import Image from '@theme/IdealImage';
 
 Enables identity providers (Okta, Azure AD, OneLogin, etc.) to automate user and team (group) provisioning, updates, and deprovisioning on LiteLLM.
 
+For directories that expose LDAP, [LDAP team sync](../proxy/ldap_sync.md) periodically reads groups and maintains team memberships for existing LiteLLM users. It does not provision or delete users, delete teams, or handle login. Use one membership source per team so LDAP and SCIM do not overwrite each other's rosters.
+
 
 This tutorial will walk you through the steps to connect your IDP to LiteLLM SCIM Endpoints.
 
