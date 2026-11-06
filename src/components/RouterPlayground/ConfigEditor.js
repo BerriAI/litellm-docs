@@ -130,7 +130,7 @@ function YamlView({text, onChange, error, marks}) {
   );
 }
 
-function DeploymentRow({entry, index, shown, share, metric, single, skipped, issues, profile, open, actions}) {
+function DeploymentRow({entry, index, shown, share, metric, single, skipped, issues, profile, open, timeout, actions}) {
   const params = entry.litellm_params ?? {};
   const idIssue = issues.find(issue => issue.field === 'id');
   const orderIssue = issues.find(issue => issue.field === 'order');
@@ -142,7 +142,9 @@ function DeploymentRow({entry, index, shown, share, metric, single, skipped, iss
   const pct = share == null ? null : Math.round(share * 100);
   return (
     <>
-      <div className={`${styles.row} ${open ? styles.rowOpen : ''} ${skipped ? styles.rowSkipped : ''}`}>
+      <div
+        data-row={shown}
+        className={`${styles.row} ${open ? styles.rowOpen : ''} ${skipped ? styles.rowSkipped : ''}`}>
         <input
           className={`${styles.input} ${styles.idInput} ${idIssue ? styles.inputErr : ''}`}
           aria-label={`id of deployment ${index + 1}`}
@@ -226,7 +228,12 @@ function DeploymentRow({entry, index, shown, share, metric, single, skipped, iss
             <span className={styles.muted}>in the simulator</span>
             <span className={styles.mono}>{profile ? profileSummary(profile) : 'no profile, answers at once'}</span>
           </div>
-          <ProfileEditor value={profile} compact onChange={next => actions.profile(shown, next)} />
+          <ProfileEditor
+            value={profile}
+            compact
+            timeout={params.timeout ?? timeout}
+            onChange={next => actions.profile(shown, next)}
+          />
           <label className={styles.inlineField}>
             <span className={styles.key}>mock_response</span>
             <input
@@ -308,6 +315,7 @@ function GroupCard({name, members, info, data, issues, profiles, openRow, action
             issues={rowIssues}
             profile={id == null ? null : profiles[shown]}
             open={openRow === shown}
+            timeout={data?.router_settings?.timeout ?? data?.litellm_settings?.request_timeout}
             actions={actions}
           />
         );
@@ -665,7 +673,15 @@ function AddDrawer({start, data, onCancel, onAdd}) {
   );
 }
 
-export default function ConfigEditor({text, onChange, info, error, profiles = {}, onProfilesChange = () => {}}) {
+export default function ConfigEditor({
+  text,
+  onChange,
+  info,
+  error,
+  profiles = {},
+  onProfilesChange = () => {},
+  focus = null,
+}) {
   const [mode, setMode] = useState('form');
   const [graphMap, setGraphMap] = useState('fallbacks');
   const [edited, setEdited] = useState([]);
@@ -677,6 +693,20 @@ export default function ConfigEditor({text, onChange, info, error, profiles = {}
   const issues = useMemo(() => validate(data), [data]);
   const kept = useMemo(() => (parsed.error ? [] : keptKeys(parsed.doc, parsed.lineCounter)), [parsed]);
   const typed = useRef(false);
+  const root = useRef(null);
+
+  // A lane elsewhere on the page asked to edit one deployment's behaviour: open its row.
+  useEffect(() => {
+    if (!focus?.id) return;
+    setMode('form');
+    setOpenRow(focus.id);
+    // Wait for the config pane to unfold, since a folded pane cannot scroll to its rows.
+    const timer = setTimeout(() => {
+      const row = root.current?.querySelector(`[data-row="${CSS.escape(focus.id)}"]`);
+      (row ?? root.current)?.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [focus]);
   const view = parsed.error ? 'yaml' : mode;
 
   const patch = next => {
@@ -744,7 +774,7 @@ export default function ConfigEditor({text, onChange, info, error, profiles = {}
   const showError = error && !parsed.error && !(view !== 'yaml' && issues.some(issue => issue.setting));
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={root}>
       <div className={styles.toolbar}>
         <div className={styles.segment} role="tablist" aria-label="Config view">
           <button

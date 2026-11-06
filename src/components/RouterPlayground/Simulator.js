@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Panel from './Panel';
-import ProfileEditor from './ProfileEditor';
-import {defaultProfile, profileLabel, profileSummary} from './profiles';
+import {profileLabel, profileSummary} from './profiles';
 import {MOCKS, coreRequests, expectedRpm, groupRate, metadataOf, mixModels, newKind} from './requests';
 import Scenario from './Scenario';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
@@ -316,7 +315,11 @@ function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, o
             <div className={styles.laneLabel} style={{width: LABEL}}>
               <div className={styles.laneName}>
                 <span className={styles.mono}>{deployment.id}</span>
-                <button type="button" className={styles.chip} onClick={() => onSelect(deployment.id)}>
+                <button
+                  type="button"
+                  className={styles.chip}
+                  title="Edit this deployment's behaviour in the config"
+                  onClick={() => onSelect(deployment.id)}>
                   {profileLabel(profile)}
                 </button>
                 {live?.cooling && (
@@ -1035,58 +1038,27 @@ const ROUTER_SEES = [
   ],
 ];
 
-function Behaviour({info, profiles, onProfiles, selected, onSelect, timeouts, onIncident}) {
+// How the answers a profile produces reach the router core.
+function RouterSees() {
   return (
-    <div className={styles.behaviour}>
-      <div className={styles.cards}>
-        <span className={styles.cap}>DEPLOYMENTS</span>
-        {info.deployments.map(deployment => {
-          const profile = profiles[deployment.id] ?? defaultProfile();
-          const open = selected === deployment.id;
-          const where = [deployment.model, deployment.model_name];
-          if (deployment.weight != null) where.push(`weight ${deployment.weight}`);
-          if (deployment.order != null) where.push(`order ${deployment.order}`);
-          return (
-            <div key={deployment.id} className={open ? `${styles.card} ${styles.cardOpen}` : styles.card}>
-              <button type="button" className={styles.cardHead} onClick={() => onSelect(open ? null : deployment.id)}>
-                <span className={styles.cardName}>{deployment.id}</span>
-                <span className={styles.cardWhere}>{where.join(' · ')}</span>
-                <span className={styles.spacer} />
-                <span className={open ? styles.chipOn : styles.chip}>{profileLabel(profile)}</span>
-                <span className={styles.cardWhere}>{open ? 'editing' : profileSummary(profile)}</span>
-              </button>
-              {open && (
-                <ProfileEditor
-                  value={profile}
-                  onChange={next => onProfiles({...profiles, [deployment.id]: next})}
-                  timeout={timeouts[deployment.id]}
-                  onIncident={onIncident && ((kind, duration) => onIncident(deployment.id, kind, duration))}
-                />
-              )}
-            </div>
-          );
-        })}
+    <div className={styles.sees}>
+      <div className={styles.seesTable}>
+        <span className={styles.muted}>Behaviour</span>
+        <span className={styles.muted}>Path through the router core</span>
+        {ROUTER_SEES.map(([what, path], index) => (
+          <React.Fragment key={index}>
+            <span>{what}</span>
+            <span>{path}</span>
+          </React.Fragment>
+        ))}
       </div>
-      <div className={styles.sees}>
-        <span className={styles.cap}>WHAT THE ROUTER SEES</span>
-        <div className={styles.seesTable}>
-          <span className={styles.muted}>Behaviour</span>
-          <span className={styles.muted}>Path through the router core</span>
-          {ROUTER_SEES.map(([what, path], index) => (
-            <React.Fragment key={index}>
-              <span>{what}</span>
-              <span>{path}</span>
-            </React.Fragment>
-          ))}
-        </div>
-        <div className={styles.note}>
-          Samples come from the seed, so the same profile, incidents and seed replay the same run. Latency starts to
-          steer picks only once latency-based routing runs in Rust; until then it is a profile setting, not a strategy.
-        </div>
-        <div className={styles.note}>
-          Requests overlap on simulated time: each attempt waits out its latency while others run, so a slow deployment
-          raises the number in flight before it changes any pick.
-        </div>
+      <div className={styles.note}>
+        Samples come from the seed, so the same profile, incidents and seed replay the same run. Latency starts to
+        steer picks only once latency-based routing runs in Rust; until then it is a profile setting, not a strategy.
+      </div>
+      <div className={styles.note}>
+        Requests overlap on simulated time: each attempt waits out its latency while others run, so a slow deployment
+        raises the number in flight before it changes any pick.
       </div>
     </div>
   );
@@ -1104,53 +1076,19 @@ export default function Simulator({
   onKinds,
   info,
   profiles,
-  onProfiles,
+  onEditDeployment,
   defaultIncidents,
   initialScenario,
 }) {
   const [tab, setTab] = useState(initialScenario ? 'scenario' : 'live');
-  const [selected, setSelected] = useState(null);
   const liveIncident = useRef(null);
   const config = useMemo(() => (configJson ? JSON.parse(configJson) : null), [configJson]);
   const timeouts = useMemo(() => timeoutsOf(config, info?.deployments), [config, info]);
-  const behaviourRef = useRef(null);
-  const [reveal, setReveal] = useState(0);
-
-  const select = id => {
-    setSelected(id);
-    if (id) setReveal(n => n + 1);
-    if (id) behaviourRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
-  };
 
   if (!info) return null;
 
   return (
     <>
-      <div ref={behaviourRef} />
-      <Panel
-        id="sim-behaviour"
-        reveal={reveal}
-        className={styles.panel}
-        headClassName={styles.panelHead}
-        title="Deployment behaviour"
-        folded={`${info.deployments.length} deployments`}
-        extra={
-          <span className={styles.muted}>
-            How each deployment answers in the simulator. The router never sees the profile, only the answers it
-            produces.
-          </span>
-        }>
-        <Behaviour
-          info={info}
-          profiles={profiles}
-          onProfiles={onProfiles}
-          selected={selected}
-          onSelect={setSelected}
-          timeouts={timeouts}
-          onIncident={tab === 'live' ? (id, kind, duration) => liveIncident.current?.(id, kind, duration) : null}
-        />
-      </Panel>
-
       <Panel
         id="sim-run"
         className={styles.panel}
@@ -1181,7 +1119,7 @@ export default function Simulator({
             info={info}
             profiles={profiles}
             timeouts={timeouts}
-            onSelect={select}
+            onSelect={onEditDeployment}
           />
         ) : (
           <Scenario
@@ -1198,6 +1136,9 @@ export default function Simulator({
             initialScenario={initialScenario}
           />
         )}
+        <Panel id="sim-sees" sub title="What the router sees" defaultOpen={false}>
+          <RouterSees />
+        </Panel>
       </Panel>
     </>
   );

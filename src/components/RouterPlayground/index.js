@@ -3,7 +3,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import ConfigEditor from './ConfigEditor';
 import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
-import {FAILURES, PRESETS} from './presets';
+import {PRESETS} from './presets';
 import Panel from './Panel';
 import {defaultProfile} from './profiles';
 import {defaultKinds, newSingle, singleBody} from './requests';
@@ -26,7 +26,7 @@ export default function Playground() {
   const [seed, setSeed] = useState(0);
   const [model, setModel] = useState(PRESETS[0].model);
   const [single, setSingle] = useState(newSingle);
-  const [behaviour, setBehaviour] = useState({});
+  const [focus, setFocus] = useState(null);
   const [profiles, setProfiles] = useState({});
   const [kinds, setKinds] = useState(defaultKinds);
   const [runs, setRuns] = useState([]);
@@ -86,7 +86,6 @@ export default function Playground() {
       setConfigJson(json);
       setInfo(JSON.parse(playground.current.describe()));
       setConfigError(null);
-      setBehaviour({});
       refresh();
     } catch (error) {
       setConfigError(String(error.message ?? error));
@@ -100,17 +99,6 @@ export default function Playground() {
     const timer = setTimeout(rebuild, 300);
     return () => clearTimeout(timer);
   }, [rebuild]);
-
-  const changeBehaviour = (id, change) => {
-    const next = {...behaviour, [id]: {...behaviour[id], ...change}};
-    if (!next[id].fail) delete next[id];
-    setBehaviour(next);
-    const payload = {};
-    for (const [key, value] of Object.entries(next)) {
-      payload[key] = value.fail === 'succeed' ? {fail: 'none'} : {fail: value.fail, times: value.times || undefined};
-    }
-    playground.current?.setBehaviour(JSON.stringify(payload));
-  };
 
   const body = () => singleBody(single, model);
   const request = () => JSON.stringify(body());
@@ -173,6 +161,7 @@ export default function Playground() {
 
       <Panel
         id="config"
+        reveal={focus?.n ?? 0}
         className={styles.panel}
         headClassName={styles.panelHead}
         title="Config"
@@ -190,82 +179,24 @@ export default function Playground() {
           error={configError}
           profiles={profiles}
           onProfilesChange={setProfiles}
+          focus={focus}
         />
       </Panel>
 
       <div>
         <Panel
-          id="deployments"
+          id="make-requests"
           className={styles.panel}
           headClassName={styles.panelHead}
-          title="Deployments"
+          title="Make requests"
           folded="send single requests on their own clock"
           extra={<span className={styles.clock}>t = {state ? seconds(state.now) : '…'}</span>}>
           {!core && <p className={styles.muted}>Loading the router core…</p>}
-          {state && (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>id</th>
-                  <th>group</th>
-                  <th>answers with</th>
-                  <th>rpm</th>
-                  <th>cooldown</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.deployments.map(deployment => {
-                  const current = behaviour[deployment.id] ?? {};
-                  return (
-                    <tr key={deployment.id}>
-                      <td>
-                        <code>{deployment.id}</code>
-                      </td>
-                      <td>{deployment.model_name}</td>
-                      <td>
-                        <select
-                          value={current.fail ?? ''}
-                          onChange={event => changeBehaviour(deployment.id, {fail: event.target.value})}
-                          aria-label={`Behaviour of ${deployment.id}`}>
-                          <option value="">its mock_response</option>
-                          <option value="succeed">200 OK</option>
-                          {FAILURES.map(name => (
-                            <option key={name} value={name}>
-                              {name}
-                            </option>
-                          ))}
-                        </select>
-                        {current.fail && current.fail !== 'succeed' && (
-                          <input
-                            className={styles.times}
-                            type="number"
-                            min={1}
-                            placeholder="always"
-                            title="How many attempts fail before it recovers"
-                            value={current.times ?? ''}
-                            onChange={event =>
-                              changeBehaviour(deployment.id, {times: Number(event.target.value) || undefined})
-                            }
-                          />
-                        )}
-                      </td>
-                      <td>{deployment.rpm}</td>
-                      <td>
-                        {deployment.cooldown ? (
-                          <span className={styles.cooling}>
-                            {deployment.cooldown.value.status_code} for {seconds(deployment.cooldown.remaining ?? 0)}
-                          </span>
-                        ) : (
-                          <span className={styles.muted}>healthy</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-
+          <p className={styles.muted}>
+            One request at a time, each with its own trace below. A deployment answers with its{' '}
+            <code>mock_response</code>; set it to an exception name such as <code>litellm.RateLimitError</code> in the
+            config to make every attempt on it fail. Behaviour profiles drive the simulator.
+          </p>
           <SingleRequest
             value={single}
             onChange={setSingle}
@@ -311,7 +242,7 @@ export default function Playground() {
           onKinds={setKinds}
           info={info}
           profiles={allProfiles}
-          onProfiles={next => setProfiles({...profiles, ...next})}
+          onEditDeployment={id => setFocus(previous => ({id, n: (previous?.n ?? 0) + 1}))}
           defaultIncidents={preset.outages}
           initialScenario={linked}
         />
