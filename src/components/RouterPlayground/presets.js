@@ -1,5 +1,5 @@
 // Starting configs. Each preset is a proxy config.yaml fragment, the model to send, and the
-// outages the over-time view schedules by default.
+// outages the simulator offers as a scenario.
 
 const TUTORIAL = `# The model list from "Route your first requests".
 # A mock_response that names an exception makes every attempt raise it.

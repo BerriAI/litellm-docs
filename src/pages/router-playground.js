@@ -21,6 +21,11 @@ export default function RouterPlaygroundPage() {
             and retry waits move a simulated clock forward instead of waiting.
           </p>
           <p className={styles.description}>
+            The simulator runs steady traffic on simulated time with a behaviour profile per deployment: click incidents
+            into a live run and watch cooldowns and fallbacks cascade, or script a scenario and compare two configs on
+            the same seed.
+          </p>
+          <p className={styles.description}>
             It covers <code>simple-shuffle</code> with weights and <code>order</code>, retries, fallbacks, cooldowns and
             allowed fails. Strategies that still run in Python, such as <code>least-busy</code>,{' '}
             <code>usage-based-routing-v2</code> and <code>latency-based-routing</code>, are not offered until they run

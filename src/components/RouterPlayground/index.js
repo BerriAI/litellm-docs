@@ -1,9 +1,11 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
 import {FAILURES, PRESETS} from './presets';
-import Timeline from './Timeline';
+import {defaultProfile} from './profiles';
+import {readScenarioLink} from './Scenario';
+import Simulator from './Simulator';
 import {RunCard} from './Trace';
 import styles from './styles.module.css';
 
@@ -26,8 +28,29 @@ export default function Playground() {
   const [configError, setConfigError] = useState(null);
   const [configJson, setConfigJson] = useState(null);
   const [info, setInfo] = useState(null);
+  const [profiles, setProfiles] = useState({});
+  const [linked, setLinked] = useState(null);
   const playground = useRef(null);
   const counter = useRef(0);
+
+  // A scenario link carries its own configs, profiles and seed.
+  useEffect(() => {
+    const scenario = readScenarioLink();
+    if (!scenario) return;
+    setLinked(scenario);
+    if (scenario.config) setConfigText(scenario.config);
+    if (scenario.model) setModel(scenario.model);
+    if (scenario.seed != null) setSeed(scenario.seed);
+    if (scenario.profiles) setProfiles(scenario.profiles);
+  }, []);
+
+  // Every deployment has a behaviour profile in the simulator; new ones start healthy.
+  const allProfiles = useMemo(() => {
+    const filled = {};
+    for (const deployment of info?.deployments ?? [])
+      filled[deployment.id] = profiles[deployment.id] ?? defaultProfile();
+    return filled;
+  }, [info, profiles]);
 
   useEffect(() => {
     loadCore(base).then(setCore, error => setLoadError(String(error)));
@@ -260,15 +283,18 @@ export default function Playground() {
       </div>
 
       {state && (
-        <Timeline
+        <Simulator
           core={core}
           configJson={configJson}
+          configText={configText}
           seed={seed}
+          onSeed={setSeed}
           model={model}
-          teamId={teamId}
-          deployments={state.deployments}
           info={info}
-          defaultOutages={preset.outages}
+          profiles={allProfiles}
+          onProfiles={next => setProfiles({...profiles, ...next})}
+          defaultIncidents={preset.outages}
+          initialScenario={linked}
         />
       )}
 
