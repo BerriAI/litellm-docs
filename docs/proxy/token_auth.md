@@ -788,7 +788,7 @@ Defaults (what the proxy uses if you don't override them in `litellm_jwtauth`):
 
 - `admin_jwt_scope`: `litellm_proxy_admin`
 - `admin_allowed_routes` (default): `management_routes`, `spend_tracking_routes`, `global_spend_tracking_routes`, `info_routes` 
-- `team_allowed_routes` (default): `openai_routes`, `info_routes`, `mcp_routes`, `/v1/messages`, `/v1/messages/count_tokens`. Setting `team_allowed_routes` replaces this list, so add `mcp_routes` and the `/v1/messages` routes back if teams still need them
+- `team_allowed_routes` (default): `openai_routes`, `info_routes`, `mcp_routes`, `/v1/messages`, `/v1/messages/count_tokens`, `/rag/ingest`, `/v1/rag/ingest`, `/rag/query`, `/v1/rag/query`. Setting `team_allowed_routes` replaces this list, so add `mcp_routes`, the `/v1/messages` routes and the `/rag` routes back if teams still need them
 - `public_allowed_routes` (default): `public_routes`
 
 
