@@ -1,12 +1,17 @@
-# MCP Per-User and Per-Key Upstream Credentials
+---
+title: Per-user credentials
+description: Let users and service accounts connect to a shared MCP server with their own credentials through LiteLLM.
+---
 
-Register an MCP server once in LiteLLM, then let users and service accounts call it with their own upstream credentials. For credentials stored in LiteLLM, give each service account a distinct machine user and attach its virtual key to that user
+# Per-user credentials {#mcp-per-user-and-per-key-upstream-credentials}
 
-Stored BYOK keys, per-user env vars, and per-user OAuth tokens belong to `(user_id, server_id)`, not to an individual virtual key. **Two keys with the same `user_id` share the stored credential for that server.** Use separate machine users when service accounts need separate upstream identities. There is no native stored per-key or per-team credential override
+Register an MCP server once in LiteLLM, then let each user or service account connect with its own credentials. To store separate credentials for service accounts, create a different LiteLLM user for each account and assign its Virtual Key to that user.
+
+LiteLLM stores each user's BYOK keys, environment variables, and OAuth tokens by `(user_id, server_id)`. **Two Virtual Keys with the same `user_id` share the stored credential for that server.** LiteLLM does not store separate credentials for individual keys or teams.
 
 ## Store a credential for a service account
 
-First register the shared MCP server. The example below assumes a [BYOK server](#byok-servers-per-user-api-keys) with alias `github`. Create a machine user, create its virtual key with access to that server, then store the upstream credential using the newly generated key
+First register the shared MCP server. The example below assumes a [BYOK server](#byok-servers-per-user-api-keys) with alias `github`. Create a machine user, create its Virtual Key with access to that server, then store the upstream credential using the newly generated key
 
 ```bash
 curl -X POST "http://localhost:4000/user/new" \
@@ -41,11 +46,11 @@ A key without a `user_id` cannot use these credential-storage endpoints: they re
 | [BYOK server](#byok-servers-per-user-api-keys) (`is_byok`) | Each user, once | LiteLLM database, encrypted | `(user_id, server_id)` | No |
 | [Per-user env vars](#per-user-env-vars) (`env_vars` with `scope: user`) | Each user, once | LiteLLM database, encrypted | `(user_id, server_id)` | No |
 | [Per-user OAuth](#per-user-oauth) (`auth_type: oauth2`, authorization code) | Each user, via the OAuth flow | LiteLLM database, encrypted | `(user_id, server_id)` | No |
-| [Delegated DCR bridge](#dcr-bridge-client-held-oauth-credentials) (`oauth_delegate`, `dcr_bridge: true`) | The client, via OAuth | The client, as a sealed token | Browser user or admitted key hash | Yes for key-bound minting; browser sign-in binds the user instead |
+| [Delegated DCR bridge](#dcr-bridge-client-held-oauth-credentials) (`oauth_delegate`, `dcr_bridge: true`) | The client, via OAuth | The client, as a sealed token | Browser user or hash of the authenticated Virtual Key | Yes for key-bound minting; browser sign-in binds the user instead |
 
 Choose the credential source to match the server's auth mode. Per-request headers do not universally override stored credentials: interactive OAuth, OBO, and ID-JAG preserve their configured credential resolution. Required per-user env vars must still be provisioned even when the client sends an auth header
 
-For server-level settings, see [MCP Non-OAuth Authentication](./mcp_authentication.md) and [MCP OAuth](./mcp_oauth.md)
+For server-level settings, see [API keys and HTTP authentication](./mcp_authentication.md) and [OAuth 2.0](./mcp_oauth.md)
 
 ## Per-request header override
 
@@ -53,7 +58,7 @@ For static-credential and BYOK servers, a caller can supply its upstream credent
 
 This works without a `user_id` on supported auth modes, but the credential stays with the client. It does not replace the stored token on an `oauth2` authorization-code server or bypass OBO/ID-JAG token exchange. It also does not bypass missing required per-user env vars
 
-See [Header routing](./auth_overview.md#3-per-user-header-passthrough) for the naming convention and [MCP client authentication](./mcp.md) for client examples. For `true_passthrough` and `oauth_delegate`, follow [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) for admission and upstream-token handling
+See [Header routing](./auth_overview.md#3-per-user-header-passthrough) for the naming convention and [MCP client authentication](./mcp.md) for client examples. For `true_passthrough` and `oauth_delegate`, see [OAuth token passthrough](./mcp_oauth_passthrough.md) for client authentication and MCP server token handling.
 
 ## BYOK servers (per-user API keys)
 
@@ -113,13 +118,13 @@ Users fill in their values with `POST /v1/mcp/server/{server_id}/user-env-vars` 
 
 ## Per-user OAuth
 
-For an upstream that speaks OAuth, register the server with `auth_type: oauth2` and an authorization-code grant. LiteLLM runs the browser flow, stores each user's access and refresh tokens encrypted under `(user_id, server_id)`, refreshes them, and injects them on that user's calls. Setup is covered in [MCP OAuth](./mcp_oauth.md)
+For an upstream that speaks OAuth, register the server with `auth_type: oauth2` and an authorization-code grant. LiteLLM runs the browser flow, stores each user's access and refresh tokens encrypted under `(user_id, server_id)`, refreshes them, and injects them on that user's calls. Setup is covered in [OAuth 2.0](./mcp_oauth.md)
 
 Tokens obtained outside LiteLLM can be seeded with `POST /v1/mcp/server/{server_id}/oauth-user-credential` and a body of `{"access_token": "...", "refresh_token": "...", "expires_in": 3600}`. This endpoint is closed on servers whose `oauth_identity_binding.mode` is set to `enforce`, because it cannot verify who the token belongs to. `GET .../oauth-user-credential/status` reports whether the caller has a token and when it expires, `GET /v1/mcp/user-credentials` lists every server the caller has connected, and `DELETE .../oauth-user-credential` revokes it (admins can pass `?user_id=`)
 
 ## DCR bridge: client-held OAuth credentials
 
-For `true_passthrough` and `oauth_delegate` servers, `dcr_bridge: true` hosts OAuth registration and sign-in at the gateway. The client holds the resulting credential. On `oauth_delegate`, the sealed credential binds the upstream token to the browser user for interactive sign-in, or to the admitted key hash when the token request authenticates with a virtual key
+For `true_passthrough` and `oauth_delegate` servers, `dcr_bridge: true` hosts OAuth registration and sign-in at the gateway. The client holds the resulting credential. On `oauth_delegate`, the sealed credential associates the MCP server token with the user who signed in through the browser, or with the hash of the Virtual Key used to authenticate the token request.
 
 The OAuth-only client setup requires working LiteLLM browser sign-in and an interactive client. Signing in as an administrator binds that browser user, not a separate service-account key. The key-authenticated mint path accepts an active key without a `user_id`, but it still needs an upstream OAuth authorization-code exchange and keeps the credential client-side. It does not provide a gateway-stored credential override for that key
 

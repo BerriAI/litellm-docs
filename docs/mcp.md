@@ -4,7 +4,9 @@ import Image from '@theme/IdealImage';
 
 # MCP Overview
 
-LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint for all MCP tools and control MCP access by Key, Team. 
+LiteLLM Proxy provides one gateway endpoint for your MCP servers and tools.
+
+Configure [client authentication](./proxy/authentication.md) for applications connecting to LiteLLM, [upstream authentication](./mcp_upstream_auth.md) for LiteLLM connecting to MCP servers, and [MCP Access](./proxy/access_management/mcp.md) for team and Virtual Key permissions.
 
 <Image 
   img={require('../img/mcp_2.png')}
@@ -259,7 +261,7 @@ mcp_servers:
 - **Description**: Optional description for the server
 - **Auth Type**: Optional authentication type. Supported values:
 
-  See [MCP Non-OAuth Authentication](./mcp_authentication.md) for a choice guide, exact credential inputs, and upstream request examples.
+  See [API keys and HTTP authentication](./mcp_authentication.md) for credential inputs and examples of requests to MCP servers.
 
   | Value | Header sent (managed SSE/HTTP transport) |
   |-------|-------------|
@@ -270,7 +272,7 @@ mcp_servers:
   | `authorization` | `Authorization: <auth_value>` (verbatim, no prefix) |
   | `token` | `Authorization: token <auth_value>` (GitHub-style) |
   | `oauth2` | `Authorization: Bearer <resolved_token>` — PKCE or M2M `client_credentials`. See [MCP OAuth](./mcp_oauth.md) |
-  | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>` — RFC 8693 On-Behalf-Of. See [MCP OBO Auth](./mcp_obo_auth.md) |
+  | `oauth2_token_exchange` | `Authorization: Bearer <exchanged_token>`. See [Token exchange (OBO)](./mcp_obo_auth.md) |
   | `oauth2_id_jag` | `Authorization: Bearer <access_token>` — Identity Assertion Authorization Grant (two legs). See [MCP ID-JAG Auth](./mcp_id_jag.md) |
   | `true_passthrough` | The client's upstream `Authorization`, forwarded verbatim. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
   | `oauth_delegate` | A distinct client-supplied upstream bearer, after LiteLLM admission. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md) |
