@@ -7,6 +7,12 @@ import TabItem from '@theme/TabItem';
 
 Reroute requests to a fallback model when a key's [`model_max_budget`](./users#-virtual-key-model-specific) is exceeded, instead of returning a `budget_exceeded` error.
 
+<EnterpriseFeature>
+
+Budget fallbacks depend on the Enterprise-only [`model_max_budget`](./users#-virtual-key-model-specific) setting. Setting `budget_fallbacks` alone does not enable budget-triggered rerouting on the open-source proxy.
+
+</EnterpriseFeature>
+
 By default `model_max_budget` blocks requests once a key's spend on a model crosses its cap. `budget_fallbacks` lets you configure a per-model fallback chain on the key itself, so the request is silently rerouted to the first fallback that still has budget remaining. Spend is attributed to the fallback model, not the exhausted one.
 
 This is a virtual key setting; it does not require any changes to `config.yaml` or router-level fallbacks.
