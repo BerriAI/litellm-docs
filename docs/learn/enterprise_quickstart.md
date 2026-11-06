@@ -540,7 +540,7 @@ PROXY_BASE_URL="https://<your-proxy-base-url>"
 
 Sign in to the Admin UI through your identity provider. Then disable the login with the master key and `UI_PASSWORD`. Refer to [Disable environment credential login](/docs/proxy/security_best_practices#disable-environment-credential-login-to-the-admin-ui).
 
-To create users and teams from your identity provider, use [SCIM provisioning](/docs/tutorials/scim_litellm). For more options, refer to [SSO for the Admin UI](/docs/proxy/admin_ui_sso), [SSO event hooks](/docs/proxy/custom_sso), and [CLI SSO](/docs/proxy/cli_sso).
+To create users and teams from your identity provider, use [SCIM provisioning](/docs/tutorials/scim_litellm). For more options, refer to [SSO for the Admin UI](/docs/proxy/admin_ui_sso), [SSO event hooks](/docs/proxy/custom_sso), and [CLI sign-in](/docs/proxy/cli_sso).
 
 ### JWT authentication for API traffic
 

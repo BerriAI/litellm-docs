@@ -230,40 +230,40 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 <SinceVersion v="1.109.0" />
 
-A request can get its tag from the W3C `baggage` header, which OpenTelemetry uses to pass context between services. Each rule in `general_settings.request_tag_mappings` reads one baggage key and adds a tag to the request, so a service that already sends a value like `baggage: entrypoint=<value>` gets its own tag without setting `metadata.tags` on every call. Spend is tracked against the mapped tag whether or not the tag has a budget, and a spent tag budget rejects the request with HTTP 422 before the provider call, the same as any other tag.
+A request can get its tag from the W3C `baggage` header, which OpenTelemetry uses to pass context between services. Each rule in `general_settings.request_tag_mappings` reads one baggage key and adds a tag to the request, so a service that already sends a value like `baggage: service=<value>` gets its own tag without setting `metadata.tags` on every call. Spend is tracked against the mapped tag whether or not the tag has a budget, and a spent tag budget rejects the request with HTTP 422 before the provider call, the same as any other tag.
 
 ```yaml title="config.yaml"
 general_settings:
   request_tag_mappings:
-    - key: entrypoint
+    - key: service
       value: support_bot
       tag: support
-    - key: entrypoint
-      tag_prefix: "usecase:"
+    - key: service
+      tag_prefix: "app:"
       required: true
       require_budgeted_tag: true
 ```
 
-With this config, `entrypoint=support_bot` adds the tag `support`, and any other value such as `entrypoint=checkout` adds `usecase:checkout`. An exact `value` rule always wins over the `tag_prefix` rule for the same key. The second rule sets `require_budgeted_tag`, so create `usecase:checkout` with a `max_budget` first, as in [step 1](#1-create-a-tag-with-budget). Then send the baggage header with the request:
+With this config, `service=support_bot` adds the tag `support`, and any other value such as `service=checkout` adds `app:checkout`. An exact `value` rule always wins over the `tag_prefix` rule for the same key. The second rule sets `require_budgeted_tag`, so create `app:checkout` with a `max_budget` first, as in [step 1](#1-create-a-tag-with-budget). Then send the baggage header with the request:
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
      -H "Authorization: Bearer $LITELLM_API_KEY" \
      -H 'Content-Type: application/json' \
-     -H 'baggage: entrypoint=checkout' \
+     -H 'baggage: service=checkout' \
      -d '{
            "model": "{{openai_large}}",
            "messages": [{"role": "user", "content": "Hello"}]
          }'
 ```
 
-The request is charged to `usecase:checkout`, and the spend log lists the mapped tag in `request_tags` after the key, team, deployment and client tags.
+The request is charged to `app:checkout`, and the spend log lists the mapped tag in `request_tags` after the key, team, deployment and client tags.
 
 **Rule fields:**
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `key` | Yes | Baggage key to read, e.g. `entrypoint` |
+| `key` | Yes | Baggage key to read, e.g. `service` |
 | `value` | With `tag` | Exact baggage value to match |
 | `tag` | With `value` | Tag added when `value` matches |
 | `tag_prefix` | Without `value` | Matches any value and adds `<tag_prefix><value>` |
@@ -279,7 +279,7 @@ When any rule for a key sets `required: true`, a request gets HTTP 400 before th
 ```json
 {
   "error": {
-    "message": "Missing, invalid or unmapped baggage value for entrypoint",
+    "message": "Missing, invalid or unmapped baggage value for service",
     "type": "bad_request_error",
     "param": null,
     "code": "400"
@@ -291,7 +291,7 @@ This applies to every mapped request, including file uploads and the Admin UI pl
 
 ### Require a budget on the mapped tag
 
-With `require_budgeted_tag: true`, the mapped tag must already exist with a `max_budget`. Otherwise the request gets HTTP 400 with the message `Mapped tag usecase:checkout requires an existing tag budget`, and nothing is sent to the provider. When the proxy cannot read tag budgets from the database, the request gets HTTP 503 instead. With `allow_requests_on_db_unavailable` turned on, it goes through with the mapped tag unchecked, the same as other tag budget checks during a database outage.
+With `require_budgeted_tag: true`, the mapped tag must already exist with a `max_budget`. Otherwise the request gets HTTP 400 with the message `Mapped tag app:checkout requires an existing tag budget`, and nothing is sent to the provider. When the proxy cannot read tag budgets from the database, the request gets HTTP 503 instead. With `allow_requests_on_db_unavailable` turned on, it goes through with the mapped tag unchecked, the same as other tag budget checks during a database outage.
 
 ### Budgets created after traffic starts
 
@@ -344,6 +344,15 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
             "tpm_limit": 200000
         }'
 ```
+
+#### LiteLLM Admin UI
+
+Navigate to the **Tag Management** page, click **Create New Tag** (or open a tag and click **Edit Tag**), expand **Budget & Rate Limits**, and fill in **TPM Limit** and **RPM Limit**. Both take whole numbers of 0 or more. Clearing a field and saving removes that limit from the tag.
+
+<Image 
+  img={require('../../img/tag_budget1.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+/>
 
 ## Managing Tags
 

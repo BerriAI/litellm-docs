@@ -141,12 +141,14 @@ general_settings:
   enforce_rpm_tpm_on_model_add: boolean  # or a {default, providers, models} mapping; new models must set a positive rpm and tpm
   enforce_project_model_quota: boolean  # or a {default, providers, models} mapping; project models must have a positive model_rpm_limit and model_tpm_limit
   reject_clientside_metadata_tags: boolean  # if true, rejects requests with client-side 'metadata.tags' to prevent users from influencing budgets
-  request_tag_mappings: [{"key": "entrypoint", "tag_prefix": "usecase:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
+  request_tag_mappings: [{"key": "service", "tag_prefix": "app:"}]  # map W3C baggage values to request tags for spend tracking and tag budgets
   missing_session_id: generate  # or "reject". What to do with LLM API requests that carry no session id; unset keeps the legacy behavior
   disable_batch_input_file_rate_limiting: boolean  # skip TPM/RPM accounting for batch input files
   skip_batch_input_file_rate_limiting_for_providers: ["hosted_vllm"]  # apply the batch accounting skip only to these providers
   disable_budget_reservation: boolean  # disable pre-request budget reservation; may allow overspend under concurrency
   allowed_routes: ["route1", "route2"]  # list of allowed proxy API routes - a user can access. (currently JWT-Auth only)
+  allowed_client_side_s3_buckets: ["my-batch-bucket"]  # buckets a client may pick with s3_bucket_name or s3_output_bucket_name in a request body, e.g. on /v1/batches
+  allowed_client_side_s3_endpoint_urls: ["https://s3.us-west-2.amazonaws.com"]  # exact s3_endpoint_url values a client may send in a request body
   key_management_system: google_kms  # either google_kms or azure_kms
   master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or has a known unsafe value
   dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or a known unsafe value
@@ -402,6 +404,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allow_cli_sso_verification_uri_complete | boolean | `false` | Default `false`. When `true`, `POST /sso/cli/start` also returns `verification_uri_complete`, and `lite login` opens the browser verification page with the code already filled in so the user only confirms it. Off by default so the code has to be typed by hand. [Doc on CLI SSO](./cli_sso.md#pre-fill-the-verification-code) |
 | include_call_id_in_error_body | boolean | `false` | Default `false`. When `true`, JSON error bodies also carry the value of the `x-litellm-call-id` response header, as `error.litellm_call_id` on the OpenAI-shaped routes and `/v1/messages` and as a top-level `litellm_call_id` on pass-through routes, so a client that only prints the body still names the request to look up. [Doc on reporting a problem](./error_reference.md#reporting-a-problem) |
 | allow_client_side_credentials | boolean | `false` | If true, allows passing client side credentials to the proxy. (Useful when testing finetuning models) [Doc on client side credentials](./virtual_keys.md) |
+| allowed_client_side_s3_buckets | List[str] | `null` (none allowed) | S3 bucket names a client may send as `s3_bucket_name` or `s3_output_bucket_name` in a request body, for example on `/v1/batches`. Any other bucket is rejected, as is `allow_legacy_cloud_file_ids`, unless `allow_client_side_credentials` is on or the deployment lists the field in `configurable_clientside_auth_params`. [Doc on choosing the batch bucket per request](../providers/bedrock_batches#can-a-client-choose-the-s3-bucket-per-request) |
+| allowed_client_side_s3_endpoint_urls | List[str] | `null` (none allowed) | Exact `s3_endpoint_url` values a client may send in a request body. Any other value is rejected unless `allow_client_side_credentials` is on or the deployment lists the field in `configurable_clientside_auth_params`. |
 | admin_only_routes | List[str] | `null` | (Enterprise Feature) List of routes that are only accessible to admin users. [Doc on admin only routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes) |
 | use_azure_key_vault | boolean | `false` | If true, load keys from azure key vault |
 | use_google_kms | boolean | `false` | If true, load keys from google kms |
@@ -412,7 +416,9 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | max_failed_login_attempts_per_source_overrides | dict | `null` | Per-address overrides of `max_failed_login_attempts_per_source`, keyed by IP address or CIDR range, e.g. `{"203.0.113.7": 50, "10.0.0.0/8": 100}`. The most specific match wins, the per-username allowance follows as half the override, and `0` exempts the address from both limits |
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
-| litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./token_auth.md) |
+| litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./jwt_auth_reference.md) |
+| litellm_jwtauth.unregistered_jwt_client_behavior | string | `fallback_team_mapping` | What to do when a JWT has no key mapping: `fallback_team_mapping`, `reject`, `auto_register`, or `link_only` <SinceVersion v="1.109.0" />. [Docs](./jwt_key_mapping.md#step-1-configure-the-claim-and-unmapped-client-policy) |
+| litellm_jwtauth.auto_register_map_existing_key | boolean | `false` | With `auto_register`, reuse the user's newest eligible key instead of creating one. [Docs](./jwt_key_mapping.md#which-existing-key-is-selected) {/* keep-version-note */} |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
@@ -431,7 +437,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | auto_redirect_ui_login_to_sso | boolean | `false` | If true, automatically redirects UI login page to SSO provider |
 | claude_code_marketplace_auth_required | boolean | `false` | If true, `GET /claude-code/marketplace.json` requires a LiteLLM key sent as `Authorization: Bearer <key>` or `x-litellm-api-key: Bearer <key>`, and the `?key=` query param is no longer accepted. A request with no key, an unknown key, or a `?key=` param gets `401` with `WWW-Authenticate: Bearer`, and a key whose `allowed_routes` does not include the route gets `403`. `GET /public/skill_hub` then returns an empty list. A quoted `"true"` also counts as on, and a value that is not a boolean in `config.yaml` stops the proxy at startup. <SinceVersion v="1.109.0" /> [Require a key for the marketplace](../tutorials/claude_code_plugin_marketplace.md#require-a-key-for-the-marketplace) |
 | control_plane_url | string | `null` | URL of the Global Control Plane that administers this instance. Enables the `/v3/login` and `/v3/login/exchange` endpoints so the control plane UI can authenticate against this instance cross-origin. No state is shared with the control plane. [Docs](./global_control_plane.md) |
-| custom_auth_run_common_checks | boolean | `false` | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](/docs/proxy/custom_auth#enforce-budgets-and-model-access) |
+| custom_auth_run_common_checks | boolean | `false` | If true, runs LiteLLM's standard auth validation alongside custom auth (key/team/user/project model allowlists, budgets, rate limits). Default is `false` — see [Custom Auth — Enforce model access](/docs/proxy/access_management/custom_auth_permissions#enforce-budgets-and-model-access) |
 | custom_ui_sso_sign_in_handler | string | `null` | Custom handler for SSO sign-in logic in the UI |
 | database_connection_pool_timeout | integer | `60` (seconds) | Database connection pool timeout in seconds |
 | disable_error_logs | boolean | `false` | If true, suppresses error tracking and storage in the database |
@@ -1120,8 +1126,8 @@ router_settings:
 | GALILEO_PASSWORD | Password for Galileo enterprise Observe authentication
 | GALILEO_PROJECT_ID | Project ID for Galileo usage
 | GALILEO_USERNAME | Username for Galileo enterprise Observe authentication
-| GCE_METADATA_HOST | <SinceVersion v="1.109.0" /> Host, or host:port with no scheme, of the Google Cloud metadata server that `oidc/google/` secret references get ID tokens from. Google's client libraries read it too. Default is `metadata.google.internal`. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
-| GCE_METADATA_TIMEOUT | <SinceVersion v="1.109.0" /> Seconds each read from the Google Cloud metadata server waits when a model's `api_key` is an `oidc/google/` secret reference. Google's client libraries read it too. Default is 3, which is also used when the value is not a positive number. [Doc on OIDC in a model's api_key](../oidc#using-oidc-as-a-models-api_key)
+| GCE_METADATA_HOST | <SinceVersion v="1.109.0" /> Host, or host:port with no scheme, of the Google Cloud metadata server that `oidc/google/` secret references get ID tokens from. Google's client libraries read it too. Default is `metadata.google.internal`. [Doc on OIDC in a model's api_key](./model_management#using-oidc-as-a-models-api_key)
+| GCE_METADATA_TIMEOUT | <SinceVersion v="1.109.0" /> Seconds each read from the Google Cloud metadata server waits when a model's `api_key` is an `oidc/google/` secret reference. Google's client libraries read it too. Default is 3, which is also used when the value is not a positive number. [Doc on OIDC in a model's api_key](./model_management#using-oidc-as-a-models-api_key)
 | GOOGLE_SECRET_MANAGER_PROJECT_ID | Project ID for Google Secret Manager
 | GRACEFUL_SHUTDOWN_TIMEOUT | Seconds the proxy waits for in-flight requests to drain on shutdown (SIGTERM or the `/health/drain` preStop hook) before proceeding with teardown. **Default is 30**
 | GCS_BATCH_BUCKET_NAME | GCS bucket used by Vertex AI files and batches. Takes precedence over GCS_BUCKET_NAME so batch data can live apart from the logging bucket
@@ -1394,6 +1400,7 @@ router_settings:
 | MAX_DECOMPRESSED_REQUEST_BODY_SIZE_MB | <SinceVersion v="1.108.0" /> Maximum size in MB of a request body sent with `Content-Encoding: gzip` or `zstd`, checked both before and after the proxy decodes it. When `max_request_size_mb` is set on a proxy with an enterprise license, the smaller of the two applies. A larger body gets a 413 before it reaches auth or the route. Set to 0 to reject every compressed body. Default is 50
 | MAX_EXCEPTION_MESSAGE_LENGTH | Maximum length for exception messages. Default is 2000
 | MAX_ITERATIONS_TO_CLEAR_QUEUE | Maximum number of iterations to attempt when clearing the logging worker queue during shutdown. Default is 200
+| MAX_REQUEST_HEADER_SIZE | {/* keep-version-note: unversioned reference requested by maintainer */} Positive integer byte size for Uvicorn's h11 incomplete HTTP header buffer. **Default is 16384** (16 KiB). For example, set `MAX_REQUEST_HEADER_SIZE=131072` for 128 KiB. Applies to the default server and `--run_gunicorn` when h11 is used. Preserves automatic parser selection and is ignored by httptools, Hypercorn, and Granian. `--max_request_header_size` takes precedence. Export this variable before starting the proxy. This is not a strict total-header limit. [Further docs](./cli#--max_request_header_size). |
 | MAX_TIME_TO_CLEAR_QUEUE | Maximum time in seconds to spend clearing the logging worker queue during shutdown. Default is 5.0
 | LOGGING_WORKER_AGGRESSIVE_CLEAR_COOLDOWN_SECONDS | Cooldown time in seconds before allowing another aggressive clear operation when the queue is full. Default is 0.5 
 | MAX_STRING_LENGTH_PROMPT_IN_DB | Maximum length for strings in spend logs when sanitizing request bodies. Strings longer than this will be truncated. Default is 1000

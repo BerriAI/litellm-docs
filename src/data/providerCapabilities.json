@@ -911,6 +911,12 @@
       "rerank"
     ]
   },
+  "providers/wally": {
+    "prefix": "wally",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/wandb_inference": {
     "prefix": "wandb",
     "capabilities": [

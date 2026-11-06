@@ -15,6 +15,8 @@ Example trace in Langfuse using multiple models via LiteLLM:
 
 For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
 
+Moving from the SDK-based `langfuse` callback? Read the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) first for ingestion costs, server compatibility, content capture and metadata changes. Use `llm_only` unless you need the full request tree in Langfuse.
+
 The SDK callback below (`langfuse`) requires the Langfuse Python SDK v4 (`langfuse>=4.7,<5`). It exports traces through LiteLLM's own OpenTelemetry pipeline to Langfuse's OTLP endpoint, so traces appear in near real time, and uses the SDK's REST client only for prompt management and credential checks. Batch size and prompt cache TTL are tuned with `LANGFUSE_FLUSH_AT` and `LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS` (see [config settings](../proxy/config_settings)).
 
 Self-hosted Langfuse must be on server 3.63.0 or newer for SDK v4, per the [Langfuse compatibility matrix](https://langfuse.com/self-hosting/upgrade/versioning#sdk-server); OSS v2 servers do not serve the `/api/public/otel/v1/traces` route the callback exports to, so traces are rejected with a 404 and the proxy logs the rejection. Upgrade the server before upgrading LiteLLM, or keep the previous LiteLLM version until then. An ingress or reverse proxy with a request body limit in front of Langfuse answers 413 to a large batch; the callback splits that batch in halves and resends, and only a single span that alone exceeds the limit is dropped, with an error log.

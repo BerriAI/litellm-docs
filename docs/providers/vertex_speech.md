@@ -87,6 +87,48 @@ response.stream_to_file("speech.mp3")
 </TabItem>
 </Tabs>
 
+### Regional Endpoints
+
+The deployment's `vertex_location` picks the Cloud Text-to-Speech host for Chirp. <SinceVersion v="1.110.0" /> On earlier versions, every Chirp request goes to the global host.
+
+| `vertex_location` | Host LiteLLM calls |
+|-------------------|--------------------|
+| `us`, `us-central1`, `us-east1`, `us-east4`, `us-east5`, `us-south1`, `us-west1`, `us-west2`, `us-west3`, `us-west4`, `us-west5` | `us-texttospeech.googleapis.com` |
+| `eu`, `europe-central2`, `europe-north1`, `europe-north2`, `europe-southwest1`, `europe-west1`, `europe-west3`, `europe-west4`, `europe-west8`, `europe-west9`, `europe-west10`, `europe-west12` | `eu-texttospeech.googleapis.com` |
+| Not set, `global`, or any other location | `texttospeech.googleapis.com` |
+
+Only the `vertex_location` set on the deployment or passed in the call picks the Chirp host. `VERTEXAI_LOCATION` and `litellm.vertex_location` do not.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: chirp-eu
+    litellm_params:
+      model: vertex_ai/chirp
+      vertex_project: "your-project-id"
+      vertex_location: "eu"
+      vertex_credentials: "/path/to/service_account.json"
+```
+
+```bash showLineNumbers title="Chirp on the EU host"
+curl http://0.0.0.0:4000/v1/audio/speech \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "chirp-eu",
+    "voice": "fr-FR-Chirp3-HD-Aoede",
+    "input": "Bonjour, votre rendez-vous est confirmé."
+  }' \
+  --output speech.wav
+```
+
+LiteLLM sends this request to `https://eu-texttospeech.googleapis.com/v1/text:synthesize`, and the request's spend log shows that URL as its `api_base`.
+
+To use a host the table does not list, such as a single-region host, set `api_base` to the full URL, for example `https://europe-west2-texttospeech.googleapis.com/v1/text:synthesize`. An `api_base` always wins over `vertex_location`.
+
+:::note
+If your network allows outbound traffic only to `texttospeech.googleapis.com`, also allow `us-texttospeech.googleapis.com` or `eu-texttospeech.googleapis.com` before you upgrade a Chirp deployment with a US or EU `vertex_location`.
+:::
+
 ### Voice Mapping
 
 LiteLLM maps OpenAI voice names to Google Cloud voices. You can use either OpenAI voices or Google Cloud voices directly.
