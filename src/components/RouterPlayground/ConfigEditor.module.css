@@ -801,6 +801,51 @@ button.chipOn {
   color: var(--ifm-color-emphasis-600);
 }
 
+/* YAML highlighting in the backdrop under the textarea. */
+.y_comment {
+  color: var(--ifm-color-emphasis-600);
+  font-style: italic;
+}
+
+.y_key {
+  color: #1d4ed8;
+}
+
+.y_dash,
+.y_punct {
+  color: var(--ifm-color-emphasis-600);
+}
+
+.y_string {
+  color: #047857;
+}
+
+.y_number,
+.y_bool {
+  color: #b45309;
+}
+
+.y_env {
+  color: #7c3aed;
+}
+
+[data-theme='dark'] .y_key {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .y_string {
+  color: #6ee7b7;
+}
+
+[data-theme='dark'] .y_number,
+[data-theme='dark'] .y_bool {
+  color: #fcd34d;
+}
+
+[data-theme='dark'] .y_env {
+  color: #c4b5fd;
+}
+
 .line_edit {
   background: var(--ce-pick-fill);
 }

@@ -15,6 +15,7 @@ import FallbackGraph from './FallbackGraph';
 import ProfileEditor from './ProfileEditor';
 import {PROFILE_PRESETS, profileSummary} from './profiles';
 import {FALLBACK_MAPS, PYTHON_STRATEGIES, fallbackTargets, groupsOf, shares, validate} from './validate';
+import {yamlTokens} from './yamlTokens';
 import styles from './ConfigEditor.module.css';
 
 // The router config as a form over the YAML, which stays the source of truth: every form edit
@@ -100,12 +101,18 @@ function YamlView({text, onChange, error, marks}) {
         <div className={styles.codeBody}>
           <div className={styles.backdrop} aria-hidden="true">
             {lines.map((line, i) => (
-              <div
-                key={i}
-                className={`${marks[i + 1] ? styles[`line_${marks[i + 1]}`] : ''} ${
-                  line.trim().startsWith('#') ? styles.comment : ''
-                }`}>
-                {line || ' '}
+              <div key={i} className={marks[i + 1] ? styles[`line_${marks[i + 1]}`] : undefined}>
+                {line
+                  ? yamlTokens(line).map((token, j) =>
+                      token.kind ? (
+                        <span key={j} className={styles[`y_${token.kind}`]}>
+                          {token.text}
+                        </span>
+                      ) : (
+                        token.text
+                      ),
+                    )
+                  : ' '}
               </div>
             ))}
           </div>
