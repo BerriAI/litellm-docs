@@ -195,7 +195,7 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
-| `questions` | array | 1 to 128 questions. Answers come back in the same order |
+| `questions` | array | One or more questions. Answers come back in the same order. LiteLLM sets no limit of its own from v1.109.0 (earlier versions reject more than 128), so each provider applies its own per-request limit |
 | `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
 | `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
 | `videos` | array, optional | Up to 2 video clips, with the rules in [Audio and video input](#audio-and-video-input) |
@@ -377,7 +377,7 @@ Changing `"model"` to `"luna"` asks OpenAI instead and still returns System One 
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `state` | string, object or array | The thing being judged, such as a support ticket, a document or a chat transcript |
-| `questions` | object | 1 to 128 named questions. Each key becomes a key in `answers` |
+| `questions` | object | One or more named questions. Each key becomes a key in `answers`. LiteLLM sets no limit of its own from v1.109.0 (earlier versions reject more than 128), so each provider applies its own per-request limit |
 | `images` | array, optional | Image URLs or data URLs. OpenAI and Cloudflare Clef only, with the rules in [Image input](#image-input) |
 | `assets` | object, optional | Images keyed by a name you use in `state`, each `{"type": "image", "format": "png", "jpg" or "jpeg", "data_base64": ...}`. TypeSafe only, with the [images header](#typesafe-images-box-questions-and-long-context) |
 | `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
