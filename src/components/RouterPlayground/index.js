@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import ConfigEditor from './ConfigEditor';
 import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
 import {FAILURES, PRESETS} from './presets';
@@ -21,6 +22,7 @@ export default function Playground() {
   const [model, setModel] = useState(PRESETS[0].model);
   const [teamId, setTeamId] = useState('');
   const [behaviour, setBehaviour] = useState({});
+  const [profiles, setProfiles] = useState({});
   const [runs, setRuns] = useState([]);
   const [state, setState] = useState(null);
   const [configError, setConfigError] = useState(null);
@@ -37,15 +39,22 @@ export default function Playground() {
     if (playground.current) setState(JSON.parse(playground.current.state()));
   }, []);
 
-  // A new config or seed builds a new router, with a fresh clock and cache.
+  // A new config or seed builds a new router, with a fresh clock and cache. YAML that does not
+  // parse keeps the router that last did.
   const rebuild = useCallback(() => {
     if (!core) return;
+    let json;
+    try {
+      json = JSON.stringify(parseConfig(configText));
+    } catch (error) {
+      setConfigError(String(error.message ?? error));
+      return;
+    }
     playground.current?.free();
     playground.current = null;
     setRuns([]);
     counter.current = 0;
     try {
-      const json = JSON.stringify(parseConfig(configText));
       playground.current = new core.Playground(json, BigInt(seed));
       setConfigJson(json);
       setInfo(JSON.parse(playground.current.describe()));
@@ -136,25 +145,25 @@ export default function Playground() {
         ))}
       </div>
 
-      <div className={styles.grid}>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <h2>Config</h2>
-            <label className={styles.inline}>
-              seed
-              <input type="number" value={seed} min={0} onChange={event => setSeed(Number(event.target.value) || 0)} />
-            </label>
-          </div>
-          <textarea
-            className={styles.editor}
-            spellCheck={false}
-            value={configText}
-            onChange={event => setConfigText(event.target.value)}
-            aria-label="Router config as YAML"
-          />
-          {configError && <p className={styles.error}>{configError}</p>}
-        </section>
+      <section className={styles.panel}>
+        <div className={styles.panelHead}>
+          <h2>Config</h2>
+          <label className={styles.inline}>
+            seed
+            <input type="number" value={seed} min={0} onChange={event => setSeed(Number(event.target.value) || 0)} />
+          </label>
+        </div>
+        <ConfigEditor
+          text={configText}
+          onChange={setConfigText}
+          info={info}
+          error={configError}
+          profiles={profiles}
+          onProfilesChange={setProfiles}
+        />
+      </section>
 
+      <div>
         <section className={styles.panel}>
           <div className={styles.panelHead}>
             <h2>Deployments</h2>

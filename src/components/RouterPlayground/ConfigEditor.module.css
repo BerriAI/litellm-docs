@@ -1,0 +1,1177 @@
+/* The config editor. Colours follow the state diagram: purple a fallback hop, amber a cooldown or
+   a warning, red a failure, the primary colour the current choice. */
+
+.root {
+  --ce-hop: #6d28d9;
+  --ce-warn: #b45309;
+  --ce-warn-text: #78350f;
+  --ce-warn-fill: #fef3c7;
+  --ce-fail: #b91c1c;
+  --ce-fail-text: #7f1d1d;
+  --ce-fail-fill: #fdecec;
+  --ce-pick: var(--ifm-color-primary);
+  --ce-pick-fill: rgba(37, 99, 235, 0.08);
+  --ce-pick-track: rgba(37, 99, 235, 0.14);
+  --ce-line: var(--ifm-color-emphasis-300);
+  --ce-soft-line: var(--ifm-color-emphasis-200);
+  --ce-panel: var(--ifm-background-surface-color);
+  --ce-field: var(--ifm-background-color);
+  --ce-sunk: var(--ifm-color-emphasis-100);
+  --ce-muted: var(--ifm-color-emphasis-700);
+  --ce-faint: var(--ifm-color-emphasis-500);
+  --ce-kept-fill: var(--ifm-color-emphasis-100);
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+[data-theme='dark'] .root {
+  --ce-hop: #a78bfa;
+  --ce-warn: #fbbf24;
+  --ce-warn-text: #fde68a;
+  --ce-warn-fill: rgba(251, 191, 36, 0.12);
+  --ce-fail: #f87171;
+  --ce-fail-text: #fecaca;
+  --ce-fail-fill: rgba(248, 113, 113, 0.12);
+  --ce-pick-fill: rgba(96, 165, 250, 0.12);
+  --ce-pick-track: rgba(96, 165, 250, 0.18);
+}
+
+.mono {
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.muted {
+  color: var(--ce-muted);
+  font-size: 0.78rem;
+}
+
+.hint {
+  color: var(--ce-muted);
+  font-size: 0.72rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.cap {
+  color: var(--ce-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Toolbar */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-panel);
+}
+
+.segment {
+  display: inline-flex;
+  border: 1px solid var(--ce-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.segment button {
+  padding: 0.3rem 0.9rem;
+  border: none;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.segment button + button {
+  border-left: 1px solid var(--ce-line);
+}
+
+.segment button[aria-selected='true'] {
+  background: var(--ce-pick-fill);
+  color: var(--ce-pick);
+  font-weight: 600;
+}
+
+.segment button:disabled {
+  background: var(--ce-sunk);
+  color: var(--ce-faint);
+  cursor: not-allowed;
+}
+
+.keptChip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.18rem 0.6rem;
+  overflow: hidden;
+  border: 1px dashed var(--ce-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ce-muted);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.keptList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: -0.25rem 0 0.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px dashed var(--ce-line);
+  border-radius: 6px;
+}
+
+.keptList .keptChip {
+  cursor: default;
+}
+
+.configError {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  background: var(--ce-fail-fill);
+  color: var(--ce-fail-text);
+  font-size: 0.78rem;
+}
+
+/* Inputs, chips, buttons */
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 4px;
+  background: var(--ce-field);
+  color: var(--ifm-font-color-base);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+}
+
+.input::placeholder {
+  color: var(--ce-faint);
+}
+
+.input:focus {
+  border-color: var(--ce-pick);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ce-pick-fill);
+}
+
+.small {
+  width: 100%;
+  max-width: 64px;
+}
+
+.setting .input {
+  width: 80px;
+}
+
+.inputWarn {
+  border-color: var(--ce-warn);
+  background: var(--ce-warn-fill);
+  color: var(--ce-warn-text);
+}
+
+.inputErr {
+  border-color: var(--ce-fail);
+  background: var(--ce-fail-fill);
+  color: var(--ce-fail-text);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chip,
+.chipOn,
+.chipOff,
+.chipRefused,
+.hopChip,
+.badChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.18rem 0.6rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 999px;
+  background: var(--ce-panel);
+  color: var(--ifm-font-color-base);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+button.chip,
+button.chipOn {
+  cursor: pointer;
+}
+
+.chipOn {
+  border-color: var(--ce-pick);
+  background: var(--ce-pick-fill);
+  color: var(--ce-pick);
+}
+
+.chipOff {
+  border-style: dashed;
+  color: var(--ce-faint);
+  cursor: not-allowed;
+}
+
+.chipRefused {
+  border-style: dashed;
+  border-color: var(--ce-fail);
+  color: var(--ce-fail);
+  cursor: not-allowed;
+}
+
+.hopChip {
+  border-color: var(--ce-hop);
+  color: var(--ce-hop);
+  white-space: normal;
+}
+
+.badChip {
+  border-color: var(--ce-fail);
+  color: var(--ce-fail);
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ifm-link-color);
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.ghost {
+  height: 32px;
+  padding: 0 0.75rem;
+  border: 1px dashed var(--ifm-color-emphasis-400);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ce-muted);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  border-color: var(--ce-pick);
+  color: var(--ce-pick);
+}
+
+.button,
+.primary {
+  height: 34px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.primary {
+  border-color: var(--ce-pick);
+  background: var(--ce-pick);
+  color: #fff;
+}
+
+.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.remove {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--ce-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: var(--ce-sunk);
+  color: var(--ce-fail);
+}
+
+.toggle,
+.toggleOn {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--ifm-color-emphasis-300);
+  cursor: pointer;
+}
+
+.toggle span,
+.toggleOn span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.12s;
+}
+
+.toggleOn {
+  background: var(--ce-pick);
+}
+
+.toggleOn span {
+  left: 14px;
+}
+
+/* Notes drawn on the form */
+
+.warn,
+.err,
+.info {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ce-warn);
+  border-radius: 4px;
+  background: var(--ce-warn-fill);
+  color: var(--ce-warn-text);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.err {
+  border-color: var(--ce-fail);
+  background: var(--ce-fail-fill);
+  color: var(--ce-fail-text);
+}
+
+.info {
+  border-color: var(--ce-line);
+  background: var(--ce-sunk);
+  color: var(--ifm-font-color-base);
+}
+
+.warn .link {
+  color: inherit;
+}
+
+/* Form */
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.groups,
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-panel);
+}
+
+.groups .card {
+  gap: 0;
+  padding: 0;
+  container-type: inline-size;
+}
+
+.cardTitle {
+  color: var(--ifm-font-color-base);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titleWarn {
+  color: var(--ce-warn);
+}
+
+.titleHop {
+  color: var(--ce-hop);
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem 0.35rem;
+}
+
+.groupName {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.row {
+  display: grid;
+  grid-template-columns:
+    minmax(96px, 1.1fr) minmax(110px, 1.2fr) minmax(130px, 1.3fr) repeat(3, minmax(48px, 54px))
+    112px 22px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  border-top: 1px solid var(--ce-soft-line);
+}
+
+.rowHead {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  border-top: none;
+  color: var(--ce-muted);
+  font-size: 0.7rem;
+}
+
+.rowOpen,
+.behaviour {
+  background: var(--ce-pick-fill);
+}
+
+.rowSkipped {
+  background: var(--ce-warn-fill);
+}
+
+.idInput {
+  border-color: transparent;
+  background: transparent;
+  font-weight: 600;
+}
+
+.idInput:hover {
+  border-color: var(--ce-line);
+}
+
+.behaviourChip {
+  justify-content: space-between;
+  overflow: hidden;
+  font-size: 0.7rem;
+}
+
+.weight {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.weight .input {
+  flex: none;
+  width: 48px;
+}
+
+.small {
+  padding: 0 0.4rem;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  min-width: 24px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--ce-pick-track);
+}
+
+.bar span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 2px;
+  background: var(--ce-pick);
+}
+
+.pct {
+  width: 2.2rem;
+  color: var(--ce-muted);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.skipped {
+  color: var(--ce-warn);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.behaviour {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.3rem 0.85rem 0.7rem;
+}
+
+.behaviourHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.inlineField {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 420px;
+}
+
+.rowIssue {
+  padding: 0 0.85rem 0.6rem;
+  background: var(--ce-warn-fill);
+}
+
+.rowIssue:has(.err) {
+  background: transparent;
+  padding-top: 0.45rem;
+}
+
+.cardFoot {
+  padding: 0.5rem 0.85rem 0.75rem;
+  border-top: 1px solid var(--ce-soft-line);
+}
+
+.addGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Narrow cards put the row on two lines: id, model and share, then order, rpm, tpm and behaviour. */
+@container (max-width: 640px) {
+  .row {
+    grid-template-columns: repeat(3, 56px) minmax(0, 1fr) minmax(0, 1fr) 22px;
+    row-gap: 0.35rem;
+  }
+
+  .row > :nth-child(1) {
+    grid-column: span 3;
+  }
+
+  .row > :nth-child(3) {
+    grid-column: span 2;
+  }
+
+  .row > :nth-child(7) {
+    justify-self: start;
+  }
+
+  .row > :nth-child(8) {
+    grid-column: 6;
+  }
+}
+
+/* Settings */
+
+.setting {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.2rem 0;
+}
+
+.setting > .key {
+  line-height: 30px;
+}
+
+.key {
+  color: var(--ifm-color-emphasis-800);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.76rem;
+}
+
+.settingValue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  min-height: 30px;
+}
+
+.policy {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.3rem 0.75rem;
+  margin: 0 0 0.3rem 0.75rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--ce-soft-line);
+}
+
+.policyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.policyRow .input {
+  width: 64px;
+}
+
+.mapRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+}
+
+.mapLabel {
+  width: 7.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ce-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mapLabel:hover {
+  color: var(--ce-hop);
+}
+
+/* YAML view */
+
+.code,
+.codeBad {
+  border: 1px solid var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-panel);
+  overflow: hidden;
+}
+
+.codeBad {
+  border-color: var(--ce-fail);
+}
+
+.codeScroll {
+  display: flex;
+  max-height: 620px;
+  overflow: auto;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 12.5px;
+  line-height: 20px;
+}
+
+.gutter {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  padding: 8px 0;
+  background: var(--ce-panel);
+  color: var(--ce-faint);
+  user-select: none;
+}
+
+.gutter div {
+  display: grid;
+  grid-template-columns: 2.4rem 1rem;
+  height: 20px;
+}
+
+.gutter span {
+  padding-right: 0.5rem;
+  text-align: right;
+}
+
+.gutter i {
+  color: var(--ce-pick);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.codeBody {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 8px 0;
+  pointer-events: none;
+  white-space: pre;
+}
+
+.backdrop div {
+  height: 20px;
+  padding: 0 14px 0 0;
+}
+
+.textarea {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  min-width: 100%;
+  margin: 0;
+  padding: 8px 14px 8px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ifm-font-color-base);
+  font: inherit;
+  line-height: 20px;
+  white-space: pre;
+  overflow: hidden;
+  resize: none;
+}
+
+.textarea::selection {
+  background: rgba(37, 99, 235, 0.25);
+  color: transparent;
+}
+
+.comment {
+  color: var(--ifm-color-emphasis-600);
+}
+
+.line_edit {
+  background: var(--ce-pick-fill);
+}
+
+.line_kept {
+  background: var(--ce-kept-fill);
+}
+
+.line_err {
+  background: var(--ce-fail-fill);
+}
+
+.gutter .line_err i {
+  color: var(--ce-fail);
+}
+
+.parseError {
+  margin: 0.5rem 0.75rem 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 4px;
+  background: var(--ce-fail-fill);
+  color: var(--ce-fail-text);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/* Fallback graph */
+
+.graphWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  border-bottom: 1px solid var(--ce-line);
+}
+
+.tab,
+.tabOn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ce-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-bottom-color: var(--ce-hop);
+  color: var(--ce-hop);
+  font-weight: 600;
+}
+
+.graphBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(250px, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .graphBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.canvas {
+  position: relative;
+  min-height: 280px;
+  padding-top: 0.6rem;
+  overflow-x: auto;
+  border: 1px dashed var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-sunk);
+}
+
+.canvasCap {
+  display: block;
+  padding: 0 1rem;
+  color: var(--ce-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edges path {
+  fill: none;
+  stroke: var(--ce-hop);
+  stroke-width: 2;
+}
+
+.edges text {
+  fill: var(--ce-hop);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--ce-sunk);
+  stroke-width: 4px;
+}
+
+.edges .arrowHead {
+  fill: var(--ce-hop);
+  stroke: none;
+}
+
+.edgeThen path {
+  stroke-dasharray: 6 4;
+  opacity: 0.7;
+}
+
+.edgeDraft {
+  stroke-dasharray: 3 3;
+}
+
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-panel);
+}
+
+.nodeOn {
+  border: 2px solid var(--ce-pick);
+}
+
+.nodeLoose {
+  border-style: dashed;
+}
+
+.nodeMissing {
+  border: 1px dashed var(--ce-fail);
+  background: var(--ce-fail-fill);
+}
+
+.nodeButton {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nodeButton:disabled {
+  cursor: default;
+}
+
+.nodeTitle {
+  overflow: hidden;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeSub {
+  overflow: hidden;
+  color: var(--ce-muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeMissing .nodeTitle,
+.nodeMissing .nodeSub {
+  color: var(--ce-fail);
+}
+
+.handle {
+  position: absolute;
+  top: calc(50% - 7px);
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ce-hop);
+  border-radius: 50%;
+  background: var(--ce-panel);
+  opacity: 0;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.node:hover .handle,
+.nodeOn .handle {
+  opacity: 1;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.ranked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.rankRow {
+  display: grid;
+  grid-template-columns: 18px 2rem minmax(0, 1fr) 22px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--ce-soft-line);
+  border-radius: 4px;
+  background: var(--ce-panel);
+  cursor: grab;
+}
+
+.rankRow:focus-visible {
+  outline: 2px solid var(--ce-pick);
+}
+
+.rankDragging {
+  opacity: 0.4;
+}
+
+.grip {
+  color: var(--ce-faint);
+  white-space: nowrap;
+  letter-spacing: -2px;
+}
+
+.rank {
+  color: var(--ce-hop);
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 600;
+}
+
+.missing {
+  color: var(--ce-fail);
+  font-family: var(--ifm-font-family-monospace);
+  text-decoration: underline wavy;
+}
+
+.addTarget {
+  height: 30px;
+  padding: 0 0.5rem;
+  border: 1px dashed var(--ifm-color-emphasis-400);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ce-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.diagramChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px dashed var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-sunk);
+}
+
+.snippet {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 6px;
+  background: var(--ce-panel);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* Add deployment drawer */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 15, 20, 0.28);
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: min(460px, 100%);
+  height: 100%;
+  padding: 1.1rem;
+  overflow-y: auto;
+  border-left: 1px solid var(--ce-line);
+  background: var(--ce-panel);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.78rem;
+}
+
+.field .input {
+  height: 32px;
+}
+
+.field small {
+  color: var(--ce-muted);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+}
+
+.fieldErr {
+  margin-top: -0.5rem;
+  color: var(--ce-fail);
+  font-size: 0.75rem;
+}
+
+.fields2,
+.fields4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.fields4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.answers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--ce-soft-line);
+}
+
+.drawerFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.rowHeadSingle {
+  display: none;
+}
