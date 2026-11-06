@@ -345,6 +345,15 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
         }'
 ```
 
+#### LiteLLM Admin UI
+
+Navigate to the **Tag Management** page, click **Create New Tag** (or open a tag and click **Edit Tag**), expand **Budget & Rate Limits**, and fill in **TPM Limit** and **RPM Limit**. Both take whole numbers of 0 or more. Clearing a field and saving removes that limit from the tag.
+
+<Image 
+  img={require('../../img/tag_budget1.png')}
+  style={{width: '80%', display: 'block', margin: '0'}}
+/>
+
 ## Managing Tags
 
 ### View Tag Information
