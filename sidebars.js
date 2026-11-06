@@ -152,6 +152,7 @@ const sidebars = {
           label: "OpenTelemetry",
           items: [
             "observability/opentelemetry_v2_migration",
+            "observability/langfuse_to_otel_v2_migration",
             "observability/opentelemetry_v2",
             "observability/opentelemetry_integration",
             "observability/signoz",
