@@ -2,8 +2,6 @@
 
 {/* keep-version-note */}
 
-This guide is about the transition from the SDK based `langfuse` callback to the [OpenTelemetry v2](./opentelemetry_v2) `langfuse_otel` preset. It's for the scenario where you want to keep your ingestion costs, your content policies and your dashboards. See [Langfuse integration](./langfuse_integration) for the integration overview.
-
 ## Turn it on
 
 Read [What changes](#what-changes) first, then:
