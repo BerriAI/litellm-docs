@@ -4,6 +4,8 @@ description: Learn how to enable FIPS mode in LiteLLM, what it currently support
 
 # FIPS Mode (Work in Progress)
 
+<SinceVersion v="1.109.0" />
+
 :::danger[FIPS support is not yet complete]
 FIPS mode is still under development. While LiteLLM can check whether it is running in a FIPS-enabled environment, not all cryptographic operations have been updated to use FIPS-approved algorithms. Some features may fail when FIPS mode is enabled.
 
