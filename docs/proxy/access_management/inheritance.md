@@ -7,7 +7,7 @@ description: Understand how organization, team, user, and Virtual Key permission
 
 {/* keep-version-note */}
 
-Give a team access to resources, then attach an application's Virtual Key to that team. The key can select fewer resources. A user can belong to several teams, but a team key uses the team selected on that key.
+Permissions can be assigned to organizations, teams, users, and Virtual Keys. When a request reaches LiteLLM, the gateway combines the applicable permissions to decide what it can access. This page explains how those rules work for models, MCP servers, and agents.
 
 ```mermaid
 flowchart TD
@@ -24,7 +24,7 @@ Ownership and membership identify which rules apply. The way those rules combine
 
 ## Keys assigned to a team
 
-These rules describe ordinary application keys. [Agents acting for a caller](./agents.md#act-for-the-caller) also carry the caller's context into downstream requests.
+These rules describe ordinary application keys. A user can belong to several teams, but a team key uses the team selected on that key. [Agents acting for a caller](./agents.md#act-for-the-caller) also carry the caller's context into downstream requests.
 
 | Resource | Key and team | User and organization |
 | --- | --- | --- |
