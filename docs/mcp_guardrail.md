@@ -59,9 +59,7 @@ PANW support requires a LiteLLM version containing [the integration fix](https:/
 
 <SinceVersion v="1.110.0" />
 
-When LiteLLM runs MCP tools for a model request on `/v1/responses`, `/v1/chat/completions` or `/v1/messages`, a guardrail block on a tool call is sent back to the model as that tool's result. The model reads text such as `Tool call failed: Content blocked: keyword 'forbiddenmarker' detected`, continues, and the request returns HTTP 200, so a client that checks the status code cannot tell a tool was blocked.
-
-Set `mcp_block_behavior: raise` on a guardrail to fail the whole request with that guardrail's error instead. The setting is per guardrail, so one guardrail can stop the request while another keeps the default. Leave it unset, or set it to `tool_result`, to keep sending the block to the model.
+By default, when a guardrail blocks an MCP tool that LiteLLM runs for `/v1/responses`, `/v1/chat/completions` or `/v1/messages`, the block goes back to the model as the tool result and the request returns HTTP 200. Set `mcp_block_behavior: raise` on the guardrail to fail the request with the guardrail's error (HTTP 400) instead.
 
 ```yaml title="config.yaml" showLineNumbers
 guardrails:
@@ -73,29 +71,10 @@ guardrails:
       blocked_words:
         - keyword: forbiddenmarker
           action: BLOCK
-      mcp_block_behavior: raise
+      mcp_block_behavior: raise  # default: tool_result
 ```
 
-```bash title="Request that triggers the block" showLineNumbers
-curl http://localhost:4000/v1/responses \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -d '{
-    "model": "{{openai_small}}",
-    "input": "Call the search tool with query forbiddenmarker",
-    "tools": [{"type": "mcp", "server_label": "local", "server_url": "litellm_proxy/mcp/local", "require_approval": "never"}]
-  }'
-```
-
-The response is HTTP 400 with the guardrail's error, including `guardrail_name` and `guardrail_mode`:
-
-```json
-{"error":{"message":"Content blocked: keyword 'forbiddenmarker' detected","type":"invalid_request_error","param":null,"code":"400","provider_specific_fields":{"error":"Content blocked: keyword 'forbiddenmarker' detected","keyword":"forbiddenmarker","description":null,"guardrail_name":"block-tool","guardrail_mode":"pre_mcp_call"}}}
-```
-
-Streaming `/v1/responses` and `/v1/chat/completions` requests have already sent HTTP 200 when the tool runs, so the stream ends with an error event that carries the guardrail's 400 and no `response.completed`. A streaming `/v1/messages` request returns the 400 before the stream starts. The model gets no follow-up call after the block, and tool calls that ran earlier in the same turn are not undone. A `post_mcp_call` guardrail blocks after the tool has run, so `raise` stops the result from reaching the model but does not stop the tool call itself.
-
-`raise` takes effect when the guardrail blocks by raising `HTTPException`, `GuardrailRaisedException` or `BlockedPiiEntityError`, which is how the built-in guardrails block. A custom guardrail that raises a different exception type still has its block returned as a tool result. The setting changes only model requests that LiteLLM runs tools for; calls on the MCP gateway (`/mcp`, `/mcp-rest/tools/call`) behave as described above.
+Streaming `/v1/responses` and `/v1/chat/completions` requests end with an error event instead, since the 200 is already sent. Custom guardrails must block by raising `HTTPException`, `GuardrailRaisedException` or `BlockedPiiEntityError` for `raise` to apply.
 
 ### Scanning Tool Descriptions on Discovery
 
