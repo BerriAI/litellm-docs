@@ -6,7 +6,14 @@ This guide is about the transition from the SDK based `langfuse` callback to the
 
 ## Turn it on
 
-Replace `langfuse` with `langfuse_otel`, set `LITELLM_OTEL_V2=true`, set the scope for either Path A (LLM only logging) or Path B (full tracing) and restart the proxy. Have a look at the changes below before you choose. Without a scope setting the proxy runs at `full`. The flag also moves your other OTel callbacks except `logfire` to V2, see the [general V2 migration guide](./opentelemetry_v2_migration).
+Read [What changes](#what-changes) first, then:
+
+1. Replace `langfuse` with `langfuse_otel` in your callbacks.
+2. Set `LITELLM_OTEL_V2=true`.
+3. Set the scope to either [Path A](#path-a-llm-only-logging-with-fewer-breaking-changes) (LLM only logging) or [Path B](#path-b-explicitly-opt-into-the-full-request-trace) (full tracing). If no scope is set the proxy runs at `full`.
+4. Restart the proxy.
+
+The flag also moves your other OTel callbacks (apart from `logfire`) to V2. See the [general V2 migration guide](./opentelemetry_v2_migration).
 
 ## What changes
 
