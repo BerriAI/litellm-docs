@@ -443,7 +443,7 @@ Help us improve this feature, by filing a [ticket here](https://github.com/Berri
 
 ### Reference a callback definition from `config.yaml`
 
-A key's `callback_vars` cannot hold `os.environ/` references, so per-key credentials normally have to be pasted into every key. Instead, a proxy admin can define the callback once in `config.yaml` under `callback_settings`, with a `callback_type` naming the backend, and point individual keys at it by name. The key stores only the name. The definition's `os.environ/` values are read through the configured [secret manager](../secret) when a request uses the key, so a rotated secret takes effect without a restart.
+A key's `callback_vars` cannot hold `os.environ/` references, so per-key credentials normally have to be pasted into every key. Instead, a proxy admin can define the callback once in `config.yaml` under `callback_settings`, with a `callback_type` naming the backend, and point individual keys at it by name. The key stores only the name. The definition's `os.environ/` values are resolved through the configured [secret manager](../secret) when the proxy starts, like every other secret in `config.yaml`, so a rotated secret takes effect on the next restart.
 
 ```yaml
 callback_settings:
@@ -454,7 +454,7 @@ callback_settings:
     excluded_services: postgres,redis
 ```
 
-Any field a key's `callback_vars` accepts for that backend can sit in the definition. The proxy refuses to start when a definition names a backend it does not know, uses a field no callback accepts, or is named after a callback such as `arize` or `langfuse`.
+Any field a key's `callback_vars` accepts for that backend can sit in the definition, which is where options such as `excluded_services` or `turn_off_message_logging` go. The proxy refuses to start when a definition names a backend it does not know, uses a field no callback accepts, is named after a callback such as `arize` or `langfuse`, or references a secret the secret manager cannot provide. The error names the field and never its value.
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
@@ -465,18 +465,15 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
         "metadata": {
             "logging": [{
                 "callback_name": "arize_space_a",
-                "callback_type": "success",
-                "callback_vars": {}
+                "callback_type": "success"
             }]
         }
     }'
 ```
 
-Only a proxy admin can point a key at a definition, change which definition it references, or remove the reference, through `/key/generate`, `/key/update` and `/key/{key}/regenerate`. Anyone else who can edit the key's metadata has to send the stored `logging` entry back unchanged, otherwise the request is rejected with a 403. A key may add values the definition does not set, such as `turn_off_message_logging` or `capture_message_content`, and they are validated against the definition's backend (`arize` here), but a value the definition sets cannot be overridden on the key, and that request fails with a 400. Only keys that carry the reference log to the definition's backend, so two keys on the same team can differ. The reference is key-level only, and a team's `logging` metadata or a `/team/{team_id}/callback` call naming a definition is rejected.
+Only a proxy admin can point a key at a definition, or change or remove the `logging` entries of a key that holds one, through `/key/generate`, `/key/update`, `/key/{key}/regenerate` and the `metadata` of `/user/new`. Anyone else who can edit the key's metadata has to send the stored `logging` list back unchanged, otherwise the request is rejected with a 403. A reference entry carries the name and the `callback_type` only. `callback_vars` on it, or a second entry on the same key naming the same backend, is rejected with a 400, because every entry's values merge into one credential map per backend at request time and the key could otherwise combine its own values with the definition's credentials. Only keys that carry the reference log to the definition's backend, so two keys on the same team can differ. The reference is key-level only. A team's `logging` metadata naming a definition is ignored like any unknown callback name.
 
-`/key/info` returns the stored entry, which holds the name and no credential. `/key/health` resolves the definition and reports the key as unhealthy, naming the field, when a secret cannot be read, for example `callback_settings.arize_space_a.arize_api_key could not be resolved from the secret manager`, and requests with that key skip the callback. A key whose definition was later removed from `config.yaml` behaves like any unknown callback name, it logs nowhere and `/key/health` still reports it healthy, so keep a definition in place for as long as a key references it.
-
-With a secret manager configured, each referenced `os.environ/` value is read through it when the request misses the proxy's in-memory cache, which keeps a value for `CALLBACK_SETTINGS_SECRET_CACHE_TTL_SECONDS` (default 60 seconds, `0` reads on every request) per worker. The secret manager client caches on its own as well, so a rotated or newly created secret shows up once both caches have expired. For Google Secret Manager that is `GOOGLE_SECRET_MANAGER_REFRESH_INTERVAL`, 24 hours by default, and a secret that was missing stays missing for that long too. When `key_management_settings.hosted_keys` is set, add each referenced secret name to it, otherwise the proxy reads that name from its own environment instead of the secret manager.
+`/key/info` returns the stored entry, which holds the name and no credential. `/key/health` runs the referenced callback with the definition's values and lists the reference name. A key whose definition was later removed from `config.yaml` behaves like any unknown callback name, it logs nowhere and `/key/health` still reports it healthy, so keep a definition in place for as long as a key references it.
 
 ### Check if key callbacks are configured correctly `/key/health`
 
