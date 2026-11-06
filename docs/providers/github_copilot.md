@@ -271,9 +271,9 @@ Direct SDK calls read the GitHub access token from disk and send it to the Copil
 <details>
 <summary>API base URL</summary>
 
-On the gateway, LiteLLM uses the API host from GitHub's token response if it uses HTTPS and the host is `githubcopilot.com` or a subdomain. Otherwise, it uses `https://api.githubcopilot.com`. The gateway does not use `GITHUB_COPILOT_API_BASE`
+For a **Per-user GitHub OAuth** credential, LiteLLM uses `endpoints.api` from GitHub's Copilot user lookup if it uses HTTPS and its host is `githubcopilot.com` or a subdomain, or `copilot-api.SUBDOMAIN.ghe.com` for a GHE.com credential. Otherwise, it uses `https://api.githubcopilot.com`, or `https://copilot-api.SUBDOMAIN.ghe.com` for a GHE.com credential. Per-user credentials do not use `GITHUB_COPILOT_API_BASE`.
 
-For direct SDK Chat Completions, Responses, and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` in the token response, `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`.
+For shared sign-in Chat Completions, Responses, and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` from the Copilot user lookup on the sign-in's GitHub host when it passes the same host check, `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`.
 
 Anthropic Messages uses the authenticated Copilot endpoint. It ignores a caller-supplied `api_base` and `GITHUB_COPILOT_API_BASE`.
 
