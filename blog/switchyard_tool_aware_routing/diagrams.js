@@ -1,6 +1,10 @@
 import React from 'react';
-import formShot from './auto_router_form.png';
 import './diagrams.css';
+
+const formImage = require('./auto_router_form.png');
+const formSet = (formImage?.default ?? formImage)?.src;
+const formShot =
+  formSet?.images?.reduce((best, image) => (image.width > best.width ? image : best))?.path ?? formSet?.src ?? formImage;
 
 const arrow = (id) =>
   `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10Z" class="s-arrow"/></marker></defs>`;
@@ -49,8 +53,8 @@ ${lane(218, [['edit', '✓ applied', true], ['pytest', '✗ 3 failed', false], [
 </figure>`;
 
 const STEPS = [
-  { n: 1, x: 84, y: 31, title: 'Pick Switchyard', text: 'Choose it next to Heuristics, LLM and Decisions Model.' },
-  { n: 2, x: 50, y: 57, title: 'Choose two models', text: 'A capable model for hard turns, an efficient one for routine work.' },
+  { n: 1, x: 96, y: 25, title: 'Pick Switchyard', text: 'Choose it next to Heuristics, LLM and Decisions Model.' },
+  { n: 2, x: 49, y: 51, title: 'Choose two models', text: 'A capable model for hard turns, an efficient one for routine work.' },
   { n: 3, x: 91, y: 66, title: 'Add a judge (optional)', text: 'An LLM or decision model settles turns the tool history leaves unclear.' },
 ];
 
@@ -60,7 +64,7 @@ export function RoutingFlow() {
 
 export function ConfigureRouter() {
   return (
-    <figure className="uca-figure u8">
+    <figure className="uca-figure u8 sw-center">
       <div className="u8-art">
         <div className="u8-head">
           <span>02 / SETUP</span>

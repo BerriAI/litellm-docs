@@ -61,3 +61,4 @@
 .sw-steps p{margin:4px 0 0!important;font-size:13px!important;color:var(--muted);line-height:1.5}
 @media(max-width:650px){.sw-setup{grid-template-columns:1fr;padding:0 14px 18px}.sw-pin{width:26px;height:26px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.sw-pin{animation:none}}
+.sw-center .u8-head{text-align:center}
