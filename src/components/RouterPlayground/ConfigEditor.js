@@ -15,6 +15,7 @@ import FallbackGraph from './FallbackGraph';
 import ProfileEditor from './ProfileEditor';
 import {PROFILE_PRESETS, profileSummary} from './profiles';
 import {FALLBACK_MAPS, PYTHON_STRATEGIES, fallbackTargets, groupsOf, shares, validate} from './validate';
+import {complete} from './yamlComplete';
 import {yamlTokens} from './yamlTokens';
 import styles from './ConfigEditor.module.css';
 
@@ -81,8 +82,41 @@ function Issue({issue, children}) {
   );
 }
 
-function YamlView({text, onChange, error, marks}) {
+function YamlView({text, onChange, error, marks, completion}) {
   const lines = text.split('\n');
+  const area = useRef(null);
+  const [menu, setMenu] = useState(null);
+  const offer = (next, caret, force) => setMenu(completion ? complete(next, caret, completion, force) : null);
+  const accept = item => {
+    const next = text.slice(0, menu.from) + item.insert + text.slice(menu.to);
+    const caret = menu.from + item.insert.length;
+    setMenu(null);
+    onChange(next);
+    requestAnimationFrame(() => {
+      area.current?.focus();
+      area.current?.setSelectionRange(caret, caret);
+    });
+  };
+  const onKeyDown = event => {
+    if (event.key === ' ' && event.ctrlKey) {
+      event.preventDefault();
+      offer(text, event.currentTarget.selectionStart, true);
+      return;
+    }
+    if (!menu) return;
+    const pick = menu.pick ?? 0;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      setMenu({...menu, pick: (pick + step + menu.items.length) % menu.items.length});
+    } else if (event.key === 'Enter' || event.key === 'Tab') {
+      event.preventDefault();
+      accept(menu.items[pick]);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setMenu(null);
+    }
+  };
   const width = Math.max(...lines.map(line => line.length));
   return (
     <div className={error ? styles.codeBad : styles.code}>
@@ -117,14 +151,43 @@ function YamlView({text, onChange, error, marks}) {
             ))}
           </div>
           <textarea
+            ref={area}
             className={styles.textarea}
             spellCheck={false}
             wrap="off"
             value={text}
             style={{height: lines.length * 20 + 16, width: `max(100%, calc(${width}ch + 28px))`}}
-            onChange={event => onChange(event.target.value)}
+            onChange={event => {
+              onChange(event.target.value);
+              offer(event.target.value, event.target.selectionStart, false);
+            }}
+            onKeyDown={onKeyDown}
+            onBlur={() => setTimeout(() => setMenu(null), 150)}
+            onClick={() => setMenu(null)}
             aria-label="Router config as YAML"
+            aria-autocomplete="list"
           />
+          {menu && (
+            <ul
+              className={styles.complete}
+              role="listbox"
+              style={{top: 8 + (menu.row + 1) * 20, left: `${menu.column}ch`}}>
+              {menu.items.map((item, i) => (
+                <li
+                  key={item.label}
+                  role="option"
+                  aria-selected={i === (menu.pick ?? 0)}
+                  className={i === (menu.pick ?? 0) ? styles.completeOn : undefined}
+                  onMouseDown={event => {
+                    event.preventDefault();
+                    accept(item);
+                  }}>
+                  <span>{item.label}</span>
+                  {item.detail && <small>{item.detail}</small>}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
       {error && (
@@ -688,6 +751,7 @@ export default function ConfigEditor({
   profiles = {},
   onProfilesChange = () => {},
   focus = null,
+  fields = [],
 }) {
   const [mode, setMode] = useState('form');
   const [graphMap, setGraphMap] = useState('fallbacks');
@@ -698,6 +762,10 @@ export default function ConfigEditor({
   const parsed = useMemo(() => parseYaml(text), [text]);
   const {data} = parsed;
   const issues = useMemo(() => validate(data), [data]);
+  const completion = useMemo(
+    () => ({settings: fields, groups: data ? [...groupsOf(data).keys()].filter(Boolean) : []}),
+    [fields, data],
+  );
   const kept = useMemo(() => (parsed.error ? [] : keptKeys(parsed.doc, parsed.lineCounter)), [parsed]);
   const typed = useRef(false);
   const root = useRef(null);
@@ -842,6 +910,7 @@ export default function ConfigEditor({
           text={text}
           error={parsed.error}
           marks={marks}
+          completion={completion}
           onChange={next => {
             if (!typed.current) setEdited([]);
             typed.current = true;

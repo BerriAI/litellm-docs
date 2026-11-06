@@ -22,6 +22,26 @@ export class Playground {
         wasm.playground_advance(this.__wbg_ptr, seconds);
     }
     /**
+     * The `router_settings` keys the router core reads, from its config types, as a JSON array.
+     * @returns {string}
+     */
+    static configFields() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.playground_configFields(retptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export2(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * The router's effective settings and every deployment's routing parameters, as JSON: what
      * the diagram's globals band and deployment objects show.
      * @returns {string}

@@ -695,6 +695,7 @@ dependencies = [
  "litellm-router-core",
  "parking_lot",
  "pollster",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]

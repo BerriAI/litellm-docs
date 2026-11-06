@@ -36,6 +36,7 @@ export default function Playground() {
   const [info, setInfo] = useState(null);
   const [linked, setLinked] = useState(null);
   const playground = useRef(null);
+  const fields = useMemo(() => (core ? JSON.parse(core.Playground.configFields()) : []), [core]);
   const counter = useRef(0);
 
   // A scenario link carries its own configs, profiles and seed.
@@ -180,6 +181,7 @@ export default function Playground() {
           profiles={profiles}
           onProfilesChange={setProfiles}
           focus={focus}
+          fields={fields}
         />
       </Panel>
 

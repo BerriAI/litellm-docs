@@ -3,6 +3,7 @@
 //! sleeps advance a virtual clock instead of waiting, and the routing cache is in memory on the
 //! same virtual clock, so cooldowns and per-minute usage expire as simulated time passes.
 
+mod schema;
 mod sim;
 
 use std::{
@@ -1069,6 +1070,12 @@ impl Playground {
             run: RefCell::new(None),
             kept: RefCell::new(VecDeque::new()),
         })
+    }
+
+    /// The `router_settings` keys the router core reads, from its config types, as a JSON array.
+    #[wasm_bindgen(js_name = configFields)]
+    pub fn config_fields() -> String {
+        serde_json::to_string(&schema::router_settings()).unwrap_or_else(|_| "[]".into())
     }
 
     /// Replace every deployment's behaviour: `{"<deployment id>": {"fail": "RateLimitError",
