@@ -726,27 +726,92 @@ The indexed OpenInference keys add up: with `openinference` on, count roughly 18
 
 ## Request identity on every span
 
-LiteLLM writes a small allowlist of request-identity values into standard OpenTelemetry [Baggage](https://opentelemetry.io/docs/specs/otel/baggage/) at the auth boundary. A custom span processor then copies those values onto every span in the trace, so a guardrail, datastore, or service span is filterable by team or key without LiteLLM re-stamping each one by hand.
+LiteLLM writes a small allowlist of request-identity values into standard OpenTelemetry [Baggage](https://opentelemetry.io/docs/specs/otel/baggage/) as soon as the caller's key is authenticated. A custom span processor then copies those values onto every span started later in the request, so a guardrail, datastore, or service span is filterable by team or key without LiteLLM re-stamping each one by hand.
 
-By default the following keys are written onto every span:
+### Attributes and the setting that controls each
 
-| Key | Value |
-|---|---|
-| `litellm.team.id` | Team UUID |
-| `litellm.team.alias` | Team display name |
-| `litellm.team.metadata` | Team's free-form metadata, filtered to the sub-keys you allowlist |
-| `litellm.api_key.hash` | Hash of the caller's virtual key |
-| `gen_ai.request.model` | User-facing model group name |
-| `litellm.provider.model` | Dispatched model on the provider |
+| Attribute | Value | Controlled by | On by default |
+|---|---|---|---|
+| `litellm.team.id` | Team UUID | `baggage_promoted_keys` | yes |
+| `litellm.team.alias` | Team display name | `baggage_promoted_keys` | yes |
+| `litellm.team.metadata` | JSON object holding the allowlisted sub-keys of the team's stored metadata | `baggage_promoted_keys` and `baggage_team_metadata_keys` | listed, but the sub-key allowlist is empty, so nothing is sent |
+| `litellm.api_key.hash` | Hash of the caller's virtual key | `baggage_promoted_keys` | yes |
+| `litellm.end_user.id` | End user the proxy resolved for the request | `baggage_promoted_keys` | no |
+| `gen_ai.request.model` | User-facing model group name | `baggage_promoted_keys` | yes |
+| `litellm.provider.model` | Model dispatched to the provider | `baggage_promoted_keys` | yes |
+| `litellm.metadata.<key>` | One attribute per allowlisted request-metadata key | `baggage_metadata_keys` | `user_api_key_org_id`, `user_api_key_user_id`, `user_api_key_alias`, `user_api_key_end_user_id`, `requester_ip_address` |
 
-A separate set of request-metadata fields is written under the `litellm.metadata.*` namespace. Defaults:
+`litellm.provider.model` is only known once routing has picked a deployment, so it is missing from the spans that start before that point. The LLM-call span always carries it from its own attributes. A key or sub-key with no value for the request is left out instead of being sent empty.
 
-`litellm.metadata.user_api_key_org_id`, `litellm.metadata.user_api_key_user_id`, `litellm.metadata.user_api_key_alias`, `litellm.metadata.user_api_key_end_user_id`, `litellm.metadata.requester_ip_address`.
+Two defaults stay conservative for privacy. The end-user id is promotable but off by default at the top level, since it identifies an individual; it still appears under `litellm.metadata.user_api_key_end_user_id` through the metadata allowlist. A team's free-form metadata is never emitted whole; only the sub-keys you allowlist leave the process, and that allowlist is empty by default.
 
-Two defaults stay conservative for privacy. The end-user id is promotable but off by default at the top level (it identifies an individual); it appears under `litellm.metadata.user_api_key_end_user_id`, which callers who filter by user should enable. A team's free-form metadata is never emitted whole; only the sub-keys you allowlist leave the process, and the allowlist is empty by default.
+### Settings
 
-Override any of these with the `LITELLM_OTEL_BAGGAGE_PROMOTED_KEYS`, `LITELLM_OTEL_BAGGAGE_METADATA_KEYS`, and `LITELLM_OTEL_BAGGAGE_TEAM_METADATA_KEYS` env vars (comma-separated), or the matching YAML lists under `callback_settings.otel`.
+| Env var | YAML key under `callback_settings.otel` | Default | What it controls |
+|---|---|---|---|
+| `LITELLM_OTEL_BAGGAGE_PROMOTED_KEYS` | `baggage_promoted_keys` | `litellm.team.id`, `litellm.team.alias`, `litellm.team.metadata`, `litellm.api_key.hash`, `gen_ai.request.model`, `litellm.provider.model` | Which of the identity attributes above are stamped. Names outside that table are ignored. |
+| `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` | `baggage_metadata_keys` | `user_api_key_org_id`, `user_api_key_user_id`, `user_api_key_alias`, `user_api_key_end_user_id`, `requester_ip_address` | Which request-metadata keys become `litellm.metadata.<key>`. See [Request metadata](#request-metadata). |
+| `LITELLM_OTEL_BAGGAGE_TEAM_METADATA_KEYS` | `baggage_team_metadata_keys` | none | Which sub-keys of the team's stored metadata go into `litellm.team.metadata`. See [Team metadata](#team-metadata). |
 
+Env vars take a comma-separated list and the YAML keys take a YAML list. Each setting replaces its default list instead of adding to it. Setting `LITELLM_OTEL_BAGGAGE_METADATA_KEYS=requester_metadata.correlation_id` therefore stops sending `litellm.metadata.user_api_key_org_id` and the other defaults, so list every key you want to keep:
+
+```bash
+LITELLM_OTEL_BAGGAGE_METADATA_KEYS=user_api_key_org_id,user_api_key_user_id,user_api_key_alias,user_api_key_end_user_id,requester_ip_address,requester_metadata.correlation_id
+```
+
+When the `otel` callback is configured and a setting appears both in `callback_settings.otel` and as an env var, the YAML value wins. The presets, such as `arize` or `langfuse_otel`, read these three settings from the env vars only, so set them there when you use a preset.
+
+These are proxy-wide settings that the operator controls. Key and team destinations added with `/team/{team_id}/callback` or a key's logging settings receive copies of the proxy's spans, so they get the same identity attributes as the proxy's own exporter.
+
+### Request metadata
+
+Request metadata is set per call: it is the `metadata` object a caller sends in the request body. The proxy keeps the caller's own object under `requester_metadata`, next to the proxy-set fields such as `user_api_key_user_id` and `requester_ip_address`. To promote a key the caller sends, allowlist it as `requester_metadata.<key>`. LiteLLM drops the `requester_metadata.` prefix when it names the attribute, so `requester_metadata.correlation_id` is emitted as `litellm.metadata.correlation_id`. A nested value uses a dotted path, for example `requester_metadata.agent.id` for `{"agent": {"id": "..."}}`, emitted as `litellm.metadata.agent.id`. Because the caller's keys always live under `requester_metadata`, a caller cannot overwrite a proxy-set field such as `litellm.metadata.user_api_key_user_id` by sending a key with the same name.
+
+<SinceVersion v="1.102.1" />
+
+With this setting:
+
+```bash
+LITELLM_OTEL_BAGGAGE_METADATA_KEYS=user_api_key_org_id,user_api_key_user_id,user_api_key_alias,user_api_key_end_user_id,requester_ip_address,requester_metadata.correlation_id
+```
+
+and this request:
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "hi"}],
+    "metadata": {"correlation_id": "corr-123", "tenant_id": "t-9"}
+  }'
+```
+
+the request's spans carry `litellm.metadata.correlation_id = "corr-123"` along with the default `litellm.metadata.*` keys. `tenant_id` is not allowlisted, so it is not sent.
+
+### Team metadata
+
+Team metadata is set per team: it is the `metadata` object stored on the team with `/team/new` or `/team/update`, and every request made with one of that team's keys carries the same values. It does not come from the request body. Allowlisted sub-keys are emitted together as one attribute, `litellm.team.metadata`, whose value is a JSON object with the keys sorted. Sub-keys that the team does not have are skipped, and the attribute is left out when none of the allowlisted sub-keys are present. `litellm.team.metadata` must also stay in `baggage_promoted_keys`, which it does by default.
+
+For a team created with:
+
+```bash
+curl http://localhost:4000/team/new \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"team_alias": "ml-platform", "metadata": {"cost_center": "cc-42", "owner": "ml-platform", "region": "eu"}}'
+```
+
+setting `LITELLM_OTEL_BAGGAGE_TEAM_METADATA_KEYS=cost_center,region` puts `litellm.team.metadata = {"cost_center": "cc-42", "region": "eu"}` on the team's spans. `owner` is not allowlisted, so it is not sent.
+
+### Which spans carry the attributes
+
+Identity is attached right after the key is authenticated, and the root HTTP server span, which started earlier, is stamped directly at that point. The proxy's pre-call hook then adds the request's `litellm.metadata.*` keys and stamps the server span again. Every span that starts afterwards in the same request inherits the attributes, including the router span, the LLM-call span, guardrail spans, datastore (Redis and Postgres) spans, and internal service spans. The `auth` span and the datastore lookups made while authenticating start before the key is known, so they carry none of these attributes, and neither do background database writes, such as spend log flushes, that run outside any request. When a request is rejected after its key was looked up, for example for an exceeded budget, the server span still carries the team and key attributes.
+
+Datastore spans also set `litellm.metadata.table_name` and `litellm.metadata.db_operation` themselves. Those two come from the span mapper, not from `baggage_metadata_keys`, so they appear whatever the allowlist holds.
+
+## Metrics
 ## Metrics
 
 Alongside traces, OTel v2 can emit GenAI **client metrics**: histograms for call latency, token usage, and cost that your backend aggregates across requests. Like the rest of OTel v2 they stay off until you turn them on.
@@ -1078,6 +1143,9 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS` | health/metrics/UI routes | Comma-separated paths to exclude from tracing (substring match). Set to `""` to trace everything. |
 | `LITELLM_OTEL_INTEGRATION_ENABLE_METRICS` | `false` | Also emit the GenAI client metrics (duration, token usage, cost, streaming timings). See [Metrics](#metrics). |
 | `LITELLM_OTEL_LEGACY_COMPAT` | `true` | Also emit attributes under the older Traceloop key names. See [Attribute conventions](#attribute-conventions). |
+| `LITELLM_OTEL_BAGGAGE_PROMOTED_KEYS` | see [Settings](#settings) | Identity attributes stamped on every span, comma-separated. Also `callback_settings.otel.baggage_promoted_keys`. |
+| `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` | see [Settings](#settings) | Request-metadata keys stamped as `litellm.metadata.<key>`, comma-separated. Also `callback_settings.otel.baggage_metadata_keys`. |
+| `LITELLM_OTEL_BAGGAGE_TEAM_METADATA_KEYS` | none | Team-metadata sub-keys stamped in `litellm.team.metadata`, comma-separated. Also `callback_settings.otel.baggage_team_metadata_keys`. |
 | `MAPPER_NAMES` | `genai` | Attribute vocabularies written on each span, comma-separated, for example `genai,openinference`. Also `callback_settings.otel.mapper_names` in config.yaml. See [Attribute conventions](#attribute-conventions) and [OpenInference tool calls and metadata](#openinference-tool-calls-and-metadata). |
 
 The full set of keys on each span kind is in [Span attributes](#span-attributes).
