@@ -1567,6 +1567,7 @@ const sidebars = {
         "proxy/telemetry",
         { type: "ref", id: "proxy/security_encryption_faq" },
         "proxy/docker_image_security",
+        "proxy/fips_mode",
         "migration_policy",
         "api_stability_policy",
         { type: "ref", id: "shared_responsibility" },
