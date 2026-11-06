@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # HiddenLayer Guardrails
 
-LiteLLM ships with a native integration for [HiddenLayer](https://hiddenlayer.com/). The proxy sends every request/response to HiddenLayer’s `/detection/v1/interactions` endpoint so you can block or redact unsafe content before it reaches your users.
+LiteLLM ships with a native integration for [HiddenLayer](https://hiddenlayer.com/). The proxy sends every request/response to HiddenLayer’s runtime detection so you can block or redact unsafe content before it reaches your users.
 
 ## Quick Start
 
@@ -22,16 +22,26 @@ export HIDDENLAYER_CLIENT_SECRET="hl_client_secret"
 
 # Optional overrides
 # export HIDDENLAYER_API_BASE="https://api.eu.hiddenlayer.ai"
-# export HL_AUTH_URL="https://auth.hiddenlayer.ai"
+# export HIDDENLAYER_AUTH_URL="https://auth.hiddenlayer.ai"
 ```
 
 **Self-hosted HiddenLayer**
 
-If you run HiddenLayer on-prem, just expose the endpoint and set:
+If you run HiddenLayer on-prem, point LiteLLM at your platform:
 
 ```shell
 export HIDDENLAYER_API_BASE="https://hiddenlayer.your-domain.com"
 ```
+
+If your platform requires authentication, also set the client credentials and your platform's OAuth URL. LiteLLM fetches a token whenever both the client ID and secret are set, for SaaS and self-hosted alike.
+
+```shell
+export HIDDENLAYER_CLIENT_ID="hl_client_id"
+export HIDDENLAYER_CLIENT_SECRET="hl_client_secret"
+export HIDDENLAYER_AUTH_URL="https://auth.hiddenlayer.your-domain.com"
+```
+
+If your platform's certificate is issued by a private CA, set `ssl_verify` on the guardrail to the path of a CA bundle that includes it (see [Supported Params](#supported-params)).
 
 ### 2. Add the hiddenlayer guardrail to `config.yaml`
 
@@ -49,8 +59,8 @@ guardrails:
       mode: ["pre_call", "post_call", "during_call"] # run at multiple stages
       default_on: true
       api_base: os.environ/HIDDENLAYER_API_BASE
-      api_id: os.environ/HIDDENLAYER_CLIENT_ID # only needed for SaaS
-      api_key: os.environ/HIDDENLAYER_CLIENT_SECRET # only needed for SaaS
+      api_id: os.environ/HIDDENLAYER_CLIENT_ID # required for SaaS and for self-hosted platforms with auth
+      api_key: os.environ/HIDDENLAYER_CLIENT_SECRET # required for SaaS and for self-hosted platforms with auth
 ```
 
 #### Supported values for `mode`
@@ -157,8 +167,11 @@ guardrails:
     litellm_params:
       guardrail: hiddenlayer
       mode: ["pre_call", "post_call", "during_call"]
+      api_id: os.environ/HIDDENLAYER_CLIENT_ID        # optional
       api_key: os.environ/HIDDENLAYER_CLIENT_SECRET   # optional
       api_base: os.environ/HIDDENLAYER_API_BASE       # optional
+      auth_url: os.environ/HIDDENLAYER_AUTH_URL       # optional
+      ssl_verify: /etc/ssl/certs/internal-ca.pem      # optional
       default_on: true
 ```
 
@@ -168,8 +181,10 @@ guardrails:
 
 ### Optional parameters
 
-- **`api_base`**: HiddenLayer REST endpoint. Defaults to `https://api.hiddenlayer.ai`, but point it at your self-hosted instance if you have one.
-- **`auth_url`**: Authentication url for hiddenlayer. Defaults to `https;//auth.hiddenlayer.ai`.
+- **`api_base`**: HiddenLayer REST endpoint. Defaults to `HIDDENLAYER_API_BASE`, then `https://api.hiddenlayer.ai`. Point it at your self-hosted instance if you have one.
+- **`api_id`** / **`api_key`**: HiddenLayer client ID and secret. Default to `HIDDENLAYER_CLIENT_ID` and `HIDDENLAYER_CLIENT_SECRET`. Required for SaaS. On a self-hosted platform, LiteLLM fetches a token when both are set and sends requests without one otherwise.
+- **`auth_url`**: HiddenLayer OAuth URL used to fetch tokens. Defaults to `HIDDENLAYER_AUTH_URL`, then `https://auth.hiddenlayer.ai`. Set it to your platform's auth URL for self-hosted installs.
+- **`ssl_verify`**: TLS verification for calls to HiddenLayer, including the token fetch. Set it to a CA bundle path to trust a private CA, or to `false` to disable verification. Defaults to the proxy-wide SSL settings (`SSL_VERIFY`, `SSL_CERT_FILE`).
 - **`mode`**: Control when the guardrail runs (`pre_call`, `post_call`, `during_call`).
 - **`default_on`**: Automatically attach the guardrail to every request unless the client opts out.
 - **`hl-project-id` header**: Routes scans to a specific HiddenLayer project.
@@ -179,12 +194,13 @@ guardrails:
 ## Environment variables
 
 ```shell
-# SaaS
+# Required for SaaS and for self-hosted platforms with auth
 export HIDDENLAYER_CLIENT_ID="hl_client_id"
 export HIDDENLAYER_CLIENT_SECRET="hl_client_secret"
 
-# Shared (SaaS or self-hosted)
+# Optional
 export HIDDENLAYER_API_BASE="https://api.hiddenlayer.ai"
+export HIDDENLAYER_AUTH_URL="https://auth.hiddenlayer.ai"
 ```
 
-Set only the variables you need, self-hosted installs can leave the client ID/secret unset and just configure `HIDDENLAYER_API_BASE`.
+Set only the variables you need. Self-hosted platforms without authentication can leave the client ID and secret unset and only configure `HIDDENLAYER_API_BASE`.
