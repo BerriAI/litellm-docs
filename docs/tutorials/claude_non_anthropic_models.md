@@ -263,6 +263,30 @@ and select any LiteLLM-managed model (`{{openai_large}}`, `{{gemini_flash}}`, `a
 
 :::
 
+### 7. Fill the Picker from the `lite` CLI with `--sync-models`
+
+If you launch Claude Code through the [LiteLLM proxy CLI](../proxy/management_cli.md), `lite claude --sync-models` reads your proxy's `/v1/models` with your key and hands its chat models to Claude Code as a [`modelPicker` setting](https://docs.claude.com/en/docs/claude-code/settings), written to `~/.litellm/claude_model_picker.json` and passed as `--settings`. The `/model` picker then lists each proxy model under its own id, so a non-Anthropic model needs no claude-flavored name. Embedding, image, audio and rerank deployments stay out of the picker, since Claude Code cannot chat with them.
+
+```bash
+lite claude --sync-models
+```
+
+The same switch as an environment variable, for a shell profile:
+
+```bash
+export LITELLM_CLAUDE_SYNC_MODELS=1
+lite claude
+```
+
+Each row is labeled with the model's `display_name` when one is set (section 8), otherwise with its id, and a model whose input window reaches 1M is listed as `<id>[1m]`, the suffix that opens Claude Code's 1M context. Claude Code skips a row whose id its built-in lineup already covers, so a plain `claude-sonnet-5-5` deployment keeps the built-in **Sonnet** row and label. Your own `--settings` file or JSON is carried into the written document with only `modelPicker` replaced, since Claude Code reads one `--settings` per launch. In this mode the CLI turns `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY` off for the session, even when `lite configure claude` or `lite up` wrote it into `settings.json`, so each model gets one row instead of a second **From gateway** copy; export the variable yourself if you want both. `lite claude --no-sync-models` turns an exported `LITELLM_CLAUDE_SYNC_MODELS=1` off for one launch, and `--skip-verify` skips the sync along with the key check. If the proxy cannot be reached or lists no chat models, `lite claude` prints a warning and starts Claude Code with its built-in picker.
+
+:::info[Requirements]
+
+- Claude Code **v2.1.242** or later, which is where the `modelPicker` setting arrived.
+- The `lite` CLI from the LiteLLM release that ships `--sync-models`. Older CLIs forward the flag to Claude Code, which rejects it.
+
+:::
+
 :::tip[Surface only specific models]
 
 If you only want a subset of your LiteLLM models to show up in the `/model` picker, issue a [virtual key](../proxy/virtual_keys) scoped to those models and use that key as `ANTHROPIC_AUTH_TOKEN`. `/v1/models` will only return models the key can access.
@@ -271,7 +295,7 @@ You can also add individual model entries manually via `ANTHROPIC_CUSTOM_MODEL_O
 
 :::
 
-### 7. Show a Clean Name in the Picker with `display_name`
+### 8. Show a Clean Name in the Picker with `display_name`
 
 The `/model` picker only keeps gateway models whose id contains `claude` or `anthropic`, so a non-Anthropic model needs a claude-flavored name like `kimi-k3-claude-compatible` to appear at all; the picker then shows that raw id as the label. To keep the id for routing but show a friendlier label, set `display_name` under the model's `model_info`:
 
@@ -287,7 +311,7 @@ model_list:
 
 The Anthropic-shaped `GET /v1/models` response now returns `"display_name": "Kimi K3"` for that entry, so the picker lists **Kimi K3** (labeled From gateway) while every request keeps using the `kimi-k3-claude-compatible` id. Models without a `display_name` keep showing their id, and the OpenAI-shaped listing is unaffected; nothing gets duplicated in other harnesses.
 
-### 8. Context Window Reported for a Gateway Model
+### 9. Context Window Reported for a Gateway Model
 
 Claude Code applies its own default context window to a model name it does not recognize as one of Anthropic's, and every gateway-served name falls into that category. Declaring `max_input_tokens` under a model's `model_info` changes what `GET /v1/models`, `/model/info`, and the LiteLLM UI report, and it drives the proxy's own [context-window pre-call checks](../proxy/reliability.md#context-window-fallbacks-pre-call-checks--fallbacks), but it does not change the figure the client shows or when the client compacts.
 
