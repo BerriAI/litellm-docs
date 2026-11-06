@@ -9,15 +9,13 @@ hide_table_of_contents: true
 image: ./hero.png
 ---
 
-You can now use names like `openai/gpt-luna-latest` and `anthropic/claude-opus-latest` in LiteLLM.
+As providers release smarter, faster, cheaper models, you shouldn't have to update every app by hand.
 
-A `-latest` alias is a stable name for a model family. We maintain its target. As we move the alias to a newer model, your application uses that model without changing the name in your code or gateway configuration.
+LiteLLM now supports `-latest` aliases. Pick a model family once. We update the model behind the alias as newer versions arrive, so you can keep the same name in your code.
 
 <!-- truncate -->
 
-## Use it in Python
-
-With `litellm` installed and `OPENAI_API_KEY` set, run:
+With `litellm` installed and `OPENAI_API_KEY` set:
 
 ```python
 from litellm import completion
@@ -26,15 +24,23 @@ response = completion(
     model="openai/gpt-luna-latest",
     messages=[{"role": "user", "content": "Say hello."}],
 )
-print(response.choices[0].message.content)
 ```
 
-LiteLLM resolves the alias before calling OpenAI. You get a response from the model behind it, with cost calculated for that model.
+The same aliases work in the Python SDK and AI Gateway.
 
-## Use it on your gateway
+## Supported models
 
-Set `litellm_params.model` to the full alias, then keep calling the same model name from your client. An existing `openai/*` wildcard route also accepts `openai/gpt-luna-latest` without another model entry. The [model aliases guide](https://docs.litellm.ai/docs/model_latest_aliases) has the config and a request you can copy.
+Use the provider prefix with any of its aliases below, as in `openai/gpt-luna-latest`.
 
-The new aliases cover OpenAI, Anthropic, xAI, Moonshot, Z.AI, DeepSeek, DashScope, and MiniMax through their own APIs. Gemini and Mistral already offer provider-managed latest names, which LiteLLM passes through.
+- **OpenAI** (`openai/`): `gpt-luna-latest`, `gpt-sol-latest`, `gpt-terra-latest`, `gpt-astra-latest`, `gpt-mini-latest`
+- **Anthropic** (`anthropic/`): `claude-opus-latest`, `claude-sonnet-latest`, `claude-haiku-latest`, `claude-fable-latest`
+- **xAI** (`xai/`): `grok-latest`
+- **Moonshot** (`moonshot/`): `kimi-latest`
+- **Z.AI** (`zai/`): `glm-latest`, `glm-flash-latest`
+- **DeepSeek** (`deepseek/`): `deepseek-pro-latest`, `deepseek-flash-latest`
+- **DashScope** (`dashscope/`): `qwen-max-latest`, `qwen-flash-latest`
+- **MiniMax** (`minimax/`): `minimax-latest`
 
-Use a specific model ID if you want to choose when you switch. A newer model can change pricing and behavior.
+These aliases call each provider's own API. Gemini and Mistral already offer provider-managed latest names, which LiteLLM passes through.
+
+[Get started with latest aliases](https://docs.litellm.ai/docs/model_latest_aliases).
