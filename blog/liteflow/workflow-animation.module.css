@@ -1,0 +1,270 @@
+.animation {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  isolation: isolate;
+  overflow: hidden;
+  color: #edf0f4;
+}
+
+.viewport {
+  width: 100%;
+  overflow: hidden;
+}
+
+.graphFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1200 / 640;
+}
+
+.particles,
+.graph {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.particles {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.graph {
+  z-index: 1;
+  overflow: visible;
+  font-family: "Geist", ui-sans-serif, sans-serif;
+}
+
+.nodes {
+  isolation: isolate;
+}
+
+.wires {
+  fill: none;
+  stroke: #7b899c;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 6;
+  opacity: 0.32;
+}
+
+.wires .sourceWire {
+  opacity: 0.45;
+}
+
+.fileName,
+.sourceLabel,
+.sourceCode,
+.inputStatus,
+.jsonStatus,
+.pythonIcon,
+.pythonStatus,
+.conditionQuestion,
+.ifLabel,
+.elseLabel,
+.replyStatus,
+.previewLabel {
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.fileName {
+  fill: #8f9caf;
+  font-size: 15px;
+}
+
+.sourceLabel {
+  fill: #7c899c;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.sourceCode {
+  font-size: 22px;
+  opacity: 0.8;
+}
+
+.nodeLabel {
+  fill: #d4dbe4;
+  font-size: 24px;
+}
+
+.envelope,
+.condition {
+  fill: #15171a;
+  stroke: #b6c3d4;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.inputStatus {
+  fill: #a5b8cf;
+  font-size: 20px;
+}
+
+.jsonStatus {
+  fill: #79cbb5;
+  font-size: 14px;
+}
+
+.pythonIcon {
+  fill: #c0b3f2;
+  font-size: 46px;
+}
+
+.pythonStatus {
+  fill: #b1a2ec;
+  font-size: 26px;
+}
+
+.condition {
+  stroke: #8290a4;
+}
+
+.conditionText {
+  fill: #b7c2d3;
+  font-size: 28px;
+}
+
+.conditionQuestion {
+  fill: #c1c9d7;
+  font-size: 28px;
+}
+
+.ifLabel,
+.elseLabel {
+  fill: #929caa;
+  font-size: 21px;
+}
+
+.anthropic,
+.mistral {
+  opacity: 0.45;
+}
+
+.graph[data-branch="urgent"] .anthropic,
+.graph[data-branch="routine"] .mistral {
+  opacity: 1;
+}
+
+.graph[data-branch="urgent"] .ifLabel,
+.graph[data-branch="urgent"] .conditionText {
+  fill: #e8bea4;
+}
+
+.graph[data-branch="urgent"] .condition {
+  stroke: #e8bea4;
+}
+
+.graph[data-branch="routine"] .elseLabel,
+.graph[data-branch="routine"] .conditionText {
+  fill: #d6bc87;
+}
+
+.graph[data-branch="routine"] .condition {
+  stroke: #d6bc87;
+}
+
+.replyIcon {
+  fill: none;
+  stroke: #65758c;
+  stroke-width: 2;
+}
+
+.graph[data-stage="6"] .replyIcon {
+  stroke: #95cfb2;
+}
+
+.replyStatus {
+  fill: #95cfb2;
+  font-size: 20px;
+}
+
+.previewLabel {
+  fill: #8c96a6;
+  font-size: 13px;
+}
+
+.pauseButton,
+.inspectButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b4bfce;
+  font: 13px/1 "Geist Mono", ui-monospace, monospace;
+  cursor: pointer;
+}
+
+.pauseButton {
+  position: absolute;
+  right: 4.5%;
+  bottom: 2.5%;
+  z-index: 2;
+}
+
+.inspectButton {
+  display: none;
+}
+
+.pauseButton:hover,
+.inspectButton:hover {
+  color: #edf0f4;
+}
+
+.pauseButton:focus-visible,
+.inspectButton:focus-visible {
+  outline: 2px solid #c0b3f2;
+  outline-offset: 4px;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid #c0b3f2;
+  outline-offset: -2px;
+}
+
+@media (max-width: 600px) {
+  .sourceLabel {
+    display: none;
+  }
+
+  .animation[data-inspecting="true"] .viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .animation[data-inspecting="true"] .graphFrame {
+    min-width: 840px;
+  }
+
+  .controls {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 4.5% 8px;
+  }
+
+  .pauseButton,
+  .inspectButton {
+    position: static;
+    min-height: 44px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .inspectButton {
+    display: inline-block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pauseButton {
+    display: none;
+  }
+}
