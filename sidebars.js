@@ -1910,6 +1910,7 @@ const providersSidebar = {
     "providers/oci",
     "providers/openinfer",
     "providers/ovhcloud",
+    "providers/pareto",
     { type: "category", label: "Perplexity AI", className: "sidebar-provider", link: { type: "doc", id: "providers/perplexity" }, items: [
       "providers/perplexity_embedding",
     ] },
