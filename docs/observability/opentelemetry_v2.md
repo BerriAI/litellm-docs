@@ -759,9 +759,9 @@ Env vars take a comma-separated list and the YAML keys take a YAML list. Each se
 LITELLM_OTEL_BAGGAGE_METADATA_KEYS=user_api_key_org_id,user_api_key_user_id,user_api_key_alias,user_api_key_end_user_id,requester_ip_address,requester_metadata.correlation_id
 ```
 
-When the `otel` callback is configured and a setting appears both in `callback_settings.otel` and as an env var, the YAML value wins. The presets, such as `arize` or `langfuse_otel`, read these three settings from the env vars only, so set them there when you use a preset.
+When `otel` is the only OTel v2 callback in `callbacks` and a setting appears both in `callback_settings.otel` and as an env var, the YAML value wins. The presets, such as `arize` or `langfuse_otel`, read these three settings from the env vars only, and so does an `otel` callback listed next to a preset, so set them as env vars whenever a preset is in `callbacks`.
 
-These are proxy-wide settings that the operator controls. Key and team destinations added with `/team/{team_id}/callback` or a key's logging settings receive copies of the proxy's spans, so they get the same identity attributes as the proxy's own exporter.
+These are proxy-wide settings that the operator controls. A key or team cannot set its own lists, and destinations added with `/team/{team_id}/callback` or a key's logging settings use the proxy's lists.
 
 ### Request metadata
 
