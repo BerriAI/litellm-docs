@@ -586,11 +586,10 @@ const sidebars = {
         },
         {
           type: "category",
-          label: "Authentication & Access",
+          label: "Authentication",
           items: [
             { type: "html", value: "Essential", className: "sidebar-group-label", defaultStyle: true },
             "proxy/virtual_keys",
-            "proxy/access_control",
             {
               type: "category",
               label: "Single Sign-On",
@@ -622,12 +621,16 @@ const sidebars = {
               id: "proxy/identity_provisioning",
               label: "Provisioning & Keys",
             },
-            "proxy/service_accounts",
             "proxy/custom_auth",
-            { type: "doc", id: "proxy/ip_address", className: "sidebar-enterprise" },
-            { type: "doc", id: "proxy/public_routes", className: "sidebar-enterprise" },
             "proxy/master_key_rotations",
-            { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Access Management",
+          items: [
+            { type: "doc", id: "proxy/access_management/overview", label: "Overview" },
+            "proxy/access_management/llm",
           ],
         },
         {
