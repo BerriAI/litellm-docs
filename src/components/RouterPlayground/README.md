@@ -4,6 +4,17 @@ Everything behind `/router-playground` lives in this folder, apart from the page
 `src/pages/router-playground.js` and the built core in `static/router-playground/`.
 
 `index.js` is the playground component: config editor, deployments, request controls and state.
+`ConfigEditor.js` is the config editor: a Form | YAML toggle over the same YAML text, model groups as
+cards with a row per deployment, router settings grouped as strategy, retries, cooldowns and
+fallbacks, an add-deployment drawer, and checks drawn on the cards. The YAML stays the source of
+truth: `configDoc.js` parses it with the `yaml` package and patches one node per form edit (a scalar
+edit splices only that value), so comments, key order and keys the form does not edit survive.
+YAML that does not parse disables the form and the router keeps the last config that parsed.
+`FallbackGraph.js` edits the fallback maps as a graph with a ranked list per group, `validate.js`
+holds the checks (a deployment without `order` beside siblings with one, a fallback to a missing
+group, duplicate ids, a Python-only strategy) and simple-shuffle's split, and
+`ConfigEditor.module.css` styles them. Behaviour profiles are keyed by deployment id in `index.js`
+and never written into the YAML; a fixed reply is, as `mock_response`.
 `Trace.js` renders one request's trace or a burst summary, `StateDiagram.js` steps through one
 request as an environment diagram (globals, frames per fallback level with pick and attempt frames,
 deployments as objects, the host edge), `diagramModel.js` folds a trace into the diagram's per-step
