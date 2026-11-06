@@ -1143,6 +1143,7 @@ const sidebars = {
         "routing",
         "proxy/cache_aware_routing",
         "wildcard_routing",
+        "model_latest_aliases",
         "proxy/health_check_routing",
         "scheduler",
         { type: "html", value: "Fallbacks & timeouts", className: "sidebar-group-label", defaultStyle: true },
