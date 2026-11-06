@@ -177,7 +177,7 @@ const SESSIONS = `
 <figure class="uca-figure u8">
 <input class="u8-pause" type="checkbox" id="sw-session-motion"/><label class="u8-control" for="sw-session-motion">Pause animation</label>
 <div class="u8-art">
-<div class="u8-head"><span>03 / TRAJECTORY-AWARE ROUTING</span><h3>The session is the unit, not the request</h3><p>Failure signals persist across a rolling window, so the session escalates, holds while it recovers and steps down once the work is routine.</p></div>
+<div class="u8-head"><span>03 / TRAJECTORY-AWARE ROUTING</span><h3>Escalate, hold, step down</h3><p>A failure keeps counting while the agent recovers, so the session stays on the capable model until the work is routine again.</p></div>
 <div class="u9-scroll" tabindex="0" role="region" aria-label="A six turn session: turns one and two run on Claude Haiku, a failing test in turn three escalates to Claude Opus, the failure signal persists through the recovery window and the session holds on Opus through turn five, and turn six steps down to Haiku. Scroll horizontally on small screens.">
 <svg class="u9-svg" viewBox="0 0 900 370" role="img" aria-label="A six turn session: turns one and two run on Claude Haiku, a failing test in turn three escalates to Claude Opus, the failure signal persists through the recovery window and the session holds on Opus through turn five, and turn six steps down to Haiku">
 ${TIMELINE_SVG}

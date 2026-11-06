@@ -10,29 +10,31 @@ hide_table_of_contents: true
 
 import { RoutingFlow, ConfigureRouter, SessionTimeline } from './diagrams';
 
-LiteLLM now ships NVIDIA NeMo Switchyard's stage router as an auto-router strategy. Switchyard follows your agent's tool trajectory (what it ran, what broke, what it keeps retrying) and steers the session to the model the work needs. It works across Chat Completions, Anthropic Messages and Responses, so Claude Code, Codex and SDK agents get it without client changes.
+LiteLLM now ships NVIDIA NeMo Switchyard's stage router as an auto-router strategy. It changes what a router looks at. Instead of judging each request by its prompt, Switchyard reads your agent's tool trajectory, meaning the commands it ran, the ones that failed and the steps it keeps retrying. It uses that history to steer the whole session to the right model.
 
-A coding agent spends most of a task exploring: reading files, making small edits, running commands that pass. A few stretches are hard: a test suite that keeps failing, a build that breaks, an edit that will not apply. Routing each request on its own prompt misses that shape. Switchyard routes the session.
+Think about how a coding agent actually spends a task. Most turns are routine. It reads a file, makes a small edit, runs a command that passes. Then it hits something hard, like a test suite that keeps failing or an edit that will not apply, and it needs a stronger model for a few turns. Switchyard gives you exactly that, on Chat Completions, Anthropic Messages and Responses, so Claude Code, Codex and SDK agents get it without changing a line of client code.
 
 {/* truncate */}
 
 ## Steer the session by its tool trajectory
 
-The prompt rarely tells you how hard the next turn is. The trajectory does. A turn that follows a clean test run and a turn that follows the third failed attempt at the same fix can carry the same user message, but they need very different models.
+The prompt is a poor guide to how hard the next turn will be. "Continue" can follow a clean test run, or it can follow the third failed attempt at the same fix. Same words, very different amount of work.
 
-Switchyard scores every turn against the session's recent tool history. It weighs how severe each failure was, from a non-zero exit to a critical error. It notices when the agent repeats the same broken step, when context gets compacted and when tests pass again. Exploration stays on your efficient model. When the trajectory turns hard, the session escalates to your capable model.
+The tool trajectory tells you which one you are in. So Switchyard scores every turn against the session's recent tool results. It weighs how bad each failure was, from a command that exited non-zero up to a crash. It notices when the agent repeats the same broken step, when the context gets compacted and when the tests start passing again.
+
+While the agent is exploring cleanly, the session stays on your efficient model. When the trajectory turns hard, Switchyard escalates the session to your capable model. You pay for the expensive model only during the stretches that need it.
 
 <RoutingFlow />
 
-**Every pick is explainable from the session's own trajectory.** When the signals do not give a confident answer, Switchyard can hand the turn to a judge, either an LLM judge or a decision model such as TypeSafe Jev. The judge only runs for the turns that need it.
+**You can explain every pick from the session's own history.** Some turns are genuinely unclear. For those, Switchyard can ask a judge, either an LLM judge or a decision model such as TypeSafe Jev. The judge only runs on the turns that need it, so it adds no cost to the rest.
 
 ## Configure once, serve every agent API
 
-The Add Auto Router form opens on a single question: which routing strategy do you want? Switchyard sits next to Heuristics, LLM and Decisions Model. Pick it, choose your models and save.
+Setting it up takes a minute. Open the Add Auto Router form, pick Switchyard as your routing strategy, choose your two models and save.
 
 <ConfigureRouter />
 
-**One router serves Claude Code, Codex and OpenAI SDK agents without client changes.** If you manage LiteLLM in config, the same router is a few lines of YAML.
+**One router name works for Claude Code, Codex and OpenAI SDK agents.** If you manage LiteLLM in config, the same router is a few lines of YAML.
 
 ```yaml
 model_list:
@@ -47,21 +49,25 @@ model_list:
         models: {capable: claude-opus, efficient: claude-haiku}
 ```
 
-Point Claude Code at the proxy and use the router name as the model.
+Then point Claude Code at the proxy and use the router name as the model.
 
 ```bash
 ANTHROPIC_BASE_URL=http://localhost:4000 ANTHROPIC_AUTH_TOKEN=$LITELLM_API_KEY ANTHROPIC_MODEL=switchyard-route claude
 ```
 
-## Trajectory-aware routing: the session is the unit
+## Trajectory-aware routing treats the session as the unit
 
-Hard problems do not end in one turn. After a failure, an agent usually needs a few turns to read the error, change the code and run the tests again. A router that only looks at the latest request would flip back to the efficient model the moment one command succeeds, right in the middle of the fix.
+This is the part that makes Switchyard different from a per-request router.
 
-Switchyard keeps state for the whole session. Failure signals persist across a rolling window of recent tool results, so a hard failure keeps counting while the agent recovers. An escalation holds the session on the capable model for the turns that follow. Once tests pass and the work turns routine, the session steps back down. You can tune the window, the confidence threshold and even teach Switchyard your own tools as observe, mutate, plan or new.
+Fixing a hard problem takes several turns. After a failure, the agent reads the error, changes the code and runs the tests again. A router that only looks at the latest request sees one successful command and drops back to the cheap model halfway through the fix.
+
+Switchyard remembers the session instead. Recent failures stay in a rolling window, so a hard failure keeps counting while the agent works through it. After an escalation, Switchyard holds the session on the capable model for the next turns. Once the tests pass and the work is routine again, the session steps back down to the efficient model.
 
 <SessionTimeline />
 
-**Session routing you can trust in production.** LiteLLM scopes session state to the API key that owns the session, so one caller can never steer another caller's routing. Every decision lands in your spend logs with the model it chose and the evidence behind it, so you can trace cost and quality across a whole session from the same place you track spend.
+You can tune how this behaves. Set the size of the window, set the confidence threshold, or teach Switchyard about your own tools by tagging them as observe, mutate, plan or new.
+
+**Session routing you can trust in production.** LiteLLM keeps each session's state separate per API key, so one caller can never change another caller's routing. Every decision is written to your spend logs with the model it chose and the reason it chose it. You can trace cost and quality across a whole session from the same place you already track spend.
 
 <div className="cost-launch-note">
 <p><strong>Available now</strong></p>
