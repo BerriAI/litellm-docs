@@ -883,6 +883,8 @@ router_settings:
 | OR_API_KEY | API key for OpenRouter, read after `OPENROUTER_API_KEY`
 | OVHCLOUD_API_BASE | Base URL for OVHcloud AI Endpoints
 | PARALLEL_AI_API_BASE | Base URL for the Parallel AI search provider
+| PARETO_API_BASE | Base URL for Pareto Inference. Default is https://api.paretoinference.com/v1
+| PARETO_API_KEY | API key for Pareto Inference
 | PERPLEXITY_API_BASE | Base URL for Perplexity. Default is https://api.perplexity.ai
 | PG_VECTOR_API_BASE | Base URL for a pgvector vector store
 | PG_VECTOR_API_KEY | API key for a pgvector vector store
