@@ -1,103 +1,97 @@
 import React from 'react';
+import formShot from './auto_router_form.png';
 import './diagrams.css';
 
 const arrow = (id) =>
   `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10Z" class="s-arrow"/></marker></defs>`;
 
-const wire = (d, id, flow = true) =>
-  `<path d="${d}" class="s-wire" marker-end="url(#${id})"/>${flow ? `<path d="${d}" class="s-flow"/>` : ''}`;
+const chip = (x, y, w, tool, result, ok) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="54" rx="8" class="${ok ? 's-box' : 's-box s-failbox'}"/>` +
+  `<text x="${x + 14}" y="${y + 23}" class="s-mono">${tool}</text>` +
+  `<text x="${x + 14}" y="${y + 43}" class="${ok ? 's-ok' : 's-fail'}">${result}</text>`;
 
-const box = (x, y, w, h, title, label, extra = '') =>
-  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" class="s-box ${extra}"/>` +
-  `<text text-anchor="middle" x="${x + w / 2}" y="${y + h / 2 - 4}" class="s-title">${title}</text>` +
-  `<text text-anchor="middle" x="${x + w / 2}" y="${y + h / 2 + 18}" class="s-label">${label}</text>`;
-
-const turn = (y, tool, result, ok) =>
-  `<rect x="24" y="${y}" width="250" height="64" rx="8" class="s-box"/>` +
-  `<text x="42" y="${y + 27}" class="s-title" style="font-size:15px">${tool}</text>` +
-  `<text x="42" y="${y + 48}" class="${ok ? 's-ok' : 's-fail'}">${result}</text>`;
+const lane = (y, chips) => chips.map(([tool, result, ok], i) => chip(24 + i * 132, y, 120, tool, result, ok)).join('');
 
 const ROUTING = `
 <figure class="uca-figure u8">
 <input class="u8-pause" type="checkbox" id="sw-routing-motion"/><label class="u8-control" for="sw-routing-motion">Pause animation</label>
 <div class="u8-art">
-<div class="u8-head"><span>01 / ROUTING</span><h3>Route by tool execution history</h3><p>Each turn is classified from the tool calls and results that came before it.</p></div>
-<div class="u9-scroll" tabindex="0" role="region" aria-label="Agent turns with tool results flow into the Switchyard stage router, which sends routine turns to the efficient model and failed tool calls to the capable model, with an optional judge for ambiguous turns. Scroll horizontally on small screens.">
-<svg class="u9-svg" viewBox="0 0 900 430" role="img" aria-label="Agent turns with tool results flow into the Switchyard stage router, which sends routine turns to the efficient model and failed tool calls to the capable model, with an optional judge for ambiguous turns">
-${arrow('sw-routing-arrow')}
-<text x="24" y="30" class="s-eyebrow">AGENT TURNS</text>
-<text x="352" y="30" class="s-eyebrow">CLASSIFY</text>
-<text x="652" y="30" class="s-eyebrow">ROUTE</text>
-${turn(56, 'read_file src/app.py', '✓ ok', true)}
-${turn(146, 'bash pytest -q', '✗ 3 failed, 41 passed', false)}
-${turn(236, 'edit utils.py', '✗ string not found ×3', false)}
-<rect x="352" y="118" width="210" height="142" rx="10" class="s-box s-accent"/>
-<text text-anchor="middle" x="457" y="160" class="s-title">Switchyard</text>
-<text text-anchor="middle" x="457" y="182" class="s-title">stage router</text>
-<text text-anchor="middle" x="457" y="210" class="s-label">tool calls · results</text>
-<text text-anchor="middle" x="457" y="231" class="s-label">failure signals</text>
-<rect x="362" y="328" width="190" height="70" rx="8" class="s-judge"/>
-<text text-anchor="middle" x="457" y="357" class="s-title" style="font-size:15px">Optional judge</text>
-<text text-anchor="middle" x="457" y="379" class="s-small">LLM or decision model</text>
-<path d="M457 260V328" class="s-dashwire"/>
-<text x="467" y="300" class="s-note">ambiguous turns</text>
-${box(652, 66, 224, 84, 'Efficient model', 'routine turns')}
-${box(652, 228, 224, 84, 'Capable model', 'failures + recovery', 's-accent')}
-${wire('M274 88H312V160H352', 'sw-routing-arrow')}
-${wire('M274 178H352', 'sw-routing-arrow')}
-${wire('M274 268H312V200H352', 'sw-routing-arrow')}
-${wire('M562 160H606V108H652', 'sw-routing-arrow')}
-${wire('M562 220H606V270H652', 'sw-routing-arrow')}
+<div class="u8-head"><span>01 / ROUTING</span><h3>Route by tool execution history</h3><p>Clean tool results stay on the efficient model. Failures escalate to the capable model.</p></div>
+<div class="u9-scroll" tabindex="0" role="region" aria-label="Two agent sessions pass through the Switchyard stage router. A session whose tool calls succeed is routed to the efficient model, Claude Haiku. A session whose test run fails is escalated to the capable model, Claude Opus. Scroll horizontally on small screens.">
+<svg class="u9-svg" viewBox="0 0 900 330" role="img" aria-label="Two agent sessions pass through the Switchyard stage router. A session whose tool calls succeed is routed to the efficient model, Claude Haiku. A session whose test run fails is escalated to the capable model, Claude Opus.">
+${arrow('sw-ok-arrow')}${arrow('sw-fail-arrow').replace('class="s-arrow"', 'class="s-arrow-fail"')}
+<text x="24" y="30" class="s-eyebrow">TOOL EXECUTION HISTORY</text>
+<text x="464" y="30" class="s-eyebrow">SWITCHYARD</text>
+<text x="676" y="30" class="s-eyebrow">ROUTED TO</text>
+${lane(56, [['read_file', '✓ ok', true], ['edit', '✓ applied', true], ['pytest', '✓ 44 passed', true]])}
+${lane(218, [['edit', '✓ applied', true], ['pytest', '✗ 3 failed', false], ['edit', '✗ not found ×2', false]])}
+<rect x="464" y="96" width="166" height="160" rx="12" class="s-box s-accent"/>
+<text text-anchor="middle" x="547" y="148" class="s-title">Stage</text>
+<text text-anchor="middle" x="547" y="170" class="s-title">router</text>
+<text text-anchor="middle" x="547" y="198" class="s-small">reads results,</text>
+<text text-anchor="middle" x="547" y="216" class="s-small">errors, retries</text>
+<rect x="676" y="44" width="200" height="78" rx="10" class="s-box"/>
+<text x="696" y="76" class="s-title">Claude Haiku</text>
+<text x="696" y="100" class="s-ok">efficient · routine turn</text>
+<rect x="676" y="206" width="200" height="78" rx="10" class="s-box s-failbox"/>
+<text x="696" y="238" class="s-title">Claude Opus</text>
+<text x="696" y="262" class="s-fail">capable · escalated</text>
+<path d="M408 83H436V136H464" class="s-wire" marker-end="url(#sw-ok-arrow)"/><path d="M408 83H436V136H464" class="s-flow"/>
+<path d="M408 245H436V216H464" class="s-wire" marker-end="url(#sw-fail-arrow)"/><path d="M408 245H436V216H464" class="s-flow s-flow-fail"/>
+<path d="M630 136H652V83H676" class="s-wire" marker-end="url(#sw-ok-arrow)"/><path d="M630 136H652V83H676" class="s-flow"/>
+<path d="M630 216H652V245H676" class="s-wire" marker-end="url(#sw-fail-arrow)"/><path d="M630 216H652V245H676" class="s-flow s-flow-fail"/>
+<text x="24" y="314" class="s-note">Ambiguous turns can go to an optional LLM judge or decision model before routing.</text>
 </svg>
 </div>
-<div class="u8-footer"><span>Tool-aware</span><span>Judge optional</span><span>Evidence logged</span></div>
+<div class="u8-footer"><span>Success → efficient</span><span>Failure → capable</span><span>Every pick logged</span></div>
 </div>
-<figcaption>Illustrative turns. Routine work stays on the efficient model; failed tool calls escalate to the capable model.</figcaption>
+<figcaption>Illustrative sessions. Switchyard scores each turn from the tool calls and results before it.</figcaption>
 </figure>`;
 
-const card = (x, y, title, label, on) =>
-  `<rect x="${x}" y="${y}" width="170" height="74" rx="8" class="${on ? 's-card-on' : 's-card'}"/>` +
-  `<text x="${x + 16}" y="${y + 31}" class="s-title" style="font-size:15px">${title}</text>` +
-  `<text x="${x + 16}" y="${y + 53}" class="s-small">${label}</text>`;
+const STEPS = [
+  { n: 1, x: 84, y: 31, title: 'Pick Switchyard', text: 'Choose it next to Heuristics, LLM and Decisions Model.' },
+  { n: 2, x: 50, y: 57, title: 'Choose two models', text: 'A capable model for hard turns, an efficient one for routine work.' },
+  { n: 3, x: 91, y: 66, title: 'Add a judge (optional)', text: 'An LLM or decision model settles turns the tool history leaves unclear.' },
+];
 
-const endpoint = (y, path, client) =>
-  `<rect x="660" y="${y}" width="216" height="70" rx="8" class="s-box"/>` +
-  `<text x="678" y="${y + 29}" class="s-title" style="font-size:14px;font-family:var(--ifm-font-family-monospace)">${path}</text>` +
-  `<text x="678" y="${y + 51}" class="s-small">${client}</text>`;
+export function RoutingFlow() {
+  return <div dangerouslySetInnerHTML={{ __html: ROUTING }} />;
+}
 
-const SETUP = `
-<figure class="uca-figure u8">
-<input class="u8-pause" type="checkbox" id="sw-setup-motion"/><label class="u8-control" for="sw-setup-motion">Pause animation</label>
-<div class="u8-art">
-<div class="u8-head"><span>02 / SETUP</span><h3>Configure once, serve every agent API</h3><p>Pick Switchyard in the dashboard. Every agent calls the same router name.</p></div>
-<div class="u9-scroll" tabindex="0" role="region" aria-label="The dashboard strategy picker with Switchyard selected creates one router, which serves chat completions, Anthropic Messages and Responses requests. Scroll horizontally on small screens.">
-<svg class="u9-svg" viewBox="0 0 900 360" role="img" aria-label="The dashboard strategy picker with Switchyard selected creates one router, which serves chat completions, Anthropic Messages and Responses requests">
-${arrow('sw-setup-arrow')}
-<rect x="24" y="30" width="390" height="290" rx="12" class="s-boundary"/>
-<text x="44" y="60" class="s-eyebrow">DASHBOARD · ADD AUTO ROUTER</text>
-<text x="44" y="92" class="s-title">Choose your routing strategy</text>
-${card(44, 116, 'Heuristics', 'Default · local', false)}
-${card(226, 116, 'LLM', 'Judge classifies', false)}
-${card(44, 208, 'Jev', 'Decision model', false)}
-${card(226, 208, 'Switchyard', 'Tool execution history', true)}
-<rect x="464" y="140" width="148" height="84" rx="10" class="s-box s-accent"/>
-<text text-anchor="middle" x="538" y="176" class="s-title" style="font-size:15px">switchyard-route</text>
-<text text-anchor="middle" x="538" y="198" class="s-small">one router name</text>
-<text x="660" y="30" class="s-eyebrow">AGENT APIS</text>
-${endpoint(48, '/v1/chat/completions', 'OpenAI SDK agents')}
-${endpoint(146, '/v1/messages', 'Claude Code')}
-${endpoint(244, '/v1/responses', 'Codex')}
-${wire('M396 245H430V182H464', 'sw-setup-arrow', false)}
-<text x="420" y="270" class="s-note">save</text>
-${wire('M660 83H636V168H612', 'sw-setup-arrow')}
-${wire('M660 181H612', 'sw-setup-arrow')}
-${wire('M660 279H636V196H612', 'sw-setup-arrow')}
-</svg>
-</div>
-<div class="u8-footer"><span>Chat Completions · Anthropic Messages · Responses</span></div>
-</div>
-<figcaption>Illustrative form. The same router serves agents on all three APIs without client changes.</figcaption>
-</figure>`;
+export function ConfigureRouter() {
+  return (
+    <figure className="uca-figure u8">
+      <div className="u8-art">
+        <div className="u8-head">
+          <span>02 / SETUP</span>
+          <h3>Enable it from the Auto Router form</h3>
+          <p>Models → Auto-Routers → Add Auto Router.</p>
+        </div>
+        <div className="sw-setup">
+          <div className="sw-shot">
+            <img src={formShot} alt="The Add Auto Router form with the Switchyard strategy selected, Claude Opus as the capable model and Claude Haiku as the efficient model" />
+            {STEPS.map((s) => (
+              <span key={s.n} className="sw-pin" style={{ left: `${s.x}%`, top: `${s.y}%` }}>{s.n}</span>
+            ))}
+          </div>
+          <ol className="sw-steps">
+            {STEPS.map((s) => (
+              <li key={s.n}>
+                <span className="sw-step-n">{s.n}</span>
+                <div>
+                  <strong>{s.title}</strong>
+                  <p>{s.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="u8-footer"><span>Save, then call the router by name from any agent</span></div>
+      </div>
+      <figcaption>The Add Auto Router form in the LiteLLM dashboard.</figcaption>
+    </figure>
+  );
+}
 
 const TURNS = [
   { tool: 'read_file', result: '✓', ok: true, capable: false },
@@ -108,66 +102,60 @@ const TURNS = [
   { tool: 'read_file', result: '✓', ok: true, capable: false },
 ];
 
-const turnX = (i) => 150 + i * 132;
-const CAPABLE_Y = 200;
-const EFFICIENT_Y = 270;
+const turnX = (i) => 170 + i * 128;
+const CAPABLE_Y = 196;
+const EFFICIENT_Y = 266;
 
 const TIMELINE_SVG = (() => {
-  const dots = TURNS.map(
+  const marks = TURNS.map(
     (t, i) =>
-      `<text text-anchor="middle" x="${turnX(i)}" y="70" class="s-title" style="font-size:14px">Turn ${i + 1}</text>` +
-      `<text text-anchor="middle" x="${turnX(i)}" y="96" class="s-small">${t.tool}</text>` +
-      `<text text-anchor="middle" x="${turnX(i)}" y="118" class="${t.ok ? 's-ok' : 's-fail'}">${t.result}</text>` +
+      `<text text-anchor="middle" x="${turnX(i)}" y="62" class="s-title" style="font-size:14px">Turn ${i + 1}</text>` +
+      `<text text-anchor="middle" x="${turnX(i)}" y="86" class="s-mono" style="font-size:12px">${t.tool}</text>` +
+      `<text text-anchor="middle" x="${turnX(i)}" y="108" class="${t.ok ? 's-ok' : 's-fail'}">${t.result}</text>` +
       `<circle cx="${turnX(i)}" cy="${t.capable ? CAPABLE_Y : EFFICIENT_Y}" r="9" class="${t.capable ? 's-dot-on' : 's-dot'}"/>`,
   ).join('');
   const path = TURNS.map((t, i) => `${i ? 'L' : 'M'}${turnX(i)} ${t.capable ? CAPABLE_Y : EFFICIENT_Y}`).join(' ');
   return (
-    `<rect x="${turnX(2) - 40}" y="${CAPABLE_Y - 30}" width="${turnX(4) - turnX(2) + 80}" height="60" rx="10" class="s-hold"/>` +
-    `<text text-anchor="middle" x="${turnX(3)}" y="${CAPABLE_Y - 38}" class="s-eyebrow">SESSION HOLD</text>` +
+    `<rect x="${turnX(2) - 44}" y="${CAPABLE_Y - 30}" width="${turnX(4) - turnX(2) + 88}" height="60" rx="10" class="s-hold"/>` +
+    `<text text-anchor="middle" x="${turnX(3)}" y="${CAPABLE_Y - 40}" class="s-eyebrow">SESSION HOLD</text>` +
     `<path d="M${turnX(0) - 50} ${CAPABLE_Y}H${turnX(5) + 50}" class="s-lane"/>` +
     `<path d="M${turnX(0) - 50} ${EFFICIENT_Y}H${turnX(5) + 50}" class="s-lane"/>` +
-    `<text x="20" y="${CAPABLE_Y + 5}" class="s-title" style="font-size:14px">Capable</text>` +
-    `<text x="20" y="${EFFICIENT_Y + 5}" class="s-title" style="font-size:14px">Efficient</text>` +
+    `<text x="16" y="${CAPABLE_Y + 5}" class="s-title" style="font-size:14px">Claude Opus</text>` +
+    `<text x="16" y="${EFFICIENT_Y + 5}" class="s-title" style="font-size:14px">Claude Haiku</text>` +
     `<path d="${path}" class="s-path"/><path d="${path}" class="s-flow"/>` +
-    dots
+    marks
   );
 })();
 
-const LOG_ROWS = [
-  ['1', 'read_file ✓', 'efficient', 'fall_open'],
-  ['3', 'pytest ✗', 'capable', 'override'],
-  ['4', 'edit ✓', 'capable', 'capable_hold'],
-  ['6', 'read_file ✓', 'efficient', 'fall_open'],
+const TRACE = [
+  ['1', 'read_file ✓', 'claude-haiku', 'fall_open'],
+  ['2', 'edit ✓', 'claude-haiku', 'fall_open'],
+  ['3', 'pytest ✗ 3 failed', 'claude-opus', 'override'],
+  ['4', 'edit ✓', 'claude-opus', 'capable_hold'],
+  ['5', 'pytest ✓', 'claude-opus', 'capable_hold'],
+  ['6', 'read_file ✓', 'claude-haiku', 'fall_open'],
 ];
 
 const SESSIONS = `
 <figure class="uca-figure u8">
 <input class="u8-pause" type="checkbox" id="sw-session-motion"/><label class="u8-control" for="sw-session-motion">Pause animation</label>
 <div class="u8-art">
-<div class="u8-head"><span>03 / SESSIONS</span><h3>Session-aware routing you can audit</h3><p>A failure escalates the session. Every pick is logged with its evidence.</p></div>
-<div class="u9-scroll" tabindex="0" role="region" aria-label="A six turn session: turns one and two run on the efficient model, a failing test in turn three escalates to the capable model, the session holds on the capable model through turn five, and turn six returns to the efficient model. Scroll horizontally on small screens.">
-<svg class="u9-svg" viewBox="0 0 900 310" role="img" aria-label="A six turn session: turns one and two run on the efficient model, a failing test in turn three escalates to the capable model, the session holds on the capable model through turn five, and turn six returns to the efficient model">
+<div class="u8-head"><span>03 / SESSIONS</span><h3>Session-aware routing you can trace</h3><p>A failure escalates the session and holds it on the capable model while it recovers.</p></div>
+<div class="u9-scroll" tabindex="0" role="region" aria-label="A six turn session: turns one and two run on Claude Haiku, a failing test in turn three escalates to Claude Opus, the session holds on Opus through turn five, and turn six returns to Haiku. Scroll horizontally on small screens.">
+<svg class="u9-svg" viewBox="0 0 900 300" role="img" aria-label="A six turn session: turns one and two run on Claude Haiku, a failing test in turn three escalates to Claude Opus, the session holds on Opus through turn five, and turn six returns to Haiku">
 ${TIMELINE_SVG}
 </svg>
 </div>
 <div class="sw-log">
-<div class="sw-log-head">Spend logs · routing decision per turn</div>
+<div class="sw-log-head">Session trace · session_id agent-7f3a</div>
 <table><thead><tr><th>TURN</th><th>TOOL RESULT</th><th>ROUTED TO</th><th>EVIDENCE</th></tr></thead><tbody>
-${LOG_ROWS.map(([n, tool, model, evidence]) => `<tr><td>${n}</td><td>${tool}</td><td class="${model === 'capable' ? 'sw-cap' : ''}">${model}</td><td><code>${evidence}</code></td></tr>`).join('')}
+${TRACE.map(([n, tool, model, evidence]) => `<tr><td>${n}</td><td>${tool}</td><td class="${model === 'claude-opus' ? 'sw-cap' : ''}">${model}</td><td><code>${evidence}</code></td></tr>`).join('')}
 </tbody></table>
 </div>
-<div class="u8-footer"><span>Session holds</span><span>Per-key isolation</span><span>Logged evidence</span></div>
+<div class="u8-footer"><span>Escalate on failure</span><span>Hold while recovering</span><span>Return when routine</span></div>
 </div>
-<figcaption>Illustrative session. Evidence values match what the router records in spend logs.</figcaption>
+<figcaption>Illustrative session. The evidence column uses the values Switchyard records for each decision.</figcaption>
 </figure>`;
-
-export function RoutingFlow() {
-  return <div dangerouslySetInnerHTML={{ __html: ROUTING }} />;
-}
-
-export function SetupToRequest() {
-  return <div dangerouslySetInnerHTML={{ __html: SETUP }} />;
-}
 
 export function SessionTimeline() {
   return <div dangerouslySetInnerHTML={{ __html: SESSIONS }} />;

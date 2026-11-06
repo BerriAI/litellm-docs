@@ -8,7 +8,7 @@ tags: [engineering, routing]
 hide_table_of_contents: true
 ---
 
-import { RoutingFlow, SetupToRequest, SessionTimeline } from './diagrams';
+import { RoutingFlow, ConfigureRouter, SessionTimeline } from './diagrams';
 
 **Route each agent turn by its tool execution history.**
 
@@ -32,7 +32,7 @@ Switchyard classifies each turn from that history. It looks at which tools ran, 
 
 The Add Auto Router form now opens on a single question: which routing strategy do you want? Heuristics remains the default, and Switchyard sits next to it with LLM and Jev. Choose Switchyard, pick a capable model, an efficient model and an optional judge, and save.
 
-<SetupToRequest />
+<ConfigureRouter />
 
 **One router serves Claude Code, Codex and OpenAI SDK agents without client changes.** If you manage LiteLLM in config, the same router is a few lines of YAML.
 
