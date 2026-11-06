@@ -120,7 +120,7 @@ To serve Responses or Embeddings, add a model for that endpoint with the same `g
 
 ## Usage with the LiteLLM Python SDK
 
-Direct SDK calls run in your own process, outside the gateway, and sign in with one GitHub account. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. The gateway never uses this sign-in. Direct SDK calls use the full model name, including the `github_copilot/` prefix
+Direct SDK calls run in your own process, outside the gateway, and sign in with one GitHub account. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. On the gateway, only a model without a **Per-user GitHub OAuth** credential uses this shared sign-in, read from the gateway host. Direct SDK calls use the full model name, including the `github_copilot/` prefix
 
 <Tabs>
 <TabItem value="chat" label="Chat Completions">
@@ -210,20 +210,48 @@ print(response)
 </TabItem>
 </Tabs>
 
+### Shared sign-in on GitHub Enterprise Cloud (GHE.com)
+
+If your Copilot plan comes from a GitHub Enterprise Cloud tenant with data residency, point the shared sign-in at that tenant. Set both variables before the first call and keep them set afterward, since LiteLLM reads the tenant from `GITHUB_COPILOT_ACCESS_TOKEN_URL` on every call.
+
+```bash
+export GITHUB_COPILOT_DEVICE_CODE_URL="https://SUBDOMAIN.ghe.com/login/device/code"
+export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://SUBDOMAIN.ghe.com/login/oauth/access_token"
+```
+
+LiteLLM then signs in on `https://SUBDOMAIN.ghe.com`, looks up your Copilot API at `https://api.SUBDOMAIN.ghe.com/copilot_internal/user`, and sends model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. An older setup that sets `GITHUB_COPILOT_API_KEY_URL` to `https://api.SUBDOMAIN.ghe.com/copilot_internal/v2/token` picks the same tenant, although LiteLLM no longer calls that URL.
+
+To use this sign-in on the gateway, sign in once outside it with the variables above, because the gateway cannot run the device flow itself.
+
+```bash
+python -c "from litellm.llms.github_copilot.authenticator import Authenticator; Authenticator().get_access_token()"
+```
+
+Then start the gateway with the same two variables, `GITHUB_COPILOT_TOKEN_DIR` pointing at the directory that holds the saved `access-token` file, and a model that has no credential.
+
+```yaml showLineNumbers keep-model-ids title="config.yaml"
+model_list:
+  - model_name: claude-copilot
+    litellm_params:
+      model: github_copilot/claude-sonnet-5.5
+```
+
+A request for `claude-copilot` then returns the model's reply from `https://copilot-api.SUBDOMAIN.ghe.com`.
+
 ## Environment variables
 
-The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to direct Python SDK calls. The gateway ignores them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`. On the gateway, `GITHUB_COPILOT_DEVICE_CODE_URL` and `GITHUB_COPILOT_ACCESS_TOKEN_URL` apply only to credentials without a **GitHub host** or with `github.com`. A credential with a GHE.com host always uses the URLs derived from that host.
+The token-file settings and `GITHUB_COPILOT_API_BASE` apply only to the shared sign-in, used by direct Python SDK calls and by gateway models without a **Per-user GitHub OAuth** credential. Per-user credentials ignore them. Use an absolute path for `GITHUB_COPILOT_TOKEN_DIR`. On the gateway, `GITHUB_COPILOT_DEVICE_CODE_URL` and `GITHUB_COPILOT_ACCESS_TOKEN_URL` apply only to credentials without a **GitHub host** or with `github.com`. A credential with a GHE.com host always uses the URLs derived from that host.
 
 LiteLLM sends the GitHub OAuth token directly to the Copilot API as a Bearer token. Set `GITHUB_COPILOT_CLIENT_ID` to the client ID of your own GitHub App when needed. Enable device flow for that app.
 
 | Variable | Default | Purpose |
 |-------|-------|-------|
-| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | SDK only. Directory for the GitHub access token |
-| `GITHUB_COPILOT_ACCESS_TOKEN_FILE` | `access-token` | SDK only. Access-token file name in the token directory |
+| `GITHUB_COPILOT_TOKEN_DIR` | `~/.config/litellm/github_copilot` | Shared sign-in only. Directory for the GitHub access token |
+| `GITHUB_COPILOT_ACCESS_TOKEN_FILE` | `access-token` | Shared sign-in only. Access-token file name in the token directory |
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in. Your own GitHub App must have device flow enabled |
 | `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
 | `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
-| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | SDK only. Fallback API base for Chat Completions, Responses, and Embeddings |
+| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | Shared sign-in only. Fallback API base for Chat Completions, Responses, and Embeddings |
 
 ## Authentication details
 
