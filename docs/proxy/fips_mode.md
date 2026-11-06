@@ -41,8 +41,6 @@ If you're using uv, you can use `--no-binary-package cryptography` instead.
 
 When `fips_mode` is `false` or not configured, LiteLLM behaves as it normally would.
 
-This startup check was introduced in [PR #48600](https://github.com/BerriAI/litellm/pull/48600).
-
 ## Known Limitations
 
 FIPS support is still being implemented, so some functionality is not yet compatible with FIPS-enabled environments.
@@ -59,18 +57,4 @@ There is also a known issue with the startup check. It currently expects MD5 to 
 
 ## What's Next
 
-We're working toward supporting FIPS-approved cryptographic operations while keeping the existing behavior unchanged for deployments that don't enable FIPS mode.
-
-The following changes are currently in progress:
-
-- **Admin UI password hashing:** Replace `scrypt` with PBKDF2-HMAC-SHA256 in FIPS mode. See [PR #49874](https://github.com/BerriAI/litellm/pull/49874).
-- **MCP key derivation:** Use the FIPS provider's SP 800-108 KBKDF for MCP session and OAuth bridge keys. See [PR #50032](https://github.com/BerriAI/litellm/pull/50032).
-
-Additional work includes:
-
-- Updating stored-secret encryption to use approved cryptographic services.
-- Restricting JWT signing algorithms and TLS ciphers to those supported in FIPS mode.
-- Building a dedicated LiteLLM FIPS Docker image using Chainguard's FIPS base image.
-- Rebuilding or removing dependencies that bundle their own cryptographic libraries, including `cryptography`, `psycopg`, and `grpcio`.
-
-We'll update this page as FIPS support progresses.
+We're working on a dedicated LiteLLM FIPS Docker image. We'll update this page when it's available.
