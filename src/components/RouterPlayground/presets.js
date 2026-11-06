@@ -71,7 +71,6 @@ model_list:
 
 router_settings:
   num_retries: 2
-  cooldown_time: 30
   allowed_fails: 1
 `;
 
@@ -135,7 +134,6 @@ router_settings:
   num_retries: 2
   timeout: 20
   allowed_fails: 3
-  cooldown_time: 30
   fallbacks:
     - gpt-4o: [claude-sonnet, gpt-4o-mini]
     - claude-sonnet: [gpt-4o]

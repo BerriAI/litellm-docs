@@ -97,6 +97,11 @@ export function RunCard({run, info}) {
       {!result.ok && <p className={styles.error}>{result.error}</p>}
       {open && (
         <div className={styles.runBody}>
+          {run.request && (
+            <p className={styles.requestBody}>
+              request <code>{JSON.stringify(run.request)}</code>
+            </p>
+          )}
           <div className={styles.viewTabs} role="tablist">
             <button type="button" role="tab" aria-selected={view === 'diagram'} onClick={() => setView('diagram')}>
               State diagram

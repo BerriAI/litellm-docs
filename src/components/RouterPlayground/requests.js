@@ -88,3 +88,30 @@ export function expectedRpm(info, id, rate) {
   const total = group.reduce((sum, item) => sum + weight(item), 0) || 1;
   return rate * 60 * (deployment ? weight(deployment) / total : 1);
 }
+
+// A single request from the Deployments pane: the same fields as a kind, with one session id in
+// place of a pool.
+export const newSingle = () => newKind({label: 'single', session: ''});
+
+export function singleBody(single, model) {
+  const body = kindBody(single, model);
+  if (single.session) {
+    body.metadata = {...body.metadata, session_id: single.session};
+    body.litellm_session_id = single.session;
+  }
+  if (single.tokens) body.playground_tokens = Number(single.tokens);
+  return body;
+}
+
+// A kind copied into the single request: its fields, and a session id from its pool.
+export const singleFromKind = (kind, previous) => ({
+  ...previous,
+  model: kind.model,
+  team_id: kind.team_id,
+  tokens: kind.tokens,
+  num_retries: kind.num_retries,
+  disable_fallbacks: kind.disable_fallbacks,
+  mock: kind.mock,
+  metadata: kind.metadata,
+  session: kind.sessions > 0 ? `${kind.label}-1` : '',
+});

@@ -84,7 +84,8 @@ export class Playground {
         return ret;
     }
     /**
-     * Send one `acompletion` through the router and return `{result, trace}` as JSON.
+     * Send one `acompletion` through the router and return `{result, trace}` as JSON. A
+     * `playground_tokens` field is taken off the body and sets what the call costs in tokens.
      * @param {string} request
      * @returns {string}
      */

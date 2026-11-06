@@ -213,6 +213,8 @@ struct ScriptedHost {
     sim: Mutex<SimLog>,
     /// Draws for latency, errors and arrivals, apart from the router's own randomness.
     rng: SeededRandomness,
+    /// Tokens the single call in progress costs, when its request names them.
+    single_tokens: Mutex<Option<u64>>,
 }
 
 /// How a deployment behaves during a simulation: lognormal latency from its median and p95,
@@ -480,6 +482,10 @@ impl ScriptedHost {
             }
             now
         };
+        let mut behaviour = behaviour;
+        if let Some(tokens) = *self.single_tokens.lock() {
+            behaviour.tokens = tokens;
+        }
         if self.simulating() {
             self.take(&id, behaviour.tokens, None, None);
         }
@@ -1045,6 +1051,7 @@ impl Playground {
             taken: Mutex::new(HashMap::new()),
             sim: Mutex::new(SimLog::default()),
             rng: SeededRandomness::new(seed ^ 0x5eed_5eed),
+            single_tokens: Mutex::new(None),
         });
         let router = Router::builder(config, dynamic, host.clone())
             .randomness(Arc::new(RecordingRandomness {
@@ -1080,18 +1087,26 @@ impl Playground {
         Ok(())
     }
 
-    /// Send one `acompletion` through the router and return `{result, trace}` as JSON.
+    /// Send one `acompletion` through the router and return `{result, trace}` as JSON. A
+    /// `playground_tokens` field is taken off the body and sets what the call costs in tokens.
     pub fn send(&self, request: &str) -> Result<String, JsError> {
         if self.run.borrow().is_some() {
             return Err(JsError::new("a simulation is running; call simStop first"));
         }
-        let request = parse_request(&serde_json::from_str(request)?);
+        let mut body: Value = serde_json::from_str(request)?;
+        let tokens = body
+            .as_object_mut()
+            .and_then(|map| map.remove("playground_tokens"))
+            .and_then(|tokens| tokens.as_u64());
+        *self.host.single_tokens.lock() = tokens;
+        let request = parse_request(&body);
         self.host.trace.lock().clear();
         let started = self.host.clock.elapsed();
         let result = outcome(pollster::block_on(
             self.router.call(Op::from("acompletion"), request),
         ));
         let took = (self.host.clock.elapsed() - started).as_secs_f64();
+        *self.host.single_tokens.lock() = None;
         let trace = std::mem::take(&mut *self.host.trace.lock());
         Ok(json!({"result": result, "trace": trace, "took": took}).to_string())
     }

@@ -6,9 +6,10 @@ import {seconds} from './format';
 import {FAILURES, PRESETS} from './presets';
 import Panel from './Panel';
 import {defaultProfile} from './profiles';
-import {defaultKinds} from './requests';
+import {defaultKinds, newSingle, singleBody} from './requests';
 import {readScenarioLink} from './Scenario';
 import Simulator from './Simulator';
+import SingleRequest from './SingleRequest';
 import {RunCard} from './Trace';
 import styles from './styles.module.css';
 
@@ -24,7 +25,7 @@ export default function Playground() {
   const [configText, setConfigText] = useState(PRESETS[0].config);
   const [seed, setSeed] = useState(0);
   const [model, setModel] = useState(PRESETS[0].model);
-  const [teamId, setTeamId] = useState('');
+  const [single, setSingle] = useState(newSingle);
   const [behaviour, setBehaviour] = useState({});
   const [profiles, setProfiles] = useState({});
   const [kinds, setKinds] = useState(defaultKinds);
@@ -111,21 +112,18 @@ export default function Playground() {
     playground.current?.setBehaviour(JSON.stringify(payload));
   };
 
-  const request = () => JSON.stringify({model, team_id: teamId || undefined});
+  const body = () => singleBody(single, model);
+  const request = () => JSON.stringify(body());
 
   const send = count => {
     if (!playground.current) return;
     if (count === 1) {
-      const run = JSON.parse(playground.current.send(request()));
+      const sent = body();
+      const run = JSON.parse(playground.current.send(JSON.stringify(sent)));
       counter.current += 1;
-      setRuns(previous =>
-        [
-          {kind: 'single', n: counter.current, model, request: {team_id: teamId || undefined}, ...run},
-          ...previous,
-        ].slice(0, 50),
-      );
+      setRuns(previous => [{kind: 'single', n: counter.current, model: sent.model, request: sent, ...run}, ...previous].slice(0, 50));
     } else {
-      const summary = {kind: 'burst', model, count, picked: {}, failed: 0, retries: 0, fallbacks: 0};
+      const summary = {kind: 'burst', model: body().model, count, picked: {}, failed: 0, retries: 0, fallbacks: 0};
       for (let i = 0; i < count; i += 1) {
         const {result} = JSON.parse(playground.current.send(request()));
         counter.current += 1;
@@ -268,16 +266,14 @@ export default function Playground() {
             </table>
           )}
 
-          <div className={styles.controls}>
-            <label className={styles.inline}>
-              model
-              <input value={model} onChange={event => setModel(event.target.value)} />
-            </label>
-            <label className={styles.inline}>
-              team id
-              <input value={teamId} placeholder="none" onChange={event => setTeamId(event.target.value)} />
-            </label>
-          </div>
+          <SingleRequest
+            value={single}
+            onChange={setSingle}
+            model={model}
+            onModel={setModel}
+            kinds={kinds}
+            info={info}
+          />
           <div className={styles.controls}>
             <button type="button" className={styles.primary} disabled={!state} onClick={() => send(1)}>
               Send request

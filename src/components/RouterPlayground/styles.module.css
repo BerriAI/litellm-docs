@@ -368,3 +368,41 @@
   background: var(--ifm-color-primary);
   color: #fff;
 }
+
+.single .controls:first-child {
+  margin-top: 0.9rem;
+}
+
+.single select {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 5px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-size: 0.8rem;
+}
+
+.grow {
+  flex: 1 1 24rem;
+}
+
+.wide {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.bad {
+  border-color: #b91c1c !important;
+}
+
+.badText {
+  color: #b91c1c;
+  font-size: 0.75rem;
+}
+
+.requestBody {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
