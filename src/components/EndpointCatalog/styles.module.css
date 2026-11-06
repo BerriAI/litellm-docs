@@ -1,0 +1,454 @@
+/* Visual system follows RealtimeTranslationFlow and ProviderCatalog. */
+.catalog {
+  margin: 1.25rem 0 2rem;
+}
+
+.controls {
+  position: sticky;
+  top: var(--ifm-navbar-height);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 -4px 1.25rem;
+  padding: 10px 4px;
+  background: var(--ifm-background-surface-color);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-color-emphasis-600);
+}
+
+.search:focus-within {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 1px var(--ifm-color-primary);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-800);
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.chip:focus-visible,
+.pill:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+:global([data-theme='dark']) .chip[aria-pressed='true'] {
+  color: #0b1220;
+}
+
+.group + .group {
+  margin-top: 1.75rem;
+}
+
+.catalog h3.groupLabel,
+.catalog h2.passHeading {
+  margin: 0 0 0.25rem;
+  padding: 0;
+  border: 0;
+  line-height: 1.4;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+}
+
+.blurb {
+  margin: 0 0 0.85rem;
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  background: var(--ifm-background-surface-color);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 1px var(--ifm-color-primary);
+}
+
+:global([data-theme='dark']) .card {
+  border-color: #2d3748;
+}
+
+:global([data-theme='dark']) .card:hover,
+:global([data-theme='dark']) .card:focus-within {
+  border-color: var(--ifm-color-primary);
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.method {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.methodPost {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.methodGet {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.methodWs {
+  background: rgba(147, 51, 234, 0.12);
+  color: #7e22ce;
+}
+
+:global([data-theme='dark']) .methodPost {
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
+}
+
+:global([data-theme='dark']) .methodGet {
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
+}
+
+:global([data-theme='dark']) .methodWs {
+  background: rgba(192, 132, 252, 0.16);
+  color: #d8b4fe;
+}
+
+.path {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-700);
+  overflow-wrap: anywhere;
+}
+
+.catalog h3.name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.mainLink {
+  color: var(--ifm-heading-color);
+  text-decoration: none;
+}
+
+.mainLink:hover {
+  color: var(--ifm-heading-color);
+  text-decoration: none;
+}
+
+/* The title link covers the whole card; sub links sit above it. */
+.mainLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+}
+
+.mainLink:focus-visible {
+  outline: none;
+}
+
+.mainLink:focus-visible::after {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.subLinks {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.bridged {
+  color: var(--ifm-color-primary);
+  font-weight: 500;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 4px 12px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ifm-color-emphasis-800);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.pill:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-emphasis-800);
+  text-decoration: none;
+}
+
+.empty {
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 996px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .controls {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .pill {
+    transition: none;
+  }
+}
+
+/* Deep-link anchor next to each card title. Sits above the stretched link. */
+.card {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+.card:target {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px var(--ifm-color-primary);
+}
+
+.anchor {
+  position: relative;
+  z-index: 1;
+  margin-left: 6px;
+  color: var(--ifm-color-emphasis-500);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .anchor,
+.anchor:focus-visible {
+  opacity: 1;
+}
+
+.anchor:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+@media (hover: none) {
+  .anchor {
+    display: none;
+  }
+}
+
+.methodSdk {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-800);
+}
+
+.more {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.passFeatures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0.9rem 0 0;
+  font-size: 14px;
+}
+
+.passFeatures span {
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* Pass-through providers: a two-column directory of name and route prefix. */
+.ptList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.ptList li {
+  margin: 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.ptRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 4px;
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+.ptRow:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.ptName {
+  min-width: 0;
+  font-size: 0.92rem;
+}
+
+.catalog code.ptRoute,
+code.ptRoute {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+}
+
+.ptRow:hover .ptRoute {
+  color: var(--ifm-color-primary);
+}
+
+@media (max-width: 699px) {
+  .ptList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Docs markdown underlines links and tints inline code; this list is a
+   directory, so it uses row hover instead. */
+.ptList a.ptRow,
+.ptList a.ptRow:hover {
+  text-decoration: none;
+}
+
+.ptList a.ptRow:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.ptList code.ptRoute {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+}
+
+.ptList a.ptRow:hover code.ptRoute {
+  color: var(--ifm-color-primary);
+}
+
+.ptList a.ptRow {
+  align-items: center;
+  line-height: 1.4;
+}

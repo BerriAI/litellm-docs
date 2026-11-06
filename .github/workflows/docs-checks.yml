@@ -37,6 +37,11 @@ jobs:
       - run: npm run test:optimize-images
       - run: npm run test:llms
       - run: npm run test:lens
+      # Supported Endpoints page: warn only for now, never fail the job.
+      - name: Check src/data/endpoints.js against the sidebar (warning only)
+        run: npm run test:endpoints || echo "::warning title=Supported Endpoints::src/data/endpoints.js is out of sync with the Supported Endpoints sidebar. See the test output above."
+      - name: Check src/data/endpoints.js against BerriAI/litellm (warning only)
+        run: npm run check:endpoints
       - run: node --test scripts/docs-models.test.cjs
   writing-style:
     runs-on: ubuntu-latest

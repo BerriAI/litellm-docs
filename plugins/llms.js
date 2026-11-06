@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
+const {pathToFileURL} = require('url');
 const {substitute} = require('../src/remark/docs-models');
 const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
@@ -295,10 +296,50 @@ function providerIndexMarkdown(items, byId) {
   return lines.join('\n').trim();
 }
 
+// The Supported Endpoints page (<EndpointCatalog />) as a markdown list grouped
+// by category. The data file is an ES module, so postBuild loads it with a
+// dynamic import and passes it in.
+let endpointIndex = '';
+let passThroughIndex = '';
+
+function endpointIndexMarkdown({CATEGORIES, ENDPOINTS}, byId) {
+  const link = (label, id) => {
+    const doc = byId.get(id);
+    return doc ? `[${label}](${mdUrl(doc.permalink)})` : label;
+  };
+  const lines = [];
+  for (const cat of CATEGORIES) {
+    const items = ENDPOINTS.filter((e) => e.category === cat.id);
+    if (!items.length) continue;
+    lines.push('', `### ${cat.label}`, '', cat.blurb, '');
+    for (const e of items) lines.push(`- ${link(e.name, e.doc)} (\`${e.method} ${e.path}\`): ${e.description}`);
+  }
+  return lines.join('\n').trim();
+}
+
+// <PassThroughList />: the provider pass-through pages as a markdown list.
+function passThroughIndexMarkdown({PASS_THROUGH}, byId) {
+  return PASS_THROUGH.map((p) => {
+    const doc = byId.get(p.doc);
+    const name = doc ? `[${p.label}](${mdUrl(doc.permalink)})` : p.label;
+    return `- ${name}${p.route ? ` (\`${p.route}\`)` : ''}`;
+  }).join('\n');
+}
+
+// <EndpointPaths />: the three request paths the diagram shows.
+const ENDPOINT_FLOW_TEXT = [
+  '- Translated: your app sends a chat request in the OpenAI, Anthropic, or Google format. LiteLLM changes it to the API of the provider you select and sends the answer back in the format your app sent.',
+  '- Native: your app sends one request shape for each endpoint (for example `/v1/embeddings`). LiteLLM maps it to the API of each provider that supports it.',
+  '- Pass-through: your app calls the provider API through LiteLLM (for example `/anthropic/v1/messages`). LiteLLM checks the LiteLLM key, adds the provider credentials, and sends the request without changes. Cost tracking depends on the provider.',
+].join('\n');
+
 function expandComponent(tag) {
   // Signup forms have no meaning in markdown
   if (/^<Newsletter\b/.test(tag)) return '';
   if (/^<ProviderCatalog\b/.test(tag)) return providerIndex;
+  if (/^<EndpointCatalog\b/.test(tag)) return endpointIndex;
+  if (/^<EndpointPaths\b/.test(tag)) return ENDPOINT_FLOW_TEXT;
+  if (/^<PassThroughList\b/.test(tag)) return passThroughIndex;
   let m = /^<AgentPrompt\b[^>]*\bid="([^"]+)"[^>]*\/>$/.exec(tag);
   if (m && PROMPTS[m[1]]) {
     const p = PROMPTS[m[1]];
@@ -593,6 +634,15 @@ module.exports = function llmsPlugin(context) {
       const byId = new Map(docs.map((d) => [d.id, d]));
       const markdown = new Map();
       providerIndex = providerIndexMarkdown(sidebars.providersSidebar, byId);
+      try {
+        const endpointData = await import(pathToFileURL(path.join(context.siteDir, 'src/data/endpoints.js')).href);
+        endpointIndex = endpointIndexMarkdown(endpointData, byId);
+        passThroughIndex = passThroughIndexMarkdown(endpointData, byId);
+      } catch (err) {
+        console.warn(`[llms] endpoint catalog not exported: ${err.message}`);
+        endpointIndex = '';
+        passThroughIndex = '';
+      }
 
       const updated = lastUpdatedDates(context.siteDir);
       const writeMd = async (permalink, content) => {
@@ -816,3 +866,8 @@ module.exports = function llmsPlugin(context) {
 };
 
 module.exports.mdxToMarkdown = mdxToMarkdown;
+module.exports.endpointIndexMarkdown = endpointIndexMarkdown;
+module.exports.passThroughIndexMarkdown = passThroughIndexMarkdown;
+module.exports.setEndpointIndex = (md) => {
+  endpointIndex = md;
+};
