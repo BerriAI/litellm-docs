@@ -1496,3 +1496,24 @@
 .requestMix button:hover:not(:disabled) {
   border-color: var(--ifm-color-primary);
 }
+
+/* Session fields wait for session affinity in the Rust router. */
+.soon {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.affinityWarn {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d97706;
+  border-radius: 4px;
+  background: rgba(217, 119, 6, 0.08);
+  font-size: 0.8rem;
+}
+
+.affinityWarn b {
+  color: #b45309;
+}

@@ -55,6 +55,27 @@ export function kindBody(kind, model) {
   return body;
 }
 
+// Session affinity is not in the Rust router yet (it comes next week), so the playground sends no
+// session ids for now and greys out the session fields.
+export const SESSIONS_READY = false;
+export const SESSIONS_SOON = 'Session affinity comes to the Rust router next week. Until then sessions are off here.';
+
+const AFFINITY_CHECKS = ['session_affinity', 'deployment_affinity', 'responses_api_deployment_check'];
+
+// Whether a config turns on session or deployment affinity, which the playground does not run yet.
+export function affinityConfigured(config) {
+  if (!config || typeof config !== 'object') return false;
+  const sections = [config, config.router_settings, config.litellm_settings].filter(Boolean);
+  return sections.some(section => {
+    const checks = section.optional_pre_call_checks;
+    const groups = section.model_group_affinity_config;
+    return (
+      (Array.isArray(checks) && checks.some(name => AFFINITY_CHECKS.includes(name))) ||
+      (groups != null && typeof groups === 'object' && Object.keys(groups).length > 0)
+    );
+  });
+}
+
 // The mix as the core's spec takes it.
 export function coreRequests(kinds, model) {
   return (kinds ?? [])
@@ -63,7 +84,7 @@ export function coreRequests(kinds, model) {
       label: kind.label || 'request',
       weight: Number(kind.share),
       body: kindBody(kind, model),
-      sessions: Math.max(0, Math.round(Number(kind.sessions) || 0)),
+      sessions: SESSIONS_READY ? Math.max(0, Math.round(Number(kind.sessions) || 0)) : 0,
       ...(kind.tokens ? {tokens: Number(kind.tokens)} : {}),
     }));
 }
@@ -95,7 +116,7 @@ export const newSingle = () => newKind({label: 'single', session: ''});
 
 export function singleBody(single, model) {
   const body = kindBody(single, model);
-  if (single.session) {
+  if (SESSIONS_READY && single.session) {
     body.metadata = {...body.metadata, session_id: single.session};
     body.litellm_session_id = single.session;
   }

@@ -1,5 +1,5 @@
 import React from 'react';
-import {MOCKS, metadataOf, singleFromKind} from './requests';
+import {MOCKS, SESSIONS_READY, SESSIONS_SOON, metadataOf, singleFromKind} from './requests';
 import styles from './styles.module.css';
 
 // What one sent request carries: the fields a simulator request kind has, with one session id.
@@ -28,11 +28,15 @@ export default function SingleRequest({value, onChange, model, onModel, kinds, i
               ))}
           </select>
         </label>
-        <label className={styles.inline}>
-          session id
+        <label
+          className={styles.inline}
+          style={SESSIONS_READY ? undefined : {opacity: 0.45}}
+          title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
+          session id{SESSIONS_READY ? '' : ' (next week)'}
           <input
             value={value.session}
             placeholder="none"
+            disabled={!SESSIONS_READY}
             onChange={event => set({session: event.target.value.trim()})}
           />
         </label>

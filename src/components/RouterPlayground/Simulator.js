@@ -1,7 +1,18 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Panel from './Panel';
 import {profileLabel, profileSummary} from './profiles';
-import {MOCKS, coreRequests, expectedRpm, groupRate, metadataOf, mixModels, newKind} from './requests';
+import {
+  MOCKS,
+  SESSIONS_READY,
+  SESSIONS_SOON,
+  affinityConfigured,
+  coreRequests,
+  expectedRpm,
+  groupRate,
+  metadataOf,
+  mixModels,
+  newKind,
+} from './requests';
 import Scenario from './Scenario';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
@@ -477,7 +488,7 @@ function Kpis({store, timeout, compact}) {
   );
 }
 
-function NumberField({value, onChange, placeholder, min = 0, step = 1, label, width}) {
+function NumberField({value, onChange, placeholder, min = 0, step = 1, label, width, disabled}) {
   return (
     <input
       type="number"
@@ -487,6 +498,7 @@ function NumberField({value, onChange, placeholder, min = 0, step = 1, label, wi
       min={min}
       step={step}
       placeholder={placeholder}
+      disabled={disabled}
       value={value ?? ''}
       onChange={event => onChange(event.target.value === '' ? null : Number(event.target.value))}
     />
@@ -505,7 +517,11 @@ function RequestMix({kinds, onKinds, model, info}) {
         <span className={styles.muted}>kind</span>
         <span className={styles.muted}>share</span>
         <span className={styles.muted}>model</span>
-        <span className={styles.muted}>sessions</span>
+        <span
+          className={SESSIONS_READY ? styles.muted : `${styles.muted} ${styles.soon}`}
+          title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
+          sessions{SESSIONS_READY ? '' : ' (next week)'}
+        </span>
         <span className={styles.muted}>team</span>
         <span className={styles.muted}>tokens</span>
         <span className={styles.muted}>num_retries</span>
@@ -545,13 +561,16 @@ function RequestMix({kinds, onKinds, model, info}) {
                     </option>
                   ))}
               </select>
-              <NumberField
-                label={`Sessions of ${kind.label}`}
-                value={kind.sessions || null}
-                placeholder="none"
-                width="4.5rem"
-                onChange={value => change(kind.key, {sessions: value ?? 0})}
-              />
+              <span className={SESSIONS_READY ? undefined : styles.soon} title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
+                <NumberField
+                  label={`Sessions of ${kind.label}`}
+                  value={kind.sessions || null}
+                  placeholder="none"
+                  width="4.5rem"
+                  disabled={!SESSIONS_READY}
+                  onChange={value => change(kind.key, {sessions: value ?? 0})}
+                />
+              </span>
               <input
                 className={styles.mixText}
                 aria-label={`Team of ${kind.label}`}
@@ -623,10 +642,8 @@ function RequestMix({kinds, onKinds, model, info}) {
           Add a kind of request
         </button>
         <span className={styles.muted}>
-          With sessions set, each request carries <code>metadata.session_id</code> and <code>litellm_session_id</code>{' '}
-          drawn from that many ids. Session affinity is not in the Rust router yet, so a session's requests are picked
-          independently; the sessions table shows how often one moves. Extra metadata goes in the body as is and shows
-          in the trace.
+          Sessions are greyed out: session affinity comes to the Rust router next week, and until then requests carry
+          no session id. Extra metadata goes in the body as is and shows in the trace.
         </span>
       </div>
     </div>
@@ -667,7 +684,8 @@ function MixResults({store}) {
           })}
         </tbody>
       </table>
-      {sessions.length > 0 && (
+      {!SESSIONS_READY && <p className={`${styles.muted} ${styles.soon}`}>{SESSIONS_SOON}</p>}
+      {SESSIONS_READY && sessions.length > 0 && (
         <div>
           <table className={styles.mixTable}>
             <thead>
@@ -1084,6 +1102,7 @@ export default function Simulator({
   const liveIncident = useRef(null);
   const config = useMemo(() => (configJson ? JSON.parse(configJson) : null), [configJson]);
   const timeouts = useMemo(() => timeoutsOf(config, info?.deployments), [config, info]);
+  const affinity = useMemo(() => !SESSIONS_READY && affinityConfigured(config), [config]);
 
   if (!info) return null;
 
@@ -1105,6 +1124,15 @@ export default function Simulator({
             </button>
           </div>
         }>
+        {affinity && (
+          <div className={styles.affinityWarn} role="note">
+            <b>!</b>
+            <span>
+              This config turns on session affinity (<code>optional_pre_call_checks</code>). The playground does not run
+              it yet, so sessions are not sticky here. It comes to the Rust router next week.
+            </span>
+          </div>
+        )}
         {tab === 'live' ? (
           <LiveRun
             handle={liveIncident}
