@@ -897,7 +897,6 @@ guardrails:
       default_on: boolean      # Optional: Default False. When set to True, will run on every request, does not need client to specify guardrail in request
       logging_only_scope: string # Optional: "input" (request only) or "output" (response only). Unset scans both directions and keeps the pre-existing behavior
       logging_only_continue_on_input_failure: boolean # Optional: when true, a flagged or failing logging_only request scan is logged and the response is still scanned. Ignored when logging_only_scope is set
-      mcp_block_behavior: string # Optional: "tool_result" (default) or "raise". "raise" fails the request with the guardrail's error when it blocks an MCP tool LiteLLM runs for a model request. See MCP Guardrails
     guardrail_info:            # Optional[Dict]: Additional information about the guardrail
       
 ```
