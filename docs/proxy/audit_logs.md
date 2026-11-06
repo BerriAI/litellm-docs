@@ -95,7 +95,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 ### Send Audit Logs to a Separate S3 Bucket
 
-If you also send normal request/response logs to S3 via `callbacks: ["s3_v2"]`, by default both streams share `s3_callback_params` and land in the same bucket. To send audit logs to a different bucket (e.g. a compliance-only bucket with stricter access controls or longer retention), add an `s3_audit_callback_params` block. It accepts the same fields as `s3_callback_params` and only applies to audit logs.
+If you also send normal request/response logs to S3 via `callbacks: ["s3_v2"]`, by default both streams share `s3_callback_params` and land in the same bucket. To send audit logs to a different bucket (e.g. a compliance-only bucket with stricter access controls or longer retention), add an `s3_audit_callback_params` block. It accepts the same fields as `s3_callback_params`, including the `s3_server_side_encryption` and `s3_sse_kms_key_id` encryption settings documented under [S3 logging](./logging#s3-buckets), and only applies to audit logs. The audit block does not inherit anything from `s3_callback_params`, so a bucket policy that denies `PutObject` without SSE-KMS rejects audit uploads with a 403 (`Error uploading to s3`) until both fields are set here as well.
 
 ```yaml
 litellm_settings:
@@ -116,6 +116,8 @@ litellm_settings:
     s3_aws_access_key_id: os.environ/AWS_AUDIT_ACCESS_KEY_ID  # different creds OK
     s3_aws_secret_access_key: os.environ/AWS_AUDIT_SECRET_ACCESS_KEY
     s3_path: litellm-audit
+    s3_server_side_encryption: os.environ/S3_SERVER_SIDE_ENCRYPTION  # aws:kms, required if the bucket policy enforces SSE-KMS
+    s3_sse_kms_key_id: os.environ/S3_SSE_KMS_KEY_ID                  # KMS key id or ARN
 ```
 
 ## Advanced
