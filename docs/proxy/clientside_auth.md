@@ -276,7 +276,7 @@ model_list:
       configurable_clientside_auth_params: ["model_id"]
 ```
 
-A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body goes to that component, a request without `model_id` goes to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` doesn't opt in so it leaves a pinned `model_id` in place. A deployment that sets neither `model_id` nor the SageMaker header still uses the request's `model_id`. Prior to 1.109.0 a `model_id` in the request body would replace the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
+A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body is routed to that component, a request without `model_id` is routed to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` doesn't opt in so it leaves a pinned `model_id` in place. A deployment that sets neither `model_id` nor the SageMaker header still uses the request's `model_id`. Prior to 1.109.0 a `model_id` in the request body would take precedence over the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
 
 ### Pass provider-specific params (e.g. Region, Project ID, etc.)
 
