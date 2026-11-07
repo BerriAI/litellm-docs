@@ -5,34 +5,6 @@ import {newKind} from './requests';
 // outages the simulator offers as a scenario. A preset may also bring behaviour profiles and a
 // request mix for the simulator.
 
-const TUTORIAL = `# The model list from "Route your first requests".
-# A mock_response that names an exception makes every attempt raise it.
-model_list:
-  - model_name: chat
-    litellm_params:
-      model: openai/gpt-4o-mini
-      mock_response: hi from a
-    model_info:
-      id: a
-  - model_name: chat
-    litellm_params:
-      model: openai/gpt-4o-mini
-      mock_response: hi from b
-    model_info:
-      id: b
-  - model_name: backup
-    litellm_params:
-      model: openai/gpt-4o-mini
-      mock_response: hi from backup
-    model_info:
-      id: c
-
-router_settings:
-  num_retries: 1
-  fallbacks:
-    - chat: [backup]
-`;
-
 const WEIGHTS = `# simple-shuffle picks by weight, then rpm, then tpm.
 # Send 100 requests and compare the split with the weights.
 model_list:
@@ -268,16 +240,6 @@ router_settings:
 const tuned = (name, fields) => ({...presetProfile(name), ...fields, preset: 'custom'});
 
 export const PRESETS = [
-  {
-    id: 'tutorial',
-    label: 'Tutorial',
-    config: TUTORIAL,
-    model: 'chat',
-    outages: [
-      {id: 'a', fail: 'RateLimitError', from: 20, to: 50},
-      {id: 'b', fail: 'RateLimitError', from: 35, to: 80},
-    ],
-  },
   {
     id: 'weights',
     label: 'Weighted load balancing',
