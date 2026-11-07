@@ -271,11 +271,13 @@ The batch output file is in JSONL format with each line containing:
 
 ### Where are my files written?
 
-When a `target_model_names` is specified, the file is written to the S3 bucket configured in your Bedrock batch model configuration. Bedrock writes the batch output to `s3_output_bucket_name` when it is set, and to the same bucket otherwise.
+When a `target_model_names` is specified, the file is written to the S3 bucket configured in your Bedrock batch model configuration, unless the upload names an allowed bucket of its own (see [Can a client choose the S3 bucket per request?](#can-a-client-choose-the-s3-bucket-per-request)). Bedrock writes the batch output to the `s3_output_bucket_name` sent with the batch create request, then to the model's `s3_output_bucket_name`, and to the input file's bucket otherwise.
 
 ### How do I keep each team's batch data in its own bucket?
 
-Give each team its own batch model with its own bucket, then restrict each team to its model. A team's input files and batch output then only ever land in that team's bucket.
+The simplest way is to list each team's buckets in the team's metadata and have the team's callers name their bucket on upload and batch create, as described in [Can a client choose the S3 bucket per request?](#can-a-client-choose-the-s3-bucket-per-request). All teams then share one batch model, and a team can only use the buckets on its own list.
+
+If you would rather not have callers pass a bucket at all, give each team its own batch model with its own bucket, then restrict each team to its model. A team's input files and batch output then only ever land in that team's bucket.
 
 ```yaml showLineNumbers title="litellm_config.yaml"
 model_list:
@@ -395,29 +397,47 @@ export AWS_S3_BUCKET_OWNER=123456789012
 
 By default no. The proxy rejects `s3_bucket_name`, `s3_output_bucket_name`, `s3_endpoint_url` and `allow_legacy_cloud_file_ids` in a client's request body, because the proxy reads and writes those buckets with the deployment's AWS credentials. The bucket comes from the deployment's `litellm_params` or the `AWS_S3_BUCKET_NAME` env var.
 
-To let clients pick from a fixed set of buckets, list them in `general_settings`. A bucket on the list is accepted as `s3_bucket_name` or `s3_output_bucket_name` and overrides the deployment's value for that request. Any other bucket is rejected.
+To let clients pick from a fixed set of buckets, list the buckets a team may use in that team's metadata as `allowed_s3_buckets`. A key on the team can then send one of those buckets as `s3_bucket_name` when it uploads a batch input file to `POST /v1/files`, and as `s3_output_bucket_name` when it creates the batch with `POST /v1/batches`. The bucket overrides the model's bucket for that request. A bucket that is not on the team's list is rejected with a 401, and a request that sends no bucket keeps using the model's bucket.
+
+`PATCH /team/{team_id}` merges the key into the team's existing metadata, while `POST /team/update` replaces the whole metadata object.
+
+```bash showLineNumbers title="allow_team_buckets.sh"
+curl -X PATCH 'http://localhost:4000/team/team-a' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"metadata": {"allowed_s3_buckets": ["team-a-batch-bucket"]}}'
+```
+
+```bash showLineNumbers title="upload_and_create.sh"
+curl http://localhost:4000/v1/files \
+  -H "Authorization: Bearer $TEAM_A_KEY" \
+  -F purpose="batch" \
+  -F target_model_names="bedrock-batch-claude" \
+  -F s3_bucket_name="team-a-batch-bucket" \
+  -F file="@batch_input.jsonl"
+
+curl http://localhost:4000/v1/batches \
+  -H "Authorization: Bearer $TEAM_A_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_file_id": "<file id from the upload>",
+    "endpoint": "/v1/chat/completions",
+    "completion_window": "24h",
+    "s3_output_bucket_name": "team-a-batch-bucket"
+  }'
+```
+
+LiteLLM records the S3 location of every managed file and batch output it creates, so retrieving the batch, downloading its output file, deleting files and tracking the batch's cost all read from the bucket the data was actually written to, without the caller passing the bucket again. Removing a bucket from the team's list stops new uploads and batches from using it, while files already stored there stay readable to their owners.
+
+To keep one team from reading another team's batches, also turn on [`require_managed_files`](../proxy/managed_batches#access-control). With it, only the team that created a file or batch can act on it, and raw `s3://` ids are rejected.
+
+To allow a bucket for every team, list it in `general_settings.allowed_client_side_s3_buckets` instead. `allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields.
 
 ```yaml
 general_settings:
   allowed_client_side_s3_buckets:
-    - team-a-batch-output
-    - team-b-batch-output
+    - shared-batch-bucket
 ```
-
-```bash
-curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input_file_id": "file-abc123",
-    "endpoint": "/v1/chat/completions",
-    "completion_window": "24h",
-    "model": "bedrock-batch-claude",
-    "s3_output_bucket_name": "team-a-batch-output"
-  }'
-```
-
-`allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields.
 
 ### How does LiteLLM get Bedrock output file details?
 

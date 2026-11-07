@@ -184,7 +184,7 @@ A caller without access gets a `403` from `GET /v1/batches/{batch_id}`, `POST /v
 
 A key with a team but no user reaches every batch of its team. A key with neither a user nor a team only reaches the batches it created.
 
-To also keep each team's batch data in its own storage, give each team its own batch model with its own bucket. See [Bedrock Batches](../providers/bedrock_batches#how-do-i-keep-each-teams-batch-data-in-its-own-bucket) for an example.
+To also keep each team's batch data in its own storage, list each team's buckets in its metadata as `allowed_s3_buckets` and have callers name their bucket on upload and batch create, or give each team its own batch model with its own bucket. See [Bedrock Batches](../providers/bedrock_batches#how-do-i-keep-each-teams-batch-data-in-its-own-bucket) for both setups.
 
 ## Batch Lifecycle
 
