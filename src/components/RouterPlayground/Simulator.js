@@ -869,7 +869,7 @@ function LiveRun({
   handle,
 }) {
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(10);
   const [rate, setRate] = useState(initialRate ?? 3);
   const [, setFrame] = useState(0);
   const [picked, setPicked] = useState(null);
