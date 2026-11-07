@@ -305,6 +305,73 @@ print(response)
 </Tabs>
 
 
+### Total Timeout - Per Request
+
+`timeout` limits one call to a provider, so retries, retry backoffs, guardrails and moderation checks can add up to much more than it. `total_timeout` limits the whole request instead: send it in the request body, or send the `x-litellm-total-timeout` header when you can't change the body. The header wins when both are set. The value is a number of seconds and must be positive and finite; anything else, including `0`, `null` or `"ten"`, returns a `400`.
+
+It applies to non-streaming `/v1/chat/completions`, `/v1/messages` and `/v1/responses` requests. A request without it behaves exactly as before, and it never changes `timeout`, `stream_timeout` or the deployment's own timeouts, which still limit each provider call inside the total.
+
+The budget starts once the request is authenticated and ends when the response is ready to send. It covers the pre-call hooks, every retry and fallback attempt, the waits between retries, the moderation checks that run during the call and the post-call hooks. Authentication, reading the request body and sending the response to the client are outside it.
+
+When the budget runs out, the proxy cancels the upstream call and answers `408`:
+
+```json
+{"error": {"message": "the request did not finish within its total_timeout of 2.0s", "type": "timeout", "param": "total_timeout", "code": "408"}}
+```
+
+A retry that would have to wait past the budget does not wait. For example, with `"total_timeout": 10` and an upstream that answers `503` with `retry-after: 6`, the proxy makes the first retry at 6s, sees that a second 6s wait would end after 10s, and returns that last `503` at once instead of waiting out the budget for a `408`.
+
+After a timeout the proxy can take a few more seconds to hand back the rate limit reservations and in-flight counts the cancelled call held, so the `408` can arrive slightly after the budget. That cleanup time does not count toward the budget.
+
+Streaming and background requests are not bounded. A body `total_timeout` on a `"stream": true` request, a `"background": true` Responses request or another endpoint returns a `400`. The header is ignored on those requests, so a client that sets `x-litellm-total-timeout` on every call through its default headers still gets its streaming requests through, unbounded.
+
+<Tabs>
+<TabItem value="body" label="Request body">
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "{{openai_small}}",
+    "messages": [{"role": "user", "content": "what color is red"}],
+    "total_timeout": 10
+  }'
+```
+
+</TabItem>
+<TabItem value="header" label="Header">
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "x-litellm-total-timeout: 10" \
+  -d '{
+    "model": "{{openai_small}}",
+    "messages": [{"role": "user", "content": "what color is red"}]
+  }'
+```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI v1.0.0+">
+
+```python
+import openai
+
+client = openai.OpenAI(api_key="anything", base_url="http://0.0.0.0:4000")
+
+response = client.chat.completions.create(
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "what color is red"}],
+    extra_body={"total_timeout": 10},
+)
+```
+
+</TabItem>
+</Tabs>
+
+
 ## Testing timeout handling 
 
 To test if your retry/fallback logic can handle timeouts, you can set `mock_timeout=True` for testing. 
