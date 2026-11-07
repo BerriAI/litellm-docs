@@ -105,6 +105,20 @@ response = client.chat.completions.create(
 )
 ```
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`baseten/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Baseten model name. LiteLLM sends Baseten the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `baseten/kimi-latest` | Kimi |
+| `baseten/glm-latest` | GLM |
+| `baseten/glm-flash-latest` | GLM Flash |
+| `baseten/deepseek-pro-latest` | DeepSeek Pro |
+| `baseten/deepseek-flash-latest` | DeepSeek Flash |
+
 ## Responses API (`/v1/responses`)
 
 Baseten's Model API serves `/v1/responses` itself. To forward `/v1/responses` requests to it untranslated instead of bridging them through `/v1/chat/completions`, add `supported_endpoints: ["/v1/responses"]` under the deployment's `model_info`, see [Native /v1/responses passthrough](../response_api_native_passthrough.md).

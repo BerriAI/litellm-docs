@@ -9,7 +9,7 @@ description: "Keep one model name as newer versions arrive. Use -latest aliases 
 
 An alias such as `openai/gpt-luna-latest` points to a model in that family. LiteLLM maintains the target. As LiteLLM moves the alias to a newer model, your application keeps the same model string.
 
-Use the full `provider/model-latest` name from the table below. You do not need to create an alias mapping.
+Use the full `provider/model-latest` name from the table below. You do not need to create an alias mapping. Each provider page also lists the aliases for that provider.
 
 ## Python SDK
 

@@ -1144,7 +1144,6 @@ const sidebars = {
         "routing",
         "proxy/cache_aware_routing",
         "wildcard_routing",
-        "model_latest_aliases",
         "proxy/health_check_routing",
         "scheduler",
         { type: "html", value: "Fallbacks & timeouts", className: "sidebar-group-label", defaultStyle: true },
@@ -1733,6 +1732,7 @@ const providersSidebar = {
   providersSidebar: [
     { type: "doc", id: "providers/index", label: "All providers" },
     { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
+    { type: "doc", id: "model_latest_aliases", label: "Latest model aliases" },
     { type: "html", value: "Popular", className: "sidebar-group-label", defaultStyle: true },
     { type: "category", label: "OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/openai" }, items: [
       "providers/openai/responses_api",

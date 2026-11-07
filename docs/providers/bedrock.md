@@ -2381,6 +2381,25 @@ Recent Claude models on Bedrock, Opus 5.5 among them, take on-demand calls only 
 | Moonshot Kimi K2 Thinking | `completion(model='bedrock/moonshot.kimi-k2-thinking', messages=messages)` or `completion(model='bedrock/invoke/moonshot.kimi-k2-thinking', messages=messages)` | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 | Moonshot Kimi K3 | `completion(model='bedrock/global.moonshotai.kimi-k3', messages=messages)` or `completion(model='bedrock/us.moonshotai.kimi-k3', messages=messages)`. The bare `moonshotai.kimi-k3` ID is an inference-profile-only entry and is not callable on demand | `os.environ['AWS_ACCESS_KEY_ID']`, `os.environ['AWS_SECRET_ACCESS_KEY']`, `os.environ['AWS_REGION_NAME']` |
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`bedrock/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Bedrock model name. LiteLLM sends Bedrock the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `bedrock/gpt-luna-latest` | GPT Luna |
+| `bedrock/gpt-sol-latest` | GPT Sol |
+| `bedrock/gpt-terra-latest` | GPT Terra |
+| `bedrock/gpt-astra-latest` | GPT Astra |
+| `bedrock/claude-opus-latest` | Claude Opus |
+| `bedrock/claude-sonnet-latest` | Claude Sonnet |
+| `bedrock/claude-haiku-latest` | Claude Haiku |
+| `bedrock/claude-fable-latest` | Claude Fable |
+| `bedrock/grok-latest` | Grok |
+| `bedrock/kimi-latest` | Kimi |
+| `bedrock/glm-latest` | GLM |
 
 ## Bedrock Embedding
 

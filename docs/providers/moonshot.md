@@ -219,6 +219,16 @@ curl http://localhost:4000/v1/chat/completions \
 
 For more detailed information on using the LiteLLM Proxy, see the [LiteLLM Proxy documentation](../providers/litellm_proxy).
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`moonshot/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Moonshot model name. LiteLLM sends Moonshot the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `moonshot/kimi-latest` | Kimi |
+
 ## Image / Vision Support
 
 Moonshot vision models (`kimi-k2.5`, `kimi-latest`, `moonshot-v1-*-vision-preview`, etc.) accept the standard OpenAI content array with `image_url` blocks.
