@@ -29,6 +29,7 @@
     "generate:social-card": "node scripts/social-card/index.cjs",
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
     "test:optimize-images": "node --test plugins/optimize-images.test.cjs",
+    "test:llms": "node --test plugins/llms.test.cjs",
     "sync:lens": "node scripts/sync-lens-docs.mjs",
     "test:lens": "node --test scripts/sync-lens-docs.test.mjs"
   },

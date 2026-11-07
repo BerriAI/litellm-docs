@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM Enterprise [pricing is usage-based](../enterprise#how-is-pricing-structured). Billable request metering reports that usage. The proxy counts successful requests to LLM, MCP, and A2A endpoints and pushes one OpenTelemetry counter to LiteLLM's collector, authenticated with the mTLS client certificate issued for your deployment.
 
-Only the request count is sent. Prompts, responses, virtual keys, and your license key never leave the deployment. Metering runs separately from any [OTEL logging](../observability/opentelemetry_integration) you configure and never touches your own metrics pipeline.
+Only the request count is sent. Prompts, responses, and virtual keys never leave the deployment. The license key is sent to the LiteLLM license server only when the gateway's offline check of its signature does not pass, see [Activate your license](../enterprise/activate.md). Metering runs separately from any [OTEL logging](../observability/opentelemetry_integration) you configure and never touches your own metrics pipeline.
 
 :::info
 

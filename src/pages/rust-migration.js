@@ -64,13 +64,14 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = baseHeight - plot.top - plot.bottom;
   const goalX = plot.left + plotWidth;
-  const dateX = createTimeScale(points[0].date, goal.endsOn, plot.left, goalX);
+  const endDate = goal.endsOn ?? points.at(-1).date;
+  const dateX = createTimeScale(points[0].date, endDate, plot.left, goalX);
   const x = index => dateX(points[index].date);
   const baseline = plot.top + plotHeight;
   const y = percent => baseline - (percent / 100) * plotHeight;
   const axisLabel = point => ({
     name: pointName(point),
-    date: point.kind === 'latest' && !compact ? `${formatDate(SHORT_DATE, point.date)} · latest` : formatDate(SHORT_DATE, point.date),
+    date: `${formatDate(SHORT_DATE, point.date)}${point.kind === 'plan' ? ' target' : point.kind === 'latest' && !compact ? ' · latest' : ''}`,
   });
   const {labels, rowCount} = layoutTimelineLabels(points.map((point, index) => {
     const {name, date} = axisLabel(point);
@@ -78,7 +79,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
     const route = point.route ? ROUTES[point.route] : '';
     const moved = index > 0 && points[index - 1].percent !== point.percent;
     return {key: index, anchor: x(index), width: Math.max(labelWidth(point.route ? point.label : name, date), route.length * 7), priority: index === 0 || point.kind !== 'release' ? 2 : moved ? 1 : 0};
-  }), goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)), width);
+  }), goal.endsOn ? goalX - labelWidth('Goal', formatDate(SHORT_DATE, goal.endsOn)) : width, width);
   const values = layoutTimelineValues(points, x, y);
   // A route plan's label takes three lines, so its rows grow by one line.
   const routeLines = points.some(point => point.route) ? 1 : 0;
@@ -94,7 +95,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
   const projectionPath = points
     .slice(current)
     .map((point, offset) => `${offset === 0 ? 'M' : 'L'}${x(current + offset)},${y(point.percent)}`)
-    .join('') + `L${goalX},${y(100)}`;
+    .join('') + (goal.endsOn ? `L${goalX},${y(100)}` : '');
 
   // A clicked point takes the chart's place at the chart's size, like a page in the card.
   if (selected >= 0) {
@@ -126,8 +127,9 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
         <desc id="timeline-description">
           {wholePercent(points[current].percent)} percent of {goal.text} is built in {CURRENT_VERSION}.
           {points.filter(point => point.kind === 'plan').map(point => ` ${pointName(point)} is planned to reach ${wholePercent(point.percent)} percent.`)}
-          {' '}The goal targets 100 percent by {goal.endsOn}.
-          {' '}Horizontal distance represents elapsed time on the same scale for releases, plans, and the goal.
+          {goal.endsOn && ` The goal targets 100 percent by ${goal.endsOn}.`}
+          {' '}Planned percentages are rough estimates of the broader migration.
+          {' '}Horizontal distance represents elapsed time.
         </desc>
         <defs>
           <linearGradient id="progress-area" x1="0" x2="0" y1="0" y2="1">
@@ -135,7 +137,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
             <stop offset="100%" className={styles.areaEnd} />
           </linearGradient>
         </defs>
-        {monthTicks(points[0].date, goal.endsOn).map(month => (
+        {monthTicks(points[0].date, endDate).map(month => (
           <g key={month}>
             <line className={styles.monthLine} x1={dateX(month)} x2={dateX(month)} y1={plot.top - 18} y2={baseline} />
             {goalX - dateX(month) >= 96 && (
@@ -182,7 +184,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
               className={styles.pointButton}
               tabIndex={0}
               role="button"
-              aria-label={`${axisLabel(point).name}, ${wholePercent(point.percent)}%`}
+              aria-label={`${axisLabel(point).name}, ${pointDate(point)}, ${wholePercent(point.percent)}%`}
               onMouseEnter={() => setHovered(index)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => setHovered(index)}
@@ -252,7 +254,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
             </g>
           );
         })}
-        <g className={styles.goal}>
+        {goal.endsOn && <g className={styles.goal}>
           <title>{goal.text}: 100% by {goal.endsOn}</title>
           <circle cx={goalX} cy={y(100)} r="5" />
           <text className={styles.goalLabel} x={goalX} y={y(100) - 14} textAnchor="end">
@@ -264,7 +266,7 @@ function MigrationTimeline({goal, selectedKey, onSelect}) {
               {formatDate(SHORT_DATE, goal.endsOn)}
             </tspan>
           </text>
-        </g>
+        </g>}
       </svg>
       {term && <TermTooltip id={term.id} anchor={term.anchor} />}
       {hovered !== null && !term && (
@@ -395,6 +397,8 @@ function PointTooltip({goal, point, previous, anchor}) {
       <div className={styles.tooltipDate}>
         {pointDate(point)} · {changes.length === 0 ? 'no change' : changeCount(changes)}
       </div>
+      {point.kind === 'plan' && <div className={styles.tooltipDate}>{point.description}</div>}
+      {point.kind === 'plan' && <div className={styles.tooltipHint}>Rough estimate of the broader migration</div>}
       {changes.length > 0 && <div className={styles.tooltipHint}>Click the point to see what it moves</div>}
     </div>
   );
@@ -426,17 +430,29 @@ function componentCards(changes) {
 // Everything a point moved, one card per component, listing its work.
 function PointDetails({goal, point, previous, width, height}) {
   const changes = componentCards(changesBetween(goal, point, previous));
+  const summaryRef = useRef(null);
+  const summary = point.kind === 'plan' && point.description;
+  const measuredSummaryHeight = useResizeObserver({ref: summaryRef, box: 'border-box'}).height;
+  const summaryHeight = summary ? measuredSummaryHeight ?? 96 : 0;
   const compact = width < 560;
   const columns = compact ? 1 : width < 860 ? 2 : 3;
   const cardHeight = compact ? 48 : 64;
-  const rows = Math.max(1, Math.floor((height - DETAILS_PADDING + CARD_GAP) / (cardHeight + CARD_GAP)));
+  const rows = Math.max(1, Math.floor((height - summaryHeight - DETAILS_PADDING + CARD_GAP) / (cardHeight + CARD_GAP)));
   const capacity = rows * columns;
   const shown = changes.length > capacity ? changes.slice(0, capacity - 1) : changes;
   const hidden = changes.slice(shown.length);
   return (
     <section className={styles.details} style={{height}} aria-label={`What ${pointName(point)} moves`}>
+      {summary && (
+        <div className={styles.detailsSummary} ref={summaryRef}>
+          <p><strong>{pointDate(point)}: {pointName(point)}</strong> · {wholePercent(point.percent)}% estimated</p>
+          <p>{summary}</p>
+        </div>
+      )}
       {changes.length === 0 ? (
-        <p className={styles.detailsEmpty}>No {point.kind === 'plan' ? 'planned ' : ''}change to {goal.text}.</p>
+        <p className={styles.detailsEmpty}>
+          {point.kind === 'plan' ? 'No additional catalog work beyond the preceding milestones.' : `No change to ${goal.text}.`}
+        </p>
       ) : (
         <ul
           className={`${styles.detailsList} ${compact ? styles.detailsCompact : ''}`}
@@ -542,7 +558,7 @@ function GoalSelect({goal, onChange}) {
               {GOALS.map(item => (
                 <Select.Item className={picker.selectItem} value={item.id} key={item.id} disabled={item.disabled}>
                   <Select.ItemText className={picker.selectLabel}>{item.text}</Select.ItemText>
-                  <span className={picker.selectMeta}>{item.disabled ? 'Not tracked yet' : `by ${formatDate(FULL_DATE, item.endsOn)}`}</span>
+                  <span className={picker.selectMeta}>{item.disabled ? 'Not tracked yet' : item.endsOn ? `by ${formatDate(FULL_DATE, item.endsOn)}` : 'No completion date announced'}</span>
                   {/* Answers "what is in this goal" right where it is picked. */}
                   <span className={picker.selectScope}>
                     {item.summary ?? item.components.map(component => component.text).join(', ')}
@@ -629,6 +645,23 @@ function MigrationTracker() {
           {goal.components.map(component => <ComponentNode component={component} key={component.id} />)}
         </ul>
       </div>
+      <p className={styles.trackerNote}>
+        The solid line shows released work. The dashed line shows estimated weekly goals toward the December 1 Messages milestone.{' '}
+        <Link to="#faq-scoring">How we measure progress</Link>
+      </p>
+      <aside className={styles.milestone} aria-labelledby="next-milestone-title">
+        <div>
+          <p className={styles.kicker}>Next milestone</p>
+          <h3 id="next-milestone-title">December 1, 2026</h3>
+        </div>
+        <div>
+          <p>
+            Run the common <code>/v1/messages</code> path end to end in Rust, with routing and supported
+            callbacks. More configurations and request types will follow.
+          </p>
+          <Link to="#faq-messages-scope">What this milestone covers</Link>
+        </div>
+      </aside>
     </section>
   );
 }
@@ -669,6 +702,12 @@ function Scoring() {
   return (
     <>
       <p className={styles.sectionLead}>
+        This tracks released components across the broader migration. It does not measure the share of traffic
+        served by Rust. The December 1 projection is a rough estimate of the catalog work needed for the common
+        Messages fast path, including its shared infrastructure. The{' '}
+        <Link to="/blog/rust-migration-rerouted">October 26 update</Link> replaces the earlier roadmap dates.
+      </p>
+      <p className={styles.sectionLead}>
         Every piece of work has a size in rough engineer-weeks, and a component's points are the sizes of its work.
         A piece earns 80% of its size once it is in a release but incomplete or not yet trusted, and all of it once it
         is done. {goal.text} is {goal.size} points in all.
@@ -706,6 +745,8 @@ function Scoring() {
 }
 
 const FAQ = [
+  {id: 'faq-messages-scope', question: 'What is planned for December 1?', answer: <MessagesFastPath />},
+  {id: 'faq-request-path', question: 'How will requests reach Rust or Python?', answer: <RequestPath />},
   {id: 'faq-scoring', question: 'How is the percentage calculated?', answer: <Scoring />},
   {id: 'faq-levels', question: 'What do Partial and Done mean?', answer: <Levels />},
 ];
@@ -739,6 +780,9 @@ function syncHash(details) {
 // opens it first so the target is visible.
 function Faq() {
   const listRef = useRef(null);
+  // Custom React IDs must be registered for Docusaurus's production link check.
+  const brokenLinks = useBrokenLinks();
+  FAQ.forEach(item => brokenLinks.collectAnchor(item.id));
   const openHashTarget = () => {
     const id = hashId();
     // Only targets inside the list, which may sit deep inside an answer.
@@ -781,7 +825,7 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
-// AIGatewayBench results for the finished Rust gateway. Every figure is from
+// AIGatewayBench results for the early Rust beta. Every figure is from
 // blog/rust_ai_gateway_benchmarks; do not edit one here without editing it
 // there. Rows are ascending in both panels, so the order is the same in each.
 const BENCHMARK = [
@@ -828,11 +872,11 @@ function barWidth(panel, value) {
 function GatewayBenchmark() {
   return (
     <section className={styles.section} aria-labelledby="benchmark-title">
-      <SectionHeading id="benchmark-title" kicker="Result" title="The result of the move to Rust" />
+      <SectionHeading id="benchmark-title" kicker="Earlier benchmark" title="Forwarding-only Rust beta results" />
       <p className={styles.sectionLead}>
-        This is where the migration takes us. AIGatewayBench measured four gateways against the
-        same mock server: the Rust gateway, Portkey, Bifrost, and the current Python proxy. The test measured the
-        delay and the memory that each gateway adds.
+        The July 2026 AIGatewayBench report measured four gateways against the same mock server with no
+        logging callbacks, spend tracking, or persistence enabled. These results isolate forwarding overhead;
+        they do not measure the December 1 fast path with common proxy features.
       </p>
       {/* One card per panel. The two use different scales, so they are two
           measurements rather than one chart cut in half. */}
@@ -879,6 +923,47 @@ function GatewayBenchmark() {
   );
 }
 
+function MessagesFastPath() {
+  const target = PLANS.find(plan => plan.id === 'messages-e2e');
+  return (
+    <>
+      <p className={styles.sectionLead}>
+        <Link to="/blog/rust-migration-rerouted">Nate's October 26 update</Link> shifts the migration from
+        porting translation, then routing, then the web server to moving a common request path to Rust
+        end to end. The target is about 20 times less proxy latency, around 1.5 milliseconds, for these
+        requests. Updated benchmarks with common proxy features are still to come.
+      </p>
+      <p className={styles.sectionLead}>
+        The initial scope is <code>/v1/messages</code> with simple-shuffle routing, Anthropic models on
+        Anthropic, Amazon Bedrock, or Vertex AI, and supported callbacks such as S3 logs and spend logging.
+        Every enabled callback must be supported. Other endpoints, routing strategies, providers, and
+        unsupported callbacks stay on Python until the fast path expands to cover them.
+      </p>
+      <p className={styles.sectionLead}>
+        This path needs Rust deployment, database-backed configuration, Redis access, routing, auth,
+        response caching, and supported logging callbacks and spend tracking. We estimate that this work
+        brings the broader migration to about {wholePercent(progressAt(GOALS[0], target))}% on the chart's existing scale.
+      </p>
+      <p className={styles.sectionLead}>
+        December 1 is the target for this common configuration. Coverage will expand to more configurations
+        and request types after this path. The latency target is an expected result; updated benchmarks
+        will confirm performance.
+      </p>
+    </>
+  );
+}
+
+function RequestPath() {
+  return (
+    <p className={styles.sectionLead}>
+      An Axum server will sit in front of all requests and check early whether Rust can handle them.
+      Supported requests will use the Rust fast path. Other requests will be forwarded to a Python
+      worker on the same host. Rust implementations of the router and callbacks will be shared with
+      Python through thin wrappers, and both servers will use the same Redis and Postgres protocols.
+    </p>
+  );
+}
+
 function MigrationUpdates() {
   // Collected at build time from every blog post tagged `rust-migration`.
   const {posts = []} = usePluginData('rust-migration-posts') || {};
@@ -889,6 +974,10 @@ function MigrationUpdates() {
   return (
     <section className={styles.section} aria-labelledby="migration-updates-title">
       <SectionHeading id="migration-updates-title" kicker="Engineering updates" title="How we are getting there" />
+      <p className={styles.sectionLead}>
+        Watch the <Link to="https://github.com/BerriAI/litellm/discussions/48869">GitHub discussion</Link> for weekly
+        updates directly from the developers, with much more detail than the blog posts.
+      </p>
       <ol className={styles.events}>
         {events.map(event => (
           <li className={styles.event} key={event.href}>
@@ -907,7 +996,7 @@ function MigrationUpdates() {
 
 export default function RustMigrationPage() {
   return (
-    <Layout title="LiteLLM Rust Migration" description="Updates from LiteLLM's migration to Rust.">
+    <Layout title="LiteLLM Rust Migration" description="Track LiteLLM's migration to Rust and the December 1 target for a common Messages request path.">
       <main className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Rust Migration</p>

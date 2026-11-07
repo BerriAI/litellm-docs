@@ -12,9 +12,7 @@ import IdJagScreenshot from '@site/src/components/IdJagScreenshot';
 
 Let LiteLLM call MCP tools on behalf of a signed-in user. LiteLLM exchanges the user's login token for an ID-JAG, then exchanges the ID-JAG for an access token at the MCP server's authorization server.
 
-:::info
-This feature requires an enterprise license, a database, and [LiteLLM SSO](../admin_ui_sso.md).
-:::
+## How it works
 
 ```mermaid
 sequenceDiagram
@@ -36,7 +34,13 @@ sequenceDiagram
     LiteLLM-->>Agent: Result
 ```
 
-## Get started
+## Prerequisites
+
+:::info
+This feature requires an enterprise license, a database, and [LiteLLM SSO](../admin_ui_sso.md).
+:::
+
+## Setup {#get-started}
 
 Select your identity provider.
 
@@ -182,20 +186,6 @@ Run `terraform plan`, then `terraform apply`.
 </TabItem>
 </Tabs>
 
-### 5. Sign in and call the MCP server {#okta-test}
-
-After deploying, sign in to `https://litellm.example.com/ui` through Okta. Use that user's credential with access to `internal_tools`:
-
-```bash
-curl -X POST "https://litellm.example.com/internal_tools/mcp" \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "x-litellm-api-key: Bearer <user-credential>" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
-```
-
-A successful response lists the server's tools.
-
 </TabItem>
 <TabItem value="other" label="Other IdP">
 
@@ -286,7 +276,34 @@ Run `terraform plan`, then `terraform apply`.
 
 If your IdP requires a resource identifier, add `id_jag_resource` with the MCP service's resource URL.
 
-### 5. Sign in and call the MCP server {#other-test}
+</TabItem>
+</Tabs>
+
+## Test authentication
+
+Select the same identity provider used for setup.
+
+<Tabs groupId="id-jag-idp" queryString="idp">
+<TabItem value="okta" label="Okta" default>
+
+### Sign in and call the MCP server {#okta-test}
+
+After deploying, sign in to `https://litellm.example.com/ui` through Okta. Use that user's credential with access to `internal_tools`:
+
+```bash
+curl -X POST "https://litellm.example.com/internal_tools/mcp" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "x-litellm-api-key: Bearer <user-credential>" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+A successful response lists the server's tools.
+
+</TabItem>
+<TabItem value="other" label="Other IdP">
+
+### Sign in and call the MCP server {#other-test}
 
 After deploying, sign in to `https://litellm.example.com/ui` through your IdP. Use that user's credential with access to `internal_tools`:
 
@@ -340,3 +357,9 @@ A successful response lists the server's tools.
 
 </TabItem>
 </Tabs>
+
+## Related guides
+
+See the [ID-JAG overview](./overview.md) for the exchange roles, or [LiteLLM as resource app](./resource_app.md) when another application needs a LiteLLM credential.
+
+Configure [OIDC SSO](../admin_ui_sso.md) for sign-in, and use [MCP Access](../access_management/mcp.md) to grant the caller access to the MCP server.

@@ -20,7 +20,7 @@ We posted regular status updates during our investigation yesterday reflecting t
 
 ## Narrative
 
-On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained an administrative key to an internal deployment of LiteLLM Agent Platform. The mistake was quickly identified, the commit force-pushed over, and the keys were noted as requiring revocation. However, revocation of the administrative key to the LiteLLM Agent Platform did not occur.
+On May 27, 2026, a configuration file [was committed](https://github.com/LiteLLM-Labs/lite-harness/blob/e10b14a/harnesses/opencode/opencode.json) to the public `LiteLLM-Labs/lite-harness` repository which inadvertently contained an administrative key to an internal deployment of LiteLLM Agent Platform. The mistake was quickly identified. About three hours later a follow-up commit deleted the file and the keys were noted as requiring revocation, but the original commit stayed in the repository's public history until October 22. Because of human error, nobody followed through on revoking the administrative key to the LiteLLM Agent Platform, so it was still valid more than four months later.
 
 ### GitHub Owner Access
 
@@ -39,7 +39,7 @@ While we have traced out all tokens we believe the threat actor could have acces
 
 ### Building and Signing the Malicious Release
 
-Having access to multiple GitHub identities, the threat actor was now in a position to be able to make changes to our repositories without being overly noisy, concealing changes within proper-seeming proposals and approvals. The threat actor began by attempting to subvert our project releaser repository to have it pull the package from a different (malicious) repository. They were unable to get approval to merge due to heavily restricted approvals on the repository. As such, they opted to for the noisier approach of using the org owner's token to bypass and disable restrictions on the repository, pushing the change.
+Having access to multiple GitHub identities, the threat actor was now in a position to be able to make changes to our repositories without being overly noisy, concealing changes within proper-seeming proposals and approvals. Our release workflows live in the private `BerriAI/project-releaser` repository, and they checked out their source with `BerriAI` hardcoded as the repository owner, so no workflow input could point a build at a fork. To build from their lookalike fork, the threat actor had to change the workflows themselves. They wrote commit `9cf97e9`, which added a `source_owner` input that defaults to `BerriAI` but accepts any organization. Branch protection on `main` rejected the push, since it requires a pull request, two passing checks, and approval from the workflow's codeowner. The threat actor then used the organization owner's token, which can override branch protection, to push the commit to `main` anyway. With that change on `main`, they dispatched the staging workflow with the source set to `Berri-AI/litellm`, their fork in the lookalike `Berri-AI` organization.
 
 In typical operation, building and publishing a release requires being kicked off by an authorized engineer and being approved by a special account locked to a physical device in our office. This restriction was relaxed earlier this week to accommodate the temporary push for more frequent releases and bugfix backports, allowing any two engineers to trigger and approve a release. As such, the threat actor used one of the tokens to trigger the release (after having repointed the deployer to their malicious repository), and another to approve it.
 
@@ -153,7 +153,7 @@ The additional secrets were not involved in the path taken towards the poisoned 
 
 Our releases are built by workflows in the private `BerriAI/project-releaser` repository. From `199.91.221.39`, the attacker changed where those workflows take their source from.
 
-1. The attacker authored commit `9cf97e9` ("ci: release from a fork source repository") as the organization owner. It let the release workflow build from a source repository other than `BerriAI/litellm`.
+1. The attacker authored commit `9cf97e9` ("ci: release from a fork source repository") as the organization owner. Before this commit, the release workflows hardcoded `BerriAI` as the source owner. The commit replaced it with a new `source_owner` input, which let the release workflow build from a source repository other than `BerriAI/litellm`.
 2. At 10:08:29 a push of that commit to `main` with the second maintainer's token was rejected by branch protection, which requires a pull request, two passing checks, and approval from the codeowner for this workflow.
 3. At 10:08:34 the attacker disables branch protections and then force-pushes with the owner's token.
 4. At 10:46:39 the attacker dispatched the staging workflow at `9cf97e9`, as the owner, with the source set to the lookalike `Berri-AI/litellm` at commit `20535d8f`.

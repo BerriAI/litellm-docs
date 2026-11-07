@@ -4,9 +4,9 @@ import TabItem from '@theme/TabItem';
 
 # SAML 2.0 SSO
 
-<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
+Sign in to the Admin UI with your SAML 2.0 identity provider. Configure SAML through the Admin UI or environment variables; no changes to `config.yaml` are needed.
 
-LiteLLM supports SAML 2.0 single sign-on for the admin UI alongside its existing OIDC providers (Google, Microsoft, Generic OAuth). SAML can be configured from the admin UI (**Admin Settings -> SSO Settings**) or through environment variables; no changes to `config.yaml` are needed. When SAML is configured and no OIDC provider is set, the existing **SSO** login button on the admin UI automatically redirects to the SAML Identity Provider.
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
 ## How it works
 
@@ -24,21 +24,15 @@ sequenceDiagram
     P-->>B: 6. Redirect to /ui/ with session JWT
 ```
 
-The proxy acts as a SAML Service Provider (SP). A user clicking the login button is redirected to the Identity Provider (IdP) with a signed AuthnRequest. After the user authenticates at the IdP, the browser POSTs the signed SAML assertion back to the proxy's Assertion Consumer Service (ACS) endpoint. The proxy validates the assertion's signature, audience, and timestamps, provisions the user in the database if needed, and issues a session JWT that logs them into the admin UI.
+The proxy acts as a SAML Service Provider (SP). A user clicking the login button is redirected to the Identity Provider (IdP) with an AuthnRequest. After the user authenticates at the IdP, the browser POSTs the signed SAML assertion back to the proxy's Assertion Consumer Service (ACS) endpoint. The proxy validates the assertion's signature, audience, and timestamps, provisions the user in the database if needed, and issues a session JWT that logs them into the admin UI.
 
-Both SP-initiated and IdP-initiated flows are supported over the HTTP-POST binding. SP-initiated logins are bound to the browser that started them via an HttpOnly state cookie, so a captured assertion cannot be replayed into another browser. IdP-initiated (unsolicited) responses are rejected by default and only accepted when `SAML_ALLOW_UNSOLICITED=true` is set explicitly.
+## Prerequisites
 
-## Configure from the admin UI
+- A running LiteLLM proxy with a master key and database connection.
+- An identity provider that supplies metadata and signed SAML assertions.
+- The public proxy URL, including `https://` (or `http://` for local development).
 
-The quickest way to set up SAML is from the dashboard. Go to **Admin Settings -> SSO Settings**, click **Configure SSO**, and pick **SAML SSO** from the provider dropdown. Paste your IdP's metadata (a URL or the inline XML), set the SP Entity ID and Proxy Base URL, and optionally enable IdP-initiated responses, then save.
-
-<Image img={require('../../img/saml_ui_config_form.png')} style={{ width: '800px', height: 'auto' }} />
-
-The settings are stored (encrypted) in the SSO config table and applied as the `SAML_*` variables the handler reads, so they survive restarts without env vars. Prefer environment variables for headless or GitOps deployments; the [Quick start](#quick-start) below covers that path.
-
-## Quick start
-
-### 1. Install the SAML extra
+### Install the SAML extra {#1-install-the-saml-extra}
 
 The SAML integration depends on the `python3-saml` library, which bundles the native `xmlsec`/`libxml2` libraries. Install it with the `saml` extra:
 
@@ -48,7 +42,21 @@ pip install 'litellm[saml]'
 
 The official Docker images already include this extra. If you are building your own image, add `litellm[saml]` to your install step.
 
-### 2. Set environment variables
+## Setup
+
+Configure SAML through the dashboard or environment variables, then register LiteLLM's service-provider details with your IdP.
+
+### Configure from the admin UI
+
+The quickest way to set up SAML is from the dashboard. Go to **Admin Settings -> SSO Settings**, click **Configure SSO**, and pick **SAML SSO** from the provider dropdown. Paste your IdP's metadata (a URL or the inline XML), set the SP Entity ID and Proxy Base URL, and optionally enable IdP-initiated responses, then save.
+
+<Image img={require('../../img/saml_ui_config_form.png')} style={{ width: '800px', height: 'auto' }} />
+
+The settings are stored (encrypted) in the SSO config table and applied as the `SAML_*` variables the handler reads, so they survive restarts without env vars. Prefer environment variables for headless or GitOps deployments; [environment variable setup](#quick-start) covers that path.
+
+### Configure with environment variables {#quick-start}
+
+#### Set environment variables {#2-set-environment-variables}
 
 At minimum, you need your IdP's metadata (as a URL or inline XML) and optionally an SP entity ID:
 
@@ -67,7 +75,7 @@ LITELLM_MASTER_KEY="sk-..."
 DATABASE_URL="postgresql://..."
 ```
 
-### 3. Register the proxy at your IdP
+#### Register the proxy at your IdP {#3-register-the-proxy-at-your-idp}
 
 Your IdP needs two values from the proxy:
 
@@ -82,11 +90,7 @@ After saving, the SSO Settings page shows the configured provider, including the
 
 <Image img={require('../../img/saml_ui_configured.png')} style={{ width: '800px', height: 'auto' }} />
 
-### 4. Start the proxy and test
-
-Start (or restart) the proxy. Navigate to `https://<proxy_base_url>/ui` and click the SSO login button. You should be redirected to your IdP, and after authenticating, redirected back to the admin UI.
-
-## IdP setup guides
+### IdP setup guides
 
 <Tabs>
 <TabItem value="okta" label="Okta">
@@ -113,7 +117,7 @@ Under **Attribute Statements**, add the attributes your proxy will read. The def
 | `firstName` | `user.firstName` |
 | `lastName` | `user.lastName` |
 
-If you want to control user roles from Okta, add a **Group Attribute Statement** or a custom attribute named `role` with a value of `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_viewer`.
+For LiteLLM roles and team membership, see [SAML permissions](./access_management/sso_permissions.md#assign-roles-and-teams-through-saml).
 
 #### Step 2: Copy the IdP metadata URL
 
@@ -148,7 +152,7 @@ Go to **Single sign-on > SAML** and configure:
 
 Under **Attributes & Claims**, verify that the default claims include the user's email. The default Entra ID claims (`emailaddress`, `givenname`, `surname`) are auto-detected by LiteLLM.
 
-To map LiteLLM roles, add a custom claim named `role` with a value sourced from an App Role or directory attribute.
+For LiteLLM role mapping, see [SAML permissions](./access_management/sso_permissions.md#assign-roles-and-teams-through-saml).
 
 #### Step 3: Copy the metadata URL
 
@@ -188,24 +192,22 @@ PROXY_BASE_URL="https://litellm.yourcompany.com"
 </Tabs>
 
 
-## Attribute mapping
+## Test sign-in
 
-LiteLLM auto-detects common SAML attribute names (URN/OID and friendly names) for email, first name, last name, role, and teams. If your IdP uses non-standard attribute names, override them with environment variables:
+<a id="4-start-the-proxy-and-test"></a>
 
-| Environment Variable | Default candidates | Description |
-| --- | --- | --- |
-| `SAML_ATTRIBUTE_EMAIL` | `urn:oid:0.9.2342.19200300.100.1.3`, `emailaddress` claim URI, `email`, `mail` | Attribute containing the user's email |
-| `SAML_ATTRIBUTE_USER_ID` | NameID | Attribute for the stable user identifier |
-| `SAML_ATTRIBUTE_FIRST_NAME` | `urn:oid:2.5.4.42`, `givenname` claim URI, `givenName` | First name attribute |
-| `SAML_ATTRIBUTE_LAST_NAME` | `urn:oid:2.5.4.4`, `surname` claim URI, `sn` | Last name attribute |
-| `SAML_ATTRIBUTE_ROLE` | `role`, `roles`, `litellm_role` | Attribute mapped to the LiteLLM user role |
-| `SAML_ATTRIBUTE_TEAM_IDS` | `teams`, `team_ids`, `groups` | Attribute mapped to LiteLLM team IDs |
+1. Start or restart the proxy with your existing configuration:
 
-The role attribute value must be one of: `proxy_admin`, `proxy_admin_viewer`, `internal_user`, or `internal_user_viewer`.
+   ```bash
+   litellm --config /path/to/config.yaml
+   ```
+
+2. Open `https://<proxy_base_url>/ui` and click **SSO**. When SAML is the only configured provider, this button redirects to your SAML IdP. If OIDC is also configured, start SAML sign-in at `/sso/saml/login`.
+3. Sign in with an assigned user and confirm that you return to the Admin UI.
 
 ## Configuration reference
 
-All configuration is done through environment variables. SAML is activated when either `SAML_IDP_METADATA_URL` or `SAML_IDP_METADATA_XML` is set.
+SAML is activated when either `SAML_IDP_METADATA_URL` or `SAML_IDP_METADATA_XML` is set, either directly or through the Admin UI.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
@@ -223,10 +225,23 @@ All configuration is done through environment variables. SAML is activated when 
 | `SAML_ATTRIBUTE_USER_ID` | NameID | Override the assertion attribute for user ID |
 | `SAML_ATTRIBUTE_FIRST_NAME` | auto-detected | Override the assertion attribute for first name |
 | `SAML_ATTRIBUTE_LAST_NAME` | auto-detected | Override the assertion attribute for last name |
-| `SAML_ATTRIBUTE_ROLE` | `role` | Override the assertion attribute for the LiteLLM role |
-| `SAML_ATTRIBUTE_TEAM_IDS` | `teams`/`groups` | Override the assertion attribute for team IDs |
 
-## SP endpoints
+
+### Attribute mapping
+
+LiteLLM auto-detects common SAML attribute names (URN/OID and friendly names) for email, first name, and last name. If your IdP uses non-standard attribute names, override them with environment variables:
+
+| Environment Variable | Default candidates | Description |
+| --- | --- | --- |
+| `SAML_ATTRIBUTE_EMAIL` | `urn:oid:0.9.2342.19200300.100.1.3`, `emailaddress` claim URI, `email`, `mail` | Attribute containing the user's email |
+| `SAML_ATTRIBUTE_USER_ID` | NameID | Attribute for the stable user identifier |
+| `SAML_ATTRIBUTE_FIRST_NAME` | `urn:oid:2.5.4.42`, `givenname` claim URI, `givenName` | First name attribute |
+| `SAML_ATTRIBUTE_LAST_NAME` | `urn:oid:2.5.4.4`, `surname` claim URI, `sn` | Last name attribute |
+
+Configure role and team attributes in [SSO permissions](./access_management/sso_permissions.md#assign-roles-and-teams-through-saml).
+
+
+### SP endpoints
 
 The proxy exposes three SAML endpoints:
 
@@ -238,9 +253,9 @@ The proxy exposes three SAML endpoints:
 
 The existing `GET /sso/key/generate` endpoint (the login button on the admin UI) automatically redirects to the SAML IdP when SAML is the only configured SSO provider.
 
-## Security
+### Security
 
-SP-initiated logins use an HttpOnly state cookie (`litellm_saml_authn`) to bind the SAML response to the browser that started the login. This prevents login CSRF attacks where a signed response is captured and replayed into a different browser session. The cookie is `Secure; SameSite=None` over HTTPS (so it survives the IdP's cross-site POST) and `SameSite=Lax` over plain HTTP for local development.
+SAML responses use the HTTP-POST binding. SP-initiated logins use an HttpOnly state cookie (`litellm_saml_authn`) to bind the SAML response to the browser that started the login. This prevents login CSRF attacks where a signed response is captured and replayed into a different browser session. The cookie is `Secure; SameSite=None` over HTTPS (so it survives the IdP's cross-site POST) and `SameSite=Lax` over plain HTTP for local development.
 
 Assertions are checked for replay via a consumed-assertion guard keyed on the assertion ID. Each assertion can only be used once within its validity window.
 
@@ -257,3 +272,9 @@ IdP-initiated (unsolicited) responses cannot be browser-bound, which is why they
 **"Unsolicited (IdP-initiated) SAML responses are disabled"** (401 error). The proxy received a SAML response without an `InResponseTo` attribute, meaning it was an IdP-initiated login. Set `SAML_ALLOW_UNSOLICITED=true` if you want to allow this flow.
 
 **Assertion validation fails after the IdP's cross-site POST.** Make sure `PROXY_BASE_URL` is set to the public URL of the proxy (including `https://`). The ACS URL and audience in the SP metadata are derived from it, and a mismatch causes validation to fail.
+
+## Related guides
+
+- [SSO permissions](./access_management/sso_permissions.md): sign-in restrictions, role mapping, and team membership.
+- [OpenID Connect (OIDC) SSO](./admin_ui_sso.md): connect an OIDC provider.
+- [Customize UI branding](./ui/ui_edit_logo.md): logos and color themes.

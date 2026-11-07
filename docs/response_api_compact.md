@@ -7,7 +7,7 @@ Compress conversation history using OpenAI's `/responses/compact` endpoint.
 
 | Feature | Supported |
 |---------|-----------|
-| Supported LiteLLM Versions | 1.72.0+ |
+| Supported LiteLLM Versions | <SinceVersion v="1.72.0" /> |
 | Supported Providers | `openai` |
 
 ## Usage

@@ -75,7 +75,7 @@ If an agent created in the UI already uses a name you then declare in `config.ya
 
 Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
 
-The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+The `agents` key is read correctly <SinceVersion v="1.96.0" />. On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
 
 :::
 
@@ -83,7 +83,7 @@ The `agents` key is read correctly starting in the next release (after `v1.95.0`
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
 
-Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
+Agents created in the current Foundry portal do not speak the Assistants API. Call them by name as a model through the project Responses API, as shown in [Foundry agents through the Responses API](./providers/azure_ai_agents#foundry-agents-through-the-responses-api), or register their A2A endpoint under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 
@@ -137,7 +137,7 @@ Task methods (`tasks/get`, `tasks/list`, …) are forwarded to the upstream agen
 
 ### Dependency
 
-LiteLLM proxy A2A routes require **a2a-sdk >= 1.1.0** (included in the `proxy` / `proxy-dev` dependency groups). If you call agents from your own code, install the matching SDK version:
+LiteLLM proxy A2A routes require **a2a-sdk >= 1.1.0** (included in the `proxy` / `proxy-dev` dependency groups). If you call agents from your own code, install the matching SDK version: {/* keep-version-note */}
 
 ```bash
 pip install "a2a-sdk>=1.1.0,<2.0"

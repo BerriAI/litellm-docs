@@ -67,7 +67,7 @@ general_settings:
     team_ids_jwt_field: "groups"    # claim carrying the user's group/team ids
 ```
 
-**Checkpoint.** Restart the proxy and send a request with a valid IdP JWT as the bearer token. It should authenticate and resolve the caller to a team. If you get a 401, the signature, audience, or issuer check is failing; see [OIDC JWT auth](./token_auth.md) for troubleshooting.
+**Checkpoint.** Restart the proxy and send a request with a valid IdP JWT as the bearer token. It should authenticate and resolve the caller to a team. If you get a 401, the signature, audience, or issuer check is failing; see [JWT troubleshooting](./jwt_auth_reference.md#troubleshooting).
 
 ---
 

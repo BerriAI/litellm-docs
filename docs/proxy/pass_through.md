@@ -201,6 +201,23 @@ Pass-through routes default to a **600 second** upstream timeout. Set `general_s
 
 Native provider passthrough routes (Bedrock `/converse`, `/v1/messages`, and the native `/v1/responses` stream) resolve their timeout through the router, and the first value set wins: the request's `timeout`, the deployment's `timeout` under `litellm_params`, `router_settings.timeout`, `litellm_settings.request_timeout` when you set it (or the `REQUEST_TIMEOUT` env var), `general_settings.pass_through_request_timeout`, then 600 seconds. A streaming request checks `stream_timeout` at each of those levels before `timeout`. So a `litellm_settings.request_timeout` you set outranks `pass_through_request_timeout` on these routes, and on a stream it bounds each wait for the next chunk, so a stalled upstream ends the stream with an error instead of hanging
 
+### Upstream-reported usage and model labels
+
+A custom pass-through upstream can report the cost and token count for its HTTP request in response headers. It can also name the model or feature that produced the usage.
+
+```http title="Upstream response headers"
+HTTP/1.1 200 OK
+x-litellm-response-cost: 0.0123
+x-litellm-total-tokens: 4210
+x-litellm-upstream-model: support-summarizer
+```
+
+`x-litellm-response-cost` reports the request's cost in USD, and `x-litellm-total-tokens` reports its total tokens. `x-litellm-upstream-model` sets the model label in spend logs and usage reports, even if the request body has no `model`. The upstream model label takes precedence over a body `model` on both success and failure records.
+
+LiteLLM trims surrounding whitespace from the model label and ignores empty or whitespace-only values. When the header is repeated or contains comma-separated values, only the first value is used. Labels are capped at 256 characters.
+
+The model header is a label only. It does not set or recalculate cost, look up a price for that name, or replace configured `cost_per_request`. Sending the model header alone does not make the request upstream-priced. See [Spend Tracking](./cost_tracking.md) to view the recorded usage.
+
 ### Header Options
 - **Authorization**: Authentication for the target API
 - **content-type**: Request body format specification

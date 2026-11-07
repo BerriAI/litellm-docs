@@ -37,6 +37,30 @@ general_settings:
 
 <Image img={require('../../img/ui_request_logs_content.png')}/>
 
+### Turn off prompt storage for a key or team
+
+When prompt storage is on for the proxy, you can still keep request and response content out of spend logs for a single key or a whole team. Set `store_prompts_in_spend_logs: false` in the key's or the team's metadata.
+
+```bash
+# one key
+curl -X POST 'http://0.0.0.0:4000/key/update' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "sk-...", "metadata": {"store_prompts_in_spend_logs": false}}'
+
+# every key on a team
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"team_id": "my-team", "metadata": {"store_prompts_in_spend_logs": false}}'
+```
+
+You can also use the "Store prompts in spend logs" switch on the Create Key, Edit Key, Create Team and Edit Team forms in the Admin UI.
+
+Requests from a restricted key still get a spend log row with cost, tokens and identity, but its `proxy_server_request` and `response` are empty. This covers chat, pass-through, queued and failed requests, plus LiteLLM-executed batch rows.
+
+If either the key or its team sets it to `false`, prompts are not stored. A key set to `true` cannot override a team set to `false`, and a client cannot turn storage back on with request metadata or the `litellm-disable-message-redaction` header. Setting it to `true` on a key or team does not enable storage when it is off for the proxy. Unlike [message redaction](./logging.md#redact-messages-response-content), this only affects spend logs; other logging callbacks still receive the content.
+
 ## Tracing Tools
 
 View which tools were provided and called in your completion requests.
@@ -109,6 +133,8 @@ general_settings:
       - usage_object
       - cost_breakdown
 ```
+
+An `include` list drops every key it does not name, including keys that only some rows carry, such as `is_silent_experiment` on [mirrored calls](../traffic_mirroring#find-mirrored-calls-in-logs).
 
 When the setting is unset, every key is written, which is the default. Setting both lists, setting neither, naming a key that is not a `LiteLLM_SpendLogs.metadata` field, or using a dotted path such as `usage_object.cache_read_input_tokens` stops the proxy at startup. `status` and `cold_storage_object_key` are always written and cannot be excluded. The setting can also be changed without a restart through `POST /config/field/update` with `config_type: general_settings`, which rejects the same invalid values with a 400
 

@@ -11,7 +11,7 @@ Send Codex requests through LiteLLM using your own ChatGPT login. LiteLLM contro
 ## Prerequisites
 
 - Codex CLI or desktop app installed, with a ChatGPT account that can use your chosen model.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.109.0 or later**, with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md) <SinceVersion v="1.109.0" /> with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy
 
@@ -68,7 +68,7 @@ Save the file and **restart Codex**. Sign in with ChatGPT if needed, then start 
 
 ### Or launch the CLI with `lite` {#lite-cli}
 
-The [`lite` CLI](../proxy/management_cli.md) from LiteLLM **v1.109.0 or later** can set up this provider each time it starts the Codex CLI, so you can skip `~/.codex/.env` and the `config.toml` edit above. Use the virtual key from Step 2:
+The [`lite` CLI](../proxy/management_cli.md) can set up this provider each time it starts the Codex CLI <SinceVersion v="1.109.0" />, so you can skip `~/.codex/.env` and the `config.toml` edit above. Use the virtual key from Step 2:
 
 ```bash
 export LITELLM_PROXY_URL=http://localhost:4000
@@ -85,6 +85,8 @@ To make this the default, run `lite config set codex_subscription true`. Pass `-
 Send: **Reply with exactly Hello. Do not use tools.**
 
 You should receive `Hello`. In the LiteLLM dashboard, open **Logs** and find the successful request with your model, virtual key, and input/output token counts.
+
+To let LiteLLM pick the ChatGPT model for each turn, see [Auto Router with Codex and your ChatGPT subscription](./codex_chatgpt_auto_router.md).
 
 ## Step 5: Add a paid fallback (optional)
 
