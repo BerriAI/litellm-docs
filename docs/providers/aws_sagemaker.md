@@ -377,6 +377,47 @@ response = completion(
         )
 ```
 
+#### Pin the inference component on a deployment
+
+<SinceVersion v="1.109.0" />
+
+When a proxy deployment or an SDK `Router` deployment sets `model_id`, LiteLLM always calls that inference component and ignores a `model_id` in the request body. A deployment can also pin the component with the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers`, and that pin wins over the request in the same way. On `sagemaker_chat/` deployments, LiteLLM drops a client's own `X-Amzn-SageMaker-Inference-Component` header, in any letter case, when the deployment pins a component.
+
+```yaml
+model_list:
+  - model_name: my-llama
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <llama-inference-component>
+  - model_name: my-mistral
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      extra_headers:
+        X-Amzn-SageMaker-Inference-Component: <mistral-inference-component>
+```
+
+This request still goes to `<llama-inference-component>`:
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "my-llama", "model_id": "<mistral-inference-component>", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+To let clients choose the component on a deployment, list `model_id` in its `configurable_clientside_auth_params`. A request that sends `model_id` then goes to that component, and a request without one goes to the deployment's own `model_id`. `general_settings.allow_client_side_credentials: true` does not let clients override a pinned component.
+
+```yaml
+model_list:
+  - model_name: my-endpoint
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <default-inference-component>
+      configurable_clientside_auth_params: ["model_id"]
+```
+
+A deployment that sets neither `model_id` nor the header still uses the `model_id` from the request. Before 1.109.0, a `model_id` in the request body replaced the deployment's, so a client could send a pinned deployment to another component on the same endpoint.
+
 ### Passing credentials as parameters - Completion()
 Pass AWS credentials as parameters to litellm.completion
 ```python

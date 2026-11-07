@@ -173,6 +173,7 @@ Specify the endpoint params you want the user to be able to configure:
 
 - api_base (regex supported)
 - base_url
+- model_id, see [Let clients choose a deployment's `model_id`](#let-clients-choose-a-deployments-model_id)
 
 Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
 
@@ -257,6 +258,25 @@ main();
 ```
 </TabItem>
 </Tabs>
+
+### Let clients choose a deployment's `model_id`
+
+<SinceVersion v="1.109.0" />
+
+When a deployment sets `model_id`, such as a SageMaker inference component or a Bedrock model ID or ARN, LiteLLM always uses the deployment's value and ignores a `model_id` in the request body. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to proxy requests and to SDK `Router` calls.
+
+To let clients choose the value on a deployment, list `model_id` in its `configurable_clientside_auth_params`:
+
+```yaml
+model_list:
+  - model_name: my-sagemaker
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <default-inference-component>
+      configurable_clientside_auth_params: ["model_id"]
+```
+
+A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body then goes to that component, and a request without `model_id` goes to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` does not opt in, so it leaves a pinned `model_id` in place. A deployment that sets no `model_id` still uses the request's `model_id`. Before 1.109.0, a `model_id` in the request body replaced the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
 
 ### Pass provider-specific params (e.g. Region, Project ID, etc.)
 
