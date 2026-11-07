@@ -57,3 +57,7 @@ Write titles, descriptions and points in ASD-STE100 Simplified Technical English
 ## Blog and release note authors
 
 Every post names at least one person who stands behind it. If an agent writes the post, credit whoever requested or drove the work. Never use a team or company byline. Keep only individual people in `blog/authors.yml` and `release_notes/authors.yml`; `author-person` in `scripts/check-docs.py` enforces this rule.
+
+## Supported Endpoints page
+
+`docs/supported_endpoints.mdx` builds its cards and its pass-through list from `src/data/endpoints.js`, not from the sidebar. When you add, rename, or remove an endpoint page in the "Supported Endpoints" sidebar category, update its entry in `src/data/endpoints.js` in the same PR: the main route and method as the proxy serves them, a one-sentence description, and the Python SDK function if one exists. A new provider pass-through page also needs its route prefix, taken from `litellm/proxy/pass_through_endpoints/llm_passthrough_endpoints.py`. Check every route against the LiteLLM source before you add it. `npm run test:endpoints` compares the data with the sidebar, and `npm run check:endpoints` compares it with BerriAI/litellm main; both only warn for now.

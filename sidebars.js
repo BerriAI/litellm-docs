@@ -1039,7 +1039,7 @@ const sidebars = {
             {
               type: "link",
               label: "All Supported Endpoints",
-              href: "/docs/supported_endpoints",
+              href: "/docs/supported_endpoints#all-endpoints",
               className: "sidebar-xlink",
             },
           ],
@@ -1312,13 +1312,7 @@ const sidebars = {
     {
       type: "category",
       label: "Supported Endpoints",
-      link: {
-        type: "generated-index",
-        title: "Supported Endpoints",
-        description:
-          "Learn how to deploy + call models from different providers on LiteLLM",
-        slug: "/supported_endpoints",
-      },
+      link: {type: "doc", id: "supported_endpoints"},
       items: [
         "assistants",
         { type: "ref", id: "audio_transcription" },
