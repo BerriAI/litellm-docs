@@ -1614,3 +1614,106 @@
 .dimRow {
   opacity: 0.4;
 }
+
+/* Lane header: the detailed toggle shows each lane's model and behaviour summary. */
+
+.laneHeaderLabel {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 0.85rem;
+}
+
+.detailToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--sim-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+/* One incident button with a caret that picks the kind. */
+
+.incidentSplit {
+  display: inline-flex;
+  border: 1px solid var(--sim-line);
+  border-radius: 4px;
+}
+
+.laneButtons .incidentSplit button {
+  border: none;
+  border-radius: 4px 0 0 4px;
+}
+
+.incidentCaret {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  border-left: 1px solid var(--sim-line);
+  color: var(--sim-muted);
+}
+
+.incidentCaret select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.incidentSplit:hover,
+.incidentSplit:focus-within {
+  border-color: var(--ifm-color-primary);
+}
+
+/* rpm and tpm used this minute against the deployment's limit. */
+
+.usageBars {
+  display: inline-flex;
+  align-self: center;
+  gap: 3px;
+}
+
+.usageBar {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 7px;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid var(--sim-line);
+  border-radius: 2px;
+  background: var(--sim-soft);
+}
+
+.usageBar i {
+  display: block;
+  width: 100%;
+  transition: height 0.2s linear;
+}
+
+.usageBar b {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.usageOk {
+  background: #16a34a;
+}
+
+.usageWarm {
+  background: var(--sim-cool);
+}
+
+.usageHot {
+  background: var(--sim-fail);
+}

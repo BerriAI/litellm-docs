@@ -246,7 +246,77 @@ function markText(mark, store, info) {
     : `Requests start falling back ${hop}.`;
 }
 
+// One incident button per lane. The button fires the lane's current kind; the caret beside it
+// picks another kind and fires it, which also makes it the button's kind.
+function IncidentButton({id, onIncident}) {
+  const [kind, setKind] = useState('outage');
+  const label = kind => (kind === 'outage' ? 'Outage' : kind === 'flaky' ? 'Flaky' : incidentLabel(kind));
+  return (
+    <div className={styles.incidentSplit}>
+      <button type="button" onClick={() => onIncident(id, kind)}>
+        {label(kind)}
+      </button>
+      <span className={styles.incidentCaret}>
+        <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
+          <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        <select
+          aria-label={`Incident kind for ${id}`}
+          value=""
+          onChange={event => {
+            const next = event.target.value;
+            if (!next) return;
+            setKind(next);
+            onIncident(id, next);
+          }}>
+          <option value="" disabled>
+            Start an incident
+          </option>
+          {LANE_INCIDENTS.map(item => (
+            <option key={item} value={item}>
+              {label(item)}
+            </option>
+          ))}
+        </select>
+      </span>
+    </div>
+  );
+}
+
+// How much of a deployment's rpm or tpm limit this minute has used: the router's limit from the
+// config when it has one, else the provider cap from its behaviour profile.
+function usageLimits(deployment, profile, live) {
+  const limits = [];
+  for (const metric of ['rpm', 'tpm']) {
+    const router = Number(deployment[metric]) > 0 ? Number(deployment[metric]) : null;
+    const provider = Number(profile?.[`${metric}_cap`]) > 0 ? Number(profile[`${metric}_cap`]) : null;
+    if (router) limits.push({metric, limit: router, used: Number(live?.[metric]) || 0, who: 'router limit'});
+    else if (provider) limits.push({metric, limit: provider, used: Number(live?.provider?.[metric]) || 0, who: 'provider cap'});
+  }
+  return limits;
+}
+
+function UsageBars({limits}) {
+  if (!limits.length) return null;
+  return (
+    <div className={styles.usageBars}>
+      {limits.map(({metric, limit, used, who}) => {
+        const fill = Math.min(1, used / limit);
+        const tone = fill >= 0.9 ? styles.usageHot : fill >= 0.7 ? styles.usageWarm : styles.usageOk;
+        const text = `${metric} ${Math.round(used).toLocaleString()} of ${limit.toLocaleString()} this minute (${who})`;
+        return (
+          <span key={metric} className={styles.usageBar} title={text} aria-label={text} role="img">
+            <i className={tone} style={{height: `${fill * 100}%`}} />
+            <b>{metric[0]}</b>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncident, onSelect, onMark}) {
+  const [detailed, setDetailed] = useState(false);
   const [ref, width] = useWidth(1080);
   const plot = Math.max(200, width - LABEL);
   const now = store.now;
@@ -289,8 +359,12 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
         </defs>
       </svg>
       <div className={styles.laneHeader}>
-        <div className={styles.cap} style={{width: LABEL}}>
-          DEPLOYMENT
+        <div className={styles.laneHeaderLabel} style={{width: LABEL}}>
+          <span className={styles.cap}>DEPLOYMENT</span>
+          <label className={styles.detailToggle}>
+            <input type="checkbox" checked={detailed} onChange={event => setDetailed(event.target.checked)} />
+            detailed
+          </label>
         </div>
         <div className={styles.axis}>
           {ticks.map(t => (
@@ -344,6 +418,7 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
           <div key={deployment.id} className={styles.lane}>
             <div className={styles.laneLabel} style={{width: LABEL}}>
               <div className={styles.laneName}>
+                <UsageBars limits={usageLimits(deployment, profile, live)} />
                 <span className={styles.mono}>{deployment.id}</span>
                 <button
                   type="button"
@@ -356,15 +431,13 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
                   <span className={styles.coolingTag}>cooling {secs(live.cooling.remaining ?? 0)}</span>
                 )}
               </div>
-              <span className={styles.laneStat}>
-                {deployment.model_name} · {profileSummary(profile)}
-              </span>
+              {detailed && (
+                <span className={styles.laneStat}>
+                  {deployment.model_name} · {profileSummary(profile)}
+                </span>
+              )}
               <div className={styles.laneButtons}>
-                {LANE_INCIDENTS.map(kind => (
-                  <button key={kind} type="button" onClick={() => onIncident(deployment.id, kind)}>
-                    {kind === 'outage' ? 'Outage' : kind === 'flaky' ? 'Flaky' : incidentLabel(kind)}
-                  </button>
-                ))}
+                <IncidentButton id={deployment.id} onIncident={onIncident} />
               </div>
             </div>
             <svg
