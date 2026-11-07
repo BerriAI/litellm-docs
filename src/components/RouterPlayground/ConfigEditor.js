@@ -9,8 +9,10 @@ import {
   setFallbacks,
   setIn,
   setSetting,
+  settingPaths,
   settingValue,
 } from './configDoc';
+import ConfigModal from './ConfigModal';
 import FallbackGraph from './FallbackGraph';
 import ProfileEditor from './ProfileEditor';
 import {PROFILE_PRESETS, profileSummary} from './profiles';
@@ -200,230 +202,477 @@ function YamlView({text, onChange, error, marks, completion}) {
   );
 }
 
-function DeploymentRow({entry, index, shown, share, metric, single, skipped, issues, profile, open, timeout, actions}) {
-  const params = entry.litellm_params ?? {};
-  const idIssue = issues.find(issue => issue.field === 'id');
-  const orderIssue = issues.find(issue => issue.field === 'order');
-  const label = profile
-    ? (PROFILE_PRESETS[profile.preset]?.label ?? 'Custom')
-    : params.mock_response != null
-      ? 'Fixed reply'
-      : 'Instant OK';
-  const pct = share == null ? null : Math.round(share * 100);
+// A text input that keeps what is typed while focused, for values the YAML stores differently.
+function DraftInput({value, onCommit, className, ...rest}) {
+  const [draft, setDraft] = useState(null);
   return (
-    <>
-      <div
-        data-row={shown}
-        className={`${styles.row} ${open ? styles.rowOpen : ''} ${skipped ? styles.rowSkipped : ''}`}>
-        <input
-          className={`${styles.input} ${styles.idInput} ${idIssue ? styles.inputErr : ''}`}
-          aria-label={`id of deployment ${index + 1}`}
-          value={fmt(deploymentValue(entry, 'id'))}
-          placeholder={shown ?? 'generated'}
-          onChange={event => actions.field(index, 'id', event.target.value || undefined)}
-        />
-        <input
-          className={styles.input}
-          aria-label={`model of ${shown}`}
-          value={fmt(params.model)}
-          onChange={event => actions.field(index, 'model', event.target.value)}
-        />
-        <span className={styles.weight}>
-          {single ? (
-            <span className={styles.muted}>only deployment</span>
-          ) : (
-            <>
-              <NumInput
-                className={`${styles.input} ${styles.small}`}
-                label={`weight of ${shown}`}
-                value={params.weight}
-                placeholder="none"
-                onCommit={value => actions.field(index, 'weight', value)}
-              />
-              {skipped ? (
-                <span className={styles.skipped}>skipped</span>
-              ) : (
-                <>
-                  <span className={styles.bar} title={metric ? `split by ${metric}` : 'even split'}>
-                    <span style={{width: `${pct ?? 0}%`}} />
-                  </span>
-                  <span className={styles.pct}>{pct == null ? '' : `${pct}%`}</span>
-                </>
-              )}
-            </>
-          )}
-        </span>
-        <NumInput
-          className={`${styles.input} ${styles.small}`}
-          label={`order of ${shown}`}
-          value={deploymentValue(entry, 'order')}
-          placeholder="none"
-          invalid={!!orderIssue}
-          onCommit={value => actions.field(index, 'order', value)}
-        />
-        <NumInput
-          className={`${styles.input} ${styles.small}`}
-          label={`rpm of ${shown}`}
-          value={params.rpm}
-          placeholder="none"
-          onCommit={value => actions.field(index, 'rpm', value)}
-        />
-        <NumInput
-          className={`${styles.input} ${styles.small}`}
-          label={`tpm of ${shown}`}
-          value={params.tpm}
-          placeholder="none"
-          onCommit={value => actions.field(index, 'tpm', value)}
-        />
-        <button
-          type="button"
-          className={`${profile ? styles.chipOn : styles.chip} ${styles.behaviourChip}`}
-          aria-expanded={open}
-          aria-label={`Behaviour of ${shown}: ${label}`}
-          onClick={() => actions.toggle(shown)}>
-          {label} <span aria-hidden="true">▾</span>
-        </button>
-        <button
-          type="button"
-          className={styles.remove}
-          aria-label={`Remove ${shown}`}
-          title="Remove deployment"
-          onClick={() => actions.remove(index)}>
-          ×
-        </button>
-      </div>
-      {open && (
-        <div className={styles.behaviour}>
-          <div className={styles.behaviourHead}>
-            <span className={styles.muted}>in the simulator</span>
-            <span className={styles.mono}>{profile ? profileSummary(profile) : 'no profile, answers at once'}</span>
-          </div>
-          <ProfileEditor
-            value={profile}
-            compact
-            timeout={params.timeout ?? timeout}
-            onChange={next => actions.profile(shown, next)}
-          />
-          <label className={styles.inlineField}>
-            <span className={styles.key}>mock_response</span>
-            <input
-              className={styles.input}
-              value={typeof params.mock_response === 'string' ? params.mock_response : fmt(params.mock_response)}
-              placeholder="none"
-              onChange={event => actions.field(index, 'mock_response', event.target.value || undefined)}
-            />
-          </label>
-        </div>
-      )}
-      {issues.map(issue => (
-        <div key={`${issue.field}-${issue.message}`} className={styles.rowIssue}>
-          <Issue issue={issue}>
-            {issue.field === 'order' && (
-              <button type="button" className={styles.link} onClick={() => actions.field(index, 'order', issue.next)}>
-                Set order {issue.next}
-              </button>
-            )}
-          </Issue>
-        </div>
-      ))}
-    </>
+    <input
+      {...rest}
+      className={className ?? styles.input}
+      value={draft ?? value}
+      onFocus={() => setDraft(value)}
+      onBlur={() => setDraft(null)}
+      onChange={event => {
+        setDraft(event.target.value);
+        onCommit(event.target.value);
+      }}
+    />
   );
 }
 
-function GroupCard({name, members, info, data, issues, profiles, openRow, actions}) {
+function Field({label, yamlKey, children}) {
+  return (
+    <label className={styles.field}>
+      {label}
+      {children}
+      {yamlKey && <small>{yamlKey}</small>}
+    </label>
+  );
+}
+
+const worst = issues =>
+  issues.some(issue => issue.level === 'err') ? 'err' : issues.some(issue => issue.level === 'warn') ? 'warn' : null;
+
+const behaviourLabel = (profile, params) =>
+  profile
+    ? (PROFILE_PRESETS[profile.preset]?.label ?? 'Custom')
+    : params.mock_response != null
+      ? 'Fixed reply'
+      : 'Healthy';
+
+function SplitBar({share, skipped}) {
+  if (skipped) return <span className={styles.skipped}>skipped</span>;
+  const pct = share == null ? null : Math.round(share * 100);
+  return (
+    <span className={styles.weight}>
+      <span className={styles.bar}>
+        <span style={{width: `${pct ?? 0}%`}} />
+      </span>
+      <span className={styles.pct}>{pct == null ? '' : `${pct}%`}</span>
+    </span>
+  );
+}
+
+function DeploymentPill({member, issues, share, single, actions}) {
+  const {entry, index, shown} = member;
+  const model = entry.litellm_params?.model;
+  const level = worst(issues);
+  const skipped = issues.some(issue => issue.field === 'order');
+  const pct = share == null || single || skipped ? null : `${Math.round(share * 100)}%`;
+  const count = `${issues.length} issue${issues.length === 1 ? '' : 's'}`;
+  const note = [pct && `${pct} of traffic`, skipped && 'skipped', issues.length && count];
+  return (
+    <button
+      type="button"
+      data-row={shown}
+      className={`${styles.pill} ${skipped ? styles.pillSkipped : ''}`}
+      title={note.filter(Boolean).join(' · ') || undefined}
+      aria-label={`Deployment settings for ${shown}${level ? `, ${count}` : ''}`}
+      onClick={() => actions.openDeployment(index)}>
+      {level && <i className={level === 'err' ? styles.dotErr : styles.dotWarn} aria-hidden="true" />}
+      <b>{shown}</b>
+      <span className={model ? styles.pillModel : styles.pillMissing}>{model || 'no model'}</span>
+    </button>
+  );
+}
+
+function GroupCard({name, members, data, issues, actions}) {
   const {shares: split, metric, ordered} = shares(members);
   const groups = groupsOf(data);
   const fallbacks = fallbackTargets(data, 'fallbacks').find(entry => entry.from === name)?.to ?? [];
-  const target = FALLBACK_MAPS.some(map => fallbackTargets(data, map.key).some(entry => entry.to.includes(name)));
-  const picks = members.length === 1 ? null : ordered ? 'order tiers' : metric ? `picks by ${metric}` : 'even split';
-  const teamOf = ({entry}) => entry?.model_info?.team_id;
-  const publicOf = ({entry}) => entry?.model_info?.team_public_model_name;
-  const team = members.length && members.every(member => teamOf(member) && publicOf(member)) ? members[0] : null;
-  const meta = [
-    `${members.length} deployment${members.length === 1 ? '' : 's'}`,
-    picks,
-    target && 'fallback target',
-    team && `team ${teamOf(team)}'s ${publicOf(team)}`,
-  ];
+  const picks = members.length === 1 ? null : ordered ? 'order tiers' : metric ? `split by ${metric}` : 'even split';
+  const team = teamOf(members);
+  const meta = [`${members.length} deployment${members.length === 1 ? '' : 's'}`, picks, team && `team ${team.team}`];
+  const good = fallbacks.filter(target => groups.has(target));
   return (
     <div className={styles.card}>
       <div className={styles.groupHead}>
         <span className={styles.groupName}>{name || '(no model_name)'}</span>
         <span className={styles.muted}>{meta.filter(Boolean).join(' · ')}</span>
         <span className={styles.spacer} />
-        {fallbacks.some(target => groups.has(target)) && (
-          <span className={styles.hopChip}>
-            falls back to {fallbacks.filter(target => groups.has(target)).join(', ')}
-          </span>
-        )}
-        {fallbacks
-          .filter(target => !groups.has(target))
-          .map(target => (
-            <span key={target} className={styles.badChip}>
-              falls back to {target}
-            </span>
-          ))}
-      </div>
-      <div
-        className={`${styles.row} ${styles.rowHead} ${members.length === 1 ? styles.rowHeadSingle : ''}`}
-        aria-hidden="true">
-        <span>id</span>
-        <span>model</span>
-        <span>weight · share</span>
-        <span>order</span>
-        <span>rpm</span>
-        <span>tpm</span>
-        <span>behaviour</span>
-        <span />
-      </div>
-      {members.map(({entry, index}) => {
-        const id = deploymentValue(entry, 'id') ?? info?.deployments?.[index]?.id;
-        const shown = id == null ? `deployment ${index + 1}` : String(id);
-        const rowIssues = issues.filter(issue => issue.index === index && issue.field);
-        return (
-          <DeploymentRow
-            key={index}
-            entry={entry}
-            index={index}
-            shown={shown}
-            share={split[index]}
-            metric={metric}
-            single={members.length === 1}
-            skipped={rowIssues.some(issue => issue.field === 'order')}
-            issues={rowIssues}
-            profile={id == null ? null : profiles[shown]}
-            open={openRow === shown}
-            timeout={data?.router_settings?.timeout ?? data?.litellm_settings?.request_timeout}
-            actions={actions}
-          />
-        );
-      })}
-      <div className={styles.cardFoot}>
-        <button type="button" className={styles.ghost} onClick={() => actions.add(name)}>
-          + Add deployment to {name}
+        <button
+          type="button"
+          className={styles.settingsButton}
+          aria-label={`Model group settings for ${name || 'unnamed group'}`}
+          onClick={() => actions.openGroup(name)}>
+          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+            <path
+              d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <circle cx="10.5" cy="4.5" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="5.5" cy="11.5" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          Settings
         </button>
       </div>
+      <div className={styles.pills}>
+        {members.map(member => (
+          <DeploymentPill
+            key={member.index}
+            member={member}
+            issues={issues.filter(issue => issue.index === member.index && issue.field)}
+            share={split[member.index]}
+            single={members.length === 1}
+            actions={actions}
+          />
+        ))}
+        <button
+          type="button"
+          className={styles.pillAdd}
+          aria-label={`Add deployment to ${name}`}
+          title={`Add deployment to ${name}`}
+          onClick={() => actions.add(name)}>
+          + Add
+        </button>
+      </div>
+      {(good.length > 0 || fallbacks.length > good.length) && (
+        <div className={styles.groupFoot}>
+          {good.length > 0 && <span className={styles.hopChip}>falls back to {good.join(', ')}</span>}
+          {fallbacks
+            .filter(target => !groups.has(target))
+            .map(target => (
+              <span key={target} className={styles.badChip}>
+                falls back to {target}
+              </span>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function Setting({name, children, note}) {
+function teamOf(members) {
+  const scoped = ({entry}) => entry?.model_info?.team_id && entry?.model_info?.team_public_model_name;
+  const all = members.length && members.every(scoped);
+  if (!all) return null;
+  const info = members[0].entry.model_info;
+  return {team: String(info.team_id), name: String(info.team_public_model_name)};
+}
+
+function DeploymentSettings({member, members, data, issues, profile, timeout, actions, onClose}) {
+  const {entry, index, shown} = member;
+  const params = entry.litellm_params ?? {};
+  const modelInfo = entry.model_info ?? {};
+  const {shares: split, metric} = shares(members);
+  const rowIssues = issues.filter(issue => issue.index === index && issue.field);
+  const skipped = rowIssues.some(issue => issue.field === 'order');
+  const issueFor = field => rowIssues.some(issue => issue.field === field);
+  const tags = Array.isArray(params.tags) ? params.tags.join(', ') : fmt(params.tags);
+  const group = entry.model_name == null ? '' : String(entry.model_name);
+  const num = (label, field, yamlKey, placeholder = 'none') => (
+    <Field label={label} yamlKey={yamlKey}>
+      <NumInput
+        label={label}
+        value={field === 'cooldown_time' ? modelInfo.cooldown_time : deploymentValue(entry, field)}
+        placeholder={placeholder}
+        invalid={issueFor(field)}
+        onCommit={value =>
+          field === 'cooldown_time'
+            ? actions.path(['model_list', index, 'model_info', 'cooldown_time'], value)
+            : actions.field(index, field, value)
+        }
+      />
+    </Field>
+  );
   return (
-    <div className={styles.setting}>
-      <span className={styles.key}>{name}</span>
-      <span className={styles.settingValue}>
-        {children}
-        {note && <span className={styles.muted}>{note}</span>}
-      </span>
-    </div>
+    <ConfigModal
+      cap="Deployment settings"
+      title={shown}
+      sub={`in model group ${group || '(no model_name)'}`}
+      label={`Deployment settings for ${shown}`}
+      onClose={onClose}
+      foot={
+        <>
+          <button type="button" className={styles.danger} onClick={() => actions.remove(index)}>
+            Delete deployment
+          </button>
+          <span className={styles.spacer} />
+          <button type="button" className={styles.primary} onClick={onClose}>
+            Done
+          </button>
+        </>
+      }>
+      {rowIssues.map(issue => (
+        <Issue key={`${issue.field}-${issue.message}`} issue={issue}>
+          {issue.field === 'order' && (
+            <button type="button" className={styles.link} onClick={() => actions.field(index, 'order', issue.next)}>
+              Set order {issue.next}
+            </button>
+          )}
+        </Issue>
+      ))}
+
+      <div className={styles.fields2}>
+        <Field label="id" yamlKey="model_info.id">
+          <input
+            className={`${styles.input} ${issueFor('id') ? styles.inputErr : ''}`}
+            value={fmt(deploymentValue(entry, 'id'))}
+            placeholder={shown ?? 'generated'}
+            onChange={event => actions.field(index, 'id', event.target.value || undefined)}
+          />
+        </Field>
+        <Field label="provider model" yamlKey="litellm_params.model">
+          <input
+            className={`${styles.input} ${issueFor('model') ? styles.inputErr : ''}`}
+            value={fmt(params.model)}
+            placeholder="openai/gpt-4o-mini"
+            onChange={event => actions.field(index, 'model', event.target.value)}
+          />
+        </Field>
+      </div>
+
+      <div className={styles.modalSection}>
+        <div className={styles.sectionHead}>
+          <span className={styles.cap}>Load balancing</span>
+          {members.length > 1 && (
+            <span className={styles.sectionSplit}>
+              <span className={styles.muted}>
+                {skipped ? 'gets no traffic' : `share of ${group}${metric ? `, by ${metric}` : ''}`}
+              </span>
+              <SplitBar share={split[index]} skipped={skipped} />
+            </span>
+          )}
+        </div>
+        <div className={styles.fields4}>
+          {num('weight', 'weight', null)}
+          {num('order', 'order', null)}
+          {num('rpm', 'rpm', null)}
+          {num('tpm', 'tpm', null)}
+        </div>
+      </div>
+
+      <div className={styles.modalSection}>
+        <span className={styles.cap}>Limits</span>
+        <div className={styles.fields2}>
+          {num('timeout', 'timeout', 'litellm_params.timeout', timeout == null ? 'none' : `${timeout} s, router`)}
+          {num('cooldown_time', 'cooldown_time', 'model_info.cooldown_time', 'router default')}
+        </div>
+        <Field label="tags" yamlKey="only matter when a request filters by tag">
+          <DraftInput
+            value={tags}
+            placeholder="none, comma separated"
+            onCommit={raw => {
+              const list = raw
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(Boolean);
+              actions.field(index, 'tags', list.length ? list : undefined);
+            }}
+          />
+        </Field>
+        {modelInfo.team_id != null && (
+          <span className={styles.hint}>
+            Serves team <code>{String(modelInfo.team_id)}</code>
+            {modelInfo.team_public_model_name != null && (
+              <>
+                {' '}
+                when it asks for <code>{String(modelInfo.team_public_model_name)}</code>
+              </>
+            )}
+            , and nobody else. Edit it in the YAML view.
+          </span>
+        )}
+      </div>
+
+      <div className={styles.modalSection}>
+        <div className={styles.sectionHead}>
+          <span className={styles.cap}>In the simulator</span>
+          <span className={styles.mono}>{profile ? profileSummary(profile) : 'no profile, answers at once'}</span>
+        </div>
+        <ProfileEditor
+          value={profile}
+          compact
+          timeout={params.timeout ?? timeout}
+          onChange={next => actions.profile(shown, next)}
+        />
+        <Field label="mock_response" yamlKey="litellm_params.mock_response, a fixed reply or an exception name">
+          <input
+            className={styles.input}
+            value={typeof params.mock_response === 'string' ? params.mock_response : fmt(params.mock_response)}
+            placeholder="none"
+            onChange={event => actions.field(index, 'mock_response', event.target.value || undefined)}
+          />
+        </Field>
+      </div>
+    </ConfigModal>
   );
 }
 
-function SettingsColumn({data, info, issues, error, actions}) {
+function GroupSettings({name, members, data, issues, profiles, actions, onClose}) {
+  const groups = groupsOf(data);
+  const others = [...groups.keys()].filter(group => group && group !== name);
+  const {shares: split, metric, ordered} = shares(members);
+  const team = teamOf(members);
+  const [draftName, setDraftName] = useState(name);
+  const sources = FALLBACK_MAPS.filter(map => map.key !== 'default_fallbacks')
+    .flatMap(map => fallbackTargets(data, map.key).filter(entry => entry.to.includes(name) && entry.from !== name))
+    .map(entry => (entry.from === '*' ? 'any' : entry.from));
+  const defaults = fallbackTargets(data, 'default_fallbacks')[0]?.to ?? [];
+  const aliasMap = settingValue(data, 'model_group_alias');
+  const aliases =
+    aliasMap && typeof aliasMap === 'object'
+      ? Object.entries(aliasMap)
+          .filter(([, target]) => (typeof target === 'string' ? target : target?.model) === name)
+          .map(([alias]) => alias)
+      : [];
+  const rename = () => {
+    const next = draftName.trim();
+    if (next && next !== name) actions.renameGroup(name, next, members);
+    else setDraftName(name);
+  };
+  const how =
+    members.length === 1
+      ? 'One deployment takes every request.'
+      : ordered
+        ? 'The lowest order tier with a healthy deployment takes the traffic, split by weight inside the tier.'
+        : metric
+          ? `simple-shuffle splits requests by ${metric}.`
+          : 'simple-shuffle splits requests evenly, since no deployment sets weight, rpm or tpm.';
+  return (
+    <ConfigModal
+      cap="Model group settings"
+      title={name || '(no model_name)'}
+      sub={[`${members.length} deployment${members.length === 1 ? '' : 's'}`, team && `team ${team.team}`]
+        .filter(Boolean)
+        .join(' · ')}
+      label={`Model group settings for ${name}`}
+      onClose={onClose}
+      foot={
+        <>
+          <button type="button" className={styles.danger} onClick={() => actions.removeGroup(members)}>
+            Delete group
+          </button>
+          <span className={styles.spacer} />
+          <button type="button" className={styles.primary} onClick={onClose}>
+            Done
+          </button>
+        </>
+      }>
+      <Field label="name" yamlKey="model_name on every deployment in the group">
+        <input
+          className={styles.input}
+          value={draftName}
+          onChange={event => setDraftName(event.target.value)}
+          onBlur={rename}
+          onKeyDown={event => event.key === 'Enter' && (event.preventDefault(), rename())}
+        />
+      </Field>
+
+      <div className={styles.modalSection}>
+        <span className={styles.cap}>Deployments</span>
+        <span className={styles.hint}>{how}</span>
+        <div className={styles.splitList}>
+          {members.map(member => {
+            const skipped = issues.some(issue => issue.index === member.index && issue.field === 'order');
+            const level = worst(issues.filter(issue => issue.index === member.index && issue.field));
+            return (
+              <button
+                key={member.index}
+                type="button"
+                className={styles.splitRow}
+                onClick={() => actions.openDeployment(member.index)}>
+                <span className={styles.splitName}>
+                  {level && <i className={level === 'err' ? styles.dotErr : styles.dotWarn} aria-hidden="true" />}
+                  <b>{member.shown}</b>
+                  <span className={styles.muted}>
+                    {behaviourLabel(profiles[member.shown], member.entry.litellm_params ?? {})}
+                  </span>
+                </span>
+                {members.length > 1 ? <SplitBar share={split[member.index]} skipped={skipped} /> : <span />}
+                <span aria-hidden="true" className={styles.muted}>
+                  ›
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div>
+          <button type="button" className={styles.ghost} onClick={() => actions.add(name)}>
+            + Add deployment to {name}
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.modalSection}>
+        <div className={styles.sectionHead}>
+          <span className={`${styles.cap} ${styles.titleHop}`}>Fallbacks</span>
+          <button type="button" className={styles.link} onClick={() => actions.graph('fallbacks')}>
+            edit as graph
+          </button>
+        </div>
+        {FALLBACK_MAPS.filter(map => map.key !== 'default_fallbacks').map(map => {
+          const targets = fallbackTargets(data, map.key).find(entry => entry.from === name)?.to ?? [];
+          const set = next => actions.fallbacks(map.key, name, next);
+          return (
+            <div key={map.key} className={styles.mapRow}>
+              <span className={styles.mapLabel}>{map.label}</span>
+              {targets.map((target, i) => (
+                <span key={target} className={groups.has(target) ? styles.hopChip : styles.badChip}>
+                  {i + 1}. {target}
+                  <button
+                    type="button"
+                    className={styles.chipX}
+                    aria-label={`Remove ${target} from ${map.label} fallbacks`}
+                    onClick={() => set(targets.filter(item => item !== target))}>
+                    ×
+                  </button>
+                </span>
+              ))}
+              {others.some(group => !targets.includes(group)) && (
+                <select
+                  className={styles.addTarget}
+                  value=""
+                  aria-label={`Add a ${map.label} fallback for ${name}`}
+                  onChange={event => event.target.value && set([...targets, event.target.value])}>
+                  <option value="">+ add</option>
+                  {others
+                    .filter(group => !targets.includes(group))
+                    .map(group => (
+                      <option key={group}>{group}</option>
+                    ))}
+                </select>
+              )}
+            </div>
+          );
+        })}
+        {(sources.length > 0 || defaults.length > 0) && (
+          <span className={styles.hint}>
+            {sources.length > 0 && <>Fallback target of {[...new Set(sources)].join(', ')}. </>}
+            {defaults.length > 0 && <>default_fallbacks for every group: {defaults.join(', ')}.</>}
+          </span>
+        )}
+      </div>
+
+      {aliases.length > 0 && (
+        <div className={styles.modalSection}>
+          <span className={styles.cap}>Aliases</span>
+          <div className={styles.chips}>
+            {aliases.map(alias => (
+              <span key={alias} className={styles.chip}>
+                {alias} → {name}
+              </span>
+            ))}
+          </div>
+          <span className={styles.hint}>From model_group_alias. Edit them in the YAML view.</span>
+        </div>
+      )}
+    </ConfigModal>
+  );
+}
+
+const MORE_KEYS = ['retry_after', 'retry_policy', 'disable_cooldowns', 'max_fallbacks'];
+
+function SettingsColumn({data, info, issues, actions}) {
+  const [more, setMore] = useState(false);
   const value = key => settingValue(data, key);
   const effective = info?.settings ?? {};
   const strategy = value('routing_strategy') ?? 'simple-shuffle';
   const strategyIssue = issues.find(issue => issue.setting === 'routing_strategy');
+  const fallbackIssues = issues.filter(issue => issue.map);
   const policy = value('retry_policy');
   const groups = groupsOf(data);
   const seconds = (key, fallback) => `${effective[key] ?? fallback} s`;
@@ -433,38 +682,29 @@ function SettingsColumn({data, info, issues, error, actions}) {
       id: String(team.team_id),
       keys: team.router_settings && typeof team.router_settings === 'object' ? Object.keys(team.router_settings) : [],
     }));
+  const rules = FALLBACK_MAPS.flatMap(map =>
+    fallbackTargets(data, map.key).map(entry => ({...entry, map, from: entry.from === '*' ? 'any' : entry.from})),
+  );
+  const extra = MORE_KEYS.filter(key => value(key) != null).length;
   return (
     <div className={styles.settings}>
       <span className={styles.cap}>Router settings · router_settings</span>
       <div className={styles.card}>
-        <span className={styles.cardTitle}>Strategy</span>
-        <div className={styles.chips}>
-          <button
-            type="button"
-            className={strategy === 'simple-shuffle' ? styles.chipOn : styles.chip}
-            aria-pressed={strategy === 'simple-shuffle'}
-            onClick={() => strategy !== 'simple-shuffle' && actions.setting('routing_strategy', 'simple-shuffle')}>
-            simple-shuffle
-          </button>
-          {PYTHON_STRATEGIES.map(name => (
-            <button
-              key={name}
-              type="button"
-              disabled
-              className={strategy === name ? styles.chipRefused : styles.chipOff}
-              title="runs in Python">
-              {name}
-            </button>
-          ))}
-        </div>
-        <span className={styles.hint}>
-          Greyed strategies still run in Python, so the playground does not offer them yet.
-        </span>
+        <Setting name="routing_strategy">
+          <select
+            className={`${styles.input} ${styles.select}`}
+            aria-label="routing_strategy"
+            value={strategy}
+            onChange={event => actions.setting('routing_strategy', event.target.value)}>
+            <option value="simple-shuffle">simple-shuffle</option>
+            {PYTHON_STRATEGIES.map(name => (
+              <option key={name} value={name} disabled>
+                {name} (Python only)
+              </option>
+            ))}
+          </select>
+        </Setting>
         {strategyIssue && <Issue issue={strategyIssue} />}
-      </div>
-
-      <div className={styles.card}>
-        <span className={styles.cardTitle}>Retries</span>
         <Setting name="num_retries">
           <NumInput
             label="num_retries"
@@ -473,41 +713,6 @@ function SettingsColumn({data, info, issues, error, actions}) {
             onCommit={next => actions.setting('num_retries', next)}
           />
         </Setting>
-        <Setting name="retry_after">
-          <NumInput
-            label="retry_after"
-            value={value('retry_after')}
-            placeholder={seconds('retry_after', 0)}
-            onCommit={next => actions.setting('retry_after', next)}
-          />
-        </Setting>
-        <Setting name="retry_policy" note={policy ? 'retries per error kind' : 'per error kind, off'}>
-          <Toggle
-            label="retry_policy"
-            on={!!policy}
-            onChange={on =>
-              actions.setting(
-                'retry_policy',
-                on ? {RateLimitErrorRetries: Number(value('num_retries') ?? effective.num_retries ?? 0)} : undefined,
-              )
-            }
-          />
-        </Setting>
-        {policy && typeof policy === 'object' && (
-          <div className={styles.policy}>
-            {RETRY_KINDS.map(kind => (
-              <label key={kind} className={styles.policyRow}>
-                <span className={styles.key}>{kind.replace(/Retries$/, '')}</span>
-                <NumInput
-                  label={kind}
-                  value={policy[kind]}
-                  placeholder="num_retries"
-                  onCommit={next => actions.setting('retry_policy', {...policy, [kind]: next})}
-                />
-              </label>
-            ))}
-          </div>
-        )}
         <Setting name="timeout">
           <NumInput
             label="timeout"
@@ -516,13 +721,7 @@ function SettingsColumn({data, info, issues, error, actions}) {
             onCommit={next => actions.setting('timeout', next)}
           />
         </Setting>
-      </div>
-
-      <div className={styles.card}>
-        <span className={`${styles.cardTitle} ${styles.titleWarn}`}>Cooldowns</span>
-        <Setting
-          name="allowed_fails"
-          note={value('allowed_fails') == null ? 'failure ratio per minute' : 'per minute, then a cooldown'}>
+        <Setting name="allowed_fails">
           <NumInput
             label="allowed_fails"
             value={value('allowed_fails')}
@@ -538,84 +737,158 @@ function SettingsColumn({data, info, issues, error, actions}) {
             onCommit={next => actions.setting('cooldown_time', next)}
           />
         </Setting>
-        <Setting name="disable_cooldowns">
-          <Toggle
-            label="disable_cooldowns"
-            on={!!value('disable_cooldowns')}
-            onChange={on => actions.setting('disable_cooldowns', on ? true : undefined)}
-          />
-        </Setting>
-      </div>
-
-      {teams.length > 0 && (
-        <div className={styles.card}>
-          <span className={styles.cardTitle}>Teams</span>
-          {teams.map(team => (
-            <div key={team.id} className={styles.mapRow}>
-              <span className={styles.mapLabel}>{team.id}</span>
-              <span className={styles.muted}>{team.keys.length ? team.keys.join(', ') : 'no router_settings'}</span>
-            </div>
-          ))}
-          <span className={styles.hint}>
-            <code>teams:</code> stands in for the team records a proxy keeps in its database. A request with that{' '}
-            <code>team_id</code> gets the team's router_settings, as the proxy forwards them. Edit them in the YAML view.
-          </span>
-        </div>
-      )}
-
-      <div className={styles.card}>
-        <div className={styles.cardTitleRow}>
-          <span className={`${styles.cardTitle} ${styles.titleHop}`}>Fallbacks</span>
+        <Setting name="fallbacks">
+          {rules.length === 0 && <span className={styles.muted}>none</span>}
+          {rules.length > 0 && (
+            <span className={fallbackIssues.length ? styles.badChip : styles.hopChip}>
+              {rules.length} rule{rules.length === 1 ? '' : 's'}
+            </span>
+          )}
           <button type="button" className={styles.link} onClick={() => actions.graph('fallbacks')}>
-            edit as graph
+            {rules.length ? 'edit' : 'add'}
           </button>
-        </div>
-        {FALLBACK_MAPS.map(map => {
-          const entries = fallbackTargets(data, map.key);
-          const mapIssues = issues.filter(issue => issue.map === map.key);
-          return (
-            <div key={map.key}>
-              <div className={styles.mapRow}>
-                <button type="button" className={styles.mapLabel} onClick={() => actions.graph(map.key)}>
-                  {map.label}
-                </button>
-                {entries.length === 0 && <span className={styles.muted}>none</span>}
-                {entries.map(entry => {
-                  const good = entry.to.filter(target => groups.has(target));
-                  const from = entry.from === '*' ? 'any' : entry.from;
-                  return (
-                    <React.Fragment key={entry.from}>
-                      {good.length > 0 && (
-                        <span className={styles.hopChip}>
-                          {from} → {good.join(', ')}
-                        </span>
-                      )}
-                      {entry.to
-                        .filter(target => !groups.has(target))
-                        .map(target => (
-                          <span key={target} className={styles.badChip}>
-                            {from} → {target}
-                          </span>
-                        ))}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-              {mapIssues.map(issue => (
-                <Issue key={issue.from} issue={issue} />
-              ))}
-            </div>
-          );
-        })}
-        <Setting name="max_fallbacks">
-          <NumInput
-            label="max_fallbacks"
-            value={value('max_fallbacks')}
-            placeholder={fmt(effective.max_fallbacks ?? 5)}
-            onCommit={next => actions.setting('max_fallbacks', next)}
-          />
         </Setting>
+        {fallbackIssues.map(issue => (
+          <Issue key={`${issue.map}-${issue.from}`} issue={issue} />
+        ))}
+        {teams.length > 0 && (
+          <Setting name="teams">
+            <span className={styles.muted}>{teams.map(team => team.id).join(', ')}</span>
+          </Setting>
+        )}
+
+        <button type="button" className={styles.disclosure} aria-expanded={more} onClick={() => setMore(!more)}>
+          <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+            <path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+          More settings
+          {extra > 0 && <span className={styles.muted}>{extra} set</span>}
+        </button>
+
+        {more && (
+          <div className={styles.more}>
+            <span className={styles.cardTitle}>Retries</span>
+            <Setting name="retry_after">
+              <NumInput
+                label="retry_after"
+                value={value('retry_after')}
+                placeholder={seconds('retry_after', 0)}
+                onCommit={next => actions.setting('retry_after', next)}
+              />
+            </Setting>
+            <Setting name="retry_policy" note={policy ? 'per error kind' : 'per error kind, off'}>
+              <Toggle
+                label="retry_policy"
+                on={!!policy}
+                onChange={on =>
+                  actions.setting(
+                    'retry_policy',
+                    on
+                      ? {RateLimitErrorRetries: Number(value('num_retries') ?? effective.num_retries ?? 0)}
+                      : undefined,
+                  )
+                }
+              />
+            </Setting>
+            {policy && typeof policy === 'object' && (
+              <div className={styles.policy}>
+                {RETRY_KINDS.map(kind => (
+                  <label key={kind} className={styles.policyRow}>
+                    <span className={styles.key}>{kind.replace(/Retries$/, '')}</span>
+                    <NumInput
+                      label={kind}
+                      value={policy[kind]}
+                      placeholder="num_retries"
+                      onCommit={next => actions.setting('retry_policy', {...policy, [kind]: next})}
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+
+            <span className={styles.cardTitle}>Cooldowns</span>
+            <Setting name="disable_cooldowns">
+              <Toggle
+                label="disable_cooldowns"
+                on={!!value('disable_cooldowns')}
+                onChange={on => actions.setting('disable_cooldowns', on ? true : undefined)}
+              />
+            </Setting>
+
+            <span className={styles.cardTitle}>Fallbacks</span>
+            {FALLBACK_MAPS.map(map => {
+              const entries = fallbackTargets(data, map.key);
+              return (
+                <div key={map.key} className={styles.mapRow}>
+                  <button type="button" className={styles.mapLabel} onClick={() => actions.graph(map.key)}>
+                    {map.label}
+                  </button>
+                  {entries.length === 0 && <span className={styles.muted}>none</span>}
+                  {entries.map(entry => {
+                    const good = entry.to.filter(target => groups.has(target));
+                    const from = entry.from === '*' ? 'any' : entry.from;
+                    return (
+                      <React.Fragment key={entry.from}>
+                        {good.length > 0 && (
+                          <span className={styles.hopChip}>
+                            {from} → {good.join(', ')}
+                          </span>
+                        )}
+                        {entry.to
+                          .filter(target => !groups.has(target))
+                          .map(target => (
+                            <span key={target} className={styles.badChip}>
+                              {from} → {target}
+                            </span>
+                          ))}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              );
+            })}
+            <Setting name="max_fallbacks">
+              <NumInput
+                label="max_fallbacks"
+                value={value('max_fallbacks')}
+                placeholder={fmt(effective.max_fallbacks ?? 5)}
+                onCommit={next => actions.setting('max_fallbacks', next)}
+              />
+            </Setting>
+
+            {teams.length > 0 && (
+              <>
+                <span className={styles.cardTitle}>Teams</span>
+                {teams.map(team => (
+                  <div key={team.id} className={styles.mapRow}>
+                    <span className={styles.mapLabel}>{team.id}</span>
+                    <span className={styles.muted}>
+                      {team.keys.length ? team.keys.join(', ') : 'no router_settings'}
+                    </span>
+                  </div>
+                ))}
+                <span className={styles.hint}>
+                  <code>teams:</code> stands in for the team records a proxy keeps in its database. A request with
+                  that <code>team_id</code> gets the team's router_settings, as the proxy forwards them. Edit them in
+                  the YAML view.
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Setting({name, children, note}) {
+  return (
+    <div className={styles.setting}>
+      <span className={styles.key}>{name}</span>
+      <span className={styles.settingValue}>
+        {children}
+        {note && <span className={styles.muted}>{note}</span>}
+      </span>
     </div>
   );
 }
@@ -773,6 +1046,7 @@ function AddDrawer({start, data, onCancel, onAdd}) {
   );
 }
 
+
 export default function ConfigEditor({
   text,
   onChange,
@@ -786,7 +1060,7 @@ export default function ConfigEditor({
   const [mode, setMode] = useState('form');
   const [graphMap, setGraphMap] = useState('fallbacks');
   const [edited, setEdited] = useState([]);
-  const [openRow, setOpenRow] = useState(null);
+  const [modal, setModal] = useState(null);
   const [drawer, setDrawer] = useState(null);
   const [showKept, setShowKept] = useState(false);
   const parsed = useMemo(() => parseYaml(text), [text]);
@@ -800,17 +1074,37 @@ export default function ConfigEditor({
   const typed = useRef(false);
   const root = useRef(null);
 
-  // A lane elsewhere on the page asked to edit one deployment's behaviour: open its row.
+  const idAt = index => {
+    const entry = data?.model_list?.[index];
+    const id = deploymentValue(entry, 'id') ?? info?.deployments?.[index]?.id;
+    return id == null ? null : String(id);
+  };
+  // Each group's deployments with the name the form shows for them: the id, else the core's, else a position.
+  const groups = new Map(
+    [...(data ? groupsOf(data) : new Map()).entries()].map(([name, members]) => [
+      name,
+      members.map(member => ({...member, shown: idAt(member.index) ?? `deployment ${member.index + 1}`})),
+    ]),
+  );
+
+  // A lane elsewhere on the page asked to edit one deployment: open its settings.
   useEffect(() => {
     if (!focus?.id) return;
     setMode('form');
-    setOpenRow(focus.id);
-    // Wait for the config pane to unfold, since a folded pane cannot scroll to its rows.
+    const list = data?.model_list ?? [];
+    const index = list.findIndex((entry, i) => {
+      const id = deploymentValue(entry, 'id') ?? info?.deployments?.[i]?.id;
+      return id != null && String(id) === String(focus.id);
+    });
+    if (index >= 0) setModal({kind: 'deployment', index});
+    // Wait for the config pane to unfold, since a folded pane cannot scroll to its pills.
     const timer = setTimeout(() => {
       const row = root.current?.querySelector(`[data-row="${CSS.escape(focus.id)}"]`);
       (row ?? root.current)?.scrollIntoView({behavior: 'smooth', block: 'center'});
     }, 100);
     return () => clearTimeout(timer);
+    // Only a new ask opens the dialog, not every config edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
   const view = parsed.error ? 'yaml' : mode;
 
@@ -825,10 +1119,17 @@ export default function ConfigEditor({
   for (const line of edited) marks[line] = 'edit';
   if (parsed.error) marks[parsed.error.line] = 'err';
 
-  const idAt = index => {
-    const entry = data?.model_list?.[index];
-    const id = deploymentValue(entry, 'id') ?? info?.deployments?.[index]?.id;
-    return id == null ? null : String(id);
+  const dropProfiles = indices => {
+    const next = {...profiles};
+    let changed = false;
+    for (const index of indices) {
+      const id = idAt(index);
+      if (id != null && next[id]) {
+        delete next[id];
+        changed = true;
+      }
+    }
+    if (changed) onProfilesChange(next);
   };
 
   const actions = {
@@ -844,26 +1145,53 @@ export default function ConfigEditor({
       }
       patch(setIn(text, deploymentPath(entry, index, field), value));
     },
+    path: (path, value) => patch(setIn(text, path, value)),
     remove: index => {
-      const id = idAt(index);
-      if (id != null && profiles[id]) {
-        const next = {...profiles};
-        delete next[id];
-        onProfilesChange(next);
-      }
-      setOpenRow(null);
+      dropProfiles([index]);
+      setModal(null);
       patch(setIn(text, ['model_list', index], undefined));
     },
-    toggle: key => setOpenRow(openRow === key ? null : key),
+    removeGroup: members => {
+      dropProfiles(members.map(member => member.index));
+      setModal(null);
+      const indices = members.map(member => member.index).sort((a, b) => b - a);
+      patch(indices.reduce((next, index) => setIn(next, ['model_list', index], undefined), text));
+    },
+    // Renames the group on each deployment and wherever a fallback rule names it.
+    renameGroup: (from, to, members) => {
+      setModal({kind: 'group', name: to});
+      let next = members.reduce((acc, member) => setIn(acc, ['model_list', member.index, 'model_name'], to), text);
+      for (const map of FALLBACK_MAPS) {
+        const now = parseYaml(next).data;
+        for (const entry of fallbackTargets(now, map.key)) {
+          const targets = entry.to.map(target => (target === from ? to : target));
+          if (targets.some((target, i) => target !== entry.to[i])) {
+            next = setFallbacks(next, now, map.key, entry.from, targets);
+          }
+          if (entry.from === from && map.key !== 'default_fallbacks') {
+            const path = settingPaths(now, map.key).at(-1);
+            next = setIn(next, [...path, entry.index], {[to]: targets});
+          }
+        }
+      }
+      patch(next);
+    },
+    openDeployment: index => setModal({kind: 'deployment', index}),
+    openGroup: name => setModal({kind: 'group', name}),
     profile: (id, profile) => {
       const next = {...profiles};
       if (profile) next[id] = profile;
       else delete next[id];
       onProfilesChange(next);
     },
-    add: group => setDrawer({group}),
+    add: group => {
+      setModal(null);
+      setDrawer({group});
+    },
     setting: (key, value) => patch(setSetting(text, data, key, value)),
+    fallbacks: (key, from, targets) => patch(setFallbacks(text, data, key, from, targets)),
     graph: key => {
+      setModal(null);
       setGraphMap(key);
       setMode('graph');
     },
@@ -875,7 +1203,16 @@ export default function ConfigEditor({
     setDrawer(null);
   };
 
-  const groups = data ? groupsOf(data) : new Map();
+  const closeModal = () => setModal(null);
+  const groupOfIndex = index => [...groups.values()].find(members => members.some(member => member.index === index));
+  const modalMembers =
+    view !== 'form' || !modal
+      ? null
+      : modal.kind === 'deployment'
+        ? groupOfIndex(modal.index)
+        : groups.get(modal.name);
+  const modalMember = modal?.kind === 'deployment' ? modalMembers?.find(member => member.index === modal.index) : null;
+  const routerTimeout = data?.router_settings?.timeout ?? data?.litellm_settings?.request_timeout;
   const showError = error && !parsed.error && !(view !== 'yaml' && issues.some(issue => issue.setting));
 
   return (
@@ -968,11 +1305,8 @@ export default function ConfigEditor({
                 key={name}
                 name={name}
                 members={members}
-                info={info}
                 data={data}
                 issues={issues.filter(issue => issue.index != null && members.some(m => m.index === issue.index))}
-                profiles={profiles}
-                openRow={openRow}
                 actions={actions}
               />
             ))}
@@ -980,13 +1314,36 @@ export default function ConfigEditor({
               <button type="button" className={styles.ghost} onClick={() => setDrawer({group: '', newGroup: true})}>
                 + Add model group
               </button>
-              <span className={styles.hint}>
-                weights fill in from rpm, then tpm, when no deployment in the group sets one, matching simple-shuffle
-              </span>
             </div>
           </div>
-          <SettingsColumn data={data} info={info} issues={issues} error={error} actions={actions} />
+          <SettingsColumn data={data} info={info} issues={issues} actions={actions} />
         </div>
+      )}
+
+      {modalMember && (
+        <DeploymentSettings
+          key={`d-${modal.index}`}
+          member={modalMember}
+          members={modalMembers}
+          data={data}
+          issues={issues}
+          profile={profiles[modalMember.shown] ?? null}
+          timeout={routerTimeout}
+          actions={actions}
+          onClose={closeModal}
+        />
+      )}
+      {modal?.kind === 'group' && modalMembers && (
+        <GroupSettings
+          key={`g-${modal.name}`}
+          name={modal.name}
+          members={modalMembers}
+          data={data}
+          issues={issues}
+          profiles={profiles}
+          actions={actions}
+          onClose={closeModal}
+        />
       )}
 
       {drawer && data && <AddDrawer start={drawer} data={data} onCancel={() => setDrawer(null)} onAdd={addEntry} />}

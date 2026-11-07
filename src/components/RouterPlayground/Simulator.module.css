@@ -18,6 +18,15 @@
   --sim-line-blue: #2563eb;
   --sim-note: #fff8e1;
   --sim-note-line: #e9d9a6;
+  --sim-kind-0: #2a78d6;
+  --sim-kind-1: #eb6834;
+  --sim-kind-2: #1baf7a;
+  --sim-kind-3: #eda100;
+  --sim-kind-4: #e87ba4;
+  --sim-kind-5: #008300;
+  --sim-kind-6: #6250d6;
+  --sim-kind-7: #e34948;
+  --sim-kind-other: #8a8a85;
   display: block;
   min-width: 0;
   margin-bottom: 1rem;
@@ -41,6 +50,15 @@
   --sim-line-blue: #60a5fa;
   --sim-note: rgba(250, 204, 21, 0.08);
   --sim-note-line: rgba(250, 204, 21, 0.3);
+  --sim-kind-0: #3987e5;
+  --sim-kind-1: #d95926;
+  --sim-kind-2: #199e70;
+  --sim-kind-3: #c98500;
+  --sim-kind-4: #d55181;
+  --sim-kind-5: #008300;
+  --sim-kind-6: #9085e9;
+  --sim-kind-7: #e66767;
+  --sim-kind-other: #8a8a85;
 }
 
 .panelHead {
@@ -787,19 +805,24 @@
   stroke-linejoin: round;
 }
 
-.bar,
-.barFallback {
-  fill: var(--sim-served);
+.seg {
   cursor: pointer;
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 0.75;
 }
 
-.barFallback {
-  fill: var(--sim-fallback);
+.seg:hover {
+  filter: brightness(0.85);
 }
 
-.bar:hover,
-.barFallback:hover {
-  fill: var(--sim-line-blue);
+/* Kinds left out of the legend's pick stay in place, faded, so the stack keeps its height. */
+.dim {
+  opacity: 0.18;
+}
+
+.fallbackStripe {
+  stroke: var(--ifm-background-surface-color);
+  stroke-width: 1.6;
 }
 
 .tick {
@@ -808,17 +831,23 @@
 
 .failTick {
   stroke: var(--sim-fail);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+.failCross {
+  fill: none;
   stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .hit {
-  stroke: transparent;
-  stroke-width: 8;
+  fill: transparent;
 }
 
 .tick:hover .failTick {
-  stroke: var(--sim-bad);
-  stroke-width: 3;
+  opacity: 1;
+  stroke-width: 2;
 }
 
 .playhead {
@@ -889,17 +918,27 @@
 }
 
 .keyServed {
-  background: var(--sim-served);
+  background: var(--sim-kind-other);
 }
 
 .keyFallback {
-  background: var(--sim-fallback);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--sim-kind-other) 0 2px,
+    var(--ifm-background-surface-color) 2px 3.4px
+  );
 }
 
-.keyFail {
-  width: 2px !important;
-  height: 12px !important;
-  background: var(--sim-fail);
+.keyCross path {
+  fill: none;
+  stroke: var(--ifm-font-color-base);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.underHint {
+  color: var(--sim-muted);
+  font-size: 0.76rem;
 }
 
 .keyCool {
@@ -973,6 +1012,39 @@
 
 .picked {
   margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem 0.25rem;
+  border: 1px solid var(--sim-line);
+  border-radius: 8px;
+}
+
+.pickedHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.pickedKind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.76rem;
+}
+
+.panel .pickedClose {
+  height: 26px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--sim-line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font-size: 0.74rem;
+}
+
+.panel .pickedClose:hover {
+  border-color: var(--ifm-color-primary);
 }
 
 /* Scenario and compare */
@@ -1516,4 +1588,29 @@
 
 .affinityWarn b {
   color: #b45309;
+}
+
+.mixName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.kindCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.kindRow {
+  cursor: pointer;
+}
+
+.kindRow:hover td {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.dimRow {
+  opacity: 0.4;
 }

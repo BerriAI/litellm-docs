@@ -14,6 +14,7 @@ import {
   newKind,
 } from './requests';
 import Scenario from './Scenario';
+import {KindLegend, KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
 import styles from './Simulator.module.css';
@@ -73,6 +74,7 @@ function emptyStore() {
     surge: null,
     lastFallback: -Infinity,
     servedBy: new Map(),
+    kindOf: new Map(),
     pending: new Map(),
     totals: {requests: 0, ok: 0, attempts: 0, fallbacks: 0, maxInFlight: 0, inFlight: 0},
     durations: [],
@@ -116,7 +118,7 @@ function binOf(store, id, t) {
   const index = Math.floor(t / BIN);
   let bin = lane.get(index);
   if (!bin) {
-    bin = {served: 0, viaFallback: 0, ids: [], failed: [], latency: []};
+    bin = {served: 0, viaFallback: 0, ids: [], failed: [], latency: [], kinds: {}};
     lane.set(index, bin);
   }
   return bin;
@@ -132,13 +134,16 @@ function absorb(store, frame, dt) {
     totals.fallbacks += request.fallbacks ?? 0;
     if (request.ok) totals.ok += 1;
     absorbMix(store, request);
+    const label = request.kind ?? 'request';
+    store.kindOf.set(request.id, label);
+    if (store.kindOf.size > 4000) store.kindOf.delete(store.kindOf.keys().next().value);
     store.durations.push(request.end - request.start);
     if (store.durations.length > 2000) store.durations.splice(0, store.durations.length - 2000);
     for (const attempt of request.attempts ?? []) {
       const bin = binOf(store, attempt.deployment, attempt.end);
       bin.latency.push(attempt.end - attempt.start);
       if (attempt.answer === '200 OK' || attempt.status === 200) continue;
-      bin.failed.push({t: attempt.end, request: request.id});
+      bin.failed.push({t: attempt.end, request: request.id, kind: label});
     }
     if (store.pending.has(request.id)) {
       store.pending.get(request.id).lane = request.deployment;
@@ -152,6 +157,10 @@ function absorb(store, frame, dt) {
       if (request.fallbacks > 0) bin.viaFallback += 1;
       bin.ids.push(request.id);
       if (bin.ids.length > 40) bin.ids.shift();
+      const slice = (bin.kinds[label] ??= {served: 0, fallback: 0, last: null});
+      slice.served += 1;
+      if (request.fallbacks > 0) slice.fallback += 1;
+      slice.last = request.id;
     }
   }
   store.totals.inFlight = frame.in_flight;
@@ -237,7 +246,7 @@ function markText(mark, store, info) {
     : `Requests start falling back ${hop}.`;
 }
 
-function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, onMark}) {
+function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncident, onSelect, onMark}) {
   const [ref, width] = useWidth(1080);
   const plot = Math.max(200, width - LABEL);
   const now = store.now;
@@ -260,6 +269,12 @@ function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, o
     for (const [index, bin] of lane) if (index >= firstBin && index <= lastBin) peak = Math.max(peak, bin.served);
   }
   const barWidth = Math.max(2, (BIN / WINDOW) * plot - 3);
+  const unit = (LANE - HALF - 14) / peak;
+  const order = [...slots.keys()];
+  const stackOf = bin => [
+    ...order.filter(label => bin.kinds[label]),
+    ...Object.keys(bin.kinds).filter(label => !slots.has(label)),
+  ];
 
   return (
     <div ref={ref} className={styles.lanes}>
@@ -267,6 +282,9 @@ function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, o
         <defs>
           <pattern id="sim-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2="8" className={styles.hatch} />
+          </pattern>
+          <pattern id="sim-fallback" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="4" className={styles.fallbackStripe} />
           </pattern>
         </defs>
       </svg>
@@ -310,15 +328,16 @@ function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, o
           path += `${pen ? 'L' : 'M'}${x((index + 0.5) * BIN).toFixed(1)} ${latY(p95).toFixed(1)} `;
           previous = index;
         }
+        // One mark per pixel; with kinds picked, theirs win the pixel over the dimmed ones.
         const ticksFailed = [];
         const seen = new Set();
-        for (const [, bin] of bins) {
-          for (const failure of bin.failed) {
-            const px = Math.round(x(failure.t));
-            if (failure.t > now || seen.has(px)) continue;
-            seen.add(px);
-            ticksFailed.push({...failure, px});
-          }
+        const failures = bins.flatMap(([, bin]) => bin.failed);
+        if (active.size) failures.sort((a, b) => kindActive(active, b.kind) - kindActive(active, a.kind));
+        for (const failure of failures) {
+          const px = Math.round(x(failure.t));
+          if (failure.t > now || seen.has(px)) continue;
+          seen.add(px);
+          ticksFailed.push({...failure, px});
         }
         const laneTimeout = timeouts[deployment.id];
         return (
@@ -411,28 +430,51 @@ function Lanes({store, info, profiles, timeouts, onPick, onIncident, onSelect, o
               <path d={path} className={styles.latLine} />
               {bins.map(([index, bin]) => {
                 if (!bin.served) return null;
-                const h = ((LANE - HALF - 14) * bin.served) / peak;
+                const bx = x(index * BIN) + 1.5;
+                let top = LANE - 8;
+                // A stack per bin, one segment per kind; the part served by a fallback is striped.
                 return (
-                  <rect
-                    key={index}
-                    x={x(index * BIN) + 1.5}
-                    y={LANE - 8 - h}
-                    width={barWidth}
-                    height={h}
-                    className={bin.viaFallback > bin.served / 2 ? styles.barFallback : styles.bar}
-                    onClick={() => onPick(bin.ids[bin.ids.length - 1])}>
-                    <title>
-                      {bin.served} served at {index * BIN} to {(index + 1) * BIN} s
-                      {bin.viaFallback ? `, ${bin.viaFallback} by fallback` : ''}; click to open one
-                    </title>
-                  </rect>
+                  <g key={index}>
+                    {stackOf(bin).map(label => {
+                      const slice = bin.kinds[label];
+                      const h = slice.served * unit;
+                      const striped = slice.fallback * unit;
+                      top -= h;
+                      return (
+                        <g
+                          key={label}
+                          className={kindActive(active, label) ? styles.seg : `${styles.seg} ${styles.dim}`}
+                          style={{fill: kindColour(slots.get(label))}}
+                          onClick={() => onPick(slice.last)}>
+                          <rect x={bx} y={top} width={barWidth} height={h} />
+                          {striped > 0 && (
+                            <rect x={bx} y={top} width={barWidth} height={striped} fill="url(#sim-fallback)" />
+                          )}
+                          <title>
+                            {slice.served} {label} served at {index * BIN} to {(index + 1) * BIN} s
+                            {slice.fallback ? `, ${slice.fallback} by fallback` : ''}; click to open one
+                          </title>
+                        </g>
+                      );
+                    })}
+                  </g>
                 );
               })}
               {ticksFailed.map(failure => (
-                <g key={failure.px} className={styles.tick} onClick={() => onPick(failure.request)}>
-                  <line x1={failure.px} x2={failure.px} y1={HALF + 2} y2={LANE - 8} className={styles.failTick} />
-                  <line x1={failure.px} x2={failure.px} y1={HALF + 2} y2={LANE - 8} className={styles.hit} />
-                  <title>failed attempt at {failure.t.toFixed(1)} s; click to open its request</title>
+                <g
+                  key={failure.px}
+                  className={kindActive(active, failure.kind) ? styles.tick : `${styles.tick} ${styles.dim}`}
+                  onClick={() => onPick(failure.request)}>
+                  <line x1={failure.px} x2={failure.px} y1={HALF + 10} y2={LANE - 8} className={styles.failTick} />
+                  <path
+                    d={`M${failure.px - 3.5} ${HALF + 3.5}l7 7m0 -7l-7 7`}
+                    className={styles.failCross}
+                    style={{stroke: kindColour(slots.get(failure.kind))}}
+                  />
+                  <rect x={failure.px - 5} y={HALF + 1} width={10} height={LANE - HALF - 9} className={styles.hit} />
+                  <title>
+                    failed {failure.kind} attempt at {failure.t.toFixed(1)} s; click to open its request
+                  </title>
                 </g>
               ))}
               <text x={6} y={HALF - 4} className={styles.laneHint}>
@@ -507,7 +549,7 @@ function NumberField({value, onChange, placeholder, min = 0, step = 1, label, wi
 
 // The kinds of request the run sends, each with its share of arrivals and the fields the router
 // core reads. Sessions draw a session id per request from a pool of that size.
-function RequestMix({kinds, onKinds, model, info}) {
+function RequestMix({kinds, onKinds, model, info, slots}) {
   const groups = [...new Set(info.deployments.map(item => item.model_name))];
   const total = kinds.reduce((sum, kind) => sum + (Number(kind.share) || 0), 0) || 1;
   const change = (key, fields) => onKinds(kinds.map(kind => (kind.key === key ? {...kind, ...fields} : kind)));
@@ -532,12 +574,15 @@ function RequestMix({kinds, onKinds, model, info}) {
           const metadata = metadataOf(kind);
           return (
             <React.Fragment key={kind.key}>
-              <input
-                className={styles.mixText}
-                aria-label="Kind name"
-                value={kind.label}
-                onChange={event => change(kind.key, {label: event.target.value.replace(/\s+/g, '-')})}
-              />
+              <span className={styles.mixName}>
+                <KindSwatch slot={slots.get(kind.label || 'request')} />
+                <input
+                  className={styles.mixText}
+                  aria-label="Kind name"
+                  value={kind.label}
+                  onChange={event => change(kind.key, {label: event.target.value.replace(/\s+/g, '-')})}
+                />
+              </span>
               <span className={styles.mixShare}>
                 <NumberField
                   label={`Share of ${kind.label}`}
@@ -650,8 +695,10 @@ function RequestMix({kinds, onKinds, model, info}) {
   );
 }
 
-function MixResults({store}) {
-  const kinds = Object.entries(store.kinds);
+function MixResults({store, slots, active, onToggle}) {
+  const order = [...slots.keys()];
+  const rank = label => (order.includes(label) ? order.indexOf(label) : order.length);
+  const kinds = Object.entries(store.kinds).sort((a, b) => rank(a[0]) - rank(b[0]));
   const sessions = [...store.sessions.entries()].sort((a, b) => b[1].requests - a[1].requests).slice(0, 8);
   const moved = [...store.sessions.values()].filter(session => session.moves > 0).length;
   if (!kinds.length) return <p className={styles.muted}>Play the run to see each kind of request and session.</p>;
@@ -672,8 +719,17 @@ function MixResults({store}) {
           {kinds.map(([label, kind]) => {
             const p95 = quantile(kind.durations, 0.95);
             return (
-              <tr key={label}>
-                <td className={styles.mono}>{label}</td>
+              <tr
+                key={label}
+                className={kindActive(active, label) ? styles.kindRow : `${styles.kindRow} ${styles.dimRow}`}
+                onClick={() => onToggle(label)}
+                title="Click to highlight this kind in the lanes">
+                <td className={styles.mono}>
+                  <span className={styles.kindCell}>
+                    <KindSwatch slot={slots.get(label)} />
+                    {label}
+                  </span>
+                </td>
                 <td>{kind.requests}</td>
                 <td>{((100 * kind.ok) / kind.requests).toFixed(1)}%</td>
                 <td>{p95 == null ? '' : secs(p95)}</td>
@@ -746,6 +802,16 @@ function LiveRun({
   const [picked, setPicked] = useState(null);
   const [error, setError] = useState(null);
   const [generation, setGeneration] = useState(0);
+  const [picks, setPicks] = useState(() => new Set());
+  const slots = useKindSlots(kinds);
+  const active = new Set([...picks].filter(label => slots.has(label)));
+  const toggleKind = label =>
+    setPicks(previous => {
+      const next = new Set([...previous].filter(item => slots.has(item)));
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
   const session = useRef(null);
   const store = useRef(emptyStore());
   const latest = useRef({profiles, rate, speed, info, kinds});
@@ -881,7 +947,8 @@ function LiveRun({
   const pick = id => {
     if (id == null || !session.current) return;
     const run = session.current.trace(id);
-    setPicked(run ? {id, run} : {id, missing: true});
+    const kind = store.current.kindOf.get(id) ?? null;
+    setPicked(run ? {id, run, kind} : {id, kind, missing: true});
   };
 
   const data = store.current;
@@ -937,11 +1004,12 @@ function LiveRun({
       </div>
 
       <Panel
-        id="sim-requests"
+        id="sim-request-mix"
         sub
-        title="Requests"
+        defaultOpen={false}
+        title="Request mix"
         folded={`${kinds.length} kind${kinds.length === 1 ? '' : 's'}: ${kinds.map(kind => kind.label).join(', ')}`}>
-        <RequestMix kinds={kinds} onKinds={onKinds} model={model} info={info} />
+        <RequestMix kinds={kinds} onKinds={onKinds} model={model} info={info} slots={slots} />
       </Panel>
 
       <Kpis store={data} timeout={groupTimeout} />
@@ -954,11 +1022,20 @@ function LiveRun({
           </p>
         ))}
       {error && <p className={styles.error}>{error}</p>}
+      <KindLegend
+        kinds={kinds}
+        slots={slots}
+        active={active}
+        onToggle={toggleKind}
+        onClear={() => setPicks(new Set())}
+      />
       <Lanes
         store={data}
         info={info}
         profiles={profiles}
         timeouts={timeouts}
+        slots={slots}
+        active={active}
         onPick={pick}
         onIncident={(id, kind) => addIncident(id, kind)}
         onSelect={onSelect}
@@ -968,13 +1045,16 @@ function LiveRun({
       <div className={styles.under}>
         <div className={styles.legend}>
           <span>
-            <i className={styles.keyServed} /> served
+            <i className={styles.keyServed} /> served{slots.size > 1 ? ', coloured by kind' : ''}
           </span>
           <span>
             <i className={styles.keyFallback} /> served by fallback
           </span>
           <span>
-            <i className={styles.keyFail} /> failed attempt
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" className={styles.keyCross}>
+              <path d="M1.5 1.5l7 7m0 -7l-7 7" />
+            </svg>{' '}
+            failed attempt
           </span>
           <span>
             <i className={styles.keyCool} /> cooldown
@@ -986,14 +1066,20 @@ function LiveRun({
             <i className={styles.keyLatency} /> p95 latency
           </span>
         </div>
-        <div className={styles.note}>
-          Click any bar or tick to open that request in the state diagram. Pausing freezes simulated time, so you can
-          step through the call that just failed and then resume.
-        </div>
+        <span className={styles.underHint}>Click a bar or a cross to open that request below.</span>
       </div>
 
-      <Panel id="sim-by-kind" sub title="By kind and session">
-        <MixResults store={data} />
+      {picked && (
+        <SimPicked picked={picked} slots={slots} model={model} info={info} onClose={() => setPicked(null)} />
+      )}
+
+      <Panel
+        id="sim-by-kind"
+        sub
+        defaultOpen={false}
+        title="By kind and session"
+        folded={Object.keys(data.kinds).length ? `${Object.keys(data.kinds).length} kinds so far` : null}>
+        <MixResults store={data} slots={slots} active={active} onToggle={toggleKind} />
       </Panel>
 
       {marks.length > 0 && (
@@ -1014,28 +1100,46 @@ function LiveRun({
         </div>
         </Panel>
       )}
-
-      {picked?.missing && (
-        <p className={styles.muted}>
-          Request {picked.id} is older than the traces the run keeps, so it cannot be opened.
-        </p>
-      )}
-      {picked?.run && (
-        <div className={styles.picked}>
-          <RunCard
-            key={picked.id}
-            run={{
-              kind: 'single',
-              n: `${picked.id} at ${clock(picked.run.trace[0]?.t ?? 0)}`,
-              model,
-              ...picked.run,
-              model: picked.run.model ?? model,
-            }}
-            info={info}
-          />
-        </div>
-      )}
     </>
+  );
+}
+
+// The request picked in the lanes, opened right under them: its trace and state diagram, until closed.
+function SimPicked({picked, slots, model, info, onClose}) {
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({block: 'nearest', behavior: 'smooth'});
+  }, [picked.id]);
+  return (
+    <div ref={ref} className={styles.picked} aria-label={`Request ${picked.id}`} role="region">
+      <div className={styles.pickedHead}>
+        <span className={styles.cap}>Request {picked.id}</span>
+        {picked.kind && (
+          <span className={styles.pickedKind}>
+            <KindSwatch slot={slots.get(picked.kind)} />
+            {picked.kind}
+          </span>
+        )}
+        <span className={styles.spacer} />
+        <button type="button" className={styles.pickedClose} onClick={onClose} aria-label="Close this request">
+          Close
+        </button>
+      </div>
+      {picked.missing ? (
+        <p className={styles.muted}>This request is older than the traces the run keeps, so it cannot be opened.</p>
+      ) : (
+        <RunCard
+          key={picked.id}
+          run={{
+            kind: 'single',
+            n: `${picked.id} at ${clock(picked.run.trace[0]?.t ?? 0)}`,
+            ...picked.run,
+            model: picked.run.model ?? model,
+          }}
+          info={info}
+        />
+      )}
+    </div>
   );
 }
 

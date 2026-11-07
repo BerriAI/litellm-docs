@@ -64,6 +64,7 @@ export function RunCard({run, info}) {
           <strong>
             {run.count} requests for <code>{run.model}</code>
           </strong>
+          {run.responses && <span className={styles.runMeta}>providers: {run.responses}</span>}
           <span className={styles.runMeta}>
             {run.failed} failed, {run.retries} retries, {run.fallbacks} fallbacks
           </span>
@@ -109,6 +110,11 @@ export function RunCard({run, info}) {
           {run.request && (
             <p className={styles.requestBody}>
               request <code>{JSON.stringify(run.request)}</code>
+            </p>
+          )}
+          {run.responses && (
+            <p className={styles.requestBody}>
+              providers for this request: <code>{run.responses}</code>
             </p>
           )}
           <div className={styles.viewTabs} role="tablist">

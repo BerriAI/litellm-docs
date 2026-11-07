@@ -433,7 +433,6 @@ button.chipOn {
 .groups .card {
   gap: 0;
   padding: 0;
-  container-type: inline-size;
 }
 
 .cardTitle {
@@ -461,59 +460,15 @@ button.chipOn {
 .groupHead {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.7rem 0.85rem 0.35rem;
+  align-items: center;
+  gap: 0.2rem 0.6rem;
+  padding: 0.55rem 0.6rem 0.2rem 0.85rem;
 }
 
 .groupName {
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.9rem;
   font-weight: 600;
-}
-
-.row {
-  display: grid;
-  grid-template-columns:
-    minmax(96px, 1.1fr) minmax(110px, 1.2fr) minmax(130px, 1.3fr) repeat(3, minmax(48px, 54px))
-    112px 22px;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.45rem 0.85rem;
-  border-top: 1px solid var(--ce-soft-line);
-}
-
-.rowHead {
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-  border-top: none;
-  color: var(--ce-muted);
-  font-size: 0.7rem;
-}
-
-.rowOpen,
-.behaviour {
-  background: var(--ce-pick-fill);
-}
-
-.rowSkipped {
-  background: var(--ce-warn-fill);
-}
-
-.idInput {
-  border-color: transparent;
-  background: transparent;
-  font-weight: 600;
-}
-
-.idInput:hover {
-  border-color: var(--ce-line);
-}
-
-.behaviourChip {
-  justify-content: space-between;
-  overflow: hidden;
-  font-size: 0.7rem;
 }
 
 .weight {
@@ -564,71 +519,11 @@ button.chipOn {
   font-weight: 600;
 }
 
-.behaviour {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.3rem 0.85rem 0.7rem;
-}
-
-.behaviourHead {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: baseline;
-}
-
-.inlineField {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  max-width: 420px;
-}
-
-.rowIssue {
-  padding: 0 0.85rem 0.6rem;
-  background: var(--ce-warn-fill);
-}
-
-.rowIssue:has(.err) {
-  background: transparent;
-  padding-top: 0.45rem;
-}
-
-.cardFoot {
-  padding: 0.5rem 0.85rem 0.75rem;
-  border-top: 1px solid var(--ce-soft-line);
-}
-
 .addGroup {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
-}
-
-/* Narrow cards put the row on two lines: id, model and share, then order, rpm, tpm and behaviour. */
-@container (max-width: 640px) {
-  .row {
-    grid-template-columns: repeat(3, 56px) minmax(0, 1fr) minmax(0, 1fr) 22px;
-    row-gap: 0.35rem;
-  }
-
-  .row > :nth-child(1) {
-    grid-column: span 3;
-  }
-
-  .row > :nth-child(3) {
-    grid-column: span 2;
-  }
-
-  .row > :nth-child(7) {
-    justify-self: start;
-  }
-
-  .row > :nth-child(8) {
-    grid-column: 6;
-  }
 }
 
 /* Settings */
@@ -1217,10 +1112,6 @@ button.chipOn {
   padding-top: 0.5rem;
 }
 
-.rowHeadSingle {
-  display: none;
-}
-
 /* The autocomplete menu under the caret in the YAML view. */
 .complete {
   position: absolute;
@@ -1254,4 +1145,372 @@ button.chipOn {
 .completeOn {
   background: var(--ce-pick-fill);
   color: var(--ce-pick);
+}
+
+/* Deployment pills on a group card; everything else about a deployment is in its dialog. */
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem 0.75rem;
+}
+
+.pill,
+.pillAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ce-line);
+  border-radius: 999px;
+  background: var(--ce-field);
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.pill:hover,
+.pill:focus-visible {
+  border-color: var(--ce-pick);
+  background: var(--ce-pick-fill);
+  outline: none;
+}
+
+.pill b {
+  overflow: hidden;
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillModel,
+.pillMissing {
+  overflow: hidden;
+  color: var(--ce-muted);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillMissing {
+  color: var(--ce-fail);
+}
+
+.pillSkipped {
+  border-style: dashed;
+  border-color: var(--ce-warn);
+}
+
+.pillSkipped b {
+  color: var(--ce-muted);
+}
+
+.pillAdd {
+  border-style: dashed;
+  border-color: var(--ifm-color-emphasis-400);
+  background: transparent;
+  color: var(--ce-muted);
+}
+
+.pillAdd:hover {
+  border-color: var(--ce-pick);
+  color: var(--ce-pick);
+}
+
+.dotWarn,
+.dotErr {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ce-warn);
+}
+
+.dotErr {
+  background: var(--ce-fail);
+}
+
+.settingsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 26px;
+  padding: 0 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ce-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.settingsButton:hover,
+.settingsButton:focus-visible {
+  border-color: var(--ce-line);
+  color: var(--ifm-font-color-base);
+  outline: none;
+}
+
+.groupFoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0 0.85rem 0.7rem;
+}
+
+/* Router settings: the few that matter on top, the rest behind a disclosure. */
+
+.select {
+  width: auto !important;
+  max-width: 100%;
+  padding-right: 0.3rem;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0 0;
+  border: none;
+  border-top: 1px solid var(--ce-soft-line);
+  background: none;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.disclosure svg {
+  transition: transform 0.12s;
+}
+
+.disclosure[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+
+.more {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.3rem;
+}
+
+.more .cardTitle {
+  margin-top: 0.4rem;
+  color: var(--ce-muted);
+}
+
+/* Settings dialogs */
+
+.modalScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 15, 20, 0.4);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: calc(100vh - 32px);
+  border: 1px solid var(--ce-line);
+  border-radius: 8px;
+  background: var(--ce-panel);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  font-size: 0.82rem;
+}
+
+.modal:focus {
+  outline: none;
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--ce-soft-line);
+}
+
+.modalTitles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.modalTitle {
+  overflow: hidden;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem 1rem;
+  overflow-y: auto;
+}
+
+.modalFoot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--ce-soft-line);
+}
+
+.modalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--ce-soft-line);
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem 0.75rem;
+}
+
+.sectionSplit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.sectionSplit .weight {
+  flex: 1;
+  min-width: 90px;
+}
+
+.danger {
+  height: 34px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--ce-fail);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ce-fail);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.danger:hover {
+  background: var(--ce-fail-fill);
+}
+
+.splitList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ce-soft-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.splitRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 160px) 12px;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  border-top: 1px solid var(--ce-soft-line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.splitRow:first-child {
+  border-top: none;
+}
+
+.splitRow:hover,
+.splitRow:focus-visible {
+  background: var(--ce-pick-fill);
+  outline: none;
+}
+
+.splitName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.splitName b {
+  overflow: hidden;
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipX {
+  margin: 0 -0.25rem 0 0.1rem;
+  padding: 0 0.15rem;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.chipX:hover {
+  opacity: 1;
+}
+
+.modal .addTarget {
+  height: 24px;
+  padding: 0 0.4rem;
+  font-size: 0.72rem;
+}
+
+.modal .mapLabel {
+  cursor: default;
+}
+
+@media (max-width: 560px) {
+  .modalScrim {
+    align-items: flex-end;
+    padding: 8px 0 0;
+  }
+
+  .modal {
+    max-height: calc(100vh - 8px);
+    border-radius: 10px 10px 0 0;
+  }
+
+  .fields4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

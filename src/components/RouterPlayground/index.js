@@ -6,15 +6,14 @@ import {seconds} from './format';
 import {PRESETS} from './presets';
 import Panel from './Panel';
 import {defaultProfile} from './profiles';
-import {defaultKinds, newSingle, singleBody} from './requests';
+import {defaultKinds} from './requests';
+import RequestPanel from './RequestPanel';
 import {readScenarioLink} from './Scenario';
 import Simulator from './Simulator';
-import SingleRequest from './SingleRequest';
-import {RunCard} from './Trace';
 import styles from './styles.module.css';
 
 // The router playground: a config editor, the deployments with how each one answers, request
-// controls, and the trace of every routing decision. Everything it runs is the router core in
+// presets with the trace of the request picked, and the simulator. Everything it runs is the router core in
 // ./core, compiled to WebAssembly; nothing here reimplements routing.
 
 export default function Playground() {
@@ -25,7 +24,6 @@ export default function Playground() {
   const [configText, setConfigText] = useState(PRESETS[0].config);
   const [seed, setSeed] = useState(0);
   const [model, setModel] = useState(PRESETS[0].model);
-  const [single, setSingle] = useState(newSingle);
   const [focus, setFocus] = useState(null);
   const [profiles, setProfiles] = useState({});
   const [kinds, setKinds] = useState(defaultKinds);
@@ -101,20 +99,28 @@ export default function Playground() {
     return () => clearTimeout(timer);
   }, [rebuild]);
 
-  const body = () => singleBody(single, model);
-  const request = () => JSON.stringify(body());
-
-  const send = count => {
-    if (!playground.current) return;
+  // One request, or a burst of the same request. `behaviour` replaces how providers answer for
+  // each request alone, and is cleared again after it.
+  const send = (count, body, behaviour, responses) => {
+    const router = playground.current;
+    if (!router) return;
+    const one = () => {
+      router.setBehaviour(JSON.stringify(behaviour));
+      try {
+        return JSON.parse(router.send(JSON.stringify(body)));
+      } finally {
+        router.setBehaviour('{}');
+      }
+    };
     if (count === 1) {
-      const sent = body();
-      const run = JSON.parse(playground.current.send(JSON.stringify(sent)));
+      const run = one();
       counter.current += 1;
-      setRuns(previous => [{kind: 'single', n: counter.current, model: sent.model, request: sent, ...run}, ...previous].slice(0, 50));
+      const n = counter.current;
+      setRuns(previous => [{kind: 'single', id: n, n, model: body.model, request: body, responses, ...run}, ...previous].slice(0, 50));
     } else {
-      const summary = {kind: 'burst', model: body().model, count, picked: {}, failed: 0, retries: 0, fallbacks: 0};
+      const summary = {kind: 'burst', model: body.model, count, responses, picked: {}, failed: 0, retries: 0, fallbacks: 0};
       for (let i = 0; i < count; i += 1) {
-        const {result} = JSON.parse(playground.current.send(request()));
+        const {result} = one();
         counter.current += 1;
         if (result.ok) {
           summary.picked[result.deployment] = (summary.picked[result.deployment] ?? 0) + 1;
@@ -124,6 +130,7 @@ export default function Playground() {
           summary.failed += 1;
         }
       }
+      summary.id = counter.current;
       setRuns(previous => [summary, ...previous].slice(0, 50));
     }
     refresh();
@@ -191,43 +198,24 @@ export default function Playground() {
           className={styles.panel}
           headClassName={styles.panelHead}
           title="Make requests"
-          folded="send single requests on their own clock"
+          folded={runs.length ? `${runs.length} sent` : null}
           extra={<span className={styles.clock}>t = {state ? seconds(state.now) : '…'}</span>}>
           {!core && <p className={styles.muted}>Loading the router core…</p>}
-          <p className={styles.muted}>
-            One request at a time, each with its own trace below. A deployment answers with its{' '}
-            <code>mock_response</code>; set it to an exception name such as <code>litellm.RateLimitError</code> in the
-            config to make every attempt on it fail. Behaviour profiles drive the simulator.
-          </p>
-          <SingleRequest
-            value={single}
-            onChange={setSingle}
+          <RequestPanel
+            core={core}
+            configJson={configJson}
+            seed={seed}
             model={model}
             onModel={setModel}
             kinds={kinds}
             info={info}
+            state={state}
+            resetKey={preset.id}
+            runs={runs}
+            onSend={send}
+            onAdvance={advance}
+            onReset={rebuild}
           />
-          <div className={styles.controls}>
-            <button type="button" className={styles.primary} disabled={!state} onClick={() => send(1)}>
-              Send request
-            </button>
-            <button type="button" disabled={!state} onClick={() => send(20)}>
-              Send 20
-            </button>
-            <button type="button" disabled={!state} onClick={() => send(100)}>
-              Send 100
-            </button>
-            <span className={styles.spacer} />
-            <button type="button" disabled={!state} onClick={() => advance(5)}>
-              +5s
-            </button>
-            <button type="button" disabled={!state} onClick={() => advance(60)}>
-              +60s
-            </button>
-            <button type="button" disabled={!core} onClick={rebuild}>
-              Reset
-            </button>
-          </div>
         </Panel>
       </div>
 
@@ -249,20 +237,6 @@ export default function Playground() {
           initialScenario={linked}
         />
       )}
-
-      <Panel
-        id="trace"
-        className={styles.panel}
-        headClassName={styles.panelHead}
-        title="Trace"
-        folded={runs.length ? `${runs.length} requests` : null}
-        extra={<span className={styles.muted}>newest first; click a request to fold it</span>}>
-        {runs.length === 0 ? (
-          <p className={styles.muted}>Send a request to see every routing decision and host call it makes.</p>
-        ) : (
-          runs.map((run, index) => <RunCard key={runs.length - index} run={run} info={info} />)
-        )}
-      </Panel>
 
       {state && state.cache.length > 0 && (
         <Panel
