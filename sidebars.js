@@ -885,6 +885,7 @@ const sidebars = {
           label: "MCP Servers",
           items: [
             "mcp_servers/index",
+            "mcp_servers/acedatacloud",
             "mcp_servers/slack",
             "mcp_servers/atlassian",
             "mcp_servers/linear",
@@ -1732,6 +1733,7 @@ const enterpriseSidebar = {
 const providersSidebar = {
   providersSidebar: [
     { type: "doc", id: "providers/index", label: "All providers" },
+    "providers/acedatacloud",
     { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
     { type: "html", value: "Popular", className: "sidebar-group-label", defaultStyle: true },
     { type: "category", label: "OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/openai" }, items: [
