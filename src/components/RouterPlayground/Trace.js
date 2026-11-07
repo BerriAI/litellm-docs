@@ -17,6 +17,9 @@ const TONE = {
   FallingBack: 'hop',
 };
 
+// A sleep of no time is not a wait, so the event list and the diagram leave it out.
+export const idleSleep = step => step.kind === 'host' && step.call === 'sleep' && !(step.seconds > 0);
+
 function Step({step}) {
   if (step.kind === 'host') {
     const detail =
@@ -129,7 +132,7 @@ export function RunCard({run, info}) {
             <StateDiagram run={run} info={info} />
           ) : (
             <ol className={styles.trace}>
-              {trace.map((step, index) => (
+              {trace.filter(step => !idleSleep(step)).map((step, index) => (
                 <Step key={index} step={step} />
               ))}
             </ol>

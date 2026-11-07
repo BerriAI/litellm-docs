@@ -128,6 +128,7 @@ export function fold(run, info) {
       roll = step.value;
       continue;
     }
+    if (step.kind === 'host' && step.call === 'sleep' && !(step.seconds > 0)) continue;
     lastCache = step.cache ?? lastCache;
     const current = level();
     const at = `level:${current.scope}`;
