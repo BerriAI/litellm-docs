@@ -972,6 +972,7 @@ const sidebars = {
         "auto_router/feature_history",
         { type: "html", value: "Configuration", className: "sidebar-group-label", defaultStyle: true },
         "proxy/auto_routing",
+        "proxy/auto_routing_cascade",
         "proxy/auto_routing_semantic",
         "proxy/auto_routing_benchmark",
         "adaptive_router",
