@@ -69,4 +69,4 @@ These aliases call each provider's own API.
 
 Gemini, Mistral, and DashScope's `qwen-plus-latest` already have provider-managed latest names. LiteLLM passes those through. The aliases above do not extend to Azure, Bedrock, or other hosting providers.
 
-Each alias is listed in the `aliases` field of its target model in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), so the alias is also billed at the target model's price. To control when you change models, use a specific model ID instead. A newer target can change pricing and model behavior.
+Each alias is its own entry in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) whose `alias_of` field names the target model, for example `"claude-haiku-latest": {"alias_of": "claude-haiku-5-5"}`, so the alias is billed at the target model's price. To control when you change models, use a specific model ID instead. A newer target can change pricing and model behavior.
