@@ -603,6 +603,19 @@ print(response)
 | claude-instant-1.2  | `completion('claude-instant-1.2', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 | claude-instant-1  | `completion('claude-instant-1', messages)` | `os.environ['ANTHROPIC_API_KEY']`       |
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`anthropic/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Anthropic model name. LiteLLM sends Anthropic the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `anthropic/claude-opus-latest` | Claude Opus |
+| `anthropic/claude-sonnet-latest` | Claude Sonnet |
+| `anthropic/claude-haiku-latest` | Claude Haiku |
+| `anthropic/claude-fable-latest` | Claude Fable |
+
 ## **Prompt Caching**
 
 Use Anthropic Prompt Caching

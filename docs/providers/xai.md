@@ -46,6 +46,16 @@ response = completion(
 os.environ['XAI_API_KEY']
 ```
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`xai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other xAI model name. LiteLLM sends xAI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `xai/grok-latest` | Grok |
+
 ## Sample Usage
 
 ```python showLineNumbers title="LiteLLM python sdk usage - Non-streaming"

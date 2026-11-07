@@ -357,6 +357,23 @@ os.environ['BEDROCK_MANTLE_REGION'] = "us-east-1"  # or use AWS_REGION
 | `openai.gpt-oss-safeguard-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
 | `openai.gpt-oss-safeguard-20b` | `/chat/completions` | 131K | $0.07 | $0.20 |
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`bedrock_mantle/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Bedrock Mantle model name. LiteLLM sends Bedrock Mantle the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `bedrock_mantle/gpt-luna-latest` | GPT Luna |
+| `bedrock_mantle/gpt-sol-latest` | GPT Sol |
+| `bedrock_mantle/gpt-terra-latest` | GPT Terra |
+| `bedrock_mantle/gpt-astra-latest` | GPT Astra |
+| `bedrock_mantle/claude-opus-latest` | Claude Opus |
+| `bedrock_mantle/claude-sonnet-latest` | Claude Sonnet |
+| `bedrock_mantle/claude-haiku-latest` | Claude Haiku |
+| `bedrock_mantle/grok-latest` | Grok |
+
 ## Sample Usage
 
 <Tabs>
