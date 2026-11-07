@@ -10,7 +10,7 @@ import {
   expectedRpm,
   groupRate,
   metadataOf,
-  mixModels,
+  unservedModels,
   newKind,
 } from './requests';
 import Scenario from './Scenario';
@@ -579,26 +579,41 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
   );
 }
 
-function Kpis({store, timeout, compact}) {
+function Kpis({store, timeout}) {
+  const [open, setOpen] = useState(false);
   const {totals} = store;
   const p95 = quantile(store.durations, 0.95);
-  const items = [
+  const slow = p95 != null && timeout && p95 > timeout;
+  const main = [
     ['success', totals.requests ? `${((100 * totals.ok) / totals.requests).toFixed(1)}%` : 'none yet'],
-    ['p95 end to end', p95 == null ? 'none yet' : secs(p95), p95 != null && timeout && p95 > timeout ? 'bad' : null],
-    ['attempts per request', totals.requests ? (totals.attempts / totals.requests).toFixed(2) : 'none yet'],
-    ['fallbacks', String(totals.fallbacks), totals.fallbacks ? 'hop' : null],
     ['in flight now', String(totals.inFlight), null, `most ${totals.maxInFlight}`],
     ['requests', String(totals.requests)],
   ];
+  const more = [
+    ['p95 end to end', p95 == null ? 'none yet' : secs(p95), slow ? 'bad' : null],
+    ['attempts per request', totals.requests ? (totals.attempts / totals.requests).toFixed(2) : 'none yet'],
+    ['fallbacks', String(totals.fallbacks), totals.fallbacks ? 'hop' : null],
+  ];
+  const cell = ([label, value, tone, sub]) => (
+    <div key={label} className={styles.kpi}>
+      <span className={styles.muted}>{label}</span>
+      <span className={`${styles.kpiValue} ${tone ? styles[tone] : ''}`}>{value}</span>
+      {sub && <span className={styles.kpiSub}>{sub}</span>}
+    </div>
+  );
   return (
-    <div className={compact ? `${styles.kpis} ${styles.kpisCompact}` : styles.kpis}>
-      {items.map(([label, value, tone, sub]) => (
-        <div key={label} className={styles.kpi}>
-          <span className={styles.muted}>{label}</span>
-          <span className={`${styles.kpiValue} ${tone ? styles[tone] : ''}`}>{value}</span>
-          {sub && <span className={styles.kpiSub}>{sub}</span>}
-        </div>
-      ))}
+    <div className={styles.kpiBox}>
+      <div className={styles.kpis}>
+        {main.map(cell)}
+        <button
+          type="button"
+          className={`${styles.kpiMore} ${slow && !open ? styles.bad : ''}`}
+          aria-expanded={open}
+          onClick={() => setOpen(value => !value)}>
+          More details {open ? '\u25B4' : '\u25BE'}
+        </button>
+      </div>
+      {open && <div className={`${styles.kpis} ${styles.kpisMore}`}>{more.map(cell)}</div>}
     </div>
   );
 }
@@ -877,6 +892,10 @@ function LiveRun({
   const [generation, setGeneration] = useState(0);
   const [picks, setPicks] = useState(() => new Set());
   const slots = useKindSlots(kinds);
+  const unserved = useMemo(
+    () => unservedModels(core, configJson, seed, kinds, model),
+    [core, configJson, seed, kinds, model],
+  );
   const active = new Set([...picks].filter(label => slots.has(label)));
   const toggleKind = label =>
     setPicks(previous => {
@@ -1086,14 +1105,18 @@ function LiveRun({
       </Panel>
 
       <Kpis store={data} timeout={groupTimeout} />
-      {mixModels(kinds, model)
-        .filter(name => !info.deployments.some(item => item.model_name === name))
-        .map(name => (
-          <p key={name} className={styles.error}>
-            No deployment serves the model <code>{name}</code>, so its requests fail. Pick one of{' '}
-            {[...new Set(info.deployments.map(item => item.model_name))].join(', ')}.
-          </p>
-        ))}
+      {unserved.map(({model: name, team_id: team}) => (
+        <p key={`${team ?? ''}/${name}`} className={styles.error}>
+          No deployment serves the model <code>{name}</code>
+          {team ? (
+            <>
+              {' '}
+              for team <code>{team}</code>
+            </>
+          ) : null}
+          , so its requests fail. Pick one of {[...new Set(info.deployments.map(item => item.model_name))].join(', ')}.
+        </p>
+      ))}
       {error && <p className={styles.error}>{error}</p>}
       <KindLegend
         kinds={kinds}

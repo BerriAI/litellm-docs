@@ -55,6 +55,34 @@ export function kindBody(kind, model) {
   return body;
 }
 
+// The (model, team) pairs in the mix that the router core cannot route. Each pair goes once
+// through a throwaway router with every provider answering, so aliases, wildcards and team
+// aliases resolve the way they do in the simulation.
+export function unservedModels(core, configJson, seed, kinds, model) {
+  if (!core || !configJson) return [];
+  const pairs = new Map();
+  for (const kind of kinds) {
+    const pair = {model: kind.model || model, team_id: kind.team_id || null};
+    if (pair.model) pairs.set(`${pair.team_id ?? ''}/${pair.model}`, pair);
+  }
+  const unserved = [];
+  for (const pair of pairs.values()) {
+    let playground;
+    try {
+      playground = new core.Playground(configJson, BigInt(seed));
+      const body = {model: pair.model, messages: [{role: 'user', content: 'hi'}]};
+      if (pair.team_id) body.team_id = pair.team_id;
+      const {result} = JSON.parse(playground.send(JSON.stringify(body)));
+      if (!result?.ok && String(result?.detail ?? '').startsWith('UnknownModel')) unserved.push(pair);
+    } catch {
+      // A config the core refuses is reported elsewhere.
+    } finally {
+      playground?.free();
+    }
+  }
+  return unserved;
+}
+
 // Session affinity is not in the Rust router yet (it comes next week), so the playground sends no
 // session ids for now and greys out the session fields.
 export const SESSIONS_READY = false;

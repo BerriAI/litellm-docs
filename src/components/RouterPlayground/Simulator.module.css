@@ -1717,3 +1717,37 @@
 .usageHot {
   background: var(--sim-fail);
 }
+
+/* KPI strip: three headline numbers, the rest behind "More details". */
+.kpiBox {
+  margin: 0.75rem 0;
+}
+
+.kpiBox .kpis {
+  margin: 0;
+}
+
+.kpisMore {
+  margin-top: 0.4rem !important;
+  border-style: dashed;
+}
+
+.kpisMore .kpiValue {
+  font-size: 1rem;
+}
+
+.kpiMore {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 0.95rem;
+  border: none;
+  border-left: 1px solid var(--sim-soft);
+  background: none;
+  color: var(--sim-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.kpiMore:hover {
+  color: var(--ifm-font-color-base);
+}
