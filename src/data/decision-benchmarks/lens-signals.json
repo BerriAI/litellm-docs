@@ -1,0 +1,209 @@
+{
+  "id": "lens-signals",
+  "title": "Flagging problems in agent traces",
+  "description": "621 yes/no calls (207 synthetic traces x 3 signals) plus an evidence pick for each yes. Every model got the same requests through LiteLLM /v1/decisions, flagged at p ≥ 0.5.",
+  "date": "2026-10",
+  "total": 621,
+  "costUnit": "traces",
+  "labels": {
+    "agree": "agrees with the label",
+    "errorA": "false flag",
+    "errorB": "missed flag",
+    "noAnswer": "no answer"
+  },
+  "topTier": 4,
+  "footnote": "Oct 2026. Labels checked by an independent judge. ai_decide matched OpenJev and pplx-decider v1 matched v1.1 on every call. Strands failed on 9 traces (6 too long for its context, 3 server errors), counted as no answer. Cost and p50 are per trace, one request for all three signals, from x-litellm-response-cost; Databricks cost is not tracked yet.",
+  "groups": [
+    {
+      "label": "Hosted APIs",
+      "rows": [
+        {
+          "model": "GPT-6 Luna",
+          "provider": "OpenAI",
+          "costPer1k": 0.151,
+          "selfHosted": false,
+          "p50Seconds": 0.25,
+          "agree": 617,
+          "errorA": 1,
+          "errorB": 3,
+          "noAnswer": 0,
+          "evidencePct": 98
+        },
+        {
+          "model": "pplx-decider v1.1 / v1",
+          "provider": "Perplexity",
+          "costPer1k": 0.021,
+          "selfHosted": false,
+          "p50Seconds": 0.38,
+          "agree": 616,
+          "errorA": 3,
+          "errorB": 2,
+          "noAnswer": 0,
+          "evidencePct": 95
+        },
+        {
+          "model": "Rune",
+          "provider": "Fireworks",
+          "costPer1k": 0.057,
+          "selfHosted": false,
+          "p50Seconds": 0.13,
+          "agree": 613,
+          "errorA": 3,
+          "errorB": 5,
+          "noAnswer": 0,
+          "evidencePct": 96
+        },
+        {
+          "model": "Clef",
+          "provider": "Cloudflare",
+          "costPer1k": 0.343,
+          "selfHosted": false,
+          "p50Seconds": 0.49,
+          "agree": 608,
+          "errorA": 6,
+          "errorB": 7,
+          "noAnswer": 0,
+          "evidencePct": 83
+        },
+        {
+          "model": "Jev 1.13",
+          "provider": "TypeSafe",
+          "costPer1k": 0.053,
+          "selfHosted": false,
+          "p50Seconds": 0.13,
+          "agree": 603,
+          "errorA": 14,
+          "errorB": 4,
+          "noAnswer": 0,
+          "evidencePct": 99
+        },
+        {
+          "model": "Jev 1.14",
+          "provider": "TypeSafe",
+          "costPer1k": 0.053,
+          "selfHosted": false,
+          "p50Seconds": 0.16,
+          "agree": 603,
+          "errorA": 15,
+          "errorB": 3,
+          "noAnswer": 0,
+          "evidencePct": 100
+        },
+        {
+          "model": "Clef Flash",
+          "provider": "Cloudflare",
+          "costPer1k": 0.129,
+          "selfHosted": false,
+          "p50Seconds": 0.7,
+          "agree": 582,
+          "errorA": 7,
+          "errorB": 32,
+          "noAnswer": 0,
+          "evidencePct": 90
+        },
+        {
+          "model": "Decision-1",
+          "provider": "Azure AI Foundry",
+          "costPer1k": 0.041,
+          "selfHosted": false,
+          "p50Seconds": 0.49,
+          "agree": 579,
+          "errorA": 6,
+          "errorB": 36,
+          "noAnswer": 0,
+          "evidencePct": 44
+        },
+        {
+          "model": "Clef Omni",
+          "provider": "Cloudflare",
+          "costPer1k": 0.213,
+          "selfHosted": false,
+          "p50Seconds": 0.22,
+          "agree": 576,
+          "errorA": 10,
+          "errorB": 35,
+          "noAnswer": 0,
+          "evidencePct": 80
+        },
+        {
+          "model": "OpenJev Qwen3.5 4B",
+          "provider": "Databricks",
+          "costPer1k": null,
+          "selfHosted": false,
+          "p50Seconds": 0.29,
+          "agree": 560,
+          "errorA": 39,
+          "errorB": 22,
+          "noAnswer": 0,
+          "evidencePct": 91
+        }
+      ]
+    },
+    {
+      "label": "Open weights",
+      "note": "Self-hosted on an 8-core CPU, no GPU. Latency is not comparable to the hosted rows",
+      "rows": [
+        {
+          "model": "Bespoke Nimble 9B",
+          "provider": "Bespoke via Ollama",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 30.11,
+          "agree": 586,
+          "errorA": 9,
+          "errorB": 26,
+          "noAnswer": 0,
+          "evidencePct": 87
+        },
+        {
+          "model": "Strands Decider 2B",
+          "provider": "Strands Agents",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 30.03,
+          "agree": 522,
+          "errorA": 1,
+          "errorB": 71,
+          "noAnswer": 27,
+          "evidencePct": 79
+        },
+        {
+          "model": "Laya Typed Decisions",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 11.52,
+          "agree": 463,
+          "errorA": 70,
+          "errorB": 88,
+          "noAnswer": 0,
+          "evidencePct": 32
+        },
+        {
+          "model": "Laya English",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 10.78,
+          "agree": 354,
+          "errorA": 221,
+          "errorB": 46,
+          "noAnswer": 0,
+          "evidencePct": 29
+        },
+        {
+          "model": "Laya Multilingual",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 4.33,
+          "agree": 265,
+          "errorA": 294,
+          "errorB": 62,
+          "noAnswer": 0,
+          "evidencePct": 20
+        }
+      ]
+    }
+  ]
+}

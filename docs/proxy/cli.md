@@ -75,6 +75,22 @@ This page documents all command-line interface (CLI) arguments available for the
     litellm
     ```
 
+### --max_request_header_size
+
+Defaults to `16384` bytes (16 KiB). Accepts a positive integer, set through `--max_request_header_size` or the `MAX_REQUEST_HEADER_SIZE` environment variable. An explicit CLI value takes precedence over the environment variable.
+
+```shell
+litellm --config config.yaml --max_request_header_size 131072
+```
+
+```shell
+MAX_REQUEST_HEADER_SIZE=131072 litellm --config config.yaml --run_gunicorn
+```
+
+Applies when the default Uvicorn server or the Uvicorn workers under `--run_gunicorn` use h11. Setting the CLI flag or environment variable preserves Uvicorn's automatic parser selection. When httptools is installed, Uvicorn normally selects it and ignores this setting. When h11 is selected, its default buffer is 16 KiB and this setting changes that buffer. Ignored under `--run_hypercorn` and `--run_granian`.
+
+This sets Uvicorn's `h11_max_incomplete_event_size`, the number of bytes buffered for an incomplete HTTP event. [Uvicorn documents its default as 16384 bytes](https://uvicorn.dev/settings/#implementation). It is not a strict limit on the total size of every complete header block. A large header block can pass when it arrives in one read but return `400 Invalid HTTP request received.` when it arrives in segments or TLS records. Raise this value if an upstream gateway adds large identity headers. It does not change limits enforced by that gateway.
+
 ### --timeout_worker_healthcheck
    - **Default:** `None` (uvicorn's own default of 5 seconds applies)
    - **Type:** `int`
@@ -441,6 +457,15 @@ A read replica takes the same key under `database.reader`, and it requires the w
    - **Usage:** 
      ```shell
      litellm --use_prisma_db_push
+     ```
+
+### --check_migrations_against_existing_data
+   - **Default:** `False`
+   - **Type:** `bool` (Flag)
+   - Dry-run this version's pending migrations on `DATABASE_URL`: the real SQL runs inside one transaction that is rolled back, so PostgreSQL reports the row or schema that would make the upgrade fail, then exit. Exit code 0 lists each migration with its duration, 2 prints PostgreSQL's error. Holds the same locks the upgrade will, so run it off-peak. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#dry-run-the-migrations-before-the-upgrade).
+   - **Usage:**
+     ```shell
+     litellm --check_migrations_against_existing_data
      ```
 
 ## Debugging

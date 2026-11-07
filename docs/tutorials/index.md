@@ -5,7 +5,19 @@ sidebar_label: All Recipes
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
-The **Cookbook** has step-by-step recipes. Each recipe connects LiteLLM to an external tool, framework, or service, or builds a complete workflow from start to end. To set up LiteLLM first, use the [Gateway Quickstart](/docs/learn/gateway_quickstart) or the [SDK Quickstart](/docs/learn/python_sdk_quickstart).
+The **Cookbook** has step-by-step recipes. Each recipe connects LiteLLM to an external tool, framework, or service, or builds a complete workflow from start to end. To set up LiteLLM first, use the [Gateway Quickstart](/docs/proxy/docker_quick_start) or the [SDK Quickstart](/docs/learn/sdk_quickstart).
+
+<NavigationCards
+columns={1}
+items={[
+  {
+    title: "LiteLLM Academy",
+    description: "Get started with our interactive course. Learn the fundamentals every platform admin needs, from gateway setup and access control to routing and observability.",
+    ctaLabel: "Get started",
+    to: "https://litellm.ai/course",
+  },
+]}
+/>
 
 <NavigationCards
 columns={2}

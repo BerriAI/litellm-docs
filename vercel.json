@@ -78,7 +78,7 @@
   ],
   "functions": {
     "api/docs/search.js": {
-      "includeFiles": "build/search-index.json",
+      "includeFiles": "build/search-runtime.bin",
       "maxDuration": 20,
       "memory": 1024
     },

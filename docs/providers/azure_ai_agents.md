@@ -8,12 +8,12 @@ Call Azure AI Foundry Agents in the OpenAI Request/Response format.
 | Property | Details |
 |----------|---------|
 | Description | Azure AI Foundry Agents provides hosted agent runtimes that can execute agentic workflows with foundation models, tools, and code interpreters. |
-| Provider Route on LiteLLM | `azure_ai/agents/{AGENT_ID}` |
+| Provider Route on LiteLLM | `azure_ai/agents/{AGENT_NAME}` or `azure_ai/agents/{ASSISTANT_ID}` |
 | Provider Doc | [Azure AI Foundry Agents ↗](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/quickstart) |
 
 ## Authentication
 
-Azure AI Foundry Agents require **Azure AD authentication** (not API keys). You can authenticate using:
+Classic agents (an `asst_` ID) require **Azure AD authentication**, not API keys. Agents reached by name through the project Responses API take a project API key too, as [Foundry agents through the Responses API](#foundry-agents-through-the-responses-api) shows. You can authenticate with Azure AD using:
 
 ### Option 1: Service Principal (Recommended for Production)
 
@@ -64,9 +64,11 @@ azure_ai/agents/{AGENT_ID}
 ```
 
 **Example:**
-- `azure_ai/agents/asst_abc123`
+- `azure_ai/agents/math-agent`, an agent from the current Foundry portal, by name. See [Foundry agents through the Responses API](#foundry-agents-through-the-responses-api).
+- `azure_ai/agents/math-agent:2`, the same agent pinned to version 2.
+- `azure_ai/agents/asst_abc123`, a classic Assistants agent.
 
-You can find the Agent ID in your Azure AI Foundry portal under Agents.
+You can find the agent name, or the ID of a classic agent, in your Azure AI Foundry portal under Agents.
 
 ### LiteLLM Python SDK
 
@@ -237,6 +239,59 @@ for chunk in stream:
 </TabItem>
 </Tabs>
 
+## Foundry agents through the Responses API
+
+<SinceVersion v="1.109.0" />
+
+Agents created in the current Microsoft Foundry portal have a name instead of an `asst_` ID. LiteLLM sends `azure_ai/agents/<agent name>` to the project's `/openai/v1/responses` route with an `agent_reference`, so the agent answers on `/v1/responses`, `/v1/chat/completions`, and `/v1/messages`, streamed token by token with `"stream": true`. Add `:<version>` to pin a version. Without it, Foundry runs the agent's latest version. An ID that starts with `asst_` still goes to the classic Assistants route.
+
+`api_base` is the project endpoint, `https://<account>.services.ai.azure.com/api/projects/<project>`. LiteLLM sends `Authorization: Bearer` to it, so a project API key in `api_key` works as well as Entra ID credentials. A service principal's token is minted for the `https://ai.azure.com/.default` scope unless `azure_scope` on the entry or the `AZURE_SCOPE` env var sets another one. An `AZURE_AI_API_KEY` env var wins over the service principal fields, as on every other `azure_ai` route.
+
+```yaml title="config.yaml"
+model_list:
+  - model_name: math-agent
+    litellm_params:
+      model: azure_ai/agents/math-agent
+      api_base: https://<account>.services.ai.azure.com/api/projects/<project>
+      tenant_id: os.environ/AZURE_TENANT_ID
+      client_id: os.environ/AZURE_CLIENT_ID
+      client_secret: os.environ/AZURE_CLIENT_SECRET
+
+  - model_name: math-agent-v2
+    litellm_params:
+      model: azure_ai/agents/math-agent:2
+      api_base: https://<account>.services.ai.azure.com/api/projects/<project>
+      api_key: os.environ/FOUNDRY_PROJECT_API_KEY
+```
+
+Call the agent through the Responses API:
+
+```bash
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "math-agent", "input": "What is 2 + 2?"}'
+```
+
+Or through chat completions:
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "math-agent", "messages": [{"role": "user", "content": "What is 2 + 2?"}]}'
+```
+
+The agent owns its model settings, so Foundry refuses `temperature`, `top_p`, `tools`, `text`, and `reasoning` on an agent call. LiteLLM drops them under `drop_params: true` (in `litellm_settings`, on the entry, or in the request) and answers 400 without it. The params Foundry accepts with an agent, like `max_output_tokens`, `tool_choice`, `store`, `metadata`, and `truncation`, pass through.
+
+A system prompt (`instructions`, a chat system message, or a Messages `system`) reaches the agent as a leading system message next to the agent's own instructions. Foundry stores it with the turn, so a later turn that sets `previous_response_id` already follows it, and `instructions` on that turn answers 400 without `drop_params` and is dropped with it.
+
+The entry always calls its own agent. A request whose `agent_reference` (or the deprecated `agent`) names another agent answers 400 without `drop_params`, and with it the entry's agent wins, so a key that can call one entry cannot reach another agent in the project. The request may pick a version of the entry's agent unless the entry pins one. Responses come back with `instructions` set to null, so callers cannot read the system prompt the agent was given in Foundry.
+
+`/v1/responses/compact` on an agent answers 400 before any Foundry call, because the project's compact endpoint takes a model deployment, not an agent. Call compact on a model entry for that deployment instead.
+
+Spend is priced from the model Foundry reports in the response. To charge a fixed price per agent, set `input_cost_per_token` and `output_cost_per_token` on the entry.
+
 ## Environment Variables
 
 | Variable | Description |
@@ -253,7 +308,7 @@ export AZURE_CLIENT_SECRET="your-client-secret"
 
 ## Conversation Continuity (Thread Management)
 
-Azure AI Foundry Agents use threads to maintain conversation context. LiteLLM automatically manages threads for you, but you can also pass an existing thread ID to continue a conversation.
+Classic Azure AI Foundry Agents use threads to maintain conversation context. LiteLLM automatically manages threads for you, but you can also pass an existing thread ID to continue a conversation. An agent reached by name continues a conversation with `previous_response_id` on `/v1/responses` instead.
 
 ```python showLineNumbers title="Continuing a Conversation"
 import litellm
@@ -364,7 +419,7 @@ Get the Agent ID from your Azure AI Foundry portal:
 
 ![Azure Agents](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-14/5e29fc48-c0f7-4b6d-8313-2063d1240d15/ascreenshot.jpeg?tl_px=0,0&br_px=2618,1463&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=39,187)
 
-2. Copy the "ID" of the agent you want to add (e.g., `asst_hbnoK9BOCcHhC3lC4MDroVGG`)
+2. Copy the name of the agent you want to add (e.g., `math-agent`, or `math-agent:2` to pin a version). A classic agent shows an ID like `asst_hbnoK9BOCcHhC3lC4MDroVGG` instead, which works too
 
 ![Copy Agent ID](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-14/bf17dfec-a627-41c6-9121-3935e86d3700/ascreenshot.jpeg?tl_px=0,0&br_px=2618,1463&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=504,241)
 
@@ -428,7 +483,7 @@ The agent responds with its capabilities. You can now interact with your Azure A
 
 ## Foundry agents over A2A
 
-Agents created in the current Microsoft Foundry portal do not speak the Assistants API, so `azure_ai/agents/<name>` answers `Invalid 'assistant_id'` for them. They expose an A2A endpoint instead, and LiteLLM registers them as plain A2A agents that authenticate with Microsoft Entra ID
+Agents created in the current Microsoft Foundry portal do not speak the Assistants API. LiteLLM reaches them by name as a model, as [Foundry agents through the Responses API](#foundry-agents-through-the-responses-api) shows. They also expose an A2A endpoint, and LiteLLM can register that as a plain A2A agent that authenticates with Microsoft Entra ID
 
 The endpoint is `https://<account>.services.ai.azure.com/api/projects/<project>/agents/<agent>/endpoint/protocols/a2a`. Foundry serves its agent card at `agentCard/v1.0` under it rather than at the well-known paths, and accepts only an Entra bearer for the `https://ai.azure.com/.default` scope, so the entry sets `agent_card_path` and the service principal fields:
 

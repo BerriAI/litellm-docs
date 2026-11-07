@@ -4,9 +4,11 @@
   --workshop-line: #dde2e9;
   --workshop-blue: #0117be;
   position: relative;
-  left: 50%;
-  width: min(1120px, calc(100vw - 48px));
-  transform: translateX(-50%);
+  container: workshop / inline-size;
+  width: 100%;
+  max-width: 1168px;
+  margin-inline: auto;
+  padding-inline: min(24px, 4%);
   color: var(--workshop-ink);
   background: transparent;
   font-family: Geist, var(--ifm-font-family-base);
@@ -14,8 +16,9 @@
   line-height: 1.7;
 }
 
-/* Theme tokens are scoped to this post; the rest of the docs is unchanged. */
-:global(html[data-theme='dark']) .workshop {
+/* Avoid html-prefixed theme selectors: the marketing importer strips them
+   from bundled CSS and can leave an invalid comma-separated selector. */
+:global([data-theme='dark']) .workshop {
   --workshop-ink: #edf2f8;
   --workshop-muted: #a7b3c3;
   --workshop-line: #2c3746;
@@ -42,7 +45,7 @@
 .brandRow { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 44px; }
 .workshop .brandRow .logo { width: 174px; height: auto; border-radius: 0; }
 .backLink { color: var(--workshop-muted); font-size: 13px; text-decoration: none; }
-.workshop .hero h1 { color: var(--workshop-ink); font-size: clamp(40px, 5.3vw, 64px); letter-spacing: -.055em; line-height: 1.09; font-weight: 500; margin: 0; }
+.workshop .hero h1 { color: var(--workshop-ink); font-size: clamp(40px, 5.3cqw, 64px); letter-spacing: -.055em; line-height: 1.09; font-weight: 500; margin: 0; }
 .workshop .heroLead { max-width: 640px; font-size: 18px; line-height: 1.6; color: var(--workshop-muted); margin: 24px 0 0; }
 .heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 22px 30px; margin-top: 28px; }
 .workshop .signup { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 55px; padding: 14px 24px; border: 1px solid var(--workshop-blue); border-radius: 8px; background: var(--workshop-blue); color: #fff; font: inherit; font-weight: 500; line-height: 1.3; text-decoration: none; white-space: nowrap; cursor: pointer; }
@@ -133,7 +136,7 @@
 .supportNotes > span { display: flex; align-items: center; gap: 8px; }
 .supportNotes svg { color: var(--workshop-accent, #6b8bb6); flex-shrink: 0; }
 
-@media (max-width: 960px) {
+@container workshop (max-width: 960px) {
   .milestone { grid-template-columns: minmax(0, 1fr) 290px; gap: 25px; }
   .workshop .timelineItem { padding-left: 66px; }
   .workshop .timeline .milestone h3 { font-size: 26px; }
@@ -142,11 +145,11 @@
   .team + .team { padding-left: 20px; }
 }
 
-@media (max-width: 760px) {
+@container workshop (max-width: 760px) {
   .hero { padding-top: 28px; }
   .brandRow { margin-bottom: 32px; }
   .workshop .brandRow .logo { width: 145px; }
-  .workshop .hero h1 { font-size: clamp(37px, 6vw, 49px); line-height: 1.12; }
+  .workshop .hero h1 { font-size: clamp(37px, 6cqw, 49px); line-height: 1.12; }
   .titleBreak { display: none; }
   .workshop .heroLead { font-size: 16px; margin-top: 20px; }
   .heroActions { gap: 20px; }
@@ -172,8 +175,7 @@
   .closing .signup { margin-top: 24px; }
 }
 
-@media (max-width: 420px) {
-  .workshop { width: calc(100vw - 36px); }
+@container workshop (max-width: 420px) {
   .workshop .hero h1 { font-size: 36px; }
   .heroActions { align-items: flex-start; flex-direction: column; gap: 16px; }
   .harnesses { display: grid; grid-template-columns: 1fr 1fr; gap: 19px 24px; }
@@ -189,12 +191,29 @@
 
 /* Use the official white wordmark, including inside milestone diagrams. */
 .workshop img.brandDark { display: none; }
-:global(html[data-theme='dark']) .workshop img.brandLight { display: none; }
-:global(html[data-theme='dark']) .workshop img.brandDark { display: block; }
-:global(html[data-theme='dark']) .workshop .backLink { color: var(--workshop-accent); }
+:global([data-theme='dark']) .workshop img.brandLight { display: none; }
+:global([data-theme='dark']) .workshop img.brandDark { display: block; }
+:global([data-theme='dark']) .workshop .backLink { color: var(--workshop-accent); }
 /* Adapt the approved blueprint's white paper and blue ink to the dark surface. */
-:global(html[data-theme='dark']) .workshop .blueprintImage {
+:global([data-theme='dark']) .workshop .blueprintImage {
   filter: invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
 }
-:global(html[data-theme='dark']) .workshop .monochromeHarness { filter: invert(1); }
+:global([data-theme='dark']) .workshop .monochromeHarness { filter: invert(1); }
+
+@container workshop (max-width: 360px) {
+  .workshop .hero h1 { font-size: 32px; }
+  .workshop .timelineItem { padding-left: 0; padding-top: 44px; }
+  .timelineItem::before { display: none; }
+  .workshop .signup { white-space: normal; gap: 12px; padding-inline: 16px; }
+  .harnesses { gap: 16px 10px; }
+  .visualHeading { flex-wrap: wrap; }
+  .visualBadge { margin-left: 0; }
+  .teamIcon { max-width: 100%; }
+  .visualTeam strong, .flowStep strong { white-space: normal; text-align: center; }
+}
+
+@container workshop (max-width: 360px) {
+  .brandRow { flex-wrap: wrap; gap: 12px; }
+  .workshop .hero h1 { overflow-wrap: anywhere; }
+}

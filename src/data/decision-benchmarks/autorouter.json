@@ -1,0 +1,205 @@
+{
+  "id": "autorouter",
+  "title": "Picking the right model tier for a prompt",
+  "description": "80 prompts with authored tiers (20 each SIMPLE, MEDIUM, COMPLEX, REASONING). Every model got the same choice question through LiteLLM /v1/decisions.",
+  "date": "2026-10",
+  "total": 80,
+  "costUnit": "calls",
+  "labels": {
+    "agree": "picks the authored tier",
+    "errorA": "over-routes (pricier tier)",
+    "errorB": "under-routes (cheaper tier)"
+  },
+  "topTier": 6,
+  "footnote": "Oct 2026. 80 cases, so the top six are within noise (95% CI about ±5 points). Cost from x-litellm-response-cost; Databricks cost is not tracked yet.",
+  "groups": [
+    {
+      "label": "Hosted APIs",
+      "rows": [
+        {
+          "model": "pplx-decider v1.1 / v1",
+          "provider": "Perplexity",
+          "costPer1k": 0.01,
+          "selfHosted": false,
+          "p50Seconds": 0.27,
+          "agree": 78,
+          "errorA": 0,
+          "errorB": 2,
+          "noAnswer": 0,
+          "note": "v1 returned identical scores"
+        },
+        {
+          "model": "Rune",
+          "provider": "Fireworks",
+          "costPer1k": 0.021,
+          "selfHosted": false,
+          "p50Seconds": 0.07,
+          "agree": 76,
+          "errorA": 0,
+          "errorB": 4,
+          "noAnswer": 0
+        },
+        {
+          "model": "Jev 1.13",
+          "provider": "TypeSafe",
+          "costPer1k": 0.032,
+          "selfHosted": false,
+          "p50Seconds": 0.09,
+          "agree": 76,
+          "errorA": 0,
+          "errorB": 4,
+          "noAnswer": 0
+        },
+        {
+          "model": "Jev 1.14",
+          "provider": "TypeSafe",
+          "costPer1k": 0.032,
+          "selfHosted": false,
+          "p50Seconds": 0.11,
+          "agree": 76,
+          "errorA": 0,
+          "errorB": 4,
+          "noAnswer": 0
+        },
+        {
+          "model": "Decision-1",
+          "provider": "Azure AI Foundry",
+          "costPer1k": 0.019,
+          "selfHosted": false,
+          "p50Seconds": 0.4,
+          "agree": 76,
+          "errorA": 0,
+          "errorB": 4,
+          "noAnswer": 0
+        },
+        {
+          "model": "Clef",
+          "provider": "Cloudflare",
+          "costPer1k": 0.138,
+          "selfHosted": false,
+          "p50Seconds": 0.35,
+          "agree": 75,
+          "errorA": 0,
+          "errorB": 5,
+          "noAnswer": 0
+        },
+        {
+          "model": "Clef Flash",
+          "provider": "Cloudflare",
+          "costPer1k": 0.052,
+          "selfHosted": false,
+          "p50Seconds": 2.65,
+          "agree": 71,
+          "errorA": 0,
+          "errorB": 9,
+          "noAnswer": 0
+        },
+        {
+          "model": "OpenJev Qwen3.5 4B",
+          "provider": "Databricks",
+          "costPer1k": null,
+          "selfHosted": false,
+          "p50Seconds": 0.23,
+          "agree": 69,
+          "errorA": 2,
+          "errorB": 9,
+          "noAnswer": 0
+        },
+        {
+          "model": "Clef Omni",
+          "provider": "Cloudflare",
+          "costPer1k": 0.086,
+          "selfHosted": false,
+          "p50Seconds": 0.18,
+          "agree": 67,
+          "errorA": 3,
+          "errorB": 10,
+          "noAnswer": 0
+        },
+        {
+          "model": "GPT-6 Luna",
+          "provider": "OpenAI",
+          "costPer1k": 0.049,
+          "selfHosted": false,
+          "p50Seconds": 0.14,
+          "agree": 65,
+          "errorA": 0,
+          "errorB": 15,
+          "noAnswer": 0
+        },
+        {
+          "model": "ai_decide",
+          "provider": "Databricks",
+          "costPer1k": null,
+          "selfHosted": false,
+          "p50Seconds": 0.26,
+          "agree": 63,
+          "errorA": 7,
+          "errorB": 10,
+          "noAnswer": 0
+        }
+      ]
+    },
+    {
+      "label": "Open weights",
+      "note": "Self-hosted on an 8-core CPU, no GPU. Latency is not comparable to the hosted rows",
+      "rows": [
+        {
+          "model": "Bespoke Nimble 9B",
+          "provider": "Bespoke via Ollama",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 8.76,
+          "agree": 75,
+          "errorA": 0,
+          "errorB": 5,
+          "noAnswer": 0
+        },
+        {
+          "model": "Strands Decider 2B",
+          "provider": "Strands Agents",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 2.65,
+          "agree": 69,
+          "errorA": 7,
+          "errorB": 4,
+          "noAnswer": 0
+        },
+        {
+          "model": "Laya Typed Decisions",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 1.71,
+          "agree": 43,
+          "errorA": 27,
+          "errorB": 10,
+          "noAnswer": 0
+        },
+        {
+          "model": "Laya English",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 1.98,
+          "agree": 42,
+          "errorA": 19,
+          "errorB": 19,
+          "noAnswer": 0
+        },
+        {
+          "model": "Laya Multilingual",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 0.73,
+          "agree": 32,
+          "errorA": 14,
+          "errorB": 34,
+          "noAnswer": 0
+        }
+      ]
+    }
+  ]
+}

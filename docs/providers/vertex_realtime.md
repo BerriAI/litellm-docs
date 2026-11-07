@@ -40,7 +40,7 @@ general_settings:
   master_key: sk-your-key
 ```
 
-`vertex_location` picks the host LiteLLM dials for the Live API websocket: a region such as `us-east4` dials `us-east4-aiplatform.googleapis.com`, a multi-region (`us` or `eu`) dials `aiplatform.us.rep.googleapis.com` or `aiplatform.eu.rep.googleapis.com`, and `global` dials `aiplatform.googleapis.com`. Google decides which models each location offers. As of October 2026, `gemini-3.8-live` is not offered in `global`. Multi-region locations on `/realtime` need LiteLLM v1.106.0-rc.1 or later ([PR #45166](https://github.com/BerriAI/litellm/pull/45166)).
+`vertex_location` picks the host LiteLLM dials for the Live API websocket: a region such as `us-east4` dials `us-east4-aiplatform.googleapis.com`, a multi-region (`us` or `eu`) dials `aiplatform.us.rep.googleapis.com` or `aiplatform.eu.rep.googleapis.com`, and `global` dials `aiplatform.googleapis.com`. Google decides which models each location offers. As of October 2026, `gemini-3.8-live` is not offered in `global`. Multi-region locations on `/realtime` work <SinceVersion v="1.106.0" />, first in `v1.106.0-rc.1` ([PR #45166](https://github.com/BerriAI/litellm/pull/45166)).
 
 ### 3. Start the proxy
 

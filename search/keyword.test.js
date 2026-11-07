@@ -6,6 +6,7 @@ const fs = require('node:fs/promises');
 const {PassThrough} = require('node:stream');
 const {createHandler} = require('./server');
 const {createIndex, search} = require('./engine');
+const {serializeRuntimeIndex} = require('./runtime-index');
 const {createKeywordSearchHandler} = require('./keyword-api');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
@@ -90,7 +91,7 @@ test('Vercel cold start typing skips disconnected requests and serves the latest
   }
   const latest = vercelRequest();
   pending.push(handler(latest.req, latest.res));
-  corpus.resolve(JSON.stringify(index));
+  corpus.resolve(serializeRuntimeIndex(index));
   await Promise.all(pending);
   assert.equal(latest.res.status, 200);
   assert.equal(latest.res.body.query, 'redis');
@@ -105,7 +106,7 @@ test('Vercel cold start bursts do not count index waits as body reads', async t 
   const requests = Array.from({length: 8}, () => vercelRequest());
   const pending = requests.map(({req, res}) => handler(req, res));
   await flush();
-  corpus.resolve(JSON.stringify(index));
+  corpus.resolve(serializeRuntimeIndex(index));
   await Promise.all(pending);
   assert.deepEqual(requests.map(({res}) => res.status), Array(8).fill(200));
   assert.equal(read.mock.callCount(), 1);
@@ -131,7 +132,7 @@ test('Vercel retries failed index loads and reuses a successful load', async t =
   let attempts = 0;
   t.mock.method(fs, 'readFile', async () => {
     if (++attempts === 1) throw new Error('Temporary index read failure');
-    return JSON.stringify(index);
+    return serializeRuntimeIndex(index);
   });
   const handler = vercelHandler(t);
   for (const expected of [503, 200, 200]) {

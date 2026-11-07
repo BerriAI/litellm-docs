@@ -401,7 +401,7 @@ print(result.results)`;
 
 export default function JevRankLaunch() {
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-full-width>
       <header className={styles.launchHero}>
         <div className={styles.launchInner}>
           <div className={styles.launchTop}>

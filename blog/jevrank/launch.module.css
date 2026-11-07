@@ -11,9 +11,10 @@
   color-scheme: light;
   isolation: isolate;
   position: relative;
-  left: 50%;
-  width: min(1160px, calc(100vw - 48px));
-  transform: translateX(-50%);
+  container: jevrank / inline-size;
+  width: 100%;
+  min-width: 0;
+  background: #f0f4fc;
   color: var(--jr-text);
   font-family:
     'Geist',
@@ -26,15 +27,13 @@
   --ifm-link-color: var(--jr-accent);
 }
 
-.root::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  left: calc(50% - 50vw);
-  background: #f0f4fc;
-  z-index: -1;
+.root > section, .root > footer {
+  width: calc(100% - 32px);
+  max-width: 1160px;
+  min-width: 0;
+  margin-inline: auto;
 }
+
 
 .root h1,
 .root h2,
@@ -44,7 +43,7 @@
 }
 .root h2 {
   margin: 0 0 18px !important;
-  font-size: clamp(26px, 3vw, 36px) !important;
+  font-size: clamp(26px, 3cqw, 36px) !important;
   line-height: 1.15;
   font-weight: 500 !important;
   letter-spacing: -0.035em;
@@ -533,7 +532,7 @@
   font-size: 13px;
   margin: 0;
 }
-@media (max-width: 900px) {
+@container jevrank (max-width: 900px) {
   .sectionHeading {
     align-items: flex-start;
   }
@@ -541,9 +540,8 @@
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 650px) {
+@container jevrank (max-width: 650px) {
   .root {
-    width: calc(100vw - 40px);
     font-size: 16px;
   }
   .primaryAction {
@@ -670,7 +668,7 @@
   border-bottom: 0;
   padding-bottom: 0;
 }
-@media (max-width: 650px) {
+@container jevrank (max-width: 650px) {
   .staticBenchmark {
     padding-top: 40px;
   }
@@ -727,7 +725,7 @@
 }
 .flowLabels {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   text-align: center;
   gap: 16px;
 }
@@ -780,7 +778,7 @@
   padding: 0 !important;
   box-shadow: none !important;
 }
-@media (max-width: 770px) {
+@container jevrank (max-width: 770px) {
   .flowCanvas {
     aspect-ratio: 900 / 640;
   }
@@ -794,7 +792,7 @@
     gap: 12px;
   }
 }
-@media (max-width: 420px) {
+@container jevrank (max-width: 420px) {
   .flowProviders > span:first-child {
     width: 100%;
     justify-content: center;
@@ -814,8 +812,7 @@
 }
 .launchHero {
   position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  width: 100%;
   background: #1b3ee9;
   color: #fff;
 }
@@ -859,7 +856,7 @@
 .launchTitle h1 {
   color: #fff !important;
   font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
-  font-size: clamp(100px, 15.5vw, 210px) !important;
+  font-size: clamp(100px, 15.5cqw, 210px) !important;
   font-weight: 600 !important;
   letter-spacing: -0.055em;
   line-height: 0.95 !important;
@@ -867,7 +864,7 @@
 }
 .launchTitle p {
   color: #fff;
-  font-size: clamp(23px, 3vw, 37px);
+  font-size: clamp(23px, 3cqw, 37px);
   font-weight: 350;
   line-height: 1.14;
   letter-spacing: -0.035em;
@@ -923,7 +920,7 @@
 .launchHero a:focus-visible {
   outline-color: #fff;
 }
-@media (max-width: 900px) {
+@container jevrank (max-width: 900px) {
   .launchInner {
     padding: 28px 36px 0;
   }
@@ -939,7 +936,7 @@
     margin: 6px 0 0;
   }
 }
-@media (max-width: 650px) {
+@container jevrank (max-width: 650px) {
   .launchInner {
     padding: 24px 24px 0;
   }
@@ -960,7 +957,7 @@
     margin-top: 24px;
   }
   .launchTitle h1 {
-    font-size: clamp(78px, 18vw, 120px) !important;
+    font-size: clamp(40px, 18cqw, 120px) !important;
   }
   .launchTitle p {
     font-size: 23px;
@@ -989,11 +986,17 @@
     font-size: 8px;
   }
 }
-@media (max-width: 390px) {
+@container jevrank (max-width: 390px) {
   .launchTitle {
     display: block;
   }
   .launchTitle p {
     margin-top: 14px;
   }
+}
+
+@container jevrank (max-width: 360px) {
+  .flowLabels { grid-template-columns: 1fr; gap: 20px; }
+  .launchInner { padding-inline: 16px; }
+  .launchFooter a { max-width: 100%; overflow-wrap: anywhere; }
 }

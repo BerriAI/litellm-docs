@@ -125,10 +125,15 @@ export default function RerankWalkthrough({children}) {
     const preference = window.matchMedia(
       '(min-width: 981px) and (min-height: 800px) and (prefers-reduced-motion: no-preference)',
     );
-    const update = () => setEnhanced(preference.matches);
+    const update = () => setEnhanced(preference.matches && storyRef.current.clientWidth >= 981);
+    const observer = new ResizeObserver(update);
+    observer.observe(storyRef.current);
     update();
     preference.addEventListener('change', update);
-    return () => preference.removeEventListener('change', update);
+    return () => {
+      observer.disconnect();
+      preference.removeEventListener('change', update);
+    };
   }, []);
 
   useEffect(() => {

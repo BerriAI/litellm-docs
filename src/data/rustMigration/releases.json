@@ -40,10 +40,26 @@
     {
       "version": "v1.106.0-rc.2",
       "releasedAt": "2026-10-13T23:59:21Z"
+    },
+    {
+      "version": "v1.106.0-rc.3",
+      "releasedAt": "2026-10-14T21:52:40Z"
+    },
+    {
+      "version": "v1.106.0-rc.4",
+      "releasedAt": "2026-10-15T15:12:32Z"
+    },
+    {
+      "version": "v1.107.0-rc.1",
+      "releasedAt": "2026-10-18T08:00:57Z"
+    },
+    {
+      "version": "v1.107.0-rc.2",
+      "releasedAt": "2026-10-20T03:22:42Z"
     }
   ],
   "main": {
-    "version": "v1.107.0-rc.1",
-    "plannedFor": "2026-10-17"
+    "version": "v1.109.0-rc.1",
+    "plannedFor": "2026-10-24"
   }
 }

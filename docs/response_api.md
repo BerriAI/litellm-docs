@@ -22,7 +22,7 @@ The reverse also happens: a deployment whose provider has no Responses API confi
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to input and output text (non-streaming only) |
 | Supported operations | Create a response, Get a response, Delete a response | |
-| Supported LiteLLM Versions | 1.63.8+ | |
+| Supported LiteLLM Versions | <SinceVersion v="1.63.8" /> | |
 | Supported LLM providers | **All LiteLLM supported providers** | `openai`, `anthropic`, `bedrock`, `vertex_ai`, `gemini`, `azure`, `azure_ai` etc. |
 
 ## Usage
@@ -1157,6 +1157,10 @@ Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7
 
 When using the Responses API with multiple deployments of the same model (e.g., multiple Azure OpenAI endpoints), LiteLLM provides session continuity. This ensures that follow-up requests using a `previous_response_id` are routed to the same deployment that generated the original response.
 
+:::warning[Where these checks apply]
+`responses_api_deployment_check`, `encrypted_content_affinity`, `session_affinity`, and `deployment_affinity` apply to proxy requests on `/v1/responses` and to `router.aresponses`. The sync `router.responses` skips them, so a follow-up can land on a deployment that did not serve the first turn. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips them on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
+:::
+
 
 #### Example Usage
 
@@ -1224,12 +1228,12 @@ follow_up = await router.aresponses(
 To enable session continuity for Responses API in your LiteLLM proxy, set `optional_pre_call_checks` in your proxy config.yaml.
 
 - `responses_api_deployment_check`: high priority routing when `previous_response_id` is provided
-- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) (**requires LiteLLM >= 1.82.3**)
+- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) <SinceVersion v="1.82.3" />
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
 :::tip[Recommended: Use `encrypted_content_affinity`]
-For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
+For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. <SinceVersion v="1.82.3" />
 :::
 
 Notes:
@@ -1316,6 +1320,10 @@ This error occurs when:
 ### The Solution: `encrypted_content_affinity`
 
 The `encrypted_content_affinity` pre-call check routes follow-up requests containing encrypted items to the originating deployment **only when necessary**
+
+:::warning[Where this check applies]
+`encrypted_content_affinity` applies to proxy requests on the LLM API routes, such as `/v1/responses`, and to async Router methods such as `router.aresponses`. The sync `router.responses` skips it, so a follow-up carrying encrypted items can land on a deployment that did not create them. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
+:::
 
 **Key Benefits:**
 - ✅ **No quota reduction**: Unlike `deployment_affinity`, only pins requests that contain encrypted items

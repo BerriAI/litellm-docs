@@ -5,6 +5,12 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM supports OpenAI text completion models
 
+:::note
+
+OpenAI's model pages list the legacy Completions endpoint as not supported for current models. gpt-5.4, gpt-5.4-mini and gpt-5.4-nano still answer there as of October 2026, while gpt-5.5 and later answer 404. These are chat models, so the endpoint continues your prompt as plain text instead of replying to it, and the text can include the model's internal formatting tokens. LiteLLM does not track spend on this route yet. For chat-style answers and spend tracking, use the `openai/` prefix, which also serves [`/completions`](../text_completion.md) requests.
+
+:::
+
 ### Required API Keys
 
 ```python
@@ -13,7 +19,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 ```
 
 ### Usage
-```python
+```python keep-model-ids
 import os 
 from litellm import completion
 
@@ -21,7 +27,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 response = completion(
-    model = "gpt-3.5-turbo-instruct", 
+    model = "text-completion-openai/gpt-5.4-mini", 
     messages=[{ "content": "Hello, how are you?","role": "user"}]
 )
 ```
@@ -41,15 +47,15 @@ export OPENAI_API_KEY=""
 <Tabs>
 <TabItem value="config" label="config.yaml">
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
       model: openai/{{openai_small}}                          # The `openai/` prefix will call openai.chat.completions.create
       api_key: os.environ/OPENAI_API_KEY
-  - model_name: gpt-3.5-turbo-instruct
+  - model_name: gpt-5.4-mini-completions
     litellm_params:
-      model: text-completion-openai/gpt-3.5-turbo-instruct # The `text-completion-openai/` prefix will call openai.completions.create
+      model: text-completion-openai/gpt-5.4-mini # The `text-completion-openai/` prefix will call openai.completions.create
       api_key: os.environ/OPENAI_API_KEY
 ```
 </TabItem>
@@ -68,8 +74,8 @@ model_list:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-```bash
-$ litellm --model gpt-3.5-turbo-instruct
+```bash keep-model-ids
+$ litellm --model text-completion-openai/gpt-5.4-mini
 
 # Server running on http://0.0.0.0:4000
 ```
@@ -83,11 +89,11 @@ $ litellm --model gpt-3.5-turbo-instruct
 <Tabs>
 <TabItem value="Curl" label="Curl Request">
 
-```shell
+```shell keep-model-ids
 curl --location 'http://0.0.0.0:4000/chat/completions' \
 --header 'Content-Type: application/json' \
 --data ' {
-      "model": "gpt-3.5-turbo-instruct",
+      "model": "gpt-5.4-mini-completions",
       "messages": [
         {
           "role": "user",
@@ -100,7 +106,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 </TabItem>
 <TabItem value="openai" label="OpenAI v1.0.0+">
 
-```python
+```python keep-model-ids
 import openai
 client = openai.OpenAI(
     api_key="anything",
@@ -108,7 +114,7 @@ client = openai.OpenAI(
 )
 
 # request sent to model set on litellm proxy, `litellm --model`
-response = client.chat.completions.create(model="gpt-3.5-turbo-instruct", messages = [
+response = client.chat.completions.create(model="gpt-5.4-mini-completions", messages = [
     {
         "role": "user",
         "content": "this is a test request, write a short poem"
@@ -121,30 +127,17 @@ print(response)
 </TabItem>
 <TabItem value="langchain" label="Langchain">
 
-```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+```python keep-model-ids
+from langchain_openai import OpenAI
 
-chat = ChatOpenAI(
-    openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "gpt-3.5-turbo-instruct",
+llm = OpenAI(
+    base_url="http://0.0.0.0:4000", # set base_url to the LiteLLM Proxy
+    api_key="anything",
+    model="gpt-5.4-mini-completions",
     temperature=0.1
 )
 
-messages = [
-    SystemMessage(
-        content="You are a helpful assistant that im using to make a test request to."
-    ),
-    HumanMessage(
-        content="test from litellm. tell me why it's amazing in 1 sentence"
-    ),
-]
-response = chat(messages)
+response = llm.invoke("test from litellm. tell me why it's amazing in 1 sentence")
 
 print(response)
 ```
@@ -156,7 +149,8 @@ print(response)
 
 | Model Name          | Function Call                                      |
 |---------------------|----------------------------------------------------|
-| gpt-3.5-turbo-instruct | `response = completion(model="gpt-3.5-turbo-instruct", messages=messages)` |
-| gpt-3.5-turbo-instruct-0914 | `response = completion(model="gpt-3.5-turbo-instruct-0914", messages=messages)` |
-| babbage-002         | `response = completion(model="babbage-002", messages=messages)` |
-| davinci-002         | `response = completion(model="davinci-002", messages=messages)` |
+| gpt-5.4             | `response = completion(model="text-completion-openai/gpt-5.4", messages=messages)` |
+| gpt-5.4-mini        | `response = completion(model="text-completion-openai/gpt-5.4-mini", messages=messages)` |
+| gpt-5.4-nano        | `response = completion(model="text-completion-openai/gpt-5.4-nano", messages=messages)` |
+
+OpenAI shuts down gpt-5.4-nano on April 1, 2027.

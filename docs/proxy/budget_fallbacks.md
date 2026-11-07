@@ -3,11 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Budget Fallbacks
 
-:::info
-
-Available on `v1.92.x` and later.
-
-:::
+<SinceVersion v="1.92.0" />
 
 Reroute requests to a fallback model when a key's [`model_max_budget`](./users#-virtual-key-model-specific) is exceeded, instead of returning a `budget_exceeded` error.
 

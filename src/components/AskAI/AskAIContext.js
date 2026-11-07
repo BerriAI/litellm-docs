@@ -1,4 +1,5 @@
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {useInkeep} from '../Inkeep';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {readAnswer} from '../../../search/stream.mjs';
 import {readConversation, saveConversation} from '../../../search/conversation-storage.mjs';
@@ -23,7 +24,9 @@ const AskAIContext = createContext({
 });
 
 export function useAskAI() {
-  return useContext(AskAIContext);
+  const internal = useContext(AskAIContext);
+  const inkeep = useInkeep();
+  return inkeep || internal;
 }
 
 export function AskAIProvider({children}) {

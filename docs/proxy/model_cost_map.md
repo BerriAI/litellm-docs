@@ -15,7 +15,7 @@ Every price in the map is in US dollars for one unit of what the provider bills.
 | `input_cost_per_query` | USD per search or tool query | `0.005` is $5 per 1,000 queries |
 | `input_cost_per_character` | USD per input character | `1.5e-05` is $15 per 1M characters |
 
-Variants of a rate keep the same unit and add a suffix. `_batches`, `_priority` and `_flex` are the batch and service-tier rates, `_above_200k_tokens` and `_above_272k_tokens` are long-context rates that apply once the prompt crosses that size, and `cache_creation_input_token_cost_above_1hr` is the 1-hour prompt cache write rate.
+Variants of a rate keep the same unit and add a suffix. `_batches`, `_priority` and `_flex` are the batch and service-tier rates, `_above_200k_tokens` and `_above_272k_tokens` are long-context rates that apply once the prompt crosses that size, `cache_creation_input_token_cost_above_1hr` is the 1-hour prompt cache write rate (Anthropic), and `cache_creation_input_token_cost_above_12hr` is the 12-hour prompt cache write rate (OpenAI GPT-5.6 and newer on `/responses`).
 
 To convert a vendor's "$X per 1M tokens" price into a cost map value, divide by 1,000,000. For example, $2.50 per 1M tokens is `2.5e-06`.
 

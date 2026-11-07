@@ -105,7 +105,7 @@ This behavior is independent of `litellm_settings.scim_upsert_user`. That settin
 
 ## Assigning the proxy admin role
 
-By default, newly provisioned SCIM users receive the role configured in `litellm_settings.default_internal_user_params.user_role`. If no role is configured, LiteLLM assigns `internal_user_view_only`. Existing users retain their current role.
+By default, newly provisioned SCIM users receive the role configured in `litellm_settings.default_internal_user_params.user_role`. If no role is configured, LiteLLM assigns `internal_user_viewer`. Existing users retain their current role.
 
 Configure `scim_admin_group` to manage global roles through SCIM group membership:
 

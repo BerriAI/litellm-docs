@@ -23,7 +23,7 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
   {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/audit_logs'},
   {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
-  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
+  {icon: 'support', title: 'Engineers on call', text: 'A shared Slack Connect channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
 ]} />
 
 <SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout and security review, and start a 30-day trial with a full license." />
@@ -92,11 +92,11 @@ Pricing depends on your deployment size. [Get in touch](https://enterprise.litel
 
 ## Support {#professional-support}
 
-Every license includes a dedicated Slack or Teams channel with the engineering team. With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
+Every license includes a shared Slack Connect channel with the engineering team, or support by email at [support@berri.ai](mailto:support@berri.ai). With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
 
 ## Version support
 
-LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support).
+LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support). This policy is paused during the [LTS pilot](/docs/enterprise/lts_pilot).
 
 ## FAQ
 

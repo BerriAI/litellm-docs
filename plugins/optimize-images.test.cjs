@@ -11,12 +11,12 @@ const {optimizeImages} = require('./optimize-images');
 
 const pluginPath = path.join(__dirname, 'optimize-images.js');
 
-function loadPlugin(fakeSharp) {
+function loadPlugin(fakeSharp, fileSystem = fsSync) {
   const pluginModule = {exports: {}};
   const pluginRequire = createRequire(pluginPath);
   vm.runInNewContext(fsSync.readFileSync(pluginPath, 'utf8'), {
     module: pluginModule,
-    require: (name) => name === 'sharp' ? fakeSharp : pluginRequire(name),
+    require: (name) => name === 'sharp' ? fakeSharp : name === 'node:fs' ? fileSystem : pluginRequire(name),
     console: {log() {}},
   }, {filename: pluginPath});
   return pluginModule.exports;
@@ -94,7 +94,7 @@ test('leaves a corrupt PNG untouched and does not cache it', async (t) => {
   assert.deepEqual(await fs.readdir(cacheDir), []);
 });
 
-test('limits image optimization to two concurrent pipelines', async (t) => {
+test('limits image optimization to two concurrent pipelines', {timeout: 10000}, async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-optimize-concurrency-'));
   t.after(() => fs.rm(root, {recursive: true, force: true}));
   const outDir = path.join(root, 'out');
@@ -112,14 +112,19 @@ test('limits image optimization to two concurrent pipelines', async (t) => {
   let active = 0;
   let peak = 0;
   let completed = 0;
+  let releaseFirstPair;
+  const firstPairStarted = new Promise((resolve) => { releaseFirstPair = resolve; });
   const fakeSharp = () => {
     active += 1;
     peak = Math.max(peak, active);
+    // Hold the first pipeline until its peer starts, independent of file I/O timing.
+    if (active === 2) releaseFirstPair();
     return {
       png() { return this; },
       jpeg() { return this; },
       async metadata() { return {width: 1, height: 1}; },
       async toFile(output) {
+        await firstPairStarted;
         await new Promise(setImmediate);
         fsSync.writeFileSync(output, 'small');
         active -= 1;
@@ -128,7 +133,12 @@ test('limits image optimization to two concurrent pipelines', async (t) => {
     };
   };
 
-  const plugin = loadPlugin(fakeSharp);
+  // Keep preparation in microtasks so disk scheduling cannot serialize the workers.
+  const plugin = loadPlugin(fakeSharp, {
+    ...fsSync,
+    createReadStream: async function* (file) { yield fsSync.readFileSync(file); },
+    promises: {...fs, stat: async (file) => fsSync.statSync(file)},
+  });
   const result = await plugin.optimizeImages(outDir, cacheDir);
   assert.equal(peak, 2);
   assert.equal(active, 0);

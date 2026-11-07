@@ -124,6 +124,7 @@ On success, the guardrail name appears in the `x-litellm-applied-guardrails` res
 | `mask_request_content` | No | Mask sensitive data in prompts instead of blocking | `false` |
 | `mask_response_content` | No | Mask sensitive data in responses instead of blocking | `false` |
 | `mask_on_block` | No | Backwards-compatible flag that enables both request and response masking | `false` |
+| `include_masked_response_on_block` | No | When a `post_call` scan blocks a response, add the AIRS `response_masked_data` (masked text and `pattern_detections`) to the HTTP 400 error body. Applies only to this guardrail. No effect when `mask_response_content` is on | `false` |
 | `experimental_use_latest_role_message_only` | No | Anthropic `/v1/messages` only. When unset: scans only latest user message on request side. Set `false` to scan all user/system/developer messages. Non-Anthropic unaffected. | Unset (true for Anthropic) |
 
 Use the regional `api_base` that matches your Prisma AIRS deployment profile region for lower latency and data residency compliance.
@@ -200,6 +201,47 @@ guardrails:
 - `mask_request_content: true` — mask sensitive data in prompts instead of blocking
 - `mask_response_content: true` — mask sensitive data in responses instead of blocking
 - `mask_on_block: true` — backwards-compatible flag that enables both request and response masking
+
+### Masked Response Details on Block
+
+By default a blocked `post_call` response returns HTTP 400 with the AIRS scan metadata (`action`, `category`, `response_detected`, scan and report IDs) but leaves out `response_masked_data`. Set `include_masked_response_on_block: true` on the guardrail to add it, so clients can see which patterns AIRS matched and where, without the raw model output.
+
+```yaml
+guardrails:
+  - guardrail_name: "panw-block-details"
+    litellm_params:
+      guardrail: panw_prisma_airs
+      mode: "post_call"
+      api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
+      profile_name: "default"
+      include_masked_response_on_block: true
+```
+
+The status stays 400, and the extra field appears under `error.provider_specific_fields.error` on `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`:
+
+```json
+{
+  "error": {
+    "code": "400",
+    "provider_specific_fields": {
+      "error": {
+        "code": "panw_prisma_airs_response_blocked",
+        "action": "block",
+        "category": "malicious",
+        "response_detected": {"dlp": true},
+        "response_masked_data": {
+          "data": "Sample values:\n\n- Email ID: `XXXXXXXXXXXXXXXXXXXXX`",
+          "pattern_detections": [
+            {"pattern": "Internet - addr_email", "locations": [[41, 61]]}
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+The field is only added when AIRS returns it, and only for guardrails that set the flag. If `mask_response_content` is also on, the response is masked and returned with HTTP 200 as before, so there is no block body to extend. The setting can also be set from the guardrail form in the Admin UI.
 
 ### Fail-Open Configuration
 
