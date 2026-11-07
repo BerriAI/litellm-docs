@@ -224,6 +224,12 @@ For this flow, the `redirect_uri` supplied to `/authorize` must exactly match a 
 
 Per-server static registration returns placeholder credentials and does not store a client-specific callback allowlist. Its authorization endpoint applies the per-server validation rules described above.
 
+#### Virtual key limits and gateway OAuth sessions
+
+:::warning[Virtual key settings do not apply to gateway OAuth sessions]
+A session created through the gateway's built-in OAuth sign-in is admitted as the user; no virtual key is attached to it. Settings that live on a virtual key therefore do not constrain the session. This covers the key's `max_budget`, its blocked status, and its MCP tool permissions (`object_permission.mcp_tool_permissions`). User-level and team-level budgets, limits, and tool permissions do apply. To govern gateway OAuth sessions, set budgets and tool permissions on the user or the team instead of on a key.
+:::
+
 #### Verify the configuration
 
 Use the following requests to verify discovery, static registration, and the authorization redirect. The examples use a proxy listening on `http://localhost:4000` with `PROXY_BASE_URL=https://llm.example.com` and the `jira_mcp` configuration above.
