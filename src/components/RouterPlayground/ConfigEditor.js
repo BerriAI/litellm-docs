@@ -13,6 +13,7 @@ import {
   settingValue,
 } from './configDoc';
 import ConfigModal from './ConfigModal';
+import {Overridden, TEAM_APPLIED, ViewAs, teamColour, teamFallbacks, teamLens, teamsOf} from './ConfigTeams';
 import FallbackGraph from './FallbackGraph';
 import ProfileEditor from './ProfileEditor';
 import {PROFILE_PRESETS, profileSummary} from './profiles';
@@ -253,37 +254,63 @@ function SplitBar({share, skipped}) {
   );
 }
 
-function DeploymentPill({member, issues, share, single, actions}) {
-  const {entry, index, shown} = member;
+function DeploymentPill({member, issues, share, single, actions, team, teamSplit}) {
+  const {entry, index, shown, lens} = member;
   const model = entry.litellm_params?.model;
   const level = worst(issues);
   const skipped = issues.some(issue => issue.field === 'order');
   const pct = share == null || single || skipped ? null : `${Math.round(share * 100)}%`;
   const count = `${issues.length} issue${issues.length === 1 ? '' : 's'}`;
-  const note = [pct && `${pct} of traffic`, skipped && 'skipped', issues.length && count];
+  const teamNote =
+    lens === 'own'
+      ? `serves ${team} instead of the shared deployments`
+      : lens === 'unused'
+        ? `${team} uses its own deployment instead`
+        : null;
+  const note = [teamNote, pct && `${pct} of traffic`, skipped && 'skipped', issues.length && count];
+  const lensClass = lens === 'own' || teamSplit ? styles.pillTeam : lens === 'unused' ? styles.pillUnused : '';
   return (
     <button
       type="button"
       data-row={shown}
-      className={`${styles.pill} ${skipped ? styles.pillSkipped : ''}`}
+      className={`${styles.pill} ${skipped ? styles.pillSkipped : ''} ${lensClass}`}
       title={note.filter(Boolean).join(' · ') || undefined}
       aria-label={`Deployment settings for ${shown}${level ? `, ${count}` : ''}`}
       onClick={() => actions.openDeployment(index)}>
       {level && <i className={level === 'err' ? styles.dotErr : styles.dotWarn} aria-hidden="true" />}
       <b>{shown}</b>
       <span className={model ? styles.pillModel : styles.pillMissing}>{model || 'no model'}</span>
+      {lens === 'own' && <span className={styles.teamTag}>{team} only</span>}
+      {teamSplit && lens !== 'unused' && <span className={styles.teamTag}>{Math.round(share * 100)}%</span>}
     </button>
   );
 }
 
-function GroupCard({name, members, data, issues, actions}) {
-  const {shares: split, metric, ordered} = shares(members);
+function GroupCard({name, members, data, issues, actions, team, lens}) {
+  const used = lens ? members.filter(member => member.lens !== 'unused') : members;
+  const base = shares(used);
+  const split = lens?.split ?? base.shares;
+  const {metric, ordered} = base;
   const groups = groupsOf(data);
-  const fallbacks = fallbackTargets(data, 'fallbacks').find(entry => entry.from === name)?.to ?? [];
-  const picks = members.length === 1 ? null : ordered ? 'order tiers' : metric ? `split by ${metric}` : 'even split';
-  const team = teamOf(members);
-  const meta = [`${members.length} deployment${members.length === 1 ? '' : 's'}`, picks, team && `team ${team.team}`];
+  const {to: fallbacks, router: routerFallbacks} = teamFallbacks(data, team, 'fallbacks', name);
+  const picks = lens?.split
+    ? `split by ${team.id}'s weights`
+    : used.length === 1
+      ? null
+      : ordered
+        ? 'order tiers'
+        : metric
+          ? `split by ${metric}`
+          : 'even split';
+  const scope = teamOf(members);
+  const owned = lens && used.some(member => member.lens === 'own');
+  const meta = [
+    `${used.length} deployment${used.length === 1 ? '' : 's'}`,
+    owned ? `${team.id}'s own deployment` : picks,
+    !lens && scope && `team ${scope.team}`,
+  ];
   const good = fallbacks.filter(target => groups.has(target));
+  const fallbackChanged = routerFallbacks != null && routerFallbacks.join() !== fallbacks.join();
   return (
     <div className={styles.card}>
       <div className={styles.groupHead}>
@@ -316,8 +343,10 @@ function GroupCard({name, members, data, issues, actions}) {
             member={member}
             issues={issues.filter(issue => issue.index === member.index && issue.field)}
             share={split[member.index]}
-            single={members.length === 1}
+            single={used.length === 1}
             actions={actions}
+            team={team?.id}
+            teamSplit={!!lens?.split}
           />
         ))}
         <button
@@ -329,9 +358,22 @@ function GroupCard({name, members, data, issues, actions}) {
           + Add
         </button>
       </div>
-      {(good.length > 0 || fallbacks.length > good.length) && (
+      {(good.length > 0 || fallbacks.length > good.length || fallbackChanged || lens?.alias.length > 0) && (
         <div className={styles.groupFoot}>
-          {good.length > 0 && <span className={styles.hopChip}>falls back to {good.join(', ')}</span>}
+          {lens?.alias.map(alias => (
+            <span key={alias} className={styles.teamChip}>
+              alias {alias}
+            </span>
+          ))}
+          {good.length > 0 && (
+            <span className={fallbackChanged ? styles.teamChip : styles.hopChip}>falls back to {good.join(', ')}</span>
+          )}
+          {fallbackChanged && fallbacks.length === 0 && (
+            <span className={styles.teamChip}>no fallback for {team.id}</span>
+          )}
+          {fallbackChanged && routerFallbacks.length > 0 && (
+            <s className={styles.routerValue}>{routerFallbacks.join(', ')}</s>
+          )}
           {fallbacks
             .filter(target => !groups.has(target))
             .map(target => (
@@ -666,7 +708,7 @@ function GroupSettings({name, members, data, issues, profiles, actions, onClose}
 
 const MORE_KEYS = ['retry_after', 'retry_policy', 'disable_cooldowns', 'max_fallbacks'];
 
-function SettingsColumn({data, info, issues, actions}) {
+function SettingsColumn({data, info, issues, actions, team}) {
   const [more, setMore] = useState(false);
   const value = key => settingValue(data, key);
   const effective = info?.settings ?? {};
@@ -686,9 +728,20 @@ function SettingsColumn({data, info, issues, actions}) {
     fallbackTargets(data, map.key).map(entry => ({...entry, map, from: entry.from === '*' ? 'any' : entry.from})),
   );
   const extra = MORE_KEYS.filter(key => value(key) != null).length;
+  const set = team?.settings ?? {};
+  const teamRules = team
+    ? ['fallbacks', 'context_window_fallbacks', 'content_policy_fallbacks'].reduce(
+        (count, key) =>
+          count + (set[key] == null ? rules.filter(rule => rule.map.key === key).length : fallbackTargets({router_settings: set}, key).length),
+        0,
+      )
+    : null;
+  const fallbacksChanged = team && ['fallbacks', 'context_window_fallbacks', 'content_policy_fallbacks'].some(key => set[key] != null);
+  const ignored = team ? Object.keys(set).filter(key => !TEAM_APPLIED.includes(key)) : [];
+  const overrides = team ? Object.keys(set).filter(key => TEAM_APPLIED.includes(key)).length : 0;
   return (
     <div className={styles.settings}>
-      <span className={styles.cap}>Router settings · router_settings</span>
+      <span className={styles.cap}>{team ? `Router settings for ${team.id}` : 'Router settings · router_settings'}</span>
       <div className={styles.card}>
         <Setting name="routing_strategy">
           <select
@@ -706,12 +759,16 @@ function SettingsColumn({data, info, issues, actions}) {
         </Setting>
         {strategyIssue && <Issue issue={strategyIssue} />}
         <Setting name="num_retries">
-          <NumInput
-            label="num_retries"
-            value={value('num_retries')}
-            placeholder={fmt(effective.num_retries ?? 0)}
-            onCommit={next => actions.setting('num_retries', next)}
-          />
+          {team && set.num_retries != null ? (
+            <Overridden value={fmt(set.num_retries)} router={fmt(value('num_retries') ?? effective.num_retries ?? 0)} />
+          ) : (
+            <NumInput
+              label="num_retries"
+              value={value('num_retries')}
+              placeholder={fmt(effective.num_retries ?? 0)}
+              onCommit={next => actions.setting('num_retries', next)}
+            />
+          )}
         </Setting>
         <Setting name="timeout">
           <NumInput
@@ -738,23 +795,51 @@ function SettingsColumn({data, info, issues, actions}) {
           />
         </Setting>
         <Setting name="fallbacks">
-          {rules.length === 0 && <span className={styles.muted}>none</span>}
-          {rules.length > 0 && (
+          {fallbacksChanged && (
+            <Overridden
+              value={`${teamRules} rule${teamRules === 1 ? '' : 's'}`}
+              router={`${rules.length} rule${rules.length === 1 ? '' : 's'}`}
+            />
+          )}
+          {!fallbacksChanged && rules.length === 0 && <span className={styles.muted}>none</span>}
+          {!fallbacksChanged && rules.length > 0 && (
             <span className={fallbackIssues.length ? styles.badChip : styles.hopChip}>
               {rules.length} rule{rules.length === 1 ? '' : 's'}
             </span>
           )}
-          <button type="button" className={styles.link} onClick={() => actions.graph('fallbacks')}>
-            {rules.length ? 'edit' : 'add'}
-          </button>
+          {!fallbacksChanged && (
+            <button type="button" className={styles.link} onClick={() => actions.graph('fallbacks')}>
+              {rules.length ? 'edit' : 'add'}
+            </button>
+          )}
         </Setting>
         {fallbackIssues.map(issue => (
           <Issue key={`${issue.map}-${issue.from}`} issue={issue} />
         ))}
-        {teams.length > 0 && (
+        {teams.length > 0 && !team && (
           <Setting name="teams">
-            <span className={styles.muted}>{teams.map(team => team.id).join(', ')}</span>
+            <span className={styles.muted}>{teams.map(item => item.id).join(', ')}</span>
           </Setting>
+        )}
+        {team && (
+          <p className={styles.teamNote}>
+            {overrides === 0 ? (
+              `${team.id} sets nothing the router reads, so its requests get the router's settings.`
+            ) : (
+              <>
+                {team.id} overrides{' '}
+                {Object.keys(set)
+                  .filter(key => TEAM_APPLIED.includes(key))
+                  .map(key => <code key={key}>{key}</code>)
+                  .reduce((a, b) => [a, ', ', b])}
+                .
+              </>
+            )}
+            {ignored.length > 0 && <> The proxy does not forward {ignored.map(key => <code key={key}>{key}</code>).reduce((a, b) => [a, ', ', b])} from a team, so it changes nothing.</>}{' '}
+            <button type="button" className={styles.link} onClick={actions.yaml}>
+              Edit in YAML
+            </button>
+          </p>
         )}
 
         <button type="button" className={styles.disclosure} aria-expanded={more} onClick={() => setMore(!more)}>
@@ -859,11 +944,11 @@ function SettingsColumn({data, info, issues, actions}) {
             {teams.length > 0 && (
               <>
                 <span className={styles.cardTitle}>Teams</span>
-                {teams.map(team => (
-                  <div key={team.id} className={styles.mapRow}>
-                    <span className={styles.mapLabel}>{team.id}</span>
+                {teams.map(item => (
+                  <div key={item.id} className={styles.mapRow}>
+                    <span className={styles.mapLabel}>{item.id}</span>
                     <span className={styles.muted}>
-                      {team.keys.length ? team.keys.join(', ') : 'no router_settings'}
+                      {item.keys.length ? item.keys.join(', ') : 'no router_settings'}
                     </span>
                   </div>
                 ))}
@@ -1063,6 +1148,7 @@ export default function ConfigEditor({
   const [modal, setModal] = useState(null);
   const [drawer, setDrawer] = useState(null);
   const [showKept, setShowKept] = useState(false);
+  const [viewAs, setViewAs] = useState(null);
   const parsed = useMemo(() => parseYaml(text), [text]);
   const {data} = parsed;
   const issues = useMemo(() => validate(data), [data]);
@@ -1086,6 +1172,12 @@ export default function ConfigEditor({
       members.map(member => ({...member, shown: idAt(member.index) ?? `deployment ${member.index + 1}`})),
     ]),
   );
+
+  // The team picked in "View as", while the YAML still has it. Without a teams: block there is no switch.
+  const teams = useMemo(() => teamsOf(data), [data]);
+  const teamIndex = teams.findIndex(item => item.id === viewAs);
+  const team = teamIndex >= 0 ? teams[teamIndex] : null;
+  const lens = team ? teamLens(groups, team) : null;
 
   // A lane elsewhere on the page asked to edit one deployment: open its settings.
   useEffect(() => {
@@ -1133,6 +1225,7 @@ export default function ConfigEditor({
   };
 
   const actions = {
+    yaml: () => setMode('yaml'),
     field: (index, field, value) => {
       const entry = data.model_list[index];
       if (field === 'id') {
@@ -1216,7 +1309,7 @@ export default function ConfigEditor({
   const showError = error && !parsed.error && !(view !== 'yaml' && issues.some(issue => issue.setting));
 
   return (
-    <div className={styles.root} ref={root}>
+    <div className={styles.root} ref={root} style={team ? {'--ce-team': teamColour(teamIndex)} : undefined}>
       <div className={styles.toolbar}>
         <div className={styles.segment} role="tablist" aria-label="Config view">
           <button
@@ -1244,6 +1337,7 @@ export default function ConfigEditor({
             back to the form
           </button>
         )}
+        {view === 'form' && teams.length > 0 && <ViewAs teams={teams} value={team?.id ?? null} onChange={setViewAs} />}
         <span className={styles.spacer} />
         {kept.length > 0 && (
           <button
@@ -1299,24 +1393,28 @@ export default function ConfigEditor({
       {view === 'form' && (
         <div className={styles.form}>
           <div className={styles.groups}>
-            <span className={styles.cap}>Model groups · model_list</span>
-            {[...groups.entries()].map(([name, members]) => (
-              <GroupCard
-                key={name}
-                name={name}
-                members={members}
-                data={data}
-                issues={issues.filter(issue => issue.index != null && members.some(m => m.index === issue.index))}
-                actions={actions}
-              />
-            ))}
+            <span className={styles.cap}>{team ? `Model groups as ${team.id} sees them` : 'Model groups · model_list'}</span>
+            {(lens ? [...lens.entries()].map(([name, entry]) => [name, entry.members, entry]) : [...groups.entries()]).map(
+              ([name, members, entry]) => (
+                <GroupCard
+                  key={name}
+                  name={name}
+                  members={members}
+                  data={data}
+                  issues={issues.filter(issue => issue.index != null && members.some(m => m.index === issue.index))}
+                  actions={actions}
+                  team={team}
+                  lens={entry}
+                />
+              ),
+            )}
             <div className={styles.addGroup}>
               <button type="button" className={styles.ghost} onClick={() => setDrawer({group: '', newGroup: true})}>
                 + Add model group
               </button>
             </div>
           </div>
-          <SettingsColumn data={data} info={info} issues={issues} actions={actions} />
+          <SettingsColumn data={data} info={info} issues={issues} actions={actions} team={team} />
         </div>
       )}
 

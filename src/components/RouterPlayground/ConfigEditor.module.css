@@ -2,6 +2,11 @@
    a warning, red a failure, the primary colour the current choice. */
 
 .root {
+  --ce-team-0: #c2410c;
+  --ce-team-1: #0f766e;
+  --ce-team-2: #1d4ed8;
+  --ce-team-3: #a21caf;
+  --ce-team-ink: #fff;
   --ce-hop: #6d28d9;
   --ce-warn: #b45309;
   --ce-warn-text: #78350f;
@@ -25,6 +30,11 @@
 }
 
 [data-theme='dark'] .root {
+  --ce-team-0: #fb923c;
+  --ce-team-1: #2dd4bf;
+  --ce-team-2: #60a5fa;
+  --ce-team-3: #e879f9;
+  --ce-team-ink: #111;
   --ce-hop: #a78bfa;
   --ce-warn: #fbbf24;
   --ce-warn-text: #fde68a;
@@ -1261,6 +1271,7 @@ button.chipOn {
 .groupFoot {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem;
   padding: 0 0.85rem 0.7rem;
 }
@@ -1513,4 +1524,91 @@ button.chipOn {
   .fields4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* View as a team: what the team's requests get. Anything the team changes wears its colour, with
+   the router's value struck through beside it. */
+
+.viewAs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.teamDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--ce-team);
+}
+
+.segment button.teamTab[aria-selected='true'] {
+  background: color-mix(in srgb, var(--ce-team) 12%, transparent);
+  box-shadow: inset 0 -2px 0 var(--ce-team);
+  color: var(--ce-team);
+}
+
+.pill.pillTeam {
+  border: 2px solid var(--ce-team);
+  background: color-mix(in srgb, var(--ce-team) 9%, var(--ce-field));
+}
+
+.pill.pillUnused {
+  opacity: 0.45;
+}
+
+.pill.pillUnused b {
+  text-decoration: line-through;
+}
+
+.teamTag {
+  padding: 0 0.4rem;
+  border-radius: 4px;
+  background: var(--ce-team);
+  color: var(--ce-team-ink);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.teamChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.6rem;
+  border: 2px solid var(--ce-team);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ce-team) 9%, var(--ce-panel));
+  color: var(--ce-team);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.74rem;
+}
+
+.routerValue {
+  color: var(--ce-faint);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.74rem;
+}
+
+.overridden {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.teamValue {
+  min-width: 3rem;
+  padding: 0.15rem 0.55rem;
+  border: 2px solid var(--ce-team);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ce-team) 9%, var(--ce-field));
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.teamNote {
+  margin: 0.6rem 0 0;
+  color: var(--ce-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
 }
