@@ -321,7 +321,7 @@ When the budget runs out, the proxy cancels the upstream call and answers `408`:
 
 A retry that would have to wait past the budget does not wait. For example, with `"total_timeout": 10` and an upstream that answers `503` with `retry-after: 6`, the proxy makes the first retry at 6s, sees that a second 6s wait would end after 10s, and returns that last `503` at once instead of waiting out the budget for a `408`.
 
-After a timeout the proxy can take a few more seconds to hand back the rate limit reservations and in-flight counts the cancelled call held, so the `408` can arrive slightly after the budget. That cleanup time does not count toward the budget.
+After a timeout the proxy can take a few more seconds to hand back the rate limit reservations and in-flight counts the cancelled call held, then logs the failure and runs any failure hooks, so the `408` can arrive slightly after the budget. That cleanup time does not count toward the budget. A timed out request is billed like a client disconnect, at the estimated cost of its prompt.
 
 Streaming and background requests are not bounded. A body `total_timeout` on a `"stream": true` request, a `"background": true` Responses request or another endpoint returns a `400`. The header is ignored on those requests, so a client that sets `x-litellm-total-timeout` on every call through its default headers still gets its streaming requests through, unbounded.
 
