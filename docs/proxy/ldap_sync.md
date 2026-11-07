@@ -76,7 +76,19 @@ Start or restart the proxy with informational logging enabled:
 LITELLM_LOG=INFO litellm --config config.yaml --num_workers 2
 ```
 
-The first run is scheduled shortly after startup. Review the `LDAP sync` messages in the proxy's normal stdout/container logs. Dry-run messages report the team ID, whether the team would be created, and user IDs to add or remove. Matching messages count matched and unmatched users. Confirm the roster before changing `dry_run` to `false` and restarting every replica.
+The first run is scheduled shortly after startup. Review the `LDAP sync` messages in the proxy's normal stdout/container logs. Dry-run messages report the team ID, whether the team would be created, and user IDs to add or remove. Matching messages count matched and unmatched users. Skipped groups and teams are logged as warnings with the reason. For example:
+
+```text
+LDAP sync skipped group_dn=cn=project-delta,ou=groups,dc=example,dc=org: LDAP member is not a user entry
+LDAP sync team_id=project-gamma matched_users=0 unmatched_users=0
+LDAP sync skipped team_id=project-gamma: group resolved to no LiteLLM users but the team has 1 members; set allow_empty_groups to remove them
+LDAP sync team_id=project-beta matched_users=2 unmatched_users=0
+LDAP sync dry_run team_id=project-beta create_team=False add=['alice'] remove=['carol']
+LDAP sync team_id=project-alpha matched_users=1 unmatched_users=1
+LDAP sync dry_run team_id=project-alpha create_team=True add=['alice'] remove=[]
+```
+
+Confirm the roster before changing `dry_run` to `false` and restarting every replica.
 
 After the next successful run, check the team in the Admin UI or through the API:
 
@@ -89,11 +101,13 @@ curl "$LITELLM_PROXY_URL/team/info?team_id=project-alpha" \
 
 The configured `group_id_attribute` matches **exactly** to LiteLLM's `team_id`. With the default `cn`, a group whose `cn` is `project-alpha` creates or updates team ID `project-alpha`. A team with only that display name and a different ID is not adopted. Choose a unique string that stays stable across group renames; binary IDs are not supported.
 
+A team ID can only be chosen when the team is created, through the optional **Team ID** field in the Admin UI or `team_id` on `/team/new`. Teams created without one get a generated ID that no LDAP group will match. To bring an existing team under LDAP sync, it must already use the group's ID; otherwise the sync creates a new team.
+
 `group_name_attribute` sets the display name only when creating a team. New teams inherit `default_team_params`, as SCIM-created teams do. Existing names, budgets, model access and other team settings stay unchanged. Retained members keep their roles; newly added members receive the regular member role.
 
 By default, the group's `member` attribute contains user DNs, the full addresses of user records. The job reads each user record's `mail` attribute and matches it to an existing LiteLLM `user_email`, ignoring email case. An unmatched user is skipped until a later run after normal onboarding.
 
-For another identity field, set `user_match_attribute` to the LDAP field and `litellm_match_field` to `user_id` or `sso_user_id`. Those values match exactly. For POSIX groups, set `member_attribute: memberUid`; the job searches `user_search_base` using `member_lookup_attribute`, which defaults to `uid`. Other membership attributes, such as `uniqueMember`, are treated as full DNs.
+For another identity field, set `user_match_attribute` to the LDAP field and `litellm_match_field` to `user_id` or `sso_user_id`. Those values match exactly. For POSIX groups, set `member_attribute: memberUid`; the job searches `user_search_base` using `member_lookup_attribute`, which defaults to `uid`. Other membership attributes, such as `uniqueMember` or `roleOccupant`, are treated as full DNs. Each member must be a user entry with the `person`, `organizationalPerson`, `inetOrgPerson`, `user` or `posixAccount` object class. Any other member, including a nested group, skips its group.
 
 :::warning Protect the matching identity
 
@@ -101,7 +115,7 @@ Use matching fields whose values are controlled by trusted administrators or you
 
 :::
 
-Changing the LDAP identity without updating the matching LiteLLM field makes the user unmatched. A subsequent sync can remove that user and their keys from affected teams. Coordinate identity changes before the next run.
+Changing the LDAP identity without updating the matching LiteLLM field makes the user unmatched. The next sync removes that user and their keys from every synchronized team. Coordinate identity changes before the next run.
 
 ## What each run does
 
@@ -111,7 +125,7 @@ Changing the LDAP identity without updating the matching LiteLLM field makes the
 4. In dry run, it logs the proposed changes. Otherwise, it creates a missing team and reconciles memberships, preserving retained roles and revoking removed members' team keys.
 5. It logs results and waits for the next scheduled interval. Unchanged rosters do not get rewritten.
 
-Membership changes are transactional per team, not across the whole run. A later failure does not undo groups already committed. Runs have a timeout shorter than the Redis lease; timeout stops further membership writes. Cleanup of caches for committed changes finishes before cancellation completes. Later runs retry from current directory state.
+Membership changes are transactional per team, not across the whole run. A later failure does not undo groups already committed. Each run has a time budget shorter than the Redis lease. A directory read that exceeds it makes no changes. Once writes begin, the budget is checked between teams, so a team that has started updating always finishes. Remaining teams retry at the next interval from current directory state. If the proxy shuts down during a team's update, a removed member's key can stay usable from the auth cache until `user_api_key_cache_ttl` expires, as with other key deletions.
 
 ## Membership and failure behavior
 
@@ -121,16 +135,16 @@ Membership changes are transactional per team, not across the whole run. A later
 | Group has no matching team | Create it with team defaults and matching existing users. |
 | Directory user has no LiteLLM account | Skip that user. Never create an account. |
 | User leaves a successfully read group | Remove membership and delete that user's keys for the team. Keep the user account and other memberships. |
-| Successfully read group is empty | Remove all memberships and associated user-team keys. Keep the team. |
+| Group resolves to no LiteLLM users while its team has members | Skip the team and log a warning. Set `allow_empty_groups: true` to remove every member and their team keys instead. |
 | Group disappears from the search results | Keep the existing team and memberships unchanged. |
 | Member DN no longer exists | Skip that group and preserve its roster. Healthy groups continue. |
-| Missing, blank or multivalued group ID; ambiguous user; nested or ranged membership | Skip the affected group. Healthy groups continue. |
+| Missing, blank or multivalued group ID; ambiguous user; non-user member (including a nested group); ranged membership | Skip the affected group. Healthy groups continue. |
 | Directory outage, partial search, referral, duplicate group IDs or unreadable member | Abort the snapshot without applying its memberships. |
 | A team's membership write fails | Preserve that transaction's prior state and continue with other valid groups. A separately created team can remain. |
 
-Only direct user memberships are supported. Active Directory ranged membership responses and groups containing nested groups are skipped rather than expanded.
+Only direct user memberships are supported. Active Directory ranged membership responses and groups containing nested groups or other non-user members are skipped rather than expanded.
 
-LDAP access controls can hide an attribute in the same way an empty attribute is omitted. The job cannot always distinguish an unreadable membership field from an empty group. Verify complete read permissions and dry-run output before enabling writes.
+LDAP access controls can hide an attribute in the same way an empty attribute is omitted. The job cannot always distinguish an unreadable membership field from an empty group, which is why a group that resolves to no users does not empty a populated team unless `allow_empty_groups` is set. Verify complete read permissions and dry-run output before enabling writes, and run a dry run again after changing directory access controls or group schemas.
 
 ## Settings reference
 
@@ -149,13 +163,14 @@ All settings below belong under `general_settings.ldap_sync`.
 | `user_search_base` | Empty | Tree location for `memberUid` user searches. Required when enabled. |
 | `group_id_attribute` | `cn` | Unique string matched to the LiteLLM team ID. |
 | `group_name_attribute` | `cn` | Display name for newly created teams. |
-| `member_attribute` | `member` | Group attribute containing member DNs, or `memberUid` values. |
+| `member_attribute` | `member` | Group attribute containing member DNs (`member`, `uniqueMember`, `roleOccupant`), or `memberUid` values. |
 | `member_lookup_attribute` | `uid` | User attribute used to look up `memberUid` values. |
 | `user_match_attribute` | `mail` | LDAP user attribute holding the LiteLLM matching identity. |
 | `litellm_match_field` | `user_email` | Existing-user field: `user_email`, `user_id`, or `sso_user_id`. |
-| `interval_minutes` | `30` | Time between scheduled attempts. Minimum `0.1` minutes. |
+| `interval_minutes` | `30` | Time between scheduled runs. Minimum `5` minutes. |
 | `timeout_seconds` | `30` | LDAP socket/search timeout upper bound, from 1 to 120 seconds. Short intervals can reduce the effective timeout. |
 | `dry_run` | `false` | Log planned changes without writing users, teams, memberships or keys. Explicitly set true for your first run. |
+| `allow_empty_groups` | `false` | Let a group that resolves to no LiteLLM users remove every member of a populated team. By default such teams are skipped. |
 
 ## Manage or stop the job
 

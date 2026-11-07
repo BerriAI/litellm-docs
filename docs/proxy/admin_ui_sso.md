@@ -375,6 +375,8 @@ If you don't see all your keys this could be due to a cached token. So just re-l
 
 For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the token returned by your identity provider into the user's `team_ids`. On every SSO login, LiteLLM reads that claim and adds the user as a member of each matching team.
 
+To manage team membership from LDAP groups on a schedule instead of at login, see [LDAP team sync](./ldap_sync.md).
+
 #### Step 1: Point LiteLLM at the claim containing the team ids
 
 ```yaml showLineNumbers title="config.yaml"
