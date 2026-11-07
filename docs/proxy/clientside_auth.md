@@ -263,7 +263,7 @@ main();
 
 <SinceVersion v="1.109.0" />
 
-When a deployment sets `model_id`, such as a SageMaker inference component or a Bedrock model ID or ARN, LiteLLM always uses the deployment's value and ignores a `model_id` in the request body. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to proxy requests and to SDK `Router` calls.
+When a deployment sets `model_id` (for example a SageMaker inference component, a Bedrock model ID or ARN), LiteLLM will always use the deployment's value and ignore any `model_id` in the request body. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to both proxy requests and to SDK `Router` calls.
 
 To let clients choose the value on a deployment, list `model_id` in its `configurable_clientside_auth_params`:
 
@@ -276,7 +276,7 @@ model_list:
       configurable_clientside_auth_params: ["model_id"]
 ```
 
-A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body then goes to that component, and a request without `model_id` goes to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` does not opt in, so it leaves a pinned `model_id` in place. A deployment that sets no `model_id` still uses the request's `model_id`. Before 1.109.0, a `model_id` in the request body replaced the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
+A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body goes to that component, a request without `model_id` goes to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` doesn't opt in so it leaves a pinned `model_id` in place. A deployment that sets no `model_id` still uses the request's `model_id`. Prior to 1.109.0 a `model_id` in the request body would replace the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
 
 ### Pass provider-specific params (e.g. Region, Project ID, etc.)
 
