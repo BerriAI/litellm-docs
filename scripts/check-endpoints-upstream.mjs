@@ -12,7 +12,6 @@
 //
 //   node scripts/check-endpoints-upstream.mjs
 import {get} from 'node:https';
-import {ENDPOINTS, PASS_THROUGH} from '../src/data/endpoints.js';
 
 const SUPPORT_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/provider_endpoints_support.json';
 const PASSTHROUGH_URL =
@@ -40,7 +39,6 @@ const IGNORED_ROUTES = new Set([
   '/openai', // alias of /openai_passthrough
   '/vertex-ai', // alias of /vertex_ai
   '/eu.assemblyai', // EU host of /assemblyai
-  '/backend-api', // Codex backend relay
   '/laya', // decision models, listed under /v1/decisions
   '/bespoke', // decision models, listed under /v1/decisions
   '/v1', // path suffixes such as "/v1/systemone" in helper code, not routes
@@ -77,7 +75,11 @@ function fetchText(url) {
 // "/anthropic/{endpoint:path}" or "/deepgram" for "/deepgram/v1/listen".
 const prefixOf = (route) => `/${route.split('/')[1]}`;
 
+// Imported inside the checks so a broken data file is a warning, not a crash.
+const loadData = () => import('../src/data/endpoints.js');
+
 async function checkEndpoints() {
+  const {ENDPOINTS} = await loadData();
   const support = JSON.parse(await fetchText(SUPPORT_URL));
   const listed = new Set(ENDPOINTS.map((e) => e.id));
   for (const key of Object.keys(support.endpoints ?? {})) {
@@ -88,7 +90,11 @@ async function checkEndpoints() {
   }
 }
 
+// The scan only sees literal route strings in llm_passthrough_endpoints.py.
+// Routes built from constants or declared in other files (/azure_speech,
+// /openai_passthrough, /langfuse, /vertex_ai/live) are not checked here.
 async function checkPassThrough() {
+  const {PASS_THROUGH} = await loadData();
   const source = await fetchText(PASSTHROUGH_URL);
   // Route decorators and websocket registrations, e.g. "/anthropic/{endpoint:path}".
   const routes = new Set([...source.matchAll(/"(\/[a-z0-9_.-]+(?:\/[^"\s]*)?)"/gi)].map((m) => m[1]));

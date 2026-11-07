@@ -27,7 +27,6 @@ function useDocUrl() {
 function methodClass(method) {
   if (method === 'SDK') return styles.methodSdk;
   if (method.startsWith('WS')) return styles.methodWs;
-  if (method.startsWith('GET')) return styles.methodGet;
   return styles.methodPost;
 }
 
@@ -153,7 +152,7 @@ export default function EndpointCatalog() {
 // route (cost tracking, guardrails, custom routes) are a separate line.
 export function PassThroughList() {
   const docUrl = useDocUrl();
-  const providers = PASS_THROUGH.filter(p => p.route).sort((a, b) => a.label.localeCompare(b.label));
+  const providers = PASS_THROUGH.filter(p => p.route).sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
   const features = PASS_THROUGH.filter(p => !p.route);
   return (
     <>

@@ -2,6 +2,10 @@
 // Paths and methods are checked against litellm/proxy in the litellm repo.
 // scripts/endpoints-data.test.cjs checks that every doc id resolves and that
 // every doc in the "Supported Endpoints" sidebar category is listed here.
+//
+// The page does not render `format` or `subLinks`. `subLinks` lists the sub-page
+// docs of an endpoint so the sidebar coverage test counts them as covered, and
+// `format` records the request format for the schema test and future filters.
 
 export const CATEGORIES = [
   {id: 'chat', label: 'Chat and responses', blurb: 'Send prompts to any model in the OpenAI, Anthropic, Google or Bedrock format.'},
@@ -497,7 +501,7 @@ export const ENDPOINTS = [
     bridged: false,
     doc: 'managed_agents',
     capability: null,
-    sdk: null,
+    sdk: 'interactions.agents.create()',
     subLinks: [],
     keywords: ['gemini', 'agents', 'v1beta'],
   },

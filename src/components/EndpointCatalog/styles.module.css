@@ -65,8 +65,7 @@
   border-color: var(--ifm-color-primary);
 }
 
-.chip:focus-visible,
-.pill:focus-visible {
+.chip:focus-visible {
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: 2px;
 }
@@ -158,11 +157,6 @@
   color: #1d4ed8;
 }
 
-.methodGet {
-  background: rgba(22, 163, 74, 0.12);
-  color: #15803d;
-}
-
 .methodWs {
   background: rgba(147, 51, 234, 0.12);
   color: #7e22ce;
@@ -171,11 +165,6 @@
 :global([data-theme='dark']) .methodPost {
   background: rgba(96, 165, 250, 0.16);
   color: #93c5fd;
-}
-
-:global([data-theme='dark']) .methodGet {
-  background: rgba(74, 222, 128, 0.16);
-  color: #86efac;
 }
 
 :global([data-theme='dark']) .methodWs {
@@ -210,7 +199,7 @@
   text-decoration: none;
 }
 
-/* The title link covers the whole card; sub links sit above it. */
+/* The title link covers the whole card; the # anchor sits above it. */
 .mainLink::after {
   content: '';
   position: absolute;
@@ -234,16 +223,6 @@
   color: var(--ifm-color-emphasis-800);
 }
 
-.subLinks {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 10px;
-  margin: 0;
-  font-size: 12.5px;
-}
-
 .footer {
   display: flex;
   flex-wrap: wrap;
@@ -257,28 +236,6 @@
 .bridged {
   color: var(--ifm-color-primary);
   font-weight: 500;
-}
-
-.pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.pill {
-  padding: 4px 12px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 999px;
-  font-size: 13px;
-  color: var(--ifm-color-emphasis-800);
-  text-decoration: none;
-  transition: border-color 0.15s ease;
-}
-
-.pill:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-emphasis-800);
-  text-decoration: none;
 }
 
 .empty {
@@ -305,8 +262,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card,
-  .pill {
+  .card {
     transition: none;
   }
 }
@@ -351,10 +307,6 @@
 .methodSdk {
   background: var(--ifm-color-emphasis-200);
   color: var(--ifm-color-emphasis-800);
-}
-
-.more {
-  color: var(--ifm-color-emphasis-700);
 }
 
 .passFeatures {

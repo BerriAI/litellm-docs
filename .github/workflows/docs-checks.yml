@@ -41,7 +41,7 @@ jobs:
       - name: Check src/data/endpoints.js against the sidebar (warning only)
         run: npm run test:endpoints || echo "::warning title=Supported Endpoints::src/data/endpoints.js is out of sync with the Supported Endpoints sidebar. See the test output above."
       - name: Check src/data/endpoints.js against BerriAI/litellm (warning only)
-        run: npm run check:endpoints
+        run: npm run check:endpoints || echo "::warning title=Supported Endpoints::The upstream endpoints check could not run. See the output above."
       - run: node --test scripts/docs-models.test.cjs
   writing-style:
     runs-on: ubuntu-latest
