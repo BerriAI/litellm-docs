@@ -67,7 +67,7 @@ You can use the CLI to authenticate to the LiteLLM Gateway. This is great if you
 
 :::info
 
-For an indepth guide, see [CLI Authentication](./cli_sso).
+For an indepth guide, see [CLI sign-in](./cli_sso).
 
 :::
 
@@ -75,7 +75,7 @@ For an indepth guide, see [CLI Authentication](./cli_sso).
 
 :::warning[Beta Feature - Required Environment Variable]
 
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
+CLI sign-in is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
 
 ```bash
 export EXPERIMENTAL_UI_LOGIN="True"

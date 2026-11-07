@@ -51,9 +51,30 @@ guardrails:
 
 For custom guardrails, implement `apply_guardrail` on your `CustomGuardrail` subclass. LiteLLM calls it with `input_type="response"` and the tool result's text values. If you override `get_supported_event_hooks`, include `post_mcp_call` in the list. An unsupported mode causes initialization to log an error and skip that guardrail while the proxy continues starting. Check the startup logs to confirm registration.
 
-On `/mcp`, a blocked result is returned as an MCP tool error (`result.isError: true`), which can arrive with HTTP 200. For `/v1/responses` MCP auto-execution, the model receives a tool error instead of the blocked content and can continue generating a response. A guardrail block does not by itself make the overall Responses request return HTTP 400.
+On `/mcp`, a blocked result is returned as an MCP tool error (`result.isError: true`), which can arrive with HTTP 200. For `/v1/responses` MCP auto-execution, the model receives a tool error instead of the blocked content and can continue generating a response. A guardrail block does not by itself make the overall Responses request return HTTP 400; set [`mcp_block_behavior: raise`](#failing-the-request-when-a-guardrail-blocks-an-mcp-tool) on the guardrail for that.
 
 PANW support requires a LiteLLM version containing [the integration fix](https://github.com/BerriAI/litellm/pull/43109).
+
+### Failing the request when a guardrail blocks an MCP tool
+
+<SinceVersion v="1.110.0" />
+
+By default, when a guardrail blocks an MCP tool that LiteLLM runs for `/v1/responses`, `/v1/chat/completions` or `/v1/messages`, the block goes back to the model as the tool result and the request returns HTTP 200. Set `mcp_block_behavior: raise` on the guardrail to fail the request with the guardrail's error (HTTP 400) instead.
+
+```yaml title="config.yaml" showLineNumbers
+guardrails:
+  - guardrail_name: block-tool
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_mcp_call
+      default_on: true
+      blocked_words:
+        - keyword: forbiddenmarker
+          action: BLOCK
+      mcp_block_behavior: raise  # default: tool_result
+```
+
+Streaming `/v1/responses` and `/v1/chat/completions` requests end with an error event instead, since the 200 is already sent. Custom guardrails must block by raising `HTTPException`, `GuardrailRaisedException` or `BlockedPiiEntityError` for `raise` to apply.
 
 ### Scanning Tool Descriptions on Discovery
 

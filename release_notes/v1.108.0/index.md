@@ -1,5 +1,5 @@
 ---
-title: "LiteLLM v1.108.0 adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live"
+title: "LiteLLM v1.108.0 (LTS) adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live"
 description: "Adds Gemini 4 Argon, Microsoft 365 Copilot, OpenAI Live sessions and shared Azure PTU capacity. Count routes return provider errors, not estimates."
 slug: "v1-108-0"
 date: 2026-11-04T03:35:33
@@ -21,6 +21,12 @@ hide_table_of_contents: false
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
+:::tip
+
+`v1.108.0` is the first release on the 1.108 LTS line. The `lts` image tag always points to the latest LTS release, so pull `docker.litellm.ai/berriai/litellm:lts` to stay on the newest LTS patch. See the [LTS pilot](/docs/enterprise/lts_pilot).
+
+:::
 
 :::info
 
